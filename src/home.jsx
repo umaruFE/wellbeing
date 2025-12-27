@@ -20,7 +20,10 @@ import {
   FileText,
   Tags,
   Baby,
-  Library
+  Library,
+  List,
+  MonitorPlay,
+  Palette
 } from 'lucide-react';
 
 // --- Data Constants ---
@@ -165,6 +168,9 @@ export default function AICoursewareTool() {
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('');
   
+  // Mobile Tab State (for responsive layout)
+  const [mobileTab, setMobileTab] = useState('preview'); // 'outline', 'preview', 'assets'
+
   // Input State
   const [config, setConfig] = useState({
     grade: '小学三年级', // Keep for display, but logic is mainly age-driven now
@@ -270,22 +276,22 @@ export default function AICoursewareTool() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-800">
         <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white relative overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 md:p-8 text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative z-10 flex items-center justify-between">
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div>
-                 <h1 className="text-3xl font-bold mb-2 flex items-center gap-3">
-                   <Sparkles className="w-8 h-8 text-yellow-300" />
+                 <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
+                   <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-300" />
                    AI 教育课件大师
                  </h1>
-                 <p className="text-blue-100 opacity-90">基于年龄发展阶段的智能课程设计引擎</p>
+                 <p className="text-blue-100 opacity-90 text-sm md:text-base">基于年龄发展阶段的智能课程设计引擎</p>
               </div>
             </div>
           </div>
           
-          <div className="p-8 space-y-6">
-            {/* Basic Info Row */}
-            <div className="grid grid-cols-2 gap-6">
+          <div className="p-6 md:p-8 space-y-6">
+            {/* Basic Info Row - Responsive Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Age Selection (Driver) */}
               <div className="space-y-2">
@@ -296,7 +302,7 @@ export default function AICoursewareTool() {
                   <select 
                     value={config.age}
                     onChange={handleAgeChange}
-                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
+                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
                   >
                     {Object.keys(CURRICULUM_DATA).map(age => (
                       <option key={age} value={age}>{age}</option>
@@ -320,7 +326,7 @@ export default function AICoursewareTool() {
                     <select 
                       value={config.unit}
                       onChange={handleUnitChange}
-                      className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
+                      className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
                     >
                       {availableUnits.map(unit => (
                         <option key={unit} value={unit}>{unit}</option>
@@ -339,12 +345,12 @@ export default function AICoursewareTool() {
                       value={config.customUnit}
                       onChange={(e) => setConfig({...config, customUnit: e.target.value})}
                       placeholder="请输入自定义单元名称..."
-                      className="flex-1 p-3 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                      className="flex-1 p-3 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
                       autoFocus
                     />
                     <button 
                       onClick={() => setConfig({...config, isCustomUnit: false, unit: availableUnits[0]})}
-                      className="px-3 text-slate-400 hover:text-slate-600"
+                      className="px-3 text-slate-400 hover:text-slate-600 text-sm whitespace-nowrap"
                       title="返回选择列表"
                     >
                       取消
@@ -364,7 +370,7 @@ export default function AICoursewareTool() {
                   <select 
                     value={config.duration}
                     onChange={(e) => setConfig({...config, duration: e.target.value})}
-                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none"
+                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-sm md:text-base"
                   >
                     <option>15分钟 (微课/学前)</option>
                     <option>30分钟 (标准课时)</option>
@@ -388,7 +394,7 @@ export default function AICoursewareTool() {
                     type="text" 
                     value={config.theme}
                     onChange={(e) => setConfig({...config, theme: e.target.value})}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
                     placeholder="例如：星际救援、海底探险、魔法森林"
                   />
               </div>
@@ -404,7 +410,7 @@ export default function AICoursewareTool() {
                   type="text" 
                   value={config.keywords}
                   onChange={(e) => setConfig({...config, keywords: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
                   placeholder="例如：Red, Blue, Yellow (若不填则由AI自动从单元提取)"
                 />
             </div>
@@ -417,7 +423,7 @@ export default function AICoursewareTool() {
               <textarea 
                 value={config.sourceText}
                 onChange={(e) => setConfig({...config, sourceText: e.target.value})}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-none"
+                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-none text-sm md:text-base"
                 placeholder="在此输入特殊的教学要求，例如：'重点训练学生的口语输出' 或 '包含一个TPR身体反应游戏'。"
               />
             </div>
@@ -469,14 +475,14 @@ export default function AICoursewareTool() {
   return (
     <div className="h-screen flex flex-col bg-slate-100 text-slate-800 font-sans overflow-hidden">
       {/* Header */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 z-10 shadow-sm shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="bg-blue-600 p-2 rounded-lg text-white shadow-md">
-            <Sparkles className="w-5 h-5" />
+      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 z-10 shadow-sm shrink-0">
+        <div className="flex items-center gap-2 lg:gap-3">
+          <div className="bg-blue-600 p-1.5 lg:p-2 rounded-lg text-white shadow-md">
+            <Sparkles className="w-4 h-4 lg:w-5 lg:h-5" />
           </div>
-          <div>
-            <h1 className="font-bold text-lg text-slate-800 tracking-tight">CourseGen AI</h1>
-            <p className="text-xs text-slate-500 flex items-center gap-2">
+          <div className="overflow-hidden">
+            <h1 className="font-bold text-base lg:text-lg text-slate-800 tracking-tight whitespace-nowrap">CourseGen AI</h1>
+            <p className="hidden md:flex text-xs text-slate-500 items-center gap-2">
               <span className="bg-slate-100 px-1 rounded">{config.age.split(' ')[0]}</span>
               <span className="bg-slate-100 px-1 rounded truncate max-w-[200px]">
                 {config.isCustomUnit ? config.customUnit : config.unit}
@@ -484,29 +490,40 @@ export default function AICoursewareTool() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-sm transition-colors">
-            <Play className="w-4 h-4" /> 预览模式
+        <div className="flex items-center gap-2">
+          <button className="flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-xs lg:text-sm transition-colors whitespace-nowrap">
+            <Play className="w-3 h-3 lg:w-4 lg:h-4" /> <span className="hidden sm:inline">预览模式</span>
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm shadow-md transition-colors">
-            <Download className="w-4 h-4" /> 导出 PPTX
+          <button className="flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-xs lg:text-sm shadow-md transition-colors whitespace-nowrap">
+            <Download className="w-3 h-3 lg:w-4 lg:h-4" /> <span className="hidden sm:inline">导出</span>
           </button>
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Content Area: Responsive Layout */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         
-        {/* LEFT: Outline Sidebar */}
-        <aside className="w-64 bg-white border-r border-slate-200 flex flex-col z-10 shrink-0">
-          <div className="p-4 border-b border-slate-100 bg-slate-50">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">教学流程大纲</h3>
-            <p className="text-sm font-semibold text-slate-700">基于 {config.age.split(' ')[0]} 专注力模型</p>
+        {/* LEFT: Outline Sidebar (Hidden on mobile unless active) */}
+        <aside className={`
+          w-full lg:w-64 bg-white lg:border-r border-slate-200 flex-col z-20 shrink-0
+          lg:flex absolute inset-0 lg:static
+          ${mobileTab === 'outline' ? 'flex' : 'hidden'}
+        `}>
+          <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between lg:justify-start">
+            <div>
+              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">教学流程大纲</h3>
+              <p className="text-sm font-semibold text-slate-700">基于 {config.age.split(' ')[0]} 专注力模型</p>
+            </div>
+            {/* Mobile Close Button (Optional if using tabs) */}
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-2">
+          <div className="flex-1 overflow-y-auto p-2 space-y-2 pb-20 lg:pb-2">
             {slides.map((slide, index) => (
               <button
                 key={slide.id}
-                onClick={() => setSelectedSlideId(slide.id)}
+                onClick={() => {
+                  setSelectedSlideId(slide.id);
+                  // On mobile, switch to preview after selection if desired, or stay to select more
+                }}
                 className={`w-full text-left p-3 rounded-xl border transition-all duration-200 group ${
                   selectedSlideId === slide.id 
                     ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200 shadow-sm' 
@@ -535,11 +552,14 @@ export default function AICoursewareTool() {
           </div>
         </aside>
 
-        {/* CENTER: Canvas/Preview */}
-        <main className="flex-1 bg-slate-100 p-8 flex flex-col items-center justify-center relative overflow-hidden">
+        {/* CENTER: Canvas/Preview (Hidden on mobile if other tabs active) */}
+        <main className={`
+          flex-1 bg-slate-100 p-4 lg:p-8 flex-col items-center justify-center relative overflow-hidden
+          ${mobileTab === 'preview' ? 'flex' : 'hidden lg:flex'}
+        `}>
           <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]"></div>
           
-          {/* Slide Container */}
+          {/* Slide Container - Responsive Aspect Ratio */}
           <div className="w-full max-w-4xl aspect-video bg-white rounded-lg shadow-2xl overflow-hidden relative z-10 border border-slate-200 group transition-all duration-300">
              {/* Render Elements visually (Simulated) */}
              <div className="absolute inset-0">
@@ -552,14 +572,14 @@ export default function AICoursewareTool() {
                 )}
                 <div className="absolute inset-0 bg-black/20"></div> {/* Overlay */}
                 
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-center">
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 lg:p-12 text-center overflow-y-auto">
                    {currentSlide.elements.filter(e => e.type !== 'script' && !e.label.includes('背景')).map(el => (
                      <div key={el.id} className="relative mb-4 last:mb-0 hover:ring-2 hover:ring-blue-400 rounded transition-all cursor-pointer">
                         {el.type === 'image' && (
-                          <img src={el.content} alt={el.label} className="max-h-64 rounded-lg shadow-lg transform hover:scale-105 transition-transform" />
+                          <img src={el.content} alt={el.label} className="max-h-32 lg:max-h-64 rounded-lg shadow-lg transform hover:scale-105 transition-transform" />
                         )}
                         {el.type === 'text' && (
-                          <h2 className={`text-4xl font-bold text-white drop-shadow-md ${el.style === 'glitch' ? 'font-mono tracking-widest' : ''}`}>
+                          <h2 className={`text-xl lg:text-4xl font-bold text-white drop-shadow-md ${el.style === 'glitch' ? 'font-mono tracking-widest' : ''}`}>
                             {el.content}
                           </h2>
                         )}
@@ -569,14 +589,14 @@ export default function AICoursewareTool() {
              </div>
 
              {/* Teacher Script Overlay */}
-             <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md p-4 rounded-lg border border-white/10 text-white/90">
-                <div className="flex items-start gap-3">
-                  <div className="bg-blue-600 p-1 rounded mt-1">
-                     <Type className="w-4 h-4" />
+             <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md p-3 lg:p-4 rounded-lg border border-white/10 text-white/90">
+                <div className="flex items-start gap-2 lg:gap-3">
+                  <div className="bg-blue-600 p-1 rounded mt-1 shrink-0">
+                     <Type className="w-3 h-3 lg:w-4 lg:h-4" />
                   </div>
-                  <div>
-                    <p className="text-xs text-blue-300 font-bold uppercase mb-1">Teacher Script (AI Generated)</p>
-                    <p className="text-sm font-medium leading-relaxed font-serif italic">
+                  <div className="overflow-y-auto max-h-24 lg:max-h-none">
+                    <p className="text-[10px] lg:text-xs text-blue-300 font-bold uppercase mb-1">Teacher Script (AI Generated)</p>
+                    <p className="text-xs lg:text-sm font-medium leading-relaxed font-serif italic">
                       "{currentSlide.elements.find(e => e.type === 'script')?.content}"
                     </p>
                   </div>
@@ -584,15 +604,19 @@ export default function AICoursewareTool() {
              </div>
           </div>
 
-          <div className="mt-6 flex items-center gap-4 text-slate-500 text-sm">
-             <span className="flex items-center gap-1"><Layout className="w-4 h-4" /> 16:9 沉浸式宽屏</span>
+          <div className="mt-4 lg:mt-6 flex items-center gap-4 text-slate-500 text-xs lg:text-sm">
+             <span className="flex items-center gap-1"><Layout className="w-3 h-3 lg:w-4 lg:h-4" /> 16:9 沉浸式宽屏</span>
              <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-             <span className="flex items-center gap-1 text-blue-600 font-medium"><BrainCircuit className="w-4 h-4" /> 心理学引擎已优化</span>
+             <span className="flex items-center gap-1 text-blue-600 font-medium"><BrainCircuit className="w-3 h-3 lg:w-4 lg:h-4" /> 心理学引擎已优化</span>
           </div>
         </main>
 
-        {/* RIGHT: Asset Manager (The "Element" breakdown) */}
-        <aside className="w-96 bg-white border-l border-slate-200 flex flex-col z-10 shadow-lg shrink-0">
+        {/* RIGHT: Asset Manager (Hidden on mobile unless active) */}
+        <aside className={`
+          w-full lg:w-96 bg-white lg:border-l border-slate-200 flex-col z-20 shadow-lg shrink-0
+          lg:flex absolute inset-0 lg:static
+          ${mobileTab === 'assets' ? 'flex' : 'hidden'}
+        `}>
           <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
             <h3 className="font-bold text-slate-800 flex items-center gap-2">
               <Settings2 className="w-4 h-4 text-blue-600" />
@@ -600,7 +624,7 @@ export default function AICoursewareTool() {
             </h3>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-20 lg:pb-4">
             {currentSlide.elements.map((element) => (
               <div key={element.id} className="group relative">
                 {/* Element Header */}
@@ -682,6 +706,32 @@ export default function AICoursewareTool() {
             ))}
           </div>
         </aside>
+
+        {/* MOBILE NAVIGATION BAR (LG Hidden) */}
+        <div className="lg:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+          <button 
+            onClick={() => setMobileTab('outline')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg flex-1 ${mobileTab === 'outline' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}
+          >
+            <List className="w-5 h-5" />
+            <span className="text-[10px] font-medium">大纲</span>
+          </button>
+          <button 
+            onClick={() => setMobileTab('preview')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg flex-1 ${mobileTab === 'preview' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}
+          >
+            <MonitorPlay className="w-5 h-5" />
+            <span className="text-[10px] font-medium">预览</span>
+          </button>
+          <button 
+            onClick={() => setMobileTab('assets')}
+            className={`flex flex-col items-center gap-1 p-2 rounded-lg flex-1 ${mobileTab === 'assets' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}
+          >
+            <Palette className="w-5 h-5" />
+            <span className="text-[10px] font-medium">素材</span>
+          </button>
+        </div>
+
       </div>
     </div>
   );
