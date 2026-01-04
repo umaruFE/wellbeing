@@ -31,11 +31,46 @@ import {
   Sliders,
   RotateCw,
   Scaling,
-  Download,     // Icon for Export
-  MonitorPlay   // Icon for Presentation
+  Download,     
+  MonitorPlay,
+  Sparkles, 
+  GraduationCap, 
+  Layout, 
+  CheckCircle2, 
+  Settings2, 
+  BrainCircuit, 
+  Lightbulb, 
+  User, 
+  Tags, 
+  Baby, 
+  Library, 
+  List, 
+  Palette, 
+  MousePointer2, 
+  FileUp, 
+  MoreVertical, 
+  Table as TableIcon, 
+  FileAudio, 
+  FileVideo, 
+  Film, 
+  Pencil
 } from 'lucide-react';
 
-// --- Initial Data Loaded from Document ---
+// --- Global Helper Functions ---
+
+// Get icon component based on asset type (Moved to global scope to fix ReferenceError)
+const getAssetIcon = (type) => {
+  switch(type) {
+    case 'image': return <ImageIcon className="w-4 h-4" />;
+    case 'video': return <Video className="w-4 h-4" />;
+    case 'audio': return <Music className="w-4 h-4" />;
+    case 'text': return <Type className="w-4 h-4" />;
+    default: return <Box className="w-4 h-4" />;
+  }
+};
+
+// --- Data Constants ---
+
 const INITIAL_COURSE_DATA = {
   engage: {
     title: 'Engage (引入)',
@@ -215,21 +250,159 @@ const INITIAL_COURSE_DATA = {
   }
 };
 
-// --- Helper Functions (Moved to global scope) ---
-
-// Get icon component based on asset type
-const getAssetIcon = (type) => {
-  switch(type) {
-    case 'image': return <ImageIcon className="w-4 h-4" />;
-    case 'video': return <Video className="w-4 h-4" />;
-    case 'audio': return <Music className="w-4 h-4" />;
-    case 'text': return <Type className="w-4 h-4" />;
-    default: return <Box className="w-4 h-4" />;
-  }
+const CURRICULUM_DATA = {
+  '3-4岁 (小班/Nursery)': [
+    'Theme: My Family (我的家庭)', 
+    'Theme: Colors & Shapes (颜色与形状)', 
+    'Theme: My Body (我的身体)', 
+    'Theme: Fruits (水果)', 
+    'Theme: Toys (玩具)'
+  ],
+  '4-5岁 (中班/K1)': [
+    'Theme: Farm Animals (农场动物)', 
+    'Theme: My Feelings (我的情绪)', 
+    'Theme: Weather (天气)', 
+    'Theme: Clothes (衣服)', 
+    'Theme: Food & Drink (饮食)'
+  ],
+  '5-6岁 (大班/K2)': [
+    'Theme: Transportation (交通工具)', 
+    'Theme: Community Helpers (社区职业)', 
+    'Theme: Solar System (太阳系)', 
+    'Theme: Insects (昆虫)', 
+    'Theme: Seasons (四季)'
+  ],
+  '6-7岁 (一年级/G1)': [
+    'Unit 1: Hello! (问候)',
+    'Unit 2: School Things (文具)',
+    'Unit 3: Animals (动物)',
+    'Unit 4: Numbers 1-10 (数字)',
+    'Unit 5: My Face (五官)'
+  ],
+  '7-8岁 (二年级/G2)': [
+    'Unit 1: My Day (我的日常)',
+    'Unit 2: The Zoo (动物园)',
+    'Unit 3: My Room (我的房间)',
+    'Unit 4: Family Activities (家庭活动)',
+    'Unit 5: Time (时间)'
+  ],
+  '8-9岁 (三年级/G3)': [
+    'Unit 3: Animals (神奇的动物)',
+    'Unit 1: Welcome Back (欢迎回来)',
+    'Unit 2: My Schoolbag (我的书包)',
+    'Unit 4: We Love Animals (我们爱动物)',
+    'Unit 5: Food and Drink (饮食)'
+  ],
+  '9-10岁 (四年级/G4)': [
+    'Unit 1: My Classroom (我的教室)',
+    'Unit 2: My Friends (我的朋友)',
+    'Unit 3: Weather (天气)',
+    'Unit 4: Shopping (购物)',
+    'Unit 5: Hobbies (爱好)'
+  ],
+  '10-12岁 (高年级/Upper Primary)': [
+    'Unit 1: Future Plans (未来计划)',
+    'Unit 2: Past Experiences (过去经历)',
+    'Unit 3: Holidays (假期)',
+    'Unit 4: Environment (环境保护)',
+    'Unit 5: Technology (科技)'
+  ]
 };
 
-// --- Reusable Component: Slide Renderer ---
-// Shared logic for rendering the slide content in both Editor and Preview
+const WORD_DOC_DATA = [
+  {
+    id: 1,
+    phase: "Engage (引入)",
+    duration: "2分钟",
+    title: "氛围营造：神秘信号",
+    objectives: "快速吸引注意力，激发好奇心，建立“特工”身份。",
+    activities: "1. 教室灯光调暗，播放神秘音乐。\n2. 教师假装捕捉空气中的信号。",
+    materials: "神秘背景音乐，调光设备",
+    worksheets: "无",
+    ppt_content: "黑色背景，中央显示微弱的绿色声波信号波动动画。",
+    image: "https://placehold.co/1000x600/000/0F0?text=Waveform+Signal",
+    audio: "https://placehold.co/audio.mp3",
+    video: null,
+    elements: []
+  },
+  {
+    id: 2,
+    phase: "Engage (引入)",
+    duration: "3分钟",
+    title: "发布神秘任务 (PPT 1)",
+    objectives: "清晰理解任务规则，发布行动指令。",
+    activities: "1. 教师发现“线索1”：身体部位卡片。\n2. 发布搜寻任务：找到教室内隐藏的14个线索。",
+    materials: "14张身体部位卡片（隐藏在教室内）",
+    worksheets: "无",
+    ppt_content: "标题：TOP SECRET MISSION\n副标题：Find 14 Hidden Clues!",
+    image: "https://placehold.co/1000x600/1a1a2e/FFF?text=Mission+File",
+    audio: null,
+    video: "https://placehold.co/video-placeholder",
+    elements: []
+  },
+  {
+    id: 6,
+    phase: "Empower (赋能)",
+    duration: "30分钟",
+    title: "图鉴共读与探索 (Guidebook)",
+    objectives: "学习身体部位、数量、形容词 (long/short, big/small)。",
+    activities: "1. 师生共读《Funky Monster Guidebook》。\n2. 完成填字、找不同、画尾巴等练习。",
+    materials: "每人一本纸质图鉴, 彩笔",
+    worksheets: "Funky Monster Guidebook",
+    ppt_content: "电子版图鉴页面投影，重点词汇高亮显示。",
+    image: "https://placehold.co/400x500/fcd34d/FFF?text=Monster+Guidebook",
+    audio: null,
+    video: null,
+    elements: []
+  },
+  {
+    id: 8,
+    phase: "Execute (产出)",
+    duration: "15分钟",
+    title: "绘画共创：魔法骰子 (PPT 15)",
+    objectives: "运用随机性激发创造力，协作完成海报。",
+    activities: "1. 掷骰子A(部位)、B(数量)、C(特征)。\n2. 根据结果作画。",
+    materials: "3种骰子, 大海报纸, 彩笔",
+    worksheets: "无",
+    ppt_content: "三个骰子的动态GIF展示。\n左侧：Part，中间：Number，右侧：Adjective",
+    image: "https://placehold.co/800x450/f3e8ff/6b21a8?text=Art+Studio",
+    audio: null,
+    video: null,
+    elements: []
+  },
+  {
+    id: 10,
+    phase: "Elevate (升华)",
+    duration: "10分钟",
+    title: "奇趣兽发布会 (PPT 17)",
+    objectives: "公开演讲，展示成果，获得成就感。",
+    activities: "1. 模拟盛大发布会。\n2. 小组上台展示海报并介绍。",
+    materials: "聚光灯音效, 海报",
+    worksheets: "无",
+    ppt_content: "盛大的舞台背景，聚光灯效果动画。",
+    image: "https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000&auto=format&fit=crop",
+    audio: null,
+    video: null,
+    elements: []
+  }
+];
+
+// --- Helper Components ---
+
+const ImagePreviewModal = ({ src, onClose }) => {
+  if (!src) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4" onClick={onClose}>
+      <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center">
+        <img src={src} alt="Preview" className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl" />
+        <button className="mt-4 bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-sm transition-colors">
+          <X className="w-4 h-4" /> 关闭预览
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const SlideRenderer = ({ assets, isEditable, onMouseDown, selectedAssetId }) => {
   
   if (assets.length === 0 && isEditable) {
@@ -312,7 +485,9 @@ const SlideRenderer = ({ assets, isEditable, onMouseDown, selectedAssetId }) => 
   );
 };
 
-export default function CourseEditor() {
+// --- Sub-Views ---
+
+const CanvasView = () => {
   const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
   const [activePhase, setActivePhase] = useState('engage');
   const [activeStepId, setActiveStepId] = useState('e1-1');
@@ -582,10 +757,8 @@ export default function CourseEditor() {
     setSelectedAssetId(null); 
   };
 
-
   return (
-    <div className="flex h-screen w-full bg-slate-50 text-slate-800 font-sans overflow-hidden">
-      
+    <div className="flex-1 flex overflow-hidden">
       {/* 1. LEFT SIDEBAR */}
       <aside 
         className={`${isLeftOpen ? 'w-64' : 'w-0'} bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 transition-all duration-300 relative`}
@@ -1035,6 +1208,648 @@ export default function CourseEditor() {
            </div>
         </div>
       )}
+    </div>
+  );
+};
+
+const TableView = () => {
+  const [step, setStep] = useState('editor');
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [loadingText, setLoadingText] = useState('');
+  
+  // Input State
+  const [config, setConfig] = useState({
+    grade: '小学三年级',
+    age: '8-9岁 (三年级/G3)',
+    unit: 'Unit 3: Animals (神奇的动物)',
+    duration: '40分钟',
+    theme: '星际救援冒险',
+    sourceText: '',
+    keywords: '',
+    isCustomUnit: false,
+    customUnit: ''
+  });
+
+  // Editor State
+  const [slides, setSlides] = useState(WORD_DOC_DATA);
+  const [previewImage, setPreviewImage] = useState(null);
+  
+  // Generating States
+  const [generatingMedia, setGeneratingMedia] = useState({});
+
+  // Define Phases Structure for Table View
+  const PHASES = [
+    { id: 'Engage', label: 'Engage (引入)', color: 'bg-purple-50 border-purple-200 text-purple-800' },
+    { id: 'Empower', label: 'Empower (赋能)', color: 'bg-blue-50 border-blue-200 text-blue-800' },
+    { id: 'Execute', label: 'Execute (实践/产出)', color: 'bg-green-50 border-green-200 text-green-800' },
+    { id: 'Elevate', label: 'Elevate (升华)', color: 'bg-yellow-50 border-yellow-200 text-yellow-800' }
+  ];
+
+  // Helper: Get units based on current age
+  const availableUnits = CURRICULUM_DATA[config.age] || [];
+
+  // --- Handlers ---
+
+  const handleAgeChange = (e) => {
+    const newAge = e.target.value;
+    const newUnits = CURRICULUM_DATA[newAge] || [];
+    
+    setConfig({
+      ...config,
+      age: newAge,
+      unit: newUnits.length > 0 ? newUnits[0] : '',
+      isCustomUnit: false,
+      customUnit: ''
+    });
+  };
+
+  const handleUnitChange = (e) => {
+    const value = e.target.value;
+    if (value === 'custom_input_option') {
+      setConfig({ ...config, isCustomUnit: true, unit: '' });
+    } else {
+      setConfig({ ...config, isCustomUnit: false, unit: value });
+    }
+  };
+
+  const updateSlideField = (id, field, value) => {
+    setSlides(prev => prev.map(slide => 
+      slide.id === id ? { ...slide, [field]: value } : slide
+    ));
+  };
+
+  const handleGenerate = () => {
+    setStep('generating');
+    
+    const stages = [
+      { p: 10, t: `正在加载 ${config.age} 认知心理学模型...` },
+      { p: 30, t: `正在分析 核心知识点图谱...` },
+      { p: 50, t: 'AI 引擎正在设计“最近发展区(ZPD)”教学支架...' },
+      { p: 70, t: '正在生成多模态(Visual-Auditory)教学素材...' },
+      { p: 90, t: '正在进行教育学原理一致性校验...' },
+      { p: 100, t: '课件组装完成！' }
+    ];
+
+    let currentStage = 0;
+    const interval = setInterval(() => {
+      if (currentStage >= stages.length) {
+        clearInterval(interval);
+        setSlides(WORD_DOC_DATA); 
+        setStep('editor');
+        return;
+      }
+      setLoadingProgress(stages[currentStage].p);
+      setLoadingText(stages[currentStage].t);
+      currentStage++;
+    }, 800);
+  };
+
+  const handleAddRow = (phaseName) => {
+    const newId = Date.now();
+    // Default phase string based on group
+    let defaultPhaseStr = phaseName;
+    if(phaseName === 'Engage') defaultPhaseStr = "Engage (引入)";
+    if(phaseName === 'Empower') defaultPhaseStr = "Empower (赋能)";
+    if(phaseName === 'Execute') defaultPhaseStr = "Execute (产出)";
+    if(phaseName === 'Elevate') defaultPhaseStr = "Elevate (升华)";
+
+    setSlides([...slides, {
+        id: newId,
+        phase: defaultPhaseStr,
+        duration: "5分钟",
+        title: "New Activity",
+        objectives: "",
+        activities: "",
+        materials: "",
+        worksheets: "无",
+        ppt_content: "",
+        image: null,
+        audio: null,
+        video: null,
+        elements: []
+    }]);
+  };
+
+  const handleDeleteRow = (id) => {
+    setSlides(slides.filter(s => s.id !== id));
+  }
+
+  // --- Regenerate Logic ---
+  const handleRegenerateMedia = (id, type) => {
+    const key = `${id}-${type}`;
+    setGeneratingMedia(prev => ({ ...prev, [key]: true }));
+
+    // Mock API delay
+    setTimeout(() => {
+      setSlides(prev => prev.map(slide => {
+        if (slide.id !== id) return slide;
+        
+        let newContent = null;
+        if (type === 'image') {
+           newContent = `https://placehold.co/600x400/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+Image+${Date.now().toString().slice(-4)}`;
+        } else if (type === 'audio') {
+           newContent = "https://placehold.co/audio.mp3"; 
+        } else if (type === 'video') {
+           newContent = "https://placehold.co/video-placeholder"; 
+        }
+
+        return { ...slide, [type]: newContent };
+      }));
+      setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+    }, 2000);
+  };
+
+  // --- Render ---
+
+  if (step === 'input') {
+     return (
+      <div className="flex-1 overflow-auto bg-slate-50 flex items-center justify-center p-4">
+        <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 md:p-8 text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
+            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+              <div>
+                 <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
+                   <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-300" />
+                   AI 教育课件大师
+                 </h1>
+                 <p className="text-blue-100 opacity-90 text-sm md:text-base">基于年龄发展阶段的智能课程设计引擎</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="p-6 md:p-8 space-y-6">
+            {/* ... (Input Form remains same as previous version) ... */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <User className="w-4 h-4 text-purple-500" /> 学生年龄 / Age
+                </label>
+                <div className="relative">
+                  <select 
+                    value={config.age}
+                    onChange={handleAgeChange}
+                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
+                  >
+                    {Object.keys(CURRICULUM_DATA).map(age => (
+                      <option key={age} value={age}>{age}</option>
+                    ))}
+                  </select>
+                  <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
+                    <ChevronRight className="w-4 h-4 rotate-90" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Library className="w-4 h-4 text-green-500" /> 
+                  {parseInt(config.age) < 6 ? "核心主题 / Theme" : "教材单元 / Unit"}
+                </label>
+                {!config.isCustomUnit ? (
+                  <div className="relative">
+                    <select 
+                      value={config.unit}
+                      onChange={handleUnitChange}
+                      className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
+                    >
+                      {availableUnits.map(unit => (
+                        <option key={unit} value={unit}>{unit}</option>
+                      ))}
+                      <option disabled>──────────</option>
+                      <option value="custom_input_option">✎ 手动输入其他...</option>
+                    </select>
+                    <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
+                      <ChevronRight className="w-4 h-4 rotate-90" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 animate-in fade-in slide-in-from-left-2">
+                    <input 
+                      type="text"
+                      value={config.customUnit}
+                      onChange={(e) => setConfig({...config, customUnit: e.target.value})}
+                      placeholder="请输入自定义单元名称..."
+                      className="flex-1 p-3 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
+                      autoFocus
+                    />
+                    <button 
+                      onClick={() => setConfig({...config, isCustomUnit: false, unit: availableUnits[0]})}
+                      className="px-3 text-slate-400 hover:text-slate-600 text-sm whitespace-nowrap"
+                    >
+                      取消
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-orange-500" /> 上课时长 / Duration
+                </label>
+                <div className="relative">
+                  <select 
+                    value={config.duration}
+                    onChange={(e) => setConfig({...config, duration: e.target.value})}
+                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-sm md:text-base"
+                  >
+                    <option>15分钟 (微课/学前)</option>
+                    <option>30分钟 (标准课时)</option>
+                    <option>40分钟 (小学常用)</option>
+                    <option>45分钟 (公开课)</option>
+                    <option>60分钟 (综合实践)</option>
+                  </select>
+                  <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
+                    <ChevronRight className="w-4 h-4 rotate-90" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Wand2 className="w-4 h-4 text-pink-500" /> 
+                    剧情主题 / Story Theme
+                  </label>
+                  <input 
+                    type="text" 
+                    value={config.theme}
+                    onChange={(e) => setConfig({...config, theme: e.target.value})}
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
+                    placeholder="例如：星际救援、海底探险、魔法森林"
+                  />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+               <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                  <Tags className="w-4 h-4 text-indigo-500" /> 
+                  重点关键词 / Key Words (可选)
+                </label>
+                <input 
+                  type="text" 
+                  value={config.keywords}
+                  onChange={(e) => setConfig({...config, keywords: e.target.value})}
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
+                  placeholder="例如：Red, Blue, Yellow (若不填则由AI自动从单元提取)"
+                />
+            </div>
+
+            <div className="pt-4 border-t border-slate-100">
+              <button 
+                onClick={handleGenerate}
+                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg transform transition active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <BrainCircuit className="w-5 h-5" /> 生成自适应互动课件
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'generating') {
+    return (
+      <div className="flex-1 bg-slate-900 flex flex-col items-center justify-center text-white p-8">
+        <div className="w-full max-w-md space-y-8 text-center">
+          <div className="relative w-32 h-32 mx-auto">
+            <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>
+            <div className="absolute inset-2 border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+               <span className="text-2xl font-bold">{loadingProgress}%</span>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold animate-pulse text-blue-200">AI 正在深度思考...</h2>
+            <p className="text-slate-400 text-lg flex items-center justify-center gap-2">
+              <BrainCircuit className="w-4 h-4" /> {loadingText}
+            </p>
+          </div>
+          <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"
+              style={{ width: `${loadingProgress}%` }}
+            ></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // EDITOR MODE (TABLE VIEW)
+  return (
+    <div className="flex-1 flex flex-col bg-slate-50 text-slate-800 font-sans overflow-hidden">
+      {/* Image Preview Modal */}
+      <ImagePreviewModal src={previewImage} onClose={() => setPreviewImage(null)} />
+
+      {/* Main Table View */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="max-w-[1600px] mx-auto space-y-8">
+           
+           {/* Render each phase as a separate block */}
+           {PHASES.map((phase) => {
+             // Filter slides belonging to this phase
+             const phaseSlides = slides.filter(slide => slide.phase.includes(phase.id));
+             
+             return (
+               <div key={phase.id} className="bg-white shadow-sm border border-slate-200 rounded-lg overflow-hidden">
+                 {/* Phase Header */}
+                 <div className={`p-4 border-b border-slate-100 flex justify-between items-center ${phase.color.replace('text-', 'bg-opacity-10 ')}`}>
+                    <h2 className={`text-lg font-bold flex items-center gap-2 ${phase.color}`}>
+                      <BookmarkIcon phase={phase.id} />
+                      {phase.label} 阶段
+                    </h2>
+                    <div className="text-xs font-medium px-2 py-1 bg-white/50 rounded-full text-slate-500">
+                       {phaseSlides.length} 个环节
+                    </div>
+                 </div>
+                 
+                 {/* Table */}
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-sm text-left">
+                     <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
+                       <tr>
+                         <th className="p-4 w-20">时长</th>
+                         <th className="p-4 w-28">环节</th>
+                         <th className="p-4 w-40">教学活动 & 讲稿</th>
+                         <th className="p-4 w-40">PPT内容</th>
+                         <th className="p-4 w-32">图片</th>
+                         <th className="p-4 w-32">音频</th>
+                         <th className="p-4 w-32">视频</th>
+                         <th className="p-4 w-24">材料/练习</th>
+                         <th className="p-4 w-12 text-center">操作</th>
+                       </tr>
+                     </thead>
+                     <tbody className="divide-y divide-slate-100">
+                       {phaseSlides.length > 0 ? (
+                         phaseSlides.map((slide) => (
+                           <tr key={slide.id} className="hover:bg-slate-50 group transition-colors">
+                             {/* Duration & Phase & Activities - Standard Text Inputs */}
+                             <td className="p-4 align-top">
+                                <input 
+                                  value={slide.duration}
+                                  onChange={(e) => updateSlideField(slide.id, 'duration', e.target.value)}
+                                  className="w-full bg-transparent border-b border-transparent focus:border-blue-400 outline-none font-medium text-blue-600 transition-colors"
+                                  placeholder="时长"
+                                />
+                             </td>
+                             <td className="p-4 align-top">
+                                <textarea 
+                                  value={slide.title}
+                                  onChange={(e) => updateSlideField(slide.id, 'title', e.target.value)}
+                                  className="w-full bg-transparent text-xs font-bold text-slate-700 resize-none outline-none focus:bg-white rounded"
+                                  rows={2}
+                                  placeholder="小标题..."
+                                />
+                             </td>
+                             <td className="p-4 align-top">
+                                <div className="space-y-2">
+                                  <textarea 
+                                    value={slide.activities}
+                                    onChange={(e) => updateSlideField(slide.id, 'activities', e.target.value)}
+                                    className="w-full bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 resize-none text-slate-700 leading-relaxed whitespace-pre-wrap transition-colors text-xs"
+                                    rows={6}
+                                    placeholder="详细的活动步骤和教师讲稿..."
+                                  />
+                                  <div className="pt-1 border-t border-slate-100">
+                                    <label className="text-[10px] text-slate-400 font-bold uppercase">教学目标</label>
+                                    <textarea 
+                                      value={slide.objectives}
+                                      onChange={(e) => updateSlideField(slide.id, 'objectives', e.target.value)}
+                                      className="w-full bg-transparent text-xs text-slate-500 resize-none outline-none focus:bg-white rounded"
+                                      rows={3}
+                                      placeholder="输入教学目标..."
+                                    />
+                                  </div>
+                                </div>
+                             </td>
+                             
+                             {/* PPT Content */}
+                             <td className="p-4 align-top">
+                                <textarea 
+                                  value={slide.ppt_content}
+                                  onChange={(e) => updateSlideField(slide.id, 'ppt_content', e.target.value)}
+                                  className="w-full bg-slate-100/50 border border-slate-200 focus:border-blue-300 focus:bg-white rounded p-2 resize-none text-xs text-slate-600 leading-relaxed transition-colors h-full min-h-[120px]"
+                                  placeholder="描述PPT画面内容..."
+                                />
+                             </td>
+
+                             {/* Image Column */}
+                             <td className="p-4 align-top">
+                                <div className="relative group/media w-full aspect-video bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex items-center justify-center">
+                                   {generatingMedia[`${slide.id}-image`] ? (
+                                      <div className="flex flex-col items-center gap-1 text-blue-500">
+                                         <RefreshCw className="w-5 h-5 animate-spin" />
+                                         <span className="text-[10px]">生成中...</span>
+                                      </div>
+                                   ) : slide.image ? (
+                                      <>
+                                         <img 
+                                           src={slide.image} 
+                                           alt="PPT Slide" 
+                                           className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                           onClick={() => setPreviewImage(slide.image)}
+                                         />
+                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/media:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                            <button onClick={() => setPreviewImage(slide.image)} title="预览" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm">
+                                               <Maximize2 className="w-3 h-3" />
+                                            </button>
+                                            <button onClick={() => handleRegenerateMedia(slide.id, 'image')} title="重新生成" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm">
+                                               <RefreshCw className="w-3 h-3" />
+                                            </button>
+                                         </div>
+                                      </>
+                                   ) : (
+                                      <button 
+                                        onClick={() => handleRegenerateMedia(slide.id, 'image')}
+                                        className="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-500 transition-colors"
+                                      >
+                                         <ImageIcon className="w-6 h-6" />
+                                         <span className="text-[10px]">生成图片</span>
+                                      </button>
+                                   )}
+                                </div>
+                             </td>
+
+                             {/* Audio Column */}
+                             <td className="p-4 align-top">
+                                <div className="flex flex-col gap-2">
+                                   {generatingMedia[`${slide.id}-audio`] ? (
+                                      <div className="flex items-center gap-2 text-purple-500 p-2 bg-purple-50 rounded">
+                                         <RefreshCw className="w-3 h-3 animate-spin" />
+                                         <span className="text-[10px]">生成音频...</span>
+                                      </div>
+                                   ) : slide.audio ? (
+                                      <div className="p-2 bg-slate-50 border border-slate-200 rounded flex flex-col gap-2">
+                                         <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-1 text-slate-600">
+                                               <Music className="w-3 h-3" />
+                                               <span className="text-[10px] font-mono">AUDIO.mp3</span>
+                                            </div>
+                                            <button onClick={() => handleRegenerateMedia(slide.id, 'audio')} className="text-slate-400 hover:text-purple-500">
+                                               <RefreshCw className="w-3 h-3" />
+                                            </button>
+                                         </div>
+                                         <audio controls src={slide.audio} className="w-full h-6 text-[10px]" />
+                                      </div>
+                                   ) : (
+                                      <button 
+                                        onClick={() => handleRegenerateMedia(slide.id, 'audio')}
+                                        className="w-full py-2 border border-dashed border-slate-300 rounded text-slate-400 text-[10px] hover:border-purple-400 hover:text-purple-500 flex items-center justify-center gap-1"
+                                      >
+                                         <FileAudio className="w-3 h-3" /> 生成音频
+                                      </button>
+                                   )}
+                                </div>
+                             </td>
+
+                             {/* Video Column */}
+                             <td className="p-4 align-top">
+                                <div className="flex flex-col gap-2">
+                                   {generatingMedia[`${slide.id}-video`] ? (
+                                      <div className="flex items-center gap-2 text-pink-500 p-2 bg-pink-50 rounded">
+                                         <RefreshCw className="w-3 h-3 animate-spin" />
+                                         <span className="text-[10px]">生成视频...</span>
+                                      </div>
+                                   ) : slide.video ? (
+                                      <div className="space-y-1">
+                                         <div className="relative group/video w-full aspect-video bg-black rounded overflow-hidden">
+                                            <video src={slide.video} className="w-full h-full object-cover" controls />
+                                         </div>
+                                         <div className="flex justify-end">
+                                            <button onClick={() => handleRegenerateMedia(slide.id, 'video')} className="text-[10px] text-slate-400 hover:text-pink-500 flex items-center gap-1">
+                                               <RefreshCw className="w-3 h-3" /> 重新生成
+                                            </button>
+                                         </div>
+                                      </div>
+                                   ) : (
+                                      <button 
+                                        onClick={() => handleRegenerateMedia(slide.id, 'video')}
+                                        className="w-full py-2 border border-dashed border-slate-300 rounded text-slate-400 text-[10px] hover:border-pink-400 hover:text-pink-500 flex items-center justify-center gap-1"
+                                      >
+                                         <Film className="w-3 h-3" /> 生成视频
+                                      </button>
+                                   )}
+                                </div>
+                             </td>
+
+                             {/* Materials */}
+                             <td className="p-4 align-top">
+                                <textarea 
+                                   value={slide.materials}
+                                   onChange={(e) => updateSlideField(slide.id, 'materials', e.target.value)}
+                                   className="w-full bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 text-xs text-amber-600 resize-none transition-colors"
+                                   rows={3}
+                                   placeholder="所需物料..."
+                                />
+                                {slide.worksheets && slide.worksheets !== '无' && (
+                                  <div className="mt-2 flex items-center gap-1 text-[10px] text-slate-400 bg-slate-100 px-2 py-1 rounded w-fit border border-slate-200">
+                                    <FileText className="w-3 h-3" /> {slide.worksheets}
+                                  </div>
+                                )}
+                             </td>
+
+                             <td className="p-4 align-top text-center">
+                                <button 
+                                  onClick={() => handleDeleteRow(slide.id)}
+                                  className="p-2 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded transition-colors"
+                                  title="删除此行"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                             </td>
+                           </tr>
+                         ))
+                       ) : (
+                         <tr>
+                           <td colSpan="9" className="p-8 text-center text-slate-400 text-sm">
+                             此阶段暂无教学环节，请点击下方按钮添加。
+                           </td>
+                         </tr>
+                       )}
+                     </tbody>
+                   </table>
+                 </div>
+                 
+                 <div className="p-3 border-t border-slate-100 bg-slate-50">
+                    <button 
+                      onClick={() => handleAddRow(phase.id)}
+                      className="w-full py-2 border border-dashed border-slate-300 rounded-md text-slate-400 text-xs font-bold hover:border-blue-400 hover:text-blue-500 hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                    >
+                       <Plus className="w-3 h-3" /> 添加 {phase.label.split(' ')[0]} 环节
+                    </button>
+                 </div>
+               </div>
+             );
+           })}
+           
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Simple Icon Helper for Phase Headers
+const BookmarkIcon = ({ phase }) => {
+  let colorClass = "text-slate-400";
+  if (phase === 'Engage') colorClass = "text-purple-500";
+  if (phase === 'Empower') colorClass = "text-blue-500";
+  if (phase === 'Execute') colorClass = "text-green-500";
+  if (phase === 'Elevate') colorClass = "text-yellow-500";
+  
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className={colorClass} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/>
+    </svg>
+  );
+};
+
+// --- Main App Component ---
+
+export default function App() {
+  const [currentView, setCurrentView] = useState('canvas'); // 'canvas' or 'table'
+
+  return (
+    <div className="h-screen flex flex-col font-sans bg-slate-50">
+      {/* Universal Header */}
+      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30 shrink-0">
+        <div className="flex items-center gap-3">
+           <div className="bg-blue-600 p-1.5 rounded text-white shadow-sm">
+             <Sparkles className="w-4 h-4" />
+           </div>
+           <div className="flex flex-col">
+              <h1 className="font-bold text-sm text-slate-800">CourseGen AI</h1>
+              <span className="text-[10px] text-slate-500">Interactive Course Creator</span>
+           </div>
+        </div>
+        
+        {/* View Switcher */}
+        <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+           <button 
+             onClick={() => setCurrentView('canvas')}
+             className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-2 transition-all ${currentView === 'canvas' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+           >
+              <Layout className="w-3.5 h-3.5" /> 画布视图
+           </button>
+           <button 
+             onClick={() => setCurrentView('table')}
+             className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-2 transition-all ${currentView === 'table' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+           >
+              <TableIcon className="w-3.5 h-3.5" /> 表格视图
+           </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded text-xs font-medium hover:bg-blue-100 flex items-center gap-1 border border-blue-100">
+             <Download className="w-3 h-3" /> 导出课件包
+          </button>
+        </div>
+      </header>
+
+      {/* View Content */}
+      <div className="flex-1 flex overflow-hidden relative">
+         {currentView === 'canvas' ? <CanvasView /> : <TableView />}
+      </div>
     </div>
   );
 }
