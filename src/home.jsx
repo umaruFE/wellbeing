@@ -1,738 +1,1040 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
-  Sparkles, 
   BookOpen, 
   Clock, 
-  GraduationCap, 
-  Layout, 
   Image as ImageIcon, 
   Type, 
   RefreshCw, 
-  Download, 
+  Video, 
+  Music, 
+  FileText, 
+  Box, 
+  ChevronDown, 
   ChevronRight, 
-  Play,
-  CheckCircle2,
+  ChevronLeft,
+  Plus, 
+  Trash2, 
+  Save, 
+  Play, 
+  Move,
   Wand2,
-  Settings2,
-  BrainCircuit,
-  Lightbulb,
-  User,
-  FileText,
-  Tags,
-  Baby,
-  Library,
-  List,
-  MonitorPlay,
-  Palette
+  Maximize2,
+  Minimize2,
+  LayoutTemplate,
+  X,
+  Upload,
+  Layers,       
+  ArrowUp,      
+  ArrowDown,    
+  ChevronsUp,   
+  ChevronsDown, 
+  Sliders,
+  RotateCw,
+  Scaling,
+  Download,     // Icon for Export
+  MonitorPlay   // Icon for Presentation
 } from 'lucide-react';
 
-// --- Data Constants ---
-
-// Age Group to Course Unit Mapping
-const CURRICULUM_DATA = {
-  '3-4岁 (小班/Nursery)': [
-    'Theme: My Family (我的家庭)', 
-    'Theme: Colors & Shapes (颜色与形状)', 
-    'Theme: My Body (我的身体)', 
-    'Theme: Fruits (水果)', 
-    'Theme: Toys (玩具)'
-  ],
-  '4-5岁 (中班/K1)': [
-    'Theme: Farm Animals (农场动物)', 
-    'Theme: My Feelings (我的情绪)', 
-    'Theme: Weather (天气)', 
-    'Theme: Clothes (衣服)', 
-    'Theme: Food & Drink (饮食)'
-  ],
-  '5-6岁 (大班/K2)': [
-    'Theme: Transportation (交通工具)', 
-    'Theme: Community Helpers (社区职业)', 
-    'Theme: Solar System (太阳系)', 
-    'Theme: Insects (昆虫)', 
-    'Theme: Seasons (四季)'
-  ],
-  '6-7岁 (一年级/G1)': [
-    'Unit 1: Hello! (问候)',
-    'Unit 2: School Things (文具)',
-    'Unit 3: Animals (动物)',
-    'Unit 4: Numbers 1-10 (数字)',
-    'Unit 5: My Face (五官)'
-  ],
-  '7-8岁 (二年级/G2)': [
-    'Unit 1: My Day (我的日常)',
-    'Unit 2: The Zoo (动物园)',
-    'Unit 3: My Room (我的房间)',
-    'Unit 4: Family Activities (家庭活动)',
-    'Unit 5: Time (时间)'
-  ],
-  '8-9岁 (三年级/G3)': [
-    'Unit 3: Animals (神奇的动物)',
-    'Unit 1: Welcome Back (欢迎回来)',
-    'Unit 2: My Schoolbag (我的书包)',
-    'Unit 4: We Love Animals (我们爱动物)',
-    'Unit 5: Food and Drink (饮食)'
-  ],
-  '9-10岁 (四年级/G4)': [
-    'Unit 1: My Classroom (我的教室)',
-    'Unit 2: My Friends (我的朋友)',
-    'Unit 3: Weather (天气)',
-    'Unit 4: Shopping (购物)',
-    'Unit 5: Hobbies (爱好)'
-  ],
-  '10-12岁 (高年级/Upper Primary)': [
-    'Unit 1: Future Plans (未来计划)',
-    'Unit 2: Past Experiences (过去经历)',
-    'Unit 3: Holidays (假期)',
-    'Unit 4: Environment (环境保护)',
-    'Unit 5: Technology (科技)'
-  ]
-};
-
-const MOCK_GENERATED_SLIDES = [
-  {
-    id: 1,
-    phase: "Engage (引入)",
-    title: "深空信号接收",
-    layout: "immersive",
-    thumbnail: "https://placehold.co/150x100/1a1a2e/FFF?text=Radar",
-    elements: [
+// --- Initial Data Loaded from Document ---
+const INITIAL_COURSE_DATA = {
+  engage: {
+    title: 'Engage (引入)',
+    color: 'bg-purple-100 text-purple-700 border-purple-200',
+    steps: [
       {
-        id: 'bg-1',
-        type: 'image',
-        label: '环境背景',
-        prompt: '浩瀚宇宙星空，远处有旋转星云，深邃神秘，高分辨率 3D 渲染',
-        content: 'https://images.unsplash.com/photo-1506318137071-a8bcbf67ccca?q=80&w=1000&auto=format&fit=crop',
-        status: 'ready',
-        rationale: '情境认知理论 (Situated Cognition)：通过构建高保真的“宇宙”宏观场景，快速切断学生与现实环境（教室）的联系，建立“星际救援”的沉浸式心理场。'
+        id: 'e1-1',
+        time: '0-2分钟',
+        title: '1. 氛围营造，引出神秘任务',
+        objective: '快速吸引学生注意力，激发好奇心；建立“特工”角色身份。',
+        activity: '教师活动：教室灯光调暗，播放神秘背景音乐。假装接收信号。',
+        script: '“Shhh... Everyone, quiet, please. I’m receiving a strange signal...”',
+        pptContent: '无 (依靠光影、音乐氛围)',
+        worksheets: '无',
+        materials: '无',
+        assets: [
+          { id: 'a1', type: 'audio', title: 'Mystery Background Music', url: 'https://placehold.co/audio.mp3', x: 50, y: 50, width: 300, height: 60, rotation: 0, prompt: 'Suspenseful cinematic background music' }
+        ]
       },
       {
-        id: 'img-1',
-        type: 'image',
-        label: '视觉焦点',
-        prompt: '高科技雷达屏幕，深色界面，中间有一个急促闪烁的红色光点，科幻 UI 风格',
-        content: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop',
-        status: 'ready',
-        rationale: '视觉显著性 (Visual Salience)：该年龄段儿童的注意力容易分散，利用“深色背景+高频闪烁红点”形成强烈的视觉反差，强制锁定视觉注意力。'
+        id: 'e1-2',
+        time: '2-5分钟',
+        title: '2. 发布神秘任务',
+        objective: '清晰理解任务规则；发布具有挑战性的行动指令。',
+        activity: '教师展示找到的线索卡片(Eye, No.3)，发布搜寻任务。',
+        script: '“Class, I have a top-secret mission for you... Find all the 14 hidden clues!”',
+        pptContent: 'Top Secret Mission! FIND all the 14 hidden clues!',
+        worksheets: '无',
+        materials: '14张身体部位卡片',
+        assets: [
+          { id: 'a2', type: 'image', title: 'Magnifying Glass Icon', url: 'https://placehold.co/400x300/1a1a2e/FFF?text=Mission+Top+Secret', x: 100, y: 80, width: 400, height: 300, rotation: -5, prompt: 'Secret agent magnifying glass finding clues', referenceImage: null }
+        ]
       },
       {
-        id: 'script-1',
-        type: 'script',
-        label: '教师指令',
-        content: 'Rescue cadets, quiet! Look at the main screen! Our deep-space radar has detected something!',
-        status: 'ready',
-        rationale: '角色扮演法 (Role-Play)：教师使用“指挥官”而非“老师”的身份指令，利用权威型角色建立游戏契约，降低学生对英语学习的焦虑感 (Affective Filter)。'
+        id: 'e1-3',
+        time: '5-12分钟',
+        title: '3. 学生搜寻与收集线索',
+        objective: '在真实空间活动，感知身体部位词汇。',
+        activity: '学生搜寻卡片，教师引导。',
+        script: '“Is there something under the table? Check near the door!”',
+        pptContent: 'Let’s put all the clues together!',
+        worksheets: '无',
+        materials: '无',
+        assets: [
+          { id: 'a3', type: 'image', title: 'Puzzle Background', url: 'https://placehold.co/400x300/EEE/333?text=Gathering+Clues', x: 200, y: 100, width: 350, height: 250, rotation: 10, prompt: 'Kids putting puzzle pieces together', referenceImage: null }
+        ]
+      },
+      {
+        id: 'e1-4',
+        time: '12-15分钟',
+        title: '4. 拼合线索，揭示全貌',
+        objective: '集体协作拼图，引出Monster主题。',
+        activity: '学生上台贴卡片，拼出怪兽轮廓。',
+        script: '“Look! It’s a... MONSTER! A funny, funky monster!”',
+        pptContent: 'Mission: Funky Monster Rescue Adventure',
+        worksheets: '无',
+        materials: '白板，卡片',
+        assets: [
+          { id: 'a4', type: 'image', title: 'Funky Monster Reveal', url: 'https://placehold.co/600x400/FF5733/FFF?text=Funky+Monster', x: 50, y: 50, width: 500, height: 350, rotation: 0, prompt: 'Cute colorful monster jumping out', referenceImage: null }
+        ]
+      },
+      {
+        id: 'e1-5',
+        time: '16-18分钟',
+        title: '6. 播放求救视频',
+        objective: '强力引入故事背景，激发同情心。',
+        activity: '观看视频，教师表现同情。',
+        script: '“Oh no! The Funky Monsters are in trouble! We must save them!”',
+        pptContent: 'Video: SOS from Planet Monster',
+        worksheets: '无',
+        materials: '无',
+        assets: [
+          { id: 'a5', type: 'video', title: 'SOS Video', url: 'https://placehold.co/video-placeholder', x: 80, y: 80, width: 400, height: 240, rotation: 0, prompt: 'Cute monster sending SOS signal', referenceImage: null }
+        ]
       }
     ]
   },
-  {
-    id: 2,
-    phase: "Empower (赋能)",
-    title: "情感连接与解码",
-    layout: "video-focus",
-    thumbnail: "https://placehold.co/150x100/333/FFF?text=Monster",
-    elements: [
+  empower: {
+    title: 'Empower (赋能)',
+    color: 'bg-blue-100 text-blue-700 border-blue-200',
+    steps: [
       {
-        id: 'bg-2',
-        type: 'image',
-        label: '背景氛围',
-        prompt: '模糊的数码干扰背景，带有解码中的进度条，赛博朋克风格',
-        content: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?q=80&w=1000&auto=format&fit=crop',
-        status: 'ready',
-        rationale: '蔡格尼克效应 (Zeigarnik Effect)：利用“解码中”和“模糊画面”制造未完成感，激发儿童天生的好奇心和探索欲，为下一个清晰画面的出现蓄势。'
+        id: 'em-1',
+        time: '20-22分钟',
+        title: '1. 明确 Mission 1',
+        objective: '建立学习框架，明确核心目标。',
+        activity: '宣布任务：Find Your Monster Buddy。',
+        script: '“Mission 1: Find Your Monster Buddy. Let’s open the Guidebook!”',
+        pptContent: 'Mission 1: Find Your Monster Buddy',
+        worksheets: '无',
+        materials: '无',
+        assets: [
+          { id: 'a6', type: 'image', title: 'Mission 1 Badge', url: 'https://placehold.co/300x300/3498db/FFF?text=Mission+1', x: 150, y: 100, width: 200, height: 200, rotation: 0, prompt: 'Golden badge with number 1', referenceImage: null }
+        ]
       },
       {
-        id: 'img-2',
-        type: 'image',
-        label: '角色特写',
-        prompt: '皮克斯风格，一只可爱的毛茸茸怪兽，颜色灰暗，表情惊恐，双手合十恳求，大眼睛含泪',
-        content: 'https://images.unsplash.com/photo-1555597673-b21d5c935865?q=80&w=1000&auto=format&fit=crop',
-        status: 'ready',
-        rationale: '镜像神经元 (Mirror Neurons)：使用具有“婴儿图式”特征（大眼睛、圆脸）的受害者形象，能瞬间激活儿童大脑中的镜像神经元系统，诱发强烈的同情心和救援动机。'
+        id: 'em-2',
+        time: '25-55分钟',
+        title: '3. 共读与探索图鉴',
+        objective: '系统学习身体部位、数量、形容词。',
+        activity: '逐页引导阅读，完成填字、连线、绘画任务。',
+        script: '“Look at Zuzu. How many eyes? Yes, two eyes.”',
+        pptContent: '无 (依托纸质材料)',
+        worksheets: 'Funky Monster Guidebook',
+        materials: '彩笔',
+        assets: []
       },
       {
-        id: 'txt-2',
-        type: 'text',
-        label: '核心句型',
-        content: 'Help us! Our color is gone!',
-        style: 'subtitle',
-        status: 'ready',
-        rationale: '可理解性输入 (i+1)：将抽象的“求救”概念与具体的“颜色消失”视觉现象绑定，确保语言输入略高于学生现有水平但可被语境理解。'
+        id: 'em-3',
+        time: '57-62分钟',
+        title: '5. 小组侦探探索',
+        objective: '多感官探究，深度强化语言关联。',
+        activity: '用“玻璃杯放大镜”观察黑水中的怪兽局部并记录。',
+        script: '“You have 5 minutes. Find at least 3 different body parts.”',
+        pptContent: 'Investigation Time! 5:00 Timer',
+        worksheets: 'Monster Detective Report',
+        materials: '托盘、黑水、玻璃杯',
+        assets: [
+          { id: 'a7', type: 'image', title: 'Timer Interface', url: 'https://placehold.co/400x200/000/F00?text=05:00', x: 200, y: 20, width: 300, height: 150, rotation: 0, prompt: 'Digital countdown timer 5 minutes', referenceImage: null }
+        ]
+      }
+    ]
+  },
+  execute: {
+    title: 'Execute (实践)',
+    color: 'bg-green-100 text-green-700 border-green-200',
+    steps: [
+      {
+        id: 'ex-1',
+        time: '86-101分钟',
+        title: '4. 绘画共创 (Magic Dice)',
+        objective: '通过随机性激发创造力，协作绘画。',
+        activity: '轮流掷骰子(部位/数量/特征)，根据指令绘画。',
+        script: '“Roll dice A! What body part? Roll dice B! How many?”',
+        pptContent: 'Let’s Create! Dice Instructions',
+        worksheets: '海报纸',
+        materials: 'A/B/C骰子, 彩笔',
+        assets: [
+          { id: 'a8', type: 'image', title: 'Magic Dice Visual', url: 'https://placehold.co/400x300/2ecc71/FFF?text=Dice+Instructions', x: 100, y: 50, width: 350, height: 260, rotation: 15, prompt: 'Three magical glowing dice', referenceImage: null }
+        ]
+      },
+      {
+        id: 'ex-2',
+        time: '101-110分钟',
+        title: '5. 添加文字介绍',
+        objective: '图文结合，完成个性化怪兽档案。',
+        activity: '参考词汇库，书写怪兽介绍。',
+        script: '“Write your monster’s profile on the poster. You have 10 minutes.”',
+        pptContent: 'Add Your Monster’s Profile! Word Bank',
+        worksheets: '无',
+        materials: '无',
+        assets: [
+          { id: 'a9', type: 'text', title: 'Word Bank', content: 'Big, Small, Long, Short...', x: 300, y: 100, width: 400, height: 100, rotation: 0, prompt: '' }
+        ]
+      }
+    ]
+  },
+  elevate: {
+    title: 'Elevate (升华)',
+    color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    steps: [
+      {
+        id: 'el-1',
+        time: '110-120分钟',
+        title: '1. 奇趣兽发布会',
+        objective: '展示成果，提升成就感和自信心。',
+        activity: '小组轮流上台展示海报，教师点评。',
+        script: '“Welcome to the Grand Monster Reveal! Group 1, please!”',
+        pptContent: 'Let’s See Our Monsters! The Grand Reveal!',
+        worksheets: '无',
+        materials: '完成的海报',
+        assets: [
+          { id: 'a10', type: 'image', title: 'Stage Curtains', url: 'https://placehold.co/800x600/f1c40f/000?text=Grand+Reveal+Stage', x: 0, y: 0, width: 960, height: 540, rotation: 0, prompt: 'Grand stage with red curtains', referenceImage: null }
+        ]
       }
     ]
   }
-];
+};
 
-// --- Main Component ---
-export default function AICoursewareTool() {
-  const [step, setStep] = useState('input'); // input, generating, editor
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState('');
-  
-  // Mobile Tab State (for responsive layout)
-  const [mobileTab, setMobileTab] = useState('preview'); // 'outline', 'preview', 'assets'
+// --- Helper Functions (Moved to global scope) ---
 
-  // Input State
-  const [config, setConfig] = useState({
-    grade: '小学三年级', // Keep for display, but logic is mainly age-driven now
-    age: '8-9岁 (三年级/G3)',
-    unit: 'Unit 3: Animals (神奇的动物)',
-    duration: '40分钟',
-    theme: '星际救援冒险',
-    sourceText: '',
-    keywords: '',
-    isCustomUnit: false, // To toggle custom input
-    customUnit: ''
-  });
-
-  // Editor State
-  const [slides, setSlides] = useState([]);
-  const [selectedSlideId, setSelectedSlideId] = useState(1);
-  const [regeneratingId, setRegeneratingId] = useState(null);
-
-  // Helper: Get units based on current age
-  const availableUnits = CURRICULUM_DATA[config.age] || [];
-
-  // --- Handlers ---
-
-  const handleAgeChange = (e) => {
-    const newAge = e.target.value;
-    const newUnits = CURRICULUM_DATA[newAge] || [];
-    
-    // Auto-select the first unit when age changes
-    setConfig({
-      ...config,
-      age: newAge,
-      unit: newUnits.length > 0 ? newUnits[0] : '',
-      isCustomUnit: false,
-      customUnit: ''
-    });
-  };
-
-  const handleUnitChange = (e) => {
-    const value = e.target.value;
-    if (value === 'custom_input_option') {
-      setConfig({ ...config, isCustomUnit: true, unit: '' });
-    } else {
-      setConfig({ ...config, isCustomUnit: false, unit: value });
-    }
-  };
-
-  // Simulate Generation Process
-  const handleGenerate = () => {
-    setStep('generating');
-    const finalUnit = config.isCustomUnit ? config.customUnit : config.unit;
-    
-    const stages = [
-      { p: 10, t: `正在加载 ${config.age} 认知心理学模型...` },
-      { p: 30, t: `正在分析 "${finalUnit}" 的核心知识点图谱...` },
-      { p: 50, t: 'AI 引擎正在设计“最近发展区(ZPD)”教学支架...' },
-      { p: 70, t: '正在生成多模态(Visual-Auditory)教学素材...' },
-      { p: 90, t: '正在进行教育学原理一致性校验...' },
-      { p: 100, t: '课件组装完成！' }
-    ];
-
-    let currentStage = 0;
-    const interval = setInterval(() => {
-      if (currentStage >= stages.length) {
-        clearInterval(interval);
-        setSlides(MOCK_GENERATED_SLIDES);
-        setStep('editor');
-        return;
-      }
-      setLoadingProgress(stages[currentStage].p);
-      setLoadingText(stages[currentStage].t);
-      currentStage++;
-    }, 800);
-  };
-
-  const handleRegenerateAsset = (slideId, elementId) => {
-    setRegeneratingId(elementId);
-    // Simulate API call delay
-    setTimeout(() => {
-      setSlides(prevSlides => {
-        return prevSlides.map(slide => {
-          if (slide.id !== slideId) return slide;
-          return {
-            ...slide,
-            elements: slide.elements.map(el => {
-              if (el.id !== elementId) return el;
-              const newUrl = el.type === 'image' 
-                ? `https://placehold.co/600x400/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=New+AI+Gen` 
-                : el.content + " (Rewrite)";
-              return { ...el, content: newUrl };
-            })
-          };
-        });
-      });
-      setRegeneratingId(null);
-    }, 1500);
-  };
-
-  const currentSlide = slides.find(s => s.id === selectedSlideId);
-
-  // --- Render Functions ---
-
-  if (step === 'input') {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-800">
-        <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 md:p-8 text-white relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
-            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-              <div>
-                 <h1 className="text-2xl md:text-3xl font-bold mb-2 flex items-center gap-3">
-                   <Sparkles className="w-6 h-6 md:w-8 md:h-8 text-yellow-300" />
-                   AI 教育课件大师
-                 </h1>
-                 <p className="text-blue-100 opacity-90 text-sm md:text-base">基于年龄发展阶段的智能课程设计引擎</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-6 md:p-8 space-y-6">
-            {/* Basic Info Row - Responsive Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Age Selection (Driver) */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <User className="w-4 h-4 text-purple-500" /> 学生年龄 / Age
-                </label>
-                <div className="relative">
-                  <select 
-                    value={config.age}
-                    onChange={handleAgeChange}
-                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
-                  >
-                    {Object.keys(CURRICULUM_DATA).map(age => (
-                      <option key={age} value={age}>{age}</option>
-                    ))}
-                  </select>
-                  <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
-                    <ChevronRight className="w-4 h-4 rotate-90" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Unit Selection (Dependent) */}
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Library className="w-4 h-4 text-green-500" /> 
-                  {parseInt(config.age) < 6 ? "核心主题 / Theme" : "教材单元 / Unit"}
-                </label>
-                
-                {!config.isCustomUnit ? (
-                  <div className="relative">
-                    <select 
-                      value={config.unit}
-                      onChange={handleUnitChange}
-                      className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
-                    >
-                      {availableUnits.map(unit => (
-                        <option key={unit} value={unit}>{unit}</option>
-                      ))}
-                      <option disabled>──────────</option>
-                      <option value="custom_input_option">✎ 手动输入其他...</option>
-                    </select>
-                    <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
-                      <ChevronRight className="w-4 h-4 rotate-90" />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex gap-2 animate-in fade-in slide-in-from-left-2">
-                    <input 
-                      type="text"
-                      value={config.customUnit}
-                      onChange={(e) => setConfig({...config, customUnit: e.target.value})}
-                      placeholder="请输入自定义单元名称..."
-                      className="flex-1 p-3 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
-                      autoFocus
-                    />
-                    <button 
-                      onClick={() => setConfig({...config, isCustomUnit: false, unit: availableUnits[0]})}
-                      className="px-3 text-slate-400 hover:text-slate-600 text-sm whitespace-nowrap"
-                      title="返回选择列表"
-                    >
-                      取消
-                    </button>
-                  </div>
-                )}
-                <p className="text-xs text-slate-400 pl-1">
-                  * 已根据 {config.age.split(' ')[0]} 自动匹配推荐教材
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-orange-500" /> 上课时长 / Duration
-                </label>
-                <div className="relative">
-                  <select 
-                    value={config.duration}
-                    onChange={(e) => setConfig({...config, duration: e.target.value})}
-                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-sm md:text-base"
-                  >
-                    <option>15分钟 (微课/学前)</option>
-                    <option>30分钟 (标准课时)</option>
-                    <option>40分钟 (小学常用)</option>
-                    <option>45分钟 (公开课)</option>
-                    <option>60分钟 (综合实践)</option>
-                  </select>
-                  <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
-                    <ChevronRight className="w-4 h-4 rotate-90" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Theme Input */}
-              <div className="space-y-2">
-                 <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                    <Wand2 className="w-4 h-4 text-pink-500" /> 
-                    剧情主题 / Story Theme
-                  </label>
-                  <input 
-                    type="text" 
-                    value={config.theme}
-                    onChange={(e) => setConfig({...config, theme: e.target.value})}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
-                    placeholder="例如：星际救援、海底探险、魔法森林"
-                  />
-              </div>
-            </div>
-
-            {/* Content Input */}
-            <div className="space-y-2">
-               <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Tags className="w-4 h-4 text-indigo-500" /> 
-                  重点关键词 / Key Words (可选)
-                </label>
-                <input 
-                  type="text" 
-                  value={config.keywords}
-                  onChange={(e) => setConfig({...config, keywords: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
-                  placeholder="例如：Red, Blue, Yellow (若不填则由AI自动从单元提取)"
-                />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-slate-500" /> 
-                补充教学目标 / Additional Goals
-              </label>
-              <textarea 
-                value={config.sourceText}
-                onChange={(e) => setConfig({...config, sourceText: e.target.value})}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none h-20 resize-none text-sm md:text-base"
-                placeholder="在此输入特殊的教学要求，例如：'重点训练学生的口语输出' 或 '包含一个TPR身体反应游戏'。"
-              />
-            </div>
-            
-            <div className="pt-4 border-t border-slate-100">
-              <button 
-                onClick={handleGenerate}
-                className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg transform transition active:scale-[0.98] flex items-center justify-center gap-2"
-              >
-                <BrainCircuit className="w-5 h-5" /> 生成自适应互动课件
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+// Get icon component based on asset type
+const getAssetIcon = (type) => {
+  switch(type) {
+    case 'image': return <ImageIcon className="w-4 h-4" />;
+    case 'video': return <Video className="w-4 h-4" />;
+    case 'audio': return <Music className="w-4 h-4" />;
+    case 'text': return <Type className="w-4 h-4" />;
+    default: return <Box className="w-4 h-4" />;
   }
+};
 
-  if (step === 'generating') {
+// --- Reusable Component: Slide Renderer ---
+// Shared logic for rendering the slide content in both Editor and Preview
+const SlideRenderer = ({ assets, isEditable, onMouseDown, selectedAssetId }) => {
+  
+  if (assets.length === 0 && isEditable) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center text-white p-8">
-        <div className="w-full max-w-md space-y-8 text-center">
-          <div className="relative w-32 h-32 mx-auto">
-            <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>
-            <div className="absolute inset-2 border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin"></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-               <span className="text-2xl font-bold">{loadingProgress}%</span>
-            </div>
-          </div>
-          
-          <div className="space-y-3">
-            <h2 className="text-2xl font-bold animate-pulse text-blue-200">AI 正在深度思考...</h2>
-            <p className="text-slate-400 text-lg flex items-center justify-center gap-2">
-              <BrainCircuit className="w-4 h-4" /> {loadingText}
-            </p>
-          </div>
-
-          <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 ease-out"
-              style={{ width: `${loadingProgress}%` }}
-            ></div>
-          </div>
-        </div>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none">
+         <LayoutTemplate className="w-16 h-16 mb-4" />
+         <p className="text-sm font-medium">画布为空，请使用上方工具栏添加素材</p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-100 text-slate-800 font-sans overflow-hidden">
-      {/* Header */}
-      <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 lg:px-6 z-10 shadow-sm shrink-0">
-        <div className="flex items-center gap-2 lg:gap-3">
-          <div className="bg-blue-600 p-1.5 lg:p-2 rounded-lg text-white shadow-md">
-            <Sparkles className="w-4 h-4 lg:w-5 lg:h-5" />
-          </div>
-          <div className="overflow-hidden">
-            <h1 className="font-bold text-base lg:text-lg text-slate-800 tracking-tight whitespace-nowrap">CourseGen AI</h1>
-            <p className="hidden md:flex text-xs text-slate-500 items-center gap-2">
-              <span className="bg-slate-100 px-1 rounded">{config.age.split(' ')[0]}</span>
-              <span className="bg-slate-100 px-1 rounded truncate max-w-[200px]">
-                {config.isCustomUnit ? config.customUnit : config.unit}
-              </span>
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 font-medium text-xs lg:text-sm transition-colors whitespace-nowrap">
-            <Play className="w-3 h-3 lg:w-4 lg:h-4" /> <span className="hidden sm:inline">预览模式</span>
-          </button>
-          <button className="flex items-center gap-2 px-3 py-1.5 lg:px-4 lg:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-xs lg:text-sm shadow-md transition-colors whitespace-nowrap">
-            <Download className="w-3 h-3 lg:w-4 lg:h-4" /> <span className="hidden sm:inline">导出</span>
-          </button>
-        </div>
-      </header>
+    <>
+      {assets.map(asset => (
+        <div
+          key={asset.id}
+          onMouseDown={(e) => isEditable ? onMouseDown(e, asset.id, 'dragging') : null}
+          style={{ 
+             left: asset.x, 
+             top: asset.y, 
+             width: asset.width || 300, 
+             height: asset.height || 200,
+             zIndex: assets.indexOf(asset),
+             transform: `rotate(${asset.rotation || 0}deg)`,
+             position: 'absolute'
+          }}
+          className={`${isEditable ? 'cursor-move select-none' : 'pointer-events-none'} group/asset 
+            ${selectedAssetId === asset.id && isEditable ? 'ring-2 ring-blue-500 z-50 shadow-2xl' : ''}
+            ${isEditable && selectedAssetId !== asset.id ? 'hover:ring-1 hover:ring-blue-300' : ''}
+            transition-shadow duration-75`}
+        >
+           {/* Editor Controls (Handles) - Only in Editable Mode */}
+           {isEditable && selectedAssetId === asset.id && (
+             <>
+               {/* Resize Handles */}
+               <div onMouseDown={(e) => onMouseDown(e, asset.id, 'resizing', 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-nw-resize z-50"></div>
+               <div onMouseDown={(e) => onMouseDown(e, asset.id, 'resizing', 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-ne-resize z-50"></div>
+               <div onMouseDown={(e) => onMouseDown(e, asset.id, 'resizing', 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-sw-resize z-50"></div>
+               <div onMouseDown={(e) => onMouseDown(e, asset.id, 'resizing', 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-se-resize z-50"></div>
+               
+               {/* Rotation Handle */}
+               <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center cursor-grab active:cursor-grabbing z-50"
+                    onMouseDown={(e) => onMouseDown(e, asset.id, 'rotating')}>
+                  <div className="w-px h-4 bg-blue-500"></div>
+                  <div className="w-5 h-5 bg-white border border-blue-500 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
+                     <RotateCw className="w-3 h-3 text-blue-500" />
+                  </div>
+               </div>
+             </>
+           )}
 
-      {/* Main Content Area: Responsive Layout */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        
-        {/* LEFT: Outline Sidebar (Hidden on mobile unless active) */}
-        <aside className={`
-          w-full lg:w-64 bg-white lg:border-r border-slate-200 flex-col z-20 shrink-0
-          lg:flex absolute inset-0 lg:static
-          ${mobileTab === 'outline' ? 'flex' : 'hidden'}
-        `}>
-          <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between lg:justify-start">
-            <div>
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">教学流程大纲</h3>
-              <p className="text-sm font-semibold text-slate-700">基于 {config.age.split(' ')[0]} 专注力模型</p>
-            </div>
-            {/* Mobile Close Button (Optional if using tabs) */}
+           {/* Content */}
+           {asset.type === 'text' ? (
+              <div className="w-full h-full bg-white/80 backdrop-blur p-2 text-xl font-bold font-sans text-slate-800 whitespace-pre-wrap border border-dashed border-slate-300 rounded shadow-sm overflow-hidden flex items-center justify-center text-center">
+                 {asset.content || "请输入文本..."}
+              </div>
+           ) : (
+              <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
+                 <img 
+                   src={asset.url} 
+                   alt={asset.title} 
+                   className="w-full h-full object-cover block select-none pointer-events-none" 
+                 />
+                 {asset.type === 'video' && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
+                       <Play className="w-12 h-12 text-white opacity-80" />
+                    </div>
+                 )}
+                 {asset.type === 'audio' && (
+                    <div className="absolute bottom-0 left-0 right-0 h-full bg-slate-900/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
+                       <Music className="w-8 h-8 text-white/80" />
+                       <div className="text-white text-xs font-mono">Audio Track</div>
+                    </div>
+                 )}
+              </div>
+           )}
+        </div>
+      ))}
+    </>
+  );
+};
+
+export default function CourseEditor() {
+  const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
+  const [activePhase, setActivePhase] = useState('engage');
+  const [activeStepId, setActiveStepId] = useState('e1-1');
+  const [expandedPhases, setExpandedPhases] = useState(['engage', 'empower', 'execute', 'elevate']);
+  
+  // UI State
+  const [isLeftOpen, setIsLeftOpen] = useState(true);
+  const [isRightOpen, setIsRightOpen] = useState(true);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false); // Preview Modal State
+  const [isExporting, setIsExporting] = useState(false);     // Export Loading State
+  
+  // Selection State
+  const [selectedAssetId, setSelectedAssetId] = useState(null);
+
+  // Interaction State
+  const [interactionMode, setInteractionMode] = useState('idle');
+  const [interactionStart, setInteractionStart] = useState(null); 
+  const canvasRef = useRef(null);
+
+  // Derived State
+  const currentPhaseData = courseData[activePhase];
+  const currentStepIndex = currentPhaseData.steps.findIndex(s => s.id === activeStepId);
+  const currentStep = currentPhaseData.steps[currentStepIndex] || currentPhaseData.steps[0];
+  const selectedAsset = selectedAssetId ? currentStep.assets.find(a => a.id === selectedAssetId) : null;
+
+  // Flatten steps for sequential navigation in preview
+  const allSteps = Object.values(courseData).flatMap(phase => phase.steps.map(step => ({...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step))})));
+  const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
+
+  // --- Handlers ---
+
+  const togglePhase = (phaseKey) => {
+    if (expandedPhases.includes(phaseKey)) {
+      setExpandedPhases(expandedPhases.filter(p => p !== phaseKey));
+    } else {
+      setExpandedPhases([...expandedPhases, phaseKey]);
+    }
+  };
+
+  const handleStepClick = (phaseKey, stepId) => {
+    setActivePhase(phaseKey);
+    setActiveStepId(stepId);
+    setSelectedAssetId(null); 
+  };
+
+  const handleInputChange = (field, value) => {
+    const newCourseData = { ...courseData };
+    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    step[field] = value;
+    setCourseData(newCourseData);
+  };
+
+  const handleAssetChange = (assetId, field, value) => {
+    const newCourseData = { ...courseData };
+    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    const asset = step.assets.find(a => a.id === assetId);
+    if (asset) {
+      asset[field] = value;
+      setCourseData(newCourseData);
+    }
+  };
+
+  const handleReferenceUpload = (e, assetId) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const newCourseData = { ...courseData };
+        const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+        const asset = step.assets.find(a => a.id === assetId);
+        if (asset) {
+          asset.referenceImage = reader.result;
+          setCourseData(newCourseData);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleLayerChange = (assetId, action) => {
+    const newCourseData = { ...courseData };
+    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    const currentAssets = [...step.assets];
+    const index = currentAssets.findIndex(a => a.id === assetId);
+    
+    if (index === -1) return;
+
+    if (action === 'front') {
+        currentAssets.push(currentAssets.splice(index, 1)[0]);
+    } else if (action === 'back') {
+        currentAssets.unshift(currentAssets.splice(index, 1)[0]);
+    } else if (action === 'forward') {
+        if (index < currentAssets.length - 1) {
+            [currentAssets[index], currentAssets[index + 1]] = [currentAssets[index + 1], currentAssets[index]];
+        }
+    } else if (action === 'backward') {
+        if (index > 0) {
+            [currentAssets[index], currentAssets[index - 1]] = [currentAssets[index - 1], currentAssets[index]];
+        }
+    }
+
+    step.assets = currentAssets;
+    setCourseData(newCourseData);
+  };
+
+  const handleAddAsset = (type) => {
+    const newCourseData = { ...courseData };
+    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    
+    let w = 300, h = 200;
+    if (type === 'audio') { w = 300; h = 100; }
+    if (type === 'text') { w = 300; h = 100; }
+
+    const newAsset = {
+      id: Date.now().toString(),
+      type,
+      title: `New ${type}`,
+      url: type === 'text' ? '' : `https://placehold.co/${w}x${h}?text=New+${type}`,
+      content: type === 'text' ? '双击编辑文本' : '',
+      prompt: 'Describe what you want AI to generate...',
+      referenceImage: null,
+      x: 100, 
+      y: 100,
+      width: w,
+      height: h,
+      rotation: 0
+    };
+    step.assets.push(newAsset);
+    setCourseData(newCourseData);
+    setSelectedAssetId(newAsset.id); 
+    setIsRightOpen(true); 
+  };
+
+  const handleDeleteAsset = (assetId) => {
+    const newCourseData = { ...courseData };
+    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    step.assets = step.assets.filter(a => a.id !== assetId);
+    setCourseData(newCourseData);
+    if (selectedAssetId === assetId) {
+      setSelectedAssetId(null);
+    }
+  };
+
+  const handleRegenerateAsset = (assetId) => {
+    const btn = document.getElementById(`regen-btn-${assetId}`);
+    if(btn) btn.classList.add('animate-spin');
+    
+    setTimeout(() => {
+      const newCourseData = { ...courseData };
+      const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+      const asset = step.assets.find(a => a.id === assetId);
+      
+      const randomColor = Math.floor(Math.random()*16777215).toString(16);
+      if (asset.type === 'image' || asset.type === 'video') {
+         const text = asset.referenceImage ? 'AI+Ref+Gen' : 'AI+Gen';
+         const w = asset.width || 300;
+         const h = asset.height || 200;
+         asset.url = `https://placehold.co/${Math.round(w)}x${Math.round(h)}/${randomColor}/FFF?text=${text}+v${Math.floor(Math.random() * 10)}`;
+      }
+      
+      setCourseData(newCourseData);
+      if(btn) btn.classList.remove('animate-spin');
+    }, 1500);
+  };
+
+  // --- Export & Preview Logic ---
+  const handleExportPPT = () => {
+    setIsExporting(true);
+    setTimeout(() => {
+      setIsExporting(false);
+      alert("PPT 导出成功！文件已生成至下载文件夹。");
+    }, 2000);
+  };
+
+  const handleNavigatePreview = (direction) => {
+    const newIndex = direction === 'next' ? currentGlobalIndex + 1 : currentGlobalIndex - 1;
+    if (newIndex >= 0 && newIndex < allSteps.length) {
+      const targetStep = allSteps[newIndex];
+      // Keep phase sync
+      if (targetStep.phaseKey) setActivePhase(targetStep.phaseKey);
+      setActiveStepId(targetStep.id);
+    }
+  };
+
+  // --- Canvas Interaction Logic (Drag, Resize, Rotate) ---
+
+  const handleMouseDown = (e, assetId, mode = 'dragging', handleType = null) => {
+    e.stopPropagation(); 
+    if (!canvasRef.current) return;
+
+    setSelectedAssetId(assetId);
+    setIsRightOpen(true);
+    setInteractionMode(mode);
+
+    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
+    const asset = step.assets.find(a => a.id === assetId);
+    const rect = canvasRef.current.getBoundingClientRect();
+
+    setInteractionStart({
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: asset.x,
+      initialY: asset.y,
+      initialW: asset.width || 300,
+      initialH: asset.height || 200,
+      initialRotation: asset.rotation || 0,
+      handleType,
+      rect 
+    });
+  };
+
+  const handleMouseMove = (e) => {
+    if (interactionMode === 'idle' || !interactionStart) return;
+    
+    const newCourseData = { ...courseData };
+    const activeAsset = newCourseData[activePhase].steps
+      .find(s => s.id === activeStepId).assets
+      .find(a => a.id === selectedAssetId);
+
+    if (!activeAsset) return;
+
+    const deltaX = e.clientX - interactionStart.startX;
+    const deltaY = e.clientY - interactionStart.startY;
+
+    if (interactionMode === 'dragging') {
+        activeAsset.x = interactionStart.initialX + deltaX;
+        activeAsset.y = interactionStart.initialY + deltaY;
+    } 
+    else if (interactionMode === 'resizing') {
+        const { handleType, initialW, initialH, initialX, initialY } = interactionStart;
+        if (handleType === 'se') { 
+            activeAsset.width = Math.max(50, initialW + deltaX);
+            activeAsset.height = Math.max(50, initialH + deltaY);
+        } else if (handleType === 'sw') { 
+            activeAsset.width = Math.max(50, initialW - deltaX);
+            activeAsset.x = initialX + deltaX;
+            activeAsset.height = Math.max(50, initialH + deltaY);
+        } else if (handleType === 'ne') { 
+            activeAsset.width = Math.max(50, initialW + deltaX);
+            activeAsset.height = Math.max(50, initialH - deltaY);
+            activeAsset.y = initialY + deltaY;
+        } else if (handleType === 'nw') {
+            activeAsset.width = Math.max(50, initialW - deltaX);
+            activeAsset.x = initialX + deltaX;
+            activeAsset.height = Math.max(50, initialH - deltaY);
+            activeAsset.y = initialY + deltaY;
+        }
+    } 
+    else if (interactionMode === 'rotating') {
+        const rect = interactionStart.rect;
+        const centerX = rect.left + interactionStart.initialX + interactionStart.initialW / 2;
+        const centerY = rect.top + interactionStart.initialY + interactionStart.initialH / 2;
+        const angleRad = Math.atan2(e.clientY - centerY, e.clientX - centerX);
+        let angleDeg = (angleRad * 180 / Math.PI) + 90;
+        activeAsset.rotation = angleDeg;
+    }
+
+    setCourseData(newCourseData);
+  };
+
+  const handleMouseUp = () => {
+    setInteractionMode('idle');
+    setInteractionStart(null);
+  };
+
+  const handleCanvasClick = () => {
+    setSelectedAssetId(null); 
+  };
+
+
+  return (
+    <div className="flex h-screen w-full bg-slate-50 text-slate-800 font-sans overflow-hidden">
+      
+      {/* 1. LEFT SIDEBAR */}
+      <aside 
+        className={`${isLeftOpen ? 'w-64' : 'w-0'} bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 transition-all duration-300 relative`}
+      >
+        <div className={`p-4 border-b border-slate-100 bg-slate-50 ${!isLeftOpen && 'hidden'}`}>
+          <div className="flex items-center justify-between">
+            <h1 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-blue-600" /> 
+              课程编排
+            </h1>
+            <button onClick={() => setIsLeftOpen(false)} className="text-slate-400 hover:text-slate-600">
+               <ChevronLeft className="w-4 h-4" />
+            </button>
           </div>
-          <div className="flex-1 overflow-y-auto p-2 space-y-2 pb-20 lg:pb-2">
-            {slides.map((slide, index) => (
-              <button
-                key={slide.id}
-                onClick={() => {
-                  setSelectedSlideId(slide.id);
-                  // On mobile, switch to preview after selection if desired, or stay to select more
-                }}
-                className={`w-full text-left p-3 rounded-xl border transition-all duration-200 group ${
-                  selectedSlideId === slide.id 
-                    ? 'bg-blue-50 border-blue-200 ring-1 ring-blue-200 shadow-sm' 
-                    : 'bg-white border-transparent hover:bg-slate-50 hover:border-slate-200'
-                }`}
+          <p className="text-xs text-slate-500 mt-1 truncate">Unit 1: Funky Monster Rescue</p>
+        </div>
+
+        <div className={`flex-1 overflow-y-auto p-2 space-y-2 ${!isLeftOpen && 'hidden'}`}>
+          {Object.entries(courseData).map(([key, phase]) => (
+            <div key={key} className="rounded-lg overflow-hidden border border-slate-100 bg-white">
+              <button 
+                onClick={() => togglePhase(key)}
+                className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phase.color.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
               >
-                <div className="flex items-start gap-3">
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                    selectedSlideId === slide.id ? 'bg-blue-600 text-white' : 'bg-slate-200 text-slate-500'
-                  }`}>
-                    {index + 1}
-                  </div>
-                  <div>
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full mb-1 inline-block uppercase tracking-wide font-bold ${
-                      slide.phase.includes('Engage') ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
-                    }`}>
-                      {slide.phase}
-                    </span>
-                    <h4 className={`text-sm font-medium leading-tight ${selectedSlideId === slide.id ? 'text-blue-900' : 'text-slate-700'}`}>
-                      {slide.title}
-                    </h4>
-                  </div>
-                </div>
+                <span className="flex items-center gap-2">
+                   {expandedPhases.includes(key) ? <ChevronDown className="w-4 h-4"/> : <ChevronRight className="w-4 h-4"/>}
+                   {phase.title}
+                </span>
               </button>
-            ))}
-          </div>
-        </aside>
 
-        {/* CENTER: Canvas/Preview (Hidden on mobile if other tabs active) */}
-        <main className={`
-          flex-1 bg-slate-100 p-4 lg:p-8 flex-col items-center justify-center relative overflow-hidden
-          ${mobileTab === 'preview' ? 'flex' : 'hidden lg:flex'}
-        `}>
-          <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]"></div>
+              {expandedPhases.includes(key) && (
+                <div className="bg-slate-50 border-t border-slate-100">
+                  {phase.steps.map((step) => (
+                    <button
+                      key={step.id}
+                      onClick={() => handleStepClick(key, step.id)}
+                      className={`w-full text-left p-2 pl-8 text-xs border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-start gap-2 ${
+                        activeStepId === step.id 
+                          ? 'bg-blue-100 text-blue-800 font-semibold border-l-4 border-l-blue-600' 
+                          : 'text-slate-600'
+                      }`}
+                    >
+                      <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
+                      <span className="line-clamp-2">{step.title}</span>
+                    </button>
+                  ))}
+                  <button className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1">
+                    <Plus className="w-3 h-3" /> 新增环节
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {!isLeftOpen && (
+           <button 
+             onClick={() => setIsLeftOpen(true)}
+             className="absolute top-4 left-0 bg-white p-2 rounded-r-md border border-l-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50"
+             title="展开导航"
+           >
+              <ChevronRight className="w-4 h-4" />
+           </button>
+        )}
+      </aside>
+
+      {/* 2. MIDDLE SECTION: Canvas */}
+      <main 
+        className="flex-1 flex flex-col bg-slate-100 relative overflow-hidden transition-all duration-300"
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      >
+        <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-10">
+          <div className="flex items-center gap-4 min-w-0">
+             {!isLeftOpen && (
+                <div className="font-bold text-slate-700 flex items-center gap-2 mr-4">
+                   <BookOpen className="w-4 h-4" /> <span className="text-xs">U1</span>
+                </div>
+             )}
+             <span className="text-sm font-medium text-slate-500 whitespace-nowrap">当前预览:</span>
+             <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold whitespace-nowrap">
+               {currentStep.time}
+             </span>
+             <h2 className="text-sm font-bold text-slate-800 truncate" title={currentStep.title}>{currentStep.title}</h2>
+          </div>
+          <div className="flex gap-2">
+            <button 
+               onClick={() => setIsPreviewOpen(true)}
+               className="px-3 py-2 hover:bg-slate-100 rounded text-slate-600 flex items-center gap-1 text-xs font-medium"
+            >
+               <MonitorPlay className="w-4 h-4" /> 单张预览
+            </button>
+            <div className="w-px h-6 bg-slate-300 my-auto mx-1"></div>
+            <button 
+               onClick={handleExportPPT}
+               disabled={isExporting}
+               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded flex items-center gap-2 shadow-sm whitespace-nowrap disabled:bg-blue-400"
+            >
+               {isExporting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+               {isExporting ? '导出中...' : '导出 PPT'}
+            </button>
+          </div>
+        </div>
+
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 z-20 transition-all hover:scale-105">
+           <button onClick={() => handleAddAsset('text')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-blue-600 transition-colors">
+              <Type className="w-5 h-5" />
+              <span className="text-[9px] font-bold">文本</span>
+           </button>
+           <div className="w-px bg-slate-200 h-8"></div>
+           <button onClick={() => handleAddAsset('image')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-purple-600 transition-colors">
+              <ImageIcon className="w-5 h-5" />
+              <span className="text-[9px] font-bold">图片</span>
+           </button>
+           <button onClick={() => handleAddAsset('audio')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-green-600 transition-colors">
+              <Music className="w-5 h-5" />
+              <span className="text-[9px] font-bold">音频</span>
+           </button>
+           <button onClick={() => handleAddAsset('video')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-red-600 transition-colors">
+              <Video className="w-5 h-5" />
+              <span className="text-[9px] font-bold">视频</span>
+           </button>
+        </div>
+
+        <div className="flex-1 overflow-auto p-8 flex items-center justify-center relative" onClick={handleCanvasClick}>
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]"></div>
           
-          {/* Slide Container - Responsive Aspect Ratio */}
-          <div className="w-full max-w-4xl aspect-video bg-white rounded-lg shadow-2xl overflow-hidden relative z-10 border border-slate-200 group transition-all duration-300">
-             {/* Render Elements visually (Simulated) */}
-             <div className="absolute inset-0">
-                {currentSlide.elements.find(e => e.label.includes('背景')) && (
-                  <img 
-                    src={currentSlide.elements.find(e => e.label.includes('背景')).content} 
-                    alt="Background" 
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                <div className="absolute inset-0 bg-black/20"></div> {/* Overlay */}
-                
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 lg:p-12 text-center overflow-y-auto">
-                   {currentSlide.elements.filter(e => e.type !== 'script' && !e.label.includes('背景')).map(el => (
-                     <div key={el.id} className="relative mb-4 last:mb-0 hover:ring-2 hover:ring-blue-400 rounded transition-all cursor-pointer">
-                        {el.type === 'image' && (
-                          <img src={el.content} alt={el.label} className="max-h-32 lg:max-h-64 rounded-lg shadow-lg transform hover:scale-105 transition-transform" />
-                        )}
-                        {el.type === 'text' && (
-                          <h2 className={`text-xl lg:text-4xl font-bold text-white drop-shadow-md ${el.style === 'glitch' ? 'font-mono tracking-widest' : ''}`}>
-                            {el.content}
-                          </h2>
+          <div 
+             ref={canvasRef}
+             className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200"
+             onClick={(e) => e.stopPropagation()} 
+          >
+             <SlideRenderer 
+                assets={currentStep.assets} 
+                isEditable={true}
+                onMouseDown={handleMouseDown}
+                selectedAssetId={selectedAssetId}
+             />
+          </div>
+        </div>
+      </main>
+
+      {/* 3. RIGHT SIDEBAR */}
+      <aside 
+        className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l border-slate-200 flex flex-col shrink-0 z-10 shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}
+      >
+         {isRightOpen && (
+           <button 
+             onClick={() => setIsRightOpen(false)}
+             className="absolute top-4 left-4 text-slate-400 hover:text-slate-600 z-20"
+             title="收起面板"
+           >
+              <ChevronRight className="w-4 h-4" />
+           </button>
+         )}
+
+         {!isRightOpen && (
+           <button 
+             onClick={() => setIsRightOpen(true)}
+             className="absolute top-4 right-0 bg-white p-2 rounded-l-md border border-r-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50 transform -translate-x-full"
+             title="展开面板"
+           >
+              <ChevronLeft className="w-4 h-4" />
+           </button>
+         )}
+
+         <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
+             
+             {selectedAsset ? (
+                <>
+                  <div className="p-4 border-b border-slate-100 bg-blue-50 flex items-center justify-between">
+                     <div className="flex items-center gap-2 pl-6">
+                        {getAssetIcon(selectedAsset.type)}
+                        <h3 className="font-bold text-blue-800">编辑元素</h3>
+                     </div>
+                     <button onClick={() => setSelectedAssetId(null)} className="text-slate-500 hover:text-slate-700">
+                        <X className="w-4 h-4" />
+                     </button>
+                  </div>
+
+                  {/* Layer Control Bar */}
+                  <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center justify-between">
+                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+                        <Layers className="w-3 h-3" /> 图层
+                     </span>
+                     <div className="flex gap-1">
+                        <button onClick={() => handleLayerChange(selectedAsset.id, 'front')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置顶"><ChevronsUp className="w-4 h-4" /></button>
+                        <button onClick={() => handleLayerChange(selectedAsset.id, 'forward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="上移"><ArrowUp className="w-4 h-4" /></button>
+                        <button onClick={() => handleLayerChange(selectedAsset.id, 'backward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="下移"><ArrowDown className="w-4 h-4" /></button>
+                        <button onClick={() => handleLayerChange(selectedAsset.id, 'back')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置底"><ChevronsDown className="w-4 h-4" /></button>
+                     </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                     
+                     {/* Dimensions & Rotation Inputs */}
+                     <div className="grid grid-cols-3 gap-2">
+                        <div>
+                           <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">宽 Width</label>
+                           <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
+                              <input 
+                                 type="number" 
+                                 value={Math.round(selectedAsset.width || 300)}
+                                 onChange={(e) => handleAssetChange(selectedAsset.id, 'width', parseInt(e.target.value))}
+                                 className="w-full text-xs bg-transparent py-1.5 outline-none"
+                              />
+                              <span className="text-[10px] text-slate-400">px</span>
+                           </div>
+                        </div>
+                        <div>
+                           <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">高 Height</label>
+                           <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
+                              <input 
+                                 type="number" 
+                                 value={Math.round(selectedAsset.height || 200)}
+                                 onChange={(e) => handleAssetChange(selectedAsset.id, 'height', parseInt(e.target.value))}
+                                 className="w-full text-xs bg-transparent py-1.5 outline-none"
+                              />
+                              <span className="text-[10px] text-slate-400">px</span>
+                           </div>
+                        </div>
+                        <div>
+                           <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">旋转 Rotate</label>
+                           <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
+                              <input 
+                                 type="number" 
+                                 value={Math.round(selectedAsset.rotation || 0)}
+                                 onChange={(e) => handleAssetChange(selectedAsset.id, 'rotation', parseInt(e.target.value))}
+                                 className="w-full text-xs bg-transparent py-1.5 outline-none"
+                              />
+                              <span className="text-[10px] text-slate-400">°</span>
+                           </div>
+                        </div>
+                     </div>
+
+                     <div className="space-y-4">
+                        <div>
+                           <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">标题 / Name</label>
+                           <input 
+                              type="text" 
+                              value={selectedAsset.title}
+                              onChange={(e) => handleAssetChange(selectedAsset.id, 'title', e.target.value)}
+                              className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                           />
+                        </div>
+
+                        {selectedAsset.type === 'text' ? (
+                           <div>
+                              <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">文本内容 / Content</label>
+                              <textarea 
+                                 value={selectedAsset.content}
+                                 onChange={(e) => handleAssetChange(selectedAsset.id, 'content', e.target.value)}
+                                 className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none"
+                              />
+                           </div>
+                        ) : (
+                           <>
+                              {/* Reference Image Upload Section */}
+                              {(selectedAsset.type === 'image' || selectedAsset.type === 'video') && (
+                                 <div className="mb-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                       <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                                          <Upload className="w-3 h-3" /> 参考图片 (可选)
+                                       </label>
+                                       <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">Optional</span>
+                                    </div>
+                                    
+                                    {!selectedAsset.referenceImage ? (
+                                       <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative group/upload">
+                                          <input 
+                                             type="file" 
+                                             accept="image/*" 
+                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                             onChange={(e) => handleReferenceUpload(e, selectedAsset.id)}
+                                          />
+                                          <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform">
+                                             <Upload className="w-5 h-5 text-slate-400" />
+                                          </div>
+                                          <span className="text-xs text-slate-500 font-medium">点击上传参考图片</span>
+                                          <span className="text-[10px] text-slate-400 mt-1">仅用于风格辅助，非必传</span>
+                                       </div>
+                                    ) : (
+                                       <div className="space-y-2">
+                                          <div className="relative group/ref">
+                                             <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded border border-slate-200 opacity-90" />
+                                             <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
+                                             <button 
+                                                onClick={() => handleAssetChange(selectedAsset.id, 'referenceImage', null)}
+                                                className="absolute top-2 right-2 bg-white text-slate-600 hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity"
+                                                title="移除参考图"
+                                             >
+                                                <X className="w-3.5 h-3.5" />
+                                             </button>
+                                          </div>
+                                          
+                                          {/* Simulated Weight Slider */}
+                                          <div className="flex items-center gap-2">
+                                             <Sliders className="w-3 h-3 text-slate-400" />
+                                             <div className="flex-1 h-1 bg-slate-200 rounded overflow-hidden">
+                                                <div className="w-1/3 h-full bg-blue-400"></div>
+                                             </div>
+                                             <span className="text-[10px] text-slate-400">参考权重: 低</span>
+                                          </div>
+                                       </div>
+                                    )}
+                                 </div>
+                              )}
+
+                              {/* Prompt Section */}
+                              <div>
+                                 <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
+                                    <Wand2 className="w-3 h-3 text-purple-500" /> 
+                                    AI 生成提示词 / Prompt
+                                 </label>
+                                 <textarea 
+                                    value={selectedAsset.prompt}
+                                    onChange={(e) => handleAssetChange(selectedAsset.id, 'prompt', e.target.value)}
+                                    placeholder="描述你想要生成的画面..."
+                                    className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none h-24 resize-none mb-2"
+                                 />
+                                 <button 
+                                    onClick={() => handleRegenerateAsset(selectedAsset.id)}
+                                    className="w-full py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                                 >
+                                    <RefreshCw className="w-4 h-4" /> 
+                                    {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}
+                                 </button>
+                              </div>
+                           </>
                         )}
                      </div>
-                   ))}
-                </div>
-             </div>
 
-             {/* Teacher Script Overlay */}
-             <div className="absolute bottom-4 left-4 right-4 bg-black/80 backdrop-blur-md p-3 lg:p-4 rounded-lg border border-white/10 text-white/90">
-                <div className="flex items-start gap-2 lg:gap-3">
-                  <div className="bg-blue-600 p-1 rounded mt-1 shrink-0">
-                     <Type className="w-3 h-3 lg:w-4 lg:h-4" />
+                     <div className="pt-6 mt-6 border-t border-slate-100">
+                        <button 
+                           onClick={() => handleDeleteAsset(selectedAsset.id)}
+                           className="w-full py-2 text-red-500 border border-red-200 rounded text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2"
+                        >
+                           <Trash2 className="w-4 h-4" /> 删除此元素
+                        </button>
+                     </div>
                   </div>
-                  <div className="overflow-y-auto max-h-24 lg:max-h-none">
-                    <p className="text-[10px] lg:text-xs text-blue-300 font-bold uppercase mb-1">Teacher Script (AI Generated)</p>
-                    <p className="text-xs lg:text-sm font-medium leading-relaxed font-serif italic">
-                      "{currentSlide.elements.find(e => e.type === 'script')?.content}"
-                    </p>
+                </>
+             ) : (
+                /* --- DEFAULT VIEW --- */
+                <>
+                  <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                     <h3 className="font-bold text-slate-800 flex items-center gap-2 pl-6">
+                        <Wand2 className="w-4 h-4 text-purple-600" />
+                        环节详情编辑
+                     </h3>
                   </div>
-                </div>
-             </div>
-          </div>
-
-          <div className="mt-4 lg:mt-6 flex items-center gap-4 text-slate-500 text-xs lg:text-sm">
-             <span className="flex items-center gap-1"><Layout className="w-3 h-3 lg:w-4 lg:h-4" /> 16:9 沉浸式宽屏</span>
-             <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-             <span className="flex items-center gap-1 text-blue-600 font-medium"><BrainCircuit className="w-3 h-3 lg:w-4 lg:h-4" /> 心理学引擎已优化</span>
-          </div>
-        </main>
-
-        {/* RIGHT: Asset Manager (Hidden on mobile unless active) */}
-        <aside className={`
-          w-full lg:w-96 bg-white lg:border-l border-slate-200 flex-col z-20 shadow-lg shrink-0
-          lg:flex absolute inset-0 lg:static
-          ${mobileTab === 'assets' ? 'flex' : 'hidden'}
-        `}>
-          <div className="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50">
-            <h3 className="font-bold text-slate-800 flex items-center gap-2">
-              <Settings2 className="w-4 h-4 text-blue-600" />
-              元素解析与理论依据
-            </h3>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-4 space-y-6 pb-20 lg:pb-4">
-            {currentSlide.elements.map((element) => (
-              <div key={element.id} className="group relative">
-                {/* Element Header */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {element.type === 'image' ? (
-                      <div className="p-1 bg-purple-100 rounded text-purple-600"><ImageIcon className="w-3 h-3" /></div>
-                    ) : element.type === 'script' ? (
-                      <div className="p-1 bg-green-100 rounded text-green-600"><BookOpen className="w-3 h-3" /></div>
-                    ) : (
-                      <div className="p-1 bg-blue-100 rounded text-blue-600"><Type className="w-3 h-3" /></div>
-                    )}
-                    <span className="text-sm font-bold text-slate-700">{element.label}</span>
-                  </div>
-                </div>
-
-                {/* Element Content Box */}
-                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden hover:border-blue-300 transition-all">
                   
-                  {/* Pedagogical Rationale (New Feature) */}
-                  <div className="bg-amber-50 border-b border-amber-100 p-3 flex items-start gap-3">
-                    <Lightbulb className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <div>
-                      <h4 className="text-[10px] font-bold text-amber-700 uppercase tracking-wide mb-1">AI 理论依据 / Rationale</h4>
-                      <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                        {element.rationale}
-                      </p>
-                    </div>
+                  <div className="flex-1 overflow-y-auto p-5 space-y-6">
+                     <div className="space-y-4">
+                        <div>
+                           <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">时间 / Time</label>
+                           <div className="flex items-center gap-2">
+                              <Clock className="w-4 h-4 text-slate-400" />
+                              <input 
+                                 type="text" 
+                                 value={currentStep.time}
+                                 onChange={(e) => handleInputChange('time', e.target.value)}
+                                 className="flex-1 text-sm border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none" 
+                              />
+                           </div>
+                        </div>
+
+                        <div>
+                           <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学环节 / Step Title</label>
+                           <input 
+                              type="text" 
+                              value={currentStep.title}
+                              onChange={(e) => handleInputChange('title', e.target.value)}
+                              className="w-full text-sm font-bold border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none" 
+                           />
+                        </div>
+
+                        <div>
+                           <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学目标 / Objectives</label>
+                           <textarea 
+                              value={currentStep.objective}
+                              onChange={(e) => handleInputChange('objective', e.target.value)}
+                              className="w-full text-sm border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-16 bg-slate-50" 
+                           />
+                        </div>
+                     </div>
+
+                     <hr className="border-slate-100" />
+
+                     <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                           <label className="text-xs font-bold text-slate-500 uppercase">本页素材 ({currentStep.assets.length})</label>
+                           <div className="flex gap-1">
+                              <button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-purple-600"><Plus className="w-4 h-4" /></button>
+                           </div>
+                        </div>
+
+                        <div className="space-y-2">
+                           {currentStep.assets.map((asset, idx) => (
+                              <div 
+                                 key={asset.id} 
+                                 onClick={() => setSelectedAssetId(asset.id)}
+                                 className="flex items-start gap-2 p-2 border border-slate-200 rounded bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"
+                              >
+                                 <div className="mt-1 text-slate-400">
+                                    {getAssetIcon(asset.type)}
+                                 </div>
+                                 <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-bold text-slate-700 truncate">{asset.title}</div>
+                                    <div className="text-[10px] text-slate-400">{asset.type} • 点击编辑</div>
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     </div>
                   </div>
+                </>
+             )}
+         </div>
+      </aside>
 
-                  {/* Prompt Display */}
-                  {(element.type === 'image' || element.type === 'script') && (
-                    <div className="p-3 bg-slate-50 border-b border-slate-100">
-                      <p className="text-xs text-slate-500 font-mono leading-relaxed break-words">
-                        <span className="font-bold text-slate-400 select-none">PROMPT: </span>
-                        {element.prompt || "Based on context analysis..."}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Preview Area */}
-                  <div className="p-3">
-                    {element.type === 'image' && (
-                      <div className="relative aspect-video rounded-lg overflow-hidden bg-slate-200 mb-3 border border-slate-200">
-                         {regeneratingId === element.id ? (
-                            <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
-                               <RefreshCw className="w-6 h-6 text-blue-500 animate-spin" />
-                            </div>
-                         ) : (
-                            <img src={element.content} alt="Asset" className="w-full h-full object-cover" />
-                         )}
-                      </div>
-                    )}
-                    
-                    {element.type !== 'image' && (
-                       <div className="text-sm text-slate-700 bg-slate-50 p-2 rounded border border-slate-200 mb-3 italic">
-                          "{element.content}"
-                       </div>
-                    )}
-
-                    {/* Action Buttons */}
-                    <button 
-                      onClick={() => handleRegenerateAsset(currentSlide.id, element.id)}
-                      disabled={regeneratingId !== null}
-                      className="w-full py-1.5 bg-white border border-slate-200 rounded text-xs font-medium text-slate-500 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 flex items-center justify-center gap-2 transition-all"
-                    >
-                      {regeneratingId === element.id ? (
-                        <>调整中...</>
-                      ) : (
-                        <>
-                          <RefreshCw className="w-3 h-3" /> 
-                          更换元素 (Regenerate)
-                        </>
-                      )}
-                    </button>
-                  </div>
-                </div>
+      {/* Preview Modal */}
+      {isPreviewOpen && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+           {/* Preview Toolbar */}
+           <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 shrink-0">
+              <div className="text-white font-bold">{currentStep.title}</div>
+              <div className="flex gap-4">
+                 <button onClick={() => handleNavigatePreview('prev')} disabled={currentGlobalIndex <= 0} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 disabled:opacity-50 text-white">
+                    <ChevronLeft className="w-5 h-5" />
+                 </button>
+                 <button onClick={() => handleNavigatePreview('next')} disabled={currentGlobalIndex >= allSteps.length - 1} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 disabled:opacity-50 text-white">
+                    <ChevronRight className="w-5 h-5" />
+                 </button>
+                 <button onClick={() => setIsPreviewOpen(false)} className="p-2 bg-red-900/50 hover:bg-red-700 text-white rounded-full ml-4">
+                    <X className="w-5 h-5" />
+                 </button>
               </div>
-            ))}
-          </div>
-        </aside>
-
-        {/* MOBILE NAVIGATION BAR (LG Hidden) */}
-        <div className="lg:hidden absolute bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around p-2 z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-          <button 
-            onClick={() => setMobileTab('outline')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg flex-1 ${mobileTab === 'outline' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}
-          >
-            <List className="w-5 h-5" />
-            <span className="text-[10px] font-medium">大纲</span>
-          </button>
-          <button 
-            onClick={() => setMobileTab('preview')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg flex-1 ${mobileTab === 'preview' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}
-          >
-            <MonitorPlay className="w-5 h-5" />
-            <span className="text-[10px] font-medium">预览</span>
-          </button>
-          <button 
-            onClick={() => setMobileTab('assets')}
-            className={`flex flex-col items-center gap-1 p-2 rounded-lg flex-1 ${mobileTab === 'assets' ? 'text-blue-600 bg-blue-50' : 'text-slate-400'}`}
-          >
-            <Palette className="w-5 h-5" />
-            <span className="text-[10px] font-medium">素材</span>
-          </button>
+           </div>
+           
+           {/* Preview Canvas */}
+           <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
+              {/* Scale container to fit screen roughly */}
+              <div style={{ width: 960, height: 540, transform: 'scale(1.2)' }} className="relative bg-white shadow-2xl overflow-hidden">
+                 <SlideRenderer assets={currentStep.assets} isEditable={false} />
+              </div>
+           </div>
         </div>
-
-      </div>
+      )}
     </div>
   );
 }
