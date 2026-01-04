@@ -55,7 +55,8 @@ import {
   Film, 
   Pencil,
   Edit3,
-  Rocket
+  Presentation,
+  FileInput // Added FileInput icon
 } from 'lucide-react';
 
 // --- Global Helper Functions ---
@@ -528,6 +529,36 @@ const WelcomeScreen = ({ onStart }) => {
     }
   };
 
+  // --- Mock Import Logic ---
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Simulate file reading and parsing
+      setStep('generating');
+      setLoadingText('正在解析上传的文档内容...');
+      const stages = [
+        { p: 10, t: '正在读取文档结构...' },
+        { p: 30, t: '识别教学目标与重难点...' },
+        { p: 50, t: '提取 Engage, Empower, Execute, Elevate 流程...' },
+        { p: 70, t: '自动匹配多媒体素材占位符...' },
+        { p: 90, t: '生成课程数据结构...' },
+        { p: 100, t: '导入成功！' }
+      ];
+
+      let currentStage = 0;
+      const interval = setInterval(() => {
+        if (currentStage >= stages.length) {
+          clearInterval(interval);
+          onStart({ ...config, unit: file.name.replace(/\.[^/.]+$/, "") }); // Use filename as unit name
+          return;
+        }
+        setLoadingProgress(stages[currentStage].p);
+        setLoadingText(stages[currentStage].t);
+        currentStage++;
+      }, 500); // Faster simulation for import
+    }
+  };
+
   const handleGenerate = () => {
     setStep('generating');
     
@@ -597,128 +628,159 @@ const WelcomeScreen = ({ onStart }) => {
           </div>
         </div>
         
-        <div className="p-6 md:p-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <User className="w-4 h-4 text-purple-500" /> 学生年龄 / Age
-              </label>
-              <div className="relative">
-                <select 
-                  value={config.age}
-                  onChange={handleAgeChange}
-                  className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
-                >
-                  {Object.keys(CURRICULUM_DATA).map(age => (
-                    <option key={age} value={age}>{age}</option>
-                  ))}
-                </select>
-                <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
-                  <ChevronRight className="w-4 h-4 rotate-90" />
+        <div className="p-6 md:p-8 space-y-8">
+          
+          {/* Option A: Import Existing Plan */}
+          <div className="space-y-3">
+             <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                <div className="bg-green-100 p-1 rounded text-green-600"><FileInput className="w-4 h-4" /></div>
+                方式一：导入现有课程详细方案 (Word/PDF)
+             </div>
+             <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 bg-slate-50 hover:bg-slate-100 hover:border-blue-400 transition-all relative group cursor-pointer">
+                <input type="file" accept=".docx,.doc,.pdf,.txt" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={handleImport} />
+                <div className="flex flex-col items-center justify-center gap-2 text-slate-400 group-hover:text-blue-500">
+                   <Upload className="w-8 h-8 mb-1" />
+                   <span className="text-sm font-medium">点击上传或拖拽文件至此</span>
+                   <span className="text-xs opacity-70">支持解析教案结构，自动生成 PPT 大纲与素材建议</span>
                 </div>
-              </div>
-            </div>
+             </div>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Library className="w-4 h-4 text-green-500" /> 
-                {parseInt(config.age) < 6 ? "核心主题 / Theme" : "教材单元 / Unit"}
-              </label>
-              {!config.isCustomUnit ? (
+          <div className="flex items-center justify-center gap-4">
+             <div className="h-px bg-slate-200 flex-1"></div>
+             <span className="text-xs text-slate-400 font-medium">OR</span>
+             <div className="h-px bg-slate-200 flex-1"></div>
+          </div>
+
+          {/* Option B: AI Generate */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
+                <div className="bg-blue-100 p-1 rounded text-blue-600"><Wand2 className="w-4 h-4" /></div>
+                方式二：AI 智能生成新课件
+             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <User className="w-3 h-3" /> 学生年龄 / Age
+                </label>
                 <div className="relative">
                   <select 
-                    value={config.unit}
-                    onChange={handleUnitChange}
-                    className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm md:text-base"
+                    value={config.age}
+                    onChange={handleAgeChange}
+                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm"
                   >
-                    {availableUnits.map(unit => (
-                      <option key={unit} value={unit}>{unit}</option>
+                    {Object.keys(CURRICULUM_DATA).map(age => (
+                      <option key={age} value={age}>{age}</option>
                     ))}
-                    <option disabled>──────────</option>
-                    <option value="custom_input_option">✎ 手动输入其他...</option>
                   </select>
-                  <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
-                    <ChevronRight className="w-4 h-4 rotate-90" />
+                  <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                    <ChevronRight className="w-3 h-3 rotate-90" />
                   </div>
                 </div>
-              ) : (
-                <div className="flex gap-2 animate-in fade-in slide-in-from-left-2">
-                  <input 
-                    type="text"
-                    value={config.customUnit}
-                    onChange={(e) => setConfig({...config, customUnit: e.target.value})}
-                    placeholder="请输入自定义单元名称..."
-                    className="flex-1 p-3 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
-                    autoFocus
-                  />
-                  <button 
-                    onClick={() => setConfig({...config, isCustomUnit: false, unit: availableUnits[0]})}
-                    className="px-3 text-slate-400 hover:text-slate-600 text-sm whitespace-nowrap"
-                  >
-                    取消
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Clock className="w-4 h-4 text-orange-500" /> 上课时长 / Duration
-              </label>
-              <div className="relative">
-                <select 
-                  value={config.duration}
-                  onChange={(e) => setConfig({...config, duration: e.target.value})}
-                  className="w-full p-3 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-sm md:text-base"
-                >
-                  <option>15分钟 (微课/学前)</option>
-                  <option>30分钟 (标准课时)</option>
-                  <option>40分钟 (小学常用)</option>
-                  <option>45分钟 (公开课)</option>
-                  <option>60分钟 (综合实践)</option>
-                </select>
-                <div className="absolute right-3 top-3.5 pointer-events-none text-slate-400">
-                  <ChevronRight className="w-4 h-4 rotate-90" />
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <Library className="w-3 h-3" /> 
+                  {parseInt(config.age) < 6 ? "核心主题 / Theme" : "教材单元 / Unit"}
+                </label>
+                {!config.isCustomUnit ? (
+                  <div className="relative">
+                    <select 
+                      value={config.unit}
+                      onChange={handleUnitChange}
+                      className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm"
+                    >
+                      {availableUnits.map(unit => (
+                        <option key={unit} value={unit}>{unit}</option>
+                      ))}
+                      <option disabled>──────────</option>
+                      <option value="custom_input_option">✎ 手动输入其他...</option>
+                    </select>
+                    <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                      <ChevronRight className="w-3 h-3 rotate-90" />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2 animate-in fade-in slide-in-from-left-2">
+                    <input 
+                      type="text"
+                      value={config.customUnit}
+                      onChange={(e) => setConfig({...config, customUnit: e.target.value})}
+                      placeholder="请输入自定义单元名称..."
+                      className="flex-1 p-2.5 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                      autoFocus
+                    />
+                    <button 
+                      onClick={() => setConfig({...config, isCustomUnit: false, unit: availableUnits[0]})}
+                      className="px-2 text-slate-400 hover:text-slate-600 text-xs whitespace-nowrap"
+                    >
+                      取消
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <Clock className="w-3 h-3" /> 上课时长 / Duration
+                </label>
+                <div className="relative">
+                  <select 
+                    value={config.duration}
+                    onChange={(e) => setConfig({...config, duration: e.target.value})}
+                    className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-sm"
+                  >
+                    <option>15分钟 (微课/学前)</option>
+                    <option>30分钟 (标准课时)</option>
+                    <option>40分钟 (小学常用)</option>
+                    <option>45分钟 (公开课)</option>
+                    <option>60分钟 (综合实践)</option>
+                  </select>
+                  <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                    <ChevronRight className="w-3 h-3 rotate-90" />
+                  </div>
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                    <Wand2 className="w-3 h-3" /> 
+                    剧情主题 / Story Theme
+                  </label>
+                  <input 
+                    type="text" 
+                    value={config.theme}
+                    onChange={(e) => setConfig({...config, theme: e.target.value})}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    placeholder="例如：星际救援、海底探险"
+                  />
               </div>
             </div>
 
             <div className="space-y-2">
-               <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                  <Wand2 className="w-4 h-4 text-pink-500" /> 
-                  剧情主题 / Story Theme
+               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <Tags className="w-3 h-3" /> 
+                  重点关键词 / Key Words (可选)
                 </label>
                 <input 
                   type="text" 
-                  value={config.theme}
-                  onChange={(e) => setConfig({...config, theme: e.target.value})}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
-                  placeholder="例如：星际救援、海底探险、魔法森林"
+                  value={config.keywords}
+                  onChange={(e) => setConfig({...config, keywords: e.target.value})}
+                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                  placeholder="例如：Red, Blue, Yellow"
                 />
             </div>
-          </div>
 
-          <div className="space-y-2">
-             <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Tags className="w-4 h-4 text-indigo-500" /> 
-                重点关键词 / Key Words (可选)
-              </label>
-              <input 
-                type="text" 
-                value={config.keywords}
-                onChange={(e) => setConfig({...config, keywords: e.target.value})}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm md:text-base"
-                placeholder="例如：Red, Blue, Yellow (若不填则由AI自动从单元提取)"
-              />
-          </div>
-
-          <div className="pt-4 border-t border-slate-100">
-            <button 
-              onClick={handleGenerate}
-              className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-lg shadow-lg transform transition active:scale-[0.98] flex items-center justify-center gap-2"
-            >
-              <BrainCircuit className="w-5 h-5" /> 生成自适应互动课件
-            </button>
+            <div className="pt-2">
+              <button 
+                onClick={handleGenerate}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-base shadow-md transform transition active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <BrainCircuit className="w-5 h-5" /> 开始生成
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -741,13 +803,7 @@ const BookmarkIcon = ({ phase }) => {
   );
 };
 
-// ... (CanvasView and TableView remain largely the same, updated props if needed)
-
 // --- Sub-Views ---
-
-// ... CanvasView component code ...
-// (Retaining existing CanvasView logic but simplifying its default config state since it receives context from parent if needed, 
-//  but for this specific request, I will keep CanvasView self-contained for data but controlled by App for visibility)
 
 const CanvasView = () => {
   const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
@@ -812,7 +868,6 @@ const CanvasView = () => {
   };
 
   // ... (Other handlers: handleReferenceUpload, handleLayerChange, handleAddAsset, handleDeleteAsset, handleRegenerateAsset, handleExportPPT, handleNavigatePreview, interaction handlers)
-  // Re-implementing necessary handlers briefly for context completeness
   const handleAddAsset = (type) => {
     const newCourseData = { ...courseData };
     const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
