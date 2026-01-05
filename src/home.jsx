@@ -634,7 +634,7 @@ const WelcomeScreen = ({ onStart }) => {
           <div className="space-y-3">
              <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
                 <div className="bg-green-100 p-1 rounded text-green-600"><FileInput className="w-4 h-4" /></div>
-                方式一：导入现有课程详细方案 (Word/PDF)
+                方式一：导入现有课程详细方案 (Excel)
              </div>
              <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 bg-slate-50 hover:bg-slate-100 hover:border-blue-400 transition-all relative group cursor-pointer">
                 <input type="file" accept=".docx,.doc,.pdf,.txt" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={handleImport} />
