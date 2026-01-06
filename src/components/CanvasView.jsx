@@ -287,14 +287,25 @@ export const CanvasView = forwardRef((props, ref) => {
       <main className="flex-1 flex flex-col bg-slate-100 relative overflow-hidden transition-all duration-300" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
         <div className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-10">
           <div className="flex items-center gap-4 min-w-0">
-             {!isLeftOpen && <div className="font-bold text-slate-700 flex items-center gap-2 mr-4"><BookOpen className="w-4 h-4" /> <span className="text-xs">U1</span></div>}
+             {!isLeftOpen && (
+               <>
+                 <button 
+                   onClick={() => setIsLeftOpen(true)} 
+                   className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded transition-colors"
+                   title="展开课程编排"
+                 >
+                   <ChevronRight className="w-4 h-4" />
+                 </button>
+                 <div className="font-bold text-slate-700 flex items-center gap-2 mr-4"><BookOpen className="w-4 h-4" /> <span className="text-xs">U1</span></div>
+               </>
+             )}
              <span className="text-sm font-medium text-slate-500 whitespace-nowrap">当前预览:</span>
              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold whitespace-nowrap">{currentStep?.time}</span>
              <h2 className="text-sm font-bold text-slate-800 truncate" title={currentStep?.title}>{currentStep?.title}</h2>
           </div>
         </div>
 
-        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 z-20 transition-all">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 z-20 transition-all">
            <button onClick={() => handleAddAsset('text')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-blue-600 transition-colors"><Type className="w-5 h-5" /><span className="text-[9px] font-bold">文本</span></button>
            <div className="w-px bg-slate-200 h-8"></div>
            <button onClick={() => handleAddAsset('image')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-purple-600 transition-colors"><ImageIcon className="w-5 h-5" /><span className="text-[9px] font-bold">图片</span></button>

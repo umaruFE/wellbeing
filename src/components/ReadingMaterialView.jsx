@@ -2,15 +2,15 @@ import React, { useState } from 'react';
 import { 
   FileText, 
   Download,
-  CheckSquare,
-  Square,
   RefreshCw,
   BookOpen,
   Wand2,
   FileDown,
-  Sparkles
+  Sparkles,
+  Eye
 } from 'lucide-react';
 import { WORD_DOC_DATA } from '../constants';
+import { ReadingMaterialEditor } from './ReadingMaterialEditor';
 
 export const ReadingMaterialView = () => {
   const [selectedSlides, setSelectedSlides] = useState(new Set());
@@ -18,6 +18,9 @@ export const ReadingMaterialView = () => {
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationText, setGenerationText] = useState('');
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [readingMaterialPages, setReadingMaterialPages] = useState([]);
+  const [editingPageIndex, setEditingPageIndex] = useState(null);
 
   // 按阶段组织幻灯片
   const phases = [
@@ -96,9 +99,49 @@ export const ReadingMaterialView = () => {
       if (currentStage >= stages.length) {
         clearInterval(interval);
         setIsGenerating(false);
-        // 模拟生成 PDF URL
+        
+        // 生成阅读材料页面数据（图文混排）
+        const generatedPages = selectedSlidesData.map((slide, index) => {
+          // 交替使用不同的图片对齐方式，让排版更丰富
+          const imageAligns = ['left', 'right', 'center', 'full'];
+          const imageAlign = imageAligns[index % imageAligns.length];
+          
+          return {
+            id: `page-${slide.id}`,
+            slideId: slide.id,
+            pageNumber: index + 1,
+            title: slide.title,
+            blocks: [
+              {
+                id: `block-${slide.id}-img-1`,
+                type: 'image',
+                content: slide.image || 'https://placehold.co/800x400/4f46e5/FFF?text=Reading+Material+Image',
+                caption: slide.title,
+                order: 0,
+                align: imageAlign,
+                prompt: '' // AI生成提示词
+              },
+              {
+                id: `block-${slide.id}-text-1`,
+                type: 'text',
+                content: slide.script || slide.activities || '暂无内容',
+                order: 1,
+                prompt: '' // AI生成提示词
+              },
+              {
+                id: `block-${slide.id}-text-2`,
+                type: 'text',
+                content: `教学目标：${slide.objectives || '暂无'}`,
+                order: 2,
+                prompt: '' // AI生成提示词
+              }
+            ]
+          };
+        });
+        
+        setReadingMaterialPages(generatedPages);
+        setIsEditing(true);
         setGeneratedPdfUrl('https://example.com/generated-reading-material.pdf');
-        alert(`成功生成阅读材料！\n\n包含 ${selectedSlides.size} 个页面\n总字数：约 ${selectedSlidesData.reduce((sum, s) => sum + (s.script?.length || 0), 0)} 字`);
         return;
       }
       setGenerationProgress(stages[currentStage].p);
@@ -116,6 +159,7 @@ export const ReadingMaterialView = () => {
       link.click();
     }
   };
+
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 overflow-hidden">
@@ -184,8 +228,8 @@ export const ReadingMaterialView = () => {
             </div>
           )}
 
-          {/* Success Message */}
-          {generatedPdfUrl && !isGenerating && (
+          {/* Success Message & Actions */}
+          {isEditing && !isGenerating && (
             <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
@@ -193,16 +237,28 @@ export const ReadingMaterialView = () => {
                 </div>
                 <div>
                   <p className="font-bold text-green-800">阅读材料生成成功！</p>
-                  <p className="text-sm text-green-600">已选择 {selectedSlides.size} 个页面</p>
+                  <p className="text-sm text-green-600">共 {readingMaterialPages.length} 个页面，可编辑内容</p>
                 </div>
               </div>
-              <button 
-                onClick={handleDownloadPDF}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2 shadow-sm transition-colors"
-              >
-                <FileDown className="w-4 h-4" />
-                下载 PDF
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    setIsEditing(false);
+                    setEditingPageIndex(null);
+                  }}
+                  className="px-4 py-2 text-slate-600 hover:text-slate-800 border border-slate-300 rounded-lg font-medium flex items-center gap-2 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  返回选择
+                </button>
+                <button 
+                  onClick={handleDownloadPDF}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-bold flex items-center gap-2 shadow-sm transition-colors"
+                >
+                  <FileDown className="w-4 h-4" />
+                  下载 PDF
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -211,12 +267,23 @@ export const ReadingMaterialView = () => {
       {/* Content */}
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          {phases.map((phase) => {
-            const phaseSlideIds = phase.slides.map(s => s.id);
-            const allSelected = phase.slides.length > 0 && phase.slides.every(s => selectedSlides.has(s.id));
-            const someSelected = phase.slides.some(s => selectedSlides.has(s.id));
+          {/* Editing Mode - Reading Material Pages */}
+          {isEditing && readingMaterialPages.length > 0 ? (
+            <ReadingMaterialEditor
+              pages={readingMaterialPages}
+              onPagesChange={setReadingMaterialPages}
+              editingPageIndex={editingPageIndex}
+              onEditingPageIndexChange={setEditingPageIndex}
+            />
+          ) : (
+            /* Selection Mode - Phase Selection */
+            <>
+              {phases.map((phase) => {
+                const phaseSlideIds = phase.slides.map(s => s.id);
+                const allSelected = phase.slides.length > 0 && phase.slides.every(s => selectedSlides.has(s.id));
+                const someSelected = phase.slides.some(s => selectedSlides.has(s.id));
 
-            return (
+                return (
               <div key={phase.id} className="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
                 {/* Phase Header */}
                 <div className={`p-4 border-b border-slate-100 flex items-center justify-between ${phase.color.replace('text-', 'bg-opacity-10 ')}`}>
@@ -292,8 +359,10 @@ export const ReadingMaterialView = () => {
                   </div>
                 </div>
               </div>
-            );
-          })}
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
     </div>
