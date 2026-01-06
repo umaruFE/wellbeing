@@ -32,6 +32,7 @@ export const ReadingMaterialEditor = ({
   const [selectedBlockId, setSelectedBlockId] = useState(null);
   const [showImageInsert, setShowImageInsert] = useState(null); // 显示图片插入界面的块ID
   const editorRefs = useRef({});
+  const contentCache = useRef({}); // 缓存内容，避免不必要的更新
 
   // 更新块内容
   const handleUpdateBlock = (pageId, blockId, field, value) => {
@@ -228,6 +229,7 @@ export const ReadingMaterialEditor = ({
 
   // 处理内容变化
   const handleContentChange = (pageId, blockId, html) => {
+    contentCache.current[blockId] = html;
     handleUpdateBlock(pageId, blockId, 'content', html);
   };
 
@@ -481,77 +483,87 @@ export const ReadingMaterialEditor = ({
                               </div>
                             ) : (
                               <>
-                                <div
-                                  ref={(el) => {
-                                    if (el) editorRefs.current[block.id] = el;
-                                  }}
-                                  contentEditable={isEditing}
-                                  onFocus={() => setSelectedBlockId(block.id)}
-                                  onBlur={() => {
-                                    // 延迟清除选中状态，以便工具栏按钮可以点击
-                                    setTimeout(() => {
-                                      if (document.activeElement !== editorRefs.current[block.id]) {
-                                        setSelectedBlockId(null);
-                                      }
-                                    }, 200);
-                                  }}
-                                  onInput={(e) => {
-                                    handleContentChange(page.id, block.id, e.target.innerHTML);
-                                  }}
-                                  onPaste={(e) => {
-                                    // 处理粘贴事件，支持粘贴图片
-                                    e.preventDefault();
-                                    const clipboardData = e.clipboardData || window.clipboardData;
-                                    const items = clipboardData.items;
-                                    
-                                    for (let i = 0; i < items.length; i++) {
-                                      if (items[i].type.indexOf('image') !== -1) {
-                                        const blob = items[i].getAsFile();
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => {
-                                          insertImageAtCursor(block.id, reader.result, 'inline');
-                                        };
-                                        reader.readAsDataURL(blob);
-                                        return;
-                                      }
-                                    }
-                                    
-                                    // 如果没有图片，使用默认粘贴行为
-                                    const text = clipboardData.getData('text/plain');
-                                    document.execCommand('insertText', false, text);
-                                  }}
-                                  dangerouslySetInnerHTML={{ __html: block.content }}
-                                  className={`min-h-[200px] p-4 text-base leading-relaxed outline-none prose prose-slate max-w-none ${
-                                    isEditing
-                                      ? 'border-2 border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200'
-                                      : 'text-slate-700'
-                                  }`}
-                                  style={{
-                                    wordWrap: 'break-word',
-                                    overflowWrap: 'break-word'
-                                  }}
-                                >
+                                <div className="relative">
                                   {/* 内联图片样式 */}
                                   <style>{`
-                                    .inline-image {
+                                    .rich-text-editor .inline-image {
                                       max-width: 100%;
                                       height: auto;
                                       border-radius: 0.5rem;
                                       margin: 0.5rem;
                                       cursor: pointer;
                                     }
-                                    .inline-image:hover {
+                                    .rich-text-editor .inline-image:hover {
                                       outline: 2px solid #6366f1;
                                       outline-offset: 2px;
                                     }
-                                    [contenteditable="true"] img {
+                                    .rich-text-editor[contenteditable="true"] img {
                                       display: inline-block;
                                       vertical-align: middle;
                                     }
-                                    [contenteditable="true"] div[style*="float"] {
+                                    .rich-text-editor[contenteditable="true"] div[style*="float"] {
                                       clear: both;
                                     }
                                   `}</style>
+                                  <div
+                                    ref={(el) => {
+                                      if (el) {
+                                        editorRefs.current[block.id] = el;
+                                        // 只在内容变化且不在编辑状态时更新，避免覆盖用户正在编辑的内容
+                                        if (contentCache.current[block.id] !== block.content && !isEditing) {
+                                          el.innerHTML = block.content;
+                                          contentCache.current[block.id] = block.content;
+                                        } else if (!contentCache.current[block.id]) {
+                                          el.innerHTML = block.content;
+                                          contentCache.current[block.id] = block.content;
+                                        }
+                                      }
+                                    }}
+                                    contentEditable={isEditing}
+                                    onFocus={() => setSelectedBlockId(block.id)}
+                                    onBlur={() => {
+                                      // 延迟清除选中状态，以便工具栏按钮可以点击
+                                      setTimeout(() => {
+                                        if (document.activeElement !== editorRefs.current[block.id]) {
+                                          setSelectedBlockId(null);
+                                        }
+                                      }, 200);
+                                    }}
+                                    onInput={(e) => {
+                                      handleContentChange(page.id, block.id, e.target.innerHTML);
+                                    }}
+                                    onPaste={(e) => {
+                                      // 处理粘贴事件，支持粘贴图片
+                                      e.preventDefault();
+                                      const clipboardData = e.clipboardData || window.clipboardData;
+                                      const items = clipboardData.items;
+                                      
+                                      for (let i = 0; i < items.length; i++) {
+                                        if (items[i].type.indexOf('image') !== -1) {
+                                          const blob = items[i].getAsFile();
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => {
+                                            insertImageAtCursor(block.id, reader.result, 'inline');
+                                          };
+                                          reader.readAsDataURL(blob);
+                                          return;
+                                        }
+                                      }
+                                      
+                                      // 如果没有图片，使用默认粘贴行为
+                                      const text = clipboardData.getData('text/plain');
+                                      document.execCommand('insertText', false, text);
+                                    }}
+                                    className={`rich-text-editor min-h-[200px] p-4 text-base leading-relaxed outline-none prose prose-slate max-w-none ${
+                                      isEditing
+                                        ? 'border-2 border-slate-300 rounded-lg bg-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200'
+                                        : 'text-slate-700'
+                                    }`}
+                                    style={{
+                                      wordWrap: 'break-word',
+                                      overflowWrap: 'break-word'
+                                    }}
+                                  />
                                 </div>
                                 {/* AI生成文本按钮（在编辑模式下显示在底部） */}
                                 {isEditing && (
@@ -578,6 +590,150 @@ export const ReadingMaterialEditor = ({
                                   </div>
                                 )}
                               </>
+                            )}
+                          </div>
+                        )}
+
+                        {/* 图片块 */}
+                        {block.type === 'image' && (
+                          <div className="relative">
+                            {isGenerating ? (
+                              <div className="w-full h-64 bg-slate-100 rounded-lg border-2 border-dashed border-indigo-300 flex items-center justify-center">
+                                <div className="text-center">
+                                  <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin mx-auto mb-2" />
+                                  <p className="text-sm text-slate-600">AI 正在生成图片...</p>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className={`space-y-2 ${block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left'}`}>
+                                <div className="relative inline-block group/img">
+                                  <img
+                                    src={block.content}
+                                    alt={block.caption}
+                                    className="rounded-lg border-2 border-slate-300 object-cover max-w-full"
+                                    style={{ maxHeight: '500px' }}
+                                  />
+                                  {isEditing && (
+                                    <>
+                                      <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors rounded-lg flex items-center justify-center">
+                                        <label className="px-4 py-2 bg-white/90 hover:bg-white text-slate-700 rounded-lg cursor-pointer font-medium text-sm opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                          <input
+                                            type="file"
+                                            accept="image/*"
+                                            className="hidden"
+                                            onChange={(e) => {
+                                              const file = e.target.files[0];
+                                              if (file) {
+                                                const reader = new FileReader();
+                                                reader.onloadend = () => {
+                                                  handleUpdateBlock(page.id, block.id, 'content', reader.result);
+                                                };
+                                                reader.readAsDataURL(file);
+                                              }
+                                            }}
+                                          />
+                                          <Upload className="w-4 h-4 inline mr-2" />
+                                          更换图片
+                                        </label>
+                                      </div>
+                                      <div className="absolute -top-2 -right-2 flex items-center gap-1 bg-white border border-slate-300 rounded-lg shadow-lg p-1 opacity-0 group-hover/img:opacity-100 transition-opacity z-20">
+                                        <button
+                                          onClick={() => {
+                                            // 将图片插入到上一个文本块，然后删除图片块
+                                            const textBlocks = page.blocks.filter(b => b.type === 'text');
+                                            if (textBlocks.length > 0) {
+                                              const lastTextBlock = textBlocks[textBlocks.length - 1];
+                                              const editor = editorRefs.current[lastTextBlock.id];
+                                              if (editor) {
+                                                editor.focus();
+                                                // 移动到末尾
+                                                const range = document.createRange();
+                                                range.selectNodeContents(editor);
+                                                range.collapse(false);
+                                                const selection = window.getSelection();
+                                                selection.removeAllRanges();
+                                                selection.addRange(range);
+                                                insertImageAtCursor(lastTextBlock.id, block.content, block.align || 'inline');
+                                              }
+                                            }
+                                            handleDeleteBlock(page.id, block.id);
+                                          }}
+                                          className="p-1.5 hover:bg-blue-50 text-blue-500 rounded transition-colors"
+                                          title="转换为内联图片"
+                                        >
+                                          <ImageIcon className="w-3.5 h-3.5" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleUpdateBlock(page.id, block.id, 'align', 'left')}
+                                          className={`p-1 rounded ${block.align === 'left' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                          title="左对齐"
+                                        >
+                                          <AlignLeft className="w-3 h-3" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleUpdateBlock(page.id, block.id, 'align', 'center')}
+                                          className={`p-1 rounded ${block.align === 'center' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                          title="居中"
+                                        >
+                                          <AlignCenter className="w-3 h-3" />
+                                        </button>
+                                        <button
+                                          onClick={() => handleUpdateBlock(page.id, block.id, 'align', 'right')}
+                                          className={`p-1 rounded ${block.align === 'right' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:bg-slate-100'}`}
+                                          title="右对齐"
+                                        >
+                                          <AlignRight className="w-3 h-3" />
+                                        </button>
+                                        <div className="w-px h-4 bg-slate-200 mx-1"></div>
+                                        <button
+                                          onClick={() => handleDeleteBlock(page.id, block.id)}
+                                          className="p-1.5 hover:bg-red-50 text-red-500 rounded transition-colors"
+                                          title="删除"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      </div>
+                                    </>
+                                  )}
+                                </div>
+                                {isEditing && (
+                                  <div className="space-y-2">
+                                    <div className="flex items-center gap-2">
+                                      <input
+                                        type="text"
+                                        value={block.prompt || ''}
+                                        onChange={(e) => handleUpdateBlock(page.id, block.id, 'prompt', e.target.value)}
+                                        className="flex-1 text-xs border border-slate-300 rounded px-2 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        placeholder="输入AI生成提示词..."
+                                      />
+                                      <button
+                                        onClick={() => handleGenerateImage(page.id, block.id, block.prompt)}
+                                        disabled={isGenerating}
+                                        className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white rounded text-xs font-medium flex items-center gap-1.5 disabled:opacity-50"
+                                      >
+                                        {isGenerating && generatingType === 'image' ? (
+                                          <RefreshCw className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                          <Wand2 className="w-3 h-3" />
+                                        )}
+                                        AI生成
+                                      </button>
+                                    </div>
+                                    <input
+                                      type="text"
+                                      value={block.caption || ''}
+                                      onChange={(e) => handleUpdateBlock(page.id, block.id, 'caption', e.target.value)}
+                                      className="w-full text-xs border border-slate-300 rounded px-2 py-1 focus:ring-2 focus:ring-indigo-500 outline-none"
+                                      placeholder="图片说明..."
+                                    />
+                                  </div>
+                                )}
+                                {!isEditing && block.caption && (
+                                  <p className={`text-xs text-slate-500 italic ${block.align === 'center' ? 'text-center' : ''}`}>
+                                    {block.caption}
+                                  </p>
+                                )}
+                              </div>
                             )}
                           </div>
                         )}
