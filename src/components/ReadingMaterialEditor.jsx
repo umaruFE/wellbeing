@@ -761,8 +761,15 @@ export const ReadingMaterialEditor = ({
                                       <div className="flex items-center gap-2">
                                         <input 
                                           type="checkbox" 
-                                          checked={!!selectedAsset.strokeWidth} 
-                                          onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', e.target.checked ? 2 : 0)} 
+                                          checked={!!selectedAsset.strokeWidth && selectedAsset.strokeWidth > 0} 
+                                          onChange={(e) => {
+                                            if (e.target.checked) {
+                                              handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', 2);
+                                            } else {
+                                              handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', null);
+                                              handleAssetChange(page.id, selectedAsset.id, 'strokeColor', null);
+                                            }
+                                          }} 
                                           className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
                                         />
                                         <span className="text-xs text-slate-600">启用描边</span>
@@ -772,14 +779,19 @@ export const ReadingMaterialEditor = ({
                                           <div>
                                             <div className="flex items-center justify-between mb-1">
                                               <span className="text-[10px] text-slate-500">描边宽度</span>
-                                              <span className="text-[10px] text-slate-400">{selectedAsset.strokeWidth || 0}px</span>
+                                              <span className="text-[10px] text-slate-400">{selectedAsset.strokeWidth}px</span>
                                             </div>
                                             <input 
                                               type="range" 
-                                              min="0" 
+                                              min="1" 
                                               max="10" 
                                               value={selectedAsset.strokeWidth || 2} 
-                                              onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', parseInt(e.target.value))} 
+                                              onChange={(e) => {
+                                                const value = parseInt(e.target.value);
+                                                if (value > 0) {
+                                                  handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', value);
+                                                }
+                                              }} 
                                               className="w-full"
                                             />
                                           </div>
