@@ -487,24 +487,20 @@ export const ReadingMaterialEditor = ({
                                     fontWeight: asset.fontWeight || 'normal',
                                     color: asset.color || '#1e293b',
                                     textAlign: asset.textAlign || 'center',
-                                    WebkitTextStroke: asset.strokeWidth ? `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}` : 'none',
-                                    WebkitTextFillColor: asset.strokeWidth ? (asset.color || '#1e293b') : 'transparent',
-                                    textShadow: asset.strokeWidth ? [
-                                      `-${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                      `${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                      `-${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                      `${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`
-                                    ].join(', ') : 'none',
+                                    ...(asset.strokeWidth ? {
+                                      WebkitTextStroke: `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}`,
+                                      WebkitTextFillColor: asset.color || '#1e293b',
+                                      textShadow: [
+                                        `-${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                        `${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                        `-${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                        `${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`
+                                      ].join(', ')
+                                    } : {}),
                                     justifyContent: asset.textAlign === 'left' ? 'flex-start' : asset.textAlign === 'right' ? 'flex-end' : 'center'
                                   }}
                                 >
-                                  <span style={{ 
-                                    color: asset.strokeWidth ? (asset.color || '#1e293b') : undefined,
-                                    WebkitTextStroke: asset.strokeWidth ? `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}` : 'none',
-                                    WebkitTextFillColor: asset.strokeWidth ? (asset.color || '#1e293b') : undefined
-                                  }}>
-                                    {asset.content || "请输入文本..."}
-                                  </span>
+                                  {asset.content || "请输入文本..."}
                                 </div>
                               ) : (
                                 <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
@@ -771,7 +767,7 @@ export const ReadingMaterialEditor = ({
                                         />
                                         <span className="text-xs text-slate-600">启用描边</span>
                                       </div>
-                                      {selectedAsset.strokeWidth && (
+                                      {selectedAsset.strokeWidth && selectedAsset.strokeWidth > 0 && (
                                         <div className="space-y-2 pl-6">
                                           <div>
                                             <div className="flex items-center justify-between mb-1">
@@ -983,16 +979,20 @@ export const ReadingMaterialEditor = ({
                                 fontWeight: asset.fontWeight || 'normal',
                                 color: asset.color || '#1e293b',
                                 textAlign: asset.textAlign || 'center',
+                                ...(asset.strokeWidth ? {
+                                  WebkitTextStroke: `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}`,
+                                  WebkitTextFillColor: asset.color || '#1e293b',
+                                  textShadow: [
+                                    `-${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                    `${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                    `-${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                    `${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`
+                                  ].join(', ')
+                                } : {}),
                                 justifyContent: asset.textAlign === 'left' ? 'flex-start' : asset.textAlign === 'right' ? 'flex-end' : 'center'
                               }}
                             >
-                              <span style={{ 
-                                color: asset.strokeWidth ? (asset.color || '#1e293b') : undefined,
-                                WebkitTextStroke: asset.strokeWidth ? `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}` : 'none',
-                                WebkitTextFillColor: asset.strokeWidth ? (asset.color || '#1e293b') : undefined
-                              }}>
-                                {asset.content || ""}
-                              </span>
+                              {asset.content || ""}
                             </div>
                           ) : (
                             <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">

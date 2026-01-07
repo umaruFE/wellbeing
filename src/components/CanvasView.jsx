@@ -75,6 +75,57 @@ export const CanvasView = forwardRef((props, ref) => {
     setSelectedAssetId(null); 
   };
 
+  const handleAddStep = (phaseKey) => {
+    const newCourseData = { ...courseData };
+    const phase = newCourseData[phaseKey];
+    if (!phase) return;
+    
+    const newStep = {
+      id: `${phaseKey}-${Date.now()}`,
+      title: '新环节',
+      time: '00:00',
+      objective: '',
+      assets: []
+    };
+    
+    phase.steps.push(newStep);
+    setCourseData(newCourseData);
+    setActivePhase(phaseKey);
+    setActiveStepId(newStep.id);
+    setSelectedAssetId(null);
+  };
+
+  const handleDeleteStep = (phaseKey, stepId) => {
+    if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) {
+      return;
+    }
+    
+    const newCourseData = { ...courseData };
+    const phase = newCourseData[phaseKey];
+    if (!phase) return;
+    
+    phase.steps = phase.steps.filter(s => s.id !== stepId);
+    
+    // 如果删除的是当前环节，切换到第一个环节
+    if (activeStepId === stepId) {
+      if (phase.steps.length > 0) {
+        setActiveStepId(phase.steps[0].id);
+      } else {
+        // 如果这个阶段没有环节了，切换到其他阶段
+        const otherPhase = Object.entries(newCourseData).find(([key, p]) => 
+          key !== phaseKey && p.steps.length > 0
+        );
+        if (otherPhase) {
+          setActivePhase(otherPhase[0]);
+          setActiveStepId(otherPhase[1].steps[0].id);
+        }
+      }
+    }
+    
+    setCourseData(newCourseData);
+    setSelectedAssetId(null);
+  };
+
   const handleInputChange = (field, value) => {
     const newCourseData = { ...courseData };
     const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
@@ -270,11 +321,31 @@ export const CanvasView = forwardRef((props, ref) => {
               {expandedPhases.includes(key) && (
                 <div className="bg-slate-50 border-t border-slate-100">
                   {phase.steps.map((step) => (
-                    <button key={step.id} onClick={() => handleStepClick(key, step.id)} className={`w-full text-left p-2 pl-8 text-xs border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-start gap-2 ${activeStepId === step.id ? 'bg-blue-100 text-blue-800 font-semibold border-l-4 border-l-blue-600' : 'text-slate-600'}`}>
-                      <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span><span className="line-clamp-2">{step.title}</span>
-                    </button>
+                    <div key={step.id} className={`group/step border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-center ${activeStepId === step.id ? 'bg-blue-100' : ''}`}>
+                      <button 
+                        onClick={() => handleStepClick(key, step.id)} 
+                        className={`flex-1 text-left p-2 pl-8 text-xs transition-all flex items-start gap-2 ${activeStepId === step.id ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600' : 'text-slate-600'}`}
+                      >
+                        <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span><span className="line-clamp-2">{step.title}</span>
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteStep(key, step.id);
+                        }}
+                        className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
+                        title="删除环节"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   ))}
-                  <button className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1"><Plus className="w-3 h-3" /> 新增环节</button>
+                  <button 
+                    onClick={() => handleAddStep(key)}
+                    className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-3 h-3" /> 新增环节
+                  </button>
                 </div>
               )}
             </div>
