@@ -96,9 +96,9 @@ export const ReadingMaterialView = () => {
         setIsGenerating(false);
         
         // 生成阅读材料页面数据（适配 Canvas Assets 格式）
-        // 假设画布尺寸为 A4 比例：宽 600px，高 848px
-        const PAGE_WIDTH = 600;
-        const PAGE_HEIGHT = 848;
+        // A4比例：210mm × 297mm ≈ 0.707:1，使用 800px × 1131px
+        const PAGE_WIDTH = 800;
+        const PAGE_HEIGHT = 1131;
         const PADDING = 40;
 
         const generatedPages = selectedSlidesData.map((slide, index) => {
@@ -147,7 +147,7 @@ export const ReadingMaterialView = () => {
           assets.push({
             id: `text-${slide.id}`,
             type: 'text',
-            title: '讲稿内容',
+            title: '文本1',
             content: scriptContent,
             x: PADDING,
             y: currentY,
@@ -164,7 +164,7 @@ export const ReadingMaterialView = () => {
             assets.push({
               id: `activity-${slide.id}`,
               type: 'text',
-              title: '活动说明',
+              title: '文本2',
               content: slide.activities,
               x: PADDING,
               y: currentY,
@@ -181,7 +181,7 @@ export const ReadingMaterialView = () => {
           assets.push({
             id: `obj-${slide.id}`,
             type: 'text',
-            title: '教学目标',
+            title: '文本3',
             content: `【教学目标】\n${slide.objectives || '暂无'}`,
             x: PADDING,
             y: PAGE_HEIGHT - 100,

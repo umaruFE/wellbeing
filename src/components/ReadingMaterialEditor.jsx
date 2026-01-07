@@ -20,7 +20,14 @@ import {
   ChevronLeft,
   Monitor,
   Smartphone,
-  Play
+  Play,
+  Bold,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Palette,
+  Plus,
+  FileX
 } from 'lucide-react';
 import { getAssetIcon } from '../utils';
 
@@ -34,7 +41,7 @@ export const ReadingMaterialEditor = ({
   editingPageIndex,
   onEditingPageIndexChange 
 }) => {
-  const [canvasAspectRatio, setCanvasAspectRatio] = useState('16:9'); // '16:9' | '9:16'
+  const [canvasAspectRatio, setCanvasAspectRatio] = useState('A4'); // 'A4' | 'A4横向'
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [interactionMode, setInteractionMode] = useState('idle');
   const [interactionStart, setInteractionStart] = useState(null);
@@ -42,12 +49,14 @@ export const ReadingMaterialEditor = ({
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
   const canvasRef = useRef(null);
 
-  // 计算画布尺寸
+  // 计算画布尺寸 (A4比例: 210mm × 297mm ≈ 0.707:1)
   const getCanvasSize = () => {
-    if (canvasAspectRatio === '16:9') {
-      return { width: 960, height: 540 };
+    if (canvasAspectRatio === 'A4') {
+      // A4竖版：宽度800px，高度1131px (800/1131 ≈ 0.707)
+      return { width: 800, height: 1131 };
     } else {
-      return { width: 540, height: 960 };
+      // A4横版：宽度1131px，高度800px
+      return { width: 1131, height: 800 };
     }
   };
 
@@ -111,6 +120,72 @@ export const ReadingMaterialEditor = ({
       return page;
     }));
     setSelectedAssetId(null);
+  };
+
+  // 添加新页面
+  const handleAddPage = (insertAfterIndex = null) => {
+    const canvasSize = getCanvasSize();
+    const newPage = {
+      id: `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      slideId: null,
+      pageNumber: insertAfterIndex !== null ? insertAfterIndex + 2 : pages.length + 1,
+      title: `新页面 ${insertAfterIndex !== null ? insertAfterIndex + 2 : pages.length + 1}`,
+      width: canvasSize.width,
+      height: canvasSize.height,
+      canvasAssets: [],
+      blocks: []
+    };
+    
+    onPagesChange(prev => {
+      if (insertAfterIndex !== null) {
+        // 在指定位置插入
+        const newPages = [...prev];
+        newPages.splice(insertAfterIndex + 1, 0, newPage);
+        // 重新编号
+        return newPages.map((page, index) => ({
+          ...page,
+          pageNumber: index + 1
+        }));
+      } else {
+        // 添加到末尾
+        return [...prev, newPage];
+      }
+    });
+  };
+
+  // 删除页面
+  const handleDeletePage = (pageId, pageIndex) => {
+    if (pages.length <= 1) {
+      alert('至少需要保留一个页面！');
+      return;
+    }
+    
+    if (!confirm(`确定要删除第 ${pageIndex + 1} 页吗？此操作无法撤销。`)) {
+      return;
+    }
+
+    onPagesChange(prev => {
+      const newPages = prev.filter(p => p.id !== pageId);
+      // 重新编号
+      return newPages.map((page, index) => ({
+        ...page,
+        pageNumber: index + 1
+      }));
+    });
+
+    // 如果删除的是当前编辑的页面，切换到第一页或上一页
+    if (editingPageIndex === pageIndex) {
+      if (pageIndex > 0) {
+        onEditingPageIndexChange(pageIndex - 1);
+      } else if (pages.length > 1) {
+        onEditingPageIndexChange(0);
+      } else {
+        onEditingPageIndexChange(null);
+      }
+    } else if (editingPageIndex > pageIndex) {
+      // 如果删除的页面在当前编辑页面之前，需要调整编辑索引
+      onEditingPageIndexChange(editingPageIndex - 1);
+    }
   };
 
   // 图层操作
@@ -220,14 +295,32 @@ export const ReadingMaterialEditor = ({
 
   if (!pages || pages.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-slate-400">
+      <div className="flex flex-col items-center justify-center h-64 text-slate-400 space-y-4">
         <p>暂无阅读材料页面</p>
+        <button
+          onClick={() => handleAddPage()}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          添加新页面
+        </button>
       </div>
     );
   }
 
   return (
     <div className="space-y-8">
+      {/* 添加页面按钮 - 顶部 */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => handleAddPage()}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          添加新页面
+        </button>
+      </div>
+
       {pages.map((page, pageIndex) => {
         const isEditing = editingPageIndex === pageIndex;
         const assets = page.canvasAssets || [];
@@ -252,25 +345,34 @@ export const ReadingMaterialEditor = ({
                   {isEditing && (
                     <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
                       <button
-                        onClick={() => setCanvasAspectRatio('16:9')}
-                        className={`px-2 py-1 rounded text-xs ${
-                          canvasAspectRatio === '16:9' ? 'bg-white text-indigo-600' : 'text-slate-500'
+                        onClick={() => setCanvasAspectRatio('A4')}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          canvasAspectRatio === 'A4' ? 'bg-white text-indigo-600' : 'text-slate-500 hover:text-slate-700'
                         }`}
-                        title="16:9 横屏"
+                        title="A4 竖版"
                       >
-                        <Monitor className="w-4 h-4" />
+                        A4 竖版
                       </button>
                       <button
-                        onClick={() => setCanvasAspectRatio('9:16')}
-                        className={`px-2 py-1 rounded text-xs ${
-                          canvasAspectRatio === '9:16' ? 'bg-white text-indigo-600' : 'text-slate-500'
+                        onClick={() => setCanvasAspectRatio('A4横向')}
+                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                          canvasAspectRatio === 'A4横向' ? 'bg-white text-indigo-600' : 'text-slate-500 hover:text-slate-700'
                         }`}
-                        title="9:16 竖屏"
+                        title="A4 横版"
                       >
-                        <Smartphone className="w-4 h-4" />
+                        A4 横版
                       </button>
                     </div>
                   )}
+                  {/* 删除页面按钮 */}
+                  <button
+                    onClick={() => handleDeletePage(page.id, pageIndex)}
+                    className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
+                    title="删除此页"
+                  >
+                    <FileX className="w-4 h-4" />
+                    删除
+                  </button>
                   {isEditing ? (
                     <button
                       onClick={() => onEditingPageIndexChange(null)}
@@ -379,10 +481,30 @@ export const ReadingMaterialEditor = ({
                               {/* 资产内容 */}
                               {asset.type === 'text' ? (
                                 <div 
-                                  className="w-full h-full bg-transparent p-2 text-xl font-bold font-sans text-slate-800 whitespace-pre-wrap overflow-hidden flex items-center justify-center text-center"
-                                  style={{ fontSize: asset.fontSize ? `${asset.fontSize}px` : undefined }}
+                                  className="w-full h-full bg-transparent p-2 font-sans whitespace-pre-wrap overflow-hidden flex items-center"
+                                  style={{ 
+                                    fontSize: asset.fontSize ? `${asset.fontSize}px` : '24px',
+                                    fontWeight: asset.fontWeight || 'normal',
+                                    color: asset.color || '#1e293b',
+                                    textAlign: asset.textAlign || 'center',
+                                    WebkitTextStroke: asset.strokeWidth ? `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}` : 'none',
+                                    WebkitTextFillColor: asset.strokeWidth ? (asset.color || '#1e293b') : 'transparent',
+                                    textShadow: asset.strokeWidth ? [
+                                      `-${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                      `${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                      `-${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
+                                      `${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`
+                                    ].join(', ') : 'none',
+                                    justifyContent: asset.textAlign === 'left' ? 'flex-start' : asset.textAlign === 'right' ? 'flex-end' : 'center'
+                                  }}
                                 >
-                                  {asset.content || "请输入文本..."}
+                                  <span style={{ 
+                                    color: asset.strokeWidth ? (asset.color || '#1e293b') : undefined,
+                                    WebkitTextStroke: asset.strokeWidth ? `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}` : 'none',
+                                    WebkitTextFillColor: asset.strokeWidth ? (asset.color || '#1e293b') : undefined
+                                  }}>
+                                    {asset.content || "请输入文本..."}
+                                  </span>
                                 </div>
                               ) : (
                                 <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
@@ -514,13 +636,177 @@ export const ReadingMaterialEditor = ({
                               />
                             </div>
                             {selectedAsset.type === 'text' ? (
-                              <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">文本内容 / Content</label>
-                                <textarea 
-                                  value={selectedAsset.content || ''} 
-                                  onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'content', e.target.value)} 
-                                  className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none"
-                                />
+                              <div className="space-y-4">
+                                <div>
+                                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">文本内容 / Content</label>
+                                  <textarea 
+                                    value={selectedAsset.content || ''} 
+                                    onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'content', e.target.value)} 
+                                    className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none"
+                                  />
+                                </div>
+                                
+                                {/* 文本样式选项 */}
+                                <div className="space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold text-slate-500 uppercase">文本样式</label>
+                                  </div>
+                                  
+                                  {/* 字号 */}
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">字号 Font Size</label>
+                                    <div className="flex items-center gap-2">
+                                      <input 
+                                        type="number" 
+                                        min="8" 
+                                        max="200" 
+                                        value={selectedAsset.fontSize || 24} 
+                                        onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'fontSize', parseInt(e.target.value) || 24)} 
+                                        className="flex-1 text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 outline-none"
+                                      />
+                                      <span className="text-[10px] text-slate-400">px</span>
+                                    </div>
+                                  </div>
+
+                                  {/* 加粗 */}
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">字重 Font Weight</label>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'fontWeight', 'normal')}
+                                        className={`flex-1 px-3 py-2 rounded border text-xs transition-colors ${
+                                          (selectedAsset.fontWeight || 'normal') === 'normal' 
+                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        正常
+                                      </button>
+                                      <button
+                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'fontWeight', 'bold')}
+                                        className={`flex-1 px-3 py-2 rounded border text-xs transition-colors flex items-center justify-center gap-1 ${
+                                          selectedAsset.fontWeight === 'bold' 
+                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                      >
+                                        <Bold className="w-3 h-3" />
+                                        加粗
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* 文本颜色 */}
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block flex items-center gap-1">
+                                      <Palette className="w-3 h-3" /> 文本颜色 Color
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                      <input 
+                                        type="color" 
+                                        value={selectedAsset.color || '#1e293b'} 
+                                        onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'color', e.target.value)} 
+                                        className="w-12 h-10 rounded border border-slate-200 cursor-pointer"
+                                      />
+                                      <input 
+                                        type="text" 
+                                        value={selectedAsset.color || '#1e293b'} 
+                                        onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'color', e.target.value)} 
+                                        className="flex-1 text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 outline-none font-mono"
+                                        placeholder="#000000"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* 文本对齐 */}
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">对齐方式 Align</label>
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'textAlign', 'left')}
+                                        className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
+                                          (selectedAsset.textAlign || 'center') === 'left' 
+                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                        title="左对齐"
+                                      >
+                                        <AlignLeft className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'textAlign', 'center')}
+                                        className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
+                                          (selectedAsset.textAlign || 'center') === 'center' 
+                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                        title="居中"
+                                      >
+                                        <AlignCenter className="w-4 h-4" />
+                                      </button>
+                                      <button
+                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'textAlign', 'right')}
+                                        className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
+                                          selectedAsset.textAlign === 'right' 
+                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
+                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        }`}
+                                        title="右对齐"
+                                      >
+                                        <AlignRight className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* 描边 */}
+                                  <div>
+                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">描边 Stroke</label>
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2">
+                                        <input 
+                                          type="checkbox" 
+                                          checked={!!selectedAsset.strokeWidth} 
+                                          onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', e.target.checked ? 2 : 0)} 
+                                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                                        />
+                                        <span className="text-xs text-slate-600">启用描边</span>
+                                      </div>
+                                      {selectedAsset.strokeWidth && (
+                                        <div className="space-y-2 pl-6">
+                                          <div>
+                                            <div className="flex items-center justify-between mb-1">
+                                              <span className="text-[10px] text-slate-500">描边宽度</span>
+                                              <span className="text-[10px] text-slate-400">{selectedAsset.strokeWidth || 0}px</span>
+                                            </div>
+                                            <input 
+                                              type="range" 
+                                              min="0" 
+                                              max="10" 
+                                              value={selectedAsset.strokeWidth || 2} 
+                                              onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', parseInt(e.target.value))} 
+                                              className="w-full"
+                                            />
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <label className="text-[10px] text-slate-500">描边颜色</label>
+                                            <input 
+                                              type="color" 
+                                              value={selectedAsset.strokeColor || '#000000'} 
+                                              onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeColor', e.target.value)} 
+                                              className="w-10 h-8 rounded border border-slate-200 cursor-pointer"
+                                            />
+                                            <input 
+                                              type="text" 
+                                              value={selectedAsset.strokeColor || '#000000'} 
+                                              onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeColor', e.target.value)} 
+                                              className="flex-1 text-xs border border-slate-200 rounded px-2 py-1 bg-slate-50 outline-none font-mono"
+                                            />
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             ) : (
                               <>
@@ -691,10 +977,22 @@ export const ReadingMaterialEditor = ({
                           {/* 资产内容 */}
                           {asset.type === 'text' ? (
                             <div 
-                              className="w-full h-full bg-transparent p-2 text-xl font-bold font-sans text-slate-800 whitespace-pre-wrap overflow-hidden flex items-center justify-center text-center"
-                              style={{ fontSize: asset.fontSize ? `${asset.fontSize}px` : undefined }}
+                              className="w-full h-full bg-transparent p-2 font-sans whitespace-pre-wrap overflow-hidden flex items-center"
+                              style={{ 
+                                fontSize: asset.fontSize ? `${asset.fontSize}px` : '24px',
+                                fontWeight: asset.fontWeight || 'normal',
+                                color: asset.color || '#1e293b',
+                                textAlign: asset.textAlign || 'center',
+                                justifyContent: asset.textAlign === 'left' ? 'flex-start' : asset.textAlign === 'right' ? 'flex-end' : 'center'
+                              }}
                             >
-                              {asset.content || ""}
+                              <span style={{ 
+                                color: asset.strokeWidth ? (asset.color || '#1e293b') : undefined,
+                                WebkitTextStroke: asset.strokeWidth ? `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}` : 'none',
+                                WebkitTextFillColor: asset.strokeWidth ? (asset.color || '#1e293b') : undefined
+                              }}>
+                                {asset.content || ""}
+                              </span>
                             </div>
                           ) : (
                             <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
@@ -732,6 +1030,17 @@ export const ReadingMaterialEditor = ({
           </div>
         );
       })}
+
+      {/* 底部添加页面按钮 */}
+      <div className="flex justify-center pt-4">
+        <button
+          onClick={() => handleAddPage(pages.length - 1)}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          在末尾添加新页面
+        </button>
+      </div>
     </div>
   );
 };
