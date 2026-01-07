@@ -53,10 +53,10 @@ export const ReadingMaterialEditor = ({
   const getCanvasSize = () => {
     if (canvasAspectRatio === 'A4') {
       // A4竖版：宽度800px，高度1131px (800/1131 ≈ 0.707)
-      return { width: 800, height: 1131 };
+      return { width: 680, height: 960 };
     } else {
       // A4横版：宽度1131px，高度800px
-      return { width: 1131, height: 800 };
+      return { width: 960, height: 680 };
     }
   };
 
