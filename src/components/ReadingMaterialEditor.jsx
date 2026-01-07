@@ -296,44 +296,27 @@ export const ReadingMaterialEditor = ({
                 {/* Main Canvas Area */}
                 <div className={`flex-1 ${isRightOpen ? '' : ''} transition-all duration-300`}>
                   <div className="flex-1 flex flex-col bg-slate-100 relative" style={{ minHeight: '600px' }}>
-                    {/* 工具栏 - 固定在画布区域上方居中，不受右侧面板影响 */}
-                    <div className="absolute top-4 left-0 right-0 flex justify-center z-30 pointer-events-none">
-                      <div className="bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 pointer-events-auto">
-                        <button 
-                          onClick={() => handleAddAsset(page.id, 'text')} 
-                          className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-blue-600 transition-colors"
-                        >
-                          <Type className="w-5 h-5" />
-                          <span className="text-[9px] font-bold">文本</span>
-                        </button>
-                        <div className="w-px bg-slate-200 h-8"></div>
-                        <button 
-                          onClick={() => handleAddAsset(page.id, 'image')} 
-                          className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-purple-600 transition-colors"
-                        >
-                          <ImageIcon className="w-5 h-5" />
-                          <span className="text-[9px] font-bold">图片</span>
-                        </button>
-                        <button 
-                          onClick={() => handleAddAsset(page.id, 'audio')} 
-                          className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-green-600 transition-colors"
-                        >
-                          <Music className="w-5 h-5" />
-                          <span className="text-[9px] font-bold">音频</span>
-                        </button>
-                        <button 
-                          onClick={() => handleAddAsset(page.id, 'video')} 
-                          className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-red-600 transition-colors"
-                        >
-                          <Video className="w-5 h-5" />
-                          <span className="text-[9px] font-bold">视频</span>
-                        </button>
-                      </div>
+                    {/* 工具栏 - 固定在顶部 */}
+                    <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-center gap-4 shrink-0">
+                      <button 
+                        onClick={() => handleAddAsset(page.id, 'text')} 
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors border border-slate-200"
+                      >
+                        <Type className="w-5 h-5" />
+                        <span className="text-sm font-medium">文本</span>
+                      </button>
+                      <button 
+                        onClick={() => handleAddAsset(page.id, 'image')} 
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-600 hover:text-purple-600 hover:bg-purple-50 transition-colors border border-slate-200"
+                      >
+                        <ImageIcon className="w-5 h-5" />
+                        <span className="text-sm font-medium">图片</span>
+                      </button>
                     </div>
 
                     {/* 画布区域 */}
                     <div 
-                      className="flex-1 overflow-auto p-8 flex items-center justify-center relative pt-20" 
+                      className="flex-1 overflow-auto p-8 flex items-center justify-center relative" 
                       onClick={() => setSelectedAssetId(null)}
                       onMouseMove={handleMouseMove}
                       onMouseUp={handleMouseUp}
