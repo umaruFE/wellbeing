@@ -40,6 +40,10 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   const [isGeneratingReadingMaterial, setIsGeneratingReadingMaterial] = useState(false);
   const [showAddPPTPromptModal, setShowAddPPTPromptModal] = useState(null); // {phaseId, slideId}
   const [isGeneratingPPT, setIsGeneratingPPT] = useState(false);
+  const [showRegeneratePPTPromptModal, setShowRegeneratePPTPromptModal] = useState(null); // {phaseId, slideId}
+  const [isRegeneratingPPT, setIsRegeneratingPPT] = useState(false);
+  const [showRegenerateReadingMaterialPromptModal, setShowRegenerateReadingMaterialPromptModal] = useState(null); // {phaseId, slideId}
+  const [isRegeneratingReadingMaterial, setIsRegeneratingReadingMaterial] = useState(false);
   const [selectedField, setSelectedField] = useState(null); // {phaseId, slideId, field: 'activity'|'objectives'|'script'}
   const [generationHistory, setGenerationHistory] = useState([]); // 历史生成记录 [{ phaseId, slideId, field, content, timestamp, type }]
   const [showHistoryModal, setShowHistoryModal] = useState(null); // { phaseId, slideId, field }
@@ -796,6 +800,122 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
     }));
   };
 
+  // 显示重新生成PPT提示词输入模态框
+  const handleRegeneratePPT = (phaseId, slideId) => {
+    setShowRegeneratePPTPromptModal({ phaseId, slideId });
+  };
+
+  // 确认重新生成PPT（带提示词）
+  const handleConfirmRegeneratePPT = (prompt) => {
+    if (!showRegeneratePPTPromptModal) return;
+    
+    const { phaseId, slideId } = showRegeneratePPTPromptModal;
+    setIsRegeneratingPPT(true);
+    
+    // 模拟AI重新生成PPT
+    setTimeout(() => {
+      const randomColor = Math.floor(Math.random()*16777215).toString(16);
+      const generatedImage = prompt 
+        ? `https://placehold.co/600x400/${randomColor}/FFF?text=AI+Regen+PPT+${encodeURIComponent(prompt.substring(0, 10))}+${Date.now().toString().slice(-4)}`
+        : `https://placehold.co/600x400/${randomColor}/FFF?text=Regen+PPT+${Date.now().toString().slice(-4)}`;
+      
+      // 重新生成第一个PPT页面，如果没有则创建一个
+      setPhases(prevPhases => prevPhases.map(phase => {
+        if (phase.id !== phaseId) return phase;
+        return {
+          ...phase,
+          slides: phase.slides.map(slide => {
+            if (slide.id !== slideId) return slide;
+            const pptSlides = slide.pptSlides || [];
+            const updatedSlides = pptSlides.length > 0
+              ? pptSlides.map((ppt, index) => 
+                  index === 0 ? {
+                    ...ppt,
+                    image: generatedImage,
+                    timestamp: Date.now(),
+                    prompt: prompt || ''
+                  } : ppt
+                )
+              : [{
+                  id: `ppt-${slideId}-${Date.now()}`,
+                  image: generatedImage,
+                  timestamp: Date.now(),
+                  prompt: prompt || ''
+                }];
+            
+            return {
+              ...slide,
+              pptSlides: updatedSlides,
+              image: updatedSlides[0]?.image || slide.image
+            };
+          })
+        };
+      }));
+      
+      setIsRegeneratingPPT(false);
+      setShowRegeneratePPTPromptModal(null);
+    }, 2000);
+  };
+
+  // 显示重新生成阅读材料提示词输入模态框
+  const handleRegenerateReadingMaterial = (phaseId, slideId) => {
+    setShowRegenerateReadingMaterialPromptModal({ phaseId, slideId });
+  };
+
+  // 确认重新生成阅读材料（带提示词）
+  const handleConfirmRegenerateReadingMaterial = (prompt) => {
+    if (!showRegenerateReadingMaterialPromptModal) return;
+    
+    const { phaseId, slideId } = showRegenerateReadingMaterialPromptModal;
+    setIsRegeneratingReadingMaterial(true);
+    
+    // 模拟AI重新生成阅读材料
+    setTimeout(() => {
+      const slide = phases.find(p => p.id === phaseId)?.slides.find(s => s.id === slideId);
+      if (!slide) {
+        setIsRegeneratingReadingMaterial(false);
+        setShowRegenerateReadingMaterialPromptModal(null);
+        return;
+      }
+
+      const randomColor = Math.floor(Math.random()*16777215).toString(16);
+      const materialTitle = prompt 
+        ? `AI重新生成：${prompt.substring(0, 20)}...` 
+        : `${slide.title} - 阅读材料`;
+      const thumbnailText = `Reading${Date.now().toString().slice(-4)}`;
+      
+      const newReadingMaterial = generateSampleReadingMaterial(slide, 0);
+      newReadingMaterial.title = materialTitle;
+      newReadingMaterial.thumbnail = `https://placehold.co/200x267/${randomColor}/FFFFFF?text=${encodeURIComponent(thumbnailText)}`;
+      newReadingMaterial.pages[0].title = materialTitle;
+      
+      // 重新生成第一个阅读材料，如果没有则创建一个
+      setPhases(prevPhases => prevPhases.map(phase => {
+        if (phase.id !== phaseId) return phase;
+        return {
+          ...phase,
+          slides: phase.slides.map(slide => {
+            if (slide.id !== slideId) return slide;
+            const readingMaterials = slide.readingMaterials || [];
+            const updatedMaterials = readingMaterials.length > 0
+              ? readingMaterials.map((material, index) => 
+                  index === 0 ? newReadingMaterial : material
+                )
+              : [newReadingMaterial];
+            
+            return {
+              ...slide,
+              readingMaterials: updatedMaterials
+            };
+          })
+        };
+      }));
+      
+      setIsRegeneratingReadingMaterial(false);
+      setShowRegenerateReadingMaterialPromptModal(null);
+    }, 2000);
+  };
+
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 text-slate-800 font-sans overflow-hidden">
@@ -934,6 +1054,16 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                            <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">PPT {idx + 1}</div>
                                          </div>
                                        ))}
+                                       {/* 重新生成PPT按钮 */}
+                                       {slide.pptSlides && slide.pptSlides.length > 0 && (
+                                         <button 
+                                           onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
+                                           className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
+                                         >
+                                           <RefreshCw className="w-4 h-4" />
+                                           <span className="text-[10px]">重新生成PPT</span>
+                                         </button>
+                                       )}
                                        {/* 添加PPT按钮 */}
                                        <button 
                                          onClick={() => handleAddPPT(phase.id, slide.id)} 
@@ -964,6 +1094,14 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                            <button onClick={() => handleRegenerateMedia(phase.id, slide.id, 'image')} title="重新生成" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><RefreshCw className="w-3 h-3" /></button>
                                          </div>
                                        </div>
+                                       {/* 重新生成PPT按钮 */}
+                                       <button 
+                                         onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
+                                         className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
+                                       >
+                                         <RefreshCw className="w-4 h-4" />
+                                         <span className="text-[10px]">重新生成PPT</span>
+                                       </button>
                                        {/* 添加PPT按钮 */}
                                        <button 
                                          onClick={() => handleAddPPT(phase.id, slide.id)} 
@@ -1077,6 +1215,16 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                      </button>
                                    )}
                                    
+                                   {/* 重新生成阅读材料按钮 */}
+                                   {slide.readingMaterials && slide.readingMaterials.length > 0 && (
+                                     <button
+                                       onClick={() => handleRegenerateReadingMaterial(phase.id, slide.id)}
+                                       className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
+                                     >
+                                       <RefreshCw className="w-4 h-4" />
+                                       <span className="text-[10px]">重新生成阅读材料</span>
+                                     </button>
+                                   )}
                                    {/* 添加更多阅读材料按钮 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 && (
                                      <button
@@ -1228,6 +1376,34 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           placeholder="例如：创建一个关于颜色词汇的PPT页面，包含图片和文字..."
           type="element"
           isLoading={isGeneratingPPT}
+        />
+      )}
+
+      {/* 重新生成PPT提示词输入模态框 */}
+      {showRegeneratePPTPromptModal && (
+        <PromptInputModal
+          isOpen={!!showRegeneratePPTPromptModal}
+          onClose={() => setShowRegeneratePPTPromptModal(null)}
+          onConfirm={handleConfirmRegeneratePPT}
+          title="重新生成PPT"
+          description="请输入AI生成提示词，描述你想要重新生成的PPT页面内容（可选，留空将使用默认生成）"
+          placeholder="例如：重新生成一个关于颜色词汇的PPT页面，包含图片和文字..."
+          type="element"
+          isLoading={isRegeneratingPPT}
+        />
+      )}
+
+      {/* 重新生成阅读材料提示词输入模态框 */}
+      {showRegenerateReadingMaterialPromptModal && (
+        <PromptInputModal
+          isOpen={!!showRegenerateReadingMaterialPromptModal}
+          onClose={() => setShowRegenerateReadingMaterialPromptModal(null)}
+          onConfirm={handleConfirmRegenerateReadingMaterial}
+          title="重新生成阅读材料"
+          description="请输入AI生成提示词，描述你想要重新生成的阅读材料内容（可选，留空将使用默认生成）"
+          placeholder="例如：重新生成一个关于颜色词汇的阅读材料，包含图片和文字..."
+          type="element"
+          isLoading={isRegeneratingReadingMaterial}
         />
       )}
 

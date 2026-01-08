@@ -30,8 +30,7 @@ import {
   AlignCenter,
   AlignRight,
   Palette,
-  History,
-  Music
+  History
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
 import { INITIAL_COURSE_DATA } from '../constants';
@@ -400,7 +399,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         return {
           ...page,
           canvasAssets: (page.canvasAssets || []).map(asset => {
-            if (asset.id === historyItem.assetId && (asset.type === 'image' || asset.type === 'video' || asset.type === 'audio')) {
+            if (asset.id === historyItem.assetId && (asset.type === 'image' || asset.type === 'video')) {
               return {
                 ...asset,
                 url: historyItem.url,
@@ -1041,7 +1040,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                                     <button 
                                       onClick={() => {
                                         // 保存当前内容到历史
-                                        if (selectedAsset.type === 'image' || selectedAsset.type === 'video' || selectedAsset.type === 'audio') {
+                                        if (selectedAsset.type === 'image' || selectedAsset.type === 'video') {
                                           if (selectedAsset.url) {
                                             saveGenerationHistory(selectedAsset.id, selectedAsset.type, selectedAsset.url, selectedAsset.prompt);
                                           }
@@ -1155,7 +1154,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-slate-800">
-                    历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : '音频'}
+                    历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : ''}
                   </h3>
                 </div>
               </div>
@@ -1198,16 +1197,12 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                                 {historyItem.displayTime}
                               </span>
                             </div>
-                            {historyItem.type === 'image' || historyItem.type === 'video' ? (
+                            {(historyItem.type === 'image' || historyItem.type === 'video') && (
                               <img 
                                 src={historyItem.url} 
                                 alt="历史生成" 
                                 className="w-full h-32 object-cover rounded border border-slate-200 mb-2"
                               />
-                            ) : (
-                              <div className="w-full h-16 bg-slate-100 rounded border border-slate-200 flex items-center justify-center mb-2">
-                                <Music className="w-6 h-6 text-slate-400" />
-                              </div>
                             )}
                             {historyItem.prompt && (
                               <p className="text-xs text-slate-600 bg-slate-50 rounded p-2 mt-2">

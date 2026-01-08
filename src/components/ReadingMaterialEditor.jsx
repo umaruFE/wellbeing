@@ -8,7 +8,6 @@ import {
   Upload,
   X,
   Video,
-  Music,
   Layers,
   ArrowUp,
   ArrowDown,
@@ -159,12 +158,11 @@ export const ReadingMaterialEditor = ({
     // 模拟AI生成
     setTimeout(() => {
       let w = 300, h = 200;
-      if (type === 'audio') { w = 300; h = 100; }
       if (type === 'text') { w = 300; h = 100; }
 
       const generatedTitle = prompt 
         ? `AI生成：${prompt.substring(0, 15)}...` 
-        : (type === 'text' ? '文本' : type === 'image' ? '图片' : type === 'video' ? '视频' : '音频');
+        : (type === 'text' ? '文本' : type === 'image' ? '图片' : type === 'video' ? '视频' : '');
       const generatedUrl = type === 'text' 
         ? '' 
         : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
@@ -593,12 +591,6 @@ export const ReadingMaterialEditor = ({
                                       <Play className="w-12 h-12 text-white opacity-80" />
                                     </div>
                                   )}
-                                  {asset.type === 'audio' && (
-                                    <div className="absolute bottom-0 left-0 right-0 h-full bg-slate-900/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
-                                      <Music className="w-8 h-8 text-white/80" />
-                                      <div className="text-white text-xs font-mono">Audio Track</div>
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             </div>
@@ -679,12 +671,6 @@ export const ReadingMaterialEditor = ({
                                   <Play className="w-12 h-12 text-white opacity-80" />
                                 </div>
                               )}
-                              {asset.type === 'audio' && (
-                                <div className="absolute bottom-0 left-0 right-0 h-full bg-slate-900/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
-                                  <Music className="w-8 h-8 text-white/80" />
-                                  <div className="text-white text-xs font-mono">Audio Track</div>
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>
@@ -722,13 +708,13 @@ export const ReadingMaterialEditor = ({
         onConfirm={promptModalConfig.type === 'page' ? handleConfirmAddPage : handleConfirmAddAsset}
         title={promptModalConfig.type === 'page' 
           ? '添加新页面'
-          : `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`}
+          : `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : '文本'}元素`}
         description={promptModalConfig.type === 'page'
           ? '请输入AI生成提示词，描述你想要创建的页面内容（可选，留空将使用默认标题）'
           : '请输入AI生成提示词，描述你想要创建的元素'}
         placeholder={promptModalConfig.type === 'page'
           ? '例如：创建一个关于颜色词汇的阅读页面，包含图片和文字...'
-          : `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容'}...`}
+          : `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : '输入文本内容'}...`}
         type={promptModalConfig.type === 'page' ? 'session' : 'element'}
         isLoading={promptModalConfig.type === 'page' ? false : isGeneratingAsset}
       />
