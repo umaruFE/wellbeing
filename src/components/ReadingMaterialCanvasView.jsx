@@ -63,14 +63,24 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [generationHistory, setGenerationHistory] = useState([]); // [{ pageId, assetId, type, url, prompt, timestamp }]
   const [showHistoryModal, setShowHistoryModal] = useState(null); // { assetId, assetType }
   
-  // 撤销/重做功能
-  const [history, setHistory] = useState([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
+  // 撤销/重做功能 - 存储pages数据
+  const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // 将courseData的steps转换为pages格式
-  const convertStepsToPages = (data) => {
-    const allSteps = Object.values(data).flatMap(phase => 
-      phase.steps.map(step => ({ ...step, phaseKey: Object.keys(data).find(k => data[k].steps.includes(step)) }))
+  // 初始化pages - 优先使用navigation传入的material数据
+  const initializePages = () => {
+    // 如果navigation中有material数据（来自TableView），使用它
+    if (navigation?.type === 'reading-material' && navigation?.material?.pages) {
+      return navigation.material.pages.map(page => ({
+        ...page,
+        // 确保有slideId（如果material是从TableView传来的，可能没有slideId）
+        slideId: page.slideId || navigation.slideId || null
+      }));
+    }
+    
+    // 否则，从INITIAL_COURSE_DATA转换（向后兼容）
+    const allSteps = Object.values(INITIAL_COURSE_DATA).flatMap(phase => 
+      phase.steps.map(step => ({ ...step, phaseKey: Object.keys(INITIAL_COURSE_DATA).find(k => INITIAL_COURSE_DATA[k].steps.includes(step)) }))
     );
     
     return allSteps.map((step, index) => ({
@@ -78,31 +88,76 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       slideId: step.id,
       pageNumber: index + 1,
       title: step.title,
-      width: 800,
-      height: 1131,
-      canvasAssets: step.assets || [],
+      width: 680, // 使用TableView的格式：680x960
+      height: 960,
+      canvasAssets: (step.assets || []).map(asset => ({
+        ...asset,
+        // 确保asset格式与TableView一致
+        prompt: asset.prompt || '',
+        referenceImage: asset.referenceImage || null
+      })),
       blocks: []
     }));
   };
 
-  const [pages, setPages] = useState(() => convertStepsToPages(INITIAL_COURSE_DATA));
+  const [pages, setPages] = useState(() => initializePages());
   const [editingPageIndex, setEditingPageIndex] = useState(0);
 
-  // 当courseData变化时，更新pages
+  // 当navigation变化时，更新pages（如果是从TableView导航过来的）
   useEffect(() => {
-    const newPages = convertStepsToPages(courseData);
+    if (navigation?.type === 'reading-material' && navigation?.material?.pages) {
+      const newPages = navigation.material.pages.map(page => ({
+        ...page,
+        slideId: page.slideId || navigation.slideId || null
+      }));
+      setPages(newPages);
+      // 重置到第一页
+      setEditingPageIndex(0);
+      // 重置历史记录
+      setHistory([JSON.parse(JSON.stringify(newPages))]);
+      setHistoryIndex(0);
+    }
+  }, [navigation]);
+
+  // 当courseData变化时，更新pages（仅在使用INITIAL_COURSE_DATA时）
+  useEffect(() => {
+    // 如果正在使用navigation的material数据，不更新
+    if (navigation?.type === 'reading-material' && navigation?.material?.pages) {
+      return;
+    }
+    
+    // 否则，从courseData转换（向后兼容）
+    const allSteps = Object.values(courseData).flatMap(phase => 
+      phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
+    );
+    
+    const newPages = allSteps.map((step, index) => ({
+      id: `page-${step.id}`,
+      slideId: step.id,
+      pageNumber: index + 1,
+      title: step.title,
+      width: 680, // 使用TableView的格式
+      height: 960,
+      canvasAssets: (step.assets || []).map(asset => ({
+        ...asset,
+        prompt: asset.prompt || '',
+        referenceImage: asset.referenceImage || null
+      })),
+      blocks: []
+    }));
+    
     setPages(newPages);
     // 找到当前activeStepId对应的页面索引
     const currentIndex = newPages.findIndex(p => p.slideId === activeStepId);
     if (currentIndex >= 0) {
       setEditingPageIndex(currentIndex);
     }
-  }, [courseData, activeStepId]);
+  }, [courseData, activeStepId, navigation]);
 
-  // 保存历史记录
-  const saveToHistory = (newData) => {
+  // 保存历史记录 - 保存pages数据而不是courseData
+  const saveToHistory = (newPages) => {
     const newHistory = history.slice(0, historyIndex + 1);
-    newHistory.push(JSON.parse(JSON.stringify(newData)));
+    newHistory.push(JSON.parse(JSON.stringify(newPages)));
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
   };
@@ -112,7 +167,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
       setHistoryIndex(newIndex);
-      setCourseData(JSON.parse(JSON.stringify(history[newIndex])));
+      setPages(JSON.parse(JSON.stringify(history[newIndex])));
     }
   };
 
@@ -121,7 +176,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
       setHistoryIndex(newIndex);
-      setCourseData(JSON.parse(JSON.stringify(history[newIndex])));
+      setPages(JSON.parse(JSON.stringify(history[newIndex])));
     }
   };
 
@@ -153,29 +208,45 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     
     // 模拟AI生成（实际应该调用API）
     setTimeout(() => {
-      const newCourseData = { ...courseData };
-      const phase = newCourseData[phaseKey];
-      if (!phase) return;
-      
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 20)}...` : '新页面';
       
-      const newStep = {
-        id: `${phaseKey}-${Date.now()}`,
+      // 创建新页面，格式与TableView一致
+      const newPage = {
+        id: `page-${phaseKey}-${Date.now()}`,
+        slideId: `${phaseKey}-${Date.now()}`,
+        pageNumber: pages.length + 1,
         title: generatedTitle,
-        time: '00:00',
-        objective: prompt ? `根据提示词"${prompt}"生成的内容` : '',
-        assets: []
+        width: 680, // 使用TableView的格式
+        height: 960,
+        canvasAssets: [],
+        blocks: [],
+        prompt: prompt || ''
       };
       
-      phase.steps.push(newStep);
-      setCourseData(newCourseData);
-      saveToHistory(newCourseData);
-      setActivePhase(phaseKey);
-      setActiveStepId(newStep.id);
+      const newPages = [...pages, newPage];
+      setPages(newPages);
+      saveToHistory(newPages);
+      setEditingPageIndex(newPages.length - 1);
+      setActiveStepId(newPage.slideId);
       setSelectedAssetId(null);
       setIsGenerating(false);
       setShowPromptModal(false);
       setPromptModalConfig({ type: null, phaseKey: null });
+      
+      // 同时更新courseData（向后兼容）
+      const newCourseData = { ...courseData };
+      const phase = newCourseData[phaseKey];
+      if (phase) {
+        const newStep = {
+          id: newPage.slideId,
+          title: generatedTitle,
+          time: '00:00',
+          objective: prompt ? `根据提示词"${prompt}"生成的内容` : '',
+          assets: []
+        };
+        phase.steps.push(newStep);
+        setCourseData(newCourseData);
+      }
     }, 1500);
   };
 
