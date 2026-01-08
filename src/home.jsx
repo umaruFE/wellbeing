@@ -8,12 +8,15 @@ import {
   MonitorPlay,
   RefreshCw,
   BookOpen,
-  FileText
+  FileText,
+  History,
+  X,
+  Clock
 } from 'lucide-react';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { CanvasView } from './components/CanvasView';
 import { TableView } from './components/TableView';
-import { ReadingMaterialView } from './components/ReadingMaterialView';
+// import { ReadingMaterialView } from './components/ReadingMaterialView';
 import { ReadingMaterialCanvasView } from './components/ReadingMaterialCanvasView';
 
 // --- Main App Component ---
@@ -26,6 +29,7 @@ export default function App() {
   const canvasViewRef = useRef(null);
   const [isExporting, setIsExporting] = useState(false);
   const [canvasNavigation, setCanvasNavigation] = useState(null); // { phaseId, slideId }
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
 
   const handleStartApp = (config) => {
     setAppConfig(config);
@@ -58,6 +62,10 @@ export default function App() {
       // 同步导出状态（2秒后重置）
       setTimeout(() => setIsExporting(false), 2000);
     }
+  };
+
+  const handleOpenHistory = () => {
+    setShowHistoryModal(true);
   };
 
   if (appState === 'welcome') {
@@ -128,8 +136,13 @@ export default function App() {
              <Settings2 className="w-4 h-4" />
           </button>
           <div className="h-4 w-px bg-slate-200"></div>
-              <button onClick={handleOpenPreview} className="px-3 py-1.5 hover:bg-slate-100 rounded text-slate-600 flex items-center gap-1 text-xs font-medium" title="单张预览">
+              {/* <button onClick={handleOpenPreview} className="px-3 py-1.5 hover:bg-slate-100 rounded text-slate-600 flex items-center gap-1 text-xs font-medium" title="单张预览">
                 <MonitorPlay className="w-4 h-4" /> 单张预览
+              </button> */}
+              {/* <div className="h-4 w-px bg-slate-200"></div> */}
+              <button onClick={handleOpenHistory} className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded flex items-center gap-2 shadow-sm whitespace-nowrap transition-colors" title="历史版本">
+                <History className="w-3 h-3" />
+                历史版本
               </button>
               <div className="h-4 w-px bg-slate-200"></div>
               <button onClick={handleExportPPT} disabled={isExporting} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded flex items-center gap-2 shadow-sm whitespace-nowrap disabled:bg-blue-400" title="导出 PPT">
@@ -172,8 +185,78 @@ export default function App() {
              }}
            />
          )}
-         {currentView === 'reading' && <ReadingMaterialView />}
+         {/* {currentView === 'reading' && <ReadingMaterialView />} */}
       </div>
+
+      {/* 历史版本模态框 */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-800">历史版本</h3>
+                  <p className="text-xs text-slate-500 mt-0.5">查看和管理课程的历史版本</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowHistoryModal(false)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors p-1 hover:bg-slate-100 rounded"
+                title="关闭"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-3">
+                {/* 示例历史版本项 - 实际应该从数据源获取 */}
+                {[
+                  { id: 1, version: 'v1.2.3', time: '2024-01-15 14:30', author: '系统自动保存', description: '最新版本' },
+                  { id: 2, version: 'v1.2.2', time: '2024-01-15 10:20', author: '用户保存', description: '修改了第三章节' },
+                  { id: 3, version: 'v1.2.1', time: '2024-01-14 16:45', author: '用户保存', description: '添加了新的练习' },
+                  { id: 4, version: 'v1.2.0', time: '2024-01-13 09:15', author: '系统自动保存', description: '初始版本' },
+                ].map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-bold text-slate-800">{item.version}</span>
+                          {item.id === 1 && (
+                            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">当前版本</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-slate-500 mb-2">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{item.time}</span>
+                          </div>
+                          <span>•</span>
+                          <span>{item.author}</span>
+                        </div>
+                        <p className="text-sm text-slate-600">{item.description}</p>
+                      </div>
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                          恢复到此版本
+                        </button>
+                        <button className="px-3 py-1.5 text-xs bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
+                          导出
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

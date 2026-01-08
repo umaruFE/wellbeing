@@ -29,7 +29,9 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Palette
+  Palette,
+  History,
+  Music
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
 import { INITIAL_COURSE_DATA } from '../constants';
@@ -57,6 +59,10 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptModalConfig, setPromptModalConfig] = useState({ type: null, phaseKey: null });
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // 历史生成记录
+  const [generationHistory, setGenerationHistory] = useState([]); // [{ pageId, assetId, type, url, prompt, timestamp }]
+  const [showHistoryModal, setShowHistoryModal] = useState(null); // { assetId, assetType }
   
   // 撤销/重做功能
   const [history, setHistory] = useState([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
@@ -328,6 +334,101 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     saveToHistory(newCourseData);
   };
 
+  // 复制元素
+  const handleCopyAsset = (assetId) => {
+    if (!currentPage || !Array.isArray(pages)) return;
+    const assetToCopy = currentAssets.find(a => a.id === assetId);
+    if (!assetToCopy) return;
+
+    const newPages = pages.map(page => {
+      if (page.id === currentPage.id) {
+        const newAsset = {
+          ...JSON.parse(JSON.stringify(assetToCopy)),
+          id: Date.now().toString(),
+          x: assetToCopy.x + 20,
+          y: assetToCopy.y + 20,
+          title: assetToCopy.title + ' (副本)'
+        };
+        return {
+          ...page,
+          canvasAssets: [...(page.canvasAssets || []), newAsset]
+        };
+      }
+      return page;
+    });
+    setPages(newPages);
+    // 同步更新courseData
+    const newCourseData = { ...courseData };
+    if (currentPage.slideId) {
+      Object.values(newCourseData).forEach(phase => {
+        const step = phase.steps.find(s => s.id === currentPage.slideId);
+        if (step) {
+          step.assets = newPages.find(p => p.id === currentPage.id)?.canvasAssets || [];
+        }
+      });
+    }
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData);
+    
+    // 选中新复制的元素
+    const newAssetId = newPages.find(p => p.id === currentPage.id)?.canvasAssets?.slice(-1)[0]?.id;
+    if (newAssetId) {
+      setSelectedAssetId(newAssetId);
+    }
+  };
+
+  // 保存生成历史
+  const saveGenerationHistory = (assetId, assetType, url, prompt) => {
+    const historyItem = {
+      id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      pageId: currentPage?.id,
+      assetId,
+      type: assetType,
+      url,
+      prompt: prompt || '',
+      timestamp: new Date().toISOString(),
+      displayTime: new Date().toLocaleString('zh-CN')
+    };
+    setGenerationHistory(prev => [historyItem, ...prev].slice(0, 100)); // 最多保存100条
+  };
+
+  // 恢复历史生成内容
+  const handleRestoreHistory = (historyItem) => {
+    if (!currentPage || !Array.isArray(pages)) return;
+    const newPages = pages.map(page => {
+      if (page.id === currentPage.id) {
+        return {
+          ...page,
+          canvasAssets: (page.canvasAssets || []).map(asset => {
+            if (asset.id === historyItem.assetId && (asset.type === 'image' || asset.type === 'video' || asset.type === 'audio')) {
+              return {
+                ...asset,
+                url: historyItem.url,
+                prompt: historyItem.prompt || asset.prompt
+              };
+            }
+            return asset;
+          })
+        };
+      }
+      return page;
+    });
+    setPages(newPages);
+    // 同步更新courseData
+    const newCourseData = { ...courseData };
+    if (currentPage.slideId) {
+      Object.values(newCourseData).forEach(phase => {
+        const step = phase.steps.find(s => s.id === currentPage.slideId);
+        if (step) {
+          step.assets = newPages.find(p => p.id === currentPage.id)?.canvasAssets || [];
+        }
+      });
+    }
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData);
+    setShowHistoryModal(null);
+  };
+
   // 图层操作
   const handleLayerChange = (assetId, action) => {
     if (!currentPage || !Array.isArray(pages)) return;
@@ -521,7 +622,6 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                     A4 横版
                   </button>
                 </div>
-                <div className="w-px h-6 bg-slate-200"></div>
               </>
             )}
           </div>
@@ -566,6 +666,8 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
               onCanvasAspectRatioChange={setCanvasAspectRatio}
               selectedAssetId={selectedAssetId}
               onSelectedAssetIdChange={setSelectedAssetId}
+              onCopyAsset={handleCopyAsset}
+              onDeleteAsset={handleDeleteAsset}
             />
           ) : (
             <div className="flex items-center justify-center h-full text-slate-400">
@@ -928,31 +1030,52 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                                     placeholder="描述你想要生成的画面..." 
                                     className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none h-24 resize-none mb-2"
                                   />
-                                  <button 
-                                    onClick={() => {
-                                      setGeneratingAssetId(selectedAsset.id);
-                                      setTimeout(() => {
-                                        const randomColor = Math.floor(Math.random()*16777215).toString(16);
-                                        const generatedUrl = `https://placehold.co/${selectedAsset.width || 300}x${selectedAsset.height || 200}/${randomColor}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
-                                        handleAssetChange(selectedAsset.id, 'url', generatedUrl);
-                                        setGeneratingAssetId(null);
-                                      }, 2000);
-                                    }}
-                                    className="w-full py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                                  >
-                                    <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} />
-                                    {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}
-                                  </button>
+                                  <div className="flex gap-2 mb-2">
+                                    <button 
+                                      onClick={() => setShowHistoryModal({ assetId: selectedAsset.id, assetType: selectedAsset.type })}
+                                      className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all"
+                                    >
+                                      <History className="w-4 h-4" />
+                                      历史生成
+                                    </button>
+                                    <button 
+                                      onClick={() => {
+                                        // 保存当前内容到历史
+                                        if (selectedAsset.type === 'image' || selectedAsset.type === 'video' || selectedAsset.type === 'audio') {
+                                          if (selectedAsset.url) {
+                                            saveGenerationHistory(selectedAsset.id, selectedAsset.type, selectedAsset.url, selectedAsset.prompt);
+                                          }
+                                        }
+                                        setGeneratingAssetId(selectedAsset.id);
+                                        setTimeout(() => {
+                                          const randomColor = Math.floor(Math.random()*16777215).toString(16);
+                                          const generatedUrl = `https://placehold.co/${selectedAsset.width || 300}x${selectedAsset.height || 200}/${randomColor}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
+                                          handleAssetChange(selectedAsset.id, 'url', generatedUrl);
+                                          setGeneratingAssetId(null);
+                                        }, 2000);
+                                      }}
+                                      className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                                    >
+                                      <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} /> 
+                                      {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}
+                                    </button>
+                                  </div>
                                 </div>
                               </>
                             )}
                           </div>
-                          <div className="pt-6 mt-6 border-t border-slate-100">
+                          <div className="pt-6 mt-6 border-t border-slate-100 space-y-2">
+                            <button 
+                              onClick={() => handleCopyAsset(selectedAsset.id)} 
+                              className="w-full py-2 text-blue-500 border border-blue-200 rounded text-sm font-bold hover:bg-blue-50 flex items-center justify-center gap-2"
+                            >
+                              <Copy className="w-4 h-4" /> 复制此元素
+                            </button>
                             <button 
                               onClick={() => handleDeleteAsset(selectedAsset.id)} 
                               className="w-full py-2 text-red-500 border border-red-200 rounded text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2"
                             >
-                              <Trash2 className="w-4 h-4" /> 删除此元素
+                              <Trash2 className="w-4 h-4" /> 删除此元素 (Del)
                             </button>
                           </div>
                         </div>
@@ -1020,6 +1143,94 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         type="session"
         isLoading={isGenerating}
       />
+
+      {/* 历史生成列表模态框 */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-800">
+                    历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : '音频'}
+                  </h3>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowHistoryModal(null)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {generationHistory
+                .filter(h => 
+                  h.pageId === currentPage?.id && 
+                  h.assetId === showHistoryModal.assetId &&
+                  h.type === showHistoryModal.assetType
+                )
+                .length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>暂无历史生成记录</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {generationHistory
+                    .filter(h => 
+                      h.pageId === currentPage?.id && 
+                      h.assetId === showHistoryModal.assetId &&
+                      h.type === showHistoryModal.assetType
+                    )
+                    .map((historyItem) => (
+                      <div 
+                        key={historyItem.id} 
+                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-medium text-slate-500">
+                                {historyItem.displayTime}
+                              </span>
+                            </div>
+                            {historyItem.type === 'image' || historyItem.type === 'video' ? (
+                              <img 
+                                src={historyItem.url} 
+                                alt="历史生成" 
+                                className="w-full h-32 object-cover rounded border border-slate-200 mb-2"
+                              />
+                            ) : (
+                              <div className="w-full h-16 bg-slate-100 rounded border border-slate-200 flex items-center justify-center mb-2">
+                                <Music className="w-6 h-6 text-slate-400" />
+                              </div>
+                            )}
+                            {historyItem.prompt && (
+                              <p className="text-xs text-slate-600 bg-slate-50 rounded p-2 mt-2">
+                                {historyItem.prompt}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleRestoreHistory(historyItem)}
+                            className="ml-4 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            恢复
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 });

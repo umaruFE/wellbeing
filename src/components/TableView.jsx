@@ -29,7 +29,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [generatingMedia, setGeneratingMedia] = useState({});
   const [generatingPdf, setGeneratingPdf] = useState({}); // PDF生成状态
-  const [showHistoryView, setShowHistoryView] = useState(false);
+  // const [showHistoryView, setShowHistoryView] = useState(false);
   const [historyVersions, setHistoryVersions] = useState([]);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [showGenerateModal, setShowGenerateModal] = useState(null); // {type: 'activity'|'script'|'session', phaseId, slideId}
@@ -802,7 +802,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
       <ImagePreviewModal src={previewImage} onClose={() => setPreviewImage(null)} />
       
       {/* 工具栏 */}
-      <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+      {/* <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowHistoryView(true)}
@@ -815,7 +815,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
             版本 {currentVersionIndex + 1} / {historyVersions.length || 1}
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="flex-1 overflow-auto p-6">
         <div className="max-w-[1600px] mx-auto space-y-8">
@@ -1175,7 +1175,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
       </div>
 
       {/* 历史版本查看模态框 */}
-      {showHistoryView && (
+      {/* {showHistoryView && (
         <HistoryVersionView
           historyVersions={historyVersions}
           currentVersionIndex={currentVersionIndex}
@@ -1187,7 +1187,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           }}
           onClose={() => setShowHistoryView(false)}
         />
-      )}
+      )} */}
 
       {/* 添加环节提示词输入模态框 */}
       {showAddRowPromptModal && (

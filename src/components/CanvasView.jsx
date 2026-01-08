@@ -114,11 +114,6 @@ export const CanvasView = forwardRef((props, ref) => {
         e.preventDefault();
         handleDeleteAsset(selectedAssetId);
       }
-      // Ctrl+C 复制元素
-      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedAssetId) {
-        e.preventDefault();
-        handleCopyAsset(selectedAssetId);
-      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
