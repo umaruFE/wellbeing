@@ -240,7 +240,7 @@ export const CURRICULUM_DATA = {
 
 export const WORD_DOC_DATA = [
   {
-    id: 1,
+    id: 'e1-1',
     phase: "Engage (引入)",
     duration: "2分钟",
     title: "氛围营造：神秘信号",
@@ -256,7 +256,7 @@ export const WORD_DOC_DATA = [
     elements: []
   },
   {
-    id: 2,
+    id: 'e1-2',
     phase: "Engage (引入)",
     duration: "3分钟",
     title: "发布神秘任务 (PPT 1)",
@@ -272,7 +272,7 @@ export const WORD_DOC_DATA = [
     elements: []
   },
   {
-    id: 6,
+    id: 'em-2',
     phase: "Empower (赋能)",
     duration: "30分钟",
     title: "图鉴共读与探索 (Guidebook)",
@@ -288,7 +288,7 @@ export const WORD_DOC_DATA = [
     elements: []
   },
   {
-    id: 8,
+    id: 'ex-1',
     phase: "Execute (产出)",
     duration: "15分钟",
     title: "绘画共创：魔法骰子 (PPT 15)",
@@ -304,7 +304,7 @@ export const WORD_DOC_DATA = [
     elements: []
   },
   {
-    id: 10,
+    id: 'el-1',
     phase: "Elevate (升华)",
     duration: "10分钟",
     title: "奇趣兽发布会 (PPT 17)",

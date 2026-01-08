@@ -120,12 +120,12 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
 
   // 当navigation变化时，如果从表格视图跳转，只定位到特定的环节，但数据源仍然是INITIAL_COURSE_DATA
   useEffect(() => {
-    // 统一使用INITIAL_COURSE_DATA作为数据源，确保数据一致性
+    // 统一使用courseData作为数据源，确保数据一致性
     const allSteps = Object.values(courseData).flatMap(phase => 
       phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
     );
     
-    const newPages = allSteps.map((step, index) => ({
+    let newPages = allSteps.map((step, index) => ({
       id: `page-${step.id}`,
       slideId: step.id,
       pageNumber: index + 1,
@@ -140,11 +140,24 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       blocks: []
     }));
     
-    setPages(newPages);
-    
     // 如果从表格视图跳转，且有navigation.slideId，定位到该环节
     if (navigation?.type === 'reading-material' && navigation?.slideId) {
       const slideIdStr = typeof navigation.slideId === 'string' ? navigation.slideId : String(navigation.slideId);
+      
+      // 如果导航中携带了具体的材料数据，使用该数据替换默认生成的页面
+      if (navigation.material && navigation.material.pages) {
+        // 移除原有的该环节页面
+        newPages = newPages.filter(p => p.slideId !== slideIdStr);
+        // 添加材料中的实际页面
+        const materialPages = navigation.material.pages.map(p => ({
+          ...p,
+          slideId: slideIdStr
+        }));
+        // 插入到合适的位置（或者直接追加）
+        newPages = [...newPages, ...materialPages];
+      }
+
+      setPages(newPages);
       setSelectedStepId(slideIdStr);
       setActiveStepId(slideIdStr);
       
@@ -160,14 +173,17 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       } else {
         setEditingPageIndex(0);
       }
-    } else if (newPages.length > 0) {
+    } else {
       // 如果没有从表格视图跳转，默认选中第一个页面对应的环节
-      const firstPage = newPages[0];
-      if (firstPage.slideId) {
-        setSelectedStepId(firstPage.slideId);
-        setActiveStepId(firstPage.slideId);
+      setPages(newPages);
+      if (newPages.length > 0) {
+        const firstPage = newPages[0];
+        if (firstPage.slideId) {
+          setSelectedStepId(firstPage.slideId);
+          setActiveStepId(firstPage.slideId);
+        }
+        setEditingPageIndex(0);
       }
-      setEditingPageIndex(0);
     }
     
     // 重置历史记录
