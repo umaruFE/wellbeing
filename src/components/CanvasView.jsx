@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { 
   BookOpen, 
   Clock, 
@@ -24,13 +24,17 @@ import {
   ChevronsUp,   
   ChevronsDown, 
   Sliders,
-  RotateCw
+  RotateCw,
+  Copy,
+  RotateCcw
 } from 'lucide-react';
 import { INITIAL_COURSE_DATA } from '../constants';
 import { SlideRenderer } from './SlideRenderer';
 import { getAssetIcon } from '../utils';
+import { PromptInputModal } from './PromptInputModal';
 
 export const CanvasView = forwardRef((props, ref) => {
+  const { navigation } = props;
   const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
   const [activePhase, setActivePhase] = useState('engage');
   const [activeStepId, setActiveStepId] = useState('e1-1');
@@ -49,6 +53,79 @@ export const CanvasView = forwardRef((props, ref) => {
   const [interactionMode, setInteractionMode] = useState('idle');
   const [interactionStart, setInteractionStart] = useState(null); 
   const canvasRef = useRef(null);
+
+  // 撤销/重做功能
+  const [history, setHistory] = useState([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+
+  // 提示词输入模态框状态
+  const [showPromptModal, setShowPromptModal] = useState(false);
+  const [promptModalConfig, setPromptModalConfig] = useState({ type: null, assetType: null, phaseKey: null });
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // 保存历史记录
+  const saveToHistory = (newData) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(JSON.parse(JSON.stringify(newData)));
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  };
+
+  // 撤销
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setCourseData(JSON.parse(JSON.stringify(history[newIndex])));
+    }
+  };
+
+  // 重做
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setCourseData(JSON.parse(JSON.stringify(history[newIndex])));
+    }
+  };
+
+  // 键盘事件处理
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Ctrl+Z 撤销
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        e.preventDefault();
+        handleUndo();
+      }
+      // Ctrl+Shift+Z 或 Ctrl+Y 重做
+      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
+        e.preventDefault();
+        handleRedo();
+      }
+      // Delete 或 Backspace 删除选中的元素
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedAssetId && !e.target.tagName.match(/INPUT|TEXTAREA/)) {
+        e.preventDefault();
+        handleDeleteAsset(selectedAssetId);
+      }
+      // Ctrl+C 复制元素
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c' && selectedAssetId) {
+        e.preventDefault();
+        handleCopyAsset(selectedAssetId);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedAssetId, historyIndex, history]);
+
+  // 处理导航（从表格视图跳转过来）
+  useEffect(() => {
+    if (navigation) {
+      // 这里可以根据navigation信息跳转到对应的环节
+      // 简化处理：如果有navigation，可以高亮显示或跳转
+      console.log('Navigation received:', navigation);
+    }
+  }, [navigation]);
 
   // Derived State
   const currentPhaseData = courseData[activePhase];
@@ -76,23 +153,42 @@ export const CanvasView = forwardRef((props, ref) => {
   };
 
   const handleAddStep = (phaseKey) => {
-    const newCourseData = { ...courseData };
-    const phase = newCourseData[phaseKey];
-    if (!phase) return;
+    // 显示提示词输入模态框
+    setPromptModalConfig({ type: 'session', phaseKey });
+    setShowPromptModal(true);
+  };
+
+  const handleConfirmAddStep = (prompt) => {
+    setIsGenerating(true);
+    const phaseKey = promptModalConfig.phaseKey;
     
-    const newStep = {
-      id: `${phaseKey}-${Date.now()}`,
-      title: '新环节',
-      time: '00:00',
-      objective: '',
-      assets: []
-    };
-    
-    phase.steps.push(newStep);
-    setCourseData(newCourseData);
-    setActivePhase(phaseKey);
-    setActiveStepId(newStep.id);
-    setSelectedAssetId(null);
+    // 模拟AI生成（实际应该调用API）
+    setTimeout(() => {
+      const newCourseData = { ...courseData };
+      const phase = newCourseData[phaseKey];
+      if (!phase) return;
+      
+      const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 20)}...` : '新环节';
+      const generatedObjective = prompt ? `根据提示词"${prompt}"生成的教学目标` : '';
+      
+      const newStep = {
+        id: `${phaseKey}-${Date.now()}`,
+        title: generatedTitle,
+        time: '00:00',
+        objective: generatedObjective,
+        assets: []
+      };
+      
+      phase.steps.push(newStep);
+      setCourseData(newCourseData);
+      saveToHistory(newCourseData);
+      setActivePhase(phaseKey);
+      setActiveStepId(newStep.id);
+      setSelectedAssetId(null);
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+    }, 1500);
   };
 
   const handleDeleteStep = (phaseKey, stepId) => {
@@ -123,6 +219,7 @@ export const CanvasView = forwardRef((props, ref) => {
     }
     
     setCourseData(newCourseData);
+    saveToHistory(newCourseData);
     setSelectedAssetId(null);
   };
 
@@ -131,6 +228,7 @@ export const CanvasView = forwardRef((props, ref) => {
     const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
     if(step) step[field] = value;
     setCourseData(newCourseData);
+    saveToHistory(newCourseData);
   };
 
   const handleAssetChange = (assetId, field, value) => {
@@ -140,31 +238,56 @@ export const CanvasView = forwardRef((props, ref) => {
     if (asset) {
       asset[field] = value;
       setCourseData(newCourseData);
+      saveToHistory(newCourseData);
     }
   };
 
   const handleAddAsset = (type) => {
-    const newCourseData = { ...courseData };
-    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-    
-    let w = 300, h = 200;
-    if (type === 'audio') { w = 300; h = 100; }
-    if (type === 'text') { w = 300; h = 100; }
+    // 显示提示词输入模态框
+    setPromptModalConfig({ type: 'element', assetType: type, phaseKey: activePhase });
+    setShowPromptModal(true);
+  };
 
-    const newAsset = {
-      id: Date.now().toString(),
-      type,
-      title: `New ${type}`,
-      url: type === 'text' ? '' : `https://placehold.co/${w}x${h}?text=New+${type}`,
-      content: type === 'text' ? '双击编辑文本' : '',
-      prompt: 'Describe what you want AI to generate...',
-      referenceImage: null,
-      x: 100, y: 100, width: w, height: h, rotation: 0
-    };
-    step.assets.push(newAsset);
-    setCourseData(newCourseData);
-    setSelectedAssetId(newAsset.id); 
-    setIsRightOpen(true); 
+  const handleConfirmAddAsset = (prompt) => {
+    setIsGenerating(true);
+    const type = promptModalConfig.assetType;
+    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
+    if (!step) return;
+
+    // 模拟AI生成（实际应该调用API）
+    setTimeout(() => {
+      const newCourseData = { ...courseData };
+      const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+      
+      let w = 300, h = 200;
+      if (type === 'audio') { w = 300; h = 100; }
+      if (type === 'text') { w = 300; h = 100; }
+
+      const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 15)}...` : `New ${type}`;
+      const generatedUrl = type === 'text' 
+        ? '' 
+        : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
+
+      const newAsset = {
+        id: Date.now().toString(),
+        type,
+        title: generatedTitle,
+        url: generatedUrl,
+        content: type === 'text' ? (prompt || '双击编辑文本') : '',
+        prompt: prompt || 'Describe what you want AI to generate...',
+        referenceImage: null,
+        x: 100, y: 100, width: w, height: h, rotation: 0
+      };
+      
+      currentStep.assets.push(newAsset);
+      setCourseData(newCourseData);
+      saveToHistory(newCourseData);
+      setSelectedAssetId(newAsset.id); 
+      setIsRightOpen(true);
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+    }, 1500);
   };
 
   const handleDeleteAsset = (assetId) => {
@@ -172,7 +295,53 @@ export const CanvasView = forwardRef((props, ref) => {
     const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
     step.assets = step.assets.filter(a => a.id !== assetId);
     setCourseData(newCourseData);
+    saveToHistory(newCourseData);
     setSelectedAssetId(null);
+  };
+
+  // 复制元素
+  const handleCopyAsset = (assetId) => {
+    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
+    const assetToCopy = step.assets.find(a => a.id === assetId);
+    if (!assetToCopy) return;
+
+    const newCourseData = { ...courseData };
+    const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    const newAsset = {
+      ...JSON.parse(JSON.stringify(assetToCopy)),
+      id: Date.now().toString(),
+      x: assetToCopy.x + 20,
+      y: assetToCopy.y + 20,
+      title: assetToCopy.title + ' (副本)'
+    };
+    currentStep.assets.push(newAsset);
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData);
+    setSelectedAssetId(newAsset.id);
+  };
+
+  // 复制整个页面
+  const handleCopyPage = () => {
+    const newCourseData = { ...courseData };
+    const phase = newCourseData[activePhase];
+    const currentStep = phase.steps.find(s => s.id === activeStepId);
+    if (!currentStep) return;
+
+    const newStep = {
+      ...JSON.parse(JSON.stringify(currentStep)),
+      id: `${activePhase}-${Date.now()}`,
+      title: currentStep.title + ' (副本)',
+      assets: currentStep.assets.map(asset => ({
+        ...JSON.parse(JSON.stringify(asset)),
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        x: asset.x + 20,
+        y: asset.y + 20
+      }))
+    };
+    phase.steps.push(newStep);
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData);
+    setActiveStepId(newStep.id);
   };
 
   const handleRegenerateAsset = (assetId) => {
@@ -190,6 +359,7 @@ export const CanvasView = forwardRef((props, ref) => {
          asset.url = `https://placehold.co/${Math.round(w)}x${Math.round(h)}/${randomColor}/FFF?text=${text}+v${Math.floor(Math.random() * 10)}`;
       }
       setCourseData(newCourseData);
+      saveToHistory(newCourseData);
       if(btn) btn.classList.remove('animate-spin');
     }, 1500);
   };
@@ -206,6 +376,7 @@ export const CanvasView = forwardRef((props, ref) => {
     else if (action === 'backward' && index > 0) [currentAssets[index], currentAssets[index - 1]] = [currentAssets[index - 1], currentAssets[index]];
     step.assets = currentAssets;
     setCourseData(newCourseData);
+    saveToHistory(newCourseData);
   };
 
   const handleReferenceUpload = (e, assetId) => {
@@ -219,6 +390,7 @@ export const CanvasView = forwardRef((props, ref) => {
         if (asset) {
           asset.referenceImage = reader.result;
           setCourseData(newCourseData);
+          saveToHistory(newCourseData);
         }
       };
       reader.readAsDataURL(file);
@@ -285,7 +457,14 @@ export const CanvasView = forwardRef((props, ref) => {
     setCourseData(newCourseData);
   };
 
-  const handleMouseUp = () => { setInteractionMode('idle'); setInteractionStart(null); };
+  const handleMouseUp = () => { 
+    if (interactionMode !== 'idle' && selectedAssetId) {
+      // 在拖拽/调整大小/旋转结束时保存历史
+      saveToHistory(courseData);
+    }
+    setInteractionMode('idle'); 
+    setInteractionStart(null); 
+  };
   const handleCanvasClick = () => { setSelectedAssetId(null); };
 
   // Expose methods to parent component
@@ -374,6 +553,32 @@ export const CanvasView = forwardRef((props, ref) => {
              <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-bold whitespace-nowrap">{currentStep?.time}</span>
              <h2 className="text-sm font-bold text-slate-800 truncate" title={currentStep?.title}>{currentStep?.title}</h2>
           </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleUndo}
+              disabled={historyIndex === 0}
+              className="p-2 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="撤销 (Ctrl+Z)"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleRedo}
+              disabled={historyIndex === history.length - 1}
+              className="p-2 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              title="重做 (Ctrl+Shift+Z)"
+            >
+              <RotateCw className="w-4 h-4" />
+            </button>
+            <div className="w-px h-6 bg-slate-200"></div>
+            <button
+              onClick={handleCopyPage}
+              className="p-2 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 transition-colors"
+              title="复制整个页面"
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <div style={{left: '65%'}}className="absolute top-20 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 z-20 transition-all">
@@ -452,8 +657,19 @@ export const CanvasView = forwardRef((props, ref) => {
                            </>
                         )}
                      </div>
-                     <div className="pt-6 mt-6 border-t border-slate-100">
-                        <button onClick={() => handleDeleteAsset(selectedAsset.id)} className="w-full py-2 text-red-500 border border-red-200 rounded text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2"><Trash2 className="w-4 h-4" /> 删除此元素</button>
+                     <div className="pt-6 mt-6 border-t border-slate-100 space-y-2">
+                        <button 
+                          onClick={() => handleCopyAsset(selectedAsset.id)} 
+                          className="w-full py-2 text-blue-500 border border-blue-200 rounded text-sm font-bold hover:bg-blue-50 flex items-center justify-center gap-2"
+                        >
+                          <Copy className="w-4 h-4" /> 复制此元素
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAsset(selectedAsset.id)} 
+                          className="w-full py-2 text-red-500 border border-red-200 rounded text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" /> 删除此元素 (Del)
+                        </button>
                      </div>
                   </div>
                 </>
@@ -479,6 +695,27 @@ export const CanvasView = forwardRef((props, ref) => {
              )}
          </div>
       </aside>
+
+      {/* Prompt Input Modal */}
+      <PromptInputModal
+        isOpen={showPromptModal}
+        onClose={() => {
+          setShowPromptModal(false);
+          setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+        }}
+        onConfirm={promptModalConfig.type === 'element' ? handleConfirmAddAsset : handleConfirmAddStep}
+        title={promptModalConfig.type === 'element' 
+          ? `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`
+          : '添加教学环节'}
+        description={promptModalConfig.type === 'element'
+          ? '请输入AI生成提示词，描述你想要创建的元素'
+          : '请输入AI生成提示词，描述你想要创建的教学环节'}
+        placeholder={promptModalConfig.type === 'element'
+          ? `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容'}...`
+          : '例如：设计一个互动游戏环节，让学生学习颜色词汇...'}
+        type={promptModalConfig.type}
+        isLoading={isGenerating}
+      />
 
       {/* Preview Modal */}
       {isPreviewOpen && (

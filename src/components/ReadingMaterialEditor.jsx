@@ -30,6 +30,7 @@ import {
   FileX
 } from 'lucide-react';
 import { getAssetIcon } from '../utils';
+import { PromptInputModal } from './PromptInputModal';
 
 /**
  * ReadingMaterialEditor - 阅读材料画板编辑器
@@ -48,6 +49,9 @@ export const ReadingMaterialEditor = ({
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
   const canvasRef = useRef(null);
+  const [showPromptModal, setShowPromptModal] = useState(false);
+  const [promptModalConfig, setPromptModalConfig] = useState({ pageId: null, assetType: null });
+  const [isGeneratingAsset, setIsGeneratingAsset] = useState(false);
 
   // 计算画布尺寸 (A4比例: 210mm × 297mm ≈ 0.707:1)
   const getCanvasSize = () => {
@@ -77,35 +81,58 @@ export const ReadingMaterialEditor = ({
     }));
   };
 
-  // 添加资产
+  // 添加资产 - 显示提示词输入模态框
   const handleAddAsset = (pageId, type) => {
-    let w = 300, h = 200;
-    if (type === 'audio') { w = 300; h = 100; }
-    if (type === 'text') { w = 300; h = 100; }
+    setPromptModalConfig({ pageId, assetType: type });
+    setShowPromptModal(true);
+  };
 
-    onPagesChange(prev => prev.map(page => {
-      if (page.id === pageId) {
-        const newAsset = {
-          id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          type,
-          title: type === 'text' ? '文本' : type === 'image' ? '图片' : type === 'video' ? '视频' : '音频',
-          url: type === 'text' ? '' : `https://placehold.co/${w}x${h}?text=New+${type}`,
-          content: type === 'text' ? '双击编辑文本' : '',
-          prompt: '',
-          referenceImage: null,
-          x: (canvasSize.width - w) / 2,
-          y: (canvasSize.height - h) / 2,
-          width: w,
-          height: h,
-          rotation: 0
-        };
-        return {
-          ...page,
-          canvasAssets: [...(page.canvasAssets || []), newAsset]
-        };
-      }
-      return page;
-    }));
+  // 确认添加资产
+  const handleConfirmAddAsset = (prompt) => {
+    setIsGeneratingAsset(true);
+    const { pageId, assetType: type } = promptModalConfig;
+    
+    // 模拟AI生成
+    setTimeout(() => {
+      let w = 300, h = 200;
+      if (type === 'audio') { w = 300; h = 100; }
+      if (type === 'text') { w = 300; h = 100; }
+
+      const generatedTitle = prompt 
+        ? `AI生成：${prompt.substring(0, 15)}...` 
+        : (type === 'text' ? '文本' : type === 'image' ? '图片' : type === 'video' ? '视频' : '音频');
+      const generatedUrl = type === 'text' 
+        ? '' 
+        : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
+
+      onPagesChange(prev => prev.map(page => {
+        if (page.id === pageId) {
+          const newAsset = {
+            id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type,
+            title: generatedTitle,
+            url: generatedUrl,
+            content: type === 'text' ? (prompt || '双击编辑文本') : '',
+            prompt: prompt || '',
+            referenceImage: null,
+            x: (canvasSize.width - w) / 2,
+            y: (canvasSize.height - h) / 2,
+            width: w,
+            height: h,
+            rotation: 0
+          };
+          return {
+            ...page,
+            canvasAssets: [...(page.canvasAssets || []), newAsset]
+          };
+        }
+        return page;
+      }));
+      
+      setIsGeneratingAsset(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ pageId: null, assetType: null });
+    }, 1500);
   };
 
   // 删除资产
@@ -1053,6 +1080,21 @@ export const ReadingMaterialEditor = ({
           在末尾添加新页面
         </button>
       </div>
+
+      {/* Prompt Input Modal */}
+      <PromptInputModal
+        isOpen={showPromptModal}
+        onClose={() => {
+          setShowPromptModal(false);
+          setPromptModalConfig({ pageId: null, assetType: null });
+        }}
+        onConfirm={handleConfirmAddAsset}
+        title={`添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`}
+        description="请输入AI生成提示词，描述你想要创建的元素"
+        placeholder={`例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容'}...`}
+        type="element"
+        isLoading={isGeneratingAsset}
+      />
     </div>
   );
 };
