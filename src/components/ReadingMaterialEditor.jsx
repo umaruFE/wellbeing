@@ -48,15 +48,18 @@ export const ReadingMaterialEditor = ({
   editingPageIndex,
   onEditingPageIndexChange,
   canvasAspectRatio: externalCanvasAspectRatio,
-  onCanvasAspectRatioChange
+  onCanvasAspectRatioChange,
+  selectedAssetId: externalSelectedAssetId,
+  onSelectedAssetIdChange
 }) => {
   const [internalCanvasAspectRatio, setInternalCanvasAspectRatio] = useState('A4'); // 'A4' | 'A4横向'
   const canvasAspectRatio = externalCanvasAspectRatio !== undefined ? externalCanvasAspectRatio : internalCanvasAspectRatio;
   const setCanvasAspectRatio = onCanvasAspectRatioChange || setInternalCanvasAspectRatio;
-  const [selectedAssetId, setSelectedAssetId] = useState(null);
+  const [internalSelectedAssetId, setInternalSelectedAssetId] = useState(null);
+  const selectedAssetId = externalSelectedAssetId !== undefined ? externalSelectedAssetId : internalSelectedAssetId;
+  const setSelectedAssetId = onSelectedAssetIdChange || setInternalSelectedAssetId;
   const [interactionMode, setInteractionMode] = useState('idle');
   const [interactionStart, setInteractionStart] = useState(null);
-  const [isRightOpen, setIsRightOpen] = useState(true);
   const [isLeftOpen, setIsLeftOpen] = useState(true); // 左侧目录树
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
   const canvasRef = useRef(null);
@@ -123,17 +126,20 @@ export const ReadingMaterialEditor = ({
 
   // 更新资产
   const handleAssetChange = (pageId, assetId, field, value) => {
-    onPagesChange(prev => prev.map(page => {
-      if (page.id === pageId) {
-        return {
-          ...page,
-          canvasAssets: (page.canvasAssets || []).map(asset => 
-            asset.id === assetId ? { ...asset, [field]: value } : asset
-          )
-        };
-      }
-      return page;
-    }));
+    onPagesChange(prev => {
+      if (!Array.isArray(prev)) return prev;
+      return prev.map(page => {
+        if (page.id === pageId) {
+          return {
+            ...page,
+            canvasAssets: (page.canvasAssets || []).map(asset => 
+              asset.id === assetId ? { ...asset, [field]: value } : asset
+            )
+          };
+        }
+        return page;
+      });
+    });
   };
 
   // 添加资产 - 显示提示词输入模态框
@@ -436,7 +442,7 @@ export const ReadingMaterialEditor = ({
             {isEditing ? (
               <div className="flex relative">
                 {/* Main Canvas Area */}
-                <div className={`flex-1 ${isRightOpen ? '' : ''} transition-all duration-300`}>
+                <div className="flex-1 transition-all duration-300">
                   <div className="flex-1 flex flex-col bg-slate-100 relative" style={{ minHeight: '600px' }}>
                     {/* 工具栏 - 固定在顶部 */}
                     <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-center gap-4 shrink-0">
@@ -575,424 +581,6 @@ export const ReadingMaterialEditor = ({
                     </div>
                   </div>
                 </div>
-
-                {/* 右侧编辑面板 */}
-                <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l border-slate-200 flex flex-col shrink-0 z-10 shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
-                  {!isRightOpen && (
-                    <button 
-                      onClick={() => setIsRightOpen(true)} 
-                      className="absolute top-4 right-0 bg-white p-2 rounded-l-md border border-r-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50 transform -translate-x-full"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </button>
-                  )}
-                  <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
-                    {selectedAsset ? (
-                      <>
-                        <div className="p-4 border-b border-slate-100 bg-blue-50 flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            {getAssetIcon(selectedAsset.type)}
-                            <h3 className="font-bold text-blue-800">编辑元素</h3>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => setIsRightOpen(false)} className="text-slate-400 hover:text-slate-600">
-                              <ChevronRight className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => setSelectedAssetId(null)} className="text-slate-500 hover:text-slate-700">
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center justify-between">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-                            <Layers className="w-3 h-3" /> 图层
-                          </span>
-                          <div className="flex gap-1">
-                            <button onClick={() => handleLayerChange(page.id, selectedAsset.id, 'front')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置顶">
-                              <ChevronsUp className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleLayerChange(page.id, selectedAsset.id, 'forward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="上移">
-                              <ArrowUp className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleLayerChange(page.id, selectedAsset.id, 'backward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="下移">
-                              <ArrowDown className="w-4 h-4" />
-                            </button>
-                            <button onClick={() => handleLayerChange(page.id, selectedAsset.id, 'back')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置底">
-                              <ChevronsDown className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                          <div className="grid grid-cols-3 gap-2">
-                            <div>
-                              <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">宽 Width</label>
-                              <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
-                                <input 
-                                  type="number" 
-                                  value={Math.round(selectedAsset.width || 300)} 
-                                  onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'width', parseInt(e.target.value))} 
-                                  className="w-full text-xs bg-transparent py-1.5 outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400">px</span>
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">高 Height</label>
-                              <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
-                                <input 
-                                  type="number" 
-                                  value={Math.round(selectedAsset.height || 200)} 
-                                  onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'height', parseInt(e.target.value))} 
-                                  className="w-full text-xs bg-transparent py-1.5 outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400">px</span>
-                              </div>
-                            </div>
-                            <div>
-                              <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">旋转 Rotate</label>
-                              <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
-                                <input 
-                                  type="number" 
-                                  value={Math.round(selectedAsset.rotation || 0)} 
-                                  onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'rotation', parseInt(e.target.value))} 
-                                  className="w-full text-xs bg-transparent py-1.5 outline-none"
-                                />
-                                <span className="text-[10px] text-slate-400">°</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="space-y-4">
-                            <div>
-                              <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">标题 / Name</label>
-                              <input 
-                                type="text" 
-                                value={selectedAsset.title || ''} 
-                                onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'title', e.target.value)} 
-                                className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                              />
-                            </div>
-                            {selectedAsset.type === 'text' ? (
-                              <div className="space-y-4">
-                                <div>
-                                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">文本内容 / Content</label>
-                                  <textarea 
-                                    value={selectedAsset.content || ''} 
-                                    onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'content', e.target.value)} 
-                                    className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none"
-                                  />
-                                </div>
-                                
-                                {/* 文本样式选项 */}
-                                <div className="space-y-3">
-                                  <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-slate-500 uppercase">文本样式</label>
-                                  </div>
-                                  
-                                  {/* 字号 */}
-                                  <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">字号 Font Size</label>
-                                    <div className="flex items-center gap-2">
-                                      <input 
-                                        type="number" 
-                                        min="8" 
-                                        max="200" 
-                                        value={selectedAsset.fontSize || 24} 
-                                        onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'fontSize', parseInt(e.target.value) || 24)} 
-                                        className="flex-1 text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 outline-none"
-                                      />
-                                      <span className="text-[10px] text-slate-400">px</span>
-                                    </div>
-                                  </div>
-
-                                  {/* 加粗 */}
-                                  <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">字重 Font Weight</label>
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'fontWeight', 'normal')}
-                                        className={`flex-1 px-3 py-2 rounded border text-xs transition-colors ${
-                                          (selectedAsset.fontWeight || 'normal') === 'normal' 
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                      >
-                                        正常
-                                      </button>
-                                      <button
-                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'fontWeight', 'bold')}
-                                        className={`flex-1 px-3 py-2 rounded border text-xs transition-colors flex items-center justify-center gap-1 ${
-                                          selectedAsset.fontWeight === 'bold' 
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                      >
-                                        <Bold className="w-3 h-3" />
-                                        加粗
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* 文本颜色 */}
-                                  <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block flex items-center gap-1">
-                                      <Palette className="w-3 h-3" /> 文本颜色 Color
-                                    </label>
-                                    <div className="flex items-center gap-2">
-                                      <input 
-                                        type="color" 
-                                        value={selectedAsset.color || '#1e293b'} 
-                                        onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'color', e.target.value)} 
-                                        className="w-12 h-10 rounded border border-slate-200 cursor-pointer"
-                                      />
-                                      <input 
-                                        type="text" 
-                                        value={selectedAsset.color || '#1e293b'} 
-                                        onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'color', e.target.value)} 
-                                        className="flex-1 text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 outline-none font-mono"
-                                        placeholder="#000000"
-                                      />
-                                    </div>
-                                  </div>
-
-                                  {/* 文本对齐 */}
-                                  <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">对齐方式 Align</label>
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'textAlign', 'left')}
-                                        className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
-                                          (selectedAsset.textAlign || 'center') === 'left' 
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                        title="左对齐"
-                                      >
-                                        <AlignLeft className="w-4 h-4" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'textAlign', 'center')}
-                                        className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
-                                          (selectedAsset.textAlign || 'center') === 'center' 
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                        title="居中"
-                                      >
-                                        <AlignCenter className="w-4 h-4" />
-                                      </button>
-                                      <button
-                                        onClick={() => handleAssetChange(page.id, selectedAsset.id, 'textAlign', 'right')}
-                                        className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
-                                          selectedAsset.textAlign === 'right' 
-                                            ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                                            : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                                        }`}
-                                        title="右对齐"
-                                      >
-                                        <AlignRight className="w-4 h-4" />
-                                      </button>
-                                    </div>
-                                  </div>
-
-                                  {/* 描边 */}
-                                  <div>
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">描边 Stroke</label>
-                                    <div className="space-y-2">
-                                      <div className="flex items-center gap-2">
-                                        <input 
-                                          type="checkbox" 
-                                          checked={!!selectedAsset.strokeWidth && selectedAsset.strokeWidth > 0} 
-                                          onChange={(e) => {
-                                            if (e.target.checked) {
-                                              handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', 2);
-                                            } else {
-                                              handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', null);
-                                              handleAssetChange(page.id, selectedAsset.id, 'strokeColor', null);
-                                            }
-                                          }} 
-                                          className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
-                                        />
-                                        <span className="text-xs text-slate-600">启用描边</span>
-                                      </div>
-                                      {selectedAsset.strokeWidth && selectedAsset.strokeWidth > 0 && (
-                                        <div className="space-y-2 pl-6">
-                                          <div>
-                                            <div className="flex items-center justify-between mb-1">
-                                              <span className="text-[10px] text-slate-500">描边宽度</span>
-                                              <span className="text-[10px] text-slate-400">{selectedAsset.strokeWidth}px</span>
-                                            </div>
-                                            <input 
-                                              type="range" 
-                                              min="1" 
-                                              max="10" 
-                                              value={selectedAsset.strokeWidth || 2} 
-                                              onChange={(e) => {
-                                                const value = parseInt(e.target.value);
-                                                if (value > 0) {
-                                                  handleAssetChange(page.id, selectedAsset.id, 'strokeWidth', value);
-                                                }
-                                              }} 
-                                              className="w-full"
-                                            />
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <label className="text-[10px] text-slate-500">描边颜色</label>
-                                            <input 
-                                              type="color" 
-                                              value={selectedAsset.strokeColor || '#000000'} 
-                                              onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeColor', e.target.value)} 
-                                              className="w-10 h-8 rounded border border-slate-200 cursor-pointer"
-                                            />
-                                            <input 
-                                              type="text" 
-                                              value={selectedAsset.strokeColor || '#000000'} 
-                                              onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'strokeColor', e.target.value)} 
-                                              className="flex-1 text-xs border border-slate-200 rounded px-2 py-1 bg-slate-50 outline-none font-mono"
-                                            />
-                                          </div>
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                {(selectedAsset.type === 'image' || selectedAsset.type === 'video') && (
-                                  <div className="mb-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
-                                        <Upload className="w-3 h-3" /> 参考图片 (可选)
-                                      </label>
-                                      <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">Optional</span>
-                                    </div>
-                                    {!selectedAsset.referenceImage ? (
-                                      <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative group/upload">
-                                        <input 
-                                          type="file" 
-                                          accept="image/*" 
-                                          className="absolute inset-0 opacity-0 cursor-pointer z-10" 
-                                          onChange={(e) => {
-                                            const file = e.target.files[0];
-                                            if (file) {
-                                              const reader = new FileReader();
-                                              reader.onloadend = () => {
-                                                handleAssetChange(page.id, selectedAsset.id, 'referenceImage', reader.result);
-                                              };
-                                              reader.readAsDataURL(file);
-                                            }
-                                          }}
-                                        />
-                                        <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform">
-                                          <Upload className="w-5 h-5 text-slate-400" />
-                                        </div>
-                                        <span className="text-xs text-slate-500 font-medium">点击上传参考图片</span>
-                                        <span className="text-[10px] text-slate-400 mt-1">仅用于风格辅助，非必传</span>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-2">
-                                        <div className="relative group/ref">
-                                          <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded border border-slate-200 opacity-90" />
-                                          <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
-                                          <button 
-                                            onClick={() => handleAssetChange(page.id, selectedAsset.id, 'referenceImage', null)} 
-                                            className="absolute top-2 right-2 bg-white text-slate-600 hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity"
-                                            title="移除参考图"
-                                          >
-                                            <X className="w-3.5 h-3.5" />
-                                          </button>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                          <Sliders className="w-3 h-3 text-slate-400" />
-                                          <div className="flex-1 h-1 bg-slate-200 rounded overflow-hidden">
-                                            <div className="w-1/3 h-full bg-blue-400"></div>
-                                          </div>
-                                          <span className="text-[10px] text-slate-400">参考权重: 低</span>
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                                <div>
-                                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
-                                    <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
-                                  </label>
-                                  <textarea 
-                                    value={selectedAsset.prompt || ''} 
-                                    onChange={(e) => handleAssetChange(page.id, selectedAsset.id, 'prompt', e.target.value)} 
-                                    placeholder="描述你想要生成的画面..." 
-                                    className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none h-24 resize-none mb-2"
-                                  />
-                                  <button 
-                                    onClick={() => {
-                                      setGeneratingAssetId(selectedAsset.id);
-                                      setTimeout(() => {
-                                        const randomColor = Math.floor(Math.random()*16777215).toString(16);
-                                        const generatedUrl = `https://placehold.co/${selectedAsset.width || 300}x${selectedAsset.height || 200}/${randomColor}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
-                                        handleAssetChange(page.id, selectedAsset.id, 'url', generatedUrl);
-                                        setGeneratingAssetId(null);
-                                      }, 2000);
-                                    }}
-                                    className="w-full py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                                  >
-                                    <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} />
-                                    {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                          <div className="pt-6 mt-6 border-t border-slate-100">
-                            <button 
-                              onClick={() => handleDeleteAsset(page.id, selectedAsset.id)} 
-                              className="w-full py-2 text-red-500 border border-red-200 rounded text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2"
-                            >
-                              <Trash2 className="w-4 h-4" /> 删除此元素
-                            </button>
-                          </div>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-                          <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                            <Wand2 className="w-4 h-4 text-purple-600" />画板编辑
-                          </h3>
-                          <button onClick={() => setIsRightOpen(false)} className="text-slate-400 hover:text-slate-600">
-                            <ChevronRight className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <label className="text-xs font-bold text-slate-500 uppercase">
-                              画板元素 ({(page.canvasAssets || []).length})
-                            </label>
-                            <div className="flex gap-1">
-                              <button onClick={() => handleAddAsset(page.id, 'image')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-purple-600">
-                                <ImageIcon className="w-4 h-4" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            {(page.canvasAssets || []).map((asset) => (
-                              <div 
-                                key={asset.id} 
-                                onClick={() => setSelectedAssetId(asset.id)} 
-                                className="flex items-start gap-2 p-2 border border-slate-200 rounded bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"
-                              >
-                                <div className="mt-1 text-slate-400">{getAssetIcon(asset.type)}</div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-xs font-bold text-slate-700 truncate">{asset.title || asset.type}</div>
-                                  <div className="text-[10px] text-slate-400">{asset.type} • 点击编辑</div>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </aside>
               </div>
             ) : (
               <div className="p-6">
