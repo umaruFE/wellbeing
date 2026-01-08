@@ -70,25 +70,68 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
 
   // 初始化pages - 统一使用INITIAL_COURSE_DATA作为数据源
   const initializePages = () => {
-    // 始终从INITIAL_COURSE_DATA转换，保持数据一致性
     const allSteps = Object.values(INITIAL_COURSE_DATA).flatMap(phase => 
       phase.steps.map(step => ({ ...step, phaseKey: Object.keys(INITIAL_COURSE_DATA).find(k => INITIAL_COURSE_DATA[k].steps.includes(step)) }))
     );
     
-    return allSteps.map((step, index) => ({
-      id: `page-${step.id}`,
-      slideId: step.id,
-      pageNumber: index + 1,
-      title: step.title,
-      width: 680,
-      height: 960,
-      canvasAssets: (step.assets || []).map(asset => ({
-        ...asset,
-        prompt: asset.prompt || '',
-        referenceImage: asset.referenceImage || null
-      })),
-      blocks: []
-    }));
+    return allSteps.map((step, index) => {
+      const rawAssets = step.assets || [];
+      
+      // 如果是原始 PPT 数据（没有文本排版），为其生成阅读材料模板
+      if (rawAssets.length <= 1 && !rawAssets.some(a => a.type === 'text')) {
+        return {
+          id: `page-${step.id}`,
+          slideId: step.id,
+          pageNumber: index + 1,
+          title: step.title,
+          width: 680,
+          height: 960,
+          canvasAssets: [
+            {
+              id: `asset-title-${step.id}`,
+              type: 'text',
+              title: '标题',
+              content: step.title,
+              x: 50, y: 40, width: 580, height: 70,
+              rotation: 0, fontSize: 28, fontWeight: 'bold', textAlign: 'center'
+            },
+            {
+              id: `asset-image-${step.id}`,
+              type: 'image',
+              title: '插图',
+              url: rawAssets.find(a => a.type === 'image')?.url || `https://placehold.co/400x250/6366f1/FFF?text=${encodeURIComponent(step.title.substring(0, 10))}`,
+              x: 140, y: 120, width: 400, height: 250,
+              rotation: 0
+            },
+            {
+              id: `asset-content-${step.id}`,
+              type: 'text',
+              title: '正文',
+              content: `【${step.title}】\n\n${step.objective || '本环节核心教学内容...'}\n\n• 活动：${step.activity || '暂无活动描述'}\n• 目标：${step.objective || '暂无目标描述'}`,
+              x: 50, y: 390, width: 580, height: 520,
+              rotation: 0, fontSize: 16, lineHeight: 1.6
+            },
+            ...rawAssets.filter(a => a.type !== 'image' && a.type !== 'text')
+          ],
+          blocks: []
+        };
+      }
+
+      return {
+        id: `page-${step.id}`,
+        slideId: step.id,
+        pageNumber: index + 1,
+        title: step.title,
+        width: 680,
+        height: 960,
+        canvasAssets: rawAssets.map(asset => ({
+          ...asset,
+          prompt: asset.prompt || '',
+          referenceImage: asset.referenceImage || null
+        })),
+        blocks: []
+      };
+    });
   };
 
   const [pages, setPages] = useState(() => initializePages());
@@ -125,20 +168,89 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
     );
     
-    let newPages = allSteps.map((step, index) => ({
-      id: `page-${step.id}`,
-      slideId: step.id,
-      pageNumber: index + 1,
-      title: step.title,
-      width: 680,
-      height: 960,
-      canvasAssets: (step.assets || []).map(asset => ({
-        ...asset,
-        prompt: asset.prompt || '',
-        referenceImage: asset.referenceImage || null
-      })),
-      blocks: []
-    }));
+    let newPages = allSteps.map((step, index) => {
+      // 检查是否已经有了排版好的资产（通过检查是否有特定的ID前缀或多个资产）
+      const rawAssets = step.assets || [];
+      const hasReadingLayout = rawAssets.some(a => a.id && (a.id.includes('title') || a.id.includes('content') || a.id.includes('asset-')));
+
+      // 如果是原始 PPT 数据（通常只有一个 asset 且没有文本排版），为其生成阅读材料模板
+      if (rawAssets.length <= 1 && !rawAssets.some(a => a.type === 'text')) {
+        const titleAsset = {
+          id: `asset-title-${step.id}`,
+          type: 'text',
+          title: '标题',
+          content: step.title,
+          x: 50,
+          y: 40,
+          width: 580,
+          height: 70,
+          rotation: 0,
+          fontSize: 28,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          prompt: ''
+        };
+
+        const imageAsset = {
+          id: `asset-image-${step.id}`,
+          type: 'image',
+          title: '插图',
+          // 优先使用原始数据中的图片，如果没有则用占位图
+          url: rawAssets.find(a => a.type === 'image')?.url || `https://placehold.co/400x250/6366f1/FFF?text=${encodeURIComponent(step.title.substring(0, 10))}`,
+          x: 140,
+          y: 120,
+          width: 400,
+          height: 250,
+          rotation: 0,
+          prompt: ''
+        };
+
+        const contentAsset = {
+          id: `asset-content-${step.id}`,
+          type: 'text',
+          title: '正文',
+          content: `【${step.title}】\n\n${step.objective || '本环节核心教学内容...'}\n\n• 活动：${step.activity || '暂无活动描述'}\n• 目标：${step.objective || '暂无目标描述'}`,
+          x: 50,
+          y: 390,
+          width: 580,
+          height: 520,
+          rotation: 0,
+          fontSize: 16,
+          lineHeight: 1.6,
+          prompt: ''
+        };
+
+        // 保留非图片非文字的资产（如音频/视频）
+        const extraAssets = rawAssets.filter(a => a.type !== 'image' && a.type !== 'text');
+
+        return {
+          id: `page-${step.id}`,
+          slideId: step.id,
+          pageNumber: index + 1,
+          title: step.title,
+          width: 680,
+          height: 960,
+          canvasAssets: [titleAsset, imageAsset, contentAsset, ...extraAssets],
+          blocks: []
+        };
+      }
+
+      // 如果已经是阅读材料格式，则保持原样
+      return {
+        id: `page-${step.id}`,
+        slideId: step.id,
+        pageNumber: index + 1,
+        title: step.title,
+        width: 680,
+        height: 960,
+        canvasAssets: rawAssets.map(a => ({
+          ...a,
+          prompt: a.prompt || '',
+          referenceImage: a.referenceImage || null
+        })),
+        blocks: []
+      };
+    });
     
     // 如果从表格视图跳转，且有navigation.slideId，定位到该环节
     if (navigation?.type === 'reading-material' && navigation?.slideId) {
@@ -153,7 +265,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
           ...p,
           slideId: slideIdStr
         }));
-        // 插入到合适的位置（或者直接追加）
+        // 插入到原本的位置
         newPages = [...newPages, ...materialPages];
       }
 
@@ -174,7 +286,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         setEditingPageIndex(0);
       }
     } else {
-      // 如果没有从表格视图跳转，默认选中第一个页面对应的环节
+      // 直接点击进入：显示所有页面，默认选中第一个
       setPages(newPages);
       if (newPages.length > 0) {
         const firstPage = newPages[0];
