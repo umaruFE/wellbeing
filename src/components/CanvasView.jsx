@@ -63,7 +63,7 @@ export const CanvasView = forwardRef((props, ref) => {
 
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);
-  const [promptModalConfig, setPromptModalConfig] = useState({ type: null, assetType: null, phaseKey: null });
+  const [promptModalConfig, setPromptModalConfig] = useState({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
   const [isGenerating, setIsGenerating] = useState(false);
 
   // 历史生成记录
@@ -160,6 +160,17 @@ export const CanvasView = forwardRef((props, ref) => {
     setShowPromptModal(true);
   };
 
+  // 在当前环节末尾添加新环节
+  const handleAddStepAtEnd = () => {
+    if (!activePhase) {
+      alert('请先选择一个环节');
+      return;
+    }
+    // 显示提示词输入模态框，添加在当前环节所在阶段的末尾
+    setPromptModalConfig({ type: 'session', phaseKey: activePhase, addAtEnd: true });
+    setShowPromptModal(true);
+  };
+
   const handleConfirmAddStep = (prompt) => {
     setIsGenerating(true);
     const phaseKey = promptModalConfig.phaseKey;
@@ -181,7 +192,18 @@ export const CanvasView = forwardRef((props, ref) => {
         assets: []
       };
       
-      phase.steps.push(newStep);
+      // 如果是addAtEnd，添加到当前环节之后；否则添加到末尾
+      if (promptModalConfig.addAtEnd && activeStepId) {
+        const currentIndex = phase.steps.findIndex(s => s.id === activeStepId);
+        if (currentIndex >= 0) {
+          phase.steps.splice(currentIndex + 1, 0, newStep);
+        } else {
+          phase.steps.push(newStep);
+        }
+      } else {
+        phase.steps.push(newStep);
+      }
+      
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
       setActivePhase(phaseKey);
@@ -189,7 +211,7 @@ export const CanvasView = forwardRef((props, ref) => {
       setSelectedAssetId(null);
       setIsGenerating(false);
       setShowPromptModal(false);
-      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
     }, 1500);
   };
 
@@ -648,6 +670,21 @@ export const CanvasView = forwardRef((props, ref) => {
                onDeleteAsset={handleDeleteAsset}
              />
           </div>
+          
+          {/* 在末尾新增PPT按钮 - 只在有选中环节时显示 */}
+          {activeStepId && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30"
+                style={{left: '58%'}}>
+              <button
+                onClick={handleAddStepAtEnd}
+                className="px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-600 rounded-full shadow-lg hover:bg-indigo-50 hover:border-indigo-400 transition-all flex items-center gap-2 font-bold text-sm"
+                title="在当前环节末尾添加新PPT页面"
+              >
+                <Plus className="w-5 h-5" />
+                在末尾新增PPT
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
@@ -770,15 +807,17 @@ export const CanvasView = forwardRef((props, ref) => {
         isOpen={showPromptModal}
         onClose={() => {
           setShowPromptModal(false);
-          setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+          setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
         }}
         onConfirm={promptModalConfig.type === 'element' ? handleConfirmAddAsset : handleConfirmAddStep}
         title={promptModalConfig.type === 'element' 
           ? `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`
+          : promptModalConfig.addAtEnd
+          ? '在末尾新增PPT'
           : '添加教学环节'}
         description={promptModalConfig.type === 'element'
           ? '请输入AI生成提示词，描述你想要创建的元素'
-          : '请输入AI生成提示词，描述你想要创建的教学环节'}
+          : '请输入AI生成提示词，描述你想要创建的教学环节（可选，留空将使用默认标题）'}
         placeholder={promptModalConfig.type === 'element'
           ? `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容'}...`
           : '例如：设计一个互动游戏环节，让学生学习颜色词汇...'}

@@ -56,8 +56,9 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);
-  const [promptModalConfig, setPromptModalConfig] = useState({ type: null, phaseKey: null });
+  const [promptModalConfig, setPromptModalConfig] = useState({ type: null, phaseKey: null, pageId: null, assetType: null });
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingAsset, setIsGeneratingAsset] = useState(false);
   
   // 历史生成记录
   const [generationHistory, setGenerationHistory] = useState([]); // [{ pageId, assetId, type, url, prompt, timestamp }]
@@ -67,18 +68,9 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // 初始化pages - 优先使用navigation传入的material数据
+  // 初始化pages - 统一使用INITIAL_COURSE_DATA作为数据源
   const initializePages = () => {
-    // 如果navigation中有material数据（来自TableView），使用它
-    if (navigation?.type === 'reading-material' && navigation?.material?.pages) {
-      return navigation.material.pages.map(page => ({
-        ...page,
-        // 确保有slideId（如果material是从TableView传来的，可能没有slideId）
-        slideId: page.slideId || navigation.slideId || null
-      }));
-    }
-    
-    // 否则，从INITIAL_COURSE_DATA转换（向后兼容）
+    // 始终从INITIAL_COURSE_DATA转换，保持数据一致性
     const allSteps = Object.values(INITIAL_COURSE_DATA).flatMap(phase => 
       phase.steps.map(step => ({ ...step, phaseKey: Object.keys(INITIAL_COURSE_DATA).find(k => INITIAL_COURSE_DATA[k].steps.includes(step)) }))
     );
@@ -88,11 +80,10 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       slideId: step.id,
       pageNumber: index + 1,
       title: step.title,
-      width: 680, // 使用TableView的格式：680x960
+      width: 680,
       height: 960,
       canvasAssets: (step.assets || []).map(asset => ({
         ...asset,
-        // 确保asset格式与TableView一致
         prompt: asset.prompt || '',
         referenceImage: asset.referenceImage || null
       })),
@@ -102,31 +93,34 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
 
   const [pages, setPages] = useState(() => initializePages());
   const [editingPageIndex, setEditingPageIndex] = useState(0);
+  
+  const [selectedStepId, setSelectedStepId] = useState(null); // 当前选中的环节ID，用于过滤pages
+  
+  // 根据selectedStepId过滤显示的pages
+  const filteredPages = selectedStepId 
+    ? pages.filter(page => page.slideId === selectedStepId)
+    : pages;
 
-  // 当navigation变化时，更新pages（如果是从TableView导航过来的）
+  // 初始化历史记录和selectedStepId
   useEffect(() => {
-    if (navigation?.type === 'reading-material' && navigation?.material?.pages) {
-      const newPages = navigation.material.pages.map(page => ({
-        ...page,
-        slideId: page.slideId || navigation.slideId || null
-      }));
-      setPages(newPages);
-      // 重置到第一页
-      setEditingPageIndex(0);
-      // 重置历史记录
-      setHistory([JSON.parse(JSON.stringify(newPages))]);
+    if (pages.length > 0 && history.length === 0) {
+      setHistory([JSON.parse(JSON.stringify(pages))]);
       setHistoryIndex(0);
     }
-  }, [navigation]);
-
-  // 当courseData变化时，更新pages（仅在使用INITIAL_COURSE_DATA时）
-  useEffect(() => {
-    // 如果正在使用navigation的material数据，不更新
-    if (navigation?.type === 'reading-material' && navigation?.material?.pages) {
-      return;
-    }
     
-    // 否则，从courseData转换（向后兼容）
+    // 如果没有选中环节，默认选中第一个页面对应的环节
+    if (!selectedStepId && pages.length > 0) {
+      const firstPage = pages[0];
+      if (firstPage.slideId) {
+        setSelectedStepId(firstPage.slideId);
+        setActiveStepId(firstPage.slideId);
+      }
+    }
+  }, [pages.length, selectedStepId]);
+
+  // 当navigation变化时，如果从表格视图跳转，只定位到特定的环节，但数据源仍然是INITIAL_COURSE_DATA
+  useEffect(() => {
+    // 统一使用INITIAL_COURSE_DATA作为数据源，确保数据一致性
     const allSteps = Object.values(courseData).flatMap(phase => 
       phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
     );
@@ -136,7 +130,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       slideId: step.id,
       pageNumber: index + 1,
       title: step.title,
-      width: 680, // 使用TableView的格式
+      width: 680,
       height: 960,
       canvasAssets: (step.assets || []).map(asset => ({
         ...asset,
@@ -147,12 +141,40 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     }));
     
     setPages(newPages);
-    // 找到当前activeStepId对应的页面索引
-    const currentIndex = newPages.findIndex(p => p.slideId === activeStepId);
-    if (currentIndex >= 0) {
-      setEditingPageIndex(currentIndex);
+    
+    // 如果从表格视图跳转，且有navigation.slideId，定位到该环节
+    if (navigation?.type === 'reading-material' && navigation?.slideId) {
+      const slideIdStr = typeof navigation.slideId === 'string' ? navigation.slideId : String(navigation.slideId);
+      setSelectedStepId(slideIdStr);
+      setActiveStepId(slideIdStr);
+      
+      // 找到该环节的第一个页面
+      const stepPages = newPages.filter(p => p.slideId === slideIdStr);
+      if (stepPages.length > 0) {
+        const pageIndex = newPages.findIndex(p => p.id === stepPages[0].id);
+        if (pageIndex >= 0) {
+          setEditingPageIndex(pageIndex);
+        } else {
+          setEditingPageIndex(0);
+        }
+      } else {
+        setEditingPageIndex(0);
+      }
+    } else if (newPages.length > 0) {
+      // 如果没有从表格视图跳转，默认选中第一个页面对应的环节
+      const firstPage = newPages[0];
+      if (firstPage.slideId) {
+        setSelectedStepId(firstPage.slideId);
+        setActiveStepId(firstPage.slideId);
+      }
+      setEditingPageIndex(0);
     }
-  }, [courseData, activeStepId, navigation]);
+    
+    // 重置历史记录
+    setHistory([JSON.parse(JSON.stringify(newPages))]);
+    setHistoryIndex(0);
+  }, [navigation, courseData]);
+
 
   // 保存历史记录 - 保存pages数据而不是courseData
   const saveToHistory = (newPages) => {
@@ -193,6 +215,110 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const handleStepClick = (phaseKey, stepId) => {
     setActivePhase(phaseKey);
     setActiveStepId(stepId);
+    setSelectedStepId(stepId); // 设置选中的环节ID，用于过滤pages
+    
+    // 找到该环节对应的第一个页面索引并切换到该页面
+    const stepPages = pages.filter(p => p.slideId === stepId);
+    if (stepPages.length > 0) {
+      const pageIndex = pages.findIndex(p => p.id === stepPages[0].id);
+      if (pageIndex >= 0) {
+        setEditingPageIndex(pageIndex);
+      }
+    } else {
+      // 如果该环节没有页面，重置编辑索引
+      setEditingPageIndex(0);
+    }
+  };
+  
+  // 在选中环节的末尾添加新页面
+  const handleAddPageToStep = () => {
+    if (!selectedStepId) {
+      alert('请先选择一个环节');
+      return;
+    }
+    
+    setPromptModalConfig({ type: 'page', phaseKey: null, stepId: selectedStepId });
+    setShowPromptModal(true);
+  };
+  
+  // 确认在环节末尾添加新页面
+  const handleConfirmAddPageToStep = (prompt) => {
+    if (!selectedStepId) return;
+    
+    setIsGenerating(true);
+    
+    // 计算画布尺寸
+    const getCanvasSize = () => {
+      if (canvasAspectRatio === 'A4') {
+        return { width: 680, height: 960 };
+      } else {
+        return { width: 960, height: 680 };
+      }
+    };
+    const canvasSize = getCanvasSize();
+    
+    setTimeout(() => {
+      const generatedTitle = prompt 
+        ? `AI生成：${prompt.substring(0, 20)}...` 
+        : '新页面';
+      
+      // 找到该环节的最后一个页面，确定新页面的编号
+      const stepPages = pages.filter(p => p.slideId === selectedStepId);
+      const lastPageNumber = stepPages.length > 0 
+        ? Math.max(...stepPages.map(p => p.pageNumber || 0))
+        : 0;
+      
+      const newPage = {
+        id: `page-${selectedStepId}-${Date.now()}`,
+        slideId: selectedStepId,
+        pageNumber: lastPageNumber + 1,
+        title: generatedTitle,
+        width: canvasSize.width,
+        height: canvasSize.height,
+        canvasAssets: [],
+        blocks: [],
+        prompt: prompt || ''
+      };
+      
+      // 将新页面添加到pages数组的末尾（或者插入到该环节的最后一个页面之后）
+      const stepPageIds = stepPages.map(p => p.id);
+      const lastStepPageIndex = pages.findIndex(p => stepPageIds.includes(p.id) && 
+        (p.pageNumber || 0) === lastPageNumber);
+      
+      let newPages;
+      if (lastStepPageIndex >= 0 && lastStepPageIndex < pages.length - 1) {
+        // 插入到该环节最后一个页面之后
+        newPages = [...pages];
+        newPages.splice(lastStepPageIndex + 1, 0, newPage);
+      } else {
+        // 添加到末尾
+        newPages = [...pages, newPage];
+      }
+      
+      setPages(newPages);
+      saveToHistory(newPages);
+      
+      // 切换到新添加的页面
+      const newPageIndex = newPages.findIndex(p => p.id === newPage.id);
+      if (newPageIndex >= 0) {
+        setEditingPageIndex(newPageIndex);
+      }
+      
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, phaseKey: null, stepId: null });
+      
+      // 同步更新courseData
+      const newCourseData = { ...courseData };
+      Object.values(newCourseData).forEach(phase => {
+        const step = phase.steps.find(s => s.id === selectedStepId);
+        if (step) {
+          // 更新step的assets（如果需要）
+          // 这里可以根据需要同步数据
+        }
+      });
+      setCourseData(newCourseData);
+    }, 1500);
   };
 
   // 添加新环节
@@ -211,21 +337,21 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 20)}...` : '新页面';
       
       // 创建新页面，格式与TableView一致
-      const newPage = {
+    const newPage = {
         id: `page-${phaseKey}-${Date.now()}`,
         slideId: `${phaseKey}-${Date.now()}`,
-        pageNumber: pages.length + 1,
+      pageNumber: pages.length + 1,
         title: generatedTitle,
         width: 680, // 使用TableView的格式
-        height: 960,
+      height: 960,
         canvasAssets: [],
         blocks: [],
         prompt: prompt || ''
-      };
+    };
       
-      const newPages = [...pages, newPage];
-      setPages(newPages);
-      saveToHistory(newPages);
+    const newPages = [...pages, newPage];
+    setPages(newPages);
+    saveToHistory(newPages);
       setEditingPageIndex(newPages.length - 1);
       setActiveStepId(newPage.slideId);
       setSelectedAssetId(null);
@@ -256,31 +382,45 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       return;
     }
     
-    const newCourseData = { ...courseData };
-    const phase = newCourseData[phaseKey];
-    if (!phase) return;
+    // 找到要删除的页面索引
+    const pageIndex = pages.findIndex(p => p.slideId === stepId);
+    if (pageIndex === -1) return;
     
-    phase.steps = phase.steps.filter(s => s.id !== stepId);
+    // 从pages中删除
+    const newPages = pages.filter((p, index) => index !== pageIndex);
+    const renumberedPages = newPages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1
+    }));
     
-    // 如果删除的是当前环节，切换到第一个环节
-    if (activeStepId === stepId) {
-      if (phase.steps.length > 0) {
-        setActiveStepId(phase.steps[0].id);
-      } else {
-        // 如果这个阶段没有环节了，切换到其他阶段
-        const otherPhase = Object.entries(newCourseData).find(([key, p]) => 
-          key !== phaseKey && p.steps.length > 0
-        );
-        if (otherPhase) {
-          setActivePhase(otherPhase[0]);
-          setActiveStepId(otherPhase[1].steps[0].id);
+    setPages(renumberedPages);
+    saveToHistory(renumberedPages);
+    
+    // 如果删除的是当前页面，切换到其他页面
+    if (pageIndex === editingPageIndex) {
+      if (renumberedPages.length > 0) {
+        const newIndex = pageIndex >= renumberedPages.length ? renumberedPages.length - 1 : pageIndex;
+        setEditingPageIndex(newIndex);
+        if (renumberedPages[newIndex]?.slideId) {
+          setActiveStepId(renumberedPages[newIndex].slideId);
         }
+      } else {
+        setEditingPageIndex(null);
       }
+    } else if (pageIndex < editingPageIndex) {
+      // 如果删除的页面在当前页面之前，需要调整编辑索引
+      setEditingPageIndex(editingPageIndex - 1);
     }
     
-    setCourseData(newCourseData);
-    saveToHistory(newCourseData);
     setSelectedAssetId(null);
+    
+    // 同步更新courseData
+    const newCourseData = { ...courseData };
+    const phase = newCourseData[phaseKey];
+    if (phase) {
+      phase.steps = phase.steps.filter(s => s.id !== stepId);
+      setCourseData(newCourseData);
+    }
   };
 
   // 导出PDF
@@ -313,14 +453,8 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       pageNumber: index + 1
     }));
 
-    // 更新courseData
-    const newCourseData = { ...courseData };
-    Object.values(newCourseData).forEach(phase => {
-      phase.steps = phase.steps.filter(step => step.id !== currentPage.slideId);
-    });
-
-    setCourseData(newCourseData);
     setPages(renumberedPages);
+    saveToHistory(renumberedPages);
     
     // 调整编辑索引
     if (editingPageIndex >= renumberedPages.length) {
@@ -331,12 +465,126 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       setEditingPageIndex(0);
     }
     
-    saveToHistory(newCourseData);
+    // 同步更新courseData
+    const newCourseData = { ...courseData };
+    Object.values(newCourseData).forEach(phase => {
+      phase.steps = phase.steps.filter(step => step.id !== currentPage.slideId);
+    });
+    setCourseData(newCourseData);
   };
 
   // 完成编辑
   const handleFinishEditing = () => {
     setEditingPageIndex(null);
+  };
+
+  // 添加资产 - 显示提示词输入模态框
+  const handleAddAsset = (assetType) => {
+    if (editingPageIndex === null || editingPageIndex < 0 || editingPageIndex >= pages.length) {
+      alert('请先选择一个页面进行编辑');
+      return;
+    }
+    const currentPage = pages[editingPageIndex];
+    if (!currentPage) {
+      alert('当前页面不存在');
+      return;
+    }
+    setPromptModalConfig({ type: 'asset', pageId: currentPage.id, assetType });
+    setShowPromptModal(true);
+  };
+
+  // 确认添加资产
+  const handleConfirmAddAsset = (prompt) => {
+    const { pageId, assetType: type } = promptModalConfig;
+    if (!pageId || !type) return;
+
+    setIsGeneratingAsset(true);
+
+    // 计算画布尺寸（用于居中放置新资产）
+    const getCanvasSize = () => {
+      if (canvasAspectRatio === 'A4') {
+        return { width: 680, height: 960 };
+      } else {
+        return { width: 960, height: 680 };
+      }
+    };
+    const canvasSize = getCanvasSize();
+
+    // 模拟AI生成
+    setTimeout(() => {
+      let w = 300, h = 200;
+      if (type === 'text') { 
+        w = 400; 
+        h = 150; 
+      } else if (type === 'image') {
+        w = 400;
+        h = 250;
+      }
+
+      const generatedTitle = prompt 
+        ? `AI生成：${prompt.substring(0, 15)}...` 
+        : (type === 'text' ? '文本' : type === 'image' ? '图片' : '');
+      
+      const generatedUrl = type === 'text' 
+        ? '' 
+        : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
+
+      const newAsset = {
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        title: generatedTitle,
+        url: generatedUrl,
+        content: type === 'text' ? (prompt || '双击编辑文本') : '',
+        prompt: prompt || '',
+        referenceImage: null,
+        x: (canvasSize.width - w) / 2,
+        y: (canvasSize.height - h) / 2,
+        width: w,
+        height: h,
+        rotation: 0
+      };
+
+      // 如果是文本类型，添加文本相关属性
+      if (type === 'text') {
+        newAsset.fontSize = 24;
+        newAsset.fontWeight = 'normal';
+        newAsset.color = '#1e293b';
+        newAsset.textAlign = 'center';
+      }
+
+      const newPages = pages.map(page => {
+        if (page.id === pageId) {
+          return {
+            ...page,
+            canvasAssets: [...(page.canvasAssets || []), newAsset]
+          };
+        }
+        return page;
+      });
+
+      setPages(newPages);
+      saveToHistory(newPages);
+      
+      // 选中新添加的资产
+      setSelectedAssetId(newAsset.id);
+      
+      setIsGeneratingAsset(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
+      
+      // 同步更新courseData
+      const updatedPage = newPages.find(p => p.id === pageId);
+      if (updatedPage && updatedPage.slideId) {
+        const newCourseData = { ...courseData };
+        Object.values(newCourseData).forEach(phase => {
+          const step = phase.steps.find(s => s.id === updatedPage.slideId);
+          if (step) {
+            step.assets = updatedPage.canvasAssets || [];
+          }
+        });
+        setCourseData(newCourseData);
+      }
+    }, 1500);
   };
 
   // 获取当前编辑页面的资产
@@ -390,6 +638,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     });
     setPages(newPages);
     setSelectedAssetId(null);
+    saveToHistory(newPages);
     // 同步更新courseData
     const newCourseData = { ...courseData };
     if (currentPage.slideId) {
@@ -401,7 +650,6 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       });
     }
     setCourseData(newCourseData);
-    saveToHistory(newCourseData);
   };
 
   // 复制元素
@@ -484,6 +732,8 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       return page;
     });
     setPages(newPages);
+    saveToHistory(newPages);
+    setShowHistoryModal(null);
     // 同步更新courseData
     const newCourseData = { ...courseData };
     if (currentPage.slideId) {
@@ -495,8 +745,6 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       });
     }
     setCourseData(newCourseData);
-    saveToHistory(newCourseData);
-    setShowHistoryModal(null);
   };
 
   // 图层操作
@@ -520,6 +768,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       return page;
     });
     setPages(newPages);
+    saveToHistory(newPages);
     // 同步更新courseData
     const newCourseData = { ...courseData };
     if (currentPage.slideId) {
@@ -531,7 +780,6 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       });
     }
     setCourseData(newCourseData);
-    saveToHistory(newCourseData);
   };
 
 
@@ -553,62 +801,64 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
           <p className="text-xs text-slate-500 mt-1 truncate">Unit 1: Funky Monster Rescue</p>
         </div>
         <div className={`flex-1 overflow-y-auto p-2 space-y-2 ${!isLeftOpen && 'hidden'}`}>
+          {/* 统一使用courseData显示目录树 */}
           {Object.entries(courseData).map(([key, phase]) => (
-            <div key={key} className="rounded-lg overflow-hidden border border-slate-100 bg-white">
-              <button
-                onClick={() => togglePhase(key)} 
-                className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phase.color.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
-              >
-                <span className="flex items-center gap-2">
-                  {expandedPhases.includes(key) ? <ChevronDown className="w-4 h-4"/> : <ChevronRight className="w-4 h-4"/>}
-                  {phase.title}
-                </span>
+              <div key={key} className="rounded-lg overflow-hidden border border-slate-100 bg-white">
+                <button
+                  onClick={() => togglePhase(key)} 
+                  className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phase.color.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
+                >
+                  <span className="flex items-center gap-2">
+                    {expandedPhases.includes(key) ? <ChevronDown className="w-4 h-4"/> : <ChevronRight className="w-4 h-4"/>}
+                    {phase.title}
+                  </span>
               </button>
-              {expandedPhases.includes(key) && (
-                <div className="bg-slate-50 border-t border-slate-100">
-                  {phase.steps.map((step) => {
-                    const pageIndex = pages.findIndex(p => p.slideId === step.id);
-                    return (
-                      <div 
-                        key={step.id} 
-                        className={`group/step border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-center ${
-                          activeStepId === step.id ? 'bg-blue-100' : ''
-                        }`}
-                      >
-                        <button
-                          onClick={() => handleStepClick(key, step.id)} 
-                          className={`flex-1 text-left p-2 pl-8 text-xs transition-all flex items-start gap-2 ${
-                            activeStepId === step.id 
-                              ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600' 
-                              : 'text-slate-600'
+                {expandedPhases.includes(key) && (
+                  <div className="bg-slate-50 border-t border-slate-100">
+                    {phase.steps.map((step) => {
+                      const pageIndex = pages.findIndex(p => p.slideId === step.id);
+                      return (
+                        <div 
+                          key={step.id} 
+                          className={`group/step border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-center ${
+                            activeStepId === step.id ? 'bg-blue-100' : ''
                           }`}
                         >
-                          <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
-                          <span className="line-clamp-2">{step.title}</span>
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteStep(key, step.id);
-                          }}
-                          className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
-                          title="删除页面"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    );
-                  })}
-                  <button 
-                    onClick={() => handleAddStep(key)}
-                    className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <Plus className="w-3 h-3" /> 新增页面
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+            <button
+                            onClick={() => handleStepClick(key, step.id)} 
+                            className={`flex-1 text-left p-2 pl-8 text-xs transition-all flex items-start gap-2 ${
+                              activeStepId === step.id 
+                                ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600' 
+                                : 'text-slate-600'
+                            }`}
+                          >
+                            <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
+                            <span className="line-clamp-2">{step.title}</span>
+            </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteStep(key, step.id);
+                            }}
+                            className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
+                            title="删除页面"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                    <button 
+                      onClick={() => handleAddStep(key)}
+                      className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" /> 新增页面
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))
+          }
         </div>
         {!isLeftOpen && (
           <button 
@@ -642,7 +892,11 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
             )}
             <span className="text-sm font-medium text-slate-500 whitespace-nowrap">当前编辑:</span>
             <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold whitespace-nowrap">
-              页面 {editingPageIndex + 1} / {pages.length || 1}
+              页面 {(() => {
+                if (!pages[editingPageIndex]) return 1;
+                const filteredIndex = filteredPages.findIndex(p => p.id === pages[editingPageIndex].id);
+                return filteredIndex >= 0 ? filteredIndex + 1 : 1;
+              })()} / {filteredPages.length || 1}
             </span>
             {pages[editingPageIndex] && (
               <h2 className="text-sm font-bold text-slate-800 truncate" title={pages[editingPageIndex].title}>
@@ -673,7 +927,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
             {editingPageIndex !== null && (
               <>
                 <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
-                  <button
+            <button
                     onClick={() => setCanvasAspectRatio('A4')}
                     className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
                       canvasAspectRatio === 'A4' ? 'bg-white text-indigo-600' : 'text-slate-500 hover:text-slate-700'
@@ -690,31 +944,65 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                     title="A4 横版"
                   >
                     A4 横版
-                  </button>
-                </div>
+            </button>
+          </div>
               </>
             )}
-          </div>
         </div>
-
+        </div>
+        {editingPageIndex !== null && (
+          <div style={{left: '65%'}} className="absolute top-20 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 z-20 transition-all">
+            <button 
+              onClick={() => handleAddAsset('text')} 
+              className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-blue-600 transition-colors"
+              title="添加文本"
+            >
+              <Type className="w-5 h-5" />
+              <span className="text-[9px] font-bold">文本</span>
+            </button>
+            <div className="w-px bg-slate-200 h-8"></div>
+            <button 
+              onClick={() => handleAddAsset('image')} 
+              className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-purple-600 transition-colors"
+              title="添加图片"
+            >
+              <ImageIcon className="w-5 h-5" />
+              <span className="text-[9px] font-bold">图片</span>
+            </button>
+          </div>
+        )}
         {/* Canvas Editor */}
-        <div className="flex-1 overflow-auto">
-          {pages.length > 0 ? (
+        <div className="flex-1 overflow-auto relative">
+          {filteredPages.length > 0 ? (
             <ReadingMaterialEditor
-              pages={pages}
+              pages={filteredPages}
               onPagesChange={(updater) => {
                 // 确保 updater 是函数，且 prev 是数组
-                const updatedPages = typeof updater === 'function' 
-                  ? updater(pages) 
+                // 使用filteredPages作为prev，但更新所有pages
+                const updatedFilteredPages = typeof updater === 'function' 
+                  ? updater(filteredPages) 
                   : updater;
                 
-                if (!Array.isArray(updatedPages)) {
+                if (!Array.isArray(updatedFilteredPages)) {
                   console.error('onPagesChange must return an array');
                   return;
                 }
                 
-                // 更新pages
+                // 更新pages：将filteredPages的更新同步回完整的pages数组
+                const updatedPages = pages.map(page => {
+                  const updatedPage = updatedFilteredPages.find(p => p.id === page.id);
+                  return updatedPage || page;
+                });
+                
+                // 如果有新页面（在filteredPages中但不在pages中），添加到pages
+                updatedFilteredPages.forEach(updatedPage => {
+                  if (!pages.find(p => p.id === updatedPage.id)) {
+                    updatedPages.push(updatedPage);
+                  }
+                });
+                
                 setPages(updatedPages);
+                saveToHistory(updatedPages);
                 // 同步更新courseData
                 const newCourseData = { ...courseData };
                 updatedPages.forEach(page => {
@@ -728,10 +1016,30 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                   }
                 });
                 setCourseData(newCourseData);
-                saveToHistory(newCourseData);
               }}
-              editingPageIndex={editingPageIndex}
-              onEditingPageIndexChange={setEditingPageIndex}
+              editingPageIndex={(() => {
+                if (!pages[editingPageIndex]) return 0;
+                const filteredIndex = filteredPages.findIndex(p => p.id === pages[editingPageIndex].id);
+                return filteredIndex >= 0 ? filteredIndex : 0;
+              })()}
+              onEditingPageIndexChange={(newIndex) => {
+                // 将filteredPages的索引转换为pages的索引
+                if (newIndex >= 0 && newIndex < filteredPages.length) {
+                  const targetPage = filteredPages[newIndex];
+                  const actualIndex = pages.findIndex(p => p.id === targetPage.id);
+                  if (actualIndex >= 0) {
+                    setEditingPageIndex(actualIndex);
+                  } else {
+                    // 如果找不到，更新到filteredPages的第一个页面
+                    if (filteredPages.length > 0) {
+                      const firstIndex = pages.findIndex(p => p.id === filteredPages[0].id);
+                      if (firstIndex >= 0) {
+                        setEditingPageIndex(firstIndex);
+                      }
+                    }
+                  }
+                }
+              }}
               canvasAspectRatio={canvasAspectRatio}
               onCanvasAspectRatioChange={setCanvasAspectRatio}
               selectedAssetId={selectedAssetId}
@@ -748,6 +1056,22 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
               </div>
             </div>
           )}
+          
+          {/* 在末尾添加新页面按钮 - 只在选中环节时显示 */}
+          {selectedStepId && (
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30"
+                style={{left: '67%'}}>
+              <button
+                onClick={handleAddPageToStep}
+
+                className="px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-600 rounded-full shadow-lg hover:bg-indigo-50 hover:border-indigo-400 transition-all flex items-center gap-2 font-bold text-sm"
+                title="在此环节末尾添加新页面"
+              >
+                <Plus className="w-5 h-5" />
+                在末尾添加新页面
+              </button>
+            </div>
+          )}
         </div>
       </main>
 
@@ -755,13 +1079,13 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       {editingPageIndex !== null && (
         <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l border-slate-200 flex flex-col shrink-0 z-10 shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
                   {!isRightOpen && (
-                    <button 
+              <button
                       onClick={() => setIsRightOpen(true)} 
                       className="absolute top-4 right-0 bg-white p-2 rounded-l-md border border-r-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50 transform -translate-x-full"
                       title="展开面板"
-                    >
+              >
                       <ChevronLeft className="w-4 h-4" />
-                    </button>
+              </button>
                   )}
                   <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
                     {selectedAsset ? (
@@ -1027,9 +1351,9 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                                               className="flex-1 text-xs border border-slate-200 rounded px-2 py-1 bg-slate-50 outline-none font-mono"
                                             />
                                           </div>
-                                        </div>
-                                      )}
-                                    </div>
+            </div>
+          )}
+        </div>
                                   </div>
                                 </div>
                               </div>
@@ -1204,14 +1528,30 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         isOpen={showPromptModal}
         onClose={() => {
           setShowPromptModal(false);
-          setPromptModalConfig({ type: null, phaseKey: null });
+          setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
         }}
-        onConfirm={handleConfirmAddStep}
-        title="添加新页面"
-        description="请输入AI生成提示词，描述你想要创建的页面内容（可选，留空将使用默认标题）"
-        placeholder="例如：创建一个关于颜色词汇的阅读页面，包含图片和文字..."
-        type="session"
-        isLoading={isGenerating}
+        onConfirm={(prompt) => {
+          if (promptModalConfig.type === 'asset') {
+            handleConfirmAddAsset(prompt);
+          } else if (promptModalConfig.type === 'page' && promptModalConfig.stepId) {
+            handleConfirmAddPageToStep(prompt);
+          } else {
+            handleConfirmAddStep(prompt);
+          }
+        }}
+        title={promptModalConfig.type === 'asset' 
+          ? `添加${promptModalConfig.assetType === 'image' ? '图片' : '文本'}元素`
+          : promptModalConfig.stepId
+          ? '在末尾添加新页面'
+          : '添加新页面'}
+        description={promptModalConfig.type === 'asset'
+          ? '请输入AI生成提示词，描述你想要创建的元素（可选，留空将使用默认生成）'
+          : '请输入AI生成提示词，描述你想要创建的页面内容（可选，留空将使用默认标题）'}
+        placeholder={promptModalConfig.type === 'asset'
+          ? `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : '输入文本内容'}...`
+          : '例如：创建一个关于颜色词汇的阅读页面，包含图片和文字...'}
+        type={promptModalConfig.type === 'asset' ? 'element' : 'session'}
+        isLoading={promptModalConfig.type === 'asset' ? isGeneratingAsset : isGenerating}
       />
 
       {/* 历史生成列表模态框 */}

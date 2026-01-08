@@ -440,28 +440,11 @@ export const ReadingMaterialEditor = ({
             
 
             {/* Content Area */}
-            {isEditing ? (
+            { (
               <div className="flex relative">
                 {/* Main Canvas Area */}
-                <div className="flex-1 transition-all duration-300">
+                <div className="flex-1">
                   <div className="flex-1 flex flex-col bg-slate-100 relative" style={{ minHeight: '600px' }}>
-                    {/* 工具栏 - 固定在顶部 */}
-                    <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-center gap-4 shrink-0">
-                      <button 
-                        onClick={() => handleAddAsset(page.id, 'text')} 
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors border border-slate-200"
-                      >
-                        <Type className="w-5 h-5" />
-                        <span className="text-sm font-medium">文本</span>
-                      </button>
-                      <button 
-                        onClick={() => handleAddAsset(page.id, 'image')} 
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg text-slate-600 hover:text-purple-600 hover:bg-purple-50 transition-colors border border-slate-200"
-                      >
-                        <ImageIcon className="w-5 h-5" />
-                        <span className="text-sm font-medium">图片</span>
-                      </button>
-                    </div>
 
                     {/* 画布区域 */}
                     <div 
@@ -601,99 +584,12 @@ export const ReadingMaterialEditor = ({
                   </div>
                 </div>
               </div>
-            ) : (
-              <div className="p-6">
-                <div className="flex items-center justify-center bg-slate-100 rounded-lg overflow-hidden" style={{ minHeight: '400px' }}>
-                  <div className="relative bg-white shadow-lg rounded-sm overflow-hidden ring-1 ring-slate-900/5" style={{ width: canvasSize.width, height: canvasSize.height }}>
-                    {/* 预览模式：显示所有元素，但不可编辑 */}
-                    {assets.length === 0 ? (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none">
-                        <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                          <Type className="w-16 h-16" />
-                        </div>
-                        <p className="text-sm font-medium">暂无内容</p>
-                        <p className="text-xs mt-2 text-slate-400">点击"编辑此页"开始添加素材</p>
-                      </div>
-                    ) : (
-                      assets.map((asset, index) => (
-                        <div
-                          key={asset.id}
-                          style={{ 
-                            left: asset.x, 
-                            top: asset.y, 
-                            width: asset.width || 300, 
-                            height: asset.height || 200,
-                            zIndex: index,
-                            transform: `rotate(${asset.rotation || 0}deg)`,
-                            position: 'absolute'
-                          }}
-                          className="select-none"
-                        >
-                          {/* 资产内容 */}
-                          {asset.type === 'text' ? (
-                            <div 
-                              className="w-full h-full bg-transparent p-2 font-sans whitespace-pre-wrap overflow-hidden flex items-center"
-                              style={{ 
-                                fontSize: asset.fontSize ? `${asset.fontSize}px` : '24px',
-                                fontWeight: asset.fontWeight || 'normal',
-                                color: asset.color || '#1e293b',
-                                textAlign: asset.textAlign || 'center',
-                                ...(asset.strokeWidth ? {
-                                  WebkitTextStroke: `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}`,
-                                  WebkitTextFillColor: asset.color || '#1e293b',
-                                  textShadow: [
-                                    `-${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                    `${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                    `-${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                    `${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`
-                                  ].join(', ')
-                                } : {}),
-                                justifyContent: asset.textAlign === 'left' ? 'flex-start' : asset.textAlign === 'right' ? 'flex-end' : 'center'
-                              }}
-                            >
-                              {asset.content || ""}
-                            </div>
-                          ) : (
-                            <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
-                              {asset.url ? (
-                                <img 
-                                  src={asset.url} 
-                                  alt={asset.title} 
-                                  className="w-full h-full object-cover block select-none pointer-events-none" 
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
-                                  No Image
-                                </div>
-                              )}
-                              {asset.type === 'video' && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                                  <Play className="w-12 h-12 text-white opacity-80" />
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
+            ) }
           </div>
         );
       })}
 
-          {/* 底部添加页面按钮 */}
-          <div className="flex justify-center pt-4">
-            <button
-              onClick={() => handleAddPage(pages.length - 1)}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
-            >
-              <Plus className="w-4 h-4" />
-              在末尾添加新页面
-            </button>
-          </div>
+         
           </div>
         </div>
 
