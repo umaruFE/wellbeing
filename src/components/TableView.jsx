@@ -520,6 +520,91 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
     }, 2000);
   };
 
+  // 重新生成教学目标
+  const handleRegenerateObjectives = (phaseId, slideId) => {
+    const key = `${slideId}-objectives`;
+    setGeneratingMedia(prev => ({ ...prev, [key]: true }));
+    setTimeout(() => {
+      setPhases(prevPhases => prevPhases.map(phase => {
+        if (phase.id !== phaseId) return phase;
+        return {
+          ...phase,
+          slides: phase.slides.map(slide => {
+            if (slide.id !== slideId) return slide;
+            const generatedObjectives = `1. 理解核心概念\n2. 掌握关键技能\n3. 培养思维能力\n4. 提升实践能力\n（AI生成于 ${new Date().toLocaleTimeString()}）`;
+            return { ...slide, objectives: generatedObjectives };
+          })
+        };
+      }));
+      setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+    }, 2000);
+  };
+
+  // 添加PPT页面
+  const handleAddPPT = (phaseId, slideId) => {
+    const newPPT = {
+      id: `ppt-${slideId}-${Date.now()}`,
+      image: `https://placehold.co/600x400/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=PPT+${Date.now().toString().slice(-4)}`,
+      timestamp: Date.now()
+    };
+    
+    setPhases(prevPhases => prevPhases.map(phase => {
+      if (phase.id !== phaseId) return phase;
+      return {
+        ...phase,
+        slides: phase.slides.map(slide => {
+          if (slide.id !== slideId) return slide;
+          return {
+            ...slide,
+            pptSlides: [...(slide.pptSlides || []), newPPT]
+          };
+        })
+      };
+    }));
+  };
+
+  // 删除PPT页面
+  const handleDeletePPT = (phaseId, slideId, pptId) => {
+    if (!confirm('确定要删除这个PPT页面吗？')) {
+      return;
+    }
+    
+    setPhases(prevPhases => prevPhases.map(phase => {
+      if (phase.id !== phaseId) return phase;
+      return {
+        ...phase,
+        slides: phase.slides.map(slide => {
+          if (slide.id !== slideId) return slide;
+          return {
+            ...slide,
+            pptSlides: (slide.pptSlides || []).filter(ppt => ppt.id !== pptId)
+          };
+        })
+      };
+    }));
+  };
+
+  // 删除阅读材料
+  const handleDeleteReadingMaterial = (phaseId, slideId, materialId) => {
+    if (!confirm('确定要删除这个阅读材料吗？')) {
+      return;
+    }
+    
+    setPhases(prevPhases => prevPhases.map(phase => {
+      if (phase.id !== phaseId) return phase;
+      return {
+        ...phase,
+        slides: phase.slides.map(slide => {
+          if (slide.id !== slideId) return slide;
+          return {
+            ...slide,
+            readingMaterials: (slide.readingMaterials || []).filter(material => material.id !== materialId)
+          };
+        })
+      };
+    }));
+  };
+
 
   return (
     <div className="flex-1 flex flex-col bg-slate-50 text-slate-800 font-sans overflow-hidden">
@@ -584,8 +669,24 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                 <div className="space-y-2">
                                     <textarea value={slide.activities} onChange={(e) => updateSlideField(phase.id, slide.id, 'activities', e.target.value)} className="w-full bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 resize-none text-slate-700 leading-relaxed whitespace-pre-wrap transition-colors text-xs" rows={6} placeholder="详细的活动步骤..."/>
                                     <div className="pt-1 border-t border-slate-100">
-                                        <label className="text-[10px] text-slate-400 font-bold uppercase">教学目标</label>
-                                        <textarea value={slide.objectives} onChange={(e) => updateSlideField(phase.id, slide.id, 'objectives', e.target.value)} className="w-full bg-transparent text-xs text-slate-500 resize-none outline-none focus:bg-white rounded" rows={3} placeholder="输入教学目标..."/>
+                                        <div className="flex items-center justify-between mb-1">
+                                          <label className="text-[10px] text-slate-400 font-bold uppercase">教学目标</label>
+                                          <button
+                                            onClick={() => handleRegenerateObjectives(phase.id, slide.id)}
+                                            disabled={generatingMedia[`${slide.id}-objectives`]}
+                                            className="p-1 hover:bg-blue-50 rounded text-blue-500 transition-colors disabled:opacity-50"
+                                            title="重新生成教学目标"
+                                          >
+                                            <RefreshCw className={`w-3 h-3 ${generatingMedia[`${slide.id}-objectives`] ? 'animate-spin' : ''}`} />
+                                          </button>
+                                        </div>
+                                        <textarea 
+                                          value={slide.objectives} 
+                                          onChange={(e) => updateSlideField(phase.id, slide.id, 'objectives', e.target.value)} 
+                                          className="w-full bg-transparent text-xs text-slate-500 resize-none outline-none focus:bg-white rounded" 
+                                          rows={3} 
+                                          placeholder="输入教学目标..."
+                                        />
                                     </div>
                                 </div>
                              </td>
@@ -600,11 +701,53 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                  <div className="space-y-2">
                                    {/* 显示所有PPT缩略图 */}
                                    {slide.pptSlides && slide.pptSlides.length > 0 ? (
-                                     slide.pptSlides.map((ppt, idx) => (
-                                       <div key={ppt.id} className="relative group/media w-full aspect-video bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex items-center justify-center">
+                                     <>
+                                       {slide.pptSlides.map((ppt, idx) => (
+                                         <div key={ppt.id} className="relative group/media w-full aspect-video bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex items-center justify-center">
+                                           <img 
+                                             src={ppt.image} 
+                                             alt={`PPT ${idx + 1}`} 
+                                             className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" 
+                                             onClick={() => handleNavigateToCanvasView(phase.id, slide.id)}
+                                           />
+                                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/media:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                             <button 
+                                               onClick={() => handleNavigateToCanvasView(phase.id, slide.id)} 
+                                               title="跳转到画布视图" 
+                                               className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"
+                                             >
+                                               <Layout className="w-3 h-3" />
+                                             </button>
+                                             <button onClick={() => setPreviewImage(ppt.image)} title="预览" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><Maximize2 className="w-3 h-3" /></button>
+                                             <button 
+                                               onClick={(e) => {
+                                                 e.stopPropagation();
+                                                 handleDeletePPT(phase.id, slide.id, ppt.id);
+                                               }} 
+                                               title="删除PPT" 
+                                               className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 backdrop-blur-sm"
+                                             >
+                                               <Trash2 className="w-3 h-3" />
+                                             </button>
+                                           </div>
+                                           <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">PPT {idx + 1}</div>
+                                         </div>
+                                       ))}
+                                       {/* 添加PPT按钮 */}
+                                       <button 
+                                         onClick={() => handleAddPPT(phase.id, slide.id)} 
+                                         className="w-full py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors flex items-center justify-center gap-1"
+                                       >
+                                         <Plus className="w-5 h-5" />
+                                         <span className="text-[10px]">添加PPT页面</span>
+                                       </button>
+                                     </>
+                                   ) : slide.image ? (
+                                     <>
+                                       <div className="relative group/media w-full aspect-video bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex items-center justify-center">
                                          <img 
-                                           src={ppt.image} 
-                                           alt={`PPT ${idx + 1}`} 
+                                           src={slide.image} 
+                                           alt="PPT Slide" 
                                            className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" 
                                            onClick={() => handleNavigateToCanvasView(phase.id, slide.id)}
                                          />
@@ -616,31 +759,19 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                            >
                                              <Layout className="w-3 h-3" />
                                            </button>
-                                           <button onClick={() => setPreviewImage(ppt.image)} title="预览" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><Maximize2 className="w-3 h-3" /></button>
+                                           <button onClick={() => setPreviewImage(slide.image)} title="预览" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><Maximize2 className="w-3 h-3" /></button>
+                                           <button onClick={() => handleRegenerateMedia(phase.id, slide.id, 'image')} title="重新生成" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><RefreshCw className="w-3 h-3" /></button>
                                          </div>
-                                         <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">PPT {idx + 1}</div>
                                        </div>
-                                     ))
-                                   ) : slide.image ? (
-                                     <div className="relative group/media w-full aspect-video bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex items-center justify-center">
-                                       <img 
-                                         src={slide.image} 
-                                         alt="PPT Slide" 
-                                         className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity" 
-                                         onClick={() => handleNavigateToCanvasView(phase.id, slide.id)}
-                                       />
-                                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/media:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                         <button 
-                                           onClick={() => handleNavigateToCanvasView(phase.id, slide.id)} 
-                                           title="跳转到画布视图" 
-                                           className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"
-                                         >
-                                           <Layout className="w-3 h-3" />
-                                         </button>
-                                         <button onClick={() => setPreviewImage(slide.image)} title="预览" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><Maximize2 className="w-3 h-3" /></button>
-                                         <button onClick={() => handleRegenerateMedia(phase.id, slide.id, 'image')} title="重新生成" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><RefreshCw className="w-3 h-3" /></button>
-                                       </div>
-                                     </div>
+                                       {/* 添加PPT按钮 */}
+                                       <button 
+                                         onClick={() => handleAddPPT(phase.id, slide.id)} 
+                                         className="w-full py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors flex items-center justify-center gap-1"
+                                       >
+                                         <Plus className="w-5 h-5" />
+                                         <span className="text-[10px]">添加PPT页面</span>
+                                       </button>
+                                     </>
                                    ) : (
                                      <button 
                                        onClick={() => handleRegenerateMedia(phase.id, slide.id, 'image')} 
@@ -710,6 +841,16 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                                  className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"
                                                >
                                                  <Maximize2 className="w-3 h-3" />
+                                               </button>
+                                               <button 
+                                                 onClick={(e) => {
+                                                   e.stopPropagation();
+                                                   handleDeleteReadingMaterial(phase.id, slide.id, material.id);
+                                                 }} 
+                                                 title="删除阅读材料" 
+                                                 className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 backdrop-blur-sm"
+                                               >
+                                                 <Trash2 className="w-3 h-3" />
                                                </button>
                                              </div>
                                              <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">阅读 {idx + 1}</div>

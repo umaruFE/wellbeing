@@ -1,6 +1,6 @@
-import { LayoutTemplate, RotateCw, Play, Music } from 'lucide-react';
+import { LayoutTemplate, RotateCw, Play, Music, Copy, Trash2 } from 'lucide-react';
 
-export const SlideRenderer = ({ assets, isEditable, onMouseDown, selectedAssetId }) => {
+export const SlideRenderer = ({ assets, isEditable, onMouseDown, selectedAssetId, onCopyAsset, onDeleteAsset }) => {
   
   if (assets.length === 0 && isEditable) {
     return (
@@ -31,6 +31,32 @@ export const SlideRenderer = ({ assets, isEditable, onMouseDown, selectedAssetId
             ${isEditable && selectedAssetId !== asset.id ? 'hover:ring-1 hover:ring-blue-300' : ''}
             transition-shadow duration-75`}
         >
+           {/* 右上角复制和删除按钮 - 仅在可编辑模式下显示 */}
+           {isEditable && (
+             <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover/asset:opacity-100 transition-opacity z-50">
+               <button
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   if (onCopyAsset) onCopyAsset(asset.id);
+                 }}
+                 className="p-1.5 bg-blue-500 text-white rounded shadow-sm hover:bg-blue-600 transition-colors"
+                 title="复制"
+               >
+                 <Copy className="w-3 h-3" />
+               </button>
+               <button
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   if (onDeleteAsset) onDeleteAsset(asset.id);
+                 }}
+                 className="p-1.5 bg-red-500 text-white rounded shadow-sm hover:bg-red-600 transition-colors"
+                 title="删除"
+               >
+                 <Trash2 className="w-3 h-3" />
+               </button>
+             </div>
+           )}
+           
            {/* Editor Controls (Handles) - Only in Editable Mode */}
            {isEditable && selectedAssetId === asset.id && (
              <>
