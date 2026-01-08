@@ -1,30 +1,20 @@
 // --- Data Constants ---
 
-export const INITIAL_COURSE_DATA = {
+// PPT 专用测试数据
+export const PPT_TEST_DATA = {
   engage: {
     title: 'Engage (引入)',
     color: 'bg-purple-100 text-purple-700 border-purple-200',
     steps: [
       {
-        id: 'e1-1',
+        id: 'ppt-e1',
         time: '2分钟',
-        title: '氛围营造：神秘信号',
-        objective: '快速吸引注意力，激发好奇心，建立"特工"身份。',
-        activity: '1. 教室灯光调暗，播放神秘音乐。 2. 教师假装捕捉空气中的信号。',
-        script: '"Shhh... Everyone, quiet, please. I\'m receiving a strange signal... Can you hear it? Listen carefully..."',
+        title: 'PPT 封面：氛围营造',
+        objective: '快速吸引注意力',
+        activity: '展示神秘信号动效',
+        script: '"Hello everyone! Are you ready for a mission?"',
         assets: [
-          { id: 'a1', type: 'audio', title: 'Mystery Background Music', url: 'https://placehold.co/audio.mp3', x: 50, y: 50, width: 300, height: 60, rotation: 0, prompt: 'Suspenseful cinematic background music' }
-        ]
-      },
-      {
-        id: 'e1-2',
-        time: '3分钟',
-        title: '发布神秘任务',
-        objective: '清晰理解任务规则，发布行动指令。',
-        activity: '1. 教师发现"线索1"：身体部位卡片。 2. 发布搜寻任务：找到教室内隐藏的14个线索。',
-        script: '"Class, I have a top-secret mission for you! Look what I found..."',
-        assets: [
-          { id: 'a2', type: 'image', title: 'Mission File', url: 'https://placehold.co/1000x600/1a1a2e/FFF?text=Mission+File', x: 100, y: 80, width: 400, height: 300, rotation: -5, prompt: 'Secret agent magnifying glass finding clues' }
+          { id: 'ppt-a1', type: 'image', title: 'PPT背景', url: 'https://placehold.co/960x540/1a1a2e/00FF00?text=PPT+MODE+TEST+DATA', x: 0, y: 0, width: 960, height: 540, rotation: 0 }
         ]
       }
     ]
@@ -34,53 +24,44 @@ export const INITIAL_COURSE_DATA = {
     color: 'bg-blue-100 text-blue-700 border-blue-200',
     steps: [
       {
-        id: 'em-2',
-        time: '30分钟',
-        title: '图鉴共读与探索',
-        objective: '学习身体部位、数量、形容词 (long/short, big/small)。',
-        activity: '1. 师生共读《Funky Monster Guidebook》。 2. 完成填字、找不同、画尾巴等练习。',
-        script: '"Now let\'s open our Funky Monster Guidebook! Look at this monster - his name is Zuzu."',
-        assets: [
-          { id: 'a6', type: 'image', title: 'Monster Guidebook', url: 'https://placehold.co/400x500/fcd34d/FFF?text=Monster+Guidebook', x: 150, y: 100, width: 300, height: 400, rotation: 0, prompt: 'Cute monster guidebook cover' }
-        ]
-      }
-    ]
-  },
-  execute: {
-    title: 'Execute (实践)',
-    color: 'bg-green-100 text-green-700 border-green-200',
-    steps: [
-      {
-        id: 'ex-1',
-        time: '15分钟',
-        title: '绘画共创：魔法骰子',
-        objective: '运用随机性激发创造力，协作完成海报。',
-        activity: '1. 掷骰子A(部位)、B(数量)、C(特征)。 2. 根据结果作画。',
-        script: '"It\'s time to create our own funky monster! We have three magic dice."',
-        assets: [
-          { id: 'a8', type: 'image', title: 'Art Studio', url: 'https://placehold.co/800x450/f3e8ff/6b21a8?text=Art+Studio', x: 100, y: 50, width: 350, height: 260, rotation: 15, prompt: 'Art studio background with dice' }
-        ]
-      }
-    ]
-  },
-  elevate: {
-    title: 'Elevate (升华)',
-    color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    steps: [
-      {
-        id: 'el-1',
+        id: 'ppt-em1',
         time: '10分钟',
-        title: '奇趣兽发布会',
-        objective: '公开演讲，展示成果，获得成就感。',
-        activity: '1. 模拟盛大发布会。 2. 小组上台展示海报并介绍。',
-        script: '"Welcome to the Grand Monster Reveal!"',
+        title: 'PPT：核心知识讲解',
+        objective: '掌握新单词',
+        activity: '互动讲解',
+        script: '"Look at these words..."',
         assets: [
-          { id: 'a10', type: 'image', title: 'Grand Reveal Stage', url: 'https://images.unsplash.com/photo-1516280440614-6697288d5d38?q=80&w=1000&auto=format&fit=crop', x: 0, y: 0, width: 960, height: 540, rotation: 0, prompt: 'Grand stage with red curtains' }
+          { id: 'ppt-a2', type: 'text', title: '标题', content: 'Key Words', x: 330, y: 50, width: 300, height: 60, rotation: 0 }
         ]
       }
     ]
   }
 };
+
+// 阅读材料专用测试数据
+export const READING_TEST_DATA = {
+  engage: {
+    title: 'Engage (引入)',
+    color: 'bg-purple-100 text-purple-700 border-purple-200',
+    steps: [
+      {
+        id: 'read-e1',
+        time: '5分钟',
+        title: '阅读：神秘任务说明书',
+        objective: '通过阅读理解任务背景',
+        activity: '自主阅读',
+        script: '"Please read this mission guidebook carefully."',
+        assets: [
+          { id: 'read-t1', type: 'text', title: '大标题', content: 'READING MODE TEST DATA', x: 50, y: 40, width: 580, height: 70, fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
+          { id: 'read-i1', type: 'image', title: '配图', url: 'https://placehold.co/400x250/6366f1/FFFFFF?text=Reading+Material+Layout', x: 140, y: 120, width: 400, height: 250, rotation: 0 },
+          { id: 'read-t2', type: 'text', title: '正文', content: '这是阅读模式的独立测试数据，确保不与PPT模式冲突。', x: 50, y: 390, width: 580, height: 520, fontSize: 16, lineHeight: 1.6 }
+        ]
+      }
+    ]
+  }
+};
+
+export const INITIAL_COURSE_DATA = PPT_TEST_DATA;
 
 export const CURRICULUM_DATA = {
   '3-4岁 (小班/Nursery)': [

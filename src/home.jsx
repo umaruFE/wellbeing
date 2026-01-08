@@ -100,6 +100,7 @@ export default function App() {
            
            <button
              onClick={() => {
+               setCanvasNavigation(null);
                setCanvasMode('ppt');
                setCurrentView('canvas');
              }}
@@ -113,6 +114,7 @@ export default function App() {
            
            <button
              onClick={() => {
+               setCanvasNavigation(null);
                setCanvasMode('reading-material');
                setCurrentView('canvas');
              }}

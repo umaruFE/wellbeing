@@ -33,7 +33,7 @@ import {
   History
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
-import { INITIAL_COURSE_DATA } from '../constants';
+import { INITIAL_COURSE_DATA, READING_TEST_DATA } from '../constants';
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
 
@@ -43,13 +43,13 @@ import { PromptInputModal } from './PromptInputModal';
  */
 export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const { navigation } = props;
-  const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
-  const [activePhase, setActivePhase] = useState('engage');
-  const [activeStepId, setActiveStepId] = useState('e1-1');
+  const [courseData, setCourseData] = useState(READING_TEST_DATA);
+  const [activePhase, setActivePhase] = useState(Object.keys(READING_TEST_DATA)[0]);
+  const [activeStepId, setActiveStepId] = useState(READING_TEST_DATA[Object.keys(READING_TEST_DATA)[0]]?.steps[0]?.id);
   const [isLeftOpen, setIsLeftOpen] = useState(true);
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-  const [expandedPhases, setExpandedPhases] = useState(['engage', 'empower', 'execute', 'elevate']);
+  const [expandedPhases, setExpandedPhases] = useState(Object.keys(READING_TEST_DATA));
   const [canvasAspectRatio, setCanvasAspectRatio] = useState('A4'); // 'A4' | 'A4横向'
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
@@ -68,10 +68,33 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // 初始化pages - 统一使用INITIAL_COURSE_DATA作为数据源
-  const initializePages = () => {
-    const allSteps = Object.values(INITIAL_COURSE_DATA).flatMap(phase => 
-      phase.steps.map(step => ({ ...step, phaseKey: Object.keys(INITIAL_COURSE_DATA).find(k => INITIAL_COURSE_DATA[k].steps.includes(step)) }))
+  // 当navigation变化时，重置数据：如果navigation为null，清空并加载测试数据；如果有navigation，使用INITIAL_COURSE_DATA
+  useEffect(() => {
+    if (!navigation) {
+      // 直接点击进入：清空所有状态，加载测试数据
+      setCourseData(READING_TEST_DATA);
+      const firstPhase = Object.keys(READING_TEST_DATA)[0];
+      const firstStepId = READING_TEST_DATA[firstPhase]?.steps[0]?.id;
+      setActivePhase(firstPhase);
+      setActiveStepId(firstStepId);
+      setExpandedPhases(Object.keys(READING_TEST_DATA));
+      setSelectedAssetId(null);
+      setGenerationHistory([]);
+      setShowHistoryModal(null);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
+      // pages 会在下面的 useEffect 中重新初始化
+    } else {
+      // 从表格跳转：使用INITIAL_COURSE_DATA
+      setCourseData(INITIAL_COURSE_DATA);
+      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
+    }
+  }, [navigation]);
+
+  // 初始化pages - 根据是否有navigation决定使用哪个数据源
+  const initializePages = (dataSource) => {
+    const allSteps = Object.values(dataSource).flatMap(phase => 
+      phase.steps.map(step => ({ ...step, phaseKey: Object.keys(dataSource).find(k => dataSource[k].steps.includes(step)) }))
     );
     
     return allSteps.map((step, index) => {
@@ -134,7 +157,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     });
   };
 
-  const [pages, setPages] = useState(() => initializePages());
+  const [pages, setPages] = useState(() => initializePages(READING_TEST_DATA));
   const [editingPageIndex, setEditingPageIndex] = useState(0);
   
   const [selectedStepId, setSelectedStepId] = useState(null); // 当前选中的环节ID，用于过滤pages
@@ -161,9 +184,9 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     }
   }, [pages.length, selectedStepId]);
 
-  // 当navigation变化时，如果从表格视图跳转，只定位到特定的环节，但数据源仍然是INITIAL_COURSE_DATA
+  // 当navigation或courseData变化时，重新初始化pages
   useEffect(() => {
-    // 统一使用courseData作为数据源，确保数据一致性
+    // 使用courseData作为数据源
     const allSteps = Object.values(courseData).flatMap(phase => 
       phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
     );

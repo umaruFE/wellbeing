@@ -31,17 +31,17 @@ import {
   Undo2,
   Redo2
 } from 'lucide-react';
-import { INITIAL_COURSE_DATA } from '../constants';
+import { PPT_TEST_DATA, INITIAL_COURSE_DATA } from '../constants';
 import { SlideRenderer } from './SlideRenderer';
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
 
 export const CanvasView = forwardRef((props, ref) => {
   const { navigation } = props;
-  const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
-  const [activePhase, setActivePhase] = useState('engage');
-  const [activeStepId, setActiveStepId] = useState('e1-1');
-  const [expandedPhases, setExpandedPhases] = useState(['engage', 'empower', 'execute', 'elevate']);
+  const [courseData, setCourseData] = useState(PPT_TEST_DATA);
+  const [activePhase, setActivePhase] = useState(Object.keys(PPT_TEST_DATA)[0]);
+  const [activeStepId, setActiveStepId] = useState(PPT_TEST_DATA[Object.keys(PPT_TEST_DATA)[0]]?.steps[0]?.id);
+  const [expandedPhases, setExpandedPhases] = useState(Object.keys(PPT_TEST_DATA));
   
   // UI State
   const [isLeftOpen, setIsLeftOpen] = useState(true);
@@ -58,8 +58,34 @@ export const CanvasView = forwardRef((props, ref) => {
   const canvasRef = useRef(null);
 
   // 撤销/重做功能
-  const [history, setHistory] = useState([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
+  const [history, setHistory] = useState([JSON.parse(JSON.stringify(PPT_TEST_DATA))]);
   const [historyIndex, setHistoryIndex] = useState(0);
+
+  // 当navigation变化时，重置数据：如果navigation为null，清空并加载测试数据；如果有navigation，使用INITIAL_COURSE_DATA
+  useEffect(() => {
+    if (!navigation) {
+      // 直接点击进入：清空所有状态，加载测试数据
+      setCourseData(PPT_TEST_DATA);
+      const firstPhase = Object.keys(PPT_TEST_DATA)[0];
+      const firstStepId = PPT_TEST_DATA[firstPhase]?.steps[0]?.id;
+      setActivePhase(firstPhase);
+      setActiveStepId(firstStepId);
+      setExpandedPhases(Object.keys(PPT_TEST_DATA));
+      setSelectedAssetId(null);
+      setGenerationHistory([]);
+      setShowHistoryModal(null);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
+      setHistory([JSON.parse(JSON.stringify(PPT_TEST_DATA))]);
+      setHistoryIndex(0);
+    } else {
+      // 从表格跳转：使用INITIAL_COURSE_DATA
+      setCourseData(INITIAL_COURSE_DATA);
+      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
+      setHistory([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
+      setHistoryIndex(0);
+    }
+  }, [navigation]);
 
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);
