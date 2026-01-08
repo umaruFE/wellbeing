@@ -26,7 +26,10 @@ import {
   Sliders,
   RotateCw,
   Copy,
-  RotateCcw
+  RotateCcw,
+  History,
+  Undo2,
+  Redo2
 } from 'lucide-react';
 import { INITIAL_COURSE_DATA } from '../constants';
 import { SlideRenderer } from './SlideRenderer';
@@ -62,6 +65,10 @@ export const CanvasView = forwardRef((props, ref) => {
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptModalConfig, setPromptModalConfig] = useState({ type: null, assetType: null, phaseKey: null });
   const [isGenerating, setIsGenerating] = useState(false);
+
+  // 历史生成记录
+  const [generationHistory, setGenerationHistory] = useState([]); // [{ phaseId, stepId, assetId, type, url, prompt, timestamp }]
+  const [showHistoryModal, setShowHistoryModal] = useState(null); // { assetId, assetType }
 
   // 保存历史记录
   const saveToHistory = (newData) => {
@@ -344,9 +351,49 @@ export const CanvasView = forwardRef((props, ref) => {
     setActiveStepId(newStep.id);
   };
 
+  // 保存生成历史
+  const saveGenerationHistory = (assetId, assetType, url, prompt) => {
+    const historyItem = {
+      id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      phaseId: activePhase,
+      stepId: activeStepId,
+      assetId,
+      type: assetType,
+      url,
+      prompt: prompt || '',
+      timestamp: new Date().toISOString(),
+      displayTime: new Date().toLocaleString('zh-CN')
+    };
+    setGenerationHistory(prev => [historyItem, ...prev].slice(0, 100)); // 最多保存100条
+  };
+
+  // 恢复历史生成内容
+  const handleRestoreHistory = (historyItem) => {
+    const newCourseData = { ...courseData };
+    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    const asset = step.assets.find(a => a.id === historyItem.assetId);
+    if (asset && (asset.type === 'image' || asset.type === 'video' || asset.type === 'audio')) {
+      asset.url = historyItem.url;
+      if (historyItem.prompt) {
+        asset.prompt = historyItem.prompt;
+      }
+      setCourseData(newCourseData);
+      saveToHistory(newCourseData);
+    }
+    setShowHistoryModal(null);
+  };
+
   const handleRegenerateAsset = (assetId) => {
     const btn = document.getElementById(`regen-btn-${assetId}`);
     if(btn) btn.classList.add('animate-spin');
+    
+    // 保存当前内容到历史
+    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
+    const asset = step?.assets.find(a => a.id === assetId);
+    if (asset && (asset.type === 'image' || asset.type === 'video' || asset.type === 'audio') && asset.url) {
+      saveGenerationHistory(assetId, asset.type, asset.url, asset.prompt);
+    }
+    
     setTimeout(() => {
       const newCourseData = { ...courseData };
       const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
@@ -357,6 +404,8 @@ export const CanvasView = forwardRef((props, ref) => {
          const w = asset.width || 300;
          const h = asset.height || 200;
          asset.url = `https://placehold.co/${Math.round(w)}x${Math.round(h)}/${randomColor}/FFF?text=${text}+v${Math.floor(Math.random() * 10)}`;
+      } else if (asset.type === 'audio') {
+         asset.url = `https://placehold.co/300x100/${randomColor}/FFF?text=AI+Audio+v${Math.floor(Math.random() * 10)}`;
       }
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
@@ -558,18 +607,21 @@ export const CanvasView = forwardRef((props, ref) => {
               onClick={handleUndo}
               disabled={historyIndex === 0}
               className="p-2 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="撤销 (Ctrl+Z)"
+              title="向后回滚 (Ctrl+Z)"
             >
-              <RotateCcw className="w-4 h-4" />
+              <Undo2 className="w-4 h-4" />
             </button>
             <button
               onClick={handleRedo}
               disabled={historyIndex === history.length - 1}
               className="p-2 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="重做 (Ctrl+Shift+Z)"
+              title="向前回滚 (Ctrl+Shift+Z)"
             >
-              <RotateCw className="w-4 h-4" />
+              <Redo2 className="w-4 h-4" />
             </button>
+            <div className="text-xs text-slate-400 px-2">
+              {historyIndex + 1} / {history.length}
+            </div>
             <div className="w-px h-6 bg-slate-200"></div>
             <button
               onClick={handleCopyPage}
@@ -659,7 +711,22 @@ export const CanvasView = forwardRef((props, ref) => {
                               <div>
                                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2"><Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt</label>
                                  <textarea value={selectedAsset.prompt} onChange={(e) => handleAssetChange(selectedAsset.id, 'prompt', e.target.value)} placeholder="描述你想要生成的画面..." className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none h-24 resize-none mb-2"/>
-                                 <button onClick={() => handleRegenerateAsset(selectedAsset.id)} className="w-full py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"><RefreshCw className="w-4 h-4" /> {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}</button>
+                                 <div className="flex gap-2 mb-2">
+                                   <button 
+                                     onClick={() => setShowHistoryModal({ assetId: selectedAsset.id, assetType: selectedAsset.type })}
+                                     className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all"
+                                   >
+                                     <History className="w-4 h-4" />
+                                     历史生成
+                                   </button>
+                                   <button 
+                                     onClick={() => handleRegenerateAsset(selectedAsset.id)} 
+                                     className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                                   >
+                                     <RefreshCw className="w-4 h-4" /> 
+                                     {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}
+                                   </button>
+                                 </div>
                               </div>
                            </>
                         )}
@@ -723,6 +790,96 @@ export const CanvasView = forwardRef((props, ref) => {
         type={promptModalConfig.type}
         isLoading={isGenerating}
       />
+
+      {/* 历史生成列表模态框 */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-800">
+                    历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : '音频'}
+                  </h3>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowHistoryModal(null)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {generationHistory
+                .filter(h => 
+                  h.phaseId === activePhase && 
+                  h.stepId === activeStepId && 
+                  h.assetId === showHistoryModal.assetId &&
+                  h.type === showHistoryModal.assetType
+                )
+                .length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>暂无历史生成记录</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {generationHistory
+                    .filter(h => 
+                      h.phaseId === activePhase && 
+                      h.stepId === activeStepId && 
+                      h.assetId === showHistoryModal.assetId &&
+                      h.type === showHistoryModal.assetType
+                    )
+                    .map((historyItem) => (
+                      <div 
+                        key={historyItem.id} 
+                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-medium text-slate-500">
+                                {historyItem.displayTime}
+                              </span>
+                            </div>
+                            {historyItem.type === 'image' || historyItem.type === 'video' ? (
+                              <img 
+                                src={historyItem.url} 
+                                alt="历史生成" 
+                                className="w-full h-32 object-cover rounded border border-slate-200 mb-2"
+                              />
+                            ) : (
+                              <div className="w-full h-16 bg-slate-100 rounded border border-slate-200 flex items-center justify-center mb-2">
+                                <Music className="w-6 h-6 text-slate-400" />
+                              </div>
+                            )}
+                            {historyItem.prompt && (
+                              <p className="text-xs text-slate-600 bg-slate-50 rounded p-2 mt-2">
+                                {historyItem.prompt}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleRestoreHistory(historyItem)}
+                            className="ml-4 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            恢复
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Preview Modal */}
       {isPreviewOpen && (

@@ -51,6 +51,15 @@ export default function App() {
     }
   };
 
+  const handleExportPDF = () => {
+    if (canvasViewRef.current && canvasViewRef.current.exportPDF) {
+      setIsExporting(true);
+      canvasViewRef.current.exportPDF();
+      // 同步导出状态（2秒后重置）
+      setTimeout(() => setIsExporting(false), 2000);
+    }
+  };
+
   if (appState === 'welcome') {
     return <WelcomeScreen onStart={handleStartApp} />;
   }
@@ -126,6 +135,10 @@ export default function App() {
               <button onClick={handleExportPPT} disabled={isExporting} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded flex items-center gap-2 shadow-sm whitespace-nowrap disabled:bg-blue-400" title="导出 PPT">
                 {isExporting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
                 {isExporting ? '导出中...' : '导出 PPT'}
+              </button>
+              <button onClick={handleExportPDF} disabled={isExporting} className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded flex items-center gap-2 shadow-sm whitespace-nowrap disabled:bg-blue-400" title="导出 PDF">
+                {isExporting ? <RefreshCw className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3" />}
+                {isExporting ? '导出中...' : '导出 PDF'}
               </button>
               <div className="h-4 w-px bg-slate-200"></div>
           

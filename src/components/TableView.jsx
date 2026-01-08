@@ -41,6 +41,9 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   const [showAddPPTPromptModal, setShowAddPPTPromptModal] = useState(null); // {phaseId, slideId}
   const [isGeneratingPPT, setIsGeneratingPPT] = useState(false);
   const [selectedField, setSelectedField] = useState(null); // {phaseId, slideId, field: 'activity'|'objectives'|'script'}
+  const [generationHistory, setGenerationHistory] = useState([]); // 历史生成记录 [{ phaseId, slideId, field, content, timestamp, type }]
+  const [showHistoryModal, setShowHistoryModal] = useState(null); // { phaseId, slideId, field }
+  const [showRegenerateModal, setShowRegenerateModal] = useState(null); // { phaseId, slideId, field: 'activity'|'objectives'|'script'|'session' }
 
   // 生成示例阅读材料的辅助函数
   const generateSampleReadingMaterial = (slide, index = 0) => {
@@ -523,10 +526,60 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
     }, 2000);
   };
 
-  // 重新生成教学目标
-  const handleRegenerateObjectives = (phaseId, slideId) => {
+  // 保存生成历史
+  const saveGenerationHistory = (phaseId, slideId, field, content, type = 'regenerate') => {
+    const historyItem = {
+      id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      phaseId,
+      slideId,
+      field,
+      content,
+      type,
+      timestamp: new Date().toISOString(),
+      displayTime: new Date().toLocaleString('zh-CN')
+    };
+    setGenerationHistory(prev => [historyItem, ...prev].slice(0, 100)); // 最多保存100条
+  };
+
+  // 恢复历史生成内容
+  const handleRestoreHistory = (historyItem) => {
+    setPhases(prevPhases => prevPhases.map(phase => {
+      if (phase.id !== historyItem.phaseId) return phase;
+      return {
+        ...phase,
+        slides: phase.slides.map(slide => {
+          if (slide.id !== historyItem.slideId) return slide;
+          const update = { [historyItem.field]: historyItem.content };
+          return { ...slide, ...update };
+        })
+      };
+    }));
+    setShowHistoryModal(null);
+  };
+
+  // 获取字段显示名称
+  const getFieldDisplayName = (field) => {
+    const fieldNames = {
+      'activities': '教学活动',
+      'objectives': '教学目标',
+      'script': '讲稿',
+      'session': '本环节'
+    };
+    return fieldNames[field] || field;
+  };
+
+  // 重新生成教学目标（带提示词）
+  const handleRegenerateObjectives = (phaseId, slideId, prompt = '') => {
     const key = `${slideId}-objectives`;
     setGeneratingMedia(prev => ({ ...prev, [key]: true }));
+    
+    // 保存当前内容到历史
+    const currentPhase = phases.find(p => p.id === phaseId);
+    const currentSlide = currentPhase?.slides.find(s => s.id === slideId);
+    if (currentSlide?.objectives) {
+      saveGenerationHistory(phaseId, slideId, 'objectives', currentSlide.objectives, 'regenerate');
+    }
+    
     setTimeout(() => {
       setPhases(prevPhases => prevPhases.map(phase => {
         if (phase.id !== phaseId) return phase;
@@ -534,19 +587,30 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           ...phase,
           slides: phase.slides.map(slide => {
             if (slide.id !== slideId) return slide;
-            const generatedObjectives = `1. 理解核心概念\n2. 掌握关键技能\n3. 培养思维能力\n4. 提升实践能力\n（AI生成于 ${new Date().toLocaleTimeString()}）`;
+            const generatedObjectives = prompt 
+              ? `根据提示词"${prompt}"生成的教学目标：\n1. 理解核心概念\n2. 掌握关键技能\n3. 培养思维能力\n4. 提升实践能力\n（AI生成于 ${new Date().toLocaleTimeString()}）`
+              : `1. 理解核心概念\n2. 掌握关键技能\n3. 培养思维能力\n4. 提升实践能力\n（AI生成于 ${new Date().toLocaleTimeString()}）`;
             return { ...slide, objectives: generatedObjectives };
           })
         };
       }));
       setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+      setShowRegenerateModal(null);
     }, 2000);
   };
 
-  // 重新生成教学活动
-  const handleRegenerateActivity = (phaseId, slideId) => {
+  // 重新生成教学活动（带提示词）
+  const handleRegenerateActivity = (phaseId, slideId, prompt = '') => {
     const key = `${slideId}-activity`;
     setGeneratingMedia(prev => ({ ...prev, [key]: true }));
+    
+    // 保存当前内容到历史
+    const currentPhase = phases.find(p => p.id === phaseId);
+    const currentSlide = currentPhase?.slides.find(s => s.id === slideId);
+    if (currentSlide?.activities) {
+      saveGenerationHistory(phaseId, slideId, 'activities', currentSlide.activities, 'regenerate');
+    }
+    
     setTimeout(() => {
       setPhases(prevPhases => prevPhases.map(phase => {
         if (phase.id !== phaseId) return phase;
@@ -554,19 +618,30 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           ...phase,
           slides: phase.slides.map(slide => {
             if (slide.id !== slideId) return slide;
-            const generatedActivity = `1. 准备阶段：准备相关教具和材料\n2. 导入环节：通过提问或游戏引入主题\n3. 活动实施：组织学生参与互动活动\n4. 总结反思：引导学生总结活动收获\n（AI生成于 ${new Date().toLocaleTimeString()}）`;
+            const generatedActivity = prompt
+              ? `根据提示词"${prompt}"生成的教学活动：\n1. 准备阶段：准备相关教具和材料\n2. 导入环节：通过提问或游戏引入主题\n3. 活动实施：组织学生参与互动活动\n4. 总结反思：引导学生总结活动收获\n（AI生成于 ${new Date().toLocaleTimeString()}）`
+              : `1. 准备阶段：准备相关教具和材料\n2. 导入环节：通过提问或游戏引入主题\n3. 活动实施：组织学生参与互动活动\n4. 总结反思：引导学生总结活动收获\n（AI生成于 ${new Date().toLocaleTimeString()}）`;
             return { ...slide, activities: generatedActivity };
           })
         };
       }));
       setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+      setShowRegenerateModal(null);
     }, 2000);
   };
 
-  // 重新生成讲稿
-  const handleRegenerateScript = (phaseId, slideId) => {
+  // 重新生成讲稿（带提示词）
+  const handleRegenerateScript = (phaseId, slideId, prompt = '') => {
     const key = `${slideId}-script`;
     setGeneratingMedia(prev => ({ ...prev, [key]: true }));
+    
+    // 保存当前内容到历史
+    const currentPhase = phases.find(p => p.id === phaseId);
+    const currentSlide = currentPhase?.slides.find(s => s.id === slideId);
+    if (currentSlide?.script) {
+      saveGenerationHistory(phaseId, slideId, 'script', currentSlide.script, 'regenerate');
+    }
+    
     setTimeout(() => {
       setPhases(prevPhases => prevPhases.map(phase => {
         if (phase.id !== phaseId) return phase;
@@ -574,17 +649,20 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           ...phase,
           slides: phase.slides.map(slide => {
             if (slide.id !== slideId) return slide;
-            const generatedScript = `同学们，今天我们要学习一个非常有趣的主题。首先，让我们一起来观察一下...\n\n通过这个活动，我希望大家能够...\n\n现在，让我们开始吧！\n（AI生成于 ${new Date().toLocaleTimeString()}）`;
+            const generatedScript = prompt
+              ? `根据提示词"${prompt}"生成的讲稿：\n\n同学们，今天我们要学习一个非常有趣的主题。首先，让我们一起来观察一下...\n\n通过这个活动，我希望大家能够...\n\n现在，让我们开始吧！\n（AI生成于 ${new Date().toLocaleTimeString()}）`
+              : `同学们，今天我们要学习一个非常有趣的主题。首先，让我们一起来观察一下...\n\n通过这个活动，我希望大家能够...\n\n现在，让我们开始吧！\n（AI生成于 ${new Date().toLocaleTimeString()}）`;
             return { ...slide, script: generatedScript };
           })
         };
       }));
       setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+      setShowRegenerateModal(null);
     }, 2000);
   };
 
-  // 重新生成本环节
-  const handleRegenerateSession = (phaseId, slideId) => {
+  // 重新生成本环节（带提示词）
+  const handleRegenerateSession = (phaseId, slideId, prompt = '') => {
     const key = `${slideId}-session`;
     setGeneratingMedia(prev => ({ ...prev, [key]: true }));
     setTimeout(() => {
@@ -596,16 +674,39 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
             if (slide.id !== slideId) return slide;
             return {
               ...slide,
-              title: `新环节 ${new Date().toLocaleTimeString()}`,
-              activities: `1. 准备阶段\n2. 导入环节\n3. 活动实施\n4. 总结反思\n（AI生成于 ${new Date().toLocaleTimeString()}）`,
-              script: `同学们，今天我们要学习一个非常有趣的主题...\n（AI生成于 ${new Date().toLocaleTimeString()}）`,
-              objectives: `1. 理解核心概念\n2. 掌握关键技能\n3. 培养思维能力\n（AI生成于 ${new Date().toLocaleTimeString()}）`
+              title: prompt ? `AI生成：${prompt.substring(0, 20)}...` : `新环节 ${new Date().toLocaleTimeString()}`,
+              activities: prompt 
+                ? `根据提示词"${prompt}"生成的教学活动：\n1. 准备阶段\n2. 导入环节\n3. 活动实施\n4. 总结反思\n（AI生成于 ${new Date().toLocaleTimeString()}）`
+                : `1. 准备阶段\n2. 导入环节\n3. 活动实施\n4. 总结反思\n（AI生成于 ${new Date().toLocaleTimeString()}）`,
+              script: prompt
+                ? `根据提示词"${prompt}"生成的讲稿：\n\n同学们，今天我们要学习一个非常有趣的主题...\n（AI生成于 ${new Date().toLocaleTimeString()}）`
+                : `同学们，今天我们要学习一个非常有趣的主题...\n（AI生成于 ${new Date().toLocaleTimeString()}）`,
+              objectives: prompt
+                ? `根据提示词"${prompt}"生成的教学目标：\n1. 理解核心概念\n2. 掌握关键技能\n3. 培养思维能力\n（AI生成于 ${new Date().toLocaleTimeString()}）`
+                : `1. 理解核心概念\n2. 掌握关键技能\n3. 培养思维能力\n（AI生成于 ${new Date().toLocaleTimeString()}）`
             };
           })
         };
       }));
       setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+      setShowRegenerateModal(null);
     }, 2000);
+  };
+
+  // 处理重新生成确认（带提示词）
+  const handleConfirmRegenerate = (prompt) => {
+    if (!showRegenerateModal) return;
+    const { phaseId, slideId, field } = showRegenerateModal;
+    
+    if (field === 'activity') {
+      handleRegenerateActivity(phaseId, slideId, prompt);
+    } else if (field === 'objectives') {
+      handleRegenerateObjectives(phaseId, slideId, prompt);
+    } else if (field === 'script') {
+      handleRegenerateScript(phaseId, slideId, prompt);
+    } else if (field === 'session') {
+      handleRegenerateSession(phaseId, slideId, prompt);
+    }
   };
 
   // 显示添加PPT提示词输入模态框
@@ -757,25 +858,19 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                              {/* 教学活动 (含目标) */}
                              <td className="p-4 align-top">
                                 <div className="space-y-2">
-                                    <textarea 
-                                      value={slide.activities} 
-                                      onChange={(e) => updateSlideField(phase.id, slide.id, 'activities', e.target.value)} 
-                                      onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'activity' })}
-                                      className={`w-full bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 resize-none text-slate-700 leading-relaxed whitespace-pre-wrap transition-colors text-xs ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'activity' ? 'ring-2 ring-purple-300' : ''}`}
-                                      rows={6} 
-                                      placeholder="详细的活动步骤..."
-                                    />
+                                    <div className="relative">
+                                      <textarea 
+                                        value={slide.activities} 
+                                        onChange={(e) => updateSlideField(phase.id, slide.id, 'activities', e.target.value)} 
+                                        onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'activity' })}
+                                        className={`w-full bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 resize-none text-slate-700 leading-relaxed whitespace-pre-wrap transition-colors text-xs ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'activity' ? 'ring-2 ring-purple-300' : ''}`}
+                                        rows={6} 
+                                        placeholder="详细的活动步骤..."
+                                      />
+                                    </div>
                                     <div className="pt-1 border-t border-slate-100">
                                         <div className="flex items-center justify-between mb-1">
                                           <label className="text-[10px] text-slate-400 font-bold uppercase">教学目标</label>
-                                          <button
-                                            onClick={() => handleRegenerateObjectives(phase.id, slide.id)}
-                                            disabled={generatingMedia[`${slide.id}-objectives`]}
-                                            className="p-1 hover:bg-blue-50 rounded text-blue-500 transition-colors disabled:opacity-50"
-                                            title="重新生成教学目标"
-                                          >
-                                            <RefreshCw className={`w-3 h-3 ${generatingMedia[`${slide.id}-objectives`] ? 'animate-spin' : ''}`} />
-                                          </button>
                                         </div>
                                         <textarea 
                                           value={slide.objectives} 
@@ -791,13 +886,15 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
 
                              {/* 讲稿 (新列) */}
                              <td className="p-4 align-top">
-                                <textarea 
-                                  value={slide.script} 
-                                  onChange={(e) => updateSlideField(phase.id, slide.id, 'script', e.target.value)} 
-                                  onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'script' })}
-                                  className={`w-full bg-slate-100/50 border border-slate-200 focus:border-blue-300 focus:bg-white rounded p-2 resize-none text-xs text-slate-600 leading-relaxed transition-colors h-full min-h-[120px] ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'script' ? 'ring-2 ring-green-300' : ''}`}
-                                  placeholder="输入教师讲稿..."
-                                />
+                                <div className="relative">
+                                  <textarea 
+                                    value={slide.script} 
+                                    onChange={(e) => updateSlideField(phase.id, slide.id, 'script', e.target.value)} 
+                                    onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'script' })}
+                                    className={`w-full bg-slate-100/50 border border-slate-200 focus:border-blue-300 focus:bg-white rounded p-2 resize-none text-xs text-slate-600 leading-relaxed transition-colors h-full min-h-[120px] ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'script' ? 'ring-2 ring-green-300' : ''}`}
+                                    placeholder="输入教师讲稿..."
+                                  />
+                                </div>
                              </td>
 
                              {/* PPT内容 (改为缩略图) - 支持多个PPT */}
@@ -1007,7 +1104,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                    <Copy className="w-4 h-4" />
                                  </button>
                                  <button 
-                                   onClick={() => handleRegenerateActivity(phase.id, slide.id)}
+                                   onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'activity' })}
                                    disabled={generatingMedia[`${slide.id}-activity`]}
                                    className={`p-2 rounded transition-colors ${
                                      selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'activity'
@@ -1019,7 +1116,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                    <RefreshCw className={`w-4 h-4 ${generatingMedia[`${slide.id}-activity`] ? 'animate-spin' : ''}`} />
                                  </button>
                                  <button 
-                                   onClick={() => handleRegenerateObjectives(phase.id, slide.id)}
+                                   onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })}
                                    disabled={generatingMedia[`${slide.id}-objectives`]}
                                    className={`p-2 rounded transition-colors ${
                                      selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'objectives'
@@ -1031,7 +1128,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                    <RefreshCw className={`w-4 h-4 ${generatingMedia[`${slide.id}-objectives`] ? 'animate-spin' : ''}`} />
                                  </button>
                                  <button 
-                                   onClick={() => handleRegenerateScript(phase.id, slide.id)}
+                                   onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'script' })}
                                    disabled={generatingMedia[`${slide.id}-script`]}
                                    className={`p-2 rounded transition-colors ${
                                      selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'script'
@@ -1043,7 +1140,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                    <RefreshCw className={`w-4 h-4 ${generatingMedia[`${slide.id}-script`] ? 'animate-spin' : ''}`} />
                                  </button>
                                  <button 
-                                   onClick={() => handleRegenerateSession(phase.id, slide.id)}
+                                   onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'session' })}
                                    disabled={generatingMedia[`${slide.id}-session`]}
                                    className="p-2 rounded transition-colors hover:bg-orange-50 text-slate-300 hover:text-orange-500 disabled:opacity-50"
                                    title="重新生成本环节"
@@ -1132,6 +1229,107 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           type="element"
           isLoading={isGeneratingPPT}
         />
+      )}
+
+      {/* 重新生成提示词输入模态框 */}
+      {showRegenerateModal && (
+        <PromptInputModal
+          isOpen={!!showRegenerateModal}
+          onClose={() => setShowRegenerateModal(null)}
+          onConfirm={handleConfirmRegenerate}
+          title={`重新生成${getFieldDisplayName(showRegenerateModal.field)}`}
+          description="请输入AI生成提示词，描述你想要生成的内容（可选，留空将使用默认生成）"
+          placeholder={showRegenerateModal.field === 'activity' 
+            ? '例如：设计一个互动游戏环节，让学生学习颜色词汇...'
+            : showRegenerateModal.field === 'objectives'
+            ? '例如：生成关于颜色认知的教学目标...'
+            : showRegenerateModal.field === 'script'
+            ? '例如：生成一段鼓励性的教师讲稿...'
+            : '例如：生成一个完整的教学环节，包含活动、目标和讲稿...'}
+          type="element"
+          isLoading={generatingMedia[`${showRegenerateModal.slideId}-${showRegenerateModal.field === 'session' ? 'session' : showRegenerateModal.field}`]}
+        />
+      )}
+
+      {/* 历史生成列表模态框 */}
+      {showHistoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-800">
+                    历史生成列表 - {getFieldDisplayName(showHistoryModal.field)}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {phases.find(p => p.id === showHistoryModal.phaseId)?.slides.find(s => s.id === showHistoryModal.slideId)?.title || '当前环节'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowHistoryModal(null)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {generationHistory
+                .filter(h => 
+                  h.phaseId === showHistoryModal.phaseId && 
+                  h.slideId === showHistoryModal.slideId && 
+                  h.field === showHistoryModal.field
+                )
+                .length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>暂无历史生成记录</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {generationHistory
+                    .filter(h => 
+                      h.phaseId === showHistoryModal.phaseId && 
+                      h.slideId === showHistoryModal.slideId && 
+                      h.field === showHistoryModal.field
+                    )
+                    .map((historyItem, index) => (
+                      <div 
+                        key={historyItem.id} 
+                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-xs font-medium text-slate-500">
+                                {historyItem.displayTime}
+                              </span>
+                              <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full">
+                                {historyItem.type === 'regenerate' ? '重新生成' : '生成'}
+                              </span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRestoreHistory(historyItem)}
+                            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                          >
+                            <RefreshCw className="w-3 h-3" />
+                            恢复
+                          </button>
+                        </div>
+                        <div className="bg-slate-50 rounded p-3 text-xs text-slate-700 whitespace-pre-wrap max-h-40 overflow-y-auto">
+                          {historyItem.content || '(空内容)'}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* 生成模态框 */}

@@ -18,6 +18,7 @@ import {
   Sliders,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   Monitor,
   Smartphone,
   Play,
@@ -27,10 +28,15 @@ import {
   AlignRight,
   Palette,
   Plus,
-  FileX
+  FileX,
+  FileDown,
+  List,
+  FileText,
+  BookOpen
 } from 'lucide-react';
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
+import { WORD_DOC_DATA } from '../constants';
 
 /**
  * ReadingMaterialEditor - 阅读材料画板编辑器
@@ -40,18 +46,67 @@ export const ReadingMaterialEditor = ({
   pages, 
   onPagesChange,
   editingPageIndex,
-  onEditingPageIndexChange 
+  onEditingPageIndexChange,
+  canvasAspectRatio: externalCanvasAspectRatio,
+  onCanvasAspectRatioChange
 }) => {
-  const [canvasAspectRatio, setCanvasAspectRatio] = useState('A4'); // 'A4' | 'A4横向'
+  const [internalCanvasAspectRatio, setInternalCanvasAspectRatio] = useState('A4'); // 'A4' | 'A4横向'
+  const canvasAspectRatio = externalCanvasAspectRatio !== undefined ? externalCanvasAspectRatio : internalCanvasAspectRatio;
+  const setCanvasAspectRatio = onCanvasAspectRatioChange || setInternalCanvasAspectRatio;
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [interactionMode, setInteractionMode] = useState('idle');
   const [interactionStart, setInteractionStart] = useState(null);
   const [isRightOpen, setIsRightOpen] = useState(true);
+  const [isLeftOpen, setIsLeftOpen] = useState(true); // 左侧目录树
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
   const canvasRef = useRef(null);
   const [showPromptModal, setShowPromptModal] = useState(false);
-  const [promptModalConfig, setPromptModalConfig] = useState({ pageId: null, assetType: null });
+  const [promptModalConfig, setPromptModalConfig] = useState({ pageId: null, assetType: null, type: null, insertAfterIndex: null });
   const [isGeneratingAsset, setIsGeneratingAsset] = useState(false);
+  const [addPageInsertIndex, setAddPageInsertIndex] = useState(null);
+  const [expandedPhases, setExpandedPhases] = useState(['engage', 'empower', 'execute', 'elevate']);
+
+  // 按阶段组织页面 - 使用与CanvasView相同的结构
+  const organizePagesByPhase = () => {
+    const phaseConfig = {
+      engage: { title: 'Engage (引入)', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+      empower: { title: 'Empower (赋能)', color: 'bg-blue-100 text-blue-700 border-blue-200' },
+      execute: { title: 'Execute (实践)', color: 'bg-green-100 text-green-700 border-green-200' },
+      elevate: { title: 'Elevate (升华)', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
+    };
+
+    return Object.entries(phaseConfig).map(([key, config]) => {
+      const phasePages = pages.filter(page => {
+        if (!page.slideId) return false;
+        const slide = WORD_DOC_DATA.find(s => s.id === page.slideId);
+        if (!slide) return false;
+        // 匹配阶段：Engage, Empower, Execute, Elevate
+        const phaseName = key.charAt(0).toUpperCase() + key.slice(1);
+        return slide.phase.includes(phaseName);
+      }).map((page) => ({
+        ...page,
+        indexInPages: pages.findIndex(p => p.id === page.id)
+      }));
+
+      return {
+        key,
+        title: config.title,
+        color: config.color,
+        pages: phasePages
+      };
+    });
+  };
+
+  const phasesWithPages = organizePagesByPhase();
+
+  // 切换阶段展开/收起 - 使用key而不是id
+  const togglePhase = (phaseKey) => {
+    if (expandedPhases.includes(phaseKey)) {
+      setExpandedPhases(expandedPhases.filter(p => p !== phaseKey));
+    } else {
+      setExpandedPhases([...expandedPhases, phaseKey]);
+    }
+  };
 
   // 计算画布尺寸 (A4比例: 210mm × 297mm ≈ 0.707:1)
   const getCanvasSize = () => {
@@ -149,18 +204,31 @@ export const ReadingMaterialEditor = ({
     setSelectedAssetId(null);
   };
 
-  // 添加新页面
+  // 显示添加页面提示词输入模态框
   const handleAddPage = (insertAfterIndex = null) => {
+    setAddPageInsertIndex(insertAfterIndex);
+    setPromptModalConfig({ type: 'page', insertAfterIndex, pageId: null, assetType: null });
+    setShowPromptModal(true);
+  };
+
+  // 确认添加页面（带提示词）
+  const handleConfirmAddPage = (prompt) => {
     const canvasSize = getCanvasSize();
+    const insertAfterIndex = addPageInsertIndex;
+    const generatedTitle = prompt 
+      ? `AI生成：${prompt.substring(0, 20)}...` 
+      : `新页面 ${insertAfterIndex !== null ? insertAfterIndex + 2 : pages.length + 1}`;
+    
     const newPage = {
       id: `page-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       slideId: null,
       pageNumber: insertAfterIndex !== null ? insertAfterIndex + 2 : pages.length + 1,
-      title: `新页面 ${insertAfterIndex !== null ? insertAfterIndex + 2 : pages.length + 1}`,
+      title: generatedTitle,
       width: canvasSize.width,
       height: canvasSize.height,
       canvasAssets: [],
-      blocks: []
+      blocks: [],
+      prompt: prompt || ''
     };
     
     onPagesChange(prev => {
@@ -178,6 +246,10 @@ export const ReadingMaterialEditor = ({
         return [...prev, newPage];
       }
     });
+
+    setShowPromptModal(false);
+    setPromptModalConfig({ pageId: null, assetType: null, type: null, insertAfterIndex: null });
+    setAddPageInsertIndex(null);
   };
 
   // 删除页面
@@ -335,89 +407,30 @@ export const ReadingMaterialEditor = ({
     );
   }
 
+  // 导出阅读材料PDF
+  const handleExportPDF = () => {
+    // 模拟导出PDF
+    alert('导出阅读材料PDF功能（待实现）');
+  };
+
   return (
-    <div className="space-y-8">
-      {/* 添加页面按钮 - 顶部 */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => handleAddPage()}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          添加新页面
-        </button>
-      </div>
+    <div className="flex flex-col h-full">
+      {/* 顶部工具栏 */}
 
-      {pages.map((page, pageIndex) => {
-        const isEditing = editingPageIndex === pageIndex;
-        const assets = page.canvasAssets || [];
-        const selectedAsset = selectedAssetId ? assets.find(a => a.id === selectedAssetId) : null;
+      {/* 主内容区域 */}
+        {/* 左侧目录树 */}
+        {/* 中间内容区域 */}
+        <div className="flex-1 overflow-auto">
+          <div className="space-y-8">
+            {pages.map((page, pageIndex) => {
+              const isEditing = editingPageIndex === pageIndex;
+              const assets = page.canvasAssets || [];
+              const selectedAsset = selectedAssetId ? assets.find(a => a.id === selectedAssetId) : null;
 
-        return (
-          <div key={page.id} className="bg-white rounded-lg border-2 border-slate-200 shadow-lg overflow-hidden">
+              return (
+                <div key={page.id} className="bg-white overflow-hidden">
             {/* Page Header */}
-            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-indigo-600 text-white rounded-full flex items-center justify-center font-bold text-sm">
-                    {page.pageNumber}
-                  </div>
-                  <div>
-                    <h2 className="font-bold text-lg text-slate-800">{page.title}</h2>
-                    <p className="text-xs text-slate-500">页面 {page.pageNumber} / {pages.length}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {/* 画板比例切换 */}
-                  {isEditing && (
-                    <div className="flex items-center bg-slate-100 rounded-lg p-1 border border-slate-200">
-                      <button
-                        onClick={() => setCanvasAspectRatio('A4')}
-                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                          canvasAspectRatio === 'A4' ? 'bg-white text-indigo-600' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                        title="A4 竖版"
-                      >
-                        A4 竖版
-                      </button>
-                      <button
-                        onClick={() => setCanvasAspectRatio('A4横向')}
-                        className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                          canvasAspectRatio === 'A4横向' ? 'bg-white text-indigo-600' : 'text-slate-500 hover:text-slate-700'
-                        }`}
-                        title="A4 横版"
-                      >
-                        A4 横版
-                      </button>
-                    </div>
-                  )}
-                  {/* 删除页面按钮 */}
-                  <button
-                    onClick={() => handleDeletePage(page.id, pageIndex)}
-                    className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors bg-red-50 text-red-600 border border-red-200 hover:bg-red-100"
-                    title="删除此页"
-                  >
-                    <FileX className="w-4 h-4" />
-                    删除
-                  </button>
-                  {isEditing ? (
-                    <button
-                      onClick={() => onEditingPageIndexChange(null)}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors bg-indigo-600 text-white"
-                    >
-                      完成编辑
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => onEditingPageIndexChange(pageIndex)}
-                      className="px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors bg-white text-slate-600 border border-slate-300 hover:bg-slate-50"
-                    >
-                      编辑此页
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            
 
             {/* Content Area */}
             {isEditing ? (
@@ -1070,30 +1083,39 @@ export const ReadingMaterialEditor = ({
         );
       })}
 
-      {/* 底部添加页面按钮 */}
-      <div className="flex justify-center pt-4">
-        <button
-          onClick={() => handleAddPage(pages.length - 1)}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          在末尾添加新页面
-        </button>
-      </div>
+          {/* 底部添加页面按钮 */}
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={() => handleAddPage(pages.length - 1)}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-sm"
+            >
+              <Plus className="w-4 h-4" />
+              在末尾添加新页面
+            </button>
+          </div>
+          </div>
+        </div>
 
       {/* Prompt Input Modal */}
       <PromptInputModal
         isOpen={showPromptModal}
         onClose={() => {
           setShowPromptModal(false);
-          setPromptModalConfig({ pageId: null, assetType: null });
+          setPromptModalConfig({ pageId: null, assetType: null, type: null, insertAfterIndex: null });
+          setAddPageInsertIndex(null);
         }}
-        onConfirm={handleConfirmAddAsset}
-        title={`添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`}
-        description="请输入AI生成提示词，描述你想要创建的元素"
-        placeholder={`例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容'}...`}
-        type="element"
-        isLoading={isGeneratingAsset}
+        onConfirm={promptModalConfig.type === 'page' ? handleConfirmAddPage : handleConfirmAddAsset}
+        title={promptModalConfig.type === 'page' 
+          ? '添加新页面'
+          : `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`}
+        description={promptModalConfig.type === 'page'
+          ? '请输入AI生成提示词，描述你想要创建的页面内容（可选，留空将使用默认标题）'
+          : '请输入AI生成提示词，描述你想要创建的元素'}
+        placeholder={promptModalConfig.type === 'page'
+          ? '例如：创建一个关于颜色词汇的阅读页面，包含图片和文字...'
+          : `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容'}...`}
+        type={promptModalConfig.type === 'page' ? 'session' : 'element'}
+        isLoading={promptModalConfig.type === 'page' ? false : isGeneratingAsset}
       />
     </div>
   );
