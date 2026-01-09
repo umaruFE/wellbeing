@@ -94,15 +94,17 @@ export const CanvasView = forwardRef((props, ref) => {
         'Elevate': 'elevate'
       };
       const phaseKey = phaseMap[navigation.phaseId] || 'engage';
-      const stepId = navigation.slideId;
+      // 确保 stepId 是字符串类型，与数据中的 ID 类型一致
+      const stepId = navigation.slideId ? String(navigation.slideId) : null;
+      // 确保对应的环节是展开的
+      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
       setActivePhase(phaseKey);
       if (stepId) {
         setActiveStepId(stepId);
       } else {
         const firstStepId = INITIAL_COURSE_DATA[phaseKey]?.steps[0]?.id;
-        if (firstStepId) setActiveStepId(firstStepId);
+        if (firstStepId) setActiveStepId(String(firstStepId));
       }
-      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
       setSelectedAssetId(null);
       setHistory([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
       setHistoryIndex(0);

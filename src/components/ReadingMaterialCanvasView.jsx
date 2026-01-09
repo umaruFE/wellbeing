@@ -100,15 +100,17 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         'Elevate': 'elevate'
       };
       const phaseKey = phaseMap[navigation.phaseId] || 'engage';
-      const stepId = navigation.slideId;
+      // 确保 stepId 是字符串类型，与数据中的 ID 类型一致
+      const stepId = navigation.slideId ? String(navigation.slideId) : null;
+      // 确保对应的环节是展开的
+      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
       setActivePhase(phaseKey);
       if (stepId) {
         setActiveStepId(stepId);
       } else {
         const firstStepId = INITIAL_COURSE_DATA[phaseKey]?.steps[0]?.id;
-        if (firstStepId) setActiveStepId(firstStepId);
+        if (firstStepId) setActiveStepId(String(firstStepId));
       }
-      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
       setSelectedAssetId(null);
     }
   }, [navigation]);
@@ -298,7 +300,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     });
     
     // 如果从表格视图跳转，且有navigation.slideId，定位到该环节
-    if (navigation?.type === 'reading-material' && navigation?.slideId) {
+    if (navigation && navigation.slideId) {
       const slideIdStr = typeof navigation.slideId === 'string' ? navigation.slideId : String(navigation.slideId);
       
       // 如果导航中携带了具体的材料数据，使用该数据替换默认生成的页面
@@ -325,7 +327,13 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         if (pageIndex >= 0) {
           setEditingPageIndex(pageIndex);
         } else {
-          setEditingPageIndex(0);
+          // 如果找不到，尝试通过 slideId 查找
+          const fallbackIndex = newPages.findIndex(p => p.slideId === slideIdStr);
+          if (fallbackIndex >= 0) {
+            setEditingPageIndex(fallbackIndex);
+          } else {
+            setEditingPageIndex(0);
+          }
         }
       } else {
         setEditingPageIndex(0);
