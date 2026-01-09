@@ -37,6 +37,7 @@ import {
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
 import { WORD_DOC_DATA } from '../constants';
+import { CanvasAssetRenderer } from './CanvasAssetRenderer';
 
 /**
  * ReadingMaterialEditor - 阅读材料画板编辑器
@@ -64,6 +65,8 @@ export const ReadingMaterialEditor = ({
   const [interactionStart, setInteractionStart] = useState(null);
   const [isLeftOpen, setIsLeftOpen] = useState(true); // 左侧目录树
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
+  const [editingTextAssetId, setEditingTextAssetId] = useState(null); // 正在编辑的文本资产ID
+  const [editingTextContent, setEditingTextContent] = useState(''); // 正在编辑的文本内容
   const canvasRef = useRef(null);
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptModalConfig, setPromptModalConfig] = useState({ pageId: null, assetType: null, type: null, insertAfterIndex: null });
@@ -151,14 +154,59 @@ export const ReadingMaterialEditor = ({
   };
 
   // 确认添加资产
-  const handleConfirmAddAsset = (prompt) => {
-    setIsGeneratingAsset(true);
+  const handleConfirmAddAsset = (prompt, inputMode = 'ai') => {
     const { pageId, assetType: type } = promptModalConfig;
+    if (!pageId || !type) return;
+
+    // 如果是文本类型且是直接输入模式，不需要生成时间，直接添加
+    if (type === 'text' && inputMode === 'direct') {
+      const w = 400;
+      const h = 150;
+
+      const newAsset = {
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        title: '文本',
+        url: '',
+        content: prompt || '双击编辑文本',
+        prompt: '',
+        referenceImage: null,
+        x: (canvasSize.width - w) / 2,
+        y: (canvasSize.height - h) / 2,
+        width: w,
+        height: h,
+        rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+
+      onPagesChange(prev => {
+        if (!Array.isArray(prev)) return prev;
+        return prev.map(page => {
+          if (page.id === pageId) {
+            return {
+              ...page,
+              canvasAssets: [...(page.canvasAssets || []), newAsset]
+            };
+          }
+          return page;
+        });
+      });
+
+      setShowPromptModal(false);
+      setPromptModalConfig({ pageId: null, assetType: null });
+      return;
+    }
+
+    setIsGeneratingAsset(true);
     
     // 模拟AI生成
     setTimeout(() => {
       let w = 300, h = 200;
       if (type === 'text') { w = 300; h = 100; }
+      // ... rest of the logic ...
 
       const generatedTitle = prompt 
         ? `AI生成：${prompt.substring(0, 15)}...` 
@@ -449,7 +497,17 @@ export const ReadingMaterialEditor = ({
                     {/* 画布区域 */}
                     <div 
                       className="flex-1 overflow-auto p-8 flex items-center justify-center relative" 
-                      onClick={() => setSelectedAssetId(null)}
+                      onClick={() => {
+                        setSelectedAssetId(null);
+                        // 如果正在编辑文本，保存并退出编辑模式
+                        if (editingTextAssetId) {
+                          const editingAsset = assets.find(a => a.id === editingTextAssetId);
+                          if (editingAsset) {
+                            handleAssetChange(page.id, editingTextAssetId, 'content', editingTextContent);
+                          }
+                          setEditingTextAssetId(null);
+                        }
+                      }}
                       onMouseMove={handleMouseMove}
                       onMouseUp={handleMouseUp}
                     >
@@ -461,124 +519,27 @@ export const ReadingMaterialEditor = ({
                         onClick={(e) => e.stopPropagation()}
                       >
                         {/* 渲染资产 */}
-                        {assets.length === 0 ? (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none">
-                            <div className="w-16 h-16 mb-4 flex items-center justify-center">
-                              <Type className="w-16 h-16" />
-                            </div>
-                            <p className="text-sm font-medium">画布为空，请使用上方工具栏添加素材</p>
-                          </div>
-                        ) : (
-                          assets.map((asset, index) => (
-                            <div
-                              key={asset.id}
-                              onMouseDown={(e) => handleMouseDown(e, asset.id, 'dragging')}
-                              style={{ 
-                                left: asset.x, 
-                                top: asset.y, 
-                                width: asset.width || 300, 
-                                height: asset.height || 200,
-                                zIndex: index,
-                                transform: `rotate(${asset.rotation || 0}deg)`,
-                                position: 'absolute'
-                              }}
-                              className={`cursor-move select-none group/asset ${
-                                selectedAssetId === asset.id ? 'ring-2 ring-blue-500 z-50 shadow-2xl' : 'hover:ring-1 hover:ring-blue-300'
-                              } transition-shadow duration-75`}
-                            >
-                              {/* 右上角复制和删除按钮 */}
-                              <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover/asset:opacity-100 transition-opacity z-50">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onCopyAsset) onCopyAsset(asset.id);
-                                  }}
-                                  className="p-1.5 bg-blue-500 text-white rounded shadow-sm hover:bg-blue-600 transition-colors"
-                                  title="复制"
-                                >
-                                  <Copy className="w-3 h-3" />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (onDeleteAsset) onDeleteAsset(asset.id);
-                                  }}
-                                  className="p-1.5 bg-red-500 text-white rounded shadow-sm hover:bg-red-600 transition-colors"
-                                  title="删除"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </div>
-                              
-                              {/* 编辑控制手柄 */}
-                              {selectedAssetId === asset.id && (
-                                <>
-                                  {/* 调整大小手柄 */}
-                                  <div onMouseDown={(e) => handleMouseDown(e, asset.id, 'resizing', 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-nw-resize z-50"></div>
-                                  <div onMouseDown={(e) => handleMouseDown(e, asset.id, 'resizing', 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-ne-resize z-50"></div>
-                                  <div onMouseDown={(e) => handleMouseDown(e, asset.id, 'resizing', 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-sw-resize z-50"></div>
-                                  <div onMouseDown={(e) => handleMouseDown(e, asset.id, 'resizing', 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-se-resize z-50"></div>
-                                  
-                                  {/* 旋转手柄 */}
-                                  <div 
-                                    className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center cursor-grab active:cursor-grabbing z-50"
-                                    onMouseDown={(e) => handleMouseDown(e, asset.id, 'rotating')}
-                                  >
-                                    <div className="w-px h-4 bg-blue-500"></div>
-                                    <div className="w-5 h-5 bg-white border border-blue-500 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
-                                      <RotateCw className="w-3 h-3 text-blue-500" />
-                                    </div>
-                                  </div>
-                                </>
-                              )}
-
-                              {/* 资产内容 */}
-                              {asset.type === 'text' ? (
-                                <div 
-                                  className="w-full h-full bg-transparent p-2 font-sans whitespace-pre-wrap overflow-hidden flex items-center"
-                                  style={{ 
-                                    fontSize: asset.fontSize ? `${asset.fontSize}px` : '24px',
-                                    fontWeight: asset.fontWeight || 'normal',
-                                    color: asset.color || '#1e293b',
-                                    textAlign: asset.textAlign || 'center',
-                                    ...(asset.strokeWidth ? {
-                                      WebkitTextStroke: `${asset.strokeWidth}px ${asset.strokeColor || '#000000'}`,
-                                      WebkitTextFillColor: asset.color || '#1e293b',
-                                      textShadow: [
-                                        `-${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                        `${asset.strokeWidth}px -${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                        `-${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`,
-                                        `${asset.strokeWidth}px ${asset.strokeWidth}px 0 ${asset.strokeColor || '#000000'}`
-                                      ].join(', ')
-                                    } : {}),
-                                    justifyContent: asset.textAlign === 'left' ? 'flex-start' : asset.textAlign === 'right' ? 'flex-end' : 'center'
-                                  }}
-                                >
-                                  {asset.content || "请输入文本..."}
-                                </div>
-                              ) : (
-                                <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
-                                  {asset.url ? (
-                                    <img 
-                                      src={asset.url} 
-                                      alt={asset.title} 
-                                      className="w-full h-full object-cover block select-none pointer-events-none" 
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
-                                      No Image
-                                    </div>
-                                  )}
-                                  {asset.type === 'video' && (
-                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                                      <Play className="w-12 h-12 text-white opacity-80" />
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          ))
-                        )}
+                        <CanvasAssetRenderer
+                          assets={assets}
+                          isEditable={true}
+                          onMouseDown={handleMouseDown}
+                          selectedAssetId={selectedAssetId}
+                          onCopyAsset={onCopyAsset}
+                          onDeleteAsset={(assetId) => {
+                            if (onDeleteAsset) {
+                              onDeleteAsset(assetId);
+                            } else {
+                              handleDeleteAsset(page.id, assetId);
+                            }
+                          }}
+                          onAssetChange={(assetId, field, value) => {
+                            handleAssetChange(page.id, assetId, field, value);
+                          }}
+                          editingTextAssetId={editingTextAssetId}
+                          onEditingTextAssetIdChange={setEditingTextAssetId}
+                          editingTextContent={editingTextContent}
+                          onEditingTextContentChange={setEditingTextContent}
+                        />
                       </div>
                     </div>
                   </div>

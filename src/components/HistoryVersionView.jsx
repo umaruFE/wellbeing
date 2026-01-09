@@ -15,9 +15,10 @@ import {
  * 支持向前向后回滚查看历史版本
  */
 export const HistoryVersionView = ({ 
-  historyVersions = [], 
+  historyVersions = [],
   currentVersionIndex = 0,
   onSelectVersion,
+  onRestore,
   onClose 
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(currentVersionIndex);
@@ -40,7 +41,14 @@ export const HistoryVersionView = ({
 
   const handleRestore = () => {
     if (confirm('确定要恢复到该版本吗？当前未保存的更改将丢失。')) {
-      onSelectVersion?.(selectedIndex);
+      // 恢复版本时，调用onRestore回调来实际应用数据
+      if (onRestore) {
+        onRestore(selectedIndex);
+      } else {
+        // 如果没有提供onRestore，则调用onSelectVersion作为后备
+        onSelectVersion?.(selectedIndex);
+      }
+      // 恢复后可以选择关闭侧边栏
       onClose?.();
     }
   };
@@ -48,8 +56,7 @@ export const HistoryVersionView = ({
   const currentVersion = historyVersions[selectedIndex];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div className="h-full flex flex-col bg-white">
         {/* Header */}
         <div className="p-6 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -58,7 +65,7 @@ export const HistoryVersionView = ({
             </div>
             <div>
               <h2 className="font-bold text-lg text-slate-800">历史版本</h2>
-              <p className="text-xs text-slate-500">查看和恢复历史版本</p>
+              <p className="text-xs text-slate-500">在新窗口查看历史版本，当前版本保持不变</p>
             </div>
           </div>
           <button 
@@ -139,7 +146,6 @@ export const HistoryVersionView = ({
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

@@ -190,18 +190,18 @@ export default function App() {
          {/* {currentView === 'reading' && <ReadingMaterialView />} */}
       </div>
 
-      {/* 历史版本模态框 */}
+      {/* 历史版本窗口 - 在新窗口打开，不关闭当前版本 */}
       {showHistoryModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-white border-l-4 border-blue-500 shadow-2xl" style={{ right: 0, width: '50%', minWidth: '600px' }}>
+          <div className="h-full flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-600 p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-slate-800">历史版本</h3>
-                  <p className="text-xs text-slate-500 mt-0.5">查看和管理课程的历史版本</p>
+                  <p className="text-xs text-slate-500 mt-0.5">在新窗口查看历史版本，当前版本保持不变</p>
                 </div>
               </div>
               <button 
@@ -224,6 +224,11 @@ export default function App() {
                   <div 
                     key={item.id} 
                     className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group"
+                    onClick={() => {
+                      // 在新窗口打开历史版本，不关闭当前窗口
+                      // 这里可以添加打开新窗口的逻辑
+                      alert(`将在新窗口打开版本 ${item.version}，当前窗口保持不变`);
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -243,9 +248,15 @@ export default function App() {
                         </div>
                         <p className="text-sm text-slate-600">{item.description}</p>
                       </div>
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                          恢复到此版本
+                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        <button 
+                          className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          onClick={() => {
+                            // 在新窗口打开历史版本，不关闭当前窗口
+                            alert(`将在新窗口打开版本 ${item.version}，当前窗口保持不变`);
+                          }}
+                        >
+                          在新窗口打开
                         </button>
                         <button className="px-3 py-1.5 text-xs bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 transition-colors">
                           导出

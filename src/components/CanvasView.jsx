@@ -35,6 +35,7 @@ import { PPT_TEST_DATA, INITIAL_COURSE_DATA } from '../constants';
 import { SlideRenderer } from './SlideRenderer';
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
+import { AssetEditorPanel } from './AssetEditorPanel';
 
 export const CanvasView = forwardRef((props, ref) => {
   const { navigation } = props;
@@ -51,6 +52,10 @@ export const CanvasView = forwardRef((props, ref) => {
   
   // Selection State
   const [selectedAssetId, setSelectedAssetId] = useState(null);
+
+  // Text Editing State
+  const [editingTextAssetId, setEditingTextAssetId] = useState(null);
+  const [editingTextContent, setEditingTextContent] = useState('');
 
   // Interaction State
   const [interactionMode, setInteractionMode] = useState('idle');
@@ -112,6 +117,10 @@ export const CanvasView = forwardRef((props, ref) => {
   // 历史生成记录
   const [generationHistory, setGenerationHistory] = useState([]); // [{ phaseId, stepId, assetId, type, url, prompt, timestamp }]
   const [showHistoryModal, setShowHistoryModal] = useState(null); // { assetId, assetType }
+  
+  // 页面历史记录（整个环节的内容）
+  const [pageHistory, setPageHistory] = useState([]); // [{ stepId, data: { title, time, objective, assets }, timestamp }]
+  const [showPageHistoryModal, setShowPageHistoryModal] = useState(false);
 
   // 保存历史记录
   const saveToHistory = (newData) => {
@@ -315,11 +324,45 @@ export const CanvasView = forwardRef((props, ref) => {
     setShowPromptModal(true);
   };
 
-  const handleConfirmAddAsset = (prompt) => {
-    setIsGenerating(true);
+  const handleConfirmAddAsset = (prompt, inputMode = 'ai') => {
     const type = promptModalConfig.assetType;
     const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
     if (!step) return;
+
+    // 如果是文本类型且是直接输入模式，不需要生成时间，直接添加
+    if (type === 'text' && inputMode === 'direct') {
+      const newCourseData = { ...courseData };
+      const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+      
+      let w = 300, h = 100;
+
+      const newAsset = {
+        id: Date.now().toString(),
+        type,
+        title: '文本',
+        url: '',
+        content: prompt || '双击编辑文本',
+        prompt: '',
+        referenceImage: null,
+        x: 100, y: 100, width: w, height: h, rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+      
+      currentStep.assets.push(newAsset);
+      setCourseData(newCourseData);
+      saveToHistory(newCourseData);
+      setSelectedAssetId(newAsset.id); 
+      setIsRightOpen(true);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+      return;
+    }
+
+    // AI生成模式
+    setIsGenerating(true);
 
     // 模拟AI生成（实际应该调用API）
     setTimeout(() => {
@@ -340,11 +383,19 @@ export const CanvasView = forwardRef((props, ref) => {
         type,
         title: generatedTitle,
         url: generatedUrl,
-        content: type === 'text' ? (prompt || '双击编辑文本') : '',
+        content: type === 'text' ? (prompt ? `根据提示词"${prompt}"生成的文本内容` : '双击编辑文本') : '',
         prompt: prompt || 'Describe what you want AI to generate...',
         referenceImage: null,
         x: 100, y: 100, width: w, height: h, rotation: 0
       };
+      
+      // 如果是文本类型，添加文本相关属性
+      if (type === 'text') {
+        newAsset.fontSize = 24;
+        newAsset.fontWeight = 'normal';
+        newAsset.color = '#1e293b';
+        newAsset.textAlign = 'center';
+      }
       
       currentStep.assets.push(newAsset);
       setCourseData(newCourseData);
@@ -443,23 +494,34 @@ export const CanvasView = forwardRef((props, ref) => {
     setShowHistoryModal(null);
   };
 
+  const [generatingAssetId, setGeneratingAssetId] = useState(null);
+
   const handleRegenerateAsset = (assetId) => {
-    const btn = document.getElementById(`regen-btn-${assetId}`);
-    if(btn) btn.classList.add('animate-spin');
-    
-    // 保存当前内容到历史
     const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
     const asset = step?.assets.find(a => a.id === assetId);
-    if (asset && (asset.type === 'image' || asset.type === 'video' || asset.type === 'audio') && asset.url) {
+    if (!asset) return;
+    
+    // 保存当前内容到历史
+    if (asset.type === 'text' && asset.content) {
+      saveGenerationHistory(assetId, asset.type, asset.content, asset.prompt);
+    } else if ((asset.type === 'image' || asset.type === 'video' || asset.type === 'audio') && asset.url) {
       saveGenerationHistory(assetId, asset.type, asset.url, asset.prompt);
     }
+    
+    setGeneratingAssetId(assetId);
     
     setTimeout(() => {
       const newCourseData = { ...courseData };
       const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
       const asset = step.assets.find(a => a.id === assetId);
       const randomColor = Math.floor(Math.random()*16777215).toString(16);
-      if (asset.type === 'image' || asset.type === 'video') {
+      
+      if (asset.type === 'text') {
+        const generatedText = asset.prompt 
+          ? `根据提示词"${asset.prompt}"重新生成的文本内容 (v${Date.now().toString().slice(-4)})`
+          : `重新生成的文本内容 (v${Date.now().toString().slice(-4)})`;
+        asset.content = generatedText;
+      } else if (asset.type === 'image' || asset.type === 'video') {
          const text = asset.referenceImage ? 'AI+Ref+Gen' : 'AI+Gen';
          const w = asset.width || 300;
          const h = asset.height || 200;
@@ -469,7 +531,7 @@ export const CanvasView = forwardRef((props, ref) => {
       }
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
-      if(btn) btn.classList.remove('animate-spin');
+      setGeneratingAssetId(null);
     }, 1500);
   };
 
@@ -574,7 +636,18 @@ export const CanvasView = forwardRef((props, ref) => {
     setInteractionMode('idle'); 
     setInteractionStart(null); 
   };
-  const handleCanvasClick = () => { setSelectedAssetId(null); };
+  const handleCanvasClick = () => { 
+    // 如果正在编辑文本，保存并退出编辑模式
+    if (editingTextAssetId) {
+      const asset = currentStep?.assets?.find(a => a.id === editingTextAssetId);
+      if (asset && editingTextContent !== undefined) {
+        handleAssetChange(editingTextAssetId, 'content', editingTextContent);
+      }
+      setEditingTextAssetId(null);
+      setEditingTextContent('');
+    }
+    setSelectedAssetId(null); 
+  };
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
@@ -711,6 +784,11 @@ export const CanvasView = forwardRef((props, ref) => {
                selectedAssetId={selectedAssetId}
                onCopyAsset={handleCopyAsset}
                onDeleteAsset={handleDeleteAsset}
+               onAssetChange={handleAssetChange}
+               editingTextAssetId={editingTextAssetId}
+               onEditingTextAssetIdChange={setEditingTextAssetId}
+               editingTextContent={editingTextContent}
+               onEditingTextContentChange={setEditingTextContent}
              />
           </div>
           
@@ -736,92 +814,20 @@ export const CanvasView = forwardRef((props, ref) => {
          {!isRightOpen && <button onClick={() => setIsRightOpen(true)} className="absolute top-4 right-0 bg-white p-2 rounded-l-md border border-r-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50 transform -translate-x-full" title="展开面板"><ChevronLeft className="w-4 h-4" /></button>}
          <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
              {selectedAsset ? (
-                <>
-                  <div className="p-4 border-b border-slate-100 bg-blue-50 flex items-center justify-between">
-                     <div className="flex items-center gap-2">{getAssetIcon(selectedAsset.type)}<h3 className="font-bold text-blue-800">编辑元素</h3></div>
-                     <div className="flex items-center gap-2">
-                        <button onClick={() => setIsRightOpen(false)} className="text-slate-400 hover:text-slate-600" title="收起面板"><ChevronRight className="w-4 h-4" /></button>
-                        <button onClick={() => setSelectedAssetId(null)} className="text-slate-500 hover:text-slate-700"><X className="w-4 h-4" /></button>
-                     </div>
-                  </div>
-                  <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center justify-between">
-                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1"><Layers className="w-3 h-3" /> 图层</span>
-                     <div className="flex gap-1">
-                        <button onClick={() => handleLayerChange(selectedAsset.id, 'front')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置顶"><ChevronsUp className="w-4 h-4" /></button>
-                        <button onClick={() => handleLayerChange(selectedAsset.id, 'forward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="上移"><ArrowUp className="w-4 h-4" /></button>
-                        <button onClick={() => handleLayerChange(selectedAsset.id, 'backward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="下移"><ArrowDown className="w-4 h-4" /></button>
-                        <button onClick={() => handleLayerChange(selectedAsset.id, 'back')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置底"><ChevronsDown className="w-4 h-4" /></button>
-                     </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                     <div className="grid grid-cols-3 gap-2">
-                        <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">宽 Width</label><div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50"><input type="number" value={Math.round(selectedAsset.width || 300)} onChange={(e) => handleAssetChange(selectedAsset.id, 'width', parseInt(e.target.value))} className="w-full text-xs bg-transparent py-1.5 outline-none"/><span className="text-[10px] text-slate-400">px</span></div></div>
-                        <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">高 Height</label><div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50"><input type="number" value={Math.round(selectedAsset.height || 200)} onChange={(e) => handleAssetChange(selectedAsset.id, 'height', parseInt(e.target.value))} className="w-full text-xs bg-transparent py-1.5 outline-none"/><span className="text-[10px] text-slate-400">px</span></div></div>
-                        <div><label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">旋转 Rotate</label><div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50"><input type="number" value={Math.round(selectedAsset.rotation || 0)} onChange={(e) => handleAssetChange(selectedAsset.id, 'rotation', parseInt(e.target.value))} className="w-full text-xs bg-transparent py-1.5 outline-none"/><span className="text-[10px] text-slate-400">°</span></div></div>
-                     </div>
-                     <div className="space-y-4">
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">标题 / Name</label><input type="text" value={selectedAsset.title} onChange={(e) => handleAssetChange(selectedAsset.id, 'title', e.target.value)} className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"/></div>
-                        {selectedAsset.type === 'text' ? (
-                           <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">文本内容 / Content</label><textarea value={selectedAsset.content} onChange={(e) => handleAssetChange(selectedAsset.id, 'content', e.target.value)} className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none"/></div>
-                        ) : (
-                           <>
-                              {(selectedAsset.type === 'image' || selectedAsset.type === 'video') && (
-                                 <div className="mb-4">
-                                    <div className="flex items-center justify-between mb-2"><label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1"><Upload className="w-3 h-3" /> 参考图片 (可选)</label><span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">Optional</span></div>
-                                    {!selectedAsset.referenceImage ? (
-                                       <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative group/upload">
-                                          <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer z-10" onChange={(e) => handleReferenceUpload(e, selectedAsset.id)} />
-                                          <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform"><Upload className="w-5 h-5 text-slate-400" /></div>
-                                          <span className="text-xs text-slate-500 font-medium">点击上传参考图片</span>
-                                          <span className="text-[10px] text-slate-400 mt-1">仅用于风格辅助，非必传</span>
-                                       </div>
-                                    ) : (
-                                       <div className="space-y-2">
-                                          <div className="relative group/ref"><img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded border border-slate-200 opacity-90" /><div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div><button onClick={() => handleAssetChange(selectedAsset.id, 'referenceImage', null)} className="absolute top-2 right-2 bg-white text-slate-600 hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity" title="移除参考图"><X className="w-3.5 h-3.5" /></button></div>
-                                          <div className="flex items-center gap-2"><Sliders className="w-3 h-3 text-slate-400" /><div className="flex-1 h-1 bg-slate-200 rounded overflow-hidden"><div className="w-1/3 h-full bg-blue-400"></div></div><span className="text-[10px] text-slate-400">参考权重: 低</span></div>
-                                       </div>
-                                    )}
-                                 </div>
-                              )}
-                              <div>
-                                 <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2"><Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt</label>
-                                 <textarea value={selectedAsset.prompt} onChange={(e) => handleAssetChange(selectedAsset.id, 'prompt', e.target.value)} placeholder="描述你想要生成的画面..." className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none h-24 resize-none mb-2"/>
-                                 <div className="flex gap-2 mb-2">
-                                   <button 
-                                     onClick={() => setShowHistoryModal({ assetId: selectedAsset.id, assetType: selectedAsset.type })}
-                                     className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all"
-                                   >
-                                     <History className="w-4 h-4" />
-                                     历史生成
-                                   </button>
-                                   <button 
-                                     onClick={() => handleRegenerateAsset(selectedAsset.id)} 
-                                     className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                                   >
-                                     <RefreshCw className="w-4 h-4" /> 
-                                     {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}
-                                   </button>
-                                 </div>
-                              </div>
-                           </>
-                        )}
-                     </div>
-                     <div className="pt-6 mt-6 border-t border-slate-100 space-y-2">
-                        <button 
-                          onClick={() => handleCopyAsset(selectedAsset.id)} 
-                          className="w-full py-2 text-blue-500 border border-blue-200 rounded text-sm font-bold hover:bg-blue-50 flex items-center justify-center gap-2"
-                        >
-                          <Copy className="w-4 h-4" /> 复制此元素
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteAsset(selectedAsset.id)} 
-                          className="w-full py-2 text-red-500 border border-red-200 rounded text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" /> 删除此元素 (Del)
-                        </button>
-                     </div>
-                  </div>
-                </>
+                <AssetEditorPanel
+                  selectedAsset={selectedAsset}
+                  onClose={() => setSelectedAssetId(null)}
+                  onAssetChange={handleAssetChange}
+                  onLayerChange={handleLayerChange}
+                  onCopyAsset={handleCopyAsset}
+                  onDeleteAsset={handleDeleteAsset}
+                  onShowHistoryModal={setShowHistoryModal}
+                  onRegenerateAsset={handleRegenerateAsset}
+                  generatingAssetId={generatingAssetId}
+                  onReferenceUpload={handleReferenceUpload}
+                  isRightOpen={isRightOpen}
+                  onToggleRightOpen={() => setIsRightOpen(false)}
+                />
              ) : (
                 <>
                   <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
@@ -839,6 +845,59 @@ export const CanvasView = forwardRef((props, ref) => {
                         <div className="flex items-center justify-between"><label className="text-xs font-bold text-slate-500 uppercase">本页素材 ({currentStep?.assets?.length || 0})</label><div className="flex gap-1"><button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-purple-600"><Plus className="w-4 h-4" /></button></div></div>
                         <div className="space-y-2">{currentStep?.assets?.map((asset, idx) => (<div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="flex items-start gap-2 p-2 border border-slate-200 rounded bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"><div className="mt-1 text-slate-400">{getAssetIcon(asset.type)}</div><div className="flex-1 min-w-0"><div className="text-xs font-bold text-slate-700 truncate">{asset.title}</div><div className="text-[10px] text-slate-400">{asset.type} • 点击编辑</div></div></div>))}</div>
                      </div>
+                     <div className="pt-6 mt-6 border-t border-slate-100 flex gap-2">
+                        <button 
+                          onClick={() => {
+                            // 保存当前页面内容到历史
+                            if (currentStep) {
+                              const historyItem = {
+                                id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                stepId: activeStepId,
+                                data: JSON.parse(JSON.stringify({
+                                  title: currentStep.title,
+                                  time: currentStep.time,
+                                  objective: currentStep.objective,
+                                  assets: currentStep.assets || []
+                                })),
+                                timestamp: new Date().toISOString(),
+                                displayTime: new Date().toLocaleString('zh-CN')
+                              };
+                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50)); // 最多保存50条
+                              setShowPageHistoryModal(true);
+                            }
+                          }}
+                          className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all"
+                        >
+                          <History className="w-4 h-4" />
+                          历史生成
+                        </button>
+                        <button 
+                          onClick={() => {
+                            // 重新生成整个页面（保存当前版本到历史，然后可以重新生成）
+                            if (currentStep) {
+                              const historyItem = {
+                                id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                                stepId: activeStepId,
+                                data: JSON.parse(JSON.stringify({
+                                  title: currentStep.title,
+                                  time: currentStep.time,
+                                  objective: currentStep.objective,
+                                  assets: currentStep.assets || []
+                                })),
+                                timestamp: new Date().toISOString(),
+                                displayTime: new Date().toLocaleString('zh-CN')
+                              };
+                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
+                              // 这里可以触发AI重新生成，暂时只是保存历史
+                              alert('已保存当前版本到历史记录，可以点击"历史生成"查看和恢复');
+                            }
+                          }}
+                          className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                          重新生成
+                        </button>
+                     </div>
                   </div>
                 </>
              )}
@@ -852,19 +911,28 @@ export const CanvasView = forwardRef((props, ref) => {
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
         }}
-        onConfirm={promptModalConfig.type === 'element' ? handleConfirmAddAsset : handleConfirmAddStep}
+        onConfirm={(prompt, inputMode) => {
+          if (promptModalConfig.type === 'element') {
+            handleConfirmAddAsset(prompt, inputMode);
+          } else {
+            handleConfirmAddStep(prompt);
+          }
+        }}
         title={promptModalConfig.type === 'element' 
           ? `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`
           : promptModalConfig.addAtEnd
           ? '在末尾新增PPT'
           : '添加教学环节'}
         description={promptModalConfig.type === 'element'
-          ? '请输入AI生成提示词，描述你想要创建的元素'
+          ? promptModalConfig.assetType === 'text'
+            ? '选择直接输入文本内容或使用AI生成文本'
+            : '请输入AI生成提示词，描述你想要创建的元素（可选，留空将使用默认生成）'
           : '请输入AI生成提示词，描述你想要创建的教学环节（可选，留空将使用默认标题）'}
         placeholder={promptModalConfig.type === 'element'
-          ? `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容'}...`
+          ? `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容或AI生成提示词'}...`
           : '例如：设计一个互动游戏环节，让学生学习颜色词汇...'}
         type={promptModalConfig.type}
+        assetType={promptModalConfig.assetType}
         isLoading={isGenerating}
       />
 
@@ -879,7 +947,7 @@ export const CanvasView = forwardRef((props, ref) => {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-slate-800">
-                    历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : '音频'}
+                    历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : showHistoryModal.assetType === 'text' ? '文本' : showHistoryModal.assetType === 'audio' ? '音频' : ''}
                   </h3>
                 </div>
               </div>
@@ -972,6 +1040,95 @@ export const CanvasView = forwardRef((props, ref) => {
            <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
               <div style={{ width: 960, height: 540, transform: 'scale(1.2)' }} className="relative bg-white shadow-2xl overflow-hidden"><SlideRenderer assets={currentStep?.assets || []} isEditable={false} /></div>
            </div>
+        </div>
+      )}
+
+      {/* 页面历史生成列表模态框 */}
+      {showPageHistoryModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                  <History className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-800">
+                    历史生成列表 - 环节内容
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {currentStep?.title || '当前环节'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowPageHistoryModal(false)} 
+                className="text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              {pageHistory
+                .filter(h => h.stepId === activeStepId)
+                .length === 0 ? (
+                <div className="text-center py-12 text-slate-400">
+                  <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>暂无历史生成记录</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {pageHistory
+                    .filter(h => h.stepId === activeStepId)
+                    .map((historyItem) => (
+                      <div 
+                        key={historyItem.id} 
+                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="text-xs font-medium text-slate-500">
+                                {historyItem.displayTime}
+                              </span>
+                            </div>
+                            <div className="text-sm text-slate-700 mb-2">
+                              <div className="font-semibold">{historyItem.data.title}</div>
+                              {historyItem.data.time && (
+                                <div className="text-xs text-slate-500 mt-1">时间: {historyItem.data.time}</div>
+                              )}
+                              {historyItem.data.objective && (
+                                <div className="text-xs text-slate-500 mt-1">目标: {historyItem.data.objective}</div>
+                              )}
+                              <div className="text-xs text-slate-500 mt-1">素材数量: {historyItem.data.assets?.length || 0}</div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              // 恢复历史版本
+                              const newCourseData = { ...courseData };
+                              const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+                              if (step) {
+                                step.title = historyItem.data.title;
+                                step.time = historyItem.data.time;
+                                step.objective = historyItem.data.objective;
+                                step.assets = JSON.parse(JSON.stringify(historyItem.data.assets || []));
+                                setCourseData(newCourseData);
+                                saveToHistory(newCourseData);
+                                setShowPageHistoryModal(false);
+                              }
+                            }}
+                            className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 transition-colors"
+                          >
+                            恢复此版本
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

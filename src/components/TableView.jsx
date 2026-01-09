@@ -29,7 +29,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   const [previewImage, setPreviewImage] = useState(null);
   const [generatingMedia, setGeneratingMedia] = useState({});
   const [generatingPdf, setGeneratingPdf] = useState({}); // PDF生成状态
-  // const [showHistoryView, setShowHistoryView] = useState(false);
+  const [showHistoryView, setShowHistoryView] = useState(false);
   const [historyVersions, setHistoryVersions] = useState([]);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(0);
   const [showGenerateModal, setShowGenerateModal] = useState(null); // {type: 'activity'|'script'|'session', phaseId, slideId}
@@ -1059,7 +1059,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                          </div>
                                        ))}
                                        {/* 重新生成PPT按钮 */}
-                                       {slide.pptSlides && slide.pptSlides.length > 0 && (
+                                       {/* {slide.pptSlides && slide.pptSlides.length > 0 && (
                                          <button 
                                            onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
                                            className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
@@ -1067,7 +1067,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                            <RefreshCw className="w-4 h-4" />
                                            <span className="text-[10px]">重新生成PPT</span>
                                          </button>
-                                       )}
+                                       )} */}
                                        {/* 添加PPT按钮 */}
                                        <button 
                                          onClick={() => handleAddPPT(phase.id, slide.id)} 
@@ -1220,7 +1220,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                    )}
                                    
                                    {/* 重新生成阅读材料按钮 */}
-                                   {slide.readingMaterials && slide.readingMaterials.length > 0 && (
+                                   {/* {slide.readingMaterials && slide.readingMaterials.length > 0 && (
                                      <button
                                        onClick={() => handleRegenerateReadingMaterial(phase.id, slide.id)}
                                        className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
@@ -1228,7 +1228,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                        <RefreshCw className="w-4 h-4" />
                                        <span className="text-[10px]">重新生成阅读材料</span>
                                      </button>
-                                   )}
+                                   )} */}
                                    {/* 添加更多阅读材料按钮 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 && (
                                      <button
@@ -1326,20 +1326,31 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
         </div>
       </div>
 
-      {/* 历史版本查看模态框 */}
-      {/* {showHistoryView && (
-        <HistoryVersionView
-          historyVersions={historyVersions}
-          currentVersionIndex={currentVersionIndex}
-          onSelectVersion={(index) => {
-            setCurrentVersionIndex(index);
-            if (historyVersions[index]) {
-              setPhases(JSON.parse(JSON.stringify(historyVersions[index].data)));
-            }
-          }}
-          onClose={() => setShowHistoryView(false)}
-        />
-      )} */}
+      {/* 历史版本查看 - 侧边栏显示，不关闭当前版本 */}
+      {showHistoryView && (
+        <div className="fixed inset-0 z-50 pointer-events-none">
+          <div className="absolute right-0 top-0 bottom-0 w-[50%] min-w-[600px] bg-white border-l-4 border-blue-500 shadow-2xl pointer-events-auto">
+            <HistoryVersionView
+              historyVersions={historyVersions}
+              currentVersionIndex={currentVersionIndex}
+              onSelectVersion={(index) => {
+                // 查看历史版本时，不修改当前版本
+                // 只有在点击"恢复此版本"按钮时才会应用数据
+                setCurrentVersionIndex(index);
+                // 注意：这里不应用数据，只有在handleRestore中才应用
+              }}
+              onRestore={(index) => {
+                // 恢复版本时，实际应用数据
+                if (historyVersions[index]) {
+                  setPhases(JSON.parse(JSON.stringify(historyVersions[index].data)));
+                  setCurrentVersionIndex(index);
+                }
+              }}
+              onClose={() => setShowHistoryView(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 添加环节提示词输入模态框 */}
       {showAddRowPromptModal && (
