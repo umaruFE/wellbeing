@@ -285,10 +285,14 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
     saveToHistory();
   };
 
-  // 跳转到画布视图
+  // 跳转到画布视图（PPT模式）
   const handleNavigateToCanvasView = (phaseId, slideId) => {
     if (onNavigateToCanvas) {
-      onNavigateToCanvas({ phaseId, slideId });
+      onNavigateToCanvas({ 
+        phaseId, 
+        slideId,
+        type: 'ppt' // 明确指定为PPT模式
+      });
     }
   };
 

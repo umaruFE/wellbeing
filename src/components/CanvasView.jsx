@@ -79,9 +79,26 @@ export const CanvasView = forwardRef((props, ref) => {
       setHistory([JSON.parse(JSON.stringify(PPT_TEST_DATA))]);
       setHistoryIndex(0);
     } else {
-      // 从表格跳转：使用INITIAL_COURSE_DATA
+      // 从表格跳转：使用INITIAL_COURSE_DATA（与表格数据一致）
       setCourseData(INITIAL_COURSE_DATA);
+      // 映射表格的phaseId到画布的phaseKey
+      const phaseMap = {
+        'Engage': 'engage',
+        'Empower': 'empower',
+        'Execute': 'execute',
+        'Elevate': 'elevate'
+      };
+      const phaseKey = phaseMap[navigation.phaseId] || 'engage';
+      const stepId = navigation.slideId;
+      setActivePhase(phaseKey);
+      if (stepId) {
+        setActiveStepId(stepId);
+      } else {
+        const firstStepId = INITIAL_COURSE_DATA[phaseKey]?.steps[0]?.id;
+        if (firstStepId) setActiveStepId(firstStepId);
+      }
       setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
+      setSelectedAssetId(null);
       setHistory([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
       setHistoryIndex(0);
     }
