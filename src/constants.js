@@ -122,7 +122,7 @@ export const PPT_TEST_DATA = {
   }
 };
 
-// 阅读材料专用测试数据
+// 阅读材料专用测试数据（环节数量和名称与INITIAL_COURSE_DATA保持一致）
 export const READING_TEST_DATA = {
   engage: {
     title: 'Engage (引入)',
@@ -139,6 +139,61 @@ export const READING_TEST_DATA = {
           { id: 'read-t1', type: 'text', title: '大标题', content: 'READING MODE TEST DATA', x: 50, y: 40, width: 580, height: 70, fontSize: 28, fontWeight: 'bold', textAlign: 'center' },
           { id: 'read-i1', type: 'image', title: '配图', url: 'https://placehold.co/400x250/6366f1/FFFFFF?text=Reading+Material+Layout', x: 140, y: 120, width: 400, height: 250, rotation: 0 },
           { id: 'read-t2', type: 'text', title: '正文', content: '这是阅读模式的独立测试数据，确保不与PPT模式冲突。', x: 50, y: 390, width: 580, height: 520, fontSize: 16, lineHeight: 1.6 }
+        ]
+      }
+    ]
+  },
+  empower: {
+    title: 'Empower (赋能)',
+    color: 'bg-blue-100 text-blue-700 border-blue-200',
+    steps: [
+      {
+        id: 'read-em1',
+        time: '10分钟',
+        title: '阅读：核心知识讲解',
+        objective: '通过阅读掌握新单词',
+        activity: '阅读理解',
+        script: '"Please read the following words carefully."',
+        assets: [
+          { id: 'read-em-t1', type: 'text', title: '标题', content: 'Key Words', x: 50, y: 40, width: 580, height: 60, fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+          { id: 'read-em-t2', type: 'text', title: '内容', content: '这是阅读材料模式的测试数据，用于展示核心知识点。', x: 50, y: 120, width: 580, height: 800, fontSize: 16, lineHeight: 1.6 }
+        ]
+      }
+    ]
+  },
+  execute: {
+    title: 'Execute (实践)',
+    color: 'bg-green-100 text-green-700 border-green-200',
+    steps: [
+      {
+        id: 'read-ex1',
+        time: '15分钟',
+        title: '阅读：实践活动指南',
+        objective: '通过阅读理解实践步骤',
+        activity: '阅读实践',
+        script: '"Read the practice guide and follow the instructions."',
+        assets: [
+          { id: 'read-ex-t1', type: 'text', title: '标题', content: 'Practice Guide', x: 50, y: 40, width: 580, height: 60, fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+          { id: 'read-ex-i1', type: 'image', title: '配图', url: 'https://placehold.co/400x250/10b981/FFFFFF?text=Practice+Reading', x: 140, y: 120, width: 400, height: 250, rotation: 0 },
+          { id: 'read-ex-t2', type: 'text', title: '内容', content: '这是实践环节的阅读材料测试数据。', x: 50, y: 390, width: 580, height: 520, fontSize: 16, lineHeight: 1.6 }
+        ]
+      }
+    ]
+  },
+  elevate: {
+    title: 'Elevate (升华)',
+    color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+    steps: [
+      {
+        id: 'read-ev1',
+        time: '8分钟',
+        title: '阅读：拓展延伸材料',
+        objective: '通过阅读拓展知识面',
+        activity: '拓展阅读',
+        script: '"Read the extended materials to broaden your knowledge."',
+        assets: [
+          { id: 'read-ev-t1', type: 'text', title: '标题', content: 'Extended Reading', x: 50, y: 40, width: 580, height: 60, fontSize: 24, fontWeight: 'bold', textAlign: 'center' },
+          { id: 'read-ev-t2', type: 'text', title: '内容', content: '这是升华环节的阅读材料测试数据，用于展示拓展内容。', x: 50, y: 120, width: 580, height: 800, fontSize: 16, lineHeight: 1.6 }
         ]
       }
     ]

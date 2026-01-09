@@ -73,10 +73,10 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [history, setHistory] = useState([]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // 当navigation变化时，重置数据：如果navigation为null，清空并加载测试数据；如果有navigation，使用INITIAL_COURSE_DATA
+  // 当navigation变化时，重置数据：如果没有navigation，使用READING_TEST_DATA；如果有navigation，使用INITIAL_COURSE_DATA
   useEffect(() => {
     if (!navigation) {
-      // 直接点击进入：清空所有状态，加载测试数据
+      // 直接点击进入：使用READING_TEST_DATA（专门的阅读材料数据）
       setCourseData(READING_TEST_DATA);
       const firstPhase = Object.keys(READING_TEST_DATA)[0];
       const firstStepId = READING_TEST_DATA[firstPhase]?.steps[0]?.id;
@@ -179,7 +179,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     });
   };
 
-  const [pages, setPages] = useState(() => initializePages(READING_TEST_DATA));
+  const [pages, setPages] = useState(() => initializePages(INITIAL_COURSE_DATA));
   const [editingPageIndex, setEditingPageIndex] = useState(0);
   
   const [selectedStepId, setSelectedStepId] = useState(null); // 当前选中的环节ID，用于过滤pages
