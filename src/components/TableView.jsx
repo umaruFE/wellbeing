@@ -1196,12 +1196,13 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                                  <Trash2 className="w-3 h-3" />
                                                </button>
                                              </div>
-                                             <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">阅读 {idx + 1}</div>
+                                             <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">{idx + 1}/{slide.readingMaterials.length}</div>
                                            </>
                                          ) : (
-                                           <div className="flex flex-col items-center gap-1 text-slate-400">
+                                           <div className="flex flex-col items-center gap-1 text-slate-400 relative w-full h-full">
+                                             <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">{idx + 1}/{slide.readingMaterials.length}</div>
                                              <BookOpen className="w-6 h-6" />
-                                             <span className="text-[10px]">阅读材料 {idx + 1}</span>
+                                             <span className="text-[10px]">阅读材料</span>
                                            </div>
                                          )}
                                        </div>
