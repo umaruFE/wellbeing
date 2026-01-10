@@ -139,7 +139,10 @@ export const WelcomeScreen = ({ onStart }) => {
   return (
     <div className="flex-1 overflow-auto bg-slate-50 flex items-center justify-center p-4 h-screen w-full absolute inset-0 z-50">
       <div className="max-w-3xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 md:p-8 text-white relative overflow-hidden">
+        <div 
+          style={{ background: 'linear-gradient(to right, rgb(37, 99, 235), rgb(67, 56, 202))' }}
+          className="p-6 md:p-8 text-white relative overflow-hidden"
+        >
           <div className="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
@@ -272,9 +275,10 @@ export const WelcomeScreen = ({ onStart }) => {
             <div className="pt-2">
               <button 
                 onClick={handleGenerate}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-base shadow-md transform transition active:scale-[0.98] flex items-center justify-center gap-2"
+                style={{ background: 'linear-gradient(to right, rgb(37, 99, 235), rgb(79, 70, 229))' }}
+                className="w-full py-3 text-white rounded-xl font-bold text-base shadow-md transform transition hover:opacity-90 active:scale-[0.98] flex items-center justify-center gap-2"
               >
-                <BrainCircuit className="w-5 h-5" /> 开始生成
+                <Sparkles className="w-5 h-5" /> 开始生成
               </button>
             </div>
           </div>
