@@ -11,7 +11,12 @@ export const SlideRenderer = ({
   selectedAssetId, 
   onCopyAsset, 
   onDeleteAsset,
-  onAssetChange // 新增：用于更新资产属性（文本编辑时需要）
+  onAssetChange, // 用于更新资产属性（文本编辑时需要）
+  editingTextAssetId, // 正在编辑的文本资产ID
+  onEditingTextAssetIdChange, // (assetId) => void
+  editingTextContent, // 正在编辑的文本内容
+  onEditingTextContentChange, // (content) => void
+  onCanvasClick // 点击画布时的回调，用于取消选择或保存编辑
 }) => {
   return (
     <CanvasAssetRenderer
@@ -22,6 +27,11 @@ export const SlideRenderer = ({
       onCopyAsset={onCopyAsset}
       onDeleteAsset={onDeleteAsset}
       onAssetChange={onAssetChange}
+      editingTextAssetId={editingTextAssetId}
+      onEditingTextAssetIdChange={onEditingTextAssetIdChange}
+      editingTextContent={editingTextContent}
+      onEditingTextContentChange={onEditingTextContentChange}
+      onCanvasClick={onCanvasClick}
     />
   );
 };

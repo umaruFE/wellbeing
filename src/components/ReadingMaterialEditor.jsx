@@ -516,7 +516,21 @@ export const ReadingMaterialEditor = ({
                         ref={canvasRef}
                         className="bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 transition-all duration-200"
                         style={{ width: canvasSize.width, height: canvasSize.height }}
-                        onClick={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          // 如果点击的是画布本身（不是资产），则保存编辑并取消选择
+                          if (e.target === e.currentTarget) {
+                            setSelectedAssetId(null);
+                            // 如果正在编辑文本，保存并退出编辑模式
+                            if (editingTextAssetId) {
+                              const editingAsset = assets.find(a => a.id === editingTextAssetId);
+                              if (editingAsset) {
+                                handleAssetChange(page.id, editingTextAssetId, 'content', editingTextContent);
+                              }
+                              setEditingTextAssetId(null);
+                            }
+                          }
+                          e.stopPropagation();
+                        }}
                       >
                         {/* 渲染资产 */}
                         <CanvasAssetRenderer
@@ -539,6 +553,17 @@ export const ReadingMaterialEditor = ({
                           onEditingTextAssetIdChange={setEditingTextAssetId}
                           editingTextContent={editingTextContent}
                           onEditingTextContentChange={setEditingTextContent}
+                          onCanvasClick={() => {
+                            setSelectedAssetId(null);
+                            // 如果正在编辑文本，保存并退出编辑模式
+                            if (editingTextAssetId) {
+                              const editingAsset = assets.find(a => a.id === editingTextAssetId);
+                              if (editingAsset) {
+                                handleAssetChange(page.id, editingTextAssetId, 'content', editingTextContent);
+                              }
+                              setEditingTextAssetId(null);
+                            }
+                          }}
                         />
                       </div>
                     </div>

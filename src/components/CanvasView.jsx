@@ -778,7 +778,7 @@ export const CanvasView = forwardRef((props, ref) => {
 
         <div className="flex-1 overflow-auto p-8 flex items-center justify-center relative" onClick={handleCanvasClick}>
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]"></div>
-          <div ref={canvasRef} className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200" onClick={(e) => e.stopPropagation()}>
+          <div ref={canvasRef} className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200" onClick={handleCanvasClick}>
              <SlideRenderer 
                assets={currentStep?.assets || []} 
                isEditable={true} 
@@ -791,6 +791,7 @@ export const CanvasView = forwardRef((props, ref) => {
                onEditingTextAssetIdChange={setEditingTextAssetId}
                editingTextContent={editingTextContent}
                onEditingTextContentChange={setEditingTextContent}
+               onCanvasClick={handleCanvasClick}
              />
           </div>
           
