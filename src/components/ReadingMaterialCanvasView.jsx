@@ -185,9 +185,13 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [editingPageIndex, setEditingPageIndex] = useState(0);
   
   const [selectedStepId, setSelectedStepId] = useState(null); // 当前选中的环节ID，用于过滤pages
+  const [selectedMaterialId, setSelectedMaterialId] = useState(null); // 当前选中的阅读材料ID，用于过滤pages
   
-  // 根据selectedStepId过滤显示的pages
-  const filteredPages = selectedStepId 
+  // 根据selectedStepId和selectedMaterialId过滤显示的pages
+  // 如果选中了阅读材料，只显示该材料的页面；否则显示该环节的所有页面
+  const filteredPages = selectedMaterialId
+    ? pages.filter(page => page.materialId === selectedMaterialId)
+    : selectedStepId 
     ? pages.filter(page => page.slideId === selectedStepId)
     : pages;
 
@@ -207,6 +211,13 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       }
     }
   }, [pages.length, selectedStepId]);
+
+  // 从表格视图获取阅读材料数据（如果存在）
+  const getReadingMaterialsFromTable = () => {
+    // 这里应该从表格视图的数据中获取，暂时返回空数组
+    // 实际应该通过props或context传递
+    return [];
+  };
 
   // 当navigation或courseData变化时，重新初始化pages
   useEffect(() => {
@@ -305,15 +316,22 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       
       // 如果导航中携带了具体的材料数据，使用该数据替换默认生成的页面
       if (navigation.material && navigation.material.pages) {
-        // 移除原有的该环节页面
-        newPages = newPages.filter(p => p.slideId !== slideIdStr);
-        // 添加材料中的实际页面
-        const materialPages = navigation.material.pages.map(p => ({
+        // 移除原有的该环节页面（只移除没有materialId的页面，保留其他材料的页面）
+        newPages = newPages.filter(p => !(p.slideId === slideIdStr && !p.materialId));
+        // 添加材料中的实际页面，并标记materialId
+        const materialPages = navigation.material.pages.map((p, idx) => ({
           ...p,
-          slideId: slideIdStr
+          slideId: slideIdStr,
+          materialId: navigation.materialId || navigation.material.id // 标记属于哪个阅读材料
         }));
         // 插入到原本的位置
         newPages = [...newPages, ...materialPages];
+        
+        // 设置选中的阅读材料ID
+        setSelectedMaterialId(navigation.materialId || navigation.material.id);
+      } else {
+        // 如果没有指定材料，清除材料选择
+        setSelectedMaterialId(null);
       }
 
       setPages(newPages);
@@ -397,6 +415,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     setActivePhase(phaseKey);
     setActiveStepId(stepId);
     setSelectedStepId(stepId); // 设置选中的环节ID，用于过滤pages
+    setSelectedMaterialId(null); // 清除材料选择，显示该环节的所有页面
     
     // 找到该环节对应的第一个页面索引并切换到该页面
     const stepPages = pages.filter(p => p.slideId === stepId);
@@ -1137,7 +1156,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
           <p className="text-xs text-slate-500 mt-1 truncate">Unit 1: Funky Monster Rescue</p>
         </div>
         <div className={`flex-1 overflow-y-auto p-2 space-y-2 ${!isLeftOpen && 'hidden'}`}>
-          {/* 统一使用courseData显示目录树 */}
+          {/* 统一使用courseData显示目录树，支持显示多个阅读材料 */}
           {Object.entries(courseData).map(([key, phase]) => (
               <div key={key} className="rounded-lg overflow-hidden border border-slate-100 bg-white">
                 <button
@@ -1152,35 +1171,110 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                 {expandedPhases.includes(key) && (
                   <div className="bg-slate-50 border-t border-slate-100">
                     {phase.steps.map((step) => {
-                      const pageIndex = pages.findIndex(p => p.slideId === step.id);
+                      // 获取该环节的所有页面
+                      const stepPages = pages.filter(p => p.slideId === step.id);
+                      // 按materialId分组，如果没有materialId则归为一组
+                      const materialsMap = new Map();
+                      stepPages.forEach(page => {
+                        const materialId = page.materialId || 'default';
+                        if (!materialsMap.has(materialId)) {
+                          materialsMap.set(materialId, []);
+                        }
+                        materialsMap.get(materialId).push(page);
+                      });
+                      const materials = Array.from(materialsMap.entries());
+                      
                       return (
-                        <div 
-                          key={step.id} 
-                          className={`group/step border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-center ${
-                            activeStepId === step.id ? 'bg-blue-100' : ''
-                          }`}
-                        >
-            <button
-                            onClick={() => handleStepClick(key, step.id)} 
-                            className={`flex-1 text-left p-2 pl-8 text-xs transition-all flex items-start gap-2 ${
-                              activeStepId === step.id 
-                                ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600' 
-                                : 'text-slate-600'
+                        <div key={step.id} className="border-b border-slate-100 last:border-0">
+                          {/* 环节标题 */}
+                          <div 
+                            className={`group/step hover:bg-blue-50 transition-all flex items-center ${
+                              activeStepId === step.id && !selectedMaterialId ? 'bg-blue-100' : ''
                             }`}
                           >
-                            <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
-                            <span className="line-clamp-2">{step.title}</span>
-            </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteStep(key, step.id);
-                            }}
-                            className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
-                            title="删除页面"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                            <button
+                              onClick={() => {
+                                handleStepClick(key, step.id);
+                                setSelectedMaterialId(null); // 清除材料选择，显示该环节的所有页面
+                              }} 
+                              className={`flex-1 text-left p-2 pl-4 text-xs transition-all flex items-start gap-2 ${
+                                activeStepId === step.id && !selectedMaterialId
+                                  ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600' 
+                                  : 'text-slate-600'
+                              }`}
+                            >
+                              <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
+                              <span className="line-clamp-2">{step.title}</span>
+                              {stepPages.length > 0 && (
+                                <span className="text-[10px] text-slate-400 ml-auto">
+                                  {materials.length}个材料
+                                </span>
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteStep(key, step.id);
+                              }}
+                              className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
+                              title="删除环节"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                          
+                          {/* 显示该环节下的多个阅读材料 */}
+                          {materials.length > 0 && (
+                            <div className="bg-slate-50/50 pl-4 border-t border-slate-100">
+                              {/* 材料列表标题 */}
+                              <div className="px-2 py-1 text-[10px] font-medium text-slate-500 uppercase">
+                                阅读材料 ({materials.length})
+                              </div>
+                              {materials.map(([materialId, materialPages]) => {
+                                const isDefault = materialId === 'default';
+                                // 尝试从materialPages中获取标题，如果没有则使用默认标题
+                                const materialTitle = isDefault 
+                                  ? '默认阅读材料' 
+                                  : materialPages[0]?.title || `阅读材料 ${materialId.slice(-4)}`;
+                                const isSelected = selectedMaterialId === materialId && activeStepId === step.id;
+                                
+                                return (
+                                  <div key={materialId} className="border-b border-slate-100 last:border-0">
+                                    <button
+                                      onClick={() => {
+                                        setActiveStepId(step.id);
+                                        setSelectedStepId(step.id);
+                                        setSelectedMaterialId(materialId);
+                                        // 切换到该材料的第一个页面
+                                        const firstPage = materialPages[0];
+                                        if (firstPage) {
+                                          const pageIndex = pages.findIndex(p => p.id === firstPage.id);
+                                          if (pageIndex >= 0) {
+                                            setEditingPageIndex(pageIndex);
+                                          }
+                                        }
+                                      }}
+                                      className={`w-full text-left p-2 pl-6 text-xs transition-all flex items-center gap-2 group/material-item ${
+                                        isSelected
+                                          ? 'text-indigo-700 font-semibold bg-indigo-50 border-l-2 border-l-indigo-500'
+                                          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                                      }`}
+                                      title={materialTitle}
+                                    >
+                                      <BookOpen className={`w-3 h-3 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                      <span className="line-clamp-1 flex-1 text-left">{materialTitle}</span>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <span className="text-[10px] text-slate-400">{materialPages.length}页</span>
+                                        {isSelected && (
+                                          <ChevronRight className="w-3 h-3 text-indigo-600" />
+                                        )}
+                                      </div>
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1188,7 +1282,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                       onClick={() => handleAddStep(key)}
                       className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
                     >
-                      <Plus className="w-3 h-3" /> 新增页面
+                      <Plus className="w-3 h-3" /> 新增环节
                     </button>
                   </div>
                 )}
@@ -1227,6 +1321,12 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
               </>
             )}
             <span className="text-sm font-medium text-slate-500 whitespace-nowrap">当前编辑:</span>
+            {/* 显示当前阅读材料信息 */}
+            {selectedMaterialId && pages[editingPageIndex] && (
+              <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium whitespace-nowrap">
+                {pages[editingPageIndex].materialId === selectedMaterialId ? '阅读材料' : ''}
+              </span>
+            )}
             <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold whitespace-nowrap">
               页面 {(() => {
                 if (!pages[editingPageIndex]) return 1;

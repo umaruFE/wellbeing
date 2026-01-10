@@ -1072,8 +1072,8 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                    <table className="w-full text-sm text-left">
                      <thead className="bg-slate-50 text-slate-500 font-bold uppercase text-xs">
                        <tr>
-                           <th className="p-4 w-20">时长</th>
-                           <th className="p-4 w-28">环节</th>
+                           <th className="p-4 w-32">时长/环节</th>
+                           <th className="p-4 w-40">教学目标</th>
                            <th className="p-4 w-40">教学活动</th>
                            <th className="p-4 w-40">讲稿</th>
                            <th className="p-4 w-48">PPT内容 (缩略图)</th>
@@ -1085,77 +1085,87 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                        {phase.slides.length > 0 ? (
                          phase.slides.map((slide) => (
                            <tr key={slide.id} className="hover:bg-slate-50 group transition-colors">
-                             {/* 时长 */}
-                             <td className="p-4 align-top"><input value={slide.duration} onChange={(e) => updateSlideField(phase.id, slide.id, 'duration', e.target.value)} className="w-full bg-transparent border-b border-transparent focus:border-blue-400 outline-none font-medium text-blue-600 transition-colors" placeholder="时长"/></td>
-                             
-                             {/* 环节标题 */}
-                             <td className="p-4 align-top"><textarea value={slide.title} onChange={(e) => updateSlideField(phase.id, slide.id, 'title', e.target.value)} className="w-full bg-transparent text-xs font-bold text-slate-700 resize-none outline-none focus:bg-white rounded" rows={2} placeholder="小标题..."/></td>
-                             
-                             {/* 教学活动 (含目标) */}
+                             {/* 时长/环节 - 合并单元格 */}
                              <td className="p-4 align-top">
-                                <div className="space-y-2">
-                                    <div className="relative">
-                                      <div className="flex items-start gap-1 mb-1">
-                                        <textarea 
-                                          value={slide.activities} 
-                                          onChange={(e) => updateSlideField(phase.id, slide.id, 'activities', e.target.value)} 
-                                          onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'activity' })}
-                                          className={`flex-1 bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 resize-none text-slate-700 leading-relaxed whitespace-pre-wrap transition-colors text-xs ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'activity' ? 'ring-2 ring-purple-300' : ''}`}
-                                          rows={6} 
-                                          placeholder="详细的活动步骤..."
-                                        />
-                                        <div className="flex flex-col gap-1 pt-1">
-                                          <button 
-                                            onClick={() => setShowHistoryModal({ phaseId: phase.id, slideId: slide.id, field: 'activities' })} 
-                                            className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
-                                            title="历史生成"
-                                          >
-                                            <History className="w-3.5 h-3.5" />
-                                          </button>
-                                          <button 
-                                            onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'activity' })} 
-                                            disabled={generatingMedia[`${slide.id}-activity`]}
-                                            className="p-1 text-slate-400 hover:text-purple-600 transition-colors disabled:opacity-50"
-                                            title="重新生成"
-                                          >
-                                            <RefreshCw className={`w-3.5 h-3.5 ${generatingMedia[`${slide.id}-activity`] ? 'animate-spin' : ''}`} />
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="pt-1 border-t border-slate-100">
-                                        <div className="flex items-center justify-between mb-1">
-                                          <label className="text-[10px] text-slate-400 font-bold uppercase">教学目标</label>
-                                        </div>
-                                        <div className="flex items-start gap-1">
-                                          <textarea 
-                                            value={slide.objectives} 
-                                            onChange={(e) => updateSlideField(phase.id, slide.id, 'objectives', e.target.value)} 
-                                            onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })}
-                                            className={`flex-1 bg-transparent text-xs text-slate-500 resize-none outline-none focus:bg-white rounded ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'objectives' ? 'ring-2 ring-blue-300' : ''}`}
-                                            rows={3} 
-                                            placeholder="输入教学目标..."
-                                          />
-                                          <div className="flex flex-col gap-1 pt-1">
-                                            <button 
-                                              onClick={() => setShowHistoryModal({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })} 
-                                              className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
-                                              title="历史生成"
-                                            >
-                                              <History className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button 
-                                              onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })} 
-                                              disabled={generatingMedia[`${slide.id}-objectives`]}
-                                              className="p-1 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
-                                              title="重新生成"
-                                            >
-                                              <RefreshCw className={`w-3.5 h-3.5 ${generatingMedia[`${slide.id}-objectives`] ? 'animate-spin' : ''}`} />
-                                            </button>
-                                          </div>
-                                        </div>
-                                    </div>
-                                </div>
+                               <div className="space-y-2">
+                                 <input 
+                                   value={slide.duration} 
+                                   onChange={(e) => updateSlideField(phase.id, slide.id, 'duration', e.target.value)} 
+                                   className="w-full bg-transparent border-b border-transparent focus:border-blue-400 outline-none font-medium text-blue-600 transition-colors text-xs" 
+                                   placeholder="时长"
+                                 />
+                                 <textarea 
+                                   value={slide.title} 
+                                   onChange={(e) => updateSlideField(phase.id, slide.id, 'title', e.target.value)} 
+                                   className="w-full bg-transparent text-xs font-bold text-slate-700 resize-none outline-none focus:bg-white rounded" 
+                                   rows={2} 
+                                   placeholder="环节标题..."
+                                 />
+                               </div>
+                             </td>
+                             
+                             {/* 教学目标 - 单独列 */}
+                             <td className="p-4 align-top">
+                               <div className="flex items-start gap-1">
+                                 <textarea 
+                                   value={slide.objectives} 
+                                   onChange={(e) => updateSlideField(phase.id, slide.id, 'objectives', e.target.value)} 
+                                   onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })}
+                                   className={`flex-1 bg-transparent text-xs text-slate-500 resize-none outline-none focus:bg-white rounded border border-transparent focus:border-blue-200 p-1 ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'objectives' ? 'ring-2 ring-blue-300' : ''}`}
+                                   rows={6} 
+                                   placeholder="输入教学目标..."
+                                 />
+                                 <div className="flex flex-col gap-1 pt-1">
+                                   <button 
+                                     onClick={() => setShowHistoryModal({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })} 
+                                     className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                                     title="历史生成"
+                                   >
+                                     <History className="w-3.5 h-3.5" />
+                                   </button>
+                                   <button 
+                                     onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })} 
+                                     disabled={generatingMedia[`${slide.id}-objectives`]}
+                                     className="p-1 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                     title="重新生成"
+                                   >
+                                     <RefreshCw className={`w-3.5 h-3.5 ${generatingMedia[`${slide.id}-objectives`] ? 'animate-spin' : ''}`} />
+                                   </button>
+                                 </div>
+                               </div>
+                             </td>
+                             
+                             {/* 教学活动 */}
+                             <td className="p-4 align-top">
+                               <div className="relative">
+                                 <div className="flex items-start gap-1">
+                                   <textarea 
+                                     value={slide.activities} 
+                                     onChange={(e) => updateSlideField(phase.id, slide.id, 'activities', e.target.value)} 
+                                     onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'activity' })}
+                                     className={`flex-1 bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 resize-none text-slate-700 leading-relaxed whitespace-pre-wrap transition-colors text-xs ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'activity' ? 'ring-2 ring-purple-300' : ''}`}
+                                     rows={6} 
+                                     placeholder="详细的活动步骤..."
+                                   />
+                                   <div className="flex flex-col gap-1 pt-1">
+                                     <button 
+                                       onClick={() => setShowHistoryModal({ phaseId: phase.id, slideId: slide.id, field: 'activities' })} 
+                                       className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                                       title="历史生成"
+                                     >
+                                       <History className="w-3.5 h-3.5" />
+                                     </button>
+                                     <button 
+                                       onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'activity' })} 
+                                       disabled={generatingMedia[`${slide.id}-activity`]}
+                                       className="p-1 text-slate-400 hover:text-purple-600 transition-colors disabled:opacity-50"
+                                       title="重新生成"
+                                     >
+                                       <RefreshCw className={`w-3.5 h-3.5 ${generatingMedia[`${slide.id}-activity`] ? 'animate-spin' : ''}`} />
+                                     </button>
+                                   </div>
+                                 </div>
+                               </div>
                              </td>
 
                              {/* 讲稿 (新列) */}
@@ -1302,80 +1312,108 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                  <div className="space-y-2">
                                    {/* 显示所有阅读材料缩略图 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 ? (
-                                     slide.readingMaterials.map((material, idx) => (
-                                       <div key={material.id} className="relative group/material w-full aspect-[3/4] bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex items-center justify-center">
-                                         {material.thumbnail ? (
-                                           <>
-                                             <img 
-                                               src={material.thumbnail || `https://placehold.co/200x267/6366f1/FFFFFF?text=Reading${idx + 1}`} 
-                                               alt={`阅读材料 ${idx + 1}`} 
-                                               className="w-full h-full object-contain bg-white cursor-pointer hover:opacity-90 transition-opacity" 
-                                               onClick={(e) => {
-                                                 e.stopPropagation();
-                                                 // 跳转到阅读材料画布模式
-                                                 if (onNavigateToCanvas) {
-                                                   onNavigateToCanvas({ 
-                                                     phaseId: phase.id, 
-                                                     slideId: slide.id, 
-                                                     type: 'reading-material',
-                                                     materialId: material.id,
-                                                     material: material // 传递完整的阅读材料数据
-                                                   });
-                                                 }
-                                               }}
-                                               onError={(e) => {
-                                                 // 如果图片加载失败，显示占位符
-                                                 e.target.src = `https://placehold.co/200x267/6366f1/FFFFFF?text=Reading${idx + 1}`;
-                                                 e.target.onerror = null; // 防止无限循环
-                                               }}
-                                             />
-                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/material:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                               <button 
-                                                 onClick={() => {
-                                                   if (onNavigateToCanvas) {
-                                                     onNavigateToCanvas({ 
-                                                       phaseId: phase.id, 
-                                                       slideId: slide.id, 
-                                                       type: 'reading-material',
-                                                       materialId: material.id,
-                                                       material: material // 传递完整的阅读材料数据
-                                                     });
-                                                   }
-                                                 }}
-                                                 title="跳转到阅读材料画布" 
-                                                 className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"
-                                               >
-                                                 <FileText className="w-3 h-3" />
-                                               </button>
-                                               <button 
-                                                 onClick={() => setPreviewImage(material.thumbnail)} 
-                                                 title="预览" 
-                                                 className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"
-                                               >
-                                                 <Maximize2 className="w-3 h-3" />
-                                               </button>
-                                               <button 
-                                                 onClick={(e) => {
-                                                   e.stopPropagation();
-                                                   handleDeleteReadingMaterial(phase.id, slide.id, material.id);
-                                                 }} 
-                                                 title="删除阅读材料" 
-                                                 className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 backdrop-blur-sm"
-                                               >
-                                                 <Trash2 className="w-3 h-3" />
-                                               </button>
-                                             </div>
-                                             <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">{idx + 1}/{slide.readingMaterials.length}</div>
-                                           </>
-                                         ) : (
-                                           <div className="flex flex-col items-center gap-1 text-slate-400 relative w-full h-full">
-                                             <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">{idx + 1}/{slide.readingMaterials.length}</div>
-                                             <BookOpen className="w-6 h-6" />
-                                             <span className="text-[10px]">阅读材料</span>
-                                           </div>
-                                         )}
+                                     <>
+                                       {/* 显示材料数量提示 */}
+                                       <div className="text-[10px] text-slate-500 font-medium mb-1">
+                                         共 {slide.readingMaterials.length} 个阅读材料
                                        </div>
-                                     ))
+                                       {slide.readingMaterials.map((material, idx) => (
+                                         <div key={material.id} className="relative group/material w-full aspect-[3/4] bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex flex-col">
+                                           {/* 材料标题栏 */}
+                                           <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-1.5 z-10">
+                                             <div className="flex items-center justify-between">
+                                               <span className="text-[10px] text-white font-medium truncate flex-1" title={material.title || `阅读材料 ${idx + 1}`}>
+                                                 {material.title || `阅读材料 ${idx + 1}`}
+                                               </span>
+                                               <span className="text-[9px] bg-white/20 text-white px-1 py-0.5 rounded ml-1">
+                                                 {idx + 1}/{slide.readingMaterials.length}
+                                               </span>
+                                             </div>
+                                           </div>
+                                           
+                                           {/* 缩略图区域 */}
+                                           <div className="flex-1 flex items-center justify-center relative">
+                                             {material.thumbnail ? (
+                                               <>
+                                                 <img 
+                                                   src={material.thumbnail || `https://placehold.co/200x267/6366f1/FFFFFF?text=Reading${idx + 1}`} 
+                                                   alt={`${material.title || `阅读材料 ${idx + 1}`}`} 
+                                                   className="w-full h-full object-contain bg-white cursor-pointer hover:opacity-90 transition-opacity" 
+                                                   onClick={(e) => {
+                                                     e.stopPropagation();
+                                                     // 跳转到阅读材料画布模式
+                                                     if (onNavigateToCanvas) {
+                                                       onNavigateToCanvas({ 
+                                                         phaseId: phase.id, 
+                                                         slideId: slide.id, 
+                                                         type: 'reading-material',
+                                                         materialId: material.id,
+                                                         material: material // 传递完整的阅读材料数据
+                                                       });
+                                                     }
+                                                   }}
+                                                   onError={(e) => {
+                                                     // 如果图片加载失败，显示占位符
+                                                     e.target.src = `https://placehold.co/200x267/6366f1/FFFFFF?text=Reading${idx + 1}`;
+                                                     e.target.onerror = null; // 防止无限循环
+                                                   }}
+                                                 />
+                                                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/material:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                   <button 
+                                                     onClick={() => {
+                                                       if (onNavigateToCanvas) {
+                                                         onNavigateToCanvas({ 
+                                                           phaseId: phase.id, 
+                                                           slideId: slide.id, 
+                                                           type: 'reading-material',
+                                                           materialId: material.id,
+                                                           material: material // 传递完整的阅读材料数据
+                                                         });
+                                                       }
+                                                     }}
+                                                     title="跳转到阅读材料画布" 
+                                                     className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"
+                                                   >
+                                                     <FileText className="w-3 h-3" />
+                                                   </button>
+                                                   <button 
+                                                     onClick={() => setPreviewImage(material.thumbnail)} 
+                                                     title="预览" 
+                                                     className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"
+                                                   >
+                                                     <Maximize2 className="w-3 h-3" />
+                                                   </button>
+                                                   <button 
+                                                     onClick={(e) => {
+                                                       e.stopPropagation();
+                                                       handleDeleteReadingMaterial(phase.id, slide.id, material.id);
+                                                     }} 
+                                                     title="删除阅读材料" 
+                                                     className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 backdrop-blur-sm"
+                                                   >
+                                                     <Trash2 className="w-3 h-3" />
+                                                   </button>
+                                                 </div>
+                                               </>
+                                             ) : (
+                                               <div className="flex flex-col items-center gap-1 text-slate-400 w-full h-full justify-center">
+                                                 <BookOpen className="w-6 h-6" />
+                                                 <span className="text-[10px]">{material.title || `阅读材料 ${idx + 1}`}</span>
+                                               </div>
+                                             )}
+                                           </div>
+                                           
+                                           {/* 底部信息栏 */}
+                                           {material.pages && material.pages.length > 0 && (
+                                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 z-10">
+                                               <div className="text-[9px] text-white/90 text-center">
+                                                 {material.pages.length} 页
+                                               </div>
+                                             </div>
+                                           )}
+                                         </div>
+                                       ))}
+                                     </>
                                    ) : (
                                      <button 
                                        onClick={() => {
@@ -1389,16 +1427,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                      </button>
                                    )}
                                    
-                                   {/* 重新生成阅读材料按钮 */}
-                                   {/* {slide.readingMaterials && slide.readingMaterials.length > 0 && (
-                                     <button
-                                       onClick={() => handleRegenerateReadingMaterial(phase.id, slide.id)}
-                                       className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
-                                     >
-                                       <RefreshCw className="w-4 h-4" />
-                                       <span className="text-[10px]">重新生成阅读材料</span>
-                                     </button>
-                                   )} */}
                                    {/* 添加更多阅读材料按钮 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 && (
                                      <button
