@@ -1610,7 +1610,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                             </button>
                             <button 
                               onClick={() => {
-                                // 重新生成整个页面（保存当前版本到历史，然后可以重新生成）
+                                // 保存当前版本到历史，然后打开提示词输入框
                                 if (currentPage) {
                                   const historyItem = {
                                     id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -1623,8 +1623,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                                     displayTime: new Date().toLocaleString('zh-CN')
                                   };
                                   setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
-                                  // 这里可以触发AI重新生成，暂时只是保存历史
-                                  alert('已保存当前版本到历史记录，可以点击"历史生成"查看和恢复');
+                                  setShowRegeneratePageModal(true);
                                 }
                               }}
                               className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
