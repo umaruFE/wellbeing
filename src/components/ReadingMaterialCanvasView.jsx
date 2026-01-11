@@ -64,6 +64,8 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [isRegeneratingPage, setIsRegeneratingPage] = useState(false);
   const [showAddReadingMaterialModal, setShowAddReadingMaterialModal] = useState(null); // { stepId, phaseKey }
   const [isGeneratingReadingMaterial, setIsGeneratingReadingMaterial] = useState(false);
+  const [showAddPageToMaterialModal, setShowAddPageToMaterialModal] = useState(null); // { stepId, materialId }
+  const [isGeneratingPageToMaterial, setIsGeneratingPageToMaterial] = useState(false);
   
   // 历史生成记录
   const [generationHistory, setGenerationHistory] = useState([]); // [{ pageId, assetId, type, url, prompt, timestamp }]
@@ -519,6 +521,89 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         if (step) {
           // 更新step的assets（如果需要）
           // 这里可以根据需要同步数据
+        }
+      });
+      setCourseData(newCourseData);
+    }, 1500);
+  };
+
+  // 确认添加页面到特定阅读材料
+  const handleConfirmAddPageToMaterial = (prompt) => {
+    if (!showAddPageToMaterialModal) return;
+    const { stepId, materialId } = showAddPageToMaterialModal;
+    
+    setIsGeneratingPageToMaterial(true);
+    
+    // 计算画布尺寸
+    const getCanvasSize = () => {
+      if (canvasAspectRatio === 'A4') {
+        return { width: 680, height: 960 };
+      } else {
+        return { width: 960, height: 680 };
+      }
+    };
+    const canvasSize = getCanvasSize();
+    
+    setTimeout(() => {
+      const generatedTitle = prompt 
+        ? `AI生成：${prompt.substring(0, 20)}...` 
+        : '新页面';
+      
+      // 找到该材料的最后一个页面，确定新页面的编号
+      const materialPages = pages.filter(p => p.materialId === materialId && p.slideId === stepId);
+      const lastPageNumber = materialPages.length > 0 
+        ? Math.max(...materialPages.map(p => p.pageNumber || 0))
+        : 0;
+      
+      const newPage = {
+        id: `page-${materialId}-${Date.now()}`,
+        slideId: stepId,
+        materialId: materialId, // 设置材料ID
+        pageNumber: lastPageNumber + 1,
+        title: generatedTitle,
+        width: canvasSize.width,
+        height: canvasSize.height,
+        canvasAssets: [],
+        blocks: [],
+        prompt: prompt || ''
+      };
+      
+      // 将新页面添加到该材料的最后一个页面之后
+      const materialPageIds = materialPages.map(p => p.id);
+      const lastMaterialPageIndex = pages.findIndex(p => materialPageIds.includes(p.id) && 
+        (p.pageNumber || 0) === lastPageNumber);
+      
+      let newPages;
+      if (lastMaterialPageIndex >= 0 && lastMaterialPageIndex < pages.length - 1) {
+        // 插入到该材料最后一个页面之后
+        newPages = [...pages];
+        newPages.splice(lastMaterialPageIndex + 1, 0, newPage);
+      } else {
+        // 添加到末尾
+        newPages = [...pages, newPage];
+      }
+      
+      setPages(newPages);
+      saveToHistory(newPages);
+      
+      // 切换到新添加的页面
+      const newPageIndex = newPages.findIndex(p => p.id === newPage.id);
+      if (newPageIndex >= 0) {
+        setEditingPageIndex(newPageIndex);
+        setActiveStepId(stepId);
+        setSelectedStepId(stepId);
+        setSelectedMaterialId(materialId);
+      }
+      
+      setIsGeneratingPageToMaterial(false);
+      setShowAddPageToMaterialModal(null);
+      
+      // 同步更新courseData
+      const newCourseData = { ...courseData };
+      Object.values(newCourseData).forEach(phase => {
+        const step = phase.steps.find(s => s.id === stepId);
+        if (step) {
+          // 更新step的assets（如果需要）
         }
       });
       setCourseData(newCourseData);
@@ -1325,37 +1410,49 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                                 const isSelected = selectedMaterialId === materialId && activeStepId === step.id;
                                 
                                 return (
-                                  <div key={materialId} className="border-b border-slate-100 last:border-0">
-                                    <button
-                                      onClick={() => {
-                                        setActiveStepId(step.id);
-                                        setSelectedStepId(step.id);
-                                        setSelectedMaterialId(materialId);
-                                        // 切换到该材料的第一个页面
-                                        const firstPage = materialPages[0];
-                                        if (firstPage) {
-                                          const pageIndex = pages.findIndex(p => p.id === firstPage.id);
-                                          if (pageIndex >= 0) {
-                                            setEditingPageIndex(pageIndex);
+                                  <div key={materialId} className="border-b border-slate-100 last:border-0 group/material-row">
+                                    <div className="flex items-center">
+                                      <button
+                                        onClick={() => {
+                                          setActiveStepId(step.id);
+                                          setSelectedStepId(step.id);
+                                          setSelectedMaterialId(materialId);
+                                          // 切换到该材料的第一个页面
+                                          const firstPage = materialPages[0];
+                                          if (firstPage) {
+                                            const pageIndex = pages.findIndex(p => p.id === firstPage.id);
+                                            if (pageIndex >= 0) {
+                                              setEditingPageIndex(pageIndex);
+                                            }
                                           }
-                                        }
-                                      }}
-                                      className={`w-full text-left p-2 pl-6 text-xs transition-all flex items-center gap-2 group/material-item ${
-                                        isSelected
-                                          ? 'text-indigo-700 font-semibold bg-indigo-50 border-l-2 border-l-indigo-500'
-                                          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
-                                      }`}
-                                      title={materialTitle}
-                                    >
-                                      <BookOpen className={`w-3 h-3 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
-                                      <span className="line-clamp-1 flex-1 text-left">{materialTitle}</span>
-                                      <div className="flex items-center gap-1 shrink-0">
-                                        <span className="text-[10px] text-slate-400">{materialPages.length}页</span>
-                                        {isSelected && (
-                                          <ChevronRight className="w-3 h-3 text-indigo-600" />
-                                        )}
-                                      </div>
-                                    </button>
+                                        }}
+                                        className={`flex-1 text-left p-2 pl-6 text-xs transition-all flex items-center gap-2 group/material-item ${
+                                          isSelected
+                                            ? 'text-indigo-700 font-semibold bg-indigo-50 border-l-2 border-l-indigo-500'
+                                            : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                                        }`}
+                                        title={materialTitle}
+                                      >
+                                        <BookOpen className={`w-3 h-3 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                        <span className="line-clamp-1 flex-1 text-left">{materialTitle}</span>
+                                        <div className="flex items-center gap-1 shrink-0">
+                                          <span className="text-[10px] text-slate-400">{materialPages.length}页</span>
+                                          {isSelected && (
+                                            <ChevronRight className="w-3 h-3 text-indigo-600" />
+                                          )}
+                                        </div>
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setShowAddPageToMaterialModal({ stepId: step.id, materialId });
+                                        }}
+                                        className="opacity-0 group-hover/material-row:opacity-100 p-1 mr-2 hover:bg-indigo-100 rounded text-indigo-600 transition-all"
+                                        title="新增页面"
+                                      >
+                                        <Plus className="w-3 h-3" />
+                                      </button>
+                                    </div>
                                   </div>
                                 );
                               })}
@@ -1902,6 +1999,20 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
           placeholder="例如：创建一份关于动物主题的阅读材料，包含图片和练习题..."
           type="session"
           isLoading={isGeneratingReadingMaterial}
+        />
+      )}
+
+      {/* 新增页面到阅读材料提示词输入模态框 */}
+      {showAddPageToMaterialModal && (
+        <PromptInputModal
+          isOpen={!!showAddPageToMaterialModal}
+          onClose={() => setShowAddPageToMaterialModal(null)}
+          onConfirm={handleConfirmAddPageToMaterial}
+          title="新增页面"
+          description="请输入AI生成提示词，描述你想要创建的页面内容"
+          placeholder="例如：创建一个关于颜色词汇的阅读页面，包含图片和文字..."
+          type="session"
+          isLoading={isGeneratingPageToMaterial}
         />
       )}
 
