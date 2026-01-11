@@ -62,6 +62,8 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [isGeneratingAsset, setIsGeneratingAsset] = useState(false);
   const [showRegeneratePageModal, setShowRegeneratePageModal] = useState(false);
   const [isRegeneratingPage, setIsRegeneratingPage] = useState(false);
+  const [showAddReadingMaterialModal, setShowAddReadingMaterialModal] = useState(null); // { stepId, phaseKey }
+  const [isGeneratingReadingMaterial, setIsGeneratingReadingMaterial] = useState(false);
   
   // 历史生成记录
   const [generationHistory, setGenerationHistory] = useState([]); // [{ pageId, assetId, type, url, prompt, timestamp }]
@@ -517,6 +519,74 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         if (step) {
           // 更新step的assets（如果需要）
           // 这里可以根据需要同步数据
+        }
+      });
+      setCourseData(newCourseData);
+    }, 1500);
+  };
+
+  // 确认添加新阅读材料
+  const handleConfirmAddReadingMaterial = (prompt) => {
+    if (!showAddReadingMaterialModal) return;
+    const { stepId, phaseKey } = showAddReadingMaterialModal;
+    
+    setIsGeneratingReadingMaterial(true);
+    
+    // 计算画布尺寸
+    const getCanvasSize = () => {
+      if (canvasAspectRatio === 'A4') {
+        return { width: 680, height: 960 };
+      } else {
+        return { width: 960, height: 680 };
+      }
+    };
+    const canvasSize = getCanvasSize();
+    
+    setTimeout(() => {
+      const generatedTitle = prompt 
+        ? `AI生成：${prompt.substring(0, 20)}...` 
+        : '新阅读材料';
+      
+      // 创建新的材料ID（不是 'default'）
+      const newMaterialId = `material-${stepId}-${Date.now()}`;
+      
+      // 创建新阅读材料的第一个页面
+      const newPage = {
+        id: `page-${newMaterialId}-1`,
+        slideId: stepId,
+        materialId: newMaterialId, // 添加材料ID标识
+        pageNumber: 1,
+        title: generatedTitle,
+        width: canvasSize.width,
+        height: canvasSize.height,
+        canvasAssets: [],
+        blocks: [],
+        prompt: prompt || ''
+      };
+      
+      // 将新页面添加到pages数组
+      const newPages = [...pages, newPage];
+      setPages(newPages);
+      saveToHistory(newPages);
+      
+      // 切换到新创建的材料和页面
+      setActiveStepId(stepId);
+      setSelectedStepId(stepId);
+      setSelectedMaterialId(newMaterialId);
+      const newPageIndex = newPages.findIndex(p => p.id === newPage.id);
+      if (newPageIndex >= 0) {
+        setEditingPageIndex(newPageIndex);
+      }
+      
+      setIsGeneratingReadingMaterial(false);
+      setShowAddReadingMaterialModal(null);
+      
+      // 同步更新courseData
+      const newCourseData = { ...courseData };
+      Object.values(newCourseData).forEach(phase => {
+        const step = phase.steps.find(s => s.id === stepId);
+        if (step) {
+          // 更新step的assets（如果需要）
         }
       });
       setCourseData(newCourseData);
@@ -1227,12 +1297,25 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                           </div>
                           
                           {/* 显示该环节下的多个阅读材料 */}
-                          {materials.length > 0 && (
-                            <div className="bg-slate-50/50 pl-4 border-t border-slate-100">
-                              {/* 材料列表标题 */}
-                              <div className="px-2 py-1 text-[10px] font-medium text-slate-500 uppercase">
+                          <div className="bg-slate-50/50 pl-4 border-t border-slate-100">
+                            {/* 材料列表标题 - 带新增按钮 */}
+                            <div className="px-2 py-1 flex items-center justify-between group/material-header">
+                              <div className="text-[10px] font-medium text-slate-500 uppercase">
                                 阅读材料 ({materials.length})
                               </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setShowAddReadingMaterialModal({ stepId: step.id, phaseKey: key });
+                                }}
+                                className="opacity-0 group-hover/material-header:opacity-100 p-1 hover:bg-indigo-100 rounded text-indigo-600 transition-all"
+                                title="新增阅读材料"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </button>
+                            </div>
+                            {materials.length > 0 && (
+                              <>
                               {materials.map(([materialId, materialPages]) => {
                                 const isDefault = materialId === 'default';
                                 // 尝试从materialPages中获取标题，如果没有则使用默认标题
@@ -1276,8 +1359,9 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                                   </div>
                                 );
                               })}
-                            </div>
-                          )}
+                              </>
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -1806,6 +1890,20 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         type="session"
         isLoading={isRegeneratingPage}
       />
+
+      {/* 新增阅读材料提示词输入模态框 */}
+      {showAddReadingMaterialModal && (
+        <PromptInputModal
+          isOpen={!!showAddReadingMaterialModal}
+          onClose={() => setShowAddReadingMaterialModal(null)}
+          onConfirm={handleConfirmAddReadingMaterial}
+          title="新增阅读材料"
+          description="请输入AI生成提示词，描述你想要创建的阅读材料内容"
+          placeholder="例如：创建一份关于动物主题的阅读材料，包含图片和练习题..."
+          type="session"
+          isLoading={isGeneratingReadingMaterial}
+        />
+      )}
 
       {/* 历史生成列表模态框 */}
       {showHistoryModal && (
