@@ -114,6 +114,8 @@ export const CanvasView = forwardRef((props, ref) => {
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptModalConfig, setPromptModalConfig] = useState({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
+  const [showRegeneratePageModal, setShowRegeneratePageModal] = useState(false);
+  const [isRegeneratingPage, setIsRegeneratingPage] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
 
   // 历史生成记录
@@ -326,7 +328,7 @@ export const CanvasView = forwardRef((props, ref) => {
     setShowPromptModal(true);
   };
 
-  const handleConfirmAddAsset = (prompt, inputMode = 'ai') => {
+  const handleConfirmAddAsset = (prompt, inputMode = 'ai', videoStyle = null) => {
     const type = promptModalConfig.assetType;
     const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
     if (!step) return;
@@ -388,6 +390,7 @@ export const CanvasView = forwardRef((props, ref) => {
         content: type === 'text' ? (prompt ? `根据提示词"${prompt}"生成的文本内容` : '双击编辑文本') : '',
         prompt: prompt || 'Describe what you want AI to generate...',
         referenceImage: null,
+        videoStyle: type === 'video' ? (videoStyle || 'realistic') : null,
         x: 100, y: 100, width: w, height: h, rotation: 0
       };
       
@@ -876,7 +879,7 @@ export const CanvasView = forwardRef((props, ref) => {
                         </button>
                         <button 
                           onClick={() => {
-                            // 重新生成整个页面（保存当前版本到历史，然后可以重新生成）
+                            // 保存当前版本到历史，然后打开提示词输入框
                             if (currentStep) {
                               const historyItem = {
                                 id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -891,8 +894,7 @@ export const CanvasView = forwardRef((props, ref) => {
                                 displayTime: new Date().toLocaleString('zh-CN')
                               };
                               setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
-                              // 这里可以触发AI重新生成，暂时只是保存历史
-                              alert('已保存当前版本到历史记录，可以点击"历史生成"查看和恢复');
+                              setShowRegeneratePageModal(true);
                             }
                           }}
                           className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
@@ -914,9 +916,9 @@ export const CanvasView = forwardRef((props, ref) => {
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
         }}
-        onConfirm={(prompt, inputMode) => {
+        onConfirm={(prompt, inputMode, videoStyle) => {
           if (promptModalConfig.type === 'element') {
-            handleConfirmAddAsset(prompt, inputMode);
+            handleConfirmAddAsset(prompt, inputMode, videoStyle);
           } else {
             handleConfirmAddStep(prompt);
           }
@@ -937,6 +939,37 @@ export const CanvasView = forwardRef((props, ref) => {
         type={promptModalConfig.type}
         assetType={promptModalConfig.assetType}
         isLoading={isGenerating}
+      />
+
+      {/* 重新生成页面提示词输入模态框 */}
+      <PromptInputModal
+        isOpen={showRegeneratePageModal}
+        onClose={() => setShowRegeneratePageModal(false)}
+        onConfirm={(prompt) => {
+          // 处理重新生成页面
+          setIsRegeneratingPage(true);
+          setTimeout(() => {
+            // 模拟重新生成
+            const newCourseData = { ...courseData };
+            const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+            if (step) {
+              // 更新标题和内容
+              if (prompt) {
+                step.title = `重新生成：${prompt.substring(0, 20)}...`;
+              }
+              // 这里可以添加更多重新生成逻辑
+            }
+            setCourseData(newCourseData);
+            saveToHistory(newCourseData);
+            setIsRegeneratingPage(false);
+            setShowRegeneratePageModal(false);
+          }, 1500);
+        }}
+        title="重新生成页面"
+        description="请输入AI生成提示词，描述你想要重新生成的页面内容（可选，留空将使用默认生成）"
+        placeholder="例如：重新生成一个关于颜色词汇的教学页面，包含图片和文字..."
+        type="session"
+        isLoading={isRegeneratingPage}
       />
 
       {/* 历史生成列表模态框 */}

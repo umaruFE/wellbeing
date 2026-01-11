@@ -60,6 +60,8 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   const [promptModalConfig, setPromptModalConfig] = useState({ type: null, phaseKey: null, pageId: null, assetType: null });
   const [isGenerating, setIsGenerating] = useState(false);
   const [isGeneratingAsset, setIsGeneratingAsset] = useState(false);
+  const [showRegeneratePageModal, setShowRegeneratePageModal] = useState(false);
+  const [isRegeneratingPage, setIsRegeneratingPage] = useState(false);
   
   // 历史生成记录
   const [generationHistory, setGenerationHistory] = useState([]); // [{ pageId, assetId, type, url, prompt, timestamp }]
@@ -694,7 +696,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   };
 
   // 确认添加资产
-  const handleConfirmAddAsset = (prompt, inputMode = 'ai') => {
+  const handleConfirmAddAsset = (prompt, inputMode = 'ai', videoStyle = null) => {
     const { pageId, assetType: type } = promptModalConfig;
     if (!pageId || !type) return;
 
@@ -806,6 +808,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         content: generatedContent,
         prompt: prompt || '',
         referenceImage: null,
+        videoStyle: type === 'video' ? (videoStyle || 'realistic') : null,
         x: (canvasSize.width - w) / 2,
         y: (canvasSize.height - h) / 2,
         width: w,
@@ -1744,9 +1747,9 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
         }}
-        onConfirm={(prompt, inputMode) => {
+        onConfirm={(prompt, inputMode, videoStyle) => {
           if (promptModalConfig.type === 'asset') {
-            handleConfirmAddAsset(prompt, inputMode);
+            handleConfirmAddAsset(prompt, inputMode, videoStyle);
           } else if (promptModalConfig.type === 'page' && promptModalConfig.stepId) {
             handleConfirmAddPageToStep(prompt);
           } else {
@@ -1769,6 +1772,40 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         type={promptModalConfig.type === 'asset' ? 'element' : 'session'}
         assetType={promptModalConfig.assetType}
         isLoading={promptModalConfig.type === 'asset' ? isGeneratingAsset : isGenerating}
+      />
+
+      {/* 重新生成页面提示词输入模态框 */}
+      <PromptInputModal
+        isOpen={showRegeneratePageModal}
+        onClose={() => setShowRegeneratePageModal(false)}
+        onConfirm={(prompt) => {
+          // 处理重新生成页面
+          setIsRegeneratingPage(true);
+          setTimeout(() => {
+            // 模拟重新生成
+            const currentPage = pages.find(p => p.id === activeStepId);
+            if (currentPage) {
+              const newPages = pages.map(page => {
+                if (page.id === currentPage.id) {
+                  return {
+                    ...page,
+                    title: prompt ? `重新生成：${prompt.substring(0, 20)}...` : page.title
+                  };
+                }
+                return page;
+              });
+              setPages(newPages);
+              saveToHistory(newPages);
+            }
+            setIsRegeneratingPage(false);
+            setShowRegeneratePageModal(false);
+          }, 1500);
+        }}
+        title="重新生成页面"
+        description="请输入AI生成提示词，描述你想要重新生成的页面内容（可选，留空将使用默认生成）"
+        placeholder="例如：重新生成一个关于颜色词汇的阅读页面，包含图片和文字..."
+        type="session"
+        isLoading={isRegeneratingPage}
       />
 
       {/* 历史生成列表模态框 */}

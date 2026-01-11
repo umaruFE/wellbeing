@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wand2, X, Sparkles, RefreshCw, Type, Edit } from 'lucide-react';
+import { Wand2, X, Sparkles, RefreshCw, Type, Edit, Zap } from 'lucide-react';
 
 /**
  * PromptInputModal - 提示词输入模态框
@@ -16,11 +16,15 @@ export const PromptInputModal = ({
   initialPrompt = '',
   type = 'element', // 'element' | 'session'
   assetType = null, // 'text' | 'image' | 'video' - 仅当type为'element'时使用
-  isLoading = false
+  isLoading = false,
+  videoStyle = null, // 视频风格选择，仅当assetType为'video'时使用
+  onVideoStyleChange = null // 视频风格变化回调
 }) => {
   const [prompt, setPrompt] = useState(initialPrompt);
   // 对于文本类型，添加输入模式选择: 'direct' | 'ai'
   const [textInputMode, setTextInputMode] = useState(assetType === 'text' ? 'direct' : 'ai');
+  const [selectedVideoStyle, setSelectedVideoStyle] = useState(videoStyle || 'realistic');
+  const [isOptimizing, setIsOptimizing] = useState(false);
 
   // 当模态框打开时，如果是文本类型，重置模式
   React.useEffect(() => {
@@ -30,13 +34,32 @@ export const PromptInputModal = ({
     } else if (isOpen) {
       setTextInputMode('ai');
     }
-  }, [isOpen, assetType]);
+    if (isOpen && assetType === 'video' && videoStyle) {
+      setSelectedVideoStyle(videoStyle);
+    }
+  }, [isOpen, assetType, videoStyle]);
+
+  // 提示词优化功能
+  const handleOptimizePrompt = async () => {
+    if (!prompt.trim()) return;
+    setIsOptimizing(true);
+    // 模拟AI优化提示词
+    setTimeout(() => {
+      const optimized = `优化后的提示词：${prompt}（更详细、更专业、更符合AI生成要求）`;
+      setPrompt(optimized);
+      setIsOptimizing(false);
+    }, 1000);
+  };
 
   if (!isOpen) return null;
 
   const handleConfirm = () => {
     // 对于文本类型，如果选择直接输入模式，prompt就是文本内容；如果是AI生成模式，prompt是提示词
-    onConfirm(prompt, assetType === 'text' ? textInputMode : 'ai');
+    // 对于视频类型，传递风格信息
+    if (assetType === 'video' && onVideoStyleChange) {
+      onVideoStyleChange(selectedVideoStyle);
+    }
+    onConfirm(prompt, assetType === 'text' ? textInputMode : 'ai', assetType === 'video' ? selectedVideoStyle : null);
     setPrompt('');
   };
 
@@ -99,20 +122,61 @@ export const PromptInputModal = ({
             </div>
           )}
 
+          {/* 视频风格选择 */}
+          {assetType === 'video' && (
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 block">视频风格</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { value: 'realistic', label: '写实风格', desc: '真实场景' },
+                  { value: 'cartoon', label: '卡通风格', desc: '动画效果' },
+                  { value: '3d', label: '3D风格', desc: '立体效果' },
+                  { value: 'minimalist', label: '简约风格', desc: '简洁设计' }
+                ].map(style => (
+                  <button
+                    key={style.value}
+                    onClick={() => setSelectedVideoStyle(style.value)}
+                    className={`p-3 rounded-lg border-2 transition-all text-left ${
+                      selectedVideoStyle === style.value
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="font-medium text-sm text-slate-700">{style.label}</div>
+                    <div className="text-xs text-slate-500 mt-0.5">{style.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
-              {assetType === 'text' && textInputMode === 'direct' ? (
-                <>
-                  <Type className="w-4 h-4 text-blue-500" />
-                  文本内容
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 text-purple-500" />
-                  {assetType === 'text' ? 'AI 生成提示词' : 'AI 生成提示词'}
-                </>
-              )}
-            </label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-medium text-slate-700 flex items-center gap-2">
+                {assetType === 'text' && textInputMode === 'direct' ? (
+                  <>
+                    <Type className="w-4 h-4 text-blue-500" />
+                    文本内容
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 text-purple-500" />
+                    {assetType === 'text' ? 'AI 生成提示词' : 'AI 生成提示词'}
+                  </>
+                )}
+              </label>
+              {/* 提示词优化按钮 - 仅在AI生成模式且不是文本直接输入时显示 */}
+              {assetType !== 'text' || textInputMode !== 'direct' ? (
+                <button
+                  onClick={handleOptimizePrompt}
+                  disabled={!prompt.trim() || isOptimizing}
+                  className="text-xs px-2 py-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <Zap className="w-3 h-3" />
+                  {isOptimizing ? '优化中...' : '优化提示词'}
+                </button>
+              ) : null}
+            </div>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
