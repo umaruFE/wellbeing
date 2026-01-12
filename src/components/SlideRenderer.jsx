@@ -16,7 +16,8 @@ export const SlideRenderer = ({
   onEditingTextAssetIdChange, // (assetId) => void
   editingTextContent, // 正在编辑的文本内容
   onEditingTextContentChange, // (content) => void
-  onCanvasClick // 点击画布时的回调，用于取消选择或保存编辑
+  onCanvasClick, // 点击画布时的回调，用于取消选择或保存编辑
+  onAssetSelect // (assetId) => void - 选中资产时的回调
 }) => {
   return (
     <CanvasAssetRenderer
@@ -32,6 +33,7 @@ export const SlideRenderer = ({
       editingTextContent={editingTextContent}
       onEditingTextContentChange={onEditingTextContentChange}
       onCanvasClick={onCanvasClick}
+      onAssetSelect={onAssetSelect}
     />
   );
 };

@@ -795,6 +795,10 @@ export const CanvasView = forwardRef((props, ref) => {
                editingTextContent={editingTextContent}
                onEditingTextContentChange={setEditingTextContent}
                onCanvasClick={handleCanvasClick}
+               onAssetSelect={(assetId) => {
+                 setSelectedAssetId(assetId);
+                 setIsRightOpen(true);
+               }}
              />
           </div>
           

@@ -72,8 +72,16 @@ export const CanvasAssetRenderer = ({
         return (
           <div
             key={asset.id}
+            onClick={(e) => {
+              // 点击元素时选中它，并阻止事件冒泡到画布
+              if (isEditable && !isEditing) {
+                e.stopPropagation();
+                onAssetSelect?.(asset.id);
+              }
+            }}
             onMouseDown={(e) => {
               if (isEditable && !isEditing) {
+                e.stopPropagation();
                 onMouseDown?.(e, asset.id, 'dragging');
               }
             }}
