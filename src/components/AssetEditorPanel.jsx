@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   X,
   ChevronRight,
@@ -18,7 +18,8 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Palette
+  Palette,
+  Zap
 } from 'lucide-react';
 import { getAssetIcon } from '../utils';
 
@@ -40,6 +41,31 @@ export const AssetEditorPanel = ({
   isRightOpen,
   onToggleRightOpen
 }) => {
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  
+  // 提示词优化功能
+  const handleOptimizePrompt = async () => {
+    if (!selectedAsset.prompt?.trim()) return;
+    
+    setIsOptimizing(true);
+    // 模拟AI优化提示词
+    setTimeout(() => {
+      const currentPrompt = selectedAsset.prompt || '';
+      // 简单的优化逻辑：添加更多描述性词汇
+      const optimizedPrompt = currentPrompt
+        .split(' ')
+        .map(word => {
+          // 添加一些优化建议（实际应该调用AI API）
+          if (word.toLowerCase() === 'a' || word.toLowerCase() === 'an') return word;
+          return word;
+        })
+        .join(' ') + '，高清，专业，精美';
+      
+      onAssetChange(selectedAsset.id, 'prompt', optimizedPrompt);
+      setIsOptimizing(false);
+    }, 1500);
+  };
+  
   if (!selectedAsset) return null;
 
   return (
@@ -151,9 +177,20 @@ export const AssetEditorPanel = ({
             
             {/* AI 生成提示词 (文本) */}
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
-                <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
+                </label>
+                <button
+                  onClick={handleOptimizePrompt}
+                  disabled={!selectedAsset.prompt?.trim() || isOptimizing}
+                  className="text-xs px-2 py-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  title="优化提示词"
+                >
+                  <Zap className="w-3 h-3" />
+                  {isOptimizing ? '优化中...' : '优化'}
+                </button>
+              </div>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 
@@ -415,9 +452,20 @@ export const AssetEditorPanel = ({
             
             {/* AI 生成提示词 */}
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
-                <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
+                </label>
+                <button
+                  onClick={handleOptimizePrompt}
+                  disabled={!selectedAsset.prompt?.trim() || isOptimizing}
+                  className="text-xs px-2 py-1 text-purple-600 hover:text-purple-700 hover:bg-purple-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  title="优化提示词"
+                >
+                  <Zap className="w-3 h-3" />
+                  {isOptimizing ? '优化中...' : '优化'}
+                </button>
+              </div>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 

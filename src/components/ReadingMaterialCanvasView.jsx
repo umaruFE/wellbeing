@@ -232,6 +232,17 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
     );
     
+    // 保留已有的自定义页面（有materialId的页面，或者不在courseData中的页面）
+    const existingCustomPages = pages.filter(page => {
+      // 如果有materialId，说明是用户添加的自定义阅读材料页面，需要保留
+      if (page.materialId && page.materialId !== 'default') {
+        return true;
+      }
+      // 如果页面的slideId不在当前courseData的steps中，也需要保留
+      const stepExists = allSteps.some(step => step.id === page.slideId);
+      return !stepExists;
+    });
+    
     let newPages = allSteps.map((step, index) => {
       // 检查是否已经有了排版好的资产（通过检查是否有特定的ID前缀或多个资产）
       const rawAssets = step.assets || [];
@@ -340,19 +351,22 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         setSelectedMaterialId(null);
       }
 
-      setPages(newPages);
+      // 合并新页面和已有的自定义页面（保留其他环节的自定义页面）
+      const otherCustomPages = existingCustomPages.filter(p => p.slideId !== slideIdStr);
+      const mergedPages = [...newPages, ...otherCustomPages];
+      setPages(mergedPages);
       setSelectedStepId(slideIdStr);
       setActiveStepId(slideIdStr);
       
       // 找到该环节的第一个页面
-      const stepPages = newPages.filter(p => p.slideId === slideIdStr);
+      const stepPages = mergedPages.filter(p => p.slideId === slideIdStr);
       if (stepPages.length > 0) {
-        const pageIndex = newPages.findIndex(p => p.id === stepPages[0].id);
+        const pageIndex = mergedPages.findIndex(p => p.id === stepPages[0].id);
         if (pageIndex >= 0) {
           setEditingPageIndex(pageIndex);
         } else {
           // 如果找不到，尝试通过 slideId 查找
-          const fallbackIndex = newPages.findIndex(p => p.slideId === slideIdStr);
+          const fallbackIndex = mergedPages.findIndex(p => p.slideId === slideIdStr);
           if (fallbackIndex >= 0) {
             setEditingPageIndex(fallbackIndex);
           } else {
@@ -364,9 +378,11 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       }
     } else {
       // 直接点击进入：显示所有页面，默认选中第一个
-      setPages(newPages);
-      if (newPages.length > 0) {
-        const firstPage = newPages[0];
+      // 合并新生成的页面和已有的自定义页面
+      const mergedPages = [...newPages, ...existingCustomPages];
+      setPages(mergedPages);
+      if (mergedPages.length > 0) {
+        const firstPage = mergedPages[0];
         if (firstPage.slideId) {
           setSelectedStepId(firstPage.slideId);
           setActiveStepId(firstPage.slideId);
@@ -375,10 +391,13 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
       }
     }
     
-    // 重置历史记录
-    setHistory([JSON.parse(JSON.stringify(newPages))]);
+    // 重置历史记录（使用合并后的页面）
+    const finalPages = navigation && navigation.slideId ? 
+      [...newPages, ...existingCustomPages.filter(p => p.slideId !== String(navigation.slideId))] : 
+      [...newPages, ...existingCustomPages];
+    setHistory([JSON.parse(JSON.stringify(finalPages))]);
     setHistoryIndex(0);
-  }, [navigation, courseData]);
+  }, [navigation]); // 只依赖navigation，不依赖courseData，避免覆盖用户添加的页面
 
 
   // 保存历史记录 - 保存pages数据而不是courseData
@@ -1462,12 +1481,12 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                         </div>
                       );
                     })}
-                    <button 
+                    {/* <button 
                       onClick={() => handleAddStep(key)}
                       className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
                     >
                       <Plus className="w-3 h-3" /> 新增环节
-                    </button>
+                    </button> */}
                   </div>
                 )}
               </div>
@@ -1609,9 +1628,10 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
                 }
                 
                 // 更新pages：将filteredPages的更新同步回完整的pages数组
+                // 保留所有不在filteredPages中的页面（这些页面可能属于其他材料或环节）
                 const updatedPages = pages.map(page => {
                   const updatedPage = updatedFilteredPages.find(p => p.id === page.id);
-                  return updatedPage || page;
+                  return updatedPage || page; // 如果不在filteredPages中，保留原页面
                 });
                 
                 // 如果有新页面（在filteredPages中但不在pages中），添加到pages
