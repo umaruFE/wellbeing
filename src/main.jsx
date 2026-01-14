@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './home.jsx'
+import App from './App.jsx'
 
 console.log('开始渲染应用...');
 console.log('App 组件:', App);
