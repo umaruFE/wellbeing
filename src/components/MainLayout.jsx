@@ -93,7 +93,7 @@ export const MainLayout = () => {
     { 
       id: 'dashboard', 
       path: '/', 
-      label: '首页', 
+      label: '工作看板', 
       icon: Home, 
       description: '工作台首页' 
     },

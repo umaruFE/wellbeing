@@ -37,7 +37,7 @@ export const AdminDashboard = () => {
   const stats = [
     { label: '课程总数', value: '156', icon: BookOpen, color: 'bg-blue-500' },
     { label: 'AI 生成素材', value: '2.4k', icon: Image, color: 'bg-purple-500', sub: '图片 1.8k / 视频 0.6k' },
-    { label: '待审记录', value: '23', icon: AlertCircle, color: 'bg-orange-500' },
+    // { label: '待审记录', value: '23', icon: AlertCircle, color: 'bg-orange-500' },
   ];
 
   // 模拟最近课程数据 - 增加缩略图和音视频标签
@@ -136,7 +136,7 @@ export const AdminDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* 顶部统计卡片 - 细化 */}
         <div className="lg:col-span-2">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
