@@ -3,13 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RequireAuth } from './components/RequireAuth';
-import { LoginPage } from './pages/LoginPage';
-import { UnauthorizedPage } from './pages/UnauthorizedPage';
+import { LoginPage } from './pages/auth/LoginPage';
+import { UnauthorizedPage } from './pages/auth/UnauthorizedPage';
 import { MainLayout } from './components/MainLayout';
-import { CourseManagementPage } from './pages/CourseManagementPage';
-import { CourseSquarePage } from './pages/CourseSquarePage';
-import { VoiceManagementPage } from './pages/VoiceManagementPage';
-import { SuperAdminPage } from './pages/SuperAdminPage';
+import { CourseManagementPage } from './pages/course/CourseManagementPage';
+import { CourseSquarePage } from './pages/course/CourseSquarePage';
+import { VoiceManagementPage } from './pages/admin/VoiceManagementPage';
+import { SuperAdminPage } from './pages/admin/SuperAdminPage';
+import { KnowledgeBasePage } from './pages/course/KnowledgeBasePage';
 
 function App() {
   return (
@@ -65,6 +66,15 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
                   <VoiceManagementPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/knowledge-base"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <KnowledgeBasePage />
                 </RequireAuth>
               }
             />

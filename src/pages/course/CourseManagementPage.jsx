@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Plus, Edit, Trash2, Eye, Upload, Search, Filter, Clock, Tag, Book, Sparkles } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const CourseManagementPage = () => {
   const { user } = useAuth();

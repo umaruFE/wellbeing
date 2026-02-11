@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Building2, Users, Clock, Plus, Edit, Trash2, Search, Settings, UserPlus } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const SuperAdminPage = () => {
   const { hasRole, ROLE_NAMES } = useAuth();

@@ -13,7 +13,8 @@ import {
   Table as TableIcon,
   FileText as FileTextIcon,
   Plus,
-  Home
+  Home,
+  Layers
 } from 'lucide-react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from './CanvasView';
@@ -76,6 +77,7 @@ export const MainLayout = () => {
     { path: '/', label: '首页', icon: Home, description: '工作台首页' },
     { path: '/courses', label: '课程管理', icon: BookOpen, description: '管理我的课程', roles: ['super_admin', 'org_admin', 'research_leader', 'creator'] },
     { path: '/course-square', label: '课程广场', icon: FileText, description: '公共课程资源' },
+    { path: '/knowledge-base', label: '知识库', icon: Layers, description: '教材课本维护', roles: ['super_admin', 'org_admin', 'research_leader', 'creator'] },
     { path: '/voices', label: '声音管理', icon: Music, description: '语音配置', roles: ['super_admin', 'org_admin', 'research_leader', 'creator'] },
   ];
 

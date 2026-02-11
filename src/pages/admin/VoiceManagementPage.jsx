@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Upload, Music, Play, Pause, Trash2, Search, Filter, Smile, Frown, Meh, Heart } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const VoiceManagementPage = () => {
   const { hasRole } = useAuth();
