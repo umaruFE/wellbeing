@@ -127,17 +127,17 @@ export const MainLayout = () => {
       ]
     },
     // 超级管理端（带二级菜单）
-    { 
-      id: 'super-admin', 
-      label: '超级管理端', 
-      icon: Settings, 
-      description: '系统管理',
-      roles: ['super_admin'],
-      children: [
-        { path: '/super-admin', label: '机构管理', icon: Building2 },
-        { path: '/account-management', label: '账号管理', icon: Users },
-      ]
-    },
+    // { 
+    //   id: 'super-admin', 
+    //   label: '超级管理端', 
+    //   icon: Settings, 
+    //   description: '系统管理',
+    //   roles: ['super_admin'],
+    //   children: [
+    //     { path: '/super-admin', label: '机构管理', icon: Building2 },
+    //     { path: '/account-management', label: '账号管理', icon: Users },
+    //   ]
+    // },
   ];
 
   // 过滤用户有权限访问的菜单项
