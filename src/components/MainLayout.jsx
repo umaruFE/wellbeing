@@ -14,7 +14,12 @@ import {
   FileText as FileTextIcon,
   Plus,
   Home,
-  Layers
+  Layers,
+  ChevronDown,
+  Image,
+  User,
+  Users,
+  Settings
 } from 'lucide-react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from './CanvasView';
@@ -28,6 +33,7 @@ export const MainLayout = () => {
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState(['knowledge']); // 默认展开知识库
 
   // 课程编辑状态
   const [appState, setAppState] = useState('welcome');
@@ -72,22 +78,75 @@ export const MainLayout = () => {
     }
   };
 
-  // 导航菜单项
-  const navItems = [
-    { path: '/', label: '首页', icon: Home, description: '工作台首页' },
-    { path: '/courses', label: '课程管理', icon: BookOpen, description: '管理我的课程', roles: ['super_admin', 'org_admin', 'research_leader', 'creator'] },
-    { path: '/course-square', label: '课程广场', icon: FileText, description: '公共课程资源' },
-    { path: '/knowledge-base', label: '知识库', icon: Layers, description: '教材课本维护', roles: ['super_admin', 'org_admin', 'research_leader', 'creator'] },
-    { path: '/voices', label: '声音管理', icon: Music, description: '语音配置', roles: ['super_admin', 'org_admin', 'research_leader', 'creator'] },
+  // 切换菜单展开/收起
+  const toggleMenu = (menuId) => {
+    setExpandedMenus(prev =>
+      prev.includes(menuId)
+        ? prev.filter(id => id !== menuId)
+        : [...prev, menuId]
+    );
+  };
+
+  // 一级菜单配置
+  const menuItems = [
+    { 
+      id: 'dashboard', 
+      path: '/', 
+      label: '首页', 
+      icon: Home, 
+      description: '工作台首页' 
+    },
+    { 
+      id: 'courses', 
+      path: '/courses', 
+      label: '课程管理', 
+      icon: BookOpen, 
+      description: '管理我的课程',
+      roles: ['super_admin', 'org_admin', 'research_leader', 'creator']
+    },
+    { 
+      id: 'course-square', 
+      path: '/course-square', 
+      label: '课程广场', 
+      icon: FileText, 
+      description: '公共课程资源' 
+    },
+    { 
+      id: 'knowledge', 
+      label: '知识库', 
+      icon: Layers, 
+      description: '教材课本维护',
+      roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
+      children: [
+        { path: '/knowledge-base', label: '教材课本', icon: BookOpen },
+        { path: '/ppt-images', label: 'PPT风格图片', icon: Image },
+        { path: '/ip-characters', label: 'IP人物', icon: User },
+      ]
+    },
+    { 
+      id: 'voices', 
+      path: '/voices', 
+      label: '声音管理', 
+      icon: Music, 
+      description: '语音配置',
+      roles: ['super_admin', 'org_admin', 'research_leader', 'creator']
+    },
+    // 超级管理端（带二级菜单）
+    { 
+      id: 'super-admin', 
+      label: '超级管理端', 
+      icon: Settings, 
+      description: '系统管理',
+      roles: ['super_admin'],
+      children: [
+        { path: '/super-admin', label: '机构管理', icon: Building2 },
+        { path: '/account-management', label: '账号管理', icon: Users },
+      ]
+    },
   ];
 
-  // 如果是超级管理员，添加管理端入口
-  if (user?.role === 'super_admin') {
-    navItems.push({ path: '/super-admin', label: '超级管理端', icon: Building2, description: '系统管理' });
-  }
-
   // 过滤用户有权限访问的菜单项
-  const accessibleNavItems = navItems.filter(item =>
+  const accessibleMenuItems = menuItems.filter(item =>
     !item.roles || item.roles.includes(user?.role)
   );
 
@@ -95,6 +154,28 @@ export const MainLayout = () => {
   const isDashboard = location.pathname === '/';
   const isCreatePage = location.pathname === '/create';
   const isInCourseEditor = isCreatePage && appState === 'app';
+
+  // 判断是否为子菜单
+  const isChildMenu = (path) => {
+    for (const item of menuItems) {
+      if (item.children) {
+        const found = item.children.find(child => child.path === path);
+        if (found) return true;
+      }
+    }
+    return false;
+  };
+
+  // 判断父菜单是否展开
+  const isParentExpanded = (path) => {
+    for (const item of menuItems) {
+      if (item.children) {
+        const found = item.children.find(child => child.path === path);
+        if (found) return expandedMenus.includes(item.id);
+      }
+    }
+    return false;
+  };
 
   return (
     <div className="h-screen flex font-sans bg-slate-50">
@@ -117,29 +198,93 @@ export const MainLayout = () => {
 
         {/* 导航菜单 */}
         <nav className="flex-1 py-4 overflow-y-auto">
-          {accessibleNavItems.map(item => {
+          {accessibleMenuItems.map(item => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
+            const isExpanded = expandedMenus.includes(item.id);
+            const hasChildren = item.children && item.children.length > 0;
+
+            // 过滤子菜单权限
+            const accessibleChildren = item.children?.filter(child =>
+              !child.roles || child.roles.includes(user?.role)
+            ) || [];
+
+            if (hasChildren && accessibleChildren.length === 0) return null;
+
             return (
-              <button
-                key={item.path}
-                onClick={() => navigate(item.path)}
-                className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                  isActive
-                    ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                    : 'text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                <Icon className="w-4 h-4 shrink-0" />
-                {!sidebarCollapsed && (
-                  <div className="text-left">
-                    <div className="font-medium text-sm">{item.label}</div>
-                    {item.description && (
-                      <div className="text-xs text-slate-400">{item.description}</div>
+              <div key={item.id}>
+                {hasChildren ? (
+                  // 一级菜单（带展开/收起）
+                  <>
+                    <button
+                      onClick={() => toggleMenu(item.id)}
+                      className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
+                        isActive || isParentExpanded(location.pathname)
+                          ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                          : 'text-slate-600 hover:bg-slate-50'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 shrink-0" />
+                      {!sidebarCollapsed && (
+                        <div className="flex-1 text-left">
+                          <div className="font-medium text-sm">{item.label}</div>
+                          {item.description && (
+                            <div className="text-xs text-slate-400">{item.description}</div>
+                          )}
+                        </div>
+                      )}
+                      {!sidebarCollapsed && (
+                        <ChevronDown className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                      )}
+                    </button>
+
+                    {/* 二级菜单 */}
+                    {!sidebarCollapsed && isExpanded && (
+                      <div className="bg-slate-50">
+                        {accessibleChildren.map(child => {
+                          const ChildIcon = child.icon;
+                          const childIsActive = location.pathname === child.path;
+                          return (
+                            <button
+                              key={child.path}
+                              onClick={() => navigate(child.path)}
+                              className={`w-full pl-12 pr-4 py-2 flex items-center gap-2 transition-colors ${
+                                childIsActive
+                                  ? 'bg-blue-100/50 text-blue-600 border-r-2 border-blue-600'
+                                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                              }`}
+                            >
+                              <ChildIcon className="w-3.5 h-3.5" />
+                              <span className="text-sm">{child.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-                  </div>
+                  </>
+                ) : (
+                  // 普通一级菜单
+                  <button
+                    key={item.path}
+                    onClick={() => navigate(item.path)}
+                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
+                        : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {!sidebarCollapsed && (
+                      <div className="text-left">
+                        <div className="font-medium text-sm">{item.label}</div>
+                        {item.description && (
+                          <div className="text-xs text-slate-400">{item.description}</div>
+                        )}
+                      </div>
+                    )}
+                  </button>
                 )}
-              </button>
+              </div>
             );
           })}
         </nav>

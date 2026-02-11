@@ -11,6 +11,9 @@ import { CourseSquarePage } from './pages/course/CourseSquarePage';
 import { VoiceManagementPage } from './pages/admin/VoiceManagementPage';
 import { SuperAdminPage } from './pages/admin/SuperAdminPage';
 import { KnowledgeBasePage } from './pages/course/KnowledgeBasePage';
+import { PptImageManagement } from './pages/course/PptImageManagement';
+import { IpCharacterManagement } from './pages/course/IpCharacterManagement';
+import { AccountManagement } from './pages/admin/AccountManagement';
 
 function App() {
   return (
@@ -70,6 +73,7 @@ function App() {
               }
             />
 
+            {/* 知识库子菜单 */}
             <Route
               path="/knowledge-base"
               element={
@@ -80,10 +84,37 @@ function App() {
             />
 
             <Route
+              path="/ppt-images"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <PptImageManagement />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/ip-characters"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <IpCharacterManagement />
+                </RequireAuth>
+              }
+            />
+
+            <Route
               path="/super-admin"
               element={
                 <RequireAuth requiredRoles={['super_admin']}>
                   <SuperAdminPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/account-management"
+              element={
+                <RequireAuth requiredRoles={['super_admin']}>
+                  <AccountManagement />
                 </RequireAuth>
               }
             />
