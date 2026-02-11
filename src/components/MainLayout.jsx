@@ -119,11 +119,11 @@ export const MainLayout = () => {
       description: '管理素材资源',
       roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
       children: [
-        { path: '/knowledge-base', label: '教材课本', icon: BookOpen },
-        { path: '/ppt-images', label: '图片素材', icon: Image },
-        { path: '/ip-characters', label: 'IP人物素材', icon: User },
-        { path: '/voices', label: '声音素材', icon: Music },
-        { path: '/video-materials', label: '视频素材', icon: Video },
+        { path: '/knowledge-base', label: '教材', icon: BookOpen },
+        { path: '/ppt-images', label: '图片', icon: Image },
+        // { path: '/ip-characters', label: 'IP人物素材', icon: User },
+        { path: '/video-materials', label: '视频', icon: Video },
+        { path: '/voices', label: '声音', icon: Music },
       ]
     },
     // 超级管理端（带二级菜单）
