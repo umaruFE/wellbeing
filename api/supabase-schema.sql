@@ -173,6 +173,24 @@ CREATE TABLE IF NOT EXISTS ip_characters (
 );
 
 -- =====================================================
+-- KNOWLEDGE BASE - VIDEOS
+-- =====================================================
+
+-- Videos
+CREATE TABLE IF NOT EXISTS videos (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  video_url TEXT NOT NULL,
+  thumbnail_url TEXT,
+  duration VARCHAR(50),
+  tags TEXT[],
+  view_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- =====================================================
 -- VOICE CONFIGURATIONS
 -- =====================================================
 
@@ -227,6 +245,7 @@ ALTER TABLE IF EXISTS textbook_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS ppt_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS ppt_images ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS ip_characters ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS videos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS voice_configs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS audit_logs ENABLE ROW LEVEL SECURITY;
 

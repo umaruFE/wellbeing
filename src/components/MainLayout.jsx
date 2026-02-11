@@ -19,7 +19,8 @@ import {
   Image,
   User,
   Users,
-  Settings
+  Settings,
+  Video
 } from 'lucide-react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from './CanvasView';
@@ -33,7 +34,7 @@ export const MainLayout = () => {
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState(['knowledge']); // 默认展开知识库
+  const [expandedMenus, setExpandedMenus] = useState(['materials']); // 默认展开素材管理
 
   // 课程编辑状态
   const [appState, setAppState] = useState('welcome');
@@ -113,23 +114,17 @@ export const MainLayout = () => {
     },
     { 
       id: 'knowledge', 
-      label: '知识库', 
-      icon: Layers, 
-      description: '教材课本维护',
+      label: '素材管理', 
+      icon: Image, 
+      description: '管理素材资源',
       roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
       children: [
         { path: '/knowledge-base', label: '教材课本', icon: BookOpen },
-        { path: '/ppt-images', label: 'PPT风格图片', icon: Image },
-        { path: '/ip-characters', label: 'IP人物', icon: User },
+        { path: '/ppt-images', label: '图片素材', icon: Image },
+        { path: '/ip-characters', label: 'IP人物素材', icon: User },
+        { path: '/voices', label: '声音素材', icon: Music },
+        { path: '/video-materials', label: '视频素材', icon: Video },
       ]
-    },
-    { 
-      id: 'voices', 
-      path: '/voices', 
-      label: '声音管理', 
-      icon: Music, 
-      description: '语音配置',
-      roles: ['super_admin', 'org_admin', 'research_leader', 'creator']
     },
     // 超级管理端（带二级菜单）
     { 

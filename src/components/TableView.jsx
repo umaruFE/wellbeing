@@ -22,6 +22,7 @@ import { ImagePreviewModal } from './ImagePreviewModal';
 import { BookmarkIcon } from './BookmarkIcon';
 import { HistoryVersionView } from './HistoryVersionView';
 import { PromptInputModal } from './PromptInputModal';
+import { CardSelectionModal } from './CardSelectionModal';
 
 export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   // 初始化数据时，确保每一行都有 script 字段
@@ -52,6 +53,11 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   const [showPhaseHistoryModal, setShowPhaseHistoryModal] = useState(null); // { phaseId }
   const [showRegeneratePhaseModal, setShowRegeneratePhaseModal] = useState(null); // { phaseId }
   const [showHistorySessionModal, setShowHistorySessionModal] = useState(null); // { phaseId, slideId } - 环节历史生成
+
+  // 图片抽卡选择模态框状态
+  const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
+  const [cardSelectionImages, setCardSelectionImages] = useState([]);
+  const [pendingSlideConfig, setPendingSlideConfig] = useState(null); // 待确认的幻灯片配置
 
   // 生成示例阅读材料的辅助函数
   const generateSampleReadingMaterial = (slide, index = 0) => {
@@ -521,21 +527,81 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   const handleRegenerateMedia = (phaseId, slideId, type) => {
     const key = `${slideId}-${type}`;
     setGeneratingMedia(prev => ({ ...prev, [key]: true }));
+
+    // 模拟AI生成（实际应该调用API）
     setTimeout(() => {
+      // 如果是图片类型，生成多张图片供选择
+      if (type === 'image') {
+        const generatedImages = [];
+        for (let i = 0; i < 4; i++) {
+          const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+          generatedImages.push({
+            url: `https://placehold.co/600x400/${randomColor}/FFF?text=AI+Gen+Slide+${Date.now().toString().slice(-4)}+${i + 1}`,
+            prompt: `PPT 图片 ${i + 1}`
+          });
+        }
+
+        // 保存待确认的配置
+        setPendingSlideConfig({
+          phaseId,
+          slideId,
+          type,
+          key
+        });
+
+        // 显示抽卡选择模态框
+        setCardSelectionImages(generatedImages);
+        setShowCardSelectionModal(true);
+        return;
+      }
+
+      // 非图片类型保持原有逻辑
       setPhases(prevPhases => prevPhases.map(phase => {
         if (phase.id !== phaseId) return phase;
         return {
-            ...phase,
-            slides: phase.slides.map(slide => {
-                if (slide.id !== slideId) return slide;
-                let newContent = null;
-                if (type === 'image') newContent = `https://placehold.co/600x400/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+Slide+${Date.now().toString().slice(-4)}`;
-                return { ...slide, [type]: newContent };
-            })
+          ...phase,
+          slides: phase.slides.map(slide => {
+            if (slide.id !== slideId) return slide;
+            let newContent = null;
+            if (type === 'image') newContent = `https://placehold.co/600x400/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+Slide+${Date.now().toString().slice(-4)}`;
+            return { ...slide, [type]: newContent };
+          })
         };
       }));
       setGeneratingMedia(prev => ({ ...prev, [key]: false }));
     }, 2000);
+  };
+
+  // 处理图片抽卡选择确认
+  const handleCardSelectionConfirm = (selectedImage, selectedIndex) => {
+    if (!pendingSlideConfig) return;
+
+    const { phaseId, slideId, type, key } = pendingSlideConfig;
+
+    setPhases(prevPhases => prevPhases.map(phase => {
+      if (phase.id !== phaseId) return phase;
+      return {
+        ...phase,
+        slides: phase.slides.map(slide => {
+          if (slide.id !== slideId) return slide;
+          return {
+            ...slide,
+            [type]: selectedImage.url,
+            // 如果有 pptSlides，更新第一个
+            pptSlides: slide.pptSlides?.length > 0
+              ? slide.pptSlides.map((ppt, idx) => idx === 0 ? { ...ppt, image: selectedImage.url } : ppt)
+              : [{ id: `ppt-${slideId}-${Date.now()}`, image: selectedImage.url, timestamp: Date.now(), prompt: selectedImage.prompt || '' }]
+          };
+        })
+      };
+    }));
+
+    setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+
+    // 关闭模态框并清理状态
+    setShowCardSelectionModal(false);
+    setCardSelectionImages([]);
+    setPendingSlideConfig(null);
   };
 
   // 保存生成历史
@@ -1917,6 +1983,20 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           </div>
         </div>
       )}
+      )}
+      {/* 图片抽卡选择模态框 */}
+      <CardSelectionModal
+        isOpen={showCardSelectionModal}
+        onClose={() => {
+          setShowCardSelectionModal(false);
+          setCardSelectionImages([]);
+          setPendingSlideConfig(null);
+        }}
+        title="选择PPT图片"
+        images={cardSelectionImages}
+        isLoading={Object.values(generatingMedia).some(v => v)}
+        onConfirm={handleCardSelectionConfirm}
+      />
     </div>
   );
 };

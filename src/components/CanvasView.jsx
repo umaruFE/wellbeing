@@ -36,6 +36,7 @@ import { SlideRenderer } from './SlideRenderer';
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
 import { AssetEditorPanel } from './AssetEditorPanel';
+import { CardSelectionModal } from './CardSelectionModal';
 
 export const CanvasView = forwardRef((props, ref) => {
   const { navigation } = props;
@@ -125,6 +126,11 @@ export const CanvasView = forwardRef((props, ref) => {
   // 页面历史记录（整个环节的内容）
   const [pageHistory, setPageHistory] = useState([]); // [{ stepId, data: { title, time, objective, assets }, timestamp }]
   const [showPageHistoryModal, setShowPageHistoryModal] = useState(false);
+
+  // 图片抽卡选择模态框状态
+  const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
+  const [cardSelectionImages, setCardSelectionImages] = useState([]);
+  const [pendingAssetConfig, setPendingAssetConfig] = useState(null); // 待确认的资源配置
 
   // 保存历史记录
   const saveToHistory = (newData) => {
@@ -337,7 +343,7 @@ export const CanvasView = forwardRef((props, ref) => {
     if (type === 'text' && inputMode === 'direct') {
       const newCourseData = { ...courseData };
       const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-      
+
       let w = 300, h = 100;
 
       const newAsset = {
@@ -354,11 +360,11 @@ export const CanvasView = forwardRef((props, ref) => {
         color: '#1e293b',
         textAlign: 'center'
       };
-      
+
       currentStep.assets.push(newAsset);
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
-      setSelectedAssetId(newAsset.id); 
+      setSelectedAssetId(newAsset.id);
       setIsRightOpen(true);
       setShowPromptModal(false);
       setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
@@ -370,16 +376,45 @@ export const CanvasView = forwardRef((props, ref) => {
 
     // 模拟AI生成（实际应该调用API）
     setTimeout(() => {
+      // 如果是图片类型，生成多张图片供选择
+      if (type === 'image') {
+        const generatedImages = [];
+        for (let i = 0; i < 4; i++) {
+          const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+          generatedImages.push({
+            url: `https://placehold.co/400x400/${randomColor}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}+${i + 1}`,
+            prompt: prompt || `图片 ${i + 1} 的生成提示词`
+          });
+        }
+
+        // 保存待确认的配置
+        setPendingAssetConfig({
+          type,
+          prompt,
+          videoStyle,
+          phaseKey: activePhase,
+          stepId: activeStepId
+        });
+
+        // 显示抽卡选择模态框
+        setCardSelectionImages(generatedImages);
+        setShowCardSelectionModal(true);
+        setIsGenerating(false);
+        setShowPromptModal(false);
+        return;
+      }
+
+      // 非图片类型保持原有逻辑
       const newCourseData = { ...courseData };
       const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-      
+
       let w = 300, h = 200;
       if (type === 'audio') { w = 300; h = 100; }
       if (type === 'text') { w = 300; h = 100; }
 
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 15)}...` : `New ${type}`;
-      const generatedUrl = type === 'text' 
-        ? '' 
+      const generatedUrl = type === 'text'
+        ? ''
         : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
 
       const newAsset = {
@@ -393,7 +428,7 @@ export const CanvasView = forwardRef((props, ref) => {
         videoStyle: type === 'video' ? (videoStyle || 'realistic') : null,
         x: 100, y: 100, width: w, height: h, rotation: 0
       };
-      
+
       // 如果是文本类型，添加文本相关属性
       if (type === 'text') {
         newAsset.fontSize = 24;
@@ -401,16 +436,52 @@ export const CanvasView = forwardRef((props, ref) => {
         newAsset.color = '#1e293b';
         newAsset.textAlign = 'center';
       }
-      
+
       currentStep.assets.push(newAsset);
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
-      setSelectedAssetId(newAsset.id); 
+      setSelectedAssetId(newAsset.id);
       setIsRightOpen(true);
       setIsGenerating(false);
       setShowPromptModal(false);
       setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
     }, 1500);
+  };
+
+  // 处理图片抽卡选择确认
+  const handleCardSelectionConfirm = (selectedImage, selectedIndex) => {
+    if (!pendingAssetConfig) return;
+
+    const { type, prompt, videoStyle, phaseKey, stepId } = pendingAssetConfig;
+
+    const newCourseData = { ...courseData };
+    const currentStep = newCourseData[phaseKey].steps.find(s => s.id === stepId);
+
+    const w = 400, h = 400;
+    const newAsset = {
+      id: Date.now().toString(),
+      type,
+      title: `AI生成：${prompt ? prompt.substring(0, 15) + '...' : '图片'}`,
+      url: selectedImage.url,
+      content: '',
+      prompt: prompt || '',
+      referenceImage: null,
+      videoStyle: null,
+      x: 100, y: 100, width: w, height: h, rotation: 0
+    };
+
+    currentStep.assets.push(newAsset);
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData);
+    setSelectedAssetId(newAsset.id);
+    setIsRightOpen(true);
+
+    // 关闭模态框并清理状态
+    setShowCardSelectionModal(false);
+    setCardSelectionImages([]);
+    setPendingAssetConfig(null);
+    setShowPromptModal(false);
+    setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
   };
 
   const handleDeleteAsset = (assetId) => {
@@ -780,12 +851,16 @@ export const CanvasView = forwardRef((props, ref) => {
         </div>
 
         <div className="flex-1 overflow-auto p-8 flex items-center justify-center relative" onClick={handleCanvasClick}>
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]"></div>
-          <div ref={canvasRef} className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200" onClick={handleCanvasClick}>
-             <SlideRenderer 
-               assets={currentStep?.assets || []} 
-               isEditable={true} 
-               onMouseDown={handleMouseDown} 
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]" onClick={(e) => e.stopPropagation()}></div>
+          <div ref={canvasRef} className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200">
+             <SlideRenderer
+               assets={currentStep?.assets || []}
+               isEditable={true}
+               onMouseDown={handleMouseDown}
+               onClick={(assetId) => {
+                 setSelectedAssetId(assetId);
+                 setIsRightOpen(true);
+               }}
                selectedAssetId={selectedAssetId}
                onCopyAsset={handleCopyAsset}
                onDeleteAsset={handleDeleteAsset}
@@ -1167,6 +1242,19 @@ export const CanvasView = forwardRef((props, ref) => {
           </div>
         </div>
       )}
+      {/* 图片抽卡选择模态框 */}
+      <CardSelectionModal
+        isOpen={showCardSelectionModal}
+        onClose={() => {
+          setShowCardSelectionModal(false);
+          setCardSelectionImages([]);
+          setPendingAssetConfig(null);
+        }}
+        title="选择图片"
+        images={cardSelectionImages}
+        isLoading={isGenerating}
+        onConfirm={handleCardSelectionConfirm}
+      />
     </div>
   );
 });

@@ -13,6 +13,7 @@ import { SuperAdminPage } from './pages/admin/SuperAdminPage';
 import { KnowledgeBasePage } from './pages/course/KnowledgeBasePage';
 import { PptImageManagement } from './pages/course/PptImageManagement';
 import { IpCharacterManagement } from './pages/course/IpCharacterManagement';
+import { VideoMaterialManagement } from './pages/course/VideoMaterialManagement';
 import { AccountManagement } from './pages/admin/AccountManagement';
 
 function App() {
@@ -73,7 +74,7 @@ function App() {
               }
             />
 
-            {/* 知识库子菜单 */}
+            {/* 素材管理子菜单 */}
             <Route
               path="/knowledge-base"
               element={
@@ -97,6 +98,15 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
                   <IpCharacterManagement />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/video-materials"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <VideoMaterialManagement />
                 </RequireAuth>
               }
             />

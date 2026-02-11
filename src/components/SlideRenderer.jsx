@@ -8,6 +8,7 @@ export const SlideRenderer = ({
   assets, 
   isEditable, 
   onMouseDown, 
+  onClick, // 添加点击回调
   selectedAssetId, 
   onCopyAsset, 
   onDeleteAsset,
@@ -23,6 +24,7 @@ export const SlideRenderer = ({
       assets={assets}
       isEditable={isEditable}
       onMouseDown={onMouseDown}
+      onClick={onClick}
       selectedAssetId={selectedAssetId}
       onCopyAsset={onCopyAsset}
       onDeleteAsset={onDeleteAsset}

@@ -263,6 +263,45 @@ class UploadService {
 
     return { valid: true };
   }
+
+  /**
+   * Upload video file
+   * @param {File} file - The video file
+   * @param {string} folder - The folder name in OSS
+   * @returns {Promise<{success: boolean, url?: string, error?: string}>}
+   */
+  async uploadVideo(file, folder) {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folder', folder);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        return {
+          success: false,
+          error: data.error || '上传失败'
+        };
+      }
+
+      return {
+        success: true,
+        url: data.url
+      };
+    } catch (error) {
+      console.error('Upload video error:', error);
+      return {
+        success: false,
+        error: '网络错误，上传失败'
+      };
+    }
+  }
 }
 
 export const uploadService = new UploadService();

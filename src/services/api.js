@@ -155,6 +155,33 @@ class ApiService {
       body: JSON.stringify(data),
     });
   }
+
+  // ============ Videos ============
+
+  async getVideos(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    return this.request(`/api/videos${queryString ? `?${queryString}` : ''}`);
+  }
+
+  async createVideo(data) {
+    return this.request('/api/videos', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateVideo(id, data) {
+    return this.request('/api/videos', {
+      method: 'PUT',
+      body: JSON.stringify({ id, ...data }),
+    });
+  }
+
+  async deleteVideo(id) {
+    return this.request(`/api/videos?id=${id}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiService = new ApiService();
