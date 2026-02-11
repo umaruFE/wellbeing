@@ -18,7 +18,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
-          
+
           <Route
             element={
               <ProtectedRoute>
@@ -26,6 +26,26 @@ function App() {
               </ProtectedRoute>
             }
           >
+            {/* 首页 - Dashboard */}
+            <Route
+              path="/"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'viewer']}>
+                  <div />
+                </RequireAuth>
+              }
+            />
+
+            {/* 创建课程页面 */}
+            <Route
+              path="/create"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <div />
+                </RequireAuth>
+              }
+            />
+
             <Route
               path="/courses"
               element={
@@ -34,12 +54,12 @@ function App() {
                 </RequireAuth>
               }
             />
-            
+
             <Route
               path="/course-square"
               element={<CourseSquarePage />}
             />
-            
+
             <Route
               path="/voices"
               element={
@@ -48,7 +68,7 @@ function App() {
                 </RequireAuth>
               }
             />
-            
+
             <Route
               path="/super-admin"
               element={
@@ -57,10 +77,8 @@ function App() {
                 </RequireAuth>
               }
             />
-            
-            <Route path="/" element={null} />
           </Route>
-          
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

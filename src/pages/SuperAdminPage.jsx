@@ -3,7 +3,7 @@ import { Building2, Users, Clock, Plus, Edit, Trash2, Search, Settings, UserPlus
 import { useAuth } from '../contexts/AuthContext';
 
 export const SuperAdminPage = () => {
-  const { hasRole } = useAuth();
+  const { hasRole, ROLE_NAMES } = useAuth();
   const [activeTab, setActiveTab] = useState('organizations'); // organizations, accounts, settings
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -263,10 +263,7 @@ export const SuperAdminPage = () => {
                       <td className="px-4 py-3 text-sm text-slate-600">{account.organizationName}</td>
                       <td className="px-4 py-3 text-sm">
                         <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
-                          {account.role === 'org_admin' ? '机构管理员' : 
-                           account.role === 'research_leader' ? '教研组长' : 
-                           account.role === 'creator' ? '课件制作人' : 
-                           account.role === 'viewer' ? '普通老师' : account.role}
+                          {ROLE_NAMES[account.role] || account.role}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-500">{account.createdAt}</td>

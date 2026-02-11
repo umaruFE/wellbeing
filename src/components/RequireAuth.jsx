@@ -24,4 +24,21 @@ export const RequireAuth = ({ children, requiredRoles = null }) => {
   return children;
 };
 
+// 权限检查组件
+export const RequirePermission = ({ children, permission }) => {
+  const { hasPermission, loading } = useAuth();
 
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-slate-500">加载中...</div>
+      </div>
+    );
+  }
+
+  if (!hasPermission(permission)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
+  return children;
+};

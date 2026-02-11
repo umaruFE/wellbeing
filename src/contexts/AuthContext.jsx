@@ -10,6 +10,64 @@ export const useAuth = () => {
   return context;
 };
 
+// 角色定义
+export const ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  ORG_ADMIN: 'org_admin',
+  RESEARCH_LEADER: 'research_leader',
+  CREATOR: 'creator',
+  VIEWER: 'viewer'
+};
+
+// 角色名称映射
+export const ROLE_NAMES = {
+  [ROLES.SUPER_ADMIN]: '超级管理员',
+  [ROLES.ORG_ADMIN]: '机构管理员',
+  [ROLES.RESEARCH_LEADER]: '教研组长',
+  [ROLES.CREATOR]: '课件制作人',
+  [ROLES.VIEWER]: '普通老师'
+};
+
+// SOP 状态定义
+export const SOP_STATUS = {
+  DRAFT: 'draft',       // 草稿（策划中）
+  REVIEW: 'review',     // 待审核
+  APPROVED: 'approved', // 已审核
+  PUBLISHED: 'published', // 已发布
+  ARCHIVED: 'archived'  // 已归档
+};
+
+// SOP 状态名称映射
+export const SOP_STATUS_NAMES = {
+  [SOP_STATUS.DRAFT]: '草稿',
+  [SOP_STATUS.REVIEW]: '待审核',
+  [SOP_STATUS.APPROVED]: '已审核',
+  [SOP_STATUS.PUBLISHED]: '已发布',
+  [SOP_STATUS.ARCHIVED]: '已归档'
+};
+
+// 权限配置
+export const PERMISSIONS = {
+  // 课程管理权限
+  COURSE_CREATE: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
+  COURSE_EDIT: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
+  COURSE_DELETE: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+  COURSE_PUBLISH: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+  COURSE_REVIEW: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+  COURSE_VIEW: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR, ROLES.VIEWER],
+
+  // 声音管理权限
+  VOICE_UPLOAD: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
+  VOICE_DELETE: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+  VOICE_VIEW: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR, ROLES.VIEWER],
+
+  // 超级管理端权限
+  SUPER_ADMIN_ACCESS: [ROLES.SUPER_ADMIN],
+
+  // 课程广场权限
+  COURSE_SQUARE_ACCESS: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR, ROLES.VIEWER]
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -28,8 +86,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (username, password) => {
-    // 模拟登录API调用
-    // 实际项目中应该调用真实API
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         // 模拟用户数据
@@ -59,6 +115,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  // 检查是否有指定角色
   const hasRole = (roles) => {
     if (!user) return false;
     if (Array.isArray(roles)) {
@@ -67,15 +124,60 @@ export const AuthProvider = ({ children }) => {
     return user.role === roles;
   };
 
+  // 检查是否有指定权限
+  const hasPermission = (permission) => {
+    if (!user) return false;
+    const allowedRoles = PERMISSIONS[permission];
+    if (!allowedRoles) return false;
+    return allowedRoles.includes(user.role);
+  };
+
+  // 检查是否可以执行 SOP 操作
+  const canExecuteSOPAction = (action, currentStatus) => {
+    if (!user) return false;
+
+    // 定义 SOP 状态流转规则
+    const sopTransitions = {
+      [SOP_STATUS.DRAFT]: ['submit_review'],      // 草稿 -> 提交审核
+      [SOP_STATUS.REVIEW]: ['approve', 'reject'], // 待审核 -> 通过/驳回
+      [SOP_STATUS.APPROVED]: ['publish'],         // 已审核 -> 发布
+      [SOP_STATUS.PUBLISHED]: ['unpublish', 'archive'], // 已发布 -> 下架/归档
+      [SOP_STATUS.ARCHIVED]: []                   // 已归档 -> 无操作
+    };
+
+    // 检查状态是否允许该操作
+    const allowedActions = sopTransitions[currentStatus] || [];
+    if (!allowedActions.includes(action)) return false;
+
+    // 检查用户角色是否有权限执行该操作
+    const actionPermissions = {
+      submit_review: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
+      approve: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+      reject: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+      publish: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+      unpublish: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
+      archive: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER]
+    };
+
+    const allowedRoles = actionPermissions[action] || [];
+    return allowedRoles.includes(user.role);
+  };
+
   const value = {
     user,
     login,
     logout,
     loading,
     isAuthenticated: !!user,
-    hasRole
+    hasRole,
+    hasPermission,
+    canExecuteSOPAction,
+    ROLES,
+    ROLE_NAMES,
+    SOP_STATUS,
+    SOP_STATUS_NAMES,
+    PERMISSIONS
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
-
