@@ -1,102 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Plus, Edit, Trash2, Eye, Upload, Search, Filter, Clock, Tag, Book, Sparkles } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import apiService from '../services/api';
 
 export const CourseManagementPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // 模拟课程数据 - 增加更多字段
-  const [courses, setCourses] = useState([
-    {
-      id: 1,
-      title: '三年级英语 Unit 3 Animals',
-      age: '8-9岁',
-      grade: '三年级/G3',
-      unit: 'Unit 3: Animals',
-      unitCN: '神奇的动物',
-      duration: 15,
-      durationType: '微课',
-      stage: '学前',
-      storyTheme: '星际救援冒险',
-      keywords: ['Red', 'Blue', 'Yellow'],
-      status: 'published',
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-20'
-    },
-    {
-      id: 2,
-      title: '数学进阶课程',
-      age: '10-11岁',
-      grade: '五年级/G5',
-      unit: 'Unit 5: Fractions',
-      unitCN: '分数的奥秘',
-      duration: 30,
-      durationType: '正课',
-      stage: '小学',
-      storyTheme: '数学王国大冒险',
-      keywords: ['Fraction', 'Half', 'Quarter'],
-      status: 'draft',
-      createdAt: '2024-01-18',
-      updatedAt: '2024-01-19'
-    },
-    {
-      id: 3,
-      title: '科学实验课程',
-      age: '7-8岁',
-      grade: '二年级/G2',
-      unit: 'Unit 2: Water',
-      unitCN: '水的循环',
-      duration: 20,
-      durationType: '实验课',
-      stage: '学前',
-      storyTheme: '小水滴旅行记',
-      keywords: ['Water', 'Ice', 'Steam'],
-      status: 'published',
-      createdAt: '2024-01-10',
-      updatedAt: '2024-01-15'
-    },
-    {
-      id: 4,
-      title: '英语基础课程',
-      age: '6-7岁',
-      grade: '一年级/G1',
-      unit: 'Unit 1: Colors',
-      unitCN: '多彩的世界',
-      duration: 10,
-      durationType: '微课',
-      stage: '学前',
-      storyTheme: '彩虹小镇的故事',
-      keywords: ['Red', 'Green', 'Blue', 'Yellow'],
-      status: 'archived',
-      createdAt: '2024-01-05',
-      updatedAt: '2024-01-08'
-    },
-    {
-      id: 5,
-      title: '音乐启蒙课程',
-      age: '5-6岁',
-      grade: '幼儿园/K',
-      unit: 'Unit 2: Rhythm',
-      unitCN: '节奏的魔法',
-      duration: 12,
-      durationType: '微课',
-      stage: '学前',
-      storyTheme: '音乐森林派对',
-      keywords: ['Music', 'Beat', 'Dance'],
-      status: 'draft',
-      createdAt: '2024-01-20',
-      updatedAt: '2024-01-20'
-    },
-  ]);
+  // 从 API 获取课程列表
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        const params = {};
+        if (user?.id) {
+          params.userId = user.id;
+        }
+        const result = await apiService.getCourses(params);
+        setCourses(result.data || []);
+        setError(null);
+      } catch (err) {
+        console.error('获取课程列表失败:', err);
+        setError('加载课程失败');
+        // 如果 API 失败，使用空数组
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    fetchCourses();
+  }, [user?.id]);
+
+  // 过滤课程
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.storyTheme.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (course.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (course.unit || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (course.theme || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterStatus === 'all' || course.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
@@ -109,16 +55,28 @@ export const CourseManagementPage = () => {
     navigate(`/courses/${courseId}/edit`);
   };
 
-  const handleDeleteCourse = (courseId) => {
+  const handleDeleteCourse = async (courseId) => {
     if (window.confirm('确定要删除这个课程吗？')) {
-      setCourses(courses.filter(c => c.id !== courseId));
+      try {
+        await apiService.deleteCourse(courseId);
+        setCourses(courses.filter(c => c.id !== courseId));
+      } catch (err) {
+        console.error('删除课程失败:', err);
+        alert('删除失败');
+      }
     }
   };
 
-  const handlePublishCourse = (courseId) => {
-    setCourses(courses.map(c =>
-      c.id === courseId ? { ...c, status: 'published' } : c
-    ));
+  const handlePublishCourse = async (courseId) => {
+    try {
+      await apiService.updateCourse(courseId, { status: 'published' });
+      setCourses(courses.map(c =>
+        c.id === courseId ? { ...c, status: 'published' } : c
+      ));
+    } catch (err) {
+      console.error('发布课程失败:', err);
+      alert('发布失败');
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -133,11 +91,33 @@ export const CourseManagementPage = () => {
       archived: '已归档'
     };
     return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status]}`}>
-        {labels[status]}
+      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status] || styles.draft}`}>
+        {labels[status] || '草稿'}
       </span>
     );
   };
+
+  // 格式化日期
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-slate-50">
@@ -192,6 +172,11 @@ export const CourseManagementPage = () => {
 
       {/* Course List */}
       <div className="flex-1 overflow-y-auto p-6">
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredCourses.map(course => (
             <div
@@ -209,28 +194,27 @@ export const CourseManagementPage = () => {
                 {/* 年龄和年级 */}
                 <div className="flex items-center gap-2 text-sm">
                   <Book className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{course.age} ({course.grade})</span>
+                  <span className="text-slate-600">{course.age_group || '未设置'} ({course.grade || '未设置'})</span>
                 </div>
 
                 {/* 教材单元 */}
                 <div className="flex items-start gap-2 text-sm">
                   <BookOpen className="w-4 h-4 text-slate-400 mt-0.5" />
                   <div>
-                    <span className="text-slate-800 font-medium">{course.unit}</span>
-                    <span className="text-slate-500 ml-1">- {course.unitCN}</span>
+                    <span className="text-slate-800 font-medium">{course.unit || '未设置'}</span>
                   </div>
                 </div>
 
                 {/* 上课时长 */}
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{course.duration}分钟 ({course.durationType}/{course.stage})</span>
+                  <span className="text-slate-600">{course.duration || 0}分钟</span>
                 </div>
 
                 {/* 剧情主题 */}
                 <div className="flex items-center gap-2 text-sm">
                   <Sparkles className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{course.storyTheme}</span>
+                  <span className="text-slate-600">{course.theme || '未设置'}</span>
                 </div>
               </div>
 
@@ -289,7 +273,7 @@ export const CourseManagementPage = () => {
 
               {/* 更新时间 */}
               <div className="mt-3 text-xs text-slate-400 text-center">
-                更新于 {course.updatedAt}
+                更新于 {formatDate(course.updated_at)}
               </div>
             </div>
           ))}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus,
   Edit,
@@ -8,20 +8,33 @@ import {
   Check,
   Upload
 } from 'lucide-react';
+import apiService from '../../services/api';
+import uploadService from '../../services/uploadService';
 
 export const PptImageManagement = () => {
-  const [modalType, setModalType] = useState(null); // 'add', 'edit', 'delete'
+  const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState({});
+  const [pptImages, setPptImages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // 模拟PPT风格图片数据
-  const [pptImages, setPptImages] = useState([
-    { id: 1, name: '可爱动物背景', tags: ['动物', '可爱', '彩色'], preview: null },
-    { id: 2, name: '学习场景插画', tags: ['学习', '教室', '学生'], preview: null },
-    { id: 3, name: '彩虹天空背景', tags: ['天空', '彩虹', '自然'], preview: null },
-    { id: 4, name: '字母卡片素材', tags: ['字母', '学习', '卡片'], preview: null },
-    { id: 5, name: '教室场景背景', tags: ['教室', '学习', '场景'], preview: null },
-    { id: 6, name: '食物主题插画', tags: ['食物', '水果', '健康'], preview: null },
-  ]);
+  // 从 API 获取数据
+  useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        setLoading(true);
+        const result = await apiService.getPptImages();
+        setPptImages(result.data || []);
+      } catch (err) {
+        console.error('获取PPT图片失败:', err);
+        setPptImages([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchImages();
+  }, []);
 
   // 打开模态框
   const openModal = (type, data = {}) => {
@@ -33,36 +46,92 @@ export const PptImageManagement = () => {
   const closeModal = () => {
     setModalType(null);
     setModalData({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 处理文件选择
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 验证文件
+      const validation = uploadService.validateFile(file);
+      if (!validation.valid) {
+        alert(validation.error);
+        return;
+      }
+      setModalData({ ...modalData, file });
+    }
   };
 
   // 新增图片
-  const handleAdd = () => {
-    const newItem = {
-      id: Date.now(),
-      name: modalData.name || '新图片',
-      tags: modalData.tags?.split(',').map(t => t.trim()) || [],
-      preview: null
-    };
-    setPptImages([...pptImages, newItem]);
-    closeModal();
+  const handleAdd = async () => {
+    if (!modalData.file && !modalData.imageUrl) {
+      alert('请选择要上传的图片');
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      let imageUrl = modalData.imageUrl;
+
+      // 如果有文件，先上传到 OSS
+      if (modalData.file) {
+        const uploadResult = await uploadService.uploadFile(modalData.file, 'ppt-images');
+        if (!uploadResult.success) {
+          alert(uploadResult.error || '上传失败');
+          setUploading(false);
+          return;
+        }
+        imageUrl = uploadResult.url;
+      }
+
+      // 调用 API 保存
+      const result = await apiService.createPptImage({
+        name: modalData.name || modalData.file?.name || '新图片',
+        imageUrl,
+        tags: modalData.tags?.split(',').map(t => t.trim()) || []
+      });
+
+      if (result.data) {
+        setPptImages([result.data, ...pptImages]);
+      }
+
+      closeModal();
+    } catch (err) {
+      console.error('新增图片失败:', err);
+      alert('保存失败');
+    } finally {
+      setUploading(false);
+    }
   };
 
   // 编辑图片
-  const handleEdit = () => {
-    const updated = pptImages.map(img => 
-      img.id === modalData.id 
-        ? { ...img, name: modalData.name, tags: modalData.tags?.split(',').map(t => t.trim()) || [] }
-        : img
-    );
-    setPptImages(updated);
+  const handleEdit = async () => {
+    // TODO: 实现编辑功能
+    console.log('Edit:', modalData);
     closeModal();
   };
 
   // 删除图片
-  const handleDelete = () => {
-    setPptImages(pptImages.filter(img => img.id !== modalData.id));
+  const handleDelete = async () => {
+    // TODO: 实现删除功能
+    console.log('Delete:', modalData);
     closeModal();
   };
+
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -73,7 +142,7 @@ export const PptImageManagement = () => {
             <h2 className="text-xl font-bold text-slate-800">PPT风格图片</h2>
             <p className="text-sm text-slate-500 mt-1">管理课件背景、边框、插画等视觉素材</p>
           </div>
-          <button 
+          <button
             onClick={() => openModal('add')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
           >
@@ -94,17 +163,21 @@ export const PptImageManagement = () => {
             >
               {/* 预览区域 */}
               <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
-                <Image className="w-8 h-8 text-slate-300" />
-                
+                {img.image_url ? (
+                  <img src={img.image_url} alt={img.name} className="w-full h-full object-cover" />
+                ) : (
+                  <Image className="w-8 h-8 text-slate-300" />
+                )}
+
                 {/* 悬停遮罩层 */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
-                  <button 
+                  <button
                     onClick={() => openModal('edit', img)}
                     className="p-2 bg-white rounded-lg hover:bg-blue-50 text-blue-600 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => openModal('delete', img)}
                     className="p-2 bg-white rounded-lg hover:bg-red-50 text-red-600 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 delay-75"
                   >
@@ -117,7 +190,7 @@ export const PptImageManagement = () => {
               <div className="p-3">
                 <div className="text-sm font-medium text-slate-800 mb-1 truncate">{img.name}</div>
                 <div className="flex flex-wrap gap-1">
-                  {img.tags.slice(0, 2).map((tag, idx) => (
+                  {(img.tags || []).slice(0, 2).map((tag, idx) => (
                     <span
                       key={idx}
                       className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs"
@@ -130,6 +203,13 @@ export const PptImageManagement = () => {
             </div>
           ))}
         </div>
+
+        {pptImages.length === 0 && (
+          <div className="text-center py-12">
+            <Image className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500">暂无图片</p>
+          </div>
+        )}
       </div>
 
       {/* 模态框 */}
@@ -161,19 +241,40 @@ export const PptImageManagement = () => {
               ) : (
                 <div className="space-y-4">
                   {/* 图片上传预览 */}
-                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer">
-                    <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Upload className="w-8 h-8 text-slate-400" />
-                    </div>
-                    <p className="text-sm text-slate-600 mb-1">点击或拖拽上传图片</p>
-                    <p className="text-xs text-slate-400">支持 PNG、JPG 格式</p>
+                  <div
+                    className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {modalData.file ? (
+                      <div className="w-full aspect-video flex items-center justify-center bg-slate-100 rounded-lg">
+                        <Image className="w-12 h-12 text-slate-400" />
+                        <span className="ml-2 text-sm text-slate-500">{modalData.file.name}</span>
+                      </div>
+                    ) : modalData.image_url ? (
+                      <img src={modalData.image_url} alt="Preview" className="max-h-48 mx-auto rounded" />
+                    ) : (
+                      <>
+                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                          <Upload className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <p className="text-sm text-slate-600 mb-1">点击或拖拽上传图片</p>
+                        <p className="text-xs text-slate-400">支持 PNG、JPG 格式，最大 10MB</p>
+                      </>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">图片名称</label>
                     <input
                       type="text"
-                      value={modalData.name || ''}
+                      value={modalData.name || modalData.file?.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                       placeholder="请输入图片名称"
@@ -184,10 +285,10 @@ export const PptImageManagement = () => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">标签（逗号分隔）</label>
                     <input
                       type="text"
-                      value={modalData.tags || ''}
+                      value={modalData.tags || (Array.isArray(modalData.tags) ? modalData.tags.join(',') : '')}
                       onChange={(e) => setModalData({ ...modalData, tags: e.target.value })}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                      placeholder="如: 动物, 可爱, 彩色"
+                      placeholder="如：动物, 可爱, 彩色"
                     />
                   </div>
                 </div>
@@ -199,6 +300,7 @@ export const PptImageManagement = () => {
               <button
                 onClick={closeModal}
                 className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                disabled={uploading}
               >
                 取消
               </button>
@@ -213,9 +315,19 @@ export const PptImageManagement = () => {
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
+                disabled={uploading}
               >
-                <Check className="w-4 h-4" />
-                {modalType === 'delete' ? '确认删除' : '保存'}
+                {uploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    上传中...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    {modalType === 'delete' ? '确认删除' : '保存'}
+                  </>
+                )}
               </button>
             </div>
           </div>

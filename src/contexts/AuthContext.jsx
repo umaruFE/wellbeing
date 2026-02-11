@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -30,11 +30,11 @@ export const ROLE_NAMES = {
 
 // SOP 状态定义
 export const SOP_STATUS = {
-  DRAFT: 'draft',       // 草稿（策划中）
-  REVIEW: 'review',     // 待审核
-  APPROVED: 'approved', // 已审核
-  PUBLISHED: 'published', // 已发布
-  ARCHIVED: 'archived'  // 已归档
+  DRAFT: 'draft',
+  REVIEW: 'review',
+  APPROVED: 'approved',
+  PUBLISHED: 'published',
+  ARCHIVED: 'archived'
 };
 
 // SOP 状态名称映射
@@ -48,7 +48,6 @@ export const SOP_STATUS_NAMES = {
 
 // 权限配置
 export const PERMISSIONS = {
-  // 课程管理权限
   COURSE_CREATE: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
   COURSE_EDIT: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
   COURSE_DELETE: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
@@ -56,15 +55,12 @@ export const PERMISSIONS = {
   COURSE_REVIEW: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
   COURSE_VIEW: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR, ROLES.VIEWER],
 
-  // 声音管理权限
   VOICE_UPLOAD: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
   VOICE_DELETE: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],
   VOICE_VIEW: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR, ROLES.VIEWER],
 
-  // 超级管理端权限
   SUPER_ADMIN_ACCESS: [ROLES.SUPER_ADMIN],
 
-  // 课程广场权限
   COURSE_SQUARE_ACCESS: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR, ROLES.VIEWER]
 };
 
@@ -72,48 +68,59 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 从 localStorage 恢复登录状态
   useEffect(() => {
-    // 从localStorage恢复登录状态
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const savedToken = localStorage.getItem('token');
+    if (savedUser && savedToken) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
         localStorage.removeItem('user');
+        localStorage.removeItem('token');
       }
     }
     setLoading(false);
   }, []);
 
   const login = async (username, password) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        // 模拟用户数据
-        const mockUsers = {
-          'admin': { id: 1, username: 'admin', role: 'super_admin', name: '超级管理员', organizationId: null },
-          'org_admin': { id: 2, username: 'org_admin', role: 'org_admin', name: '机构管理员', organizationId: 1, organizationName: '测试机构' },
-          'research_leader': { id: 3, username: 'research_leader', role: 'research_leader', name: '教研组长', organizationId: 1, organizationName: '测试机构' },
-          'creator': { id: 4, username: 'creator', role: 'creator', name: '课件制作人', organizationId: 1, organizationName: '测试机构' },
-          'viewer': { id: 5, username: 'viewer', role: 'viewer', name: '普通老师', organizationId: 1, organizationName: '测试机构' }
-        };
+    // 使用相对路径，通过 Vite 代理转发到后端
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
 
-        const user = mockUsers[username];
-        if (user && password === '123456') {
-          const userData = { ...user, token: `mock_token_${Date.now()}` };
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-          resolve(userData);
-        } else {
-          reject(new Error('用户名或密码错误'));
-        }
-      }, 500);
-    });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '登录失败');
+      }
+
+      const userData = {
+        ...data.user,
+        token: data.token
+      };
+
+      setUser(userData);
+      localStorage.setItem('user', JSON.stringify(userData));
+      localStorage.setItem('token', data.token);
+
+      return userData;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   };
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('user');
-  };
+    localStorage.removeItem('token');
+  }, []);
 
   // 检查是否有指定角色
   const hasRole = (roles) => {
@@ -136,20 +143,17 @@ export const AuthProvider = ({ children }) => {
   const canExecuteSOPAction = (action, currentStatus) => {
     if (!user) return false;
 
-    // 定义 SOP 状态流转规则
     const sopTransitions = {
-      [SOP_STATUS.DRAFT]: ['submit_review'],      // 草稿 -> 提交审核
-      [SOP_STATUS.REVIEW]: ['approve', 'reject'], // 待审核 -> 通过/驳回
-      [SOP_STATUS.APPROVED]: ['publish'],         // 已审核 -> 发布
-      [SOP_STATUS.PUBLISHED]: ['unpublish', 'archive'], // 已发布 -> 下架/归档
-      [SOP_STATUS.ARCHIVED]: []                   // 已归档 -> 无操作
+      [SOP_STATUS.DRAFT]: ['submit_review'],
+      [SOP_STATUS.REVIEW]: ['approve', 'reject'],
+      [SOP_STATUS.APPROVED]: ['publish'],
+      [SOP_STATUS.PUBLISHED]: ['unpublish', 'archive'],
+      [SOP_STATUS.ARCHIVED]: []
     };
 
-    // 检查状态是否允许该操作
     const allowedActions = sopTransitions[currentStatus] || [];
     if (!allowedActions.includes(action)) return false;
 
-    // 检查用户角色是否有权限执行该操作
     const actionPermissions = {
       submit_review: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER, ROLES.CREATOR],
       approve: [ROLES.SUPER_ADMIN, ROLES.ORG_ADMIN, ROLES.RESEARCH_LEADER],

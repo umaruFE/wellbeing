@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Plus,
   Edit,
@@ -8,22 +8,36 @@ import {
   Check,
   Upload
 } from 'lucide-react';
+import apiService from '../../services/api';
+import uploadService from '../../services/uploadService';
 
 export const IpCharacterManagement = () => {
-  const [modalType, setModalType] = useState(null); // 'add', 'edit', 'delete'
+  const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState({});
+  const [ipCharacters, setIpCharacters] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
-  // 模拟IP人物数据
-  const [ipCharacters, setIpCharacters] = useState([
-    { id: 1, name: '小英老师', gender: '女', style: '教师', description: '英语教师形象，友善亲切', preview: null },
-    { id: 2, name: 'Tommy猫', gender: '动物', style: '吉祥物', description: '蓝色卡通猫，活泼可爱', preview: null },
-    { id: 3, name: 'Lily老师', gender: '女', style: '教师', description: '年轻女教师，温柔专业', preview: null },
-    { id: 4, name: 'Sam同学', gender: '男', style: '学生', description: '三年级小学生，好奇好学', preview: null },
-    { id: 5, name: 'Kitty兔', gender: '动物', style: '吉祥物', description: '粉色小兔子，温馨治愈', preview: null },
-    { id: 6, name: 'Mike老师', gender: '男', style: '教师', description: '男教师形象，阳光活力', preview: null },
-    { id: 7, name: 'Emma同学', gender: '女', style: '学生', description: '四年级小学生，勤奋好学', preview: null },
-    { id: 8, name: 'Bunny兔', gender: '动物', style: '吉祥物', description: '绿色小兔子，聪明伶俐', preview: null },
-  ]);
+  const genderOptions = ['男', '女', '动物'];
+  const styleOptions = ['教师', '学生', '吉祥物', '其他'];
+
+  // 从 API 获取数据
+  useEffect(() => {
+    const fetchCharacters = async () => {
+      try {
+        setLoading(true);
+        const result = await apiService.getIpCharacters();
+        setIpCharacters(result.data || []);
+      } catch (err) {
+        console.error('获取IP人物失败:', err);
+        setIpCharacters([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCharacters();
+  }, []);
 
   // 打开模态框
   const openModal = (type, data = {}) => {
@@ -35,41 +49,93 @@ export const IpCharacterManagement = () => {
   const closeModal = () => {
     setModalType(null);
     setModalData({});
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 处理文件选择
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validation = uploadService.validateFile(file);
+      if (!validation.valid) {
+        alert(validation.error);
+        return;
+      }
+      setModalData({ ...modalData, file });
+    }
   };
 
   // 新增人物
-  const handleAdd = () => {
-    const newItem = {
-      id: Date.now(),
-      name: modalData.name || '新人物',
-      gender: modalData.gender || '女',
-      style: modalData.style || '教师',
-      description: modalData.description || '',
-      preview: null
-    };
-    setIpCharacters([...ipCharacters, newItem]);
-    closeModal();
+  const handleAdd = async () => {
+    if (!modalData.file && !modalData.imageUrl) {
+      alert('请选择要上传的头像图片');
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      let imageUrl = modalData.imageUrl;
+
+      // 如果有文件，先上传到 OSS
+      if (modalData.file) {
+        const uploadResult = await uploadService.uploadFile(modalData.file, 'ip-characters');
+        if (!uploadResult.success) {
+          alert(uploadResult.error || '上传失败');
+          setUploading(false);
+          return;
+        }
+        imageUrl = uploadResult.url;
+      }
+
+      // 调用 API 保存
+      const result = await apiService.createIpCharacter({
+        name: modalData.name || '新人物',
+        gender: modalData.gender || '女',
+        style: modalData.style || '教师',
+        description: modalData.description || '',
+        imageUrl
+      });
+
+      if (result.data) {
+        setIpCharacters([result.data, ...ipCharacters]);
+      }
+
+      closeModal();
+    } catch (err) {
+      console.error('新增人物失败:', err);
+      alert('保存失败');
+    } finally {
+      setUploading(false);
+    }
   };
 
   // 编辑人物
-  const handleEdit = () => {
-    const updated = ipCharacters.map(char => 
-      char.id === modalData.id 
-        ? { ...char, name: modalData.name, gender: modalData.gender, style: modalData.style, description: modalData.description }
-        : char
-    );
-    setIpCharacters(updated);
+  const handleEdit = async () => {
+    // TODO: 实现编辑功能
+    console.log('Edit:', modalData);
     closeModal();
   };
 
   // 删除人物
-  const handleDelete = () => {
-    setIpCharacters(ipCharacters.filter(char => char.id !== modalData.id));
+  const handleDelete = async () => {
+    // TODO: 实现删除功能
+    console.log('Delete:', modalData);
     closeModal();
   };
 
-  const genderOptions = ['男', '女', '动物'];
-  const styleOptions = ['教师', '学生', '吉祥物', '其他'];
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex flex-col">
@@ -80,7 +146,7 @@ export const IpCharacterManagement = () => {
             <h2 className="text-xl font-bold text-slate-800">IP人物</h2>
             <p className="text-sm text-slate-500 mt-1">管理课程中使用的虚拟人物形象</p>
           </div>
-          <button 
+          <button
             onClick={() => openModal('add')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
           >
@@ -101,17 +167,21 @@ export const IpCharacterManagement = () => {
             >
               {/* 头像区域 */}
               <div className="aspect-square bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative">
-                <User className="w-16 h-16 text-blue-300" />
-                
+                {char.image_url ? (
+                  <img src={char.image_url} alt={char.name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-16 h-16 text-blue-300" />
+                )}
+
                 {/* 悬停操作按钮 */}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <button 
+                  <button
                     onClick={() => openModal('edit', char)}
                     className="p-1.5 bg-white rounded-lg shadow-sm hover:bg-blue-50 text-blue-600"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
-                  <button 
+                  <button
                     onClick={() => openModal('delete', char)}
                     className="p-1.5 bg-white rounded-lg shadow-sm hover:bg-red-50 text-red-600"
                   >
@@ -129,7 +199,7 @@ export const IpCharacterManagement = () => {
                   </span>
                 </div>
                 <p className="text-sm text-slate-500 mb-3">{char.description}</p>
-                
+
                 {/* 性别标签 */}
                 <div className="flex items-center gap-2 text-xs text-slate-400">
                   <span className="px-2 py-0.5 bg-slate-100 rounded">
@@ -140,6 +210,13 @@ export const IpCharacterManagement = () => {
             </div>
           ))}
         </div>
+
+        {ipCharacters.length === 0 && (
+          <div className="text-center py-12">
+            <User className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500">暂无人物</p>
+          </div>
+        )}
       </div>
 
       {/* 模态框 */}
@@ -171,11 +248,30 @@ export const IpCharacterManagement = () => {
               ) : (
                 <div className="space-y-4">
                   {/* 头像上传预览 */}
-                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-400 transition-colors cursor-pointer">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <User className="w-10 h-10 text-blue-300" />
-                    </div>
+                  <div
+                    className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-400 transition-colors cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {modalData.file ? (
+                      <div className="w-20 h-20 mx-auto rounded-full bg-slate-100 flex items-center justify-center">
+                        <User className="w-10 h-10 text-slate-400" />
+                        <span className="ml-2 text-xs text-slate-500">{modalData.file.name}</span>
+                      </div>
+                    ) : modalData.image_url ? (
+                      <img src={modalData.image_url} alt="Preview" className="w-20 h-20 mx-auto rounded-full object-cover" />
+                    ) : (
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-50 to-purple-50 rounded-full flex items-center justify-center mx-auto mb-2">
+                        <User className="w-10 h-10 text-blue-300" />
+                      </div>
+                    )}
                     <p className="text-xs text-slate-500">点击上传头像图片</p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
                   </div>
 
                   <div>
@@ -237,6 +333,7 @@ export const IpCharacterManagement = () => {
               <button
                 onClick={closeModal}
                 className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                disabled={uploading}
               >
                 取消
               </button>
@@ -251,9 +348,19 @@ export const IpCharacterManagement = () => {
                     ? 'bg-red-600 text-white hover:bg-red-700'
                     : 'bg-blue-600 text-white hover:bg-blue-700'
                 }`}
+                disabled={uploading}
               >
-                <Check className="w-4 h-4" />
-                {modalType === 'delete' ? '确认删除' : '保存'}
+                {uploading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    上传中...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    {modalType === 'delete' ? '确认删除' : '保存'}
+                  </>
+                )}
               </button>
             </div>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BookOpen,
   Search,
@@ -11,60 +11,42 @@ import {
   Layers,
   X,
   Check,
-  Image
+  Image,
+  Upload
 } from 'lucide-react';
+import apiService from '../../services/api';
 
 export const TextbookManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedItems, setExpandedItems] = useState(['textbook-1']);
+  const [expandedItems, setExpandedItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [modalType, setModalType] = useState(null); // 'add', 'edit', 'delete'
+  const [selectedLevel, setSelectedLevel] = useState(0); // 0: textbook, 1: grade, 2: unit
+  const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState({});
+  const [textbooks, setTextbooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // 模拟教材数据 - 三级结构
-  const [textbooks, setTextbooks] = useState([
-    {
-      id: 'textbook-1',
-      name: '人教版',
-      type: '人教版',
-      children: [
-        {
-          id: 'grade-1-3',
-          name: '三年级英语',
-          grade: '三年级',
-          children: [
-            { id: 'unit-1-3-1', name: 'Unit 1: Hello', unit: 'Unit 1', keywords: ['Hello', 'Hi', 'I'] },
-            { id: 'unit-1-3-2', name: 'Unit 2: Colors', unit: 'Unit 2', keywords: ['Red', 'Blue', 'Yellow'] },
-            { id: 'unit-1-3-3', name: 'Unit 3: Animals', unit: 'Unit 3', keywords: ['Cat', 'Dog', 'Bird'] },
-          ]
-        },
-        {
-          id: 'grade-4-3',
-          name: '四年级英语',
-          grade: '四年级',
-          children: [
-            { id: 'unit-1-4-1', name: 'Unit 1: School', unit: 'Unit 1', keywords: ['School', 'Bag', 'Book'] },
-            { id: 'unit-1-4-2', name: 'Unit 2: Numbers', unit: 'Unit 2', keywords: ['One', 'Two', 'Three'] },
-          ]
-        },
-      ]
-    },
-    {
-      id: 'textbook-2',
-      name: '外研版',
-      type: '外研版',
-      children: [
-        {
-          id: 'grade-3-wy',
-          name: '三年级英语',
-          grade: '三年级',
-          children: [
-            { id: 'unit-1-wy-1', name: 'Module 1: Introduction', unit: 'Module 1', keywords: ['I am', 'I have', 'Good'] },
-          ]
-        },
-      ]
-    },
-  ]);
+  // 从 API 获取教材数据
+  useEffect(() => {
+    const fetchTextbooks = async () => {
+      try {
+        setLoading(true);
+        const result = await apiService.getTextbooks();
+        setTextbooks(result.data || []);
+        setError(null);
+      } catch (err) {
+        console.error('获取教材列表失败:', err);
+        setError('加载教材失败');
+        // 如果 API 失败，使用空数组
+        setTextbooks([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTextbooks();
+  }, []);
 
   const toggleExpand = (id) => {
     setExpandedItems(prev =>
@@ -74,8 +56,9 @@ export const TextbookManagement = () => {
     );
   };
 
-  const handleSelectItem = (item) => {
+  const handleSelectItem = (item, level) => {
     setSelectedItem(item);
+    setSelectedLevel(level);
   };
 
   // 打开模态框
@@ -90,100 +73,98 @@ export const TextbookManagement = () => {
     setModalData({});
   };
 
-  // 新增教材
-  const handleAdd = () => {
-    const newItem = {
-      id: `textbook-${Date.now()}`,
-      name: modalData.name || '新教材',
-      type: modalData.type || '新教材',
-      children: []
-    };
-    setTextbooks([...textbooks, newItem]);
-    closeModal();
+  // 新增教材类型
+  const handleAdd = async () => {
+    try {
+      const result = await apiService.createTextbookType({
+        name: modalData.name || '新教材',
+        description: modalData.type || ''
+      });
+      if (result.data) {
+        setTextbooks([...textbooks, {
+          ...result.data,
+          children: []
+        }]);
+      }
+      closeModal();
+    } catch (err) {
+      console.error('新增教材失败:', err);
+      alert('新增失败');
+    }
   };
 
   // 新增年级
-  const handleAddGrade = () => {
-    const newGrade = {
-      id: `grade-${Date.now()}`,
-      name: modalData.name || '新年级',
-      grade: modalData.grade || '新年级',
-      children: []
-    };
-    const updated = textbooks.map(tb => {
-      if (tb.id === selectedItem?.id) {
-        return { ...tb, children: [...tb.children, newGrade] };
-      }
-      return tb;
-    });
-    setTextbooks(updated);
-    setExpandedItems([...expandedItems, selectedItem?.id]);
-    closeModal();
+  const handleAddGrade = async () => {
+    try {
+      const result = await apiService.createTextbookUnit({
+        action: 'grade',
+        textbookTypeId: selectedItem.id,
+        name: modalData.name || modalData.grade || '新年级',
+        grade: modalData.grade || modalData.name || '新年级'
+      });
+      // 重新获取数据
+      const allResult = await apiService.getTextbooks();
+      setTextbooks(allResult.data || []);
+      closeModal();
+    } catch (err) {
+      console.error('新增年级失败:', err);
+      alert('新增失败');
+    }
   };
 
   // 新增单元
-  const handleAddUnit = () => {
-    const newUnit = {
-      id: `unit-${Date.now()}`,
-      name: modalData.name || '新单元',
-      unit: modalData.unit || 'Unit',
-      keywords: modalData.keywords?.split(',').map(k => k.trim()) || []
-    };
-    
-    const updated = textbooks.map(tb => {
-      const newTb = { ...tb };
-      newTb.children = tb.children.map(grade => {
-        if (grade.id === selectedItem?.id) {
-          return { ...grade, children: [...grade.children, newUnit] };
-        }
-        return grade;
+  const handleAddUnit = async () => {
+    try {
+      const result = await apiService.createTextbookUnit({
+        action: 'unit',
+        textbookTypeId: selectedItem.textbook_type_id || selectedItem.id,
+        gradeId: selectedItem.id,
+        name: modalData.name || '新单元',
+        unitCode: modalData.unit || '',
+        keywords: modalData.keywords?.split(',').map(k => k.trim()) || []
       });
-      return newTb;
-    });
-    setTextbooks(updated);
-    closeModal();
+      // 重新获取数据
+      const allResult = await apiService.getTextbooks();
+      setTextbooks(allResult.data || []);
+      closeModal();
+    } catch (err) {
+      console.error('新增单元失败:', err);
+      alert('新增失败');
+    }
   };
 
   // 编辑
   const handleEdit = () => {
-    const { id } = modalData;
-    
-    const updateItem = (items) => {
-      return items.map(item => {
-        if (item.id === id) {
-          return { ...item, ...modalData };
-        }
-        if (item.children) {
-          return { ...item, children: updateItem(item.children) };
-        }
-        return item;
-      });
-    };
-    
-    setTextbooks(updateItem(textbooks));
-    setSelectedItem({ ...selectedItem, ...modalData });
+    // TODO: 实现编辑功能
+    console.log('Edit:', modalData);
     closeModal();
   };
 
   // 删除
   const handleDelete = () => {
-    const { id } = modalData;
-    
-    const deleteItem = (items) => {
-      return items.filter(item => item.id !== id).map(item => {
-        if (item.children) {
-          return { ...item, children: deleteItem(item.children) };
-        }
-        return item;
-      });
-    };
-    
-    setTextbooks(deleteItem(textbooks));
-    if (selectedItem?.id === id) {
-      setSelectedItem(null);
-    }
+    // TODO: 实现删除功能
+    console.log('Delete:', modalData);
     closeModal();
   };
+
+  // 搜索过滤
+  const filteredTextbooks = textbooks.filter(item => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+
+    // 检查教材名称
+    if (item.name?.toLowerCase().includes(searchLower)) return true;
+
+    // 检查年级
+    if (item.children?.some(g => g.name?.toLowerCase().includes(searchLower))) return true;
+
+    // 检查单元
+    if (item.children?.some(g =>
+      g.children?.some(u => u.name?.toLowerCase().includes(searchLower))
+    )) return true;
+
+    return false;
+  });
 
   const renderTreeItem = (item, level = 0) => {
     const hasChildren = item.children && item.children.length > 0;
@@ -197,35 +178,23 @@ export const TextbookManagement = () => {
             isSelected ? 'bg-blue-50 border-l-2 border-blue-600' : 'hover:bg-slate-50'
           }`}
           style={{ paddingLeft: `${level * 16 + 12}px` }}
-          onClick={() => handleSelectItem(item)}
+          onClick={() => handleSelectItem(item, level)}
         >
-          {hasChildren ? (
-            <button
+          {hasChildren && (
+            <ChevronRight
+              className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleExpand(item.id);
               }}
-              className="p-0.5 hover:bg-slate-200 rounded"
-            >
-              <ChevronRight
-                className={`w-4 h-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
-              />
-            </button>
-          ) : (
-            <span className="w-5" />
+            />
           )}
-
-          {level === 0 && <BookOpen className="w-4 h-4 text-blue-600" />}
-          {level === 1 && <FolderOpen className="w-4 h-4 text-orange-600" />}
-          {level === 2 && <Book className="w-4 h-4 text-green-600" />}
-
-          <span className={`text-sm ${isSelected ? 'text-blue-600 font-medium' : 'text-slate-700'}`}>
-            {item.name}
-          </span>
+          {!hasChildren && <span className="w-4 h-4" />}
+          <FolderOpen className={`w-4 h-4 ${level === 0 ? 'text-blue-500' : level === 1 ? 'text-green-500' : 'text-orange-500'}`} />
+          <span className="text-sm text-slate-700">{item.name}</span>
         </div>
-
         {hasChildren && isExpanded && (
-          <div className="bg-slate-50">
+          <div>
             {item.children.map(child => renderTreeItem(child, level + 1))}
           </div>
         )}
@@ -233,32 +202,47 @@ export const TextbookManagement = () => {
     );
   };
 
-  const filteredTextbooks = textbooks.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         item.children?.some(child =>
-                           child.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           child.children?.some(unit =>
-                             unit.name.toLowerCase().includes(searchTerm.toLowerCase())
-                           )
-                         );
-    return matchesSearch;
-  });
-
-  // 判断选中项的层级
-  const getSelectedLevel = () => {
-    if (!selectedItem) return 0;
-    if (textbooks.find(tb => tb.id === selectedItem.id)) return 0;
-    if (textbooks.some(tb => tb.children?.some(g => g.id === selectedItem.id))) return 1;
-    return 2;
+  // 获取选中项的层级路径
+  const getSelectedPath = () => {
+    if (!selectedItem) return [];
+    let path = [];
+    for (const tb of textbooks) {
+      if (tb.id === selectedItem.id) {
+        path = [tb.name];
+        break;
+      }
+      for (const grade of (tb.children || [])) {
+        if (grade.id === selectedItem.id) {
+          path = [tb.name, grade.name];
+          break;
+        }
+        for (const unit of (grade.children || [])) {
+          if (unit.id === selectedItem.id) {
+            path = [tb.name, grade.name, unit.name];
+            break;
+          }
+        }
+      }
+    }
+    return path;
   };
 
-  const selectedLevel = getSelectedLevel();
+  if (loading) {
+    return (
+      <div className="h-full flex items-center justify-center bg-white">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex overflow-hidden">
-      {/* 左侧 - 教材树 */}
+      {/* Left - Textbook Tree */}
       <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0">
-        {/* 搜索框 */}
+        {/* Search Box */}
         <div className="p-4 border-b border-slate-200">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -272,14 +256,14 @@ export const TextbookManagement = () => {
           </div>
         </div>
 
-        {/* 教材树 */}
+        {/* Textbook Tree */}
         <div className="flex-1 overflow-y-auto py-2">
           {filteredTextbooks.map(item => renderTreeItem(item))}
         </div>
 
-        {/* 底部按钮 */}
-        <div className="p-4 border-t border-slate-200">
-          <button 
+        {/* Bottom Button */}
+        <div className="p-4 border-t border-slate-200 space-y-2">
+          <button
             onClick={() => openModal('add')}
             className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition-colors"
           >
@@ -289,18 +273,22 @@ export const TextbookManagement = () => {
         </div>
       </div>
 
-      {/* 右侧 - 详情区 */}
+      {/* Right - Detail Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {selectedItem ? (
           <>
-            {/* 详情头部 */}
+            {/* Detail Header */}
             <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
                     <span>{selectedItem.type || selectedItem.grade || '教材'}</span>
-                    <ChevronRight className="w-4 h-4" />
-                    <span>{selectedItem.grade || selectedItem.name}</span>
+                    {selectedItem.grade && (
+                      <>
+                        <ChevronRight className="w-4 h-4" />
+                        <span>{selectedItem.grade}</span>
+                      </>
+                    )}
                     {selectedItem.unit && (
                       <>
                         <ChevronRight className="w-4 h-4" />
@@ -311,7 +299,7 @@ export const TextbookManagement = () => {
                   <h2 className="text-xl font-bold text-slate-800">{selectedItem.name}</h2>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     onClick={() => openModal('edit', { ...selectedItem, level: selectedLevel })}
                     className="px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm"
                   >
@@ -319,7 +307,7 @@ export const TextbookManagement = () => {
                     编辑
                   </button>
                   {selectedLevel === 0 && (
-                    <button 
+                    <button
                       onClick={() => openModal('addGrade')}
                       className="px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm"
                     >
@@ -328,7 +316,7 @@ export const TextbookManagement = () => {
                     </button>
                   )}
                   {selectedLevel === 1 && (
-                    <button 
+                    <button
                       onClick={() => openModal('addUnit')}
                       className="px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm"
                     >
@@ -336,7 +324,7 @@ export const TextbookManagement = () => {
                       新增单元
                     </button>
                   )}
-                  <button 
+                  <button
                     onClick={() => openModal('delete', { ...selectedItem, level: selectedLevel })}
                     className="px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 flex items-center gap-2 text-sm"
                   >
@@ -347,96 +335,53 @@ export const TextbookManagement = () => {
               </div>
             </div>
 
-            {/* 详情内容 */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* 基础信息 */}
-              <div className="bg-white rounded-xl border border-slate-200 p-5">
-                <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                  <Book className="w-5 h-5 text-blue-600" />
-                  基础信息
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between py-2 border-b border-slate-100">
-                    <span className="text-slate-500">名称</span>
-                    <span className="text-slate-800 font-medium">{selectedItem.name}</span>
-                  </div>
-                  {selectedItem.type && (
+            {/* Detail Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-1 gap-6">
+                {/* Basic Info */}
+                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                  <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <Book className="w-5 h-5 text-blue-600" />
+                    基础信息
+                  </h3>
+                  <div className="space-y-3">
                     <div className="flex justify-between py-2 border-b border-slate-100">
-                      <span className="text-slate-500">教材类型</span>
-                      <span className="text-slate-800 font-medium">{selectedItem.type}</span>
+                      <span className="text-slate-500">名称</span>
+                      <span className="text-slate-800 font-medium">{selectedItem.name}</span>
                     </div>
-                  )}
-                  {selectedItem.grade && (
-                    <div className="flex justify-between py-2 border-b border-slate-100">
-                      <span className="text-slate-500">适用年级</span>
-                      <span className="text-slate-800 font-medium">{selectedItem.grade}</span>
-                    </div>
-                  )}
-                  {selectedItem.unit && (
-                    <div className="flex justify-between py-2 border-b border-slate-100">
-                      <span className="text-slate-500">单元编号</span>
-                      <span className="text-slate-800 font-medium">{selectedItem.unit}</span>
-                    </div>
-                  )}
-                  {selectedItem.keywords && (
-                    <div className="flex justify-between py-2">
-                      <span className="text-slate-500">关键词</span>
-                      <div className="flex flex-wrap gap-1 justify-end">
-                        {selectedItem.keywords.map((kw, idx) => (
-                          <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
-                            {kw}
-                          </span>
-                        ))}
+                    {selectedItem.type && (
+                      <div className="flex justify-between py-2 border-b border-slate-100">
+                        <span className="text-slate-500">教材类型</span>
+                        <span className="text-slate-800 font-medium">{selectedItem.type}</span>
                       </div>
-                    </div>
-                  )}
+                    )}
+                    {selectedItem.grade && (
+                      <div className="flex justify-between py-2 border-b border-slate-100">
+                        <span className="text-slate-500">适用年级</span>
+                        <span className="text-slate-800 font-medium">{selectedItem.grade}</span>
+                      </div>
+                    )}
+                    {selectedItem.unit_code && (
+                      <div className="flex justify-between py-2 border-b border-slate-100">
+                        <span className="text-slate-500">单元编号</span>
+                        <span className="text-slate-800 font-medium">{selectedItem.unit_code}</span>
+                      </div>
+                    )}
+                    {selectedItem.keywords && (
+                      <div className="flex justify-between py-2">
+                        <span className="text-slate-500">关键词</span>
+                        <div className="flex flex-wrap gap-1 justify-end">
+                          {(Array.isArray(selectedItem.keywords) ? selectedItem.keywords : []).map((kw, idx) => (
+                            <span key={idx} className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs">
+                              {kw}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {/* 课本图片上传 - 仅单元显示 */}
-              {selectedLevel === 2 && (
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                      <Image className="w-5 h-5 text-green-600" />
-                      课本图片
-                    </h3>
-                    <button 
-                      onClick={() => openModal('uploadImage')}
-                      className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-1 text-sm"
-                    >
-                      <Plus className="w-4 h-4" />
-                      上传图片
-                    </button>
-                  </div>
-                  
-                  {/* 图片网格 */}
-                  <div className="grid grid-cols-4 gap-3">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="relative group aspect-video bg-slate-100 rounded-lg overflow-hidden border border-slate-200">
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Image className="w-8 h-8 text-slate-300" />
-                        </div>
-                        {/* 悬停删除按钮 */}
-                        <button 
-                          onClick={() => openModal('deleteImage', { id: i })}
-                          className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                    {/* 上传占位 */}
-                    <div 
-                      onClick={() => openModal('uploadImage')}
-                      className="aspect-video bg-slate-50 rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-green-400 hover:bg-green-50 transition-colors"
-                    >
-                      <Plus className="w-6 h-6 text-slate-400" />
-                      <span className="text-xs text-slate-400 mt-1">上传</span>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </>
         ) : (
@@ -450,11 +395,11 @@ export const TextbookManagement = () => {
         )}
       </div>
 
-      {/* 模态框 */}
+      {/* Modals */}
       {modalType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
-            {/* 头部 */}
+            {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
               <h3 className="text-lg font-semibold text-slate-800">
                 {modalType === 'add' && '新增教材'}
@@ -468,7 +413,7 @@ export const TextbookManagement = () => {
               </button>
             </div>
 
-            {/* 内容 */}
+            {/* Content */}
             <div className="p-6">
               {modalType === 'delete' ? (
                 <div className="text-center">
@@ -477,12 +422,6 @@ export const TextbookManagement = () => {
                   </div>
                   <p className="text-slate-600 mb-2">确定要删除以下内容吗？</p>
                   <p className="font-medium text-slate-800">{modalData.name}</p>
-                  {modalData.level === 0 && (
-                    <p className="text-sm text-slate-500 mt-1">删除教材将同时删除其下所有年级和单元</p>
-                  )}
-                  {modalData.level === 1 && (
-                    <p className="text-sm text-slate-500 mt-1">删除年级将同时删除其下所有单元</p>
-                  )}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -496,21 +435,21 @@ export const TextbookManagement = () => {
                       placeholder="请输入名称"
                     />
                   </div>
-                  
-                  {(modalType === 'add' || modalType === 'edit') && (
+
+                  {(modalType === 'add' || modalType === 'edit') && modalData.level === 0 && (
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">教材类型</label>
                       <input
                         type="text"
-                        value={modalData.type || ''}
-                        onChange={(e) => setModalData({ ...modalData, type: e.target.value })}
+                        value={modalData.type || modalData.name || ''}
+                        onChange={(e) => setModalData({ ...modalData, type: e.target.value, name: e.target.value })}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        placeholder="请输入教材类型"
+                        placeholder="如：人教版、外研版"
                       />
                     </div>
                   )}
 
-                  {(modalType === 'addGrade' || modalType === 'edit') && (
+                  {(modalType === 'addGrade' || modalType === 'edit') && modalData.level === 1 && (
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-1">年级</label>
                       <input
@@ -518,7 +457,7 @@ export const TextbookManagement = () => {
                         value={modalData.grade || modalData.name || ''}
                         onChange={(e) => setModalData({ ...modalData, grade: e.target.value, name: e.target.value })}
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                        placeholder="请输入年级"
+                        placeholder="如：三年级、四年级"
                       />
                     </div>
                   )}
@@ -526,13 +465,23 @@ export const TextbookManagement = () => {
                   {modalType === 'addUnit' && (
                     <>
                       <div>
+                        <label className="block text-sm font-medium text-slate-700 mb-1">单元名称</label>
+                        <input
+                          type="text"
+                          value={modalData.name || ''}
+                          onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          placeholder="如：Unit 1: Hello"
+                        />
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">单元编号</label>
                         <input
                           type="text"
                           value={modalData.unit || ''}
                           onChange={(e) => setModalData({ ...modalData, unit: e.target.value })}
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                          placeholder="如: Unit 1"
+                          placeholder="如：Unit 1"
                         />
                       </div>
                       <div>
@@ -542,7 +491,7 @@ export const TextbookManagement = () => {
                           value={modalData.keywords || ''}
                           onChange={(e) => setModalData({ ...modalData, keywords: e.target.value })}
                           className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                          placeholder="如: Hello, Hi, I"
+                          placeholder="如：Hello, Hi, I"
                         />
                       </div>
                     </>
@@ -551,7 +500,7 @@ export const TextbookManagement = () => {
               )}
             </div>
 
-            {/* 底部按钮 */}
+            {/* Bottom Buttons */}
             <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
               <button
                 onClick={closeModal}
