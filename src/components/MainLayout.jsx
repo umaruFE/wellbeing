@@ -95,7 +95,7 @@ export const MainLayout = () => {
       path: '/', 
       label: '工作看板', 
       icon: Home, 
-      description: '工作台首页' 
+      description: '工作台驾驶舱' 
     },
     { 
       id: 'courses', 
