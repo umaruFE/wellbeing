@@ -11,14 +11,7 @@ import {
   Sparkles,
   FileInput,
   BookOpen,
-  Layers,
-  Search,
-  ChevronDown,
-  Copy,
-  Star,
-  Users,
-  FolderOpen,
-  Book
+  Layers
 } from 'lucide-react';
 import { CURRICULUM_DATA } from '../constants';
 
@@ -26,7 +19,6 @@ export const WelcomeScreen = ({ onStart }) => {
   const [step, setStep] = useState('input'); // input, generating
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('');
-  const [sourceMode, setSourceMode] = useState('ai'); // ai, knowledge
 
   const [config, setConfig] = useState({
     grade: '小学三年级',
@@ -87,25 +79,49 @@ export const WelcomeScreen = ({ onStart }) => {
     },
   ];
 
-  const [expandedItems, setExpandedItems] = useState([]);
-  const [selectedKBItem, setSelectedKBItem] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  // 获取所有单元选项（AI教材 + 知识库）
+  const getAllUnitOptions = () => {
+    const options = [];
 
-  const toggleExpand = (id) => {
-    setExpandedItems(prev =>
-      prev.includes(id)
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
+    // 添加 AI 教材单元
+    if (availableUnits.length > 0) {
+      options.push({ type: 'header', label: 'AI 教材' });
+      availableUnits.forEach(unit => {
+        options.push({ type: 'ai', value: unit, label: unit });
+      });
+    }
+
+    // 添加知识库单元
+    if (knowledgeBaseItems.length > 0) {
+      options.push({ type: 'header', label: '知识库教材' });
+      knowledgeBaseItems.forEach(textbook => {
+        if (textbook.children) {
+          textbook.children.forEach(grade => {
+            if (grade.children) {
+              grade.children.forEach(unit => {
+                options.push({
+                  type: 'knowledge',
+                  value: JSON.stringify({
+                    id: unit.id,
+                    name: unit.name,
+                    textbook: textbook.name,
+                    grade: grade.name,
+                    unit: unit.unit,
+                    keywords: unit.keywords
+                  }),
+                  label: `${grade.name} - ${unit.name}`
+                });
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return options;
   };
 
-  const handleSelectKBItem = (item) => {
-    setSelectedKBItem(item);
-    setConfig({
-      ...config,
-      selectedKnowledgeItem: item
-    });
-  };
+  const allUnitOptions = getAllUnitOptions();
 
   const handleAgeChange = (e) => {
     const newAge = e.target.value;
@@ -126,37 +142,6 @@ export const WelcomeScreen = ({ onStart }) => {
     } else {
       setConfig({ ...config, isCustomUnit: false, unit: value });
     }
-  };
-
-  const handleKnowledgeBaseGenerate = () => {
-    if (!selectedKBItem) return;
-
-    setStep('generating');
-
-    const stages = [
-      { p: 10, t: `正在加载知识库教材数据...` },
-      { p: 30, t: `正在分析 ${selectedKBItem.name} 课程结构...` },
-      { p: 50, t: 'AI 引擎正在设计教学支架...' },
-      { p: 70, t: '正在生成多媒体教学素材...' },
-      { p: 90, t: '正在进行教育学原理校验...' },
-      { p: 100, t: '课件组装完成！' }
-    ];
-
-    let currentStage = 0;
-    const interval = setInterval(() => {
-      if (currentStage >= stages.length) {
-        clearInterval(interval);
-        onStart({
-          ...config,
-          unit: selectedKBItem.unit,
-          theme: selectedKBItem.keywords?.join(', ') || ''
-        });
-        return;
-      }
-      setLoadingProgress(stages[currentStage].p);
-      setLoadingText(stages[currentStage].t);
-      currentStage++;
-    }, 800);
   };
 
   // --- Mock Import Logic ---
@@ -258,35 +243,13 @@ export const WelcomeScreen = ({ onStart }) => {
                </h1>
                <p className="text-blue-100 opacity-90 text-sm md:text-base">基于年龄发展阶段的智能课程设计引擎</p>
             </div>
-            {/* 来源切换 */}
-            <div className="flex bg-white/10 backdrop-blur rounded-lg p-1">
-              <button
-                onClick={() => setSourceMode('ai')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  sourceMode === 'ai' ? 'bg-white text-blue-600' : 'text-white hover:bg-white/10'
-                }`}
-              >
-                <Sparkles className="w-4 h-4 inline mr-2" />
-                AI 生成
-              </button>
-              <button
-                onClick={() => setSourceMode('knowledge')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  sourceMode === 'knowledge' ? 'bg-white text-blue-600' : 'text-white hover:bg-white/10'
-                }`}
-              >
-                <Layers className="w-4 h-4 inline mr-2" />
-                知识库选择
-              </button>
-            </div>
           </div>
         </div>
 
         <div className="p-6 md:p-8">
-          {sourceMode === 'ai' ? (
-            /* AI 生成模式 */
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* AI 生成模式 */}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
                     <User className="w-3 h-3" /> 学生年龄 / Age
@@ -319,10 +282,20 @@ export const WelcomeScreen = ({ onStart }) => {
                         onChange={handleUnitChange}
                         className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm"
                       >
-                        {availableUnits.map(unit => (
-                          <option key={unit} value={unit}>{unit}</option>
-                        ))}
-                        <option disabled>──────────</option>
+                        {allUnitOptions.map((option, index) => {
+                          if (option.type === 'header') {
+                            return (
+                              <option key={index} disabled className="font-bold bg-slate-100 text-slate-600">
+                                ── {option.label} ──
+                              </option>
+                            );
+                          }
+                          return (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          );
+                        })}
                         <option value="custom_input_option">✎ 手动输入其他...</option>
                       </select>
                       <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
@@ -340,7 +313,7 @@ export const WelcomeScreen = ({ onStart }) => {
                         autoFocus
                       />
                       <button
-                        onClick={() => setConfig({...config, isCustomUnit: false, unit: availableUnits[0]})}
+                        onClick={() => setConfig({...config, isCustomUnit: false, unit: allUnitOptions[0]?.value || ''})}
                         className="px-2 text-slate-400 hover:text-slate-600 text-xs whitespace-nowrap"
                       >
                         取消
@@ -411,194 +384,6 @@ export const WelcomeScreen = ({ onStart }) => {
                 </button>
               </div>
             </div>
-          ) : (
-            /* 知识库选择模式 */
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* 左侧 - 知识库树 */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                  <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <Layers className="w-4 h-4 text-blue-600" />
-                    选择教材单元
-                  </h3>
-                </div>
-                <div className="p-4">
-                  {/* 搜索框 */}
-                  <div className="relative mb-4">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="搜索教材、年级、单元..."
-                      className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                    />
-                  </div>
-
-                  {/* 教材树 */}
-                  <div className="space-y-1 max-h-96 overflow-y-auto">
-                    {knowledgeBaseItems.map(item => (
-                      <div key={item.id}>
-                        {/* 教材层级 */}
-                        <div
-                          className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-slate-50 rounded-lg"
-                        >
-                          <button
-                            onClick={() => toggleExpand(item.id)}
-                            className="p-0.5 hover:bg-slate-200 rounded"
-                          >
-                            <ChevronRight
-                              className={`w-4 h-4 text-slate-400 transition-transform ${expandedItems.includes(item.id) ? 'rotate-90' : ''}`}
-                            />
-                          </button>
-                          <BookOpen className="w-4 h-4 text-blue-600" />
-                          <span className="font-medium text-slate-700">{item.name}</span>
-                        </div>
-
-                        {/* 年级层级 */}
-                        {expandedItems.includes(item.id) && item.children?.map(grade => (
-                          <div key={grade.id} className="ml-6">
-                            <div
-                              className="flex items-center gap-2 py-2 px-3 cursor-pointer hover:bg-slate-50 rounded-lg"
-                            >
-                              <button
-                                onClick={() => toggleExpand(grade.id)}
-                                className="p-0.5 hover:bg-slate-200 rounded"
-                              >
-                                <ChevronRight
-                                  className={`w-4 h-4 text-slate-400 transition-transform ${expandedItems.includes(grade.id) ? 'rotate-90' : ''}`}
-                                />
-                              </button>
-                              <FolderOpen className="w-4 h-4 text-orange-600" />
-                              <span className="text-slate-700">{grade.name}</span>
-                            </div>
-
-                            {/* 单元层级 */}
-                            {expandedItems.includes(grade.id) && grade.children?.map(unit => (
-                              <div key={unit.id} className="ml-12">
-                                <div
-                                  onClick={() => handleSelectKBItem(unit)}
-                                  className={`flex items-center gap-2 py-2 px-3 cursor-pointer rounded-lg transition-colors ${
-                                    selectedKBItem?.id === unit.id
-                                      ? 'bg-blue-50 border-l-2 border-blue-600'
-                                      : 'hover:bg-slate-50'
-                                  }`}
-                                >
-                                  <Book className="w-4 h-4 text-green-600" />
-                                  <span className={`text-sm ${selectedKBItem?.id === unit.id ? 'text-blue-600 font-medium' : 'text-slate-600'}`}>
-                                    {unit.name}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* 右侧 - 选中项详情 */}
-              <div className="border border-slate-200 rounded-xl overflow-hidden">
-                <div className="bg-slate-50 px-4 py-3 border-b border-slate-200">
-                  <h3 className="font-semibold text-slate-800 flex items-center gap-2">
-                    <Copy className="w-4 h-4 text-purple-600" />
-                    课程预览
-                  </h3>
-                </div>
-                <div className="p-4">
-                  {selectedKBItem ? (
-                    <div className="space-y-4">
-                      {/* 选中单元信息 */}
-                      <div className="bg-blue-50 rounded-lg p-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Book className="w-5 h-5 text-blue-600" />
-                          <span className="font-bold text-slate-800">{selectedKBItem.name}</span>
-                        </div>
-                        <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div className="flex items-center gap-2 text-slate-600">
-                            <Star className="w-4 h-4 text-yellow-500" />
-                            <span>评分: {selectedKBItem.rating}</span>
-                          </div>
-                          <div className="flex items-center gap-2 text-slate-600">
-                            <Users className="w-4 h-4" />
-                            <span>已复制: {selectedKBItem.copies} 次</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 关键词 */}
-                      <div>
-                        <span className="text-xs font-bold text-slate-500 uppercase mb-2 block">关键词</span>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedKBItem.keywords?.map((kw, idx) => (
-                            <span key={idx} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
-                              {kw}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* 时长选择 */}
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
-                          <Clock className="w-3 h-3" /> 上课时长
-                        </label>
-                        <select
-                          value={config.duration}
-                          onChange={(e) => setConfig({...config, duration: e.target.value})}
-                          className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
-                        >
-                          <option>15分钟 (微课/学前)</option>
-                          <option>30分钟 (标准课时)</option>
-                          <option>40分钟 (小学常用)</option>
-                          <option>45分钟 (公开课)</option>
-                          <option>60分钟 (综合实践)</option>
-                        </select>
-                      </div>
-
-                      <button
-                        onClick={handleKnowledgeBaseGenerate}
-                        disabled={!selectedKBItem}
-                        style={{ background: 'linear-gradient(to right, rgb(37, 99, 235), rgb(79, 70, 229))' }}
-                        className="w-full py-3 text-white rounded-xl font-bold text-base shadow-md transform transition hover:opacity-90 active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Copy className="w-5 h-5" />
-                        复制并生成课程
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <Layers className="w-16 h-16 text-slate-300 mb-4" />
-                      <p className="text-slate-500 mb-2">请从左侧选择教材单元</p>
-                      <p className="text-sm text-slate-400">选择后将自动填充课程信息</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 分割线 */}
-          <div className="relative my-8">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-slate-400">或者</span>
-            </div>
-          </div>
-
-          {/* 上传文档 */}
-          <div className="text-center">
-            <label className="inline-flex items-center gap-2 px-6 py-3 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
-              <Upload className="w-5 h-5 text-slate-400" />
-              <span className="text-slate-600 font-medium">上传文档自定义</span>
-              <input type="file" className="hidden" onChange={handleImport} accept=".doc,.docx,.pdf,.txt" />
-            </label>
-            <p className="text-xs text-slate-400 mt-2">支持 .doc, .docx, .pdf, .txt 格式</p>
-          </div>
         </div>
       </div>
     </div>

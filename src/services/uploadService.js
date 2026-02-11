@@ -17,7 +17,7 @@ class UploadService {
     formData.append('folder', folder);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/upload`, {
+      const response = await fetch(`${API_BASE_URL}/api/upload`, {
         method: 'POST',
         body: formData,
       });
@@ -90,7 +90,7 @@ class UploadService {
 
     // Then create the database record
     try {
-      const response = await fetch(`${API_BASE_URL}/ppt-images`, {
+      const response = await fetch(`${API_BASE_URL}/api/ppt-images`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -146,7 +146,7 @@ class UploadService {
 
     // Then create the database record
     try {
-      const response = await fetch(`${API_BASE_URL}/ip-characters`, {
+      const response = await fetch(`${API_BASE_URL}/api/ip-characters`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -203,7 +203,7 @@ class UploadService {
 
     // Then create the database record
     try {
-      const response = await fetch(`${API_BASE_URL}/textbooks/images`, {
+      const response = await fetch(`${API_BASE_URL}/api/textbooks/images`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

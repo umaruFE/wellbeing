@@ -35,29 +35,29 @@ class ApiService {
 
   async getCourses(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/courses${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/api/courses${queryString ? `?${queryString}` : ''}`);
   }
 
   async getCourse(id) {
-    return this.request(`/courses/${id}`);
+    return this.request(`/api/courses/${id}`);
   }
 
   async createCourse(courseData) {
-    return this.request('/courses', {
+    return this.request('/api/courses', {
       method: 'POST',
       body: JSON.stringify(courseData),
     });
   }
 
   async updateCourse(id, courseData) {
-    return this.request(`/courses/${id}`, {
+    return this.request(`/api/courses/${id}`, {
       method: 'PUT',
       body: JSON.stringify(courseData),
     });
   }
 
   async deleteCourse(id) {
-    return this.request(`/courses/${id}`, {
+    return this.request(`/api/courses/${id}`, {
       method: 'DELETE',
     });
   }
@@ -65,18 +65,18 @@ class ApiService {
   // ============ Textbooks ============
 
   async getTextbooks() {
-    return this.request('/textbooks');
+    return this.request('/api/textbooks');
   }
 
   async createTextbookType(data) {
-    return this.request('/textbooks', {
+    return this.request('/api/textbooks', {
       method: 'POST',
       body: JSON.stringify({ action: 'type', ...data }),
     });
   }
 
   async createTextbookUnit(data) {
-    return this.request('/textbooks', {
+    return this.request('/api/textbooks', {
       method: 'POST',
       body: JSON.stringify({ action: 'unit', ...data }),
     });
@@ -86,11 +86,11 @@ class ApiService {
 
   async getPptImages(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/ppt-images${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/api/ppt-images${queryString ? `?${queryString}` : ''}`);
   }
 
   async createPptImage(data) {
-    return this.request('/ppt-images', {
+    return this.request('/api/ppt-images', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -99,11 +99,11 @@ class ApiService {
   // ============ IP Characters ============
 
   async getIpCharacters() {
-    return this.request('/ip-characters');
+    return this.request('/api/ip-characters');
   }
 
   async createIpCharacter(data) {
-    return this.request('/ip-characters', {
+    return this.request('/api/ip-characters', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -112,11 +112,11 @@ class ApiService {
   // ============ Voice Configs ============
 
   async getVoiceConfigs(userId) {
-    return this.request(`/voices${userId ? `?userId=${userId}` : ''}`);
+    return this.request(`/api/voices${userId ? `?userId=${userId}` : ''}`);
   }
 
   async createVoiceConfig(data) {
-    return this.request('/voices', {
+    return this.request('/api/voices', {
       method: 'POST',
       body: JSON.stringify(data),
     });
@@ -125,18 +125,18 @@ class ApiService {
   // ============ Organizations ============
 
   async getOrganizations(search = '') {
-    return this.request(`/organizations${search ? `?search=${search}` : ''}`);
+    return this.request(`/api/organizations${search ? `?search=${search}` : ''}`);
   }
 
   async createOrganization(data) {
-    return this.request('/organizations', {
+    return this.request('/api/organizations', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
   async updateOrganization(id, data) {
-    return this.request('/organizations', {
+    return this.request('/api/organizations', {
       method: 'PUT',
       body: JSON.stringify({ id, ...data }),
     });
@@ -146,11 +146,11 @@ class ApiService {
 
   async getUsers(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/users${queryString ? `?${queryString}` : ''}`);
+    return this.request(`/api/users${queryString ? `?${queryString}` : ''}`);
   }
 
   async createUser(data) {
-    return this.request('/users', {
+    return this.request('/api/users', {
       method: 'POST',
       body: JSON.stringify(data),
     });
