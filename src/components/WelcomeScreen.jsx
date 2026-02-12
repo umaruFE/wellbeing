@@ -200,7 +200,7 @@ export const WelcomeScreen = ({ onStart }) => {
 
   if (step === 'generating') {
     return (
-      <div className="flex-1 bg-slate-900 flex flex-col items-center justify-center text-white p-8 h-screen w-full absolute inset-0 z-50">
+      <div className="flex-1 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-white p-8 h-full w-full absolute inset-0 z-50">
         <div className="w-full max-w-md space-y-8 text-center">
           <div className="relative w-32 h-32 mx-auto">
             <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>
@@ -227,7 +227,7 @@ export const WelcomeScreen = ({ onStart }) => {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-slate-50 flex items-center justify-center p-4 h-screen w-full absolute inset-0 z-50">
+    <div className="flex-1 overflow-auto bg-slate-50 flex items-center justify-center p-4 h-full w-full">
       <div className="max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
         {/* 顶部标题 */}
         <div

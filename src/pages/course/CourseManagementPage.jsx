@@ -102,7 +102,7 @@ export const CourseManagementPage = () => {
   });
 
   const handleCreateCourse = () => {
-    window.location.href = 'http://localhost:5173/create';
+    navigate('/create');
   };
 
   const handleEditCourse = (courseId) => {
