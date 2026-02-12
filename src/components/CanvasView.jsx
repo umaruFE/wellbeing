@@ -1,42 +1,26 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { 
-  BookOpen, 
   Clock, 
   Image as ImageIcon, 
   Type, 
-  RefreshCw, 
   Video, 
   Music, 
-  FileText, 
-  ChevronDown, 
-  ChevronRight, 
   ChevronLeft,
-  Plus, 
-  Trash2, 
-  Download, 
-  MonitorPlay,
+  ChevronRight,
+  Plus,
   Wand2,
-  X,
-  Upload,
-  Layers,       
-  ArrowUp,      
-  ArrowDown,    
-  ChevronsUp,   
-  ChevronsDown, 
-  Sliders,
-  RotateCw,
-  Copy,
-  RotateCcw,
-  History,
   Undo2,
-  Redo2
+  Redo2,
+  Copy,
+  RotateCw
 } from 'lucide-react';
 import { INITIAL_COURSE_DATA } from '../constants';
 import { SlideRenderer } from './SlideRenderer';
 import { getAssetIcon } from '../utils';
-import { PromptInputModal } from './PromptInputModal';
 import { AssetEditorPanel } from './AssetEditorPanel';
-import { CardSelectionModal } from './CardSelectionModal';
+import { CanvasViewLeftSidebar } from './CanvasView.LeftSidebar';
+import { CanvasViewModals } from './CanvasView.Modals';
+import { History, RefreshCw } from 'lucide-react';
 
 export const CanvasView = forwardRef((props, ref) => {
   const { navigation } = props;
@@ -67,10 +51,9 @@ export const CanvasView = forwardRef((props, ref) => {
   const [history, setHistory] = useState([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // 当navigation变化时，重置数据：统一使用INITIAL_COURSE_DATA（与表格视图一致）
+  // 当navigation变化时，重置数据
   useEffect(() => {
     if (!navigation) {
-      // 直接点击进入：使用INITIAL_COURSE_DATA（与表格视图一致）
       setCourseData(INITIAL_COURSE_DATA);
       const firstPhase = Object.keys(INITIAL_COURSE_DATA)[0];
       const firstStepId = INITIAL_COURSE_DATA[firstPhase]?.steps[0]?.id;
@@ -78,16 +61,10 @@ export const CanvasView = forwardRef((props, ref) => {
       setActiveStepId(firstStepId);
       setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
       setSelectedAssetId(null);
-      setGenerationHistory([]);
-      setShowHistoryModal(null);
-      setShowPromptModal(false);
-      setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
       setHistory([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
       setHistoryIndex(0);
     } else {
-      // 从表格跳转：使用INITIAL_COURSE_DATA（与表格数据一致）
       setCourseData(INITIAL_COURSE_DATA);
-      // 映射表格的phaseId到画布的phaseKey
       const phaseMap = {
         'Engage': 'engage',
         'Empower': 'empower',
@@ -95,9 +72,7 @@ export const CanvasView = forwardRef((props, ref) => {
         'Elevate': 'elevate'
       };
       const phaseKey = phaseMap[navigation.phaseId] || 'engage';
-      // 确保 stepId 是字符串类型，与数据中的 ID 类型一致
       const stepId = navigation.slideId ? String(navigation.slideId) : null;
-      // 确保对应的环节是展开的
       setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
       setActivePhase(phaseKey);
       if (stepId) {
@@ -120,17 +95,17 @@ export const CanvasView = forwardRef((props, ref) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
   // 历史生成记录
-  const [generationHistory, setGenerationHistory] = useState([]); // [{ phaseId, stepId, assetId, type, url, prompt, timestamp }]
-  const [showHistoryModal, setShowHistoryModal] = useState(null); // { assetId, assetType }
+  const [generationHistory, setGenerationHistory] = useState([]);
+  const [showHistoryModal, setShowHistoryModal] = useState(null);
   
-  // 页面历史记录（整个环节的内容）
-  const [pageHistory, setPageHistory] = useState([]); // [{ stepId, data: { title, time, objective, assets }, timestamp }]
+  // 页面历史记录
+  const [pageHistory, setPageHistory] = useState([]);
   const [showPageHistoryModal, setShowPageHistoryModal] = useState(false);
 
   // 图片抽卡选择模态框状态
   const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
   const [cardSelectionImages, setCardSelectionImages] = useState([]);
-  const [pendingAssetConfig, setPendingAssetConfig] = useState(null); // 待确认的资源配置
+  const [pendingAssetConfig, setPendingAssetConfig] = useState(null);
 
   // 保存历史记录
   const saveToHistory = (newData) => {
@@ -161,43 +136,28 @@ export const CanvasView = forwardRef((props, ref) => {
   // 键盘事件处理
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Ctrl+Z 撤销
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         handleUndo();
       }
-      // Ctrl+Shift+Z 或 Ctrl+Y 重做
       if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z') || ((e.ctrlKey || e.metaKey) && e.key === 'y')) {
         e.preventDefault();
         handleRedo();
       }
-      // Delete 或 Backspace 删除选中的元素
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedAssetId && !e.target.tagName.match(/INPUT|TEXTAREA/)) {
         e.preventDefault();
         handleDeleteAsset(selectedAssetId);
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedAssetId, historyIndex, history]);
 
-  // 处理导航（从表格视图跳转过来）
-  useEffect(() => {
-    if (navigation) {
-      // 这里可以根据navigation信息跳转到对应的环节
-      // 简化处理：如果有navigation，可以高亮显示或跳转
-      console.log('Navigation received:', navigation);
-    }
-  }, [navigation]);
-
   // Derived State
   const currentPhaseData = courseData[activePhase];
-  // Safely find current step data
   const currentStep = currentPhaseData?.steps.find(s => s.id === activeStepId) || currentPhaseData?.steps[0];
   const selectedAsset = selectedAssetId && currentStep ? currentStep.assets.find(a => a.id === selectedAssetId) : null;
 
-  // Flatten steps for sequential navigation in preview
   const allSteps = Object.values(courseData).flatMap(phase => phase.steps.map(step => ({...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step))})));
   const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
 
@@ -217,18 +177,15 @@ export const CanvasView = forwardRef((props, ref) => {
   };
 
   const handleAddStep = (phaseKey) => {
-    // 显示提示词输入模态框
     setPromptModalConfig({ type: 'session', phaseKey });
     setShowPromptModal(true);
   };
 
-  // 在当前环节末尾添加新环节
   const handleAddStepAtEnd = () => {
     if (!activePhase) {
       alert('请先选择一个环节');
       return;
     }
-    // 显示提示词输入模态框，添加在当前环节所在阶段的末尾
     setPromptModalConfig({ type: 'session', phaseKey: activePhase, addAtEnd: true });
     setShowPromptModal(true);
   };
@@ -237,7 +194,6 @@ export const CanvasView = forwardRef((props, ref) => {
     setIsGenerating(true);
     const phaseKey = promptModalConfig.phaseKey;
     
-    // 模拟AI生成（实际应该调用API）
     setTimeout(() => {
       const newCourseData = { ...courseData };
       const phase = newCourseData[phaseKey];
@@ -254,7 +210,6 @@ export const CanvasView = forwardRef((props, ref) => {
         assets: []
       };
       
-      // 如果是addAtEnd，添加到当前环节之后；否则添加到末尾
       if (promptModalConfig.addAtEnd && activeStepId) {
         const currentIndex = phase.steps.findIndex(s => s.id === activeStepId);
         if (currentIndex >= 0) {
@@ -278,9 +233,7 @@ export const CanvasView = forwardRef((props, ref) => {
   };
 
   const handleDeleteStep = (phaseKey, stepId) => {
-    if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) {
-      return;
-    }
+    if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
     
     const newCourseData = { ...courseData };
     const phase = newCourseData[phaseKey];
@@ -288,12 +241,10 @@ export const CanvasView = forwardRef((props, ref) => {
     
     phase.steps = phase.steps.filter(s => s.id !== stepId);
     
-    // 如果删除的是当前环节，切换到第一个环节
     if (activeStepId === stepId) {
       if (phase.steps.length > 0) {
         setActiveStepId(phase.steps[0].id);
       } else {
-        // 如果这个阶段没有环节了，切换到其他阶段
         const otherPhase = Object.entries(newCourseData).find(([key, p]) => 
           key !== phaseKey && p.steps.length > 0
         );
@@ -329,7 +280,6 @@ export const CanvasView = forwardRef((props, ref) => {
   };
 
   const handleAddAsset = (type) => {
-    // 显示提示词输入模态框
     setPromptModalConfig({ type: 'element', assetType: type, phaseKey: activePhase });
     setShowPromptModal(true);
   };
@@ -339,12 +289,10 @@ export const CanvasView = forwardRef((props, ref) => {
     const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
     if (!step) return;
 
-    // 如果是文本类型且是直接输入模式，不需要生成时间，直接添加
     if (type === 'text' && inputMode === 'direct') {
       const newCourseData = { ...courseData };
       const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-
-      let w = 300, h = 100;
+      const w = 300, h = 100;
 
       const newAsset = {
         id: Date.now().toString(),
@@ -371,12 +319,9 @@ export const CanvasView = forwardRef((props, ref) => {
       return;
     }
 
-    // AI生成模式
     setIsGenerating(true);
 
-    // 模拟AI生成（实际应该调用API）
     setTimeout(() => {
-      // 如果是图片类型，生成多张图片供选择
       if (type === 'image') {
         const generatedImages = [];
         for (let i = 0; i < 4; i++) {
@@ -387,16 +332,7 @@ export const CanvasView = forwardRef((props, ref) => {
           });
         }
 
-        // 保存待确认的配置
-        setPendingAssetConfig({
-          type,
-          prompt,
-          videoStyle,
-          phaseKey: activePhase,
-          stepId: activeStepId
-        });
-
-        // 显示抽卡选择模态框
+        setPendingAssetConfig({ type, prompt, videoStyle, phaseKey: activePhase, stepId: activeStepId });
         setCardSelectionImages(generatedImages);
         setShowCardSelectionModal(true);
         setIsGenerating(false);
@@ -404,7 +340,6 @@ export const CanvasView = forwardRef((props, ref) => {
         return;
       }
 
-      // 非图片类型保持原有逻辑
       const newCourseData = { ...courseData };
       const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
 
@@ -429,7 +364,6 @@ export const CanvasView = forwardRef((props, ref) => {
         x: 100, y: 100, width: w, height: h, rotation: 0
       };
 
-      // 如果是文本类型，添加文本相关属性
       if (type === 'text') {
         newAsset.fontSize = 24;
         newAsset.fontWeight = 'normal';
@@ -448,15 +382,11 @@ export const CanvasView = forwardRef((props, ref) => {
     }, 1500);
   };
 
-  // 处理图片抽卡选择确认
-  const handleCardSelectionConfirm = (selectedImage, selectedIndex) => {
+  const handleCardSelectionConfirm = (selectedImage) => {
     if (!pendingAssetConfig) return;
-
-    const { type, prompt, videoStyle, phaseKey, stepId } = pendingAssetConfig;
-
+    const { type, prompt, phaseKey, stepId } = pendingAssetConfig;
     const newCourseData = { ...courseData };
     const currentStep = newCourseData[phaseKey].steps.find(s => s.id === stepId);
-
     const w = 400, h = 400;
     const newAsset = {
       id: Date.now().toString(),
@@ -475,8 +405,6 @@ export const CanvasView = forwardRef((props, ref) => {
     saveToHistory(newCourseData);
     setSelectedAssetId(newAsset.id);
     setIsRightOpen(true);
-
-    // 关闭模态框并清理状态
     setShowCardSelectionModal(false);
     setCardSelectionImages([]);
     setPendingAssetConfig(null);
@@ -493,7 +421,6 @@ export const CanvasView = forwardRef((props, ref) => {
     setSelectedAssetId(null);
   };
 
-  // 复制元素
   const handleCopyAsset = (assetId) => {
     const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
     const assetToCopy = step.assets.find(a => a.id === assetId);
@@ -514,7 +441,6 @@ export const CanvasView = forwardRef((props, ref) => {
     setSelectedAssetId(newAsset.id);
   };
 
-  // 复制整个页面
   const handleCopyPage = () => {
     const newCourseData = { ...courseData };
     const phase = newCourseData[activePhase];
@@ -538,7 +464,6 @@ export const CanvasView = forwardRef((props, ref) => {
     setActiveStepId(newStep.id);
   };
 
-  // 保存生成历史
   const saveGenerationHistory = (assetId, assetType, url, prompt) => {
     const historyItem = {
       id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -551,19 +476,16 @@ export const CanvasView = forwardRef((props, ref) => {
       timestamp: new Date().toISOString(),
       displayTime: new Date().toLocaleString('zh-CN')
     };
-    setGenerationHistory(prev => [historyItem, ...prev].slice(0, 100)); // 最多保存100条
+    setGenerationHistory(prev => [historyItem, ...prev].slice(0, 100));
   };
 
-  // 恢复历史生成内容
   const handleRestoreHistory = (historyItem) => {
     const newCourseData = { ...courseData };
     const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
     const asset = step.assets.find(a => a.id === historyItem.assetId);
     if (asset && (asset.type === 'image' || asset.type === 'video' || asset.type === 'audio')) {
       asset.url = historyItem.url;
-      if (historyItem.prompt) {
-        asset.prompt = historyItem.prompt;
-      }
+      if (historyItem.prompt) asset.prompt = historyItem.prompt;
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
     }
@@ -577,7 +499,6 @@ export const CanvasView = forwardRef((props, ref) => {
     const asset = step?.assets.find(a => a.id === assetId);
     if (!asset) return;
     
-    // 保存当前内容到历史
     if (asset.type === 'text' && asset.content) {
       saveGenerationHistory(assetId, asset.type, asset.content, asset.prompt);
     } else if ((asset.type === 'image' || asset.type === 'video' || asset.type === 'audio') && asset.url) {
@@ -593,10 +514,9 @@ export const CanvasView = forwardRef((props, ref) => {
       const randomColor = Math.floor(Math.random()*16777215).toString(16);
       
       if (asset.type === 'text') {
-        const generatedText = asset.prompt 
+        asset.content = asset.prompt 
           ? `根据提示词"${asset.prompt}"重新生成的文本内容 (v${Date.now().toString().slice(-4)})`
           : `重新生成的文本内容 (v${Date.now().toString().slice(-4)})`;
-        asset.content = generatedText;
       } else if (asset.type === 'image' || asset.type === 'video') {
          const text = asset.referenceImage ? 'AI+Ref+Gen' : 'AI+Gen';
          const w = asset.width || 300;
@@ -658,7 +578,6 @@ export const CanvasView = forwardRef((props, ref) => {
     }
   };
 
-  // Interaction handlers
   const handleMouseDown = (e, assetId, mode = 'dragging', handleType = null) => {
     e.stopPropagation(); 
     if (!canvasRef.current) return;
@@ -706,14 +625,13 @@ export const CanvasView = forwardRef((props, ref) => {
 
   const handleMouseUp = () => { 
     if (interactionMode !== 'idle' && selectedAssetId) {
-      // 在拖拽/调整大小/旋转结束时保存历史
       saveToHistory(courseData);
     }
     setInteractionMode('idle'); 
     setInteractionStart(null); 
   };
+
   const handleCanvasClick = () => { 
-    // 如果正在编辑文本，保存并退出编辑模式
     if (editingTextAssetId) {
       const asset = currentStep?.assets?.find(a => a.id === editingTextAssetId);
       if (asset && editingTextContent !== undefined) {
@@ -741,55 +659,25 @@ export const CanvasView = forwardRef((props, ref) => {
   return (
     <div className="flex-1 flex overflow-hidden relative">
       {/* 1. LEFT SIDEBAR */}
-      <aside className={`${isLeftOpen ? 'w-64' : 'w-0'} bg-white border-r border-slate-200 flex flex-col shrink-0 z-10 transition-all duration-300 relative`}>
-        <div className={`p-4 border-b border-slate-100 bg-slate-50 ${!isLeftOpen && 'hidden'}`}>
-          <div className="flex items-center justify-between">
-            <h1 className="font-bold text-lg text-slate-800 flex items-center gap-2"><BookOpen className="w-5 h-5 text-blue-600" /> 课程编排</h1>
-            <button onClick={() => setIsLeftOpen(false)} className="text-slate-400 hover:text-slate-600"><ChevronLeft className="w-4 h-4" /></button>
-          </div>
-          <p className="text-xs text-slate-500 mt-1 truncate">Unit 1: Funky Monster Rescue</p>
-        </div>
-        <div className={`flex-1 overflow-y-auto p-2 space-y-2 ${!isLeftOpen && 'hidden'}`}>
-          {Object.entries(courseData).map(([key, phase]) => (
-            <div key={key} className="rounded-lg overflow-hidden border border-slate-100 bg-white">
-              <button onClick={() => togglePhase(key)} className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phase.color.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}>
-                <span className="flex items-center gap-2">{expandedPhases.includes(key) ? <ChevronDown className="w-4 h-4"/> : <ChevronRight className="w-4 h-4"/>}{phase.title}</span>
-              </button>
-              {expandedPhases.includes(key) && (
-                <div className="bg-slate-50 border-t border-slate-100">
-                  {phase.steps.map((step) => (
-                    <div key={step.id} className={`group/step border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-center ${activeStepId === step.id ? 'bg-blue-100' : ''}`}>
-                      <button 
-                        onClick={() => handleStepClick(key, step.id)} 
-                        className={`flex-1 text-left p-2 pl-8 text-xs transition-all flex items-start gap-2 ${activeStepId === step.id ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600' : 'text-slate-600'}`}
-                      >
-                        <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span><span className="line-clamp-2">{step.title}</span>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteStep(key, step.id);
-                        }}
-                        className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
-                        title="删除环节"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                  <button 
-                    onClick={() => handleAddStep(key)}
-                    className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
-                  >
-                    <Plus className="w-3 h-3" /> 新增环节
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        {!isLeftOpen && <button onClick={() => setIsLeftOpen(true)} className="absolute top-4 left-0 bg-white p-2 rounded-r-md border border-l-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50"><ChevronRight className="w-4 h-4" /></button>}
-      </aside>
+      <CanvasViewLeftSidebar
+        courseData={courseData}
+        expandedPhases={expandedPhases}
+        activeStepId={activeStepId}
+        onTogglePhase={togglePhase}
+        onStepClick={handleStepClick}
+        onAddStep={handleAddStep}
+        onDeleteStep={handleDeleteStep}
+        isLeftOpen={isLeftOpen}
+        onLeftToggle={() => setIsLeftOpen(false)}
+      />
+      {!isLeftOpen && (
+        <button 
+          onClick={() => setIsLeftOpen(true)} 
+          className="absolute top-4 left-0 bg-white p-2 rounded-r-md border border-l-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+      )}
 
       {/* 2. MIDDLE SECTION: Canvas */}
       <main className="flex-1 flex flex-col bg-slate-100 relative overflow-hidden transition-all duration-300" onMouseMove={handleMouseMove} onMouseUp={handleMouseUp}>
@@ -804,7 +692,10 @@ export const CanvasView = forwardRef((props, ref) => {
                  >
                    <ChevronRight className="w-4 h-4" />
                  </button>
-                 <div className="font-bold text-slate-700 flex items-center gap-2 mr-4"><BookOpen className="w-4 h-4" /> <span className="text-xs">U1</span></div>
+                 <div className="font-bold text-slate-700 flex items-center gap-2 mr-4">
+                   <Wand2 className="w-4 h-4" />
+                   <span className="text-xs">PPT</span>
+                 </div>
                </>
              )}
              <span className="text-sm font-medium text-slate-500 whitespace-nowrap">当前预览:</span>
@@ -843,11 +734,23 @@ export const CanvasView = forwardRef((props, ref) => {
         </div>
 
         <div style={{left: '65%'}}className="absolute top-20 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 z-20 transition-all">
-           <button onClick={() => handleAddAsset('text')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-blue-600 transition-colors"><Type className="w-5 h-5" /><span className="text-[9px] font-bold">文本</span></button>
+           <button onClick={() => handleAddAsset('text')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-blue-600 transition-colors">
+             <Type className="w-5 h-5" />
+             <span className="text-[9px] font-bold">文本</span>
+           </button>
            <div className="w-px bg-slate-200 h-8"></div>
-           <button onClick={() => handleAddAsset('image')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-purple-600 transition-colors"><ImageIcon className="w-5 h-5" /><span className="text-[9px] font-bold">图片</span></button>
-           <button onClick={() => handleAddAsset('audio')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-green-600 transition-colors"><Music className="w-5 h-5" /><span className="text-[9px] font-bold">音频</span></button>
-           <button onClick={() => handleAddAsset('video')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-red-600 transition-colors"><Video className="w-5 h-5" /><span className="text-[9px] font-bold">视频</span></button>
+           <button onClick={() => handleAddAsset('image')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-purple-600 transition-colors">
+             <ImageIcon className="w-5 h-5" />
+             <span className="text-[9px] font-bold">图片</span>
+           </button>
+           <button onClick={() => handleAddAsset('audio')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-green-600 transition-colors">
+             <Music className="w-5 h-5" />
+             <span className="text-[9px] font-bold">音频</span>
+           </button>
+           <button onClick={() => handleAddAsset('video')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-red-600 transition-colors">
+             <Video className="w-5 h-5" />
+             <span className="text-[9px] font-bold">视频</span>
+           </button>
         </div>
 
         <div className="flex-1 overflow-auto p-8 flex items-center justify-center relative" onClick={handleCanvasClick}>
@@ -873,10 +776,8 @@ export const CanvasView = forwardRef((props, ref) => {
              />
           </div>
           
-          {/* 在末尾新增PPT按钮 - 只在有选中环节时显示 */}
           {activeStepId && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30"
-                style={{left: '58%'}}>
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30" style={{left: '58%'}}>
               <button
                 onClick={handleAddStepAtEnd}
                 className="px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-600 rounded-full shadow-lg hover:bg-indigo-50 hover:border-indigo-400 transition-all flex items-center gap-2 font-bold text-sm"
@@ -892,7 +793,15 @@ export const CanvasView = forwardRef((props, ref) => {
 
       {/* 3. RIGHT SIDEBAR */}
       <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l border-slate-200 flex flex-col shrink-0 z-10 shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
-         {!isRightOpen && <button onClick={() => setIsRightOpen(true)} className="absolute top-4 right-0 bg-white p-2 rounded-l-md border border-r-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50 transform -translate-x-full" title="展开面板"><ChevronLeft className="w-4 h-4" /></button>}
+         {!isRightOpen && (
+           <button 
+             onClick={() => setIsRightOpen(true)} 
+             className="absolute top-4 right-0 bg-white p-2 rounded-l-md border border-r-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50 transform -translate-x-full"
+             title="展开面板"
+           >
+             <ChevronLeft className="w-4 h-4" />
+           </button>
+         )}
          <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
              {selectedAsset ? (
                 <AssetEditorPanel
@@ -912,24 +821,74 @@ export const CanvasView = forwardRef((props, ref) => {
              ) : (
                 <>
                   <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
-                     <h3 className="font-bold text-slate-800 flex items-center gap-2"><Wand2 className="w-4 h-4 text-purple-600" />环节详情编辑</h3>
-                     <button onClick={() => setIsRightOpen(false)} className="text-slate-400 hover:text-slate-600" title="收起面板"><ChevronRight className="w-4 h-4" /></button>
+                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                       <Wand2 className="w-4 h-4 text-purple-600" />环节详情编辑
+                     </h3>
+                     <button onClick={() => setIsRightOpen(false)} className="text-slate-400 hover:text-slate-600" title="收起面板">
+                       <ChevronRight className="w-4 h-4" />
+                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-5 space-y-6">
                      <div className="space-y-4">
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">时间 / Time</label><div className="flex items-center gap-2"><Clock className="w-4 h-4 text-slate-400" /><input type="text" value={currentStep?.time || ''} onChange={(e) => handleInputChange('time', e.target.value)} className="flex-1 text-sm border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none" /></div></div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学环节 / Step Title</label><input type="text" value={currentStep?.title || ''} onChange={(e) => handleInputChange('title', e.target.value)} className="w-full text-sm font-bold border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none" /></div>
-                        <div><label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学目标 / Objectives</label><textarea value={currentStep?.objective || ''} onChange={(e) => handleInputChange('objective', e.target.value)} className="w-full text-sm border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-16 bg-slate-50" /></div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">时间 / Time</label>
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-slate-400" />
+                            <input 
+                              type="text" 
+                              value={currentStep?.time || ''} 
+                              onChange={(e) => handleInputChange('time', e.target.value)} 
+                              className="flex-1 text-sm border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none" 
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学环节 / Step Title</label>
+                          <input 
+                            type="text" 
+                            value={currentStep?.title || ''} 
+                            onChange={(e) => handleInputChange('title', e.target.value)} 
+                            className="w-full text-sm font-bold border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none" 
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学目标 / Objectives</label>
+                          <textarea 
+                            value={currentStep?.objective || ''} 
+                            onChange={(e) => handleInputChange('objective', e.target.value)} 
+                            className="w-full text-sm border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none resize-none h-16 bg-slate-50" 
+                          />
+                        </div>
                      </div>
                      <hr className="border-slate-100" />
                      <div className="space-y-3">
-                        <div className="flex items-center justify-between"><label className="text-xs font-bold text-slate-500 uppercase">本页素材 ({currentStep?.assets?.length || 0})</label><div className="flex gap-1"><button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-purple-600"><Plus className="w-4 h-4" /></button></div></div>
-                        <div className="space-y-2">{currentStep?.assets?.map((asset, idx) => (<div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="flex items-start gap-2 p-2 border border-slate-200 rounded bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"><div className="mt-1 text-slate-400">{getAssetIcon(asset.type)}</div><div className="flex-1 min-w-0"><div className="text-xs font-bold text-slate-700 truncate">{asset.title}</div><div className="text-[10px] text-slate-400">{asset.type} • 点击编辑</div></div></div>))}</div>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-slate-500 uppercase">本页素材 ({currentStep?.assets?.length || 0})</label>
+                          <div className="flex gap-1">
+                            <button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-purple-600">
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          {currentStep?.assets?.map((asset) => (
+                            <div 
+                              key={asset.id} 
+                              onClick={() => setSelectedAssetId(asset.id)} 
+                              className="flex items-start gap-2 p-2 border border-slate-200 rounded bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"
+                            >
+                              <div className="mt-1 text-slate-400">{getAssetIcon(asset.type)}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-bold text-slate-700 truncate">{asset.title}</div>
+                                <div className="text-[10px] text-slate-400">{asset.type} • 点击编辑</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                      </div>
                      <div className="pt-6 mt-6 border-t border-slate-100 flex gap-2">
                         <button 
                           onClick={() => {
-                            // 保存当前页面内容到历史
                             if (currentStep) {
                               const historyItem = {
                                 id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -943,7 +902,7 @@ export const CanvasView = forwardRef((props, ref) => {
                                 timestamp: new Date().toISOString(),
                                 displayTime: new Date().toLocaleString('zh-CN')
                               };
-                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50)); // 最多保存50条
+                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
                               setShowPageHistoryModal(true);
                             }
                           }}
@@ -954,7 +913,6 @@ export const CanvasView = forwardRef((props, ref) => {
                         </button>
                         <button 
                           onClick={() => {
-                            // 保存当前版本到历史，然后打开提示词输入框
                             if (currentStep) {
                               const historyItem = {
                                 id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -984,55 +942,29 @@ export const CanvasView = forwardRef((props, ref) => {
          </div>
       </aside>
 
-      {/* Prompt Input Modal */}
-      <PromptInputModal
-        isOpen={showPromptModal}
-        onClose={() => {
-          setShowPromptModal(false);
-          setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
-        }}
-        onConfirm={(prompt, inputMode, videoStyle) => {
-          if (promptModalConfig.type === 'element') {
-            handleConfirmAddAsset(prompt, inputMode, videoStyle);
-          } else {
-            handleConfirmAddStep(prompt);
-          }
-        }}
-        title={promptModalConfig.type === 'element' 
-          ? `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`
-          : promptModalConfig.addAtEnd
-          ? '在末尾新增PPT'
-          : '添加教学环节'}
-        description={promptModalConfig.type === 'element'
-          ? promptModalConfig.assetType === 'text'
-            ? '选择直接输入文本内容或使用AI生成文本'
-            : '请输入AI生成提示词，描述你想要创建的元素（可选，留空将使用默认生成）'
-          : '请输入AI生成提示词，描述你想要创建的教学环节（可选，留空将使用默认标题）'}
-        placeholder={promptModalConfig.type === 'element'
-          ? `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : promptModalConfig.assetType === 'audio' ? '生成背景音乐' : '输入文本内容或AI生成提示词'}...`
-          : '例如：设计一个互动游戏环节，让学生学习颜色词汇...'}
-        type={promptModalConfig.type}
-        assetType={promptModalConfig.assetType}
-        isLoading={isGenerating}
-      />
-
-      {/* 重新生成页面提示词输入模态框 */}
-      <PromptInputModal
-        isOpen={showRegeneratePageModal}
-        onClose={() => setShowRegeneratePageModal(false)}
-        onConfirm={(prompt) => {
-          // 处理重新生成页面
+      {/* Modals */}
+      <CanvasViewModals
+        showPromptModal={showPromptModal}
+        setShowPromptModal={setShowPromptModal}
+        promptModalConfig={promptModalConfig}
+        setPromptModalConfig={setPromptModalConfig}
+        onConfirmAddStep={handleConfirmAddStep}
+        onConfirmAddAsset={handleConfirmAddAsset}
+        showCardSelectionModal={showCardSelectionModal}
+        setShowCardSelectionModal={setShowCardSelectionModal}
+        cardSelectionImages={cardSelectionImages}
+        isGenerating={isGenerating}
+        onCardSelectionConfirm={handleCardSelectionConfirm}
+        showRegeneratePageModal={showRegeneratePageModal}
+        setShowRegeneratePageModal={setShowRegeneratePageModal}
+        isRegeneratingPage={isRegeneratingPage}
+        onConfirmRegeneratePage={(prompt) => {
           setIsRegeneratingPage(true);
           setTimeout(() => {
-            // 模拟重新生成
             const newCourseData = { ...courseData };
             const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
             if (step) {
-              // 更新标题和内容
-              if (prompt) {
-                step.title = `重新生成：${prompt.substring(0, 20)}...`;
-              }
-              // 这里可以添加更多重新生成逻辑
+              if (prompt) step.title = `重新生成：${prompt.substring(0, 20)}...`;
             }
             setCourseData(newCourseData);
             saveToHistory(newCourseData);
@@ -1040,121 +972,38 @@ export const CanvasView = forwardRef((props, ref) => {
             setShowRegeneratePageModal(false);
           }, 1500);
         }}
-        title="重新生成页面"
-        description="请输入AI生成提示词，描述你想要重新生成的页面内容（可选，留空将使用默认生成）"
-        placeholder="例如：重新生成一个关于颜色词汇的教学页面，包含图片和文字..."
-        type="session"
-        isLoading={isRegeneratingPage}
+        showHistoryModal={showHistoryModal}
+        setShowHistoryModal={setShowHistoryModal}
+        generationHistory={generationHistory}
+        activePhase={activePhase}
+        activeStepId={activeStepId}
+        onRestoreHistory={handleRestoreHistory}
       />
 
-      {/* 历史生成列表模态框 */}
-      {showHistoryModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white">
-                  <History className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-lg text-slate-800">
-                    历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : showHistoryModal.assetType === 'text' ? '文本' : showHistoryModal.assetType === 'audio' ? '音频' : ''}
-                  </h3>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowHistoryModal(null)} 
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6">
-              {generationHistory
-                .filter(h => 
-                  h.phaseId === activePhase && 
-                  h.stepId === activeStepId && 
-                  h.assetId === showHistoryModal.assetId &&
-                  h.type === showHistoryModal.assetType
-                )
-                .length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
-                  <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                  <p>暂无历史生成记录</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {generationHistory
-                    .filter(h => 
-                      h.phaseId === activePhase && 
-                      h.stepId === activeStepId && 
-                      h.assetId === showHistoryModal.assetId &&
-                      h.type === showHistoryModal.assetType
-                    )
-                    .map((historyItem) => (
-                      <div 
-                        key={historyItem.id} 
-                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-medium text-slate-500">
-                                {historyItem.displayTime}
-                              </span>
-                            </div>
-                            {historyItem.type === 'image' || historyItem.type === 'video' ? (
-                              <img 
-                                src={historyItem.url} 
-                                alt="历史生成" 
-                                className="w-full h-32 object-cover rounded border border-slate-200 mb-2"
-                              />
-                            ) : (
-                              <div className="w-full h-16 bg-slate-100 rounded border border-slate-200 flex items-center justify-center mb-2">
-                                <Music className="w-6 h-6 text-slate-400" />
-                              </div>
-                            )}
-                            {historyItem.prompt && (
-                              <p className="text-xs text-slate-600 bg-slate-50 rounded p-2 mt-2">
-                                {historyItem.prompt}
-                              </p>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => handleRestoreHistory(historyItem)}
-                            className="ml-4 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
-                          >
-                            <RefreshCw className="w-3 h-3" />
-                            恢复
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal */}
       {isPreviewOpen && (
         <div className="fixed inset-0 z-50 bg-black flex flex-col">
            <div className="h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6 shrink-0">
               <div className="text-white font-bold">{currentStep?.title}</div>
               <div className="flex gap-4">
-                 <button onClick={() => handleNavigatePreview('prev')} disabled={currentGlobalIndex <= 0} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 disabled:opacity-50 text-white"><ChevronLeft className="w-5 h-5" /></button>
-                 <button onClick={() => handleNavigatePreview('next')} disabled={currentGlobalIndex >= allSteps.length - 1} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 disabled:opacity-50 text-white"><ChevronRight className="w-5 h-5" /></button>
-                 <button onClick={() => setIsPreviewOpen(false)} className="p-2 bg-red-900/50 hover:bg-red-700 text-white rounded-full ml-4"><X className="w-5 h-5" /></button>
+                 <button onClick={() => handleNavigatePreview('prev')} disabled={currentGlobalIndex <= 0} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 disabled:opacity-50 text-white">
+                   <ChevronLeft className="w-5 h-5" />
+                 </button>
+                 <button onClick={() => handleNavigatePreview('next')} disabled={currentGlobalIndex >= allSteps.length - 1} className="p-2 bg-slate-800 rounded-full hover:bg-slate-700 disabled:opacity-50 text-white">
+                   <ChevronRight className="w-5 h-5" />
+                 </button>
+                 <button onClick={() => setIsPreviewOpen(false)} className="p-2 bg-red-900/50 hover:bg-red-700 text-white rounded-full ml-4">
+                   <X className="w-5 h-5" />
+                 </button>
               </div>
            </div>
            <div className="flex-1 flex items-center justify-center bg-black overflow-hidden relative">
-              <div style={{ width: 960, height: 540, transform: 'scale(1.2)' }} className="relative bg-white shadow-2xl overflow-hidden"><SlideRenderer assets={currentStep?.assets || []} isEditable={false} /></div>
+              <div style={{ width: 960, height: 540, transform: 'scale(1.2)' }} className="relative bg-white shadow-2xl overflow-hidden">
+                <SlideRenderer assets={currentStep?.assets || []} isEditable={false} />
+              </div>
            </div>
         </div>
       )}
 
-      {/* 页面历史生成列表模态框 */}
       {showPageHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
@@ -1164,97 +1013,63 @@ export const CanvasView = forwardRef((props, ref) => {
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">
-                    历史生成列表 - 环节内容
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    {currentStep?.title || '当前环节'}
-                  </p>
+                  <h3 className="font-bold text-lg text-slate-800">历史生成列表 - 环节内容</h3>
+                  <p className="text-xs text-slate-500 mt-1">{currentStep?.title || '当前环节'}</p>
                 </div>
               </div>
-              <button 
-                onClick={() => setShowPageHistoryModal(false)} 
-                className="text-slate-400 hover:text-slate-600 transition-colors"
-              >
+              <button onClick={() => setShowPageHistoryModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
-              {pageHistory
-                .filter(h => h.stepId === activeStepId)
-                .length === 0 ? (
+              {pageHistory.filter(h => h.stepId === activeStepId).length === 0 ? (
                 <div className="text-center py-12 text-slate-400">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无历史生成记录</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {pageHistory
-                    .filter(h => h.stepId === activeStepId)
-                    .map((historyItem) => (
-                      <div 
-                        key={historyItem.id} 
-                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
-                      >
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-medium text-slate-500">
-                                {historyItem.displayTime}
-                              </span>
-                            </div>
-                            <div className="text-sm text-slate-700 mb-2">
-                              <div className="font-semibold">{historyItem.data.title}</div>
-                              {historyItem.data.time && (
-                                <div className="text-xs text-slate-500 mt-1">时间: {historyItem.data.time}</div>
-                              )}
-                              {historyItem.data.objective && (
-                                <div className="text-xs text-slate-500 mt-1">目标: {historyItem.data.objective}</div>
-                              )}
-                              <div className="text-xs text-slate-500 mt-1">素材数量: {historyItem.data.assets?.length || 0}</div>
-                            </div>
+                  {pageHistory.filter(h => h.stepId === activeStepId).map((historyItem) => (
+                    <div key={historyItem.id} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-medium text-slate-500">{historyItem.displayTime}</span>
                           </div>
-                          <button
-                            onClick={() => {
-                              // 恢复历史版本
-                              const newCourseData = { ...courseData };
-                              const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-                              if (step) {
-                                step.title = historyItem.data.title;
-                                step.time = historyItem.data.time;
-                                step.objective = historyItem.data.objective;
-                                step.assets = JSON.parse(JSON.stringify(historyItem.data.assets || []));
-                                setCourseData(newCourseData);
-                                saveToHistory(newCourseData);
-                                setShowPageHistoryModal(false);
-                              }
-                            }}
-                            className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 transition-colors"
-                          >
-                            恢复此版本
-                          </button>
+                          <div className="text-sm text-slate-700 mb-2">
+                            <div className="font-semibold">{historyItem.data.title}</div>
+                            {historyItem.data.time && <div className="text-xs text-slate-500 mt-1">时间: {historyItem.data.time}</div>}
+                            {historyItem.data.objective && <div className="text-xs text-slate-500 mt-1">目标: {historyItem.data.objective}</div>}
+                            <div className="text-xs text-slate-500 mt-1">素材数量: {historyItem.data.assets?.length || 0}</div>
+                          </div>
                         </div>
+                        <button
+                          onClick={() => {
+                            const newCourseData = { ...courseData };
+                            const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+                            if (step) {
+                              step.title = historyItem.data.title;
+                              step.time = historyItem.data.time;
+                              step.objective = historyItem.data.objective;
+                              step.assets = JSON.parse(JSON.stringify(historyItem.data.assets || []));
+                              setCourseData(newCourseData);
+                              saveToHistory(newCourseData);
+                              setShowPageHistoryModal(false);
+                            }
+                          }}
+                          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 transition-colors"
+                        >
+                          恢复此版本
+                        </button>
                       </div>
-                    ))}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
           </div>
         </div>
       )}
-      {/* 图片抽卡选择模态框 */}
-      <CardSelectionModal
-        isOpen={showCardSelectionModal}
-        onClose={() => {
-          setShowCardSelectionModal(false);
-          setCardSelectionImages([]);
-          setPendingAssetConfig(null);
-        }}
-        title="选择图片"
-        images={cardSelectionImages}
-        isLoading={isGenerating}
-        onConfirm={handleCardSelectionConfirm}
-      />
     </div>
   );
 });
