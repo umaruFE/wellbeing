@@ -170,13 +170,14 @@ export const AdminDashboard = () => {
                   <p className="text-slate-500 text-sm">基于 AI 快速生成专业的课件内容</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-xl">
-                  <Plus className="w-6 h-6 text-blue-600" />
+                  <Layout className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
               <button
                 onClick={() => navigate('/create')}
                 className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-medium flex items-center gap-2 hover:bg-blue-700 transition-colors"
               >
+                <Plus className="w-4 h-4" />
                 开始创建
                 <ChevronRight className="w-4 h-4" />
               </button>

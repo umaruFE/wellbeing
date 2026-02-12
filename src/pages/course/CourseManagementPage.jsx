@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Plus, Edit, Trash2, Eye, Upload, Search, Filter, Clock, Tag, Book, Sparkles } from 'lucide-react';
+import { BookOpen, Plus, Edit, Trash2, Eye, Upload, Search, Filter, Clock, Book, Sparkles, Layout } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const CourseManagementPage = () => {
@@ -196,47 +196,77 @@ export const CourseManagementPage = () => {
           {filteredCourses.map(course => (
             <div
               key={course.id}
-              className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg transition-all cursor-pointer"
+              className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-lg transition-all cursor-pointer group"
+              onClick={() => navigate(`/courses/${course.id}`)}
             >
-              {/* 标题和状态 */}
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="text-lg font-bold text-slate-800 flex-1 pr-2">{course.title}</h3>
-                {getStatusBadge(course.status)}
-              </div>
-
-              {/* 课程信息网格 */}
-              <div className="space-y-3 mb-4">
-                {/* 年龄和年级 */}
-                <div className="flex items-center gap-2 text-sm">
-                  <Book className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{course.age} ({course.grade})</span>
+              {/* 左右布局：左侧缩略图 + 右侧信息 */}
+              <div className="flex gap-4">
+                {/* 左侧缩略图 - 点击放大预览 */}
+                <div
+                  className="w-32 h-24 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex-shrink-0 overflow-hidden relative cursor-zoom-in group"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (course.thumbnail) {
+                      window.open(course.thumbnail, '_blank');
+                    }
+                  }}
+                >
+                  {course.thumbnail ? (
+                    <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-blue-300">
+                      <Layout className="w-8 h-8 mb-1" />
+                      <span className="text-[10px]">暂无封面</span>
+                    </div>
+                  )}
+                  {/* 悬停时显示放大图标 */}
+                  {course.thumbnail && (
+                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Eye className="w-6 h-6 text-white drop-shadow-lg" />
+                    </div>
+                  )}
                 </div>
 
-                {/* 教材单元 */}
-                <div className="flex items-start gap-2 text-sm">
-                  <BookOpen className="w-4 h-4 text-slate-400 mt-0.5" />
-                  <div>
-                    <span className="text-slate-800 font-medium">{course.unit}</span>
-                    <span className="text-slate-500 ml-1">- {course.unitCN}</span>
+                {/* 右侧信息区域 - 点击跳转详情 */}
+                <div
+                  className="flex-1 min-w-0 cursor-pointer"
+                  onClick={() => navigate(`/courses/${course.id}`)}
+                >
+                  {/* 标题和状态 */}
+                  <div className="flex items-start justify-between mb-2">
+                    <h3 className="text-base font-bold text-slate-800 flex-1 pr-2 truncate">{course.title}</h3>
+                    {getStatusBadge(course.status)}
                   </div>
-                </div>
 
-                {/* 上课时长 */}
-                <div className="flex items-center gap-2 text-sm">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{course.duration}分钟 ({course.durationType}/{course.stage})</span>
-                </div>
+                  {/* 课程信息 */}
+                  <div className="space-y-1.5">
+                    {/* 年龄和年级 */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <Book className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-slate-600">{course.age} ({course.grade})</span>
+                    </div>
 
-                {/* 剧情主题 */}
-                <div className="flex items-center gap-2 text-sm">
-                  <Sparkles className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{course.storyTheme}</span>
+                    {/* 教材单元 */}
+                    <div className="flex items-start gap-2 text-xs">
+                      <BookOpen className="w-3.5 h-3.5 text-slate-400 mt-0.5" />
+                      <div className="truncate">
+                        <span className="text-slate-800">{course.unit}</span>
+                        <span className="text-slate-500 ml-1">- {course.unitCN}</span>
+                      </div>
+                    </div>
+
+                    {/* 剧情主题 */}
+                    <div className="flex items-center gap-2 text-xs">
+                      <Sparkles className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="text-slate-600 truncate">{course.storyTheme}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {/* 关键词标签 */}
               {course.keywords && course.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-4">
+                <div className="flex flex-wrap gap-1.5 mt-3">
                   {course.keywords.slice(0, 4).map((keyword, idx) => (
                     <span
                       key={idx}
@@ -254,46 +284,60 @@ export const CourseManagementPage = () => {
               )}
 
               {/* 底部操作栏 */}
-              <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
                 <button
-                  onClick={() => navigate(`/courses/${course.id}`)}
-                  className="flex-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 flex items-center justify-center gap-1 transition-colors text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/courses/${course.id}`);
+                  }}
+                  className="flex-1 px-2 py-1.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 flex items-center justify-center gap-1 transition-colors text-xs"
                 >
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-3.5 h-3.5" />
                   查看
                 </button>
                 <button
-                  onClick={() => handleEditCourse(course.id)}
-                  className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center justify-center gap-1 transition-colors text-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditCourse(course.id);
+                  }}
+                  className="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center justify-center gap-1 transition-colors text-xs"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="w-3.5 h-3.5" />
                   编辑
                 </button>
                 {course.status === 'draft' && (
                   <button
-                    onClick={() => handlePublishCourse(course.id)}
-                    className="px-3 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePublishCourse(course.id);
+                    }}
+                    className="px-2 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
                     title="发布"
                   >
-                    <Upload className="w-4 h-4" />
+                    <Upload className="w-3.5 h-3.5" />
                   </button>
                 )}
                 <button
-                  onClick={() => handleDeleteCourse(course.id)}
-                  className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteCourse(course.id);
+                  }}
+                  className="px-2 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
                   title="删除"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
 
               {/* 更新时间 */}
-              <div className="mt-3 text-xs text-slate-400 text-center">
+              <div className="mt-2 text-[10px] text-slate-400 text-center">
                 更新于 {course.updatedAt}
               </div>
             </div>
           ))}
         </div>
+
+        {/* 无课程时的提示 */}
         {filteredCourses.length === 0 && (
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
@@ -307,6 +351,21 @@ export const CourseManagementPage = () => {
             </button>
           </div>
         )}
+
+        {/* 无课程时的提示 */}
+        {filteredCourses.length === 0 ? (
+          <div className="text-center py-12">
+            <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500">暂无课程</p>
+            <button
+              onClick={handleCreateCourse}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 mx-auto transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              立即创建
+            </button>
+          </div>
+        ) : null}
       </div>
     </div>
   );

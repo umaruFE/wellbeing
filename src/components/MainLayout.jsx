@@ -9,6 +9,7 @@ import {
   Building2,
   LogOut,
   ChevronLeft,
+  ChevronRight,
   Layout,
   Table as TableIcon,
   FileText as FileTextIcon,
@@ -284,13 +285,14 @@ export const MainLayout = () => {
           })}
         </nav>
 
-        {/* 收起按钮 */}
+        {/* 收起/展开按钮 */}
         <div className="p-3 border-t border-slate-200">
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+            title={sidebarCollapsed ? "展开菜单" : "收起菜单"}
           >
-            <ChevronLeft className={`w-4 h-4 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+            <ChevronRight className={`w-4 h-4 transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`} />
             {!sidebarCollapsed && <span className="text-xs">收起</span>}
           </button>
         </div>
