@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Type, Edit } from 'lucide-react';
+import { X, Type, Edit, Wand2 } from 'lucide-react';
+import PromptOptimizer from './PromptOptimizer';
 
 /**
  * PromptInputModal - 内容输入模态框
@@ -14,10 +15,11 @@ export const PromptInputModal = ({
   description = '请输入您的内容',
   placeholder = '请输入内容...',
   initialContent = '',
-  type = 'text', // 'text' | 其他
+  type = 'text', // 'text' | 'image' | 'script' | 'activity' | 'ppt'
   isLoading = false
 }) => {
   const [content, setContent] = useState(initialContent);
+  const [showOptimizer, setShowOptimizer] = useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
@@ -70,9 +72,21 @@ export const PromptInputModal = ({
               className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-32"
               autoFocus
             />
-            <p className="text-xs text-slate-400 mt-2">
-              提示：直接输入文本内容，将立即添加到画布
-            </p>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-slate-400">
+                提示：直接输入文本内容，将立即添加到画布
+              </p>
+              {(type === 'image' || type === 'script' || type === 'activity' || type === 'ppt') && (
+                <button
+                  onClick={() => setShowOptimizer(true)}
+                  disabled={isLoading}
+                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 disabled:opacity-50"
+                >
+                  <Wand2 className="w-3 h-3" />
+                  优化提示词
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3">
@@ -94,6 +108,18 @@ export const PromptInputModal = ({
           </div>
         </div>
       </div>
+
+      {/* 提示词优化器 */}
+      {showOptimizer && (
+        <PromptOptimizer
+          elementType={type}
+          onOptimize={(optimizedPrompt) => {
+            setContent(optimizedPrompt);
+            setShowOptimizer(false);
+          }}
+          onClose={() => setShowOptimizer(false)}
+        />
+      )}
     </div>
   );
 };

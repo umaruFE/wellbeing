@@ -15,8 +15,10 @@ import {
 } from 'lucide-react';
 import { CURRICULUM_DATA } from '../constants';
 import { generateCourseData } from '../services/dashscope';
+import { useAuth } from '../contexts/AuthContext';
 
 export const WelcomeScreen = ({ onStart }) => {
+  const { user } = useAuth();
   const [step, setStep] = useState('input'); // input, generating
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [loadingText, setLoadingText] = useState('');
@@ -198,7 +200,10 @@ export const WelcomeScreen = ({ onStart }) => {
     }, 800);
 
     try {
-      const courseData = await generateCourseData(config);
+      const userId = user?.id || null;
+      const organizationId = user?.organization_id || null;
+      
+      const courseData = await generateCourseData(config, userId, organizationId);
       clearInterval(interval);
       setLoadingProgress(100);
       setLoadingText('课件组装完成！');

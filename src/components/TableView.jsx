@@ -1652,7 +1652,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="添加教学环节"
           description="请输入AI生成提示词，描述你想要创建的教学环节"
           placeholder="例如：设计一个互动游戏环节，让学生学习颜色词汇..."
-          type="session"
+          type="activity"
           isLoading={isGeneratingRow}
         />
       )}
@@ -1666,7 +1666,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="生成阅读材料"
           description="请输入AI生成提示词，描述你想要创建的阅读材料内容"
           placeholder="例如：创建一份关于动物主题的阅读材料，包含图片和练习题..."
-          type="element"
+          type="script"
           isLoading={isGeneratingReadingMaterial}
         />
       )}
@@ -1680,7 +1680,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="添加PPT页面"
           description="请输入AI生成提示词，描述你想要创建的PPT页面内容"
           placeholder="例如：创建一个关于颜色词汇的PPT页面，包含图片和文字..."
-          type="element"
+          type="ppt"
           isLoading={isGeneratingPPT}
         />
       )}
@@ -1694,7 +1694,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="重新生成PPT"
           description="请输入AI生成提示词，描述你想要重新生成的PPT页面内容（可选，留空将使用默认生成）"
           placeholder="例如：重新生成一个关于颜色词汇的PPT页面，包含图片和文字..."
-          type="element"
+          type="ppt"
           isLoading={isRegeneratingPPT}
         />
       )}
@@ -1708,7 +1708,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="重新生成阅读材料"
           description="请输入AI生成提示词，描述你想要重新生成的阅读材料内容（可选，留空将使用默认生成）"
           placeholder="例如：重新生成一个关于颜色词汇的阅读材料，包含图片和文字..."
-          type="element"
+          type="script"
           isLoading={isRegeneratingReadingMaterial}
         />
       )}
@@ -1728,7 +1728,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
             : showRegenerateModal.field === 'script'
             ? '例如：生成一段鼓励性的教师讲稿...'
             : '例如：生成一个完整的教学环节，包含活动、目标和讲稿...'}
-          type="element"
+          type={showRegenerateModal.field === 'activity' ? 'activity' : showRegenerateModal.field === 'script' ? 'script' : 'text'}
           isLoading={generatingMedia[`${showRegenerateModal.slideId}-${showRegenerateModal.field === 'session' ? 'session' : showRegenerateModal.field}`]}
         />
       )}
@@ -1742,7 +1742,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="重新生成阶段"
           description="请输入AI生成提示词，描述你想要重新生成的阶段内容（可选，留空将使用默认生成）"
           placeholder="例如：重新生成一个关于颜色教学的阶段，包含多个互动环节..."
-          type="session"
+          type="activity"
           isLoading={false}
         />
       )}
