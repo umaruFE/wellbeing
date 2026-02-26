@@ -192,6 +192,62 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   };
 
   useEffect(() => {
+    if (initialConfig && initialConfig.courseData) {
+      const courseData = initialConfig.courseData;
+      
+      const convertCourseDataToPhases = () => {
+        const phaseOrder = ['engage', 'empower', 'execute', 'elevate'];
+        const phaseLabels = {
+          engage: 'Engage (引入)',
+          empower: 'Empower (赋能)',
+          execute: 'Execute (实践/产出)',
+          elevate: 'Elevate (升华)'
+        };
+        const phaseColors = {
+          engage: 'bg-purple-50 border-purple-200 text-purple-800',
+          empower: 'bg-blue-50 border-blue-200 text-blue-800',
+          execute: 'bg-green-50 border-green-200 text-green-800',
+          elevate: 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        };
+
+        return phaseOrder.map(phaseKey => {
+          const phaseData = courseData[phaseKey];
+          if (!phaseData) return null;
+
+          return {
+            id: phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1),
+            label: phaseLabels[phaseKey],
+            color: phaseColors[phaseKey],
+            slides: phaseData.steps.map((step, idx) => ({
+              id: step.id || `${phaseKey}-${idx}`,
+              phase: phaseLabels[phaseKey],
+              duration: step.time || '0分钟',
+              title: step.title || '未命名环节',
+              objectives: step.objective || '',
+              activities: step.activity || '',
+              script: step.script || '',
+              materials: '',
+              worksheets: '',
+              ppt_content: '',
+              image: '',
+              audio: '',
+              video: '',
+              elements: [],
+              pptSlides: [],
+              readingMaterials: [generateSampleReadingMaterial({
+                title: step.title || '未命名环节',
+                id: step.id || `${phaseKey}-${idx}`
+              }, 0)]
+            }))
+          };
+        }).filter(Boolean);
+      };
+
+      setPhases(convertCourseDataToPhases());
+    }
+  }, [initialConfig]);
+
+  useEffect(() => {
     // 自动保存到历史（简化版，实际应该防抖）
     const timer = setTimeout(() => {
       if (phases.length > 0) {
@@ -1982,7 +2038,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
             </div>
           </div>
         </div>
-      )}
       )}
       {/* 图片抽卡选择模态框 */}
       <CardSelectionModal
