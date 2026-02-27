@@ -158,10 +158,50 @@ export async function PUT(
     const { id } = params;
     const body = await request.json();
 
-    const updateData = {
-      ...body,
-      updated_at: new Date().toISOString()
+    // 只允许更新 courses 表中实际存在的字段，并做命名转换
+    const {
+      userId,
+      organizationId,
+      title,
+      description,
+      ageGroup,
+      unit,
+      duration,
+      theme,
+      keywords,
+      isPublic,
+      status,
+      // 其余如 courseData 等字段目前没有对应列，避免直接更新导致报错
+    } = body;
+
+    // 处理 userId（与创建接口保持一致逻辑）
+    let processed_user_id = userId;
+    if (
+      typeof userId === 'number' ||
+      (typeof userId === 'string' && !isNaN(userId) && userId !== '')
+    ) {
+      processed_user_id = null;
+    }
+
+    const updateData: any = {
+      updated_at: new Date().toISOString(),
     };
+
+    if (typeof processed_user_id !== 'undefined') {
+      updateData.user_id = processed_user_id;
+    }
+    if (typeof organizationId !== 'undefined') {
+      updateData.organization_id = organizationId;
+    }
+    if (typeof title !== 'undefined') updateData.title = title;
+    if (typeof description !== 'undefined') updateData.description = description;
+    if (typeof ageGroup !== 'undefined') updateData.age_group = ageGroup;
+    if (typeof unit !== 'undefined') updateData.unit = unit;
+    if (typeof duration !== 'undefined') updateData.duration = duration;
+    if (typeof theme !== 'undefined') updateData.theme = theme;
+    if (typeof keywords !== 'undefined') updateData.keywords = keywords;
+    if (typeof isPublic !== 'undefined') updateData.is_public = isPublic;
+    if (typeof status !== 'undefined') updateData.status = status;
 
     const { data, error } = await update('courses', updateData, { id });
 

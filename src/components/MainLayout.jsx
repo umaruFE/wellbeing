@@ -304,13 +304,14 @@ export const MainLayout = () => {
 
   // 如果通过 ?courseId=xxx 进入创建页，则加载已有课程并直接进入表格编辑模式
   // 如果没有 courseId，则回到欢迎页，避免直接跳过 WelcomeScreen
+  // 注意：依赖只监听路由变化，避免在保存/生成课程时被意外重置回欢迎页
   React.useEffect(() => {
     if (!isCreatePage) return;
 
     const searchParams = new URLSearchParams(location.search || '');
     const editingCourseId = searchParams.get('courseId');
 
-    // 没有传 courseId：认为是“新建课程”，重置到欢迎页
+    // 没有传 courseId：认为是“新建课程”，重置到欢迎页（仅在刚进入 /create 时生效）
     if (!editingCourseId) {
       setAppState('welcome');
       setAppConfig(null);
@@ -363,7 +364,7 @@ export const MainLayout = () => {
     };
 
     loadCourse();
-  }, [isCreatePage, location.search, currentCourseId, appConfig]);
+  }, [isCreatePage, location.search]);
 
   // 判断是否为子菜单
   const isChildMenu = (path) => {
