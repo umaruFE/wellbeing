@@ -25,7 +25,7 @@ import { PromptInputModal } from './PromptInputModal';
 import { CardSelectionModal } from './CardSelectionModal';
 import { aiAssetService } from '../services/aiAssetService';
 
-export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
+export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateToCanvas, onReady }, ref) => {
   // 初始化数据时，确保每一行都有 script 字段
   const [slides, setSlides] = useState(WORD_DOC_DATA.map(s => ({...s, script: s.script || ''})));
   const [previewImage, setPreviewImage] = useState(null);
@@ -193,8 +193,11 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   };
 
   useEffect(() => {
+    console.log('TableView useEffect triggered:', { initialConfig, hasCourseData: !!initialConfig?.courseData });
+    
     if (initialConfig && initialConfig.courseData) {
       const courseData = initialConfig.courseData;
+      console.log('Converting courseData to phases:', courseData);
       
       const convertCourseDataToPhases = () => {
         const phaseOrder = ['engage', 'empower', 'execute', 'elevate'];
@@ -244,7 +247,9 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
         }).filter(Boolean);
       };
 
-      setPhases(convertCourseDataToPhases());
+      const newPhases = convertCourseDataToPhases();
+      console.log('Setting phases:', newPhases);
+      setPhases(newPhases);
     }
   }, [initialConfig]);
 
@@ -257,6 +262,34 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
     }, 30000); // 每30秒自动保存
     return () => clearTimeout(timer);
   }, [phases]);
+
+  // 暴露给父组件的方法（必须在 return 之前执行）
+  React.useImperativeHandle(ref, () => ({
+    getSlides: () => phases
+  }), [phases]);
+
+  // 组件准备好后通知父组件
+  useEffect(() => {
+    console.log('TableView onReady useEffect:', { hasRef: !!ref?.current, onReady });
+    
+    // 使用 setTimeout 确保 ref 已经被设置
+    const timer = setTimeout(() => {
+      if (onReady && typeof onReady === 'function') {
+        console.log('Calling onReady callback');
+        onReady();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []); // 只在组件挂载时执行一次
+  
+  // 当 phases 被设置后，确保 onReady 被调用
+  useEffect(() => {
+    if (phases.length > 0 && onReady && typeof onReady === 'function') {
+      console.log('Phases set, calling onReady');
+      onReady();
+    }
+  }, [phases, onReady]);
 
   const updateSlideField = (phaseId, slideId, field, value) => {
     setPhases(prevPhases => prevPhases.map(phase => {
@@ -2086,4 +2119,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
       />
     </div>
   );
-};
+});
+
+TableView.displayName = 'TableView';

@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 // Database client configuration
 const dbType = process.env.DB_TYPE || 'postgres';
 let dbClient;
@@ -138,11 +140,11 @@ export async function POST(request: Request) {
     const { user_id, element_type, original_prompt, optimized_prompt, improvement_score } = await request.json();
 
     // Handle user_id type conversion
+    // If user_id is numeric or invalid, set to null to avoid foreign key constraint errors
     let processed_user_id = user_id;
-    if (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) {
-      // Generate a UUID for numeric user_id
-      const { v4: uuidv4 } = require('uuid');
-      processed_user_id = uuidv4();
+    if (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id) && user_id !== '')) {
+      // Numeric user_id - set to null since we don't have a real user record
+      processed_user_id = null;
     }
 
     const { data, error } = await insert('prompt_optimizations', {

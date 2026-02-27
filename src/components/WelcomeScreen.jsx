@@ -179,40 +179,33 @@ export const WelcomeScreen = ({ onStart }) => {
   const handleGenerate = async () => {
     setStep('generating');
 
-    const stages = [
-      { p: 10, t: `正在连接 AI 引擎...` },
-      { p: 30, t: `正在分析 ${config.age} 认知心理学模型...` },
-      { p: 50, t: `正在分析 核心知识点图谱...` },
-      { p: 70, t: 'AI 引擎正在设计"最近发展区(ZPD)"教学支架...' },
-      { p: 90, t: '正在生成多模态(Visual-Auditory)教学素材...' },
-      { p: 100, t: '正在进行教育学原理一致性校验...' }
-    ];
-
-    let currentStage = 0;
-    const interval = setInterval(() => {
-      if (currentStage >= stages.length) {
-        clearInterval(interval);
-        return;
-      }
-      setLoadingProgress(stages[currentStage].p);
-      setLoadingText(stages[currentStage].t);
-      currentStage++;
-    }, 800);
-
     try {
       const userId = user?.id || null;
       const organizationId = user?.organization_id || null;
       
-      const courseData = await generateCourseData(config, userId, organizationId);
-      clearInterval(interval);
+      // 使用真实的进度回调
+      const courseData = await generateCourseData(
+        config, 
+        userId, 
+        organizationId,
+        (progress, text) => {
+          setLoadingProgress(progress);
+          if (text) setLoadingText(text);
+        }
+      );
+      
+      console.log('Course data generated:', courseData);
+      
       setLoadingProgress(100);
       setLoadingText('课件组装完成！');
       
+      const resultConfig = { ...config, courseData };
+      console.log('Calling onStart with config:', resultConfig);
+      
       setTimeout(() => {
-        onStart({ ...config, courseData });
+        onStart(resultConfig);
       }, 500);
     } catch (error) {
-      clearInterval(interval);
       setLoadingText(`生成失败: ${error.message}`);
       console.error('生成课程数据失败:', error);
       

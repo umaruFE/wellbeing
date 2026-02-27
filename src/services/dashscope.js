@@ -176,7 +176,7 @@ export const optimizePrompt = async (originalPrompt, elementType, userId = null)
   return optimizedPrompt;
 };
 
-export const generateCourseData = async (config, userId = null, organizationId = null) => {
+export const generateCourseData = async (config, userId = null, organizationId = null, onProgress = null) => {
   const { age, unit, duration, theme, keywords, isCustomUnit, customUnit } = config;
   
   const unitName = isCustomUnit ? customUnit : unit;
@@ -222,8 +222,20 @@ export const generateCourseData = async (config, userId = null, organizationId =
   const startTime = Date.now();
   let courseData = null;
   let errorMessage = null;
+  
+  // 报告进度函数
+  const reportProgress = (progress, text) => {
+    if (onProgress && typeof onProgress === 'function') {
+      onProgress(progress, text);
+    }
+  };
+  
+  // 开始请求，报告初始进度
+  reportProgress(10, '正在连接AI服务...');
 
   try {
+    reportProgress(20, '正在发送请求...');
+    
     const response = await fetch(API_URL, {
       method: 'POST',
       headers: {
@@ -243,7 +255,7 @@ export const generateCourseData = async (config, userId = null, organizationId =
           }
         ],
         temperature: 0.7,
-        max_tokens: 4000
+        max_tokens: 8000
       })
     });
 
@@ -251,17 +263,49 @@ export const generateCourseData = async (config, userId = null, organizationId =
       throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
     }
 
+    reportProgress(40, 'AI正在生成课程内容...');
+    
     const data = await response.json();
+    
+    reportProgress(70, '正在解析课程数据...');
     
     if (data.choices && data.choices[0] && data.choices[0].message) {
       const content = data.choices[0].message.content;
       
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const parsedData = JSON.parse(jsonMatch[0]);
+      // 尝试提取 JSON 数据
+      let jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('无法在API返回内容中找到JSON数据');
+      }
+      
+      let jsonStr = jsonMatch[0];
+      
+      // 尝试解析 JSON
+      try {
+        const parsedData = JSON.parse(jsonStr);
         courseData = parsedData.courseData;
-      } else {
-        throw new Error('无法解析API返回的JSON数据');
+        reportProgress(90, '课程数据解析完成...');
+      } catch (parseError) {
+        console.error('JSON解析失败，尝试修复:', parseError.message);
+        console.error('原始JSON字符串:', jsonStr.substring(0, 500));
+        
+        // 尝试修复常见的 JSON 错误
+        let fixedJsonStr = jsonStr
+          .replace(/,\s*}/g, '}')  // 移除对象末尾的逗号
+          .replace(/,\s*]/g, ']')  // 移除数组末尾的逗号
+          .replace(/'/g, '"')       // 将单引号替换为双引号
+          .replace(/([{,]\s*)(\w+)(\s*:)/g, '$1"$2"$3')  // 为未加引号的键添加引号
+          .replace(/:\s*'([^']*)'/g, ': "$1"');  // 修复字符串值
+        
+        try {
+          const parsedData = JSON.parse(fixedJsonStr);
+          courseData = parsedData.courseData;
+          reportProgress(90, '课程数据解析完成...');
+          console.log('JSON修复成功');
+        } catch (fixedError) {
+          console.error('JSON修复失败:', fixedError.message);
+          throw new Error(`无法解析API返回的JSON数据: ${parseError.message}`);
+        }
       }
     } else {
       throw new Error('API返回数据格式不正确');

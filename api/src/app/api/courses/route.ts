@@ -130,7 +130,14 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     const filters = {};
-    if (userId) filters.user_id = userId;
+    // Handle user_id type conversion - skip filtering for numeric user_id
+    if (userId && !isNaN(userId)) {
+      // Skip user_id filter for numeric IDs, return all courses
+      console.log('Skipping user_id filter for numeric ID:', userId);
+    } else if (userId) {
+      filters.user_id = userId;
+    }
+    
     if (status) filters.status = status;
     if (isPublic === 'true') filters.is_public = true;
 
@@ -198,8 +205,16 @@ export async function POST(request: NextRequest) {
       isPublic
     } = body;
 
+    // Handle userId type conversion
+    // If userId is numeric or invalid, set to null to avoid foreign key constraint errors
+    let processed_user_id = userId;
+    if (typeof userId === 'number' || (typeof userId === 'string' && !isNaN(userId) && userId !== '')) {
+      // Numeric userId - set to null since we don't have a real user record
+      processed_user_id = null;
+    }
+
     const courseData = {
-      user_id: userId,
+      user_id: processed_user_id,
       organization_id: organizationId,
       title,
       description,
