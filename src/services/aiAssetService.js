@@ -1,5 +1,5 @@
 // AI素材生成服务（图片、音频、视频）
-const AI_API_BASE_URL = 'https://8afbu10k60e64svm-8188.container.x-gpu.com';
+const AI_API_BASE_URL = '/ai';
 
 export const aiAssetService = {
   // 生成图片

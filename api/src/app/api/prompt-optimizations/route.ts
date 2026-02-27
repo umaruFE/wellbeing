@@ -137,8 +137,16 @@ export async function POST(request: Request) {
   try {
     const { user_id, element_type, original_prompt, optimized_prompt, improvement_score } = await request.json();
 
+    // Handle user_id type conversion
+    let processed_user_id = user_id;
+    if (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id))) {
+      // Generate a UUID for numeric user_id
+      const { v4: uuidv4 } = require('uuid');
+      processed_user_id = uuidv4();
+    }
+
     const { data, error } = await insert('prompt_optimizations', {
-      user_id,
+      user_id: processed_user_id,
       element_type,
       original_prompt,
       optimized_prompt,

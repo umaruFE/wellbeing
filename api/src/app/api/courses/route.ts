@@ -1,5 +1,123 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase, createServerSupabaseClient } from '@/lib/supabase';
+
+// Database client configuration
+let dbClient;
+let dbError = null;
+
+try {
+  const { Pool } = require('pg');
+  dbClient = new Pool({
+    host: process.env.DB_HOST || 'localhost',
+    port: parseInt(process.env.DB_PORT || '5432'),
+    database: process.env.DB_NAME || 'wellbeing',
+    user: process.env.DB_USER || 'wellbeing_user',
+    password: process.env.DB_PASSWORD || 'your_password',
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+} catch (error) {
+  dbError = `PostgreSQL client initialization error: ${error.message}`;
+  console.error(dbError);
+}
+
+// Select data function
+async function select(table, params = {}) {
+  if (dbError) {
+    return { data: null, error: new Error(dbError) };
+  }
+  
+  if (!dbClient) {
+    return { data: null, error: new Error('Database client not initialized') };
+  }
+  
+  let query = `SELECT * FROM ${table}`;
+  const conditions = [];
+  const placeholders = [];
+  let paramIndex = 1;
+  
+  if (params.filters) {
+    Object.entries(params.filters).forEach(([key, value]) => {
+      conditions.push(`${key} = $${paramIndex++}`);
+      placeholders.push(value);
+    });
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+  }
+  
+  if (params.orderBy) {
+    query += ` ORDER BY ${params.orderBy} ${params.ascending ? 'ASC' : 'DESC'}`;
+  }
+  
+  if (params.limit) {
+    query += ` LIMIT ${params.limit} OFFSET ${params.offset || 0}`;
+  }
+  
+  try {
+    const res = await dbClient.query(query, placeholders);
+    return { data: res.rows, error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+// Insert data function
+async function insert(table, data) {
+  if (dbError) {
+    return { data: null, error: new Error(dbError) };
+  }
+  
+  if (!dbClient) {
+    return { data: null, error: new Error('Database client not initialized') };
+  }
+  
+  const columns = Object.keys(data).join(', ');
+  const values = Object.values(data).map((val, i) => `$${i + 1}`).join(', ');
+  const placeholders = Object.values(data);
+  
+  const query = `INSERT INTO ${table} (${columns}) VALUES (${values}) RETURNING *`;
+  
+  try {
+    const res = await dbClient.query(query, placeholders);
+    return { data: res.rows[0], error: null };
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+// Count records function
+async function count(table, filters = {}) {
+  if (dbError) {
+    return { count: 0, error: new Error(dbError) };
+  }
+  
+  if (!dbClient) {
+    return { count: 0, error: new Error('Database client not initialized') };
+  }
+  
+  let query = `SELECT COUNT(*) as count FROM ${table}`;
+  const conditions = [];
+  const placeholders = [];
+  let paramIndex = 1;
+  
+  if (Object.keys(filters).length > 0) {
+    Object.entries(filters).forEach(([key, value]) => {
+      conditions.push(`${key} = $${paramIndex++}`);
+      placeholders.push(value);
+    });
+    if (conditions.length > 0) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+  }
+  
+  try {
+    const res = await dbClient.query(query, placeholders);
+    return { count: parseInt(res.rows[0].count), error: null };
+  } catch (error) {
+    return { count: 0, error };
+  }
+}
 
 // GET /api/courses - Get courses list
 export async function GET(request: NextRequest) {
@@ -11,53 +129,47 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
 
-    let query = supabase
-      .from('courses')
-      .select(`
-        *,
-        user:users(id, name),
-        slides:course_slides(count)
-      `, { count: 'exact' });
-
-    // Filter by user
-    if (userId) {
-      query = query.eq('user_id', userId);
-    }
-
-    // Filter by status
-    if (status) {
-      query = query.eq('status', status);
-    }
-
-    // Filter public courses
-    if (isPublic === 'true') {
-      query = query.eq('is_public', true);
-    }
+    const filters = {};
+    if (userId) filters.user_id = userId;
+    if (status) filters.status = status;
+    if (isPublic === 'true') filters.is_public = true;
 
     // Pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
+    const offset = (page - 1) * limit;
 
-    query = query
-      .order('created_at', { ascending: false })
-      .range(from, to);
+    // Get courses
+    const { data: courses, error: coursesError } = await select('courses', {
+      filters,
+      orderBy: 'created_at',
+      ascending: false,
+      limit,
+      offset
+    });
 
-    const { data, error, count } = await query;
-
-    if (error) {
+    if (coursesError) {
       return NextResponse.json(
-        { error: error.message },
+        { error: coursesError.message },
+        { status: 500 }
+      );
+    }
+
+    // Get total count
+    const { count: total, error: countError } = await count('courses', filters);
+
+    if (countError) {
+      return NextResponse.json(
+        { error: countError.message },
         { status: 500 }
       );
     }
 
     return NextResponse.json({
-      data,
+      data: courses,
       pagination: {
         page,
         limit,
-        total: count,
-        totalPages: Math.ceil((count || 0) / limit)
+        total,
+        totalPages: Math.ceil(total / limit)
       }
     });
   } catch (error) {
@@ -86,23 +198,23 @@ export async function POST(request: NextRequest) {
       isPublic
     } = body;
 
-    const { data, error } = await supabase
-      .from('courses')
-      .insert({
-        user_id: userId,
-        organization_id: organizationId,
-        title,
-        description,
-        age_group: ageGroup,
-        unit,
-        duration,
-        theme,
-        keywords,
-        is_public: isPublic || false,
-        status: 'draft'
-      })
-      .select()
-      .single();
+    const courseData = {
+      user_id: userId,
+      organization_id: organizationId,
+      title,
+      description,
+      age_group: ageGroup,
+      unit,
+      duration,
+      theme,
+      keywords,
+      is_public: isPublic || false,
+      status: 'draft',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data, error } = await insert('courses', courseData);
 
     if (error) {
       return NextResponse.json(

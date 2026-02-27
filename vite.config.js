@@ -14,6 +14,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/ai': {
+        target: 'https://8afbu10k60e64svm-8188.container.x-gpu.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/ai/, ''),
+      },
     },
   },
 })
