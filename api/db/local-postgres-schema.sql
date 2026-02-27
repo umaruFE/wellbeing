@@ -1,10 +1,5 @@
--- Supabase Database Schema for Wellbeing Platform
--- Run this SQL in your Supabase SQL Editor
---
--- 注意：如果表已存在，请先删除：
--- DROP TABLE IF EXISTS audit_logs, voice_configs, ip_characters, ppt_images, ppt_categories,
---   textbook_images, textbook_units, grades, textbook_types, course_slides, courses,
---   users, organizations CASCADE;
+-- Local PostgreSQL Database Schema for Wellbeing Platform
+-- Run this SQL in your local PostgreSQL database
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -24,35 +19,18 @@ CREATE TABLE IF NOT EXISTS organizations (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Users table (extends Supabase auth.users)
+-- Users table (simplified for local PostgreSQL)
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL DEFAULT 'creator',
   avatar_url TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
-
--- Create a trigger to automatically create user record on signup
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.users (id, name, role)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.raw_user_meta_data->>'name', '新用户'),
-    COALESCE(NEW.raw_user_meta_data->>'role', 'creator')
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
 -- =====================================================
 -- COURSES
@@ -212,6 +190,7 @@ CREATE TABLE IF NOT EXISTS voice_configs (
 -- AUDIT LOG
 -- =====================================================
 
+-- Audit logs
 CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
@@ -223,62 +202,56 @@ CREATE TABLE IF NOT EXISTS audit_logs (
 );
 
 -- =====================================================
--- ROW LEVEL SECURITY POLICIES
+-- PROMPT HISTORY & OPTIMIZATION
 -- =====================================================
 
--- Drop existing policies first (if any)
-DROP POLICY IF EXISTS "Public courses are viewable by everyone" ON courses;
-DROP POLICY IF EXISTS "Users can view their own courses" ON courses;
-DROP POLICY IF EXISTS "Users can create courses" ON courses;
-DROP POLICY IF EXISTS "Users can update their own courses" ON courses;
-DROP POLICY IF EXISTS "Users can manage voice configs" ON voice_configs;
+-- Prompt history table
+CREATE TABLE IF NOT EXISTS prompt_history (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+  prompt_type VARCHAR(50) NOT NULL,
+  original_prompt TEXT NOT NULL,
+  generated_result JSONB,
+  model_name VARCHAR(100) DEFAULT 'qwen-plus',
+  execution_time INTEGER,
+  success BOOLEAN DEFAULT true,
+  error_message TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
--- Enable RLS on all tables
-ALTER TABLE IF EXISTS organizations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS courses ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS course_slides ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS textbook_types ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS grades ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS textbook_units ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS textbook_images ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS ppt_categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS ppt_images ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS ip_characters ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS videos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS voice_configs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE IF EXISTS audit_logs ENABLE ROW LEVEL SECURITY;
-
--- Public read access for published courses
-CREATE POLICY "Public courses are viewable by everyone"
-  ON courses FOR SELECT
-  USING (is_public = true);
-
--- Users can see their own courses
-CREATE POLICY "Users can view their own courses"
-  ON courses FOR SELECT
-  USING (auth.uid() = user_id);
-
--- Users can create courses
-CREATE POLICY "Users can create courses"
-  ON courses FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
-
--- Users can update their own courses
-CREATE POLICY "Users can update their own courses"
-  ON courses FOR UPDATE
-  USING (auth.uid() = user_id);
-
--- Users can manage their own voice configs
-CREATE POLICY "Users can manage voice configs"
-  ON voice_configs FOR ALL
-  USING (auth.uid() = user_id);
+-- Prompt optimization table
+CREATE TABLE IF NOT EXISTS prompt_optimizations (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  element_type VARCHAR(50) NOT NULL,
+  original_prompt TEXT NOT NULL,
+  optimized_prompt TEXT NOT NULL,
+  improvement_score INTEGER DEFAULT 0,
+  usage_count INTEGER DEFAULT 0,
+  last_used_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
 
 -- =====================================================
--- SEED DATA - 示例数据
+-- INDEXES
 -- =====================================================
 
--- Insert default grades (如果不存在)
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_courses_user_id ON courses(user_id);
+CREATE INDEX IF NOT EXISTS idx_courses_status ON courses(status);
+CREATE INDEX IF NOT EXISTS idx_course_slides_course_id ON course_slides(course_id);
+CREATE INDEX IF NOT EXISTS idx_prompt_history_user_id ON prompt_history(user_id);
+CREATE INDEX IF NOT EXISTS idx_prompt_history_prompt_type ON prompt_history(prompt_type);
+CREATE INDEX IF NOT EXISTS idx_prompt_optimizations_element_type ON prompt_optimizations(element_type);
+CREATE INDEX IF NOT EXISTS idx_prompt_optimizations_user_id ON prompt_optimizations(user_id);
+
+-- =====================================================
+-- SEED DATA
+-- =====================================================
+
+-- Insert default grades
 INSERT INTO grades (name, display_order)
 SELECT '一年级', 1 WHERE NOT EXISTS (SELECT 1 FROM grades WHERE name = '一年级');
 INSERT INTO grades (name, display_order)
@@ -292,7 +265,7 @@ SELECT '五年级', 5 WHERE NOT EXISTS (SELECT 1 FROM grades WHERE name = '五�
 INSERT INTO grades (name, display_order)
 SELECT '六年级', 6 WHERE NOT EXISTS (SELECT 1 FROM grades WHERE name = '六年级');
 
--- Insert default textbook types (如果不存在)
+-- Insert default textbook types
 INSERT INTO textbook_types (name, description)
 SELECT '人教版', '人民教育出版社教材' WHERE NOT EXISTS (SELECT 1 FROM textbook_types WHERE name = '人教版');
 INSERT INTO textbook_types (name, description)
@@ -302,7 +275,7 @@ SELECT '北师大版', '北京师范大学出版社教材' WHERE NOT EXISTS (SEL
 INSERT INTO textbook_types (name, description)
 SELECT '牛津版', '牛津大学出版社教材' WHERE NOT EXISTS (SELECT 1 FROM textbook_types WHERE name = '牛津版');
 
--- Insert default PPT categories (如果不存在)
+-- Insert default PPT categories
 INSERT INTO ppt_categories (name, display_order)
 SELECT '背景', 1 WHERE NOT EXISTS (SELECT 1 FROM ppt_categories WHERE name = '背景');
 INSERT INTO ppt_categories (name, display_order)
@@ -312,7 +285,7 @@ SELECT '边框', 3 WHERE NOT EXISTS (SELECT 1 FROM ppt_categories WHERE name = '
 INSERT INTO ppt_categories (name, display_order)
 SELECT '图标', 4 WHERE NOT EXISTS (SELECT 1 FROM ppt_categories WHERE name = '图标');
 
--- Insert sample IP characters (如果不存在)
+-- Insert sample IP characters
 INSERT INTO ip_characters (name, gender, style, description)
 SELECT '小英老师', '女', '教师', '英语教师形象，友善亲切' WHERE NOT EXISTS (SELECT 1 FROM ip_characters WHERE name = '小英老师');
 INSERT INTO ip_characters (name, gender, style, description)
@@ -323,12 +296,3 @@ INSERT INTO ip_characters (name, gender, style, description)
 SELECT 'Sam同学', '男', '学生', '三年级小学生，好奇好学' WHERE NOT EXISTS (SELECT 1 FROM ip_characters WHERE name = 'Sam同学');
 INSERT INTO ip_characters (name, gender, style, description)
 SELECT 'Kitty兔', '动物', '吉祥物', '粉色小兔子，温馨治愈' WHERE NOT EXISTS (SELECT 1 FROM ip_characters WHERE name = 'Kitty兔');
-
--- =====================================================
--- DEBUG: 查询验证
--- =====================================================
-
-SELECT 'Grades count: ' || COUNT(*)::text as grades_count FROM grades;
-SELECT 'Textbook types count: ' || COUNT(*)::text as textbook_types_count FROM textbook_types;
-SELECT 'PPT categories count: ' || COUNT(*)::text as ppt_categories_count FROM ppt_categories;
-SELECT 'IP characters count: ' || COUNT(*)::text as ip_characters_count FROM ip_characters;

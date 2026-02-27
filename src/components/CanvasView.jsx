@@ -21,6 +21,7 @@ import { AssetEditorPanel } from './AssetEditorPanel';
 import { CanvasViewLeftSidebar } from './CanvasView.LeftSidebar';
 import { CanvasViewModals } from './CanvasView.Modals';
 import { History, RefreshCw } from 'lucide-react';
+import { aiAssetService } from '../services/aiAssetService';
 
 export const CanvasView = forwardRef((props, ref) => {
   const { navigation } = props;
@@ -494,7 +495,7 @@ export const CanvasView = forwardRef((props, ref) => {
 
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
 
-  const handleRegenerateAsset = (assetId) => {
+  const handleRegenerateAsset = async (assetId) => {
     const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
     const asset = step?.assets.find(a => a.id === assetId);
     if (!asset) return;
@@ -507,28 +508,54 @@ export const CanvasView = forwardRef((props, ref) => {
     
     setGeneratingAssetId(assetId);
     
-    setTimeout(() => {
+    try {
       const newCourseData = { ...courseData };
       const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
       const asset = step.assets.find(a => a.id === assetId);
-      const randomColor = Math.floor(Math.random()*16777215).toString(16);
       
       if (asset.type === 'text') {
         asset.content = asset.prompt 
           ? `根据提示词"${asset.prompt}"重新生成的文本内容 (v${Date.now().toString().slice(-4)})`
           : `重新生成的文本内容 (v${Date.now().toString().slice(-4)})`;
-      } else if (asset.type === 'image' || asset.type === 'video') {
-         const text = asset.referenceImage ? 'AI+Ref+Gen' : 'AI+Gen';
-         const w = asset.width || 300;
-         const h = asset.height || 200;
-         asset.url = `https://placehold.co/${Math.round(w)}x${Math.round(h)}/${randomColor}/FFF?text=${text}+v${Math.floor(Math.random() * 10)}`;
+      } else if (asset.type === 'image') {
+        const prompt = asset.prompt || asset.title || '教学场景';
+        const result = await aiAssetService.generateImageWithPolling(
+          prompt,
+          {
+            width: asset.width || 300,
+            height: asset.height || 200,
+            seed: Date.now(),
+            maxAttempts: 60,
+            interval: 2000
+          }
+        );
+        asset.url = result.url;
+      } else if (asset.type === 'video') {
+        const prompt = asset.prompt || asset.title || '教学视频';
+        const result = await aiAssetService.generateImageWithPolling(
+          prompt,
+          {
+            width: asset.width || 300,
+            height: asset.height || 200,
+            seed: Date.now(),
+            maxAttempts: 60,
+            interval: 2000
+          }
+        );
+        asset.url = result.url;
       } else if (asset.type === 'audio') {
-         asset.url = `https://placehold.co/300x100/${randomColor}/FFF?text=AI+Audio+v${Math.floor(Math.random() * 10)}`;
+        const randomColor = Math.floor(Math.random()*16777215).toString(16);
+        asset.url = `https://placehold.co/300x100/${randomColor}/FFF?text=AI+Audio+v${Math.floor(Math.random() * 10)}`;
       }
+      
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
       setGeneratingAssetId(null);
-    }, 1500);
+    } catch (error) {
+      console.error('重新生成素材失败:', error);
+      setGeneratingAssetId(null);
+      alert('生成素材失败，请稍后重试');
+    }
   };
 
   const handleLayerChange = (assetId, action) => {

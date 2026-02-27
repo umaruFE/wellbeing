@@ -23,6 +23,7 @@ import { BookmarkIcon } from './BookmarkIcon';
 import { HistoryVersionView } from './HistoryVersionView';
 import { PromptInputModal } from './PromptInputModal';
 import { CardSelectionModal } from './CardSelectionModal';
+import { aiAssetService } from '../services/aiAssetService';
 
 export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   // 初始化数据时，确保每一行都有 script 字段
@@ -580,21 +581,48 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   };
 
   // 媒体生成逻辑（用于PPT缩略图）
-  const handleRegenerateMedia = (phaseId, slideId, type) => {
+  const handleRegenerateMedia = async (phaseId, slideId, type) => {
     const key = `${slideId}-${type}`;
     setGeneratingMedia(prev => ({ ...prev, [key]: true }));
 
-    // 模拟AI生成（实际应该调用API）
-    setTimeout(() => {
+    try {
       // 如果是图片类型，生成多张图片供选择
       if (type === 'image') {
+        const slide = phases.find(p => p.id === phaseId)?.slides.find(s => s.id === slideId);
+        const prompt = slide?.title || slide?.activity || '教学场景';
+        
         const generatedImages = [];
+        
+        // 生成4张图片供选择
         for (let i = 0; i < 4; i++) {
-          const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-          generatedImages.push({
-            url: `https://placehold.co/600x400/${randomColor}/FFF?text=AI+Gen+Slide+${Date.now().toString().slice(-4)}+${i + 1}`,
-            prompt: `PPT 图片 ${i + 1}`
-          });
+          try {
+            const result = await aiAssetService.generateImageWithPolling(
+              `${prompt} - 教学场景 ${i + 1}`,
+              {
+                width: 600,
+                height: 400,
+                seed: Date.now() + i * 1000,
+                maxAttempts: 60,
+                interval: 2000
+              },
+              (progress, text) => {
+                console.log(`生成图片 ${i + 1}: ${progress}% - ${text}`);
+              }
+            );
+            
+            generatedImages.push({
+              url: result.url,
+              prompt: `${prompt} - 教学场景 ${i + 1}`
+            });
+          } catch (error) {
+            console.error(`生成图片 ${i + 1} 失败:`, error);
+            // 如果生成失败，使用占位图
+            const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+            generatedImages.push({
+              url: `https://placehold.co/600x400/${randomColor}/FFF?text=Gen+Failed+${i + 1}`,
+              prompt: `${prompt} - 教学场景 ${i + 1} (生成失败)`
+            });
+          }
         }
 
         // 保存待确认的配置
@@ -625,7 +653,11 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
         };
       }));
       setGeneratingMedia(prev => ({ ...prev, [key]: false }));
-    }, 2000);
+    } catch (error) {
+      console.error('生成媒体失败:', error);
+      setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+      alert('生成图片失败，请稍后重试');
+    }
   };
 
   // 处理图片抽卡选择确认

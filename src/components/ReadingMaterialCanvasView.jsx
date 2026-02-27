@@ -18,6 +18,7 @@ import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
 import { AssetEditorPanel } from './AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
+import { aiAssetService } from '../services/aiAssetService';
 
 /**
  * ReadingMaterialCanvasView - 阅读材料画布模式视图
@@ -670,7 +671,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   };
 
   // 重新生成资产
-  const handleRegenerateAsset = (assetId) => {
+  const handleRegenerateAsset = async (assetId) => {
     if (!currentPage || !Array.isArray(pages)) return;
     const asset = currentAssets.find(a => a.id === assetId);
     if (!asset) return;
@@ -680,31 +681,51 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     
     setGeneratingAssetId(assetId);
     
-    setTimeout(() => {
-      const newPages = pages.map(page => {
+    try {
+      const newPages = await Promise.all(pages.map(async page => {
         if (page.id === currentPage.id) {
-          const assets = (page.canvasAssets || []).map(a => {
+          const assets = await Promise.all((page.canvasAssets || []).map(async a => {
             if (a.id === assetId) {
               if (a.type === 'text') {
                 const generatedText = a.prompt ? `根据提示词"${a.prompt}"重新生成的文本内容 (v${Date.now().toString().slice(-4)})` : `重新生成的文本内容 (v${Date.now().toString().slice(-4)})`;
                 return { ...a, content: generatedText };
-              } else if (a.type === 'image' || a.type === 'video') {
-                const randomColor = Math.floor(Math.random()*16777215).toString(16);
-                const text = a.referenceImage ? 'AI+Ref+Gen' : 'AI+Gen';
-                const w = a.width || 300;
-                const h = a.height || 200;
-                return { ...a, url: `https://placehold.co/${Math.round(w)}x${Math.round(h)}/${randomColor}/FFF?text=${text}+v${Math.floor(Math.random() * 10)}` };
+              } else if (a.type === 'image') {
+                const prompt = a.prompt || a.title || '教学场景';
+                const result = await aiAssetService.generateImageWithPolling(
+                  prompt,
+                  {
+                    width: a.width || 300,
+                    height: a.height || 200,
+                    seed: Date.now(),
+                    maxAttempts: 60,
+                    interval: 2000
+                  }
+                );
+                return { ...a, url: result.url };
+              } else if (a.type === 'video') {
+                const prompt = a.prompt || a.title || '教学视频';
+                const result = await aiAssetService.generateImageWithPolling(
+                  prompt,
+                  {
+                    width: a.width || 300,
+                    height: a.height || 200,
+                    seed: Date.now(),
+                    maxAttempts: 60,
+                    interval: 2000
+                  }
+                );
+                return { ...a, url: result.url };
               } else if (a.type === 'audio') {
                 const randomColor = Math.floor(Math.random()*16777215).toString(16);
                 return { ...a, url: `https://placehold.co/300x100/${randomColor}/FFF?text=AI+Audio+v${Math.floor(Math.random() * 10)}` };
               }
             }
             return a;
-          });
+          }));
           return { ...page, canvasAssets: assets };
         }
         return page;
-      });
+      }));
       setPages(newPages);
       saveToHistory(newPages);
       setGeneratingAssetId(null);
@@ -718,7 +739,11 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
         });
       }
       setCourseData(newCourseData);
-    }, 2000);
+    } catch (error) {
+      console.error('重新生成素材失败:', error);
+      setGeneratingAssetId(null);
+      alert('生成素材失败，请稍后重试');
+    }
   };
 
   // 处理参考图片上传
