@@ -148,8 +148,22 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
     if (initialConfig && initialConfig.courseData) {
       const courseData = initialConfig.courseData;
       console.log('Converting courseData to phases:', courseData);
+      console.log('courseData type:', typeof courseData);
+      console.log('courseData is array:', Array.isArray(courseData));
       
       const convertCourseDataToPhases = () => {
+        // 如果 courseData 是数组格式（从数据库加载的格式）
+        if (Array.isArray(courseData)) {
+          console.log('courseData is array format, using directly');
+          return courseData.map(phase => ({
+            id: phase.id,
+            label: phase.label,
+            color: phase.color,
+            slides: phase.slides || []
+          }));
+        }
+        
+        // 如果 courseData 是对象格式（欢迎页生成的格式）
         const phaseOrder = ['engage', 'empower', 'execute', 'elevate'];
         const phaseLabels = {
           engage: 'Engage (引入)',

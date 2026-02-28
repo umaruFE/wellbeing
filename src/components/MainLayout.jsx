@@ -146,39 +146,62 @@ export const MainLayout = () => {
       hasRef: !!canvasViewRef.current, 
       currentView,
       canvasMode,
-      refMethods: canvasViewRef.current ? Object.keys(canvasViewRef.current) : null 
+      refMethods: canvasViewRef.current ? Object.keys(canvasViewRef.current) : null,
+      hasAppConfigCourseData: !!appConfig?.courseData
     });
     
     if (!canvasViewRef.current) {
-      console.log('No ref available, returning null');
-      return null;
+      console.log('No ref available, returning appConfig.courseData');
+      return appConfig?.courseData || null;
     }
     
     const refMethods = Object.keys(canvasViewRef.current);
     console.log('Available ref methods:', refMethods);
     
+    let courseData = null;
+    
     if (currentView === 'table') {
       if (refMethods.includes('getSlides')) {
         const slides = canvasViewRef.current.getSlides();
         console.log('getSlides() returned:', slides);
-        return slides;
+        
+        // 如果 getSlides 返回空数组，尝试使用 appConfig.courseData
+        if (!slides || slides.length === 0) {
+          console.log('getSlides returned empty, using appConfig.courseData');
+          courseData = appConfig?.courseData;
+        } else {
+          courseData = slides;
+        }
       } else {
         console.log('getSlides method not found in ref');
-        return null;
+        courseData = appConfig?.courseData;
       }
     } else if (currentView === 'canvas') {
       if (refMethods.includes('getCourseData')) {
-        const courseData = canvasViewRef.current.getCourseData();
-        console.log('getCourseData() returned:', courseData);
-        return courseData;
+        const data = canvasViewRef.current.getCourseData();
+        console.log('getCourseData() returned:', data);
+        
+        // 如果 getCourseData 返回空对象，尝试使用 appConfig.courseData
+        if (!data || Object.keys(data).length === 0) {
+          console.log('getCourseData returned empty, using appConfig.courseData');
+          courseData = appConfig?.courseData;
+        } else {
+          courseData = data;
+        }
       } else {
         console.log('getCourseData method not found in ref');
-        return null;
+        courseData = appConfig?.courseData;
       }
     }
     
-    console.log('Unknown view:', currentView);
-    return null;
+    // 最后的备选方案：如果 courseData 仍然是 null，使用 appConfig.courseData
+    if (!courseData) {
+      console.log('No course data from ref, using appConfig.courseData as fallback');
+      courseData = appConfig?.courseData;
+    }
+    
+    console.log('Final courseData:', courseData);
+    return courseData;
   };
 
   // 保存课程
@@ -401,23 +424,33 @@ export const MainLayout = () => {
 
         console.log('API返回的完整结果:', result);
         console.log('解析后的课程对象:', course);
+        console.log('course 对象的所有字段:', Object.keys(course));
         console.log('course.courseData:', course.courseData);
         console.log('course.data:', course.data);
         console.log('course.course_data:', course.course_data);
+        
+        // 打印 course 对象的完整内容（前 100 个字符）
+        const courseString = JSON.stringify(course);
+        console.log('course 对象内容（前 100 字符）:', courseString.substring(0, 100));
 
         const initialConfig = {
-          grade: course.grade || '',
-          age: course.age_group || '',
-          unit: course.unit || course.title || '自定义课程',
-          duration: course.duration || (appConfig?.duration || '40分钟'),
-          theme: course.theme || '',
-          // 关键字数组转成逗号分隔字符串，方便表格里显示
-          keywords: Array.isArray(course.keywords)
-            ? course.keywords.join(',')
-            : (course.keywords || ''),
-          // TableView 会用到的课程结构数据（字段名不确定时做兼容）
-          courseData: course.courseData || course.data || course.course_data || null,
-        };
+      grade: course.grade || '',
+      age: course.age_group || '',
+      unit: course.unit || course.title || '自定义课程',
+      duration: course.duration || (appConfig?.duration || '40分钟'),
+      theme: course.theme || '',
+      // 关键字数组转成逗号分隔字符串，方便表格里显示
+      keywords: Array.isArray(course.keywords)
+        ? course.keywords.join(',')
+        : (course.keywords || ''),
+      // TableView 会用到的课程结构数据（字段名不确定时做兼容）
+      courseData: course.courseData || course.data || course.course_data || null,
+    };
+
+    console.log('设置的 initialConfig 完整内容:', JSON.stringify(initialConfig));
+    console.log('initialConfig.courseData 值:', initialConfig.courseData);
+    console.log('initialConfig.courseData 类型:', typeof initialConfig.courseData);
+    console.log('initialConfig.courseData 是否为数组:', Array.isArray(initialConfig.courseData));
 
         console.log('设置的 initialConfig:', initialConfig);
 

@@ -198,7 +198,28 @@ export async function GET(
       );
     }
 
-    return NextResponse.json({ data: courses[0] });
+    const course = courses[0];
+    
+    // 如果 course_data 是 PostgreSQL 的 Json 对象，转换为标准 JavaScript 对象
+    // PostgreSQL 的 Json 对象在 JavaScript 中的 typeof 返回 'number'，所以不能用 typeof !== 'object' 检测
+    if (course.course_data && !Array.isArray(course.course_data)) {
+      console.log('course_data is PostgreSQL Json object, converting to JSON');
+      
+      // 使用 JSON.stringify 将其转换为字符串，然后解析回 JavaScript 对象
+      try {
+        const jsonString = JSON.stringify(course.course_data);
+        console.log('course_data stringified:', jsonString.substring(0, 200));
+        course.course_data = JSON.parse(jsonString);
+      } catch (error) {
+        console.error('Failed to convert course_data:', error);
+      }
+    }
+
+    console.log('Final course data:', course);
+    console.log('course_data type:', typeof course.course_data);
+    console.log('course_data is array:', Array.isArray(course.course_data));
+
+    return NextResponse.json({ data: course });
   } catch (error) {
     console.error('Error fetching course:', error);
     return NextResponse.json(
