@@ -14,6 +14,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/uploads': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        secure: false,
+      },
       '/ai': {
         target: 'https://8afbu10k60e64svm-8188.container.x-gpu.com',
         changeOrigin: true,

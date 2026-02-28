@@ -8,7 +8,7 @@ import { UnauthorizedPage } from './pages/auth/UnauthorizedPage';
 import { MainLayout } from './components/MainLayout';
 import { CourseManagementPage } from './pages/course/CourseManagementPage';
 import { CourseSquarePage } from './pages/course/CourseSquarePage';
-import { VoiceManagementPage } from './pages/admin/VoiceManagementPage';
+import { VoiceManagementPage } from './pages/course/VoiceManagementPage';
 import { SuperAdminPage } from './pages/admin/SuperAdminPage';
 import { KnowledgeBasePage } from './pages/course/KnowledgeBasePage';
 import { PptImageManagement } from './pages/course/PptImageManagement';

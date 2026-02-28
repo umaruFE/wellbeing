@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 
 // GET /api/textbooks/images - Get textbook images for a unit
 export async function GET(request: NextRequest) {
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('textbook_images')
       .select('*')
       .eq('unit_id', unitId)
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { unitId, imageUrl, pageNumber, description } = body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('textbook_images')
       .insert({
         unit_id: unitId,

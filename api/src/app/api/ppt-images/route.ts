@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 
 // GET /api/ppt-images - Get PPT images
 export async function GET(request: NextRequest) {
@@ -9,11 +9,11 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    let query = supabase
+    let query = db
       .from('ppt_images')
       .select(`
         *,
-        category:ppt_categories(*)
+        category:ppt_categories(id, name, display_order)
       `, { count: 'exact' });
 
     if (categoryId) {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, categoryId, imageUrl, tags } = body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('ppt_images')
       .insert({
         name,

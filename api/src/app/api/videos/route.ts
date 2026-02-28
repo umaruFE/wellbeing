@@ -1,69 +1,14 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
-import OSS from 'ali-oss';
+import { db } from '@/lib/db';
 
-// 初始化 Supabase 客户端
-const getSupabaseClient = () => {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseKey) {
-    console.warn('Supabase credentials not configured');
-    return null;
-  }
-
-  return createClient(supabaseUrl, supabaseKey);
-};
-
-// 获取 OSS 客户端
-const getOSSClient = () => {
-  const region = process.env.OSS_REGION;
-  const accessKeyId = process.env.OSS_ACCESS_KEY_ID;
-  const accessKeySecret = process.env.OSS_ACCESS_KEY_SECRET;
-  const bucket = process.env.OSS_BUCKET;
-
-  if (!region || !accessKeyId || !accessKeySecret || !bucket) {
-    console.warn('OSS credentials not configured');
-    return null;
-  }
-
-  return new OSS({
-    region,
-    accessKeyId,
-    accessKeySecret,
-    bucket,
-    endpoint: process.env.OSS_ENDPOINT,
-  });
-};
-
-// 生成文件路径
-const generateFilePath = (folder, fileName) => {
-  const ext = fileName.split('.').pop();
-  const uniqueId = uuidv4().slice(0, 8);
-  const timestamp = Date.now();
-  return `${folder}/${timestamp}-${uniqueId}.${ext}`;
-};
-
-export async function GET(request) {
+export async function GET(request: Request) {
   try {
-    const supabase = getSupabaseClient();
-
-    if (!supabase) {
-      // 如果没有 Supabase，返回空数据
-      return NextResponse.json({
-        success: true,
-        data: [],
-        pagination: { page: 1, limit: 20, total: 0, totalPages: 0 }
-      });
-    }
-
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
     const search = searchParams.get('search') || '';
 
-    let query = supabase
+    let query = db
       .from('videos')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
@@ -78,7 +23,7 @@ export async function GET(request) {
     if (error) {
       console.error('Error fetching videos:', error);
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -96,23 +41,14 @@ export async function GET(request) {
   } catch (error) {
     console.error('Error in GET /api/videos:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: (error as Error).message },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
-    const supabase = getSupabaseClient();
-
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Database not configured' },
-        { status: 500 }
-      );
-    }
-
     const body = await request.json();
     const { name, description, video_url, thumbnail_url, duration, tags } = body;
 
@@ -123,7 +59,7 @@ export async function POST(request) {
       );
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('videos')
       .insert({
         name,
@@ -139,7 +75,7 @@ export async function POST(request) {
     if (error) {
       console.error('Error creating video:', error);
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -152,23 +88,14 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error in POST /api/videos:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: (error as Error).message },
       { status: 500 }
     );
   }
 }
 
-export async function PUT(request) {
+export async function PUT(request: Request) {
   try {
-    const supabase = getSupabaseClient();
-
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Database not configured' },
-        { status: 500 }
-      );
-    }
-
     const body = await request.json();
     const { id, ...updateData } = body;
 
@@ -179,7 +106,7 @@ export async function PUT(request) {
       );
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('videos')
       .update(updateData)
       .eq('id', id)
@@ -189,7 +116,7 @@ export async function PUT(request) {
     if (error) {
       console.error('Error updating video:', error);
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -202,23 +129,14 @@ export async function PUT(request) {
   } catch (error) {
     console.error('Error in PUT /api/videos:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: (error as Error).message },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(request) {
+export async function DELETE(request: Request) {
   try {
-    const supabase = getSupabaseClient();
-
-    if (!supabase) {
-      return NextResponse.json(
-        { success: false, error: 'Database not configured' },
-        { status: 500 }
-      );
-    }
-
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
 
@@ -229,7 +147,7 @@ export async function DELETE(request) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await db
       .from('videos')
       .delete()
       .eq('id', id);
@@ -237,7 +155,7 @@ export async function DELETE(request) {
     if (error) {
       console.error('Error deleting video:', error);
       return NextResponse.json(
-        { success: false, error: error.message },
+        { success: false, error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -249,9 +167,8 @@ export async function DELETE(request) {
   } catch (error) {
     console.error('Error in DELETE /api/videos:', error);
     return NextResponse.json(
-      { success: false, error: error.message },
+      { success: false, error: (error as Error).message },
       { status: 500 }
     );
   }
 }
-

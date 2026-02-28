@@ -1,11 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { uploadToOss, getSignedUrl } from '@/lib/oss';
+import { saveToLocal } from '@/lib/localUpload';
 
-// 允许的文件类型
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+// 允许的文件类型（按场景区分）
+const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const DOC_TYPES = ['application/pdf'];
+const VIDEO_TYPES = [
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'video/quicktime',
+  // mkv 在不同浏览器/系统上可能会是这个 MIME
+  'video/x-matroska'
+];
 
-// 最大文件大小 (10MB)
-const MAX_SIZE = 10 * 1024 * 1024;
+// 最大文件大小
+const MAX_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB（图片/PDF）
+const MAX_SIZE_VIDEO = 100 * 1024 * 1024; // 100MB（视频）
+
+function getFileExt(filename: string) {
+  const idx = filename.lastIndexOf('.');
+  return idx >= 0 ? filename.slice(idx + 1).toLowerCase() : '';
+}
+
+// 本地优先；只有显式指定才使用 OSS
+const HAS_OSS_KEYS = !!(process.env.ALIYUN_OSS_ACCESS_KEY_ID && process.env.ALIYUN_OSS_ACCESS_KEY_SECRET);
+const UPLOAD_PROVIDER = (process.env.UPLOAD_PROVIDER || 'local').toLowerCase(); // 'local' | 'oss'
+const USE_OSS = UPLOAD_PROVIDER === 'oss' && HAS_OSS_KEYS;
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,8 +41,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 按上传场景选择允许的类型与大小限制
+    const isVideoUpload =
+      folder.toLowerCase().includes('video') ||
+      file.type.startsWith('video/');
+
+    const allowedTypes = isVideoUpload ? VIDEO_TYPES : [...IMAGE_TYPES, ...DOC_TYPES];
+    const maxSize = isVideoUpload ? MAX_SIZE_VIDEO : MAX_SIZE_DEFAULT;
+
     // 验证文件类型
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    // 注意：部分浏览器/系统对某些格式会返回 application/octet-stream，这里做一次基于后缀的兜底
+    const ext = getFileExt(file.name);
+    const isOctetStream = file.type === 'application/octet-stream';
+    const octetStreamAllowed =
+      isVideoUpload && isOctetStream && ['mp4', 'webm', 'ogg', 'mov', 'mkv'].includes(ext);
+
+    if (!allowedTypes.includes(file.type) && !octetStreamAllowed) {
       return NextResponse.json(
         { error: '不支持的文件类型' },
         { status: 400 }
@@ -29,15 +64,24 @@ export async function POST(request: NextRequest) {
     }
 
     // 验证文件大小
-    if (file.size > MAX_SIZE) {
+    if (file.size > maxSize) {
       return NextResponse.json(
-        { error: '文件大小不能超过10MB' },
+        { error: isVideoUpload ? '文件大小不能超过100MB' : '文件大小不能超过10MB' },
         { status: 400 }
       );
     }
 
-    // 上传到 OSS
-    const url = await uploadToOss(file, folder, file.name);
+    let url: string;
+
+    if (USE_OSS) {
+      url = await uploadToOss(file, folder, file.name);
+    } else {
+      if (UPLOAD_PROVIDER === 'oss' && !HAS_OSS_KEYS) {
+        console.warn('[upload] UPLOAD_PROVIDER=oss but OSS keys are missing; falling back to local storage.');
+      }
+      // 本地存储，后续可迁移到 OSS
+      url = await saveToLocal(file, folder);
+    }
 
     return NextResponse.json({
       success: true,

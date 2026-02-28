@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 
 // GET /api/ip-characters - Get IP characters
 export async function GET(request: NextRequest) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('ip_characters')
       .select('*')
       .order('created_at', { ascending: false });
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, gender, style, description, imageUrl } = body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('ip_characters')
       .insert({
         name,

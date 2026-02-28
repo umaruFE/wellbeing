@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 
 // GET /api/voices - Get voice configurations
 export async function GET(request: NextRequest) {
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
 
-    let query = supabase
+    let query = db
       .from('voice_configs')
       .select('*')
       .order('created_at', { ascending: false });
@@ -40,13 +40,13 @@ export async function POST(request: NextRequest) {
 
     // If setting as default, unset other defaults
     if (isDefault) {
-      await supabase
+      await db
         .from('voice_configs')
         .update({ is_default: false })
         .eq('user_id', userId);
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('voice_configs')
       .insert({
         user_id: userId,

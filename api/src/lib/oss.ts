@@ -1,4 +1,5 @@
 import OSS from 'ali-oss';
+import { Buffer } from 'node:buffer';
 
 let client: OSS | null = null;
 
@@ -59,7 +60,7 @@ export const generateFilePath = (folder: string, filename: string): string => {
  * @param filename 原始文件名
  */
 export const uploadToOss = async (
-  file: File | ArrayBuffer,
+  file: File | ArrayBuffer | Buffer,
   folder: string,
   filename: string
 ): Promise<string> => {
@@ -68,11 +69,15 @@ export const uploadToOss = async (
 
   let result;
 
-  if (file instanceof File) {
-    const arrayBuffer = await file.arrayBuffer();
-    result = await client.put(filePath, new Uint8Array(arrayBuffer));
+  // ali-oss put() only accepts String/Buffer/ReadableStream.
+  // Next.js route gives us a Web File; convert it to Buffer first.
+  if (file && typeof (file as any).arrayBuffer === 'function') {
+    const arrayBuffer = await (file as File).arrayBuffer();
+    result = await client.put(filePath, Buffer.from(arrayBuffer));
+  } else if (file instanceof ArrayBuffer) {
+    result = await client.put(filePath, Buffer.from(file));
   } else {
-    result = await client.put(filePath, file);
+    result = await client.put(filePath, file as Buffer);
   }
 
   // 返回签名URL（私有文件需要签名）

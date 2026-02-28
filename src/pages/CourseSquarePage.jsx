@@ -1,122 +1,139 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Search, Star, Users, Clock, Grid, List, Copy, Book, Sparkles, Tag } from 'lucide-react';
+import apiService from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 export const CourseSquarePage = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // 模拟广场课程数据 - 儿童英语培训
-  const courses = [
-    {
-      id: 1,
-      title: '三年级英语 Unit 3 Animals',
-      author: '张老师',
-      age: '8-9岁',
-      grade: '三年级/G3',
-      unit: 'Unit 3: Animals',
-      unitCN: '神奇的动物',
-      duration: 15,
-      stage: '学前',
-      storyTheme: '星际救援冒险',
-      keywords: ['Red', 'Blue', 'Yellow', 'Animals'],
-      rating: 4.9,
-      students: 256,
-      copies: 89,
-      thumbnail: '🦁',
-      tags: ['自然拼读', '词汇学习']
-    },
-    {
-      id: 2,
-      title: '五年级英语 Unit 5 Fractions',
-      author: '李老师',
-      age: '10-11岁',
-      grade: '五年级/G5',
-      unit: 'Unit 5: Fractions',
-      unitCN: '分数的奥秘',
-      duration: 30,
-      stage: '小学',
-      storyTheme: '数学王国大冒险',
-      keywords: ['Half', 'Quarter', 'Share'],
-      rating: 4.7,
-      students: 189,
-      copies: 56,
-      thumbnail: '🔢',
-      tags: ['阅读理解', '语法']
-    },
-    {
-      id: 3,
-      title: '一年级英语 Unit 1 Colors',
-      author: '王老师',
-      age: '6-7岁',
-      grade: '一年级/G1',
-      unit: 'Unit 1: Colors',
-      unitCN: '多彩的世界',
-      duration: 10,
-      stage: '学前',
-      storyTheme: '彩虹小镇的故事',
-      keywords: ['Red', 'Green', 'Blue'],
-      rating: 4.8,
-      students: 342,
-      copies: 128,
-      thumbnail: '🌈',
-      tags: ['自然拼读', '基础词汇']
-    },
-    {
-      id: 4,
-      title: '二年级英语 Unit 2 Food',
-      author: '赵老师',
-      age: '7-8岁',
-      grade: '二年级/G2',
-      unit: 'Unit 2: Food',
-      unitCN: '美味的食物',
-      duration: 12,
-      stage: '学前',
-      storyTheme: '小厨师大冒险',
-      keywords: ['Apple', 'Banana', 'Milk'],
-      rating: 4.6,
-      students: 178,
-      copies: 67,
-      thumbnail: '🍎',
-      tags: ['口语会话', '词汇学习']
-    },
-    {
-      id: 5,
-      title: '四年级英语 Unit 4 Weather',
-      author: '刘老师',
-      age: '9-10岁',
-      grade: '四年级/G4',
-      unit: 'Unit 4: Weather',
-      unitCN: '神奇的天气',
-      duration: 20,
-      stage: '小学',
-      storyTheme: '天气侦探',
-      keywords: ['Rain', 'Sunny', 'Cloud'],
-      rating: 4.5,
-      students: 145,
-      copies: 45,
-      thumbnail: '🌤️',
-      tags: ['阅读理解', '语法']
-    },
-    {
-      id: 6,
-      title: '自然拼读 Phonics ABC',
-      author: '陈老师',
-      age: '5-8岁',
-      grade: '幼儿园/K',
-      unit: 'Phonics Level 1',
-      unitCN: '自然拼读入门',
-      duration: 8,
-      stage: '学前',
-      storyTheme: '字母王国',
-      keywords: ['A', 'B', 'C', 'Phonics'],
-      rating: 4.9,
-      students: 456,
-      copies: 203,
-      thumbnail: '🔤',
-      tags: ['自然拼读', '发音']
-    },
-  ];
+  // 从后端获取公开课程
+  useEffect(() => {
+    console.log('🚀 CourseSquarePage useEffect 执行，开始获取课程数据');
+    
+    const fetchCourses = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // 调试：显示请求参数
+        const params = { 
+          public: 'true',
+          status: 'published',
+          limit: 100 // 获取更多课程
+        };
+        console.log('📡 正在请求课程数据，参数:', params);
+        console.log('📡 请求 URL: /api/courses?' + new URLSearchParams(params).toString());
+        console.log('📡 apiService 对象:', apiService);
+        console.log('📡 调用 apiService.getCourses...');
+        
+        const result = await apiService.getCourses(params);
+        
+        console.log('✅ 收到后端响应:', result);
+        console.log('📊 课程数量:', result.data?.length || 0);
+        
+        const rawCourses = result.data || [];
+        
+        if (rawCourses.length === 0) {
+          console.warn('⚠️ 后端返回的课程列表为空');
+        }
+        
+        // 规范化数据格式，将后端字段映射到前端需要的格式
+        const normalized = rawCourses.map(course => {
+          // 处理年龄组，提取年龄和年级信息
+          const ageGroup = course.age_group || course.ageGroup || '';
+          const ageMatch = ageGroup.match(/(\d+)[-~](\d+)/);
+          const age = ageMatch ? `${ageMatch[1]}-${ageMatch[2]}岁` : ageGroup || '未设置';
+          
+          // 从 age_group 提取年级信息，或使用默认值
+          let grade = '';
+          if (ageGroup.includes('G1') || ageGroup.includes('一年级')) grade = '一年级/G1';
+          else if (ageGroup.includes('G2') || ageGroup.includes('二年级')) grade = '二年级/G2';
+          else if (ageGroup.includes('G3') || ageGroup.includes('三年级')) grade = '三年级/G3';
+          else if (ageGroup.includes('G4') || ageGroup.includes('四年级')) grade = '四年级/G4';
+          else if (ageGroup.includes('G5') || ageGroup.includes('五年级')) grade = '五年级/G5';
+          else if (ageGroup.includes('G6') || ageGroup.includes('六年级')) grade = '六年级/G6';
+          else if (ageGroup.includes('K') || ageGroup.includes('幼儿园')) grade = '幼儿园/K';
+          
+          // 处理单元信息，尝试分离中英文
+          const unit = course.unit || '';
+          const unitParts = unit.split(/[：:]/);
+          const unitEN = unitParts[0] || unit;
+          const unitCN = unitParts[1] || '';
+          
+          // 处理关键词
+          const keywords = Array.isArray(course.keywords) ? course.keywords : 
+                          (course.keywords ? course.keywords.split(',').map(k => k.trim()) : []);
+          
+          // 生成默认缩略图（基于主题或关键词）
+          const getThumbnail = () => {
+            const theme = (course.theme || '').toLowerCase();
+            const title = (course.title || '').toLowerCase();
+            if (theme.includes('动物') || title.includes('animal')) return '🦁';
+            if (theme.includes('颜色') || title.includes('color')) return '🌈';
+            if (theme.includes('食物') || title.includes('food')) return '🍎';
+            if (theme.includes('天气') || title.includes('weather')) return '🌤️';
+            if (theme.includes('数学') || title.includes('math') || title.includes('fraction')) return '🔢';
+            if (theme.includes('字母') || title.includes('phonics') || title.includes('abc')) return '🔤';
+            return '📚';
+          };
+          
+          // 从关键词或主题推断标签
+          const getTags = () => {
+            const tags = [];
+            const text = `${course.theme || ''} ${course.title || ''} ${keywords.join(' ')}`.toLowerCase();
+            if (text.includes('phonics') || text.includes('自然拼读') || text.includes('发音')) tags.push('自然拼读');
+            if (text.includes('vocabulary') || text.includes('词汇')) tags.push('词汇学习');
+            if (text.includes('reading') || text.includes('阅读') || text.includes('绘本')) tags.push('绘本阅读');
+            if (text.includes('grammar') || text.includes('语法')) tags.push('语法');
+            if (text.includes('speaking') || text.includes('口语') || text.includes('会话')) tags.push('口语会话');
+            return tags.length > 0 ? tags : ['通用课程'];
+          };
+          
+          return {
+            id: course.id,
+            title: course.title || '未命名课程',
+            author: course.user_name || course.userName || '未知作者',
+            age: age,
+            grade: grade || ageGroup || '未设置',
+            unit: unitEN,
+            unitCN: unitCN,
+            duration: parseInt(course.duration) || 0,
+            stage: ageGroup.includes('学前') || ageGroup.includes('K') ? '学前' : 
+                   ageGroup.includes('小学') || ageGroup.match(/G[1-6]/) ? '小学' : '未设置',
+            storyTheme: course.theme || '未设置',
+            keywords: keywords,
+            rating: 4.5, // 默认评分，后续可以从后端获取
+            students: course.view_count || course.viewCount || 0,
+            copies: course.copy_count || course.copyCount || 0,
+            thumbnail: course.thumbnail || getThumbnail(),
+            tags: getTags()
+          };
+        });
+        
+        setCourses(normalized);
+        console.log('✅ 课程数据已处理并设置到状态，共', normalized.length, '门课程');
+      } catch (err) {
+        console.error('❌ 获取课程广场数据失败:', err);
+        console.error('错误详情:', {
+          message: err.message,
+          stack: err.stack,
+          name: err.name
+        });
+        setError(`加载课程失败: ${err.message || '请检查后端服务是否运行（http://localhost:3000）'}`);
+        setCourses([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   // 儿童英语培训分类 - 简化版
   const categories = [
@@ -128,16 +145,71 @@ export const CourseSquarePage = () => {
   ];
 
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.unit.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         course.storyTheme.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (course.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (course.unit || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (course.storyTheme || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' ||
                            course.tags?.some(tag => tag.toLowerCase().includes(selectedCategory.toLowerCase()));
     return matchesSearch && matchesCategory;
   });
 
-  const handleCopyCourse = (courseId) => {
-    alert('课程复制成功！已添加到您的课程列表，您可以开始编辑。');
+  const handleCopyCourse = async (courseId) => {
+    if (!user) {
+      alert('请先登录后再复制课程');
+      return;
+    }
+
+    try {
+      // 获取课程详情
+      const courseDetail = await apiService.getCourse(courseId);
+      const originalCourse = courseDetail.data || courseDetail;
+      
+      // 创建新课程（复制）
+      // 注意：后端 API 使用 camelCase 字段名
+      const newCourseData = {
+        title: `${originalCourse.title || '未命名课程'} (副本)`,
+        description: originalCourse.description || '',
+        ageGroup: originalCourse.age_group || originalCourse.ageGroup || '',
+        unit: originalCourse.unit || '',
+        duration: originalCourse.duration || '',
+        theme: originalCourse.theme || '',
+        keywords: Array.isArray(originalCourse.keywords) 
+          ? originalCourse.keywords 
+          : (originalCourse.keywords ? [originalCourse.keywords] : []),
+        isPublic: false, // 复制后默认不公开
+        // status 会在后端自动设置为 'draft'
+      };
+      
+      const result = await apiService.createCourse(newCourseData);
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      
+      // 更新原课程的复制计数（如果后端支持）
+      // 注意：后端可能不支持直接更新 copy_count，这里尝试更新但不影响主流程
+      try {
+        // 尝试更新复制计数，使用后端可能支持的字段名
+        const currentCopyCount = originalCourse.copy_count || originalCourse.copyCount || 0;
+        // 如果后端支持，可以在这里更新；否则忽略
+        // await apiService.updateCourse(courseId, { copy_count: currentCopyCount + 1 });
+        
+        // 更新本地状态以反映复制操作
+        setCourses(courses.map(c => 
+          c.id === courseId 
+            ? { ...c, copies: (c.copies || 0) + 1 }
+            : c
+        ));
+      } catch (err) {
+        // 更新复制计数失败不影响主流程
+        console.warn('更新复制计数失败:', err);
+      }
+      
+      alert('课程复制成功！已添加到您的课程列表，您可以开始编辑。');
+    } catch (err) {
+      console.error('复制课程失败:', err);
+      alert('复制课程失败，请稍后重试');
+    }
   };
 
   const formatNumber = (num) => {
@@ -161,6 +233,24 @@ export const CourseSquarePage = () => {
               <p className="text-slate-500 mt-1">发现优质课程，一键复制开始您的教学</p>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  console.log('🧪 手动测试：开始请求课程数据');
+                  try {
+                    const params = { public: 'true', status: 'published', limit: 5 };
+                    const result = await apiService.getCourses(params);
+                    console.log('🧪 手动测试：请求成功', result);
+                    alert(`测试成功！收到 ${result.data?.length || 0} 门课程`);
+                  } catch (err) {
+                    console.error('🧪 手动测试：请求失败', err);
+                    alert(`测试失败：${err.message}`);
+                  }
+                }}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 text-sm"
+                title="测试 API 请求"
+              >
+                测试请求
+              </button>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-colors ${
@@ -213,7 +303,20 @@ export const CourseSquarePage = () => {
 
       {/* Course List - 可滚动区域 */}
       <div className="flex-1 overflow-y-auto max-w-7xl mx-auto px-6 py-6 w-full">
-        {viewMode === 'grid' ? (
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
+        
+        {loading ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center">
+              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-slate-500">加载中...</p>
+            </div>
+          </div>
+        ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map(course => (
               <div
@@ -381,10 +484,12 @@ export const CourseSquarePage = () => {
           </div>
         )}
 
-        {filteredCourses.length === 0 && (
+        {!loading && filteredCourses.length === 0 && (
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">未找到相关课程</p>
+            <p className="text-slate-500">
+              {courses.length === 0 ? '暂无公开课程' : '未找到相关课程'}
+            </p>
           </div>
         )}
       </div>

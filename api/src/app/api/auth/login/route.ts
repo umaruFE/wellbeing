@@ -1,17 +1,9 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { db } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
-// 初始化 Supabase 客户端
-const supabaseUrl = process.env.SUPABASE_URL || 'https://plbkvhmumamkainkzxng.supabase.co';
-const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
-
-let supabase;
-
-if (supabaseKey) {
-  supabase = createClient(supabaseUrl, supabaseKey);
-}
-
-export async function POST(request) {
+export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
 
@@ -22,150 +14,62 @@ export async function POST(request) {
       );
     }
 
-    // 如果 Supabase 未配置，使用模拟数据
-    if (!supabase) {
-      console.log('Supabase not configured, using mock data for login');
-      
-      const mockUsers = {
-        'admin': { 
-          id: 1, 
-          username: 'admin', 
-          role: 'super_admin', 
-          name: '超级管理员', 
-          organizationId: null 
-        },
-        'org_admin': { 
-          id: 2, 
-          username: 'org_admin', 
-          role: 'org_admin', 
-          name: '机构管理员', 
-          organizationId: 1, 
-          organizationName: '测试机构' 
-        },
-        'research_leader': { 
-          id: 3, 
-          username: 'research_leader', 
-          role: 'research_leader', 
-          name: '教研组长', 
-          organizationId: 1, 
-          organizationName: '测试机构' 
-        },
-        'creator': { 
-          id: 4, 
-          username: 'creator', 
-          role: 'creator', 
-          name: '课件制作人', 
-          organizationId: 1, 
-          organizationName: '测试机构' 
-        },
-        'viewer': { 
-          id: 5, 
-          username: 'viewer', 
-          role: 'viewer', 
-          name: '普通老师', 
-          organizationId: 1, 
-          organizationName: '测试机构' 
-        }
+    // 从 PostgreSQL 查询用户（支持 email 或 name）
+    const { data: byEmail } = await db.from('users').select('*').eq('email', username);
+    const { data: byName } = await db.from('users').select('*').eq('name', username);
+    const userData = (byEmail && byEmail[0]) || (byName && byName[0]);
+
+    if (!userData) {
+      // 无数据库用户时使用模拟数据（开发/测试）
+      const mockUsers: Record<string, any> = {
+        admin: { id: '1', email: 'admin@test.com', name: '超级管理员', role: 'super_admin', organization_id: null },
+        org_admin: { id: '2', email: 'org_admin@test.com', name: '机构管理员', role: 'org_admin', organization_id: '1' },
+        research_leader: { id: '3', email: 'research@test.com', name: '教研组长', role: 'research_leader', organization_id: '1' },
+        creator: { id: '4', email: 'creator@test.com', name: '课件制作人', role: 'creator', organization_id: '1' },
+        viewer: { id: '5', email: 'viewer@test.com', name: '普通老师', role: 'viewer', organization_id: '1' },
       };
-
-      const user = mockUsers[username];
-      
-      if (user && password === '123456') {
-        const token = `mock_token_${Date.now()}`;
+      const mock = mockUsers[username];
+      if (mock && password === '123456') {
+        const token = `pg_token_${crypto.randomBytes(32).toString('hex')}`;
         return NextResponse.json({
-          user,
+          user: {
+            id: mock.id,
+            username: mock.email,
+            role: mock.role,
+            name: mock.name,
+            organizationId: mock.organization_id,
+          },
           token,
-          message: '登录成功（模拟模式）'
+          message: '登录成功（模拟模式）',
         });
-      } else {
-        return NextResponse.json(
-          { error: '用户名或密码错误' },
-          { status: 401 }
-        );
       }
+      return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
-    // 使用 Supabase 认证
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: username,
-      password: password
-    });
+    // 验证密码（支持 bcrypt 或明文，便于迁移）
+    const valid =
+      userData.password_hash?.startsWith('$2') // bcrypt
+        ? await bcrypt.compare(password, userData.password_hash)
+        : password === userData.password_hash;
 
-    if (authError) {
-      // 尝试查找用户名对应的邮箱
-      const { data: users, error: userError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
-
-      if (userError || !users) {
-        return NextResponse.json(
-          { error: '用户不存在' },
-          { status: 401 }
-        );
-      }
-
-      // 使用用户邮箱登录
-      const { data: emailLoginData, error: emailLoginError } = await supabase.auth.signInWithPassword({
-        email: users.email,
-        password: password
-      });
-
-      if (emailLoginError) {
-        return NextResponse.json(
-          { error: '密码错误' },
-          { status: 401 }
-        );
-      }
-
-      return NextResponse.json({
-        user: {
-          id: users.id,
-          username: users.username,
-          role: users.role,
-          name: users.name,
-          organizationId: users.organization_id
-        },
-        token: emailLoginData.session.access_token
-      });
+    if (!valid) {
+      return NextResponse.json({ error: '密码错误' }, { status: 401 });
     }
 
-    // 获取用户详细信息
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', authData.user.id)
-      .single();
-
-    if (userError) {
-      return NextResponse.json({
-        user: {
-          id: authData.user.id,
-          email: authData.user.email,
-          role: 'viewer'
-        },
-        token: authData.session.access_token
-      });
-    }
-
+    const token = `pg_token_${crypto.randomBytes(32).toString('hex')}`;
     return NextResponse.json({
       user: {
         id: userData.id,
-        username: userData.username,
+        username: userData.email || userData.name,
         role: userData.role || 'viewer',
-        name: userData.name || userData.username,
-        organizationId: userData.organization_id
+        name: userData.name || userData.email,
+        organizationId: userData.organization_id,
       },
-      token: authData.session.access_token
+      token,
     });
-
   } catch (error) {
     console.error('Login error:', error);
-    return NextResponse.json(
-      { error: '登录失败，请重试' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: '登录失败，请重试' }, { status: 500 });
   }
 }
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { db } from '@/lib/db';
 
 // GET /api/textbooks - Get textbook types, grades, and units
 export async function GET(request: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     if (type === 'types') {
       // Get all textbook types
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('textbook_types')
         .select('*')
         .order('name');
@@ -23,20 +23,20 @@ export async function GET(request: NextRequest) {
       // Get children for each type
       const typesWithChildren = await Promise.all(
         (data || []).asyncForEach(async (t) => {
-          const { data: grades } = await supabase
+          const { data: grades } = await db
             .from('textbook_units')
             .select('grade_id, grades(*)')
             .eq('textbook_type_id', t.id)
             .distinct('grade_id');
 
-          const { data: units } = await supabase
+          const { data: units } = await db
             .from('textbook_units')
             .select('*')
             .eq('textbook_type_id', t.id);
 
           const gradeIds = [...new Set((grades || []).map(g => g.grade_id).filter(Boolean))];
           const { data: gradeDetails } = gradeIds.length > 0
-            ? await supabase.from('grades').select('*').in('id', gradeIds)
+            ? await db.from('grades').select('*').in('id', gradeIds)
             : { data: [] };
 
           return {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (type === 'grades') {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('grades')
         .select('*')
         .order('display_order');
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (type === 'units') {
-      let query = supabase
+      let query = db
         .from('textbook_units')
         .select(`
           *,
@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Default: return all textbooks with hierarchy
-    const { data: textbookTypes, error: typesError } = await supabase
+    const { data: textbookTypes, error: typesError } = await db
       .from('textbook_types')
       .select('*')
       .order('name');
@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: typesError.message }, { status: 500 });
     }
 
-    const { data: allUnits, error: unitsError } = await supabase
+    const { data: allUnits, error: unitsError } = await db
       .from('textbook_units')
       .select(`
         *,
@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: unitsError.message }, { status: 500 });
     }
 
-    const { data: allGrades, error: gradesError } = await supabase
+    const { data: allGrades, error: gradesError } = await db
       .from('grades')
       .select('*')
       .order('display_order');
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'type') {
       // Create textbook type
-      const { data: result, error } = await supabase
+      const { data: result, error } = await db
         .from('textbook_types')
         .insert({ name: data.name, description: data.description })
         .select()
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
 
     if (action === 'unit') {
       // Create textbook unit
-      const { data: result, error } = await supabase
+      const { data: result, error } = await db
         .from('textbook_units')
         .insert({
           textbook_type_id: data.textbookTypeId,

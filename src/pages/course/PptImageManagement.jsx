@@ -44,6 +44,9 @@ export const PptImageManagement = () => {
 
   // 关闭模态框
   const closeModal = () => {
+    if (modalData.previewUrl) {
+      URL.revokeObjectURL(modalData.previewUrl);
+    }
     setModalType(null);
     setModalData({});
     if (fileInputRef.current) {
@@ -61,7 +64,9 @@ export const PptImageManagement = () => {
         alert(validation.error);
         return;
       }
-      setModalData({ ...modalData, file });
+      // 生成本地预览 URL 用于回显
+      const previewUrl = URL.createObjectURL(file);
+      setModalData({ ...modalData, file, previewUrl });
     }
   };
 
@@ -246,9 +251,12 @@ export const PptImageManagement = () => {
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {modalData.file ? (
-                      <div className="w-full aspect-video flex items-center justify-center bg-slate-100 rounded-lg">
-                        <Image className="w-12 h-12 text-slate-400" />
-                        <span className="ml-2 text-sm text-slate-500">{modalData.file.name}</span>
+                      <div className="w-full aspect-video flex items-center justify-center bg-slate-100 rounded-lg overflow-hidden">
+                        <img
+                          src={modalData.previewUrl}
+                          alt="预览"
+                          className="max-w-full max-h-full object-contain"
+                        />
                       </div>
                     ) : modalData.image_url ? (
                       <img src={modalData.image_url} alt="Preview" className="max-h-48 mx-auto rounded" />

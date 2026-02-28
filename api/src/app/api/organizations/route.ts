@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase';
+import { db } from '@/lib/db';
 
 // GET /api/organizations - Get organizations
 export async function GET(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient();
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search');
 
-    let query = supabase
+    let query = db
       .from('organizations')
       .select('*')
       .order('created_at', { ascending: false });
@@ -20,7 +19,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 
     return NextResponse.json({ data });
@@ -36,23 +35,22 @@ export async function GET(request: NextRequest) {
 // POST /api/organizations - Create organization
 export async function POST(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient();
     const body = await request.json();
     const { name, code, totalHours } = body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('organizations')
       .insert({
         name,
         code,
         total_hours: totalHours || 0,
-        used_hours: 0
+        used_hours: 0,
       })
       .select()
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 
     return NextResponse.json({ data }, { status: 201 });
@@ -68,23 +66,22 @@ export async function POST(request: NextRequest) {
 // PUT /api/organizations - Update organization (e.g., set hours)
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = createServerSupabaseClient();
     const body = await request.json();
     const { id, totalHours, ...updateData } = body;
 
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('organizations')
       .update({
         ...updateData,
         total_hours: totalHours,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 
     return NextResponse.json({ data });

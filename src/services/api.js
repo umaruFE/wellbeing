@@ -21,14 +21,45 @@ class ApiService {
       delete config.headers['Content-Type'];
     }
 
-    const response = await fetch(url, config);
-    const data = await response.json();
+    // 详细的请求日志
+    console.log('🌐 API 请求开始:', {
+      url: url,
+      method: options.method || 'GET',
+      endpoint: endpoint,
+      fullUrl: window.location.origin + url,
+      config: config
+    });
 
-    if (!response.ok) {
-      throw new Error(data.error || 'API request failed');
+    try {
+      const response = await fetch(url, config);
+      console.log('📥 收到响应:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok,
+        url: response.url
+      });
+
+      const data = await response.json();
+      console.log('📦 响应数据:', data);
+
+      if (!response.ok) {
+        console.error('❌ API 请求失败:', {
+          status: response.status,
+          error: data.error || 'API request failed'
+        });
+        throw new Error(data.error || 'API request failed');
+      }
+
+      console.log('✅ API 请求成功');
+      return data;
+    } catch (err) {
+      console.error('💥 API 请求异常:', {
+        message: err.message,
+        stack: err.stack,
+        url: url
+      });
+      throw err;
     }
-
-    return data;
   }
 
   // ============ Courses ============
@@ -164,16 +195,36 @@ class ApiService {
   }
 
   async createVideo(data) {
+    // Backend expects snake_case fields (video_url, thumbnail_url)
+    const payload = { ...(data || {}) };
+    if (payload.videoUrl && !payload.video_url) {
+      payload.video_url = payload.videoUrl;
+      delete payload.videoUrl;
+    }
+    if (payload.thumbnailUrl && !payload.thumbnail_url) {
+      payload.thumbnail_url = payload.thumbnailUrl;
+      delete payload.thumbnailUrl;
+    }
     return this.request('/api/videos', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify(payload),
     });
   }
 
   async updateVideo(id, data) {
+    // Backend expects snake_case fields (video_url, thumbnail_url)
+    const payload = { ...(data || {}) };
+    if (payload.videoUrl && !payload.video_url) {
+      payload.video_url = payload.videoUrl;
+      delete payload.videoUrl;
+    }
+    if (payload.thumbnailUrl && !payload.thumbnail_url) {
+      payload.thumbnail_url = payload.thumbnailUrl;
+      delete payload.thumbnailUrl;
+    }
     return this.request('/api/videos', {
       method: 'PUT',
-      body: JSON.stringify({ id, ...data }),
+      body: JSON.stringify({ id, ...payload }),
     });
   }
 
@@ -186,3 +237,42 @@ class ApiService {
 
 export const apiService = new ApiService();
 export default apiService;
+
+// =========================
+// Named exports for service modules (./courseService, ./voiceService, etc.)
+// These helpers map business paths like "/courses" to backend routes "/api/courses".
+// =========================
+
+const normalizeApiPath = (path) => {
+  if (!path) return '/api';
+  // Allow passing full "/api/xxx" to avoid double prefixing
+  if (path.startsWith('/api/')) return path;
+  if (path === '/api') return path;
+  if (path.startsWith('/')) return `/api${path}`;
+  return `/api/${path}`;
+};
+
+export const request = async (path, options = {}) => {
+  return apiService.request(normalizeApiPath(path), options);
+};
+
+export const get = async (path, params = {}, options = {}) => {
+  const queryString = params && Object.keys(params).length
+    ? `?${new URLSearchParams(params).toString()}`
+    : '';
+  return request(`${path}${queryString}`, { method: 'GET', ...options });
+};
+
+export const post = async (path, data, options = {}) => {
+  const body = data instanceof FormData ? data : JSON.stringify(data ?? {});
+  return request(path, { method: 'POST', body, ...options });
+};
+
+export const put = async (path, data, options = {}) => {
+  const body = data instanceof FormData ? data : JSON.stringify(data ?? {});
+  return request(path, { method: 'PUT', body, ...options });
+};
+
+export const del = async (path, options = {}) => {
+  return request(path, { method: 'DELETE', ...options });
+};
