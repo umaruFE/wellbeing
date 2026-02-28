@@ -13,7 +13,6 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
-import { INITIAL_COURSE_DATA, READING_TEST_DATA } from '../constants';
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
 import { AssetEditorPanel } from './AssetEditorPanel';
@@ -24,11 +23,11 @@ import { aiAssetService } from '../services/aiAssetService';
  * ReadingMaterialCanvasView - 阅读材料画布模式视图
  * 独立的画布视图，专门用于编辑阅读材料
  */
-export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
-  const { navigation } = props;
-  const [courseData, setCourseData] = useState(READING_TEST_DATA);
-  const [activePhase, setActivePhase] = useState(Object.keys(READING_TEST_DATA)[0]);
-  const [activeStepId, setActiveStepId] = useState(READING_TEST_DATA[Object.keys(READING_TEST_DATA)[0]]?.steps[0]?.id);
+export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
+  const initialData = initialConfig?.courseData || {};
+  const [courseData, setCourseData] = useState(initialData);
+  const [activePhase, setActivePhase] = useState(initialData ? Object.keys(initialData)[0] : 'engage');
+  const [activeStepId, setActiveStepId] = useState(initialData ? initialData[Object.keys(initialData)[0]]?.steps[0]?.id : null);
   const [isLeftOpen, setIsLeftOpen] = useState(true);
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
@@ -61,34 +60,35 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
 
   // 当navigation变化时，重置数据
   useEffect(() => {
+    const initialData = initialConfig?.courseData || {};
     if (!navigation) {
-      setCourseData(READING_TEST_DATA);
-      const firstPhase = Object.keys(READING_TEST_DATA)[0];
-      const firstStepId = READING_TEST_DATA[firstPhase]?.steps[0]?.id;
+      setCourseData(initialData);
+      const firstPhase = Object.keys(initialData)[0];
+      const firstStepId = initialData[firstPhase]?.steps[0]?.id;
       setActivePhase(firstPhase);
       setActiveStepId(firstStepId);
-      setExpandedPhases(Object.keys(READING_TEST_DATA));
+      setExpandedPhases(Object.keys(initialData));
       setSelectedAssetId(null);
       setGenerationHistory([]);
       setShowHistoryModal(null);
       setShowPromptModal(false);
       setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
     } else {
-      setCourseData(INITIAL_COURSE_DATA);
+      setCourseData(initialData);
       const phaseMap = { 'Engage': 'engage', 'Empower': 'empower', 'Execute': 'execute', 'Elevate': 'elevate' };
       const phaseKey = phaseMap[navigation.phaseId] || 'engage';
       const stepId = navigation.slideId ? String(navigation.slideId) : null;
-      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
+      setExpandedPhases(Object.keys(initialData));
       setActivePhase(phaseKey);
       if (stepId) {
         setActiveStepId(stepId);
       } else {
-        const firstStepId = INITIAL_COURSE_DATA[phaseKey]?.steps[0]?.id;
+        const firstStepId = initialData[phaseKey]?.steps[0]?.id;
         if (firstStepId) setActiveStepId(String(firstStepId));
       }
       setSelectedAssetId(null);
     }
-  }, [navigation]);
+  }, [navigation, initialConfig]);
 
   // 初始化pages
   const initializePages = (dataSource) => {
@@ -130,7 +130,7 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
     });
   };
 
-  const [pages, setPages] = useState(() => initializePages(INITIAL_COURSE_DATA));
+  const [pages, setPages] = useState(() => initializePages(initialConfig?.courseData || {}));
   const [editingPageIndex, setEditingPageIndex] = useState(0);
   const [selectedStepId, setSelectedStepId] = useState(null);
   const [selectedMaterialId, setSelectedMaterialId] = useState(null);

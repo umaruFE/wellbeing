@@ -14,7 +14,6 @@ import {
   Copy,
   RotateCw
 } from 'lucide-react';
-import { INITIAL_COURSE_DATA } from '../constants';
 import { SlideRenderer } from './SlideRenderer';
 import { getAssetIcon } from '../utils';
 import { AssetEditorPanel } from './AssetEditorPanel';
@@ -26,13 +25,12 @@ import { promptHistoryService, promptOptimizationService } from '../services/pro
 import { optimizePrompt } from '../services/dashscope';
 import { useAuth } from '../contexts/AuthContext';
 
-export const CanvasView = forwardRef((props, ref) => {
-  const { navigation } = props;
+export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const { user } = useAuth();
-  const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
-  const [activePhase, setActivePhase] = useState(Object.keys(INITIAL_COURSE_DATA)[0]);
-  const [activeStepId, setActiveStepId] = useState(INITIAL_COURSE_DATA[Object.keys(INITIAL_COURSE_DATA)[0]]?.steps[0]?.id);
-  const [expandedPhases, setExpandedPhases] = useState(Object.keys(INITIAL_COURSE_DATA));
+  const [courseData, setCourseData] = useState(initialConfig?.courseData || {});
+  const [activePhase, setActivePhase] = useState(initialConfig?.courseData ? Object.keys(initialConfig.courseData)[0] : 'engage');
+  const [activeStepId, setActiveStepId] = useState(initialConfig?.courseData ? initialConfig.courseData[Object.keys(initialConfig.courseData)[0]]?.steps[0]?.id : null);
+  const [expandedPhases, setExpandedPhases] = useState(initialConfig?.courseData ? Object.keys(initialConfig.courseData) : []);
   
   // UI State
   const [isLeftOpen, setIsLeftOpen] = useState(true);
@@ -53,23 +51,25 @@ export const CanvasView = forwardRef((props, ref) => {
   const canvasRef = useRef(null);
 
   // 撤销/重做功能
-  const [history, setHistory] = useState([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
+  const [history, setHistory] = useState([JSON.parse(JSON.stringify(initialConfig?.courseData || {}))]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
   // 当navigation变化时，重置数据
   useEffect(() => {
     if (!navigation) {
-      setCourseData(INITIAL_COURSE_DATA);
-      const firstPhase = Object.keys(INITIAL_COURSE_DATA)[0];
-      const firstStepId = INITIAL_COURSE_DATA[firstPhase]?.steps[0]?.id;
+      const initialData = initialConfig?.courseData || {};
+      setCourseData(initialData);
+      const firstPhase = Object.keys(initialData)[0];
+      const firstStepId = initialData[firstPhase]?.steps[0]?.id;
       setActivePhase(firstPhase);
       setActiveStepId(firstStepId);
-      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
+      setExpandedPhases(Object.keys(initialData));
       setSelectedAssetId(null);
-      setHistory([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
+      setHistory([JSON.parse(JSON.stringify(initialData))]);
       setHistoryIndex(0);
     } else {
-      setCourseData(INITIAL_COURSE_DATA);
+      const initialData = initialConfig?.courseData || {};
+      setCourseData(initialData);
       const phaseMap = {
         'Engage': 'engage',
         'Empower': 'empower',
@@ -78,19 +78,19 @@ export const CanvasView = forwardRef((props, ref) => {
       };
       const phaseKey = phaseMap[navigation.phaseId] || 'engage';
       const stepId = navigation.slideId ? String(navigation.slideId) : null;
-      setExpandedPhases(Object.keys(INITIAL_COURSE_DATA));
+      setExpandedPhases(Object.keys(initialData));
       setActivePhase(phaseKey);
       if (stepId) {
         setActiveStepId(stepId);
       } else {
-        const firstStepId = INITIAL_COURSE_DATA[phaseKey]?.steps[0]?.id;
+        const firstStepId = initialData[phaseKey]?.steps[0]?.id;
         if (firstStepId) setActiveStepId(String(firstStepId));
       }
       setSelectedAssetId(null);
-      setHistory([JSON.parse(JSON.stringify(INITIAL_COURSE_DATA))]);
+      setHistory([JSON.parse(JSON.stringify(initialData))]);
       setHistoryIndex(0);
     }
-  }, [navigation]);
+  }, [navigation, initialConfig]);
 
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);

@@ -63,9 +63,58 @@ export const MainLayout = () => {
   };
 
   // 开始创建课程
-  const handleStartApp = (config) => {
-    setAppConfig(config);
-    setAppState('app');
+  const handleStartApp = async (config) => {
+    try {
+      setIsSaving(true);
+      setAutoSaveStatus('saving');
+
+      const requestBody = {
+        userId: user?.id || 1,
+        organizationId: user?.organizationId || null,
+        title: config.unit || '自定义课程',
+        description: config.theme || '',
+        ageGroup: config.age || '',
+        unit: config.unit || '',
+        duration: config.duration || 40,
+        theme: config.theme || '',
+        keywords: config.keywords ? config.keywords.split(',').map(k => k.trim()) : [],
+        isPublic: false,
+        courseData: config.courseData
+      };
+
+      console.log('Saving new course:', requestBody);
+
+      const response = await fetch('/api/courses', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Save response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '保存课程失败');
+      }
+
+      const result = await response.json();
+      const newCourse = result.data;
+
+      console.log('Course saved successfully:', newCourse);
+
+      setCurrentCourseId(newCourse.id);
+      setAppConfig(config);
+      setAppState('app');
+      setAutoSaveStatus('success');
+    } catch (error) {
+      console.error('Error saving course:', error);
+      setAutoSaveStatus('error');
+    } finally {
+      setIsSaving(false);
+      setTimeout(() => setAutoSaveStatus('idle'), 2000);
+    }
   };
 
   // 重置回到欢迎页
@@ -350,23 +399,27 @@ export const MainLayout = () => {
         const result = await apiService.getCourse(editingCourseId);
         const course = result?.data || result;
 
-        console.log('Loaded course for editing:', course);
+        console.log('API返回的完整结果:', result);
+        console.log('解析后的课程对象:', course);
+        console.log('course.courseData:', course.courseData);
+        console.log('course.data:', course.data);
+        console.log('course.course_data:', course.course_data);
 
         const initialConfig = {
           grade: course.grade || '',
           age: course.age_group || '',
           unit: course.unit || course.title || '自定义课程',
-          duration: course.duration
-            ? `${course.duration}分钟`
-            : (appConfig?.duration || '40分钟'),
+          duration: course.duration || (appConfig?.duration || '40分钟'),
           theme: course.theme || '',
           // 关键字数组转成逗号分隔字符串，方便表格里显示
           keywords: Array.isArray(course.keywords)
             ? course.keywords.join(',')
             : (course.keywords || ''),
           // TableView 会用到的课程结构数据（字段名不确定时做兼容）
-          courseData: course.courseData || course.data || null,
+          courseData: course.courseData || course.data || course.course_data || null,
         };
+
+        console.log('设置的 initialConfig:', initialConfig);
 
         setAppConfig(initialConfig);
         setAppState('app');
@@ -686,8 +739,8 @@ export const MainLayout = () => {
                 <div className="h-full flex">
                   {currentView === 'canvas' && (
                     <>
-                      {canvasMode === 'ppt' && <CanvasView ref={canvasViewRef} navigation={canvasNavigation} />}
-                      {canvasMode === 'reading-material' && <ReadingMaterialCanvasView ref={canvasViewRef} navigation={canvasNavigation} />}
+                      {canvasMode === 'ppt' && <CanvasView ref={canvasViewRef} navigation={canvasNavigation} initialConfig={appConfig} />}
+                      {canvasMode === 'reading-material' && <ReadingMaterialCanvasView ref={canvasViewRef} navigation={canvasNavigation} initialConfig={appConfig} />}
                     </>
                   )}
                   {currentView === 'table' && (

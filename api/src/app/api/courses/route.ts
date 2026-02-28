@@ -72,16 +72,47 @@ async function insert(table, data) {
     return { data: null, error: new Error('Database client not initialized') };
   }
   
-  const columns = Object.keys(data).join(', ');
-  const values = Object.values(data).map((val, i) => `$${i + 1}`).join(', ');
-  const placeholders = Object.values(data);
+  const columns = [];
+  const values = [];
+  const placeholders = [];
+  let paramIndex = 1;
   
-  const query = `INSERT INTO ${table} (${columns}) VALUES (${values}) RETURNING *`;
+  Object.entries(data).forEach(([key, value]) => {
+    columns.push(key);
+    
+    // 如果是 JSONB 字段（以 _data 结尾），使用 JSON 格式
+    if (key.endsWith('_data') && typeof value === 'string') {
+      placeholders.push(`$${paramIndex}::jsonb`);
+      values.push(value);
+    } else {
+      placeholders.push(`$${paramIndex}`);
+      values.push(value);
+    }
+    paramIndex++;
+  });
+  
+  const query = `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${placeholders.join(', ')}) RETURNING *`;
   
   try {
-    const res = await dbClient.query(query, placeholders);
+    const res = await dbClient.query(query, values);
     return { data: res.rows[0], error: null };
   } catch (error) {
+    // 如果错误是列不存在，尝试跳过该列
+    if (error.code === '42703') {
+      console.log(`Column does not exist, retrying without it...`);
+      
+      // 找出不存在的列名
+      const match = error.message.match(/column "(.+?)" of relation/);
+      if (match && match[1]) {
+        const invalidColumn = match[1];
+        const newData = { ...data };
+        delete newData[invalidColumn];
+        
+        // 递归调用，去掉无效列
+        return insert(table, newData);
+      }
+    }
+    
     return { data: null, error };
   }
 }
@@ -202,7 +233,8 @@ export async function POST(request: NextRequest) {
       duration,
       theme,
       keywords,
-      isPublic
+      isPublic,
+      courseData
     } = body;
 
     // Handle userId type conversion
@@ -213,7 +245,7 @@ export async function POST(request: NextRequest) {
       processed_user_id = null;
     }
 
-    const courseData = {
+    const courseRecord = {
       user_id: processed_user_id,
       organization_id: organizationId,
       title,
@@ -225,11 +257,12 @@ export async function POST(request: NextRequest) {
       keywords,
       is_public: isPublic || false,
       status: 'draft',
+      course_data: courseData ? JSON.stringify(courseData) : null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
-    const { data, error } = await insert('courses', courseData);
+    const { data, error } = await insert('courses', courseRecord);
 
     if (error) {
       return NextResponse.json(

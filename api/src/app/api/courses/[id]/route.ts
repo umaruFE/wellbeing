@@ -21,6 +21,30 @@ try {
   console.error(dbError);
 }
 
+// Ensure course_data column exists
+async function ensureCourseDataColumn() {
+  try {
+    const checkColumnQuery = `
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'courses' 
+      AND column_name = 'course_data'
+    `;
+    const result = await dbClient.query(checkColumnQuery);
+    
+    if (result.rows.length === 0) {
+      console.log('Adding course_data column to courses table...');
+      await dbClient.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_data JSONB');
+      console.log('course_data column added successfully');
+    }
+  } catch (error) {
+    console.error('Error ensuring course_data column:', error);
+  }
+}
+
+// Initialize column on startup
+ensureCourseDataColumn();
+
 // Select data function
 async function select(table, params = {}) {
   if (dbError) {
@@ -64,22 +88,57 @@ async function update(table, data, filters) {
     return { data: null, error: new Error('Database client not initialized') };
   }
   
-  const setClause = Object.keys(data).map((key, i) => `${key} = $${i + 1}`).join(', ');
-  const values = Object.values(data);
+  const setClause = [];
+  const values = [];
+  let paramIndex = 1;
+  
+  Object.entries(data).forEach(([key, value]) => {
+    // 如果是 JSONB 字段（以 _data 结尾），使用 JSON 格式
+    if (key.endsWith('_data') && typeof value === 'string') {
+      setClause.push(`${key} = $${paramIndex}::jsonb`);
+      values.push(value);
+    } else {
+      setClause.push(`${key} = $${paramIndex}`);
+      values.push(value);
+    }
+    paramIndex++;
+  });
   
   const conditions = [];
-  let paramIndex = values.length + 1;
   Object.entries(filters).forEach(([key, value]) => {
     conditions.push(`${key} = $${paramIndex++}`);
     values.push(value);
   });
   
-  const query = `UPDATE ${table} SET ${setClause} WHERE ${conditions.join(' AND ')} RETURNING *`;
+  const query = `UPDATE ${table} SET ${setClause.join(', ')} WHERE ${conditions.join(' AND ')} RETURNING *`;
   
   try {
+    console.log('Update query:', query);
+    console.log('Update values:', values.map((v, i) => `$${i + 1} = ${typeof v === 'object' ? JSON.stringify(v).substring(0, 200) : v}`).join(', '));
+    
     const res = await dbClient.query(query, values);
     return { data: res.rows[0], error: null };
   } catch (error) {
+    console.error('Update error:', error.message);
+    console.error('Error code:', error.code);
+    console.error('Error detail:', error.detail);
+    
+    // 如果错误是列不存在，尝试跳过该列
+    if (error.code === '42703') {
+      console.log(`Column does not exist, retrying without it...`);
+      
+      // 找出不存在的列名
+      const match = error.message.match(/column "(.+?)" of relation/);
+      if (match && match[1]) {
+        const invalidColumn = match[1];
+        const newData = { ...data };
+        delete newData[invalidColumn];
+        
+        // 递归调用，去掉无效列
+        return update(table, newData, filters);
+      }
+    }
+    
     return { data: null, error };
   }
 }
@@ -171,7 +230,7 @@ export async function PUT(
       keywords,
       isPublic,
       status,
-      // 其余如 courseData 等字段目前没有对应列，避免直接更新导致报错
+      courseData,
     } = body;
 
     // 处理 userId（与创建接口保持一致逻辑）
@@ -202,6 +261,23 @@ export async function PUT(
     if (typeof keywords !== 'undefined') updateData.keywords = keywords;
     if (typeof isPublic !== 'undefined') updateData.is_public = isPublic;
     if (typeof status !== 'undefined') updateData.status = status;
+    if (typeof courseData !== 'undefined') {
+      console.log('courseData type:', typeof courseData);
+      console.log('courseData is array:', Array.isArray(courseData));
+      console.log('courseData length:', Array.isArray(courseData) ? courseData.length : 'N/A');
+      
+      // 尝试序列化为 JSON 字符串
+      try {
+        const jsonString = JSON.stringify(courseData);
+        console.log('JSON stringify successful, length:', jsonString.length);
+        
+        // 将 JSON 字符串传递给数据库，让 PostgreSQL 解析
+        updateData.course_data = jsonString;
+      } catch (error) {
+        console.error('JSON stringify failed:', error);
+        console.error('courseData sample:', JSON.stringify(courseData).substring(0, 500));
+      }
+    }
 
     const { data, error } = await update('courses', updateData, { id });
 

@@ -17,7 +17,6 @@ import {
   X,
   Sparkles
 } from 'lucide-react';
-import { WORD_DOC_DATA } from '../constants';
 import { ImagePreviewModal } from './ImagePreviewModal';
 import { BookmarkIcon } from './BookmarkIcon';
 import { HistoryVersionView } from './HistoryVersionView';
@@ -28,7 +27,7 @@ import { uploadService } from '../services/uploadService';
 
 export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateToCanvas, onReady }, ref) => {
   // 初始化数据时，确保每一行都有 script 字段
-  const [slides, setSlides] = useState(WORD_DOC_DATA.map(s => ({...s, script: s.script || ''})));
+  const [slides, setSlides] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [generatingMedia, setGeneratingMedia] = useState({});
   const [generatingPdf, setGeneratingPdf] = useState({}); // PDF生成状态
@@ -130,57 +129,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
   };
 
   // 扩展数据结构：支持多个PPT和阅读素材
-  const [phases, setPhases] = useState([
-    { 
-      id: 'Engage', 
-      label: 'Engage (引入)', 
-      color: 'bg-purple-50 border-purple-200 text-purple-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Engage')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        // 扩展：支持多个PPT和阅读素材
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    },
-    { 
-      id: 'Empower', 
-      label: 'Empower (赋能)', 
-      color: 'bg-blue-50 border-blue-200 text-blue-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Empower')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    },
-    { 
-      id: 'Execute', 
-      label: 'Execute (实践/产出)', 
-      color: 'bg-green-50 border-green-200 text-green-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Execute')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    },
-    { 
-      id: 'Elevate', 
-      label: 'Elevate (升华)', 
-      color: 'bg-yellow-50 border-yellow-200 text-yellow-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Elevate')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    }
-  ]);
+  const [phases, setPhases] = useState([]);
 
   // 历史版本管理
   const saveToHistory = () => {
