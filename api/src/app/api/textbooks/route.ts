@@ -68,12 +68,8 @@ export async function GET(request: NextRequest) {
     if (type === 'units') {
       let query = db
         .from('textbook_units')
-        .select(`
-          *,
-          textbook_type:textbook_types(*),
-          grade:grades(*),
-          images:textbook_images(*)
-        `);
+        // 简化为仅返回 textbook_units 本身字段，避免复杂 join 导致列名不匹配错误
+        .select('*');
 
       if (textbookTypeId) {
         query = query.eq('textbook_type_id', textbookTypeId);
@@ -103,11 +99,8 @@ export async function GET(request: NextRequest) {
 
     const { data: allUnits, error: unitsError } = await db
       .from('textbook_units')
-      .select(`
-        *,
-        grade:grades(*),
-        images:textbook_images(*)
-      `);
+      // 这里只需要单元自身信息，前端按 textbook_type_id 和 grade_id 组织层级即可
+      .select('*');
 
     if (unitsError) {
       return NextResponse.json({ error: unitsError.message }, { status: 500 });
