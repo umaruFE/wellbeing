@@ -93,7 +93,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
           <div className="flex items-center gap-3">
             <Wand2 className="w-6 h-6 text-purple-600" />
             <h3 className="font-bold text-lg text-slate-800">
-              提示词优化器 - {elementType === 'image' ? '图片' : elementType === 'script' ? '讲稿' : elementType === 'activity' ? '活动' : 'PPT'}
+              提示词优化器 - {elementType === 'image' ? '图片' : elementType === 'video' ? '视频' : elementType === 'audio' ? '音频' : elementType === 'script' ? '讲稿' : elementType === 'activity' ? '活动' : 'PPT'}
             </h3>
           </div>
           <button onClick={onClose} className="text-slate-400 hover:text-slate-600">

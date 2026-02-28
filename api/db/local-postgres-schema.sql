@@ -217,6 +217,7 @@ CREATE TABLE IF NOT EXISTS prompt_history (
   execution_time INTEGER,
   success BOOLEAN DEFAULT true,
   error_message TEXT,
+  prompt_id TEXT, -- AI API 返回的任务ID
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

@@ -135,7 +135,7 @@ export const aiAssetService = {
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(workflow)
+        body: JSON.stringify({ prompt: workflow })
       });
 
       if (!response.ok) {
@@ -250,8 +250,155 @@ export const aiAssetService = {
     throw new Error('任务超时，请稍后重试');
   },
 
-  // 完整的图片生成流程（提交任务 + 轮询结果）
-  generateImageWithPolling: async (prompt, options = {}, onProgress) => {
+  // 从任务结果中提取图片信息
+  extractImageInfo: (taskData) => {
+    try {
+      if (!taskData || !taskData.outputs) {
+        return null;
+      }
+
+      const outputs = taskData.outputs;
+      const saveImageNode = Object.values(outputs).find(node => node.images && node.images.length > 0);
+      
+      if (!saveImageNode) {
+        return null;
+      }
+
+      const imageInfo = saveImageNode.images[0];
+      return {
+        filename: imageInfo.filename,
+        subfolder: imageInfo.subfolder || '',
+        type: imageInfo.type || 'output'
+      };
+    } catch (error) {
+      console.error('提取图片信息失败:', error);
+      return null;
+    }
+  },
+
+  // 获取生成的图片并上传到OSS
+  getAndUploadImage: async (promptId, uploadService) => {
+    try {
+      const taskData = await aiAssetService.pollTaskStatus(promptId);
+      const imageInfo = aiAssetService.extractImageInfo(taskData);
+      
+      if (!imageInfo) {
+        throw new Error('未找到生成的图片');
+      }
+
+      const blob = await aiAssetService.getGeneratedAsset(
+        imageInfo.filename,
+        imageInfo.subfolder,
+        imageInfo.type
+      );
+
+      const file = new File([blob], imageInfo.filename, { type: 'image/png' });
+      const uploadResult = await uploadService.uploadFile(file, 'ai-generated-images');
+      
+      if (!uploadResult.success || !uploadResult.url) {
+        throw new Error('上传到OSS失败');
+      }
+
+      return {
+        success: true,
+        url: uploadResult.url,
+        filename: imageInfo.filename
+      };
+    } catch (error) {
+      console.error('获取并上传图片失败:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  // 生成多张图片（后端批量生成，立即返回任务ID）
+  generateMultipleImages: async (prompt, options = {}) => {
+    const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
+    
+    try {
+      const response = await fetch('/api/ai/generate-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt,
+          count,
+          width,
+          height,
+          user_id,
+          organization_id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('生成多张图片失败:', error);
+      throw error;
+    }
+  },
+
+  // 轮询单个任务状态并上传到OSS
+  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 60, interval = 2000, onProgress) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        if (onProgress) {
+          onProgress({ index, attempt, status: 'polling' });
+        }
+
+        const response = await fetch(`/api/ai/task-status/${promptId}`, {
+          method: 'GET'
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `查询任务状态失败: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.status === 'completed') {
+          if (onProgress) {
+            onProgress({ index, attempt, status: 'completed', url: data.url });
+          }
+          
+          return {
+            index,
+            url: data.url,
+            filename: data.filename,
+            prompt: `${prompt} - 教学场景 ${index + 1}`,
+            completed: true
+          };
+        } else if (data.status === 'error') {
+          throw new Error('任务执行失败');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, interval));
+      } catch (error) {
+        console.error(`轮询任务 ${index + 1} 状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+        if (attempt === maxAttempts - 1) {
+          if (onProgress) {
+            onProgress({ index, attempt, status: 'failed', error: error.message });
+          }
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, interval));
+      }
+    }
+    
+    throw new Error('任务超时，请稍后重试');
+  },
+
+  // 完整的图片生成流程（提交任务 + 轮询结果 + 上传OSS）
+  generateImageWithPolling: async (prompt, options = {}, onProgress, uploadService) => {
     try {
       onProgress?.(10, '正在提交生成任务...');
       
@@ -259,15 +406,36 @@ export const aiAssetService = {
       
       onProgress?.(30, '任务已提交，正在生成中...');
       
-      const result = await aiAssetService.pollTaskStatus(
-        promptId,
-        options.maxAttempts || 60,
-        options.interval || 2000
-      );
-      
-      onProgress?.(100, '生成完成！');
-      
-      return result;
+      if (uploadService) {
+        onProgress?.(50, '正在获取生成的图片...');
+        
+        const uploadResult = await aiAssetService.getAndUploadImage(promptId, uploadService);
+        
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.error);
+        }
+        
+        onProgress?.(100, '生成完成并已上传到OSS！');
+        
+        return {
+          success: true,
+          url: uploadResult.url,
+          filename: uploadResult.filename
+        };
+      } else {
+        const result = await aiAssetService.pollTaskStatus(
+          promptId,
+          options.maxAttempts || 60,
+          options.interval || 2000
+        );
+        
+        onProgress?.(100, '生成完成！');
+        
+        return {
+          success: true,
+          data: result
+        };
+      }
     } catch (error) {
       console.error('生成图片失败:', error);
       throw error;

@@ -96,22 +96,39 @@ export const MainLayout = () => {
     console.log('getCurrentCourseData called:', { 
       hasRef: !!canvasViewRef.current, 
       currentView,
+      canvasMode,
       refMethods: canvasViewRef.current ? Object.keys(canvasViewRef.current) : null 
     });
     
     if (!canvasViewRef.current) {
+      console.log('No ref available, returning null');
       return null;
     }
     
+    const refMethods = Object.keys(canvasViewRef.current);
+    console.log('Available ref methods:', refMethods);
+    
     if (currentView === 'table') {
-      const slides = canvasViewRef.current.getSlides();
-      console.log('getSlides() returned:', slides);
-      return slides;
+      if (refMethods.includes('getSlides')) {
+        const slides = canvasViewRef.current.getSlides();
+        console.log('getSlides() returned:', slides);
+        return slides;
+      } else {
+        console.log('getSlides method not found in ref');
+        return null;
+      }
     } else if (currentView === 'canvas') {
-      const courseData = canvasViewRef.current.getCourseData();
-      console.log('getCourseData() returned:', courseData);
-      return courseData;
+      if (refMethods.includes('getCourseData')) {
+        const courseData = canvasViewRef.current.getCourseData();
+        console.log('getCourseData() returned:', courseData);
+        return courseData;
+      } else {
+        console.log('getCourseData method not found in ref');
+        return null;
+      }
     }
+    
+    console.log('Unknown view:', currentView);
     return null;
   };
 
@@ -197,8 +214,8 @@ export const MainLayout = () => {
 
   // 自动保存
   const triggerAutoSave = React.useCallback(() => {
-    // 只在课程编辑器中且组件准备好时才触发自动保存
-    if (appState !== 'app' || !isComponentReady) {
+    // 只在课程编辑器中且 ref 存在时才触发自动保存
+    if (appState !== 'app' || !canvasViewRef.current) {
       return;
     }
 
@@ -212,15 +229,15 @@ export const MainLayout = () => {
       clearTimeout(autoSaveTimerRef.current);
     }
     
-    // 只在真正调用保存时才展示“自动保存中”状态，避免频繁闪烁
+    // 只在真正调用保存时才展示"自动保存中"状态，避免频繁闪烁
     autoSaveTimerRef.current = setTimeout(async () => {
       await handleSaveCourse();
     }, 2000);
-  }, [appState, isComponentReady, lastSavedTime]);
+  }, [appState, lastSavedTime]);
 
   // 监听数据变化触发自动保存
   React.useEffect(() => {
-    if (appState === 'app' && appConfig && isComponentReady) {
+    if (appState === 'app' && appConfig && canvasViewRef.current) {
       triggerAutoSave();
     }
     
@@ -229,7 +246,7 @@ export const MainLayout = () => {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [appState, appConfig, currentView, canvasMode, triggerAutoSave, isComponentReady]);
+  }, [appState, appConfig, currentView, canvasMode, triggerAutoSave]);
 
   // 切换菜单展开/收起
   const toggleMenu = (menuId) => {

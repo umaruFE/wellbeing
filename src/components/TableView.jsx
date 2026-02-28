@@ -24,6 +24,7 @@ import { HistoryVersionView } from './HistoryVersionView';
 import { PromptInputModal } from './PromptInputModal';
 import { CardSelectionModal } from './CardSelectionModal';
 import { aiAssetService } from '../services/aiAssetService';
+import { uploadService } from '../services/uploadService';
 
 export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateToCanvas, onReady }, ref) => {
   // 初始化数据时，确保每一行都有 script 字段
@@ -266,7 +267,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
   // 暴露给父组件的方法（必须在 return 之前执行）
   React.useImperativeHandle(ref, () => ({
     getSlides: () => phases
-  }), [phases]);
+  }));
 
   // 组件准备好后通知父组件
   useEffect(() => {
@@ -624,39 +625,38 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
         const slide = phases.find(p => p.id === phaseId)?.slides.find(s => s.id === slideId);
         const prompt = slide?.title || slide?.activity || '教学场景';
         
-        const generatedImages = [];
+        console.log('开始生成图片:', prompt);
         
-        // 生成4张图片供选择
-        for (let i = 0; i < 4; i++) {
-          try {
-            const result = await aiAssetService.generateImageWithPolling(
-              `${prompt} - 教学场景 ${i + 1}`,
-              {
-                width: 600,
-                height: 400,
-                seed: Date.now() + i * 1000,
-                maxAttempts: 60,
-                interval: 2000
-              },
-              (progress, text) => {
-                console.log(`生成图片 ${i + 1}: ${progress}% - ${text}`);
-              }
-            );
-            
-            generatedImages.push({
-              url: result.url,
-              prompt: `${prompt} - 教学场景 ${i + 1}`
-            });
-          } catch (error) {
-            console.error(`生成图片 ${i + 1} 失败:`, error);
+        // 使用后端批量生成API
+        const result = await aiAssetService.generateMultipleImages(prompt, {
+          count: 4,
+          width: 600,
+          height: 400
+        });
+        
+        console.log('图片生成完成:', result);
+        
+        if (!result.success || !result.data) {
+          throw new Error('生成图片失败');
+        }
+        
+        // 提取生成的图片
+        const generatedImages = result.data.map((item, index) => {
+          if (item.url) {
+            return {
+              url: item.url,
+              prompt: item.prompt || `${prompt} - 教学场景 ${index + 1}`
+            };
+          } else {
             // 如果生成失败，使用占位图
             const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-            generatedImages.push({
-              url: `https://placehold.co/600x400/${randomColor}/FFF?text=Gen+Failed+${i + 1}`,
-              prompt: `${prompt} - 教学场景 ${i + 1} (生成失败)`
-            });
+            return {
+              url: `https://placehold.co/600x400/${randomColor}/FFF?text=Gen+Failed+${index + 1}`,
+              prompt: `${prompt} - 教学场景 ${index + 1} (生成失败)`,
+              error: item.error
+            };
           }
-        }
+        });
 
         // 保存待确认的配置
         setPendingSlideConfig({

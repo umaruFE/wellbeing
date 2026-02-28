@@ -17,6 +17,8 @@ export const CardSelectionModal = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
 
+  console.log('CardSelectionModal rendered:', { isOpen, images: images.length, isLoading });
+
   if (!isOpen) return null;
 
   const handleSelect = (index) => {
@@ -83,19 +85,30 @@ export const CardSelectionModal = ({
               {images.map((image, index) => (
                 <div
                   key={index}
-                  onClick={() => handleSelect(index)}
+                  onClick={() => !image.loading && handleSelect(index)}
                   className={`
                     relative cursor-pointer rounded-lg overflow-hidden transition-all duration-200
                     ${selectedIndex === index
                       ? 'ring-2 ring-purple-500 ring-offset-1'
                       : 'hover:ring-1 hover:ring-purple-300 hover:ring-offset-1'
                     }
+                    ${image.loading ? 'cursor-wait' : ''}
                   `}
                   style={{ aspectRatio: '4/3' }}
                 >
                   {/* 图片 */}
                   <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200">
-                    {image.url ? (
+                    {image.loading ? (
+                      <div className="w-full h-full flex flex-col items-center justify-center">
+                        <div className="relative mb-3">
+                          <div className="w-12 h-12 border-4 border-purple-200 rounded-full animate-spin border-t-purple-600"></div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <RefreshCw className="w-5 h-5 text-purple-600 animate-spin" />
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 animate-pulse">生成中...</p>
+                      </div>
+                    ) : image.url ? (
                       <img
                         src={image.url}
                         alt={`图片 ${index + 1}`}
@@ -164,7 +177,7 @@ export const CardSelectionModal = ({
                 className={`
                   px-8 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2
                   ${selectedIndex !== null
-                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25'
+                    ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-black hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25'
                     : 'bg-slate-200 text-slate-400 cursor-not-allowed'
                   }
                 `}

@@ -16,6 +16,7 @@ export const PromptInputModal = ({
   placeholder = '请输入内容...',
   initialContent = '',
   type = 'text', // 'text' | 'image' | 'script' | 'activity' | 'ppt'
+  assetType = null, // 'image' | 'video' | 'audio' | 'text' | 'script' | 'activity' | 'ppt'
   isLoading = false
 }) => {
   const [content, setContent] = useState(initialContent);
@@ -31,7 +32,11 @@ export const PromptInputModal = ({
 
   const handleConfirm = () => {
     if (!content.trim()) return;
-    onConfirm(content);
+    // 对于图片、视频、音频，默认使用AI生成模式
+    // 对于文本，默认使用直接输入模式
+    const inputMode = (assetType === 'image' || assetType === 'video' || assetType === 'audio') ? 'ai' : 'direct';
+    const videoStyle = null;
+    onConfirm(content, inputMode, videoStyle);
     setContent('');
   };
 
@@ -76,7 +81,7 @@ export const PromptInputModal = ({
               <p className="text-xs text-slate-400">
                 提示：直接输入文本内容，将立即添加到画布
               </p>
-              {(type === 'image' || type === 'script' || type === 'activity' || type === 'ppt') && (
+              {(type === 'image' || type === 'script' || type === 'activity' || type === 'ppt' || assetType === 'image' || assetType === 'script' || assetType === 'activity' || assetType === 'ppt') && (
                 <button
                   onClick={() => setShowOptimizer(true)}
                   disabled={isLoading}
@@ -102,8 +107,17 @@ export const PromptInputModal = ({
               disabled={isLoading || !content.trim()}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
-              <Edit className="w-4 h-4" />
-              确认添加
+              {isLoading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  处理中...
+                </>
+              ) : (
+                <>
+                  <Edit className="w-4 h-4" />
+                  确认添加
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -112,7 +126,7 @@ export const PromptInputModal = ({
       {/* 提示词优化器 */}
       {showOptimizer && (
         <PromptOptimizer
-          elementType={type}
+          elementType={assetType || type}
           onOptimize={(optimizedPrompt) => {
             setContent(optimizedPrompt);
             setShowOptimizer(false);

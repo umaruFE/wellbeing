@@ -71,15 +71,15 @@ export const VoiceManagementPage = () => {
             alert(uploadResult.error || '上传失败');
             return;
           }
-          const newVoice = {
+        const newVoice = {
             id: `local-${Date.now()}`,
-            name: file.name.replace(/\.[^/.]+$/, ''),
+          name: file.name.replace(/\.[^/.]+$/, ''),
             emotion: 'all',
             duration: '--:--',
-            uploadedAt: new Date().toISOString().split('T')[0],
+          uploadedAt: new Date().toISOString().split('T')[0],
             url: uploadResult.url || '#',
             raw: { uploadedUrl: uploadResult.url }
-          };
+        };
           setVoices(prev => [newVoice, ...prev]);
         } catch (err) {
           console.error('上传声音失败:', err);

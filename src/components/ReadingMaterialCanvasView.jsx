@@ -785,7 +785,11 @@ export const ReadingMaterialCanvasView = forwardRef((props, ref) => {
   };
 
   // 暴露方法给父组件
-  useImperativeHandle(ref, () => ({ exportPDF: handleExportPDF, isExporting }));
+  useImperativeHandle(ref, () => ({ 
+    getCourseData: () => courseData,
+    exportPDF: handleExportPDF, 
+    isExporting 
+  }));
 
   // 保存到页面历史
   const saveCurrentToPageHistory = () => {

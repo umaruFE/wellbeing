@@ -22,9 +22,13 @@ import { CanvasViewLeftSidebar } from './CanvasView.LeftSidebar';
 import { CanvasViewModals } from './CanvasView.Modals';
 import { History, RefreshCw } from 'lucide-react';
 import { aiAssetService } from '../services/aiAssetService';
+import { promptHistoryService, promptOptimizationService } from '../services/promptService';
+import { optimizePrompt } from '../services/dashscope';
+import { useAuth } from '../contexts/AuthContext';
 
 export const CanvasView = forwardRef((props, ref) => {
   const { navigation } = props;
+  const { user } = useAuth();
   const [courseData, setCourseData] = useState(INITIAL_COURSE_DATA);
   const [activePhase, setActivePhase] = useState(Object.keys(INITIAL_COURSE_DATA)[0]);
   const [activeStepId, setActiveStepId] = useState(INITIAL_COURSE_DATA[Object.keys(INITIAL_COURSE_DATA)[0]]?.steps[0]?.id);
@@ -107,6 +111,7 @@ export const CanvasView = forwardRef((props, ref) => {
   const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
   const [cardSelectionImages, setCardSelectionImages] = useState([]);
   const [pendingAssetConfig, setPendingAssetConfig] = useState(null);
+  const [savedPromptIds, setSavedPromptIds] = useState([]);
 
   // 保存历史记录
   const saveToHistory = (newData) => {
@@ -285,12 +290,19 @@ export const CanvasView = forwardRef((props, ref) => {
     setShowPromptModal(true);
   };
 
-  const handleConfirmAddAsset = (prompt, inputMode = 'ai', videoStyle = null) => {
+  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null) => {
+    console.log('handleConfirmAddAsset called:', { prompt, inputMode, videoStyle, promptModalConfig });
+    
     const type = promptModalConfig.assetType;
     const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
-    if (!step) return;
+    if (!step) {
+      console.log('No step found, returning');
+      return;
+    }
 
+    // 直接输入文本的场景：不走 AI 接口，只本地创建元素
     if (type === 'text' && inputMode === 'direct') {
+      console.log('Direct text input mode');
       const newCourseData = { ...courseData };
       const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
       const w = 300, h = 100;
@@ -320,49 +332,264 @@ export const CanvasView = forwardRef((props, ref) => {
       return;
     }
 
+    console.log('AI generation mode, setting isGenerating to true');
     setIsGenerating(true);
 
-    setTimeout(() => {
-      if (type === 'image') {
-        const generatedImages = [];
-        for (let i = 0; i < 4; i++) {
-          const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-          generatedImages.push({
-            url: `https://placehold.co/400x400/${randomColor}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}+${i + 1}`,
-            prompt: prompt || `图片 ${i + 1} 的生成提示词`
+    const userId = user?.id;
+    const organizationId = user?.organizationId;
+    const promptStart = performance.now();
+
+    // 根据元素类型准备一个默认提示词
+    const basePrompt =
+      prompt ||
+      (type === 'image'
+        ? '生成一张适合小学英语教学的图片'
+        : type === 'video'
+          ? '生成一个适合小学英语教学的视频封面'
+          : type === 'audio'
+            ? '生成一段适合作为课堂背景音乐的音频'
+            : '生成一段教学文本内容');
+
+    try {
+      let effectivePrompt = basePrompt;
+
+      // 1) 先做提示词优化（调用大模型与优化服务）
+      try {
+        const optimized = await optimizePrompt(basePrompt, type === 'text' ? 'script' : type, userId);
+        if (optimized && typeof optimized === 'string') {
+          effectivePrompt = optimized;
+          await promptOptimizationService.saveOptimization({
+            user_id: userId,
+            element_type: type,
+            original_prompt: basePrompt,
+            optimized_prompt: optimized,
+            improvement_score: 5
           });
         }
-
-        setPendingAssetConfig({ type, prompt, videoStyle, phaseKey: activePhase, stepId: activeStepId });
-        setCardSelectionImages(generatedImages);
-        setShowCardSelectionModal(true);
-        setIsGenerating(false);
-        setShowPromptModal(false);
-        return;
+      } catch (optError) {
+        console.error('提示词优化失败，将使用原始提示词:', optError);
       }
 
       const newCourseData = { ...courseData };
       const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
 
-      let w = 300, h = 200;
+      let w = 300;
+      let h = 200;
       if (type === 'audio') { w = 300; h = 100; }
       if (type === 'text') { w = 300; h = 100; }
 
-      const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 15)}...` : `New ${type}`;
-      const generatedUrl = type === 'text'
-        ? ''
-        : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
+      let generatedUrl = '';
+      let generatedContent = '';
+
+      // 2) 调用 AI 生成接口（/prompt）
+      if (type === 'image' || type === 'video') {
+        console.log('开始生成图片，调用API...');
+        
+        try {
+          const result = await aiAssetService.generateMultipleImages(
+            effectivePrompt,
+            {
+              count: 4,
+              width: w,
+              height: h,
+              user_id: userId,
+              organization_id: organizationId
+            }
+          );
+
+          console.log('API返回结果:', result);
+
+          if (!result.success || !result.tasks) {
+            console.log('API返回失败，抛出错误');
+            throw new Error('生成图片失败');
+          }
+
+          console.log('已提交任务，准备显示抽卡界面（loading状态）');
+          
+          // 立即显示抽卡界面（loading状态）
+          const loadingImages = result.tasks.map((task, index) => ({
+            url: null,
+            prompt: `${effectivePrompt} - 教学场景 ${index + 1}`,
+            loading: true,
+            index
+          }));
+
+          console.log('设置卡片选择图片:', loadingImages);
+          setCardSelectionImages(loadingImages);
+          
+          // 保存所有 promptId 到状态中
+          const allPromptIds = result.tasks.map(task => task.promptId);
+          console.log('保存所有 promptId:', allPromptIds);
+          setSavedPromptIds(allPromptIds);
+          
+          const pendingConfig = {
+            type,
+            effectivePrompt,
+            w,
+            h,
+            generatedTitle: basePrompt
+              ? `AI生成：${basePrompt.substring(0, 15)}...`
+              : `New ${type}`
+          };
+          console.log('设置待确认配置:', pendingConfig);
+          setPendingAssetConfig(pendingConfig);
+          
+          console.log('显示抽卡模态框，调用 setShowCardSelectionModal(true)');
+          setShowCardSelectionModal(true);
+          
+          console.log('关闭提示词模态框');
+          setShowPromptModal(false);
+          setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+
+          // 使用保存的 promptId 列表查询任务状态
+          console.log('开始轮询任务状态...');
+          console.log('allPromptIds:', allPromptIds);
+          console.log('allPromptIds 长度:', allPromptIds.length);
+          
+          if (!allPromptIds || allPromptIds.length === 0) {
+            console.log('allPromptIds 为空，跳过轮询');
+            setIsGenerating(false);
+            return;
+          }
+          
+          // 轮询每个任务，完成后立即更新抽卡界面
+          const pollPromises = allPromptIds.map(async (promptId, index) => {
+            console.log(`开始轮询任务 ${index + 1}, promptId: ${promptId}`);
+            try {
+              const imageResult = await aiAssetService.pollTaskAndUpload(
+                promptId,
+                index,
+                effectivePrompt,
+                60,
+                2000,
+                (progress) => {
+                  console.log(`任务 ${index + 1} 进度:`, progress);
+                  
+                  if (progress.status === 'completed') {
+                    // 任务完成，更新抽卡界面
+                    setCardSelectionImages(prevImages => {
+                      const newImages = [...prevImages];
+                      newImages[index] = {
+                        url: progress.url,
+                        prompt: `${effectivePrompt} - 教学场景 ${index + 1}`,
+                        loading: false,
+                        completed: true,
+                        index
+                      };
+                      console.log(`更新图片 ${index + 1}:`, newImages[index]);
+                      return newImages;
+                    });
+                  }
+                }
+              );
+              
+              return imageResult;
+            } catch (error) {
+              console.error(`任务 ${index + 1} 失败:`, error);
+              
+              // 任务失败，更新抽卡界面显示占位图
+              setCardSelectionImages(prevImages => {
+                const newImages = [...prevImages];
+                const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+                newImages[index] = {
+                  url: `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Gen+Failed+${index + 1}`,
+                  prompt: `${effectivePrompt} - 教学场景 ${index + 1} (生成失败)`,
+                  loading: false,
+                  error: error?.message || '生成失败',
+                  index
+                };
+                console.log(`更新失败图片 ${index + 1}:`, newImages[index]);
+                return newImages;
+              });
+              
+              throw error;
+            }
+          });
+
+          // 等待所有任务完成
+          await Promise.allSettled(pollPromises);
+          
+          console.log('所有任务轮询完成');
+          setIsGenerating(false);
+          return;
+        } catch (error) {
+          console.error('生成图片失败:', error);
+          console.log('准备显示抽卡界面（使用占位图）');
+
+          // 失败时也记录提示词历史，标记为失败
+          try {
+            await promptHistoryService.saveHistory({
+              user_id: userId,
+              organization_id: organizationId,
+              prompt_type: type,
+              original_prompt: basePrompt,
+              generated_result: null,
+              execution_time: Math.round(performance.now() - promptStart),
+              success: false,
+              error_message: error?.message || '生成失败'
+            });
+          } catch (historyError) {
+            console.error('保存失败提示词历史失败:', historyError);
+          }
+
+          // 即使生成失败，也显示抽卡界面（使用占位图）
+          const generatedImages = [];
+          for (let i = 0; i < 4; i++) {
+            const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+            generatedImages.push({
+              url: `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Gen+Failed+${i + 1}`,
+              prompt: `${effectivePrompt} - 教学场景 ${i + 1} (生成失败)`,
+              error: error?.message || '生成失败'
+            });
+          }
+
+          console.log('设置卡片选择图片:', generatedImages);
+          setCardSelectionImages(generatedImages);
+          
+          const pendingConfig = {
+            type,
+            effectivePrompt,
+            w,
+            h,
+            generatedTitle: basePrompt
+              ? `AI生成：${basePrompt.substring(0, 15)}...`
+              : `New ${type}`
+          };
+          console.log('设置待确认配置:', pendingConfig);
+          setPendingAssetConfig(pendingConfig);
+          
+          console.log('显示抽卡模态框');
+          setShowCardSelectionModal(true);
+          setIsGenerating(false);
+          setShowPromptModal(false);
+          setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+        }
+      } else if (type === 'text') {
+        generatedContent = `根据提示词"${effectivePrompt}"生成的文本内容`;
+      } else if (type === 'audio') {
+        // 目前暂时没有音频生成服务，这里先占位
+        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+        generatedUrl = `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=AI+Audio`;
+      }
+
+      const generatedTitle = basePrompt
+        ? `AI生成：${basePrompt.substring(0, 15)}...`
+        : `New ${type}`;
 
       const newAsset = {
         id: Date.now().toString(),
         type,
         title: generatedTitle,
         url: generatedUrl,
-        content: type === 'text' ? (prompt ? `根据提示词"${prompt}"生成的文本内容` : '双击编辑文本') : '',
-        prompt: prompt || 'Describe what you want AI to generate...',
+        content: type === 'text' ? generatedContent : '',
+        prompt: effectivePrompt,
         referenceImage: null,
         videoStyle: type === 'video' ? (videoStyle || 'realistic') : null,
-        x: 100, y: 100, width: w, height: h, rotation: 0
+        x: 100,
+        y: 100,
+        width: w,
+        height: h,
+        rotation: 0
       };
 
       if (type === 'text') {
@@ -377,29 +604,117 @@ export const CanvasView = forwardRef((props, ref) => {
       saveToHistory(newCourseData);
       setSelectedAssetId(newAsset.id);
       setIsRightOpen(true);
+
+      const execTime = Math.round(performance.now() - promptStart);
+
+      // 3) 记录提示词使用历史
+      try {
+        await promptHistoryService.saveHistory({
+          user_id: userId,
+          organization_id: organizationId,
+          prompt_type: type,
+          original_prompt: basePrompt,
+          generated_result: JSON.stringify({
+            type,
+            url: generatedUrl,
+            content: generatedContent
+          }),
+          execution_time: execTime,
+          success: true,
+          error_message: null
+        });
+      } catch (historyError) {
+        console.error('保存提示词历史失败:', historyError);
+      }
+
       setIsGenerating(false);
       setShowPromptModal(false);
       setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
-    }, 1500);
+    } catch (error) {
+      console.error('生成素材失败:', error);
+      console.log('准备显示抽卡界面（使用占位图）');
+
+      // 失败时也记录提示词历史，标记为失败
+      try {
+        await promptHistoryService.saveHistory({
+          user_id: userId,
+          organization_id: organizationId,
+          prompt_type: type,
+          original_prompt: basePrompt,
+          generated_result: null,
+          execution_time: Math.round(performance.now() - promptStart),
+          success: false,
+          error_message: error?.message || '生成失败'
+        });
+      } catch (historyError) {
+        console.error('保存失败提示词历史失败:', historyError);
+      }
+
+      // 即使生成失败，也显示抽卡界面（使用占位图）
+      const generatedImages = [];
+      for (let i = 0; i < 4; i++) {
+        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+        generatedImages.push({
+          url: `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Gen+Failed+${i + 1}`,
+          prompt: `${effectivePrompt} - 教学场景 ${i + 1} (生成失败)`,
+          error: error?.message || '生成失败'
+        });
+      }
+
+      console.log('设置卡片选择图片:', generatedImages);
+      setCardSelectionImages(generatedImages);
+      
+      const pendingConfig = {
+        type,
+        effectivePrompt,
+        w,
+        h,
+        generatedTitle: basePrompt
+          ? `AI生成：${basePrompt.substring(0, 15)}...`
+          : `New ${type}`
+      };
+      console.log('设置待确认配置:', pendingConfig);
+      setPendingAssetConfig(pendingConfig);
+      
+      console.log('显示抽卡模态框');
+      setShowCardSelectionModal(true);
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+    }
   };
 
   const handleCardSelectionConfirm = (selectedImage) => {
     if (!pendingAssetConfig) return;
-    const { type, prompt, phaseKey, stepId } = pendingAssetConfig;
+    const { type, effectivePrompt, w, h, generatedTitle } = pendingAssetConfig;
+    
     const newCourseData = { ...courseData };
-    const currentStep = newCourseData[phaseKey].steps.find(s => s.id === stepId);
-    const w = 400, h = 400;
+    const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    
+    if (!currentStep) return;
+    
     const newAsset = {
       id: Date.now().toString(),
       type,
-      title: `AI生成：${prompt ? prompt.substring(0, 15) + '...' : '图片'}`,
+      title: generatedTitle,
       url: selectedImage.url,
       content: '',
-      prompt: prompt || '',
+      prompt: effectivePrompt,
       referenceImage: null,
-      videoStyle: null,
-      x: 100, y: 100, width: w, height: h, rotation: 0
+      videoStyle: type === 'video' ? 'realistic' : null,
+      x: 100,
+      y: 100,
+      width: w,
+      height: h,
+      rotation: 0
     };
+
+    if (type === 'text') {
+      newAsset.fontSize = 24;
+      newAsset.fontWeight = 'normal';
+      newAsset.color = '#1e293b';
+      newAsset.textAlign = 'center';
+    }
 
     currentStep.assets.push(newAsset);
     setCourseData(newCourseData);
@@ -409,8 +724,6 @@ export const CanvasView = forwardRef((props, ref) => {
     setShowCardSelectionModal(false);
     setCardSelectionImages([]);
     setPendingAssetConfig(null);
-    setShowPromptModal(false);
-    setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
   };
 
   const handleDeleteAsset = (assetId) => {
@@ -672,6 +985,7 @@ export const CanvasView = forwardRef((props, ref) => {
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
+    getCourseData: () => courseData,
     openPreview: () => setIsPreviewOpen(true),
     exportPPT: () => {
       setIsExporting(true);
