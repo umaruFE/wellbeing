@@ -401,13 +401,6 @@ export const AssetEditorPanel = ({
                         <X className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Sliders className="w-3 h-3 text-slate-400" />
-                      <div className="flex-1 h-1 bg-slate-200 rounded overflow-hidden">
-                        <div className="w-1/3 h-full bg-blue-400"></div>
-                      </div>
-                      <span className="text-[10px] text-slate-400">参考权重: 低</span>
-                    </div>
                   </div>
                 )}
               </div>
@@ -432,12 +425,12 @@ export const AssetEditorPanel = ({
                   <History className="w-4 h-4" />
                   历史生成
                 </button>
-                <button 
+                <button
                   onClick={() => onRegenerateAsset?.(selectedAsset.id)}
                   className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
-                  <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} /> 
-                  {selectedAsset.referenceImage ? '参考图 + 文本生成' : '立即生成'}
+                  <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} />
+                  {selectedAsset.referenceImage ? '图生图' : '立即生成'}
                 </button>
               </div>
             </div>

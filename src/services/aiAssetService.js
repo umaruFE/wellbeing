@@ -401,22 +401,22 @@ export const aiAssetService = {
   generateImageWithPolling: async (prompt, options = {}, onProgress, uploadService) => {
     try {
       onProgress?.(10, '正在提交生成任务...');
-      
+
       const { promptId } = await aiAssetService.generateImage(prompt, options);
-      
+
       onProgress?.(30, '任务已提交，正在生成中...');
-      
+
       if (uploadService) {
         onProgress?.(50, '正在获取生成的图片...');
-        
+
         const uploadResult = await aiAssetService.getAndUploadImage(promptId, uploadService);
-        
+
         if (!uploadResult.success) {
           throw new Error(uploadResult.error);
         }
-        
+
         onProgress?.(100, '生成完成并已上传到OSS！');
-        
+
         return {
           success: true,
           url: uploadResult.url,
@@ -428,9 +428,9 @@ export const aiAssetService = {
           options.maxAttempts || 60,
           options.interval || 2000
         );
-        
+
         onProgress?.(100, '生成完成！');
-        
+
         return {
           success: true,
           data: result
@@ -438,6 +438,157 @@ export const aiAssetService = {
       }
     } catch (error) {
       console.error('生成图片失败:', error);
+      throw error;
+    }
+  },
+
+  // 生成多个音频（后端批量生成，立即返回任务ID）
+  generateMultipleAudio: async (prompt, options = {}) => {
+    const { count = 4, user_id, organization_id } = options;
+
+    try {
+      const response = await fetch('/api/ai/generate-audio', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt,
+          count,
+          user_id,
+          organization_id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('生成多个音频失败:', error);
+      throw error;
+    }
+  },
+
+  // 完整的音频生成流程（提交任务 + 轮询结果 + 上传OSS）
+  generateAudioWithPolling: async (prompt, options = {}, onProgress) => {
+    try {
+      onProgress?.(10, '正在提交音频生成任务...');
+
+      const result = await aiAssetService.generateMultipleAudio(prompt, options);
+
+      onProgress?.(30, '任务已提交，正在生成中...');
+
+      // 轮询所有任务
+      const tasks = result.tasks;
+      const completedAudios = [];
+
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        onProgress?.(30 + Math.floor((i / tasks.length) * 60), `正在生成音频 ${i + 1}/${tasks.length}...`);
+
+        try {
+          const audioResult = await aiAssetService.pollTaskAndUpload(
+            task.promptId,
+            i,
+            prompt,
+            60,
+            2000
+          );
+          completedAudios.push(audioResult);
+        } catch (error) {
+          console.error(`音频任务 ${i + 1} 失败:`, error);
+        }
+      }
+
+      onProgress?.(100, '音频生成完成！');
+
+      return {
+        success: true,
+        audios: completedAudios
+      };
+    } catch (error) {
+      console.error('生成音频失败:', error);
+      throw error;
+    }
+  },
+
+  // 图生图（后端批量生成，立即返回任务ID）
+  generateImageToImage: async (prompt, imageUrl, options = {}) => {
+    const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
+
+    try {
+      const response = await fetch('/api/ai/image-to-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt,
+          imageUrl,
+          count,
+          width,
+          height,
+          user_id,
+          organization_id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('图生图失败:', error);
+      throw error;
+    }
+  },
+
+  // 完整的图生图流程（提交任务 + 轮询结果 + 上传OSS）
+  generateImageToImageWithPolling: async (prompt, imageUrl, options = {}, onProgress) => {
+    try {
+      onProgress?.(10, '正在提交图生图任务...');
+
+      const result = await aiAssetService.generateImageToImage(prompt, imageUrl, options);
+
+      onProgress?.(30, '任务已提交，正在生成中...');
+
+      // 轮询所有任务
+      const tasks = result.tasks;
+      const completedImages = [];
+
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        onProgress?.(30 + Math.floor((i / tasks.length) * 60), `正在生成图片 ${i + 1}/${tasks.length}...`);
+
+        try {
+          const imageResult = await aiAssetService.pollTaskAndUpload(
+            task.promptId,
+            i,
+            prompt,
+            60,
+            2000
+          );
+          completedImages.push(imageResult);
+        } catch (error) {
+          console.error(`图生图任务 ${i + 1} 失败:`, error);
+        }
+      }
+
+      onProgress?.(100, '图生图完成！');
+
+      return {
+        success: true,
+        images: completedImages
+      };
+    } catch (error) {
+      console.error('图生图失败:', error);
       throw error;
     }
   }

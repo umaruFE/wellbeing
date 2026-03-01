@@ -168,7 +168,7 @@ export const CanvasViewModals = ({
         </div>
       )}
 
-      {/* 图片抽卡选择模态框 */}
+      {/* 图片/音频抽卡选择模态框 */}
       <CardSelectionModal
         isOpen={showCardSelectionModal}
         onClose={() => {
@@ -176,10 +176,11 @@ export const CanvasViewModals = ({
           setCardSelectionImages([]);
           setPendingAssetConfig(null);
         }}
-        title="选择图片"
+        title={pendingAssetConfig?.type === 'audio' ? '选择音频' : '选择图片'}
         images={cardSelectionImages}
         isLoading={isGenerating}
         onConfirm={onCardSelectionConfirm}
+        type={pendingAssetConfig?.type}
       />
     </>
   );

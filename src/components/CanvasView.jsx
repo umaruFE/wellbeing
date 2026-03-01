@@ -430,7 +430,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setShowPromptModal(true);
   };
 
-  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null) => {
+  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null, referenceImage = null) => {
     const type = promptModalConfig.assetType;
     const phaseData = getPhaseData(activePhase);
     const step = phaseData?.slides?.find(s => s.id === activeStepId);
@@ -555,18 +555,37 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
       // 2) 调用 AI 生成接口（/prompt）
       if (type === 'image' || type === 'video') {
-        console.log('准备生成图片:', { type, effectivePrompt, w, h, userId, organizationId });
+        console.log('准备生成图片:', { type, effectivePrompt, w, h, userId, organizationId, referenceImage });
         try {
-          const result = await aiAssetService.generateMultipleImages(
-            effectivePrompt,
-            {
-              count: 4,
-              width: w,
-              height: h,
-              user_id: userId,
-              organization_id: organizationId
-            }
-          );
+          let result;
+
+          // 如果有参考图片，使用图生图
+          if (referenceImage) {
+            console.log('使用图生图功能，参考图片:', referenceImage);
+            result = await aiAssetService.generateImageToImage(
+              effectivePrompt,
+              referenceImage,
+              {
+                count: 4,
+                width: w,
+                height: h,
+                user_id: userId,
+                organization_id: organizationId
+              }
+            );
+          } else {
+            // 普通文生图
+            result = await aiAssetService.generateMultipleImages(
+              effectivePrompt,
+              {
+                count: 4,
+                width: w,
+                height: h,
+                user_id: userId,
+                organization_id: organizationId
+              }
+            );
+          }
 
           console.log('生成图片API返回结果:', result);
 
@@ -595,7 +614,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             h,
             generatedTitle: basePrompt
               ? `AI生成：${basePrompt.substring(0, 15)}...`
-              : `New ${type}`
+              : `New ${type}`,
+            referenceImage
           };
           setPendingAssetConfig(pendingConfig);
           
@@ -707,7 +727,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             h,
             generatedTitle: basePrompt
               ? `AI生成：${basePrompt.substring(0, 15)}...`
-              : `New ${type}`
+              : `New ${type}`,
+            referenceImage
           };
           console.log('设置待确认配置:', pendingConfig);
           setPendingAssetConfig(pendingConfig);
@@ -721,9 +742,173 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       } else if (type === 'text') {
         generatedContent = `根据提示词"${effectivePrompt}"生成的文本内容`;
       } else if (type === 'audio') {
-        // 目前暂时没有音频生成服务，这里先占位
-        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-        generatedUrl = `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=AI+Audio`;
+        // 音频生成 - 使用AI服务生成多个音频供选择
+        console.log('准备生成音频:', { type, effectivePrompt, userId, organizationId });
+        try {
+          const result = await aiAssetService.generateMultipleAudio(
+            effectivePrompt,
+            {
+              count: 4,
+              user_id: userId,
+              organization_id: organizationId
+            }
+          );
+
+          console.log('生成音频API返回结果:', result);
+
+          if (!result.success || !result.tasks) {
+            throw new Error('生成音频失败');
+          }
+
+          // 立即显示抽卡界面（loading状态）
+          const loadingAudios = result.tasks.map((task, index) => ({
+            url: null,
+            prompt: `${effectivePrompt} - 音频 ${index + 1}`,
+            loading: true,
+            index
+          }));
+
+          setCardSelectionImages(loadingAudios);
+
+          // 保存所有 promptId 到状态中
+          const allPromptIds = result.tasks.map(task => task.promptId);
+          setSavedPromptIds(allPromptIds);
+
+          const pendingConfig = {
+            type,
+            effectivePrompt,
+            w,
+            h,
+            generatedTitle: basePrompt
+              ? `AI生成：${basePrompt.substring(0, 15)}...`
+              : `New ${type}`,
+            referenceImage
+          };
+          setPendingAssetConfig(pendingConfig);
+
+          setShowCardSelectionModal(true);
+
+          setShowPromptModal(false);
+          setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+
+          // 使用保存的 promptId 列表查询任务状态
+          if (!allPromptIds || allPromptIds.length === 0) {
+            setIsGenerating(false);
+            return;
+          }
+
+          // 轮询每个任务，完成后立即更新抽卡界面
+          // 音频生成可能需要较长时间，增加轮询次数和间隔
+          const pollPromises = allPromptIds.map(async (promptId, index) => {
+            try {
+              const audioResult = await aiAssetService.pollTaskAndUpload(
+                promptId,
+                index,
+                effectivePrompt,
+                180, // 增加到180次（6分钟）
+                3000, // 增加到3秒间隔
+                (progress) => {
+                  if (progress.status === 'completed') {
+                    // 任务完成，更新抽卡界面
+                    setCardSelectionImages(prevImages => {
+                      const newImages = [...prevImages];
+                      newImages[index] = {
+                        url: progress.url,
+                        prompt: `${effectivePrompt} - 音频 ${index + 1}`,
+                        loading: false,
+                        completed: true,
+                        index,
+                        isAudio: true
+                      };
+                      return newImages;
+                    });
+                  }
+                }
+              );
+
+              return audioResult;
+            } catch (error) {
+              console.error(`音频任务 ${index + 1} 失败:`, error);
+
+              // 任务失败，更新抽卡界面显示占位图
+              setCardSelectionImages(prevImages => {
+                const newImages = [...prevImages];
+                const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+                newImages[index] = {
+                  url: `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Audio+Failed+${index + 1}`,
+                  prompt: `${effectivePrompt} - 音频 ${index + 1} (生成失败)`,
+                  loading: false,
+                  error: error?.message || '生成失败',
+                  index,
+                  isAudio: true
+                };
+                console.log(`更新失败音频 ${index + 1}:`, newImages[index]);
+                return newImages;
+              });
+
+              throw error;
+            }
+          });
+
+          // 等待所有任务完成
+          await Promise.allSettled(pollPromises);
+
+          console.log('所有音频任务轮询完成');
+          setIsGenerating(false);
+          return;
+        } catch (error) {
+          console.error('生成音频失败:', error);
+          console.log('准备显示抽卡界面（使用占位图）');
+
+          // 失败时也记录提示词历史，标记为失败
+          try {
+            await promptHistoryService.saveHistory({
+              user_id: userId,
+              organization_id: organizationId,
+              prompt_type: type,
+              original_prompt: basePrompt,
+              generated_result: null,
+              execution_time: Math.round(performance.now() - promptStart),
+              success: false,
+              error_message: error?.message || '生成失败'
+            });
+          } catch (historyError) {
+            console.error('保存失败提示词历史失败:', historyError);
+          }
+
+          // 即使生成失败，也显示抽卡界面（使用占位图）
+          const generatedAudios = [];
+          for (let i = 0; i < 4; i++) {
+            const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+            generatedAudios.push({
+              url: `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Audio+Failed+${i + 1}`,
+              prompt: `${effectivePrompt} - 音频 ${i + 1} (生成失败)`,
+              error: error?.message || '生成失败',
+              isAudio: true
+            });
+          }
+
+          console.log('设置音频卡片选择:', generatedAudios);
+          setCardSelectionImages(generatedAudios);
+
+          const pendingConfig = {
+            type,
+            effectivePrompt,
+            w,
+            h,
+            generatedTitle: basePrompt
+              ? `AI生成：${basePrompt.substring(0, 15)}...`
+              : `New ${type}`
+          };
+          console.log('设置待确认配置:', pendingConfig);
+          setPendingAssetConfig(pendingConfig);
+
+          console.log('显示音频抽卡模态框');
+          setShowCardSelectionModal(true);
+          setIsGenerating(false);
+          setShowPromptModal(false);
+          setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
+        }
       }
 
       const generatedTitle = basePrompt
@@ -827,7 +1012,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         h,
         generatedTitle: basePrompt
           ? `AI生成：${basePrompt.substring(0, 15)}...`
-          : `New ${type}`
+          : `New ${type}`,
+        referenceImage
       };
       console.log('设置待确认配置:', pendingConfig);
       setPendingAssetConfig(pendingConfig);
@@ -842,7 +1028,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
   const handleCardSelectionConfirm = (selectedImage) => {
     if (!pendingAssetConfig) return;
-    const { type, effectivePrompt, w, h, generatedTitle } = pendingAssetConfig;
+    const { type, effectivePrompt, w, h, generatedTitle, referenceImage } = pendingAssetConfig;
     
     const phaseData = getPhaseData(activePhase);
     if (!phaseData) {
@@ -894,7 +1080,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       url: selectedImage.url,
       content: '',
       prompt: effectivePrompt,
-      referenceImage: null,
+      referenceImage: referenceImage || null,
       videoStyle: type === 'video' ? 'realistic' : null,
       x: 100,
       y: 100,
@@ -1113,30 +1299,76 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           : `重新生成的文本内容 (v${Date.now().toString().slice(-4)})`;
       } else if (asset.type === 'image') {
         const prompt = asset.prompt || asset.title || '教学场景';
-        const result = await aiAssetService.generateImageWithPolling(
-          prompt,
-          {
-            width: asset.width || 300,
-            height: asset.height || 200,
-            seed: Date.now(),
-            maxAttempts: 60,
-            interval: 2000
+        
+        // 如果有参考图片，使用图生图
+        if (asset.referenceImage) {
+          console.log('使用图生图功能，参考图片:', asset.referenceImage);
+          const result = await aiAssetService.generateImageToImageWithPolling(
+            prompt,
+            asset.referenceImage,
+            {
+              count: 1,
+              width: asset.width || 300,
+              height: asset.height || 200,
+              user_id: user?.id,
+              organization_id: user?.organizationId
+            }
+          );
+          if (result.success && result.images && result.images.length > 0) {
+            asset.url = result.images[0].url;
+          } else {
+            throw new Error('图生图失败');
           }
-        );
-        asset.url = result.url;
+        } else {
+          // 普通文生图
+          const result = await aiAssetService.generateImageWithPolling(
+            prompt,
+            {
+              width: asset.width || 300,
+              height: asset.height || 200,
+              seed: Date.now(),
+              maxAttempts: 60,
+              interval: 2000
+            }
+          );
+          asset.url = result.url;
+        }
       } else if (asset.type === 'video') {
         const prompt = asset.prompt || asset.title || '教学视频';
-        const result = await aiAssetService.generateImageWithPolling(
-          prompt,
-          {
-            width: asset.width || 300,
-            height: asset.height || 200,
-            seed: Date.now(),
-            maxAttempts: 60,
-            interval: 2000
+        
+        // 如果有参考图片，使用图生图
+        if (asset.referenceImage) {
+          console.log('使用图生图功能，参考图片:', asset.referenceImage);
+          const result = await aiAssetService.generateImageToImageWithPolling(
+            prompt,
+            asset.referenceImage,
+            {
+              count: 1,
+              width: asset.width || 300,
+              height: asset.height || 200,
+              user_id: user?.id,
+              organization_id: user?.organizationId
+            }
+          );
+          if (result.success && result.images && result.images.length > 0) {
+            asset.url = result.images[0].url;
+          } else {
+            throw new Error('图生图失败');
           }
-        );
-        asset.url = result.url;
+        } else {
+          // 普通文生图
+          const result = await aiAssetService.generateImageWithPolling(
+            prompt,
+            {
+              width: asset.width || 300,
+              height: asset.height || 200,
+              seed: Date.now(),
+              maxAttempts: 60,
+              interval: 2000
+            }
+          );
+          asset.url = result.url;
+        }
       } else if (asset.type === 'audio') {
         const randomColor = Math.floor(Math.random()*16777215).toString(16);
         asset.url = `https://placehold.co/300x100/${randomColor}/FFF?text=AI+Audio+v${Math.floor(Math.random() * 10)}`;

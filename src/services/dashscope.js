@@ -99,7 +99,7 @@ export const optimizePrompt = async (originalPrompt, elementType, userId = null)
 请根据以下原始提示词和元素类型，生成优化后的提示词：
 
 原始提示词：${originalPrompt}
-元素类型：${elementType === 'image' ? '图片生成' : elementType === 'script' ? '教师讲稿' : elementType === 'activity' ? '教学活动' : 'PPT内容'}
+元素类型：${elementType === 'image' ? '图片生成' : elementType === 'audio' ? '音频生成' : elementType === 'script' ? '教师讲稿' : elementType === 'activity' ? '教学活动' : 'PPT内容'}
 
 优化要求：
 1. 保持原始提示词的核心意图

@@ -13,10 +13,23 @@ const VIDEO_TYPES = [
   // mkv 在不同浏览器/系统上可能会是这个 MIME
   'video/x-matroska'
 ];
+const AUDIO_TYPES = [
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/wav',
+  'audio/flac',
+  'audio/ogg',
+  'audio/aac',
+  'audio/x-m4a',
+  'audio/mp4',
+  // 某些系统可能会返回这个
+  'application/octet-stream'
+];
 
 // 最大文件大小
 const MAX_SIZE_DEFAULT = 10 * 1024 * 1024; // 10MB（图片/PDF）
 const MAX_SIZE_VIDEO = 100 * 1024 * 1024; // 100MB（视频）
+const MAX_SIZE_AUDIO = 50 * 1024 * 1024; // 50MB（音频）
 
 function getFileExt(filename: string) {
   const idx = filename.lastIndexOf('.');
@@ -46,15 +59,35 @@ export async function POST(request: NextRequest) {
       folder.toLowerCase().includes('video') ||
       file.type.startsWith('video/');
 
-    const allowedTypes = isVideoUpload ? VIDEO_TYPES : [...IMAGE_TYPES, ...DOC_TYPES];
-    const maxSize = isVideoUpload ? MAX_SIZE_VIDEO : MAX_SIZE_DEFAULT;
+    const isAudioUpload =
+      folder.toLowerCase().includes('audio') ||
+      file.type.startsWith('audio/');
+
+    let allowedTypes: string[];
+    let maxSize: number;
+
+    if (isVideoUpload) {
+      allowedTypes = VIDEO_TYPES;
+      maxSize = MAX_SIZE_VIDEO;
+    } else if (isAudioUpload) {
+      allowedTypes = AUDIO_TYPES;
+      maxSize = MAX_SIZE_AUDIO;
+    } else {
+      allowedTypes = [...IMAGE_TYPES, ...DOC_TYPES];
+      maxSize = MAX_SIZE_DEFAULT;
+    }
 
     // 验证文件类型
     // 注意：部分浏览器/系统对某些格式会返回 application/octet-stream，这里做一次基于后缀的兜底
     const ext = getFileExt(file.name);
     const isOctetStream = file.type === 'application/octet-stream';
-    const octetStreamAllowed =
-      isVideoUpload && isOctetStream && ['mp4', 'webm', 'ogg', 'mov', 'mkv'].includes(ext);
+
+    let octetStreamAllowed = false;
+    if (isVideoUpload && isOctetStream) {
+      octetStreamAllowed = ['mp4', 'webm', 'ogg', 'mov', 'mkv'].includes(ext);
+    } else if (isAudioUpload && isOctetStream) {
+      octetStreamAllowed = ['mp3', 'wav', 'flac', 'ogg', 'aac', 'm4a'].includes(ext);
+    }
 
     if (!allowedTypes.includes(file.type) && !octetStreamAllowed) {
       return NextResponse.json(
@@ -65,8 +98,9 @@ export async function POST(request: NextRequest) {
 
     // 验证文件大小
     if (file.size > maxSize) {
+      const maxSizeMB = maxSize / (1024 * 1024);
       return NextResponse.json(
-        { error: isVideoUpload ? '文件大小不能超过100MB' : '文件大小不能超过10MB' },
+        { error: `文件大小不能超过${maxSizeMB}MB` },
         { status: 400 }
       );
     }

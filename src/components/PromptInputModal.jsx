@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Type, Edit, Wand2, RectangleHorizontal } from 'lucide-react';
+import { X, Type, Edit, Wand2, RectangleHorizontal, Upload, Image as ImageIcon } from 'lucide-react';
 import PromptOptimizer from './PromptOptimizer';
 
 const ASPECT_RATIOS = [
@@ -25,11 +25,13 @@ export const PromptInputModal = ({
   const [content, setContent] = useState(initialContent);
   const [showOptimizer, setShowOptimizer] = useState(false);
   const [selectedRatio, setSelectedRatio] = useState(ASPECT_RATIOS[0]);
+  const [referenceImage, setReferenceImage] = useState(null);
 
   React.useEffect(() => {
     if (isOpen) {
       setContent(initialContent || '');
       setSelectedRatio(ASPECT_RATIOS[0]);
+      setReferenceImage(null);
     }
   }, [isOpen, initialContent]);
 
@@ -40,13 +42,26 @@ export const PromptInputModal = ({
     const inputMode = (assetType === 'image' || assetType === 'video' || assetType === 'audio') ? 'ai' : 'direct';
     const videoStyle = null;
     const imageSize = (assetType === 'image') ? { width: selectedRatio.width, height: selectedRatio.height } : null;
-    onConfirm(content, inputMode, videoStyle, imageSize);
+    onConfirm(content, inputMode, videoStyle, imageSize, referenceImage);
     setContent('');
+    setReferenceImage(null);
   };
 
   const handleClose = () => {
     setContent('');
+    setReferenceImage(null);
     onClose();
+  };
+
+  const handleReferenceUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReferenceImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -83,9 +98,13 @@ export const PromptInputModal = ({
             />
             <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-slate-400">
-                提示：直接输入文本内容，将立即添加到画布
+                {assetType === 'audio'
+                  ? '提示：输入歌词或音频描述，AI将生成背景音乐'
+                  : '提示：直接输入文本内容，将立即添加到画布'}
               </p>
-              {(type === 'image' || type === 'script' || type === 'activity' || type === 'ppt' || assetType === 'image' || assetType === 'script' || assetType === 'activity' || assetType === 'ppt') && (
+              {(type === 'image' || type === 'script' || type === 'activity' || type === 'ppt' ||
+                assetType === 'image' || assetType === 'script' || assetType === 'activity' || assetType === 'ppt' ||
+                assetType === 'audio') && (
                 <button
                   onClick={() => setShowOptimizer(true)}
                   disabled={isLoading}
@@ -135,6 +154,44 @@ export const PromptInputModal = ({
               <p className="text-xs text-slate-400 mt-1">
                 已选择：{selectedRatio.label} ({selectedRatio.width}×{selectedRatio.height}) - {selectedRatio.description}
               </p>
+            </div>
+          )}
+
+          {(assetType === 'image' || assetType === 'video') && (
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" />
+                参考图片 (可选)
+              </label>
+              {!referenceImage ? (
+                <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative group/upload">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    onChange={handleReferenceUpload}
+                    disabled={isLoading}
+                  />
+                  <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform">
+                    <Upload className="w-5 h-5 text-slate-400" />
+                  </div>
+                  <span className="text-xs text-slate-500 font-medium">点击上传参考图片</span>
+                  <span className="text-[10px] text-slate-400 mt-1">用于图生图功能</span>
+                </div>
+              ) : (
+                <div className="relative group/ref">
+                  <img src={referenceImage} alt="Reference" className="w-full h-32 object-cover rounded border border-slate-200 opacity-90" />
+                  <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
+                  <button
+                    onClick={() => setReferenceImage(null)}
+                    disabled={isLoading}
+                    className="absolute top-2 right-2 bg-white text-slate-600 hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity disabled:opacity-50"
+                    title="移除参考图"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
