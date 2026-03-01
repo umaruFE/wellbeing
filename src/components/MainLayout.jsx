@@ -44,7 +44,11 @@ export const MainLayout = () => {
   const [currentView, setCurrentView] = useState('table');
   const [canvasMode, setCanvasMode] = useState('ppt');
   const [appConfig, setAppConfig] = useState(null);
+  const [pptCanvasConfig, setPptCanvasConfig] = useState(null);
+  const [readingMaterialCanvasConfig, setReadingMaterialCanvasConfig] = useState(null);
   const canvasViewRef = React.useRef(null);
+  const pptCanvasRef = React.useRef(null);
+  const readingMaterialCanvasRef = React.useRef(null);
   const [isExporting, setIsExporting] = useState(false);
   const [canvasNavigation, setCanvasNavigation] = useState(null);
   
@@ -99,7 +103,23 @@ export const MainLayout = () => {
       const newCourse = result.data;
 
       setCurrentCourseId(newCourse.id);
-      setAppConfig(config);
+      
+      // 为新建课程创建独立配置
+      const baseConfig = config;
+      const pptConfig = {
+        ...baseConfig,
+        canvasData: null,
+        readingMaterialsData: null,
+      };
+      const readingMaterialConfig = {
+        ...baseConfig,
+        canvasData: null,
+        readingMaterialsData: null,
+      };
+      
+      setAppConfig(baseConfig);
+      setPptCanvasConfig(pptConfig);
+      setReadingMaterialCanvasConfig(readingMaterialConfig);
       setAppState('app');
       setAutoSaveStatus('success');
     } catch (error) {
@@ -118,35 +138,47 @@ export const MainLayout = () => {
 
   // 导出PPT
   const handleExportPPT = () => {
-    if (canvasViewRef.current) {
+    if (pptCanvasRef.current) {
       setIsExporting(true);
-      canvasViewRef.current.exportPPT();
+      pptCanvasRef.current.exportPPT();
       setTimeout(() => setIsExporting(false), 2000);
     }
   };
 
   // 导出PDF
   const handleExportPDF = () => {
-    if (canvasViewRef.current && canvasViewRef.current.exportPDF) {
+    if (pptCanvasRef.current && pptCanvasRef.current.exportPDF) {
       setIsExporting(true);
-      canvasViewRef.current.exportPDF();
+      pptCanvasRef.current.exportPDF();
       setTimeout(() => setIsExporting(false), 2000);
     }
   };
 
   // 获取当前课程数据
   const getCurrentCourseData = () => {
-    if (!canvasViewRef.current) {
+    // 根据当前视图类型选择合适的 ref
+    let currentRef = null;
+    if (currentView === 'table') {
+      currentRef = canvasViewRef;
+    } else if (currentView === 'canvas') {
+      if (canvasMode === 'ppt') {
+        currentRef = pptCanvasRef;
+      } else if (canvasMode === 'reading-material') {
+        currentRef = readingMaterialCanvasRef;
+      }
+    }
+    
+    if (!currentRef?.current) {
       return appConfig?.courseData || null;
     }
     
-    const refMethods = Object.keys(canvasViewRef.current);
+    const refMethods = Object.keys(currentRef.current);
     
     let courseData = null;
     
     if (currentView === 'table') {
       if (refMethods.includes('getSlides')) {
-        const slides = canvasViewRef.current.getSlides();
+        const slides = currentRef.current.getSlides();
         
         if (!slides || slides.length === 0) {
           courseData = appConfig?.courseData;
@@ -158,7 +190,7 @@ export const MainLayout = () => {
       }
     } else if (currentView === 'canvas') {
       if (refMethods.includes('getCourseData')) {
-        const data = canvasViewRef.current.getCourseData();
+        const data = currentRef.current.getCourseData();
         
         if (!data || Object.keys(data).length === 0) {
           courseData = appConfig?.courseData;
@@ -179,8 +211,8 @@ export const MainLayout = () => {
 
   // 保存课程
   const handleSaveCourse = async () => {
-    // 检查是否在课程编辑器中且 ref 存在
-    if (appState !== 'app' || !canvasViewRef.current) {
+    // 检查是否在课程编辑器中
+    if (appState !== 'app') {
       return;
     }
     
@@ -199,16 +231,14 @@ export const MainLayout = () => {
       let canvasData = null;
       let readingMaterialsData = null;
       
-      if (canvasViewRef.current) {
-        // 尝试获取画布数据
-        if (typeof canvasViewRef.current.getCanvasData === 'function') {
-          canvasData = canvasViewRef.current.getCanvasData();
-        }
-        
-        // 尝试获取阅读材料数据
-        if (typeof canvasViewRef.current.getReadingMaterialsData === 'function') {
-          readingMaterialsData = canvasViewRef.current.getReadingMaterialsData();
-        }
+      // 从 PPT 画布获取 canvasData
+      if (pptCanvasRef.current && typeof pptCanvasRef.current.getCanvasData === 'function') {
+        canvasData = pptCanvasRef.current.getCanvasData();
+      }
+      
+      // 从阅读材料画布获取 readingMaterialsData
+      if (readingMaterialCanvasRef.current && typeof readingMaterialCanvasRef.current.getReadingMaterialsData === 'function') {
+        readingMaterialsData = readingMaterialCanvasRef.current.getReadingMaterialsData();
       }
 
       const requestBody = {
@@ -292,8 +322,12 @@ export const MainLayout = () => {
 
   // 监听数据变化触发自动保存
   React.useEffect(() => {
-    if (appState === 'app' && appConfig && canvasViewRef.current) {
-      triggerAutoSave();
+    if (appState === 'app' && appConfig) {
+      // 检查是否有任何画布组件可用
+      const hasAnyCanvas = canvasViewRef.current || pptCanvasRef.current || readingMaterialCanvasRef.current;
+      if (hasAnyCanvas) {
+        triggerAutoSave();
+      }
     }
     
     return () => {
@@ -405,7 +439,7 @@ export const MainLayout = () => {
         const result = await apiService.getCourse(editingCourseId);
         const course = result?.data || result;
 
-        const initialConfig = {
+        const baseConfig = {
           grade: course.grade || '',
           age: course.age_group || '',
           unit: course.unit || course.title || '自定义课程',
@@ -417,13 +451,25 @@ export const MainLayout = () => {
             : (course.keywords || ''),
           // TableView 会用到的课程结构数据（字段名不确定时做兼容）
           courseData: course.courseData || course.data || course.course_data || null,
-          // CanvasView 会用到的画布元素数据
+        };
+
+        // 为 PPT 画布创建独立配置（只包含 canvasData）
+        const pptConfig = {
+          ...baseConfig,
           canvasData: course.canvas_data || null,
-          // ReadingMaterialCanvasView 会用到的阅读材料数据
+          readingMaterialsData: null,
+        };
+
+        // 为阅读材料画布创建独立配置（只包含 readingMaterialsData）
+        const readingMaterialConfig = {
+          ...baseConfig,
+          canvasData: null,
           readingMaterialsData: course.reading_materials_data || null,
         };
 
-        setAppConfig(initialConfig);
+        setAppConfig(baseConfig);
+        setPptCanvasConfig(pptConfig);
+        setReadingMaterialCanvasConfig(readingMaterialConfig);
         setAppState('app');
         setCurrentView('table');
         setIsComponentReady(false);
@@ -753,8 +799,8 @@ export const MainLayout = () => {
                 <div className="h-full flex">
                   {currentView === 'canvas' && (
                     <>
-                      {canvasMode === 'ppt' && <CanvasView ref={canvasViewRef} navigation={canvasNavigation} initialConfig={appConfig} />}
-                      {canvasMode === 'reading-material' && <ReadingMaterialCanvasView ref={canvasViewRef} navigation={canvasNavigation} initialConfig={appConfig} />}
+                      {canvasMode === 'ppt' && <CanvasView ref={pptCanvasRef} navigation={canvasNavigation} initialConfig={pptCanvasConfig || appConfig} />}
+                      {canvasMode === 'reading-material' && <ReadingMaterialCanvasView ref={readingMaterialCanvasRef} navigation={canvasNavigation} initialConfig={readingMaterialCanvasConfig || appConfig} />}
                     </>
                   )}
                   {currentView === 'table' && (

@@ -203,10 +203,13 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         );
     
     return allSteps.map((step, index) => {
-      const rawAssets = step.assets || [];
+      // 从 readingMaterials 读取数据，而不是从 assets 读取
+      const rawAssets = step.readingMaterials || step.assets || [];
       
-      // 不再从 course_data 中读取 readingMaterials
-      // 只使用 reading_materials_data 中的数据（通过 mergeData 合并）
+      // 过滤掉音频类型的资产，只保留图片和文本
+      const filteredAssets = rawAssets.filter(asset => 
+        asset.type === 'image' || asset.type === 'text'
+      );
       
       // 返回空页面（不创建默认元素）
       return { 
@@ -217,7 +220,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         title: step.title, 
         width: 680, 
         height: 960, 
-        canvasAssets: rawAssets.map(a => ({ ...a, prompt: a.prompt || '', referenceImage: a.referenceImage || null })), 
+        canvasAssets: filteredAssets.map(a => ({ ...a, prompt: a.prompt || '', referenceImage: a.referenceImage || null })), 
         blocks: [] 
       };
     });
@@ -265,10 +268,13 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         );
     
     let newPages = allSteps.map((step, index) => {
-      const rawAssets = step.assets || [];
+      // 从 readingMaterials 读取数据，而不是从 assets 读取
+      const rawAssets = step.readingMaterials || step.assets || [];
       
-      // 不再从 course_data 中读取 readingMaterials
-      // 只使用 reading_materials_data 中的数据（通过 mergeData 合并）
+      // 过滤掉音频类型的资产，只保留图片和文本
+      const filteredAssets = rawAssets.filter(asset => 
+        asset.type === 'image' || asset.type === 'text'
+      );
       
       // 返回空页面（不创建默认元素）
       return { 
@@ -279,7 +285,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         title: step.title, 
         width: 680, 
         height: 960, 
-        canvasAssets: rawAssets.map(a => ({ ...a, prompt: a.prompt || '', referenceImage: a.referenceImage || null })), 
+        canvasAssets: filteredAssets.map(a => ({ ...a, prompt: a.prompt || '', referenceImage: a.referenceImage || null })), 
         blocks: [] 
       };
     });
@@ -629,7 +635,11 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         const newCourseData = { ...courseData };
         Object.values(newCourseData).forEach(phase => {
           const step = phase.steps.find(s => s.id === updatedPage.slideId);
-          if (step) step.assets = updatedPage.canvasAssets || [];
+          if (step) {
+            step.assets = updatedPage.canvasAssets || [];
+            // 同时更新 readingMaterials 字段，确保数据同步
+            step.readingMaterials = updatedPage.canvasAssets || [];
+          }
         });
         setCourseData(newCourseData);
       }
@@ -709,7 +719,11 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       const newCourseData = { ...courseData };
       Object.values(newCourseData).forEach(phase => {
         const step = phase.steps.find(s => s.id === updatedPage.slideId);
-        if (step) step.assets = updatedPage.canvasAssets || [];
+        if (step) {
+          step.assets = updatedPage.canvasAssets || [];
+          // 同时更新 readingMaterials 字段，确保数据同步
+          step.readingMaterials = updatedPage.canvasAssets || [];
+        }
       });
       setCourseData(newCourseData);
     }
@@ -755,7 +769,11 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     if (currentPage.slideId) {
       Object.values(newCourseData).forEach(phase => {
         const step = phase.steps.find(s => s.id === currentPage.slideId);
-        if (step) step.assets = newPages.find(p => p.id === currentPage.id)?.canvasAssets || [];
+        if (step) {
+          step.assets = newPages.find(p => p.id === currentPage.id)?.canvasAssets || [];
+          // 同时更新 readingMaterials 字段，确保数据同步
+          step.readingMaterials = newPages.find(p => p.id === currentPage.id)?.canvasAssets || [];
+        }
       });
     }
     setCourseData(newCourseData);
