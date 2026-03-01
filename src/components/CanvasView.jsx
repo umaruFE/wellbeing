@@ -35,10 +35,12 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const mergeData = (courseData, canvasData, readingMaterialsData) => {
     if (!courseData) return courseData;
     
+    const isArray = Array.isArray(courseData);
+    
     // 深拷贝数据
     const mergedData = JSON.parse(JSON.stringify(courseData));
     
-    if (isCourseDataArray) {
+    if (isArray) {
       // 数组格式
       mergedData.forEach(phase => {
         (phase.slides || []).forEach(slide => {
@@ -91,7 +93,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   
   // 辅助函数：获取 phase 数据
   const getPhaseData = (phaseKey) => {
-    if (isCourseDataArray) {
+    const isArray = Array.isArray(courseData);
+    if (isArray) {
       return courseData.find(phase => phase.id === phaseKey);
     }
     return courseData[phaseKey];
@@ -99,7 +102,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   
   // 辅助函数：获取所有 phase keys
   const getPhaseKeys = () => {
-    if (isCourseDataArray) {
+    const isArray = Array.isArray(courseData);
+    if (isArray) {
       return courseData.map(phase => phase.id);
     }
     return Object.keys(courseData);
@@ -348,8 +352,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const handleDeleteStep = (phaseKey, stepId) => {
     if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
     
-    const newCourseData = isCourseDataArray ? [...courseData] : { ...courseData };
-    const phase = isCourseDataArray 
+    const isArray = Array.isArray(courseData);
+    const newCourseData = isArray ? [...courseData] : { ...courseData };
+    const phase = isArray 
       ? newCourseData.find(p => p.id === phaseKey)
       : newCourseData[phaseKey];
     if (!phase) return;
@@ -360,14 +365,14 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       if (phase.slides.length > 0) {
         setActiveStepId(phase.slides[0].id);
       } else {
-        const otherPhase = isCourseDataArray
+        const otherPhase = isArray
           ? newCourseData.find(p => p.id !== phaseKey && p.slides.length > 0)
           : Object.entries(newCourseData).find(([key, p]) => 
               key !== phaseKey && p.slides.length > 0
             );
         if (otherPhase) {
-          setActivePhase(isCourseDataArray ? otherPhase.id : otherPhase[0]);
-          setActiveStepId(isCourseDataArray ? otherPhase.slides[0].id : otherPhase[1].slides[0].id);
+          setActivePhase(isArray ? otherPhase.id : otherPhase[0]);
+          setActiveStepId(isArray ? otherPhase.slides[0].id : otherPhase[1].slides[0].id);
         }
       }
     }
@@ -401,20 +406,16 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setShowPromptModal(true);
   };
 
-  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null) => {
-    console.log('handleConfirmAddAsset called:', { prompt, inputMode, videoStyle, promptModalConfig });
-    
+  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null) => {
     const type = promptModalConfig.assetType;
     const phase = getPhaseData(activePhase);
     const step = phase?.slides?.find(s => s.id === activeStepId);
     if (!step) {
-      console.log('No step found, returning');
       return;
     }
 
     // 直接输入文本的场景：不走 AI 接口，只本地创建元素
     if (type === 'text' && inputMode === 'direct') {
-      console.log('Direct text input mode');
       const newCourseData = { ...courseData };
       const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
       const w = 300, h = 100;
@@ -444,7 +445,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       return;
     }
 
-    console.log('AI generation mode, setting isGenerating to true');
     setIsGenerating(true);
 
     const userId = user?.id;
@@ -482,11 +482,22 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         console.error('提示词优化失败，将使用原始提示词:', optError);
       }
 
-      const newCourseData = { ...courseData };
-      const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+      const phase = getPhaseData(activePhase);
+      if (!phase) {
+        console.error('Phase not found:', activePhase, 'courseData:', courseData);
+        return;
+      }
 
-      let w = 300;
-      let h = 200;
+      const newCourseData = { ...courseData };
+      const currentStep = phase.steps?.find(s => s.id === activeStepId);
+      if (!currentStep) {
+        console.error('Step not found:', activeStepId, 'phase:', phase, 'phase.steps:', phase?.steps);
+        return;
+      }
+
+      // 使用用户选择的尺寸，如果没有则使用默认值
+      let w = imageSize?.width || 300;
+      let h = imageSize?.height || 200;
       if (type === 'audio') { w = 300; h = 100; }
       if (type === 'text') { w = 300; h = 100; }
 
@@ -495,8 +506,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
       // 2) 调用 AI 生成接口（/prompt）
       if (type === 'image' || type === 'video') {
-        console.log('开始生成图片，调用API...');
-        
+        console.log('准备生成图片:', { type, effectivePrompt, w, h, userId, organizationId });
         try {
           const result = await aiAssetService.generateMultipleImages(
             effectivePrompt,
@@ -509,14 +519,11 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             }
           );
 
-          console.log('API返回结果:', result);
+          console.log('生成图片API返回结果:', result);
 
           if (!result.success || !result.tasks) {
-            console.log('API返回失败，抛出错误');
             throw new Error('生成图片失败');
           }
-
-          console.log('已提交任务，准备显示抽卡界面（loading状态）');
           
           // 立即显示抽卡界面（loading状态）
           const loadingImages = result.tasks.map((task, index) => ({
@@ -526,12 +533,10 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             index
           }));
 
-          console.log('设置卡片选择图片:', loadingImages);
           setCardSelectionImages(loadingImages);
           
           // 保存所有 promptId 到状态中
           const allPromptIds = result.tasks.map(task => task.promptId);
-          console.log('保存所有 promptId:', allPromptIds);
           setSavedPromptIds(allPromptIds);
           
           const pendingConfig = {
@@ -543,30 +548,21 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               ? `AI生成：${basePrompt.substring(0, 15)}...`
               : `New ${type}`
           };
-          console.log('设置待确认配置:', pendingConfig);
           setPendingAssetConfig(pendingConfig);
           
-          console.log('显示抽卡模态框，调用 setShowCardSelectionModal(true)');
           setShowCardSelectionModal(true);
           
-          console.log('关闭提示词模态框');
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
 
           // 使用保存的 promptId 列表查询任务状态
-          console.log('开始轮询任务状态...');
-          console.log('allPromptIds:', allPromptIds);
-          console.log('allPromptIds 长度:', allPromptIds.length);
-          
           if (!allPromptIds || allPromptIds.length === 0) {
-            console.log('allPromptIds 为空，跳过轮询');
             setIsGenerating(false);
             return;
           }
           
           // 轮询每个任务，完成后立即更新抽卡界面
           const pollPromises = allPromptIds.map(async (promptId, index) => {
-            console.log(`开始轮询任务 ${index + 1}, promptId: ${promptId}`);
             try {
               const imageResult = await aiAssetService.pollTaskAndUpload(
                 promptId,
@@ -575,8 +571,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 60,
                 2000,
                 (progress) => {
-                  console.log(`任务 ${index + 1} 进度:`, progress);
-                  
                   if (progress.status === 'completed') {
                     // 任务完成，更新抽卡界面
                     setCardSelectionImages(prevImages => {
@@ -588,7 +582,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                         completed: true,
                         index
                       };
-                      console.log(`更新图片 ${index + 1}:`, newImages[index]);
                       return newImages;
                     });
                   }
@@ -1102,10 +1095,10 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   useImperativeHandle(ref, () => ({
     getCourseData: () => courseData,
     getCanvasData: () => {
-      // 返回每个 slide 的 canvasAssets 数据
+      const isArray = Array.isArray(courseData);
       const canvasData = {};
       
-      if (isCourseDataArray) {
+      if (isArray) {
         courseData.forEach(phase => {
           (phase.slides || []).forEach(slide => {
             canvasData[slide.id] = {
@@ -1128,10 +1121,10 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       return canvasData;
     },
     getReadingMaterialsData: () => {
-      // 返回每个 slide 的阅读材料数据
+      const isArray = Array.isArray(courseData);
       const readingMaterialsData = {};
       
-      if (isCourseDataArray) {
+      if (isArray) {
         courseData.forEach(phase => {
           (phase.slides || []).forEach(slide => {
             if (slide.readingMaterials && slide.readingMaterials.length > 0) {

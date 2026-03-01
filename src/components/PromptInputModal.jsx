@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { X, Type, Edit, Wand2 } from 'lucide-react';
+import { X, Type, Edit, Wand2, RectangleHorizontal } from 'lucide-react';
 import PromptOptimizer from './PromptOptimizer';
 
-/**
- * PromptInputModal - 内容输入模态框
- * 用于手动输入文本内容
- * 简化版：移除AI生成功能，保留直接输入模式
- */
+const ASPECT_RATIOS = [
+  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
+  { id: '4:3', label: '4:3', width: 1024, height: 768, description: '标准横屏' },
+  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
+  { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
+  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: '竖屏长图' },
+];
+
 export const PromptInputModal = ({
   isOpen,
   onClose,
@@ -15,16 +18,18 @@ export const PromptInputModal = ({
   description = '请输入您的内容',
   placeholder = '请输入内容...',
   initialContent = '',
-  type = 'text', // 'text' | 'image' | 'script' | 'activity' | 'ppt'
-  assetType = null, // 'image' | 'video' | 'audio' | 'text' | 'script' | 'activity' | 'ppt'
+  type = 'text',
+  assetType = null,
   isLoading = false
 }) => {
   const [content, setContent] = useState(initialContent);
   const [showOptimizer, setShowOptimizer] = useState(false);
+  const [selectedRatio, setSelectedRatio] = useState(ASPECT_RATIOS[0]);
 
   React.useEffect(() => {
     if (isOpen) {
       setContent(initialContent || '');
+      setSelectedRatio(ASPECT_RATIOS[0]);
     }
   }, [isOpen, initialContent]);
 
@@ -32,11 +37,10 @@ export const PromptInputModal = ({
 
   const handleConfirm = () => {
     if (!content.trim()) return;
-    // 对于图片、视频、音频，默认使用AI生成模式
-    // 对于文本，默认使用直接输入模式
     const inputMode = (assetType === 'image' || assetType === 'video' || assetType === 'audio') ? 'ai' : 'direct';
     const videoStyle = null;
-    onConfirm(content, inputMode, videoStyle);
+    const imageSize = (assetType === 'image') ? { width: selectedRatio.width, height: selectedRatio.height } : null;
+    onConfirm(content, inputMode, videoStyle, imageSize);
     setContent('');
   };
 
@@ -94,6 +98,46 @@ export const PromptInputModal = ({
             </div>
           </div>
 
+          {assetType === 'image' && (
+            <div>
+              <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                图片比例
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {ASPECT_RATIOS.map((ratio) => (
+                  <button
+                    key={ratio.id}
+                    onClick={() => setSelectedRatio(ratio)}
+                    disabled={isLoading}
+                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                      selectedRatio.id === ratio.id
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    <div 
+                      className="bg-current rounded-sm mb-1"
+                      style={{
+                        width: ratio.id === '16:9' ? '32px' :
+                               ratio.id === '4:3' ? '24px' :
+                               ratio.id === '1:1' ? '20px' :
+                               ratio.id === '3:4' ? '15px' : '12px',
+                        height: ratio.id === '16:9' ? '18px' :
+                                ratio.id === '4:3' ? '18px' :
+                                ratio.id === '1:1' ? '20px' :
+                                ratio.id === '3:4' ? '20px' : '21px'
+                      }}
+                    />
+                    <span className="text-xs font-medium">{ratio.label}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                已选择：{selectedRatio.label} ({selectedRatio.width}×{selectedRatio.height}) - {selectedRatio.description}
+              </p>
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button
               onClick={handleClose}
@@ -123,7 +167,6 @@ export const PromptInputModal = ({
         </div>
       </div>
 
-      {/* 提示词优化器 */}
       {showOptimizer && (
         <PromptOptimizer
           elementType={assetType || type}

@@ -602,7 +602,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   };
 
   // 确认添加资产
-  const handleConfirmAddAsset = (prompt, inputMode = 'ai', videoStyle = null) => {
+  const handleConfirmAddAsset = (prompt, inputMode = 'ai', videoStyle = null, imageSize = null) => {
     const { pageId, assetType: type } = promptModalConfig;
     if (!pageId || !type) return;
     
@@ -640,8 +640,10 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     const canvasSize = getCanvasSize();
     
     setTimeout(() => {
-      let w = 300, h = 200;
-      if (type === 'text') { w = 400; h = 150; } else if (type === 'image') { w = 400; h = 250; }
+      // 使用用户选择的尺寸，如果没有则使用默认值
+      let w = imageSize?.width || 300;
+      let h = imageSize?.height || 200;
+      if (type === 'text') { w = 400; h = 150; }
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 15)}...` : (type === 'text' ? '文本' : type === 'image' ? '图片' : '');
       const generatedUrl = type === 'text' ? '' : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
       const generatedContent = type === 'text' ? (prompt ? `根据提示词"${prompt}"生成的文本内容` : '双击编辑文本') : '';
@@ -1255,8 +1257,8 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       <PromptInputModal
         isOpen={showPromptModal}
         onClose={() => { setShowPromptModal(false); setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null }); }}
-        onConfirm={(prompt, inputMode, videoStyle) => {
-          if (promptModalConfig.type === 'asset') handleConfirmAddAsset(prompt, inputMode, videoStyle);
+        onConfirm={(prompt, inputMode, videoStyle, imageSize) => {
+          if (promptModalConfig.type === 'asset') handleConfirmAddAsset(prompt, inputMode, videoStyle, imageSize);
           else if (promptModalConfig.type === 'page' && promptModalConfig.stepId) handleConfirmAddPageToStep(prompt);
           else handleConfirmAddStep(prompt);
         }}
