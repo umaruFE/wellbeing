@@ -1226,8 +1226,8 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                            <th className="p-4 w-40">教学目标</th>
                            <th className="p-4 w-40">教学活动</th>
                            <th className="p-4 w-40">讲稿</th>
-                           <th className="p-4 w-48">PPT内容 (缩略图)</th>
-                           <th className="p-4 w-48">阅读材料</th>
+                           {/* <th className="p-4 w-48">PPT内容 (缩略图)</th>
+                           <th className="p-4 w-48">阅读材料</th> */}
                            <th className="p-4 w-12 text-center">操作</th>
                        </tr>
                      </thead>
@@ -1351,9 +1351,8 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                              </td>
 
                              {/* PPT内容 (改为缩略图) - 支持多个PPT */}
-                             <td className="p-4 align-top">
+                             {/* <td className="p-4 align-top">
                                  <div className="space-y-2">
-                                   {/* 显示所有PPT缩略图 */}
                                    {slide.pptSlides && slide.pptSlides.length > 0 ? (
                                      <>
                                        {slide.pptSlides.map((ppt, idx) => (
@@ -1387,8 +1386,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                            <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">PPT {idx + 1}</div>
                                          </div>
                                        ))}
-                                       {/* 重新生成PPT按钮 */}
-                                       {/* {slide.pptSlides && slide.pptSlides.length > 0 && (
                                          <button 
                                            onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
                                            className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
@@ -1396,8 +1393,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                            <RefreshCw className="w-4 h-4" />
                                            <span className="text-[10px]">重新生成PPT</span>
                                          </button>
-                                       )} */}
-                                       {/* 添加PPT按钮 */}
+                                       )} 
                                        <button 
                                          onClick={() => handleAddPPT(phase.id, slide.id)} 
                                          className="w-full py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors flex items-center justify-center gap-1"
@@ -1427,7 +1423,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                            <button onClick={() => handleRegenerateMedia(phase.id, slide.id, 'image')} title="重新生成" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><RefreshCw className="w-3 h-3" /></button>
                                          </div>
                                        </div>
-                                       {/* 重新生成PPT按钮 */}
                                        <button 
                                          onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
                                          className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
@@ -1435,7 +1430,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                          <RefreshCw className="w-4 h-4" />
                                          <span className="text-[10px]">重新生成PPT</span>
                                        </button>
-                                       {/* 添加PPT按钮 */}
                                        <button 
                                          onClick={() => handleAddPPT(phase.id, slide.id)} 
                                          className="w-full py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors flex items-center justify-center gap-1"
@@ -1455,21 +1449,18 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                    )}
                                    
                                  </div>
-                             </td>
+                             </td> */}
 
                              {/* 阅读材料列 */}
-                             <td className="p-4 align-top">
+                             {/* <td className="p-4 align-top">
                                  <div className="space-y-2">
-                                   {/* 显示所有阅读材料缩略图 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 ? (
                                      <>
-                                       {/* 显示材料数量提示 */}
                                        <div className="text-[10px] text-slate-500 font-medium mb-1">
                                          共 {slide.readingMaterials.length} 个阅读材料
                                        </div>
                                        {slide.readingMaterials.map((material, idx) => (
                                          <div key={material.id} className="relative group/material w-full aspect-[3/4] bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex flex-col">
-                                           {/* 材料标题栏 */}
                                            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-1.5 z-10">
                                              <div className="flex items-center justify-between">
                                                <span className="text-[10px] text-white font-medium truncate flex-1" title={material.title || `阅读材料 ${idx + 1}`}>
@@ -1481,7 +1472,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                              </div>
                                            </div>
                                            
-                                           {/* 缩略图区域 */}
                                            <div className="flex-1 flex items-center justify-center relative">
                                              {material.thumbnail ? (
                                                <>
@@ -1553,7 +1543,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                              )}
                                            </div>
                                            
-                                           {/* 底部信息栏 */}
                                            {material.pages && material.pages.length > 0 && (
                                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 z-10">
                                                <div className="text-[9px] text-white/90 text-center">
@@ -1577,7 +1566,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                      </button>
                                    )}
                                    
-                                   {/* 添加更多阅读材料按钮 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 && (
                                      <button
                                        onClick={() => {
@@ -1591,7 +1579,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                      </button>
                                    )}
                                  </div>
-                             </td>
+                             </td> */}
 
                              {/* 操作列 */}
                              <td className="p-4 align-top">

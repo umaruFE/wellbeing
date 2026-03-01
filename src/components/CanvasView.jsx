@@ -27,10 +27,47 @@ import { useAuth } from '../contexts/AuthContext';
 
 export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const { user } = useAuth();
+  
+  // 支持 courseData 的两种格式：对象格式（欢迎页生成）和数组格式（从数据库加载）
+  const isCourseDataArray = Array.isArray(initialConfig?.courseData);
+  
   const [courseData, setCourseData] = useState(initialConfig?.courseData || {});
-  const [activePhase, setActivePhase] = useState(initialConfig?.courseData ? Object.keys(initialConfig.courseData)[0] : 'engage');
-  const [activeStepId, setActiveStepId] = useState(initialConfig?.courseData ? initialConfig.courseData[Object.keys(initialConfig.courseData)[0]]?.steps[0]?.id : null);
-  const [expandedPhases, setExpandedPhases] = useState(initialConfig?.courseData ? Object.keys(initialConfig.courseData) : []);
+  
+  // 辅助函数：获取 phase 数据
+  const getPhaseData = (phaseKey) => {
+    if (isCourseDataArray) {
+      return courseData.find(phase => phase.id === phaseKey);
+    }
+    return courseData[phaseKey];
+  };
+  
+  // 辅助函数：获取所有 phase keys
+  const getPhaseKeys = () => {
+    if (isCourseDataArray) {
+      return courseData.map(phase => phase.id);
+    }
+    return Object.keys(courseData);
+  };
+  
+  // 如果 courseData 是数组格式，使用第一个 phase 的 id
+  const [activePhase, setActivePhase] = useState(
+    isCourseDataArray 
+      ? initialConfig?.courseData?.[0]?.id || 'engage'
+      : (initialConfig?.courseData ? Object.keys(initialConfig.courseData)[0] : 'engage')
+  );
+  
+  // 如果 courseData 是数组格式，使用第一个 phase 的第一个 slide 的 id
+  const [activeStepId, setActiveStepId] = useState(
+    isCourseDataArray
+      ? initialConfig?.courseData?.[0]?.slides?.[0]?.id || null
+      : (initialConfig?.courseData ? initialConfig.courseData[Object.keys(initialConfig.courseData)[0]]?.steps[0]?.id : null)
+  );
+  
+  const [expandedPhases, setExpandedPhases] = useState(
+    isCourseDataArray
+      ? initialConfig?.courseData?.map(phase => phase.id) || []
+      : (initialConfig?.courseData ? Object.keys(initialConfig.courseData) : [])
+  );
   
   // UI State
   const [isLeftOpen, setIsLeftOpen] = useState(true);
@@ -59,31 +96,41 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     if (!navigation) {
       const initialData = initialConfig?.courseData || {};
       setCourseData(initialData);
-      const firstPhase = Object.keys(initialData)[0];
-      const firstStepId = initialData[firstPhase]?.steps[0]?.id;
+      
+      const firstPhase = isCourseDataArray 
+        ? initialData?.[0]?.id || 'engage'
+        : Object.keys(initialData)[0];
+      const firstStepId = isCourseDataArray
+        ? initialData?.[0]?.slides?.[0]?.id
+        : initialData[firstPhase]?.steps[0]?.id;
+      
       setActivePhase(firstPhase);
       setActiveStepId(firstStepId);
-      setExpandedPhases(Object.keys(initialData));
+      setExpandedPhases(isCourseDataArray ? initialData?.map(p => p.id) : Object.keys(initialData));
       setSelectedAssetId(null);
       setHistory([JSON.parse(JSON.stringify(initialData))]);
       setHistoryIndex(0);
     } else {
       const initialData = initialConfig?.courseData || {};
       setCourseData(initialData);
+      
       const phaseMap = {
         'Engage': 'engage',
         'Empower': 'empower',
         'Execute': 'execute',
         'Elevate': 'elevate'
       };
-      const phaseKey = phaseMap[navigation.phaseId] || 'engage';
+      const phaseKey = phaseMap[navigation.phaseId] || (isCourseDataArray ? initialData?.[0]?.id : 'engage');
       const stepId = navigation.slideId ? String(navigation.slideId) : null;
-      setExpandedPhases(Object.keys(initialData));
+      
+      setExpandedPhases(isCourseDataArray ? initialData?.map(p => p.id) : Object.keys(initialData));
       setActivePhase(phaseKey);
       if (stepId) {
         setActiveStepId(stepId);
       } else {
-        const firstStepId = initialData[phaseKey]?.steps[0]?.id;
+        const firstStepId = isCourseDataArray
+          ? initialData?.find(p => p.id === phaseKey)?.slides?.[0]?.id
+          : initialData[phaseKey]?.steps[0]?.id;
         if (firstStepId) setActiveStepId(String(firstStepId));
       }
       setSelectedAssetId(null);
@@ -160,11 +207,15 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   }, [selectedAssetId, historyIndex, history]);
 
   // Derived State
-  const currentPhaseData = courseData[activePhase];
-  const currentStep = currentPhaseData?.steps.find(s => s.id === activeStepId) || currentPhaseData?.steps[0];
-  const selectedAsset = selectedAssetId && currentStep ? currentStep.assets.find(a => a.id === selectedAssetId) : null;
+  const currentPhaseData = getPhaseData(activePhase);
+  const currentStep = currentPhaseData?.slides?.find(s => s.id === activeStepId) || currentPhaseData?.slides?.[0];
+  const selectedAsset = selectedAssetId && currentStep ? currentStep.elements?.find(a => a.id === selectedAssetId) : null;
 
-  const allSteps = Object.values(courseData).flatMap(phase => phase.steps.map(step => ({...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step))})));
+  const allSteps = getPhaseKeys().flatMap(phaseKey => {
+    const phase = getPhaseData(phaseKey);
+    if (!phase) return [];
+    return (phase.slides || []).map(slide => ({...slide, phaseKey}));
+  });
   const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
 
   // --- Handlers ---
@@ -241,22 +292,26 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const handleDeleteStep = (phaseKey, stepId) => {
     if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
     
-    const newCourseData = { ...courseData };
-    const phase = newCourseData[phaseKey];
+    const newCourseData = isCourseDataArray ? [...courseData] : { ...courseData };
+    const phase = isCourseDataArray 
+      ? newCourseData.find(p => p.id === phaseKey)
+      : newCourseData[phaseKey];
     if (!phase) return;
     
-    phase.steps = phase.steps.filter(s => s.id !== stepId);
+    phase.slides = phase.slides.filter(s => s.id !== stepId);
     
     if (activeStepId === stepId) {
-      if (phase.steps.length > 0) {
-        setActiveStepId(phase.steps[0].id);
+      if (phase.slides.length > 0) {
+        setActiveStepId(phase.slides[0].id);
       } else {
-        const otherPhase = Object.entries(newCourseData).find(([key, p]) => 
-          key !== phaseKey && p.steps.length > 0
-        );
+        const otherPhase = isCourseDataArray
+          ? newCourseData.find(p => p.id !== phaseKey && p.slides.length > 0)
+          : Object.entries(newCourseData).find(([key, p]) => 
+              key !== phaseKey && p.slides.length > 0
+            );
         if (otherPhase) {
-          setActivePhase(otherPhase[0]);
-          setActiveStepId(otherPhase[1].steps[0].id);
+          setActivePhase(isCourseDataArray ? otherPhase.id : otherPhase[0]);
+          setActiveStepId(isCourseDataArray ? otherPhase.slides[0].id : otherPhase[1].slides[0].id);
         }
       }
     }
@@ -294,7 +349,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     console.log('handleConfirmAddAsset called:', { prompt, inputMode, videoStyle, promptModalConfig });
     
     const type = promptModalConfig.assetType;
-    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
+    const phase = getPhaseData(activePhase);
+    const step = phase?.slides?.find(s => s.id === activeStepId);
     if (!step) {
       console.log('No step found, returning');
       return;
@@ -736,8 +792,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleCopyAsset = (assetId) => {
-    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
-    const assetToCopy = step.assets.find(a => a.id === assetId);
+    const phase = getPhaseData(activePhase);
+    const step = phase?.slides?.find(s => s.id === activeStepId);
+    const assetToCopy = step?.elements?.find(a => a.id === assetId);
     if (!assetToCopy) return;
 
     const newCourseData = { ...courseData };
@@ -809,8 +866,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
 
   const handleRegenerateAsset = async (assetId) => {
-    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
-    const asset = step?.assets.find(a => a.id === assetId);
+    const phase = getPhaseData(activePhase);
+    const step = phase?.slides?.find(s => s.id === activeStepId);
+    const asset = step?.elements?.find(a => a.id === assetId);
     if (!asset) return;
     
     if (asset.type === 'text' && asset.content) {
@@ -924,8 +982,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setSelectedAssetId(assetId);
     setIsRightOpen(true);
     setInteractionMode(mode);
-    const step = courseData[activePhase].steps.find(s => s.id === activeStepId);
-    const asset = step.assets.find(a => a.id === assetId);
+    const phase = getPhaseData(activePhase);
+    const step = phase?.slides?.find(s => s.id === activeStepId);
+    const asset = step?.elements?.find(a => a.id === assetId);
     const rect = canvasRef.current.getBoundingClientRect();
     setInteractionStart({
       startX: e.clientX, startY: e.clientY,

@@ -25,16 +25,49 @@ import { aiAssetService } from '../services/aiAssetService';
  */
 export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const initialData = initialConfig?.courseData || {};
+  const isCourseDataArray = Array.isArray(initialData);
+  
   const [courseData, setCourseData] = useState(initialData);
-  const [activePhase, setActivePhase] = useState(initialData ? Object.keys(initialData)[0] : 'engage');
-  const [activeStepId, setActiveStepId] = useState(initialData ? initialData[Object.keys(initialData)[0]]?.steps[0]?.id : null);
+  
+  const [activePhase, setActivePhase] = useState(
+    isCourseDataArray 
+      ? initialData?.[0]?.id || 'engage'
+      : (initialData ? Object.keys(initialData)[0] : 'engage')
+  );
+  
+  const [activeStepId, setActiveStepId] = useState(
+    isCourseDataArray
+      ? initialData?.[0]?.slides?.[0]?.id
+      : (initialData ? initialData[Object.keys(initialData)[0]]?.steps[0]?.id : null)
+  );
+  
   const [isLeftOpen, setIsLeftOpen] = useState(true);
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-  const [expandedPhases, setExpandedPhases] = useState(Object.keys(initialData));
+  const [expandedPhases, setExpandedPhases] = useState(
+    isCourseDataArray 
+      ? initialData?.map(phase => phase.id) 
+      : Object.keys(initialData)
+  );
   const [canvasAspectRatio, setCanvasAspectRatio] = useState('A4');
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
+  
+  // 辅助函数：获取 phase 数据
+  const getPhaseData = (phaseKey) => {
+    if (isCourseDataArray) {
+      return courseData.find(phase => phase.id === phaseKey);
+    }
+    return courseData[phaseKey];
+  };
+  
+  // 辅助函数：获取所有 phase keys
+  const getPhaseKeys = () => {
+    if (isCourseDataArray) {
+      return courseData.map(phase => phase.id);
+    }
+    return Object.keys(courseData);
+  };
   
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);
@@ -61,13 +94,21 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   // 当navigation变化时，重置数据
   useEffect(() => {
     const initialData = initialConfig?.courseData || {};
+    const isInitialDataArray = Array.isArray(initialData);
+    
     if (!navigation) {
       setCourseData(initialData);
-      const firstPhase = Object.keys(initialData)[0];
-      const firstStepId = initialData[firstPhase]?.steps[0]?.id;
+      
+      const firstPhase = isInitialDataArray 
+        ? initialData?.[0]?.id || 'engage'
+        : Object.keys(initialData)[0];
+      const firstStepId = isInitialDataArray
+        ? initialData?.[0]?.slides?.[0]?.id
+        : initialData[firstPhase]?.steps[0]?.id;
+      
       setActivePhase(firstPhase);
       setActiveStepId(firstStepId);
-      setExpandedPhases(Object.keys(initialData));
+      setExpandedPhases(isInitialDataArray ? initialData?.map(p => p.id) : Object.keys(initialData));
       setSelectedAssetId(null);
       setGenerationHistory([]);
       setShowHistoryModal(null);
@@ -75,15 +116,19 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
     } else {
       setCourseData(initialData);
+      
       const phaseMap = { 'Engage': 'engage', 'Empower': 'empower', 'Execute': 'execute', 'Elevate': 'elevate' };
-      const phaseKey = phaseMap[navigation.phaseId] || 'engage';
+      const phaseKey = phaseMap[navigation.phaseId] || (isInitialDataArray ? initialData?.[0]?.id : 'engage');
       const stepId = navigation.slideId ? String(navigation.slideId) : null;
-      setExpandedPhases(Object.keys(initialData));
+      
+      setExpandedPhases(isInitialDataArray ? initialData?.map(p => p.id) : Object.keys(initialData));
       setActivePhase(phaseKey);
       if (stepId) {
         setActiveStepId(stepId);
       } else {
-        const firstStepId = initialData[phaseKey]?.steps[0]?.id;
+        const firstStepId = isInitialDataArray
+          ? initialData?.find(p => p.id === phaseKey)?.slides?.[0]?.id
+          : initialData[phaseKey]?.steps[0]?.id;
         if (firstStepId) setActiveStepId(String(firstStepId));
       }
       setSelectedAssetId(null);
@@ -92,9 +137,15 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
 
   // 初始化pages
   const initializePages = (dataSource) => {
-    const allSteps = Object.values(dataSource).flatMap(phase => 
-      phase.steps.map(step => ({ ...step, phaseKey: Object.keys(dataSource).find(k => dataSource[k].steps.includes(step)) }))
-    );
+    const isDataSourceArray = Array.isArray(dataSource);
+    
+    const allSteps = isDataSourceArray
+      ? dataSource.flatMap(phase => 
+          (phase.slides || []).map(slide => ({ ...slide, phaseKey: phase.id }))
+        )
+      : Object.values(dataSource).flatMap(phase => 
+          phase.steps.map(step => ({ ...step, phaseKey: Object.keys(dataSource).find(k => dataSource[k].steps.includes(step)) }))
+        );
     
     return allSteps.map((step, index) => {
       const rawAssets = step.assets || [];
@@ -103,6 +154,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         return {
           id: `page-${step.id}`,
           slideId: step.id,
+          phaseKey: step.phaseKey,
           pageNumber: index + 1,
           title: step.title,
           width: 680,
@@ -120,6 +172,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       return {
         id: `page-${step.id}`,
         slideId: step.id,
+        phaseKey: step.phaseKey,
         pageNumber: index + 1,
         title: step.title,
         width: 680,
@@ -130,7 +183,12 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     });
   };
 
-  const [pages, setPages] = useState(() => initializePages(initialConfig?.courseData || {}));
+  const [pages, setPages] = useState(() => {
+    const initialData = initialConfig?.courseData || {};
+    return initialData && (Object.keys(initialData).length > 0 || Array.isArray(initialData)) 
+      ? initializePages(initialData) 
+      : [];
+  });
   const [editingPageIndex, setEditingPageIndex] = useState(0);
   const [selectedStepId, setSelectedStepId] = useState(null);
   const [selectedMaterialId, setSelectedMaterialId] = useState(null);
@@ -158,9 +216,13 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
 
   // 当navigation或courseData变化时，重新初始化pages
   useEffect(() => {
-    const allSteps = Object.values(courseData).flatMap(phase => 
-      phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
-    );
+    const allSteps = isCourseDataArray
+      ? courseData.flatMap(phase => 
+          (phase.slides || []).map(slide => ({ ...slide, phaseKey: phase.id }))
+        )
+      : Object.values(courseData).flatMap(phase => 
+          phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
+        );
     
     let newPages = allSteps.map((step, index) => {
       const rawAssets = step.assets || [];
@@ -285,8 +347,9 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 20)}...` : '新页面';
       const stepPages = pages.filter(p => p.slideId === selectedStepId);
       const lastPageNumber = stepPages.length > 0 ? Math.max(...stepPages.map(p => p.pageNumber || 0)) : 0;
+      const phaseKey = stepPages.length > 0 ? stepPages[0].phaseKey : activePhase;
       
-      const newPage = { id: `page-${selectedStepId}-${Date.now()}`, slideId: selectedStepId, pageNumber: lastPageNumber + 1, title: generatedTitle, width: canvasSize.width, height: canvasSize.height, canvasAssets: [], blocks: [], prompt: prompt || '' };
+      const newPage = { id: `page-${selectedStepId}-${Date.now()}`, slideId: selectedStepId, phaseKey, pageNumber: lastPageNumber + 1, title: generatedTitle, width: canvasSize.width, height: canvasSize.height, canvasAssets: [], blocks: [], prompt: prompt || '' };
       
       const stepPageIds = stepPages.map(p => p.id);
       const lastStepPageIndex = pages.findIndex(p => stepPageIds.includes(p.id) && (p.pageNumber || 0) === lastPageNumber);
@@ -323,8 +386,9 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 20)}...` : '新页面';
       const materialPages = pages.filter(p => p.materialId === materialId && p.slideId === stepId);
       const lastPageNumber = materialPages.length > 0 ? Math.max(...materialPages.map(p => p.pageNumber || 0)) : 0;
+      const phaseKey = materialPages.length > 0 ? materialPages[0].phaseKey : activePhase;
       
-      const newPage = { id: `page-${materialId}-${Date.now()}`, slideId: stepId, materialId, pageNumber: lastPageNumber + 1, title: generatedTitle, width: canvasSize.width, height: canvasSize.height, canvasAssets: [], blocks: [], prompt: prompt || '' };
+      const newPage = { id: `page-${materialId}-${Date.now()}`, slideId: stepId, materialId, phaseKey, pageNumber: lastPageNumber + 1, title: generatedTitle, width: canvasSize.width, height: canvasSize.height, canvasAssets: [], blocks: [], prompt: prompt || '' };
       
       const materialPageIds = materialPages.map(p => p.id);
       const lastMaterialPageIndex = pages.findIndex(p => materialPageIds.includes(p.id) && (p.pageNumber || 0) === lastPageNumber);
@@ -356,7 +420,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   // 确认添加新阅读材料
   const handleConfirmAddReadingMaterial = (prompt) => {
     if (!showAddReadingMaterialModal) return;
-    const { stepId } = showAddReadingMaterialModal;
+    const { stepId, phaseKey: stepPhaseKey } = showAddReadingMaterialModal;
     setIsGeneratingReadingMaterial(true);
     const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
     const canvasSize = getCanvasSize();
@@ -364,7 +428,8 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     setTimeout(() => {
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 20)}...` : '新阅读材料';
       const newMaterialId = `material-${stepId}-${Date.now()}`;
-      const newPage = { id: `page-${newMaterialId}-1`, slideId: stepId, materialId: newMaterialId, pageNumber: 1, title: generatedTitle, width: canvasSize.width, height: canvasSize.height, canvasAssets: [], blocks: [], prompt: prompt || '' };
+      const phaseKey = stepPhaseKey || activePhase;
+      const newPage = { id: `page-${newMaterialId}-1`, slideId: stepId, materialId: newMaterialId, phaseKey, pageNumber: 1, title: generatedTitle, width: canvasSize.width, height: canvasSize.height, canvasAssets: [], blocks: [], prompt: prompt || '' };
       
       const newPages = [...pages, newPage];
       setPages(newPages);
@@ -395,7 +460,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     
     setTimeout(() => {
       const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 20)}...` : '新页面';
-      const newPage = { id: `page-${phaseKey}-${Date.now()}`, slideId: `${phaseKey}-${Date.now()}`, pageNumber: pages.length + 1, title: generatedTitle, width: 680, height: 960, canvasAssets: [], blocks: [], prompt: prompt || '' };
+      const newPage = { id: `page-${phaseKey}-${Date.now()}`, slideId: `${phaseKey}-${Date.now()}`, phaseKey, pageNumber: pages.length + 1, title: generatedTitle, width: 680, height: 960, canvasAssets: [], blocks: [], prompt: prompt || '' };
       
       const newPages = [...pages, newPage];
       setPages(newPages);

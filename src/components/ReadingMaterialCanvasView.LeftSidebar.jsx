@@ -30,6 +30,15 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
 }) => {
   if (!isLeftOpen) return null;
 
+  const isCourseDataArray = Array.isArray(courseData);
+  
+  const phases = isCourseDataArray ? courseData : Object.entries(courseData).map(([key, phase]) => ({ key, ...phase }));
+  
+  const getPhaseKey = (phase) => isCourseDataArray ? phase.id : phase.key;
+  const getPhaseSteps = (phase) => isCourseDataArray ? phase.slides : phase.steps;
+  const getPhaseLabel = (phase) => isCourseDataArray ? phase.label : phase.title;
+  const getPhaseColor = (phase) => isCourseDataArray ? phase.color : phase.color;
+
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 z-10">
       <div className="p-4 border-b border-slate-100 bg-slate-50">
@@ -41,24 +50,33 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-xs text-slate-500 mt-1 truncate">Unit 1: Funky Monster Rescue</p>
+        <p className="text-xs text-slate-500 mt-1 truncate">
+          {isCourseDataArray && courseData[0]?.slides?.[0]?.phase 
+            ? courseData[0].slides[0].phase 
+            : '课程编排'}
+        </p>
       </div>
       <div className="flex-1 overflow-y-auto p-2 space-y-2">
-        {Object.entries(courseData).map(([phaseKey, phase]) => {
+        {phases.map((phase) => {
+          const phaseKey = getPhaseKey(phase);
+          const phaseSteps = getPhaseSteps(phase);
+          const phaseLabel = getPhaseLabel(phase);
+          const phaseColor = getPhaseColor(phase);
+          
           return (
             <div key={phaseKey} className="rounded-lg overflow-hidden border border-slate-100 bg-white">
               <button
                 onClick={() => onTogglePhase(phaseKey)}
-                className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phase.color.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
+                className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phaseColor.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
               >
                 <span className="flex items-center gap-2">
                   {expandedPhases.includes(phaseKey) ? <ChevronDown className="w-4 h-4"/> : <ChevronRight className="w-4 h-4"/>}
-                  {phase.title}
+                  {phaseLabel}
                 </span>
               </button>
               {expandedPhases.includes(phaseKey) && (
                 <div className="bg-slate-50 border-t border-slate-100">
-                  {phase.steps.map((step) => {
+                  {phaseSteps.map((step) => {
                     // 获取该环节的所有页面
                     const stepPages = pages.filter(p => p.slideId === step.id);
                     // 按materialId分组

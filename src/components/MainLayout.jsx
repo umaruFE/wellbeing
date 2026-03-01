@@ -764,7 +764,19 @@ export const MainLayout = () => {
           {/* 创建课程页面 */}
           {isCreatePage && (
             <>
-              {appState === 'welcome' && (
+              {isLoadingCourse && (
+                <div className="flex-1 flex items-center justify-center bg-slate-50">
+                  <div className="text-center space-y-4">
+                    <div className="relative w-16 h-16 mx-auto">
+                      <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>
+                      <div className="absolute inset-2 border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin"></div>
+                    </div>
+                    <p className="text-slate-600">正在加载课程...</p>
+                  </div>
+                </div>
+              )}
+              
+              {!isLoadingCourse && appState === 'welcome' && (
                 <WelcomeScreen onStart={handleStartApp} />
               )}
 

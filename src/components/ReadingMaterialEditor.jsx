@@ -37,7 +37,6 @@ import {
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
 import { CardSelectionModal } from './CardSelectionModal';
-import { WORD_DOC_DATA } from '../constants';
 import { CanvasAssetRenderer } from './CanvasAssetRenderer';
 
 /**
@@ -92,11 +91,8 @@ export const ReadingMaterialEditor = ({
     return Object.entries(phaseConfig).map(([key, config]) => {
       const phasePages = pages.filter(page => {
         if (!page.slideId) return false;
-        const slide = WORD_DOC_DATA.find(s => s.id === page.slideId);
-        if (!slide) return false;
-        // 匹配阶段：Engage, Empower, Execute, Elevate
-        const phaseName = key.charAt(0).toUpperCase() + key.slice(1);
-        return slide.phase.includes(phaseName);
+        if (!page.phaseKey) return false;
+        return page.phaseKey === key;
       }).map((page) => ({
         ...page,
         indexInPages: pages.findIndex(p => p.id === page.id)
