@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Type, Edit, Wand2, RectangleHorizontal, Upload, Image as ImageIcon } from 'lucide-react';
+import { X, Type, Edit, Wand2, RectangleHorizontal, Upload, Image as ImageIcon, Clock, Music } from 'lucide-react';
 import PromptOptimizer from './PromptOptimizer';
 
 const ASPECT_RATIOS = [
@@ -26,12 +26,40 @@ export const PromptInputModal = ({
   const [showOptimizer, setShowOptimizer] = useState(false);
   const [selectedRatio, setSelectedRatio] = useState(ASPECT_RATIOS[0]);
   const [referenceImage, setReferenceImage] = useState(null);
+  const [lyrics, setLyrics] = useState('');
+  const [audioDuration, setAudioDuration] = useState(30);
+  const [audioStyle, setAudioStyle] = useState('');
+
+  // HeartMuLa 要求最小 10 秒
+  const MIN_AUDIO_DURATION = 10;
+
+  // HeartMuLa 音乐风格选项
+  const AUDIO_STYLES = [
+    { id: '', label: '自动选择', tags: '' },
+    { id: 'pop', label: '流行 Pop', tags: 'pop, catchy, upbeat' },
+    { id: 'rnb', label: 'R&B', tags: 'R&B, smooth, soulful' },
+    { id: 'rock', label: '摇滚 Rock', tags: 'rock, electric guitar, energetic' },
+    { id: 'electronic', label: '电子 Electronic', tags: 'electronic, synthesizer, modern' },
+    { id: 'jazz', label: '爵士 Jazz', tags: 'jazz, improvisation, sophisticated' },
+    { id: 'classical', label: '古典 Classical', tags: 'classical, orchestral, elegant' },
+    { id: 'folk', label: '民谣 Folk', tags: 'folk, acoustic, storytelling' },
+    { id: 'cafe', label: '咖啡厅 Cafe', tags: 'cafe, warm, reflection, relaxed' },
+    { id: 'piano', label: '钢琴 Piano', tags: 'piano, keyboard, melodic' },
+    { id: 'guitar', label: '吉他 Guitar', tags: 'guitar, strings, acoustic' },
+    { id: 'soft', label: '轻柔 Soft', tags: 'soft, gentle, calming' },
+    { id: 'upbeat', label: '欢快 Upbeat', tags: 'upbeat, happy, energetic' },
+    { id: 'emotional', label: '情感 Emotional', tags: 'emotional, heartfelt, moving' },
+    { id: 'ambient', label: '氛围 Ambient', tags: 'ambient, atmospheric, ethereal' }
+  ];
 
   React.useEffect(() => {
     if (isOpen) {
       setContent(initialContent || '');
       setSelectedRatio(ASPECT_RATIOS[0]);
       setReferenceImage(null);
+      setLyrics('');
+      setAudioDuration(30);
+      setAudioStyle('');
     }
   }, [isOpen, initialContent]);
 
@@ -42,14 +70,23 @@ export const PromptInputModal = ({
     const inputMode = (assetType === 'image' || assetType === 'video' || assetType === 'audio') ? 'ai' : 'direct';
     const videoStyle = null;
     const imageSize = (assetType === 'image') ? { width: selectedRatio.width, height: selectedRatio.height } : null;
-    onConfirm(content, inputMode, videoStyle, imageSize, referenceImage);
+    const selectedStyle = AUDIO_STYLES.find(s => s.id === audioStyle);
+    const audioConfig = assetType === 'audio' ? { 
+      duration: audioDuration,
+      style: selectedStyle?.tags || ''
+    } : null;
+    onConfirm(content, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig);
     setContent('');
     setReferenceImage(null);
+    setLyrics('');
+    setAudioDuration(30);
+    setAudioStyle('');
   };
 
   const handleClose = () => {
     setContent('');
     setReferenceImage(null);
+    setLyrics('');
     onClose();
   };
 
@@ -193,6 +230,74 @@ export const PromptInputModal = ({
                 </div>
               )}
             </div>
+          )}
+
+          {assetType === 'audio' && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                  <Music className="w-4 h-4" />
+                  音乐风格
+                </label>
+                <select
+                  value={audioStyle}
+                  onChange={(e) => setAudioStyle(e.target.value)}
+                  className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  disabled={isLoading}
+                >
+                  {AUDIO_STYLES.map((style) => (
+                    <option key={style.id} value={style.id}>
+                      {style.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-400 mt-1">
+                  选择音乐风格，将自动添加到生成提示中
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  音频时长
+                </label>
+                <div className="flex items-center gap-4">
+                  <input
+                    type="range"
+                    min="10"
+                    max="240"
+                    step="10"
+                    value={audioDuration}
+                    onChange={(e) => setAudioDuration(Number(e.target.value))}
+                    className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    disabled={isLoading}
+                  />
+                  <span className="text-sm font-medium text-slate-700 min-w-[60px]">
+                    {audioDuration} 秒
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">
+                  拖动滑块调整音频时长（10-240秒）
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                  <Wand2 className="w-4 h-4" />
+                  歌词 (可选)
+                </label>
+                <textarea
+                  value={lyrics}
+                  onChange={(e) => setLyrics(e.target.value)}
+                  placeholder="输入歌词内容，留空则生成纯音乐..."
+                  className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24"
+                  disabled={isLoading}
+                />
+                <p className="text-xs text-slate-400 mt-1">
+                  提示：输入歌词后，AI会根据歌词生成歌曲；留空则生成纯音乐
+                </p>
+              </div>
+            </>
           )}
 
           <div className="flex gap-3">

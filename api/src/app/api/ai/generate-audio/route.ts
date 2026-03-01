@@ -2,10 +2,77 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
 const AI_API_BASE_URL = process.env.AI_API_BASE_URL;
+const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
+const DASHSCOPE_API_URL = process.env.DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation';
+
+// 简单的中文检测函数
+function containsChinese(text: string): boolean {
+  return /[\u4e00-\u9fa5]/.test(text);
+}
+
+// 使用通义千问 API 翻译中文到英文
+async function translateToEnglish(text: string): Promise<string> {
+  try {
+    console.log('使用通义千问翻译:', text);
+    
+    const response = await fetch(DASHSCOPE_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${DASHSCOPE_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'qwen-plus',
+        input: {
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a professional translator. Translate the following Chinese text to English for music generation tags. Keep it concise and suitable for AI music generation. Only return the English translation, no explanations.'
+            },
+            {
+              role: 'user',
+              content: text
+            }
+          ]
+        },
+        parameters: {
+          temperature: 0.3,
+          max_tokens: 200
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('通义千问翻译API调用失败:', response.status, response.statusText, errorText);
+      return text; // 翻译失败返回原文
+    }
+
+    const data = await response.json();
+    console.log('通义千问API返回:', data);
+    
+    // 解析通义千问的返回格式
+    const translation = data.output?.text?.trim() || 
+                       data.output?.choices?.[0]?.message?.content?.trim() ||
+                       data.choices?.[0]?.message?.content?.trim();
+    
+    if (translation) {
+      console.log('通义千问翻译结果:', { original: text, translation });
+      return translation;
+    }
+    
+    return text;
+  } catch (error) {
+    console.error('通义千问翻译失败:', error);
+    return text; // 翻译失败返回原文
+  }
+}
 
 interface AudioGenerationRequest {
   prompt: string;
   count?: number;
+  lyrics?: string;
+  duration?: number;
   user_id?: string;
   organization_id?: string;
 }
@@ -41,7 +108,7 @@ interface TaskStatus {
 }
 
 // 创建音频生成工作流
-function createWorkflow(prompt: string, seed: number): Workflow {
+function createWorkflow(prompt: string, lyrics: string, seed: number, duration: number = 30): Workflow {
   return {
     "2": {
       "inputs": {
@@ -59,12 +126,12 @@ function createWorkflow(prompt: string, seed: number): Workflow {
     },
     "9": {
       "inputs": {
-        "lyrics": prompt,
-        "tags": "Funny grounded R&B, immediate vocal entry, no long instrumental intro, start singing right away within 2 seconds, quick build-up, crisp drum machine from the first beat, clean female voice jumps in fast, powerful but no slow fade-in or atmospheric pad intro",
+        "lyrics": lyrics || "",
+        "tags": prompt,
         "version": "RL-oss-3B-20260123",
         "codec_version": "oss-20260123",
         "seed": seed,
-        "max_audio_length_seconds": 60,
+        "max_audio_length_seconds": duration,
         "topk": 1,
         "temperature": 1.5,
         "cfg_scale": 1.5,
@@ -81,8 +148,8 @@ function createWorkflow(prompt: string, seed: number): Workflow {
 }
 
 // 提交音频生成任务
-async function submitAudioTask(prompt: string, seed: number): Promise<TaskResponse> {
-  const workflow = createWorkflow(prompt, seed);
+async function submitAudioTask(prompt: string, lyrics: string, seed: number, duration: number = 30): Promise<TaskResponse> {
+  const workflow = createWorkflow(prompt, lyrics, seed, duration);
 
   console.log(`提交音频生成任务: ${AI_API_BASE_URL}/prompt`);
   console.log(`请求参数:`, { prompt, seed });
@@ -218,6 +285,8 @@ export async function POST(request: NextRequest) {
     const {
       prompt,
       count = 4,
+      lyrics,
+      duration = 30,
       user_id,
       organization_id
     } = body as AudioGenerationRequest;
@@ -229,13 +298,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 如果提示词包含中文，则翻译成英文
+    let finalPrompt = prompt;
+    console.log('接收到的提示词:', prompt);
+    console.log('是否包含中文:', containsChinese(prompt));
+    if (containsChinese(prompt)) {
+      console.log('检测到中文提示词，开始翻译...');
+      finalPrompt = await translateToEnglish(prompt);
+      console.log('翻译后的提示词:', finalPrompt);
+    } else {
+      console.log('提示词不包含中文，无需翻译');
+    }
+
     const startTime = Date.now();
     const tasks = [];
 
     // 提交所有任务
     for (let i = 0; i < count; i++) {
       const seed = Date.now() + i * 1000;
-      const taskPromise = submitAudioTask(prompt, seed);
+      const taskPromise = submitAudioTask(finalPrompt, lyrics || '', seed, duration);
       tasks.push(taskPromise);
     }
 

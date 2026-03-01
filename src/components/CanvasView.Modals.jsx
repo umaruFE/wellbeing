@@ -41,9 +41,9 @@ export const CanvasViewModals = ({
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
         }}
-        onConfirm={(prompt, inputMode, videoStyle, imageSize) => {
+        onConfirm={(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig) => {
           if (promptModalConfig.type === 'element') {
-            onConfirmAddAsset(prompt, inputMode, videoStyle, imageSize);
+            onConfirmAddAsset(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig);
           } else {
             onConfirmAddStep(prompt);
           }

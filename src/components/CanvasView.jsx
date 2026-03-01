@@ -430,7 +430,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setShowPromptModal(true);
   };
 
-  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null, referenceImage = null) => {
+  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null, referenceImage = null, lyrics = '', audioConfig = null) => {
     const type = promptModalConfig.assetType;
     const phaseData = getPhaseData(activePhase);
     const step = phaseData?.slides?.find(s => s.id === activeStepId);
@@ -506,20 +506,26 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       let effectivePrompt = basePrompt;
 
       // 1) 先做提示词优化（调用大模型与优化服务）
-      try {
-        const optimized = await optimizePrompt(basePrompt, type === 'text' ? 'script' : type, userId);
-        if (optimized && typeof optimized === 'string') {
-          effectivePrompt = optimized;
-          await promptOptimizationService.saveOptimization({
-            user_id: userId,
-            element_type: type,
-            original_prompt: basePrompt,
-            optimized_prompt: optimized,
-            improvement_score: 5
-          });
+      // 注意：音频类型不使用优化后的提示词，因为HeartMuLa更适合简洁的tags
+      const shouldOptimize = type !== 'audio';
+      if (shouldOptimize) {
+        try {
+          const optimized = await optimizePrompt(basePrompt, type === 'text' ? 'script' : type, userId);
+          if (optimized && typeof optimized === 'string') {
+            effectivePrompt = optimized;
+            await promptOptimizationService.saveOptimization({
+              user_id: userId,
+              element_type: type,
+              original_prompt: basePrompt,
+              optimized_prompt: optimized,
+              improvement_score: 5
+            });
+          }
+        } catch (optError) {
+          console.error('提示词优化失败，将使用原始提示词:', optError);
         }
-      } catch (optError) {
-        console.error('提示词优化失败，将使用原始提示词:', optError);
+      } else {
+        console.log('音频类型跳过提示词优化，使用原始提示词:', basePrompt);
       }
 
       const phaseData = getPhaseData(activePhase);
@@ -615,7 +621,10 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             generatedTitle: basePrompt
               ? `AI生成：${basePrompt.substring(0, 15)}...`
               : `New ${type}`,
-            referenceImage
+            referenceImage,
+            lyrics: lyrics,
+            duration: audioDuration,
+            style: audioStyle
           };
           setPendingAssetConfig(pendingConfig);
           
@@ -743,12 +752,20 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         generatedContent = `根据提示词"${effectivePrompt}"生成的文本内容`;
       } else if (type === 'audio') {
         // 音频生成 - 使用AI服务生成多个音频供选择
-        console.log('准备生成音频:', { type, effectivePrompt, userId, organizationId });
+        const audioDuration = audioConfig?.duration || 30;
+        const audioStyle = audioConfig?.style || '';
+        // 合并风格标签和用户提示词（风格在前）
+        const finalPrompt = audioStyle 
+          ? `${audioStyle}, ${effectivePrompt}` 
+          : effectivePrompt;
+        console.log('准备生成音频:', { type, finalPrompt, lyrics, audioDuration, audioStyle, userId, organizationId });
         try {
           const result = await aiAssetService.generateMultipleAudio(
-            effectivePrompt,
+            finalPrompt,
             {
               count: 4,
+              lyrics: lyrics,
+              duration: audioDuration,
               user_id: userId,
               organization_id: organizationId
             }
@@ -898,7 +915,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             h,
             generatedTitle: basePrompt
               ? `AI生成：${basePrompt.substring(0, 15)}...`
-              : `New ${type}`
+              : `New ${type}`,
+            lyrics
           };
           console.log('设置待确认配置:', pendingConfig);
           setPendingAssetConfig(pendingConfig);
@@ -1028,7 +1046,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
   const handleCardSelectionConfirm = (selectedImage) => {
     if (!pendingAssetConfig) return;
-    const { type, effectivePrompt, w, h, generatedTitle, referenceImage } = pendingAssetConfig;
+    const { type, effectivePrompt, w, h, generatedTitle, referenceImage, lyrics, duration, style } = pendingAssetConfig;
     
     const phaseData = getPhaseData(activePhase);
     if (!phaseData) {
@@ -1081,6 +1099,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       content: '',
       prompt: effectivePrompt,
       referenceImage: referenceImage || null,
+      lyrics: lyrics || '',
+      duration: duration || 30,
+      style: style || '',
       videoStyle: type === 'video' ? 'realistic' : null,
       x: 100,
       y: 100,
@@ -1370,8 +1391,30 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           asset.url = result.url;
         }
       } else if (asset.type === 'audio') {
-        const randomColor = Math.floor(Math.random()*16777215).toString(16);
-        asset.url = `https://placehold.co/300x100/${randomColor}/FFF?text=AI+Audio+v${Math.floor(Math.random() * 10)}`;
+        const prompt = asset.prompt || asset.title || '教学音频';
+        const lyrics = asset.lyrics || '';
+        const duration = asset.duration || 30;
+        const style = asset.style || '';
+        // 合并风格标签和提示词（风格在前）
+        const finalPrompt = style ? `${style}, ${prompt}` : prompt;
+        
+        // 使用AI服务生成音频
+        const result = await aiAssetService.generateAudioWithPolling(
+          finalPrompt,
+          {
+            count: 1,
+            lyrics: lyrics,
+            duration: duration,
+            user_id: user?.id,
+            organization_id: user?.organizationId
+          }
+        );
+        
+        if (result.success && result.audios && result.audios.length > 0) {
+          asset.url = result.audios[0].url;
+        } else {
+          throw new Error('音频生成失败');
+        }
       }
       
       setCourseData(newCourseData);

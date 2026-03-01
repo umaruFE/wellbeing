@@ -18,7 +18,9 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Palette
+  Palette,
+  Clock,
+  Music
 } from 'lucide-react';
 import { getAssetIcon } from '../utils';
 
@@ -434,6 +436,73 @@ export const AssetEditorPanel = ({
                 </button>
               </div>
             </div>
+
+            {/* 音频设置 */}
+            {selectedAsset.type === 'audio' && (
+              <>
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
+                    <Music className="w-3 h-3 text-blue-500" /> 风格 / Style
+                  </label>
+                  <select
+                    value={selectedAsset.style || ''}
+                    onChange={(e) => onAssetChange(selectedAsset.id, 'style', e.target.value)}
+                    className="w-full text-sm border border-blue-200 bg-blue-50 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">自动选择</option>
+                    <option value="pop, catchy, upbeat">流行 Pop</option>
+                    <option value="R&B, smooth, soulful">R&B</option>
+                    <option value="rock, electric guitar, energetic">摇滚 Rock</option>
+                    <option value="electronic, synthesizer, modern">电子 Electronic</option>
+                    <option value="jazz, improvisation, sophisticated">爵士 Jazz</option>
+                    <option value="classical, orchestral, elegant">古典 Classical</option>
+                    <option value="folk, acoustic, storytelling">民谣 Folk</option>
+                    <option value="cafe, warm, reflection, relaxed">咖啡厅 Cafe</option>
+                    <option value="piano, keyboard, melodic">钢琴 Piano</option>
+                    <option value="guitar, strings, acoustic">吉他 Guitar</option>
+                    <option value="soft, gentle, calming">轻柔 Soft</option>
+                    <option value="upbeat, happy, energetic">欢快 Upbeat</option>
+                    <option value="emotional, heartfelt, moving">情感 Emotional</option>
+                    <option value="ambient, atmospheric, ethereal">氛围 Ambient</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-blue-500" /> 时长 / Duration
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="range"
+                      min="10"
+                      max="60"
+                      step="5"
+                      value={selectedAsset.duration || 30}
+                      onChange={(e) => onAssetChange(selectedAsset.id, 'duration', Number(e.target.value))}
+                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    />
+                    <span className="text-sm font-medium text-slate-700 min-w-[50px]">
+                      {selectedAsset.duration || 30} 秒
+                    </span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
+                    <Wand2 className="w-3 h-3 text-blue-500" /> 歌词 / Lyrics
+                  </label>
+                  <textarea 
+                    value={selectedAsset.lyrics || ''} 
+                    onChange={(e) => onAssetChange(selectedAsset.id, 'lyrics', e.target.value)} 
+                    placeholder="输入歌词内容，留空则生成纯音乐..." 
+                    className="w-full text-sm border border-blue-200 bg-blue-50 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    提示：输入歌词后，AI会根据歌词生成歌曲；留空则生成纯音乐
+                  </p>
+                </div>
+              </>
+            )}
           </>
         )}
 

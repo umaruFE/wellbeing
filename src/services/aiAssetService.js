@@ -444,20 +444,24 @@ export const aiAssetService = {
 
   // 生成多个音频（后端批量生成，立即返回任务ID）
   generateMultipleAudio: async (prompt, options = {}) => {
-    const { count = 4, user_id, organization_id } = options;
+    const { count = 4, lyrics, duration = 30, user_id, organization_id } = options;
 
     try {
+      const requestBody = {
+        prompt,
+        count,
+        lyrics,
+        duration,
+        user_id,
+        organization_id
+      };
+
       const response = await fetch('/api/ai/generate-audio', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          prompt,
-          count,
-          user_id,
-          organization_id
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
