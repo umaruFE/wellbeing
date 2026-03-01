@@ -16,6 +16,9 @@ export const CanvasViewModals = ({
   showCardSelectionModal,
   setShowCardSelectionModal,
   cardSelectionImages,
+  setCardSelectionImages,
+  pendingAssetConfig,
+  setPendingAssetConfig,
   isGenerating,
   onCardSelectionConfirm,
   showRegeneratePageModal,
@@ -38,9 +41,9 @@ export const CanvasViewModals = ({
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
         }}
-        onConfirm={(prompt, inputMode, videoStyle) => {
+        onConfirm={(prompt, inputMode, videoStyle, imageSize) => {
           if (promptModalConfig.type === 'element') {
-            onConfirmAddAsset(prompt, inputMode, videoStyle);
+            onConfirmAddAsset(prompt, inputMode, videoStyle, imageSize);
           } else {
             onConfirmAddStep(prompt);
           }

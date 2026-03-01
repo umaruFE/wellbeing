@@ -18,6 +18,7 @@ import { PromptInputModal } from './PromptInputModal';
 import { AssetEditorPanel } from './AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
 import { aiAssetService } from '../services/aiAssetService';
+import { promptHistoryService, promptOptimizationService } from '../services/promptService';
 
 /**
  * ReadingMaterialCanvasView - 阅读材料画布模式视图
@@ -602,7 +603,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   };
 
   // 确认添加资产
-  const handleConfirmAddAsset = (prompt, inputMode = 'ai', videoStyle = null, imageSize = null) => {
+  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null) => {
     const { pageId, assetType: type } = promptModalConfig;
     if (!pageId || !type) return;
     
@@ -639,41 +640,79 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
     const canvasSize = getCanvasSize();
     
-    setTimeout(() => {
-      // 使用用户选择的尺寸，如果没有则使用默认值
-      let w = imageSize?.width || 300;
-      let h = imageSize?.height || 200;
-      if (type === 'text') { w = 400; h = 150; }
-      const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 15)}...` : (type === 'text' ? '文本' : type === 'image' ? '图片' : '');
-      const generatedUrl = type === 'text' ? '' : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
-      const generatedContent = type === 'text' ? (prompt ? `根据提示词"${prompt}"生成的文本内容` : '双击编辑文本') : '';
-      const newAsset = { id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, type, title: generatedTitle, url: generatedUrl, content: generatedContent, prompt: prompt || '', referenceImage: null, videoStyle: type === 'video' ? (videoStyle || 'realistic') : null, x: (canvasSize.width - w) / 2, y: (canvasSize.height - h) / 2, width: w, height: h, rotation: 0 };
-      
-      if (type === 'text') { newAsset.fontSize = 24; newAsset.fontWeight = 'normal'; newAsset.color = '#1e293b'; newAsset.textAlign = 'center'; }
-      
-      const newPages = pages.map(page => {
-        if (page.id === pageId) return { ...page, canvasAssets: [...(page.canvasAssets || []), newAsset] };
-        return page;
-      });
-      
-      setPages(newPages);
-      saveToHistory(newPages);
-      if (type === 'text' || type === 'image' || type === 'video') saveGenerationHistory(newAsset.id, type, generatedUrl || generatedContent, prompt);
-      setSelectedAssetId(newAsset.id);
-      setIsGeneratingAsset(false);
-      setShowPromptModal(false);
-      setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
-      
-      const updatedPage = newPages.find(p => p.id === pageId);
-      if (updatedPage && updatedPage.slideId) {
-        const newCourseData = { ...courseData };
-        Object.values(newCourseData).forEach(phase => {
-          const step = phase.steps.find(s => s.id === updatedPage.slideId);
-          if (step) step.assets = updatedPage.canvasAssets || [];
-        });
-        setCourseData(newCourseData);
+    // 使用用户选择的尺寸，如果没有则使用默认值
+    let w = imageSize?.width || 300;
+    let h = imageSize?.height || 200;
+    if (type === 'text') { w = 400; h = 150; }
+    
+    let generatedUrl = '';
+    let generatedContent = '';
+    
+    // 调用 AI 生成接口
+    if (type === 'image' || type === 'video') {
+      try {
+        const result = await aiAssetService.generateMultipleImages(
+          prompt,
+          {
+            count: 1,
+            width: w,
+            height: h,
+            user_id: userId,
+            organization_id: organizationId
+          }
+        );
+
+        if (!result.success || !result.tasks || result.tasks.length === 0) {
+          throw new Error('生成图片失败');
+        }
+        
+        // 轮询任务状态
+        const imageResult = await aiAssetService.pollTaskAndUpload(
+          result.tasks[0].promptId,
+          0,
+          prompt,
+          60,
+          2000
+        );
+        
+        generatedUrl = imageResult.url;
+      } catch (error) {
+        console.error('生成图片失败:', error);
+        // 失败时使用占位图
+        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+        generatedUrl = `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Gen+Failed`;
       }
-    }, 1500);
+    } else if (type === 'text') {
+      generatedContent = `根据提示词"${prompt}"生成的文本内容`;
+    }
+    
+    const generatedTitle = prompt ? `AI生成：${prompt.substring(0, 15)}...` : (type === 'text' ? '文本' : type === 'image' ? '图片' : '');
+    const newAsset = { id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, type, title: generatedTitle, url: generatedUrl, content: generatedContent, prompt: prompt || '', referenceImage: null, videoStyle: type === 'video' ? (videoStyle || 'realistic') : null, x: (canvasSize.width - w) / 2, y: (canvasSize.height - h) / 2, width: w, height: h, rotation: 0 };
+    
+    if (type === 'text') { newAsset.fontSize = 24; newAsset.fontWeight = 'normal'; newAsset.color = '#1e293b'; newAsset.textAlign = 'center'; }
+    
+    const newPages = pages.map(page => {
+      if (page.id === pageId) return { ...page, canvasAssets: [...(page.canvasAssets || []), newAsset] };
+      return page;
+    });
+    
+    setPages(newPages);
+    saveToHistory(newPages);
+    if (type === 'text' || type === 'image' || type === 'video') saveGenerationHistory(newAsset.id, type, generatedUrl || generatedContent, prompt);
+    setSelectedAssetId(newAsset.id);
+    setIsGeneratingAsset(false);
+    setShowPromptModal(false);
+    setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
+    
+    const updatedPage = newPages.find(p => p.id === pageId);
+    if (updatedPage && updatedPage.slideId) {
+      const newCourseData = { ...courseData };
+      Object.values(newCourseData).forEach(phase => {
+        const step = phase.steps.find(s => s.id === updatedPage.slideId);
+        if (step) step.assets = updatedPage.canvasAssets || [];
+      });
+      setCourseData(newCourseData);
+    }
   };
 
   // 获取当前编辑页面的资产

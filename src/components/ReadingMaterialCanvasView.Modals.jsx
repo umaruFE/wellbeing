@@ -45,9 +45,9 @@ export const ReadingMaterialCanvasViewModals = ({
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
         }}
-        onConfirm={(prompt, inputMode, videoStyle) => {
+        onConfirm={(prompt, inputMode, videoStyle, imageSize) => {
           if (promptModalConfig.type === 'asset') {
-            onConfirmAddAsset(prompt, inputMode, videoStyle);
+            onConfirmAddAsset(prompt, inputMode, videoStyle, imageSize);
           } else if (promptModalConfig.type === 'page' && promptModalConfig.stepId) {
             onConfirmAddPageToStep(prompt);
           } else {

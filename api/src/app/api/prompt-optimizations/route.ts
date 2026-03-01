@@ -67,7 +67,15 @@ export async function GET(request: Request) {
       return new Response(JSON.stringify({ error: 'user_id is required' }), { status: 400 });
     }
 
-    const filters: any = { user_id };
+    // Handle user_id type conversion
+    // If user_id is numeric or invalid, set to null to avoid foreign key constraint errors
+    let processed_user_id = user_id;
+    if (typeof user_id === 'string' && !isNaN(parseInt(user_id)) && user_id !== '') {
+      // Numeric user_id - set to null since we don't have a real user record
+      processed_user_id = null;
+    }
+
+    const filters: any = { user_id: processed_user_id };
     if (element_type) {
       filters.element_type = element_type;
     }

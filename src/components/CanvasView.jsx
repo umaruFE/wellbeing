@@ -269,7 +269,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   // Derived State
   const currentPhaseData = getPhaseData(activePhase);
   const currentStep = currentPhaseData?.slides?.find(s => s.id === activeStepId) || currentPhaseData?.slides?.[0];
-  const selectedAsset = selectedAssetId && currentStep ? currentStep.elements?.find(a => a.id === selectedAssetId) : null;
+  const selectedAsset = selectedAssetId && currentStep ? (currentStep.assets || currentStep.canvasAssets || []).find(a => a.id === selectedAssetId) : null;
 
   const allSteps = getPhaseKeys().flatMap(phaseKey => {
     const phase = getPhaseData(phaseKey);
@@ -312,7 +312,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     const phaseKey = promptModalConfig.phaseKey;
     
     setTimeout(() => {
-      const newCourseData = { ...courseData };
+      const newCourseData = JSON.parse(JSON.stringify(courseData));
       const phase = newCourseData[phaseKey];
       if (!phase) return;
       
@@ -324,7 +324,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         title: generatedTitle,
         time: '00:00',
         objective: generatedObjective,
-        assets: []
+        assets: [],
+        canvasAssets: []
       };
       
       if (promptModalConfig.addAtEnd && activeStepId) {
@@ -352,8 +353,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const handleDeleteStep = (phaseKey, stepId) => {
     if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
     
-    const isArray = Array.isArray(courseData);
-    const newCourseData = isArray ? [...courseData] : { ...courseData };
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    const isArray = Array.isArray(newCourseData);
     const phase = isArray 
       ? newCourseData.find(p => p.id === phaseKey)
       : newCourseData[phaseKey];
@@ -383,17 +384,40 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleInputChange = (field, value) => {
-    const newCourseData = { ...courseData };
-    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
+    const stepsOrSlides = phase.steps || phase.slides;
+    if (!stepsOrSlides) return;
+    
+    const step = stepsOrSlides.find(s => s.id === activeStepId);
     if(step) step[field] = value;
     setCourseData(newCourseData);
     saveToHistory(newCourseData);
   };
 
   const handleAssetChange = (assetId, field, value) => {
-    const newCourseData = { ...courseData };
-    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-    const asset = step.assets.find(a => a.id === assetId);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
+    const stepsOrSlides = phase.steps || phase.slides;
+    if (!stepsOrSlides) return;
+    
+    const step = stepsOrSlides.find(s => s.id === activeStepId);
+    if (!step) return;
+    const asset = step.assets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
     if (asset) {
       asset[field] = value;
       setCourseData(newCourseData);
@@ -408,16 +432,25 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
   const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null) => {
     const type = promptModalConfig.assetType;
-    const phase = getPhaseData(activePhase);
-    const step = phase?.slides?.find(s => s.id === activeStepId);
+    const phaseData = getPhaseData(activePhase);
+    const step = phaseData?.slides?.find(s => s.id === activeStepId);
     if (!step) {
       return;
     }
 
     // 直接输入文本的场景：不走 AI 接口，只本地创建元素
     if (type === 'text' && inputMode === 'direct') {
-      const newCourseData = { ...courseData };
-      const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+      const newCourseData = JSON.parse(JSON.stringify(courseData));
+      
+      // 处理数组和对象两种格式
+      const phase = Array.isArray(newCourseData) 
+        ? newCourseData.find(p => p.id === activePhase)
+        : newCourseData[activePhase];
+      
+      if (!phase) return;
+      
+      const currentStep = phase.steps.find(s => s.id === activeStepId);
+      if (!currentStep) return;
       const w = 300, h = 100;
 
       const newAsset = {
@@ -435,7 +468,14 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         textAlign: 'center'
       };
 
+      if (!currentStep.assets) {
+        currentStep.assets = [];
+      }
       currentStep.assets.push(newAsset);
+      if (!currentStep.canvasAssets) {
+        currentStep.canvasAssets = [];
+      }
+      currentStep.canvasAssets.push(newAsset);
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
       setSelectedAssetId(newAsset.id);
@@ -482,17 +522,26 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         console.error('提示词优化失败，将使用原始提示词:', optError);
       }
 
-      const phase = getPhaseData(activePhase);
-      if (!phase) {
+      const phaseData = getPhaseData(activePhase);
+      if (!phaseData) {
         console.error('Phase not found:', activePhase, 'courseData:', courseData);
         return;
       }
 
-      const newCourseData = { ...courseData };
-      const currentStep = phase.steps?.find(s => s.id === activeStepId);
+      const newCourseData = JSON.parse(JSON.stringify(courseData));
+      const stepsOrSlides = phaseData.steps || phaseData.slides;
+      const currentStep = stepsOrSlides?.find(s => s.id === activeStepId);
       if (!currentStep) {
-        console.error('Step not found:', activeStepId, 'phase:', phase, 'phase.steps:', phase?.steps);
+        console.error('Step not found:', activeStepId, 'phaseData:', phaseData, 'stepsOrSlides:', stepsOrSlides);
         return;
+      }
+      
+      // 初始化 assets 和 canvasAssets 数组
+      if (!currentStep.assets) {
+        currentStep.assets = [];
+      }
+      if (!currentStep.canvasAssets) {
+        currentStep.canvasAssets = [];
       }
 
       // 使用用户选择的尺寸，如果没有则使用默认值
@@ -704,7 +753,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         newAsset.textAlign = 'center';
       }
 
+      // 同时添加到 assets 和 canvasAssets
       currentStep.assets.push(newAsset);
+      currentStep.canvasAssets.push(newAsset);
       setCourseData(newCourseData);
       saveToHistory(newCourseData);
       setSelectedAssetId(newAsset.id);
@@ -793,10 +844,48 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     if (!pendingAssetConfig) return;
     const { type, effectivePrompt, w, h, generatedTitle } = pendingAssetConfig;
     
-    const newCourseData = { ...courseData };
-    const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    const phaseData = getPhaseData(activePhase);
+    if (!phaseData) {
+      console.error('Phase not found:', activePhase);
+      return;
+    }
     
-    if (!currentStep) return;
+    const stepsOrSlides = phaseData.steps || phaseData.slides;
+    const currentStep = stepsOrSlides?.find(s => s.id === activeStepId);
+    
+    if (!currentStep) {
+      console.error('Step not found:', activeStepId, 'stepsOrSlides:', stepsOrSlides);
+      return;
+    }
+    
+    // 深拷贝 courseData
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 获取新的 phase 和 step
+    const newPhase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!newPhase) {
+      console.error('Phase not found in newCourseData:', activePhase);
+      return;
+    }
+    
+    const newStepsOrSlides = newPhase.steps || newPhase.slides;
+    const newCurrentStep = newStepsOrSlides?.find(s => s.id === activeStepId);
+    
+    if (!newCurrentStep) {
+      console.error('Step not found in newCourseData:', activeStepId);
+      return;
+    }
+    
+    // 初始化 assets 或 canvasAssets 数组
+    if (!newCurrentStep.assets) {
+      newCurrentStep.assets = [];
+    }
+    if (!newCurrentStep.canvasAssets) {
+      newCurrentStep.canvasAssets = [];
+    }
     
     const newAsset = {
       id: Date.now().toString(),
@@ -821,7 +910,13 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       newAsset.textAlign = 'center';
     }
 
-    currentStep.assets.push(newAsset);
+    // 同时添加到 assets 和 canvasAssets
+    newCurrentStep.assets.push(newAsset);
+    newCurrentStep.canvasAssets.push(newAsset);
+    
+    console.log('添加资产到画布:', newAsset);
+    console.log('更新后的 courseData:', newCourseData);
+    
     setCourseData(newCourseData);
     saveToHistory(newCourseData);
     setSelectedAssetId(newAsset.id);
@@ -832,22 +927,48 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleDeleteAsset = (assetId) => {
-    const newCourseData = { ...courseData };
-    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-    step.assets = step.assets.filter(a => a.id !== assetId);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
+    const stepsOrSlides = phase.steps || phase.slides;
+    if (!stepsOrSlides) return;
+    
+    const step = stepsOrSlides.find(s => s.id === activeStepId);
+    if (!step) return;
+    if (step.assets) {
+      step.assets = step.assets.filter(a => a.id !== assetId);
+    }
+    if (step.elements) {
+      step.elements = step.elements.filter(a => a.id !== assetId);
+    }
     setCourseData(newCourseData);
     saveToHistory(newCourseData);
     setSelectedAssetId(null);
   };
 
   const handleCopyAsset = (assetId) => {
-    const phase = getPhaseData(activePhase);
-    const step = phase?.slides?.find(s => s.id === activeStepId);
-    const assetToCopy = step?.elements?.find(a => a.id === assetId);
+    const phaseData = getPhaseData(activePhase);
+    const step = phaseData?.slides?.find(s => s.id === activeStepId);
+    const assetToCopy = step?.assets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
     if (!assetToCopy) return;
 
-    const newCourseData = { ...courseData };
-    const currentStep = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
+    const currentStep = phase.steps.find(s => s.id === activeStepId);
+    if (!currentStep) return;
     const newAsset = {
       ...JSON.parse(JSON.stringify(assetToCopy)),
       id: Date.now().toString(),
@@ -855,6 +976,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       y: assetToCopy.y + 20,
       title: assetToCopy.title + ' (副本)'
     };
+    if (!currentStep.assets) {
+      currentStep.assets = [];
+    }
     currentStep.assets.push(newAsset);
     setCourseData(newCourseData);
     saveToHistory(newCourseData);
@@ -862,8 +986,15 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleCopyPage = () => {
-    const newCourseData = { ...courseData };
-    const phase = newCourseData[activePhase];
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
     const currentStep = phase.steps.find(s => s.id === activeStepId);
     if (!currentStep) return;
 
@@ -871,7 +1002,13 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       ...JSON.parse(JSON.stringify(currentStep)),
       id: `${activePhase}-${Date.now()}`,
       title: currentStep.title + ' (副本)',
-      assets: currentStep.assets.map(asset => ({
+      assets: (currentStep.assets || []).map(asset => ({
+        ...JSON.parse(JSON.stringify(asset)),
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        x: asset.x + 20,
+        y: asset.y + 20
+      })),
+      canvasAssets: (currentStep.canvasAssets || []).map(asset => ({
         ...JSON.parse(JSON.stringify(asset)),
         id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         x: asset.x + 20,
@@ -900,9 +1037,21 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleRestoreHistory = (historyItem) => {
-    const newCourseData = { ...courseData };
-    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-    const asset = step.assets.find(a => a.id === historyItem.assetId);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
+    const stepsOrSlides = phase.steps || phase.slides;
+    if (!stepsOrSlides) return;
+    
+    const step = stepsOrSlides.find(s => s.id === activeStepId);
+    if (!step) return;
+    const asset = step.assets?.find(a => a.id === historyItem.assetId) || step.elements?.find(a => a.id === historyItem.assetId);
     if (asset && (asset.type === 'image' || asset.type === 'video' || asset.type === 'audio')) {
       asset.url = historyItem.url;
       if (historyItem.prompt) asset.prompt = historyItem.prompt;
@@ -915,9 +1064,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
 
   const handleRegenerateAsset = async (assetId) => {
-    const phase = getPhaseData(activePhase);
-    const step = phase?.slides?.find(s => s.id === activeStepId);
-    const asset = step?.elements?.find(a => a.id === assetId);
+    const phaseData = getPhaseData(activePhase);
+    const step = phaseData?.slides?.find(s => s.id === activeStepId);
+    const asset = step?.assets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
     if (!asset) return;
     
     if (asset.type === 'text' && asset.content) {
@@ -929,9 +1078,34 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setGeneratingAssetId(assetId);
     
     try {
-      const newCourseData = { ...courseData };
-      const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-      const asset = step.assets.find(a => a.id === assetId);
+      const newCourseData = JSON.parse(JSON.stringify(courseData));
+      
+      // 处理数组和对象两种格式
+      const phase = Array.isArray(newCourseData) 
+        ? newCourseData.find(p => p.id === activePhase)
+        : newCourseData[activePhase];
+      
+      if (!phase) {
+        setGeneratingAssetId(null);
+        return;
+      }
+      
+      const stepsOrSlides = phase.steps || phase.slides;
+      if (!stepsOrSlides) {
+        setGeneratingAssetId(null);
+        return;
+      }
+      
+      const step = stepsOrSlides.find(s => s.id === activeStepId);
+      if (!step) {
+        setGeneratingAssetId(null);
+        return;
+      }
+      const asset = step.assets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
+      if (!asset) {
+        setGeneratingAssetId(null);
+        return;
+      }
       
       if (asset.type === 'text') {
         asset.content = asset.prompt 
@@ -979,9 +1153,21 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleLayerChange = (assetId, action) => {
-    const newCourseData = { ...courseData };
-    const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-    const currentAssets = [...step.assets];
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
+    const stepsOrSlides = phase.steps || phase.slides;
+    if (!stepsOrSlides) return;
+    
+    const step = stepsOrSlides.find(s => s.id === activeStepId);
+    if (!step) return;
+    const currentAssets = [...(step.assets || step.elements || [])];
     const index = currentAssets.findIndex(a => a.id === assetId);
     if (index === -1) return;
     if (action === 'front') currentAssets.push(currentAssets.splice(index, 1)[0]);
@@ -998,9 +1184,21 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        const newCourseData = { ...courseData };
-        const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
-        const asset = step.assets.find(a => a.id === assetId);
+        const newCourseData = JSON.parse(JSON.stringify(courseData));
+        
+        // 处理数组和对象两种格式
+        const phase = Array.isArray(newCourseData) 
+          ? newCourseData.find(p => p.id === activePhase)
+          : newCourseData[activePhase];
+        
+        if (!phase) return;
+        
+        const stepsOrSlides = phase.steps || phase.slides;
+        if (!stepsOrSlides) return;
+        
+        const step = stepsOrSlides.find(s => s.id === activeStepId);
+        if (!step) return;
+        const asset = step.assets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
         if (asset) {
           asset.referenceImage = reader.result;
           setCourseData(newCourseData);
@@ -1031,9 +1229,10 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setSelectedAssetId(assetId);
     setIsRightOpen(true);
     setInteractionMode(mode);
-    const phase = getPhaseData(activePhase);
-    const step = phase?.slides?.find(s => s.id === activeStepId);
-    const asset = step?.elements?.find(a => a.id === assetId);
+    const phaseData = getPhaseData(activePhase);
+    const step = phaseData?.slides?.find(s => s.id === activeStepId);
+    const asset = step?.assets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
+    if (!asset) return;
     const rect = canvasRef.current.getBoundingClientRect();
     setInteractionStart({
       startX: e.clientX, startY: e.clientY,
@@ -1046,8 +1245,21 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
   const handleMouseMove = (e) => {
     if (interactionMode === 'idle' || !interactionStart) return;
-    const newCourseData = { ...courseData };
-    const activeAsset = newCourseData[activePhase].steps.find(s => s.id === activeStepId).assets.find(a => a.id === selectedAssetId);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData) 
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    
+    if (!phase) return;
+    
+    const stepsOrSlides = phase.steps || phase.slides;
+    if (!stepsOrSlides) return;
+    
+    const step = stepsOrSlides.find(s => s.id === activeStepId);
+    if (!step) return;
+    const activeAsset = step.assets?.find(a => a.id === selectedAssetId) || step.elements?.find(a => a.id === selectedAssetId);
     if (!activeAsset) return;
     const deltaX = e.clientX - interactionStart.startX;
     const deltaY = e.clientY - interactionStart.startY;
@@ -1081,7 +1293,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
   const handleCanvasClick = () => { 
     if (editingTextAssetId) {
-      const asset = currentStep?.assets?.find(a => a.id === editingTextAssetId);
+      const asset = currentStep?.assets?.find(a => a.id === editingTextAssetId) || currentStep?.elements?.find(a => a.id === editingTextAssetId);
       if (asset && editingTextContent !== undefined) {
         handleAssetChange(editingTextAssetId, 'content', editingTextContent);
       }
@@ -1452,6 +1664,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         showCardSelectionModal={showCardSelectionModal}
         setShowCardSelectionModal={setShowCardSelectionModal}
         cardSelectionImages={cardSelectionImages}
+        setCardSelectionImages={setCardSelectionImages}
+        pendingAssetConfig={pendingAssetConfig}
+        setPendingAssetConfig={setPendingAssetConfig}
         isGenerating={isGenerating}
         onCardSelectionConfirm={handleCardSelectionConfirm}
         showRegeneratePageModal={showRegeneratePageModal}
@@ -1460,8 +1675,27 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         onConfirmRegeneratePage={(prompt) => {
           setIsRegeneratingPage(true);
           setTimeout(() => {
-            const newCourseData = { ...courseData };
-            const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+            const newCourseData = JSON.parse(JSON.stringify(courseData));
+            
+            // 处理数组和对象两种格式
+            const phase = Array.isArray(newCourseData) 
+              ? newCourseData.find(p => p.id === activePhase)
+              : newCourseData[activePhase];
+            
+            if (!phase) {
+              setIsRegeneratingPage(false);
+              setShowRegeneratePageModal(false);
+              return;
+            }
+            
+            const stepsOrSlides = phase.steps || phase.slides;
+            if (!stepsOrSlides) {
+              setIsRegeneratingPage(false);
+              setShowRegeneratePageModal(false);
+              return;
+            }
+            
+            const step = stepsOrSlides.find(s => s.id === activeStepId);
             if (step) {
               if (prompt) step.title = `重新生成：${prompt.substring(0, 20)}...`;
             }
@@ -1544,8 +1778,19 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                         </div>
                         <button
                           onClick={() => {
-                            const newCourseData = { ...courseData };
-                            const step = newCourseData[activePhase].steps.find(s => s.id === activeStepId);
+                            const newCourseData = JSON.parse(JSON.stringify(courseData));
+                            
+                            // 处理数组和对象两种格式
+                            const phase = Array.isArray(newCourseData) 
+                              ? newCourseData.find(p => p.id === activePhase)
+                              : newCourseData[activePhase];
+                            
+                            if (!phase) return;
+                            
+                            const stepsOrSlides = phase.steps || phase.slides;
+                            if (!stepsOrSlides) return;
+                            
+                            const step = stepsOrSlides.find(s => s.id === activeStepId);
                             if (step) {
                               step.title = historyItem.data.title;
                               step.time = historyItem.data.time;
