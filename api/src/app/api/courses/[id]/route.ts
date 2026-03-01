@@ -28,17 +28,31 @@ async function ensureCourseDataColumn() {
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'courses' 
-      AND column_name = 'course_data'
+      AND column_name IN ('course_data', 'canvas_data', 'reading_materials_data')
     `;
     const result = await dbClient.query(checkColumnQuery);
     
-    if (result.rows.length === 0) {
+    const existingColumns = result.rows.map(row => row.column_name);
+    
+    if (!existingColumns.includes('course_data')) {
       console.log('Adding course_data column to courses table...');
       await dbClient.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS course_data JSONB');
       console.log('course_data column added successfully');
     }
+    
+    if (!existingColumns.includes('canvas_data')) {
+      console.log('Adding canvas_data column to courses table...');
+      await dbClient.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS canvas_data JSONB DEFAULT \'{}\'::jsonb');
+      console.log('canvas_data column added successfully');
+    }
+    
+    if (!existingColumns.includes('reading_materials_data')) {
+      console.log('Adding reading_materials_data column to courses table...');
+      await dbClient.query('ALTER TABLE courses ADD COLUMN IF NOT EXISTS reading_materials_data JSONB DEFAULT \'{}\'::jsonb');
+      console.log('reading_materials_data column added successfully');
+    }
   } catch (error) {
-    console.error('Error ensuring course_data column:', error);
+    console.error('Error ensuring columns:', error);
   }
 }
 
@@ -200,24 +214,28 @@ export async function GET(
 
     const course = courses[0];
     
-    // 如果 course_data 是 PostgreSQL 的 Json 对象，转换为标准 JavaScript 对象
-    // PostgreSQL 的 Json 对象在 JavaScript 中的 typeof 返回 'number'，所以不能用 typeof !== 'object' 检测
-    if (course.course_data && !Array.isArray(course.course_data)) {
-      console.log('course_data is PostgreSQL Json object, converting to JSON');
-      
-      // 使用 JSON.stringify 将其转换为字符串，然后解析回 JavaScript 对象
-      try {
-        const jsonString = JSON.stringify(course.course_data);
-        console.log('course_data stringified:', jsonString.substring(0, 200));
-        course.course_data = JSON.parse(jsonString);
-      } catch (error) {
-        console.error('Failed to convert course_data:', error);
+    // 转换 JSONB 字段为标准 JavaScript 对象
+    const jsonbFields = ['course_data', 'canvas_data', 'reading_materials_data'];
+    
+    jsonbFields.forEach(field => {
+      if (course[field] && !Array.isArray(course[field])) {
+        console.log(`${field} is PostgreSQL Json object, converting to JSON`);
+        
+        try {
+          const jsonString = JSON.stringify(course[field]);
+          console.log(`${field} stringified:`, jsonString.substring(0, 200));
+          course[field] = JSON.parse(jsonString);
+        } catch (error) {
+          console.error(`Failed to convert ${field}:`, error);
+        }
       }
-    }
+    });
 
     console.log('Final course data:', course);
     console.log('course_data type:', typeof course.course_data);
     console.log('course_data is array:', Array.isArray(course.course_data));
+    console.log('canvas_data type:', typeof course.canvas_data);
+    console.log('reading_materials_data type:', typeof course.reading_materials_data);
 
     return NextResponse.json({ data: course });
   } catch (error) {
@@ -252,6 +270,8 @@ export async function PUT(
       isPublic,
       status,
       courseData,
+      canvasData,
+      readingMaterialsData,
     } = body;
 
     // 处理 userId（与创建接口保持一致逻辑）
@@ -287,16 +307,39 @@ export async function PUT(
       console.log('courseData is array:', Array.isArray(courseData));
       console.log('courseData length:', Array.isArray(courseData) ? courseData.length : 'N/A');
       
-      // 尝试序列化为 JSON 字符串
       try {
         const jsonString = JSON.stringify(courseData);
         console.log('JSON stringify successful, length:', jsonString.length);
-        
-        // 将 JSON 字符串传递给数据库，让 PostgreSQL 解析
         updateData.course_data = jsonString;
       } catch (error) {
         console.error('JSON stringify failed:', error);
         console.error('courseData sample:', JSON.stringify(courseData).substring(0, 500));
+      }
+    }
+    
+    if (typeof canvasData !== 'undefined') {
+      console.log('canvasData type:', typeof canvasData);
+      console.log('canvasData keys:', canvasData ? Object.keys(canvasData) : 'null');
+      
+      try {
+        const jsonString = JSON.stringify(canvasData);
+        console.log('canvasData JSON stringify successful, length:', jsonString.length);
+        updateData.canvas_data = jsonString;
+      } catch (error) {
+        console.error('canvasData JSON stringify failed:', error);
+      }
+    }
+    
+    if (typeof readingMaterialsData !== 'undefined') {
+      console.log('readingMaterialsData type:', typeof readingMaterialsData);
+      console.log('readingMaterialsData keys:', readingMaterialsData ? Object.keys(readingMaterialsData) : 'null');
+      
+      try {
+        const jsonString = JSON.stringify(readingMaterialsData);
+        console.log('readingMaterialsData JSON stringify successful, length:', jsonString.length);
+        updateData.reading_materials_data = jsonString;
+      } catch (error) {
+        console.error('readingMaterialsData JSON stringify failed:', error);
       }
     }
 

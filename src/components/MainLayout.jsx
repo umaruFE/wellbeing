@@ -226,6 +226,24 @@ export const MainLayout = () => {
         setAutoSaveStatus('idle');
         return;
       }
+      
+      // 获取 canvasData 和 readingMaterialsData
+      let canvasData = null;
+      let readingMaterialsData = null;
+      
+      if (canvasViewRef.current) {
+        // 尝试获取画布数据
+        if (typeof canvasViewRef.current.getCanvasData === 'function') {
+          canvasData = canvasViewRef.current.getCanvasData();
+          console.log('Canvas data:', canvasData);
+        }
+        
+        // 尝试获取阅读材料数据
+        if (typeof canvasViewRef.current.getReadingMaterialsData === 'function') {
+          readingMaterialsData = canvasViewRef.current.getReadingMaterialsData();
+          console.log('Reading materials data:', readingMaterialsData);
+        }
+      }
 
       const requestBody = {
         userId: user?.id || 1,
@@ -239,7 +257,11 @@ export const MainLayout = () => {
         keywords: appConfig?.keywords || [],
         isPublic: false,
         // 把当前表格/画布结构一并保存到后端
-        courseData
+        courseData,
+        // 保存画布元素数据
+        canvasData,
+        // 保存阅读材料数据
+        readingMaterialsData,
       };
       
       const isUpdate = !!currentCourseId;
@@ -445,12 +467,18 @@ export const MainLayout = () => {
         : (course.keywords || ''),
       // TableView 会用到的课程结构数据（字段名不确定时做兼容）
       courseData: course.courseData || course.data || course.course_data || null,
+      // CanvasView 会用到的画布元素数据
+      canvasData: course.canvas_data || null,
+      // ReadingMaterialCanvasView 会用到的阅读材料数据
+      readingMaterialsData: course.reading_materials_data || null,
     };
 
     console.log('设置的 initialConfig 完整内容:', JSON.stringify(initialConfig));
     console.log('initialConfig.courseData 值:', initialConfig.courseData);
     console.log('initialConfig.courseData 类型:', typeof initialConfig.courseData);
     console.log('initialConfig.courseData 是否为数组:', Array.isArray(initialConfig.courseData));
+    console.log('initialConfig.canvasData:', initialConfig.canvasData);
+    console.log('initialConfig.readingMaterialsData:', initialConfig.readingMaterialsData);
 
         console.log('设置的 initialConfig:', initialConfig);
 
@@ -715,7 +743,7 @@ export const MainLayout = () => {
                 {isSaving ? '保存中...' : '保存'}
               </button>
 
-              <button
+              {/* <button
                 onClick={handleExportPPT}
                 disabled={isExporting}
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:bg-blue-400 transition-colors"
@@ -729,7 +757,7 @@ export const MainLayout = () => {
                 className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium flex items-center gap-2 disabled:bg-blue-400 transition-colors"
               >
                 导出PDF
-              </button>
+              </button> */}
 
               <div className="flex items-center gap-2 ml-4 text-xs text-slate-500 w-32 justify-end">
                 {autoSaveStatus === 'saving' && (

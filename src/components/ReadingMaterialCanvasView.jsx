@@ -26,8 +26,62 @@ import { aiAssetService } from '../services/aiAssetService';
 export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const initialData = initialConfig?.courseData || {};
   const isCourseDataArray = Array.isArray(initialData);
+  const canvasData = initialConfig?.canvasData || null;
+  const readingMaterialsData = initialConfig?.readingMaterialsData || null;
   
-  const [courseData, setCourseData] = useState(initialData);
+  // 合并 courseData、canvasData 和 readingMaterialsData
+  const mergeData = (courseData, canvasData, readingMaterialsData) => {
+    if (!courseData) return courseData;
+    
+    // 深拷贝数据
+    const mergedData = JSON.parse(JSON.stringify(courseData));
+    
+    if (isCourseDataArray) {
+      // 数组格式
+      mergedData.forEach(phase => {
+        (phase.slides || []).forEach(slide => {
+          // 清空原有的 canvasAssets 和 readingMaterials（不使用 course_data 中的数据）
+          slide.canvasAssets = [];
+          slide.blocks = [];
+          slide.readingMaterials = [];
+          
+          // 只使用 canvasData 和 readingMaterialsData 中的数据
+          if (canvasData && canvasData[slide.id]) {
+            slide.canvasAssets = canvasData[slide.id].canvasAssets || [];
+            slide.blocks = canvasData[slide.id].blocks || [];
+          }
+          if (readingMaterialsData && readingMaterialsData[slide.id]) {
+            slide.readingMaterials = readingMaterialsData[slide.id];
+          }
+        });
+      });
+    } else {
+      // 对象格式
+      Object.entries(mergedData).forEach(([phaseKey, phase]) => {
+        (phase.steps || []).forEach(step => {
+          // 清空原有的 canvasAssets 和 readingMaterials（不使用 course_data 中的数据）
+          step.canvasAssets = [];
+          step.blocks = [];
+          step.readingMaterials = [];
+          
+          // 只使用 canvasData 和 readingMaterialsData 中的数据
+          if (canvasData && canvasData[step.id]) {
+            step.canvasAssets = canvasData[step.id].canvasAssets || [];
+            step.blocks = canvasData[step.id].blocks || [];
+          }
+          if (readingMaterialsData && readingMaterialsData[step.id]) {
+            step.readingMaterials = readingMaterialsData[step.id];
+          }
+        });
+      });
+    }
+    
+    return mergedData;
+  };
+  
+  const [courseData, setCourseData] = useState(() => {
+    return mergeData(initialData, canvasData, readingMaterialsData);
+  });
   
   const [activePhase, setActivePhase] = useState(
     isCourseDataArray 
@@ -150,35 +204,20 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     return allSteps.map((step, index) => {
       const rawAssets = step.assets || [];
       
-      if (rawAssets.length <= 1 && !rawAssets.some(a => a.type === 'text')) {
-        return {
-          id: `page-${step.id}`,
-          slideId: step.id,
-          phaseKey: step.phaseKey,
-          pageNumber: index + 1,
-          title: step.title,
-          width: 680,
-          height: 960,
-          canvasAssets: [
-            { id: `asset-title-${step.id}`, type: 'text', title: '标题', content: step.title, x: 50, y: 40, width: 580, height: 70, rotation: 0, fontSize: 28, fontWeight: 'bold', textAlign: 'center', prompt: '' },
-            { id: `asset-image-${step.id}`, type: 'image', title: '插图', url: rawAssets.find(a => a.type === 'image')?.url || `https://placehold.co/400x250/6366f1/FFF?text=${encodeURIComponent(step.title.substring(0, 10))}`, x: 140, y: 120, width: 400, height: 250, rotation: 0, prompt: '' },
-            { id: `asset-content-${step.id}`, type: 'text', title: '正文', content: `【${step.title}】\n\n${step.objective || '本环节核心教学内容...'}\n\n• 活动：${step.activity || '暂无活动描述'}\n• 目标：${step.objective || '暂无目标描述'}`, x: 50, y: 390, width: 580, height: 520, rotation: 0, fontSize: 16, lineHeight: 1.6, prompt: '' },
-            ...rawAssets.filter(a => a.type !== 'image' && a.type !== 'text')
-          ],
-          blocks: []
-        };
-      }
+      // 不再从 course_data 中读取 readingMaterials
+      // 只使用 reading_materials_data 中的数据（通过 mergeData 合并）
       
-      return {
-        id: `page-${step.id}`,
-        slideId: step.id,
+      // 返回空页面（不创建默认元素）
+      return { 
+        id: `page-${step.id}`, 
+        slideId: step.id, 
         phaseKey: step.phaseKey,
-        pageNumber: index + 1,
-        title: step.title,
-        width: 680,
-        height: 960,
-        canvasAssets: rawAssets.map(asset => ({ ...asset, prompt: asset.prompt || '', referenceImage: asset.referenceImage || null })),
-        blocks: []
+        pageNumber: index + 1, 
+        title: step.title, 
+        width: 680, 
+        height: 960, 
+        canvasAssets: rawAssets.map(a => ({ ...a, prompt: a.prompt || '', referenceImage: a.referenceImage || null })), 
+        blocks: [] 
       };
     });
   };
@@ -226,14 +265,22 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     
     let newPages = allSteps.map((step, index) => {
       const rawAssets = step.assets || [];
-      if (rawAssets.length <= 1 && !rawAssets.some(a => a.type === 'text')) {
-        const titleAsset = { id: `asset-title-${step.id}`, type: 'text', title: '标题', content: step.title, x: 50, y: 40, width: 580, height: 70, rotation: 0, fontSize: 28, fontWeight: 'bold', textAlign: 'center', prompt: '' };
-        const imageAsset = { id: `asset-image-${step.id}`, type: 'image', title: '插图', url: rawAssets.find(a => a.type === 'image')?.url || `https://placehold.co/400x250/6366f1/FFF?text=${encodeURIComponent(step.title.substring(0, 10))}`, x: 140, y: 120, width: 400, height: 250, rotation: 0, prompt: '' };
-        const contentAsset = { id: `asset-content-${step.id}`, type: 'text', title: '正文', content: `【${step.title}】\n\n${step.objective || '本环节核心教学内容...'}\n\n• 活动：${step.activity || '暂无活动描述'}\n• 目标：${step.objective || '暂无目标描述'}`, x: 50, y: 390, width: 580, height: 520, rotation: 0, fontSize: 16, lineHeight: 1.6, prompt: '' };
-        const extraAssets = rawAssets.filter(a => a.type !== 'image' && a.type !== 'text');
-        return { id: `page-${step.id}`, slideId: step.id, pageNumber: index + 1, title: step.title, width: 680, height: 960, canvasAssets: [titleAsset, imageAsset, contentAsset, ...extraAssets], blocks: [] };
-      }
-      return { id: `page-${step.id}`, slideId: step.id, pageNumber: index + 1, title: step.title, width: 680, height: 960, canvasAssets: rawAssets.map(a => ({ ...a, prompt: a.prompt || '', referenceImage: a.referenceImage || null })), blocks: [] };
+      
+      // 不再从 course_data 中读取 readingMaterials
+      // 只使用 reading_materials_data 中的数据（通过 mergeData 合并）
+      
+      // 返回空页面（不创建默认元素）
+      return { 
+        id: `page-${step.id}`, 
+        slideId: step.id, 
+        phaseKey: step.phaseKey,
+        pageNumber: index + 1, 
+        title: step.title, 
+        width: 680, 
+        height: 960, 
+        canvasAssets: rawAssets.map(a => ({ ...a, prompt: a.prompt || '', referenceImage: a.referenceImage || null })), 
+        blocks: [] 
+      };
     });
     
     if (navigation && navigation.slideId) {
@@ -852,6 +899,56 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   // 暴露方法给父组件
   useImperativeHandle(ref, () => ({ 
     getCourseData: () => courseData,
+    getCanvasData: () => {
+      // 返回每个 slide 的 canvasAssets 数据
+      const canvasData = {};
+      
+      if (isCourseDataArray) {
+        courseData.forEach(phase => {
+          (phase.slides || []).forEach(slide => {
+            canvasData[slide.id] = {
+              canvasAssets: slide.canvasAssets || [],
+              blocks: slide.blocks || []
+            };
+          });
+        });
+      } else {
+        Object.entries(courseData).forEach(([phaseKey, phase]) => {
+          (phase.steps || []).forEach(step => {
+            canvasData[step.id] = {
+              canvasAssets: step.canvasAssets || [],
+              blocks: step.blocks || []
+            };
+          });
+        });
+      }
+      
+      return canvasData;
+    },
+    getReadingMaterialsData: () => {
+      // 返回每个 slide 的阅读材料数据
+      const readingMaterialsData = {};
+      
+      if (isCourseDataArray) {
+        courseData.forEach(phase => {
+          (phase.slides || []).forEach(slide => {
+            if (slide.readingMaterials && slide.readingMaterials.length > 0) {
+              readingMaterialsData[slide.id] = slide.readingMaterials;
+            }
+          });
+        });
+      } else {
+        Object.entries(courseData).forEach(([phaseKey, phase]) => {
+          (phase.steps || []).forEach(step => {
+            if (step.readingMaterials && step.readingMaterials.length > 0) {
+              readingMaterialsData[step.id] = step.readingMaterials;
+            }
+          });
+        });
+      }
+      
+      return readingMaterialsData;
+    },
     exportPDF: handleExportPDF, 
     isExporting 
   }));

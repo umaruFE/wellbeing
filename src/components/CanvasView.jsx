@@ -31,7 +31,63 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   // 支持 courseData 的两种格式：对象格式（欢迎页生成）和数组格式（从数据库加载）
   const isCourseDataArray = Array.isArray(initialConfig?.courseData);
   
-  const [courseData, setCourseData] = useState(initialConfig?.courseData || {});
+  // 合并 courseData、canvasData 和 readingMaterialsData
+  const mergeData = (courseData, canvasData, readingMaterialsData) => {
+    if (!courseData) return courseData;
+    
+    // 深拷贝数据
+    const mergedData = JSON.parse(JSON.stringify(courseData));
+    
+    if (isCourseDataArray) {
+      // 数组格式
+      mergedData.forEach(phase => {
+        (phase.slides || []).forEach(slide => {
+          // 清空原有的 canvasAssets 和 readingMaterials（不使用 course_data 中的数据）
+          slide.canvasAssets = [];
+          slide.blocks = [];
+          slide.readingMaterials = [];
+          
+          // 只使用 canvasData 和 readingMaterialsData 中的数据
+          if (canvasData && canvasData[slide.id]) {
+            slide.canvasAssets = canvasData[slide.id].canvasAssets || [];
+            slide.blocks = canvasData[slide.id].blocks || [];
+          }
+          if (readingMaterialsData && readingMaterialsData[slide.id]) {
+            slide.readingMaterials = readingMaterialsData[slide.id];
+          }
+        });
+      });
+    } else {
+      // 对象格式
+      Object.entries(mergedData).forEach(([phaseKey, phase]) => {
+        (phase.steps || []).forEach(step => {
+          // 清空原有的 canvasAssets 和 readingMaterials（不使用 course_data 中的数据）
+          step.canvasAssets = [];
+          step.blocks = [];
+          step.readingMaterials = [];
+          
+          // 只使用 canvasData 和 readingMaterialsData 中的数据
+          if (canvasData && canvasData[step.id]) {
+            step.canvasAssets = canvasData[step.id].canvasAssets || [];
+            step.blocks = canvasData[step.id].blocks || [];
+          }
+          if (readingMaterialsData && readingMaterialsData[step.id]) {
+            step.readingMaterials = readingMaterialsData[step.id];
+          }
+        });
+      });
+    }
+    
+    return mergedData;
+  };
+  
+  const [courseData, setCourseData] = useState(() => {
+    const initialCourseData = initialConfig?.courseData || {};
+    const canvasData = initialConfig?.canvasData || null;
+    const readingMaterialsData = initialConfig?.readingMaterialsData || null;
+    
+    return mergeData(initialCourseData, canvasData, readingMaterialsData);
+  });
   
   // 辅助函数：获取 phase 数据
   const getPhaseData = (phaseKey) => {
@@ -1045,6 +1101,56 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
     getCourseData: () => courseData,
+    getCanvasData: () => {
+      // 返回每个 slide 的 canvasAssets 数据
+      const canvasData = {};
+      
+      if (isCourseDataArray) {
+        courseData.forEach(phase => {
+          (phase.slides || []).forEach(slide => {
+            canvasData[slide.id] = {
+              canvasAssets: slide.canvasAssets || [],
+              blocks: slide.blocks || []
+            };
+          });
+        });
+      } else {
+        Object.entries(courseData).forEach(([phaseKey, phase]) => {
+          (phase.steps || []).forEach(step => {
+            canvasData[step.id] = {
+              canvasAssets: step.canvasAssets || [],
+              blocks: step.blocks || []
+            };
+          });
+        });
+      }
+      
+      return canvasData;
+    },
+    getReadingMaterialsData: () => {
+      // 返回每个 slide 的阅读材料数据
+      const readingMaterialsData = {};
+      
+      if (isCourseDataArray) {
+        courseData.forEach(phase => {
+          (phase.slides || []).forEach(slide => {
+            if (slide.readingMaterials && slide.readingMaterials.length > 0) {
+              readingMaterialsData[slide.id] = slide.readingMaterials;
+            }
+          });
+        });
+      } else {
+        Object.entries(courseData).forEach(([phaseKey, phase]) => {
+          (phase.steps || []).forEach(step => {
+            if (step.readingMaterials && step.readingMaterials.length > 0) {
+              readingMaterialsData[step.id] = step.readingMaterials;
+            }
+          });
+        });
+      }
+      
+      return readingMaterialsData;
+    },
     openPreview: () => setIsPreviewOpen(true),
     exportPPT: () => {
       setIsExporting(true);
