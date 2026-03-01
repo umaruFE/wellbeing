@@ -3,9 +3,6 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 
-console.log('开始渲染应用...');
-console.log('App 组件:', App);
-
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   console.error('找不到 root 元素！');
@@ -17,7 +14,6 @@ if (!rootElement) {
         <App />
       </StrictMode>
     );
-    console.log('应用渲染成功');
   } catch (error) {
     console.error('渲染错误:', error);
     rootElement.innerHTML = `

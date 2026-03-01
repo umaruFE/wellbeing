@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-const AI_API_BASE_URL = process.env.AI_API_BASE_URL || 'http://localhost:8188';
+const AI_API_BASE_URL = process.env.AI_API_BASE_URL;
 
 interface ImageGenerationRequest {
   prompt: string;

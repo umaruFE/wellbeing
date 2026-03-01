@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AI_API_BASE_URL = process.env.AI_API_BASE_URL || 'http://localhost:8188';
+const AI_API_BASE_URL = process.env.AI_API_BASE_URL;
 
 // 提取图片信息
 function extractImageInfo(taskData: any) {

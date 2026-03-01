@@ -143,18 +143,12 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
   };
 
   useEffect(() => {
-    console.log('TableView useEffect triggered:', { initialConfig, hasCourseData: !!initialConfig?.courseData });
-    
     if (initialConfig && initialConfig.courseData) {
       const courseData = initialConfig.courseData;
-      console.log('Converting courseData to phases:', courseData);
-      console.log('courseData type:', typeof courseData);
-      console.log('courseData is array:', Array.isArray(courseData));
       
       const convertCourseDataToPhases = () => {
         // 如果 courseData 是数组格式（从数据库加载的格式）
         if (Array.isArray(courseData)) {
-          console.log('courseData is array format, using directly');
           return courseData.map(phase => ({
             id: phase.id,
             label: phase.label,
@@ -212,7 +206,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
       };
 
       const newPhases = convertCourseDataToPhases();
-      console.log('Setting phases:', newPhases);
       setPhases(newPhases);
     }
   }, [initialConfig]);
@@ -234,12 +227,9 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
 
   // 组件准备好后通知父组件
   useEffect(() => {
-    console.log('TableView onReady useEffect:', { hasRef: !!ref?.current, onReady });
-    
     // 使用 setTimeout 确保 ref 已经被设置
     const timer = setTimeout(() => {
       if (onReady && typeof onReady === 'function') {
-        console.log('Calling onReady callback');
         onReady();
       }
     }, 100);
@@ -250,7 +240,6 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
   // 当 phases 被设置后，确保 onReady 被调用
   useEffect(() => {
     if (phases.length > 0 && onReady && typeof onReady === 'function') {
-      console.log('Phases set, calling onReady');
       onReady();
     }
   }, [phases, onReady]);
@@ -588,16 +577,12 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
         const slide = phases.find(p => p.id === phaseId)?.slides.find(s => s.id === slideId);
         const prompt = slide?.title || slide?.activity || '教学场景';
         
-        console.log('开始生成图片:', prompt);
-        
         // 使用后端批量生成API
         const result = await aiAssetService.generateMultipleImages(prompt, {
           count: 4,
           width: 600,
           height: 400
         });
-        
-        console.log('图片生成完成:', result);
         
         if (!result.success || !result.data) {
           throw new Error('生成图片失败');

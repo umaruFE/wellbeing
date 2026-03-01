@@ -127,20 +127,13 @@ async function update(table, data, filters) {
   const query = `UPDATE ${table} SET ${setClause.join(', ')} WHERE ${conditions.join(' AND ')} RETURNING *`;
   
   try {
-    console.log('Update query:', query);
-    console.log('Update values:', values.map((v, i) => `$${i + 1} = ${typeof v === 'object' ? JSON.stringify(v).substring(0, 200) : v}`).join(', '));
-    
     const res = await dbClient.query(query, values);
     return { data: res.rows[0], error: null };
   } catch (error) {
     console.error('Update error:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Error detail:', error.detail);
     
     // 如果错误是列不存在，尝试跳过该列
     if (error.code === '42703') {
-      console.log(`Column does not exist, retrying without it...`);
-      
       // 找出不存在的列名
       const match = error.message.match(/column "(.+?)" of relation/);
       if (match && match[1]) {
@@ -219,23 +212,14 @@ export async function GET(
     
     jsonbFields.forEach(field => {
       if (course[field] && !Array.isArray(course[field])) {
-        console.log(`${field} is PostgreSQL Json object, converting to JSON`);
-        
         try {
           const jsonString = JSON.stringify(course[field]);
-          console.log(`${field} stringified:`, jsonString.substring(0, 200));
           course[field] = JSON.parse(jsonString);
         } catch (error) {
           console.error(`Failed to convert ${field}:`, error);
         }
       }
     });
-
-    console.log('Final course data:', course);
-    console.log('course_data type:', typeof course.course_data);
-    console.log('course_data is array:', Array.isArray(course.course_data));
-    console.log('canvas_data type:', typeof course.canvas_data);
-    console.log('reading_materials_data type:', typeof course.reading_materials_data);
 
     return NextResponse.json({ data: course });
   } catch (error) {
@@ -303,27 +287,17 @@ export async function PUT(
     if (typeof isPublic !== 'undefined') updateData.is_public = isPublic;
     if (typeof status !== 'undefined') updateData.status = status;
     if (typeof courseData !== 'undefined') {
-      console.log('courseData type:', typeof courseData);
-      console.log('courseData is array:', Array.isArray(courseData));
-      console.log('courseData length:', Array.isArray(courseData) ? courseData.length : 'N/A');
-      
       try {
         const jsonString = JSON.stringify(courseData);
-        console.log('JSON stringify successful, length:', jsonString.length);
         updateData.course_data = jsonString;
       } catch (error) {
         console.error('JSON stringify failed:', error);
-        console.error('courseData sample:', JSON.stringify(courseData).substring(0, 500));
       }
     }
     
     if (typeof canvasData !== 'undefined') {
-      console.log('canvasData type:', typeof canvasData);
-      console.log('canvasData keys:', canvasData ? Object.keys(canvasData) : 'null');
-      
       try {
         const jsonString = JSON.stringify(canvasData);
-        console.log('canvasData JSON stringify successful, length:', jsonString.length);
         updateData.canvas_data = jsonString;
       } catch (error) {
         console.error('canvasData JSON stringify failed:', error);
@@ -331,12 +305,8 @@ export async function PUT(
     }
     
     if (typeof readingMaterialsData !== 'undefined') {
-      console.log('readingMaterialsData type:', typeof readingMaterialsData);
-      console.log('readingMaterialsData keys:', readingMaterialsData ? Object.keys(readingMaterialsData) : 'null');
-      
       try {
         const jsonString = JSON.stringify(readingMaterialsData);
-        console.log('readingMaterialsData JSON stringify successful, length:', jsonString.length);
         updateData.reading_materials_data = jsonString;
       } catch (error) {
         console.error('readingMaterialsData JSON stringify failed:', error);

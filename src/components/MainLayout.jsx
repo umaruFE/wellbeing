@@ -82,8 +82,6 @@ export const MainLayout = () => {
         courseData: config.courseData
       };
 
-      console.log('Saving new course:', requestBody);
-
       const response = await fetch('/api/courses', {
         method: 'POST',
         headers: {
@@ -92,8 +90,6 @@ export const MainLayout = () => {
         body: JSON.stringify(requestBody)
       });
 
-      console.log('Save response status:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || '保存课程失败');
@@ -101,8 +97,6 @@ export const MainLayout = () => {
 
       const result = await response.json();
       const newCourse = result.data;
-
-      console.log('Course saved successfully:', newCourse);
 
       setCurrentCourseId(newCourse.id);
       setAppConfig(config);
@@ -142,75 +136,51 @@ export const MainLayout = () => {
 
   // 获取当前课程数据
   const getCurrentCourseData = () => {
-    console.log('getCurrentCourseData called:', { 
-      hasRef: !!canvasViewRef.current, 
-      currentView,
-      canvasMode,
-      refMethods: canvasViewRef.current ? Object.keys(canvasViewRef.current) : null,
-      hasAppConfigCourseData: !!appConfig?.courseData
-    });
-    
     if (!canvasViewRef.current) {
-      console.log('No ref available, returning appConfig.courseData');
       return appConfig?.courseData || null;
     }
     
     const refMethods = Object.keys(canvasViewRef.current);
-    console.log('Available ref methods:', refMethods);
     
     let courseData = null;
     
     if (currentView === 'table') {
       if (refMethods.includes('getSlides')) {
         const slides = canvasViewRef.current.getSlides();
-        console.log('getSlides() returned:', slides);
         
-        // 如果 getSlides 返回空数组，尝试使用 appConfig.courseData
         if (!slides || slides.length === 0) {
-          console.log('getSlides returned empty, using appConfig.courseData');
           courseData = appConfig?.courseData;
         } else {
           courseData = slides;
         }
       } else {
-        console.log('getSlides method not found in ref');
         courseData = appConfig?.courseData;
       }
     } else if (currentView === 'canvas') {
       if (refMethods.includes('getCourseData')) {
         const data = canvasViewRef.current.getCourseData();
-        console.log('getCourseData() returned:', data);
         
-        // 如果 getCourseData 返回空对象，尝试使用 appConfig.courseData
         if (!data || Object.keys(data).length === 0) {
-          console.log('getCourseData returned empty, using appConfig.courseData');
           courseData = appConfig?.courseData;
         } else {
           courseData = data;
         }
       } else {
-        console.log('getCourseData method not found in ref');
         courseData = appConfig?.courseData;
       }
     }
     
-    // 最后的备选方案：如果 courseData 仍然是 null，使用 appConfig.courseData
     if (!courseData) {
-      console.log('No course data from ref, using appConfig.courseData as fallback');
       courseData = appConfig?.courseData;
     }
     
-    console.log('Final courseData:', courseData);
     return courseData;
   };
 
   // 保存课程
   const handleSaveCourse = async () => {
-    console.log('handleSaveCourse called:', { appState, isComponentReady, currentView, hasRef: !!canvasViewRef.current });
-    
     // 检查是否在课程编辑器中且 ref 存在
     if (appState !== 'app' || !canvasViewRef.current) {
-      console.log('Skipping save: appState or ref not ready');
       return;
     }
     
@@ -219,10 +189,8 @@ export const MainLayout = () => {
       setAutoSaveStatus('saving');
       
       const courseData = getCurrentCourseData();
-      console.log('Course data:', courseData);
       
       if (!courseData) {
-        console.log('No course data available');
         setAutoSaveStatus('idle');
         return;
       }
@@ -235,13 +203,11 @@ export const MainLayout = () => {
         // 尝试获取画布数据
         if (typeof canvasViewRef.current.getCanvasData === 'function') {
           canvasData = canvasViewRef.current.getCanvasData();
-          console.log('Canvas data:', canvasData);
         }
         
         // 尝试获取阅读材料数据
         if (typeof canvasViewRef.current.getReadingMaterialsData === 'function') {
           readingMaterialsData = canvasViewRef.current.getReadingMaterialsData();
-          console.log('Reading materials data:', readingMaterialsData);
         }
       }
 
@@ -268,8 +234,6 @@ export const MainLayout = () => {
       const url = isUpdate ? `/api/courses/${currentCourseId}` : '/api/courses';
       const method = isUpdate ? 'PUT' : 'POST';
 
-      console.log('Saving course with request body:', { method, url, body: requestBody });
-
       const response = await fetch(url, {
         method,
         headers: {
@@ -278,8 +242,6 @@ export const MainLayout = () => {
         body: JSON.stringify(requestBody)
       });
 
-      console.log('Save response status:', response.status);
-      
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Save failed response:', errorText);
@@ -287,7 +249,6 @@ export const MainLayout = () => {
       }
 
       const result = await response.json();
-      console.log('Save result:', result);
 
       const savedCourse = result?.data || result;
       if (savedCourse?.id) {
@@ -444,43 +405,23 @@ export const MainLayout = () => {
         const result = await apiService.getCourse(editingCourseId);
         const course = result?.data || result;
 
-        console.log('API返回的完整结果:', result);
-        console.log('解析后的课程对象:', course);
-        console.log('course 对象的所有字段:', Object.keys(course));
-        console.log('course.courseData:', course.courseData);
-        console.log('course.data:', course.data);
-        console.log('course.course_data:', course.course_data);
-        
-        // 打印 course 对象的完整内容（前 100 个字符）
-        const courseString = JSON.stringify(course);
-        console.log('course 对象内容（前 100 字符）:', courseString.substring(0, 100));
-
         const initialConfig = {
-      grade: course.grade || '',
-      age: course.age_group || '',
-      unit: course.unit || course.title || '自定义课程',
-      duration: course.duration || (appConfig?.duration || '40分钟'),
-      theme: course.theme || '',
-      // 关键字数组转成逗号分隔字符串，方便表格里显示
-      keywords: Array.isArray(course.keywords)
-        ? course.keywords.join(',')
-        : (course.keywords || ''),
-      // TableView 会用到的课程结构数据（字段名不确定时做兼容）
-      courseData: course.courseData || course.data || course.course_data || null,
-      // CanvasView 会用到的画布元素数据
-      canvasData: course.canvas_data || null,
-      // ReadingMaterialCanvasView 会用到的阅读材料数据
-      readingMaterialsData: course.reading_materials_data || null,
-    };
-
-    console.log('设置的 initialConfig 完整内容:', JSON.stringify(initialConfig));
-    console.log('initialConfig.courseData 值:', initialConfig.courseData);
-    console.log('initialConfig.courseData 类型:', typeof initialConfig.courseData);
-    console.log('initialConfig.courseData 是否为数组:', Array.isArray(initialConfig.courseData));
-    console.log('initialConfig.canvasData:', initialConfig.canvasData);
-    console.log('initialConfig.readingMaterialsData:', initialConfig.readingMaterialsData);
-
-        console.log('设置的 initialConfig:', initialConfig);
+          grade: course.grade || '',
+          age: course.age_group || '',
+          unit: course.unit || course.title || '自定义课程',
+          duration: course.duration || (appConfig?.duration || '40分钟'),
+          theme: course.theme || '',
+          // 关键字数组转成逗号分隔字符串，方便表格里显示
+          keywords: Array.isArray(course.keywords)
+            ? course.keywords.join(',')
+            : (course.keywords || ''),
+          // TableView 会用到的课程结构数据（字段名不确定时做兼容）
+          courseData: course.courseData || course.data || course.course_data || null,
+          // CanvasView 会用到的画布元素数据
+          canvasData: course.canvas_data || null,
+          // ReadingMaterialCanvasView 会用到的阅读材料数据
+          readingMaterialsData: course.reading_materials_data || null,
+        };
 
         setAppConfig(initialConfig);
         setAppState('app');
@@ -818,7 +759,6 @@ export const MainLayout = () => {
                   )}
                   {currentView === 'table' && (
                     <>
-                      {console.log('Rendering TableView with appConfig:', appConfig)}
                       <TableView
                         ref={canvasViewRef}
                         initialConfig={appConfig}

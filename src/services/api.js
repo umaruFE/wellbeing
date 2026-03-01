@@ -21,43 +21,18 @@ class ApiService {
       delete config.headers['Content-Type'];
     }
 
-    // 详细的请求日志
-    console.log('🌐 API 请求开始:', {
-      url: url,
-      method: options.method || 'GET',
-      endpoint: endpoint,
-      fullUrl: window.location.origin + url,
-      config: config
-    });
-
     try {
       const response = await fetch(url, config);
-      console.log('📥 收到响应:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        url: response.url
-      });
 
       const data = await response.json();
-      console.log('📦 响应数据:', data);
 
       if (!response.ok) {
-        console.error('❌ API 请求失败:', {
-          status: response.status,
-          error: data.error || 'API request failed'
-        });
         throw new Error(data.error || 'API request failed');
       }
 
-      console.log('✅ API 请求成功');
       return data;
     } catch (err) {
-      console.error('💥 API 请求异常:', {
-        message: err.message,
-        stack: err.stack,
-        url: url
-      });
+      console.error('API 请求异常:', err.message);
       throw err;
     }
   }

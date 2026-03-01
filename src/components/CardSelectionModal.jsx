@@ -17,8 +17,6 @@ export const CardSelectionModal = ({
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(null);
 
-  console.log('CardSelectionModal rendered:', { isOpen, images: images.length, isLoading });
-
   if (!isOpen) return null;
 
   const handleSelect = (index) => {
