@@ -13,6 +13,7 @@ export const CanvasViewModals = ({
   setPromptModalConfig,
   onConfirmAddStep,
   onConfirmAddAsset,
+  onConfirmAddVideoAsset,
   showCardSelectionModal,
   setShowCardSelectionModal,
   cardSelectionImages,
@@ -48,6 +49,10 @@ export const CanvasViewModals = ({
             onConfirmAddStep(prompt);
           }
         }}
+        // 视频类型时，通过分镜向导直接添加视频到画布
+        onVideoConfirm={promptModalConfig.assetType === 'video' && onConfirmAddVideoAsset
+          ? (videoData) => onConfirmAddVideoAsset(videoData)
+          : null}
         title={promptModalConfig.type === 'element' 
           ? `添加${promptModalConfig.assetType === 'image' ? '图片' : promptModalConfig.assetType === 'video' ? '视频' : promptModalConfig.assetType === 'audio' ? '音频' : '文本'}元素`
           : promptModalConfig.addAtEnd

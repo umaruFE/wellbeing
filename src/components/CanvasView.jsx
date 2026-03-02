@@ -1042,6 +1042,63 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     }
   };
 
+  // 通过分镜向导（VideoStoryboardModal）确认并直接将视频添加到画布
+  const handleConfirmAddVideoAsset = (videoData) => {
+    const phaseData = getPhaseData(activePhase);
+    if (!phaseData) return;
+
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+
+    // 处理数组和对象两种格式
+    const phase = Array.isArray(newCourseData)
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+
+    if (!phase) return;
+
+    const stepsOrSlides = phase.steps || phase.slides;
+    if (!stepsOrSlides) return;
+
+    const currentStep = stepsOrSlides.find(s => s.id === activeStepId);
+    if (!currentStep) return;
+
+    if (!currentStep.assets) currentStep.assets = [];
+    if (!currentStep.canvasAssets) currentStep.canvasAssets = [];
+
+    const w = 400;
+    const h = 225; // 16:9
+
+    const newAsset = {
+      id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'video',
+      title: videoData.title || 'AI生成视频',
+      url: videoData.videoUrl || '',
+      content: '',
+      prompt: videoData.description || '',
+      referenceImage: null,
+      videoStyle: 'realistic',
+      x: 100,
+      y: 100,
+      width: w,
+      height: h,
+      rotation: 0,
+      storyboardData: {
+        scenes: videoData.scenes,
+        referenceImages: videoData.referenceImages
+      }
+    };
+
+    currentStep.assets.push(newAsset);
+    currentStep.canvasAssets.push(newAsset);
+
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData);
+    setSelectedAssetId(newAsset.id);
+    setIsRightOpen(true);
+    setShowPromptModal(false);
+    setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
+  };
+
   const handleCardSelectionConfirm = (selectedImage) => {
     if (!pendingAssetConfig) return;
     const { type, effectivePrompt, w, h, generatedTitle, referenceImage, lyrics, duration, style } = pendingAssetConfig;
@@ -1934,6 +1991,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         setPromptModalConfig={setPromptModalConfig}
         onConfirmAddStep={handleConfirmAddStep}
         onConfirmAddAsset={handleConfirmAddAsset}
+        onConfirmAddVideoAsset={handleConfirmAddVideoAsset}
         showCardSelectionModal={showCardSelectionModal}
         setShowCardSelectionModal={setShowCardSelectionModal}
         cardSelectionImages={cardSelectionImages}
