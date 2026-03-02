@@ -115,9 +115,9 @@ export const VideoStoryboardModal = ({
       const validation = uploadService.validateFile(file, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 10);
       if (!validation.valid) {
         setError(validation.error || '文件验证失败');
-        return;
-      }
-      
+      return;
+    }
+    
       // 上传文件获取URL
       const uploadResult = await uploadService.uploadFile(file, 'reference-images');
       
@@ -631,11 +631,11 @@ export const VideoStoryboardModal = ({
                   className="w-full h-full cursor-zoom-in"
                   title="点击放大查看"
                 >
-                  <img
-                    src={scene.generatedImage}
-                    alt={`分镜${scene.sequence}`}
-                    className="w-full h-full object-cover"
-                  />
+                <img
+                  src={scene.generatedImage}
+                  alt={`分镜${scene.sequence}`}
+                  className="w-full h-full object-cover"
+                />
                 </button>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-400">
@@ -808,7 +808,8 @@ export const VideoStoryboardModal = ({
         {currentStep === 4 && (
           <button
             onClick={handleStep4Next}
-            disabled={scenes.filter(s => s.generatedImage).length === 0}
+            // 分镜图全部生成后才能进入下一步
+            disabled={scenes.length === 0 || scenes.some(s => !s.generatedImage)}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
           >
             下一步

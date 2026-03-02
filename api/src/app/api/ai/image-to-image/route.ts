@@ -500,15 +500,15 @@ export async function POST(request: NextRequest) {
     // 立即返回任务ID列表，不等待任务完成
     return NextResponse.json(
       {
-        success: true,
-        tasks: taskResponses.map(task => ({
-          promptId: task.promptId,
-          number: task.number,
-          status: 'pending'
-        })),
-        prompt,
-        width,
-        height
+      success: true,
+      tasks: taskResponses.map(task => ({
+        promptId: task.promptId,
+        number: task.number,
+        status: 'pending'
+      })),
+      prompt,
+      width,
+      height
       },
       { headers: corsHeaders() }
     );

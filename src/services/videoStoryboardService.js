@@ -292,7 +292,7 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
       .filter(s => s && s.generatedImage)
       .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
       .map(s => s.generatedImage);
-
+    
     if (sceneImages.length === 0) {
       throw new Error('没有可用的分镜图片');
     }
@@ -344,7 +344,9 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
  * @param {number} interval - 轮询间隔（毫秒）
  * @returns {Promise<string>} - 视频URL
  */
-export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 120, interval = 3000) => {
+// 默认轮询时长从约 6 分钟提升到约 60 分钟：
+// 1200 次 * 3000ms ≈ 3,600,000ms（60 分钟）
+export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 1200, interval = 3000) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const response = await fetch(`${API_BASE_URL}/api/ai/task-status/${promptId}`, {
