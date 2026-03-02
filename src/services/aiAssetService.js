@@ -1,5 +1,6 @@
 // AI素材生成服务（图片、音频、视频）
 const AI_API_BASE_URL = '/ai';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 export const aiAssetService = {
   // 生成图片
@@ -525,7 +526,7 @@ export const aiAssetService = {
     const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
 
     try {
-      const response = await fetch('/api/ai/image-to-image', {
+      const response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

@@ -15,6 +15,7 @@ import {
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
 import { getAssetIcon } from '../utils';
 import { PromptInputModal } from './PromptInputModal';
+import { VideoStoryboardModal } from './VideoStoryboardModal';
 import { AssetEditorPanel } from './AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
 import { aiAssetService } from '../services/aiAssetService';
@@ -29,6 +30,8 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const isCourseDataArray = Array.isArray(initialData);
   const canvasData = initialConfig?.canvasData || null;
   const readingMaterialsData = initialConfig?.readingMaterialsData || null;
+  const userId = initialConfig?.userId || null;
+  const organizationId = initialConfig?.organizationId || null;
   
   // 合并 courseData、canvasData 和 readingMaterialsData
   const mergeData = (courseData, canvasData, readingMaterialsData) => {
@@ -135,6 +138,13 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [isGeneratingReadingMaterial, setIsGeneratingReadingMaterial] = useState(false);
   const [showAddPageToMaterialModal, setShowAddPageToMaterialModal] = useState(null);
   const [isGeneratingPageToMaterial, setIsGeneratingPageToMaterial] = useState(false);
+  
+  // 视频分镜模态框状态
+  const [showVideoStoryboardModal, setShowVideoStoryboardModal] = useState(false);
+  const [videoStoryboardConfig, setVideoStoryboardConfig] = useState({
+    description: '',
+    referenceImages: []
+  });
   
   // 历史生成记录
   const [generationHistory, setGenerationHistory] = useState([]);
@@ -609,7 +619,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   };
 
   // 确认添加资产
-  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null) => {
+  const handleConfirmAddAsset = async (prompt, inputMode = 'ai', videoStyle = null, imageSize = null, referenceImage = null, lyrics = null, audioConfig = null) => {
     const { pageId, assetType: type } = promptModalConfig;
     if (!pageId || !type) return;
     
@@ -1314,8 +1324,21 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       <PromptInputModal
         isOpen={showPromptModal}
         onClose={() => { setShowPromptModal(false); setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null }); }}
-        onConfirm={(prompt, inputMode, videoStyle, imageSize) => {
-          if (promptModalConfig.type === 'asset') handleConfirmAddAsset(prompt, inputMode, videoStyle, imageSize);
+        onConfirm={(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages) => {
+          if (promptModalConfig.type === 'asset') {
+            // 如果是视频类型，打开视频分镜模态框
+            if (promptModalConfig.assetType === 'video') {
+              setVideoStoryboardConfig({
+                description: prompt,
+                referenceImages: videoReferenceImages || []
+              });
+              setShowVideoStoryboardModal(true);
+              setShowPromptModal(false);
+              setPromptModalConfig({ type: null, phaseKey: null, pageId: null, assetType: null });
+            } else {
+              handleConfirmAddAsset(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig);
+            }
+          }
           else if (promptModalConfig.type === 'page' && promptModalConfig.stepId) handleConfirmAddPageToStep(prompt);
           else handleConfirmAddStep(prompt);
         }}
@@ -1375,6 +1398,76 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           isLoading={isGeneratingPageToMaterial}
         />
       )}
+
+      {/* Video Storyboard Modal */}
+      <VideoStoryboardModal
+        isOpen={showVideoStoryboardModal}
+        onClose={() => {
+          setShowVideoStoryboardModal(false);
+          setVideoStoryboardConfig({ description: '', referenceImages: [] });
+        }}
+        initialDescription={videoStoryboardConfig.description}
+        initialReferenceImages={videoStoryboardConfig.referenceImages}
+        userId={userId}
+        organizationId={organizationId}
+        onConfirm={(videoData) => {
+          // 将生成的视频添加到当前页面
+          const { pageId } = promptModalConfig;
+          if (!pageId) return;
+          
+          const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
+          const canvasSize = getCanvasSize();
+          const w = 400, h = 225; // 16:9 视频尺寸
+          
+          const newAsset = {
+            id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            type: 'video',
+            title: videoData.title || 'AI生成视频',
+            url: videoData.videoUrl || '',
+            content: '',
+            prompt: videoData.description,
+            referenceImage: null,
+            videoStyle: 'realistic',
+            x: (canvasSize.width - w) / 2,
+            y: (canvasSize.height - h) / 2,
+            width: w,
+            height: h,
+            rotation: 0,
+            // 存储分镜数据
+            storyboardData: {
+              scenes: videoData.scenes,
+              referenceImages: videoData.referenceImages
+            }
+          };
+          
+          const newPages = pages.map(page => {
+            if (page.id === pageId) {
+              return { ...page, canvasAssets: [...(page.canvasAssets || []), newAsset] };
+            }
+            return page;
+          });
+          
+          setPages(newPages);
+          saveToHistory(newPages);
+          setSelectedAssetId(newAsset.id);
+          setShowVideoStoryboardModal(false);
+          setVideoStoryboardConfig({ description: '', referenceImages: [] });
+          
+          // 更新 courseData
+          const updatedPage = newPages.find(p => p.id === pageId);
+          if (updatedPage && updatedPage.slideId) {
+            const newCourseData = { ...courseData };
+            Object.values(newCourseData).forEach(phase => {
+              const step = phase.steps.find(s => s.id === updatedPage.slideId);
+              if (step) {
+                step.assets = updatedPage.canvasAssets || [];
+                step.readingMaterials = updatedPage.canvasAssets || [];
+              }
+            });
+            setCourseData(newCourseData);
+          }
+        }}
+      />
 
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">

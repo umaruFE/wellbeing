@@ -352,6 +352,34 @@ export const VideoMaterialManagement = () => {
                   className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                 />
               </div>
+
+              {/* 运镜 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  运镜
+                </label>
+                <input
+                  type="text"
+                  value={modalData.camera_movement || ''}
+                  onChange={(e) => handleInputChange('camera_movement', e.target.value)}
+                  placeholder="请输入运镜方式（可选）"
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              {/* 画面内容 */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  画面内容
+                </label>
+                <textarea
+                  value={modalData.scene_content || ''}
+                  onChange={(e) => handleInputChange('scene_content', e.target.value)}
+                  placeholder="请输入画面内容描述（可选）"
+                  rows={3}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                />
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-200 bg-slate-50">

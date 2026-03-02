@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { X, Type, Edit, Wand2, RectangleHorizontal, Upload, Image as ImageIcon, Clock, Music } from 'lucide-react';
+import { X, Type, Edit, Wand2, RectangleHorizontal, Upload, Image as ImageIcon, Clock, Music, Video, Plus, Trash2 } from 'lucide-react';
 import PromptOptimizer from './PromptOptimizer';
+import { VideoStoryboardModal } from './VideoStoryboardModal';
 
 const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
@@ -20,12 +21,16 @@ export const PromptInputModal = ({
   initialContent = '',
   type = 'text',
   assetType = null,
-  isLoading = false
+  isLoading = false,
+  userId = null,
+  organizationId = null,
+  onVideoConfirm = null
 }) => {
   const [content, setContent] = useState(initialContent);
   const [showOptimizer, setShowOptimizer] = useState(false);
   const [selectedRatio, setSelectedRatio] = useState(ASPECT_RATIOS[0]);
   const [referenceImage, setReferenceImage] = useState(null);
+  const [referenceImages, setReferenceImages] = useState([]); // 视频支持多张参考图
   const [lyrics, setLyrics] = useState('');
   const [audioDuration, setAudioDuration] = useState(30);
   const [audioStyle, setAudioStyle] = useState('');
@@ -57,11 +62,45 @@ export const PromptInputModal = ({
       setContent(initialContent || '');
       setSelectedRatio(ASPECT_RATIOS[0]);
       setReferenceImage(null);
+      setReferenceImages([]);
       setLyrics('');
       setAudioDuration(30);
       setAudioStyle('');
     }
   }, [isOpen, initialContent]);
+
+  // 如果是视频类型，直接显示 VideoStoryboardModal
+  if (assetType === 'video' && isOpen) {
+    return (
+      <VideoStoryboardModal
+        isOpen={isOpen}
+        onClose={onClose}
+        initialDescription={initialContent}
+        initialReferenceImages={[]}
+        userId={userId}
+        organizationId={organizationId}
+        onConfirm={(videoData) => {
+          if (onVideoConfirm) {
+            onVideoConfirm(videoData);
+          } else {
+            // 如果没有提供 onVideoConfirm，调用默认的 onConfirm
+            // 传递视频数据，但保持兼容性
+            onConfirm(
+              videoData.description || '',
+              'ai',
+              null,
+              null,
+              null,
+              null,
+              null,
+              videoData.referenceImages || []
+            );
+          }
+          onClose();
+        }}
+      />
+    );
+  }
 
   if (!isOpen) return null;
 
@@ -75,9 +114,12 @@ export const PromptInputModal = ({
       duration: audioDuration,
       style: selectedStyle?.tags || ''
     } : null;
-    onConfirm(content, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig);
+    // 视频类型传递多张参考图片
+    const videoReferenceImages = assetType === 'video' ? referenceImages : null;
+    onConfirm(content, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages);
     setContent('');
     setReferenceImage(null);
+    setReferenceImages([]);
     setLyrics('');
     setAudioDuration(30);
     setAudioStyle('');
@@ -86,8 +128,26 @@ export const PromptInputModal = ({
   const handleClose = () => {
     setContent('');
     setReferenceImage(null);
+    setReferenceImages([]);
     setLyrics('');
     onClose();
+  };
+
+  // 视频类型：上传多张参考图片
+  const handleVideoReferenceUpload = (e) => {
+    const files = Array.from(e.target.files);
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setReferenceImages(prev => [...prev, reader.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 删除视频参考图片
+  const handleRemoveVideoReferenceImage = (index) => {
+    setReferenceImages(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleReferenceUpload = (e) => {
@@ -296,6 +356,68 @@ export const PromptInputModal = ({
                 <p className="text-xs text-slate-400 mt-1">
                   提示：输入歌词后，AI会根据歌词生成歌曲；留空则生成纯音乐
                 </p>
+              </div>
+            </>
+          )}
+
+          {assetType === 'video' && (
+            <>
+              <div>
+                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                  <Video className="w-4 h-4" />
+                  人物参考图片（可选）
+                </label>
+                <p className="text-xs text-slate-400 mb-2">
+                  上传人物参考图片，AI会保持人物形象一致性生成分镜
+                </p>
+                <div className="space-y-2">
+                  {referenceImages.map((img, index) => (
+                    <div key={index} className="relative group">
+                      <img 
+                        src={img} 
+                        alt={`参考${index + 1}`}
+                        className="w-full h-20 object-cover rounded border border-slate-200"
+                      />
+                      <button
+                        onClick={() => handleRemoveVideoReferenceImage(index)}
+                        disabled={isLoading}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleVideoReferenceUpload}
+                      disabled={isLoading}
+                    />
+                    <div className="flex flex-col items-center">
+                      <Plus className="w-5 h-5 text-slate-400 mb-1" />
+                      <span className="text-xs text-slate-500">点击上传参考图片</span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <Video className="w-5 h-5 text-purple-600 mt-0.5" />
+                  <div>
+                    <h4 className="text-sm font-medium text-purple-800">视频生成流程</h4>
+                    <ol className="text-xs text-purple-600 mt-1 space-y-1 list-decimal list-inside">
+                      <li>输入视频描述</li>
+                      <li>上传人物参考图片（可选）</li>
+                      <li>AI生成分镜脚本</li>
+                      <li>为每个分镜生成图片</li>
+                      <li>合成最终视频</li>
+                    </ol>
+                  </div>
+                </div>
               </div>
             </>
           )}

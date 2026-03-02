@@ -43,8 +43,8 @@ interface TaskStatus {
   };
 }
 
-// 下载图片并转换为base64
-async function downloadImageAsBase64(imageUrl: string): Promise<string> {
+// 上传图片到 ComfyUI
+async function uploadImageToComfyUI(imageUrl: string): Promise<string> {
   try {
     // 如果是本地路径，需要处理
     let fullUrl = imageUrl;
@@ -52,26 +52,54 @@ async function downloadImageAsBase64(imageUrl: string): Promise<string> {
       fullUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${imageUrl}`;
     }
 
+    // 下载图片
     const response = await fetch(fullUrl);
     if (!response.ok) {
       throw new Error(`下载图片失败: ${response.status} ${response.statusText}`);
     }
 
     const arrayBuffer = await response.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString('base64');
     
     // 检测图片类型
     const contentType = response.headers.get('content-type') || 'image/png';
-    return `data:${contentType};base64,${base64}`;
+    const extension = contentType.split('/')[1] || 'png';
+    const filename = `image_${Date.now()}.${extension}`;
+    
+    // 创建 FormData
+    const formData = new FormData();
+    const blob = new Blob([arrayBuffer], { type: contentType });
+    formData.append('image', blob, filename);
+    
+    // 上传到 ComfyUI
+    const uploadResponse = await fetch(`${AI_API_BASE_URL}/upload/image`, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error(`上传图片到 ComfyUI 失败: ${uploadResponse.status} ${uploadResponse.statusText}`, errorText);
+      throw new Error(`上传图片到 ComfyUI 失败: ${uploadResponse.status} ${uploadResponse.statusText}`);
+    }
+
+    const uploadData = await uploadResponse.json();
+    // ComfyUI 返回的格式通常是 { name: "ComfyUI/input/filename.png" }
+    const imagePath = uploadData.name || uploadData.filename || uploadData.path;
+    
+    if (!imagePath) {
+      throw new Error('ComfyUI 返回的图片路径为空');
+    }
+
+    console.log(`图片上传成功，路径: ${imagePath}`);
+    return imagePath;
   } catch (error) {
-    console.error('下载图片失败:', error);
+    console.error('上传图片到 ComfyUI 失败:', error);
     throw error;
   }
 }
 
 // 创建图生图工作流
-function createImageToImageWorkflow(prompt: string, width: number, height: number, seed: number, imageBase64: string): Workflow {
+function createImageToImageWorkflow(prompt: string, width: number, height: number, seed: number, imagePath: string): Workflow {
   return {
     "2": {
       "inputs": {
@@ -105,8 +133,7 @@ function createImageToImageWorkflow(prompt: string, width: number, height: numbe
     },
     "5": {
       "inputs": {
-        "image": imageBase64,
-        "upload": "image"
+        "image": imagePath
       },
       "class_type": "LoadImage",
       "_meta": {
@@ -217,8 +244,13 @@ function createImageToImageWorkflow(prompt: string, width: number, height: numbe
 }
 
 // 提交图生图任务
-async function submitImageToImageTask(prompt: string, width: number, height: number, seed: number, imageBase64: string): Promise<TaskResponse> {
-  const workflow = createImageToImageWorkflow(prompt, width, height, seed, imageBase64);
+async function submitImageToImageTask(prompt: string, width: number, height: number, seed: number, imageUrl: string): Promise<TaskResponse> {
+  // 上传图片到 ComfyUI 并获取路径
+  console.log(`开始上传图片到 ComfyUI: ${imageUrl}`);
+  const imagePath = await uploadImageToComfyUI(imageUrl);
+  console.log(`图片上传完成，路径: ${imagePath}`);
+  
+  const workflow = createImageToImageWorkflow(prompt, width, height, seed, imagePath);
 
   console.log(`提交图生图任务: ${AI_API_BASE_URL}/prompt`);
   console.log(`请求参数:`, { prompt, width, height, seed });
@@ -329,7 +361,9 @@ async function downloadImage(filename: string, subfolder: string, type: string):
 // 上传到OSS
 async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Promise<string> {
   const formData = new FormData();
-  formData.append('file', new Blob([buffer]), filename);
+  // 将 Buffer 转换为 Uint8Array 以兼容 Blob
+  const uint8Array = new Uint8Array(buffer);
+  formData.append('file', new Blob([uint8Array]), filename);
   formData.append('folder', folder);
 
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/upload`, {
@@ -344,6 +378,20 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Pr
 
   const data = await response.json();
   return data.url;
+}
+
+// CORS 响应头辅助函数
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
+// OPTIONS 处理函数 - 处理预检请求
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders() });
 }
 
 // POST /api/ai/image-to-image - 图生图（立即返回任务ID）
@@ -363,22 +411,18 @@ export async function POST(request: NextRequest) {
     if (!prompt) {
       return NextResponse.json(
         { error: '缺少prompt参数' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
     if (!imageUrl) {
       return NextResponse.json(
         { error: '缺少imageUrl参数' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
     console.log(`开始图生图，参考图片: ${imageUrl}`);
-
-    // 下载参考图片并转换为base64
-    const imageBase64 = await downloadImageAsBase64(imageUrl);
-    console.log(`参考图片已下载并转换，大小: ${imageBase64.length} 字符`);
 
     const startTime = Date.now();
     const tasks = [];
@@ -386,7 +430,7 @@ export async function POST(request: NextRequest) {
     // 提交所有任务
     for (let i = 0; i < count; i++) {
       const seed = Date.now() + i * 1000;
-      const taskPromise = submitImageToImageTask(prompt, width, height, seed, imageBase64);
+      const taskPromise = submitImageToImageTask(prompt, width, height, seed, imageUrl);
       tasks.push(taskPromise);
     }
 
@@ -440,17 +484,20 @@ export async function POST(request: NextRequest) {
     }
 
     // 立即返回任务ID列表，不等待任务完成
-    return NextResponse.json({
-      success: true,
-      tasks: taskResponses.map(task => ({
-        promptId: task.promptId,
-        number: task.number,
-        status: 'pending'
-      })),
-      prompt,
-      width,
-      height
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        tasks: taskResponses.map(task => ({
+          promptId: task.promptId,
+          number: task.number,
+          status: 'pending'
+        })),
+        prompt,
+        width,
+        height
+      },
+      { headers: corsHeaders() }
+    );
   } catch (error) {
     console.error('提交图生图任务失败:', error);
     return NextResponse.json(
@@ -458,7 +505,7 @@ export async function POST(request: NextRequest) {
         error: '提交图生图任务失败',
         details: error instanceof Error ? error.message : '未知错误'
       },
-      { status: 500 }
+      { status: 500, headers: corsHeaders() }
     );
   }
 }

@@ -48,6 +48,56 @@ function extractAudioInfo(taskData: any) {
   };
 }
 
+// 提取视频信息
+function extractVideoInfo(taskData: any) {
+  if (!taskData || !taskData.outputs) {
+    return null;
+  }
+
+  const outputs = taskData.outputs;
+  // VHS_VideoCombine 节点输出视频
+  const saveVideoNode = Object.values(outputs).find((node: any) => {
+    // 检查是否有视频文件（通常是 gifs 数组，但实际上是视频）
+    if (node.gifs && node.gifs.length > 0) {
+      return true;
+    }
+    // 或者检查文件名后缀
+    if (node.images && node.images.length > 0) {
+      const filename = node.images[0].filename;
+      if (filename.endsWith('.mp4') || filename.endsWith('.webm') || filename.endsWith('.mov')) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  if (!saveVideoNode) {
+    return null;
+  }
+
+  const node = saveVideoNode as any;
+  // 优先从 gifs 数组获取
+  if (node.gifs && node.gifs.length > 0) {
+    const videoInfo = node.gifs[0];
+    return {
+      filename: videoInfo.filename,
+      subfolder: videoInfo.subfolder || '',
+      type: videoInfo.type || 'output'
+    };
+  }
+  // 否则从 images 数组获取
+  if (node.images && node.images.length > 0) {
+    const videoInfo = node.images[0];
+    return {
+      filename: videoInfo.filename,
+      subfolder: videoInfo.subfolder || '',
+      type: videoInfo.type || 'output'
+    };
+  }
+
+  return null;
+}
+
 // 下载文件
 async function downloadFile(filename: string, subfolder: string, type: string): Promise<Buffer> {
   const params = new URLSearchParams({
@@ -156,6 +206,13 @@ export async function GET(
         fileInfo = extractAudioInfo(taskData);
         folder = 'ai-generated-audio';
         contentType = 'audio/flac';
+      }
+
+      // 如果没有音频，尝试提取视频
+      if (!fileInfo) {
+        fileInfo = extractVideoInfo(taskData);
+        folder = 'ai-generated-videos';
+        contentType = 'video/mp4';
       }
 
       console.log(`fileInfo:`, fileInfo);
