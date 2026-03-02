@@ -622,9 +622,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               ? `AI生成：${basePrompt.substring(0, 15)}...`
               : `New ${type}`,
             referenceImage,
-            lyrics: lyrics,
-            duration: audioDuration,
-            style: audioStyle
+            lyrics: lyrics
           };
           setPendingAssetConfig(pendingConfig);
           
