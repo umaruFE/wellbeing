@@ -338,7 +338,7 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
 };
 
 /**
- * 轮询任务状态并获取视频URL
+ * 轮询视频任务状态并获取视频URL（走视频专用的 ComfyUI 实例）
  * @param {string} promptId - 任务ID
  * @param {number} maxAttempts - 最大轮询次数
  * @param {number} interval - 轮询间隔（毫秒）
@@ -349,7 +349,9 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
 export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 1200, interval = 3000) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ai/task-status/${promptId}`, {
+      // 视频任务改为调用后端专门的 /api/ai/video-task-status 接口，
+      // 避免和图片/音频任务混用不同的 ComfyUI 实例
+      const response = await fetch(`${API_BASE_URL}/api/ai/video-task-status/${promptId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
