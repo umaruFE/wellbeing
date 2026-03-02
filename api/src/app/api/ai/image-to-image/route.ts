@@ -243,13 +243,10 @@ function createImageToImageWorkflow(prompt: string, width: number, height: numbe
   };
 }
 
-// 提交图生图任务
-async function submitImageToImageTask(prompt: string, width: number, height: number, seed: number, imageUrl: string): Promise<TaskResponse> {
-  // 上传图片到 ComfyUI 并获取路径
-  console.log(`开始上传图片到 ComfyUI: ${imageUrl}`);
-  const imagePath = await uploadImageToComfyUI(imageUrl);
-  console.log(`图片上传完成，路径: ${imagePath}`);
-  
+// 提交图生图任务（使用已经上传到 ComfyUI 的图片路径）
+async function submitImageToImageTask(prompt: string, width: number, height: number, seed: number, imagePath: string): Promise<TaskResponse> {
+  console.log(`使用已上传的参考图片路径提交任务: ${imagePath}`);
+
   const workflow = createImageToImageWorkflow(prompt, width, height, seed, imagePath);
 
   console.log(`提交图生图任务: ${AI_API_BASE_URL}/prompt`);
@@ -425,12 +422,29 @@ export async function POST(request: NextRequest) {
     console.log(`开始图生图，参考图片: ${imageUrl}`);
 
     const startTime = Date.now();
+
+    // 先将参考图片上传到 ComfyUI，一次请求只上传一次
+    console.log(`开始上传参考图片到 ComfyUI: ${imageUrl}`);
+    let imagePath: string;
+    try {
+      imagePath = await uploadImageToComfyUI(imageUrl);
+      console.log(`参考图片上传到 ComfyUI 完成，路径: ${imagePath}`);
+    } catch (error) {
+      console.error('参考图片上传到 ComfyUI 失败:', error);
+      return NextResponse.json(
+        {
+          error: '参考图片上传到 ComfyUI 失败',
+          details: error instanceof Error ? error.message : '未知错误'
+        },
+        { status: 500, headers: corsHeaders() }
+      );
+    }
     const tasks = [];
 
-    // 提交所有任务
+    // 提交所有任务（共用同一张已上传的参考图片）
     for (let i = 0; i < count; i++) {
       const seed = Date.now() + i * 1000;
-      const taskPromise = submitImageToImageTask(prompt, width, height, seed, imageUrl);
+      const taskPromise = submitImageToImageTask(prompt, width, height, seed, imagePath);
       tasks.push(taskPromise);
     }
 
