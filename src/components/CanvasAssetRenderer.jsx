@@ -219,12 +219,33 @@ export const CanvasAssetRenderer = ({
               )
             ) : (
               <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
+                {(() => {
+                  try {
+                    console.log('[CanvasAssetRenderer] render non-text asset:', {
+                      id: asset.id,
+                      type: asset.type,
+                      url: asset.url,
+                      title: asset.title,
+                    });
+                  } catch (e) {
+                    // 避免渲染时报错影响 UI
+                  }
+                  return null;
+                })()}
                 {asset.url ? (
-                  <img 
-                    src={asset.url} 
-                    alt={asset.title} 
-                    className="w-full h-full object-cover block select-none pointer-events-none" 
-                  />
+                  asset.type === 'video' ? (
+                    <video
+                      src={asset.url}
+                      className="w-full h-full object-cover block select-none pointer-events-none"
+                      controls={false}
+                    />
+                  ) : (
+                    <img 
+                      src={asset.url} 
+                      alt={asset.title} 
+                      className="w-full h-full object-cover block select-none pointer-events-none" 
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
                     {asset.type === 'image' ? 'No Image' : asset.type === 'video' ? 'No Video' : 'No Audio'}
