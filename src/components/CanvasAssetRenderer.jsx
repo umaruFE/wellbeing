@@ -6,12 +6,13 @@ import { RotateCw, Play, Music, Copy, Trash2, Type } from 'lucide-react';
  * 支持文本、图片、视频、音频的渲染和编辑
  * 支持文本双击编辑功能
  */
-export const CanvasAssetRenderer = ({ 
-  assets, 
-  isEditable, 
-  onMouseDown, 
-  selectedAssetId, 
-  onCopyAsset, 
+export const CanvasAssetRenderer = ({
+  assets,
+  isEditable,
+  onMouseDown,
+  onClick, // 添加点击回调
+  selectedAssetId,
+  onCopyAsset,
   onDeleteAsset,
   onAssetChange, // (assetId, field, value) => void - 用于更新资产属性
   editingTextAssetId, // 正在编辑的文本资产ID
@@ -65,7 +66,10 @@ export const CanvasAssetRenderer = ({
   }
 
   return (
-    <>
+    <div className="absolute inset-0" onClick={(e) => {
+      e.stopPropagation();
+      onCanvasClick?.();
+    }}>
       {assets.map((asset, index) => {
         const isEditing = currentEditingAssetId === asset.id;
 
@@ -83,6 +87,12 @@ export const CanvasAssetRenderer = ({
               if (isEditable && !isEditing) {
                 e.stopPropagation();
                 onMouseDown?.(e, asset.id, 'dragging');
+              }
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isEditable && !isEditing && onClick) {
+                onClick(asset.id);
               }
             }}
             style={{ 
@@ -217,12 +227,33 @@ export const CanvasAssetRenderer = ({
               )
             ) : (
               <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
+                {(() => {
+                  try {
+                    console.log('[CanvasAssetRenderer] render non-text asset:', {
+                      id: asset.id,
+                      type: asset.type,
+                      url: asset.url,
+                      title: asset.title,
+                    });
+                  } catch (e) {
+                    // 避免渲染时报错影响 UI
+                  }
+                  return null;
+                })()}
                 {asset.url ? (
-                  <img 
-                    src={asset.url} 
-                    alt={asset.title} 
-                    className="w-full h-full object-cover block select-none pointer-events-none" 
-                  />
+                  asset.type === 'video' ? (
+                    <video
+                      src={asset.url}
+                      className="w-full h-full object-cover block select-none pointer-events-none"
+                      controls={false}
+                    />
+                  ) : (
+                    <img 
+                      src={asset.url} 
+                      alt={asset.title} 
+                      className="w-full h-full object-cover block select-none pointer-events-none" 
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
                     {asset.type === 'image' ? 'No Image' : asset.type === 'video' ? 'No Video' : 'No Audio'}
@@ -244,7 +275,7 @@ export const CanvasAssetRenderer = ({
           </div>
         );
       })}
-    </>
+    </div>
   );
 };
 

@@ -34,10 +34,10 @@ import {
   BookOpen,
   Copy
 } from 'lucide-react';
-import { getAssetIcon } from '../utils';
-import { PromptInputModal } from './PromptInputModal';
-import { WORD_DOC_DATA } from '../constants';
-import { CanvasAssetRenderer } from './CanvasAssetRenderer';
+import { getAssetIcon } from '../../../utils';
+import { PromptInputModal } from '../../../components/PromptInputModal';
+import { CardSelectionModal } from '../../../components/CardSelectionModal';
+import { CanvasAssetRenderer } from '../../../components/CanvasAssetRenderer';
 
 /**
  * ReadingMaterialEditor - 阅读材料画板编辑器
@@ -74,6 +74,11 @@ export const ReadingMaterialEditor = ({
   const [addPageInsertIndex, setAddPageInsertIndex] = useState(null);
   const [expandedPhases, setExpandedPhases] = useState(['engage', 'empower', 'execute', 'elevate']);
 
+  // 图片抽卡选择模态框状态
+  const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
+  const [cardSelectionImages, setCardSelectionImages] = useState([]);
+  const [pendingAssetConfig, setPendingAssetConfig] = useState(null); // 待确认的资源配置
+
   // 按阶段组织页面 - 使用与CanvasView相同的结构
   const organizePagesByPhase = () => {
     const phaseConfig = {
@@ -86,11 +91,8 @@ export const ReadingMaterialEditor = ({
     return Object.entries(phaseConfig).map(([key, config]) => {
       const phasePages = pages.filter(page => {
         if (!page.slideId) return false;
-        const slide = WORD_DOC_DATA.find(s => s.id === page.slideId);
-        if (!slide) return false;
-        // 匹配阶段：Engage, Empower, Execute, Elevate
-        const phaseName = key.charAt(0).toUpperCase() + key.slice(1);
-        return slide.phase.includes(phaseName);
+        if (!page.phaseKey) return false;
+        return page.phaseKey === key;
       }).map((page) => ({
         ...page,
         indexInPages: pages.findIndex(p => p.id === page.id)
@@ -201,36 +203,63 @@ export const ReadingMaterialEditor = ({
     }
 
     setIsGeneratingAsset(true);
-    
-    // 模拟AI生成
+
+    // 模拟AI生成（实际应该调用API）
     setTimeout(() => {
+      // 如果是图片类型，生成多张图片供选择
+      if (type === 'image') {
+        const generatedImages = [];
+        for (let i = 0; i < 4; i++) {
+          const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+          generatedImages.push({
+            url: `https://placehold.co/400x400/${randomColor}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}+${i + 1}`,
+            prompt: prompt || `图片 ${i + 1} 的生成提示词`
+          });
+        }
+
+        // 保存待确认的配置
+        setPendingAssetConfig({
+          pageId,
+          type,
+          prompt
+        });
+
+        // 显示抽卡选择模态框
+        setCardSelectionImages(generatedImages);
+        setShowCardSelectionModal(true);
+        setIsGeneratingAsset(false);
+        setShowPromptModal(false);
+        return;
+      }
+
+      // 非图片类型保持原有逻辑
       let w = 300, h = 200;
       if (type === 'text') { w = 300; h = 100; }
-      // ... rest of the logic ...
 
-      const generatedTitle = prompt 
-        ? `AI生成：${prompt.substring(0, 15)}...` 
+      const generatedTitle = prompt
+        ? `AI生成：${prompt.substring(0, 15)}...`
         : (type === 'text' ? '文本' : type === 'image' ? '图片' : type === 'video' ? '视频' : '');
-      const generatedUrl = type === 'text' 
-        ? '' 
+      const generatedUrl = type === 'text'
+        ? ''
         : `https://placehold.co/${w}x${h}/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+${Date.now().toString().slice(-4)}`;
+
+      const newAsset = {
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        title: generatedTitle,
+        url: generatedUrl,
+        content: type === 'text' ? (prompt || '双击编辑文本') : '',
+        prompt: prompt || '',
+        referenceImage: null,
+        x: (canvasSize.width - w) / 2,
+        y: (canvasSize.height - h) / 2,
+        width: w,
+        height: h,
+        rotation: 0
+      };
 
       onPagesChange(prev => prev.map(page => {
         if (page.id === pageId) {
-          const newAsset = {
-            id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            type,
-            title: generatedTitle,
-            url: generatedUrl,
-            content: type === 'text' ? (prompt || '双击编辑文本') : '',
-            prompt: prompt || '',
-            referenceImage: null,
-            x: (canvasSize.width - w) / 2,
-            y: (canvasSize.height - h) / 2,
-            width: w,
-            height: h,
-            rotation: 0
-          };
           return {
             ...page,
             canvasAssets: [...(page.canvasAssets || []), newAsset]
@@ -238,11 +267,49 @@ export const ReadingMaterialEditor = ({
         }
         return page;
       }));
-      
+
       setIsGeneratingAsset(false);
       setShowPromptModal(false);
       setPromptModalConfig({ pageId: null, assetType: null });
     }, 1500);
+  };
+
+  // 处理图片抽卡选择确认
+  const handleCardSelectionConfirm = (selectedImage, selectedIndex) => {
+    if (!pendingAssetConfig) return;
+
+    const { pageId, type, prompt } = pendingAssetConfig;
+
+    const w = 400, h = 400;
+    const newAsset = {
+      id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      title: `AI生成：${prompt ? prompt.substring(0, 15) + '...' : '图片'}`,
+      url: selectedImage.url,
+      content: '',
+      prompt: prompt || '',
+      referenceImage: null,
+      x: (canvasSize.width - w) / 2,
+      y: (canvasSize.height - h) / 2,
+      width: w,
+      height: h,
+      rotation: 0
+    };
+
+    onPagesChange(prev => prev.map(page => {
+      if (page.id === pageId) {
+        return {
+          ...page,
+          canvasAssets: [...(page.canvasAssets || []), newAsset]
+        };
+      }
+      return page;
+    }));
+
+    // 关闭模态框并清理状态
+    setShowCardSelectionModal(false);
+    setCardSelectionImages([]);
+    setPendingAssetConfig(null);
   };
 
   // 删除资产
@@ -575,7 +642,6 @@ export const ReadingMaterialEditor = ({
         );
       })}
 
-         
           </div>
         </div>
 
@@ -599,6 +665,20 @@ export const ReadingMaterialEditor = ({
           : `例如：${promptModalConfig.assetType === 'image' ? '生成一张关于动物的图片' : promptModalConfig.assetType === 'video' ? '生成一个教学视频' : '输入文本内容'}...`}
         type={promptModalConfig.type === 'page' ? 'session' : 'element'}
         isLoading={promptModalConfig.type === 'page' ? false : isGeneratingAsset}
+      />
+
+      {/* 图片抽卡选择模态框 */}
+      <CardSelectionModal
+        isOpen={showCardSelectionModal}
+        onClose={() => {
+          setShowCardSelectionModal(false);
+          setCardSelectionImages([]);
+          setPendingAssetConfig(null);
+        }}
+        title="选择图片"
+        images={cardSelectionImages}
+        isLoading={isGeneratingAsset}
+        onConfirm={handleCardSelectionConfirm}
       />
     </div>
   );

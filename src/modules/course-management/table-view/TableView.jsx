@@ -17,15 +17,17 @@ import {
   X,
   Sparkles
 } from 'lucide-react';
-import { WORD_DOC_DATA } from '../constants';
-import { ImagePreviewModal } from './ImagePreviewModal';
-import { BookmarkIcon } from './BookmarkIcon';
-import { HistoryVersionView } from './HistoryVersionView';
-import { PromptInputModal } from './PromptInputModal';
+import { ImagePreviewModal } from '../../../components/ImagePreviewModal';
+import { BookmarkIcon } from '../../../components/BookmarkIcon';
+import { HistoryVersionView } from '../../../components/HistoryVersionView';
+import { PromptInputModal } from '../../../components/PromptInputModal';
+import { CardSelectionModal } from '../../../components/CardSelectionModal';
+import { aiAssetService } from '../../../services/aiAssetService';
+import { uploadService } from '../../../services/uploadService';
 
-export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
+export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateToCanvas, onReady }, ref) => {
   // 初始化数据时，确保每一行都有 script 字段
-  const [slides, setSlides] = useState(WORD_DOC_DATA.map(s => ({...s, script: s.script || ''})));
+  const [slides, setSlides] = useState([]);
   const [previewImage, setPreviewImage] = useState(null);
   const [generatingMedia, setGeneratingMedia] = useState({});
   const [generatingPdf, setGeneratingPdf] = useState({}); // PDF生成状态
@@ -52,6 +54,11 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   const [showPhaseHistoryModal, setShowPhaseHistoryModal] = useState(null); // { phaseId }
   const [showRegeneratePhaseModal, setShowRegeneratePhaseModal] = useState(null); // { phaseId }
   const [showHistorySessionModal, setShowHistorySessionModal] = useState(null); // { phaseId, slideId } - 环节历史生成
+
+  // 图片抽卡选择模态框状态
+  const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
+  const [cardSelectionImages, setCardSelectionImages] = useState([]);
+  const [pendingSlideConfig, setPendingSlideConfig] = useState(null); // 待确认的幻灯片配置
 
   // 生成示例阅读材料的辅助函数
   const generateSampleReadingMaterial = (slide, index = 0) => {
@@ -122,57 +129,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   };
 
   // 扩展数据结构：支持多个PPT和阅读素材
-  const [phases, setPhases] = useState([
-    { 
-      id: 'Engage', 
-      label: 'Engage (引入)', 
-      color: 'bg-purple-50 border-purple-200 text-purple-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Engage')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        // 扩展：支持多个PPT和阅读素材
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    },
-    { 
-      id: 'Empower', 
-      label: 'Empower (赋能)', 
-      color: 'bg-blue-50 border-blue-200 text-blue-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Empower')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    },
-    { 
-      id: 'Execute', 
-      label: 'Execute (实践/产出)', 
-      color: 'bg-green-50 border-green-200 text-green-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Execute')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    },
-    { 
-      id: 'Elevate', 
-      label: 'Elevate (升华)', 
-      color: 'bg-yellow-50 border-yellow-200 text-yellow-800', 
-      slides: WORD_DOC_DATA.filter(s => s.phase.includes('Elevate')).map((s, idx) => ({
-        ...s, 
-        script: s.script || '',
-        pptSlides: s.image ? [{ id: `ppt-${s.id}`, image: s.image, timestamp: Date.now() }] : [],
-        // 为所有环节添加示例阅读材料（至少一个）
-        readingMaterials: [generateSampleReadingMaterial(s, 0)]
-      }))
-    }
-  ]);
+  const [phases, setPhases] = useState([]);
 
   // 历史版本管理
   const saveToHistory = () => {
@@ -186,6 +143,74 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   };
 
   useEffect(() => {
+    if (initialConfig && initialConfig.courseData) {
+      const courseData = initialConfig.courseData;
+      
+      const convertCourseDataToPhases = () => {
+        // 如果 courseData 是数组格式（从数据库加载的格式）
+        if (Array.isArray(courseData)) {
+          return courseData.map(phase => ({
+            id: phase.id,
+            label: phase.label,
+            color: phase.color,
+            slides: phase.slides || []
+          }));
+        }
+        
+        // 如果 courseData 是对象格式（欢迎页生成的格式）
+        const phaseOrder = ['engage', 'empower', 'execute', 'elevate'];
+        const phaseLabels = {
+          engage: 'Engage (引入)',
+          empower: 'Empower (赋能)',
+          execute: 'Execute (实践/产出)',
+          elevate: 'Elevate (升华)'
+        };
+        const phaseColors = {
+          engage: 'bg-purple-50 border-purple-200 text-purple-800',
+          empower: 'bg-blue-50 border-blue-200 text-blue-800',
+          execute: 'bg-green-50 border-green-200 text-green-800',
+          elevate: 'bg-yellow-50 border-yellow-200 text-yellow-800'
+        };
+
+        return phaseOrder.map(phaseKey => {
+          const phaseData = courseData[phaseKey];
+          if (!phaseData) return null;
+
+          return {
+            id: phaseKey.charAt(0).toUpperCase() + phaseKey.slice(1),
+            label: phaseLabels[phaseKey],
+            color: phaseColors[phaseKey],
+            slides: phaseData.steps.map((step, idx) => ({
+              id: step.id || `${phaseKey}-${idx}`,
+              phase: phaseLabels[phaseKey],
+              duration: step.time || '0分钟',
+              title: step.title || '未命名环节',
+              objectives: step.objective || '',
+              activities: step.activity || '',
+              script: step.script || '',
+              materials: '',
+              worksheets: '',
+              ppt_content: '',
+              image: '',
+              audio: '',
+              video: '',
+              elements: [],
+              pptSlides: [],
+              readingMaterials: [generateSampleReadingMaterial({
+                title: step.title || '未命名环节',
+                id: step.id || `${phaseKey}-${idx}`
+              }, 0)]
+            }))
+          };
+        }).filter(Boolean);
+      };
+
+      const newPhases = convertCourseDataToPhases();
+      setPhases(newPhases);
+    }
+  }, [initialConfig]);
+
+  useEffect(() => {
     // 自动保存到历史（简化版，实际应该防抖）
     const timer = setTimeout(() => {
       if (phases.length > 0) {
@@ -194,6 +219,30 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
     }, 30000); // 每30秒自动保存
     return () => clearTimeout(timer);
   }, [phases]);
+
+  // 暴露给父组件的方法（必须在 return 之前执行）
+  React.useImperativeHandle(ref, () => ({
+    getSlides: () => phases
+  }));
+
+  // 组件准备好后通知父组件
+  useEffect(() => {
+    // 使用 setTimeout 确保 ref 已经被设置
+    const timer = setTimeout(() => {
+      if (onReady && typeof onReady === 'function') {
+        onReady();
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []); // 只在组件挂载时执行一次
+  
+  // 当 phases 被设置后，确保 onReady 被调用
+  useEffect(() => {
+    if (phases.length > 0 && onReady && typeof onReady === 'function') {
+      onReady();
+    }
+  }, [phases, onReady]);
 
   const updateSlideField = (phaseId, slideId, field, value) => {
     setPhases(prevPhases => prevPhases.map(phase => {
@@ -518,24 +567,110 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
   };
 
   // 媒体生成逻辑（用于PPT缩略图）
-  const handleRegenerateMedia = (phaseId, slideId, type) => {
+  const handleRegenerateMedia = async (phaseId, slideId, type) => {
     const key = `${slideId}-${type}`;
     setGeneratingMedia(prev => ({ ...prev, [key]: true }));
-    setTimeout(() => {
+
+    try {
+      // 如果是图片类型，生成多张图片供选择
+      if (type === 'image') {
+        const slide = phases.find(p => p.id === phaseId)?.slides.find(s => s.id === slideId);
+        const prompt = slide?.title || slide?.activity || '教学场景';
+        
+        // 使用后端批量生成API
+        const result = await aiAssetService.generateMultipleImages(prompt, {
+          count: 4,
+          width: 600,
+          height: 400
+        });
+        
+        if (!result.success || !result.data) {
+          throw new Error('生成图片失败');
+        }
+        
+        // 提取生成的图片
+        const generatedImages = result.data.map((item, index) => {
+          if (item.url) {
+            return {
+              url: item.url,
+              prompt: item.prompt || `${prompt} - 教学场景 ${index + 1}`
+            };
+          } else {
+            // 如果生成失败，使用占位图
+            const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+            return {
+              url: `https://placehold.co/600x400/${randomColor}/FFF?text=Gen+Failed+${index + 1}`,
+              prompt: `${prompt} - 教学场景 ${index + 1} (生成失败)`,
+              error: item.error
+            };
+          }
+        });
+
+        // 保存待确认的配置
+        setPendingSlideConfig({
+          phaseId,
+          slideId,
+          type,
+          key
+        });
+
+        // 显示抽卡选择模态框
+        setCardSelectionImages(generatedImages);
+        setShowCardSelectionModal(true);
+        return;
+      }
+
+      // 非图片类型保持原有逻辑
       setPhases(prevPhases => prevPhases.map(phase => {
         if (phase.id !== phaseId) return phase;
         return {
-            ...phase,
-            slides: phase.slides.map(slide => {
-                if (slide.id !== slideId) return slide;
-                let newContent = null;
-                if (type === 'image') newContent = `https://placehold.co/600x400/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+Slide+${Date.now().toString().slice(-4)}`;
-                return { ...slide, [type]: newContent };
-            })
+          ...phase,
+          slides: phase.slides.map(slide => {
+            if (slide.id !== slideId) return slide;
+            let newContent = null;
+            if (type === 'image') newContent = `https://placehold.co/600x400/${Math.floor(Math.random()*16777215).toString(16)}/FFF?text=AI+Gen+Slide+${Date.now().toString().slice(-4)}`;
+            return { ...slide, [type]: newContent };
+          })
         };
       }));
       setGeneratingMedia(prev => ({ ...prev, [key]: false }));
-    }, 2000);
+    } catch (error) {
+      console.error('生成媒体失败:', error);
+      setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+      alert('生成图片失败，请稍后重试');
+    }
+  };
+
+  // 处理图片抽卡选择确认
+  const handleCardSelectionConfirm = (selectedImage, selectedIndex) => {
+    if (!pendingSlideConfig) return;
+
+    const { phaseId, slideId, type, key } = pendingSlideConfig;
+
+    setPhases(prevPhases => prevPhases.map(phase => {
+      if (phase.id !== phaseId) return phase;
+      return {
+        ...phase,
+        slides: phase.slides.map(slide => {
+          if (slide.id !== slideId) return slide;
+          return {
+            ...slide,
+            [type]: selectedImage.url,
+            // 如果有 pptSlides，更新第一个
+            pptSlides: slide.pptSlides?.length > 0
+              ? slide.pptSlides.map((ppt, idx) => idx === 0 ? { ...ppt, image: selectedImage.url } : ppt)
+              : [{ id: `ppt-${slideId}-${Date.now()}`, image: selectedImage.url, timestamp: Date.now(), prompt: selectedImage.prompt || '' }]
+          };
+        })
+      };
+    }));
+
+    setGeneratingMedia(prev => ({ ...prev, [key]: false }));
+
+    // 关闭模态框并清理状态
+    setShowCardSelectionModal(false);
+    setCardSelectionImages([]);
+    setPendingSlideConfig(null);
   };
 
   // 保存生成历史
@@ -1076,8 +1211,8 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                            <th className="p-4 w-40">教学目标</th>
                            <th className="p-4 w-40">教学活动</th>
                            <th className="p-4 w-40">讲稿</th>
-                           <th className="p-4 w-48">PPT内容 (缩略图)</th>
-                           <th className="p-4 w-48">阅读材料</th>
+                           {/* <th className="p-4 w-48">PPT内容 (缩略图)</th>
+                           <th className="p-4 w-48">阅读材料</th> */}
                            <th className="p-4 w-12 text-center">操作</th>
                        </tr>
                      </thead>
@@ -1201,9 +1336,8 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                              </td>
 
                              {/* PPT内容 (改为缩略图) - 支持多个PPT */}
-                             <td className="p-4 align-top">
+                             {/* <td className="p-4 align-top">
                                  <div className="space-y-2">
-                                   {/* 显示所有PPT缩略图 */}
                                    {slide.pptSlides && slide.pptSlides.length > 0 ? (
                                      <>
                                        {slide.pptSlides.map((ppt, idx) => (
@@ -1237,8 +1371,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                            <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded">PPT {idx + 1}</div>
                                          </div>
                                        ))}
-                                       {/* 重新生成PPT按钮 */}
-                                       {/* {slide.pptSlides && slide.pptSlides.length > 0 && (
                                          <button 
                                            onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
                                            className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
@@ -1246,8 +1378,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                            <RefreshCw className="w-4 h-4" />
                                            <span className="text-[10px]">重新生成PPT</span>
                                          </button>
-                                       )} */}
-                                       {/* 添加PPT按钮 */}
+                                       )} 
                                        <button 
                                          onClick={() => handleAddPPT(phase.id, slide.id)} 
                                          className="w-full py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors flex items-center justify-center gap-1"
@@ -1277,7 +1408,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                            <button onClick={() => handleRegenerateMedia(phase.id, slide.id, 'image')} title="重新生成" className="p-1.5 bg-white/20 text-white rounded hover:bg-white/40 backdrop-blur-sm"><RefreshCw className="w-3 h-3" /></button>
                                          </div>
                                        </div>
-                                       {/* 重新生成PPT按钮 */}
                                        <button 
                                          onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
                                          className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
@@ -1285,7 +1415,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                          <RefreshCw className="w-4 h-4" />
                                          <span className="text-[10px]">重新生成PPT</span>
                                        </button>
-                                       {/* 添加PPT按钮 */}
                                        <button 
                                          onClick={() => handleAddPPT(phase.id, slide.id)} 
                                          className="w-full py-1.5 text-xs text-indigo-600 border border-indigo-200 rounded hover:bg-indigo-50 transition-colors flex items-center justify-center gap-1"
@@ -1305,21 +1434,18 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                    )}
                                    
                                  </div>
-                             </td>
+                             </td> */}
 
                              {/* 阅读材料列 */}
-                             <td className="p-4 align-top">
+                             {/* <td className="p-4 align-top">
                                  <div className="space-y-2">
-                                   {/* 显示所有阅读材料缩略图 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 ? (
                                      <>
-                                       {/* 显示材料数量提示 */}
                                        <div className="text-[10px] text-slate-500 font-medium mb-1">
                                          共 {slide.readingMaterials.length} 个阅读材料
                                        </div>
                                        {slide.readingMaterials.map((material, idx) => (
                                          <div key={material.id} className="relative group/material w-full aspect-[3/4] bg-slate-100 rounded-md border border-slate-200 overflow-hidden flex flex-col">
-                                           {/* 材料标题栏 */}
                                            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-1.5 z-10">
                                              <div className="flex items-center justify-between">
                                                <span className="text-[10px] text-white font-medium truncate flex-1" title={material.title || `阅读材料 ${idx + 1}`}>
@@ -1331,7 +1457,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                              </div>
                                            </div>
                                            
-                                           {/* 缩略图区域 */}
                                            <div className="flex-1 flex items-center justify-center relative">
                                              {material.thumbnail ? (
                                                <>
@@ -1403,7 +1528,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                              )}
                                            </div>
                                            
-                                           {/* 底部信息栏 */}
                                            {material.pages && material.pages.length > 0 && (
                                              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-1.5 z-10">
                                                <div className="text-[9px] text-white/90 text-center">
@@ -1427,7 +1551,6 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                      </button>
                                    )}
                                    
-                                   {/* 添加更多阅读材料按钮 */}
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 && (
                                      <button
                                        onClick={() => {
@@ -1441,7 +1564,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
                                      </button>
                                    )}
                                  </div>
-                             </td>
+                             </td> */}
 
                              {/* 操作列 */}
                              <td className="p-4 align-top">
@@ -1530,7 +1653,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="添加教学环节"
           description="请输入AI生成提示词，描述你想要创建的教学环节"
           placeholder="例如：设计一个互动游戏环节，让学生学习颜色词汇..."
-          type="session"
+          type="activity"
           isLoading={isGeneratingRow}
         />
       )}
@@ -1544,7 +1667,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="生成阅读材料"
           description="请输入AI生成提示词，描述你想要创建的阅读材料内容"
           placeholder="例如：创建一份关于动物主题的阅读材料，包含图片和练习题..."
-          type="element"
+          type="script"
           isLoading={isGeneratingReadingMaterial}
         />
       )}
@@ -1558,7 +1681,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="添加PPT页面"
           description="请输入AI生成提示词，描述你想要创建的PPT页面内容"
           placeholder="例如：创建一个关于颜色词汇的PPT页面，包含图片和文字..."
-          type="element"
+          type="ppt"
           isLoading={isGeneratingPPT}
         />
       )}
@@ -1572,7 +1695,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="重新生成PPT"
           description="请输入AI生成提示词，描述你想要重新生成的PPT页面内容（可选，留空将使用默认生成）"
           placeholder="例如：重新生成一个关于颜色词汇的PPT页面，包含图片和文字..."
-          type="element"
+          type="ppt"
           isLoading={isRegeneratingPPT}
         />
       )}
@@ -1586,7 +1709,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="重新生成阅读材料"
           description="请输入AI生成提示词，描述你想要重新生成的阅读材料内容（可选，留空将使用默认生成）"
           placeholder="例如：重新生成一个关于颜色词汇的阅读材料，包含图片和文字..."
-          type="element"
+          type="script"
           isLoading={isRegeneratingReadingMaterial}
         />
       )}
@@ -1606,7 +1729,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
             : showRegenerateModal.field === 'script'
             ? '例如：生成一段鼓励性的教师讲稿...'
             : '例如：生成一个完整的教学环节，包含活动、目标和讲稿...'}
-          type="element"
+          type={showRegenerateModal.field === 'activity' ? 'activity' : showRegenerateModal.field === 'script' ? 'script' : 'text'}
           isLoading={generatingMedia[`${showRegenerateModal.slideId}-${showRegenerateModal.field === 'session' ? 'session' : showRegenerateModal.field}`]}
         />
       )}
@@ -1620,7 +1743,7 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           title="重新生成阶段"
           description="请输入AI生成提示词，描述你想要重新生成的阶段内容（可选，留空将使用默认生成）"
           placeholder="例如：重新生成一个关于颜色教学的阶段，包含多个互动环节..."
-          type="session"
+          type="activity"
           isLoading={false}
         />
       )}
@@ -1917,6 +2040,21 @@ export const TableView = ({ initialConfig, onReset, onNavigateToCanvas }) => {
           </div>
         </div>
       )}
+      {/* 图片抽卡选择模态框 */}
+      <CardSelectionModal
+        isOpen={showCardSelectionModal}
+        onClose={() => {
+          setShowCardSelectionModal(false);
+          setCardSelectionImages([]);
+          setPendingSlideConfig(null);
+        }}
+        title="选择PPT图片"
+        images={cardSelectionImages}
+        isLoading={Object.values(generatingMedia).some(v => v)}
+        onConfirm={handleCardSelectionConfirm}
+      />
     </div>
   );
-};
+});
+
+TableView.displayName = 'TableView';

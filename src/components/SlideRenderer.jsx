@@ -5,9 +5,11 @@ import { CanvasAssetRenderer } from './CanvasAssetRenderer';
  * 现在使用共用的 CanvasAssetRenderer 组件
  */
 export const SlideRenderer = ({ 
-  assets, 
+  step, // 接收 step 对象
+  assets, // 直接接收 assets 数组（向后兼容）
   isEditable, 
   onMouseDown, 
+  onClick, // 添加点击回调
   selectedAssetId, 
   onCopyAsset, 
   onDeleteAsset,
@@ -19,11 +21,15 @@ export const SlideRenderer = ({
   onCanvasClick, // 点击画布时的回调，用于取消选择或保存编辑
   onAssetSelect // (assetId) => void - 选中资产时的回调
 }) => {
+  // 如果传入了 step 对象，从中提取 assets
+  const assetsToRender = assets || (step?.elements || step?.canvasAssets || []);
+  
   return (
     <CanvasAssetRenderer
-      assets={assets}
+      assets={assetsToRender}
       isEditable={isEditable}
       onMouseDown={onMouseDown}
+      onClick={onClick}
       selectedAssetId={selectedAssetId}
       onCopyAsset={onCopyAsset}
       onDeleteAsset={onDeleteAsset}
