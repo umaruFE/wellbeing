@@ -17,13 +17,13 @@ import {
   X,
   Sparkles
 } from 'lucide-react';
-import { ImagePreviewModal } from './ImagePreviewModal';
-import { BookmarkIcon } from './BookmarkIcon';
-import { HistoryVersionView } from './HistoryVersionView';
-import { PromptInputModal } from './PromptInputModal';
-import { CardSelectionModal } from './CardSelectionModal';
-import { aiAssetService } from '../services/aiAssetService';
-import { uploadService } from '../services/uploadService';
+import { ImagePreviewModal } from '../../../components/ImagePreviewModal';
+import { BookmarkIcon } from '../../../components/BookmarkIcon';
+import { HistoryVersionView } from '../../../components/HistoryVersionView';
+import { PromptInputModal } from '../../../components/PromptInputModal';
+import { CardSelectionModal } from '../../../components/CardSelectionModal';
+import { aiAssetService } from '../../../services/aiAssetService';
+import { uploadService } from '../../../services/uploadService';
 
 export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateToCanvas, onReady }, ref) => {
   // 初始化数据时，确保每一行都有 script 字段

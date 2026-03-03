@@ -3,18 +3,18 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RequireAuth } from './components/RequireAuth';
-import { LoginPage } from './pages/auth/LoginPage';
-import { UnauthorizedPage } from './pages/auth/UnauthorizedPage';
+import { LoginPage } from './modules/auth/LoginPage';
+import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
 import { MainLayout } from './components/MainLayout';
-import { CourseManagementPage } from './pages/course/CourseManagementPage';
-import { CourseSquarePage } from './pages/course/CourseSquarePage';
-import { VoiceManagementPage } from './pages/course/VoiceManagementPage';
-import { SuperAdminPage } from './pages/admin/SuperAdminPage';
-import { KnowledgeBasePage } from './pages/course/KnowledgeBasePage';
-import { PptImageManagement } from './pages/course/PptImageManagement';
-import { IpCharacterManagement } from './pages/course/IpCharacterManagement';
-import { VideoMaterialManagement } from './pages/course/VideoMaterialManagement';
-import { AccountManagement } from './pages/admin/AccountManagement';
+import { CourseManagementPage } from './modules/course-management/CourseManagementPage';
+import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
+import { VoiceManagementPage } from './modules/material-management/audio/VoiceManagementPage';
+import { SuperAdminPage } from './modules/admin/SuperAdminPage';
+import { KnowledgeBasePage } from './modules/material-management/KnowledgeBasePage';
+import { PptImageManagement } from './modules/material-management/image/PptImageManagement';
+import { IpCharacterManagement } from './modules/material-management/IpCharacterManagement';
+import { VideoMaterialManagement } from './modules/material-management/video/VideoMaterialManagement';
+import { AccountManagement } from './modules/admin/AccountManagement';
 
 function App() {
   return (

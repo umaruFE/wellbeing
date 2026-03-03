@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Upload, Music, Play, Pause, Trash2, Search, Filter, Smile, Frown, Meh, Heart } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import apiService from '../../services/api';
-import uploadService from '../../services/uploadService';
+import { useAuth } from '../../../contexts/AuthContext';
+import apiService from '../../../services/api';
+import uploadService from '../../../services/uploadService';
 
 export const VoiceManagementPage = () => {
   const { hasRole } = useAuth();

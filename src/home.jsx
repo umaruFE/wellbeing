@@ -14,10 +14,10 @@ import {
   Clock
 } from 'lucide-react';
 import { WelcomeScreen } from './components/WelcomeScreen';
-import { CanvasView } from './components/CanvasView';
-import { TableView } from './components/TableView';
+import { CanvasView } from './modules/course-management/ppt-canvas/CanvasView';
+import { TableView } from './modules/course-management/table-view/TableView';
 // import { ReadingMaterialView } from './components/ReadingMaterialView';
-import { ReadingMaterialCanvasView } from './components/ReadingMaterialCanvasView';
+import { ReadingMaterialCanvasView } from './modules/course-management/reading-material/ReadingMaterialCanvasView';
 
 // --- Main App Component ---
 

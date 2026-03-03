@@ -1,6 +1,6 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
-import { TextbookManagement } from './TextbookManagement';
+import { TextbookManagement } from './textbook/TextbookManagement';
 
 export const KnowledgeBasePage = () => {
   return (

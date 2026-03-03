@@ -34,10 +34,10 @@ import {
   BookOpen,
   Copy
 } from 'lucide-react';
-import { getAssetIcon } from '../utils';
-import { PromptInputModal } from './PromptInputModal';
-import { CardSelectionModal } from './CardSelectionModal';
-import { CanvasAssetRenderer } from './CanvasAssetRenderer';
+import { getAssetIcon } from '../../../utils';
+import { PromptInputModal } from '../../../components/PromptInputModal';
+import { CardSelectionModal } from '../../../components/CardSelectionModal';
+import { CanvasAssetRenderer } from '../../../components/CanvasAssetRenderer';
 
 /**
  * ReadingMaterialEditor - 阅读材料画板编辑器
@@ -642,7 +642,6 @@ export const ReadingMaterialEditor = ({
         );
       })}
 
-         
           </div>
         </div>
 

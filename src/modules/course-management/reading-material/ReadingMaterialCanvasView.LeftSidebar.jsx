@@ -212,4 +212,3 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
 };
 
 export default ReadingMaterialCanvasViewLeftSidebar;
-

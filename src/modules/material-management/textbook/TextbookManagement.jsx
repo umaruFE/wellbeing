@@ -14,7 +14,7 @@ import {
   Image,
   Upload
 } from 'lucide-react';
-import apiService from '../../services/api';
+import apiService from '../../../services/api';
 
 export const TextbookManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');

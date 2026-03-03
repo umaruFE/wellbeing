@@ -13,13 +13,13 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
-import { getAssetIcon } from '../utils';
-import { PromptInputModal } from './PromptInputModal';
-import { VideoStoryboardModal } from './VideoStoryboardModal';
-import { AssetEditorPanel } from './AssetEditorPanel';
+import { getAssetIcon } from '../../../utils';
+import { PromptInputModal } from '../../../components/PromptInputModal';
+import { VideoStoryboardModal } from '../../../components/VideoStoryboardModal';
+import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
-import { aiAssetService } from '../services/aiAssetService';
-import { promptHistoryService, promptOptimizationService } from '../services/promptService';
+import { aiAssetService } from '../../../services/aiAssetService';
+import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
 
 /**
  * ReadingMaterialCanvasView - 阅读材料画布模式视图

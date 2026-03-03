@@ -8,8 +8,8 @@ import {
   Check,
   Upload
 } from 'lucide-react';
-import apiService from '../../services/api';
-import uploadService from '../../services/uploadService';
+import apiService from '../../../services/api';
+import uploadService from '../../../services/uploadService';
 
 export const PptImageManagement = () => {
   const [modalType, setModalType] = useState(null);

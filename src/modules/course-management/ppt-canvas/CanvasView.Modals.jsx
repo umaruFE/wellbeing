@@ -1,6 +1,6 @@
 import React from 'react';
-import { PromptInputModal } from './PromptInputModal';
-import { CardSelectionModal } from './CardSelectionModal';
+import { PromptInputModal } from '../../../components/PromptInputModal';
+import { CardSelectionModal } from '../../../components/CardSelectionModal';
 import { History, X, RefreshCw, Music } from 'lucide-react';
 
 /**

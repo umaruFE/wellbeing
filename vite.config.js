@@ -7,7 +7,6 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5174,
-    allowedHosts: ['shanalhe.6655.la'],
     proxy: {
       '/api': {
         target: 'http://localhost:3000',
@@ -24,6 +23,13 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/ai/, ''),
+      },
+      '/ai-video': {
+        // 单独给视频生成 / 另一套 ComfyUI 工作流使用
+        target: 'https://8n0vf44x64b58itu-8188.container.x-gpu.com',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/ai-video/, ''),
       },
     },
   },

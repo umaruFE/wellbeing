@@ -10,8 +10,8 @@ import {
   Play,
   Search
 } from 'lucide-react';
-import apiService from '../../services/api';
-import uploadService from '../../services/uploadService';
+import apiService from '../../../services/api';
+import uploadService from '../../../services/uploadService';
 
 export const VideoMaterialManagement = () => {
   const [modalType, setModalType] = useState(null);

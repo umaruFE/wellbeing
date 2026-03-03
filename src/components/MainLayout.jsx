@@ -26,9 +26,9 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { WelcomeScreen } from './WelcomeScreen';
-import { CanvasView } from './CanvasView';
-import { TableView } from './TableView';
-import { ReadingMaterialCanvasView } from './ReadingMaterialCanvasView';
+import { CanvasView } from '../modules/course-management/ppt-canvas/CanvasView';
+import { TableView } from '../modules/course-management/table-view/TableView';
+import { ReadingMaterialCanvasView } from '../modules/course-management/reading-material/ReadingMaterialCanvasView';
 import { AdminDashboard } from './AdminDashboard';
 
 export const MainLayout = () => {
