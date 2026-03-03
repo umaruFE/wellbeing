@@ -10,7 +10,10 @@ import {
   Wand2,
   History,
   X,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Type,
+  Video,
+  Music
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
 import { getAssetIcon } from '../../../utils';
@@ -1149,22 +1152,8 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           </div>
         </div>
         
-        {editingPageIndex !== null && (
-          <div style={{left: '65%'}} className="absolute top-20 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur shadow-lg rounded-full px-4 py-2 flex gap-3 border border-slate-200 z-20 transition-all">
-            <button onClick={() => handleAddAsset('text')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-blue-600 transition-colors" title="添加文本">
-              <Wand2 className="w-5 h-5" />
-              <span className="text-[9px] font-bold">文本</span>
-            </button>
-            <div className="w-px bg-slate-200 h-8"></div>
-            <button onClick={() => handleAddAsset('image')} className="flex flex-col items-center gap-0.5 text-slate-600 hover:text-purple-600 transition-colors" title="添加图片">
-              <ImageIcon className="w-5 h-5" />
-              <span className="text-[9px] font-bold">图片</span>
-            </button>
-          </div>
-        )}
-        
         {/* Canvas Editor */}
-        <div className="flex-1 overflow-auto relative">
+        <div className="flex-1 overflow-hidden relative flex flex-col">
           {filteredPages.length > 0 ? (
             <ReadingMaterialEditor
               pages={filteredPages}
@@ -1211,6 +1200,42 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
                 <Copy className="w-5 h-5" />
                 在末尾添加新页面
               </button>
+            </div>
+          )}
+          
+          {/* 底部添加按钮栏 */}
+          {editingPageIndex !== null && (
+            <div className="bg-white border-t border-slate-200 px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleAddAsset('text')}
+                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                >
+                  <Type className="w-4 h-4" />
+                  文本
+                </button>
+                <button
+                  onClick={() => handleAddAsset('image')}
+                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  图片
+                </button>
+                <button
+                  onClick={() => handleAddAsset('video')}
+                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                >
+                  <Video className="w-4 h-4" />
+                  视频
+                </button>
+                <button
+                  onClick={() => handleAddAsset('audio')}
+                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                >
+                  <Music className="w-4 h-4" />
+                  音频
+                </button>
+              </div>
             </div>
           )}
         </div>

@@ -661,7 +661,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             >
               <Copy className="w-5 h-5 text-slate-600" />
             </button>
-            <button
+            {/* <button
               onClick={handleExportPPT}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative"
               disabled={isExporting}
@@ -672,7 +672,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 </div>
               )}
               <RefreshCw className="w-5 h-5 text-slate-600" />
-            </button>
+            </button>*/}
           </div>
         </div>
 
@@ -751,12 +751,12 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           </div>
           
           <div className="flex items-center gap-2">
-            <button
+            {/*<button
               onClick={() => handleAddAsset('text')}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
             >
               <Wand2 className="w-5 h-5 text-blue-600" />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

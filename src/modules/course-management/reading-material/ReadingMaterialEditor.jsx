@@ -536,7 +536,7 @@ export const ReadingMaterialEditor = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full mt-16">
       {/* 顶部工具栏 */}
 
       {/* 主内容区域 */}
