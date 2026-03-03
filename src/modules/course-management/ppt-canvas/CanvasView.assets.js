@@ -32,11 +32,11 @@ export const handleAssetChange = (assetId, field, value, activePhase, activeStep
   
   const step = stepsOrSlides.find(s => s.id === activeStepId);
   if (!step) return;
-  const asset = step.assets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
+  const asset = step.assets?.find(a => a.id === assetId) || step.canvasAssets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
   if (asset) {
     asset[field] = value;
     setCourseData(newCourseData);
-    saveToHistory();
+    if (saveToHistory) saveToHistory();
   }
 };
 
@@ -68,12 +68,15 @@ export const handleDeleteAsset = (assetId, activePhase, activeStepId, courseData
   if (step.assets) {
     step.assets = step.assets.filter(a => a.id !== assetId);
   }
+  if (step.canvasAssets) {
+    step.canvasAssets = step.canvasAssets.filter(a => a.id !== assetId);
+  }
   if (step.elements) {
     step.elements = step.elements.filter(a => a.id !== assetId);
   }
   setCourseData(newCourseData);
-  saveToHistory();
-  setSelectedAssetId(null);
+  if (saveToHistory) saveToHistory();
+  if (setSelectedAssetId) setSelectedAssetId(null);
 };
 
 /**
@@ -90,7 +93,8 @@ export const handleCopyAsset = (assetId, activePhase, activeStepId, courseData, 
   const phaseData = Array.isArray(courseData) 
     ? courseData.find(p => p.id === activePhase)
     : courseData[activePhase];
-  const step = phaseData?.slides?.find(s => s.id === activeStepId);
+  const stepsOrSlidesOriginal = phaseData?.steps || phaseData?.slides;
+  const step = stepsOrSlidesOriginal?.find(s => s.id === activeStepId);
   const assetToCopy = step?.assets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
   if (!assetToCopy) return;
 
@@ -103,7 +107,7 @@ export const handleCopyAsset = (assetId, activePhase, activeStepId, courseData, 
   
   if (!phase) return;
   
-  const currentStep = phase.steps.find(s => s.id === activeStepId);
+  const currentStep = (phase.steps || phase.slides)?.find(s => s.id === activeStepId);
   if (!currentStep) return;
   const newAsset = {
     ...JSON.parse(JSON.stringify(assetToCopy)),
@@ -115,10 +119,14 @@ export const handleCopyAsset = (assetId, activePhase, activeStepId, courseData, 
   if (!currentStep.assets) {
     currentStep.assets = [];
   }
+  if (!currentStep.canvasAssets) {
+    currentStep.canvasAssets = [];
+  }
   currentStep.assets.push(newAsset);
+  currentStep.canvasAssets.push(newAsset);
   setCourseData(newCourseData);
-  saveToHistory();
-  setSelectedAssetId(newAsset.id);
+  if (saveToHistory) saveToHistory();
+  if (setSelectedAssetId) setSelectedAssetId(newAsset.id);
 };
 
 /**
@@ -140,7 +148,8 @@ export const handleCopyPage = (activePhase, activeStepId, courseData, setCourseD
   
   if (!phase) return;
   
-  const currentStep = phase.steps.find(s => s.id === activeStepId);
+  const stepsOrSlides = phase.steps || phase.slides;
+  const currentStep = stepsOrSlides?.find(s => s.id === activeStepId);
   if (!currentStep) return;
 
   const newStep = {
@@ -160,10 +169,10 @@ export const handleCopyPage = (activePhase, activeStepId, courseData, setCourseD
       y: asset.y + 20
     }))
   };
-  phase.steps.push(newStep);
+  stepsOrSlides.push(newStep);
   setCourseData(newCourseData);
-  saveToHistory();
-  setActiveStepId(newStep.id);
+  if (saveToHistory) saveToHistory();
+  if (setActiveStepId) setActiveStepId(newStep.id);
 };
 
 /**
@@ -191,7 +200,7 @@ export const handleLayerChange = (assetId, action, activePhase, activeStepId, co
   
   const step = stepsOrSlides.find(s => s.id === activeStepId);
   if (!step) return;
-  const currentAssets = [...(step.assets || step.elements || [])];
+  const currentAssets = [...(step.assets || step.canvasAssets || step.elements || [])];
   const index = currentAssets.findIndex(a => a.id === assetId);
   if (index === -1) return;
   if (action === 'front') currentAssets.push(currentAssets.splice(index, 1)[0]);
@@ -199,8 +208,9 @@ export const handleLayerChange = (assetId, action, activePhase, activeStepId, co
   else if (action === 'forward' && index < currentAssets.length - 1) [currentAssets[index], currentAssets[index + 1]] = [currentAssets[index + 1], currentAssets[index]];
   else if (action === 'backward' && index > 0) [currentAssets[index], currentAssets[index - 1]] = [currentAssets[index - 1], currentAssets[index]];
   step.assets = currentAssets;
+  if (step.canvasAssets) step.canvasAssets = currentAssets;
   setCourseData(newCourseData);
-  saveToHistory();
+  if (saveToHistory) saveToHistory();
 };
 
 /**
@@ -232,11 +242,11 @@ export const handleReferenceUpload = (e, assetId, activePhase, activeStepId, cou
       
       const step = stepsOrSlides.find(s => s.id === activeStepId);
       if (!step) return;
-      const asset = step.assets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
+      const asset = step.assets?.find(a => a.id === assetId) || step.canvasAssets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
       if (asset) {
         asset.referenceImage = reader.result;
         setCourseData(newCourseData);
-        saveToHistory();
+        if (saveToHistory) saveToHistory();
       }
     };
     reader.readAsDataURL(file);

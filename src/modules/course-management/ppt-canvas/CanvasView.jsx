@@ -257,15 +257,29 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedAssetId, historyIndex, history, activePhase, activeStepId, courseData]);
 
+  // 鼠标事件处理 - 拖拽、缩放、旋转
+  useEffect(() => {
+    const handleGlobalMouseMove = (e) => handleMouseMove(e);
+    const handleGlobalMouseUp = () => handleMouseUp();
+    
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [interactionMode, interactionStart, selectedAssetId, activePhase, activeStepId, courseData, history, historyIndex]);
+
   // Derived State
   const currentPhaseData = getPhaseData(activePhase);
-  const currentStep = currentPhaseData?.slides?.find(s => s.id === activeStepId) || currentPhaseData?.slides?.[0];
+  const currentStep = (currentPhaseData?.steps || currentPhaseData?.slides)?.find(s => s.id === activeStepId) || (currentPhaseData?.steps || currentPhaseData?.slides)?.[0];
   const selectedAsset = selectedAssetId && currentStep ? (currentStep.assets || currentStep.canvasAssets || []).find(a => a.id === selectedAssetId) : null;
 
   const allSteps = getPhaseKeys().flatMap(phaseKey => {
     const phase = getPhaseData(phaseKey);
     if (!phase) return [];
-    return (phase.slides || []).map(slide => ({...slide, phaseKey}));
+    return (phase.steps || phase.slides || []).map(slide => ({...slide, phaseKey}));
   });
   const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
 
@@ -386,8 +400,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setIsRightOpen(true);
     setInteractionMode(mode);
     const phaseData = getPhaseData(activePhase);
-    const step = phaseData?.slides?.find(s => s.id === activeStepId);
-    const asset = step?.assets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
+    const stepsOrSlides = phaseData?.steps || phaseData?.slides;
+    const step = stepsOrSlides?.find(s => s.id === activeStepId);
+    const asset = step?.assets?.find(a => a.id === assetId) || step?.canvasAssets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
     if (!asset) return;
     const rect = canvasRef.current.getBoundingClientRect();
     setInteractionStart({
@@ -415,7 +430,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     
     const step = stepsOrSlides.find(s => s.id === activeStepId);
     if (!step) return;
-    const activeAsset = step.assets?.find(a => a.id === selectedAssetId) || step.elements?.find(a => a.id === selectedAssetId);
+    const activeAsset = step.assets?.find(a => a.id === selectedAssetId) || step.canvasAssets?.find(a => a.id === selectedAssetId) || step.elements?.find(a => a.id === selectedAssetId);
     if (!activeAsset) return;
     const deltaX = e.clientX - interactionStart.startX;
     const deltaY = e.clientY - interactionStart.startY;
@@ -449,7 +464,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
   const handleCanvasClick = () => { 
     if (editingTextAssetId) {
-      const asset = currentStep?.assets?.find(a => a.id === editingTextAssetId) || currentStep?.elements?.find(a => a.id === editingTextAssetId);
+      const asset = currentStep?.assets?.find(a => a.id === editingTextAssetId) || currentStep?.canvasAssets?.find(a => a.id === editingTextAssetId) || currentStep?.elements?.find(a => a.id === editingTextAssetId);
       if (asset && editingTextContent !== undefined) {
         handleAssetChange(editingTextAssetId, 'content', editingTextContent, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex));
       }
@@ -777,14 +792,14 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                <AssetEditorPanel
                  selectedAsset={selectedAsset}
                  onClose={() => setSelectedAssetId(null)}
-                 onAssetChange={handleAssetChange}
-                 onLayerChange={handleLayerChange}
-                 onCopyAsset={handleCopyAsset}
-                 onDeleteAsset={handleDeleteAsset}
+                 onAssetChange={(assetId, field, value) => handleAssetChange(assetId, field, value, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
+                 onLayerChange={(assetId, direction) => handleLayerChange(assetId, direction, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
+                 onCopyAsset={(assetId) => handleCopyAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
+                 onDeleteAsset={(assetId) => handleDeleteAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setSelectedAssetId)}
                  onShowHistoryModal={setShowHistoryModal}
-                 onRegenerateAsset={handleRegenerateAsset}
+                 onRegenerateAsset={(assetId) => handleRegenerateAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setGeneratingAssetId, user, saveGenerationHistory)}
                  generatingAssetId={generatingAssetId}
-                 onReferenceUpload={handleReferenceUpload}
+                 onReferenceUpload={(e, assetId) => handleReferenceUpload(e, assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
                  isRightOpen={isRightOpen}
                  onToggleRightOpen={() => setIsRightOpen(false)}
                />
@@ -935,7 +950,11 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         pendingAssetConfig={pendingAssetConfig}
         setPendingAssetConfig={setPendingAssetConfig}
         isGenerating={isGenerating}
-        onCardSelectionConfirm={handleCardSelectionConfirm}
+        onCardSelectionConfirm={(selectedImage, selectedIndex) => handleCardSelectionConfirm(
+          selectedImage, pendingAssetConfig, activePhase, activeStepId, courseData, setCourseData,
+          setShowCardSelectionModal, setCardSelectionImages, setPendingAssetConfig, setSelectedAssetId, setIsRightOpen,
+          saveToHistory, history, historyIndex, setHistory, setHistoryIndex
+        )}
         showRegeneratePageModal={showRegeneratePageModal}
         setShowRegeneratePageModal={setShowRegeneratePageModal}
         isRegeneratingPage={isRegeneratingPage}
