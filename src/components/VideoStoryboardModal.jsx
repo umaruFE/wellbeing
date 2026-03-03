@@ -281,7 +281,7 @@ export const VideoStoryboardModal = ({
   // ========== 步骤4：分镜图片 ==========
   
   // 生成分镜图片
-  const handleGenerateSceneImage = async (sceneId) => {
+  const handleGenerateSceneImage = async (sceneId, previousSceneImage = null) => {
     const scene = scenes.find(s => s.id === sceneId);
     if (!scene) return;
 
@@ -294,7 +294,9 @@ export const VideoStoryboardModal = ({
         scene,
         referenceImages,
         userId,
-        organizationId
+        organizationId,
+        previousSceneImage,
+        description
       );
       
       setScenes(prev => prev.map(s => 
@@ -302,18 +304,26 @@ export const VideoStoryboardModal = ({
           ? { ...s, generatedImage: imageUrl, status: 'completed' }
           : s
       ));
+      return imageUrl;
     } catch (err) {
       setError('生成分镜图片失败: ' + err.message);
+      return null;
     } finally {
       setIsGeneratingSceneImage(prev => ({ ...prev, [sceneId]: false }));
     }
   };
 
-  // 生成所有分镜图片
+  // 生成所有分镜图片（按顺序，每个使用前一个作为参考）
   const handleGenerateAllSceneImages = async () => {
+    let previousImage = null;
     for (const scene of scenes) {
       if (!scene.generatedImage) {
-        await handleGenerateSceneImage(scene.id);
+        const generatedImage = await handleGenerateSceneImage(scene.id, previousImage);
+        if (generatedImage) {
+          previousImage = generatedImage;
+        }
+      } else {
+        previousImage = scene.generatedImage;
       }
     }
   };
