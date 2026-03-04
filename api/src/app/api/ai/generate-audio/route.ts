@@ -264,7 +264,7 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Pr
   formData.append('file', new Blob([buffer]), filename);
   formData.append('folder', folder);
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}/api/upload`, {
+  const response = await fetch('/api/upload', {
     method: 'POST',
     body: formData,
   });

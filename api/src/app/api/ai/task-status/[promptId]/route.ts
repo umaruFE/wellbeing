@@ -120,8 +120,7 @@ async function downloadFile(filename: string, subfolder: string, type: string): 
 
 // 上传到OSS
 async function uploadToOSS(buffer: Buffer, filename: string, folder: string, contentType: string): Promise<string> {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api';
-  console.log(`上传到OSS: ${apiUrl}/upload, filename: ${filename}, folder: ${folder}`);
+  console.log(`上传到OSS: /api/upload, filename: ${filename}, folder: ${folder}`);
 
   // 使用 FormData 上传文件
   const formData = new FormData();
@@ -129,7 +128,7 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string, con
   formData.append('file', file);
   formData.append('folder', folder);
 
-  const response = await fetch(`${apiUrl}/upload`, {
+  const response = await fetch('/api/upload', {
     method: 'POST',
     body: formData
   });

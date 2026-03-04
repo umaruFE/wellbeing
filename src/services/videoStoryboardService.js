@@ -1,6 +1,7 @@
 const API_KEY = import.meta.env.VITE_DASHSCOPE_API_KEY;
 const API_URL = import.meta.env.VITE_DASHSCOPE_API_URL;
-const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:3000';
+// 使用相对路径，这样在任何环境下都能正确访问
+const API_BASE_URL = '';
 
 /**
  * 从描述中提取人物特征
@@ -9,7 +10,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL
  */
 export const extractCharacterFromDescription = async (description) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/ai/extract-character`, {
+    const response = await fetch('/api/ai/extract-character', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -40,7 +41,7 @@ export const extractCharacterFromDescription = async (description) => {
 export const pollTaskAndGetImageUrl = async (promptId, maxAttempts = 60, interval = 2000) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ai/task-status/${promptId}`, {
+      const response = await fetch(`/api/ai/task-status/${promptId}`, {
         method: 'GET',
       });
 
@@ -90,7 +91,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
   // 从后端获取人物参考图提示词
   let characterPrompt = `${characterDescription}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
   try {
-    const promptResponse = await fetch(`${API_BASE_URL}/api/ai/get-character-prompt`, {
+    const promptResponse = await fetch('/api/ai/get-character-prompt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ characterDescription })
@@ -117,15 +118,15 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
       // 处理图片 URL，确保服务器可以访问
       let imageUrl = uploadedImages[0];
       if (imageUrl.startsWith('/')) {
-        imageUrl = `${API_BASE_URL}${imageUrl}`;
-        console.log('相对路径转换为完整 URL:', imageUrl);
+        imageUrl = `${imageUrl}`;
+        console.log('相对路径:', imageUrl);
       } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
         const urlObj = new URL(imageUrl);
-        imageUrl = `${API_BASE_URL}${urlObj.pathname}`;
-        console.log('前端地址转换为后端地址:', imageUrl);
+        imageUrl = `${urlObj.pathname}`;
+        console.log('前端地址转换为相对路径:', imageUrl);
       }
       
-      response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
+      response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -143,7 +144,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
     } else {
       // 没有上传参考图，使用文生图接口
       console.log('使用文生图接口生成人物参考图');
-      response = await fetch(`${API_BASE_URL}/api/ai/generate-images`, {
+      response = await fetch('/api/ai/generate-images', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -338,7 +339,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
   // 先优化提示词为LTX2.0格式
   let optimizedPrompt = scene.content;
   try {
-    const response = await fetch(`${API_BASE_URL}/api/ai/optimize-scene-prompt`, {
+    const response = await fetch('/api/ai/optimize-scene-prompt', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -389,7 +390,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
     
     if (referenceImage) {
       console.log('使用图生图保持风格一致性');
-      response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
+      response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -406,7 +407,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
         })
       });
     } else {
-      response = await fetch(`${API_BASE_URL}/api/ai/generate-images`, {
+      response = await fetch('/api/ai/generate-images', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -452,7 +453,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
 export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 60, interval = 3000) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ai/video-task-status/${promptId}`, {
+      const response = await fetch(`/api/ai/video-task-status/${promptId}`, {
         method: 'GET',
       });
 
@@ -504,7 +505,7 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
     const videoPrompt = scenes.map(s => s.content).join('，');
     
     // 调用视频生成API
-    const response = await fetch(`${API_BASE_URL}/api/ai/generate-video`, {
+    const response = await fetch('/api/ai/generate-video', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

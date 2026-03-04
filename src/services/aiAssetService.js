@@ -1,6 +1,7 @@
 // AI素材生成服务（图片、音频、视频）
 const AI_API_BASE_URL = '/ai';
-const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:3000';
+// 使用相对路径，这样在任何环境下都能正确访问
+const API_BASE_URL = '';
 
 export const aiAssetService = {
   // 生成图片
@@ -131,7 +132,7 @@ export const aiAssetService = {
     };
 
     try {
-      const response = await fetch(`${AI_API_BASE_URL}/prompt`, {
+      const response = await fetch('/ai/prompt', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -154,7 +155,7 @@ export const aiAssetService = {
   // 查询任务状态
   getTaskStatus: async (promptId) => {
     try {
-      const response = await fetch(`${AI_API_BASE_URL}/history/${promptId}`, {
+      const response = await fetch(`/ai/history/${promptId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -182,7 +183,7 @@ export const aiAssetService = {
         type
       });
 
-      const response = await fetch(`${AI_API_BASE_URL}/view?${params.toString()}`, {
+      const response = await fetch(`/ai/view?${params.toString()}`, {
         method: 'GET'
       });
 
@@ -203,7 +204,7 @@ export const aiAssetService = {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch(`${AI_API_BASE_URL}/upload/image`, {
+      const response = await fetch('/ai/upload/image', {
         method: 'GET',
         body: formData
       });
@@ -529,15 +530,15 @@ export const aiAssetService = {
       // 处理图片 URL，确保服务器可以访问
       let processedUrl = imageUrl;
       if (imageUrl.startsWith('/')) {
-        processedUrl = `${API_BASE_URL}${imageUrl}`;
-        console.log('相对路径转换为完整 URL:', processedUrl);
+        processedUrl = `${imageUrl}`;
+        console.log('相对路径:', processedUrl);
       } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
         const urlObj = new URL(imageUrl);
-        processedUrl = `${API_BASE_URL}${urlObj.pathname}`;
-        console.log('前端地址转换为后端地址:', processedUrl);
+        processedUrl = `${urlObj.pathname}`;
+        console.log('前端地址转换为相对路径:', processedUrl);
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
+      const response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
