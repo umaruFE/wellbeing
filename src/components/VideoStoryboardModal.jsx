@@ -171,62 +171,16 @@ export const VideoStoryboardModal = ({
     setError(null);
     
     try {
-      // 先提取人物特征
-      let characterDescription = description;
-      if (!uploadedReferenceImages || uploadedReferenceImages.length === 0) {
-        console.log('开始提取人物特征...');
-        const extractResponse = await fetch('/api/ai/extract-character', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ description })
-        });
-        
-        if (extractResponse.ok) {
-          const extractData = await extractResponse.json();
-          characterDescription = extractData.character || '一个通用卡通人物';
-          console.log('提取的人物特征:', characterDescription);
-        } else {
-          characterDescription = '一个通用卡通人物';
-        }
-      }
-      
-      // 构建人物生成提示词 - 单个人物，白色背景
-      const characterPrompt = `${characterDescription}，单个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
-      
-      // 调用AI生成4张图片
-      const result = await aiAssetService.generateMultipleImages(
-        characterPrompt,
-        {
-          count: 4,
-          width: 512,
-          height: 512,
-          user_id: userId,
-          organization_id: organizationId
-        }
+      // 调用服务函数生成人物参考图
+      const images = await videoStoryboardService.generateCharacterReferenceImages(
+        description,
+        uploadedReferenceImages,
+        userId,
+        organizationId
       );
-
-      if (!result.success || !result.tasks || result.tasks.length === 0) {
-        throw new Error('生成人物参考图失败');
-      }
       
-      // 轮询所有任务
-      const images = [];
-      for (const task of result.tasks) {
-        try {
-          const imageResult = await aiAssetService.pollTaskAndUpload(
-            task.promptId,
-            0,
-            characterPrompt,
-            60,
-            2000
-          );
-          images.push(imageResult.url);
-        } catch (err) {
-          console.error('生成单张人物图失败:', err);
-          // 使用占位图
-          const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-          images.push(`https://placehold.co/512x512/${randomColor}/FFF?text=Character+${images.length + 1}`);
-        }
+      if (!images || images.length === 0) {
+        throw new Error('未能生成任何人物参考图');
       }
       
       setGeneratedCharacterImages(images);
@@ -299,6 +253,15 @@ export const VideoStoryboardModal = ({
 
   // ========== 步骤4：分镜图片 ==========
   
+  // 获取人物描述（用于分镜提示词优化）
+  const getCharacterDescription = () => {
+    if (selectedCharacterImage) {
+      // 如果有选择的人物参考图，返回人物描述
+      return 'consistent character appearance from reference image';
+    }
+    return null;
+  };
+  
   // 生成分镜图片
   const handleGenerateSceneImage = async (sceneId, previousSceneImage = null) => {
     const scene = scenes.find(s => s.id === sceneId);
@@ -309,13 +272,15 @@ export const VideoStoryboardModal = ({
 
     try {
       const referenceImages = getFinalReferenceImages();
+      const characterDescription = getCharacterDescription();
+      
       const imageUrl = await videoStoryboardService.generateSceneImage(
         scene,
         referenceImages,
         userId,
         organizationId,
         previousSceneImage,
-        description
+        characterDescription
       );
       
       setScenes(prev => prev.map(s => 

@@ -168,13 +168,13 @@ export async function GET(
     }
 
     const data = await response.json();
-    console.log(`AI API 返回数据:`, JSON.stringify(data, null, 2));
+    // console.log(`AI API 返回数据:`, JSON.stringify(data, null, 2));
 
     // AI API 返回格式: { "promptId": { ... } }
     // 需要使用 promptId 作为 key 来获取任务数据
     const taskData = data[promptId];
 
-    console.log(`taskData:`, taskData);
+    // console.log(`taskData:`, taskData);
 
     // 如果 taskData 不存在，说明任务还在处理中，返回 pending 状态
     if (!taskData) {

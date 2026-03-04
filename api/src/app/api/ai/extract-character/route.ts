@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { characterExtractionPrompt } from '@/lib/prompt-config';
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
 const DASHSCOPE_API_URL = process.env.DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
@@ -38,26 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = `你是一个专业的人物特征提取助手。你的任务是从用户的视频描述中提取主要人物的外貌特征。
-
-规则：
-1. 只提取人物的外貌特征（如：年龄、性别、发型、发色、肤色、服装、配饰等）
-2. 忽略所有场景、道具、动作、情节描述
-3. 如果描述中有多个角色，只提取主要角色
-4. 如果描述中没有明确的人物，返回"一个通用卡通人物"
-5. 返回简洁的人物描述，不超过50个字
-
-输出格式：直接返回人物描述，不要添加任何其他内容。
-
-示例：
-输入："画面1：一个穿着红色裙子的小女孩在公园里玩耍，旁边有一只小狗"
-输出："一个穿着红色裙子的小女孩"
-
-输入："画面1：地面上有几个打开的箱子，远处有一个架子。娃娃和球散落着"
-输出："一个通用卡通人物"
-
-输入："画面1：一个戴眼镜的中年男性教师在黑板前讲课"
-输出："一个戴眼镜的中年男性教师"`;
+    const systemPrompt = characterExtractionPrompt;
 
     const response = await fetch(`${DASHSCOPE_API_URL}/chat/completions`, {
       method: 'POST',

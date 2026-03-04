@@ -175,17 +175,17 @@ export async function GET(
     }
 
     const data = await response.json();
-    console.log(
-      `[video-task-status] AI API 返回数据:`,
-      JSON.stringify(data, null, 2)
-    );
+    // console.log(
+    //   `[video-task-status] AI API 返回数据:`,
+    //   JSON.stringify(data, null, 2)
+    // );
 
     // 兼容两种返回格式：
     // 1) { "promptId": { ... } }
     // 2) { "status": { ... }, "outputs": { ... } }
     let taskData: any = data[promptId] || data;
 
-    console.log(`[video-task-status] taskData:`, taskData);
+    // console.log(`[video-task-status] taskData:`, taskData);
 
     // 如果 taskData 不存在，说明任务还在处理中，返回 pending 状态
     if (!taskData || Object.keys(taskData).length === 0) {
