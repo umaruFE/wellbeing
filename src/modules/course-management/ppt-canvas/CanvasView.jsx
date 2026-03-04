@@ -707,9 +707,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 setIsRightOpen(true);
               }}
               selectedAssetId={selectedAssetId}
-              onCopyAsset={handleCopyAsset}
-              onDeleteAsset={handleDeleteAsset}
-              onAssetChange={handleAssetChange}
+              onCopyAsset={(assetId) => handleCopyAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setSelectedAssetId)}
+              onDeleteAsset={(assetId) => handleDeleteAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setSelectedAssetId)}
+              onAssetChange={(assetId, field, value) => handleAssetChange(assetId, field, value, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
               editingTextAssetId={editingTextAssetId}
               onEditingTextAssetIdChange={setEditingTextAssetId}
               editingTextContent={editingTextContent}

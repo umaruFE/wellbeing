@@ -536,14 +536,15 @@ export const ReadingMaterialEditor = ({
   };
 
   return (
-    <div className="flex flex-col h-full mt-16">
+    <div className="flex flex-col h-full">
       {/* 顶部工具栏 */}
 
       {/* 主内容区域 */}
+      <div className="flex-1 flex overflow-hidden">
         {/* 左侧目录树 */}
         {/* 中间内容区域 */}
         <div className="flex-1 overflow-auto">
-          <div className="space-y-8">
+          <div className="space-y-8 p-4">
             {pages.map((page, pageIndex) => {
               const isEditing = editingPageIndex === pageIndex;
               const assets = page.canvasAssets || [];
@@ -551,76 +552,17 @@ export const ReadingMaterialEditor = ({
 
               return (
                 <div key={page.id} className="bg-white overflow-hidden">
-            {/* Page Header */}
-            
+                  {/* Page Header */}
 
-            {/* Content Area */}
-            { (
-              <div className="flex relative">
-                {/* Main Canvas Area */}
-                <div className="flex-1">
-                  <div className="flex-1 flex flex-col bg-slate-100 relative" style={{ minHeight: '600px' }}>
-
-                    {/* 画布区域 */}
-                    <div 
-                      className="flex-1 overflow-auto p-8 flex items-center justify-center relative" 
-                      onClick={() => {
-                        setSelectedAssetId(null);
-                        // 如果正在编辑文本，保存并退出编辑模式
-                        if (editingTextAssetId) {
-                          const editingAsset = assets.find(a => a.id === editingTextAssetId);
-                          if (editingAsset) {
-                            handleAssetChange(page.id, editingTextAssetId, 'content', editingTextContent);
-                          }
-                          setEditingTextAssetId(null);
-                        }
-                      }}
-                      onMouseMove={handleMouseMove}
-                      onMouseUp={handleMouseUp}
-                    >
-                      <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]"></div>
-                      <div 
-                        ref={canvasRef}
-                        className="bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 transition-all duration-200"
-                        style={{ width: canvasSize.width, height: canvasSize.height }}
-                        onClick={(e) => {
-                          // 如果点击的是画布本身（不是资产），则保存编辑并取消选择
-                          if (e.target === e.currentTarget) {
-                            setSelectedAssetId(null);
-                            // 如果正在编辑文本，保存并退出编辑模式
-                            if (editingTextAssetId) {
-                              const editingAsset = assets.find(a => a.id === editingTextAssetId);
-                              if (editingAsset) {
-                                handleAssetChange(page.id, editingTextAssetId, 'content', editingTextContent);
-                              }
-                              setEditingTextAssetId(null);
-                            }
-                          }
-                          e.stopPropagation();
-                        }}
-                      >
-                        {/* 渲染资产 */}
-                        <CanvasAssetRenderer
-                          assets={assets}
-                          isEditable={true}
-                          onMouseDown={handleMouseDown}
-                          selectedAssetId={selectedAssetId}
-                          onCopyAsset={onCopyAsset}
-                          onDeleteAsset={(assetId) => {
-                            if (onDeleteAsset) {
-                              onDeleteAsset(assetId);
-                            } else {
-                              handleDeleteAsset(page.id, assetId);
-                            }
-                          }}
-                          onAssetChange={(assetId, field, value) => {
-                            handleAssetChange(page.id, assetId, field, value);
-                          }}
-                          editingTextAssetId={editingTextAssetId}
-                          onEditingTextAssetIdChange={setEditingTextAssetId}
-                          editingTextContent={editingTextContent}
-                          onEditingTextContentChange={setEditingTextContent}
-                          onCanvasClick={() => {
+                  {/* Content Area */}
+                  <div className="flex relative">
+                    {/* Main Canvas Area */}
+                    <div className="flex-1">
+                      <div className="flex-1 flex flex-col bg-slate-100 relative" style={{ minHeight: '600px' }}>
+                        {/* 画布区域 */}
+                        <div 
+                          className="flex-1 overflow-auto p-8 flex items-center justify-center relative" 
+                          onClick={() => {
                             setSelectedAssetId(null);
                             // 如果正在编辑文本，保存并退出编辑模式
                             if (editingTextAssetId) {
@@ -631,19 +573,103 @@ export const ReadingMaterialEditor = ({
                               setEditingTextAssetId(null);
                             }
                           }}
-                        />
+                          onMouseMove={handleMouseMove}
+                          onMouseUp={handleMouseUp}
+                        >
+                          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]"></div>
+                          <div 
+                            ref={canvasRef}
+                            className="bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 transition-all duration-200"
+                            style={{ width: canvasSize.width, height: canvasSize.height }}
+                            onClick={(e) => {
+                              // 如果点击的是画布本身（不是资产），则保存编辑并取消选择
+                              if (e.target === e.currentTarget) {
+                                setSelectedAssetId(null);
+                                // 如果正在编辑文本，保存并退出编辑模式
+                                if (editingTextAssetId) {
+                                  const editingAsset = assets.find(a => a.id === editingTextAssetId);
+                                  if (editingAsset) {
+                                    handleAssetChange(page.id, editingTextAssetId, 'content', editingTextContent);
+                                  }
+                                  setEditingTextAssetId(null);
+                                }
+                              }
+                              e.stopPropagation();
+                            }}
+                          >
+                            {/* 渲染资产 */}
+                            <CanvasAssetRenderer
+                              assets={assets}
+                              isEditable={true}
+                              onMouseDown={handleMouseDown}
+                              selectedAssetId={selectedAssetId}
+                              onCopyAsset={onCopyAsset}
+                              onDeleteAsset={(assetId) => {
+                                if (onDeleteAsset) {
+                                  onDeleteAsset(assetId);
+                                } else {
+                                  handleDeleteAsset(page.id, assetId);
+                                }
+                              }}
+                              onAssetChange={(assetId, field, value) => {
+                                handleAssetChange(page.id, assetId, field, value);
+                              }}
+                              editingTextAssetId={editingTextAssetId}
+                              onEditingTextAssetIdChange={setEditingTextAssetId}
+                              editingTextContent={editingTextContent}
+                              onEditingTextContentChange={setEditingTextContent}
+                              onCanvasClick={() => {
+                                setSelectedAssetId(null);
+                                // 如果正在编辑文本，保存并退出编辑模式
+                                if (editingTextAssetId) {
+                                  const editingAsset = assets.find(a => a.id === editingTextAssetId);
+                                  if (editingAsset) {
+                                    handleAssetChange(page.id, editingTextAssetId, 'content', editingTextContent);
+                                  }
+                                  setEditingTextAssetId(null);
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ) }
-          </div>
-        );
-      })}
-
+              );
+            })}
           </div>
         </div>
+      </div>
+
+      {/* 底部按钮区域 */}
+      <div className="border-t border-slate-200 bg-white p-4 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'text')}
+            className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+          >
+            <Type className="w-4 h-4" />
+            文本
+          </button>
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'image')}
+            className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+          >
+            <ImageIcon className="w-4 h-4" />
+            图片
+          </button>
+        </div>
+        {/* <button
+          onClick={handleExportPDF}
+          className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          导出PDF
+        </button> */}
+      </div>
 
       {/* Prompt Input Modal */}
       <PromptInputModal

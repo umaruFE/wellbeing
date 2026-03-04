@@ -1,114 +1,11 @@
 import { promptHistoryService } from './promptService';
+import { courseGenerationSystemPrompt, promptOptimizationSystemPrompt } from '../lib/prompt-config';
 
 const API_KEY = import.meta.env.VITE_DASHSCOPE_API_KEY;
 const API_URL = import.meta.env.VITE_DASHSCOPE_API_URL;
 
-const SYSTEM_PROMPT = `你是一位精通"PERMA+4E"课程框架的资深课程设计师。请基于用户提供的核心信息，生成一个完整、详细、可直接使用的教学包。
-
-所有生成内容必须严格遵循以下原则：
-1. PERMA驱动 ：每个环节都自然融入积极心理学五大维度
-2. 4E结构化 ：严格遵循Engage→Empower→Execute→Elevate四阶段
-3. 青少年中心 ：活动设计符合目标学段的认知特点和兴趣偏好
-4. 语言真实性 ：在真实、有意义的交际情境中学习语言
-5. 体验完整性 ：构成完整的学习旅程，有清晰的递进逻辑
-
-请严格按照以下JSON格式返回课程数据，不要包含任何其他文字说明：
-
-{
-  "courseData": {
-    "engage": {
-      "title": "Engage (引入)",
-      "color": "bg-purple-100 text-purple-700 border-purple-200",
-      "steps": [
-        {
-          "id": "e1",
-          "time": "X分钟",
-          "title": "环节标题",
-          "objective": "教学目标",
-          "activity": "活动描述",
-          "script": "教师讲稿（中文）",
-          "assets": [
-            {
-              "id": "asset-1",
-              "type": "image|audio|video|text",
-              "title": "素材标题",
-              "url": "素材URL（可选）",
-              "x": 0,
-              "y": 0,
-              "width": 400,
-              "height": 300,
-              "rotation": 0,
-              "prompt": "生成提示词（用于图片生成）"
-            }
-          ]
-        }
-      ]
-    },
-    "empower": {
-      "title": "Empower (赋能)",
-      "color": "bg-blue-100 text-blue-700 border-blue-200",
-      "steps": []
-    },
-    "execute": {
-      "title": "Execute (实践)",
-      "color": "bg-green-100 text-green-700 border-green-200",
-      "steps": []
-    },
-    "elevate": {
-      "title": "Elevate (升华)",
-      "color": "bg-yellow-100 text-yellow-700 border-yellow-200",
-      "steps": []
-    }
-  }
-}
-
-课程设计要求：
-1. Engage阶段：15-20分钟，情感连接与动机唤醒
-   - 流程：情绪启动活动、主题引入、个人连接、目标设定
-   - 要求：3分钟内抓住注意力，主题呈现符合青少年审美，建立"这与我有关"的连接
-
-2. Empower阶段：45-55分钟，支架学习与技能构建
-   - 流程：情境化输入、趣味化读写练习、初步应用
-   - 要求：输入情境真实有趣，练习从控制性过渡到半开放性，提供足够的语言和策略支架
-
-3. Execute阶段：35-45分钟，创意实践与初步产出
-   - 流程：任务说明、创意实践、成果分享
-   - 要求：任务允许个性化表达，创作过程有清晰步骤指导，分享环节具有鼓励性
-
-4. Elevate阶段：15-20分钟，即时反思与期待构建
-   - 流程：亮点庆祝、个人反思、悬念设置
-   - 要求：庆祝方式具体真诚，反思工具简单易用，悬念能引发真实期待
-
-活动设计要求：
-- 活动形式：从多元活动形式库中选择3-5种核心活动形式
-- PERMA体验强化：融入积极情绪、全心投入、人际关系、意义感、成就感策略
-- 语言目标：核心词汇、句型、语法的学习和应用
-- 教学资源：PPT设计、工作纸/手册设计、教具/材料、环境布置建议
-
-生成的课程内容需要：
-- 符合目标学生年龄段的兴趣特征
-- 匹配单元语言目标适合的表达形式
-- 体现PERMA重点维度
-- 形式新颖、可操作、有吸引力
-- 包含详细的教师中文讲稿
-- 提供多媒体素材建议和AI生成指令`;
-
 export const optimizePrompt = async (originalPrompt, elementType, userId = null) => {
-  const systemPrompt = `你是一位专业的提示词优化专家，擅长为不同类型的内容生成高质量的提示词。
-
-请根据以下原始提示词和元素类型，生成优化后的提示词：
-
-原始提示词：${originalPrompt}
-元素类型：${elementType === 'image' ? '图片生成' : elementType === 'audio' ? '音频生成' : elementType === 'script' ? '教师讲稿' : elementType === 'activity' ? '教学活动' : 'PPT内容'}
-
-优化要求：
-1. 保持原始提示词的核心意图
-2. 提高提示词的明确性和具体性
-3. 添加适当的细节和约束条件
-4. 确保提示词符合目标受众的需求
-5. 优化后的提示词应该更能引导AI生成高质量的内容
-
-请直接返回优化后的提示词，不要包含任何其他文字说明。`;
+  const systemPrompt = promptOptimizationSystemPrompt(originalPrompt, elementType);
 
   const startTime = Date.now();
   let optimizedPrompt = null;
@@ -247,7 +144,7 @@ export const generateCourseData = async (config, userId = null, organizationId =
         messages: [
           {
             role: 'system',
-            content: SYSTEM_PROMPT
+            content: courseGenerationSystemPrompt
           },
           {
             role: 'user',

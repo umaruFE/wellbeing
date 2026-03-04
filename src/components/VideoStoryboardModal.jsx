@@ -30,7 +30,9 @@ export const VideoStoryboardModal = ({
   const [currentStep, setCurrentStep] = useState(1);
   
   // 步骤1：基本信息
-  const [description, setDescription] = useState(initialDescription);
+  const [storyCore, setStoryCore] = useState('');
+  const [overallStyle, setOverallStyle] = useState('');
+  const [characterSetting, setCharacterSetting] = useState('');
   const [videoDuration, setVideoDuration] = useState(10);
   const [uploadedReferenceImages, setUploadedReferenceImages] = useState(initialReferenceImages);
   const [uploadingImages, setUploadingImages] = useState({}); // file name -> boolean
@@ -74,7 +76,9 @@ export const VideoStoryboardModal = ({
   useEffect(() => {
     if (isOpen) {
       setCurrentStep(1);
-      setDescription(initialDescription);
+      setStoryCore('');
+      setOverallStyle('');
+      setCharacterSetting('');
       setVideoDuration(10);
       setUploadedReferenceImages(initialReferenceImages);
       setUploadingImages({});
@@ -88,7 +92,7 @@ export const VideoStoryboardModal = ({
       setError(null);
       setPreviewImage(null);
     }
-  }, [isOpen, initialDescription, initialReferenceImages]);
+  }, [isOpen, initialReferenceImages]);
 
   // 获取最终参考图片（上传的或生成的）
   const getFinalReferenceImages = () => {
@@ -171,9 +175,12 @@ export const VideoStoryboardModal = ({
     setError(null);
     
     try {
+      // 组合三个维度的描述
+      const combinedDescription = `故事核心要素：${storyCore}\n整体风格：${overallStyle}\n角色设定：${characterSetting}`;
+      
       // 调用服务函数生成人物参考图
       const images = await videoStoryboardService.generateCharacterReferenceImages(
-        description,
+        combinedDescription,
         uploadedReferenceImages,
         userId,
         organizationId
@@ -263,7 +270,7 @@ export const VideoStoryboardModal = ({
   };
   
   // 生成分镜图片
-  const handleGenerateSceneImage = async (sceneId, previousSceneImage = null) => {
+  const handleGenerateSceneImage = async (sceneId) => {
     const scene = scenes.find(s => s.id === sceneId);
     if (!scene) return;
 
@@ -279,7 +286,6 @@ export const VideoStoryboardModal = ({
         referenceImages,
         userId,
         organizationId,
-        previousSceneImage,
         characterDescription
       );
       
@@ -297,17 +303,11 @@ export const VideoStoryboardModal = ({
     }
   };
 
-  // 生成所有分镜图片（按顺序，每个使用前一个作为参考）
+  // 生成所有分镜图片（使用人物参考图保持人物一致性）
   const handleGenerateAllSceneImages = async () => {
-    let previousImage = null;
     for (const scene of scenes) {
       if (!scene.generatedImage) {
-        const generatedImage = await handleGenerateSceneImage(scene.id, previousImage);
-        if (generatedImage) {
-          previousImage = generatedImage;
-        }
-      } else {
-        previousImage = scene.generatedImage;
+        await handleGenerateSceneImage(scene.id);
       }
     }
   };
@@ -384,13 +384,46 @@ export const VideoStoryboardModal = ({
     <div className="space-y-6">
       <div>
         <label className="text-sm font-medium text-slate-700 mb-2 block">
-          视频描述 <span className="text-red-500">*</span>
+          故事核心要素 <span className="text-red-500">*</span>
         </label>
         <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="描述你想要的视频内容，例如：一个关于数字学习的儿童教育视频，通过有趣的动画和互动帮助小朋友认识1-10的数字..."
-          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-32"
+          value={storyCore}
+          onChange={(e) => setStoryCore(e.target.value)}
+          placeholder="例如：一个小女孩周末在花园里玩耍"
+          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-slate-700 mb-2 block">
+          整体风格 <span className="text-red-500">*</span>
+        </label>
+        <select
+          value={overallStyle}
+          onChange={(e) => setOverallStyle(e.target.value)}
+          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none h-15"
+        >
+          <option value="">请选择整体风格</option>
+          <option value="3D皮克斯风格、温馨治愈、明亮色彩">3D皮克斯风格、温馨治愈、明亮色彩</option>
+          <option value="2D手绘风格、简约可爱、柔和色调">2D手绘风格、简约可爱、柔和色调</option>
+          <option value="赛博朋克风格、未来科技、霓虹色调">赛博朋克风格、未来科技、霓虹色调</option>
+          <option value="水墨风格、中国风、典雅含蓄">水墨风格、中国风、典雅含蓄</option>
+          <option value="写实风格、逼真细腻、自然光影">写实风格、逼真细腻、自然光影</option>
+          <option value="卡通风格、夸张有趣、鲜明色彩">卡通风格、夸张有趣、鲜明色彩</option>
+          <option value="科幻风格、宇宙太空、未来感">科幻风格、宇宙太空、未来感</option>
+          <option value="奇幻风格、魔法元素、神秘氛围">奇幻风格、魔法元素、神秘氛围</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-slate-700 mb-2 block">
+          角色设定 <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          value={characterSetting}
+          onChange={(e) => setCharacterSetting(e.target.value)}
+          placeholder="例如：单人故事，主角只有一个人"
+          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
         />
       </div>
 

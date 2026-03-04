@@ -13,7 +13,23 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'your_password',
   max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  connectionTimeoutMillis: 10000,
+  maxUses: 7500,
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000,
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+pool.on('connect', () => {
+  console.log('New client connected to PostgreSQL');
+});
+
+pool.on('remove', () => {
+  console.log('Client removed from pool');
 });
 
 interface QueryState {
@@ -73,13 +89,9 @@ function createQueryBuilder(table: string) {
       return builder;
     },
 
-    async then(resolve: any, reject?: any) {
-      try {
-        const result = await executeSelect(state);
-        return resolve(result);
-      } catch (err) {
-        return reject ? reject(err) : resolve({ data: null, error: err, count: null });
-      }
+    // Return a promise that executes the query
+    then(onFulfilled?: any, onRejected?: any) {
+      return executeSelect(state).then(onFulfilled, onRejected);
     },
   };
 
@@ -158,7 +170,7 @@ async function executeSelect(state: QueryState): Promise<{ data: any[]; error: a
   }
 
   let sql = `SELECT ${selectClause} FROM ${mainTable}`;
-  const countSql = state.countExact ? `SELECT COUNT(*)::int FROM ${state.table}` : null;
+  let countSql = state.countExact ? `SELECT COUNT(*)::int FROM ${state.table}` : null;
 
   // WHERE
   const whereParts: string[] = [];
@@ -193,7 +205,7 @@ async function executeSelect(state: QueryState): Promise<{ data: any[]; error: a
   if (whereParts.length > 0) {
     sql += ` WHERE ${whereParts.join(' AND ')}`;
     if (countSql) {
-      (countSql as any) = countSql + ` WHERE ${whereParts.join(' AND ')}`;
+      countSql = countSql + ` WHERE ${whereParts.join(' AND ')}`;
     }
   }
 
