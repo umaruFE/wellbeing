@@ -3,6 +3,34 @@ const API_URL = import.meta.env.VITE_DASHSCOPE_API_URL;
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 /**
+ * 从描述中提取人物特征
+ * @param {string} description - 视频描述
+ * @returns {Promise<string>} - 人物特征描述
+ */
+export const extractCharacterFromDescription = async (description) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ai/extract-character`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ description })
+    });
+
+    if (!response.ok) {
+      console.error('提取人物特征失败，使用默认描述');
+      return '一个通用卡通人物';
+    }
+
+    const data = await response.json();
+    return data.character || '一个通用卡通人物';
+  } catch (error) {
+    console.error('提取人物特征失败:', error);
+    return '一个通用卡通人物';
+  }
+};
+
+/**
  * 生成人物参考图（文生图或图生图）
  * @param {string} description - 视频描述
  * @param {string[]} uploadedImages - 用户上传的参考图片
@@ -11,7 +39,15 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
 export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null) => {
-  const characterPrompt = `${description}，单个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
+  // 先提取人物特征
+  let characterDescription = description;
+  if (uploadedImages.length === 0) {
+    console.log('开始提取人物特征...');
+    characterDescription = await extractCharacterFromDescription(description);
+    console.log('提取的人物特征:', characterDescription);
+  }
+  
+  const characterPrompt = `${characterDescription}，单个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
   
   try {
     let response;

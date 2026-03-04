@@ -171,8 +171,27 @@ export const VideoStoryboardModal = ({
     setError(null);
     
     try {
+      // 先提取人物特征
+      let characterDescription = description;
+      if (!uploadedReferenceImages || uploadedReferenceImages.length === 0) {
+        console.log('开始提取人物特征...');
+        const extractResponse = await fetch('/api/ai/extract-character', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description })
+        });
+        
+        if (extractResponse.ok) {
+          const extractData = await extractResponse.json();
+          characterDescription = extractData.character || '一个通用卡通人物';
+          console.log('提取的人物特征:', characterDescription);
+        } else {
+          characterDescription = '一个通用卡通人物';
+        }
+      }
+      
       // 构建人物生成提示词 - 单个人物，白色背景
-      const characterPrompt = `${description}，单个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
+      const characterPrompt = `${characterDescription}，单个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
       
       // 调用AI生成4张图片
       const result = await aiAssetService.generateMultipleImages(
