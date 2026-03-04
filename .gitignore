@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 /api/.next
 /api/public/uploads
+.env
+api/.env
