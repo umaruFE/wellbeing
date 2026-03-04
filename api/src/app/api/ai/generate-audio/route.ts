@@ -264,7 +264,8 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Pr
   formData.append('file', new Blob([buffer]), filename);
   formData.append('folder', folder);
 
-  const response = await fetch('/api/upload', {
+  // 在服务器端使用完整的 URL 或内部 API 调用
+  const response = await fetch(new URL('/api/upload', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'), {
     method: 'POST',
     body: formData,
   });

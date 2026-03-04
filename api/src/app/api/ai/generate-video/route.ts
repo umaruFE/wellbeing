@@ -233,7 +233,7 @@ async function downloadImage(imageUrl: string): Promise<Buffer> {
     // 如果是本地路径，需要处理
     let fullUrl = imageUrl;
     if (imageUrl.startsWith('/')) {
-      fullUrl = `${imageUrl}`;
+      fullUrl = new URL(imageUrl, process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').href;
     }
 
     const response = await fetch(fullUrl);

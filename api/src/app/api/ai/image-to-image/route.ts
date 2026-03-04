@@ -50,13 +50,13 @@ async function uploadImageToComfyUI(imageUrl: string): Promise<string> {
     
     // 处理不同类型的 URL
     if (imageUrl.startsWith('/')) {
-      // 相对路径，直接使用
-      fullUrl = `${imageUrl}`;
+      // 相对路径，构建完整 URL
+      fullUrl = new URL(imageUrl, process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').href;
     } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
-      // 前端开发服务器地址，提取路径部分
+      // 前端开发服务器地址，构建完整 URL
       const urlObj = new URL(imageUrl);
-      fullUrl = `${urlObj.pathname}`;
-      console.log(`检测到前端本地地址，转换为相对路径: ${imageUrl} -> ${fullUrl}`);
+      fullUrl = new URL(urlObj.pathname, process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').href;
+      console.log(`检测到前端本地地址，转换为完整 URL: ${imageUrl} -> ${fullUrl}`);
     }
     // OSS URL 或其他公网 URL 直接使用
 
@@ -373,7 +373,8 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Pr
   formData.append('file', new Blob([uint8Array]), filename);
   formData.append('folder', folder);
 
-  const response = await fetch('/api/upload', {
+  // 在服务器端使用完整的 URL
+  const response = await fetch(new URL('/api/upload', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'), {
     method: 'POST',
     body: formData,
   });
