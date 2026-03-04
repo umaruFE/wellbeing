@@ -573,13 +573,37 @@ export const VideoStoryboardModal = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {scenes.map((scene) => (
+                {scenes.map((scene, index) => (
                   <tr key={scene.id} className="hover:bg-slate-50">
                     <td className="px-4 py-3 text-slate-600">{scene.sequence}</td>
                     <td className="px-4 py-3 text-slate-600">{scene.duration}</td>
                     <td className="px-4 py-3 text-slate-600">{scene.shotType}</td>
-                    <td className="px-4 py-3 text-slate-600">{scene.cameraMovement}</td>
-                    <td className="px-4 py-3 text-slate-600 max-w-xs truncate">{scene.content}</td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="text"
+                        value={scene.cameraMovement || ''}
+                        onChange={(e) => {
+                          const newScenes = [...scenes];
+                          newScenes[index] = { ...scene, cameraMovement: e.target.value };
+                          setScenes(newScenes);
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
+                        placeholder="请输入运镜方式"
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <textarea
+                        value={scene.content || ''}
+                        onChange={(e) => {
+                          const newScenes = [...scenes];
+                          newScenes[index] = { ...scene, content: e.target.value };
+                          setScenes(newScenes);
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white resize-none"
+                        rows={2}
+                        placeholder="请输入画面内容"
+                      />
+                    </td>
                   </tr>
                 ))}
               </tbody>
