@@ -555,6 +555,27 @@ export async function POST(request: NextRequest) {
       console.error('Error saving task:', taskError);
     }
 
+    // 保存提示词到历史记录
+    try {
+      const insertData = {
+        user_id: user_id || null,
+        organization_id: organization_id || null,
+        prompt: prompt,
+        prompt_type: 'video_generation',
+        metadata: {
+          image_url: imageUrl || (allImageUrls[0] || null),
+          image_urls: allImageUrls,
+          duration: duration,
+          workflow_type: allImageUrls.length > 0 ? 'image_to_video' : 'text_to_video'
+        },
+        created_at: new Date().toISOString()
+      };
+      const result = await db.from('prompt_history').insert(insertData).select().single();
+      console.log('保存视频生成提示词历史成功:', result?.data?.id);
+    } catch (historyError) {
+      console.error('保存视频生成提示词历史失败:', historyError);
+    }
+
     return withCors(
       NextResponse.json({
         success: true,

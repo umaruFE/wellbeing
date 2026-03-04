@@ -450,7 +450,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
  * @param {number} interval - 轮询间隔（毫秒）
  * @returns {Promise<string>} - 视频URL
  */
-export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 60, interval = 3000) => {
+export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 300, interval = 5000) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const response = await fetch(`/api/ai/video-task-status/${promptId}`, {

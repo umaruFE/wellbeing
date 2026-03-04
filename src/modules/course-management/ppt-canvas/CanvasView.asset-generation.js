@@ -381,7 +381,7 @@ export const handleConfirmAddAsset = async (
         const result = await aiAssetService.generateMultipleAudio(
           finalPrompt,
           {
-            count: 4,
+            count: 2,
             lyrics: lyrics,
             duration: audioDuration,
             user_id: userId,
@@ -513,7 +513,7 @@ export const handleConfirmAddAsset = async (
 
         // 即使生成失败，也显示抽卡界面（使用占位图）
         const generatedAudios = [];
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 2; i++) {
           const randomColor = Math.floor(Math.random() * 16777215).toString(16);
           generatedAudios.push({
             url: `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Audio+Failed+${i + 1}`,
