@@ -528,14 +528,14 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
 
     const data = await response.json();
     
-    if (!data.success || !data.taskId) {
+    if (!data.success || !data.promptId) {
       throw new Error('提交视频生成任务失败');
     }
     
-    console.log('视频生成任务ID:', data.taskId);
+    console.log('视频生成任务ID:', data.promptId);
     
     // 轮询任务状态
-    const videoUrl = await pollTaskAndGetVideoUrl(data.taskId);
+    const videoUrl = await pollTaskAndGetVideoUrl(data.promptId);
     return videoUrl;
   } catch (error) {
     console.error('合成视频失败:', error);
