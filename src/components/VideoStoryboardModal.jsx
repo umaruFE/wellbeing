@@ -171,8 +171,8 @@ export const VideoStoryboardModal = ({
     setError(null);
     
     try {
-      // 构建人物生成提示词
-      const characterPrompt = `${description}，人物特写，正面，清晰面部特征，高质量，细节丰富`;
+      // 构建人物生成提示词 - 单个人物，白色背景
+      const characterPrompt = `${description}，单个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
       
       // 调用AI生成4张图片
       const result = await aiAssetService.generateMultipleImages(

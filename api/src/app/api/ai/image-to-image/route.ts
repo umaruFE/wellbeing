@@ -46,12 +46,24 @@ interface TaskStatus {
 // 上传图片到 ComfyUI
 async function uploadImageToComfyUI(imageUrl: string): Promise<string> {
   try {
-    // 如果是本地路径，需要处理
     let fullUrl = imageUrl;
+    
+    // 处理不同类型的 URL
     if (imageUrl.startsWith('/')) {
+      // 相对路径，添加后端 API 地址
       fullUrl = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'}${imageUrl}`;
+    } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
+      // 前端开发服务器地址，需要替换为后端 API 地址
+      // 图片可能存储在后端，尝试替换端口
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const urlObj = new URL(imageUrl);
+      fullUrl = `${backendUrl}${urlObj.pathname}`;
+      console.log(`检测到前端本地地址，转换为后端地址: ${imageUrl} -> ${fullUrl}`);
     }
+    // OSS URL 或其他公网 URL 直接使用
 
+    console.log(`下载参考图片: ${fullUrl}`);
+    
     // 下载图片
     const response = await fetch(fullUrl);
     if (!response.ok) {

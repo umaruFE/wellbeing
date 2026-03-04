@@ -526,6 +526,17 @@ export const aiAssetService = {
     const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
 
     try {
+      // 处理图片 URL，确保服务器可以访问
+      let processedUrl = imageUrl;
+      if (imageUrl.startsWith('/')) {
+        processedUrl = `${API_BASE_URL}${imageUrl}`;
+        console.log('相对路径转换为完整 URL:', processedUrl);
+      } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
+        const urlObj = new URL(imageUrl);
+        processedUrl = `${API_BASE_URL}${urlObj.pathname}`;
+        console.log('前端地址转换为后端地址:', processedUrl);
+      }
+
       const response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
         method: 'POST',
         headers: {
@@ -533,7 +544,7 @@ export const aiAssetService = {
         },
         body: JSON.stringify({
           prompt,
-          imageUrl,
+          imageUrl: processedUrl,
           count,
           width,
           height,

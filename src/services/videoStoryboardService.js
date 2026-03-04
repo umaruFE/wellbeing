@@ -11,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
 export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null) => {
-  const characterPrompt = `${description}，人物特写，正面，清晰面部特征，高质量，细节丰富`;
+  const characterPrompt = `${description}，单个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
   
   try {
     let response;
@@ -19,6 +19,18 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
     if (uploadedImages.length > 0) {
       // 有上传参考图，使用图生图接口
       console.log('使用图生图接口生成人物参考图');
+      
+      // 处理图片 URL，确保服务器可以访问
+      let imageUrl = uploadedImages[0];
+      if (imageUrl.startsWith('/')) {
+        imageUrl = `${API_BASE_URL}${imageUrl}`;
+        console.log('相对路径转换为完整 URL:', imageUrl);
+      } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
+        const urlObj = new URL(imageUrl);
+        imageUrl = `${API_BASE_URL}${urlObj.pathname}`;
+        console.log('前端地址转换为后端地址:', imageUrl);
+      }
+      
       response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
         method: 'POST',
         headers: {
@@ -26,7 +38,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
         },
         body: JSON.stringify({
           prompt: characterPrompt,
-          imageUrl: uploadedImages[0], // 使用第一张上传的图片作为参考
+          imageUrl: imageUrl,
           count: 4,
           width: 512,
           height: 512,
@@ -221,10 +233,25 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
   try {
     let response;
     
-    const referenceImage = previousSceneImage || (referenceImages.length > 0 ? referenceImages[0] : null);
+    let referenceImage = previousSceneImage || (referenceImages.length > 0 ? referenceImages[0] : null);
+    
+    // 处理图片 URL，确保服务器可以访问
+    if (referenceImage) {
+      // 如果是相对路径（如 /uploads/...），转换为完整 URL
+      if (referenceImage.startsWith('/')) {
+        referenceImage = `${API_BASE_URL}${referenceImage}`;
+        console.log('相对路径转换为完整 URL:', referenceImage);
+      }
+      // 如果是前端开发服务器地址，转换为后端地址
+      else if (referenceImage.includes('localhost:517') || referenceImage.includes('127.0.0.1:517')) {
+        const urlObj = new URL(referenceImage);
+        referenceImage = `${API_BASE_URL}${urlObj.pathname}`;
+        console.log('前端地址转换为后端地址:', referenceImage);
+      }
+    }
     
     if (referenceImage) {
-      console.log('使用图生图保持风格一致性');
+      console.log('使用图生图保持风格一致性，参考图:', referenceImage);
       response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
         method: 'POST',
         headers: {
