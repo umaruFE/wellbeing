@@ -942,7 +942,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           setPendingAssetConfig, setShowCardSelectionModal, user, saveToHistory, history, historyIndex, setHistory, setHistoryIndex,
           setSelectedAssetId, setIsRightOpen
         )}
-        onConfirmAddVideoAsset={handleConfirmAddVideoAsset}
+        onConfirmAddVideoAsset={(videoData) => handleConfirmAddVideoAsset(
+          videoData, activePhase, activeStepId, courseData, setCourseData, saveToHistory, history, historyIndex, setHistory, setHistoryIndex, setSelectedAssetId, setIsRightOpen, setShowPromptModal, setPromptModalConfig
+        )}
         showCardSelectionModal={showCardSelectionModal}
         setShowCardSelectionModal={setShowCardSelectionModal}
         cardSelectionImages={cardSelectionImages}
