@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
           }
         ],
         temperature: 0.3,
-        max_tokens: 100
+        max_tokens: 500
       })
     });
 
@@ -74,7 +74,36 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    const character = data.choices?.[0]?.message?.content?.trim() || '一个通用卡通人物';
+    let character = data.choices?.[0]?.message?.content?.trim() || '一个通用卡通人物';
+
+    console.log('API返回的原始内容:', character);
+
+    if (character.includes('character_description')) {
+      try {
+        let cleanedContent = character;
+        if (cleanedContent.startsWith('```json')) {
+          cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        } else if (cleanedContent.startsWith('```')) {
+          cleanedContent = cleanedContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
+        
+        const jsonMatch = cleanedContent.match(/\{[\s\S]*"character_description"[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsedContent = JSON.parse(jsonMatch[0]);
+          if (parsedContent.character_description) {
+            character = parsedContent.character_description;
+          }
+        }
+      } catch (parseError) {
+        console.log('JSON解析失败，尝试正则提取');
+        const match = character.match(/"character_description"\s*:\s*"([^"]+)"/);
+        if (match && match[1]) {
+          character = match[1].trim();
+        } else {
+          console.log('正则提取失败，使用原始内容');
+        }
+      }
+    }
 
     console.log('提取的人物特征:', character);
 

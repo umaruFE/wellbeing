@@ -77,9 +77,11 @@ export const pollTaskAndGetImageUrl = async (promptId, maxAttempts = 60, interva
  * @param {string[]} uploadedImages - 用户上传的参考图片
  * @param {string} userId - 用户ID
  * @param {string} organizationId - 组织ID
+ * @param {number} width - 图片宽度
+ * @param {number} height - 图片高度
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
-export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null) => {
+export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512) => {
   // 先提取人物特征
   let characterDescription = description;
   if (uploadedImages.length === 0) {
@@ -134,9 +136,9 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
         body: JSON.stringify({
           prompt: characterPrompt,
           imageUrl: imageUrl,
-          count: 4,
-          width: 512,
-          height: 512,
+          count: 1,
+          width: width,
+          height: height,
           user_id: userId,
           organization_id: organizationId
         })
@@ -151,11 +153,128 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
         },
         body: JSON.stringify({
           prompt: characterPrompt,
-          count: 4,
-          width: 512,
-          height: 512,
+          count: 1,
+          width: width,
+          height: height,
+          user_id: userId,
+          organization_id: organizationId,
+          workflow_type: 'person'
+        })
+      });
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '生成人物参考图失败');
+    }
+
+    const data = await response.json();
+    
+    if (!data.success || !data.tasks || data.tasks.length === 0) {
+      throw new Error('生成人物参考图失败');
+    }
+    
+    // 轮询所有任务获取图片URL
+    const images = [];
+    for (const task of data.tasks) {
+      try {
+        const imageUrl = await pollTaskAndGetImageUrl(task.promptId);
+        images.push(imageUrl);
+      } catch (err) {
+        console.error('轮询任务失败:', err);
+        // 使用占位图
+        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
+        images.push(`https://placehold.co/512x512/${randomColor}/FFF?text=Character+${images.length + 1}`);
+      }
+    }
+    
+    return images;
+  } catch (error) {
+    console.error('生成人物参考图失败:', error);
+    throw error;
+  }
+};
+
+/**
+ * 使用已提取的人物描述生成人物参考图
+ * @param {string} characterDescription - 已提取/编辑的人物描述
+ * @param {string[]} uploadedImages - 用户上传的参考图片
+ * @param {string} userId - 用户ID
+ * @param {string} organizationId - 组织ID
+ * @param {number} width - 图片宽度
+ * @param {number} height - 图片高度
+ * @returns {Promise<string[]>} - 生成的图片URL数组
+ */
+export const generateCharacterReferenceImagesWithPrompt = async (characterDescription, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512) => {
+  // 从后端获取人物参考图提示词
+  let characterPrompt = `${characterDescription}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
+  try {
+    const promptResponse = await fetch('/api/ai/get-character-prompt', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ characterDescription })
+    });
+    
+    if (promptResponse.ok) {
+      const promptData = await promptResponse.json();
+      if (promptData.prompt) {
+        characterPrompt = promptData.prompt;
+        console.log('使用后端提示词:', characterPrompt);
+      }
+    }
+  } catch (error) {
+    console.error('获取后端提示词失败，使用默认提示词:', error);
+  }
+  
+  try {
+    let response;
+    
+    if (uploadedImages.length > 0) {
+      // 有上传参考图，使用图生图接口
+      console.log('使用图生图接口生成人物参考图');
+      
+      // 处理图片 URL，确保服务器可以访问
+      let imageUrl = uploadedImages[0];
+      if (imageUrl.startsWith('/')) {
+        imageUrl = `${imageUrl}`;
+        console.log('相对路径:', imageUrl);
+      } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
+        const urlObj = new URL(imageUrl);
+        imageUrl = `${urlObj.pathname}`;
+        console.log('前端地址转换为相对路径:', imageUrl);
+      }
+      
+      response = await fetch('/api/ai/image-to-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: characterPrompt,
+          imageUrl: imageUrl,
+          count: 1,
+          width: width,
+          height: height,
           user_id: userId,
           organization_id: organizationId
+        })
+      });
+    } else {
+      // 没有上传参考图，使用文生图接口
+      console.log('使用文生图接口生成人物参考图');
+      response = await fetch('/api/ai/generate-images', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          prompt: characterPrompt,
+          count: 1,
+          width: width,
+          height: height,
+          user_id: userId,
+          organization_id: organizationId,
+          workflow_type: 'person'
         })
       });
     }
@@ -547,6 +666,7 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
 export default {
   extractCharacterFromDescription,
   generateCharacterReferenceImages,
+  generateCharacterReferenceImagesWithPrompt,
   pollTaskAndGetImageUrl,
   generateStoryboardScript,
   generateSceneImage,

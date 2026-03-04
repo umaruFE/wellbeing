@@ -1,0 +1,247 @@
+{
+  "56": {
+    "inputs": {
+      "seed": 1113395333209473,
+      "steps": 4,
+      "cfg": 1,
+      "sampler_name": "sa_solver",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "109",
+        0
+      ],
+      "positive": [
+        "68",
+        0
+      ],
+      "negative": [
+        "61",
+        0
+      ],
+      "latent_image": [
+        "60",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "K采样器"
+    }
+  },
+  "60": {
+    "inputs": {
+      "pixels": [
+        "91",
+        0
+      ],
+      "vae": [
+        "110",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE编码"
+    }
+  },
+  "61": {
+    "inputs": {
+      "prompt": "",
+      "clip": [
+        "107",
+        0
+      ],
+      "vae": [
+        "110",
+        0
+      ],
+      "image1": [
+        "91",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "文本编码（QwenImageEditPlus）"
+    }
+  },
+  "68": {
+    "inputs": {
+      "prompt": [
+        "138",
+        0
+      ],
+      "clip": [
+        "107",
+        0
+      ],
+      "vae": [
+        "110",
+        0
+      ],
+      "image1": [
+        "91",
+        0
+      ]
+    },
+    "class_type": "TextEncodeQwenImageEditPlus",
+    "_meta": {
+      "title": "文本编码（QwenImageEditPlus）"
+    }
+  },
+  "69": {
+    "inputs": {
+      "samples": [
+        "56",
+        0
+      ],
+      "vae": [
+        "110",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "74": {
+    "inputs": {
+      "image": "1772635175212-0235bb33.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "91": {
+    "inputs": {
+      "aspect_ratio": "original",
+      "proportional_width": 1,
+      "proportional_height": 1,
+      "fit": "letterbox",
+      "method": "lanczos",
+      "round_to_multiple": "8",
+      "scale_to_side": "shortest",
+      "scale_to_length": [
+        "104",
+        0
+      ],
+      "background_color": "#000000",
+      "image": [
+        "74",
+        0
+      ]
+    },
+    "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
+    "_meta": {
+      "title": "图层工具：按宽高比缩放 V2"
+    }
+  },
+  "99": {
+    "inputs": {
+      "text": "overlapping small hands—boy's muddy hand, girl's hand holding daisy, against lush green grass and wild berries, dewdrop on petal reflecting two laughing children, dew trembling then falling, soft light bloom transition, hand-drawn subtitle 'Some wonders grow best together.', realistic style, close-up to extreme close-up, static camera with slight tilt, gentle 3-second rotation blur, natural soft lighting, consistent visual style, coherent color palette, unified art direction, high quality, detailed, professional cinematography",
+      "anything": [
+        "138",
+        0
+      ]
+    },
+    "class_type": "easy showAnything",
+    "_meta": {
+      "title": "展示任何"
+    }
+  },
+  "104": {
+    "inputs": {
+      "Number": 1024
+    },
+    "class_type": "Int",
+    "_meta": {
+      "title": "Int"
+    }
+  },
+  "105": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "69",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图像"
+    }
+  },
+  "106": {
+    "inputs": {
+      "unet_name": "qwen_image_edit_2511_fp8_e4m3fn.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "107": {
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "109": {
+    "inputs": {
+      "lora_name": "Qwen-Image-Lightning-4steps-V1.0.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "133",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "110": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "133": {
+    "inputs": {
+      "lora_name": "next-scene_lora-v2-3000.safetensors",
+      "strength_model": 0.8000000000000002,
+      "model": [
+        "106",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "138": {
+    "inputs": {
+      "prompt": "overlapping small hands—boy's muddy hand, girl's hand holding daisy, against lush green grass and wild berries, dewdrop on petal reflecting two laughing children, dew trembling then falling, soft light bloom transition, hand-drawn subtitle 'Some wonders grow best together.', realistic style, close-up to extreme close-up, static camera with slight tilt, gentle 3-second rotation blur, natural soft lighting, consistent visual style, coherent color palette, unified art direction, high quality, detailed, professional cinematography",
+      "start_index": 0,
+      "max_rows": 1000,
+      "remove_empty_lines": ""
+    },
+    "class_type": "easy promptLine",
+    "_meta": {
+      "title": "提示词行"
+    }
+  }
+}

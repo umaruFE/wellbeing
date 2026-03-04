@@ -13,6 +13,15 @@ const STEPS = [
   { id: 5, title: '生成视频', description: '合成最终视频' }
 ];
 
+// 图片比例选项
+const ASPECT_RATIOS = [
+  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
+  { id: '4:3', label: '4:3', width: 1024, height: 768, description: '标准横屏' },
+  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
+  { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
+  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: '竖屏长图' },
+];
+
 /**
  * VideoStoryboardModal - 视频分镜向导式编辑模态框
  * 分步骤完成视频生成：基本信息 → 人物参考 → 分镜脚本 → 分镜图片 → 生成视频
@@ -36,8 +45,11 @@ export const VideoStoryboardModal = ({
   const [videoDuration, setVideoDuration] = useState(10);
   const [uploadedReferenceImages, setUploadedReferenceImages] = useState(initialReferenceImages);
   const [uploadingImages, setUploadingImages] = useState({}); // file name -> boolean
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState(ASPECT_RATIOS[0]); // 默认16:9
   
   // 步骤2：人物参考图生成
+  const [extractedCharacterDescription, setExtractedCharacterDescription] = useState(''); // 提取的人物特征描述
+  const [isExtractingCharacter, setIsExtractingCharacter] = useState(false); // 是否正在提取人物特征
   const [generatedCharacterImages, setGeneratedCharacterImages] = useState([]);
   const [selectedCharacterImage, setSelectedCharacterImage] = useState(null);
   const [isGeneratingCharacters, setIsGeneratingCharacters] = useState(false);
@@ -82,6 +94,8 @@ export const VideoStoryboardModal = ({
       setVideoDuration(10);
       setUploadedReferenceImages(initialReferenceImages);
       setUploadingImages({});
+      setSelectedAspectRatio(ASPECT_RATIOS[0]);
+      setExtractedCharacterDescription('');
       setGeneratedCharacterImages([]);
       setSelectedCharacterImage(null);
       setStoryboardTitle('');
@@ -100,6 +114,11 @@ export const VideoStoryboardModal = ({
       return uploadedReferenceImages;
     }
     return selectedCharacterImage ? [selectedCharacterImage] : [];
+  };
+
+  // 获取组合的视频描述（三个维度）
+  const getCombinedDescription = () => {
+    return `故事核心要素：${storyCore}\n整体风格：${overallStyle}\n角色设定：${characterSetting}`;
   };
 
   // ========== 步骤1：基本信息 ==========
@@ -152,8 +171,8 @@ export const VideoStoryboardModal = ({
 
   // 步骤1下一步
   const handleStep1Next = () => {
-    if (!description.trim()) {
-      setError('请输入视频描述');
+    if (!storyCore.trim() || !overallStyle.trim() || !characterSetting.trim()) {
+      setError('请完整填写故事核心要素、整体风格和角色设定');
       return;
     }
     
@@ -161,29 +180,55 @@ export const VideoStoryboardModal = ({
       // 已上传参考图，直接跳到步骤3
       setCurrentStep(3);
     } else {
-      // 未上传参考图，跳到步骤2生成人物参考图
+      // 未上传参考图，跳到步骤2提取人物特征
       setCurrentStep(2);
-      generateCharacterImages();
+      extractCharacterDescription();
     }
   };
 
   // ========== 步骤2：人物参考图生成 ==========
   
-  // 生成人物参考图（抽卡模式，4张）
-  const generateCharacterImages = async () => {
-    setIsGeneratingCharacters(true);
+  // 提取人物特征描述
+  const extractCharacterDescription = async () => {
+    setIsExtractingCharacter(true);
     setError(null);
     
     try {
       // 组合三个维度的描述
       const combinedDescription = `故事核心要素：${storyCore}\n整体风格：${overallStyle}\n角色设定：${characterSetting}`;
       
-      // 调用服务函数生成人物参考图
-      const images = await videoStoryboardService.generateCharacterReferenceImages(
-        combinedDescription,
+      // 调用服务函数提取人物特征
+      const characterDesc = await videoStoryboardService.extractCharacterFromDescription(combinedDescription);
+      
+      setExtractedCharacterDescription(characterDesc);
+    } catch (err) {
+      setError('提取人物特征失败: ' + err.message);
+      // 使用默认描述
+      setExtractedCharacterDescription(`一个通用卡通人物，${characterSetting}`);
+    } finally {
+      setIsExtractingCharacter(false);
+    }
+  };
+
+  // 生成人物参考图
+  const generateCharacterImages = async () => {
+    if (!extractedCharacterDescription.trim()) {
+      setError('请先提取人物特征描述');
+      return;
+    }
+    
+    setIsGeneratingCharacters(true);
+    setError(null);
+    
+    try {
+      // 使用提取/编辑后的人物描述生成人物参考图
+      const images = await videoStoryboardService.generateCharacterReferenceImagesWithPrompt(
+        extractedCharacterDescription,
         uploadedReferenceImages,
         userId,
-        organizationId
+        organizationId,
+        selectedAspectRatio.width,
+        selectedAspectRatio.height
       );
       
       if (!images || images.length === 0) {
@@ -195,7 +240,7 @@ export const VideoStoryboardModal = ({
       setError('生成人物参考图失败: ' + err.message);
       // 使用占位图
       const placeholderImages = [];
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 1; i++) {
         const randomColor = Math.floor(Math.random() * 16777215).toString(16);
         placeholderImages.push(`https://placehold.co/512x512/${randomColor}/FFF?text=Character+${i + 1}`);
       }
@@ -208,14 +253,19 @@ export const VideoStoryboardModal = ({
   // 重新生成人物参考图
   const handleRegenerateCharacters = () => {
     setSelectedCharacterImage(null);
+    setGeneratedCharacterImages([]);
     generateCharacterImages();
   };
 
   // 步骤2下一步
   const handleStep2Next = () => {
-    if (!selectedCharacterImage) {
-      setError('请选择一张人物参考图');
+    if (generatedCharacterImages.length === 0) {
+      setError('请先生成人物参考图');
       return;
+    }
+    // 自动选择第一张图片
+    if (!selectedCharacterImage && generatedCharacterImages.length > 0) {
+      setSelectedCharacterImage(generatedCharacterImages[0]);
     }
     setCurrentStep(3);
   };
@@ -230,7 +280,7 @@ export const VideoStoryboardModal = ({
     try {
       const referenceImages = getFinalReferenceImages();
       const result = await videoStoryboardService.generateStoryboardScript(
-        description,
+        getCombinedDescription(),
         referenceImages,
         videoDuration
       );
@@ -348,7 +398,7 @@ export const VideoStoryboardModal = ({
   const handleConfirm = () => {
     onConfirm({
       title: storyboardTitle,
-      description,
+      description: getCombinedDescription(),
       duration: videoDuration,
       referenceImages: getFinalReferenceImages(),
       scenes,
@@ -450,6 +500,43 @@ export const VideoStoryboardModal = ({
 
       <div>
         <label className="text-sm font-medium text-slate-700 mb-2 block">
+          图片比例
+        </label>
+        <div className="grid grid-cols-5 gap-2">
+          {ASPECT_RATIOS.map((ratio) => (
+            <button
+              key={ratio.id}
+              onClick={() => setSelectedAspectRatio(ratio)}
+              className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                selectedAspectRatio.id === ratio.id
+                  ? 'border-purple-500 bg-purple-50 text-purple-700'
+                  : 'border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              <div 
+                className="bg-current rounded-sm mb-1"
+                style={{
+                  width: ratio.id === '16:9' ? '32px' :
+                         ratio.id === '4:3' ? '24px' :
+                         ratio.id === '1:1' ? '20px' :
+                         ratio.id === '3:4' ? '15px' : '12px',
+                  height: ratio.id === '16:9' ? '18px' :
+                          ratio.id === '4:3' ? '18px' :
+                          ratio.id === '1:1' ? '20px' :
+                          ratio.id === '3:4' ? '20px' : '21px'
+                }}
+              />
+              <span className="text-xs font-medium">{ratio.label}</span>
+            </button>
+          ))}
+        </div>
+        <p className="text-xs text-slate-400 mt-1">
+          已选择：{selectedAspectRatio.label} ({selectedAspectRatio.width}×{selectedAspectRatio.height}) - {selectedAspectRatio.description}
+        </p>
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-slate-700 mb-2 block">
           人物参考图片 <span className="text-slate-400 font-normal">（可选，仅支持1张）</span>
         </label>
         <p className="text-xs text-slate-500 mb-3">
@@ -504,57 +591,92 @@ export const VideoStoryboardModal = ({
           <div>
             <h4 className="text-sm font-medium text-blue-800">人物参考图</h4>
             <p className="text-xs text-blue-600 mt-1">
-              由于您没有上传人物参考图片，AI已根据视频描述生成了4张人物参考图。请选择一张最符合您期望的图片作为视频中的人物形象。
+              AI已根据视频描述提取了人物特征。您可以修改特征描述，然后生成人物参考图。
             </p>
           </div>
         </div>
       </div>
 
-      {isGeneratingCharacters ? (
-        <div className="text-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-600" />
-          <p className="text-slate-600">正在生成人物参考图...</p>
-          <p className="text-sm text-slate-400 mt-1">请稍候，大约需要30-60秒</p>
+      {/* 人物特征描述编辑区域 */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-slate-700 block">
+          人物特征描述 <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          value={extractedCharacterDescription}
+          onChange={(e) => setExtractedCharacterDescription(e.target.value)}
+          placeholder="AI将自动提取人物特征，您也可以手动编辑..."
+          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+          disabled={isExtractingCharacter}
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={extractCharacterDescription}
+            disabled={isExtractingCharacter}
+            className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm"
+          >
+            {isExtractingCharacter ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                提取中...
+              </>
+            ) : (
+              <>
+                <Wand2 className="w-4 h-4" />
+                重新提取特征
+              </>
+            )}
+          </button>
+          <button
+            onClick={generateCharacterImages}
+            disabled={isGeneratingCharacters || !extractedCharacterDescription.trim()}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2 text-sm"
+          >
+            {isGeneratingCharacters ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4 h-4" />
+                生成参考图
+              </>
+            )}
+          </button>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-2 gap-4">
+      </div>
+
+      {/* 生成的人物参考图 */}
+      {generatedCharacterImages.length > 0 && (
+        <div className="space-y-3">
+          <label className="text-sm font-medium text-slate-700 block">
+            生成的人物参考图
+          </label>
+          <div className="flex gap-4">
             {generatedCharacterImages.map((img, index) => (
               <div
                 key={index}
-                onClick={() => setSelectedCharacterImage(img)}
-                className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                  selectedCharacterImage === img 
-                    ? 'border-purple-500 ring-2 ring-purple-200' 
-                    : 'border-slate-200 hover:border-purple-300'
-                }`}
+                onClick={() => setPreviewImage({ url: img, alt: `人物参考${index + 1}` })}
+                className="relative cursor-pointer rounded-lg overflow-hidden border-2 border-slate-200 hover:border-purple-300 transition-all w-32 h-32"
               >
                 <img 
                   src={img} 
                   alt={`人物参考${index + 1}`}
-                  className="w-full aspect-square object-cover"
+                  className="w-full h-full object-cover"
                 />
-                {selectedCharacterImage === img && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
-                  </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs py-1 text-center">
-                  选项 {index + 1}
-                </div>
               </div>
             ))}
           </div>
-
           <button
             onClick={handleRegenerateCharacters}
             disabled={isGeneratingCharacters}
-            className="w-full px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
+            className="w-full px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2 text-sm"
           >
             <RefreshCw className="w-4 h-4" />
             重新生成人物参考图
           </button>
-        </>
+        </div>
       )}
     </div>
   );
@@ -843,7 +965,7 @@ export const VideoStoryboardModal = ({
         {currentStep === 2 && (
           <button
             onClick={handleStep2Next}
-            disabled={!selectedCharacterImage}
+            disabled={generatedCharacterImages.length === 0}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
           >
             下一步
