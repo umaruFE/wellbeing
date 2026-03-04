@@ -748,14 +748,6 @@ export const VideoStoryboardModal = ({
               className="w-full h-full"
             />
           </div>
-
-          <button
-            onClick={handleConfirm}
-            className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto"
-          >
-            <Check className="w-5 h-5" />
-            确认并添加到画布
-          </button>
         </div>
       )}
     </div>
@@ -775,9 +767,23 @@ export const VideoStoryboardModal = ({
 
   // 渲染底部按钮
   const renderFooterButtons = () => {
-    // 步骤5有特殊的按钮逻辑
+    // 步骤5的特殊按钮逻辑
     if (currentStep === 5) {
-      return null; // 步骤5的按钮在内容区域
+      if (generatedVideoUrl) {
+        // 视频已生成，显示确认按钮
+        return (
+          <div className="flex justify-center">
+            <button
+              onClick={handleConfirm}
+              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto"
+            >
+              <Check className="w-5 h-5" />
+              确认并添加到画布
+            </button>
+          </div>
+        );
+      }
+      return null; // 视频未生成，不显示按钮
     }
 
     return (
