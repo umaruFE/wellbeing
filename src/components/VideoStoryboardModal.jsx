@@ -653,20 +653,27 @@ export const VideoStoryboardModal = ({
           <label className="text-sm font-medium text-slate-700 block">
             生成的人物参考图
           </label>
-          <div className="flex gap-4">
-            {generatedCharacterImages.map((img, index) => (
-              <div
-                key={index}
-                onClick={() => setPreviewImage({ url: img, alt: `人物参考${index + 1}` })}
-                className="relative cursor-pointer rounded-lg overflow-hidden border-2 border-slate-200 hover:border-purple-300 transition-all w-32 h-32"
-              >
-                <img 
-                  src={img} 
-                  alt={`人物参考${index + 1}`}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ))}
+          <div className="flex gap-4 flex-wrap">
+            {generatedCharacterImages.map((img, index) => {
+              const aspectRatio = selectedAspectRatio.width / selectedAspectRatio.height;
+              const thumbWidth = aspectRatio >= 1 ? 160 : Math.round(160 * aspectRatio);
+              const thumbHeight = aspectRatio >= 1 ? Math.round(160 / aspectRatio) : 160;
+              
+              return (
+                <div
+                  key={index}
+                  onClick={() => setPreviewImage({ url: img, alt: `人物参考${index + 1}` })}
+                  className="relative cursor-pointer rounded-lg overflow-hidden border-2 border-slate-200 hover:border-purple-300 transition-all"
+                  style={{ width: thumbWidth, height: thumbHeight }}
+                >
+                  <img 
+                    src={img} 
+                    alt={`人物参考${index + 1}`}
+                    className="w-full h-full object-contain bg-slate-100"
+                  />
+                </div>
+              );
+            })}
           </div>
           <button
             onClick={handleRegenerateCharacters}

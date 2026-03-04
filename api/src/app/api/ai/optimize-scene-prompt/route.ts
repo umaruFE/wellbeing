@@ -107,19 +107,19 @@ export async function POST(request: NextRequest) {
 
 // 生成备用提示词
 function generateFallbackPrompt(scene: any, characterDescription?: string, videoStyle: string = 'realistic') {
-  const content = scene?.content || 'a scene';
-  const shotType = scene?.shotType || 'medium shot';
-  const cameraMovement = scene?.cameraMovement || 'static';
+  const content = scene?.content || '一个场景';
+  const shotType = scene?.shotType || '中景';
+  const cameraMovement = scene?.cameraMovement || '固定镜头';
   
   const styleKeywords: Record<string, string> = {
-    realistic: 'photorealistic, cinematic lighting',
-    anime: 'anime style, vibrant colors',
-    cartoon: 'cartoon style, bright colors',
-    cinematic: 'cinematic, film grain, dramatic lighting'
+    realistic: '写实风格，电影感光照',
+    anime: '动漫风格，鲜艳色彩',
+    cartoon: '卡通风格，明亮色彩',
+    cinematic: '电影感，胶片质感，戏剧性光照'
   };
   
-  const character = characterDescription ? `featuring ${characterDescription}, ` : '';
+  const character = characterDescription ? `${characterDescription}，` : '';
   const style = styleKeywords[videoStyle] || styleKeywords.realistic;
   
-  return `${character}${content}, ${shotType}, ${cameraMovement}, ${style}, high quality, smooth motion`;
+  return `${character}${content}，${shotType}，${cameraMovement}，${style}，高质量，细节丰富`;
 }

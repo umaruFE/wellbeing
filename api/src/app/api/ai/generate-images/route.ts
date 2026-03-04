@@ -27,6 +27,7 @@ interface ImageGenerationRequest {
   user_id?: string;
   organization_id?: string;
   workflow_type?: 'scene' | 'person';
+  reference_image?: string;
 }
 
 interface WorkflowNode {
@@ -163,8 +164,8 @@ function createPersonWorkflow(prompt: string, width: number, height: number, see
   };
 }
 
-// 创建图片生成工作流
-function createWorkflow(prompt: string, width: number, height: number, seed: number): Workflow {
+// 创建分镜图工作流（基于 sence.json）
+function createSceneWorkflow(prompt: string, width: number, height: number, seed: number, referenceImage?: string): any {
   const longerSide = Math.max(width, height);
   
   return {
@@ -176,113 +177,56 @@ function createWorkflow(prompt: string, width: number, height: number, seed: num
         "sampler_name": "sa_solver",
         "scheduler": "simple",
         "denoise": 1,
-        "model": [
-          "109",
-          0
-        ],
-        "positive": [
-          "68",
-          0
-        ],
-        "negative": [
-          "61",
-          0
-        ],
-        "latent_image": [
-          "60",
-          0
-        ]
+        "model": ["109", 0],
+        "positive": ["68", 0],
+        "negative": ["61", 0],
+        "latent_image": ["60", 0]
       },
       "class_type": "KSampler",
-      "_meta": {
-        "title": "K采样器"
-      }
+      "_meta": { "title": "K采样器" }
     },
     "60": {
       "inputs": {
-        "pixels": [
-          "91",
-          0
-        ],
-        "vae": [
-          "110",
-          0
-        ]
+        "pixels": ["91", 0],
+        "vae": ["110", 0]
       },
       "class_type": "VAEEncode",
-      "_meta": {
-        "title": "VAE编码"
-      }
+      "_meta": { "title": "VAE编码" }
     },
     "61": {
       "inputs": {
         "prompt": "",
-        "clip": [
-          "107",
-          0
-        ],
-        "vae": [
-          "110",
-          0
-        ],
-        "image1": [
-          "91",
-          0
-        ]
+        "clip": ["107", 0],
+        "vae": ["110", 0],
+        "image1": ["91", 0]
       },
       "class_type": "TextEncodeQwenImageEditPlus",
-      "_meta": {
-        "title": "文本编码（QwenImageEditPlus）"
-      }
+      "_meta": { "title": "文本编码（QwenImageEditPlus）" }
     },
     "68": {
       "inputs": {
-        "prompt": [
-          "138",
-          0
-        ],
-        "clip": [
-          "107",
-          0
-        ],
-        "vae": [
-          "110",
-          0
-        ],
-        "image1": [
-          "91",
-          0
-        ]
+        "prompt": ["138", 0],
+        "clip": ["107", 0],
+        "vae": ["110", 0],
+        "image1": ["91", 0]
       },
       "class_type": "TextEncodeQwenImageEditPlus",
-      "_meta": {
-        "title": "文本编码（QwenImageEditPlus）"
-      }
+      "_meta": { "title": "文本编码（QwenImageEditPlus）" }
     },
     "69": {
       "inputs": {
-        "samples": [
-          "56",
-          0
-        ],
-        "vae": [
-          "110",
-          0
-        ]
+        "samples": ["56", 0],
+        "vae": ["110", 0]
       },
       "class_type": "VAEDecode",
-      "_meta": {
-        "title": "VAE解码"
-      }
+      "_meta": { "title": "VAE解码" }
     },
     "74": {
       "inputs": {
-        "image": "1772635175212-0235bb33.png"
+        "image": referenceImage || "1772635175212-0235bb33.png"
       },
       "class_type": "LoadImage",
-      "_meta": {
-        "title": "加载图像"
-      }
+      "_meta": { "title": "加载图像" }
     },
     "91": {
       "inputs": {
@@ -293,55 +237,35 @@ function createWorkflow(prompt: string, width: number, height: number, seed: num
         "method": "lanczos",
         "round_to_multiple": "8",
         "scale_to_side": "longest",
-        "scale_to_length": [
-          "104",
-          0
-        ],
+        "scale_to_length": ["104", 0],
         "background_color": "#000000",
-        "image": [
-          "74",
-          0
-        ]
+        "image": ["74", 0]
       },
       "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
-      "_meta": {
-        "title": "图层工具：按宽高比缩放 V2"
-      }
+      "_meta": { "title": "图层工具：按宽高比缩放 V2" }
     },
     "99": {
       "inputs": {
         "text": prompt,
-        "anything": [
-          "138",
-          0
-        ]
+        "anything": ["138", 0]
       },
       "class_type": "easy showAnything",
-      "_meta": {
-        "title": "展示任何"
-      }
+      "_meta": { "title": "展示任何" }
     },
     "104": {
       "inputs": {
         "Number": longerSide
       },
       "class_type": "Int",
-      "_meta": {
-        "title": "Int"
-      }
+      "_meta": { "title": "Int" }
     },
     "105": {
       "inputs": {
         "filename_prefix": "ComfyUI",
-        "images": [
-          "69",
-          0
-        ]
+        "images": ["69", 0]
       },
       "class_type": "SaveImage",
-      "_meta": {
-        "title": "保存图像"
-      }
+      "_meta": { "title": "保存图像" }
     },
     "106": {
       "inputs": {
@@ -349,9 +273,7 @@ function createWorkflow(prompt: string, width: number, height: number, seed: num
         "weight_dtype": "default"
       },
       "class_type": "UNETLoader",
-      "_meta": {
-        "title": "UNet加载器"
-      }
+      "_meta": { "title": "UNet加载器" }
     },
     "107": {
       "inputs": {
@@ -360,46 +282,32 @@ function createWorkflow(prompt: string, width: number, height: number, seed: num
         "device": "default"
       },
       "class_type": "CLIPLoader",
-      "_meta": {
-        "title": "加载CLIP"
-      }
+      "_meta": { "title": "加载CLIP" }
     },
     "109": {
       "inputs": {
         "lora_name": "Qwen-Image-Lightning-4steps-V1.0.safetensors",
         "strength_model": 1.0000000000000002,
-        "model": [
-          "133",
-          0
-        ]
+        "model": ["133", 0]
       },
       "class_type": "LoraLoaderModelOnly",
-      "_meta": {
-        "title": "LoRA加载器（仅模型）"
-      }
+      "_meta": { "title": "LoRA加载器（仅模型）" }
     },
     "110": {
       "inputs": {
         "vae_name": "qwen_image_vae.safetensors"
       },
       "class_type": "VAELoader",
-      "_meta": {
-        "title": "加载VAE"
-      }
+      "_meta": { "title": "加载VAE" }
     },
     "133": {
       "inputs": {
         "lora_name": "next-scene_lora-v2-3000.safetensors",
         "strength_model": 0.8000000000000002,
-        "model": [
-          "106",
-          0
-        ]
+        "model": ["106", 0]
       },
       "class_type": "LoraLoaderModelOnly",
-      "_meta": {
-        "title": "LoRA加载器（仅模型）"
-      }
+      "_meta": { "title": "LoRA加载器（仅模型）" }
     },
     "138": {
       "inputs": {
@@ -409,18 +317,21 @@ function createWorkflow(prompt: string, width: number, height: number, seed: num
         "remove_empty_lines": ""
       },
       "class_type": "easy promptLine",
-      "_meta": {
-        "title": "提示词行"
-      }
+      "_meta": { "title": "提示词行" }
     }
   };
 }
 
+// 创建图片生成工作流（保留旧函数名以兼容）
+function createWorkflow(prompt: string, width: number, height: number, seed: number): any {
+  return createSceneWorkflow(prompt, width, height, seed);
+}
+
 // 提交图片生成任务
-async function submitImageTask(prompt: string, width: number, height: number, seed: number, workflowType: 'scene' | 'person' = 'scene'): Promise<TaskResponse> {
+async function submitImageTask(prompt: string, width: number, height: number, seed: number, workflowType: 'scene' | 'person' = 'scene', referenceImage?: string): Promise<TaskResponse> {
   const workflow = workflowType === 'person' 
     ? createPersonWorkflow(prompt, width, height, seed)
-    : createWorkflow(prompt, width, height, seed);
+    : createSceneWorkflow(prompt, width, height, seed, referenceImage);
   
   console.log(`提交图片生成任务: ${AI_API_BASE_URL}/prompt`);
   console.log(`工作流类型: ${workflowType}`);
@@ -564,7 +475,8 @@ export async function POST(request: NextRequest) {
       height = 400,
       user_id,
       organization_id,
-      workflow_type = 'scene'
+      workflow_type = 'scene',
+      reference_image
     } = body as ImageGenerationRequest;
 
     if (!prompt) {
@@ -580,7 +492,7 @@ export async function POST(request: NextRequest) {
     // 提交所有任务
     for (let i = 0; i < count; i++) {
       const seed = Date.now() + i * 1000;
-      const taskPromise = submitImageTask(prompt, width, height, seed, workflow_type);
+      const taskPromise = submitImageTask(prompt, width, height, seed, workflow_type, reference_image);
       tasks.push(taskPromise);
     }
 

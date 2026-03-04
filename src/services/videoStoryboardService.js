@@ -526,6 +526,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
         })
       });
     } else {
+      console.log('使用分镜图工作流生成图片');
       response = await fetch('/api/ai/generate-images', {
         method: 'POST',
         headers: {
@@ -537,7 +538,9 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
           width: 800,
           height: 450,
           user_id: userId,
-          organization_id: organizationId
+          organization_id: organizationId,
+          workflow_type: 'scene',
+          reference_image: referenceImage
         })
       });
     }

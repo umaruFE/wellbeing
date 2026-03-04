@@ -108,147 +108,160 @@ async function uploadImageToComfyUI(imageUrl: string): Promise<string> {
   }
 }
 
-// 创建图生图工作流
+// 创建图生图工作流（基于 sence.json）
 function createImageToImageWorkflow(prompt: string, width: number, height: number, seed: number, imagePath: string): Workflow {
+  const longerSide = Math.max(width, height);
+  
   return {
-    "2": {
+    "56": {
       "inputs": {
-        "unet_name": "qwen_image_fp8_e4m3fn.safetensors",
-        "weight_dtype": "fp8_e4m3fn"
+        "seed": seed,
+        "steps": 4,
+        "cfg": 1,
+        "sampler_name": "sa_solver",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": ["109", 0],
+        "positive": ["68", 0],
+        "negative": ["61", 0],
+        "latent_image": ["60", 0]
+      },
+      "class_type": "KSampler",
+      "_meta": { "title": "K采样器" }
+    },
+    "60": {
+      "inputs": {
+        "pixels": ["91", 0],
+        "vae": ["110", 0]
+      },
+      "class_type": "VAEEncode",
+      "_meta": { "title": "VAE编码" }
+    },
+    "61": {
+      "inputs": {
+        "prompt": "",
+        "clip": ["107", 0],
+        "vae": ["110", 0],
+        "image1": ["91", 0]
+      },
+      "class_type": "TextEncodeQwenImageEditPlus",
+      "_meta": { "title": "文本编码（QwenImageEditPlus）" }
+    },
+    "68": {
+      "inputs": {
+        "prompt": ["138", 0],
+        "clip": ["107", 0],
+        "vae": ["110", 0],
+        "image1": ["91", 0]
+      },
+      "class_type": "TextEncodeQwenImageEditPlus",
+      "_meta": { "title": "文本编码（QwenImageEditPlus）" }
+    },
+    "69": {
+      "inputs": {
+        "samples": ["56", 0],
+        "vae": ["110", 0]
+      },
+      "class_type": "VAEDecode",
+      "_meta": { "title": "VAE解码" }
+    },
+    "74": {
+      "inputs": {
+        "image": imagePath
+      },
+      "class_type": "LoadImage",
+      "_meta": { "title": "加载图像" }
+    },
+    "91": {
+      "inputs": {
+        "aspect_ratio": "custom",
+        "proportional_width": width,
+        "proportional_height": height,
+        "fit": "letterbox",
+        "method": "lanczos",
+        "round_to_multiple": "8",
+        "scale_to_side": "longest",
+        "scale_to_length": ["104", 0],
+        "background_color": "#000000",
+        "image": ["74", 0]
+      },
+      "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
+      "_meta": { "title": "图层工具：按宽高比缩放 V2" }
+    },
+    "99": {
+      "inputs": {
+        "text": prompt,
+        "anything": ["138", 0]
+      },
+      "class_type": "easy showAnything",
+      "_meta": { "title": "展示任何" }
+    },
+    "104": {
+      "inputs": {
+        "Number": longerSide
+      },
+      "class_type": "Int",
+      "_meta": { "title": "Int" }
+    },
+    "105": {
+      "inputs": {
+        "filename_prefix": "ComfyUI",
+        "images": ["69", 0]
+      },
+      "class_type": "SaveImage",
+      "_meta": { "title": "保存图像" }
+    },
+    "106": {
+      "inputs": {
+        "unet_name": "qwen_image_edit_2511_fp8_e4m3fn.safetensors",
+        "weight_dtype": "default"
       },
       "class_type": "UNETLoader",
-      "_meta": {
-        "title": "Load Diffusion Model"
-      }
+      "_meta": { "title": "UNet加载器" }
     },
-    "3": {
+    "107": {
       "inputs": {
         "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
         "type": "qwen_image",
         "device": "default"
       },
       "class_type": "CLIPLoader",
-      "_meta": {
-        "title": "Load CLIP"
-      }
+      "_meta": { "title": "加载CLIP" }
     },
-    "4": {
+    "109": {
+      "inputs": {
+        "lora_name": "Qwen-Image-Lightning-4steps-V1.0.safetensors",
+        "strength_model": 1.0000000000000002,
+        "model": ["133", 0]
+      },
+      "class_type": "LoraLoaderModelOnly",
+      "_meta": { "title": "LoRA加载器（仅模型）" }
+    },
+    "110": {
       "inputs": {
         "vae_name": "qwen_image_vae.safetensors"
       },
       "class_type": "VAELoader",
-      "_meta": {
-        "title": "Load VAE"
-      }
+      "_meta": { "title": "加载VAE" }
     },
-    "5": {
+    "133": {
       "inputs": {
-        "image": imagePath
-      },
-      "class_type": "LoadImage",
-      "_meta": {
-        "title": "Load Image"
-      }
-    },
-    "6": {
-      "inputs": {
-        "shift": 3.1000000000000005,
-        "model": ["12", 0]
-      },
-      "class_type": "ModelSamplingAuraFlow",
-      "_meta": {
-        "title": "ModelSamplingAuraFlow"
-      }
-    },
-    "7": {
-      "inputs": {
-        "text": prompt,
-        "clip": ["3", 0]
-      },
-      "class_type": "CLIPTextEncode",
-      "_meta": {
-        "title": "CLIP Text Encode (Prompt)"
-      }
-    },
-    "8": {
-      "inputs": {
-        "text": "模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物",
-        "clip": ["3", 0]
-      },
-      "class_type": "CLIPTextEncode",
-      "_meta": {
-        "title": "CLIP Text Encode (Prompt)"
-      }
-    },
-    "9": {
-      "inputs": {
-        "width": width,
-        "height": height,
-        "batch_size": 1
-      },
-      "class_type": "EmptyLatentImage",
-      "_meta": {
-        "title": "Empty Latent Image"
-      }
-    },
-    "10": {
-      "inputs": {
-        "seed": seed,
-        "steps": 8,
-        "cfg": 1,
-        "sampler_name": "res_multistep",
-        "scheduler": "sgm_uniform",
-        "denoise": 0.75,
-        "model": ["6", 0],
-        "positive": ["7", 0],
-        "negative": ["8", 0],
-        "latent_image": ["16", 0]
-      },
-      "class_type": "KSampler",
-      "_meta": {
-        "title": "KSampler"
-      }
-    },
-    "12": {
-      "inputs": {
-        "lora_name": "Qwen-Image-Lightning-8steps-V1.0.safetensors",
-        "strength_model": 1,
-        "model": ["2", 0]
+        "lora_name": "next-scene_lora-v2-3000.safetensors",
+        "strength_model": 0.8000000000000002,
+        "model": ["106", 0]
       },
       "class_type": "LoraLoaderModelOnly",
-      "_meta": {
-        "title": "LoraLoaderModelOnly"
-      }
+      "_meta": { "title": "LoRA加载器（仅模型）" }
     },
-    "14": {
+    "138": {
       "inputs": {
-        "filename_prefix": "ComfyUI",
-        "images": ["15", 0]
+        "prompt": prompt,
+        "start_index": 0,
+        "max_rows": 1000,
+        "remove_empty_lines": ""
       },
-      "class_type": "SaveImage",
-      "_meta": {
-        "title": "Save Image"
-      }
-    },
-    "15": {
-      "inputs": {
-        "samples": ["10", 0],
-        "vae": ["4", 0]
-      },
-      "class_type": "VAEDecode",
-      "_meta": {
-        "title": "VAE Decode"
-      }
-    },
-    "16": {
-      "inputs": {
-        "pixels": ["5", 0],
-        "vae": ["4", 0]
-      },
-      "class_type": "VAEEncode",
-      "_meta": {
-        "title": "VAE Encode"
-      }
+      "class_type": "easy promptLine",
+      "_meta": { "title": "提示词行" }
     }
   };
 }
