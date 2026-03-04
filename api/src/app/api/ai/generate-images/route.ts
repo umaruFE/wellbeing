@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+// CORS 响应头辅助函数
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
+// OPTIONS 处理函数 - 处理预检请求
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders() });
+}
+
 const AI_API_BASE_URL = process.env.AI_API_BASE_URL;
 
 interface ImageGenerationRequest {
@@ -317,7 +331,7 @@ export async function POST(request: NextRequest) {
     if (!prompt) {
       return NextResponse.json(
         { error: '缺少prompt参数' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -394,7 +408,7 @@ export async function POST(request: NextRequest) {
       prompt,
       width,
       height
-    });
+    }, { headers: corsHeaders() });
   } catch (error) {
     console.error('提交图片生成任务失败:', error);
     return NextResponse.json(
@@ -402,7 +416,7 @@ export async function POST(request: NextRequest) {
         error: '提交图片生成任务失败',
         details: error instanceof Error ? error.message : '未知错误'
       },
-      { status: 500 }
+      { status: 500, headers: corsHeaders() }
     );
   }
 }

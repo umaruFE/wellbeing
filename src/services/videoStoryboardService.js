@@ -1,6 +1,6 @@
 const API_KEY = import.meta.env.VITE_DASHSCOPE_API_KEY;
 const API_URL = import.meta.env.VITE_DASHSCOPE_API_URL;
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:3000';
 
 /**
  * 从描述中提取人物特征

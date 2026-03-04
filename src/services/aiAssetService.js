@@ -1,6 +1,6 @@
 // AI素材生成服务（图片、音频、视频）
 const AI_API_BASE_URL = '/ai';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:3000';
 
 export const aiAssetService = {
   // 生成图片
