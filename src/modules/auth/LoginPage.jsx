@@ -79,6 +79,7 @@ export const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
+              style={{ backgroundColor: '#000000' }}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg flex items-center justify-center gap-2 transition-colors disabled:bg-blue-400 disabled:cursor-not-allowed shadow-sm"
             >
               {loading ? (

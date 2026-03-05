@@ -356,6 +356,14 @@ export const MainLayout = () => {
       description: '工作台驾驶舱' 
     },
     { 
+      id: 'ai-generator', 
+      path: '/ai-generator', 
+      label: 'AI 创作工具', 
+      icon: Sparkles, 
+      description: '生成图片和视频',
+      roles: ['super_admin', 'org_admin', 'research_leader', 'creator']
+    },
+    { 
       id: 'courses', 
       path: '/courses', 
       label: '课程管理', 

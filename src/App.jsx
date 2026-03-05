@@ -15,6 +15,7 @@ import { PptImageManagement } from './modules/material-management/image/PptImage
 import { IpCharacterManagement } from './modules/material-management/IpCharacterManagement';
 import { VideoMaterialManagement } from './modules/material-management/video/VideoMaterialManagement';
 import { AccountManagement } from './modules/admin/AccountManagement';
+import { AIGeneratorPage } from './components/AIGeneratorPage';
 
 function App() {
   return (
@@ -23,6 +24,14 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+          {/* AI 生成页面 - 公开访问 */}
+          <Route
+            path="/ai-generator"
+            element={
+              <AIGeneratorPage />
+            }
+          />
 
           <Route
             element={
@@ -121,16 +130,16 @@ function App() {
             />
 
             <Route
-              path="/account-management"
+              path="/accounts"
               element={
                 <RequireAuth requiredRoles={['super_admin']}>
                   <AccountManagement />
                 </RequireAuth>
               }
             />
-          </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>
