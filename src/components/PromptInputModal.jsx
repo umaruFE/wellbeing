@@ -105,7 +105,6 @@ export const PromptInputModal = ({
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    if (!content.trim()) return;
     const inputMode = (assetType === 'image' || assetType === 'video' || assetType === 'audio') ? 'ai' : 'direct';
     const videoStyle = null;
     const imageSize = (assetType === 'image') ? { width: selectedRatio.width, height: selectedRatio.height } : null;
@@ -114,7 +113,6 @@ export const PromptInputModal = ({
       duration: audioDuration,
       style: selectedStyle?.tags || ''
     } : null;
-    // 视频类型传递多张参考图片
     const videoReferenceImages = assetType === 'video' ? referenceImages : null;
     onConfirm(content, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages);
     setContent('');
@@ -432,7 +430,7 @@ export const PromptInputModal = ({
             </button>
             <button
               onClick={handleConfirm}
-              disabled={isLoading || !content.trim()}
+              disabled={isLoading || (assetType === 'text' && !content.trim())}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (

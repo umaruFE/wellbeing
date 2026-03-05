@@ -41,18 +41,29 @@ import { optimizePrompt } from '../../../services/dashscope';
  * @param {Function} setIsRightOpen - 显示/隐藏右侧面板的函数
  */
 export const handleConfirmAddAsset = async (
-  prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig,
+  prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages,
   promptModalConfig, activePhase, activeStepId, courseData, setCourseData, setIsGenerating,
   setShowPromptModal, setPromptModalConfig, setCardSelectionImages, setSavedPromptIds,
   setPendingAssetConfig, setShowCardSelectionModal, user, saveToHistory, history, historyIndex, setHistory, setHistoryIndex,
   setSelectedAssetId, setIsRightOpen
 ) => {
+  console.log('=== handleConfirmAddAsset called ===');
+  console.log('Parameters:', { prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages });
+  console.log('promptModalConfig:', promptModalConfig);
+  console.log('activePhase:', activePhase, 'activeStepId:', activeStepId);
+  console.log('user:', user);
+  
   const type = promptModalConfig.assetType;
   const phaseData = Array.isArray(courseData) 
     ? courseData.find(p => p.id === activePhase)
     : courseData[activePhase];
-  const step = phaseData?.slides?.find(s => s.id === activeStepId);
+  const stepsOrSlides = phaseData?.steps || phaseData?.slides;
+  const step = stepsOrSlides?.find(s => s.id === activeStepId);
+  console.log('handleConfirmAddAsset - activePhase:', activePhase, 'activeStepId:', activeStepId);
+  console.log('handleConfirmAddAsset - phaseData:', phaseData);
+  console.log('handleConfirmAddAsset - step:', step);
   if (!step) {
+    console.error('handleConfirmAddAsset - Step not found');
     return;
   }
 
@@ -151,6 +162,9 @@ export const handleConfirmAddAsset = async (
       : courseData[activePhase];
     if (!phaseData) {
       console.error('Phase not found:', activePhase, 'courseData:', courseData);
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
       return;
     }
 
@@ -159,6 +173,9 @@ export const handleConfirmAddAsset = async (
     const currentStep = stepsOrSlides?.find(s => s.id === activeStepId);
     if (!currentStep) {
       console.error('Step not found:', activeStepId, 'phaseData:', phaseData, 'stepsOrSlides:', stepsOrSlides);
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
       return;
     }
     

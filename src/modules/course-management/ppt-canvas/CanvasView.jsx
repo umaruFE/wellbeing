@@ -935,8 +935,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         promptModalConfig={promptModalConfig}
         setPromptModalConfig={setPromptModalConfig}
         onConfirmAddStep={handleConfirmAddStep}
-        onConfirmAddAsset={(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig) => handleConfirmAddAsset(
-          prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig,
+        onConfirmAddAsset={(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages) => handleConfirmAddAsset(
+          prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages,
           promptModalConfig, activePhase, activeStepId, courseData, setCourseData, setIsGenerating,
           setShowPromptModal, setPromptModalConfig, setCardSelectionImages, setSavedPromptIds,
           setPendingAssetConfig, setShowCardSelectionModal, user, saveToHistory, history, historyIndex, setHistory, setHistoryIndex,
@@ -967,6 +967,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         activePhase={activePhase}
         activeStepId={activeStepId}
         onRestoreHistory={handleRestoreHistory}
+        userId={user?.id}
+        organizationId={user?.organizationId}
       />
 
       {showPageHistoryModal && (

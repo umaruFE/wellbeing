@@ -31,7 +31,9 @@ export const CanvasViewModals = ({
   generationHistory,
   activePhase,
   activeStepId,
-  onRestoreHistory
+  onRestoreHistory,
+  userId,
+  organizationId
 }) => {
   return (
     <>
@@ -42,14 +44,13 @@ export const CanvasViewModals = ({
           setShowPromptModal(false);
           setPromptModalConfig({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
         }}
-        onConfirm={(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig) => {
+        onConfirm={(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages) => {
           if (promptModalConfig.type === 'element') {
-            onConfirmAddAsset(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig);
+            onConfirmAddAsset(prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages);
           } else {
             onConfirmAddStep(prompt);
           }
         }}
-        // 视频类型时，通过分镜向导直接添加视频到画布
         onVideoConfirm={promptModalConfig.assetType === 'video' && onConfirmAddVideoAsset
           ? (videoData) => onConfirmAddVideoAsset(videoData)
           : null}
@@ -69,6 +70,8 @@ export const CanvasViewModals = ({
         type={promptModalConfig.type}
         assetType={promptModalConfig.assetType}
         isLoading={isGenerating}
+        userId={userId}
+        organizationId={organizationId}
       />
 
       {/* 重新生成页面提示词输入模态框 */}
