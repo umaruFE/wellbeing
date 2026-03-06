@@ -349,15 +349,15 @@ export const AIGeneratorPage = () => {
     } else {
       // 未上传参考图，跳到步骤2提取人物特征
       setVideoStep(2);
-      extractCharacterDescription();
+      handleExtractCharacterDescription();
     }
   };
   
   // 步骤2：提取人物特征
-  const extractCharacterDescription = async () => {
+  const handleExtractCharacterDescription = async () => {
     setIsExtractingCharacter(true);
     setVideoError(null);
-    
+
     try {
       const characterDesc = await extractCharacterFromDescription(getCombinedDescription());
       setExtractedCharacterDescription(characterDesc);
