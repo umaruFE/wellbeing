@@ -29,7 +29,7 @@ export async function POST(request: Request) {
         viewer: { id: '5', email: 'viewer@test.com', name: '普通老师', role: 'viewer', organization_id: '1' },
       };
       const mock = mockUsers[username];
-      if (mock && password === '123456') {
+      if (mock && password === 'xxx@123456') {
         const token = `pg_token_${crypto.randomBytes(32).toString('hex')}`;
         return NextResponse.json({
           user: {

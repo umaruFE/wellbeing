@@ -98,7 +98,7 @@ export const LoginPage = () => {
 
           {/* Demo Accounts */}
           <div className="mt-6 pt-6 border-t border-slate-200">
-            <p className="text-xs text-slate-500 mb-3 text-center">测试账户（密码：123456）</p>
+            <p className="text-xs text-slate-500 mb-3 text-center"></p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-slate-50 p-2 rounded border border-slate-200">
                 <div className="font-medium text-slate-700">超级管理员</div>
