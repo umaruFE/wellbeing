@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { authenticate } from '@/lib/auth';
 
 // GET /api/courses - Get courses list
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await authenticate(request);
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error || '认证失败' },
+        { status: 401 }
+      );
+    }
+
+    const user = authResult.user;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
@@ -80,6 +90,15 @@ export async function GET(request: NextRequest) {
 // POST /api/courses - Create a new course
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await authenticate(request);
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error || '认证失败' },
+        { status: 401 }
+      );
+    }
+
+    const user = authResult.user;
     const body = await request.json();
     const { 
       userId, 

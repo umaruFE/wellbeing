@@ -3,6 +3,18 @@ const API_URL = import.meta.env.VITE_DASHSCOPE_API_URL;
 // 使用相对路径，这样在任何环境下都能正确访问
 const API_BASE_URL = '';
 
+// 获取认证token并添加到请求头
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 /**
  * 从描述中提取人物特征
  * @param {string} description - 视频描述
@@ -12,9 +24,7 @@ export const extractCharacterFromDescription = async (description) => {
   try {
     const response = await fetch('/api/ai/extract-character', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ description })
     });
 
@@ -43,6 +53,7 @@ export const pollTaskAndGetImageUrl = async (promptId, maxAttempts = 60, interva
     try {
       const response = await fetch(`/api/ai/task-status/${promptId}`, {
         method: 'GET',
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -95,7 +106,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
   try {
     const promptResponse = await fetch('/api/ai/get-character-prompt', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ characterDescription })
     });
     
@@ -130,9 +141,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
       
       response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt: characterPrompt,
           imageUrl: imageUrl,
@@ -148,9 +157,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
       console.log('使用文生图接口生成人物参考图');
       response = await fetch('/api/ai/generate-images', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt: characterPrompt,
           count: 1,
@@ -211,7 +218,7 @@ export const generateCharacterReferenceImagesWithPrompt = async (characterDescri
   try {
     const promptResponse = await fetch('/api/ai/get-character-prompt', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({ characterDescription })
     });
     
@@ -246,9 +253,7 @@ export const generateCharacterReferenceImagesWithPrompt = async (characterDescri
       
       response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt: characterPrompt,
           imageUrl: imageUrl,
@@ -264,9 +269,7 @@ export const generateCharacterReferenceImagesWithPrompt = async (characterDescri
       console.log('使用文生图接口生成人物参考图');
       response = await fetch('/api/ai/generate-images', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt: characterPrompt,
           count: 1,
@@ -459,7 +462,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
   try {
     const response = await fetch('/api/ai/optimize-scene-prompt', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         scene,
         characterDescription: stylePrompt,
@@ -511,9 +514,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
       console.log('使用图生图保持风格一致性');
       response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt: scenePrompt,
           imageUrl: referenceImage,
@@ -529,9 +530,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
       console.log('使用分镜图工作流生成图片');
       response = await fetch('/api/ai/generate-images', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt: scenePrompt,
           count: 1,
@@ -577,6 +576,7 @@ export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 300, interv
     try {
       const response = await fetch(`/api/ai/video-task-status/${promptId}`, {
         method: 'GET',
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -629,9 +629,7 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
     // 调用视频生成API
     const response = await fetch('/api/ai/generate-video', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         prompt: videoPrompt,
         // 传所有分镜图给后端（后端可按需处理）；同时保留 imageUrl 兼容旧逻辑

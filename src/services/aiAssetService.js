@@ -3,6 +3,18 @@ const AI_API_BASE_URL = '/ai';
 // 使用相对路径，这样在任何环境下都能正确访问
 const API_BASE_URL = '';
 
+// 获取认证token并添加到请求头
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export const aiAssetService = {
   // 生成图片
   generateImage: async (prompt, options = {}) => {
@@ -134,9 +146,7 @@ export const aiAssetService = {
     try {
       const response = await fetch('/ai/prompt', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ prompt: workflow })
       });
 
@@ -157,9 +167,7 @@ export const aiAssetService = {
     try {
       const response = await fetch(`/ai/history/${promptId}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -322,9 +330,7 @@ export const aiAssetService = {
     try {
       const response = await fetch('/api/ai/generate-images', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt,
           count,
@@ -357,7 +363,8 @@ export const aiAssetService = {
         }
 
         const response = await fetch(`/api/ai/task-status/${promptId}`, {
-          method: 'GET'
+          method: 'GET',
+          headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -460,9 +467,7 @@ export const aiAssetService = {
 
       const response = await fetch('/api/ai/generate-audio', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(requestBody)
       });
 
@@ -540,9 +545,7 @@ export const aiAssetService = {
 
       const response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt,
           imageUrl: processedUrl,

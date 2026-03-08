@@ -57,6 +57,13 @@ export async function POST(request: Request) {
     }
 
     const token = `pg_token_${crypto.randomBytes(32).toString('hex')}`;
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    await db
+      .from('users')
+      .update({ token_hash: tokenHash })
+      .eq('id', userData.id);
+
     return NextResponse.json({
       user: {
         id: userData.id,

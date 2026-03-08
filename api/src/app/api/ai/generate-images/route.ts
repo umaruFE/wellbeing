@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { authenticate } from '@/lib/auth';
 import fs from 'fs';
 import path from 'path';
 
@@ -467,6 +468,15 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Pr
 // POST /api/ai/generate-images - 生成多张图片（立即返回任务ID）
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await authenticate(request);
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error || '认证失败' },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+
+    const user = authResult.user;
     const body = await request.json();
     const { 
       prompt, 
