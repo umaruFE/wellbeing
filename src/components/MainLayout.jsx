@@ -90,6 +90,7 @@ export const MainLayout = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(requestBody)
       });
@@ -268,6 +269,7 @@ export const MainLayout = () => {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(requestBody)
       });

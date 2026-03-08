@@ -5,7 +5,9 @@ import { authenticate } from '@/lib/auth';
 // GET /api/courses - Get courses list
 export async function GET(request: NextRequest) {
   try {
+    console.log('GET /api/courses - 开始认证');
     const authResult = await authenticate(request);
+    console.log('GET /api/courses - 认证结果:', authResult.success ? '成功' : '失败', authResult.error || '');
     if (!authResult.success) {
       return NextResponse.json(
         { error: authResult.error || '认证失败' },

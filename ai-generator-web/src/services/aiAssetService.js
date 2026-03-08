@@ -1,0 +1,617 @@
+// AI素材生成服务（图片、音频、视频）
+const AI_API_BASE_URL = '/ai';
+// 使用相对路径，这样在任何环境下都能正确访问
+const API_BASE_URL = '';
+
+// 获取认证token并添加到请求头
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+export const aiAssetService = {
+  // 生成图片
+  generateImage: async (prompt, options = {}) => {
+    const { width = 1104, height = 1472, seed = Date.now() } = options;
+    
+    const workflow = {
+      "2": {
+        "inputs": {
+          "unet_name": "qwen_image_fp8_e4m3fn.safetensors",
+          "weight_dtype": "fp8_e4m3fn"
+        },
+        "class_type": "UNETLoader",
+        "_meta": {
+          "title": "Load Diffusion Model"
+        }
+      },
+      "3": {
+        "inputs": {
+          "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "type": "qwen_image",
+          "device": "default"
+        },
+        "class_type": "CLIPLoader",
+        "_meta": {
+          "title": "Load CLIP"
+        }
+      },
+      "4": {
+        "inputs": {
+          "vae_name": "qwen_image_vae.safetensors"
+        },
+        "class_type": "VAELoader",
+        "_meta": {
+          "title": "Load VAE"
+        }
+      },
+      "6": {
+        "inputs": {
+          "shift": 3.1000000000000005,
+          "model": ["12", 0]
+        },
+        "class_type": "ModelSamplingAuraFlow",
+        "_meta": {
+          "title": "ModelSamplingAuraFlow"
+        }
+      },
+      "7": {
+        "inputs": {
+          "text": prompt,
+          "clip": ["3", 0]
+        },
+        "class_type": "CLIPTextEncode",
+        "_meta": {
+          "title": "CLIP Text Encode (Prompt)"
+        }
+      },
+      "8": {
+        "inputs": {
+          "text": "模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物",
+          "clip": ["3", 0]
+        },
+        "class_type": "CLIPTextEncode",
+        "_meta": {
+          "title": "CLIP Text Encode (Prompt)"
+        }
+      },
+      "9": {
+        "inputs": {
+          "width": width,
+          "height": height,
+          "batch_size": 1
+        },
+        "class_type": "EmptyLatentImage",
+        "_meta": {
+          "title": "Empty Latent Image"
+        }
+      },
+      "10": {
+        "inputs": {
+          "seed": seed,
+          "steps": 8,
+          "cfg": 1,
+          "sampler_name": "res_multistep",
+          "scheduler": "sgm_uniform",
+          "denoise": 1,
+          "model": ["6", 0],
+          "positive": ["7", 0],
+          "negative": ["8", 0],
+          "latent_image": ["9", 0]
+        },
+        "class_type": "KSampler",
+        "_meta": {
+          "title": "KSampler"
+        }
+      },
+      "12": {
+        "inputs": {
+          "lora_name": "Qwen-Image-Lightning-8steps-V1.0.safetensors",
+          "strength_model": 1,
+          "model": ["2", 0]
+        },
+        "class_type": "LoraLoaderModelOnly",
+        "_meta": {
+          "title": "LoraLoaderModelOnly"
+        }
+      },
+      "14": {
+        "inputs": {
+          "filename_prefix": "ComfyUI",
+          "images": ["15", 0]
+        },
+        "class_type": "SaveImage",
+        "_meta": {
+          "title": "Save Image"
+        }
+      },
+      "15": {
+        "inputs": {
+          "samples": ["10", 0],
+          "vae": ["4", 0]
+        },
+        "class_type": "VAEDecode",
+        "_meta": {
+          "title": "VAE Decode"
+        }
+      }
+    };
+
+    try {
+      const response = await fetch('/ai/prompt', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ prompt: workflow })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return { promptId: data.prompt_id, number: data.number };
+    } catch (error) {
+      console.error('生成图片失败:', error);
+      throw error;
+    }
+  },
+
+  // 查询任务状态
+  getTaskStatus: async (promptId) => {
+    try {
+      const response = await fetch(`/ai/history/${promptId}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        throw new Error(`查询任务状态失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('查询任务状态失败:', error);
+      throw error;
+    }
+  },
+
+  // 获取生成的素材
+  getGeneratedAsset: async (filename, subfolder = '', type = 'output') => {
+    try {
+      const params = new URLSearchParams({
+        filename,
+        subfolder,
+        type
+      });
+
+      const response = await fetch(`/ai/view?${params.toString()}`, {
+        method: 'GET'
+      });
+
+      if (!response.ok) {
+        throw new Error(`获取素材失败: ${response.status} ${response.statusText}`);
+      }
+
+      return response.blob();
+    } catch (error) {
+      console.error('获取素材失败:', error);
+      throw error;
+    }
+  },
+
+  // 上传图片（图生图）
+  uploadImage: async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/ai/upload/image', {
+        method: 'GET',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`上传图片失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('上传图片失败:', error);
+      throw error;
+    }
+  },
+
+  // 轮询任务状态直到完成
+  pollTaskStatus: async (promptId, maxAttempts = 60, interval = 2000) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const statusData = await aiAssetService.getTaskStatus(promptId);
+        const taskData = Object.values(statusData)[0];
+        
+        if (taskData && taskData.outputs) {
+          const outputs = taskData.outputs;
+          const images = outputs['14']?.images || [];
+          
+          if (images.length > 0) {
+            const filename = images[0].filename;
+            const url = `${AI_API_BASE_URL}/view?filename=${filename}&subfolder=&type=output`;
+            return { filename, url, completed: true };
+          }
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, interval));
+      } catch (error) {
+        console.error(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+        if (attempt === maxAttempts - 1) {
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, interval));
+      }
+    }
+    
+    throw new Error('任务超时，请稍后重试');
+  },
+
+  // 从任务结果中提取图片信息
+  extractImageInfo: (taskData) => {
+    try {
+      if (!taskData || !taskData.outputs) {
+        return null;
+      }
+
+      const outputs = taskData.outputs;
+      const saveImageNode = Object.values(outputs).find(node => node.images && node.images.length > 0);
+      
+      if (!saveImageNode) {
+        return null;
+      }
+
+      const imageInfo = saveImageNode.images[0];
+      return {
+        filename: imageInfo.filename,
+        subfolder: imageInfo.subfolder || '',
+        type: imageInfo.type || 'output'
+      };
+    } catch (error) {
+      console.error('提取图片信息失败:', error);
+      return null;
+    }
+  },
+
+  // 获取生成的图片并上传到OSS
+  getAndUploadImage: async (promptId, uploadService) => {
+    try {
+      const taskData = await aiAssetService.pollTaskStatus(promptId);
+      const imageInfo = aiAssetService.extractImageInfo(taskData);
+      
+      if (!imageInfo) {
+        throw new Error('未找到生成的图片');
+      }
+
+      const blob = await aiAssetService.getGeneratedAsset(
+        imageInfo.filename,
+        imageInfo.subfolder,
+        imageInfo.type
+      );
+
+      const file = new File([blob], imageInfo.filename, { type: 'image/png' });
+      const uploadResult = await uploadService.uploadFile(file, 'ai-generated-images');
+      
+      if (!uploadResult.success || !uploadResult.url) {
+        throw new Error('上传到OSS失败');
+      }
+
+      return {
+        success: true,
+        url: uploadResult.url,
+        filename: imageInfo.filename
+      };
+    } catch (error) {
+      console.error('获取并上传图片失败:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  },
+
+  // 生成多张图片（后端批量生成，立即返回任务ID）
+  generateMultipleImages: async (prompt, options = {}) => {
+    const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
+    
+    try {
+      const response = await fetch('/api/ai/generate-images', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          prompt,
+          count,
+          width,
+          height,
+          user_id,
+          organization_id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('生成多张图片失败:', error);
+      throw error;
+    }
+  },
+
+  // 轮询单个任务状态并上传到OSS
+  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 60, interval = 2000, onProgress) => {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        if (onProgress) {
+          onProgress({ index, attempt, status: 'polling' });
+        }
+
+        const response = await fetch(`/api/ai/task-status/${promptId}`, {
+          method: 'GET',
+          headers: getAuthHeaders()
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || `查询任务状态失败: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.status === 'completed') {
+          if (onProgress) {
+            onProgress({ index, attempt, status: 'completed', url: data.url });
+          }
+          
+          return {
+            index,
+            url: data.url,
+            filename: data.filename,
+            prompt: `${prompt} - 教学场景 ${index + 1}`,
+            completed: true
+          };
+        } else if (data.status === 'error') {
+          throw new Error('任务执行失败');
+        }
+        
+        await new Promise(resolve => setTimeout(resolve, interval));
+      } catch (error) {
+        console.error(`轮询任务 ${index + 1} 状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+        if (attempt === maxAttempts - 1) {
+          if (onProgress) {
+            onProgress({ index, attempt, status: 'failed', error: error.message });
+          }
+          throw error;
+        }
+        await new Promise(resolve => setTimeout(resolve, interval));
+      }
+    }
+    
+    throw new Error('任务超时，请稍后重试');
+  },
+
+  // 完整的图片生成流程（提交任务 + 轮询结果 + 上传OSS）
+  generateImageWithPolling: async (prompt, options = {}, onProgress, uploadService) => {
+    try {
+      onProgress?.(10, '正在提交生成任务...');
+
+      const { promptId } = await aiAssetService.generateImage(prompt, options);
+
+      onProgress?.(30, '任务已提交，正在生成中...');
+
+      if (uploadService) {
+        onProgress?.(50, '正在获取生成的图片...');
+
+        const uploadResult = await aiAssetService.getAndUploadImage(promptId, uploadService);
+
+        if (!uploadResult.success) {
+          throw new Error(uploadResult.error);
+        }
+
+        onProgress?.(100, '生成完成并已上传到OSS！');
+
+        return {
+          success: true,
+          url: uploadResult.url,
+          filename: uploadResult.filename
+        };
+      } else {
+        const result = await aiAssetService.pollTaskStatus(
+          promptId,
+          options.maxAttempts || 60,
+          options.interval || 2000
+        );
+
+        onProgress?.(100, '生成完成！');
+
+        return {
+          success: true,
+          data: result
+        };
+      }
+    } catch (error) {
+      console.error('生成图片失败:', error);
+      throw error;
+    }
+  },
+
+  // 生成多个音频（后端批量生成，立即返回任务ID）
+  generateMultipleAudio: async (prompt, options = {}) => {
+    const { count = 2, lyrics, duration = 30, user_id, organization_id } = options;
+
+    try {
+      const requestBody = {
+        prompt,
+        count,
+        lyrics,
+        duration,
+        user_id,
+        organization_id
+      };
+
+      const response = await fetch('/api/ai/generate-audio', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('生成多个音频失败:', error);
+      throw error;
+    }
+  },
+
+  // 完整的音频生成流程（提交任务 + 轮询结果 + 上传OSS）
+  generateAudioWithPolling: async (prompt, options = {}, onProgress) => {
+    try {
+      onProgress?.(10, '正在提交音频生成任务...');
+
+      const result = await aiAssetService.generateMultipleAudio(prompt, options);
+
+      onProgress?.(30, '任务已提交，正在生成中...');
+
+      // 轮询所有任务
+      const tasks = result.tasks;
+      const completedAudios = [];
+
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        onProgress?.(30 + Math.floor((i / tasks.length) * 60), `正在生成音频 ${i + 1}/${tasks.length}...`);
+
+        try {
+          const audioResult = await aiAssetService.pollTaskAndUpload(
+            task.promptId,
+            i,
+            prompt,
+            60,
+            2000
+          );
+          completedAudios.push(audioResult);
+        } catch (error) {
+          console.error(`音频任务 ${i + 1} 失败:`, error);
+        }
+      }
+
+      onProgress?.(100, '音频生成完成！');
+
+      return {
+        success: true,
+        audios: completedAudios
+      };
+    } catch (error) {
+      console.error('生成音频失败:', error);
+      throw error;
+    }
+  },
+
+  // 图生图（后端批量生成，立即返回任务ID）
+  generateImageToImage: async (prompt, imageUrl, options = {}) => {
+    const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
+
+    try {
+      // 处理图片 URL，确保服务器可以访问
+      let processedUrl = imageUrl;
+      if (imageUrl.startsWith('/')) {
+        processedUrl = `${imageUrl}`;
+        console.log('相对路径:', processedUrl);
+      } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
+        const urlObj = new URL(imageUrl);
+        processedUrl = `${urlObj.pathname}`;
+        console.log('前端地址转换为相对路径:', processedUrl);
+      }
+
+      const response = await fetch('/api/ai/image-to-image', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          prompt,
+          imageUrl: processedUrl,
+          count,
+          width,
+          height,
+          user_id,
+          organization_id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('图生图失败:', error);
+      throw error;
+    }
+  },
+
+  // 完整的图生图流程（提交任务 + 轮询结果 + 上传OSS）
+  generateImageToImageWithPolling: async (prompt, imageUrl, options = {}, onProgress) => {
+    try {
+      onProgress?.(10, '正在提交图生图任务...');
+
+      const result = await aiAssetService.generateImageToImage(prompt, imageUrl, options);
+
+      onProgress?.(30, '任务已提交，正在生成中...');
+
+      // 轮询所有任务
+      const tasks = result.tasks;
+      const completedImages = [];
+
+      for (let i = 0; i < tasks.length; i++) {
+        const task = tasks[i];
+        onProgress?.(30 + Math.floor((i / tasks.length) * 60), `正在生成图片 ${i + 1}/${tasks.length}...`);
+
+        try {
+          const imageResult = await aiAssetService.pollTaskAndUpload(
+            task.promptId,
+            i,
+            prompt,
+            60,
+            2000
+          );
+          completedImages.push(imageResult);
+        } catch (error) {
+          console.error(`图生图任务 ${i + 1} 失败:`, error);
+        }
+      }
+
+      onProgress?.(100, '图生图完成！');
+
+      return {
+        success: true,
+        images: completedImages
+      };
+    } catch (error) {
+      console.error('图生图失败:', error);
+      throw error;
+    }
+  }
+};
+
+export default aiAssetService;

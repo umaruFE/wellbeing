@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ImageIcon, Video, Download, Sparkles, Plus, Trash2, Camera, Film, X, Wand2, Upload, Check, Clock, AlertCircle, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { aiAssetService } from '../services/aiAssetService';
-import { extractCharacterFromDescription, generateCharacterReferenceImages, generateStoryboardScript, generateSceneImage, composeVideo } from '../services/videoStoryboardService';
+import { aiAssetService } from './services/aiAssetService';
+import { extractCharacterFromDescription, generateCharacterReferenceImages, generateStoryboardScript, generateSceneImage, composeVideo } from './services/videoStoryboardService';
 
 const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
@@ -24,10 +24,7 @@ const pollTaskStatus = async (promptId, maxAttempts = 60, interval = 2000) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const response = await fetch(`/api/ai/task-status/${promptId}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
-        }
+        method: 'GET'
       });
 
       if (!response.ok) {
@@ -1024,54 +1021,47 @@ export const AIGeneratorPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* 顶部导航 */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
-            <h2 className="text-base sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent whitespace-nowrap">
-              AI创作助手
-            </h2>
-          </div>
-          
-          {/* 标签切换 */}
-          <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 sm:p-1">
-            <button
-              onClick={() => setActiveTab('image')}
-              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                activeTab === 'image'
-                  ? 'bg-white dark:bg-slate-700 text-purple-600 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-            >
-              <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">图片生成</span>
-              <span className="sm:hidden">图片</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('video')}
-              className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
-                activeTab === 'video'
-                  ? 'bg-white dark:bg-slate-700 text-purple-600 shadow-sm'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
-            >
-              <Video className="w-3 h-3 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">视频生成</span>
-              <span className="sm:hidden">视频</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <div>
       {/* 主内容区 */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* 左侧：输入区域 */}
           <div className="space-y-6">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-500" />
+                  AI创作助手
+                </h2>
+                <div className="flex bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5 sm:p-1">
+                  <button
+                    onClick={() => setActiveTab('image')}
+                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
+                      activeTab === 'image'
+                        ? 'bg-white dark:bg-slate-700 text-purple-600 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">图片生成</span>
+                    <span className="sm:hidden">图片</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('video')}
+                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
+                      activeTab === 'video'
+                        ? 'bg-white dark:bg-slate-700 text-purple-600 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <Video className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">视频生成</span>
+                    <span className="sm:hidden">视频</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
             {activeTab === 'image' ? (
               <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from './db';
+import crypto from 'crypto';
 
 export interface AuthUser {
   id: string;
@@ -15,6 +16,10 @@ export interface AuthResult {
   error?: string;
 }
 
+// 简单的JWT风格token（不依赖数据库存储）
+// token格式: pg_token_{userId}_{timestamp}_{signature}
+const SECRET_KEY = process.env.JWT_SECRET || 'wellbeing-secret-key-2024';
+
 export function extractToken(request: NextRequest): string | null {
   const authHeader = request.headers.get('authorization');
   if (authHeader?.startsWith('Bearer ')) {
@@ -23,38 +28,73 @@ export function extractToken(request: NextRequest): string | null {
   return null;
 }
 
-export async function verifyToken(token: string): Promise<AuthResult> {
+// 生成token（包含用户信息和签名）
+export function generateToken(user: AuthUser): string {
+  const timestamp = Date.now();
+  const data = `${user.id}:${user.role}:${timestamp}`;
+  const signature = crypto
+    .createHmac('sha256', SECRET_KEY)
+    .update(data)
+    .digest('hex')
+    .substring(0, 32);
+  
+  const token = `pg_token_${Buffer.from(JSON.stringify({
+    id: user.id,
+    username: user.username,
+    role: user.role,
+    name: user.name,
+    organizationId: user.organizationId,
+    timestamp,
+    signature
+  })).toString('base64')}`;
+  
+  console.log('Token生成, 用户:', user.name);
+  return token;
+}
+
+// 验证token
+export function verifyToken(token: string): AuthResult {
   try {
     if (!token || !token.startsWith('pg_token_')) {
+      console.log('Token格式无效');
       return { success: false, error: '无效的token格式' };
     }
 
-    const tokenParts = token.split('_');
-    if (tokenParts.length < 3) {
-      return { success: false, error: '无效的token格式' };
-    }
+    // 解析token
+    const payloadBase64 = token.substring(9); // 去掉 'pg_token_'
+    const payloadStr = Buffer.from(payloadBase64, 'base64').toString('utf-8');
+    const payload = JSON.parse(payloadStr);
 
-    const tokenHash = tokenParts.slice(2).join('_');
+    // 验证签名
+    const data = `${payload.id}:${payload.role}:${payload.timestamp}`;
+    const expectedSignature = crypto
+      .createHmac('sha256', SECRET_KEY)
+      .update(data)
+      .digest('hex')
+      .substring(0, 32);
 
-    const { data: users } = await db
-      .from('users')
-      .select('*')
-      .eq('token_hash', tokenHash)
-      .limit(1);
-
-    if (!users || users.length === 0) {
+    if (payload.signature !== expectedSignature) {
+      console.log('Token签名无效');
       return { success: false, error: 'Token无效或已过期' };
     }
 
-    const user = users[0];
+    // 检查token是否过期（7天）
+    const tokenAge = Date.now() - payload.timestamp;
+    const maxAge = 7 * 24 * 60 * 60 * 1000; // 7天
+    if (tokenAge > maxAge) {
+      console.log('Token已过期');
+      return { success: false, error: 'Token已过期' };
+    }
+
+    console.log('Token验证成功, 用户:', payload.name);
     return {
       success: true,
       user: {
-        id: user.id,
-        username: user.email || user.name,
-        role: user.role || 'viewer',
-        name: user.name || user.email,
-        organizationId: user.organization_id,
+        id: payload.id,
+        username: payload.username,
+        role: payload.role,
+        name: payload.name,
+        organizationId: payload.organizationId,
       },
     };
   } catch (error) {
@@ -63,7 +103,7 @@ export async function verifyToken(token: string): Promise<AuthResult> {
   }
 }
 
-export async function authenticate(request: NextRequest): Promise<AuthResult> {
+export function authenticate(request: NextRequest): AuthResult {
   const token = extractToken(request);
   if (!token) {
     return { success: false, error: '未提供认证token' };
@@ -74,7 +114,7 @@ export async function authenticate(request: NextRequest): Promise<AuthResult> {
 
 export function requireAuth(handler: (request: NextRequest, user: AuthUser) => Promise<NextResponse>) {
   return async (request: NextRequest): Promise<NextResponse> => {
-    const authResult = await authenticate(request);
+    const authResult = authenticate(request);
 
     if (!authResult.success) {
       return NextResponse.json(
@@ -87,10 +127,10 @@ export function requireAuth(handler: (request: NextRequest, user: AuthUser) => P
   };
 }
 
-export function requireRoles(allowedRoles: string[]) {
-  return function (handler: (request: NextRequest, user: AuthUser) => Promise<NextResponse>) {
+export function requireRole(allowedRoles: string[]) {
+  return function(handler: (request: NextRequest, user: AuthUser) => Promise<NextResponse>) {
     return async (request: NextRequest): Promise<NextResponse> => {
-      const authResult = await authenticate(request);
+      const authResult = authenticate(request);
 
       if (!authResult.success) {
         return NextResponse.json(
@@ -99,14 +139,15 @@ export function requireRoles(allowedRoles: string[]) {
         );
       }
 
-      if (!allowedRoles.includes(authResult.user!.role)) {
+      const user = authResult.user!;
+      if (!allowedRoles.includes(user.role)) {
         return NextResponse.json(
           { error: '权限不足' },
           { status: 403 }
         );
       }
 
-      return handler(request, authResult.user!);
+      return handler(request, user);
     };
   };
 }
