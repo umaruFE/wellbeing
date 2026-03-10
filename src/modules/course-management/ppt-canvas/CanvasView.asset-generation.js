@@ -136,7 +136,8 @@ export const handleConfirmAddAsset = async (
 
     // 1) 先做提示词优化（调用大模型与优化服务）
     // 注意：音频类型不使用优化后的提示词，因为HeartMuLa更适合简洁的tags
-    const shouldOptimize = type !== 'audio';
+    // inputMode为direct时也不优化（direct模式用于用户手动输入精确描述的场景）
+    const shouldOptimize = type !== 'audio' && inputMode !== 'direct';
     if (shouldOptimize) {
       try {
         const optimized = await optimizePrompt(basePrompt, type === 'text' ? 'script' : type, userId);
