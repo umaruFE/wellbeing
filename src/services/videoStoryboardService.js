@@ -18,14 +18,15 @@ function getAuthHeaders() {
 /**
  * 从描述中提取人物特征
  * @param {string} description - 视频描述
+ * @param {string} videoStyle - 视频风格（可选）
  * @returns {Promise<string>} - 人物特征描述
  */
-export const extractCharacterFromDescription = async (description) => {
+export const extractCharacterFromDescription = async (description, videoStyle = '') => {
   try {
     const response = await fetch('/api/ai/extract-character', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ description })
+      body: JSON.stringify({ description, videoStyle })
     });
 
     if (!response.ok) {
@@ -98,7 +99,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
   let characterDescription = description;
   if (uploadedImages.length === 0) {
     console.log('开始提取人物特征...');
-    characterDescription = await extractCharacterFromDescription(description);
+    characterDescription = await extractCharacterFromDescription(description, videoStyle);
     console.log('提取的人物特征:', characterDescription);
   }
   

@@ -10,7 +10,8 @@ const configPath = path.join(process.cwd(), 'src', 'lib', 'prompt-config.json');
 const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
 // 导出配置
-export const characterExtractionPrompt = configData.characterExtractionPrompt;
+export const characterExtractionPrompt = configData.characterExtractionPrompts?.default || configData.characterExtractionPrompt || '';
+export const characterExtractionPrompts = configData.characterExtractionPrompts || {};
 export const characterReferencePrompt = configData.characterReferencePrompt;
 export const characterReferencePrompts = configData.characterReferencePrompts || {};
 export const qwenImageConfig = configData.qwenImageConfig || {};
@@ -22,6 +23,30 @@ export const promptOptimizationSystemPrompt = (originalPrompt, elementType) => {
   return configData.promptOptimizationTemplate
     .replace('{originalPrompt}', originalPrompt)
     .replace('{elementType}', elementType === 'image' ? '图片生成' : elementType === 'audio' ? '音频生成' : elementType === 'script' ? '教师讲稿' : elementType === 'activity' ? '教学活动' : 'PPT内容');
+};
+
+// 根据风格获取人物特征提取提示词
+export const getCharacterExtractionPrompt = (videoStyle) => {
+  if (!videoStyle) {
+    return characterExtractionPrompts.default || characterExtractionPrompt;
+  }
+
+  // 精确匹配
+  if (characterExtractionPrompts[videoStyle]) {
+    return characterExtractionPrompts[videoStyle];
+  }
+
+  // 模糊匹配
+  const styleLower = videoStyle.toLowerCase();
+  for (const [key, prompt] of Object.entries(characterExtractionPrompts)) {
+    const keyLower = key.toLowerCase();
+    const keywords = keyLower.split(/[、,]/).filter(k => k.trim());
+    if (keywords.some(keyword => keyword && styleLower.includes(keyword))) {
+      return prompt;
+    }
+  }
+
+  return characterExtractionPrompts.default || characterExtractionPrompt;
 };
 
 // 根据风格获取 qwen-image 模型的采样参数

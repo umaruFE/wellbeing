@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { characterExtractionPrompt } from '@/lib/prompt-config';
+import { getCharacterExtractionPrompt } from '@/lib/prompt-config';
 
 const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
 const DASHSCOPE_API_URL = process.env.DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
@@ -22,7 +22,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { description } = body;
+    const { description, videoStyle } = body;
 
     if (!description) {
       return NextResponse.json(
@@ -39,7 +39,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const systemPrompt = characterExtractionPrompt;
+    // 根据风格获取对应的提取提示词
+    const systemPrompt = getCharacterExtractionPrompt(videoStyle);
+    console.log('使用的提取提示词风格:', videoStyle || 'default');
 
     const response = await fetch(`${DASHSCOPE_API_URL}/chat/completions`, {
       method: 'POST',
