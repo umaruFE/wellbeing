@@ -3,7 +3,8 @@
  * 从静态 JSON 文件读取配置，支持热修改
  */
 
-import fs from 'path';
+import fs from 'fs';
+import path from 'path';
 
 // 读取 JSON 配置文件
 const configPath = path.join(process.cwd(), 'src', 'lib', 'prompt-config.json');
