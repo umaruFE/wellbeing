@@ -166,7 +166,8 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
           height: height,
           user_id: userId,
           organization_id: organizationId,
-          workflow_type: 'person'
+          workflow_type: 'person',
+          video_style: videoStyle
         })
       });
     }
@@ -279,7 +280,8 @@ export const generateCharacterReferenceImagesWithPrompt = async (characterDescri
           height: height,
           user_id: userId,
           organization_id: organizationId,
-          workflow_type: 'person'
+          workflow_type: 'person',
+          video_style: videoStyle
         })
       });
     }
