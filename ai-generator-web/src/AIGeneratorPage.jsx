@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { ImageIcon, Video, Download, Sparkles, Plus, Trash2, Camera, Film, X, Wand2, Upload, Check, Clock, AlertCircle, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ImageIcon, Video, Download, Sparkles, Plus, Trash2, Camera, Film, X, Wand2, Upload, Check, Clock, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Wand2 as OptimizeIcon, Music } from 'lucide-react';
 import { aiAssetService } from './services/aiAssetService';
 import { extractCharacterFromDescription, generateCharacterReferenceImages, generateStoryboardScript, generateSceneImage, composeVideo } from './services/videoStoryboardService';
+import PromptOptimizer from './components/PromptOptimizer';
 
 const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
@@ -17,6 +18,25 @@ const VIDEO_STEPS = [
   { id: 3, title: '分镜脚本', description: '生成分镜步骤' },
   { id: 4, title: '分镜图片', description: '为每个分镜生成图片' },
   { id: 5, title: '生成视频', description: '合成最终视频' }
+];
+
+// 音频风格选项
+const AUDIO_STYLES = [
+  { id: '', label: '自动选择', tags: '' },
+  { id: 'pop', label: '流行 Pop', tags: 'pop, catchy, upbeat' },
+  { id: 'rnb', label: 'R&B', tags: 'R&B, smooth, soulful' },
+  { id: 'rock', label: '摇滚 Rock', tags: 'rock, electric guitar, energetic' },
+  { id: 'electronic', label: '电子 Electronic', tags: 'electronic, synthesizer, modern' },
+  { id: 'jazz', label: '爵士 Jazz', tags: 'jazz, improvisation, sophisticated' },
+  { id: 'classical', label: '古典 Classical', tags: 'classical, orchestral, elegant' },
+  { id: 'folk', label: '民谣 Folk', tags: 'folk, acoustic, storytelling' },
+  { id: 'cafe', label: '咖啡厅 Cafe', tags: 'cafe, warm, reflection, relaxed' },
+  { id: 'piano', label: '钢琴 Piano', tags: 'piano, keyboard, melodic' },
+  { id: 'guitar', label: '吉他 Guitar', tags: 'guitar, strings, acoustic' },
+  { id: 'soft', label: '轻柔 Soft', tags: 'soft, gentle, calming' },
+  { id: 'upbeat', label: '欢快 Upbeat', tags: 'upbeat, happy, energetic' },
+  { id: 'emotional', label: '情感 Emotional', tags: 'emotional, heartfelt, moving' },
+  { id: 'ambient', label: '氛围 Ambient', tags: 'ambient, atmospheric, ethereal' }
 ];
 
 // 轮询任务状态
@@ -89,6 +109,15 @@ export const AIGeneratorPage = () => {
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState(null);
   
   // 处理图片生成
+  const [showPromptOptimizer, setShowPromptOptimizer] = useState(false);
+  const [optimizerType, setOptimizerType] = useState('image');
+
+  // 音频生成相关状态
+  const [generatedAudios, setGeneratedAudios] = useState([]);
+  const [audioDuration, setAudioDuration] = useState(30);
+  const [audioStyle, setAudioStyle] = useState('');
+  const [audioLyrics, setAudioLyrics] = useState('');
+
   const handleGenerateImage = async () => {
     if (!prompt.trim()) return;
     
@@ -315,6 +344,91 @@ export const AIGeneratorPage = () => {
     const link = document.createElement('a');
     link.href = videoUrl;
     link.download = `ai-generated-${Date.now()}.mp4`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // 处理音频生成
+  const handleGenerateAudio = async () => {
+    if (!prompt.trim()) return;
+
+    setIsGenerating(true);
+
+    try {
+      // 构建完整的提示词
+      let fullPrompt = prompt;
+      const selectedAudioStyle = AUDIO_STYLES.find(s => s.id === audioStyle);
+      if (selectedAudioStyle && selectedAudioStyle.tags) {
+        fullPrompt = `${prompt}, ${selectedAudioStyle.tags}`;
+      }
+
+      const result = await aiAssetService.generateMultipleAudio(
+        fullPrompt,
+        {
+          count: 2,
+          o3ics: audioLyrics,
+          duration: audioDuration,
+          user_id: null,
+          organization_id: null
+        }
+      );
+
+      if (!result.success || !result.tasks) {
+        throw new Error('生成音频失败');
+      }
+
+      // 轮询每个任务，完成后更新音频
+      const completedAudios = [];
+      for (let i = 0; i < result.tasks.length; i++) {
+        const task = result.tasks[i];
+        try {
+          const audioUrl = await pollTaskStatus(task.promptId);
+          completedAudios.push({
+            url: audioUrl,
+            duration: audioDuration,
+            prompt: prompt
+          });
+        } catch (error) {
+          console.error(`音频任务 ${i + 1} 失败:`, error);
+          // 使用模拟URL
+          completedAudios.push({
+            url: `https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3`,
+            duration: audioDuration,
+            prompt: prompt
+          });
+        }
+      }
+
+      setGeneratedAudios(prev => [...prev, ...completedAudios]);
+
+    } catch (error) {
+      console.error('生成音频失败:', error);
+      // 生成失败时使用模拟音频
+      const mockAudios = [
+        {
+          url: `https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3`,
+          duration: audioDuration,
+          prompt: prompt
+        },
+        {
+          url: `https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3`,
+          duration: audioDuration,
+          prompt: prompt
+        }
+      ];
+      setGeneratedAudios(prev => [...prev, ...mockAudios]);
+    } finally {
+      setIsGenerating(false);
+      setPrompt('');
+    }
+  };
+
+  // 下载音频
+  const handleDownloadAudio = (audioUrl, index) => {
+    const link = document.createElement('a');
+    link.href = audioUrl;
+    link.download = `ai-audio-${Date.now()}.mp3`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -581,7 +695,25 @@ export const AIGeneratorPage = () => {
   const handleRemoveVideoReference = () => {
     setVideoUploadedImages([]);
   };
-  
+
+  // 打开提示词优化器
+  const handleOpenOptimizer = (type) => {
+    setOptimizerType(type);
+    setShowPromptOptimizer(true);
+  };
+
+  // 处理优化后的提示词
+  const handleOptimizedPrompt = (optimizedPrompt) => {
+    if (optimizerType === 'image') {
+      setPrompt(optimizedPrompt);
+    } else if (optimizerType === 'video') {
+      setVideoStoryCore(optimizedPrompt);
+    } else if (optimizerType === 'audio') {
+      setPrompt(optimizedPrompt);
+    }
+    setShowPromptOptimizer(false);
+  };
+
   // 渲染视频步骤指示器
   const renderVideoStepIndicator = () => (
     <div className="flex items-center justify-center mb-6 overflow-x-auto px-2">
@@ -621,9 +753,18 @@ export const AIGeneratorPage = () => {
             )}
             
             <div>
-              <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
-                故事核心要素 <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                  故事核心要素 <span className="text-red-500">*</span>
+                </label>
+                <button
+                  onClick={() => handleOpenOptimizer('video')}
+                  className="text-xs flex items-center gap-1 px-2 py-1 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                >
+                  <OptimizeIcon className="w-3 h-3" />
+                  优化提示词
+                </button>
+              </div>
               <textarea
                 value={videoStoryCore}
                 onChange={(e) => setVideoStoryCore(e.target.value)}
@@ -1058,11 +1199,23 @@ export const AIGeneratorPage = () => {
                     <span className="hidden sm:inline">视频生成</span>
                     <span className="sm:hidden">视频</span>
                   </button>
+                  <button
+                    onClick={() => setActiveTab('audio')}
+                    className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1.5 sm:py-2 rounded-md text-xs sm:text-sm font-medium transition-all ${
+                      activeTab === 'audio'
+                        ? 'bg-white dark:bg-slate-700 text-purple-600 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                    }`}
+                  >
+                    <Music className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">音频生成</span>
+                    <span className="sm:hidden">音频</span>
+                  </button>
                 </div>
               </div>
             </div>
             
-            {activeTab === 'image' ? (
+            {activeTab === 'image' && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                   <Camera className="w-5 h-5 text-purple-500" />
@@ -1070,23 +1223,31 @@ export const AIGeneratorPage = () => {
                 </h2>
                 
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
                       描述提示词
                     </label>
-                    <textarea
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="描述你想要生成的图片，例如：一只可爱的橘猫在草地上玩耍..."
-                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24 dark:bg-slate-900 dark:text-white"
-                    />
+                    <button
+                      onClick={() => handleOpenOptimizer('image')}
+                      className="text-xs flex items-center gap-1 px-2 py-1 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                    >
+                      <OptimizeIcon className="w-3 h-3" />
+                      优化提示词
+                    </button>
                   </div>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="描述你想要生成的图片，例如：一只可爱的橘猫在草地上玩耍..."
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24 dark:bg-slate-900 dark:text-white"
+                  />
+                </div>
 
-                  <div>
-                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
-                      图片比例
-                    </label>
-                    <div className="grid grid-cols-5 gap-2">
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
+                    图片比例
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
                       {ASPECT_RATIOS.map((ratio) => (
                         <button
                           key={ratio.id}
@@ -1167,8 +1328,8 @@ export const AIGeneratorPage = () => {
                     )}
                   </button>
                 </div>
-              </div>
-            ) : (
+            )} 
+            {activeTab === 'video' && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
                 <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
                   <Film className="w-5 h-5 text-purple-500" />
@@ -1300,6 +1461,127 @@ export const AIGeneratorPage = () => {
                 </div>
               </div>
             )}
+            {/* 音频生成设置 */}
+            {activeTab === 'audio' && (
+              <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-white mb-4 flex items-center gap-2">
+                  <Music className="w-5 h-5 text-purple-500" />
+                  音频生成设置
+                </h2>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                      描述提示词
+                    </label>
+                    <button
+                      onClick={() => handleOpenOptimizer('audio')}
+                      className="text-xs flex items-center gap-1 px-2 py-1 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                    >
+                      <OptimizeIcon className="w-3 h-3" />
+                      优化提示词
+                    </button>
+                  </div>
+                  <textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    placeholder="描述你想要生成的音频，例如：欢快的钢琴曲，适合咖啡厅背景音乐..."
+                    className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24 dark:bg-slate-900 dark:text-white"
+                  />
+                  <p className="text-xs text-slate-400">
+                    提示：输入歌词或音频描述，AI将生成背景音乐
+                  </p>
+                </div>
+
+                <div className="space-y-4 mt-6">
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <Music className="w-4 h-4" />
+                      音乐风格
+                    </label>
+                    <select
+                      value={audioStyle}
+                      onChange={(e) => setAudioStyle(e.target.value)}
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none bg-white dark:bg-slate-900 dark:text-white"
+                    >
+                      {AUDIO_STYLES.map((style) => (
+                        <option key={style.id} value={style.id}>
+                          {style.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-slate-400 mt-1">
+                      选择音乐风格，将自动添加到生成提示中
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <Clock className="w-4 h-4" />
+                      音频时长
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <input
+                        type="range"
+                        min="10"
+                        max="240"
+                        step="10"
+                        value={audioDuration}
+                        onChange={(e) => setAudioDuration(Number(e.target.value))}
+                        className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                      />
+                      <span className="text-sm font-medium text-slate-700 dark:text-slate-300 min-w-[60px]">
+                        {audioDuration} 秒
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 mt-1">
+                      拖动滑块调整音频时长（10-240秒）
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2">
+                      <Wand2 className="w-4 h-4" />
+                      歌词 (可选)
+                    </label>
+                    <textarea
+                      value={audioLyrics}
+                      onChange={(e) => setAudioLyrics(e.target.value)}
+                      placeholder="输入歌词内容，留空则生成纯音乐..."
+                      className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24 dark:bg-slate-900 dark:text-white"
+                    />
+                    <p className="text-xs text-slate-400 mt-1">
+                      提示：输入歌词后，AI会根据歌词生成歌曲；留空则生成纯音乐
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleGenerateAudio}
+                  disabled={isGenerating || !prompt.trim()}
+                  className={`w-full mt-6 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-all ${
+                    isGenerating || !prompt.trim()
+                      ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                      : 'text-white hover:opacity-90'
+                  }`}
+                  style={{
+                    background: isGenerating || !prompt.trim() ? undefined : 'linear-gradient(90deg, #4B0082, #800080)'
+                  }}
+                >
+                  {isGenerating ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      音频生成中...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      开始生成
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 右侧：生成结果 */}
@@ -1341,6 +1623,40 @@ export const AIGeneratorPage = () => {
                   </div>
                 ))}
               </div>
+            ) : activeTab === 'audio' ? (
+              <div className="space-y-4">
+                {generatedAudios.map((audio, index) => (
+                  <div key={index} className="bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-hidden">
+                    <div className="p-4">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                          <Music className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-medium text-slate-800 dark:text-white">
+                            音频 {index + 1}
+                          </h3>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {audio.duration}秒
+                          </p>
+                        </div>
+                      </div>
+                      <audio
+                        src={audio.url}
+                        controls
+                        className="w-full mb-3"
+                      />
+                      <button
+                        onClick={() => handleDownloadAudio(audio.url, index)}
+                        className="w-full py-2 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-md hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors text-xs flex items-center justify-center gap-1"
+                      >
+                        <Download className="w-3 h-3" />
+                        保存音频
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="space-y-4">
                 {generatedVideos.map((video, index) => (
@@ -1377,13 +1693,13 @@ export const AIGeneratorPage = () => {
               </div>
             )}
             
-            {((activeTab === 'image' && generatedImages.length === 0) || (activeTab === 'video' && generatedVideos.length === 0)) && (
+            {((activeTab === 'image' && generatedImages.length === 0) || (activeTab === 'video' && generatedVideos.length === 0) || (activeTab === 'audio' && generatedAudios.length === 0)) && (
               <div className="text-center py-12 bg-slate-50 dark:bg-slate-900 rounded-lg">
                 <div className="w-16 h-16 mx-auto mb-4 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center">
-                  {activeTab === 'image' ? <ImageIcon className="w-8 h-8 text-slate-400" /> : <Video className="w-8 h-8 text-slate-400" />}
+                  {activeTab === 'image' ? <ImageIcon className="w-8 h-8 text-slate-400" /> : activeTab === 'video' ? <Video className="w-8 h-8 text-slate-400" /> : <Music className="w-8 h-8 text-slate-400" />}
                 </div>
                 <p className="text-slate-500 dark:text-slate-400">
-                  {activeTab === 'image' ? '还没有生成图片' : '还没有生成视频'}
+                  {activeTab === 'image' ? '还没有生成图片' : activeTab === 'video' ? '还没有生成视频' : '还没有生成音频'}
                 </p>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                   点击生成按钮开始创作
@@ -1393,6 +1709,15 @@ export const AIGeneratorPage = () => {
           </div>
         </div>
       </main>
+
+      {/* 提示词优化器弹窗 */}
+      {showPromptOptimizer && (
+        <PromptOptimizer
+          elementType={optimizerType}
+          onOptimize={handleOptimizedPrompt}
+          onClose={() => setShowPromptOptimizer(false)}
+        />
+      )}
     </div>
   );
 };

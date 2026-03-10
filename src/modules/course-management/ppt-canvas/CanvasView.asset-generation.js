@@ -707,6 +707,9 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
   const w = 400;
   const h = 225; // 16:9
 
+  // 使用用户选择的风格
+  const selectedStyle = videoData.style || 'realistic';
+
   const newAsset = {
     id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type: 'video',
@@ -715,7 +718,7 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
     content: '',
     prompt: videoData.description || '',
     referenceImage: null,
-    videoStyle: 'realistic',
+    videoStyle: selectedStyle,
     x: 100,
     y: 100,
     width: w,

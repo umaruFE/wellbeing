@@ -23,6 +23,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/ai/, ''),
+        // 排除 /ai-generator 路径
+        bypass: (req) => {
+          if (req.url.startsWith('/ai-generator')) {
+            return req.url;
+          }
+        }
       },
       '/ai-video': {
         // 单独给视频生成 / 另一套 ComfyUI 工作流使用

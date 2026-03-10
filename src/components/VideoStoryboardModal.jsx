@@ -402,7 +402,8 @@ export const VideoStoryboardModal = ({
       duration: videoDuration,
       referenceImages: getFinalReferenceImages(),
       scenes,
-      videoUrl: generatedVideoUrl
+      videoUrl: generatedVideoUrl,
+      style: overallStyle  // 单独传递风格字段
     });
   };
 

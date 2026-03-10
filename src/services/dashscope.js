@@ -4,6 +4,14 @@ import { courseGenerationSystemPrompt, promptOptimizationSystemPrompt } from '..
 const API_KEY = import.meta.env.VITE_DASHSCOPE_API_KEY;
 const API_URL = import.meta.env.VITE_DASHSCOPE_API_URL;
 
+// 安全检查：如果环境变量未定义，抛出明确的错误
+if (!API_URL) {
+  throw new Error('环境变量 VITE_DASHSCOPE_API_URL 未定义，请确保 .env 文件已正确配置并重启开发服务器');
+}
+if (!API_KEY) {
+  throw new Error('环境变量 VITE_DASHSCOPE_API_KEY 未定义，请确保 .env 文件已正确配置并重启开发服务器');
+}
+
 export const optimizePrompt = async (originalPrompt, elementType, userId = null) => {
   const systemPrompt = promptOptimizationSystemPrompt(originalPrompt, elementType);
 
