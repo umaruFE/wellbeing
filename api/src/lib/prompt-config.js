@@ -3,8 +3,7 @@
  * 从静态 JSON 文件读取配置，支持热修改
  */
 
-import fs from 'fs';
-import path from 'path';
+import fs from 'path';
 
 // 读取 JSON 配置文件
 const configPath = path.join(process.cwd(), 'src', 'lib', 'prompt-config.json');
@@ -13,6 +12,7 @@ const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 // 导出配置
 export const characterExtractionPrompt = configData.characterExtractionPrompt;
 export const characterReferencePrompt = configData.characterReferencePrompt;
+export const characterReferencePrompts = configData.characterReferencePrompts || {};
 export const scenePromptOptimizationPrompt = configData.scenePromptOptimizationPrompt;
 export const courseGenerationSystemPrompt = configData.courseGenerationSystemPrompt;
 

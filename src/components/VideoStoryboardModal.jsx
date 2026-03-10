@@ -216,10 +216,10 @@ export const VideoStoryboardModal = ({
       setError('请先提取人物特征描述');
       return;
     }
-    
+
     setIsGeneratingCharacters(true);
     setError(null);
-    
+
     try {
       // 使用提取/编辑后的人物描述生成人物参考图
       const images = await videoStoryboardService.generateCharacterReferenceImagesWithPrompt(
@@ -228,7 +228,8 @@ export const VideoStoryboardModal = ({
         userId,
         organizationId,
         selectedAspectRatio.width,
-        selectedAspectRatio.height
+        selectedAspectRatio.height,
+        overallStyle // 传递整体风格
       );
       
       if (!images || images.length === 0) {

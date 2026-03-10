@@ -90,9 +90,10 @@ export const pollTaskAndGetImageUrl = async (promptId, maxAttempts = 60, interva
  * @param {string} organizationId - 组织ID
  * @param {number} width - 图片宽度
  * @param {number} height - 图片高度
+ * @param {string} videoStyle - 视频风格
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
-export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512) => {
+export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512, videoStyle = '') => {
   // 先提取人物特征
   let characterDescription = description;
   if (uploadedImages.length === 0) {
@@ -107,7 +108,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
     const promptResponse = await fetch('/api/ai/get-character-prompt', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ characterDescription })
+      body: JSON.stringify({ characterDescription, videoStyle })
     });
     
     if (promptResponse.ok) {
@@ -210,16 +211,17 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
  * @param {string} organizationId - 组织ID
  * @param {number} width - 图片宽度
  * @param {number} height - 图片高度
+ * @param {string} videoStyle - 视频风格（如：水墨风格、3D皮克斯风格等）
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
-export const generateCharacterReferenceImagesWithPrompt = async (characterDescription, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512) => {
-  // 从后端获取人物参考图提示词
+export const generateCharacterReferenceImagesWithPrompt = async (characterDescription, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512, videoStyle = '') => {
+  // 从后端获取人物参考图提示词（传递风格参数）
   let characterPrompt = `${characterDescription}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
   try {
     const promptResponse = await fetch('/api/ai/get-character-prompt', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ characterDescription })
+      body: JSON.stringify({ characterDescription, videoStyle })
     });
     
     if (promptResponse.ok) {
