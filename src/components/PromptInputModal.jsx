@@ -105,7 +105,9 @@ export const PromptInputModal = ({
   if (!isOpen) return null;
 
   const handleConfirm = () => {
-    const inputMode = (assetType === 'image' || assetType === 'video' || assetType === 'audio') ? 'ai' : 'direct';
+    // 图片使用direct模式（不自动优化，但仍然会调用AI生成）
+    // 视频和音频保持ai模式（需要AI辅助生成）
+    const inputMode = (assetType === 'video' || assetType === 'audio') ? 'ai' : 'direct';
     const videoStyle = null;
     const imageSize = (assetType === 'image') ? { width: selectedRatio.width, height: selectedRatio.height } : null;
     const selectedStyle = AUDIO_STYLES.find(s => s.id === audioStyle);

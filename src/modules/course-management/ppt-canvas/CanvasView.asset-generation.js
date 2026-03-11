@@ -136,7 +136,8 @@ export const handleConfirmAddAsset = async (
 
     // 1) 先做提示词优化（调用大模型与优化服务）
     // 注意：音频类型不使用优化后的提示词，因为HeartMuLa更适合简洁的tags
-    const shouldOptimize = type !== 'audio';
+    // inputMode为direct时也不优化（direct模式用于用户手动输入精确描述的场景）
+    const shouldOptimize = type !== 'audio' && inputMode !== 'direct';
     if (shouldOptimize) {
       try {
         const optimized = await optimizePrompt(basePrompt, type === 'text' ? 'script' : type, userId);
@@ -707,6 +708,9 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
   const w = 400;
   const h = 225; // 16:9
 
+  // 使用用户选择的风格
+  const selectedStyle = videoData.style || 'realistic';
+
   const newAsset = {
     id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type: 'video',
@@ -715,7 +719,7 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
     content: '',
     prompt: videoData.description || '',
     referenceImage: null,
-    videoStyle: 'realistic',
+    videoStyle: selectedStyle,
     x: 100,
     y: 100,
     width: w,

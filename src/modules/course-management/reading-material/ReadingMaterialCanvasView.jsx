@@ -1437,12 +1437,15 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         organizationId={organizationId}
         onConfirm={(videoData) => {
           // 将生成的视频添加到当前页面
-          const { pageId } = promptModalConfig;
+          const { pageId, style: videoStyleFromModal } = promptModalConfig;
           if (!pageId) return;
           
           const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
           const canvasSize = getCanvasSize();
           const w = 400, h = 225; // 16:9 视频尺寸
+          
+          // 使用用户选择的风格，如果没有则默认用 realistic
+          const selectedStyle = videoData.style || videoStyleFromModal || 'realistic';
           
           const newAsset = {
             id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -1452,7 +1455,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
             content: '',
             prompt: videoData.description,
             referenceImage: null,
-            videoStyle: 'realistic',
+            videoStyle: selectedStyle,
             x: (canvasSize.width - w) / 2,
             y: (canvasSize.height - h) / 2,
             width: w,

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { authenticate } from '@/lib/auth';
+import { getQwenImageStyleParams, qwenImageConfig } from '@/lib/prompt-config';
 import fs from 'fs';
 import path from 'path';
 
@@ -28,6 +30,7 @@ interface ImageGenerationRequest {
   organization_id?: string;
   workflow_type?: 'scene' | 'person';
   reference_image?: string;
+  video_style?: string;
 }
 
 interface WorkflowNode {
@@ -61,7 +64,20 @@ interface TaskStatus {
 }
 
 // 创建人物参考图工作流（基于 person.json）
-function createPersonWorkflow(prompt: string, width: number, height: number, seed: number): any {
+function createPersonWorkflow(prompt: string, width: number, height: number, seed: number, styleParams?: any): any {
+  // 获取风格参数
+  const steps = styleParams?.steps || qwenImageConfig.defaultSteps || 8;
+  const cfg = styleParams?.cfg || qwenImageConfig.defaultCfg || 1;
+  const sampler = styleParams?.sampler || qwenImageConfig.defaultSampler || 'res_multistep';
+  const scheduler = styleParams?.scheduler || qwenImageConfig.defaultScheduler || 'sgm_uniform';
+  const negativePrompt = qwenImageConfig.negativePrompt || '模糊，低清，畸形，杂乱背景';
+
+  // 如果有风格增强提示词，追加到正向提示词
+  let enhancedPrompt = prompt;
+  if (styleParams?.promptEnhance) {
+    enhancedPrompt = `${prompt}，${styleParams.promptEnhance}`;
+  }
+
   return {
     "6": {
       "inputs": {
@@ -115,10 +131,10 @@ function createPersonWorkflow(prompt: string, width: number, height: number, see
     "10": {
       "inputs": {
         "seed": seed,
-        "steps": 8,
-        "cfg": 1,
-        "sampler_name": "res_multistep",
-        "scheduler": "sgm_uniform",
+        "steps": steps,
+        "cfg": cfg,
+        "sampler_name": sampler,
+        "scheduler": scheduler,
         "denoise": 1,
         "model": ["6", 0],
         "positive": ["7", 0],
@@ -147,7 +163,7 @@ function createPersonWorkflow(prompt: string, width: number, height: number, see
     },
     "8": {
       "inputs": {
-        "text": "模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物",
+        "text": negativePrompt,
         "clip": ["3", 0]
       },
       "class_type": "CLIPTextEncode",
@@ -155,7 +171,7 @@ function createPersonWorkflow(prompt: string, width: number, height: number, see
     },
     "7": {
       "inputs": {
-        "text": prompt,
+        "text": enhancedPrompt,
         "clip": ["3", 0]
       },
       "class_type": "CLIPTextEncode",
@@ -165,9 +181,22 @@ function createPersonWorkflow(prompt: string, width: number, height: number, see
 }
 
 // 创建分镜图工作流（基于 sence.json）
-function createSceneWorkflow(prompt: string, width: number, height: number, seed: number, referenceImage?: string): any {
+function createSceneWorkflow(prompt: string, width: number, height: number, seed: number, referenceImage?: string, styleParams?: any): any {
   const longerSide = Math.max(width, height);
-  
+
+  // 获取风格参数
+  const steps = styleParams?.steps || 4;
+  const cfg = styleParams?.cfg || 1;
+  const sampler = styleParams?.sampler || 'sa_solver';
+  const scheduler = styleParams?.scheduler || 'simple';
+  const negativePrompt = qwenImageConfig.negativePrompt || '';
+
+  // 如果有风格增强提示词，追加到正向提示词
+  let enhancedPrompt = prompt;
+  if (styleParams?.promptEnhance) {
+    enhancedPrompt = `${prompt}，${styleParams.promptEnhance}`;
+  }
+
   return {
     "56": {
       "inputs": {
@@ -328,10 +357,10 @@ function createWorkflow(prompt: string, width: number, height: number, seed: num
 }
 
 // 提交图片生成任务
-async function submitImageTask(prompt: string, width: number, height: number, seed: number, workflowType: 'scene' | 'person' = 'scene', referenceImage?: string): Promise<TaskResponse> {
-  const workflow = workflowType === 'person' 
-    ? createPersonWorkflow(prompt, width, height, seed)
-    : createSceneWorkflow(prompt, width, height, seed, referenceImage);
+async function submitImageTask(prompt: string, width: number, height: number, seed: number, workflowType: 'scene' | 'person' = 'scene', referenceImage?: string, styleParams?: any): Promise<TaskResponse> {
+  const workflow = workflowType === 'person'
+    ? createPersonWorkflow(prompt, width, height, seed, styleParams)
+    : createSceneWorkflow(prompt, width, height, seed, referenceImage, styleParams);
   
   console.log(`提交图片生成任务: ${AI_API_BASE_URL}/prompt`);
   console.log(`工作流类型: ${workflowType}`);
@@ -467,16 +496,26 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Pr
 // POST /api/ai/generate-images - 生成多张图片（立即返回任务ID）
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await authenticate(request);
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error || '认证失败' },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+
+    const user = authResult.user;
     const body = await request.json();
-    const { 
-      prompt, 
-      count = 4, 
-      width = 600, 
+    const {
+      prompt,
+      count = 4,
+      width = 600,
       height = 400,
       user_id,
       organization_id,
       workflow_type = 'scene',
-      reference_image
+      reference_image,
+      video_style
     } = body as ImageGenerationRequest;
 
     if (!prompt) {
@@ -486,13 +525,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 获取风格参数
+    const styleParams = getQwenImageStyleParams(video_style);
+    console.log('生成图片使用的风格参数:', { video_style, styleParams });
+
     const startTime = Date.now();
     const tasks = [];
 
     // 提交所有任务
     for (let i = 0; i < count; i++) {
       const seed = Date.now() + i * 1000;
-      const taskPromise = submitImageTask(prompt, width, height, seed, workflow_type, reference_image);
+      const taskPromise = submitImageTask(prompt, width, height, seed, workflow_type, reference_image, styleParams);
       tasks.push(taskPromise);
     }
 

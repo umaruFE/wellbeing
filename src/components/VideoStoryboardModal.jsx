@@ -229,10 +229,10 @@ export const VideoStoryboardModal = ({
       };
       setCharacterImageHistory(prev => [historyEntry, ...prev]);
     }
-    
+
     setIsGeneratingCharacters(true);
     setError(null);
-    
+
     try {
       // 使用提取/编辑后的人物描述生成人物参考图
       const images = await videoStoryboardService.generateCharacterReferenceImagesWithPrompt(
@@ -241,7 +241,8 @@ export const VideoStoryboardModal = ({
         userId,
         organizationId,
         selectedAspectRatio.width,
-        selectedAspectRatio.height
+        selectedAspectRatio.height,
+        overallStyle // 传递整体风格
       );
       
       if (!images || images.length === 0) {
@@ -420,7 +421,8 @@ export const VideoStoryboardModal = ({
       duration: videoDuration,
       referenceImages: getFinalReferenceImages(),
       scenes,
-      videoUrl: generatedVideoUrl
+      videoUrl: generatedVideoUrl,
+      style: overallStyle  // 单独传递风格字段
     });
   };
 

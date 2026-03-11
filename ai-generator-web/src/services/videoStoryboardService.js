@@ -18,15 +18,14 @@ function getAuthHeaders() {
 /**
  * 从描述中提取人物特征
  * @param {string} description - 视频描述
- * @param {string} videoStyle - 视频风格（可选）
  * @returns {Promise<string>} - 人物特征描述
  */
-export const extractCharacterFromDescription = async (description, videoStyle = '') => {
+export const extractCharacterFromDescription = async (description) => {
   try {
     const response = await fetch('/api/ai/extract-character', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ description, videoStyle })
+      body: JSON.stringify({ description })
     });
 
     if (!response.ok) {
@@ -91,15 +90,14 @@ export const pollTaskAndGetImageUrl = async (promptId, maxAttempts = 60, interva
  * @param {string} organizationId - 组织ID
  * @param {number} width - 图片宽度
  * @param {number} height - 图片高度
- * @param {string} videoStyle - 视频风格
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
-export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512, videoStyle = '') => {
+export const generateCharacterReferenceImages = async (description, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512) => {
   // 先提取人物特征
   let characterDescription = description;
   if (uploadedImages.length === 0) {
     console.log('开始提取人物特征...');
-    characterDescription = await extractCharacterFromDescription(description, videoStyle);
+    characterDescription = await extractCharacterFromDescription(description);
     console.log('提取的人物特征:', characterDescription);
   }
   
@@ -109,7 +107,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
     const promptResponse = await fetch('/api/ai/get-character-prompt', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ characterDescription, videoStyle })
+      body: JSON.stringify({ characterDescription })
     });
     
     if (promptResponse.ok) {
@@ -167,8 +165,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
           height: height,
           user_id: userId,
           organization_id: organizationId,
-          workflow_type: 'person',
-          video_style: videoStyle
+          workflow_type: 'person'
         })
       });
     }
@@ -213,17 +210,16 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
  * @param {string} organizationId - 组织ID
  * @param {number} width - 图片宽度
  * @param {number} height - 图片高度
- * @param {string} videoStyle - 视频风格（如：水墨风格、3D皮克斯风格等）
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
-export const generateCharacterReferenceImagesWithPrompt = async (characterDescription, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512, videoStyle = '') => {
-  // 从后端获取人物参考图提示词（传递风格参数）
+export const generateCharacterReferenceImagesWithPrompt = async (characterDescription, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512) => {
+  // 从后端获取人物参考图提示词
   let characterPrompt = `${characterDescription}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
   try {
     const promptResponse = await fetch('/api/ai/get-character-prompt', {
       method: 'POST',
       headers: getAuthHeaders(),
-      body: JSON.stringify({ characterDescription, videoStyle })
+      body: JSON.stringify({ characterDescription })
     });
     
     if (promptResponse.ok) {
@@ -281,8 +277,7 @@ export const generateCharacterReferenceImagesWithPrompt = async (characterDescri
           height: height,
           user_id: userId,
           organization_id: organizationId,
-          workflow_type: 'person',
-          video_style: videoStyle
+          workflow_type: 'person'
         })
       });
     }

@@ -90,6 +90,7 @@ export const MainLayout = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(requestBody)
       });
@@ -268,6 +269,7 @@ export const MainLayout = () => {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(requestBody)
       });
@@ -354,14 +356,6 @@ export const MainLayout = () => {
       label: '工作看板', 
       icon: Home, 
       description: '工作台驾驶舱' 
-    },
-    { 
-      id: 'ai-generator', 
-      path: '/ai-generator', 
-      label: 'AI 创作工具', 
-      icon: Sparkles, 
-      description: '生成图片和视频',
-      roles: ['super_admin', 'org_admin', 'research_leader', 'creator']
     },
     { 
       id: 'courses', 
