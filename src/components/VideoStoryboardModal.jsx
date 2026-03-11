@@ -53,6 +53,8 @@ export const VideoStoryboardModal = ({
   const [generatedCharacterImages, setGeneratedCharacterImages] = useState([]);
   const [selectedCharacterImage, setSelectedCharacterImage] = useState(null);
   const [isGeneratingCharacters, setIsGeneratingCharacters] = useState(false);
+  const [characterImageHistory, setCharacterImageHistory] = useState([]); // 历史生成记录 [{ id, images, description, timestamp }]
+  const [showHistory, setShowHistory] = useState(false); // 是否显示历史记录
   
   // 步骤3：分镜脚本
   const [storyboardTitle, setStoryboardTitle] = useState('');
@@ -98,6 +100,8 @@ export const VideoStoryboardModal = ({
       setExtractedCharacterDescription('');
       setGeneratedCharacterImages([]);
       setSelectedCharacterImage(null);
+      setCharacterImageHistory([]);
+      setShowHistory(false);
       setStoryboardTitle('');
       setScenes([]);
       setIsGeneratingSceneImage({});
@@ -182,7 +186,8 @@ export const VideoStoryboardModal = ({
     } else {
       // 未上传参考图，跳到步骤2提取人物特征
       setCurrentStep(2);
-      extractCharacterDescription();
+      // extractCharacterDescription();
+      generateCharacterImages();
     }
   };
 
@@ -212,9 +217,17 @@ export const VideoStoryboardModal = ({
 
   // 生成人物参考图
   const generateCharacterImages = async () => {
-    if (!extractedCharacterDescription.trim()) {
-      setError('请先提取人物特征描述');
-      return;
+    await extractCharacterDescription();
+    
+    // 保存当前图片到历史记录
+    if (generatedCharacterImages.length > 0) {
+      const historyEntry = {
+        id: Date.now(),
+        images: [...generatedCharacterImages],
+        description: extractedCharacterDescription,
+        timestamp: new Date().toLocaleString()
+      };
+      setCharacterImageHistory(prev => [historyEntry, ...prev]);
     }
     
     setIsGeneratingCharacters(true);
@@ -252,9 +265,14 @@ export const VideoStoryboardModal = ({
 
   // 重新生成人物参考图
   const handleRegenerateCharacters = () => {
-    setSelectedCharacterImage(null);
-    setGeneratedCharacterImages([]);
     generateCharacterImages();
+  };
+
+  // 从历史记录恢复图片
+  const handleRestoreFromHistory = (historyEntry) => {
+    setGeneratedCharacterImages(historyEntry.images);
+    setExtractedCharacterDescription(historyEntry.description);
+    setSelectedCharacterImage(null);
   };
 
   // 步骤2下一步
@@ -607,52 +625,26 @@ export const VideoStoryboardModal = ({
           onChange={(e) => setExtractedCharacterDescription(e.target.value)}
           placeholder="AI将自动提取人物特征，您也可以手动编辑..."
           className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
-          disabled={isExtractingCharacter}
         />
-        <div className="flex gap-2">
-          <button
-            onClick={extractCharacterDescription}
-            disabled={isExtractingCharacter}
-            className="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm"
-          >
-            {isExtractingCharacter ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                提取中...
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-4 h-4" />
-                重新提取特征
-              </>
-            )}
-          </button>
-          <button
-            onClick={generateCharacterImages}
-            disabled={isGeneratingCharacters || !extractedCharacterDescription.trim()}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2 text-sm"
-          >
-            {isGeneratingCharacters ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                生成中...
-              </>
-            ) : (
-              <>
-                <ImageIcon className="w-4 h-4" />
-                生成参考图
-              </>
-            )}
-          </button>
-        </div>
       </div>
 
       {/* 生成的人物参考图 */}
-      {generatedCharacterImages.length > 0 && (
+      {(
         <div className="space-y-3">
-          <label className="text-sm font-medium text-slate-700 block">
-            生成的人物参考图
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-slate-700">
+              生成的人物参考图
+            </label>
+            {characterImageHistory.length > 0 && (
+              <button
+                onClick={() => setShowHistory(true)}
+                className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm"
+              >
+                <Clock className="w-4 h-4" />
+                生成历史 ({characterImageHistory.length})
+              </button>
+            )}
+          </div>
           <div className="flex gap-4 flex-wrap">
             {generatedCharacterImages.map((img, index) => {
               const aspectRatio = selectedAspectRatio.width / selectedAspectRatio.height;
@@ -677,11 +669,19 @@ export const VideoStoryboardModal = ({
           </div>
           <button
             onClick={handleRegenerateCharacters}
-            disabled={isGeneratingCharacters}
-            className="w-full px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2 text-sm"
+            className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 text-sm"
           >
-            <RefreshCw className="w-4 h-4" />
-            重新生成人物参考图
+            {isGeneratingCharacters ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                生成中...
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4 h-4" />
+                重新生成人物参考图
+              </>
+            )}
           </button>
         </div>
       )}
@@ -1075,6 +1075,69 @@ export const VideoStoryboardModal = ({
               alt={previewImage.alt}
               className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl bg-black"
             />
+          </div>
+        </div>
+      )}
+
+      {/* 历史记录弹窗 */}
+      {showHistory && (
+        <div
+          className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
+            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+              <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                <Clock className="w-5 h-5" />
+                生成历史 ({characterImageHistory.length})
+              </h3>
+              <button
+                onClick={() => setShowHistory(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-3">
+                {characterImageHistory.map((historyEntry, index) => (
+                  <div key={historyEntry.id} className="border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs text-slate-500">生成时间: {historyEntry.timestamp}</span>
+                      <button
+                        onClick={() => {
+                          handleRestoreFromHistory(historyEntry);
+                          setShowHistory(false);
+                        }}
+                        className="px-3 py-1.5 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        恢复
+                      </button>
+                    </div>
+                    <p className="text-sm text-slate-600 mb-3 line-clamp-2">{historyEntry.description}</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {historyEntry.images.map((img, imgIndex) => {
+                        const aspectRatio = selectedAspectRatio.width / selectedAspectRatio.height;
+                        const thumbWidth = aspectRatio >= 1 ? 100 : Math.round(100 * aspectRatio);
+                        const thumbHeight = aspectRatio >= 1 ? Math.round(100 / aspectRatio) : 100;
+                        
+                        return (
+                          <img
+                            key={imgIndex}
+                            src={img}
+                            alt={`历史图片${imgIndex + 1}`}
+                            className="rounded border border-slate-200 cursor-pointer hover:border-purple-300 transition-colors"
+                            style={{ width: thumbWidth, height: thumbHeight }}
+                            onClick={() => setPreviewImage({ url: img, alt: `历史图片${imgIndex + 1}` })}
+                          />
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
