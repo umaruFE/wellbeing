@@ -796,12 +796,17 @@ export const AIGeneratorPage = () => {
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2 block">
                 角色设定 <span className="text-red-500">*</span>
               </label>
-              <textarea
+              <select
                 value={videoCharacterSetting}
                 onChange={(e) => setVideoCharacterSetting(e.target.value)}
-                placeholder="例如：单人故事，主角只有一个人"
-                className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24 dark:bg-slate-900 dark:text-white"
-              />
+                className="w-full border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none h-15 dark:bg-slate-900 dark:text-white"
+              >
+                <option value="">请选择角色设定</option>
+                <option value="无主角故事">无主角故事</option>
+                <option value="单人故事">单人故事</option>
+                <option value="双人故事">双人故事</option>
+                <option value="多人故事">多人故事</option>
+              </select>
             </div>
 
             <div>

@@ -7,10 +7,8 @@ import { uploadService } from '../services/uploadService';
 // 步骤定义
 const STEPS = [
   { id: 1, title: '基本信息', description: '输入视频描述和参考图片' },
-  { id: 2, title: '人物参考', description: '生成或确认人物参考图' },
-  { id: 3, title: '分镜脚本', description: '生成分镜步骤' },
-  { id: 4, title: '分镜图片', description: '为每个分镜生成图片' },
-  { id: 5, title: '生成视频', description: '合成最终视频' }
+  { id: 2, title: '分镜生成', description: '生成脚本和图片' },
+  { id: 3, title: '生成视频', description: '合成最终视频' }
 ];
 
 // 图片比例选项
@@ -20,6 +18,15 @@ const ASPECT_RATIOS = [
   { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
   { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
   { id: '9:16', label: '9:16', width: 1080, height: 1920, description: '竖屏长图' },
+];
+
+// IP占位图片数据
+const IP_PLACEHOLDERS = [
+  { id: 1, name: 'IP角色1', image: 'https://placehold.co/200x200/6366F96/FFF?text=IP+1' },
+  { id: 2, name: 'IP角色2', image: 'https://placehold.co/200x200/6366F96/FFF?text=IP+2' },
+  { id: 3, name: 'IP角色3', image: 'https://placehold.co/200x200/6366F96/FFF?text=IP+3' },
+  { id: 4, name: 'IP角色4', image: 'https://placehold.co/200x200/6366F96/FFF?text=IP+4' },
+  { id: 5, name: 'IP角色5', image: 'https://placehold.co/200x200/6366F96/FFF?text=IP+5' },
 ];
 
 /**
@@ -41,31 +48,20 @@ export const VideoStoryboardModal = ({
   // 步骤1：基本信息
   const [storyCore, setStoryCore] = useState('');
   const [overallStyle, setOverallStyle] = useState('');
-  const [characterSetting, setCharacterSetting] = useState('');
   const [videoDuration, setVideoDuration] = useState(10);
   const [uploadedReferenceImages, setUploadedReferenceImages] = useState(initialReferenceImages);
   const [uploadingImages, setUploadingImages] = useState({}); // file name -> boolean
   const [selectedAspectRatio, setSelectedAspectRatio] = useState(ASPECT_RATIOS[0]); // 默认16:9
+  const [selectedIPs, setSelectedIPs] = useState([]); // 选中的IP列表
   
-  // 步骤2：人物参考图生成
-  const [extractedCharacterDescription, setExtractedCharacterDescription] = useState(''); // 提取的人物特征描述
-  const [isExtractingCharacter, setIsExtractingCharacter] = useState(false); // 是否正在提取人物特征
-  const [generatedCharacterImages, setGeneratedCharacterImages] = useState([]);
-  const [selectedCharacterImage, setSelectedCharacterImage] = useState(null);
-  const [isGeneratingCharacters, setIsGeneratingCharacters] = useState(false);
-  const [characterImageHistory, setCharacterImageHistory] = useState([]); // 历史生成记录 [{ id, images, description, timestamp }]
-  const [showHistory, setShowHistory] = useState(false); // 是否显示历史记录
-  
-  // 步骤3：分镜脚本
+  // 步骤2：分镜生成
   const [storyboardTitle, setStoryboardTitle] = useState('');
   const [scenes, setScenes] = useState([]);
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
   const [editingScene, setEditingScene] = useState(null); // { sceneId, field } 或 null
-  
-  // 步骤4：分镜图片
   const [isGeneratingSceneImage, setIsGeneratingSceneImage] = useState({}); // sceneId -> boolean
   
-  // 步骤5：视频生成
+  // 步骤3：视频生成
   const [isComposingVideo, setIsComposingVideo] = useState(false);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState(null);
   
@@ -92,16 +88,11 @@ export const VideoStoryboardModal = ({
       setCurrentStep(1);
       setStoryCore('');
       setOverallStyle('');
-      setCharacterSetting('');
       setVideoDuration(10);
       setUploadedReferenceImages(initialReferenceImages);
       setUploadingImages({});
       setSelectedAspectRatio(ASPECT_RATIOS[0]);
-      setExtractedCharacterDescription('');
-      setGeneratedCharacterImages([]);
-      setSelectedCharacterImage(null);
-      setCharacterImageHistory([]);
-      setShowHistory(false);
+      setSelectedIPs([]);
       setStoryboardTitle('');
       setScenes([]);
       setIsGeneratingSceneImage({});
@@ -112,17 +103,33 @@ export const VideoStoryboardModal = ({
     }
   }, [isOpen, initialReferenceImages]);
 
+  // 自动生成分镜脚本和图片（当进入第2步且还没有脚本时）
+  useEffect(() => {
+    if (currentStep === 2 && scenes.length === 0 && !isGeneratingScript) {
+      generateStoryboardScript();
+    }
+  }, [currentStep, scenes.length]);
+
   // 获取最终参考图片（上传的或生成的）
   const getFinalReferenceImages = () => {
     if (uploadedReferenceImages.length > 0) {
       return uploadedReferenceImages;
     }
-    return selectedCharacterImage ? [selectedCharacterImage] : [];
+    return [];
   };
 
   // 获取组合的视频描述（三个维度）
   const getCombinedDescription = () => {
-    return `故事核心要素：${storyCore}\n整体风格：${overallStyle}\n角色设定：${characterSetting}`;
+    const selectedIPNames = selectedIPs.map(id => {
+      const ip = IP_PLACEHOLDERS.find(p => p.id === id);
+      return ip ? ip.name : '';
+    }).filter(name => name).join('、');
+    
+    let description = `故事核心要素：${storyCore}\n整体风格：${overallStyle}`;
+    if (selectedIPNames) {
+      description += `\nIP选择：${selectedIPNames}`;
+    }
+    return description;
   };
 
   // ========== 步骤1：基本信息 ==========
@@ -175,121 +182,15 @@ export const VideoStoryboardModal = ({
 
   // 步骤1下一步
   const handleStep1Next = () => {
-    if (!storyCore.trim() || !overallStyle.trim() || !characterSetting.trim()) {
-      setError('请完整填写故事核心要素、整体风格和角色设定');
+    if (!storyCore.trim() || !overallStyle.trim()) {
+      setError('请完整填写故事核心要素和整体风格');
       return;
     }
-    
-    if (uploadedReferenceImages.length > 0) {
-      // 已上传参考图，直接跳到步骤3
-      setCurrentStep(3);
-    } else {
-      // 未上传参考图，跳到步骤2提取人物特征
-      setCurrentStep(2);
-      // extractCharacterDescription();
-      generateCharacterImages();
-    }
+    // 直接跳到步骤2
+    setCurrentStep(2);
   };
 
-  // ========== 步骤2：人物参考图生成 ==========
-  
-  // 提取人物特征描述
-  const extractCharacterDescription = async () => {
-    setIsExtractingCharacter(true);
-    setError(null);
-    
-    try {
-      // 组合三个维度的描述
-      const combinedDescription = `故事核心要素：${storyCore}\n整体风格：${overallStyle}\n角色设定：${characterSetting}`;
-      
-      // 调用服务函数提取人物特征
-      const characterDesc = await videoStoryboardService.extractCharacterFromDescription(combinedDescription);
-      
-      setExtractedCharacterDescription(characterDesc);
-    } catch (err) {
-      setError('提取人物特征失败: ' + err.message);
-      // 使用默认描述
-      setExtractedCharacterDescription(`一个通用卡通人物，${characterSetting}`);
-    } finally {
-      setIsExtractingCharacter(false);
-    }
-  };
-
-  // 生成人物参考图
-  const generateCharacterImages = async () => {
-    await extractCharacterDescription();
-    
-    // 保存当前图片到历史记录
-    if (generatedCharacterImages.length > 0) {
-      const historyEntry = {
-        id: Date.now(),
-        images: [...generatedCharacterImages],
-        description: extractedCharacterDescription,
-        timestamp: new Date().toLocaleString()
-      };
-      setCharacterImageHistory(prev => [historyEntry, ...prev]);
-    }
-
-    setIsGeneratingCharacters(true);
-    setError(null);
-
-    try {
-      // 使用提取/编辑后的人物描述生成人物参考图
-      const images = await videoStoryboardService.generateCharacterReferenceImagesWithPrompt(
-        extractedCharacterDescription,
-        uploadedReferenceImages,
-        userId,
-        organizationId,
-        selectedAspectRatio.width,
-        selectedAspectRatio.height,
-        overallStyle // 传递整体风格
-      );
-      
-      if (!images || images.length === 0) {
-        throw new Error('未能生成任何人物参考图');
-      }
-      
-      setGeneratedCharacterImages(images);
-    } catch (err) {
-      setError('生成人物参考图失败: ' + err.message);
-      // 使用占位图
-      const placeholderImages = [];
-      for (let i = 0; i < 1; i++) {
-        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-        placeholderImages.push(`https://placehold.co/512x512/${randomColor}/FFF?text=Character+${i + 1}`);
-      }
-      setGeneratedCharacterImages(placeholderImages);
-    } finally {
-      setIsGeneratingCharacters(false);
-    }
-  };
-
-  // 重新生成人物参考图
-  const handleRegenerateCharacters = () => {
-    generateCharacterImages();
-  };
-
-  // 从历史记录恢复图片
-  const handleRestoreFromHistory = (historyEntry) => {
-    setGeneratedCharacterImages(historyEntry.images);
-    setExtractedCharacterDescription(historyEntry.description);
-    setSelectedCharacterImage(null);
-  };
-
-  // 步骤2下一步
-  const handleStep2Next = () => {
-    if (generatedCharacterImages.length === 0) {
-      setError('请先生成人物参考图');
-      return;
-    }
-    // 自动选择第一张图片
-    if (!selectedCharacterImage && generatedCharacterImages.length > 0) {
-      setSelectedCharacterImage(generatedCharacterImages[0]);
-    }
-    setCurrentStep(3);
-  };
-
-  // ========== 步骤3：分镜脚本 ==========
+  // ========== 步骤2：分镜生成 ==========
   
   // 生成分镜脚本
   const generateStoryboardScript = async () => {
@@ -297,20 +198,28 @@ export const VideoStoryboardModal = ({
     setError(null);
     
     try {
-      const referenceImages = getFinalReferenceImages();
       const result = await videoStoryboardService.generateStoryboardScript(
         getCombinedDescription(),
-        referenceImages,
+        [],
         videoDuration
       );
       
       setStoryboardTitle(result.title);
-      setScenes(result.scenes.map((scene, index) => ({
+      const newScenes = result.scenes.map((scene, index) => ({
         ...scene,
         id: `scene-${index + 1}`,
         generatedImage: null,
         status: 'pending'
-      })));
+      }));
+      setScenes(newScenes);
+      
+      // 等待状态更新后再生成图片
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // 自动生成所有分镜图片
+      for (const scene of newScenes) {
+        await handleGenerateSceneImage(scene.id, scene);
+      }
     } catch (err) {
       setError('生成分镜脚本失败: ' + err.message);
     } finally {
@@ -318,29 +227,18 @@ export const VideoStoryboardModal = ({
     }
   };
 
-  // 步骤3下一步
-  const handleStep3Next = () => {
-    if (scenes.length === 0) {
-      setError('请先生成分镜脚本');
-      return;
-    }
-    setCurrentStep(4);
-  };
-
-  // ========== 步骤4：分镜图片 ==========
-  
   // 获取人物描述（用于分镜提示词优化）
   const getCharacterDescription = () => {
-    if (selectedCharacterImage) {
-      // 如果有选择的人物参考图，返回人物描述
+    if (uploadedReferenceImages.length > 0) {
+      // 如果有上传的参考图片，返回人物描述
       return 'consistent character appearance from reference image';
     }
     return null;
   };
   
   // 生成分镜图片
-  const handleGenerateSceneImage = async (sceneId) => {
-    const scene = scenes.find(s => s.id === sceneId);
+  const handleGenerateSceneImage = async (sceneId, sceneOverride = null) => {
+    const scene = sceneOverride || scenes.find(s => s.id === sceneId);
     if (!scene) return;
 
     setIsGeneratingSceneImage(prev => ({ ...prev, [sceneId]: true }));
@@ -372,7 +270,7 @@ export const VideoStoryboardModal = ({
     }
   };
 
-  // 生成所有分镜图片（使用人物参考图保持人物一致性）
+  // 生成所有分镜图片
   const handleGenerateAllSceneImages = async () => {
     for (const scene of scenes) {
       if (!scene.generatedImage) {
@@ -381,17 +279,17 @@ export const VideoStoryboardModal = ({
     }
   };
 
-  // 步骤4下一步
-  const handleStep4Next = () => {
+  // 步骤3下一步
+  const handleStep3Next = () => {
     const completedScenes = scenes.filter(s => s.generatedImage);
     if (completedScenes.length === 0) {
-      setError('请至少生成一个分镜图片');
+      setError('请先生成至少一张分镜图片');
       return;
     }
-    setCurrentStep(5);
+    setCurrentStep(3);
   };
 
-  // ========== 步骤5：生成视频 ==========
+  // ========== 步骤3：生成视频 ==========
   
   // 合成视频
   const handleComposeVideo = async () => {
@@ -486,18 +384,6 @@ export const VideoStoryboardModal = ({
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700 mb-2 block">
-          角色设定 <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          value={characterSetting}
-          onChange={(e) => setCharacterSetting(e.target.value)}
-          placeholder="例如：单人故事，主角只有一个人"
-          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
-        />
-      </div>
-
-      <div>
         <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
           <Clock className="w-4 h-4" />
           视频时长
@@ -557,142 +443,50 @@ export const VideoStoryboardModal = ({
 
       <div>
         <label className="text-sm font-medium text-slate-700 mb-2 block">
-          人物参考图片 <span className="text-slate-400 font-normal">（可选，仅支持1张）</span>
+          IP选择
         </label>
-        <p className="text-xs text-slate-500 mb-3">
-          上传人物参考图片可以保持视频中人物形象的一致性。如果不上传，AI会自动生成人物参考图。
-        </p>
-        <div className="grid grid-cols-3 gap-3">
-          {uploadedReferenceImages[0] && (
-            <div className="relative group aspect-square">
-              <img 
-                src={uploadedReferenceImages[0]} 
-                alt="人物参考"
-                className="w-full h-full object-cover rounded-lg border border-slate-200"
-              />
+        <div className="grid grid-cols-5 gap-2">
+          {IP_PLACEHOLDERS.map((ip) => {
+            const isSelected = selectedIPs.includes(ip.id);
+            return (
               <button
-                onClick={() => handleRemoveUploadedImage(0)}
-                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                key={ip.id}
+                onClick={() => {
+                  if (isSelected) {
+                    setSelectedIPs(prev => prev.filter(id => id !== ip.id));
+                  } else {
+                    setSelectedIPs(prev => [...prev, ip.id]);
+                  }
+                }}
+                className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                  isSelected
+                    ? 'border-purple-500 bg-purple-50 text-purple-700'
+                    : 'border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
+                }`}
               >
-                <Trash2 className="w-3 h-3" />
+                {isSelected && (
+                  <div className="absolute top-1 right-1 bg-purple-600 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                    <Check className="w-3 h-3" />
+                  </div>
+                )}
+                <img 
+                  src={ip.image} 
+                  alt={ip.name}
+                  className="w-full h-20 object-cover rounded-lg"
+                />
+                <span className="text-xs font-medium mt-1">{ip.name}</span>
               </button>
-            </div>
-          )}
-          {Object.keys(uploadingImages).length > 0 && (
-            <div className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-purple-300 rounded-lg bg-purple-50">
-              <RefreshCw className="w-6 h-6 text-purple-600 animate-spin mb-1" />
-              <span className="text-xs text-purple-600">上传中...</span>
-            </div>
-          )}
-          {uploadedReferenceImages.length === 0 && Object.keys(uploadingImages).length === 0 && (
-            <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleUploadReferenceImage}
-                disabled={Object.keys(uploadingImages).length > 0}
-              />
-              <Plus className="w-6 h-6 text-slate-400 mb-1" />
-              <span className="text-xs text-slate-500">上传图片</span>
-            </label>
-          )}
+            );
+          })}
         </div>
       </div>
     </div>
   );
 
-  // 渲染步骤2：人物参考图
-  const renderStep2 = () => (
-    <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-medium text-blue-800">人物参考图</h4>
-            <p className="text-xs text-blue-600 mt-1">
-              AI已根据视频描述提取了人物特征。您可以修改特征描述，然后生成人物参考图。
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 人物特征描述编辑区域 */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-slate-700 block">
-          人物特征描述 <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          value={extractedCharacterDescription}
-          onChange={(e) => setExtractedCharacterDescription(e.target.value)}
-          placeholder="AI将自动提取人物特征，您也可以手动编辑..."
-          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
-        />
-      </div>
-
-      {/* 生成的人物参考图 */}
-      {(
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium text-slate-700">
-              生成的人物参考图
-            </label>
-            {characterImageHistory.length > 0 && (
-              <button
-                onClick={() => setShowHistory(true)}
-                className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2 text-sm"
-              >
-                <Clock className="w-4 h-4" />
-                生成历史 ({characterImageHistory.length})
-              </button>
-            )}
-          </div>
-          <div className="flex gap-4 flex-wrap">
-            {generatedCharacterImages.map((img, index) => {
-              const aspectRatio = selectedAspectRatio.width / selectedAspectRatio.height;
-              const thumbWidth = aspectRatio >= 1 ? 160 : Math.round(160 * aspectRatio);
-              const thumbHeight = aspectRatio >= 1 ? Math.round(160 / aspectRatio) : 160;
-              
-              return (
-                <div
-                  key={index}
-                  onClick={() => setPreviewImage({ url: img, alt: `人物参考${index + 1}` })}
-                  className="relative cursor-pointer rounded-lg overflow-hidden border-2 border-slate-200 hover:border-purple-300 transition-all"
-                  style={{ width: thumbWidth, height: thumbHeight }}
-                >
-                  <img 
-                    src={img} 
-                    alt={`人物参考${index + 1}`}
-                    className="w-full h-full object-contain bg-slate-100"
-                  />
-                </div>
-              );
-            })}
-          </div>
-          <button
-            onClick={handleRegenerateCharacters}
-            className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 text-sm"
-          >
-            {isGeneratingCharacters ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                生成中...
-              </>
-            ) : (
-              <>
-                <ImageIcon className="w-4 h-4" />
-                重新生成人物参考图
-              </>
-            )}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // 渲染步骤3：分镜脚本
+  // 渲染步骤3：分镜图片
   const renderStep3 = () => (
     <div className="space-y-6">
+      {/* 分镜脚本部分 */}
       {scenes.length === 0 ? (
         <div className="text-center py-8">
           <button
@@ -703,165 +497,107 @@ export const VideoStoryboardModal = ({
             {isGeneratingScript ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                生成分镜脚本中...
+                生成分镜脚本和图片中...
               </>
             ) : (
               <>
                 <Wand2 className="w-4 h-4" />
-                点击生成分镜脚本
+                点击生成分镜脚本和图片
               </>
             )}
           </button>
           <p className="text-sm text-slate-400 mt-3">
-            AI将根据视频描述和人物参考图生成分镜脚本
+            AI将根据视频描述生成分镜脚本和图片
           </p>
         </div>
       ) : (
         <>
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <h4 className="font-medium text-purple-800">{storyboardTitle}</h4>
-            <p className="text-xs text-purple-600 mt-1">
-              共 {scenes.length} 个分镜，预计时长 {videoDuration} 秒
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-purple-800">{storyboardTitle}</h4>
+                <p className="text-xs text-purple-600 mt-1">
+                  共 {scenes.length} 个分镜，预计时长 {videoDuration} 秒
+                </p>
+              </div>
+              <button
+                onClick={generateStoryboardScript}
+                disabled={isGeneratingScript}
+                className="px-3 py-1.5 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center gap-1 text-sm"
+              >
+                <RefreshCw className="w-4 h-4" />
+                重新生成
+              </button>
+            </div>
           </div>
 
-          <div className="border border-slate-200 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">序号</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">时长</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">景别</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">运镜</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">画面内容</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {scenes.map((scene, index) => (
-                  <tr key={scene.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-600">{scene.sequence}</td>
-                    <td className="px-4 py-3 text-slate-600">{scene.duration}</td>
-                    <td className="px-4 py-3 text-slate-600">{scene.shotType}</td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="text"
-                        value={scene.cameraMovement || ''}
-                        onChange={(e) => {
-                          const newScenes = [...scenes];
-                          newScenes[index] = { ...scene, cameraMovement: e.target.value };
-                          setScenes(newScenes);
-                        }}
-                        className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
-                        placeholder="请输入运镜方式"
-                      />
-                    </td>
-                    <td className="px-4 py-3">
-                      <textarea
-                        value={scene.content || ''}
-                        onChange={(e) => {
-                          const newScenes = [...scenes];
-                          newScenes[index] = { ...scene, content: e.target.value };
-                          setScenes(newScenes);
-                        }}
-                        className="w-full px-2 py-1 text-sm border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white resize-none"
-                        rows={2}
-                        placeholder="请输入画面内容"
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {/* 分镜图片部分 */}
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-slate-700">分镜图片生成</h4>
           </div>
 
-          <button
-            onClick={generateStoryboardScript}
-            disabled={isGeneratingScript}
-            className="w-full px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            重新生成分镜脚本
-          </button>
+          <div className="grid grid-cols-2 gap-4 overflow-y-auto">
+            {scenes.map((scene) => (
+              <div key={scene.id} className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="aspect-video bg-slate-100 relative">
+                  {scene.generatedImage ? (
+                    <button
+                      type="button"
+                      onClick={() => setPreviewImage({ url: scene.generatedImage, alt: `分镜${scene.sequence}` })}
+                      className="w-full h-full cursor-zoom-in"
+                      title="点击放大查看"
+                    >
+                    <img
+                      src={scene.generatedImage}
+                      alt={`分镜${scene.sequence}`}
+                      className="w-full h-full object-cover"
+                    />
+                    </button>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <ImageIcon className="w-8 h-8" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-slate-700">分镜 {scene.sequence}</span>
+                    <span className="text-xs text-slate-500">{scene.duration}</span>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-2 line-clamp-2">{scene.content}</p>
+                  <button
+                    onClick={() => handleGenerateSceneImage(scene.id)}
+                    disabled={isGeneratingSceneImage[scene.id]}
+                    className="w-full px-3 py-1.5 text-xs border border-purple-200 text-purple-600 rounded hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
+                  >
+                    {isGeneratingSceneImage[scene.id] ? (
+                      <>
+                        <RefreshCw className="w-3 h-3 animate-spin" />
+                        生成中...
+                      </>
+                    ) : scene.generatedImage ? (
+                      <>
+                        <RefreshCw className="w-3 h-3" />
+                        重新生成
+                      </>
+                    ) : (
+                      <>
+                        <Wand2 className="w-3 h-3" />
+                        生成图片
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </>
       )}
     </div>
   );
 
-  // 渲染步骤4：分镜图片
+  // 渲染步骤4：生成视频
   const renderStep4 = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h4 className="font-medium text-slate-700">分镜图片生成</h4>
-        <button
-          onClick={handleGenerateAllSceneImages}
-          disabled={Object.values(isGeneratingSceneImage).some(v => v)}
-          className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-1"
-        >
-          <Wand2 className="w-3 h-3" />
-          生成全部
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 overflow-y-auto">
-        {scenes.map((scene) => (
-          <div key={scene.id} className="border border-slate-200 rounded-lg overflow-hidden">
-            <div className="aspect-video bg-slate-100 relative">
-              {scene.generatedImage ? (
-                <button
-                  type="button"
-                  onClick={() => setPreviewImage({ url: scene.generatedImage, alt: `分镜${scene.sequence}` })}
-                  className="w-full h-full cursor-zoom-in"
-                  title="点击放大查看"
-                >
-                <img
-                  src={scene.generatedImage}
-                  alt={`分镜${scene.sequence}`}
-                  className="w-full h-full object-cover"
-                />
-                </button>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400">
-                  <ImageIcon className="w-8 h-8" />
-                </div>
-              )}
-            </div>
-            <div className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">分镜 {scene.sequence}</span>
-                <span className="text-xs text-slate-500">{scene.duration}</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-2 line-clamp-2">{scene.content}</p>
-              <button
-                onClick={() => handleGenerateSceneImage(scene.id)}
-                disabled={isGeneratingSceneImage[scene.id]}
-                className="w-full px-3 py-1.5 text-xs border border-purple-200 text-purple-600 rounded hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
-              >
-                {isGeneratingSceneImage[scene.id] ? (
-                  <>
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                    生成中...
-                  </>
-                ) : scene.generatedImage ? (
-                  <>
-                    <RefreshCw className="w-3 h-3" />
-                    重新生成
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="w-3 h-3" />
-                    生成图片
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  // 渲染步骤5：生成视频
-  const renderStep5 = () => (
     <div className="space-y-6">
       {!generatedVideoUrl ? (
         <div className="text-center py-8">
@@ -921,18 +657,16 @@ export const VideoStoryboardModal = ({
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1: return renderStep1();
-      case 2: return renderStep2();
-      case 3: return renderStep3();
-      case 4: return renderStep4();
-      case 5: return renderStep5();
+      case 2: return renderStep3();
+      case 3: return renderStep4();
       default: return null;
     }
   };
 
   // 渲染底部按钮
   const renderFooterButtons = () => {
-    // 步骤5的特殊按钮逻辑
-    if (currentStep === 5) {
+    // 步骤3的特殊按钮逻辑
+    if (currentStep === 3) {
       if (generatedVideoUrl) {
         // 视频已生成，显示确认按钮
         return (
@@ -973,8 +707,7 @@ export const VideoStoryboardModal = ({
 
         {currentStep === 2 && (
           <button
-            onClick={handleStep2Next}
-            disabled={generatedCharacterImages.length === 0}
+            onClick={handleStep3Next}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
           >
             下一步
@@ -1077,69 +810,6 @@ export const VideoStoryboardModal = ({
               alt={previewImage.alt}
               className="max-h-[85vh] max-w-[90vw] object-contain rounded-lg shadow-2xl bg-black"
             />
-          </div>
-        </div>
-      )}
-
-      {/* 历史记录弹窗 */}
-      {showHistory && (
-        <div
-          className="fixed inset-0 z-[70] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-          role="dialog"
-          aria-modal="true"
-        >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[80vh] flex flex-col">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-              <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                生成历史 ({characterImageHistory.length})
-              </h3>
-              <button
-                onClick={() => setShowHistory(false)}
-                className="text-slate-400 hover:text-slate-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <div className="space-y-3">
-                {characterImageHistory.map((historyEntry, index) => (
-                  <div key={historyEntry.id} className="border border-slate-200 rounded-lg p-4 hover:border-purple-300 transition-colors">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-xs text-slate-500">生成时间: {historyEntry.timestamp}</span>
-                      <button
-                        onClick={() => {
-                          handleRestoreFromHistory(historyEntry);
-                          setShowHistory(false);
-                        }}
-                        className="px-3 py-1.5 bg-purple-600 text-white text-xs rounded-lg hover:bg-purple-700 transition-colors"
-                      >
-                        恢复
-                      </button>
-                    </div>
-                    <p className="text-sm text-slate-600 mb-3 line-clamp-2">{historyEntry.description}</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {historyEntry.images.map((img, imgIndex) => {
-                        const aspectRatio = selectedAspectRatio.width / selectedAspectRatio.height;
-                        const thumbWidth = aspectRatio >= 1 ? 100 : Math.round(100 * aspectRatio);
-                        const thumbHeight = aspectRatio >= 1 ? Math.round(100 / aspectRatio) : 100;
-                        
-                        return (
-                          <img
-                            key={imgIndex}
-                            src={img}
-                            alt={`历史图片${imgIndex + 1}`}
-                            className="rounded border border-slate-200 cursor-pointer hover:border-purple-300 transition-colors"
-                            style={{ width: thumbWidth, height: thumbHeight }}
-                            onClick={() => setPreviewImage({ url: img, alt: `历史图片${imgIndex + 1}` })}
-                          />
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       )}
