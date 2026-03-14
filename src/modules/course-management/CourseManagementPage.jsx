@@ -244,7 +244,7 @@ export const CourseManagementPage = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={(e) => { e.stopPropagation(); handleEditCourse(course.id); }}
-                    className="flex-1 px-3 py-2 bg-[#fffbe6] text-[#2d2d2d] rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs"
+                    className="flex-1 px-3 py-2 bg-[#fffbe6] text-[#2d2d2d] rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs transition-all duration-200 hover:bg-[#fff0dc] hover:border-[#f0ad4e]"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     编辑
