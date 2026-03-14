@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Plus, Edit, Trash2, Eye, Upload, Search, Filter, Clock, Book, Sparkles, Layout } from 'lucide-react';
+import { BookOpen, Plus, Edit3, Trash2, Upload, Search, Filter, Clock, Users, Sparkles, LayoutTemplate, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 
@@ -12,6 +12,16 @@ export const CourseManagementPage = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const filterRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (filterRef.current && !filterRef.current.contains(e.target)) setFilterOpen(false);
+    };
+    if (filterOpen) document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [filterOpen]);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -84,39 +94,34 @@ export const CourseManagementPage = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const styles = {
-      published: 'bg-green-100 text-green-700 border border-green-200',
-      draft: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
-      archived: 'bg-slate-100 text-slate-600 border border-slate-200'
-    };
-    const labels = {
-      published: '已发布',
-      draft: '草稿',
-      archived: '已归档'
-    };
-    return (
-      <span className={`px-2 py-1 rounded text-xs font-medium ${styles[status]}`}>
-        {labels[status]}
-      </span>
-    );
+  const getStatusLabel = (status) => {
+    const labels = { published: '已发布', draft: '草稿', archived: '已归档' };
+    return labels[status] || status;
+  };
+
+  const formatDuration = (dur) => {
+    if (typeof dur === 'number') return `${dur}分钟`;
+    if (typeof dur === 'string' && dur.includes('分钟')) return dur;
+    return dur ? `${dur}分钟` : '未设置';
   };
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
+    <div className="h-full overflow-y-auto bg-[#fcfbf9]">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      <div className="mx-auto p-8 pb-4">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-              <BookOpen className="w-6 h-6 text-blue-600" />
-              课程管理
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">创建和管理您的课程</p>
+          <div className="flex items-center gap-6">
+            <div className="w-12 h-12 rounded-xl bg-[#a5c29b] flex items-center justify-center border-2 border-[#2d2d2d] flex-shrink-0">
+              <BookOpen className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[#2d2d2d]">课程管理</h1>
+              <p className="text-sm text-gray-500 mt-0.5">创建和管理您的课程</p>
+            </div>
           </div>
           <button
             onClick={handleCreateCourse}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors shadow-sm"
+            className="px-5 py-2.5 bg-[#f47d64] text-white rounded-full font-bold flex items-center gap-2 transition-colors border-2 border-[#2d2d2d] shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] hover:shadow-[3px_3px_0px_0px_rgba(45,45,45,1)] hover:translate-[-1px,-1px]"
           >
             <Plus className="w-4 h-4" />
             创建课程
@@ -124,39 +129,49 @@ export const CourseManagementPage = () => {
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      {/* Search & Filter */}
+      <div className="mx-auto px-8 pb-6">
         <div className="flex items-center gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜索课程、单元、主题..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              placeholder="搜索课程名称或关键字..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-[#e5e3db] bg-white focus:border-[#2d2d2d] focus:ring-0 outline-none text-[#2d2d2d] placeholder:text-gray-400"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400" />
-            <select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          <div className="relative" ref={filterRef}>
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="px-4 py-2.5 rounded-2xl border-2 border-[#e5e3db] bg-white flex items-center gap-2 text-[#2d2d2d] font-medium hover:border-[#2d2d2d] transition-colors"
             >
-              <option value="all">全部状态</option>
-              <option value="draft">草稿</option>
-              <option value="published">已发布</option>
-              <option value="archived">已归档</option>
-            </select>
+              <Filter className="w-4 h-4 text-gray-500" />
+              {filterStatus === 'all' ? '全部状态' : getStatusLabel(filterStatus)}
+              <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {filterOpen && (
+              <div className="absolute right-0 top-full mt-1 py-2 bg-white rounded-xl border-2 border-[#2d2d2d] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] z-10 min-w-[140px]">
+                {['all', 'draft', 'published', 'archived'].map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => { setFilterStatus(s); setFilterOpen(false); }}
+                    className="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-[#2d2d2d]"
+                  >
+                    {s === 'all' ? '全部状态' : getStatusLabel(s)}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Course List */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className=" mx-auto px-8 pb-20">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-red-50 border-2 border-red-300 text-red-700 px-4 py-3 rounded-xl mb-4">
             {error}
           </div>
         )}
@@ -164,149 +179,100 @@ export const CourseManagementPage = () => {
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <div className="w-8 h-8 border-4 border-[#a5c29b] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-slate-500">加载中...</p>
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCourses.map(course => (
             <div
               key={course.id}
-              className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-lg transition-all cursor-pointer group"
+              className="bg-white rounded-[24px] border-2 border-[#e5e3db] p-4 cursor-pointer group transition-all duration-200 ease-out hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
               onClick={() => navigate(`/courses/${course.id}`)}
             >
-              {/* 左右布局：左侧缩略图 + 右侧信息 */}
+              {/* 左右布局：左侧封面 + 右侧信息 */}
               <div className="flex gap-4">
-                {/* 左侧缩略图 - 点击放大预览 */}
+                {/* 左侧封面占位 */}
                 <div
-                  className="w-32 h-24 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex-shrink-0 overflow-hidden relative cursor-zoom-in group"
+                  className="w-28 h-32 flex-shrink-0 rounded-xl border-2 border-dashed border-[#e5e3db] bg-[#fcfbf9] flex flex-col items-center justify-center text-[#c9b896] overflow-hidden"
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (course.thumbnail) {
-                      window.open(course.thumbnail, '_blank');
-                    }
+                    if (course.thumbnail) window.open(course.thumbnail, '_blank');
                   }}
                 >
                   {course.thumbnail ? (
                     <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-blue-300">
-                      <Layout className="w-8 h-8 mb-1" />
+                    <>
+                      <LayoutTemplate className="w-8 h-8 mb-1" />
                       <span className="text-[10px]">暂无封面</span>
-                    </div>
-                  )}
-                  {/* 悬停时显示放大图标 */}
-                  {course.thumbnail && (
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Eye className="w-6 h-6 text-white drop-shadow-lg" />
-                    </div>
+                    </>
                   )}
                 </div>
 
-                {/* 右侧信息区域 - 点击跳转详情 */}
-                <div
-                  className="flex-1 min-w-0"
-                >
-                  {/* 标题和状态 */}
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-base font-bold text-slate-800 flex-1 pr-2 truncate">{course.title}</h3>
-                    {getStatusBadge(course.status)}
+                {/* 右侧信息 */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="text-base font-bold text-[#2d2d2d] flex-1 truncate">{course.title}</h3>
+                    <span className="bg-[#fbdf9b] text-[#8a6d3b] text-[11px] font-extrabold px-2.5 py-1 rounded-md border-2 border-[#2d2d2d] flex-shrink-0 shadow-[1px_1px_0px_0px_rgba(45,45,45,1)]">{getStatusLabel(course.status)}</span>
                   </div>
 
-                  {/* 课程信息 */}
                   <div className="space-y-1.5">
-                    {/* 年龄和年级 */}
-                    <div className="flex items-center gap-2 text-xs">
-                      <Book className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-slate-600">{course.age_group || '未设置'}</span>
+                    <div className="flex items-center gap-2 text-xs text-[#2d2d2d]">
+                      <Users className="w-3.5 h-3.5 text-[#82a47a]" />
+                      <span className="truncate">{course.age_group || '未设置'}</span>
                     </div>
-
-                    {/* 教材单元 */}
-                    <div className="flex items-start gap-2 text-xs">
-                      <BookOpen className="w-3.5 h-3.5 text-slate-400 mt-0.5" />
-                      <div className="truncate">
-                        <span className="text-slate-800">{course.unit || '未设置'}</span>
-                      </div>
+                    <div className="flex items-center gap-2 text-xs text-[#2d2d2d]">
+                      <BookOpen className="w-3.5 h-3.5 text-[#f0ad4e]" />
+                      <span className="truncate">{course.unit || '未设置'}</span>
                     </div>
-
-                    {/* 剧情主题 */}
-                    <div className="flex items-center gap-2 text-xs">
-                      <Sparkles className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-slate-600 truncate">{course.theme || '未设置'}</span>
+                    <div className="flex items-center gap-2 text-xs text-[#2d2d2d]">
+                      <Sparkles className="w-3.5 h-3.5 text-[#f48686]" />
+                      <span className="truncate">{course.theme || '未设置'}</span>
                     </div>
-
-                    {/* 上课时长 */}
-                    <div className="flex items-center gap-2 text-xs">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      <span className="text-slate-600">{course.duration || 0}</span>
+                    <div className="flex items-center gap-2 text-xs text-[#2d2d2d]">
+                      <Clock className="w-3.5 h-3.5 text-[#f47d64]" />
+                      <span>{formatDuration(course.duration)}</span>
                     </div>
                   </div>
                 </div>
               </div>
-
-              {/* 关键词标签 */}
-              {course.keywords && course.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {course.keywords.slice(0, 4).map((keyword, idx) => (
-                    <span
-                      key={idx}
-                      className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs font-medium"
-                    >
-                      {keyword}
-                    </span>
-                  ))}
-                  {course.keywords.length > 4 && (
-                    <span className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded text-xs">
-                      +{course.keywords.length - 4}
-                    </span>
-                  )}
-                </div>
-              )}
 
               {/* 底部操作栏 */}
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditCourse(course.id);
-                  }}
-                  className="flex-1 px-2 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 flex items-center justify-center gap-1 transition-colors text-xs"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  编辑
-                </button>
-                {course.status === 'draft' && (
+              <div className="mt-4 pt-3 border-t border-dashed border-[#e5e3db]">
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handlePublishCourse(course.id);
-                    }}
-                    className="px-2 py-1.5 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition-colors"
-                    title="发布"
+                    onClick={(e) => { e.stopPropagation(); handleEditCourse(course.id); }}
+                    className="flex-1 px-3 py-2 bg-[#fffbe6] text-[#2d2d2d] rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs"
                   >
-                    <Upload className="w-3.5 h-3.5" />
+                    <Edit3 className="w-3.5 h-3.5" />
+                    编辑
                   </button>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleDeleteCourse(course.id);
-                  }}
-                  className="px-2 py-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
-                  title="删除"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* 更新时间 */}
-              <div className="mt-2 text-[10px] text-slate-400 text-center">
-                {course.updatedAt ? (
-                  <>更新于 {new Date(course.updatedAt).toLocaleString('zh-CN', { hour12: false })}</>
-                ) : (
-                  <>创建于 {course.createdAt ? new Date(course.createdAt).toLocaleString('zh-CN', { hour12: false }) : '未知时间'}</>
-                )}
+                  {course.status === 'draft' && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handlePublishCourse(course.id); }}
+                      className="p-2 rounded-full bg-green-100 text-green-600 hover:bg-green-200 transition-colors"
+                      title="发布"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }}
+                    className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                    title="删除"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="text-center mt-2 text-[10px] text-gray-500">
+                  {course.updatedAt
+                    ? `更新于 ${new Date(course.updatedAt).toLocaleString('zh-CN', { hour12: false })}`
+                    : course.createdAt
+                      ? `创建于 ${new Date(course.createdAt).toLocaleString('zh-CN', { hour12: false })}`
+                      : ''}
+                </div>
               </div>
             </div>
           ))}
@@ -316,8 +282,8 @@ export const CourseManagementPage = () => {
         {/* 无课程时的提示 */}
         {!loading && filteredCourses.length === 0 && (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">暂无课程</p>
+            <BookOpen className="w-16 h-16 text-[#e5e3db] mx-auto mb-4" />
+            <p className="text-gray-500">暂无课程</p>
           </div>
         )}
       </div>
