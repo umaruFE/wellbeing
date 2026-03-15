@@ -34,8 +34,8 @@ export const CanvasViewLeftSidebar = ({
   const getPhaseColor = (phase) => isCourseDataArray ? phase.color : phase.color;
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 z-10">
-      <div className="p-4 border-b border-slate-100 bg-slate-50">
+    <aside className="w-64 bg-white border-r-2 border-[#e5e3db] flex flex-col shrink-0 z-10">
+      <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fcfbf9]">
         <div className="flex items-center justify-between">
           <h1 className="font-bold text-lg text-slate-800 flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-600" /> 课程编排
@@ -58,7 +58,7 @@ export const CanvasViewLeftSidebar = ({
           const phaseColor = getPhaseColor(phase);
           
           return (
-            <div key={phaseKey} className="rounded-lg overflow-hidden border border-slate-100 bg-white">
+            <div key={phaseKey} className="rounded-xl overflow-hidden border-2 border-[#e5e3db] bg-white">
               <button 
                 onClick={() => onTogglePhase(phaseKey)} 
                 className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phaseColor.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
@@ -71,11 +71,11 @@ export const CanvasViewLeftSidebar = ({
                 </span>
               </button>
               {expandedPhases.includes(phaseKey) && (
-                <div className="bg-slate-50 border-t border-slate-100">
+                <div className="bg-[#fcfbf9] border-t-2 border-[#e5e3db]">
                   {phaseSteps.map((step) => (
                     <div 
                       key={step.id} 
-                      className={`group/step border-b border-slate-100 last:border-0 hover:bg-blue-50 transition-all flex items-center ${activeStepId === step.id ? 'bg-blue-100' : ''}`}
+                      className={`group/step border-b-2 border-[#e5e3db] last:border-0 hover:bg-[#fcfbf9] transition-all flex items-center ${activeStepId === step.id ? 'bg-[#fcfbf9]' : ''}`}
                     >
                       <button 
                         onClick={() => onStepClick(phaseKey, step.id)} 

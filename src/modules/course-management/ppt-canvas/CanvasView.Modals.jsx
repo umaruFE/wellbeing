@@ -90,7 +90,7 @@ export const CanvasViewModals = ({
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-600 p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
@@ -133,7 +133,7 @@ export const CanvasViewModals = ({
                     .map((historyItem) => (
                       <div 
                         key={historyItem.id} 
-                        className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                        className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
@@ -146,15 +146,15 @@ export const CanvasViewModals = ({
                               <img 
                                 src={historyItem.url} 
                                 alt="历史生成" 
-                                className="w-full h-32 object-cover rounded border border-slate-200 mb-2"
+                                className="w-full h-32 object-cover rounded-xl border-2 border-[#e5e3db] mb-2"
                               />
                             ) : (
-                              <div className="w-full h-16 bg-slate-100 rounded border border-slate-200 flex items-center justify-center mb-2">
+                              <div className="w-full h-16 bg-[#fcfbf9] rounded-xl border-2 border-[#e5e3db] flex items-center justify-center mb-2">
                                 <Music className="w-6 h-6 text-slate-400" />
                               </div>
                             )}
                             {historyItem.prompt && (
-                              <p className="text-xs text-slate-600 bg-slate-50 rounded p-2 mt-2">
+                              <p className="text-xs text-[#2d2d2d] bg-[#fcfbf9] rounded-xl p-2 mt-2 border border-[#e5e3db]">
                                 {historyItem.prompt}
                               </p>
                             )}

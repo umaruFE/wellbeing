@@ -665,7 +665,7 @@ export const MainLayout = () => {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* 顶部栏 - 仅在课程编辑时显示 */}
         {isInCourseEditor && (
-          <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
+          <header className="h-14 bg-[#fcfbf9] border-b-2 border-[#e5e3db] flex items-center justify-between px-4 shrink-0">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-slate-700">
                 {appConfig?.unit || '自定义课程'}
@@ -674,7 +674,7 @@ export const MainLayout = () => {
 
             <div className="flex items-center gap-2">
               {/* 视图切换 */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 mr-4">
+              <div className="flex items-center bg-[#fcfbf9] p-1 rounded-xl border-2 border-[#e5e3db] mr-4">
                 <button
                   onClick={() => {
                     setIsComponentReady(false);
@@ -784,7 +784,7 @@ export const MainLayout = () => {
           {isCreatePage && (
             <>
               {isLoadingCourse && (
-                <div className="flex-1 flex items-center justify-center bg-slate-50">
+                <div className="flex-1 flex items-center justify-center bg-[#fcfbf9]">
                   <div className="text-center space-y-4">
                     <div className="relative w-16 h-16 mx-auto">
                       <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>

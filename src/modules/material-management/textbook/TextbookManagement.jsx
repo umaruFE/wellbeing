@@ -174,8 +174,8 @@ export const TextbookManagement = () => {
     return (
       <div key={item.id}>
         <div
-          className={`flex items-center gap-2 py-2 px-3 cursor-pointer transition-colors ${
-            isSelected ? 'bg-blue-50 border-l-2 border-blue-600' : 'hover:bg-slate-50'
+          className={`flex items-center gap-2 py-2 px-3 cursor-pointer transition-all duration-200 ${
+            isSelected ? 'bg-[#fffbe6] border-l-2 border-[#2d2d2d]' : 'hover:bg-[#fffbe6] hover:border-l-2 hover:border-[#e5e3db]'
           }`}
           style={{ paddingLeft: `${level * 16 + 12}px` }}
           onClick={() => handleSelectItem(item, level)}
@@ -229,7 +229,7 @@ export const TextbookManagement = () => {
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-white">
+      <div className="h-full flex items-center justify-center bg-[#fcfbf9]">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-500">加载中...</p>
@@ -241,9 +241,9 @@ export const TextbookManagement = () => {
   return (
     <div className="h-full flex overflow-hidden">
       {/* Left - Textbook Tree */}
-      <div className="w-80 bg-white border-r border-slate-200 flex flex-col shrink-0">
+      <div className="w-80 bg-[#fcfbf9] border-r-2 border-[#e5e3db] flex flex-col shrink-0">
         {/* Search Box */}
-        <div className="p-4 border-b border-slate-200">
+        <div className="p-4 border-b-2 border-[#e5e3db]">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -251,7 +251,7 @@ export const TextbookManagement = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="搜索教材、年级、单元..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+              className="w-full pl-10 pr-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-sm transition-all duration-200"
             />
           </div>
         </div>
@@ -262,10 +262,10 @@ export const TextbookManagement = () => {
         </div>
 
         {/* Bottom Button */}
-        <div className="p-4 border-t border-slate-200 space-y-2">
+        <div className="p-4 border-t-2 border-[#e5e3db] space-y-2">
           <button
             onClick={() => openModal('add')}
-            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2 transition-colors"
+            className="w-full px-4 py-2 border-2 border-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:text-[#2d2d2d] flex items-center justify-center gap-2 transition-all duration-200 font-medium shadow-[2px_2px_0px_0px_rgba(45,45,45,1)]"
           >
             <Plus className="w-4 h-4" />
             新增教材
@@ -278,7 +278,7 @@ export const TextbookManagement = () => {
         {selectedItem ? (
           <>
             {/* Detail Header */}
-            <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
+            <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] px-6 py-4 shrink-0">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
@@ -301,7 +301,7 @@ export const TextbookManagement = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openModal('edit', { ...selectedItem, level: selectedLevel })}
-                    className="px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm"
+                    className="px-3 py-2 border-2 border-[#e5e3db] text-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                   >
                     <Edit className="w-4 h-4" />
                     编辑
@@ -309,7 +309,7 @@ export const TextbookManagement = () => {
                   {selectedLevel === 0 && (
                     <button
                       onClick={() => openModal('addGrade')}
-                      className="px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm"
+                      className="px-3 py-2 border-2 border-[#e5e3db] text-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       新增年级
@@ -318,7 +318,7 @@ export const TextbookManagement = () => {
                   {selectedLevel === 1 && (
                     <button
                       onClick={() => openModal('addUnit')}
-                      className="px-3 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 flex items-center gap-2 text-sm"
+                      className="px-3 py-2 border-2 border-[#e5e3db] text-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                     >
                       <Plus className="w-4 h-4" />
                       新增单元
@@ -326,7 +326,7 @@ export const TextbookManagement = () => {
                   )}
                   <button
                     onClick={() => openModal('delete', { ...selectedItem, level: selectedLevel })}
-                    className="px-3 py-2 border border-red-200 text-red-600 rounded-lg hover:bg-red-50 flex items-center gap-2 text-sm"
+                    className="px-3 py-2 border-2 border-red-200 text-red-600 rounded-xl hover:bg-red-50 hover:border-red-600 flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                   >
                     <Trash2 className="w-4 h-4" />
                     删除
@@ -339,30 +339,30 @@ export const TextbookManagement = () => {
             <div className="flex-1 overflow-y-auto p-6">
               <div className="grid grid-cols-1 gap-6">
                 {/* Basic Info */}
-                <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <div className="bg-[#fcfbf9] rounded-[24px] border-2 border-[#e5e3db] p-5 transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1">
                   <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
                     <Book className="w-5 h-5 text-blue-600" />
                     基础信息
                   </h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b border-slate-100">
+                    <div className="flex justify-between py-2 border-b-2 border-[#e5e3db]">
                       <span className="text-slate-500">名称</span>
                       <span className="text-slate-800 font-medium">{selectedItem.name}</span>
                     </div>
                     {selectedItem.type && (
-                      <div className="flex justify-between py-2 border-b border-slate-100">
+                      <div className="flex justify-between py-2 border-b-2 border-[#e5e3db]">
                         <span className="text-slate-500">教材类型</span>
                         <span className="text-slate-800 font-medium">{selectedItem.type}</span>
                       </div>
                     )}
                     {selectedItem.grade && (
-                      <div className="flex justify-between py-2 border-b border-slate-100">
+                      <div className="flex justify-between py-2 border-b-2 border-[#e5e3db]">
                         <span className="text-slate-500">适用年级</span>
                         <span className="text-slate-800 font-medium">{selectedItem.grade}</span>
                       </div>
                     )}
                     {selectedItem.unit_code && (
-                      <div className="flex justify-between py-2 border-b border-slate-100">
+                      <div className="flex justify-between py-2 border-b-2 border-[#e5e3db]">
                         <span className="text-slate-500">单元编号</span>
                         <span className="text-slate-800 font-medium">{selectedItem.unit_code}</span>
                       </div>
@@ -398,9 +398,9 @@ export const TextbookManagement = () => {
       {/* Modals */}
       {modalType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+          <div className="bg-[#fcfbf9] rounded-[24px] border-2 border-[#e5e3db] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] w-full max-w-md mx-4">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#e5e3db]">
               <h3 className="text-lg font-semibold text-slate-800">
                 {modalType === 'add' && '新增教材'}
                 {modalType === 'addGrade' && '新增年级'}
@@ -431,7 +431,7 @@ export const TextbookManagement = () => {
                       type="text"
                       value={modalData.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                       placeholder="请输入名称"
                     />
                   </div>
@@ -443,7 +443,7 @@ export const TextbookManagement = () => {
                         type="text"
                         value={modalData.type || modalData.name || ''}
                         onChange={(e) => setModalData({ ...modalData, type: e.target.value, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                         placeholder="如：人教版、外研版"
                       />
                     </div>
@@ -456,7 +456,7 @@ export const TextbookManagement = () => {
                         type="text"
                         value={modalData.grade || modalData.name || ''}
                         onChange={(e) => setModalData({ ...modalData, grade: e.target.value, name: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                         placeholder="如：三年级、四年级"
                       />
                     </div>
@@ -470,7 +470,7 @@ export const TextbookManagement = () => {
                           type="text"
                           value={modalData.name || ''}
                           onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                           placeholder="如：Unit 1: Hello"
                         />
                       </div>
@@ -480,7 +480,7 @@ export const TextbookManagement = () => {
                           type="text"
                           value={modalData.unit || ''}
                           onChange={(e) => setModalData({ ...modalData, unit: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                           placeholder="如：Unit 1"
                         />
                       </div>
@@ -490,7 +490,7 @@ export const TextbookManagement = () => {
                           type="text"
                           value={modalData.keywords || ''}
                           onChange={(e) => setModalData({ ...modalData, keywords: e.target.value })}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                           placeholder="如：Hello, Hi, I"
                         />
                       </div>
@@ -501,10 +501,10 @@ export const TextbookManagement = () => {
             </div>
 
             {/* Bottom Buttons */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t-2 border-[#e5e3db]">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-[#2d2d2d] border-2 border-[#e5e3db] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all duration-200 font-medium"
               >
                 取消
               </button>
@@ -516,10 +516,10 @@ export const TextbookManagement = () => {
                   if (modalType === 'edit') handleEdit();
                   if (modalType === 'delete') handleDelete();
                 }}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] ${
                   modalType === 'delete'
-                    ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] hover:bg-red-600 hover:border-red-600'
+                    : 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] hover:bg-[#fffbe6] hover:text-[#2d2d2d]'
                 }`}
               >
                 <Check className="w-4 h-4" />

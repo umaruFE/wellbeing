@@ -29,7 +29,7 @@ export const LoginPage = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+        <div className="bg-white rounded-[24px] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] p-8 border-2 border-[#e5e3db]">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="bg-blue-600 p-3 rounded-xl mb-4 shadow-lg">
@@ -56,7 +56,7 @@ export const LoginPage = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full px-4 py-2.5 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all"
                 placeholder="请输入用户名"
                 required
               />
@@ -70,7 +70,7 @@ export const LoginPage = () => {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                className="w-full px-4 py-2.5 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all"
                 placeholder="请输入密码"
                 required
               />
@@ -97,26 +97,26 @@ export const LoginPage = () => {
           </form>
 
           {/* Demo Accounts */}
-          <div className="mt-6 pt-6 border-t border-slate-200">
+          <div className="mt-6 pt-6 border-t-2 border-[#e5e3db]">
             <p className="text-xs text-slate-500 mb-3 text-center"></p>
             <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+              <div className="bg-[#fcfbf9] p-2 rounded-xl border-2 border-[#e5e3db]">
                 <div className="font-medium text-slate-700">超级管理员</div>
                 <div className="text-slate-500">admin</div>
               </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+              <div className="bg-[#fcfbf9] p-2 rounded-xl border-2 border-[#e5e3db]">
                 <div className="font-medium text-slate-700">机构管理员</div>
                 <div className="text-slate-500">org_admin</div>
               </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+              <div className="bg-[#fcfbf9] p-2 rounded-xl border-2 border-[#e5e3db]">
                 <div className="font-medium text-slate-700">教研组长</div>
                 <div className="text-slate-500">research_leader</div>
               </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+              <div className="bg-[#fcfbf9] p-2 rounded-xl border-2 border-[#e5e3db]">
                 <div className="font-medium text-slate-700">课件制作人</div>
                 <div className="text-slate-500">creator</div>
               </div>
-              <div className="bg-slate-50 p-2 rounded border border-slate-200">
+              <div className="bg-[#fcfbf9] p-2 rounded-xl border-2 border-[#e5e3db]">
                 <div className="font-medium text-slate-700">普通老师</div>
                 <div className="text-slate-500">viewer</div>
               </div>

@@ -164,7 +164,7 @@ export const PromptInputModal = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-lg text-white">
               <Type className="w-5 h-5" />
@@ -190,7 +190,7 @@ export const PromptInputModal = ({
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={placeholder}
-              className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-32"
+              className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-32 transition-all"
               autoFocus
             />
             <div className="flex items-center justify-between mt-2">
@@ -228,7 +228,7 @@ export const PromptInputModal = ({
                     className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
                       selectedRatio.id === ratio.id
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
+                        : 'border-2 border-[#e5e3db] hover:border-[#2d2d2d] text-[#2d2d2d] hover:bg-[#fffbe6]'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <div 
@@ -261,7 +261,7 @@ export const PromptInputModal = ({
                 参考图片 (可选)
               </label>
               {!referenceImage ? (
-                <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative group/upload">
+                <div className="border-2 border-dashed border-[#e5e3db] rounded-xl p-4 flex flex-col items-center justify-center bg-[#fcfbf9] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all cursor-pointer relative group/upload">
                   <input
                     type="file"
                     accept="image/*"
@@ -277,7 +277,7 @@ export const PromptInputModal = ({
                 </div>
               ) : (
                 <div className="relative group/ref">
-                  <img src={referenceImage} alt="Reference" className="w-full h-32 object-cover rounded border border-slate-200 opacity-90" />
+                  <img src={referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border-2 border-[#e5e3db] opacity-90" />
                   <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
                   <button
                     onClick={() => setReferenceImage(null)}
@@ -302,7 +302,7 @@ export const PromptInputModal = ({
                 <select
                   value={audioStyle}
                   onChange={(e) => setAudioStyle(e.target.value)}
-                  className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                  className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none bg-white transition-all"
                   disabled={isLoading}
                 >
                   {AUDIO_STYLES.map((style) => (
@@ -329,7 +329,7 @@ export const PromptInputModal = ({
                     step="10"
                     value={audioDuration}
                     onChange={(e) => setAudioDuration(Number(e.target.value))}
-                    className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                    className="flex-1 h-2 bg-[#e5e3db] rounded-lg appearance-none cursor-pointer accent-[#2d2d2d]"
                     disabled={isLoading}
                   />
                   <span className="text-sm font-medium text-slate-700 min-w-[60px]">
@@ -350,7 +350,7 @@ export const PromptInputModal = ({
                   value={lyrics}
                   onChange={(e) => setLyrics(e.target.value)}
                   placeholder="输入歌词内容，留空则生成纯音乐..."
-                  className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none h-24"
+                  className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-24 transition-all"
                   disabled={isLoading}
                 />
                 <p className="text-xs text-slate-400 mt-1">
@@ -376,7 +376,7 @@ export const PromptInputModal = ({
                       <img 
                         src={img} 
                         alt={`参考${index + 1}`}
-                        className="w-full h-20 object-cover rounded border border-slate-200"
+                        className="w-full h-20 object-cover rounded-xl border-2 border-[#e5e3db]"
                       />
                       <button
                         onClick={() => handleRemoveVideoReferenceImage(index)}
@@ -387,7 +387,7 @@ export const PromptInputModal = ({
                       </button>
                     </div>
                   ))}
-                  <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
+                  <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-[#e5e3db] rounded-xl cursor-pointer hover:border-[#2d2d2d] hover:bg-[#fffbe6] transition-all">
                     <input
                       type="file"
                       accept="image/*"
@@ -426,7 +426,7 @@ export const PromptInputModal = ({
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 transition-colors"
+              className="flex-1 px-4 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 transition-all font-medium"
             >
               取消
             </button>

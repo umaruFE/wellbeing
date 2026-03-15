@@ -58,7 +58,7 @@ export const OrganizationManagement = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="搜索机构..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full pl-10 pr-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none"
           />
         </div>
       </div>
@@ -78,7 +78,7 @@ export const OrganizationManagement = () => {
         {filteredOrganizations.map(org => (
           <div
             key={org.id}
-            className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-xl border-2 border-[#e5e3db] p-5 hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:border-[#2d2d2d] transition-all"
           >
             <div className="flex items-start justify-between mb-3">
               <div>

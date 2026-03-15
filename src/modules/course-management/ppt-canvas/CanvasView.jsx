@@ -593,7 +593,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   return (
-    <div className="flex h-full bg-slate-50 overflow-hidden">
+    <div className="flex h-full bg-[#fcfbf9] overflow-hidden">
       {/* Left Sidebar */}
       <CanvasViewLeftSidebar
         courseData={courseData}
@@ -641,7 +641,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border-b-2 border-[#e5e3db] px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsLeftOpen(!isLeftOpen)}
@@ -733,7 +733,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="bg-white border-t border-slate-200 px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border-t-2 border-[#e5e3db] px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleAddAsset('text')}
@@ -777,11 +777,11 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       </div>
 
       {/* Right Sidebar */}
-      <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l border-slate-200 flex flex-col shrink-0 z-10 shadow-[0_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
+      <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l-2 border-[#e5e3db] flex flex-col shrink-0 z-10 shadow-[4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
          {!isRightOpen && (
            <button 
              onClick={() => setIsRightOpen(true)} 
-             className="absolute top-4 right-0 bg-white p-2 rounded-l-md border border-r-0 border-slate-200 shadow-sm text-slate-500 hover:text-blue-600 z-50 transform -translate-x-full"
+             className="absolute top-4 right-0 bg-white p-2 rounded-l-md border-2 border-r-0 border-[#e5e3db] shadow-sm text-[#2d2d2d] hover:text-[#2d2d2d] hover:border-[#2d2d2d] z-50 transform -translate-x-full transition-all"
              title="展开面板"
            >
              <ChevronLeft className="w-4 h-4" />
@@ -805,7 +805,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                />
             ) : (
                <>
-                  <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+                  <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fcfbf9] flex items-center justify-between">
                      <h3 className="font-bold text-slate-800 flex items-center gap-2">
                        <Wand2 className="w-4 h-4 text-purple-600" />环节详情编辑
                      </h3>
@@ -823,7 +823,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                               type="text" 
                               value={currentStep?.time || ''} 
                               onChange={(e) => handleInputChange('time', e.target.value)} 
-                              className="flex-1 text-sm border border-slate-200 rounded px-2 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none" 
+                              className="flex-1 text-sm border-2 border-[#e5e3db] rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all" 
                             />
                           </div>
                         </div>
@@ -833,7 +833,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                             type="text" 
                             value={currentStep?.title || ''} 
                             onChange={(e) => handleInputChange('title', e.target.value)} 
-                            className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none" 
+                            className="w-full text-sm border-2 border-[#e5e3db] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all" 
                           />
                         </div>
                         <div>
@@ -841,12 +841,12 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                           <textarea 
                             value={currentStep?.objective || ''} 
                             onChange={(e) => handleInputChange('objective', e.target.value)} 
-                            className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none resize-none" 
+                            className="w-full text-sm border-2 border-[#e5e3db] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none transition-all" 
                             rows={4}
                           />
                         </div>
                      </div>
-                     <hr className="border-slate-100" />
+                     <hr className="border-[#e5e3db]" />
                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <label className="text-xs font-bold text-slate-500 uppercase">本页素材 ({currentStep?.assets?.length || 0})</label>
@@ -861,7 +861,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                             <div 
                               key={asset.id} 
                               onClick={() => setSelectedAssetId(asset.id)} 
-                              className="flex items-start gap-2 p-2 border border-slate-200 rounded bg-white hover:border-blue-300 hover:shadow-sm cursor-pointer transition-all group"
+                              className="flex items-start gap-2 p-2 border-2 border-[#e5e3db] rounded-xl bg-white hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] cursor-pointer transition-all group"
                             >
                               <div className="mt-1 text-slate-400">{getAssetIcon(asset.type)}</div>
                               <div className="flex-1 min-w-0">
@@ -872,7 +872,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                           ))}
                         </div>
                      </div>
-                     <div className="pt-6 mt-6 border-t border-slate-100 flex gap-2">
+                     <div className="pt-6 mt-6 border-t-2 border-[#e5e3db] flex gap-2">
                         <button 
                           onClick={() => {
                             if (currentStep) {
@@ -974,7 +974,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       {showPageHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-600 p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
@@ -997,7 +997,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               ) : (
                 <div className="space-y-3">
                   {pageHistory.filter(h => h.stepId === activeStepId).map((historyItem) => (
-                    <div key={historyItem.id} className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all">
+                    <div key={historyItem.id} className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">

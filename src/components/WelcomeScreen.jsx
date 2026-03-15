@@ -245,8 +245,8 @@ export const WelcomeScreen = ({ onStart }) => {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-slate-50 flex items-center justify-center p-4 h-full w-full">
-      <div className="max-w-5xl w-full bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-100">
+    <div className="flex-1 overflow-auto bg-[#fcfbf9] flex items-center justify-center p-4 h-full w-full">
+      <div className="max-w-5xl w-full bg-white rounded-[24px] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] overflow-hidden border-2 border-[#e5e3db]">
         {/* 顶部标题 */}
         <div
           style={{ background: 'linear-gradient(to right, rgb(37, 99, 235), rgb(67, 56, 202))' }}
@@ -276,7 +276,7 @@ export const WelcomeScreen = ({ onStart }) => {
                     <select
                       value={config.age}
                       onChange={handleAgeChange}
-                      className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm"
+                      className="w-full p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all appearance-none text-sm"
                     >
                       {Object.keys(CURRICULUM_DATA).map(age => (
                         <option key={age} value={age}>{age}</option>
@@ -298,7 +298,7 @@ export const WelcomeScreen = ({ onStart }) => {
                       <select
                         value={config.unit}
                         onChange={handleUnitChange}
-                        className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none text-sm"
+                        className="w-full p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all appearance-none text-sm"
                       >
                         {allUnitOptions.map((option, index) => {
                           if (option.type === 'header') {
@@ -327,7 +327,7 @@ export const WelcomeScreen = ({ onStart }) => {
                         value={config.customUnit}
                         onChange={(e) => setConfig({...config, customUnit: e.target.value})}
                         placeholder="请输入自定义单元名称..."
-                        className="flex-1 p-2.5 bg-white border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                        className="flex-1 p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-sm transition-all"
                         autoFocus
                       />
                       <button
@@ -348,7 +348,7 @@ export const WelcomeScreen = ({ onStart }) => {
                     <select
                       value={config.duration}
                       onChange={(e) => setConfig({...config, duration: e.target.value})}
-                      className="w-full p-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none appearance-none text-sm"
+                      className="w-full p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none appearance-none text-sm transition-all"
                     >
                       <option>15分钟 (微课/学前)</option>
                       <option>30分钟 (标准课时)</option>
@@ -371,7 +371,7 @@ export const WelcomeScreen = ({ onStart }) => {
                       type="text"
                       value={config.theme}
                       onChange={(e) => setConfig({...config, theme: e.target.value})}
-                      className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                      className="w-full p-2.5 bg-[#fcfbf9] border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-sm transition-all"
                       placeholder="例如：星际救援、海底探险"
                     />
                 </div>
@@ -386,7 +386,7 @@ export const WelcomeScreen = ({ onStart }) => {
                     type="text"
                     value={config.keywords}
                     onChange={(e) => setConfig({...config, keywords: e.target.value})}
-                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                    className="w-full p-2.5 bg-[#fcfbf9] border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-sm transition-all"
                     placeholder="例如：Red, Blue, Yellow"
                   />
               </div>
@@ -394,8 +394,7 @@ export const WelcomeScreen = ({ onStart }) => {
               <div className="pt-2">
                 <button
                   onClick={handleGenerate}
-                  style={{ background: 'linear-gradient(to right, rgb(37, 99, 235), rgb(79, 70, 229))' }}
-                  className="w-full py-3 text-white rounded-xl font-bold text-base shadow-md transform transition hover:opacity-90 active:scale-[0.98] flex items-center justify-center gap-2"
+                  className="w-full py-3 border-2 border-[#2d2d2d] rounded-xl font-bold text-base shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] transition-all duration-200 hover:bg-[#fffbe6] hover:text-[#2d2d2d] flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
                   开始生成

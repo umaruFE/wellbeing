@@ -333,7 +333,7 @@ export const VideoStoryboardModal = ({
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
               currentStep === step.id ? 'bg-purple-100 border-2 border-purple-600' :
               currentStep > step.id ? 'bg-green-100 border-2 border-green-600' :
-              'bg-slate-100 border-2 border-slate-300'
+              'bg-[#fcfbf9] border-2 border-[#d1d5db]'
             }`}>
               {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
             </div>
@@ -358,7 +358,7 @@ export const VideoStoryboardModal = ({
           value={storyCore}
           onChange={(e) => setStoryCore(e.target.value)}
           placeholder="例如：一个小女孩周末在花园里玩耍"
-          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+          className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-24 transition-all"
         />
       </div>
 
@@ -369,7 +369,7 @@ export const VideoStoryboardModal = ({
         <select
           value={overallStyle}
           onChange={(e) => setOverallStyle(e.target.value)}
-          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none h-15"
+          className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all h-15"
         >
           <option value="">请选择整体风格</option>
           <option value="3D皮克斯风格、温馨治愈、明亮色彩">3D皮克斯风格、温馨治愈、明亮色彩</option>
@@ -416,7 +416,7 @@ export const VideoStoryboardModal = ({
               className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
                 selectedAspectRatio.id === ratio.id
                   ? 'border-purple-500 bg-purple-50 text-purple-700'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
+                  : 'border-2 border-[#e5e3db] hover:border-[#2d2d2d] text-[#2d2d2d] hover:bg-[#fffbe6]'
               }`}
             >
               <div 
@@ -461,7 +461,7 @@ export const VideoStoryboardModal = ({
                 className={`relative flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
                   isSelected
                     ? 'border-purple-500 bg-purple-50 text-purple-700'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-600 hover:bg-slate-50'
+                    : 'border-2 border-[#e5e3db] hover:border-[#2d2d2d] text-[#2d2d2d] hover:bg-[#fffbe6]'
                 }`}
               >
                 {isSelected && (
@@ -538,7 +538,7 @@ export const VideoStoryboardModal = ({
 
           <div className="grid grid-cols-2 gap-4 overflow-y-auto">
             {scenes.map((scene) => (
-              <div key={scene.id} className="border border-slate-200 rounded-lg overflow-hidden">
+              <div key={scene.id} className="border-2 border-[#e5e3db] rounded-xl overflow-hidden transition-all hover:border-[#2d2d2d]">
                 <div className="aspect-video bg-slate-100 relative">
                   {scene.generatedImage ? (
                     <button
@@ -689,7 +689,7 @@ export const VideoStoryboardModal = ({
         <button
           onClick={() => setCurrentStep(prev => prev - 1)}
           disabled={currentStep === 1}
-          className="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
         >
           <ChevronLeft className="w-4 h-4" />
           上一步
@@ -747,7 +747,7 @@ export const VideoStoryboardModal = ({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[740px] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between shrink-0">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-purple-600 p-2 rounded-lg text-white">
               <Video className="w-5 h-5" />
@@ -783,7 +783,7 @@ export const VideoStoryboardModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-200">
+        <div className="p-6 border-t-2 border-[#e5e3db]">
           {renderFooterButtons()}
         </div>
       </div>

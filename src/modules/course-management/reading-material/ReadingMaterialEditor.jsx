@@ -643,7 +643,7 @@ export const ReadingMaterialEditor = ({
       </div>
 
       {/* 底部按钮区域 */}
-      <div className="border-t border-slate-200 bg-white p-4 flex items-center justify-between">
+      <div className="border-t-2 border-[#e5e3db] bg-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleAddAsset(editingPageIndex, 'text')}

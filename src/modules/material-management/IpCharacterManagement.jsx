@@ -128,7 +128,7 @@ export const IpCharacterManagement = () => {
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-white">
+      <div className="h-full flex items-center justify-center bg-[#fcfbf9]">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-500">加载中...</p>
@@ -140,7 +140,7 @@ export const IpCharacterManagement = () => {
   return (
     <div className="h-full flex flex-col">
       {/* 头部 */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
+      <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-800">IP人物</h2>
@@ -148,7 +148,7 @@ export const IpCharacterManagement = () => {
           </div>
           <button
             onClick={() => openModal('add')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:text-[#2d2d2d] flex items-center gap-2 transition-all duration-200 font-medium shadow-[2px_2px_0px_0px_rgba(45,45,45,1)]"
           >
             <Plus className="w-4 h-4" />
             新增人物
@@ -163,27 +163,27 @@ export const IpCharacterManagement = () => {
           {ipCharacters.map((char) => (
             <div
               key={char.id}
-              className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200"
+              className="group bg-[#fcfbf9] rounded-[24px] border-2 border-[#e5e3db] overflow-hidden transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
             >
               {/* 头像区域 */}
-              <div className="aspect-square bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center relative">
+              <div className="aspect-square bg-gradient-to-br from-[#fffbe6] to-[#f5f0e6] flex items-center justify-center relative border-b-2 border-[#e5e3db]">
                 {char.image_url ? (
                   <img src={char.image_url} alt={char.name} className="w-full h-full object-cover" />
                 ) : (
-                  <User className="w-16 h-16 text-blue-300" />
+                  <User className="w-16 h-16 text-[#e5e3db]" />
                 )}
 
                 {/* 悬停操作按钮 */}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                   <button
                     onClick={() => openModal('edit', char)}
-                    className="p-1.5 bg-white rounded-lg shadow-sm hover:bg-blue-50 text-blue-600"
+                    className="p-1.5 bg-[#fcfbf9] border-2 border-[#e5e3db] rounded-lg shadow-sm hover:bg-[#fffbe6] hover:border-[#2d2d2d] text-[#2d2d2d] transition-all duration-200"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => openModal('delete', char)}
-                    className="p-1.5 bg-white rounded-lg shadow-sm hover:bg-red-50 text-red-600"
+                    className="p-1.5 bg-[#fcfbf9] border-2 border-[#e5e3db] rounded-lg shadow-sm hover:bg-red-50 hover:border-red-600 text-red-600 transition-all duration-200"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -194,7 +194,7 @@ export const IpCharacterManagement = () => {
               <div className="p-4">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="font-semibold text-slate-800">{char.name}</h3>
-                  <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs">
+                  <span className="px-2 py-0.5 bg-[#fffbe6] border border-[#e5e3db] text-[#2d2d2d] rounded text-xs">
                     {char.style}
                   </span>
                 </div>
@@ -202,7 +202,7 @@ export const IpCharacterManagement = () => {
 
                 {/* 性别标签 */}
                 <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className="px-2 py-0.5 bg-slate-100 rounded">
+                  <span className="px-2 py-0.5 bg-[#fcfbf9] border border-[#e5e3db] rounded">
                     {char.gender === '女' ? '👩' : char.gender === '男' ? '👨' : '🐾'} {char.gender}
                   </span>
                 </div>
@@ -222,9 +222,9 @@ export const IpCharacterManagement = () => {
       {/* 模态框 */}
       {modalType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+          <div className="bg-[#fcfbf9] rounded-[24px] border-2 border-[#e5e3db] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] w-full max-w-md mx-4">
             {/* 头部 */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#e5e3db]">
               <h3 className="text-lg font-semibold text-slate-800">
                 {modalType === 'add' && '新增人物'}
                 {modalType === 'edit' && '编辑人物'}
@@ -249,7 +249,7 @@ export const IpCharacterManagement = () => {
                 <div className="space-y-4">
                   {/* 头像上传预览 */}
                   <div
-                    className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-blue-400 transition-colors cursor-pointer"
+                    className="border-2 border-dashed border-[#e5e3db] rounded-xl p-4 text-center hover:border-[#2d2d2d] transition-all duration-200 cursor-pointer bg-[#fcfbf9]"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {modalData.file ? (
@@ -280,7 +280,7 @@ export const IpCharacterManagement = () => {
                       type="text"
                       value={modalData.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                       placeholder="请输入人物名称"
                     />
                   </div>
@@ -291,7 +291,7 @@ export const IpCharacterManagement = () => {
                       <select
                         value={modalData.gender || '女'}
                         onChange={(e) => setModalData({ ...modalData, gender: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                       >
                         {genderOptions.map(opt => (
                           <option key={opt} value={opt}>
@@ -305,7 +305,7 @@ export const IpCharacterManagement = () => {
                       <select
                         value={modalData.style || '教师'}
                         onChange={(e) => setModalData({ ...modalData, style: e.target.value })}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                        className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                       >
                         {styleOptions.map(opt => (
                           <option key={opt} value={opt}>{opt}</option>
@@ -319,7 +319,7 @@ export const IpCharacterManagement = () => {
                     <textarea
                       value={modalData.description || ''}
                       onChange={(e) => setModalData({ ...modalData, description: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none"
+                      className="w-full px-3 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none"
                       rows={3}
                       placeholder="请输入人物描述"
                     />
@@ -329,10 +329,10 @@ export const IpCharacterManagement = () => {
             </div>
 
             {/* 底部按钮 */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t-2 border-[#e5e3db]">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-[#2d2d2d] border-2 border-[#e5e3db] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all duration-200 font-medium"
                 disabled={uploading}
               >
                 取消
@@ -343,10 +343,10 @@ export const IpCharacterManagement = () => {
                   if (modalType === 'edit') handleEdit();
                   if (modalType === 'delete') handleDelete();
                 }}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] ${
                   modalType === 'delete'
-                    ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] hover:bg-red-600 hover:border-red-600'
+                    : 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] hover:bg-[#fffbe6] hover:text-[#2d2d2d]'
                 }`}
                 disabled={uploading}
               >
