@@ -325,7 +325,7 @@ export const aiAssetService = {
 
   // 生成多张图片（后端批量生成，立即返回任务ID）
   generateMultipleImages: async (prompt, options = {}) => {
-    const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
+    const { count = 4, width = 600, height = 400, user_id, organization_id, workflow_type = 'lora-v3' } = options;
     
     try {
       const response = await fetch('/api/ai/generate-images', {
@@ -337,7 +337,8 @@ export const aiAssetService = {
           width,
           height,
           user_id,
-          organization_id
+          organization_id,
+          workflow_type
         })
       });
 
@@ -355,13 +356,15 @@ export const aiAssetService = {
   },
 
   // 轮询单个任务状态并上传到OSS
-  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 60, interval = 2000, onProgress) => {
+  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 120, interval = 3000, onProgress) => {
+    console.log(`开始轮询任务 ${promptId}，最多尝试 ${maxAttempts} 次，间隔 ${interval}ms`);
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         if (onProgress) {
           onProgress({ index, attempt, status: 'polling' });
         }
 
+        console.log(`轮询任务 ${promptId}，尝试 ${attempt + 1}/${maxAttempts}`);
         const response = await fetch(`/api/ai/task-status/${promptId}`, {
           method: 'GET',
           headers: getAuthHeaders()
@@ -373,6 +376,7 @@ export const aiAssetService = {
         }
 
         const data = await response.json();
+        console.log(`轮询任务 ${promptId}，响应数据:`, data);
         
         if (data.status === 'completed') {
           if (onProgress) {
@@ -388,8 +392,13 @@ export const aiAssetService = {
           };
         } else if (data.status === 'error') {
           throw new Error('任务执行失败');
+        } else if (data.status === 'pending') {
+          console.log(`任务 ${promptId} 仍在处理中，继续轮询`);
+        } else {
+          console.warn(`任务 ${promptId} 状态未知: ${data.status}`);
         }
         
+        console.log(`等待 ${interval}ms 后继续轮询`);
         await new Promise(resolve => setTimeout(resolve, interval));
       } catch (error) {
         console.error(`轮询任务 ${index + 1} 状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
@@ -399,6 +408,7 @@ export const aiAssetService = {
           }
           throw error;
         }
+        console.log(`等待 ${interval}ms 后重试`);
         await new Promise(resolve => setTimeout(resolve, interval));
       }
     }

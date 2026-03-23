@@ -28,7 +28,7 @@ interface ImageGenerationRequest {
   height?: number;
   user_id?: string;
   organization_id?: string;
-  workflow_type?: 'scene' | 'person';
+  workflow_type?: 'scene' | 'person' | 'lora-v3';
   reference_image?: string;
   video_style?: string;
 }
@@ -351,16 +351,124 @@ function createSceneWorkflow(prompt: string, width: number, height: number, seed
   };
 }
 
+// 创建LoRA V3工作流（基于 lora-v3.json）
+function createLoraV3Workflow(prompt: string, width: number, height: number, seed: number): any {
+  return {
+    "9": {
+      "inputs": {
+        "filename_prefix": "z-image",
+        "images": ["43", 0]
+      },
+      "class_type": "SaveImage",
+      "_meta": { "title": "保存图像" }
+    },
+    "39": {
+      "inputs": {
+        "clip_name": "qwen_3_4b.safetensors",
+        "type": "lumina2",
+        "device": "default"
+      },
+      "class_type": "CLIPLoader",
+      "_meta": { "title": "加载CLIP" }
+    },
+    "40": {
+      "inputs": {
+        "vae_name": "ae.safetensors"
+      },
+      "class_type": "VAELoader",
+      "_meta": { "title": "加载VAE" }
+    },
+    "41": {
+      "inputs": {
+        "width": width,
+        "height": height,
+        "batch_size": 1
+      },
+      "class_type": "EmptySD3LatentImage",
+      "_meta": { "title": "空Latent图像（SD3）" }
+    },
+    "42": {
+      "inputs": {
+        "conditioning": ["45", 0]
+      },
+      "class_type": "ConditioningZeroOut",
+      "_meta": { "title": "条件零化" }
+    },
+    "43": {
+      "inputs": {
+        "samples": ["44", 0],
+        "vae": ["40", 0]
+      },
+      "class_type": "VAEDecode",
+      "_meta": { "title": "VAE解码" }
+    },
+    "44": {
+      "inputs": {
+        "seed": seed,
+        "steps": 11,
+        "cfg": 1.8,
+        "sampler_name": "res_multistep",
+        "scheduler": "simple",
+        "denoise": 1,
+        "model": ["47", 0],
+        "positive": ["45", 0],
+        "negative": ["42", 0],
+        "latent_image": ["41", 0]
+      },
+      "class_type": "KSampler",
+      "_meta": { "title": "K采样器" }
+    },
+    "45": {
+      "inputs": {
+        "text": prompt,
+        "clip": ["39", 0]
+      },
+      "class_type": "CLIPTextEncode",
+      "_meta": { "title": "CLIP文本编码" }
+    },
+    "46": {
+      "inputs": {
+        "unet_name": "z_image_turbo_bf16.safetensors",
+        "weight_dtype": "default"
+      },
+      "class_type": "UNETLoader",
+      "_meta": { "title": "UNet加载器" }
+    },
+    "47": {
+      "inputs": {
+        "shift": 3,
+        "model": ["48", 0]
+      },
+      "class_type": "ModelSamplingAuraFlow",
+      "_meta": { "title": "采样算法（AuraFlow）" }
+    },
+    "48": {
+      "inputs": {
+        "lora_name": "my_first_lora_v3.safetensors",
+        "strength_model": 1,
+        "model": ["46", 0]
+      },
+      "class_type": "LoraLoaderModelOnly",
+      "_meta": { "title": "LoRA加载器（仅模型）" }
+    }
+  };
+}
+
 // 创建图片生成工作流（保留旧函数名以兼容）
 function createWorkflow(prompt: string, width: number, height: number, seed: number): any {
   return createSceneWorkflow(prompt, width, height, seed);
 }
 
 // 提交图片生成任务
-async function submitImageTask(prompt: string, width: number, height: number, seed: number, workflowType: 'scene' | 'person' = 'scene', referenceImage?: string, styleParams?: any): Promise<TaskResponse> {
-  const workflow = workflowType === 'person'
-    ? createPersonWorkflow(prompt, width, height, seed, styleParams)
-    : createSceneWorkflow(prompt, width, height, seed, referenceImage, styleParams);
+async function submitImageTask(prompt: string, width: number, height: number, seed: number, workflowType: 'scene' | 'person' | 'lora-v3' = 'scene', referenceImage?: string, styleParams?: any): Promise<TaskResponse> {
+  let workflow;
+  if (workflowType === 'person') {
+    workflow = createPersonWorkflow(prompt, width, height, seed, styleParams);
+  } else if (workflowType === 'lora-v3') {
+    workflow = createLoraV3Workflow(prompt, width, height, seed);
+  } else {
+    workflow = createSceneWorkflow(prompt, width, height, seed, referenceImage, styleParams);
+  }
   
   console.log(`提交图片生成任务: ${AI_API_BASE_URL}/prompt`);
   console.log(`工作流类型: ${workflowType}`);
