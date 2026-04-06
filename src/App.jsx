@@ -15,6 +15,7 @@ import { PptImageManagement } from './modules/material-management/image/PptImage
 import { IpCharacterManagement } from './modules/material-management/IpCharacterManagement';
 import { VideoMaterialManagement } from './modules/material-management/video/VideoMaterialManagement';
 import { AccountManagement } from './modules/admin/AccountManagement';
+import IPSceneTestPage from './modules/test/IPSceneTestPage';
 
 function App() {
   return (
@@ -126,6 +127,11 @@ function App() {
                   <AccountManagement />
                 </RequireAuth>
               }
+            />
+
+            <Route
+              path="/test/ip-scene"
+              element={<IPSceneTestPage />}
             />
 
             <Route path="*" element={<Navigate to="/" replace />} />

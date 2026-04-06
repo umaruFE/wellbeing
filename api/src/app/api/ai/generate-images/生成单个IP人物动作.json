@@ -1,0 +1,109 @@
+{
+  "id": "5-in-1-asset-studio",
+  "revision": 0,
+  "last_node_id": 505,
+  "last_link_id": 5041,
+  "nodes": [
+    {"id":1,"type":"UNETLoader","pos":[50,50],"size":[270,82],"inputs":[],"outputs":[{"name":"MODEL","type":"MODEL","links":[1]}],"properties":{"Node name for S&R":"UNETLoader"},"widgets_values":["z_image_turbo_bf16.safetensors","default"]},
+    {"id":2,"type":"VAELoader","pos":[50,200],"size":[270,58],"inputs":[],"outputs":[{"name":"VAE","type":"VAE","links":[12,22,32,42,52]}],"properties":{"Node name for S&R":"VAELoader"},"widgets_values":["ae.safetensors"]},
+    {"id":3,"type":"CLIPLoader","pos":[50,350],"size":[270,106],"inputs":[],"outputs":[{"name":"CLIP","type":"CLIP","links":[3,13,23,33,43,53]}],"properties":{"Node name for S&R":"CLIPLoader"},"widgets_values":["qwen_3_4b.safetensors","lumina2","default"]},
+    {"id":4,"type":"ModelSamplingAuraFlow","pos":[350,50],"size":[270,58],"inputs":[{"name":"model","type":"MODEL","link":1}],"outputs":[{"name":"MODEL","type":"MODEL","links":[14,24,34,44,54]}],"properties":{"Node name for S&R":"ModelSamplingAuraFlow"},"widgets_values":[3]},
+    {"id":5,"type":"EmptySD3LatentImage","pos":[350,200],"size":[270,106],"inputs":[],"outputs":[{"name":"LATENT","type":"LATENT","links":[15,25,35,45,55]}],"properties":{"Node name for S&R":"EmptySD3LatentImage"},"widgets_values":[1024,1024,1]},
+    {"id":7,"type":"CLIPTextEncode","pos":[350,350],"size":[400,200],"title":"全局负面提示词 (Global Negative)","inputs":[{"name":"clip","type":"CLIP","link":3}],"outputs":[{"name":"CONDITIONING","type":"CONDITIONING","links":[17,27,37,47,57]}],"properties":{"Node name for S&R":"CLIPTextEncode"},"widgets_values":["blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background details"]},
+
+    {"id":101,"type":"LoraLoader","pos":[800,50],"size":[270,126],"title":"1. LoRA - Poppy","inputs":[{"name":"model","type":"MODEL","link":14},{"name":"clip","type":"CLIP","link":13}],"outputs":[{"name":"MODEL","type":"MODEL","links":[1011]},{"name":"CLIP","type":"CLIP","links":[1012]}],"properties":{"Node name for S&R":"LoraLoader"},"widgets_values":["poppy.safetensors",0.8,1]},
+    {"id":102,"type":"CLIPTextEncode","pos":[1100,50],"size":[400,200],"title":"1. 动作 - Poppy (粉色)","inputs":[{"name":"clip","type":"CLIP","link":1012}],"outputs":[{"name":"CONDITIONING","type":"CONDITIONING","links":[1021]}],"properties":{"Node name for S&R":"CLIPTextEncode"},"widgets_values":["cj_vector_style, poppy character, doing yoga stretching poses, flat vector illustration, uniform thick black outlines, monoline style, 2D flat design, solid white background"]},
+    {"id":103,"type":"KSampler","pos":[1550,50],"size":[270,262],"title":"1. 生成 Poppy","inputs":[{"name":"model","type":"MODEL","link":1011},{"name":"positive","type":"CONDITIONING","link":1021},{"name":"negative","type":"CONDITIONING","link":17},{"name":"latent_image","type":"LATENT","link":15}],"outputs":[{"name":"LATENT","type":"LATENT","links":[1031]}],"properties":{"Node name for S&R":"KSampler"},"widgets_values":[12345,"randomize",20,1.5,"euler","simple",1]},
+    {"id":104,"type":"VAEDecode","pos":[1850,50],"size":[140,46],"inputs":[{"name":"samples","type":"LATENT","link":1031},{"name":"vae","type":"VAE","link":12}],"outputs":[{"name":"IMAGE","type":"IMAGE","links":[1041]}],"properties":{"Node name for S&R":"VAEDecode"},"widgets_values":[]},
+    {"id":105,"type":"SaveImage","pos":[2050,50],"size":[270,270],"title":"保存 Poppy 资产","inputs":[{"name":"images","type":"IMAGE","link":1041}],"outputs":[],"properties":{"Node name for S&R":"SaveImage"},"widgets_values":["Asset_Poppy"]},
+
+    {"id":201,"type":"LoraLoader","pos":[800,350],"size":[270,126],"title":"2. LoRA - Edi","inputs":[{"name":"model","type":"MODEL","link":24},{"name":"clip","type":"CLIP","link":23}],"outputs":[{"name":"MODEL","type":"MODEL","links":[2011]},{"name":"CLIP","type":"CLIP","links":[2012]}],"properties":{"Node name for S&R":"LoraLoader"},"widgets_values":["edi_new_000002250.safetensors",0.8,1]},
+    {"id":202,"type":"CLIPTextEncode","pos":[1100,350],"size":[400,200],"title":"2. 动作 - Edi (蓝色)","inputs":[{"name":"clip","type":"CLIP","link":2012}],"outputs":[{"name":"CONDITIONING","type":"CONDITIONING","links":[2021]}],"properties":{"Node name for S&R":"CLIPTextEncode"},"widgets_values":["cj_vector_style, edi character, lifting heavy dumbbells, flat vector illustration, uniform thick black outlines, monoline style, 2D flat design, solid white background"]},
+    {"id":203,"type":"KSampler","pos":[1550,350],"size":[270,262],"title":"2. 生成 Edi","inputs":[{"name":"model","type":"MODEL","link":2011},{"name":"positive","type":"CONDITIONING","link":2021},{"name":"negative","type":"CONDITIONING","link":27},{"name":"latent_image","type":"LATENT","link":25}],"outputs":[{"name":"LATENT","type":"LATENT","links":[2031]}],"properties":{"Node name for S&R":"KSampler"},"widgets_values":[23456,"randomize",20,1.5,"euler","simple",1]},
+    {"id":204,"type":"VAEDecode","pos":[1850,350],"size":[140,46],"inputs":[{"name":"samples","type":"LATENT","link":2031},{"name":"vae","type":"VAE","link":22}],"outputs":[{"name":"IMAGE","type":"IMAGE","links":[2041]}],"properties":{"Node name for S&R":"VAEDecode"},"widgets_values":[]},
+    {"id":205,"type":"SaveImage","pos":[2050,350],"size":[270,270],"title":"保存 Edi 资产","inputs":[{"name":"images","type":"IMAGE","link":2041}],"outputs":[],"properties":{"Node name for S&R":"SaveImage"},"widgets_values":["Asset_Edi"]},
+
+    {"id":301,"type":"LoraLoader","pos":[800,650],"size":[270,126],"title":"3. LoRA - Rolly","inputs":[{"name":"model","type":"MODEL","link":34},{"name":"clip","type":"CLIP","link":33}],"outputs":[{"name":"MODEL","type":"MODEL","links":[3011]},{"name":"CLIP","type":"CLIP","links":[3012]}],"properties":{"Node name for S&R":"LoraLoader"},"widgets_values":["rolly.safetensors",0.8,1]},
+    {"id":302,"type":"CLIPTextEncode","pos":[1100,650],"size":[400,200],"title":"3. 动作 - Rolly (橘色)","inputs":[{"name":"clip","type":"CLIP","link":3012}],"outputs":[{"name":"CONDITIONING","type":"CONDITIONING","links":[3021]}],"properties":{"Node name for S&R":"CLIPTextEncode"},"widgets_values":["cj_vector_style, rolly character, running fast on a treadmill, sweating, flat vector illustration, uniform thick black outlines, monoline style, 2D flat design, solid white background"]},
+    {"id":303,"type":"KSampler","pos":[1550,650],"size":[270,262],"title":"3. 生成 Rolly","inputs":[{"name":"model","type":"MODEL","link":3011},{"name":"positive","type":"CONDITIONING","link":3021},{"name":"negative","type":"CONDITIONING","link":37},{"name":"latent_image","type":"LATENT","link":35}],"outputs":[{"name":"LATENT","type":"LATENT","links":[3031]}],"properties":{"Node name for S&R":"KSampler"},"widgets_values":[34567,"randomize",20,1.5,"euler","simple",1]},
+    {"id":304,"type":"VAEDecode","pos":[1850,650],"size":[140,46],"inputs":[{"name":"samples","type":"LATENT","link":3031},{"name":"vae","type":"VAE","link":32}],"outputs":[{"name":"IMAGE","type":"IMAGE","links":[3041]}],"properties":{"Node name for S&R":"VAEDecode"},"widgets_values":[]},
+    {"id":305,"type":"SaveImage","pos":[2050,650],"size":[270,270],"title":"保存 Rolly 资产","inputs":[{"name":"images","type":"IMAGE","link":3041}],"outputs":[],"properties":{"Node name for S&R":"SaveImage"},"widgets_values":["Asset_Rolly"]},
+
+    {"id":401,"type":"LoraLoader","pos":[800,950],"size":[270,126],"title":"4. LoRA - Ace","inputs":[{"name":"model","type":"MODEL","link":44},{"name":"clip","type":"CLIP","link":43}],"outputs":[{"name":"MODEL","type":"MODEL","links":[4011]},{"name":"CLIP","type":"CLIP","links":[4012]}],"properties":{"Node name for S&R":"LoraLoader"},"widgets_values":["ace.safetensors",0.8,1]},
+    {"id":402,"type":"CLIPTextEncode","pos":[1100,950],"size":[400,200],"title":"4. 动作 - Ace (紫色)","inputs":[{"name":"clip","type":"CLIP","link":4012}],"outputs":[{"name":"CONDITIONING","type":"CONDITIONING","links":[4021]}],"properties":{"Node name for S&R":"CLIPTextEncode"},"widgets_values":["cj_vector_style, ace character, a purple star mascot, stretching arms with a jump rope, flat vector illustration, uniform thick black outlines, monoline style, 2D flat design, solid white background"]},
+    {"id":403,"type":"KSampler","pos":[1550,950],"size":[270,262],"title":"4. 生成 Ace","inputs":[{"name":"model","type":"MODEL","link":4011},{"name":"positive","type":"CONDITIONING","link":4021},{"name":"negative","type":"CONDITIONING","link":47},{"name":"latent_image","type":"LATENT","link":45}],"outputs":[{"name":"LATENT","type":"LATENT","links":[4031]}],"properties":{"Node name for S&R":"KSampler"},"widgets_values":[45678,"randomize",20,1.5,"euler","simple",1]},
+    {"id":404,"type":"VAEDecode","pos":[1850,950],"size":[140,46],"inputs":[{"name":"samples","type":"LATENT","link":4031},{"name":"vae","type":"VAE","link":42}],"outputs":[{"name":"IMAGE","type":"IMAGE","links":[4041]}],"properties":{"Node name for S&R":"VAEDecode"},"widgets_values":[]},
+    {"id":405,"type":"SaveImage","pos":[2050,950],"size":[270,270],"title":"保存 Ace 资产","inputs":[{"name":"images","type":"IMAGE","link":4041}],"outputs":[],"properties":{"Node name for S&R":"SaveImage"},"widgets_values":["Asset_Ace"]},
+
+    {"id":501,"type":"LoraLoader","pos":[800,1250],"size":[270,126],"title":"5. LoRA - Milo","inputs":[{"name":"model","type":"MODEL","link":54},{"name":"clip","type":"CLIP","link":53}],"outputs":[{"name":"MODEL","type":"MODEL","links":[5011]},{"name":"CLIP","type":"CLIP","links":[5012]}],"properties":{"Node name for S&R":"LoraLoader"},"widgets_values":["milo.safetensors",0.8,1]},
+    {"id":502,"type":"CLIPTextEncode","pos":[1100,1250],"size":[400,200],"title":"5. 动作 - Milo (黄色)","inputs":[{"name":"clip","type":"CLIP","link":5012}],"outputs":[{"name":"CONDITIONING","type":"CONDITIONING","links":[5021]}],"properties":{"Node name for S&R":"CLIPTextEncode"},"widgets_values":["cj_vector_style, milo character, a yellow bulb mascot wearing glasses, doing pushups, flat vector illustration, uniform thick black outlines, monoline style, 2D flat design, solid white background"]},
+    {"id":503,"type":"KSampler","pos":[1550,1250],"size":[270,262],"title":"5. 生成 Milo","inputs":[{"name":"model","type":"MODEL","link":5011},{"name":"positive","type":"CONDITIONING","link":5021},{"name":"negative","type":"CONDITIONING","link":57},{"name":"latent_image","type":"LATENT","link":55}],"outputs":[{"name":"LATENT","type":"LATENT","links":[5031]}],"properties":{"Node name for S&R":"KSampler"},"widgets_values":[56789,"randomize",20,1.5,"euler","simple",1]},
+    {"id":504,"type":"VAEDecode","pos":[1850,1250],"size":[140,46],"inputs":[{"name":"samples","type":"LATENT","link":5031},{"name":"vae","type":"VAE","link":52}],"outputs":[{"name":"IMAGE","type":"IMAGE","links":[5041]}],"properties":{"Node name for S&R":"VAEDecode"},"widgets_values":[]},
+    {"id":505,"type":"SaveImage","pos":[2050,1250],"size":[270,270],"title":"保存 Milo 资产","inputs":[{"name":"images","type":"IMAGE","link":5041}],"outputs":[],"properties":{"Node name for S&R":"SaveImage"},"widgets_values":["Asset_Milo"]}
+  ],
+  "links": [
+    [1, 1, 0, 4, 0, "MODEL"],
+    [3, 3, 0, 7, 0, "CLIP"],
+
+    [12, 2, 0, 104, 1, "VAE"],
+    [22, 2, 0, 204, 1, "VAE"],
+    [32, 2, 0, 304, 1, "VAE"],
+    [42, 2, 0, 404, 1, "VAE"],
+    [52, 2, 0, 504, 1, "VAE"],
+
+    [13, 3, 0, 101, 1, "CLIP"],
+    [23, 3, 0, 201, 1, "CLIP"],
+    [33, 3, 0, 301, 1, "CLIP"],
+    [43, 3, 0, 401, 1, "CLIP"],
+    [53, 3, 0, 501, 1, "CLIP"],
+
+    [14, 4, 0, 101, 0, "MODEL"],
+    [24, 4, 0, 201, 0, "MODEL"],
+    [34, 4, 0, 301, 0, "MODEL"],
+    [44, 4, 0, 401, 0, "MODEL"],
+    [54, 4, 0, 501, 0, "MODEL"],
+
+    [15, 5, 0, 103, 3, "LATENT"],
+    [25, 5, 0, 203, 3, "LATENT"],
+    [35, 5, 0, 303, 3, "LATENT"],
+    [45, 5, 0, 403, 3, "LATENT"],
+    [55, 5, 0, 503, 3, "LATENT"],
+
+    [17, 7, 0, 103, 2, "CONDITIONING"],
+    [27, 7, 0, 203, 2, "CONDITIONING"],
+    [37, 7, 0, 303, 2, "CONDITIONING"],
+    [47, 7, 0, 403, 2, "CONDITIONING"],
+    [57, 7, 0, 503, 2, "CONDITIONING"],
+
+    [1011, 101, 0, 103, 0, "MODEL"],
+    [1012, 101, 1, 102, 0, "CLIP"],
+    [1021, 102, 0, 103, 1, "CONDITIONING"],
+    [1031, 103, 0, 104, 0, "LATENT"],
+    [1041, 104, 0, 105, 0, "IMAGE"],
+
+    [2011, 201, 0, 203, 0, "MODEL"],
+    [2012, 201, 1, 202, 0, "CLIP"],
+    [2021, 202, 0, 203, 1, "CONDITIONING"],
+    [2031, 203, 0, 204, 0, "LATENT"],
+    [2041, 204, 0, 205, 0, "IMAGE"],
+
+    [3011, 301, 0, 303, 0, "MODEL"],
+    [3012, 301, 1, 302, 0, "CLIP"],
+    [3021, 302, 0, 303, 1, "CONDITIONING"],
+    [3031, 303, 0, 304, 0, "LATENT"],
+    [3041, 304, 0, 305, 0, "IMAGE"],
+
+    [4011, 401, 0, 403, 0, "MODEL"],
+    [4012, 401, 1, 402, 0, "CLIP"],
+    [4021, 402, 0, 403, 1, "CONDITIONING"],
+    [4031, 403, 0, 404, 0, "LATENT"],
+    [4041, 404, 0, 405, 0, "IMAGE"],
+
+    [5011, 501, 0, 503, 0, "MODEL"],
+    [5012, 501, 1, 502, 0, "CLIP"],
+    [5021, 502, 0, 503, 1, "CONDITIONING"],
+    [5031, 503, 0, 504, 0, "LATENT"],
+    [5041, 504, 0, 505, 0, "IMAGE"]
+  ],
+  "version": 0.4
+}
