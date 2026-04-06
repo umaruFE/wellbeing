@@ -234,17 +234,26 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
     setState(prev => ({ ...prev, isCompositing: true }));
 
     try {
+      console.log('开始Canvas合成...');
+      
       const canvas = document.createElement('canvas');
       canvas.width = state.aspectRatio.width;
       canvas.height = state.aspectRatio.height;
       const ctx = canvas.getContext('2d');
 
+      console.log('加载背景图:', state.generatedAssets.background);
       const backgroundImg = new Image();
       backgroundImg.crossOrigin = 'anonymous';
       
       await new Promise((resolve, reject) => {
-        backgroundImg.onload = resolve;
-        backgroundImg.onerror = reject;
+        backgroundImg.onload = () => {
+          console.log('背景图加载成功');
+          resolve();
+        };
+        backgroundImg.onerror = (e) => {
+          console.error('背景图加载失败:', e);
+          reject(new Error('背景图加载失败'));
+        };
         const fullUrl = state.generatedAssets.background.startsWith('http') 
           ? state.generatedAssets.background 
           : `${window.location.origin}${state.generatedAssets.background}`;
@@ -252,6 +261,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       });
 
       ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
+      console.log('背景图绘制完成');
 
       const editorCanvasWidth = 700;
       const editorCanvasHeight = 500;
@@ -267,14 +277,24 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         const roleUrl = state.generatedAssets.roles[roleName];
         const position = state.canvasState.roles[roleName];
         
-        if (!roleUrl || !position) continue;
+        if (!roleUrl || !position) {
+          console.warn(`跳过角色 ${roleName}: 缺少URL或位置信息`);
+          continue;
+        }
 
+        console.log(`加载角色图: ${roleName}`, roleUrl);
         const roleImg = new Image();
         roleImg.crossOrigin = 'anonymous';
         
         await new Promise((resolve, reject) => {
-          roleImg.onload = resolve;
-          roleImg.onerror = reject;
+          roleImg.onload = () => {
+            console.log(`角色 ${roleName} 加载成功`);
+            resolve();
+          };
+          roleImg.onerror = (e) => {
+            console.error(`角色 ${roleName} 加载失败:`, e);
+            reject(new Error(`角色 ${roleName} 加载失败`));
+          };
           const fullUrl = roleUrl.startsWith('http') 
             ? roleUrl 
             : `${window.location.origin}${roleUrl}`;
@@ -290,6 +310,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         const actualWidth = roleWidth / editorScale;
         const actualHeight = roleHeight / editorScale;
 
+        console.log(`绘制角色 ${roleName}:`, { actualX, actualY, actualWidth, actualHeight });
+
         ctx.save();
         ctx.translate(actualX + actualWidth / 2, actualY + actualHeight / 2);
         ctx.rotate((position.rotation || 0) * Math.PI / 180);
@@ -297,6 +319,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         ctx.restore();
       }
 
+      console.log('Canvas合成完成，准备上传...');
       const compositeDataUrl = canvas.toDataURL('image/png');
       
       const uploadFormData = new FormData();
@@ -305,13 +328,16 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       uploadFormData.append('file', file);
       uploadFormData.append('folder', 'ai-generated-composite');
 
+      console.log('上传合成图片...');
       const uploadResponse = await fetch('/api/upload', {
         method: 'POST',
         body: uploadFormData
       });
 
       if (!uploadResponse.ok) {
-        throw new Error('上传合成图片失败');
+        const errorData = await uploadResponse.json().catch(() => ({}));
+        console.error('上传失败:', errorData);
+        throw new Error(errorData.error || '上传合成图片失败');
       }
 
       const uploadData = await uploadResponse.json();

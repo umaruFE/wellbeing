@@ -143,14 +143,6 @@ export const CanvasEditor = ({
     setIsDragging(false);
   };
 
-  const handleWheel = (e) => {
-    if (!selectedRole) return;
-    
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    handleScaleChange(delta);
-  };
-
   const handleScaleChange = (delta) => {
     if (!selectedRole) return;
     
@@ -210,7 +202,6 @@ export const CanvasEditor = ({
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
-              onWheel={handleWheel}
             />
           </div>
 
@@ -242,10 +233,6 @@ export const CanvasEditor = ({
                     <ZoomIn className="w-4 h-4" />
                   </button>
                 </div>
-                
-                <span className="text-xs text-slate-400">
-                  💡 提示：选中角色后可用鼠标滚轮缩放
-                </span>
 
                 <div className="flex items-center gap-2">
                   <button
