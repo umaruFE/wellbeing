@@ -620,7 +620,7 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     },
     "7": {
       "inputs": {
-        "text": "blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background, scenery, environment, nature, grass, ground, sky, trees, bushes, outdoor, indoor background, furniture, objects, landscape, backdrop, surroundings, scene details",
+        "text": "blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background, scenery, environment, nature, grass, ground, sky, trees, bushes, outdoor, indoor background, furniture, objects, landscape, backdrop, surroundings, scene details, transparent, alpha channel, watermark, text, logo, signature, frame, border, outline glow, bloom effect, depth of field, bokeh, photographic, photorealistic, real photo, camera, lens, lighting setup",
         "clip": ["3", 0]
       },
       "class_type": "CLIPTextEncode",
@@ -629,7 +629,7 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     "101": {
       "inputs": {
         "lora_name": characterConfig.lora,
-        "strength_model": 0.8,
+        "strength_model": 1,
         "strength_clip": 1,
         "model": ["4", 0],
         "clip": ["3", 0]
@@ -639,7 +639,7 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     },
     "102": {
       "inputs": {
-        "text": `cj_vector_style, ${characterName} character, ${prompt}, flat vector illustration, isolated character on plain white background, no background, no scenery, no environment, no outdoor, no grass, no trees, no sky, no ground, no landscape, solo character, centered, uniform thick black outlines, monoline style, 2D flat design, pure white background, clean isolated figure`,
+        "text": `cj_vector_style, ${characterName} character, ${prompt}, flat vector illustration, solid white background, pure white (#FFFFFF) background, single color background, no transparency, no alpha channel, isolated character, character centered, character fills 60-80% of frame, consistent character proportions, standing or sitting姿态完整, uniform thick black outlines, monoline style, 2D flat design, clean vector art, no shading, no gradients, no shadows, solid color fills, crisp edges`,
         "clip": ["101", 1]
       },
       "class_type": "CLIPTextEncode",
@@ -648,8 +648,8 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     "103": {
       "inputs": {
         "seed": seed,
-        "steps": 20,
-        "cfg": 1.5,
+        "steps": 25,
+        "cfg": 1.8,
         "sampler_name": "euler",
         "scheduler": "simple",
         "denoise": 1,
