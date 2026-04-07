@@ -471,97 +471,66 @@ function createWorkflow(prompt: string, width: number, height: number, seed: num
 
 // 创建背景生成工作流（基于 背景生成.json）
 function createBackgroundWorkflow(prompt: string, width: number, height: number, seed: number): any {
-  return {
-    "1": {
-      "inputs": {
-        "unet_name": "z_image_turbo_bf16.safetensors",
-        "weight_dtype": "default"
-      },
-      "class_type": "UNETLoader",
-      "_meta": { "title": "UNet加载器" }
-    },
-    "2": {
-      "inputs": {
-        "vae_name": "ae.safetensors"
-      },
-      "class_type": "VAELoader",
-      "_meta": { "title": "加载VAE" }
-    },
-    "3": {
-      "inputs": {
-        "clip_name": "qwen_3_4b.safetensors",
-        "type": "lumina2",
-        "device": "default"
-      },
-      "class_type": "CLIPLoader",
-      "_meta": { "title": "加载CLIP" }
-    },
-    "4": {
-      "inputs": {
-        "shift": 3,
-        "model": ["1", 0]
-      },
-      "class_type": "ModelSamplingAuraFlow",
-      "_meta": { "title": "采样算法（AuraFlow）" }
-    },
-    "5": {
-      "inputs": {
-        "width": width,
-        "height": height,
-        "batch_size": 1
-      },
-      "class_type": "EmptySD3LatentImage",
-      "_meta": { "title": "空Latent图像（SD3）" }
-    },
-    "6": {
-      "inputs": {
-        "text": `扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字, ${prompt}`,
-        "clip": ["3", 0]
-      },
-      "class_type": "CLIPTextEncode",
-      "_meta": { "title": "正向提示词" }
-    },
-    "7": {
-      "inputs": {
-        "text": "people, humans, characters, animals, blurry, realistic, 3d, complex gradients, dark shadows.",
-        "clip": ["3", 0]
-      },
-      "class_type": "CLIPTextEncode",
-      "_meta": { "title": "背景负面提示词" }
-    },
-    "8": {
-      "inputs": {
-        "seed": seed,
-        "steps": 15,
-        "cfg": 1.5,
-        "sampler_name": "euler",
-        "scheduler": "simple",
-        "denoise": 1,
-        "model": ["4", 0],
-        "positive": ["6", 0],
-        "negative": ["7", 0],
-        "latent_image": ["5", 0]
-      },
-      "class_type": "KSampler",
-      "_meta": { "title": "生成场景" }
-    },
-    "9": {
-      "inputs": {
-        "samples": ["8", 0],
-        "vae": ["2", 0]
-      },
-      "class_type": "VAEDecode",
-      "_meta": { "title": "背景解码" }
-    },
-    "10": {
-      "inputs": {
-        "filename_prefix": "Universal_Scene",
-        "images": ["9", 0]
-      },
-      "class_type": "SaveImage",
-      "_meta": { "title": "保存纯净背景" }
+  const workflowPath = path.join(process.cwd(), 'src/app/api/ai/generate-images/背景生成.json');
+  const workflowJson = fs.readFileSync(workflowPath, 'utf-8');
+  const workflow = JSON.parse(workflowJson);
+  
+  const nodeMap: Record<number, any> = {};
+  workflow.nodes.forEach((node: any) => {
+    nodeMap[node.id] = node;
+  });
+  
+  const apiWorkflow: Record<string, any> = {};
+  
+  Object.keys(nodeMap).forEach((id: string) => {
+    const node = nodeMap[parseInt(id)];
+    const inputs: Record<string, any> = {};
+    
+    node.inputs.forEach((input: any) => {
+      if (input.link !== undefined) {
+        const link = workflow.links.find((l: any) => l[0] === input.link);
+        if (link) {
+          inputs[input.name] = [String(link[1]), link[2]];
+        }
+      }
+    });
+    
+    if (node.widgets_values) {
+      if (node.type === 'EmptySD3LatentImage') {
+        inputs.width = width;
+        inputs.height = height;
+        inputs.batch_size = 1;
+      } else if (node.type === 'KSampler') {
+        inputs.seed = seed;
+        inputs.steps = node.widgets_values[1];
+        inputs.cfg = node.widgets_values[2];
+        inputs.sampler_name = node.widgets_values[3];
+        inputs.scheduler = node.widgets_values[4];
+        inputs.denoise = node.widgets_values[5];
+      } else if (node.type === 'CLIPTextEncode') {
+        if (node.title && node.title.includes('正向')) {
+          inputs.text = `扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字, ${prompt}`;
+        } else {
+          inputs.text = node.widgets_values[0];
+        }
+      } else {
+        node.widgets_values.forEach((value: any, index: number) => {
+          const widgetName = ['unet_name', 'weight_dtype', 'vae_name', 'clip_name', 'type', 'device', 'shift', 'lora_name', 'strength_model', 'strength_clip', 'filename_prefix'][index];
+          if (widgetName) {
+            inputs[widgetName] = value;
+          }
+        });
+      }
     }
-  };
+    
+    apiWorkflow[id] = {
+      inputs,
+      class_type: node.type,
+      _meta: { title: node.title || node.type }
+    };
+  });
+  
+  return apiWorkflow;
 }
 
 // 创建IP角色生成工作流（基于 生成单个IP人物动作.json）
