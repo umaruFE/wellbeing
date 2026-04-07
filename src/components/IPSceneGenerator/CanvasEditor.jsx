@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Move, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import { Move, RotateCw, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
 import {
   getImageContentBounds,
   getEditorSceneLayout,
@@ -36,7 +36,9 @@ export const CanvasEditor = ({
   roles,
   rolePositions,
   onRolePositionChange,
-  aspectRatio
+  aspectRatio,
+  isLoadingBackground = false,
+  loadingRoles = {}
 }) => {
   const canvasRef = useRef(null);
   const [selectedRole, setSelectedRole] = useState(null);
@@ -52,7 +54,7 @@ export const CanvasEditor = ({
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !backgroundImgRef.current) return;
+    if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -60,18 +62,62 @@ export const CanvasEditor = ({
     const layout = getEditorSceneLayout(canvas.width, canvas.height, aspectRatio);
     const { offsetX, offsetY, sceneW, sceneH } = layout;
 
-    ctx.drawImage(
-      backgroundImgRef.current,
-      offsetX,
-      offsetY,
-      sceneW,
-      sceneH
-    );
+    if (isLoadingBackground) {
+      ctx.fillStyle = '#f3f4f6';
+      ctx.fillRect(offsetX, offsetY, sceneW, sceneH);
+      
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '16px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('背景图生成中...', offsetX + sceneW / 2, offsetY + sceneH / 2);
+    } else if (backgroundImgRef.current) {
+      ctx.drawImage(
+        backgroundImgRef.current,
+        offsetX,
+        offsetY,
+        sceneW,
+        sceneH
+      );
+    }
 
-    Object.entries(roles).forEach(([roleName, roleUrl]) => {
+    const allRoleNames = new Set([
+      ...Object.keys(roles),
+      ...Object.keys(loadingRoles).filter(key => loadingRoles[key])
+    ]);
+
+    allRoleNames.forEach(roleName => {
       const position = rolePositions[roleName];
+      if (!position) return;
+
+      if (loadingRoles[roleName]) {
+        const placeholderBounds = { x: 0, y: 0, w: 1024, h: 1024 };
+        const { dw, dh } = getNormalizedRoleDrawSize(
+          placeholderBounds,
+          sceneW,
+          sceneH,
+          position.scale || 1
+        );
+
+        ctx.fillStyle = 'rgba(147, 51, 234, 0.1)';
+        ctx.fillRect(position.x, position.y, dw, dh);
+        ctx.strokeStyle = '#9333ea';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]);
+        ctx.strokeRect(position.x, position.y, dw, dh);
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = '#9333ea';
+        ctx.font = '14px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${roleName} 生成中...`, position.x + dw / 2, position.y + dh / 2);
+        return;
+      }
+
+      const roleUrl = roles[roleName];
       const roleImg = roleImgsRef.current[roleName];
-      if (!position || !roleImg || !roleUrl) return;
+      if (!roleImg || !roleUrl) return;
 
       const metrics = getRoleDrawMetrics(
         canvas,
@@ -109,7 +155,7 @@ export const CanvasEditor = ({
         ctx.setLineDash([]);
       }
     });
-  }, [roles, rolePositions, selectedRole, aspectRatio]);
+  }, [roles, rolePositions, selectedRole, aspectRatio, isLoadingBackground, loadingRoles]);
 
   drawCanvasRef.current = drawCanvas;
 
@@ -264,7 +310,7 @@ export const CanvasEditor = ({
 
   return (
     <div className="h-full flex flex-col overflow-y-auto">
-      {background ? (
+      {background || isLoadingBackground || Object.keys(loadingRoles).some(key => loadingRoles[key]) ? (
         <>
           <div className="p-3 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-center gap-2">

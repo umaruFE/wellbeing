@@ -40,7 +40,9 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
     },
     isCompositing: false,
     compositeResult: null,
-    compositeMethod: 'canvas' // 'canvas' 或 'ai'
+    compositeMethod: 'canvas',
+    isLoadingBackground: false,
+    loadingRoles: {}
   });
 
   const handleRoleSelect = (roles) => {
@@ -66,7 +68,53 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       return;
     }
 
-    setState(prev => ({ ...prev, isGenerating: true }));
+    const EDITOR_W = 700;
+    const EDITOR_H = 500;
+    const layout = getEditorSceneLayout(EDITOR_W, EDITOR_H, state.aspectRatio);
+    const placeholderBounds = { x: 0, y: 0, w: 1024, h: 1024 };
+    const { dw: estW, dh: estH } = getNormalizedRoleDrawSize(
+      placeholderBounds,
+      layout.sceneW,
+      layout.sceneH,
+      1
+    );
+
+    const calculateRolePosition = (index, total) => {
+      let x, y;
+      if (total <= 3) {
+        const stepX = layout.sceneW / (total + 1);
+        const stepY = layout.sceneH / (total + 1);
+        x = layout.offsetX + stepX * (index + 1) - estW / 2;
+        y = layout.offsetY + stepY * (index + 1) - estH / 2;
+      } else {
+        const cols = Math.ceil(Math.sqrt(total));
+        const rows = Math.ceil(total / cols);
+        const col = index % cols;
+        const row = Math.floor(index / cols);
+        x = layout.offsetX + (layout.sceneW / cols) * (col + 0.5) - estW / 2;
+        y = layout.offsetY + (layout.sceneH / rows) * (row + 0.5) - estH / 2;
+      }
+      return { x, y, scale: 1, rotation: 0 };
+    };
+
+    const initialRolePositions = state.selectedRoles.reduce((acc, roleName, index) => {
+      acc[roleName] = calculateRolePosition(index, state.selectedRoles.length);
+      return acc;
+    }, {});
+
+    setState(prev => ({ 
+      ...prev, 
+      isGenerating: true,
+      isLoadingBackground: true,
+      loadingRoles: state.selectedRoles.reduce((acc, name) => ({ ...acc, [name]: true }), {}),
+      generatedAssets: {
+        background: null,
+        roles: {}
+      },
+      canvasState: {
+        roles: initialRolePositions
+      }
+    }));
 
     try {
       console.log('开始提取关键词...');
@@ -89,8 +137,6 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const { background: backgroundPrompt, roles: rolePrompts } = extractData.data;
 
-      const seed = Date.now();
-      
       console.log('生成背景图，提示词:', backgroundPrompt);
       const backgroundResponse = await fetch('/api/ai/generate-images', {
         method: 'POST',
@@ -163,14 +209,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         throw new Error('任务超时');
       };
 
-      const backgroundUrl = await pollTask(backgroundTaskId);
-      
-      const roleUrls = {};
-      for (const roleTask of roleTasks) {
-        console.log(`获取角色 ${roleTask.name} 的原始图片...`);
-        const roleUrl = await pollTask(roleTask.taskId);
-        
-        console.log(`对角色 ${roleTask.name} 进行白色背景去除处理...`);
+      const removeWhiteBackground = async (roleName, roleUrl) => {
+        console.log(`对角色 ${roleName} 进行白色背景去除处理...`);
         try {
           const removeBgResponse = await fetch('/api/ai/remove-white-background', {
             method: 'POST',
@@ -183,75 +223,68 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           
           if (removeBgResponse.ok) {
             const removeBgData = await removeBgResponse.json();
-            roleUrls[roleTask.name] = removeBgData.url;
-            console.log(`角色 ${roleTask.name} 白色背景去除完成:`, removeBgData.url);
+            console.log(`角色 ${roleName} 白色背景去除完成:`, removeBgData.url);
+            return removeBgData.url;
           } else {
-            console.warn(`角色 ${roleTask.name} 去背景失败，使用原图`);
-            roleUrls[roleTask.name] = roleUrl;
+            console.warn(`角色 ${roleName} 去背景失败，使用原图`);
+            return roleUrl;
           }
         } catch (error) {
-          console.warn(`角色 ${roleTask.name} 去背景出错，使用原图:`, error);
-          roleUrls[roleTask.name] = roleUrl;
+          console.warn(`角色 ${roleName} 去背景出错，使用原图:`, error);
+          return roleUrl;
         }
-      }
+      };
 
-      const EDITOR_W = 700;
-      const EDITOR_H = 500;
-      const layout = getEditorSceneLayout(EDITOR_W, EDITOR_H, state.aspectRatio);
-      const placeholderBounds = { x: 0, y: 0, w: 1024, h: 1024 };
-      const { dw: estW, dh: estH } = getNormalizedRoleDrawSize(
-        placeholderBounds,
-        layout.sceneW,
-        layout.sceneH,
-        1
-      );
+      const backgroundPromise = pollTask(backgroundTaskId).then(url => {
+        console.log('背景图生成完成:', url);
+        setState(prev => ({
+          ...prev,
+          isLoadingBackground: false,
+          generatedAssets: {
+            ...prev.generatedAssets,
+            background: url
+          }
+        }));
+        return url;
+      });
 
-      setState((prev) => ({
-        ...prev,
-        isGenerating: false,
-        generatedAssets: {
-          background: backgroundUrl,
-          roles: roleUrls
-        },
-        canvasState: {
-          roles: state.selectedRoles.reduce((acc, roleName, index) => {
-            const n = state.selectedRoles.length;
-            let x;
-            let y;
-            if (n <= 3) {
-              const stepX = layout.sceneW / (n + 1);
-              const stepY = layout.sceneH / (n + 1);
-              x = layout.offsetX + stepX * (index + 1) - estW / 2;
-              y = layout.offsetY + stepY * (index + 1) - estH / 2;
-            } else {
-              const cols = Math.ceil(Math.sqrt(n));
-              const rows = Math.ceil(n / cols);
-              const col = index % cols;
-              const row = Math.floor(index / cols);
-              x =
-                layout.offsetX +
-                (layout.sceneW / cols) * (col + 0.5) -
-                estW / 2;
-              y =
-                layout.offsetY +
-                (layout.sceneH / rows) * (row + 0.5) -
-                estH / 2;
-            }
-            acc[roleName] = {
-              x,
-              y,
-              scale: 1,
-              rotation: 0
-            };
-            return acc;
-          }, {})
-        }
-      }));
+      const rolePromises = roleTasks.map((roleTask, index) => {
+        return pollTask(roleTask.taskId)
+          .then(url => removeWhiteBackground(roleTask.name, url))
+          .then(url => {
+            console.log(`角色 ${roleTask.name} 生成完成:`, url);
+            setState(prev => ({
+              ...prev,
+              loadingRoles: {
+                ...prev.loadingRoles,
+                [roleTask.name]: false
+              },
+              generatedAssets: {
+                ...prev.generatedAssets,
+                roles: {
+                  ...prev.generatedAssets.roles,
+                  [roleTask.name]: url
+                }
+              }
+            }));
+            return { name: roleTask.name, url };
+          });
+      });
+
+      await Promise.all([backgroundPromise, ...rolePromises]);
+
+      console.log('所有图片生成完成');
+      setState(prev => ({ ...prev, isGenerating: false }));
 
     } catch (error) {
       console.error('生成失败:', error);
       alert(`生成失败: ${error.message}`);
-      setState(prev => ({ ...prev, isGenerating: false }));
+      setState(prev => ({ 
+        ...prev, 
+        isGenerating: false,
+        isLoadingBackground: false,
+        loadingRoles: {}
+      }));
     }
   };
 
@@ -523,7 +556,9 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         roles: {}
       },
       isCompositing: false,
-      compositeResult: null
+      compositeResult: null,
+      isLoadingBackground: false,
+      loadingRoles: {}
     });
   };
 
@@ -639,6 +674,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                 rolePositions={state.canvasState.roles}
                 onRolePositionChange={handleRolePositionChange}
                 aspectRatio={state.aspectRatio}
+                isLoadingBackground={state.isLoadingBackground}
+                loadingRoles={state.loadingRoles}
               />
             </div>
 
