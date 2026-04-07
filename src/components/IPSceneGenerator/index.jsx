@@ -35,6 +35,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       background: null,
       roles: {}
     },
+    prompts: {
+      background: '',
+      roles: {}
+    },
     canvasState: {
       roles: {}
     },
@@ -255,6 +259,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           generatedAssets: {
             ...prev.generatedAssets,
             background: url
+          },
+          prompts: {
+            ...prev.prompts,
+            background: backgroundPrompt
           }
         }));
         return url;
@@ -265,6 +273,17 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           .then(url => removeWhiteBackground(roleTask.name, url))
           .then(url => {
             console.log(`角色 ${roleTask.name} 生成完成:`, url);
+            const rolePrompt = rolePrompts[roleTask.name] || state.prompt;
+            const characterColors = {
+              poppy: '粉色',
+              edi: '蓝色',
+              rolly: '橘色',
+              milo: '黄色',
+              ace: '紫色'
+            };
+            const characterColor = characterColors[roleTask.name] || '';
+            const finalRolePrompt = `${characterColor}的${roleTask.name}角色，${rolePrompt}`;
+            
             setState(prev => ({
               ...prev,
               loadingRoles: {
@@ -276,6 +295,13 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                 roles: {
                   ...prev.generatedAssets.roles,
                   [roleTask.name]: url
+                }
+              },
+              prompts: {
+                ...prev.prompts,
+                roles: {
+                  ...prev.prompts.roles,
+                  [roleTask.name]: finalRolePrompt
                 }
               }
             }));
@@ -553,6 +579,156 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
     });
   };
 
+  const handleRegenerateBackground = async () => {
+    if (!state.prompts.background) return;
+    
+    setState(prev => ({ ...prev, isLoadingBackground: true }));
+    
+    try {
+      const response = await fetch('/api/ai/generate-images', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          prompt: state.prompts.background,
+          count: 1,
+          width: state.aspectRatio.width,
+          height: state.aspectRatio.height,
+          workflow_type: 'background',
+          user_id: userId,
+          organization_id: organizationId
+        })
+      });
+
+      if (!response.ok) throw new Error('生成背景图失败');
+
+      const data = await response.json();
+      const taskId = data.tasks[0].promptId;
+
+      const pollTask = async (taskId, maxAttempts = 120, interval = 3000) => {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const response = await fetch(`/api/ai/task-status/${taskId}`, {
+            headers: getAuthHeaders()
+          });
+          const data = await response.json();
+          
+          if (data.status === 'completed') {
+            return data.url;
+          } else if (data.status === 'error') {
+            throw new Error('任务执行失败');
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, interval));
+        }
+        throw new Error('任务超时');
+      };
+
+      const url = await pollTask(taskId);
+      
+      setState(prev => ({
+        ...prev,
+        isLoadingBackground: false,
+        generatedAssets: {
+          ...prev.generatedAssets,
+          background: url
+        }
+      }));
+    } catch (error) {
+      console.error('重新生成背景失败:', error);
+      alert(`重新生成背景失败: ${error.message}`);
+      setState(prev => ({ ...prev, isLoadingBackground: false }));
+    }
+  };
+
+  const handleRegenerateRole = async (roleName) => {
+    const rolePrompt = state.prompts.roles[roleName];
+    if (!rolePrompt) return;
+    
+    setState(prev => ({
+      ...prev,
+      loadingRoles: { ...prev.loadingRoles, [roleName]: true }
+    }));
+    
+    try {
+      const response = await fetch('/api/ai/generate-images', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          prompt: rolePrompt,
+          count: 1,
+          width: 1024,
+          height: 1024,
+          workflow_type: 'ip-character',
+          character_name: roleName,
+          user_id: userId,
+          organization_id: organizationId
+        })
+      });
+
+      if (!response.ok) throw new Error(`生成角色 ${roleName} 失败`);
+
+      const data = await response.json();
+      const taskId = data.tasks[0].promptId;
+
+      const pollTask = async (taskId, maxAttempts = 120, interval = 3000) => {
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+          const response = await fetch(`/api/ai/task-status/${taskId}`, {
+            headers: getAuthHeaders()
+          });
+          const data = await response.json();
+          
+          if (data.status === 'completed') {
+            return data.url;
+          } else if (data.status === 'error') {
+            throw new Error('任务执行失败');
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, interval));
+        }
+        throw new Error('任务超时');
+      };
+
+      let url = await pollTask(taskId);
+      
+      // 去除白色背景
+      try {
+        const removeBgResponse = await fetch('/api/ai/remove-white-background', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ 
+            imageUrl: url,
+            threshold: 240
+          })
+        });
+        
+        if (removeBgResponse.ok) {
+          const removeBgData = await removeBgResponse.json();
+          url = removeBgData.url;
+        }
+      } catch (error) {
+        console.warn('去背景失败，使用原图:', error);
+      }
+      
+      setState(prev => ({
+        ...prev,
+        loadingRoles: { ...prev.loadingRoles, [roleName]: false },
+        generatedAssets: {
+          ...prev.generatedAssets,
+          roles: {
+            ...prev.generatedAssets.roles,
+            [roleName]: url
+          }
+        }
+      }));
+    } catch (error) {
+      console.error(`重新生成角色 ${roleName} 失败:`, error);
+      alert(`重新生成角色 ${roleName} 失败: ${error.message}`);
+      setState(prev => ({
+        ...prev,
+        loadingRoles: { ...prev.loadingRoles, [roleName]: false }
+      }));
+    }
+  };
+
   const handleDownload = () => {
     if (state.compositeResult) {
       const link = document.createElement('a');
@@ -658,16 +834,74 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           </div>
 
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 min-h-0 overflow-hidden">
-              <CanvasEditor
-                background={state.generatedAssets.background}
-                roles={state.generatedAssets.roles}
-                rolePositions={state.canvasState.roles}
-                onRolePositionChange={handleRolePositionChange}
-                aspectRatio={state.aspectRatio}
-                isLoadingBackground={state.isLoadingBackground}
-                loadingRoles={state.loadingRoles}
-              />
+            <div className="flex-1 min-h-0 overflow-hidden flex gap-4">
+              <div className="flex-1 min-w-0">
+                <CanvasEditor
+                  background={state.generatedAssets.background}
+                  roles={state.generatedAssets.roles}
+                  rolePositions={state.canvasState.roles}
+                  onRolePositionChange={handleRolePositionChange}
+                  aspectRatio={state.aspectRatio}
+                  isLoadingBackground={state.isLoadingBackground}
+                  loadingRoles={state.loadingRoles}
+                />
+              </div>
+              
+              {state.generatedAssets.background && (
+                <div className="w-80 flex-shrink-0 bg-gray-50 rounded-lg p-4 overflow-y-auto">
+                  <h4 className="text-sm font-medium text-slate-700 mb-3">提示词管理</h4>
+                  
+                  <div className="space-y-3">
+                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-slate-600">背景图</span>
+                        <button
+                          onClick={handleRegenerateBackground}
+                          disabled={state.isLoadingBackground}
+                          className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                        >
+                          {state.isLoadingBackground ? (
+                            <>
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                              生成中
+                            </>
+                          ) : (
+                            '重新生成'
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        {state.prompts.background || '暂无提示词'}
+                      </p>
+                    </div>
+                    
+                    {state.selectedRoles.map(roleName => (
+                      <div key={roleName} className="bg-white rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-slate-600">{roleName}</span>
+                          <button
+                            onClick={() => handleRegenerateRole(roleName)}
+                            disabled={state.loadingRoles[roleName]}
+                            className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                          >
+                            {state.loadingRoles[roleName] ? (
+                              <>
+                                <Loader2 className="w-3 h-3 animate-spin" />
+                                生成中
+                              </>
+                            ) : (
+                              '重新生成'
+                            )}
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 leading-relaxed">
+                          {state.prompts.roles[roleName] || '暂无提示词'}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex-shrink-0 p-4 border-t-2 border-[#e5e3db] bg-white">
