@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Wand2, Download, RotateCcw, Loader2 } from 'lucide-react';
+import { Wand2, Download, RotateCcw, Loader2, Edit2, X, Check } from 'lucide-react';
 import RoleSelection from './RoleSelection';
 import CanvasEditor from './CanvasEditor';
 import {
@@ -37,6 +37,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
     },
     prompts: {
       background: '',
+      roles: {}
+    },
+    editingPrompts: {
+      background: false,
       roles: {}
     },
     canvasState: {
@@ -855,36 +859,63 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                     <div className="bg-white rounded-lg p-3 border border-gray-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-slate-600">背景图</span>
-                        <button
-                          onClick={handleRegenerateBackground}
-                          disabled={state.isLoadingBackground}
-                          className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                        >
-                          {state.isLoadingBackground ? (
+                        <div className="flex gap-1">
+                          {state.editingPrompts.background ? (
                             <>
-                              <Loader2 className="w-3 h-3 animate-spin" />
-                              生成中
+                              <button
+                                onClick={() => {
+                                  setState(prev => ({
+                                    ...prev,
+                                    editingPrompts: {
+                                      ...prev.editingPrompts,
+                                      background: false
+                                    }
+                                  }));
+                                }}
+                                className="text-xs p-1 text-green-600 hover:bg-green-50 rounded"
+                                title="确认"
+                              >
+                                <Check className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setState(prev => ({
+                                    ...prev,
+                                    editingPrompts: {
+                                      ...prev.editingPrompts,
+                                      background: false
+                                    }
+                                  }));
+                                }}
+                                className="text-xs p-1 text-red-600 hover:bg-red-50 rounded"
+                                title="取消"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
                             </>
                           ) : (
-                            '重新生成'
+                            <button
+                              onClick={() => {
+                                setState(prev => ({
+                                  ...prev,
+                                  editingPrompts: {
+                                    ...prev.editingPrompts,
+                                    background: true
+                                  }
+                                }));
+                              }}
+                              className="text-xs p-1 text-slate-600 hover:bg-slate-100 rounded"
+                              title="编辑"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
                           )}
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-500 leading-relaxed">
-                        {state.prompts.background || '暂无提示词'}
-                      </p>
-                    </div>
-                    
-                    {state.selectedRoles.map(roleName => (
-                      <div key={roleName} className="bg-white rounded-lg p-3 border border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-slate-600">{roleName}</span>
                           <button
-                            onClick={() => handleRegenerateRole(roleName)}
-                            disabled={state.loadingRoles[roleName]}
+                            onClick={handleRegenerateBackground}
+                            disabled={state.isLoadingBackground}
                             className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                           >
-                            {state.loadingRoles[roleName] ? (
+                            {state.isLoadingBackground ? (
                               <>
                                 <Loader2 className="w-3 h-3 animate-spin" />
                                 生成中
@@ -894,9 +925,136 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                             )}
                           </button>
                         </div>
+                      </div>
+                      {state.editingPrompts.background ? (
+                        <textarea
+                          value={state.prompts.background || ''}
+                          onChange={(e) => {
+                            setState(prev => ({
+                              ...prev,
+                              prompts: {
+                                ...prev.prompts,
+                                background: e.target.value
+                              }
+                            }));
+                          }}
+                          className="w-full text-xs text-slate-500 leading-relaxed border border-gray-200 rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          rows={4}
+                          placeholder="背景提示词"
+                          autoFocus
+                        />
+                      ) : (
                         <p className="text-xs text-slate-500 leading-relaxed">
-                          {state.prompts.roles[roleName] || '暂无提示词'}
+                          {state.prompts.background || '暂无提示词'}
                         </p>
+                      )}
+                    </div>
+                    
+                    {state.selectedRoles.map(roleName => (
+                      <div key={roleName} className="bg-white rounded-lg p-3 border border-gray-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs font-medium text-slate-600">{roleName}</span>
+                          <div className="flex gap-1">
+                            {state.editingPrompts.roles[roleName] ? (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setState(prev => ({
+                                      ...prev,
+                                      editingPrompts: {
+                                        ...prev.editingPrompts,
+                                        roles: {
+                                          ...prev.editingPrompts.roles,
+                                          [roleName]: false
+                                        }
+                                      }
+                                    }));
+                                  }}
+                                  className="text-xs p-1 text-green-600 hover:bg-green-50 rounded"
+                                  title="确认"
+                                >
+                                  <Check className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setState(prev => ({
+                                      ...prev,
+                                      editingPrompts: {
+                                        ...prev.editingPrompts,
+                                        roles: {
+                                          ...prev.editingPrompts.roles,
+                                          [roleName]: false
+                                        }
+                                      }
+                                    }));
+                                  }}
+                                  className="text-xs p-1 text-red-600 hover:bg-red-50 rounded"
+                                  title="取消"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setState(prev => ({
+                                    ...prev,
+                                    editingPrompts: {
+                                      ...prev.editingPrompts,
+                                      roles: {
+                                        ...prev.editingPrompts.roles,
+                                        [roleName]: true
+                                      }
+                                    }
+                                  }));
+                                }}
+                                className="text-xs p-1 text-slate-600 hover:bg-slate-100 rounded"
+                                title="编辑"
+                              >
+                                <Edit2 className="w-3 h-3" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleRegenerateRole(roleName)}
+                              disabled={state.loadingRoles[roleName]}
+                              className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            >
+                              {state.loadingRoles[roleName] ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 animate-spin" />
+                                  生成中
+                                </>
+                              ) : (
+                                '重新生成'
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                        {state.editingPrompts.roles[roleName] ? (
+                          <textarea
+                            value={state.prompts.roles[roleName] || ''}
+                            onChange={(e) => {
+                              setState(prev => ({
+                                ...prev,
+                                prompts: {
+                                  ...prev.prompts,
+                                  roles: {
+                                    ...prev.prompts.roles,
+                                    [roleName]: e.target.value
+                                  }
+                                }
+                              }));
+                            }}
+                            className="w-full text-xs text-slate-500 leading-relaxed border border-gray-200 rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            rows={4}
+                            placeholder={`${roleName}提示词`}
+                            autoFocus
+                          />
+                        ) : (
+                          <p className="text-xs text-slate-500 leading-relaxed">
+                            {state.prompts.roles[roleName] || '暂无提示词'}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
