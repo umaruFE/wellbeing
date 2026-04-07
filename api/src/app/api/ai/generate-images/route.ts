@@ -620,7 +620,7 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     },
     "7": {
       "inputs": {
-        "text": "blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background details",
+        "text": "blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background, scenery, environment, nature, grass, ground, sky, trees, bushes, outdoor, indoor background, furniture, objects, landscape, backdrop, surroundings, scene details",
         "clip": ["3", 0]
       },
       "class_type": "CLIPTextEncode",
@@ -639,7 +639,7 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     },
     "102": {
       "inputs": {
-        "text": `cj_vector_style, ${characterName} character, ${prompt}, flat vector illustration, uniform thick black outlines, monoline style, 2D flat design, solid pure white background, no background elements, no scenery, no environment, character only`,
+        "text": `cj_vector_style, ${characterName} character, ${prompt}, flat vector illustration, isolated character on plain white background, no background, no scenery, no environment, no outdoor, no grass, no trees, no sky, no ground, no landscape, solo character, centered, uniform thick black outlines, monoline style, 2D flat design, pure white background, clean isolated figure`,
         "clip": ["101", 1]
       },
       "class_type": "CLIPTextEncode",
