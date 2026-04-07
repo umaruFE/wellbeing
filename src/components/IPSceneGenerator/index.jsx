@@ -422,34 +422,13 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         ctx.restore();
       }
 
-      console.log('Canvas合成完成，准备上传...');
+      console.log('Canvas合成完成');
       const compositeDataUrl = canvas.toDataURL('image/png');
-      
-      const uploadFormData = new FormData();
-      const blob = await fetch(compositeDataUrl).then(r => r.blob());
-      const file = new File([blob], `composite-${Date.now()}.png`, { type: 'image/png' });
-      uploadFormData.append('file', file);
-      uploadFormData.append('folder', 'ai-generated-composite');
-
-      console.log('上传合成图片...');
-      const uploadResponse = await fetch('/api/upload', {
-        method: 'POST',
-        body: uploadFormData
-      });
-
-      if (!uploadResponse.ok) {
-        const errorData = await uploadResponse.json().catch(() => ({}));
-        console.error('上传失败:', errorData);
-        throw new Error(errorData.error || '上传合成图片失败');
-      }
-
-      const uploadData = await uploadResponse.json();
-      console.log('Canvas合成图片上传成功:', uploadData.url);
 
       setState(prev => ({
         ...prev,
         isCompositing: false,
-        compositeResult: uploadData.url
+        compositeResult: compositeDataUrl
       }));
 
     } catch (error) {
