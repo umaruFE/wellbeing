@@ -486,6 +486,7 @@ function createBackgroundWorkflow(prompt: string, width: number, height: number,
     const node = nodeMap[parseInt(id)];
     const inputs: Record<string, any> = {};
     
+    // 处理连接
     node.inputs.forEach((input: any) => {
       if (input.link !== undefined) {
         const link = workflow.links.find((l: any) => l[0] === input.link);
@@ -495,31 +496,65 @@ function createBackgroundWorkflow(prompt: string, width: number, height: number,
       }
     });
     
-    if (node.widgets_values) {
-      if (node.type === 'EmptySD3LatentImage') {
-        inputs.width = width;
-        inputs.height = height;
-        inputs.batch_size = 1;
-      } else if (node.type === 'KSampler') {
-        inputs.seed = seed;
-        inputs.steps = node.widgets_values[1];
-        inputs.cfg = node.widgets_values[2];
-        inputs.sampler_name = node.widgets_values[3];
-        inputs.scheduler = node.widgets_values[4];
-        inputs.denoise = node.widgets_values[5];
-      } else if (node.type === 'CLIPTextEncode') {
-        if (node.title && node.title.includes('正向')) {
-          inputs.text = `扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字, ${prompt}`;
-        } else {
-          inputs.text = node.widgets_values[0];
-        }
-      } else {
-        node.widgets_values.forEach((value: any, index: number) => {
-          const widgetName = ['unet_name', 'weight_dtype', 'vae_name', 'clip_name', 'type', 'device', 'shift', 'lora_name', 'strength_model', 'strength_clip', 'filename_prefix'][index];
-          if (widgetName) {
-            inputs[widgetName] = value;
+    // 处理widgets_values
+    if (node.widgets_values && node.widgets_values.length > 0) {
+      switch (node.type) {
+        case 'UNETLoader':
+          inputs.unet_name = node.widgets_values[0];
+          inputs.weight_dtype = node.widgets_values[1];
+          break;
+          
+        case 'VAELoader':
+          inputs.vae_name = node.widgets_values[0];
+          break;
+          
+        case 'CLIPLoader':
+          inputs.clip_name = node.widgets_values[0];
+          inputs.type = node.widgets_values[1];
+          inputs.device = node.widgets_values[2];
+          break;
+          
+        case 'ModelSamplingAuraFlow':
+          inputs.shift = node.widgets_values[0];
+          break;
+          
+        case 'EmptySD3LatentImage':
+          inputs.width = width;
+          inputs.height = height;
+          inputs.batch_size = 1;
+          break;
+          
+        case 'LoraLoader':
+          inputs.lora_name = node.widgets_values[0];
+          inputs.strength_model = node.widgets_values[1];
+          inputs.strength_clip = node.widgets_values[2];
+          break;
+          
+        case 'CLIPTextEncode':
+          if (node.title && node.title.includes('正向')) {
+            inputs.text = `扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字, ${prompt}`;
+          } else {
+            inputs.text = node.widgets_values[0];
           }
-        });
+          break;
+          
+        case 'KSampler':
+          inputs.seed = seed;
+          inputs.steps = node.widgets_values[2];
+          inputs.cfg = node.widgets_values[3];
+          inputs.sampler_name = node.widgets_values[4];
+          inputs.scheduler = node.widgets_values[5];
+          inputs.denoise = node.widgets_values[6];
+          break;
+          
+        case 'SaveImage':
+          inputs.filename_prefix = node.widgets_values[0];
+          break;
+          
+        default:
+          node.widgets_values.forEach((value: any, index: number) => {
+            inputs[`widget_${index}`] = value;
+          });
       }
     }
     
