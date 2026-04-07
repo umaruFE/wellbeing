@@ -88,7 +88,7 @@ export function getEditorSceneLayout(canvasWidth, canvasHeight, aspectRatio) {
 }
 
 /** 角色内容高度占场景短边的比例（统一视觉大小） */
-export const ROLE_CONTENT_HEIGHT_FRACTION = 0.2;
+export const ROLE_CONTENT_HEIGHT_FRACTION = 0.3;
 
 /**
  * 根据内容包围盒计算绘制尺寸（编辑器坐标系下 dw, dh）
