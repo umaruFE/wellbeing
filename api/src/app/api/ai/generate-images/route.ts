@@ -576,6 +576,12 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
 
   const characterConfig = loraMap[characterName.toLowerCase()] || loraMap['poppy'];
 
+  // 增强的负面提示词，确保不生成背景和透明区域
+  const enhancedNegativePrompt = `blurry, low resolution, bad anatomy, deformed,畸形, 杂乱背景, complex background, detailed background, scenery, environment, nature, grass, ground, sky, clouds, sun, moon, stars, trees, flowers, bushes, mountains, water, landscape, outdoor, indoor background, furniture, objects, backdrop, surroundings, scene details, transparent, alpha channel, watermark, text, logo, signature, frame, border, outline glow, bloom effect, depth of field, bokeh, photographic, photorealistic, real photo, camera, lens, lighting setup, partial character, cropped, cut off, disconnected limbs, hollow areas, cutout, stencil, silhouette`;
+
+  // 增强的正向提示词，强制角色占据画面主体
+  const enhancedPositivePrompt = `cj_vector_style, ${characterName} character, ${prompt}, flat vector illustration, pure white background (#FFFFFF), completely isolated character on white background, full character body visible, character centered in frame, character fills 80-90% of image height, complete solid figure, NO background whatsoever, NO environment, NO scenery, NO transparency, NO alpha channel, NO hollow areas, NO cutouts, solid opaque filled character, no outlines going outside the character, uniform thick black outlines, clean edges, 2D flat design, no shading, no gradients, no shadows, solid color fills only, crisp sharp edges, cartoon vector style`;
+
   return {
     "1": {
       "inputs": {
@@ -620,7 +626,7 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     },
     "7": {
       "inputs": {
-        "text": "blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background, scenery, environment, nature, grass, ground, sky, trees, bushes, outdoor, indoor background, furniture, objects, landscape, backdrop, surroundings, scene details, transparent, alpha channel, watermark, text, logo, signature, frame, border, outline glow, bloom effect, depth of field, bokeh, photographic, photorealistic, real photo, camera, lens, lighting setup",
+        "text": enhancedNegativePrompt,
         "clip": ["3", 0]
       },
       "class_type": "CLIPTextEncode",
@@ -639,7 +645,7 @@ function createIPCharacterWorkflow(prompt: string, characterName: string, seed: 
     },
     "102": {
       "inputs": {
-        "text": `cj_vector_style, ${characterName} character, ${prompt}, flat vector illustration, solid white background, pure white (#FFFFFF) background, single color background, no transparency, no alpha channel, isolated character, character centered, character fills 60-80% of frame, consistent character proportions, standing or sitting姿态完整, uniform thick black outlines, monoline style, 2D flat design, clean vector art, no shading, no gradients, no shadows, solid color fills, crisp edges`,
+        "text": enhancedPositivePrompt,
         "clip": ["101", 1]
       },
       "class_type": "CLIPTextEncode",

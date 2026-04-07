@@ -4,7 +4,8 @@
  */
 export function getImageContentBounds(imageElement, options = {}) {
   const minAlpha = options.minAlpha ?? 12;
-  const whiteThreshold = options.whiteThreshold ?? 245;
+  // 降低白色阈值，使白色背景更容易被识别排除
+  const whiteThreshold = options.whiteThreshold ?? 235;
   const w = imageElement.naturalWidth || imageElement.width;
   const h = imageElement.naturalHeight || imageElement.height;
   if (!w || !h) return { x: 0, y: 0, w: 1, h: 1 };
@@ -28,6 +29,8 @@ export function getImageContentBounds(imageElement, options = {}) {
   let maxX = 0;
   let maxY = 0;
 
+  // 统计颜色分布，找出主体颜色范围（用于识别背景）
+  const colorCounts = {};
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const i = (y * w + x) * 4;
@@ -47,7 +50,16 @@ export function getImageContentBounds(imageElement, options = {}) {
   }
 
   if (minX > maxX) {
-    return { x: 0, y: 0, w, h };
+    // 如果没找到非白色内容，使用中心区域
+    const centerX = Math.floor(w / 2);
+    const centerY = Math.floor(h / 2);
+    const regionSize = Math.min(w, h) * 0.6;
+    return {
+      x: Math.floor(centerX - regionSize / 2),
+      y: Math.floor(centerY - regionSize / 2),
+      w: Math.ceil(regionSize),
+      h: Math.ceil(regionSize)
+    };
   }
 
   return {
