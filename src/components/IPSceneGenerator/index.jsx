@@ -161,13 +161,25 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const roleTaskPromises = state.selectedRoles.map(async (roleName) => {
         const rolePrompt = rolePrompts[roleName] || state.prompt;
-        console.log(`生成角色 ${roleName}，提示词:`, rolePrompt);
+        
+        const characterColors = {
+          poppy: '粉色',
+          edi: '蓝色',
+          rolly: '橘色',
+          milo: '黄色',
+          ace: '紫色'
+        };
+        
+        const characterColor = characterColors[roleName] || '';
+        const finalRolePrompt = `${characterColor}的${roleName}角色，${rolePrompt}`;
+        
+        console.log(`生成角色 ${roleName}，提示词:`, finalRolePrompt);
         
         const roleResponse = await fetch('/api/ai/generate-images', {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify({
-            prompt: rolePrompt,
+            prompt: finalRolePrompt,
             count: 1,
             width: 1024,
             height: 1024,
