@@ -1,21 +1,54 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Move, RotateCw, ZoomIn, ZoomOut } from 'lucide-react';
+import {
+  getImageContentBounds,
+  getEditorSceneLayout,
+  getNormalizedRoleDrawSize
+} from './roleImageLayout';
 
-export const CanvasEditor = ({ 
-  background, 
-  roles, 
-  rolePositions, 
+function resolveRoleUrl(roleUrl) {
+  if (!roleUrl) return '';
+  return roleUrl.startsWith('http')
+    ? roleUrl
+    : `${typeof window !== 'undefined' ? window.location.origin : ''}${roleUrl.startsWith('/') ? '' : '/'}${roleUrl}`;
+}
+
+function getRoleDrawMetrics(canvas, aspectRatio, roleName, position, roleImg, boundsRef) {
+  if (!canvas || !roleImg) return null;
+  const layout = getEditorSceneLayout(canvas.width, canvas.height, aspectRatio);
+  const bounds = boundsRef.current[roleName] || {
+    x: 0,
+    y: 0,
+    w: roleImg.naturalWidth || roleImg.width,
+    h: roleImg.naturalHeight || roleImg.height
+  };
+  const { dw, dh } = getNormalizedRoleDrawSize(
+    bounds,
+    layout.sceneW,
+    layout.sceneH,
+    position.scale || 1
+  );
+  return { ...layout, bounds, dw, dh };
+}
+
+export const CanvasEditor = ({
+  background,
+  roles,
+  rolePositions,
   onRolePositionChange,
-  aspectRatio 
+  aspectRatio
 }) => {
   const canvasRef = useRef(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  
+
   const backgroundImgRef = useRef(null);
   const roleImgsRef = useRef({});
+  const roleBoundsRef = useRef({});
+  const roleSrcRef = useRef({});
   const animationFrameRef = useRef(null);
+  const drawCanvasRef = useRef(() => {});
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -23,37 +56,62 @@ export const CanvasEditor = ({
 
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    const scale = Math.min(canvas.width / aspectRatio.width, canvas.height / aspectRatio.height);
-    const x = (canvas.width - aspectRatio.width * scale) / 2;
-    const y = (canvas.height - aspectRatio.height * scale) / 2;
-    
-    ctx.drawImage(backgroundImgRef.current, x, y, aspectRatio.width * scale, aspectRatio.height * scale);
-    
+
+    const layout = getEditorSceneLayout(canvas.width, canvas.height, aspectRatio);
+    const { offsetX, offsetY, sceneW, sceneH } = layout;
+
+    ctx.drawImage(
+      backgroundImgRef.current,
+      offsetX,
+      offsetY,
+      sceneW,
+      sceneH
+    );
+
     Object.entries(roles).forEach(([roleName, roleUrl]) => {
       const position = rolePositions[roleName];
       const roleImg = roleImgsRef.current[roleName];
-      if (!position || !roleImg) return;
-      
-      const roleScale = 0.3 * (position.scale || 1);
-      const roleWidth = roleImg.width * roleScale;
-      const roleHeight = roleImg.height * roleScale;
-      
+      if (!position || !roleImg || !roleUrl) return;
+
+      const metrics = getRoleDrawMetrics(
+        canvas,
+        aspectRatio,
+        roleName,
+        position,
+        roleImg,
+        roleBoundsRef
+      );
+      if (!metrics || metrics.dh <= 0) return;
+
+      const { dw, dh, bounds } = metrics;
+
       ctx.save();
-      ctx.translate(position.x + roleWidth / 2, position.y + roleHeight / 2);
-      ctx.rotate((position.rotation || 0) * Math.PI / 180);
-      ctx.drawImage(roleImg, -roleWidth / 2, -roleHeight / 2, roleWidth, roleHeight);
+      ctx.translate(position.x + dw / 2, position.y + dh / 2);
+      ctx.rotate((position.rotation || 0) * (Math.PI / 180));
+      ctx.drawImage(
+        roleImg,
+        bounds.x,
+        bounds.y,
+        bounds.w,
+        bounds.h,
+        -dw / 2,
+        -dh / 2,
+        dw,
+        dh
+      );
       ctx.restore();
-      
+
       if (selectedRole === roleName) {
         ctx.strokeStyle = '#9333ea';
         ctx.lineWidth = 3;
         ctx.setLineDash([5, 5]);
-        ctx.strokeRect(position.x - 2, position.y - 2, roleWidth + 4, roleHeight + 4);
+        ctx.strokeRect(position.x - 2, position.y - 2, dw + 4, dh + 4);
         ctx.setLineDash([]);
       }
     });
   }, [roles, rolePositions, selectedRole, aspectRatio]);
+
+  drawCanvasRef.current = drawCanvas;
 
   useEffect(() => {
     if (!background) return;
@@ -62,31 +120,55 @@ export const CanvasEditor = ({
     img.crossOrigin = 'anonymous';
     img.onload = () => {
       backgroundImgRef.current = img;
-      drawCanvas();
+      drawCanvasRef.current();
     };
-    img.src = background;
-  }, [background, drawCanvas]);
+    img.src = background.startsWith('http')
+      ? background
+      : `${window.location.origin}${background.startsWith('/') ? '' : '/'}${background}`;
+  }, [background]);
 
   useEffect(() => {
     Object.entries(roles).forEach(([roleName, roleUrl]) => {
-      if (roleImgsRef.current[roleName]) return;
-      
+      const resolved = resolveRoleUrl(roleUrl);
+      if (!resolved) return;
+      if (
+        roleSrcRef.current[roleName] === resolved &&
+        roleImgsRef.current[roleName]
+      ) {
+        return;
+      }
+      roleSrcRef.current[roleName] = resolved;
+      delete roleImgsRef.current[roleName];
+      delete roleBoundsRef.current[roleName];
+
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
         roleImgsRef.current[roleName] = img;
-        drawCanvas();
+        roleBoundsRef.current[roleName] = getImageContentBounds(img);
+        drawCanvasRef.current();
       };
-      img.src = roleUrl;
+      img.onerror = () => {
+        delete roleSrcRef.current[roleName];
+      };
+      img.src = resolved;
     });
-  }, [roles, drawCanvas]);
+
+    Object.keys(roleSrcRef.current).forEach((name) => {
+      if (!roles[name]) {
+        delete roleImgsRef.current[name];
+        delete roleBoundsRef.current[name];
+        delete roleSrcRef.current[name];
+      }
+    });
+  }, [roles]);
 
   useEffect(() => {
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
     animationFrameRef.current = requestAnimationFrame(drawCanvas);
-    
+
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -96,18 +178,31 @@ export const CanvasEditor = ({
 
   const handleMouseDown = (e) => {
     const canvas = canvasRef.current;
+    if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
     let foundRole = null;
     Object.entries(rolePositions).forEach(([roleName, position]) => {
-      const roleScale = 0.3 * (position.scale || 1);
-      const roleWidth = 1024 * roleScale;
-      const roleHeight = 1024 * roleScale;
-      
-      if (x >= position.x && x <= position.x + roleWidth &&
-          y >= position.y && y <= position.y + roleHeight) {
+      const roleImg = roleImgsRef.current[roleName];
+      if (!roleImg) return;
+      const metrics = getRoleDrawMetrics(
+        canvas,
+        aspectRatio,
+        roleName,
+        position,
+        roleImg,
+        roleBoundsRef
+      );
+      if (!metrics) return;
+      const { dw, dh } = metrics;
+      if (
+        x >= position.x &&
+        x <= position.x + dw &&
+        y >= position.y &&
+        y <= position.y + dh
+      ) {
         foundRole = roleName;
       }
     });
@@ -145,10 +240,10 @@ export const CanvasEditor = ({
 
   const handleScaleChange = (delta) => {
     if (!selectedRole) return;
-    
+
     const currentScale = rolePositions[selectedRole]?.scale || 1;
     const newScale = Math.max(0.3, Math.min(3, currentScale + delta));
-    
+
     onRolePositionChange(selectedRole, {
       ...rolePositions[selectedRole],
       scale: newScale
@@ -157,10 +252,10 @@ export const CanvasEditor = ({
 
   const handleRotationChange = (delta) => {
     if (!selectedRole) return;
-    
+
     const currentRotation = rolePositions[selectedRole]?.rotation || 0;
     const newRotation = currentRotation + delta;
-    
+
     onRolePositionChange(selectedRole, {
       ...rolePositions[selectedRole],
       rotation: newRotation
@@ -175,7 +270,7 @@ export const CanvasEditor = ({
             <div className="flex items-center justify-center gap-2">
               <span className="text-sm font-medium text-slate-700">选择角色：</span>
               <div className="flex gap-2">
-                {Object.keys(roles).map(roleName => (
+                {Object.keys(roles).map((roleName) => (
                   <button
                     key={roleName}
                     onClick={() => setSelectedRole(roleName)}
@@ -211,7 +306,7 @@ export const CanvasEditor = ({
                 <span className="text-sm font-medium text-slate-700">
                   已选择: {selectedRole}
                 </span>
-                
+
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleScaleChange(-0.1)}
@@ -220,11 +315,11 @@ export const CanvasEditor = ({
                   >
                     <ZoomOut className="w-4 h-4" />
                   </button>
-                  
+
                   <span className="text-sm text-slate-600 w-16 text-center">
                     {Math.round((rolePositions[selectedRole]?.scale || 1) * 100)}%
                   </span>
-                  
+
                   <button
                     onClick={() => handleScaleChange(0.1)}
                     className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
@@ -242,11 +337,11 @@ export const CanvasEditor = ({
                   >
                     <RotateCw className="w-4 h-4 transform -scale-x-100" />
                   </button>
-                  
+
                   <span className="text-sm text-slate-600 w-12 text-center">
                     {rolePositions[selectedRole]?.rotation || 0}°
                   </span>
-                  
+
                   <button
                     onClick={() => handleRotationChange(15)}
                     className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition-colors"

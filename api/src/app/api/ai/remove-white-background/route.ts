@@ -65,26 +65,22 @@ export async function POST(request: NextRequest) {
     const width = info.width;
     const height = info.height;
     
+    // 背景：接近纯白/浅灰统一改为全透明；角色像素保持完全不透明。
+    // 旧逻辑用「距离白色的渐变 alpha」会让浅灰/浅色角色（如 edi）整身半透明，出现「幽灵」效果。
+    const satMax = 40;
     for (let i = 0; i < pixels.length; i += 4) {
       const r = pixels[i];
       const g = pixels[i + 1];
       const b = pixels[i + 2];
-      
-      if (r >= threshold && g >= threshold && b >= threshold) {
-        const maxChannel = Math.max(r, g, b);
-        const minChannel = Math.min(r, g, b);
-        const isNearWhite = (maxChannel - minChannel) < 30;
-        
-        if (isNearWhite) {
-          const distance = Math.sqrt(
-            Math.pow(255 - r, 2) + 
-            Math.pow(255 - g, 2) + 
-            Math.pow(255 - b, 2)
-          );
-          
-          const alpha = Math.min(255, Math.max(0, distance * 2));
-          pixels[i + 3] = alpha;
-        }
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const isLight = r >= threshold && g >= threshold && b >= threshold;
+      const isGrayish = maxC - minC < satMax;
+
+      if (isLight && isGrayish) {
+        pixels[i + 3] = 0;
+      } else {
+        pixels[i + 3] = 255;
       }
     }
     

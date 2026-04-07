@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { Wand2, Download, RotateCcw, Loader2 } from 'lucide-react';
 import RoleSelection from './RoleSelection';
 import CanvasEditor from './CanvasEditor';
+import {
+  getImageContentBounds,
+  getEditorSceneLayout,
+  getNormalizedRoleDrawSize
+} from './roleImageLayout';
 
 const ASPECT_RATIOS = [
   { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
@@ -190,7 +195,18 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         }
       }
 
-      setState(prev => ({
+      const EDITOR_W = 700;
+      const EDITOR_H = 500;
+      const layout = getEditorSceneLayout(EDITOR_W, EDITOR_H, state.aspectRatio);
+      const placeholderBounds = { x: 0, y: 0, w: 1024, h: 1024 };
+      const { dw: estW, dh: estH } = getNormalizedRoleDrawSize(
+        placeholderBounds,
+        layout.sceneW,
+        layout.sceneH,
+        1
+      );
+
+      setState((prev) => ({
         ...prev,
         isGenerating: false,
         generatedAssets: {
@@ -199,9 +215,31 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         },
         canvasState: {
           roles: state.selectedRoles.reduce((acc, roleName, index) => {
+            const n = state.selectedRoles.length;
+            let x;
+            let y;
+            if (n <= 3) {
+              const stepX = layout.sceneW / (n + 1);
+              const stepY = layout.sceneH / (n + 1);
+              x = layout.offsetX + stepX * (index + 1) - estW / 2;
+              y = layout.offsetY + stepY * (index + 1) - estH / 2;
+            } else {
+              const cols = Math.ceil(Math.sqrt(n));
+              const rows = Math.ceil(n / cols);
+              const col = index % cols;
+              const row = Math.floor(index / cols);
+              x =
+                layout.offsetX +
+                (layout.sceneW / cols) * (col + 0.5) -
+                estW / 2;
+              y =
+                layout.offsetY +
+                (layout.sceneH / rows) * (row + 0.5) -
+                estH / 2;
+            }
             acc[roleName] = {
-              x: 100 + index * 200,
-              y: 100 + index * 100,
+              x,
+              y,
               scale: 1,
               rotation: 0
             };
@@ -265,18 +303,18 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const editorCanvasWidth = 700;
       const editorCanvasHeight = 500;
-      
-      const editorScale = Math.min(
-        editorCanvasWidth / state.aspectRatio.width,
-        editorCanvasHeight / state.aspectRatio.height
-      );
-      const offsetX = (editorCanvasWidth - state.aspectRatio.width * editorScale) / 2;
-      const offsetY = (editorCanvasHeight - state.aspectRatio.height * editorScale) / 2;
+      const {
+        editorScale,
+        sceneW,
+        sceneH,
+        offsetX,
+        offsetY
+      } = getEditorSceneLayout(editorCanvasWidth, editorCanvasHeight, state.aspectRatio);
 
       for (const roleName of state.selectedRoles) {
         const roleUrl = state.generatedAssets.roles[roleName];
         const position = state.canvasState.roles[roleName];
-        
+
         if (!roleUrl || !position) {
           console.warn(`跳过角色 ${roleName}: 缺少URL或位置信息`);
           continue;
@@ -285,7 +323,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         console.log(`加载角色图: ${roleName}`, roleUrl);
         const roleImg = new Image();
         roleImg.crossOrigin = 'anonymous';
-        
+
         await new Promise((resolve, reject) => {
           roleImg.onload = () => {
             console.log(`角色 ${roleName} 加载成功`);
@@ -295,27 +333,47 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
             console.error(`角色 ${roleName} 加载失败:`, e);
             reject(new Error(`角色 ${roleName} 加载失败`));
           };
-          const fullUrl = roleUrl.startsWith('http') 
-            ? roleUrl 
+          const fullUrl = roleUrl.startsWith('http')
+            ? roleUrl
             : `${window.location.origin}${roleUrl}`;
           roleImg.src = fullUrl;
         });
 
-        const roleScale = 0.3 * (position.scale || 1);
-        const roleWidth = roleImg.width * roleScale;
-        const roleHeight = roleImg.height * roleScale;
+        const bounds = getImageContentBounds(roleImg);
+        const { dw, dh } = getNormalizedRoleDrawSize(
+          bounds,
+          sceneW,
+          sceneH,
+          position.scale || 1
+        );
 
         const actualX = (position.x - offsetX) / editorScale;
         const actualY = (position.y - offsetY) / editorScale;
-        const actualWidth = roleWidth / editorScale;
-        const actualHeight = roleHeight / editorScale;
+        const actualWidth = dw / editorScale;
+        const actualHeight = dh / editorScale;
 
-        console.log(`绘制角色 ${roleName}:`, { actualX, actualY, actualWidth, actualHeight });
+        console.log(`绘制角色 ${roleName}:`, {
+          actualX,
+          actualY,
+          actualWidth,
+          actualHeight,
+          bounds
+        });
 
         ctx.save();
         ctx.translate(actualX + actualWidth / 2, actualY + actualHeight / 2);
         ctx.rotate((position.rotation || 0) * Math.PI / 180);
-        ctx.drawImage(roleImg, -actualWidth / 2, -actualHeight / 2, actualWidth, actualHeight);
+        ctx.drawImage(
+          roleImg,
+          bounds.x,
+          bounds.y,
+          bounds.w,
+          bounds.h,
+          -actualWidth / 2,
+          -actualHeight / 2,
+          actualWidth,
+          actualHeight
+        );
         ctx.restore();
       }
 

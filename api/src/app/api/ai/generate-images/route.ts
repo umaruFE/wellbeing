@@ -19,7 +19,7 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
-const AI_API_BASE_URL = process.env.AI_API_BASE_URL;
+const AI_API_BASE_URL = (process.env.AI_API_BASE_URL || '').replace(/\/+$/, '');
 
 interface ImageGenerationRequest {
   prompt: string;
