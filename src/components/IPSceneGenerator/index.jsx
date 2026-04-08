@@ -91,9 +91,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       let x, y;
       if (total <= 3) {
         const stepX = layout.sceneW / (total + 1);
-        const stepY = layout.sceneH / (total + 1);
         x = layout.offsetX + stepX * (index + 1) - estW / 2;
-        y = layout.offsetY + stepY * (index + 1) - estH / 2;
+        y = layout.offsetY + layout.sceneH / 2 - estH / 2;
       } else {
         const cols = Math.ceil(Math.sqrt(total));
         const rows = Math.ceil(total / cols);
