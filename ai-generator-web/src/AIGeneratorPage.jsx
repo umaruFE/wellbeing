@@ -39,11 +39,12 @@ const AUDIO_STYLES = [
   { id: 'ambient', label: '氛围 Ambient', tags: 'ambient, atmospheric, ethereal' }
 ];
 
-// 轮询任务状态
-const pollTaskStatus = async (promptId, maxAttempts = 60, interval = 2000) => {
+// 轮询任务状态（支持 apiUrl 动态路由）
+const pollTaskStatus = async (promptId, maxAttempts = 60, interval = 2000, apiUrl) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await fetch(`/api/ai/task-status/${promptId}`, {
+      const url = apiUrl ? `/api/ai/task-status/${promptId}?apiUrl=${encodeURIComponent(apiUrl)}` : `/api/ai/task-status/${promptId}`;
+      const response = await fetch(url, {
         method: 'GET'
       });
 
@@ -172,7 +173,7 @@ export const AIGeneratorPage = () => {
       // 轮询每个任务，完成后更新图片
       const pollPromises = result.tasks.map(async (task, index) => {
         try {
-          const imageUrl = await pollTaskStatus(task.promptId);
+          const imageUrl = await pollTaskStatus(task.promptId, 60, 2000, task.apiUrl);
           
           // 更新图片状态
           setGeneratedImages(prev => {
@@ -383,7 +384,7 @@ export const AIGeneratorPage = () => {
       for (let i = 0; i < result.tasks.length; i++) {
         const task = result.tasks[i];
         try {
-          const audioUrl = await pollTaskStatus(task.promptId);
+          const audioUrl = await pollTaskStatus(task.promptId, 60, 2000, task.apiUrl);
           completedAudios.push({
             url: audioUrl,
             duration: audioDuration,

@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AI_API_BASE_URL = process.env.AI_API_BASE_URL;
+const AI_API_BASE_URL_DEFAULT = (process.env.AI_API_BASE_URL_DEFAULT || '').replace(/\/+$/, '') || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
 
 // 禁用缓存以避免大文件下载时的警告
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
+
+// 获取 API URL（支持通过查询参数传入任务对应的端口）
+function getAiApiUrl(request: NextRequest): string {
+  const apiUrlParam = request.nextUrl.searchParams.get('apiUrl');
+  if (apiUrlParam) {
+    return apiUrlParam.replace(/\/+$/, '');
+  }
+  return AI_API_BASE_URL_DEFAULT;
+}
 
 // 提取图片信息
 function extractImageInfo(taskData: any) {
@@ -98,15 +107,15 @@ function extractVideoInfo(taskData: any) {
   return null;
 }
 
-// 下载文件
-async function downloadFile(filename: string, subfolder: string, type: string): Promise<Buffer> {
+// 下载文件（使用动态获取的 API URL）
+async function downloadFile(filename: string, subfolder: string, type: string, apiUrl: string): Promise<Buffer> {
   const params = new URLSearchParams({
     filename,
     subfolder,
     type
   });
 
-  const response = await fetch(`${AI_API_BASE_URL}/view?${params.toString()}`, {
+  const response = await fetch(`${apiUrl}/view?${params.toString()}`, {
     method: 'GET'
   });
 
@@ -143,19 +152,19 @@ async function uploadToOSS(buffer: Buffer, filename: string, folder: string, con
   return data.url;
 }
 
-// GET /api/ai/task-status/{promptId} - 查询任务状态并上传到OSS
+// GET /api/ai/task-status/{promptId}?apiUrl=xxx - 查询任务状态并上传到OSS
 export async function GET(
   request: NextRequest,
   { params }: { params: { promptId: string } }
 ) {
   try {
     const { promptId } = params;
+    const apiUrl = getAiApiUrl(request);
 
-    const apiUrl = `${AI_API_BASE_URL}/history/${promptId}`;
-    console.log(`查询任务状态: ${apiUrl}`);
-    console.log(`promptId: ${promptId}`);
+    const historyUrl = `${apiUrl}/history/${promptId}`;
+    console.log(`查询任务状态: ${historyUrl}, promptId: ${promptId}`);
 
-    const response = await fetch(apiUrl, {
+    const response = await fetch(historyUrl, {
       method: 'GET'
     });
 
@@ -224,7 +233,8 @@ export async function GET(
       const buffer = await downloadFile(
         fileInfo.filename,
         fileInfo.subfolder,
-        fileInfo.type
+        fileInfo.type,
+        apiUrl
       );
 
       const ossUrl = await uploadToOSS(

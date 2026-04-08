@@ -19,7 +19,34 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
-const AI_API_BASE_URL = (process.env.AI_API_BASE_URL || '').replace(/\/+$/, '');
+const AI_API_BASE_URL_DEFAULT = (process.env.AI_API_BASE_URL_DEFAULT || '').replace(/\/+$/, '') || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+
+/**
+ * 根据工作流类型和角色名称路由到对应的 GPU 端口，
+ * 实现不同任务类型的真正并行处理。
+ */
+function getApiUrl(
+  workflowType: 'scene' | 'person' | 'lora-v3' | 'background' | 'ip-character' | 'composite',
+  characterName?: string
+): string {
+  if (workflowType === 'background') {
+    return (process.env.AI_API_BASE_URL_BG || AI_API_BASE_URL_DEFAULT).replace(/\/+$/, '');
+  }
+
+  if (workflowType === 'ip-character' && characterName) {
+    const charKey = characterName.toLowerCase();
+    const charMap: Record<string, string | undefined> = {
+      poppy: process.env.AI_API_BASE_URL_POPPY,
+      edi: process.env.AI_API_BASE_URL_EDI,
+      rolly: process.env.AI_API_BASE_URL_ROLLY,
+      milo: process.env.AI_API_BASE_URL_MILO,
+      ace: process.env.AI_API_BASE_URL_ACE,
+    };
+    return (charMap[charKey] || AI_API_BASE_URL_DEFAULT).replace(/\/+$/, '');
+  }
+
+  return AI_API_BASE_URL_DEFAULT;
+}
 
 interface ImageGenerationRequest {
   prompt: string;
@@ -58,6 +85,7 @@ interface Workflow {
 interface TaskResponse {
   promptId: string;
   number: number;
+  apiUrl: string;
 }
 
 interface TaskStatus {
@@ -938,17 +966,20 @@ async function createCompositeWorkflow(
 
 // 提交图片生成任务
 async function submitImageTask(
-  prompt: string, 
-  width: number, 
-  height: number, 
-  seed: number, 
-  workflowType: 'scene' | 'person' | 'lora-v3' | 'background' | 'ip-character' | 'composite' = 'scene', 
-  referenceImage?: string, 
+  prompt: string,
+  width: number,
+  height: number,
+  seed: number,
+  workflowType: 'scene' | 'person' | 'lora-v3' | 'background' | 'ip-character' | 'composite' = 'scene',
+  referenceImage?: string,
   styleParams?: any,
   characterName?: string,
   roles?: Array<{name: string; url: string; x: number; y: number; scale?: number; rotation?: number}>
 ): Promise<TaskResponse> {
   let workflow;
+  // 根据工作流类型和角色名路由到对应端口
+  const apiUrl = getApiUrl(workflowType, characterName);
+
   if (workflowType === 'person') {
     workflow = createPersonWorkflow(prompt, width, height, seed, styleParams);
   } else if (workflowType === 'lora-v3') {
@@ -959,18 +990,17 @@ async function submitImageTask(
     workflow = createIPCharacterWorkflow(prompt, characterName || 'poppy', seed);
   } else if (workflowType === 'composite') {
     const compositeRoles = roles || [];
-    const apiUrl = AI_API_BASE_URL || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
     workflow = await createCompositeWorkflow(referenceImage || '', compositeRoles, prompt, seed, apiUrl, width, height);
   } else {
     workflow = createSceneWorkflow(prompt, width, height, seed, referenceImage, styleParams);
   }
-  
-  console.log(`提交图片生成任务: ${AI_API_BASE_URL}/prompt`);
-  console.log(`工作流类型: ${workflowType}`);
+
+  console.log(`提交图片生成任务: ${apiUrl}/prompt`);
+  console.log(`工作流类型: ${workflowType}, 角色: ${characterName || 'N/A'}, 路由端口: ${apiUrl}`);
   console.log(`请求参数:`, { prompt, width, height, seed });
   console.log(`请求体 (workflow):`, JSON.stringify(workflow, null, 2));
-  
-  const response = await fetch(`${AI_API_BASE_URL}/prompt`, {
+
+  const response = await fetch(`${apiUrl}/prompt`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -986,12 +1016,13 @@ async function submitImageTask(
 
   const responseData = await response.json();
   console.log(`任务提交成功:`, responseData);
-  
+
   // AI API 返回的数据格式是 { prompt_id: string, number: number }
   // 需要转换为 { promptId: string, number: number }
   return {
     promptId: responseData.prompt_id || responseData.promptId,
-    number: responseData.number
+    number: responseData.number,
+    apiUrl
   };
 }
 
@@ -999,7 +1030,7 @@ async function submitImageTask(
 async function pollTaskStatus(promptId: string, maxAttempts: number = 60, interval: number = 2000): Promise<TaskStatus> {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await fetch(`${AI_API_BASE_URL}/history/${promptId}`, {
+      const response = await fetch(`${AI_API_BASE_URL_DEFAULT}/history/${promptId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -1063,7 +1094,7 @@ async function downloadImage(filename: string, subfolder: string, type: string):
     type
   });
 
-  const response = await fetch(`${AI_API_BASE_URL}/view?${params.toString()}`, {
+  const response = await fetch(`${AI_API_BASE_URL_DEFAULT}/view?${params.toString()}`, {
     method: 'GET'
   });
 
@@ -1202,7 +1233,8 @@ export async function POST(request: NextRequest) {
       tasks: taskResponses.map(task => ({
         promptId: task.promptId,
         number: task.number,
-        status: 'pending'
+        status: 'pending',
+        apiUrl: task.apiUrl
       })),
       prompt,
       width,

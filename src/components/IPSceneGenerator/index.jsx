@@ -166,10 +166,11 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const backgroundData = await backgroundResponse.json();
       const backgroundTaskId = backgroundData.tasks[0].promptId;
+      const backgroundApiUrl = backgroundData.tasks[0].apiUrl;
 
       const roleTaskPromises = state.selectedRoles.map(async (roleName) => {
         const rolePrompt = rolePrompts[roleName] || state.prompt;
-        
+
         const characterColors = {
           poppy: '粉色',
           edi: '蓝色',
@@ -177,12 +178,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           milo: '黄色',
           ace: '紫色'
         };
-        
+
         const characterColor = characterColors[roleName] || '';
         const finalRolePrompt = `${characterColor}的${roleName}角色，${rolePrompt}`;
-        
+
         console.log(`生成角色 ${roleName}，提示词:`, finalRolePrompt);
-        
+
         const roleResponse = await fetch('/api/ai/generate-images', {
           method: 'POST',
           headers: getAuthHeaders(),
@@ -205,25 +206,26 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         const roleData = await roleResponse.json();
         return {
           name: roleName,
-          taskId: roleData.tasks[0].promptId
+          taskId: roleData.tasks[0].promptId,
+          apiUrl: roleData.tasks[0].apiUrl
         };
       });
 
       const roleTasks = await Promise.all(roleTaskPromises);
 
-      const pollTask = async (taskId, maxAttempts = 120, interval = 3000) => {
+      const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();
-          
+
           if (data.status === 'completed') {
             return data.url;
           } else if (data.status === 'error') {
             throw new Error('任务执行失败');
           }
-          
+
           await new Promise(resolve => setTimeout(resolve, interval));
         }
         throw new Error('任务超时');
@@ -235,12 +237,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           const removeBgResponse = await fetch('/api/ai/remove-white-background', {
             method: 'POST',
             headers: getAuthHeaders(),
-            body: JSON.stringify({ 
+            body: JSON.stringify({
               imageUrl: roleUrl,
               threshold: 240
             })
           });
-          
+
           if (removeBgResponse.ok) {
             const removeBgData = await removeBgResponse.json();
             console.log(`角色 ${roleName} 白色背景去除完成:`, removeBgData.url);
@@ -255,7 +257,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         }
       };
 
-      const backgroundPromise = pollTask(backgroundTaskId).then(url => {
+      const backgroundPromise = pollTask(backgroundTaskId, backgroundApiUrl).then(url => {
         console.log('背景图生成完成:', url);
         setState(prev => ({
           ...prev,
@@ -273,7 +275,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       });
 
       const rolePromises = roleTasks.map((roleTask, index) => {
-        return pollTask(roleTask.taskId)
+        return pollTask(roleTask.taskId, roleTask.apiUrl)
           .then(url => removeWhiteBackground(roleTask.name, url))
           .then(url => {
             console.log(`角色 ${roleTask.name} 生成完成:`, url);
@@ -287,7 +289,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
             };
             const characterColor = characterColors[roleTask.name] || '';
             const finalRolePrompt = `${characterColor}的${roleTask.name}角色，${rolePrompt}`;
-            
+
             setState(prev => ({
               ...prev,
               loadingRoles: {
@@ -521,26 +523,27 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const data = await response.json();
       const compositeTaskId = data.tasks[0].promptId;
+      const compositeApiUrl = data.tasks[0].apiUrl;
 
-      const pollTask = async (taskId, maxAttempts = 120, interval = 3000) => {
+      const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();
-          
+
           if (data.status === 'completed') {
             return data.url;
           } else if (data.status === 'error') {
             throw new Error('任务执行失败');
           }
-          
+
           await new Promise(resolve => setTimeout(resolve, interval));
         }
         throw new Error('任务超时');
       };
 
-      const compositeUrl = await pollTask(compositeTaskId);
+      const compositeUrl = await pollTask(compositeTaskId, compositeApiUrl);
 
       setState(prev => ({
         ...prev,
@@ -607,26 +610,27 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const data = await response.json();
       const taskId = data.tasks[0].promptId;
+      const apiUrl = data.tasks[0].apiUrl;
 
-      const pollTask = async (taskId, maxAttempts = 120, interval = 3000) => {
+      const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();
-          
+
           if (data.status === 'completed') {
             return data.url;
           } else if (data.status === 'error') {
             throw new Error('任务执行失败');
           }
-          
+
           await new Promise(resolve => setTimeout(resolve, interval));
         }
         throw new Error('任务超时');
       };
 
-      const url = await pollTask(taskId);
+      const url = await pollTask(taskId, apiUrl);
       
       setState(prev => ({
         ...prev,
@@ -672,26 +676,27 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const data = await response.json();
       const taskId = data.tasks[0].promptId;
+      const apiUrl = data.tasks[0].apiUrl;
 
-      const pollTask = async (taskId, maxAttempts = 120, interval = 3000) => {
+      const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();
-          
+
           if (data.status === 'completed') {
             return data.url;
           } else if (data.status === 'error') {
             throw new Error('任务执行失败');
           }
-          
+
           await new Promise(resolve => setTimeout(resolve, interval));
         }
         throw new Error('任务超时');
       };
 
-      let url = await pollTask(taskId);
+      let url = await pollTask(taskId, apiUrl);
       
       // 去除白色背景
       try {

@@ -47,12 +47,14 @@ export const extractCharacterFromDescription = async (description, videoStyle = 
  * @param {string} promptId - 任务ID
  * @param {number} maxAttempts - 最大轮询次数
  * @param {number} interval - 轮询间隔（毫秒）
+ * @param {string} [apiUrl] - 可选，任务提交时对应的API端口
  * @returns {Promise<string>} - 图片URL
  */
-export const pollTaskAndGetImageUrl = async (promptId, maxAttempts = 60, interval = 2000) => {
+export const pollTaskAndGetImageUrl = async (promptId, maxAttempts = 60, interval = 2000, apiUrl) => {
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
-      const response = await fetch(`/api/ai/task-status/${promptId}`, {
+      const url = apiUrl ? `/api/ai/task-status/${promptId}?apiUrl=${encodeURIComponent(apiUrl)}` : `/api/ai/task-status/${promptId}`;
+      const response = await fetch(url, {
         method: 'GET',
         headers: getAuthHeaders()
       });
@@ -188,7 +190,7 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
     const images = [];
     for (const task of data.tasks) {
       try {
-        const imageUrl = await pollTaskAndGetImageUrl(task.promptId);
+        const imageUrl = await pollTaskAndGetImageUrl(task.promptId, 60, 2000, task.apiUrl);
         images.push(imageUrl);
       } catch (err) {
         console.error('轮询任务失败:', err);
@@ -302,7 +304,7 @@ export const generateCharacterReferenceImagesWithPrompt = async (characterDescri
     const images = [];
     for (const task of data.tasks) {
       try {
-        const imageUrl = await pollTaskAndGetImageUrl(task.promptId);
+        const imageUrl = await pollTaskAndGetImageUrl(task.promptId, 60, 2000, task.apiUrl);
         images.push(imageUrl);
       } catch (err) {
         console.error('轮询任务失败:', err);
@@ -560,7 +562,7 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
       throw new Error('生成分镜图片失败');
     }
     
-    const imageUrl = await pollTaskAndGetImageUrl(data.tasks[0].promptId);
+    const imageUrl = await pollTaskAndGetImageUrl(data.tasks[0].promptId, 60, 2000, data.tasks[0].apiUrl);
     return imageUrl;
   } catch (error) {
     console.error('生成分镜图片失败:', error);

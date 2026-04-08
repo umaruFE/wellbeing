@@ -355,9 +355,10 @@ export const aiAssetService = {
     }
   },
 
-  // 轮询单个任务状态并上传到OSS
-  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 120, interval = 3000, onProgress) => {
+  // 轮询单个任务状态并上传到OSS（支持 apiUrl 动态路由）
+  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 120, interval = 3000, onProgress, apiUrl) => {
     console.log(`开始轮询任务 ${promptId}，最多尝试 ${maxAttempts} 次，间隔 ${interval}ms`);
+    const url = apiUrl ? `/api/ai/task-status/${promptId}?apiUrl=${encodeURIComponent(apiUrl)}` : `/api/ai/task-status/${promptId}`;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         if (onProgress) {
@@ -365,7 +366,7 @@ export const aiAssetService = {
         }
 
         console.log(`轮询任务 ${promptId}，尝试 ${attempt + 1}/${maxAttempts}`);
-        const response = await fetch(`/api/ai/task-status/${promptId}`, {
+        const response = await fetch(url, {
           method: 'GET',
           headers: getAuthHeaders()
         });
@@ -517,7 +518,9 @@ export const aiAssetService = {
             i,
             prompt,
             60,
-            2000
+            2000,
+            undefined,
+            task.apiUrl
           );
           completedAudios.push(audioResult);
         } catch (error) {
@@ -603,7 +606,9 @@ export const aiAssetService = {
             i,
             prompt,
             60,
-            2000
+            2000,
+            undefined,
+            task.apiUrl
           );
           completedImages.push(imageResult);
         } catch (error) {

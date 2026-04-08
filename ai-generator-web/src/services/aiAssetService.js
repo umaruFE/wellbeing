@@ -354,15 +354,16 @@ export const aiAssetService = {
     }
   },
 
-  // 轮询单个任务状态并上传到OSS
-  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 60, interval = 2000, onProgress) => {
+  // 轮询单个任务状态并上传到OSS（支持 apiUrl 动态路由）
+  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 60, interval = 2000, onProgress, apiUrl) => {
+    const url = apiUrl ? `/api/ai/task-status/${promptId}?apiUrl=${encodeURIComponent(apiUrl)}` : `/api/ai/task-status/${promptId}`;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         if (onProgress) {
           onProgress({ index, attempt, status: 'polling' });
         }
 
-        const response = await fetch(`/api/ai/task-status/${promptId}`, {
+        const response = await fetch(url, {
           method: 'GET',
           headers: getAuthHeaders()
         });
@@ -507,7 +508,9 @@ export const aiAssetService = {
             i,
             prompt,
             60,
-            2000
+            2000,
+            undefined,
+            task.apiUrl
           );
           completedAudios.push(audioResult);
         } catch (error) {
@@ -593,7 +596,9 @@ export const aiAssetService = {
             i,
             prompt,
             60,
-            2000
+            2000,
+            undefined,
+            task.apiUrl
           );
           completedImages.push(imageResult);
         } catch (error) {
