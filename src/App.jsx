@@ -16,6 +16,7 @@ import { IpCharacterManagement } from './modules/material-management/IpCharacter
 import { VideoMaterialManagement } from './modules/material-management/video/VideoMaterialManagement';
 import { AccountManagement } from './modules/admin/AccountManagement';
 import IPSceneTestPage from './modules/test/IPSceneTestPage';
+import { VideoGeneratorPage } from './modules/test/VideoGeneratorPage';
 
 function App() {
   return (
@@ -132,6 +133,11 @@ function App() {
             <Route
               path="/test/ip-scene"
               element={<IPSceneTestPage />}
+            />
+
+            <Route
+              path="/test/video-generator"
+              element={<VideoGeneratorPage />}
             />
 
             <Route path="*" element={<Navigate to="/" replace />} />

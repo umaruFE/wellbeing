@@ -23,7 +23,9 @@ import {
   Users,
   Settings,
   Video,
-  RefreshCw
+  RefreshCw,
+  Wand2,
+  Clapperboard
 } from 'lucide-react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from '../modules/course-management/ppt-canvas/CanvasView';
@@ -37,7 +39,7 @@ export const MainLayout = () => {
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState(['materials']); // 默认展开素材管理
+  const [expandedMenus, setExpandedMenus] = useState(['knowledge']); // 默认展开素材管理
 
   // 课程编辑状态
   const [appState, setAppState] = useState('welcome');
@@ -386,6 +388,17 @@ export const MainLayout = () => {
         { path: '/voices', label: '声音', icon: Music },
       ]
     },
+    {
+      id: 'ai-tools',
+      label: 'AI工具',
+      icon: Wand2,
+      description: 'AI智能生成',
+      roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
+      children: [
+        { path: '/test/ip-scene', label: 'IP场景生成', icon: Wand2 },
+        { path: '/test/video-generator', label: '视频生成', icon: Clapperboard },
+      ]
+    },
     // 超级管理端（带二级菜单）
     // { 
     //   id: 'super-admin', 
@@ -497,16 +510,7 @@ export const MainLayout = () => {
     return false;
   };
 
-  // 判断父菜单是否展开
-  const isParentExpanded = (path) => {
-    for (const item of menuItems) {
-      if (item.children) {
-        const found = item.children.find(child => child.path === path);
-        if (found) return expandedMenus.includes(item.id);
-      }
-    }
-    return false;
-  };
+  // 展开状态直接用 isExpanded 变量，不需要额外函数
 
   return (
     <div className="h-screen flex font-sans bg-[#fcfbf9]">
@@ -548,12 +552,12 @@ export const MainLayout = () => {
                     <button
                       onClick={() => toggleMenu(item.id)}
                       className={`w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors group ${
-                        isActive || isParentExpanded(location.pathname)
+                        isActive || isExpanded
                           ? 'bg-[#cde0c5] text-[#2d2d2d] border-2 border-[#2d2d2d] shadow-[2px_2px_0px_0px_rgba(45,45,45,1)]'
                           : 'text-gray-600 hover:bg-gray-100 border-2 border-transparent'
                       } ${sidebarCollapsed ? 'justify-center' : ''}`}
                     >
-                      <div className={isActive || isParentExpanded(location.pathname) ? 'text-green-950' : 'text-gray-500 group-hover:text-gray-800'}>
+                      <div className={isActive || isExpanded ? 'text-green-950' : 'text-gray-500 group-hover:text-gray-800'}>
                         <Icon className="w-5 h-5 shrink-0" />
                       </div>
                       {!sidebarCollapsed && (
@@ -579,14 +583,14 @@ export const MainLayout = () => {
                             <button
                               key={child.path}
                               onClick={() => navigate(child.path)}
-                              className={`w-full flex items-center gap-3 py-2 px-4 rounded-lg cursor-pointer transition-colors ${
+                              className={`w-full flex items-center gap-3 py-2 px-4 rounded-lg cursor-pointer transition-colors text-sm border-2 ${
                                 childIsActive
-                                  ? 'bg-[#cde0c5] text-[#2d2d2d] border-2 border-[#2d2d2d]'
-                                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 text-sm font-medium'
+                                  ? 'bg-[#e8efe4] text-[#1a1a1a] border-[#b8c9b0] font-semibold shadow-none'
+                                  : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-100 font-medium'
                               }`}
                             >
-                              <ChildIcon className="w-4 h-4" />
-                              <span>{child.label}</span>
+                              <ChildIcon className={`w-4 h-4 shrink-0 ${childIsActive ? 'text-[#2d5a27]' : ''}`} />
+                              <span className="text-left">{child.label}</span>
                             </button>
                           );
                         })}
