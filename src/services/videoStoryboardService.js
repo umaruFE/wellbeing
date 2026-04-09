@@ -609,65 +609,108 @@ export const pollTaskAndGetVideoUrl = async (promptId, maxAttempts = 300, interv
   throw new Error('视频生成任务超时');
 };
 
+const N8N_BASE = 'https://wblo9e19bic8lycu-8188.container.x-gpu.com';
+
 /**
- * 合成视频
- * 使用第一个分镜的图片作为参考，生成短视频
- * @param {Array} scenes - 分镜步骤数组
- * @param {string} _title - 视频标题（预留参数）
- * @param {string} userId - 用户ID
- * @param {string} organizationId - 组织ID
- * @returns {Promise<string>} - 生成的视频URL
+ * 轮询 n8n 执行状态
+ * @param {string} executionId
+ * @param {number} maxAttempts - 最大轮询次数（默认5分钟，每5秒一次）
+ * @returns {Promise<object>} - n8n 执行结果数据
  */
-export const composeVideo = async (scenes, _title = '', userId = null, organizationId = null) => {
-  try {
-    // 获取所有有生成图片的分镜（按顺序）
-    const sceneImages = (scenes || [])
-      .filter(s => s && s.generatedImage)
-      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
-      .map(s => s.generatedImage);
-    
-    if (sceneImages.length === 0) {
-      throw new Error('没有可用的分镜图片');
-    }
-
-    // 构建视频生成提示词
-    const videoPrompt = scenes.map(s => s.content).join('，');
-    
-    // 调用视频生成API
-    const response = await fetch('/api/ai/generate-video', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        prompt: videoPrompt,
-        // 传所有分镜图给后端（后端可按需处理）；同时保留 imageUrl 兼容旧逻辑
-        imageUrls: sceneImages,
-        imageUrl: sceneImages[0],
-        duration: 5,
-        user_id: userId,
-        organization_id: organizationId
-      })
+const pollN8nExecution = async (executionId, maxAttempts = 60) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    const res = await fetch(`${N8N_BASE}/api/v1/executions/${executionId}`, {
+      headers: { 'Accept': 'application/json' }
     });
+    if (!res.ok) throw new Error(`n8n 查询失败: ${res.status}`);
+    const data = await res.json();
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || '提交视频生成任务失败');
+    // finished: true 表示执行完成
+    if (data.data?.finished === true) {
+      return data.data;
     }
-
-    const data = await response.json();
-    
-    if (!data.success || !data.promptId) {
-      throw new Error('提交视频生成任务失败');
+    if (data.data?.stoppedAt) {
+      throw new Error('n8n 执行异常终止');
     }
-    
-    console.log('视频生成任务ID:', data.promptId);
-    
-    // 轮询任务状态
-    const videoUrl = await pollTaskAndGetVideoUrl(data.promptId);
-    return videoUrl;
-  } catch (error) {
-    console.error('合成视频失败:', error);
-    throw error;
+    await new Promise(r => setTimeout(r, 5000));
   }
+  throw new Error('n8n 执行超时');
+};
+
+/**
+ * 合成视频（调用 n8n webhook）
+ * @param {Array}  scenes          - 分镜步骤数组
+ * @param {string} _title          - 视频标题（预留）
+ * @param {string} userId
+ * @param {string} organizationId
+ * @param {string} storyText       - 故事描述（用于 n8n prompt）
+ * @returns {Promise<string>}      - 最终视频 URL
+ */
+export const composeVideo = async (scenes, _title = '', userId = null, organizationId = null, storyText = '') => {
+  // 取第一个有图片的分镜作为 image 参数
+  const firstImage = (scenes || [])
+    .filter(s => s?.generatedImage)
+    .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))[0]?.generatedImage;
+
+  if (!firstImage) throw new Error('没有可用的分镜图片');
+
+  // image 文件名从 URL 中提取
+  const imageUrlObj = new URL(firstImage);
+  const imageFileName = imageUrlObj.pathname.split('/').pop() || 'scene.jpg';
+
+  // 从 URL 拉取为 Blob（浏览器环境）
+  const imageRes = await fetch(firstImage);
+  if (!imageRes.ok) throw new Error('无法下载分镜图片');
+  const imageBlob = await imageRes.blob();
+
+  const formData = new FormData();
+  formData.append('image', imageBlob, imageFileName);
+  formData.append('video_ratio', '16:9');
+  formData.append('max_image_count', String(scenes.filter(s => s?.generatedImage).length));
+  formData.append('story', storyText || scenes.map(s => s.content).join('，'));
+
+  // 触发 n8n webhook（注意 URL 中只有一个 /webhook，不要重复）
+  const triggerRes = await fetch(`${N8N_BASE}/webhook/gene-images`, {
+    method: 'POST',
+    body: formData,
+    headers: { 'Accept': 'application/json' }
+  });
+  if (!triggerRes.ok) throw new Error(`n8n webhook 失败: ${triggerRes.status}`);
+
+  // n8n 返回 200 但 body 可能是重定向信息，从 header 或 body 中取 executionId
+  const resText = await triggerRes.text();
+  let executionId;
+  try {
+    const parsed = JSON.parse(resText);
+    executionId = parsed.executionId || parsed.id || parsed.data?.executionId;
+  } catch {
+    // 尝试从 response headers 中取
+    executionId = triggerRes.headers.get('x-n8n-execution-id') || null;
+  }
+  if (!executionId) {
+    console.warn('未拿到 n8n executionId，假设执行成功');
+    return firstImage; // fallback
+  }
+
+  // 轮询执行结果
+  const execData = await pollN8nExecution(executionId);
+
+  // 从 n8n 输出中提取最终图片 URL（具体字段名由你的 n8n 流程决定）
+  const output = execData?.data?.output || execData?.data?.resultData?.data || execData?.output || execData;
+  let videoUrl;
+  if (Array.isArray(output)) {
+    videoUrl = output[0]?.url || output[0];
+  } else if (typeof output === 'string') {
+    videoUrl = output;
+  } else {
+    videoUrl = output?.url || output?.videoUrl || output?.fileUrl || null;
+  }
+
+  if (!videoUrl) {
+    console.warn('n8n 输出中未找到视频 URL，返回首帧图片:', output);
+    return firstImage;
+  }
+  return videoUrl;
 };
 
 // 导出默认对象
@@ -679,5 +722,6 @@ export default {
   generateStoryboardScript,
   generateSceneImage,
   composeVideo,
-  pollTaskAndGetVideoUrl
+  pollTaskAndGetVideoUrl,
+  pollN8nExecution
 };

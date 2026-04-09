@@ -52,8 +52,6 @@ export const VideoStoryboardModal = ({
   
   // 步骤1：基本信息
   const [storyCore, setStoryCore] = useState('');
-  const [overallStyle, setOverallStyle] = useState('');
-  const [videoDuration, setVideoDuration] = useState(10);
   const [uploadedReferenceImages, setUploadedReferenceImages] = useState(initialReferenceImages);
   const [uploadingImages, setUploadingImages] = useState({}); // file name -> boolean
   const [selectedAspectRatio, setSelectedAspectRatio] = useState(ASPECT_RATIOS[0]); // 默认16:9
@@ -320,7 +318,8 @@ export const VideoStoryboardModal = ({
         scenes,
         storyboardTitle,
         userId,
-        organizationId
+        organizationId,
+        getCombinedDescription()   // n8n 需要 story 参数
       );
       setGeneratedVideoUrl(videoUrl);
     } catch (err) {
