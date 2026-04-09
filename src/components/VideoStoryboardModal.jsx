@@ -52,6 +52,8 @@ export const VideoStoryboardModal = ({
   
   // 步骤1：基本信息
   const [storyCore, setStoryCore] = useState('');
+  const [overallStyle, setOverallStyle] = useState('');
+  const [videoDuration, setVideoDuration] = useState(10);
   const [uploadedReferenceImages, setUploadedReferenceImages] = useState(initialReferenceImages);
   const [uploadingImages, setUploadingImages] = useState({}); // file name -> boolean
   const [selectedAspectRatio, setSelectedAspectRatio] = useState(ASPECT_RATIOS[0]); // 默认16:9
@@ -374,7 +376,7 @@ export const VideoStoryboardModal = ({
         <textarea
           value={storyCore}
           onChange={(e) => setStoryCore(e.target.value)}
-          placeholder="例如：一个小女孩周末在花园里玩耍"
+          placeholder="例如：poppy在花园里玩耍"
           className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-24 transition-all"
         />
       </div>
@@ -455,7 +457,7 @@ export const VideoStoryboardModal = ({
                 <img
                   src={ip.thumbnail}
                   alt={ip.name}
-                  className="w-full h-20 object-cover rounded-lg"
+                  className="w-full h-25 object-cover rounded-lg"
                 />
                 <span className={`text-xs font-medium mt-1.5 ${!isAvailable ? 'text-gray-400' : 'text-slate-800'}`}>
                   {ip.name}
