@@ -99,8 +99,6 @@ export const VideoStoryboardModal = ({
 
     setCurrentStep(1);
     setStoryCore('');
-    setOverallStyle('');
-    setVideoDuration(10);
     setUploadedReferenceImages(initialReferenceImages);
     setUploadingImages({});
     setSelectedAspectRatio(ASPECT_RATIOS[0]);
@@ -457,7 +455,7 @@ export const VideoStoryboardModal = ({
                 <img
                   src={ip.thumbnail}
                   alt={ip.name}
-                  className="w-full h-25 object-cover rounded-lg"
+                  className="w-full h-30 object-cover rounded-lg"
                 />
                 <span className={`text-xs font-medium mt-1.5 ${!isAvailable ? 'text-gray-400' : 'text-slate-800'}`}>
                   {ip.name}
