@@ -761,28 +761,30 @@ export const VideoStoryboardModal = ({
               <div key={scene.id} className="border-2 border-[#e5e3db] rounded-xl overflow-hidden transition-all hover:border-[#2d2d2d]">
                 <div className="flex gap-4 p-4">
                   {/* 图片 */}
-                  <div className="w-64 h-36 bg-slate-100 relative shrink-0 rounded-lg overflow-hidden">
-                    {scene.generatedImage ? (
-                      <button
-                        type="button"
-                        onClick={() => setPreviewImage({ url: scene.generatedImage, alt: `分镜${scene.sequence}` })}
-                        className="w-full h-full cursor-zoom-in"
-                        title="点击放大查看"
-                      >
-                        <img
-                          src={scene.generatedImage}
-                          alt={`分镜${scene.sequence}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
-                        <ImageIcon className="w-8 h-8" />
-                      </div>
-                    )}
+                  <div className="w-64 shrink-0 flex flex-col justify-center">
+                    <div className="h-36 bg-slate-100 relative rounded-lg overflow-hidden flex items-center justify-center mb-2">
+                      {scene.generatedImage ? (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage({ url: scene.generatedImage, alt: `分镜${scene.sequence}` })}
+                          className="w-full h-full cursor-zoom-in flex items-center justify-center"
+                          title="点击放大查看"
+                        >
+                          <img
+                            src={scene.generatedImage}
+                            alt={`分镜${scene.sequence}`}
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </button>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                          <ImageIcon className="w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
                     
                     {/* 图片操作按钮 */}
-                    <div className="absolute bottom-2 left-2 right-2 flex gap-1">
+                    <div className="flex gap-1">
                       <input
                         type="file"
                         accept="image/jpeg,image/png,image/gif,image/webp"
@@ -792,7 +794,7 @@ export const VideoStoryboardModal = ({
                       />
                       <label
                         htmlFor={`upload-scene-${scene.id}`}
-                        className={`flex-1 px-2 py-1 text-xs bg-white/90 backdrop-blur-sm rounded text-center cursor-pointer hover:bg-white transition-colors ${
+                        className={`flex-1 px-2 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded text-center cursor-pointer transition-colors ${
                           uploadingSceneImage[scene.id] ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
                       >
