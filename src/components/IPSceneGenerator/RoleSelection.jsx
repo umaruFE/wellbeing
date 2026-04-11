@@ -35,9 +35,9 @@ const IP_CHARACTERS = [
     id: 'milo',
     name: 'Milo',
     color: '黄色',
-    description: '黄色角色 (LoRA文件缺失)',
+    description: '黄色角色',
     thumbnail: miloImg,
-    available: false
+    available: true
   },
   {
     id: 'ace',

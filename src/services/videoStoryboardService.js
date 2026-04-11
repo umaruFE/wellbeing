@@ -713,6 +713,101 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
   return videoUrl;
 };
 
+/**
+ * 查询执行状态
+ * @param {string} executionId - 执行ID
+ * @returns {Promise<any>} - 返回执行状态
+ */
+export const queryExecutionStatus = async (executionId) => {
+  try {
+    const response = await fetch(`/api/ai/generate-storyboard?executionId=${executionId}`, {
+      method: 'GET',
+      headers: {
+        ...getAuthHeaders()
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '查询失败');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('查询执行状态失败:', error);
+    throw error;
+  }
+};
+
+/**
+ * 调用后端API生成图片（不暴露webhook URL）
+ * @param {string} ipCharacterId - IP角色ID（如"poppy"）
+ * @param {string} videoRatio - 视频比例（如"16:9"）
+ * @param {number} maxImageCount - 最大图片数量
+ * @param {string} story - 故事描述
+ * @returns {Promise<any>} - 返回生成的结果
+ */
+export const callWebhookGenerateImages = async (ipCharacterId, videoRatio, maxImageCount, story) => {
+  try {
+    console.log('调用后端API生成图片:', { ipCharacterId, videoRatio, maxImageCount, story });
+    
+    const response = await fetch('/api/ai/generate-storyboard', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        ipCharacterId,
+        videoRatio,
+        maxImageCount,
+        story
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '调用失败');
+    }
+
+    const data = await response.json();
+    console.log('后端API返回数据:', data);
+    
+    if (!data.success || !data.data.executionId) {
+      throw new Error('未返回executionId');
+    }
+
+    const executionId = data.data.executionId;
+    console.log('获取到executionId:', executionId, '开始轮询执行状态...');
+
+    const maxAttempts = 60;
+    const interval = 3000;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(`第${attempt + 1}/${maxAttempts}次查询执行状态...`);
+      
+      const statusData = await queryExecutionStatus(executionId);
+      console.log('执行状态:', statusData);
+
+      if (statusData.data.status === 'completed') {
+        console.log('执行完成，返回完整数据:', statusData.data);
+        return statusData.data;
+      } else if (statusData.data.status === 'failed') {
+        throw new Error('执行失败');
+      }
+
+      console.log(`等待${interval/1000}秒后继续查询...`);
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    throw new Error('执行超时');
+  } catch (error) {
+    console.error('生成图片失败:', error);
+    throw error;
+  }
+};
+
 // 导出默认对象
 export default {
   extractCharacterFromDescription,
@@ -723,5 +818,7 @@ export default {
   generateSceneImage,
   composeVideo,
   pollTaskAndGetVideoUrl,
-  pollN8nExecution
+  pollN8nExecution,
+  callWebhookGenerateImages,
+  queryExecutionStatus
 };
