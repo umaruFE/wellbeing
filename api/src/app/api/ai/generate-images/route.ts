@@ -600,7 +600,7 @@ function createBackgroundWorkflow(prompt: string, width: number, height: number,
 function createIPCharacterWorkflow(prompt: string, characterName: string, seed: number): any {
   const loraMap: Record<string, { lora: string; color: string }> = {
     'poppy': { lora: 'poppy.safetensors', color: '粉色' },
-    'edi': { lora: 'edi_new_000002250.safetensors', color: '蓝色' },
+    'edi': { lora: 'edi.safetensors', color: '蓝色' },
     'rolly': { lora: 'rolly.safetensors', color: '橘色' },
     'milo': { lora: 'milo.safetensors', color: '黄色' },
     'ace': { lora: 'ace.safetensors', color: '紫色' }
@@ -840,7 +840,7 @@ async function createCompositeWorkflow(
 
   const loraMap: Record<string, string> = {
     'poppy': 'poppy.safetensors',
-    'edi': 'edi_new_000002250.safetensors',
+    'edi': 'edi.safetensors',
     'rolly': 'rolly.safetensors',
     'milo': 'milo.safetensors',
     'ace': 'ace.safetensors'
