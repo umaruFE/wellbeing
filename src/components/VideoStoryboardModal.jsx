@@ -972,12 +972,19 @@ export const VideoStoryboardModal = ({
     // 步骤3的特殊按钮逻辑
     if (currentStep === 3) {
       if (generatedVideoUrl) {
-        // 视频已生成，显示确认按钮
+        // 视频已生成，显示上一步和确认按钮
         return (
-          <div className="flex justify-center">
+          <div className="flex justify-between">
+            <button
+              onClick={() => setCurrentStep(prev => prev - 1)}
+              className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all flex items-center gap-2 font-medium"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              上一步
+            </button>
             <button
               onClick={handleConfirm}
-              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto"
+              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
             >
               <Check className="w-5 h-5" />
               确认并添加到画布
@@ -985,7 +992,18 @@ export const VideoStoryboardModal = ({
           </div>
         );
       }
-      return null; // 视频未生成，不显示按钮
+      // 视频未生成，显示上一步按钮
+      return (
+        <div className="flex justify-start">
+          <button
+            onClick={() => setCurrentStep(prev => prev - 1)}
+            className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all flex items-center gap-2 font-medium"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            上一步
+          </button>
+        </div>
+      );
     }
 
     return (
