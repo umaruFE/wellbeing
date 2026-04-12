@@ -620,55 +620,137 @@ const N8N_BASE = 'https://wblo9e19bic8lycu-8188.container.x-gpu.com';
 /**
  * 查询执行状态
  * @param {string} executionId - 执行ID
+ * @param {number} maxRetries - 最大重试次数
+ * @param {number} retryDelay - 重试延迟（毫秒）
  * @returns {Promise<any>} - 返回执行状态
  */
-export const queryExecutionStatus = async (executionId) => {
-  try {
-    const response = await fetch(`/api/ai/generate-storyboard?executionId=${executionId}`, {
-      method: 'GET',
-      headers: {
-        ...getAuthHeaders()
+export const queryExecutionStatus = async (executionId, maxRetries = 3, retryDelay = 2000) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(`/api/ai/generate-storyboard?executionId=${executionId}`, {
+        method: 'GET',
+        headers: {
+          ...getAuthHeaders()
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        
+        // 如果是502、503等临时错误，继续重试
+        if (response.status >= 500 && response.status < 600) {
+          console.warn(`查询执行状态失败 (${response.status})，第${attempt + 1}/${maxRetries}次重试...`);
+          lastError = new Error(`服务器错误 (${response.status}): ${errorData.error || errorText}`);
+          
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+        }
+        
+        throw new Error(errorData.error || '查询失败');
       }
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || '查询失败');
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      lastError = error;
+      
+      // 如果是网络错误或超时，继续重试
+      if (error.name === 'TypeError' || error.message.includes('fetch')) {
+        console.warn(`网络错误，第${attempt + 1}/${maxRetries}次重试...`, error.message);
+        
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+      }
+      
+      // 如果是最后一次尝试，或者不是临时错误，抛出异常
+      if (attempt === maxRetries - 1) {
+        console.error('查询执行状态失败:', error);
+        throw error;
+      }
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('查询执行状态失败:', error);
-    throw error;
   }
+  
+  throw lastError || new Error('查询执行状态失败');
 };
 
 /**
  * 查询重新生成图片的执行状态
  * @param {string} executionId - 执行ID
+ * @param {number} maxRetries - 最大重试次数
+ * @param {number} retryDelay - 重试延迟（毫秒）
  * @returns {Promise<any>} - 返回执行状态
  */
-export const queryRegeneImageStatus = async (executionId) => {
-  try {
-    const response = await fetch(`/api/ai/get-image?executionId=${executionId}`, {
-      method: 'GET',
-      headers: {
-        ...getAuthHeaders()
+export const queryRegeneImageStatus = async (executionId, maxRetries = 3, retryDelay = 2000) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(`/api/ai/get-image?executionId=${executionId}`, {
+        method: 'GET',
+        headers: {
+          ...getAuthHeaders()
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        
+        // 如果是502、503等临时错误，继续重试
+        if (response.status >= 500 && response.status < 600) {
+          console.warn(`查询重新生成图片状态失败 (${response.status})，第${attempt + 1}/${maxRetries}次重试...`);
+          lastError = new Error(`服务器错误 (${response.status}): ${errorData.error || errorText}`);
+          
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+        }
+        
+        throw new Error(errorData.error || '查询失败');
       }
-    });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || '查询失败');
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      lastError = error;
+      
+      // 如果是网络错误或超时，继续重试
+      if (error.name === 'TypeError' || error.message.includes('fetch')) {
+        console.warn(`网络错误，第${attempt + 1}/${maxRetries}次重试...`, error.message);
+        
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+      }
+      
+      // 如果是最后一次尝试，或者不是临时错误，抛出异常
+      if (attempt === maxRetries - 1) {
+        console.error('查询重新生成图片状态失败:', error);
+        throw error;
+      }
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('查询重新生成图片状态失败:', error);
-    throw error;
   }
+  
+  throw lastError || new Error('查询重新生成图片状态失败');
 };
 
 /**
@@ -779,26 +861,67 @@ export const generateVideo = async (storyboardData) => {
 /**
  * 查询视频生成状态
  * @param {string} executionId - 执行ID
+ * @param {number} maxRetries - 最大重试次数
+ * @param {number} retryDelay - 重试延迟（毫秒）
  * @returns {Promise<any>} - 返回视频状态
  */
-export const queryVideoStatus = async (executionId) => {
-  try {
-    const response = await fetch(`/api/ai/video-status?executionId=${executionId}`, {
-      method: 'GET',
-      headers: getAuthHeaders()
-    });
+export const queryVideoStatus = async (executionId, maxRetries = 3, retryDelay = 2000) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(`/api/ai/video-status?executionId=${executionId}`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || '查询失败');
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText };
+        }
+        
+        // 如果是502、503等临时错误，继续重试
+        if (response.status >= 500 && response.status < 600) {
+          console.warn(`查询视频状态失败 (${response.status})，第${attempt + 1}/${maxRetries}次重试...`);
+          lastError = new Error(`服务器错误 (${response.status}): ${errorData.error || errorText}`);
+          
+          if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            continue;
+          }
+        }
+        
+        throw new Error(errorData.error || '查询失败');
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      lastError = error;
+      
+      // 如果是网络错误或超时，继续重试
+      if (error.name === 'TypeError' || error.message.includes('fetch')) {
+        console.warn(`网络错误，第${attempt + 1}/${maxRetries}次重试...`, error.message);
+        
+        if (attempt < maxRetries - 1) {
+          await new Promise(resolve => setTimeout(resolve, retryDelay));
+          continue;
+        }
+      }
+      
+      // 如果是最后一次尝试，或者不是临时错误，抛出异常
+      if (attempt === maxRetries - 1) {
+        console.error('查询视频状态失败:', error);
+        throw error;
+      }
     }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('查询视频状态失败:', error);
-    throw error;
   }
+  
+  throw lastError || new Error('查询视频状态失败');
 };
 
 /**
