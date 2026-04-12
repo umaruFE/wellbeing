@@ -742,15 +742,14 @@ export const queryExecutionStatus = async (executionId) => {
 
 /**
  * 调用后端API生成图片（不暴露webhook URL）
- * @param {string} ipCharacterId - IP角色ID（如"poppy"）
+ * @param {string} role - IP角色ID（如"poppy"）
  * @param {string} videoRatio - 视频比例（如"16:9"）
- * @param {number} maxImageCount - 最大图片数量
  * @param {string} story - 故事描述
  * @returns {Promise<any>} - 返回生成的结果
  */
-export const callWebhookGenerateImages = async (ipCharacterId, videoRatio, maxImageCount, story) => {
+export const callWebhookGenerateImages = async (role, videoRatio, story) => {
   try {
-    console.log('调用后端API生成图片:', { ipCharacterId, videoRatio, maxImageCount, story });
+    console.log('调用后端API生成图片:', { role, videoRatio, story });
     
     const response = await fetch('/api/ai/generate-storyboard', {
       method: 'POST',
@@ -759,9 +758,8 @@ export const callWebhookGenerateImages = async (ipCharacterId, videoRatio, maxIm
         ...getAuthHeaders()
       },
       body: JSON.stringify({
-        ipCharacterId,
+        role,
         videoRatio,
-        maxImageCount,
         story
       })
     });
@@ -781,7 +779,7 @@ export const callWebhookGenerateImages = async (ipCharacterId, videoRatio, maxIm
     const executionId = data.data.executionId;
     console.log('获取到executionId:', executionId, '开始轮询执行状态...');
 
-    const maxAttempts = 60;
+    const maxAttempts = 120;
     const interval = 3000;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -794,7 +792,9 @@ export const callWebhookGenerateImages = async (ipCharacterId, videoRatio, maxIm
         console.log('执行完成，返回完整数据:', statusData.data);
         return statusData.data;
       } else if (statusData.data.status === 'failed') {
-        throw new Error('执行失败');
+        const errorMsg = statusData.details || statusData.error || '执行失败';
+        console.error('执行失败，详细信息:', statusData);
+        throw new Error(errorMsg);
       }
 
       console.log(`等待${interval/1000}秒后继续查询...`);

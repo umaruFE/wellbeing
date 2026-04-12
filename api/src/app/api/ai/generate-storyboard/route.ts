@@ -124,11 +124,11 @@ async function queryExecutionStatus(executionId: string): Promise<any> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { ipCharacterId, videoRatio, maxImageCount, story } = body;
+    const { role, videoRatio, story } = body;
 
-    console.log('收到生成分镜请求:', { ipCharacterId, videoRatio, maxImageCount, story });
+    console.log('收到生成分镜请求:', { role, videoRatio, story });
 
-    if (!ipCharacterId || !story) {
+    if (!role || !story) {
       return NextResponse.json(
         { error: '缺少必要参数' },
         { status: 400 }
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
       ace: 'ace.png'
     };
 
-    const imageName = ipImageMap[ipCharacterId];
+    const imageName = ipImageMap[role];
     if (!imageName) {
       return NextResponse.json(
         { error: '无效的IP角色ID' },
@@ -167,15 +167,15 @@ export async function POST(request: NextRequest) {
     const formData = new FormData();
     const blob = new Blob([imageBuffer], { type: 'image/png' });
     formData.append('image', blob, imageName);
+    formData.append('role', role);
     formData.append('video_ratio', videoRatio || '16:9');
-    formData.append('max_image_count', (maxImageCount || 2).toString());
     formData.append('story', story);
 
     console.log('FormData构建完成:');
     console.log('- 图片文件名:', imageName);
     console.log('- 图片大小:', imageBuffer.length, 'bytes');
+    console.log('- role:', role);
     console.log('- video_ratio:', videoRatio || '16:9');
-    console.log('- max_image_count:', maxImageCount || 2);
     console.log('- story:', story);
 
     console.log('开始调用webhook...');
@@ -265,9 +265,12 @@ export async function GET(request: NextRequest) {
         });
       }
     } else if (executionStatus.status === 'error' || executionStatus.status === 'failed') {
+      console.error('执行失败，详细状态:', JSON.stringify(executionStatus, null, 2));
       return NextResponse.json({
         success: false,
         error: '执行失败',
+        details: executionStatus.error || 'N8N工作流执行失败',
+        executionStatus: executionStatus,
         data: {
           executionId: executionId,
           status: 'failed'
