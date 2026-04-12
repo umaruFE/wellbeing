@@ -273,14 +273,21 @@ export const VideoStoryboardModal = ({
       // 使用 imagePrompt（图片提示词）而不是 prompt（视频提示词）
       const prompt = scene.imagePrompt || scene.prompt;
       
-      if (!scene.generatedImage) {
-        throw new Error('没有原图片URL');
-      }
+      // 获取视频尺寸
+      const width = videoSize.width;
+      const height = videoSize.height;
       
-      const result = await videoStoryboardService.regeneImage(
-        scene.generatedImage,
-        prompt,
-        scene.id
+      // 获取角色名称
+      const role = selectedIPs[0] || 'poppy'; // 默认使用 poppy
+      
+      console.log('调用重新生成图片API，参数:', { width, height, role, prompt });
+      
+      // 调用重新生成图片API并轮询
+      const result = await videoStoryboardService.regeneImageWithPolling(
+        width,
+        height,
+        role,
+        prompt
       );
       
       console.log('重新生成图片结果:', result);
@@ -353,6 +360,40 @@ export const VideoStoryboardModal = ({
     setScenes(updatedScenes);
   };
 
+  // 上移分镜
+  const handleMoveSceneUp = (sceneId) => {
+    const index = scenes.findIndex(s => s.id === sceneId);
+    if (index <= 0) return; // 已经是第一个
+    
+    const newScenes = [...scenes];
+    [newScenes[index - 1], newScenes[index]] = [newScenes[index], newScenes[index - 1]];
+    
+    // 更新序号
+    const updatedScenes = newScenes.map((scene, idx) => ({
+      ...scene,
+      sequence: idx + 1
+    }));
+    
+    setScenes(updatedScenes);
+  };
+
+  // 下移分镜
+  const handleMoveSceneDown = (sceneId) => {
+    const index = scenes.findIndex(s => s.id === sceneId);
+    if (index >= scenes.length - 1) return; // 已经是最后一个
+    
+    const newScenes = [...scenes];
+    [newScenes[index], newScenes[index + 1]] = [newScenes[index + 1], newScenes[index]];
+    
+    // 更新序号
+    const updatedScenes = newScenes.map((scene, idx) => ({
+      ...scene,
+      sequence: idx + 1
+    }));
+    
+    setScenes(updatedScenes);
+  };
+
   // 上传分镜图片
   const handleUploadSceneImage = async (sceneId, e) => {
     const file = e.target.files[0];
@@ -419,12 +460,41 @@ export const VideoStoryboardModal = ({
     setError(null);
 
     try {
-      if (!storyboardData) {
-        throw new Error('缺少分镜数据');
-      }
-
       console.log('开始生成视频...');
-      console.log('传递给视频生成的storyboardData:', JSON.stringify(storyboardData, null, 2));
+      console.log('当前分镜数据:', scenes);
+      
+      // 从当前的 scenes 数据构建请求数据
+      const storyboard_images_filepath = scenes.map(scene => {
+        // 如果图片URL是本地代理路径，转换回原始路径
+        if (scene.generatedImage && scene.generatedImage.includes('/api/ai/serve-image')) {
+          const urlParams = new URLSearchParams(scene.generatedImage.split('?')[1]);
+          return urlParams.get('path') || scene.generatedImage;
+        }
+        return scene.generatedImage || '';
+      });
+      
+      const storyboard_prompts = scenes.map(scene => ({
+        prompt: scene.prompt || '',
+        duration: scene.duration || 3,
+        description: scene.description || ''
+      }));
+      
+      const storyboard_image_prompts = scenes.map(scene => ({
+        prompt: scene.imagePrompt || scene.prompt || '',
+        thought_process: scene.thoughtProcess || ''
+      }));
+      
+      // 构建完整的请求数据
+      const requestData = {
+        storyboard_images_filepath,
+        storyboard_prompts,
+        video_width: videoSize.width,
+        video_height: videoSize.height,
+        voice: voiceInfo || storyboardData?.voice || {},
+        storyboard_image_prompts
+      };
+      
+      console.log('构建的请求数据:', JSON.stringify(requestData, null, 2));
       
       // 验证必要字段
       const requiredFields = [
@@ -436,20 +506,20 @@ export const VideoStoryboardModal = ({
         'storyboard_image_prompts'
       ];
       
-      const missingFields = requiredFields.filter(field => !storyboardData[field]);
+      const missingFields = requiredFields.filter(field => !requestData[field]);
       if (missingFields.length > 0) {
         console.error('缺少必要字段:', missingFields);
         throw new Error(`缺少必要字段: ${missingFields.join(', ')}`);
       }
       
       console.log('数据验证通过，所有必要字段都存在');
-      console.log('图片数量:', storyboardData.storyboard_images_filepath.length);
-      console.log('提示词数量:', storyboardData.storyboard_prompts.length);
-      console.log('视频尺寸:', storyboardData.video_width, 'x', storyboardData.video_height);
-      console.log('配音角色数量:', storyboardData.voice.characters_timbre?.length);
-      console.log('配音脚本数量:', storyboardData.voice.voice_scripts?.length);
+      console.log('图片数量:', requestData.storyboard_images_filepath.length);
+      console.log('提示词数量:', requestData.storyboard_prompts.length);
+      console.log('视频尺寸:', requestData.video_width, 'x', requestData.video_height);
+      console.log('配音角色数量:', requestData.voice.characters_timbre?.length);
+      console.log('配音脚本数量:', requestData.voice.voice_scripts?.length);
       
-      const result = await videoStoryboardService.generateVideoWithPolling(storyboardData);
+      const result = await videoStoryboardService.generateVideoWithPolling(requestData);
       
       console.log('视频生成结果:', result);
       
@@ -727,6 +797,16 @@ export const VideoStoryboardModal = ({
                   {/* 图片 */}
                   <div className="w-64 shrink-0 flex flex-col justify-center">
                     <div className="h-36 bg-slate-100 relative rounded-lg overflow-hidden flex items-center justify-center mb-2">
+                      {/* Loading 覆盖层 */}
+                      {isGeneratingSceneImage[scene.id] && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+                          <div className="text-white text-center">
+                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+                            <span className="text-sm">重新生成中...</span>
+                          </div>
+                        </div>
+                      )}
+                      
                       {scene.generatedImage ? (
                         <button
                           type="button"
@@ -782,6 +862,25 @@ export const VideoStoryboardModal = ({
                         <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
                           时长: {scene.duration}s
                         </span>
+                        {/* 排序按钮 */}
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleMoveSceneUp(scene.id)}
+                            disabled={scenes.findIndex(s => s.id === scene.id) === 0}
+                            className="px-2 py-1 text-xs border border-slate-200 text-slate-600 rounded hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="上移"
+                          >
+                            <ChevronLeft className="w-3 h-3 rotate-90" />
+                          </button>
+                          <button
+                            onClick={() => handleMoveSceneDown(scene.id)}
+                            disabled={scenes.findIndex(s => s.id === scene.id) === scenes.length - 1}
+                            className="px-2 py-1 text-xs border border-slate-200 text-slate-600 rounded hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="下移"
+                          >
+                            <ChevronLeft className="w-3 h-3 -rotate-90" />
+                          </button>
+                        </div>
                         <button
                           onClick={() => handleGenerateSceneImage(scene.id)}
                           disabled={isGeneratingSceneImage[scene.id]}
@@ -836,13 +935,13 @@ export const VideoStoryboardModal = ({
                       />
                     </div>
                     
-                    {scene.imagePrompt && (
+                    {/* {scene.imagePrompt && (
                       <div>
                         <span className="text-xs text-slate-500 font-medium">图片提示词：</span>
                         <p className="text-sm text-slate-600 mt-1 bg-blue-50 p-2 rounded">{scene.imagePrompt}</p>
                       </div>
                     )}
-                    
+                     */}
                     {scene.thoughtProcess && (
                       <details className="text-xs">
                         <summary className="cursor-pointer text-slate-500 hover:text-slate-700">

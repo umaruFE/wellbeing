@@ -820,14 +820,15 @@ export const generateVideoWithPolling = async (storyboardData, maxAttempts = 360
 
 /**
  * 重新生成图片
- * @param {string} imageUrl - 原图片URL
+ * @param {number} width - 视频宽度
+ * @param {number} height - 视频高度
+ * @param {string} role - 角色名称
  * @param {string} prompt - 提示词
- * @param {string} sceneId - 场景ID
- * @returns {Promise<any>} - 返回新生成的图片数据
+ * @returns {Promise<any>} - 返回执行ID
  */
-export const regeneImage = async (imageUrl, prompt, sceneId) => {
+export const regeneImage = async (width, height, role, prompt) => {
   try {
-    console.log('调用后端API重新生成图片:', { imageUrl, prompt, sceneId });
+    console.log('调用后端API重新生成图片:', { width, height, role, prompt });
     
     const response = await fetch('/api/ai/regene-image', {
       method: 'POST',
@@ -836,9 +837,10 @@ export const regeneImage = async (imageUrl, prompt, sceneId) => {
         ...getAuthHeaders()
       },
       body: JSON.stringify({
-        image_url: imageUrl,
-        prompt,
-        scene_id: sceneId
+        width,
+        height,
+        role,
+        prompt
       })
     });
 
@@ -851,6 +853,94 @@ export const regeneImage = async (imageUrl, prompt, sceneId) => {
     console.log('后端API返回数据:', data);
     
     return data.data;
+  } catch (error) {
+    console.error('重新生成图片失败:', error);
+    throw error;
+  }
+};
+
+/**
+ * 获取重新生成的图片
+ * @param {string} executionId - 执行ID
+ * @returns {Promise<any>} - 返回图片数据
+ */
+export const getRegeneImage = async (executionId) => {
+  try {
+    console.log('获取重新生成的图片:', executionId);
+    
+    const response = await fetch(`/api/ai/get-image?executionId=${executionId}`, {
+      method: 'GET',
+      headers: {
+        ...getAuthHeaders()
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '调用失败');
+    }
+
+    const data = await response.json();
+    console.log('获取图片数据:', data);
+    
+    return data.data;
+  } catch (error) {
+    console.error('获取图片失败:', error);
+    throw error;
+  }
+};
+
+/**
+ * 重新生成图片并轮询获取结果
+ * @param {number} width - 视频宽度
+ * @param {number} height - 视频高度
+ * @param {string} role - 角色名称
+ * @param {string} prompt - 提示词
+ * @param {number} maxAttempts - 最大轮询次数
+ * @param {number} interval - 轮询间隔（毫秒）
+ * @returns {Promise<any>} - 返回图片数据
+ */
+export const regeneImageWithPolling = async (width, height, role, prompt, maxAttempts = 60, interval = 5000) => {
+  try {
+    // 调用重新生成图片API
+    const result = await regeneImage(width, height, role, prompt);
+    
+    if (!result.executionId) {
+      throw new Error('未返回executionId');
+    }
+
+    const executionId = result.executionId;
+    console.log('获取到executionId:', executionId, '开始轮询...');
+
+    // 轮询执行状态
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(`第${attempt + 1}/${maxAttempts}次查询状态...`);
+      
+      const statusData = await queryExecutionStatus(executionId);
+      console.log('执行状态:', statusData);
+
+      // 检查是否完成（支持两种数据格式）
+      const isCompleted = (statusData.status === 'success' && statusData.finished) ||
+                          (statusData.data && statusData.data.status === 'completed');
+      
+      if (isCompleted) {
+        console.log('执行完成，获取图片数据...');
+        
+        // 获取图片数据
+        const imageData = await getRegeneImage(executionId);
+        console.log('获取图片数据成功:', imageData);
+        
+        return imageData;
+      } else if (statusData.status === 'error' || statusData.status === 'failed' || 
+                 (statusData.data && statusData.data.status === 'failed')) {
+        throw new Error('执行失败');
+      }
+
+      console.log(`等待${interval/1000}秒后继续查询...`);
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    throw new Error('执行超时');
   } catch (error) {
     console.error('重新生成图片失败:', error);
     throw error;
@@ -871,5 +961,7 @@ export default {
   generateVideo,
   queryVideoStatus,
   generateVideoWithPolling,
-  regeneImage
+  regeneImage,
+  getRegeneImage,
+  regeneImageWithPolling
 };

@@ -16,11 +16,11 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { image_url, prompt, scene_id } = body;
+    const { width, height, role, prompt } = body;
 
-    console.log('收到重新生成图片请求:', { image_url, prompt, scene_id });
+    console.log('收到重新生成图片请求:', { width, height, role, prompt });
 
-    if (!image_url || !prompt) {
+    if (!role || !prompt) {
       return NextResponse.json(
         { error: '缺少必要参数' },
         { status: 400 }
@@ -29,17 +29,19 @@ export async function POST(request: NextRequest) {
 
     console.log('调用 N8N regene-image webhook...');
     
+    // 使用 FormData 格式
+    const formData = new FormData();
+    formData.append('width', String(width || 1280));
+    formData.append('height', String(height || 720));
+    formData.append('role', role);
+    formData.append('prompt', prompt);
+
     const response = await fetch(`${AI_API_BASE_URL}/webhook/regene-image`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'X-N8N-API-KEY': N8N_API_KEY
       },
-      body: JSON.stringify({
-        image_url,
-        prompt,
-        scene_id
-      })
+      body: formData
     });
 
     if (!response.ok) {
