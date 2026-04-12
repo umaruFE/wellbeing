@@ -296,6 +296,9 @@ export const VideoStoryboardModal = ({
       let newImageUrl;
       if (typeof result === 'string') {
         newImageUrl = result;
+      } else if (result.storyboardData) {
+        // 后端返回格式：{ status: 'completed', storyboardData: 'http://...' }
+        newImageUrl = result.storyboardData;
       } else if (result.image_url) {
         newImageUrl = result.image_url;
       } else if (result.url) {
@@ -306,6 +309,8 @@ export const VideoStoryboardModal = ({
         console.error('未知的返回格式:', result);
         throw new Error('未找到图片URL');
       }
+      
+      console.log('新图片URL:', newImageUrl);
       
       setScenes(prev => prev.map(s => 
         s.id === sceneId 

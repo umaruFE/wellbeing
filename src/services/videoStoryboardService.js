@@ -645,6 +645,33 @@ export const queryExecutionStatus = async (executionId) => {
 };
 
 /**
+ * 查询重新生成图片的执行状态
+ * @param {string} executionId - 执行ID
+ * @returns {Promise<any>} - 返回执行状态
+ */
+export const queryRegeneImageStatus = async (executionId) => {
+  try {
+    const response = await fetch(`/api/ai/get-image?executionId=${executionId}`, {
+      method: 'GET',
+      headers: {
+        ...getAuthHeaders()
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '查询失败');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('查询重新生成图片状态失败:', error);
+    throw error;
+  }
+};
+
+/**
  * 调用后端API生成图片（不暴露webhook URL）
  * @param {string} role - IP角色ID（如"poppy"）
  * @param {string} videoRatio - 视频比例（如"16:9"）
@@ -916,21 +943,19 @@ export const regeneImageWithPolling = async (width, height, role, prompt, maxAtt
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       console.log(`第${attempt + 1}/${maxAttempts}次查询状态...`);
       
-      const statusData = await queryExecutionStatus(executionId);
+      const statusData = await queryRegeneImageStatus(executionId);
       console.log('执行状态:', statusData);
 
       // 检查是否完成（支持两种数据格式）
       const isCompleted = (statusData.status === 'success' && statusData.finished) ||
-                          (statusData.data && statusData.data.status === 'completed');
+                          (statusData.data && statusData.data.status === 'completed') ||
+                          (statusData.data && statusData.data.storyboardData);
       
       if (isCompleted) {
-        console.log('执行完成，获取图片数据...');
+        console.log('执行完成，返回图片数据...');
         
-        // 获取图片数据
-        const imageData = await getRegeneImage(executionId);
-        console.log('获取图片数据成功:', imageData);
-        
-        return imageData;
+        // 直接返回图片数据
+        return statusData.data;
       } else if (statusData.status === 'error' || statusData.status === 'failed' || 
                  (statusData.data && statusData.data.status === 'failed')) {
         throw new Error('执行失败');
@@ -958,6 +983,7 @@ export default {
   pollTaskAndGetVideoUrl,
   callWebhookGenerateImages,
   queryExecutionStatus,
+  queryRegeneImageStatus,
   generateVideo,
   queryVideoStatus,
   generateVideoWithPolling,
