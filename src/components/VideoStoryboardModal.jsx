@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Plus, Trash2, RefreshCw, Image as ImageIcon, Video, Wand2, ChevronLeft, ChevronRight, Check, AlertCircle } from 'lucide-react';
+import { X, Plus, Trash2, RefreshCw, Image as ImageIcon, Video, Wand2, ChevronLeft, ChevronRight, Check, AlertCircle, Download } from 'lucide-react';
 import videoStoryboardService from '../services/videoStoryboardService';
-import { aiAssetService } from '../services/aiAssetService';
 import { uploadService } from '../services/uploadService';
 import poppyImg from '../assets/ip/poppy.png';
 import ediImg from '../assets/ip/edi.png';
@@ -18,11 +17,11 @@ const STEPS = [
 
 // 图片比例选项
 const ASPECT_RATIOS = [
-  { id: '16:9', label: '16:9', width: 1960, height: 1104, description: '横屏宽屏' },
-  { id: '4:3', label: '4:3', width: 1960, height: 1470, description: '标准横屏' },
-  { id: '1:1', label: '1:1', width: 1960, height: 1960, description: '正方形' },
-  { id: '3:4', label: '3:4', width: 1470, height: 1960, description: '标准竖屏' },
-  { id: '9:16', label: '9:16', width: 1104, height: 1960, description: '竖屏长图' },
+  { id: '16:9', label: '16:9', width: 1280, height: 720, description: '横屏宽屏' },
+  { id: '4:3', label: '4:3', width: 1280, height: 960, description: '标准横屏' },
+  { id: '1:1', label: '1:1', width: 1280, height: 1280, description: '正方形' },
+  { id: '3:4', label: '3:4', width: 960, height: 1280, description: '标准竖屏' },
+  { id: '9:16', label: '9:16', width: 720, height: 1280, description: '竖屏长图' },
 ];
 
 // IP角色数据（与RoleSelection.jsx保持一致）
@@ -269,24 +268,48 @@ export const VideoStoryboardModal = ({
     setError(null);
 
     try {
-      const referenceImages = getFinalReferenceImages();
+      console.log('重新生成图片，场景:', scene);
       
-      const imageUrl = await videoStoryboardService.generateSceneImage(
-        scene,
-        referenceImages,
-        userId,
-        organizationId,
-        null
+      // 使用 imagePrompt（图片提示词）而不是 prompt（视频提示词）
+      const prompt = scene.imagePrompt || scene.prompt;
+      
+      if (!scene.generatedImage) {
+        throw new Error('没有原图片URL');
+      }
+      
+      const result = await videoStoryboardService.regeneImage(
+        scene.generatedImage,
+        prompt,
+        scene.id
       );
+      
+      console.log('重新生成图片结果:', result);
+      
+      // 更新场景的图片URL
+      let newImageUrl;
+      if (typeof result === 'string') {
+        newImageUrl = result;
+      } else if (result.image_url) {
+        newImageUrl = result.image_url;
+      } else if (result.url) {
+        newImageUrl = result.url;
+      } else if (result.data) {
+        newImageUrl = result.data;
+      } else {
+        console.error('未知的返回格式:', result);
+        throw new Error('未找到图片URL');
+      }
       
       setScenes(prev => prev.map(s => 
         s.id === sceneId 
-          ? { ...s, generatedImage: imageUrl, status: 'completed' }
+          ? { ...s, generatedImage: newImageUrl, status: 'completed' }
           : s
       ));
-      return imageUrl;
+      
+      return newImageUrl;
     } catch (err) {
-      setError('生成分镜图片失败: ' + err.message);
+      console.error('重新生成图片失败:', err);
+      setError('重新生成图片失败: ' + err.message);
       return null;
     } finally {
       setIsGeneratingSceneImage(prev => ({ ...prev, [sceneId]: false }));
@@ -401,14 +424,47 @@ export const VideoStoryboardModal = ({
       }
 
       console.log('开始生成视频...');
+      console.log('传递给视频生成的storyboardData:', JSON.stringify(storyboardData, null, 2));
+      
+      // 验证必要字段
+      const requiredFields = [
+        'storyboard_images_filepath',
+        'storyboard_prompts',
+        'video_width',
+        'video_height',
+        'voice',
+        'storyboard_image_prompts'
+      ];
+      
+      const missingFields = requiredFields.filter(field => !storyboardData[field]);
+      if (missingFields.length > 0) {
+        console.error('缺少必要字段:', missingFields);
+        throw new Error(`缺少必要字段: ${missingFields.join(', ')}`);
+      }
+      
+      console.log('数据验证通过，所有必要字段都存在');
+      console.log('图片数量:', storyboardData.storyboard_images_filepath.length);
+      console.log('提示词数量:', storyboardData.storyboard_prompts.length);
+      console.log('视频尺寸:', storyboardData.video_width, 'x', storyboardData.video_height);
+      console.log('配音角色数量:', storyboardData.voice.characters_timbre?.length);
+      console.log('配音脚本数量:', storyboardData.voice.voice_scripts?.length);
+      
       const result = await videoStoryboardService.generateVideoWithPolling(storyboardData);
       
       console.log('视频生成结果:', result);
       
       // 检查返回的视频数据
       if (result && result.videoData) {
-        const videoUrl = result.videoData.video_url || result.videoData.url || result.videoData.videoUrl;
+        // videoData 可能是字符串（直接是URL）或对象
+        let videoUrl;
+        if (typeof result.videoData === 'string') {
+          videoUrl = result.videoData;
+        } else {
+          videoUrl = result.videoData.video_url || result.videoData.url || result.videoData.videoUrl || result.videoData.data;
+        }
+        
         if (videoUrl) {
+          console.log('视频URL:', videoUrl);
           setGeneratedVideoUrl(videoUrl);
         } else {
           console.error('视频数据结构:', result.videoData);
@@ -889,13 +945,32 @@ export const VideoStoryboardModal = ({
               <ChevronLeft className="w-4 h-4" />
               上一步
             </button>
-            <button
-              onClick={handleConfirm}
-              className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-            >
-              <Check className="w-5 h-5" />
-              确认并添加到画布
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  if (generatedVideoUrl) {
+                    const link = document.createElement('a');
+                    link.href = generatedVideoUrl;
+                    link.download = `video_${Date.now()}.mp4`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                }}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <Download className="w-5 h-5" />
+                下载视频
+              </button>
+              {/* 暂时屏蔽确认按钮 */}
+              {/* <button
+                onClick={handleConfirm}
+                className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
+                <Check className="w-5 h-5" />
+                确认并添加到画布
+              </button> */}
+            </div>
           </div>
         );
       }

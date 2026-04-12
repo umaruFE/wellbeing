@@ -818,6 +818,45 @@ export const generateVideoWithPolling = async (storyboardData, maxAttempts = 360
   }
 };
 
+/**
+ * 重新生成图片
+ * @param {string} imageUrl - 原图片URL
+ * @param {string} prompt - 提示词
+ * @param {string} sceneId - 场景ID
+ * @returns {Promise<any>} - 返回新生成的图片数据
+ */
+export const regeneImage = async (imageUrl, prompt, sceneId) => {
+  try {
+    console.log('调用后端API重新生成图片:', { imageUrl, prompt, sceneId });
+    
+    const response = await fetch('/api/ai/regene-image', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify({
+        image_url: imageUrl,
+        prompt,
+        scene_id: sceneId
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '调用失败');
+    }
+
+    const data = await response.json();
+    console.log('后端API返回数据:', data);
+    
+    return data.data;
+  } catch (error) {
+    console.error('重新生成图片失败:', error);
+    throw error;
+  }
+};
+
 // 导出默认对象
 export default {
   extractCharacterFromDescription,
@@ -831,5 +870,6 @@ export default {
   queryExecutionStatus,
   generateVideo,
   queryVideoStatus,
-  generateVideoWithPolling
+  generateVideoWithPolling,
+  regeneImage
 };
