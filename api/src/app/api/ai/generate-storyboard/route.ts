@@ -124,9 +124,9 @@ async function queryExecutionStatus(executionId: string): Promise<any> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { role, videoRatio, story } = body;
+    const { role, videoRatio, story, videoWidth, videoHeight } = body;
 
-    console.log('收到生成分镜请求:', { role, videoRatio, story });
+    console.log('收到生成分镜请求:', { role, videoRatio, story, videoWidth, videoHeight });
 
     if (!role || !story) {
       return NextResponse.json(
@@ -170,6 +170,8 @@ export async function POST(request: NextRequest) {
     formData.append('role', role);
     formData.append('video_ratio', videoRatio || '16:9');
     formData.append('story', story);
+    formData.append('video_width', String(videoWidth || 1920));
+    formData.append('video_height', String(videoHeight || 1080));
 
     console.log('FormData构建完成:');
     console.log('- 图片文件名:', imageName);
@@ -177,6 +179,8 @@ export async function POST(request: NextRequest) {
     console.log('- role:', role);
     console.log('- video_ratio:', videoRatio || '16:9');
     console.log('- story:', story);
+    console.log('- video_width:', videoWidth || 1920);
+    console.log('- video_height:', videoHeight || 1080);
 
     console.log('开始调用webhook...');
     const webhookResult = await callWebhookWithRetry(formData, 3, 5000);
@@ -235,7 +239,8 @@ export async function GET(request: NextRequest) {
       try {
         const storyboardData = await getStoryboardImages(executionId);
         
-        console.log('获取分镜图片数据成功，返回给前端');
+        console.log('获取分镜图片数据成功，完整数据:', JSON.stringify(storyboardData.data, null, 2));
+        console.log('video_width:', storyboardData.data?.video_width, 'video_height:', storyboardData.data?.video_height);
         
         return NextResponse.json({
           success: true,

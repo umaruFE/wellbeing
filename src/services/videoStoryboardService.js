@@ -617,102 +617,6 @@ const N8N_BASE = 'https://wblo9e19bic8lycu-8188.container.x-gpu.com';
  * @param {number} maxAttempts - 最大轮询次数（默认5分钟，每5秒一次）
  * @returns {Promise<object>} - n8n 执行结果数据
  */
-const pollN8nExecution = async (executionId, maxAttempts = 60) => {
-  for (let i = 0; i < maxAttempts; i++) {
-    const res = await fetch(`${N8N_BASE}/api/v1/executions/${executionId}`, {
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!res.ok) throw new Error(`n8n 查询失败: ${res.status}`);
-    const data = await res.json();
-
-    // finished: true 表示执行完成
-    if (data.data?.finished === true) {
-      return data.data;
-    }
-    if (data.data?.stoppedAt) {
-      throw new Error('n8n 执行异常终止');
-    }
-    await new Promise(r => setTimeout(r, 5000));
-  }
-  throw new Error('n8n 执行超时');
-};
-
-/**
- * 合成视频（调用 n8n webhook）
- * @param {Array}  scenes          - 分镜步骤数组
- * @param {string} _title          - 视频标题（预留）
- * @param {string} userId
- * @param {string} organizationId
- * @param {string} storyText       - 故事描述（用于 n8n prompt）
- * @returns {Promise<string>}      - 最终视频 URL
- */
-export const composeVideo = async (scenes, _title = '', userId = null, organizationId = null, storyText = '') => {
-  // 取第一个有图片的分镜作为 image 参数
-  const firstImage = (scenes || [])
-    .filter(s => s?.generatedImage)
-    .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))[0]?.generatedImage;
-
-  if (!firstImage) throw new Error('没有可用的分镜图片');
-
-  // image 文件名从 URL 中提取
-  const imageUrlObj = new URL(firstImage);
-  const imageFileName = imageUrlObj.pathname.split('/').pop() || 'scene.jpg';
-
-  // 从 URL 拉取为 Blob（浏览器环境）
-  const imageRes = await fetch(firstImage);
-  if (!imageRes.ok) throw new Error('无法下载分镜图片');
-  const imageBlob = await imageRes.blob();
-
-  const formData = new FormData();
-  formData.append('image', imageBlob, imageFileName);
-  formData.append('video_ratio', '16:9');
-  formData.append('max_image_count', String(scenes.filter(s => s?.generatedImage).length));
-  formData.append('story', storyText || scenes.map(s => s.content).join('，'));
-
-  // 触发 n8n webhook（注意 URL 中只有一个 /webhook，不要重复）
-  const triggerRes = await fetch(`${N8N_BASE}/webhook/gene-images`, {
-    method: 'POST',
-    body: formData,
-    headers: { 'Accept': 'application/json' }
-  });
-  if (!triggerRes.ok) throw new Error(`n8n webhook 失败: ${triggerRes.status}`);
-
-  // n8n 返回 200 但 body 可能是重定向信息，从 header 或 body 中取 executionId
-  const resText = await triggerRes.text();
-  let executionId;
-  try {
-    const parsed = JSON.parse(resText);
-    executionId = parsed.executionId || parsed.id || parsed.data?.executionId;
-  } catch {
-    // 尝试从 response headers 中取
-    executionId = triggerRes.headers.get('x-n8n-execution-id') || null;
-  }
-  if (!executionId) {
-    console.warn('未拿到 n8n executionId，假设执行成功');
-    return firstImage; // fallback
-  }
-
-  // 轮询执行结果
-  const execData = await pollN8nExecution(executionId);
-
-  // 从 n8n 输出中提取最终图片 URL（具体字段名由你的 n8n 流程决定）
-  const output = execData?.data?.output || execData?.data?.resultData?.data || execData?.output || execData;
-  let videoUrl;
-  if (Array.isArray(output)) {
-    videoUrl = output[0]?.url || output[0];
-  } else if (typeof output === 'string') {
-    videoUrl = output;
-  } else {
-    videoUrl = output?.url || output?.videoUrl || output?.fileUrl || null;
-  }
-
-  if (!videoUrl) {
-    console.warn('n8n 输出中未找到视频 URL，返回首帧图片:', output);
-    return firstImage;
-  }
-  return videoUrl;
-};
-
 /**
  * 查询执行状态
  * @param {string} executionId - 执行ID
@@ -745,11 +649,13 @@ export const queryExecutionStatus = async (executionId) => {
  * @param {string} role - IP角色ID（如"poppy"）
  * @param {string} videoRatio - 视频比例（如"16:9"）
  * @param {string} story - 故事描述
+ * @param {number} videoWidth - 视频宽度
+ * @param {number} videoHeight - 视频高度
  * @returns {Promise<any>} - 返回生成的结果
  */
-export const callWebhookGenerateImages = async (role, videoRatio, story) => {
+export const callWebhookGenerateImages = async (role, videoRatio, story, videoWidth, videoHeight) => {
   try {
-    console.log('调用后端API生成图片:', { role, videoRatio, story });
+    console.log('调用后端API生成图片:', { role, videoRatio, story, videoWidth, videoHeight });
     
     const response = await fetch('/api/ai/generate-storyboard', {
       method: 'POST',
@@ -760,7 +666,9 @@ export const callWebhookGenerateImages = async (role, videoRatio, story) => {
       body: JSON.stringify({
         role,
         videoRatio,
-        story
+        story,
+        videoWidth,
+        videoHeight
       })
     });
 
@@ -808,6 +716,108 @@ export const callWebhookGenerateImages = async (role, videoRatio, story) => {
   }
 };
 
+/**
+ * 生成视频
+ * @param {Object} storyboardData - 分镜数据
+ * @returns {Promise<any>} - 返回执行ID
+ */
+export const generateVideo = async (storyboardData) => {
+  try {
+    console.log('调用后端API生成视频:', storyboardData);
+    
+    const response = await fetch('/api/ai/generate-video', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(storyboardData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '调用失败');
+    }
+
+    const data = await response.json();
+    console.log('后端API返回数据:', data);
+    
+    return data.data;
+  } catch (error) {
+    console.error('生成视频失败:', error);
+    throw error;
+  }
+};
+
+/**
+ * 查询视频生成状态
+ * @param {string} executionId - 执行ID
+ * @returns {Promise<any>} - 返回视频状态
+ */
+export const queryVideoStatus = async (executionId) => {
+  try {
+    const response = await fetch(`/api/ai/video-status?executionId=${executionId}`, {
+      method: 'GET',
+      headers: getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || '查询失败');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('查询视频状态失败:', error);
+    throw error;
+  }
+};
+
+/**
+ * 生成视频并轮询状态
+ * @param {Object} storyboardData - 分镜数据
+ * @param {number} maxAttempts - 最大轮询次数
+ * @param {number} interval - 轮询间隔（毫秒）
+ * @returns {Promise<any>} - 返回视频数据
+ */
+export const generateVideoWithPolling = async (storyboardData, maxAttempts = 360, interval = 5000) => {
+  try {
+    const result = await generateVideo(storyboardData);
+    
+    if (!result.executionId) {
+      throw new Error('未返回executionId');
+    }
+
+    const executionId = result.executionId;
+    console.log('获取到视频executionId:', executionId, '开始轮询视频状态...');
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      console.log(`第${attempt + 1}/${maxAttempts}次查询视频状态...`);
+      
+      const statusData = await queryVideoStatus(executionId);
+      console.log('视频状态:', statusData);
+
+      if (statusData.data && statusData.data.status === 'completed') {
+        console.log('视频生成完成，返回完整数据:', statusData.data);
+        return statusData.data;
+      } else if (statusData.data && statusData.data.status === 'failed') {
+        const errorMsg = statusData.data.error || '视频生成失败';
+        console.error('视频生成失败，详细信息:', statusData);
+        throw new Error(errorMsg);
+      }
+
+      console.log(`等待${interval/1000}秒后继续查询...`);
+      await new Promise(resolve => setTimeout(resolve, interval));
+    }
+
+    throw new Error('视频生成超时');
+  } catch (error) {
+    console.error('生成视频失败:', error);
+    throw error;
+  }
+};
+
 // 导出默认对象
 export default {
   extractCharacterFromDescription,
@@ -816,9 +826,10 @@ export default {
   pollTaskAndGetImageUrl,
   generateStoryboardScript,
   generateSceneImage,
-  composeVideo,
   pollTaskAndGetVideoUrl,
-  pollN8nExecution,
   callWebhookGenerateImages,
-  queryExecutionStatus
+  queryExecutionStatus,
+  generateVideo,
+  queryVideoStatus,
+  generateVideoWithPolling
 };
