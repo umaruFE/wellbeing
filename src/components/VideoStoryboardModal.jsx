@@ -297,14 +297,27 @@ export const VideoStoryboardModal = ({
       if (typeof result === 'string') {
         newImageUrl = result;
       } else if (result.storyboardData) {
-        // 后端返回格式：{ status: 'completed', storyboardData: 'http://...' }
-        newImageUrl = result.storyboardData;
+        // 后端返回格式：{ status: 'completed', storyboardData: { data: 'http://...' } }
+        if (typeof result.storyboardData === 'string') {
+          newImageUrl = result.storyboardData;
+        } else if (result.storyboardData.data) {
+          newImageUrl = result.storyboardData.data;
+        } else {
+          console.error('storyboardData格式未知:', result.storyboardData);
+          throw new Error('未找到图片URL');
+        }
       } else if (result.image_url) {
         newImageUrl = result.image_url;
       } else if (result.url) {
         newImageUrl = result.url;
       } else if (result.data) {
-        newImageUrl = result.data;
+        // 可能直接是 { data: 'http://...' }
+        if (typeof result.data === 'string') {
+          newImageUrl = result.data;
+        } else {
+          console.error('data格式未知:', result.data);
+          throw new Error('未找到图片URL');
+        }
       } else {
         console.error('未知的返回格式:', result);
         throw new Error('未找到图片URL');
