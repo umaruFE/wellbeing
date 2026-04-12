@@ -18,11 +18,11 @@ const STEPS = [
 
 // 图片比例选项
 const ASPECT_RATIOS = [
-  { id: '16:9', label: '16:9', width: 1024, height: 576, description: '横屏宽屏' },
-  { id: '4:3', label: '4:3', width: 1024, height: 768, description: '标准横屏' },
-  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
-  { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
-  { id: '9:16', label: '9:16', width: 576, height: 1024, description: '竖屏长图' },
+  { id: '16:9', label: '16:9', width: 1960, height: 1104, description: '横屏宽屏' },
+  { id: '4:3', label: '4:3', width: 1960, height: 1470, description: '标准横屏' },
+  { id: '1:1', label: '1:1', width: 1960, height: 1960, description: '正方形' },
+  { id: '3:4', label: '3:4', width: 1470, height: 1960, description: '标准竖屏' },
+  { id: '9:16', label: '9:16', width: 1104, height: 1960, description: '竖屏长图' },
 ];
 
 // IP角色数据（与RoleSelection.jsx保持一致）
