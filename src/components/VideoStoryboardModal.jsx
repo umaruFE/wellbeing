@@ -30,7 +30,7 @@ const IP_CHARACTERS = [
   { id: 'edi', name: 'Edi', color: '蓝色', colorHex: '#87CEEB', description: '蓝色角色', thumbnail: ediImg, available: true },
   { id: 'rolly', name: 'Rolly', color: '橘色', colorHex: '#FFA500', description: '橘色角色', thumbnail: rollyImg, available: true },
   { id: 'milo', name: 'Milo', color: '黄色', colorHex: '#FFD700', description: '黄色角色', thumbnail: miloImg, available: true },
-  { id: 'ace', name: 'Ace', color: '紫色', colorHex: '#9370DB', description: 'LoRA文件缺失', thumbnail: aceImg, available: false },
+  { id: 'ace', name: 'Ace', color: '紫色', colorHex: '#9370DB', description: '紫色角色', thumbnail: aceImg, available: true },
 ];
 
 /**
