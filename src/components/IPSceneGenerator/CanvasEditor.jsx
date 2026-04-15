@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Move, RotateCw, ZoomIn, ZoomOut, Loader2 } from 'lucide-react';
+import { Move, RotateCw, ZoomIn, ZoomOut, Loader2, FlipHorizontal, FlipVertical } from 'lucide-react';
 import {
   getImageContentBounds,
   getEditorSceneLayout,
@@ -134,6 +134,10 @@ export const CanvasEditor = ({
       ctx.save();
       ctx.translate(position.x + dw / 2, position.y + dh / 2);
       ctx.rotate((position.rotation || 0) * (Math.PI / 180));
+      ctx.scale(
+        position.flipX ? -1 : 1,
+        position.flipY ? -1 : 1
+      );
       ctx.drawImage(
         roleImg,
         bounds.x,
@@ -308,6 +312,19 @@ export const CanvasEditor = ({
     });
   };
 
+  const handleFlipChange = (axis) => {
+    if (!selectedRole) return;
+
+    const currentFlipX = rolePositions[selectedRole]?.flipX || false;
+    const currentFlipY = rolePositions[selectedRole]?.flipY || false;
+
+    onRolePositionChange(selectedRole, {
+      ...rolePositions[selectedRole],
+      flipX: axis === 'x' ? !currentFlipX : currentFlipX,
+      flipY: axis === 'y' ? !currentFlipY : currentFlipY
+    });
+  };
+
   return (
     <div className="h-full flex flex-col overflow-y-auto">
       {background || isLoadingBackground || Object.keys(loadingRoles).some(key => loadingRoles[key]) ? (
@@ -394,6 +411,32 @@ export const CanvasEditor = ({
                     title="顺时针旋转"
                   >
                     <RotateCw className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleFlipChange('x')}
+                    className={`p-2 rounded-lg border transition-colors ${
+                      rolePositions[selectedRole]?.flipX
+                        ? 'bg-purple-100 border-purple-400 text-purple-600'
+                        : 'bg-white border-gray-300 hover:bg-gray-50 text-slate-700'
+                    }`}
+                    title="水平翻转"
+                  >
+                    <FlipHorizontal className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => handleFlipChange('y')}
+                    className={`p-2 rounded-lg border transition-colors ${
+                      rolePositions[selectedRole]?.flipY
+                        ? 'bg-purple-100 border-purple-400 text-purple-600'
+                        : 'bg-white border-gray-300 hover:bg-gray-50 text-slate-700'
+                    }`}
+                    title="垂直翻转"
+                  >
+                    <FlipVertical className="w-4 h-4" />
                   </button>
                 </div>
               </div>

@@ -43,9 +43,9 @@ const IP_CHARACTERS = [
     id: 'ace',
     name: 'Ace',
     color: '紫色',
-    description: '紫色角色 (LoRA文件缺失)',
+    description: '紫色角色',
     thumbnail: aceImg,
-    available: false
+    available: true
   }
 ];
 

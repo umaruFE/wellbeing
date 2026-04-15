@@ -697,7 +697,7 @@ export const queryRegeneImageStatus = async (executionId, maxRetries = 3, retryD
   
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      const response = await fetch(`/api/ai/get-image?executionId=${executionId}`, {
+      const response = await fetch(`/api/ai/get-resource?executionId=${executionId}`, {
         method: 'GET',
         headers: {
           ...getAuthHeaders()
@@ -1018,7 +1018,7 @@ export const getRegeneImage = async (executionId) => {
   try {
     console.log('获取重新生成的图片:', executionId);
     
-    const response = await fetch(`/api/ai/get-image?executionId=${executionId}`, {
+    const response = await fetch(`/api/ai/get-resource?executionId=${executionId}`, {
       method: 'GET',
       headers: {
         ...getAuthHeaders()

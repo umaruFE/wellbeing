@@ -55,7 +55,7 @@ async function getVideoData(executionId: string): Promise<any> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-    const response = await fetch(`${AI_API_BASE_URL}/webhook/get-video?execution_id=${executionId}`, {
+    const response = await fetch(`${AI_API_BASE_URL}/webhook/get-resource?execution_id=${executionId}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

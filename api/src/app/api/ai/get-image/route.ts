@@ -31,7 +31,7 @@ async function getImageData(executionId: string): Promise<any> {
   try {
     console.log('获取重新生成的图片:', executionId);
     
-    const response = await fetch(`${AI_API_BASE_URL}/webhook/get-image?execution_id=${executionId}`, {
+    const response = await fetch(`${AI_API_BASE_URL}/webhook/get-resource?execution_id=${executionId}`, {
       method: 'GET',
       headers: {
         'X-N8N-API-KEY': N8N_API_KEY
