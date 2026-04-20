@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
 import { n8nClient } from '@/lib/n8n/client';
 
 /**
  * N8N 分镜图生成路由
- * 
+ *
  * 改造说明：
- * - 已通过 N8N 调用（/webhook/gene-images）
- * - 现改为使用统一的 n8nClient 调用
+ * - 通过 N8N 调用（/webhook/gene-images）
+ * - 入参中不再传递图片 base64
  * - 提示词优化由 N8N Workflow 内部处理
  */
-
-const AI_API_BASE_URL = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
 
 function corsHeaders() {
   return {
@@ -64,59 +60,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // IP角色图片映射
-    const ipImageMap: Record<string, string> = {
-      poppy: 'poppy.png',
-      edi: 'edi.png',
-      rolly: 'rolly.png',
-      milo: 'milo.png',
-      ace: 'ace.png'
-    };
-
-    const imageName = ipImageMap[role];
-    if (!imageName) {
-      return NextResponse.json(
-        { error: '无效的IP角色ID' },
-        { status: 400, headers: corsHeaders() }
-      );
-    }
-
-    const imagePath = path.join(process.cwd(), 'public', 'ip', imageName);
-
-    if (!fs.existsSync(imagePath)) {
-      return NextResponse.json(
-        { error: 'IP角色图片不存在', path: imagePath },
-        { status: 404, headers: corsHeaders() }
-      );
-    }
-
-    // 读取图片并转为 base64
-    const imageBuffer = fs.readFileSync(imagePath);
-    const imageBase64 = imageBuffer.toString('base64');
-    const imageMimeType = 'image/png';
-
-    // 构建 N8N 调用参数（JSON 格式）
+    // 构建 N8N 调用参数
     const n8nPayload = {
       role,
       video_ratio: videoRatio || '16:9',
       story,
       video_width: videoWidth || 1920,
       video_height: videoHeight || 1080,
-      image_base64: imageBase64,
-      image_mime_type: imageMimeType,
-      image_name: imageName,
       timestamp: Date.now()
     };
 
     console.log('[generate-storyboard] 调用 N8N Workflow:', {
-      workflow: 'ai-storyboard-generation',
+      workflow: 'gene-images',
       role,
       videoRatio: videoRatio || '16:9',
-      storyLength: story.length,
-      imageSize: imageBuffer.length
+      storyLength: story.length
     });
 
-    // 调用 N8N Workflow（使用 JSON 格式，图片转为 base64）
+    // 调用 N8N Workflow
     const result = await n8nClient.call('gene-images', n8nPayload);
 
     console.log('[generate-storyboard] N8N 响应:', result);
@@ -177,7 +138,7 @@ export async function GET(request: NextRequest) {
 
     console.log('[generate-storyboard] 查询执行状态:', executionId);
 
-    // 调用 N8N 查询执行状态
+    // 调用 N8N API 查询执行状态（不轮询，只查一次）
     const executionStatus = await n8nClient.pollExecution(executionId, {
       maxAttempts: 1,
       interval: 0
@@ -189,23 +150,16 @@ export async function GET(request: NextRequest) {
       console.log('[generate-storyboard] 执行完成，获取分镜图片数据...');
 
       try {
-        // 获取分镜数据
-        const response = await fetch(`${AI_API_BASE_URL}/webhook/get-images?execution_id=${executionId}`, {
-          method: 'GET'
-        });
-
-        if (!response.ok) {
-          throw new Error(`获取分镜图片数据失败: ${response.status}`);
-        }
-
-        const storyboardData = await response.json();
+        // 调用 get-images webhook 获取图片 (GET 请求)
+        const storyboardData = await n8nClient.call('get-images', { executionId }, { method: 'GET' });
+        console.log('[generate-storyboard] 分镜图片数据:', storyboardData);
 
         return NextResponse.json({
           success: true,
           data: {
             executionId: executionId,
             status: 'completed',
-            storyboardData: storyboardData.data
+            ...storyboardData
           }
         }, { headers: corsHeaders() });
 

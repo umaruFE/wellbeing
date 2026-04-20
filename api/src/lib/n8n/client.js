@@ -21,33 +21,50 @@ class N8NClient {
    * @param {string} workflowName - 工作流名称（Webhook 路径）
    * @param {object} payload - 传递给 Workflow 的参数
    * @param {object} options - 额外选项
+   * @param {string} options.method - HTTP 方法，默认 POST
    * @returns {Promise<object>} Workflow 执行结果
    */
   async call(workflowName, payload, options = {}) {
     const webhookUrl = `${this.baseUrl}/webhook/${workflowName}`;
     const timeout = options.timeout || 60000;
+    const method = options.method || 'POST';
+
+    console.log(`[n8n.call] ${method} ${webhookUrl}`);
+    console.log(`[n8n.call] API Key: ${this.apiKey ? '已设置' : '未设置'}`);
 
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
+      const fetchOptions = {
+        method,
         headers: {
           'Content-Type': 'application/json',
-          ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` })
+          ...(this.apiKey && { 'X-N8N-API-KEY': this.apiKey })
         },
-        body: JSON.stringify(payload),
         signal: controller.signal
-      });
+      };
+
+      // POST 请求才带 body
+      if (method === 'POST' && payload) {
+        console.log(`[n8n.call] Payload:`, JSON.stringify(payload, null, 2));
+        fetchOptions.body = JSON.stringify(payload);
+      }
+
+      const response = await fetch(webhookUrl, fetchOptions);
 
       clearTimeout(timeoutId);
 
+      console.log(`[n8n.call] 响应状态: ${response.status}`);
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.log(`[n8n.call] 错误响应: ${errorText}`);
         throw new Error(`N8N调用失败: ${response.status}`);
       }
 
       const result = await response.json();
+      console.log(`[n8n.call] 响应结果:`, result);
       return result;
 
     } catch (error) {
@@ -56,6 +73,17 @@ class N8NClient {
       }
       throw error;
     }
+  }
+
+  /**
+   * 获取 API 请求头
+   */
+  getHeaders() {
+    // N8N REST API 使用 X-N8N-API-KEY header
+    if (this.apiKey) {
+      return { 'X-N8N-API-KEY': this.apiKey };
+    }
+    return {};
   }
 
   /**
@@ -68,25 +96,37 @@ class N8NClient {
     const maxAttempts = options.maxAttempts || 60;
     const interval = options.interval || 3000;
 
+    const statusUrl = `${this.baseUrl}/api/v1/executions/${executionId}?includeData=true`;
+    console.log(`[pollExecution] GET ${statusUrl}`);
+    console.log(`[pollExecution] API Key: ${this.apiKey || '(未设置)'}`);
+
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const response = await fetch(
-        `${this.baseUrl}/api/v1/executions/${executionId}?includeData=true`,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`
-          }
-        }
-      );
+      console.log(`[pollExecution] 第 ${attempt + 1} 次尝试...`);
+
+      const response = await fetch(statusUrl, {
+        headers: this.getHeaders()
+      });
+
+      console.log(`[pollExecution] 响应状态: ${response.status}`);
 
       if (response.ok) {
         const data = await response.json();
-        const status = data.data?.status;
+        const status = data.status;
+        const finished = data.finished;
 
-        if (status === 'success') {
+        console.log(`[pollExecution] 状态: ${status}, finished: ${finished}`);
+
+        // N8N 可能的状态: success, error, running, waiting, stopped
+        if (status === 'success' || finished === true) {
           return { status: 'completed', data: data };
-        } else if (status === 'error') {
-          return { status: 'error', error: '执行失败' };
+        } else if (status === 'error' || status === 'stopped') {
+          return { status: 'error', error: '执行失败', data: data };
+        } else if (status === 'running' || status === 'waiting') {
+          // 继续轮询
+          console.log(`[pollExecution] 执行中, 等待 ${interval}ms...`);
         }
+      } else {
+        console.log(`[pollExecution] API 响应失败: ${response.status}`);
       }
 
       await new Promise(resolve => setTimeout(resolve, interval));
@@ -104,9 +144,7 @@ class N8NClient {
     const response = await fetch(
       `${this.baseUrl}/api/v1/executions/${executionId}?includeData=true`,
       {
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`
-        }
+        headers: this.getHeaders()
       }
     );
 
