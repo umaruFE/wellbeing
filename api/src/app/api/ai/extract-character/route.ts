@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCharacterExtractionPrompt } from '@/lib/prompt-config';
+import { n8nClient } from '@/lib/n8n/client';
 
-const DASHSCOPE_API_KEY = process.env.DASHSCOPE_API_KEY;
-const DASHSCOPE_API_URL = process.env.DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1';
+/**
+ * N8N 人物特征提取路由
+ * 
+ * 改造说明：
+ * - 原来直接调用 DashScope API（提示词从 prompt-config.js 获取）
+ * - 现改为调用 N8N Workflow（ai-prompt-processing）
+ * - 提示词由 N8N Workflow 从 Variables 中获取
+ */
 
-// CORS 响应头辅助函数
+// CORS 响应头
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -13,111 +19,73 @@ function corsHeaders() {
   };
 }
 
-// OPTIONS 处理函数 - 处理预检请求
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
-// POST /api/ai/extract-character - 从描述中提取人物特征
+/**
+ * POST /api/ai/extract-character
+ * 
+ * 提取人物特征描述
+ * 通过 N8N Workflow 调用
+ * 
+ * @param request.body
+ * @param description - 人物描述
+ * @param videoStyle - 风格名称 (default|ink-painting|pixar|cartoon|cyberpunk|realistic|scifi|fantasy)
+ * 
+ * @returns
+ * @success - 是否成功
+ * @character - 人物特征描述
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { description, videoStyle } = body;
 
+    // 参数验证
     if (!description) {
       return NextResponse.json(
-        { error: '缺少description参数' },
+        { error: '缺少必要参数: description' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
-    if (!DASHSCOPE_API_KEY) {
-      console.error('DASHSCOPE_API_KEY 未配置');
-      return NextResponse.json(
-        { error: 'API密钥未配置' },
-        { status: 500, headers: corsHeaders() }
-      );
-    }
-
-    // 根据风格获取对应的提取提示词
-    const systemPrompt = getCharacterExtractionPrompt(videoStyle);
-    console.log('使用的提取提示词风格:', videoStyle || 'default');
-
-    const response = await fetch(`${DASHSCOPE_API_URL}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${DASHSCOPE_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'qwen-plus',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: description
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 500
-      })
+    console.log('[extract-character] 调用 N8N Workflow:', {
+      workflow: 'ai-prompt-processing',
+      taskType: 'character-extract',
+      videoStyle: videoStyle || 'default',
+      descriptionLength: description.length
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('通义千问 API 调用失败:', response.status, response.statusText, errorText);
-      return NextResponse.json(
-        { error: '提取人物特征失败', character: '一个通用卡通人物' },
-        { status: 200, headers: corsHeaders() }
-      );
-    }
+    // 调用 N8N Workflow
+    const result = await n8nClient.call('ai-prompt-processing', {
+      taskType: 'character-extract',
+      description,
+      videoStyle: videoStyle || 'default',
+      timestamp: Date.now()
+    });
 
-    const data = await response.json();
-    let character = data.choices?.[0]?.message?.content?.trim() || '一个通用卡通人物';
+    console.log('[extract-character] N8N 响应:', result);
 
-    console.log('API返回的原始内容:', character);
+    // 提取结果
+    const character = result.character || result.data?.character || '一个通用卡通人物';
 
-    if (character.includes('character_description')) {
-      try {
-        let cleanedContent = character;
-        if (cleanedContent.startsWith('```json')) {
-          cleanedContent = cleanedContent.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-        } else if (cleanedContent.startsWith('```')) {
-          cleanedContent = cleanedContent.replace(/^```\s*/, '').replace(/\s*```$/, '');
-        }
-        
-        const jsonMatch = cleanedContent.match(/\{[\s\S]*"character_description"[\s\S]*\}/);
-        if (jsonMatch) {
-          const parsedContent = JSON.parse(jsonMatch[0]);
-          if (parsedContent.character_description) {
-            character = parsedContent.character_description;
-          }
-        }
-      } catch (parseError) {
-        console.log('JSON解析失败，尝试正则提取');
-        const match = character.match(/"character_description"\s*:\s*"([^"]+)"/);
-        if (match && match[1]) {
-          character = match[1].trim();
-        } else {
-          console.log('正则提取失败，使用原始内容');
-        }
-      }
-    }
-
-    console.log('提取的人物特征:', character);
-
+    // 返回结果
     return NextResponse.json({
       success: true,
       character
     }, { headers: corsHeaders() });
 
   } catch (error) {
-    console.error('提取人物特征失败:', error);
+    console.error('[extract-character] 提取失败:', error);
+
+    // 降级处理：返回默认人物描述
     return NextResponse.json(
-      { error: '提取人物特征失败', character: '一个通用卡通人物' },
+      {
+        success: true, // 返回 success: true，避免前端逻辑中断
+        character: '一个通用卡通人物',
+        error: error instanceof Error ? error.message : '提取人物特征失败'
+      },
       { status: 200, headers: corsHeaders() }
     );
   }

@@ -1,0 +1,77 @@
+{
+    "name": "ai-task-status",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "ai-task-status",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "name": "📥 Webhook 接收",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [250, 300],
+        "webhookId": "ai-task-status"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 解析输入参数\nconst item = $input.first()?.json || {};\nconst executionId = item.executionId;\nconst workflowType = item.workflowType || 'image';\nconst taskId = item.taskId;\n\nreturn [{\n  json: {\n    executionId,\n    workflowType,\n    taskId,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        },
+        "name": "🔍 解析参数",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300]
+      },
+      {
+        "parameters": {
+          "options": {},
+          "values": {
+            "string": [
+              {
+                "name": "status",
+                "value": "={{ $json.status || 'pending' }}"
+              },
+              {
+                "name": "message",
+                "value": "={{ $json.message || '任务处理中' }}"
+              },
+              {
+                "name": "progress",
+                "value": "={{ $json.progress || 0 }}"
+              }
+            ]
+          }
+        },
+        "name": "📊 构建状态响应",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 1,
+        "position": [650, 300]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "name": "📤 返回结果",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [850, 300]
+      }
+    ],
+    "connections": {
+      "📥 Webhook 接收": {
+        "main": [[{ "node": "🔍 解析参数", "type": "main", "index": 0 }]]
+      },
+      "🔍 解析参数": {
+        "main": [[{ "node": "📊 构建状态响应", "type": "main", "index": 0 }]]
+      },
+      "📊 构建状态响应": {
+        "main": [[{ "node": "📤 返回结果", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }

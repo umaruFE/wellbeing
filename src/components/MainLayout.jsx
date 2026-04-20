@@ -25,7 +25,8 @@ import {
   Video,
   RefreshCw,
   Wand2,
-  Clapperboard
+  Clapperboard,
+  Mic
 } from 'lucide-react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from '../modules/course-management/ppt-canvas/CanvasView';
@@ -397,6 +398,8 @@ export const MainLayout = () => {
       children: [
         { path: '/test/ip-scene', label: 'IP场景生成', icon: Wand2 },
         { path: '/test/video-generator', label: '视频生成', icon: Clapperboard },
+        { path: '/test/voice-generator', label: '声音生成', icon: Mic },
+        { path: '/audio-generator', label: '音频生成', icon: Music },
       ]
     },
     // 超级管理端（带二级菜单）

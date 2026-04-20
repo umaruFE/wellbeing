@@ -1,74 +1,106 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { n8nClient } from '@/lib/n8n/client';
 
-const AI_API_BASE_URL = 'http://117.50.218.161:5678';
-const N8N_API_KEY = process.env.N8N_API_KEY || '';
+/**
+ * N8N 图片重新生成路由
+ * 
+ * 改造说明：
+ * - 已通过 N8N 调用（/webhook/regene-image）
+ * - 现改为使用统一的 n8nClient 调用
+ * - 提示词优化由 N8N Workflow 内部处理
+ */
 
-export async function OPTIONS() {
-  return NextResponse.json({}, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-    }
-  });
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
 }
 
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders() });
+}
+
+/**
+ * POST /api/ai/regene-image
+ * 
+ * 重新生成图片
+ * 通过 N8N Workflow 调用
+ * 
+ * @param request.body
+ * @param width - 图片宽度
+ * @param height - 图片高度
+ * @param role - 角色ID
+ * @param prompt - 提示词
+ * 
+ * @returns
+ * @success - 是否成功
+ * @executionId - 执行ID
+ * @status - 状态
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { width, height, role, prompt } = body;
 
-    console.log('收到重新生成图片请求:', { width, height, role, prompt });
-
-    if (!role || !prompt) {
-      return NextResponse.json(
-        { error: '缺少必要参数' },
-        { status: 400 }
-      );
-    }
-
-    console.log('调用 N8N regene-image webhook...');
-    
-    // 使用 FormData 格式
-    const formData = new FormData();
-    formData.append('width', String(width || 1280));
-    formData.append('height', String(height || 720));
-    formData.append('role', role);
-    formData.append('prompt', prompt);
-
-    const response = await fetch(`${AI_API_BASE_URL}/webhook/regene-image`, {
-      method: 'POST',
-      headers: {
-        'X-N8N-API-KEY': N8N_API_KEY
-      },
-      body: formData
+    console.log('[regene-image] 收到重新生成图片请求:', {
+      width,
+      height,
+      role,
+      promptLength: prompt?.length
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('重新生成图片失败:', errorText);
+    // 参数验证
+    if (!role || !prompt) {
       return NextResponse.json(
-        { error: '重新生成图片失败', details: errorText },
-        { status: 500 }
+        { error: '缺少必要参数: role 或 prompt' },
+        { status: 400, headers: corsHeaders() }
       );
     }
 
-    const result = await response.json();
-    console.log('重新生成图片成功:', result);
+    // 构建 N8N 调用参数（JSON 格式）
+    const n8nPayload = {
+      width: width || 1280,
+      height: height || 720,
+      role,
+      prompt,
+      timestamp: Date.now()
+    };
+
+    console.log('[regene-image] 调用 N8N Workflow:', {
+      workflow: 'ai-storyboard-generation',
+      webhook: 'regene-image',
+      role,
+      width: n8nPayload.width,
+      height: n8nPayload.height
+    });
+
+    // 调用 N8N Workflow（使用统一的 n8nClient）
+    const result = await n8nClient.call('regene-image', n8nPayload);
+
+    console.log('[regene-image] N8N 响应:', result);
+
+    // 提取 executionId
+    const executionId = result.executionId || result.id;
 
     return NextResponse.json({
       success: true,
-      data: result
-    }, {
-      headers: {
-        'Access-Control-Allow-Origin': '*'
+      data: {
+        executionId,
+        status: result.status || 'processing'
       }
-    });
-  } catch (error: any) {
-    console.error('重新生成图片失败:', error);
+    }, { headers: corsHeaders() });
+
+  } catch (error) {
+    console.error('[regene-image] 图片重生成失败:', error);
+
     return NextResponse.json(
-      { error: '重新生成图片失败', details: error.message },
-      { status: 500 }
+      {
+        error: error instanceof Error ? error.message : '重新生成图片失败',
+        details: error instanceof Error ? error.stack : null
+      },
+      { status: 500, headers: corsHeaders() }
     );
   }
 }

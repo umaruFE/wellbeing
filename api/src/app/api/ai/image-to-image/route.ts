@@ -1,407 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { n8nClient } from '@/lib/n8n/client';
 
-const AI_API_BASE_URL = process.env.AI_API_BASE_URL;
+/**
+ * N8N 图生图路由
+ * 
+ * 改造说明：
+ * - 原来直接调用 ComfyUI
+ * - 现改为调用 N8N Workflow（ai-image-to-image）
+ */
 
-interface ImageToImageRequest {
-  prompt: string;
-  imageUrl: string;
-  count?: number;
-  width?: number;
-  height?: number;
-  user_id?: string;
-  organization_id?: string;
-}
-
-interface WorkflowNode {
-  inputs: any;
-  class_type: string;
-  _meta: {
-    title: string;
-  };
-}
-
-interface Workflow {
-  [key: string]: WorkflowNode;
-}
-
-interface TaskResponse {
-  promptId: string;
-  number: number;
-}
-
-interface TaskStatus {
-  status: string;
-  outputs?: {
-    [key: string]: {
-      images: Array<{
-        filename: string;
-        subfolder: string;
-        type: string;
-      }>;
-    };
-  };
-}
-
-// 上传图片到 ComfyUI
-async function uploadImageToComfyUI(imageUrl: string): Promise<string> {
-  try {
-    let fullUrl = imageUrl;
-    
-    // 处理不同类型的 URL
-    if (imageUrl.startsWith('/')) {
-      // 相对路径，构建完整 URL
-      fullUrl = new URL(imageUrl, process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').href;
-    } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
-      // 前端开发服务器地址，构建完整 URL
-      const urlObj = new URL(imageUrl);
-      fullUrl = new URL(urlObj.pathname, process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000').href;
-      console.log(`检测到前端本地地址，转换为完整 URL: ${imageUrl} -> ${fullUrl}`);
-    }
-    // OSS URL 或其他公网 URL 直接使用
-
-    console.log(`下载参考图片: ${fullUrl}`);
-    
-    // 下载图片
-    const response = await fetch(fullUrl);
-    if (!response.ok) {
-      throw new Error(`下载图片失败: ${response.status} ${response.statusText}`);
-    }
-
-    const arrayBuffer = await response.arrayBuffer();
-    
-    // 检测图片类型
-    const contentType = response.headers.get('content-type') || 'image/png';
-    const extension = contentType.split('/')[1] || 'png';
-    const filename = `image_${Date.now()}.${extension}`;
-    
-    // 创建 FormData
-    const formData = new FormData();
-    const blob = new Blob([arrayBuffer], { type: contentType });
-    formData.append('image', blob, filename);
-    
-    // 上传到 ComfyUI
-    const uploadResponse = await fetch(`${AI_API_BASE_URL}/upload/image`, {
-      method: 'POST',
-      body: formData
-    });
-
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      console.error(`上传图片到 ComfyUI 失败: ${uploadResponse.status} ${uploadResponse.statusText}`, errorText);
-      throw new Error(`上传图片到 ComfyUI 失败: ${uploadResponse.status} ${uploadResponse.statusText}`);
-    }
-
-    const uploadData = await uploadResponse.json();
-    // ComfyUI 返回的格式通常是 { name: "ComfyUI/input/filename.png" }
-    const imagePath = uploadData.name || uploadData.filename || uploadData.path;
-    
-    if (!imagePath) {
-      throw new Error('ComfyUI 返回的图片路径为空');
-    }
-
-    console.log(`图片上传成功，路径: ${imagePath}`);
-    return imagePath;
-  } catch (error) {
-    console.error('上传图片到 ComfyUI 失败:', error);
-    throw error;
-  }
-}
-
-// 创建图生图工作流（基于 sence.json）
-function createImageToImageWorkflow(prompt: string, width: number, height: number, seed: number, imagePath: string): Workflow {
-  const longerSide = Math.max(width, height);
-  
-  return {
-    "56": {
-      "inputs": {
-        "seed": seed,
-        "steps": 4,
-        "cfg": 1,
-        "sampler_name": "sa_solver",
-        "scheduler": "simple",
-        "denoise": 1,
-        "model": ["109", 0],
-        "positive": ["68", 0],
-        "negative": ["61", 0],
-        "latent_image": ["60", 0]
-      },
-      "class_type": "KSampler",
-      "_meta": { "title": "K采样器" }
-    },
-    "60": {
-      "inputs": {
-        "pixels": ["91", 0],
-        "vae": ["110", 0]
-      },
-      "class_type": "VAEEncode",
-      "_meta": { "title": "VAE编码" }
-    },
-    "61": {
-      "inputs": {
-        "prompt": "",
-        "clip": ["107", 0],
-        "vae": ["110", 0],
-        "image1": ["91", 0]
-      },
-      "class_type": "TextEncodeQwenImageEditPlus",
-      "_meta": { "title": "文本编码（QwenImageEditPlus）" }
-    },
-    "68": {
-      "inputs": {
-        "prompt": ["138", 0],
-        "clip": ["107", 0],
-        "vae": ["110", 0],
-        "image1": ["91", 0]
-      },
-      "class_type": "TextEncodeQwenImageEditPlus",
-      "_meta": { "title": "文本编码（QwenImageEditPlus）" }
-    },
-    "69": {
-      "inputs": {
-        "samples": ["56", 0],
-        "vae": ["110", 0]
-      },
-      "class_type": "VAEDecode",
-      "_meta": { "title": "VAE解码" }
-    },
-    "74": {
-      "inputs": {
-        "image": imagePath
-      },
-      "class_type": "LoadImage",
-      "_meta": { "title": "加载图像" }
-    },
-    "91": {
-      "inputs": {
-        "aspect_ratio": "custom",
-        "proportional_width": width,
-        "proportional_height": height,
-        "fit": "letterbox",
-        "method": "lanczos",
-        "round_to_multiple": "8",
-        "scale_to_side": "longest",
-        "scale_to_length": ["104", 0],
-        "background_color": "#000000",
-        "image": ["74", 0]
-      },
-      "class_type": "LayerUtility: ImageScaleByAspectRatio V2",
-      "_meta": { "title": "图层工具：按宽高比缩放 V2" }
-    },
-    "99": {
-      "inputs": {
-        "text": prompt,
-        "anything": ["138", 0]
-      },
-      "class_type": "easy showAnything",
-      "_meta": { "title": "展示任何" }
-    },
-    "104": {
-      "inputs": {
-        "Number": longerSide
-      },
-      "class_type": "Int",
-      "_meta": { "title": "Int" }
-    },
-    "105": {
-      "inputs": {
-        "filename_prefix": "ComfyUI",
-        "images": ["69", 0]
-      },
-      "class_type": "SaveImage",
-      "_meta": { "title": "保存图像" }
-    },
-    "106": {
-      "inputs": {
-        "unet_name": "qwen_image_edit_2511_fp8_e4m3fn.safetensors",
-        "weight_dtype": "default"
-      },
-      "class_type": "UNETLoader",
-      "_meta": { "title": "UNet加载器" }
-    },
-    "107": {
-      "inputs": {
-        "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
-        "type": "qwen_image",
-        "device": "default"
-      },
-      "class_type": "CLIPLoader",
-      "_meta": { "title": "加载CLIP" }
-    },
-    "109": {
-      "inputs": {
-        "lora_name": "Qwen-Image-Lightning-4steps-V1.0.safetensors",
-        "strength_model": 1.0000000000000002,
-        "model": ["133", 0]
-      },
-      "class_type": "LoraLoaderModelOnly",
-      "_meta": { "title": "LoRA加载器（仅模型）" }
-    },
-    "110": {
-      "inputs": {
-        "vae_name": "qwen_image_vae.safetensors"
-      },
-      "class_type": "VAELoader",
-      "_meta": { "title": "加载VAE" }
-    },
-    "133": {
-      "inputs": {
-        "lora_name": "next-scene_lora-v2-3000.safetensors",
-        "strength_model": 0.8000000000000002,
-        "model": ["106", 0]
-      },
-      "class_type": "LoraLoaderModelOnly",
-      "_meta": { "title": "LoRA加载器（仅模型）" }
-    },
-    "138": {
-      "inputs": {
-        "prompt": prompt,
-        "start_index": 0,
-        "max_rows": 1000,
-        "remove_empty_lines": ""
-      },
-      "class_type": "easy promptLine",
-      "_meta": { "title": "提示词行" }
-    }
-  };
-}
-
-// 提交图生图任务（使用已经上传到 ComfyUI 的图片路径）
-async function submitImageToImageTask(prompt: string, width: number, height: number, seed: number, imagePath: string): Promise<TaskResponse> {
-  console.log(`使用已上传的参考图片路径提交任务: ${imagePath}`);
-
-  const workflow = createImageToImageWorkflow(prompt, width, height, seed, imagePath);
-
-  console.log(`提交图生图任务: ${AI_API_BASE_URL}/prompt`);
-  console.log(`请求参数:`, { prompt, width, height, seed });
-
-  const response = await fetch(`${AI_API_BASE_URL}/prompt`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ prompt: workflow })
-  });
-
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`提交任务失败: ${response.status} ${response.statusText}`, errorText);
-    throw new Error(`提交任务失败: ${response.status} ${response.statusText}`);
-  }
-
-  const responseData = await response.json();
-  console.log(`任务提交成功:`, responseData);
-
-  return {
-    promptId: responseData.prompt_id || responseData.promptId,
-    number: responseData.number
-  };
-}
-
-// 轮询任务状态
-async function pollTaskStatus(promptId: string, maxAttempts: number = 60, interval: number = 2000): Promise<TaskStatus> {
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    try {
-      const response = await fetch(`${AI_API_BASE_URL}/history/${promptId}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`查询任务状态失败: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      const taskData = Object.values(data)[0] as TaskStatus;
-
-      if (!taskData) {
-        throw new Error('任务不存在');
-      }
-
-      if (taskData.status === 'success') {
-        return taskData;
-      } else if (taskData.status === 'error') {
-        throw new Error('任务执行失败');
-      }
-
-      await new Promise(resolve => setTimeout(resolve, interval));
-    } catch (error) {
-      if (attempt === maxAttempts - 1) {
-        throw error;
-      }
-      await new Promise(resolve => setTimeout(resolve, interval));
-    }
-  }
-  throw new Error('任务超时');
-}
-
-// 提取图片信息
-function extractImageInfo(taskData: TaskStatus) {
-  if (!taskData || !taskData.outputs) {
-    return null;
-  }
-
-  const outputs = taskData.outputs;
-  const saveImageNode = Object.values(outputs).find(node => node.images && node.images.length > 0);
-
-  if (!saveImageNode) {
-    return null;
-  }
-
-  const imageInfo = saveImageNode.images[0];
-  return {
-    filename: imageInfo.filename,
-    subfolder: imageInfo.subfolder || '',
-    type: imageInfo.type || 'output'
-  };
-}
-
-// 下载图片
-async function downloadImage(filename: string, subfolder: string, type: string): Promise<Buffer> {
-  const params = new URLSearchParams({
-    filename,
-    subfolder,
-    type
-  });
-
-  const response = await fetch(`${AI_API_BASE_URL}/view?${params.toString()}`, {
-    method: 'GET'
-  });
-
-  if (!response.ok) {
-    throw new Error(`下载图片失败: ${response.status} ${response.statusText}`);
-  }
-
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
-}
-
-// 上传到OSS
-async function uploadToOSS(buffer: Buffer, filename: string, folder: string): Promise<string> {
-  const formData = new FormData();
-  // 将 Buffer 转换为 Uint8Array 以兼容 Blob
-  const uint8Array = new Uint8Array(buffer);
-  formData.append('file', new Blob([uint8Array]), filename);
-  formData.append('folder', folder);
-
-  // 在服务器端使用完整的 URL
-  const response = await fetch(new URL('/api/upload', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'), {
-    method: 'POST',
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || '上传到OSS失败');
-  }
-
-  const data = await response.json();
-  return data.url;
-}
-
-// CORS 响应头辅助函数
+// CORS 响应头
 function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
@@ -410,90 +19,101 @@ function corsHeaders() {
   };
 }
 
-// OPTIONS 处理函数 - 处理预检请求
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
-// POST /api/ai/image-to-image - 图生图（立即返回任务ID）
+/**
+ * POST /api/ai/image-to-image
+ * 
+ * 图生图
+ * 通过 N8N Workflow 调用
+ * 
+ * @param request.body
+ * @param prompt - 提示词
+ * @param imageUrl - 参考图片URL
+ * @param count - 生成数量
+ * @param width - 图片宽度
+ * @param height - 图片高度
+ * @param strength - 重绘强度 (可选)
+ * @param user_id - 用户ID
+ * @param organization_id - 组织ID
+ * 
+ * @returns
+ * @success - 是否成功
+ * @executionId - 执行ID
+ * @status - 状态
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
       prompt,
       imageUrl,
-      count = 4,
-      width = 600,
-      height = 400,
+      count = 1,
+      width = 1024,
+      height = 1024,
+      strength = 0.75,
       user_id,
       organization_id
-    } = body as ImageToImageRequest;
+    } = body;
 
+    console.log('[image-to-image] 收到图生图请求:', {
+      promptLength: prompt?.length,
+      imageUrlLength: imageUrl?.length,
+      count,
+      width,
+      height,
+      strength
+    });
+
+    // 参数验证
     if (!prompt) {
       return NextResponse.json(
-        { error: '缺少prompt参数' },
+        { error: '缺少必要参数: prompt' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
     if (!imageUrl) {
       return NextResponse.json(
-        { error: '缺少imageUrl参数' },
+        { error: '缺少必要参数: imageUrl' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
-    console.log(`开始图生图，参考图片: ${imageUrl}`);
+    // 准备 N8N 调用参数
+    const n8nPayload = {
+      prompt,
+      image_url: imageUrl,
+      width,
+      height,
+      strength,
+      user_id,
+      organization_id,
+      timestamp: Date.now()
+    };
 
-    const startTime = Date.now();
+    console.log('[image-to-image] 调用 N8N Workflow:', {
+      workflow: 'ai-image-to-image',
+      promptLength: prompt.length,
+      hasImageUrl: !!imageUrl
+    });
 
-    // 先将参考图片上传到 ComfyUI，一次请求只上传一次
-    console.log(`开始上传参考图片到 ComfyUI: ${imageUrl}`);
-    let imagePath: string;
-    try {
-      imagePath = await uploadImageToComfyUI(imageUrl);
-      console.log(`参考图片上传到 ComfyUI 完成，路径: ${imagePath}`);
-    } catch (error) {
-      console.error('参考图片上传到 ComfyUI 失败:', error);
-      return NextResponse.json(
-        {
-          error: '参考图片上传到 ComfyUI 失败',
-          details: error instanceof Error ? error.message : '未知错误'
-        },
-        { status: 500, headers: corsHeaders() }
-      );
-    }
-    const tasks = [];
+    // 调用 N8N Workflow
+    const n8nResult = await n8nClient.call('ai-image-to-image', n8nPayload);
 
-    // 提交所有任务（共用同一张已上传的参考图片）
-    for (let i = 0; i < count; i++) {
-      const seed = Date.now() + i * 1000;
-      const taskPromise = submitImageToImageTask(prompt, width, height, seed, imagePath);
-      tasks.push(taskPromise);
-    }
+    console.log('[image-to-image] N8N 响应:', n8nResult);
 
-    const taskResponses = await Promise.all(tasks);
-    console.log(`已提交 ${taskResponses.length} 个图生图任务`);
-    console.log(`user_id: ${user_id}, organization_id: ${organization_id}`);
-    console.log(`taskResponses:`, taskResponses);
-
-    // 保存 prompt_id 到数据库
+    // 保存到数据库
     try {
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       const validUserId = (user_id && uuidRegex.test(user_id)) ? user_id : null;
       const validOrganizationId = (organization_id && uuidRegex.test(organization_id)) ? organization_id : null;
 
-      const allPromptIds = taskResponses.map(task => task.promptId).join(',');
+      const executionId = n8nResult.executionId || n8nResult.id;
 
-      console.log(`准备保存图生图 prompt_id 到数据库：`);
-      console.log(`  - user_id: ${validUserId}`);
-      console.log(`  - organization_id: ${validOrganizationId}`);
-      console.log(`  - prompt_type: image_to_image`);
-      console.log(`  - original_prompt: ${prompt.substring(0, 100)}...`);
-      console.log(`  - model_name: qwen-image`);
-      console.log(`  - prompt_id: ${allPromptIds}`);
-
-      const insertData = {
+      await db.from('prompt_history').insert({
         user_id: validUserId,
         organization_id: validOrganizationId,
         prompt_type: 'image_to_image',
@@ -503,45 +123,29 @@ export async function POST(request: NextRequest) {
         execution_time: null,
         success: true,
         error_message: null,
-        prompt_id: allPromptIds
-      };
+        prompt_id: executionId
+      });
 
-      console.log(`insertData:`, insertData);
-
-      const result = await db.from('prompt_history').insert(insertData).select().single();
-
-      console.log(`插入结果:`, result);
-
-      if (result.error) {
-        console.error(`插入数据库失败:`, result.error);
-      } else {
-        console.log(`已保存 ${taskResponses.length} 个图生图 prompt_id 到数据库: ${allPromptIds}`);
-      }
-    } catch (error) {
-      console.error(`保存图生图 prompt_id 到数据库失败:`, error);
+      console.log('[image-to-image] 已保存 executionId 到数据库:', executionId);
+    } catch (dbError) {
+      console.error('[image-to-image] 保存到数据库失败:', dbError);
     }
 
-    // 立即返回任务ID列表，不等待任务完成
-    return NextResponse.json(
-      {
+    // 返回结果
+    return NextResponse.json({
       success: true,
-      tasks: taskResponses.map(task => ({
-        promptId: task.promptId,
-        number: task.number,
-        status: 'pending'
-      })),
-      prompt,
-      width,
-      height
-      },
-      { headers: corsHeaders() }
-    );
+      executionId: n8nResult.executionId || n8nResult.id,
+      workflowType: 'image-to-image',
+      workflow: 'ai-image-to-image'
+    }, { headers: corsHeaders() });
+
   } catch (error) {
-    console.error('提交图生图任务失败:', error);
+    console.error('[image-to-image] 图生图失败:', error);
+
     return NextResponse.json(
       {
-        error: '提交图生图任务失败',
-        details: error instanceof Error ? error.message : '未知错误'
+        error: error instanceof Error ? error.message : '图生图失败',
+        details: error instanceof Error ? error.stack : null
       },
       { status: 500, headers: corsHeaders() }
     );

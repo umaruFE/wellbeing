@@ -126,6 +126,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
     try {
       console.log('开始提取关键词...');
       
+      // 1. 调用 extract-keywords 获取场景和角色的优化提示词
       const extractResponse = await fetch('/api/ai/extract-keywords', {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -140,81 +141,76 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       }
 
       const extractData = await extractResponse.json();
-      console.log('提取的关键词:', extractData.data);
+      console.log('提取的关键词:', extractData);
 
-      const { background: backgroundPrompt, roles: rolePrompts } = extractData.data;
+      // 检查 N8N 是否返回了错误
+      if (extractData.error) {
+        throw new Error(`提取关键词失败: ${extractData.error}`);
+      }
 
-      console.log('生成背景图，提示词:', backgroundPrompt);
-      const backgroundResponse = await fetch('/api/ai/generate-images', {
+      const { background: backgroundPrompt, roles: rolePrompts } = extractData.data || {};
+
+      if (!backgroundPrompt) {
+        throw new Error('关键词提取结果为空');
+      }
+
+      // 2. 构建角色数据
+      const characterColors = {
+        poppy: '粉色',
+        edi: '蓝色',
+        rolly: '橘色',
+        milo: '黄色',
+        ace: '紫色'
+      };
+
+      const roles = state.selectedRoles.map(name => ({
+        name,
+        prompt: rolePrompts?.[name] || `${characterColors[name] || ''}的${name}角色，${state.prompt}`
+      }));
+
+      // 3. 使用 generate-scene API，并行生成背景和角色图
+      console.log('调用 generate-scene API，并行生成...');
+      const sceneResponse = await fetch('/api/ai/generate-scene', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          prompt: backgroundPrompt,
-          count: 1,
-          width: state.aspectRatio.width,
-          height: state.aspectRatio.height,
-          workflow_type: 'background',
+          backgroundPrompt,
+          backgroundWidth: state.aspectRatio.width,
+          backgroundHeight: state.aspectRatio.height,
+          roles,
           user_id: userId,
           organization_id: organizationId
         })
       });
 
-      if (!backgroundResponse.ok) {
-        throw new Error('生成背景图失败');
+      if (!sceneResponse.ok) {
+        const errorText = await sceneResponse.text();
+        throw new Error(`生成场景失败: ${errorText}`);
       }
 
-      const backgroundData = await backgroundResponse.json();
-      const backgroundTaskId = backgroundData.tasks[0].promptId;
-      const backgroundApiUrl = backgroundData.tasks[0].apiUrl;
+      const sceneData = await sceneResponse.json();
+      console.log('generate-scene 返回:', sceneData);
 
-      const roleTaskPromises = state.selectedRoles.map(async (roleName) => {
-        const rolePrompt = rolePrompts[roleName] || state.prompt;
+      if (!sceneData.success) {
+        throw new Error(sceneData.error || '生成场景失败');
+      }
 
-        const characterColors = {
-          poppy: '粉色',
-          edi: '蓝色',
-          rolly: '橘色',
-          milo: '黄色',
-          ace: '紫色'
-        };
+      // 解析任务结果
+      const backgroundTask = sceneData.tasks.find(t => t.type === 'background');
+      const characterTasks = sceneData.tasks.filter(t => t.type === 'character');
 
-        const characterColor = characterColors[roleName] || '';
-        const finalRolePrompt = `${characterColor}的${roleName}角色，${rolePrompt}`;
+      const backgroundTaskId = backgroundTask?.promptId;
+      const backgroundApiUrl = backgroundTask?.apiUrl;
 
-        console.log(`生成角色 ${roleName}，提示词:`, finalRolePrompt);
-
-        const roleResponse = await fetch('/api/ai/generate-images', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({
-            prompt: finalRolePrompt,
-            count: 1,
-            width: 1024,
-            height: 1024,
-            workflow_type: 'ip-character',
-            character_name: roleName,
-            user_id: userId,
-            organization_id: organizationId
-          })
-        });
-
-        if (!roleResponse.ok) {
-          throw new Error(`生成角色 ${roleName} 失败`);
-        }
-
-        const roleData = await roleResponse.json();
-        return {
-          name: roleName,
-          taskId: roleData.tasks[0].promptId,
-          apiUrl: roleData.tasks[0].apiUrl
-        };
-      });
-
-      const roleTasks = await Promise.all(roleTaskPromises);
+      const roleTasks = characterTasks.map(t => ({
+        name: t.name,
+        taskId: t.promptId,
+        apiUrl: t.apiUrl
+      }));
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl || '')}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();
@@ -222,7 +218,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           if (data.status === 'completed') {
             return data.url;
           } else if (data.status === 'error') {
-            throw new Error('任务执行失败');
+            throw new Error('任务执行失败: ' + (data.error || '未知错误'));
           }
 
           await new Promise(resolve => setTimeout(resolve, interval));
@@ -278,16 +274,9 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           .then(url => removeWhiteBackground(roleTask.name, url))
           .then(url => {
             console.log(`角色 ${roleTask.name} 生成完成:`, url);
-            const rolePrompt = rolePrompts[roleTask.name] || state.prompt;
-            const characterColors = {
-              poppy: '粉色',
-              edi: '蓝色',
-              rolly: '橘色',
-              milo: '黄色',
-              ace: '紫色'
-            };
-            const characterColor = characterColors[roleTask.name] || '';
-            const finalRolePrompt = `${characterColor}的${roleTask.name}角色，${rolePrompt}`;
+            // 从之前构建的 roles 数组中获取提示词
+            const roleData = roles.find(r => r.name === roleTask.name);
+            const rolePrompt = roleData?.prompt || state.prompt;
 
             setState(prev => ({
               ...prev,
@@ -306,7 +295,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                 ...prev.prompts,
                 roles: {
                   ...prev.prompts.roles,
-                  [roleTask.name]: finalRolePrompt
+                  [roleTask.name]: rolePrompt
                 }
               }
             }));
