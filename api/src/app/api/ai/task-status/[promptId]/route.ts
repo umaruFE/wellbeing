@@ -32,14 +32,15 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string) {
 
     const history = await response.json();
     const data = history[promptId];
-
     if (!data) {
       return { status: 'pending' };
     }
 
-    // 检查执行状态
-    const status = data.status?.exec_node;
-    if (status === 'success' || status === 'completed') {
+    // ComfyUI 返回的状态字段：status.status_str (success/pending/error) 和 status.completed (true/false)
+    const execStatus = data.status?.status_str || data.status?.exec_node;
+    const isCompleted = data.status?.completed === true;
+    
+    if (execStatus === 'success' || isCompleted) {
       // 提取输出图片
       const outputs = data.outputs || {};
       for (const nodeId of Object.keys(outputs)) {
@@ -54,8 +55,8 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string) {
         }
       }
       return { status: 'completed' };
-    } else if (status === 'error') {
-      return { status: 'error', error: data.status?.error || '执行失败' };
+    } else if (execStatus === 'error' || execStatus === 'failed') {
+      return { status: 'error', error: data.status?.error || data.status?.exception || '执行失败' };
     }
 
     return { status: 'pending' };

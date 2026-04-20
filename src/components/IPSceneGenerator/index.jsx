@@ -515,7 +515,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();
@@ -602,7 +602,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();
@@ -654,7 +654,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           width: 1024,
           height: 1024,
           workflow_type: 'ip-character',
-          character_name: roleName,
+          name: roleName,
           user_id: userId,
           organization_id: organizationId
         })
@@ -668,7 +668,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?apiUrl=${encodeURIComponent(apiUrl)}`, {
+          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
             headers: getAuthHeaders()
           });
           const data = await response.json();

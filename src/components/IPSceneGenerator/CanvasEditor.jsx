@@ -163,6 +163,27 @@ export const CanvasEditor = ({
 
   drawCanvasRef.current = drawCanvas;
 
+  const loadImageWithProxy = async (url) => {
+    if (!url) return null;
+    
+    try {
+      // 如果是外部 URL，尝试通过代理获取
+      if (url.startsWith('http')) {
+        const response = await fetch(`/api/ai/proxy-image?url=${encodeURIComponent(url)}`);
+        if (response.ok) {
+          const data = await response.json();
+          return data.url;
+        }
+      }
+      // 如果是本地 URL，直接返回
+      return url.startsWith('/') ? url : `/${url}`;
+    } catch (error) {
+      console.error('[CanvasEditor] 图片代理失败:', error);
+      // 降级：直接使用原 URL
+      return url.startsWith('http') ? url : `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    }
+  };
+
   useEffect(() => {
     if (!background) return;
 
@@ -172,13 +193,17 @@ export const CanvasEditor = ({
       backgroundImgRef.current = img;
       drawCanvasRef.current();
     };
-    img.src = background.startsWith('http')
-      ? background
-      : `${window.location.origin}${background.startsWith('/') ? '' : '/'}${background}`;
+    img.onerror = () => {
+      console.error('[CanvasEditor] 背景图加载失败:', background);
+    };
+    
+    loadImageWithProxy(background).then(src => {
+      img.src = src;
+    });
   }, [background]);
 
   useEffect(() => {
-    Object.entries(roles).forEach(([roleName, roleUrl]) => {
+    Object.entries(roles).forEach(async ([roleName, roleUrl]) => {
       const resolved = resolveRoleUrl(roleUrl);
       if (!resolved) return;
       if (
@@ -199,9 +224,12 @@ export const CanvasEditor = ({
         drawCanvasRef.current();
       };
       img.onerror = () => {
+        console.error('[CanvasEditor] 角色图加载失败:', roleName, roleUrl);
         delete roleSrcRef.current[roleName];
       };
-      img.src = resolved;
+      
+      const src = await loadImageWithProxy(resolved);
+      img.src = src;
     });
 
     Object.keys(roleSrcRef.current).forEach((name) => {

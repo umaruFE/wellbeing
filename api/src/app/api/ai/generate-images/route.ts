@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       count = 1,
       reference_image,
       video_style,
+      name,
       character_name,
       roles,
       user_id,
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
       height,
       reference_image,
       video_style,
+      name: name || character_name,  // N8N 用 name 判断角色
       character_name,
       roles,
       user_id: user.id,
@@ -137,10 +139,15 @@ export async function POST(request: NextRequest) {
       console.error('[generate-images] 保存到数据库失败:', dbError);
     }
 
-    // 7. 返回结果
+    // 7. 返回结果（包含 comfyuiUrl 让前端可以直接轮询）
     return NextResponse.json({
       success: true,
-      executionId: n8nResult.executionId || n8nResult.id,
+      tasks: [{
+        type: workflow_type,
+        name: character_name,
+        promptId: n8nResult.executionId || n8nResult.id,
+        apiUrl: n8nResult.comfyuiUrl
+      }],
       workflowType: workflow_type,
       workflow: 'ai-image-generation'
     }, { headers: corsHeaders() });
