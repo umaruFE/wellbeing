@@ -67,23 +67,28 @@ export const VoiceGeneratorPage = () => {
       }
 
       const data = await res.json();
-      const promptId = data.promptId;
+      const executionId = data.executionId;
 
-      setResult({ id: `voice-${Date.now()}`, promptId, url: null, status: 'pending' });
+      setResult({ id: `voice-${Date.now()}`, executionId, url: null, status: 'pending' });
       setIsGenerating(false);
       setIsPolling(true);
 
       // 轮询获取音频
       for (let attempt = 0; attempt < 60; attempt++) {
         await new Promise(r => setTimeout(r, 3000));
-        const statusRes = await fetch(`/api/ai/generate-voice?promptId=${promptId}`, {
+        const statusRes = await fetch(`/api/ai/generate-voice?executionId=${executionId}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
         });
         if (statusRes.ok) {
           const statusData = await statusRes.json();
-          if (statusData.url) {
+          if (statusData.status === 'completed' && statusData.url) {
             setResult(prev => ({ ...prev, url: statusData.url, status: 'done' }));
             setIsPolling(false);
+            return;
+          } else if (statusData.status === 'error') {
+            setResult(prev => ({ ...prev, status: 'error' }));
+            setIsPolling(false);
+            setError('生成失败，请重试');
             return;
           }
         }

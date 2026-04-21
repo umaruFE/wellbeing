@@ -135,3 +135,92 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/**
+ * GET /api/ai/generate-audio
+ * 
+ * 查询音频生成状态
+ * 
+ * @param query.executionId - 执行ID
+ * 
+ * @returns
+ * @success - 是否成功
+ * @status - completed|pending|error
+ * @results - 音频结果数组（完成时）
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const executionId = searchParams.get('executionId');
+
+    if (!executionId) {
+      return NextResponse.json(
+        { error: '缺少 executionId 参数' },
+        { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    console.log('[generate-audio] 查询执行状态:', executionId);
+
+    // 调用 N8N API 查询执行状态
+    const executionStatus = await n8nClient.pollExecution(executionId, {
+      maxAttempts: 1,
+      interval: 0
+    });
+
+    console.log('[generate-audio] 执行状态:', executionStatus);
+
+    // 根据状态返回结果
+    if (executionStatus.status === 'completed') {
+      console.log('[generate-audio] 执行完成，获取音频资源...');
+
+      try {
+        // 通过 get-resource webhook 获取音频资源
+        const resourceData = await n8nClient.call('get-resource', { execution_id: executionId }, { method: 'GET' });
+        console.log('[generate-audio] 音频资源数据:', resourceData);
+
+        // 返回音频结果数组
+        const results = Array.isArray(resourceData) ? resourceData : [resourceData];
+
+        return NextResponse.json({
+          success: true,
+          status: 'completed',
+          results: results.map((item, index) => ({
+            url: item?.url || item?.audio_url,
+            filename: item?.filename || `audio_${index + 1}.mp3`
+          }))
+        }, { headers: corsHeaders() });
+
+      } catch (error) {
+        console.error('[generate-audio] 获取音频资源失败:', error);
+        return NextResponse.json({
+          success: false,
+          status: 'error',
+          error: '获取音频资源失败'
+        }, { headers: corsHeaders() });
+      }
+
+    } else if (executionStatus.status === 'error') {
+      return NextResponse.json({
+        success: false,
+        status: 'error',
+        error: '任务执行失败'
+      }, { headers: corsHeaders() });
+    } else {
+      return NextResponse.json({
+        success: true,
+        status: 'pending'
+      }, { headers: corsHeaders() });
+    }
+
+  } catch (error) {
+    console.error('[generate-audio] 查询失败:', error);
+
+    return NextResponse.json(
+      {
+        error: error instanceof Error ? error.message : '查询失败'
+      },
+      { status: 500, headers: corsHeaders() }
+    );
+  }
+}

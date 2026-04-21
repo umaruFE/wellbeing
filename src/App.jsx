@@ -9,7 +9,7 @@ import { MainLayout } from './components/MainLayout';
 import { CourseManagementPage } from './modules/course-management/CourseManagementPage';
 import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
 import { VoiceManagementPage } from './modules/material-management/audio/VoiceManagementPage';
-import { AudioGeneratorPage } from './modules/material-management/audio/AudioGeneratorPage';
+import { AudioGeneratorPage } from './modules/test/AudioGeneratorPage';
 import { SuperAdminPage } from './modules/admin/SuperAdminPage';
 import { KnowledgeBasePage } from './modules/material-management/KnowledgeBasePage';
 import { PptImageManagement } from './modules/material-management/image/PptImageManagement';
