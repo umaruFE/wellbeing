@@ -81,12 +81,12 @@ export async function POST(request: NextRequest) {
     };
 
     console.log('[generate-voice] 调用 N8N Workflow:', {
-      workflow: 'ai-voice-generation',
+      workflow: 'gene-audio',
       textLength: text.length
     });
 
     // 调用 N8N Workflow
-    const n8nResult = await n8nClient.call('ai-voice-generation', n8nPayload);
+    const n8nResult = await n8nClient.call('gene-audio', n8nPayload);
 
     console.log('[generate-voice] N8N 响应:', n8nResult);
 
@@ -176,14 +176,24 @@ export async function GET(request: NextRequest) {
       console.log('[generate-voice] 执行完成，获取音频资源...');
 
       try {
-        // 通过 get-resource webhook 获取音频资源
-        const resourceData = await n8nClient.call('get-resource', { execution_id: executionId }, { method: 'GET' });
+        // 通过 get-resource webhook 获取资源
+        const resourceUrl = `${process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678'}/webhook/get-resource?execution_id=${executionId}`;
+        console.log('[generate-voice] 获取音频资源:', resourceUrl);
+
+        const resourceResponse = await fetch(resourceUrl, {
+          method: 'GET',
+          headers: {
+            'X-N8N-API-KEY': process.env.N8N_API_KEY
+          }
+        });
+
+        const resourceData = await resourceResponse.json();
         console.log('[generate-voice] 音频资源数据:', resourceData);
 
         return NextResponse.json({
           success: true,
           status: 'completed',
-          url: resourceData?.url || resourceData?.audio_url,
+          url: resourceData?.url || resourceData?.audio_url || resourceData?.output?.url,
           filename: resourceData?.filename
         }, { headers: corsHeaders() });
 
