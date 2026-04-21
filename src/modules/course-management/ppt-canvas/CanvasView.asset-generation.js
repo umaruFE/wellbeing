@@ -41,18 +41,29 @@ import { optimizePrompt } from '../../../services/dashscope';
  * @param {Function} setIsRightOpen - 显示/隐藏右侧面板的函数
  */
 export const handleConfirmAddAsset = async (
-  prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig,
+  prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages,
   promptModalConfig, activePhase, activeStepId, courseData, setCourseData, setIsGenerating,
   setShowPromptModal, setPromptModalConfig, setCardSelectionImages, setSavedPromptIds,
   setPendingAssetConfig, setShowCardSelectionModal, user, saveToHistory, history, historyIndex, setHistory, setHistoryIndex,
   setSelectedAssetId, setIsRightOpen
 ) => {
+  console.log('=== handleConfirmAddAsset called ===');
+  console.log('Parameters:', { prompt, inputMode, videoStyle, imageSize, referenceImage, lyrics, audioConfig, videoReferenceImages });
+  console.log('promptModalConfig:', promptModalConfig);
+  console.log('activePhase:', activePhase, 'activeStepId:', activeStepId);
+  console.log('user:', user);
+  
   const type = promptModalConfig.assetType;
   const phaseData = Array.isArray(courseData) 
     ? courseData.find(p => p.id === activePhase)
     : courseData[activePhase];
-  const step = phaseData?.slides?.find(s => s.id === activeStepId);
+  const stepsOrSlides = phaseData?.steps || phaseData?.slides;
+  const step = stepsOrSlides?.find(s => s.id === activeStepId);
+  console.log('handleConfirmAddAsset - activePhase:', activePhase, 'activeStepId:', activeStepId);
+  console.log('handleConfirmAddAsset - phaseData:', phaseData);
+  console.log('handleConfirmAddAsset - step:', step);
   if (!step) {
+    console.error('handleConfirmAddAsset - Step not found');
     return;
   }
 
@@ -125,7 +136,8 @@ export const handleConfirmAddAsset = async (
 
     // 1) 先做提示词优化（调用大模型与优化服务）
     // 注意：音频类型不使用优化后的提示词，因为HeartMuLa更适合简洁的tags
-    const shouldOptimize = type !== 'audio';
+    // inputMode为direct时也不优化（direct模式用于用户手动输入精确描述的场景）
+    const shouldOptimize = type !== 'audio' && inputMode !== 'direct';
     if (shouldOptimize) {
       try {
         const optimized = await optimizePrompt(basePrompt, type === 'text' ? 'script' : type, userId);
@@ -151,6 +163,9 @@ export const handleConfirmAddAsset = async (
       : courseData[activePhase];
     if (!phaseData) {
       console.error('Phase not found:', activePhase, 'courseData:', courseData);
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
       return;
     }
 
@@ -159,6 +174,9 @@ export const handleConfirmAddAsset = async (
     const currentStep = stepsOrSlides?.find(s => s.id === activeStepId);
     if (!currentStep) {
       console.error('Step not found:', activeStepId, 'phaseData:', phaseData, 'stepsOrSlides:', stepsOrSlides);
+      setIsGenerating(false);
+      setShowPromptModal(false);
+      setPromptModalConfig({ type: null, assetType: null, phaseKey: null });
       return;
     }
     
@@ -381,7 +399,7 @@ export const handleConfirmAddAsset = async (
         const result = await aiAssetService.generateMultipleAudio(
           finalPrompt,
           {
-            count: 4,
+            count: 2,
             lyrics: lyrics,
             duration: audioDuration,
             user_id: userId,
@@ -513,7 +531,7 @@ export const handleConfirmAddAsset = async (
 
         // 即使生成失败，也显示抽卡界面（使用占位图）
         const generatedAudios = [];
-        for (let i = 0; i < 4; i++) {
+        for (let i = 0; i < 2; i++) {
           const randomColor = Math.floor(Math.random() * 16777215).toString(16);
           generatedAudios.push({
             url: `https://placehold.co/${w}x${h}/${randomColor}/FFF?text=Audio+Failed+${i + 1}`,
@@ -690,6 +708,9 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
   const w = 400;
   const h = 225; // 16:9
 
+  // 使用用户选择的风格
+  const selectedStyle = videoData.style || 'realistic';
+
   const newAsset = {
     id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     type: 'video',
@@ -698,7 +719,7 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
     content: '',
     prompt: videoData.description || '',
     referenceImage: null,
-    videoStyle: 'realistic',
+    videoStyle: selectedStyle,
     x: 100,
     y: 100,
     width: w,
@@ -723,14 +744,42 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
 
 // 处理卡片选择确认
 export const handleCardSelectionConfirm = (selectedImage, pendingAssetConfig, activePhase, activeStepId, courseData, setCourseData, setShowCardSelectionModal, setCardSelectionImages, setPendingAssetConfig, setSelectedAssetId, setIsRightOpen, saveToHistory, history, historyIndex, setHistory, setHistoryIndex) => {
-  if (!pendingAssetConfig) return;
+  console.log('handleCardSelectionConfirm called with:', { selectedImage, pendingAssetConfig, activePhase, activeStepId });
+  
+  if (!pendingAssetConfig) {
+    console.error('pendingAssetConfig is null or undefined');
+    setShowCardSelectionModal(false);
+    return;
+  }
+  if (!selectedImage) {
+    console.error('selectedImage is null or undefined');
+    return;
+  }
+  if (activePhase === undefined || activePhase === 'undefined' || activePhase === null) {
+    console.error('activePhase is invalid:', activePhase);
+    setShowCardSelectionModal(false);
+    return;
+  }
+  if (activeStepId === undefined || activeStepId === 'undefined' || activeStepId === null) {
+    console.error('activeStepId is invalid:', activeStepId);
+    setShowCardSelectionModal(false);
+    return;
+  }
+  
   const { type, effectivePrompt, w, h, generatedTitle, referenceImage, lyrics, duration, style } = pendingAssetConfig;
+  
+  if (!courseData) {
+    console.error('courseData is null or undefined');
+    setShowCardSelectionModal(false);
+    return;
+  }
   
   const phaseData = Array.isArray(courseData) 
     ? courseData.find(p => p.id === activePhase)
     : courseData[activePhase];
   if (!phaseData) {
-    console.error('Phase not found:', activePhase);
+    console.error('Phase not found:', activePhase, 'courseData:', courseData);
+    setShowCardSelectionModal(false);
     return;
   }
   
@@ -739,6 +788,7 @@ export const handleCardSelectionConfirm = (selectedImage, pendingAssetConfig, ac
   
   if (!currentStep) {
     console.error('Step not found:', activeStepId, 'stepsOrSlides:', stepsOrSlides);
+    setShowCardSelectionModal(false);
     return;
   }
   
@@ -771,6 +821,26 @@ export const handleCardSelectionConfirm = (selectedImage, pendingAssetConfig, ac
     newCurrentStep.canvasAssets = [];
   }
   
+  // 计算合适的尺寸（画布尺寸 960x540）
+  const canvasWidth = 960;
+  const canvasHeight = 540;
+  const maxWidth = canvasWidth * 0.4; // 最大宽度为画布宽度的40%
+  const maxHeight = canvasHeight * 0.6; // 最大高度为画布高度的60%
+  
+  let finalWidth = w || 300;
+  let finalHeight = h || 200;
+  
+  // 如果是图片类型，根据最大尺寸进行缩放
+  if (type === 'image' && (finalWidth > maxWidth || finalHeight > maxHeight)) {
+    const ratio = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
+    finalWidth = Math.round(finalWidth * ratio);
+    finalHeight = Math.round(finalHeight * ratio);
+  }
+  
+  // 居中放置
+  const finalX = Math.round((canvasWidth - finalWidth) / 2);
+  const finalY = Math.round((canvasHeight - finalHeight) / 2);
+  
   const newAsset = {
     id: Date.now().toString(),
     type,
@@ -783,10 +853,10 @@ export const handleCardSelectionConfirm = (selectedImage, pendingAssetConfig, ac
     duration: duration || 30,
     style: style || '',
     videoStyle: type === 'video' ? 'realistic' : null,
-    x: 100,
-    y: 100,
-    width: w,
-    height: h,
+    x: finalX,
+    y: finalY,
+    width: finalWidth,
+    height: finalHeight,
     rotation: 0
   };
 
@@ -818,8 +888,9 @@ export const handleRegenerateAsset = async (assetId, activePhase, activeStepId, 
   const phaseData = Array.isArray(courseData) 
     ? courseData.find(p => p.id === activePhase)
     : courseData[activePhase];
-  const step = phaseData?.slides?.find(s => s.id === activeStepId);
-  const asset = step?.assets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
+  const stepsOrSlidesOriginal = phaseData?.steps || phaseData?.slides;
+  const step = stepsOrSlidesOriginal?.find(s => s.id === activeStepId);
+  const asset = step?.assets?.find(a => a.id === assetId) || step?.canvasAssets?.find(a => a.id === assetId) || step?.elements?.find(a => a.id === assetId);
   if (!asset) return;
   
   if (asset.type === 'text' && asset.content) {
@@ -854,7 +925,7 @@ export const handleRegenerateAsset = async (assetId, activePhase, activeStepId, 
       setGeneratingAssetId(null);
       return;
     }
-    const asset = step.assets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
+    const asset = step.assets?.find(a => a.id === assetId) || step.canvasAssets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
     if (!asset) {
       setGeneratingAssetId(null);
       return;

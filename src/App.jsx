@@ -9,12 +9,16 @@ import { MainLayout } from './components/MainLayout';
 import { CourseManagementPage } from './modules/course-management/CourseManagementPage';
 import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
 import { VoiceManagementPage } from './modules/material-management/audio/VoiceManagementPage';
+import { AudioGeneratorPage } from './modules/material-management/audio/AudioGeneratorPage';
 import { SuperAdminPage } from './modules/admin/SuperAdminPage';
 import { KnowledgeBasePage } from './modules/material-management/KnowledgeBasePage';
 import { PptImageManagement } from './modules/material-management/image/PptImageManagement';
 import { IpCharacterManagement } from './modules/material-management/IpCharacterManagement';
 import { VideoMaterialManagement } from './modules/material-management/video/VideoMaterialManagement';
 import { AccountManagement } from './modules/admin/AccountManagement';
+import IPSceneTestPage from './modules/test/IPSceneTestPage';
+import { VideoGeneratorPage } from './modules/test/VideoGeneratorPage';
+import { VoiceGeneratorPage } from './modules/test/VoiceGeneratorPage';
 
 function App() {
   return (
@@ -23,7 +27,6 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
-
           <Route
             element={
               <ProtectedRoute>
@@ -70,6 +73,15 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
                   <VoiceManagementPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/audio-generator"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <AudioGeneratorPage />
                 </RequireAuth>
               }
             />
@@ -121,16 +133,31 @@ function App() {
             />
 
             <Route
-              path="/account-management"
+              path="/accounts"
               element={
                 <RequireAuth requiredRoles={['super_admin']}>
                   <AccountManagement />
                 </RequireAuth>
               }
             />
-          </Route>
 
-          <Route path="*" element={<Navigate to="/" replace />} />
+            <Route
+              path="/test/ip-scene"
+              element={<IPSceneTestPage />}
+            />
+
+            <Route
+              path="/test/video-generator"
+              element={<VideoGeneratorPage />}
+            />
+
+            <Route
+              path="/test/voice-generator"
+              element={<VoiceGeneratorPage />}
+            />
+
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </AuthProvider>

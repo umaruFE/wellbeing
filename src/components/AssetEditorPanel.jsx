@@ -46,7 +46,7 @@ export const AssetEditorPanel = ({
 
   return (
     <>
-      <div className="p-4 border-b border-slate-100 bg-blue-50 flex items-center justify-between">
+      <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fffbe6] flex items-center justify-between">
         <div className="flex items-center gap-2">
           {getAssetIcon(selectedAsset.type)}
           <h3 className="font-bold text-blue-800">编辑元素</h3>
@@ -65,7 +65,7 @@ export const AssetEditorPanel = ({
       
       {/* 图层操作 */}
       {onLayerChange && (
-        <div className="px-4 py-2 border-b border-slate-100 bg-white flex items-center justify-between">
+        <div className="px-4 py-2 border-b-2 border-[#e5e3db] bg-white flex items-center justify-between">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <Layers className="w-3 h-3" /> 图层
           </span>
@@ -91,7 +91,7 @@ export const AssetEditorPanel = ({
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">宽 Width</label>
-            <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
+            <div className="flex items-center border-2 border-[#e5e3db] rounded-xl px-2 bg-[#fcfbf9]">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.width || 300)} 
@@ -103,7 +103,7 @@ export const AssetEditorPanel = ({
           </div>
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">高 Height</label>
-            <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
+            <div className="flex items-center border-2 border-[#e5e3db] rounded-xl px-2 bg-[#fcfbf9]">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.height || 200)} 
@@ -115,7 +115,7 @@ export const AssetEditorPanel = ({
           </div>
           <div>
             <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">旋转 Rotate</label>
-            <div className="flex items-center border border-slate-200 rounded px-2 bg-slate-50">
+            <div className="flex items-center border-2 border-[#e5e3db] rounded-xl px-2 bg-[#fcfbf9]">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.rotation || 0)} 
@@ -134,7 +134,7 @@ export const AssetEditorPanel = ({
             type="text" 
             value={selectedAsset.title || ''} 
             onChange={(e) => onAssetChange(selectedAsset.id, 'title', e.target.value)} 
-            className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+            className="w-full text-sm border-2 border-[#e5e3db] rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all"
           />
         </div>
 
@@ -147,7 +147,7 @@ export const AssetEditorPanel = ({
               <textarea 
                 value={selectedAsset.content || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'content', e.target.value)} 
-                className="w-full text-sm border border-slate-200 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-32 resize-none"
+                className="w-full text-sm border-2 border-[#e5e3db] rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all h-32 resize-none"
               />
             </div>
             
@@ -196,7 +196,7 @@ export const AssetEditorPanel = ({
                     max="200" 
                     value={selectedAsset.fontSize || 24} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'fontSize', parseInt(e.target.value) || 24)} 
-                    className="flex-1 text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 outline-none"
+                    className="flex-1 text-xs border-2 border-[#e5e3db] rounded-lg px-2 py-1.5 bg-[#fcfbf9] outline-none transition-all"
                   />
                   <span className="text-[10px] text-slate-400">px</span>
                 </div>
@@ -211,7 +211,7 @@ export const AssetEditorPanel = ({
                     className={`flex-1 px-3 py-2 rounded border text-xs transition-colors ${
                       (selectedAsset.fontWeight || 'normal') === 'normal' 
                         ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
                     }`}
                   >
                     正常
@@ -221,7 +221,7 @@ export const AssetEditorPanel = ({
                     className={`flex-1 px-3 py-2 rounded border text-xs transition-colors flex items-center justify-center gap-1 ${
                       selectedAsset.fontWeight === 'bold' 
                         ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
                     }`}
                   >
                     <Bold className="w-3 h-3" />
@@ -240,13 +240,13 @@ export const AssetEditorPanel = ({
                     type="color" 
                     value={selectedAsset.color || '#1e293b'} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'color', e.target.value)} 
-                    className="w-12 h-10 rounded border border-slate-200 cursor-pointer"
+                    className="w-12 h-10 rounded-xl border-2 border-[#e5e3db] cursor-pointer transition-all hover:border-[#2d2d2d]"
                   />
                   <input 
                     type="text" 
                     value={selectedAsset.color || '#1e293b'} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'color', e.target.value)} 
-                    className="flex-1 text-xs border border-slate-200 rounded px-2 py-1.5 bg-slate-50 outline-none font-mono"
+                    className="flex-1 text-xs border-2 border-[#e5e3db] rounded-lg px-2 py-1.5 bg-[#fcfbf9] outline-none font-mono transition-all"
                     placeholder="#000000"
                   />
                 </div>
@@ -261,7 +261,7 @@ export const AssetEditorPanel = ({
                     className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       (selectedAsset.textAlign || 'center') === 'left' 
                         ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
                     }`}
                     title="左对齐"
                   >
@@ -272,7 +272,7 @@ export const AssetEditorPanel = ({
                     className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       (selectedAsset.textAlign || 'center') === 'center' 
                         ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
                     }`}
                     title="居中"
                   >
@@ -283,7 +283,7 @@ export const AssetEditorPanel = ({
                     className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       selectedAsset.textAlign === 'right' 
                         ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
                     }`}
                     title="右对齐"
                   >
@@ -308,7 +308,7 @@ export const AssetEditorPanel = ({
                           onAssetChange(selectedAsset.id, 'strokeColor', null);
                         }
                       }} 
-                      className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-[#2d2d2d] border-2 border-[#e5e3db] rounded focus:ring-[#2d2d2d]"
                     />
                     <span className="text-xs text-slate-600">启用描边</span>
                   </div>
@@ -339,13 +339,13 @@ export const AssetEditorPanel = ({
                           type="color" 
                           value={selectedAsset.strokeColor || '#000000'} 
                           onChange={(e) => onAssetChange(selectedAsset.id, 'strokeColor', e.target.value)} 
-                          className="w-10 h-8 rounded border border-slate-200 cursor-pointer"
+                          className="w-10 h-8 rounded-lg border-2 border-[#e5e3db] cursor-pointer transition-all hover:border-[#2d2d2d]"
                         />
                         <input 
                           type="text" 
                           value={selectedAsset.strokeColor || '#000000'} 
                           onChange={(e) => onAssetChange(selectedAsset.id, 'strokeColor', e.target.value)} 
-                          className="flex-1 text-xs border border-slate-200 rounded px-2 py-1 bg-slate-50 outline-none font-mono"
+                          className="flex-1 text-xs border-2 border-[#e5e3db] rounded-lg px-2 py-1 bg-[#fcfbf9] outline-none font-mono transition-all"
                         />
                       </div>
                     </div>
@@ -363,10 +363,10 @@ export const AssetEditorPanel = ({
                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
                     <Upload className="w-3 h-3" /> 参考图片 (可选)
                   </label>
-                  <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded border border-slate-200">Optional</span>
+                  <span className="text-[10px] bg-[#fcfbf9] text-[#2d2d2d] px-1.5 py-0.5 rounded-lg border border-[#e5e3db]">Optional</span>
                 </div>
                 {!selectedAsset.referenceImage ? (
-                  <div className="border border-dashed border-slate-300 rounded-lg p-4 flex flex-col items-center justify-center bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer relative group/upload">
+                  <div className="border-2 border-dashed border-[#e5e3db] rounded-xl p-4 flex flex-col items-center justify-center bg-[#fcfbf9] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all cursor-pointer relative group/upload">
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -393,7 +393,7 @@ export const AssetEditorPanel = ({
                 ) : (
                   <div className="space-y-2">
                     <div className="relative group/ref">
-                      <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded border border-slate-200 opacity-90" />
+                      <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border-2 border-[#e5e3db] opacity-90" />
                       <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
                       <button 
                         onClick={() => onAssetChange(selectedAsset.id, 'referenceImage', null)} 
@@ -507,7 +507,7 @@ export const AssetEditorPanel = ({
         )}
 
         {/* 操作按钮 */}
-        <div className="pt-6 mt-6 border-t border-slate-100 space-y-2">
+        <div className="pt-6 mt-6 border-t-2 border-[#e5e3db] space-y-2">
           <button 
             onClick={() => onCopyAsset?.(selectedAsset.id)} 
             className="w-full py-2 text-blue-500 border border-blue-200 rounded text-sm font-bold hover:bg-blue-50 flex items-center justify-center gap-2"

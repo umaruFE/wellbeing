@@ -1,9 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { resolve } from 'path'
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+      },
+    },
+  },
   server: {
     host: '0.0.0.0',
     port: 5174,
@@ -25,7 +33,6 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/ai/, ''),
       },
       '/ai-video': {
-        // 单独给视频生成 / 另一套 ComfyUI 工作流使用
         target: 'https://8n0vf44x64b58itu-8188.container.x-gpu.com',
         changeOrigin: true,
         secure: false,

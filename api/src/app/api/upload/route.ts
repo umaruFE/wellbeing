@@ -2,6 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { uploadToOss, getSignedUrl } from '@/lib/oss';
 import { saveToLocal } from '@/lib/localUpload';
 
+// CORS 响应头辅助函数
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
+// OPTIONS 处理函数 - 处理预检请求
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders() });
+}
+
 // 允许的文件类型（按场景区分）
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const DOC_TYPES = ['application/pdf'];
@@ -50,7 +64,7 @@ export async function POST(request: NextRequest) {
     if (!file) {
       return NextResponse.json(
         { error: '没有上传文件' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -92,7 +106,7 @@ export async function POST(request: NextRequest) {
     if (!allowedTypes.includes(file.type) && !octetStreamAllowed) {
       return NextResponse.json(
         { error: '不支持的文件类型' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -101,7 +115,7 @@ export async function POST(request: NextRequest) {
       const maxSizeMB = maxSize / (1024 * 1024);
       return NextResponse.json(
         { error: `文件大小不能超过${maxSizeMB}MB` },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -123,12 +137,12 @@ export async function POST(request: NextRequest) {
       filename: file.name,
       size: file.size,
       type: file.type
-    });
+    }, { headers: corsHeaders() });
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
       { error: '上传失败' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders() }
     );
   }
 }
@@ -143,7 +157,7 @@ export async function GET(request: NextRequest) {
     if (!filePath) {
       return NextResponse.json(
         { error: '缺少文件路径' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders() }
       );
     }
 
@@ -152,12 +166,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       url,
       expires
-    });
+    }, { headers: corsHeaders() });
   } catch (error) {
     console.error('Get signed URL error:', error);
     return NextResponse.json(
       { error: '获取访问链接失败' },
-      { status: 500 }
+      { status: 500, headers: corsHeaders() }
     );
   }
 }

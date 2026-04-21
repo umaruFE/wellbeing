@@ -4,13 +4,27 @@
 // 使用相对路径，Vite 代理会将 /api/* 请求转发到 http://localhost:3000/api/*
 const API_BASE_URL = '';
 
+// 获取认证token并添加到请求头
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  console.log('getAuthHeaders - token from localStorage:', token ? token.substring(0, 30) + '...' : 'null');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+    console.log('getAuthHeaders - Authorization header set');
+  } else {
+    console.log('getAuthHeaders - No token found');
+  }
+  return headers;
+}
+
 class ApiService {
   // Generic request handler
   async request(endpoint, options = {}) {
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
       headers: {
-        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
         ...options.headers,
       },
       ...options,

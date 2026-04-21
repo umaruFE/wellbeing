@@ -73,9 +73,9 @@ export default function App() {
   }
 
     return (
-    <div className="h-screen flex flex-col font-sans bg-slate-50">
+    <div className="h-screen flex flex-col font-sans bg-[#fcfbf9]">
       {/* Universal Header */}
-      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 z-30 shrink-0">
+      <header className="h-14 bg-white border-b-2 border-[#e5e3db] flex items-center justify-between px-4 z-30 shrink-0">
         <div className="flex items-center gap-3">
            <div className="bg-blue-600 p-1.5 rounded text-white shadow-sm">
              <Sparkles className="w-4 h-4" />
@@ -87,7 +87,7 @@ export default function App() {
           </div>
         
         {/* View Switcher - 三个视图按钮平铺 */}
-        <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+        <div className="flex items-center bg-[#fcfbf9] p-1 rounded-xl border-2 border-[#e5e3db]">
            <button 
              onClick={() => setCurrentView('table')} 
              className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-2 transition-all ${
@@ -194,7 +194,7 @@ export default function App() {
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 bg-white border-l-4 border-blue-500 shadow-2xl" style={{ right: 0, width: '50%', minWidth: '600px' }}>
           <div className="h-full flex flex-col">
-            <div className="p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between bg-[#fcfbf9]">
               <div className="flex items-center gap-3">
                 <div className="bg-blue-600 p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
@@ -223,7 +223,7 @@ export default function App() {
                 ].map((item) => (
                   <div 
                     key={item.id} 
-                    className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group"
+                    className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all cursor-pointer group"
                     onClick={() => {
                       // 在新窗口打开历史版本，不关闭当前窗口
                       // 这里可以添加打开新窗口的逻辑

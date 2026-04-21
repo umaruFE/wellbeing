@@ -6,7 +6,7 @@ export const UnauthorizedPage = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+    <div className="min-h-screen flex items-center justify-center bg-[#fcfbf9]">
       <div className="text-center">
         <div className="bg-red-100 p-6 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
           <ShieldX className="w-12 h-12 text-red-600" />

@@ -1,0 +1,182 @@
+{
+  "name": "ai-image-generation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-image-generation",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "📥 Webhook 接收",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        48,
+        160
+      ],
+      "webhookId": "ai-image-generation",
+      "id": "d84c10a8-5b8f-4f78-9202-a73e2bbc2737"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 定义 API 格式模板 (Prompt JSON)\nconst bgWorkflowRaw = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": 2048, \"height\": 1152, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"6\": { \"inputs\": { \"text\": \"\", \"clip\": [\"3\", 0] }, \"class_type\": \"CLIPTextEncode\" },\n  \"7\": { \"inputs\": { \"text\": \"\", \"clip\": [\"3\", 0] }, \"class_type\": \"CLIPTextEncode\" },\n  \"8\": { \"inputs\": { \"seed\": 0, \"steps\": 15, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"4\", 0], \"positive\": [\"6\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"9\": { \"inputs\": { \"samples\": [\"8\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"10\": { \"inputs\": { \"filename_prefix\": \"Universal_Scene\", \"images\": [\"9\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\nconst charWorkflowRaw = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": 1024, \"height\": 1024, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"7\": { \"inputs\": { \"text\": \"\", \"clip\": [\"3\", 0] }, \"class_type\": \"CLIPTextEncode\" },\n  \"101\": { \"inputs\": { \"lora_name\": \"poppy.safetensors\", \"strength_model\": 0.8, \"strength_clip\": 1, \"model\": [\"4\", 0], \"clip\": [\"3\", 0] }, \"class_type\": \"LoraLoader\" },\n  \"102\": { \"inputs\": { \"text\": \"\", \"clip\": [\"101\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"103\": { \"inputs\": { \"seed\": 0, \"steps\": 20, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"101\", 0], \"positive\": [\"102\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"104\": { \"inputs\": { \"samples\": [\"103\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"105\": { \"inputs\": { \"filename_prefix\": \"Asset_Poppy\", \"images\": [\"104\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\n// --- 核心逻辑开始 ---\n\n// 2. 解析 Webhook body\nconst inputData = $input.first()?.json || {};\nconst body = inputData.body || {};\n\n// 判断角色：如果有 name 字段就用 name，否则默认为 bg\nconst role = (body.name || 'bg').toLowerCase();\n// 提取提示词：直接取 body.prompt\nconst userPrompt = body.prompt || \"\";\nconst userNegative = body.negative_prompt || \"blurry, low quality, 3d, realistic\";\n\n// 机器 URL 映射\nconst comfyuiUrls = {\n  'poppy': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'edi': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'rolly': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'milo': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'ace': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'bg': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com'\n};\n\n// 3. 参数注入\nlet finalPrompt = JSON.parse(JSON.stringify(role === 'bg' ? bgWorkflowRaw : charWorkflowRaw));\n\nif (role === 'bg') {\n  // 背景逻辑：注入到 6 号和 7 号节点\n  finalPrompt[\"6\"].inputs.text = userPrompt;\n  finalPrompt[\"7\"].inputs.text = userNegative;\n  finalPrompt[\"8\"].inputs.seed = Math.floor(Math.random() * 100000000000000);\n} else {\n  // 角色逻辑：注入到 102 号和 7 号节点\n  finalPrompt[\"102\"].inputs.text = userPrompt;\n  finalPrompt[\"7\"].inputs.text = userNegative;\n  finalPrompt[\"103\"].inputs.seed = Math.floor(Math.random() * 100000000000000);\n  \n  // 动态修改 LoRA 名称和尺寸\n  if (finalPrompt[\"101\"]) {\n    finalPrompt[\"101\"].inputs.lora_name = `${role}.safetensors`;\n    finalPrompt[\"105\"].inputs.filename_prefix = `Asset_${role}`;\n  }\n  // 如果 body 传了宽高，覆盖默认值\n  if (body.width) finalPrompt[\"5\"].inputs.width = body.width;\n  if (body.height) finalPrompt[\"5\"].inputs.height = body.height;\n}\n\n// 4. 返回结果\nreturn [{\n  json: {\n    comfyui_url: comfyuiUrls[role] || comfyuiUrls.bg,\n    comfyui_payload: { prompt: finalPrompt },\n    meta: { \n      target_role: role, \n      applied_prompt: userPrompt // 确认这里不是空的\n    }\n  }\n}];"
+      },
+      "name": "🎨 准备生成参数",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        256,
+        160
+      ],
+      "id": "4740765b-3279-4382-b266-f7383e64768f"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.comfyui_url}}/prompt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.comfyui_payload }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "🎬 提交 ComfyUI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        448,
+        160
+      ],
+      "id": "5abc033f-01ba-4e6e-a07c-bafa7a09ae33"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 提取 prompt_id 和 comfyui_url\nconst response = $input.first()?.json || {};\nconst promptId = response?.prompt_id || response?.id;\nconst comfyuiUrl = response?.comfyui_url || '';\n\nreturn [{\n  json: {\n    executionId: promptId,\n    comfyuiUrl: comfyuiUrl,\n    workflowType: 'image',\n    status: 'submitted'\n  }\n}];"
+      },
+      "name": "📌 提取任务ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        160
+      ],
+      "id": "45a6ab45-f65b-4207-843d-c6d1a8f3030c"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "📤 返回任务ID",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        848,
+        160
+      ],
+      "id": "f1a183d3-96e8-437e-ad2d-5ff75a5bd7f1"
+    }
+  ],
+  "pinData": {
+    "📥 Webhook 接收": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "804"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "prompt": "清晨时分的森林场景，晴朗天气，柔和均匀的自然光线，低饱和度的平涂色彩，和谐的柔和色调，连贯的配色方案，以绿色和棕色为主，氛围宁静祥和，包含简化的树木和草地元素，清晰的环境线稿，简化但风格化的背景环境，无渐变，无阴影，扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D 扁平设计，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字",
+            "negative_prompt": "blurry, low quality, deformed, ugly, bad anatomy, disfigured, poorly drawn face, mutation, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body",
+            "width": 1920,
+            "height": 1080
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/ai-image-generation",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "📥 Webhook 接收": {
+      "main": [
+        [
+          {
+            "node": "🎨 准备生成参数",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎨 准备生成参数": {
+      "main": [
+        [
+          {
+            "node": "🎬 提交 ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎬 提交 ComfyUI": {
+      "main": [
+        [
+          {
+            "node": "📌 提取任务ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📌 提取任务ID": {
+      "main": [
+        [
+          {
+            "node": "📤 返回任务ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "90589217-346a-4095-b7df-f3b0ed9a4e90",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "Yob3i0jyxxUCkEF0",
+  "tags": []
+}

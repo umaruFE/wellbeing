@@ -198,14 +198,14 @@ export const CourseSquarePage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-[#fcfbf9]">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 shrink-0">
+      <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] shrink-0">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
-                <BookOpen className="w-8 h-8 text-blue-600" />
+              <h1 className="text-3xl font-bold text-[#2d2d2d] flex items-center gap-2">
+                <BookOpen className="w-8 h-8 text-[#2d2d2d]" />
                 课程广场
               </h1>
               <p className="text-slate-500 mt-1">发现优质课程，一键复制开始您的教学</p>
@@ -213,16 +213,16 @@ export const CourseSquarePage = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-slate-400 hover:bg-slate-100'
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  viewMode === 'grid' ? 'bg-[#fffbe6] border-2 border-[#2d2d2d] text-[#2d2d2d]' : 'text-slate-400 hover:bg-slate-100'
                 }`}
               >
                 <Grid className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-slate-400 hover:bg-slate-100'
+                className={`p-2 rounded-lg transition-all duration-200 ${
+                  viewMode === 'list' ? 'bg-[#fffbe6] border-2 border-[#2d2d2d] text-[#2d2d2d]' : 'text-slate-400 hover:bg-slate-100'
                 }`}
               >
                 <List className="w-5 h-5" />
@@ -238,7 +238,7 @@ export const CourseSquarePage = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="搜索课程、单元、主题..."
-              className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-lg"
+              className="w-full pl-12 pr-4 py-3 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-lg transition-all duration-200"
             />
           </div>
 
@@ -248,10 +248,10 @@ export const CourseSquarePage = () => {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-200 ${
                   selectedCategory === category.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    ? 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d]'
+                    : 'bg-slate-100 text-slate-700 hover:bg-[#fffbe6] hover:border-2 hover:border-[#2d2d2d]'
                 }`}
               >
                 {category.name}
@@ -281,10 +281,10 @@ export const CourseSquarePage = () => {
             {filteredCourses.map(course => (
               <div
                 key={course.id}
-                className="bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all cursor-pointer group"
+                className="bg-white rounded-[24px] border-2 border-[#e5e3db] overflow-hidden cursor-pointer group transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
               >
                 {/* 缩略图 */}
-                <div className="h-40 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-6xl relative">
+                <div className="h-40 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] flex items-center justify-center text-6xl relative border-b-2 border-[#e5e3db]">
                   {course.thumbnail}
                   {/* 复制按钮 */}
                   <button
@@ -292,7 +292,7 @@ export const CourseSquarePage = () => {
                       e.stopPropagation();
                       handleCopyCourse(course.id);
                     }}
-                    className="absolute top-3 right-3 px-3 py-1.5 bg-white/90 backdrop-blur text-blue-600 rounded-lg text-sm font-medium flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-sm hover:bg-white"
+                    className="absolute top-3 right-3 px-3 py-1.5 bg-white border-2 border-[#2d2d2d] text-[#2d2d2d] rounded-xl text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] hover:bg-[#fffbe6]"
                   >
                     <Copy className="w-4 h-4" />
                     复制课程
@@ -326,7 +326,7 @@ export const CourseSquarePage = () => {
                     {course.tags?.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs"
+                        className="px-2 py-0.5 bg-[#fffbe6] text-[#2d2d2d] border border-[#e5e3db] rounded-lg text-xs font-medium"
                       >
                         {tag}
                       </span>
@@ -334,7 +334,7 @@ export const CourseSquarePage = () => {
                   </div>
 
                   {/* 统计数据 */}
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between pt-4 border-t-2 border-[#e5e3db]">
                     <div className="flex items-center gap-3 text-sm text-slate-500">
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -359,18 +359,18 @@ export const CourseSquarePage = () => {
             {filteredCourses.map(course => (
               <div
                 key={course.id}
-                className="bg-white rounded-xl border border-slate-200 p-5 hover:shadow-lg transition-all cursor-pointer group"
+                className="bg-white rounded-[24px] border-2 border-[#e5e3db] p-5 cursor-pointer group transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
               >
                 <div className="flex gap-5">
                   {/* 缩略图 */}
-                  <div className="w-36 h-36 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center text-5xl shrink-0 relative">
+                  <div className="w-36 h-36 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] rounded-2xl flex items-center justify-center text-5xl shrink-0 relative border-2 border-[#e5e3db]">
                     {course.thumbnail}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCopyCourse(course.id);
                       }}
-                      className="absolute -bottom-2 -right-2 px-3 py-1.5 bg-white text-blue-600 rounded-lg text-sm font-medium flex items-center gap-1 shadow-md opacity-0 group-hover:opacity-100 transition-all"
+                      className="absolute -bottom-2 -right-2 px-3 py-1.5 bg-white border-2 border-[#2d2d2d] text-[#2d2d2d] rounded-xl text-sm font-bold flex items-center gap-1 shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] opacity-0 group-hover:opacity-100 transition-all hover:bg-[#fffbe6]"
                     >
                       <Copy className="w-4 h-4" />
                       复制
@@ -384,7 +384,7 @@ export const CourseSquarePage = () => {
                         <h3 className="text-xl font-bold text-slate-800">{course.title}</h3>
                         <p className="text-sm text-slate-400">by {course.author}</p>
                       </div>
-                      <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                      <span className="px-2 py-1 bg-[#fffbe6] border border-[#2d2d2d] text-[#2d2d2d] rounded-lg text-xs font-bold">
                         {course.grade}
                       </span>
                     </div>
@@ -413,7 +413,7 @@ export const CourseSquarePage = () => {
                       {course.keywords?.map((keyword, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-xs"
+                          className="px-2 py-0.5 bg-[#fffbe6] text-[#2d2d2d] border border-[#e5e3db] rounded-lg text-xs font-medium"
                         >
                           {keyword}
                         </span>
@@ -421,7 +421,7 @@ export const CourseSquarePage = () => {
                     </div>
 
                     {/* 底部统计 */}
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <div className="flex items-center justify-between pt-3 border-t-2 border-[#e5e3db]">
                       <div className="flex items-center gap-4 text-sm text-slate-500">
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />

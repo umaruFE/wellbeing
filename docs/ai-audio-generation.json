@@ -1,0 +1,103 @@
+{
+    "name": "ai-audio-generation",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "ai-audio-generation",
+          "responseMode": "lastNode",
+          "options": {}
+        },
+        "name": "📥 Webhook 接收",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1,
+        "position": [250, 300],
+        "webhookId": "ai-audio-generation"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 音乐生成参数准备\nconst item = $input.first()?.json || {};\nconst prompt = item.optimized_prompt || item.prompt;\nconst duration = item.duration || 30;\nconst genre = item.genre || 'background';\n\nreturn [{\n  json: {\n    workflow_type: 'audio',\n    prompt: prompt,\n    duration: duration,\n    genre: genre\n  }\n}];"
+        },
+        "name": "🎵 准备音乐参数",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [450, 300]
+      },
+      {
+        "parameters": {
+          "url": "={{$env.COMFYUI_URL}}/prompt",
+          "method": "POST",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "bodyParameters": {
+            "parameters": [
+              {
+                "name": "prompt",
+                "value": "={{$json.prompt}}"
+              },
+              {
+                "name": "duration",
+                "value": "={{$json.duration}}"
+              },
+              {
+                "name": "genre",
+                "value": "={{$json.genre}}"
+              }
+            ]
+          },
+          "options": {
+            "timeout": 120000
+          }
+        },
+        "name": "🎼 提交音乐生成",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4,
+        "position": [650, 300]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 提取 prompt_id\nconst response = $input.first()?.json || {};\nconst promptId = response?.prompt_id || response?.id;\n\nreturn [{\n  json: {\n    executionId: promptId,\n    workflowType: 'audio',\n    status: 'submitted'\n  }\n}];"
+        },
+        "name": "📌 提取任务ID",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [850, 300]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {}
+        },
+        "name": "📤 返回任务ID",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [1050, 300]
+      }
+    ],
+    "connections": {
+      "📥 Webhook 接收": {
+        "main": [[{ "node": "🎵 准备音乐参数", "type": "main", "index": 0 }]]
+      },
+      "🎵 准备音乐参数": {
+        "main": [[{ "node": "🎼 提交音乐生成", "type": "main", "index": 0 }]]
+      },
+      "🎼 提交音乐生成": {
+        "main": [[{ "node": "📌 提取任务ID", "type": "main", "index": 0 }]]
+      },
+      "📌 提取任务ID": {
+        "main": [[{ "node": "📤 返回任务ID", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1"
+    }
+  }

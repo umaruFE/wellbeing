@@ -1,6 +1,19 @@
 // AI素材生成服务（图片、音频、视频）
 const AI_API_BASE_URL = '/ai';
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// 使用相对路径，这样在任何环境下都能正确访问
+const API_BASE_URL = '';
+
+// 获取认证token并添加到请求头
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  const headers = {
+    'Content-Type': 'application/json'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 export const aiAssetService = {
   // 生成图片
@@ -131,11 +144,9 @@ export const aiAssetService = {
     };
 
     try {
-      const response = await fetch(`${AI_API_BASE_URL}/prompt`, {
+      const response = await fetch('/ai/prompt', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ prompt: workflow })
       });
 
@@ -154,11 +165,9 @@ export const aiAssetService = {
   // 查询任务状态
   getTaskStatus: async (promptId) => {
     try {
-      const response = await fetch(`${AI_API_BASE_URL}/history/${promptId}`, {
+      const response = await fetch(`/ai/history/${promptId}`, {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json'
-        }
+        headers: getAuthHeaders()
       });
 
       if (!response.ok) {
@@ -182,7 +191,7 @@ export const aiAssetService = {
         type
       });
 
-      const response = await fetch(`${AI_API_BASE_URL}/view?${params.toString()}`, {
+      const response = await fetch(`/ai/view?${params.toString()}`, {
         method: 'GET'
       });
 
@@ -203,7 +212,7 @@ export const aiAssetService = {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch(`${AI_API_BASE_URL}/upload/image`, {
+      const response = await fetch('/ai/upload/image', {
         method: 'GET',
         body: formData
       });
@@ -316,21 +325,20 @@ export const aiAssetService = {
 
   // 生成多张图片（后端批量生成，立即返回任务ID）
   generateMultipleImages: async (prompt, options = {}) => {
-    const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
+    const { count = 4, width = 600, height = 400, user_id, organization_id, workflow_type = 'lora-v3' } = options;
     
     try {
       const response = await fetch('/api/ai/generate-images', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt,
           count,
           width,
           height,
           user_id,
-          organization_id
+          organization_id,
+          workflow_type
         })
       });
 
@@ -347,16 +355,20 @@ export const aiAssetService = {
     }
   },
 
-  // 轮询单个任务状态并上传到OSS
-  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 60, interval = 2000, onProgress) => {
+  // 轮询单个任务状态并上传到OSS（支持 apiUrl 动态路由）
+  pollTaskAndUpload: async (promptId, index, prompt, maxAttempts = 120, interval = 3000, onProgress, apiUrl) => {
+    console.log(`开始轮询任务 ${promptId}，最多尝试 ${maxAttempts} 次，间隔 ${interval}ms`);
+    const url = apiUrl ? `/api/ai/task-status/${promptId}?apiUrl=${encodeURIComponent(apiUrl)}` : `/api/ai/task-status/${promptId}`;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         if (onProgress) {
           onProgress({ index, attempt, status: 'polling' });
         }
 
-        const response = await fetch(`/api/ai/task-status/${promptId}`, {
-          method: 'GET'
+        console.log(`轮询任务 ${promptId}，尝试 ${attempt + 1}/${maxAttempts}`);
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: getAuthHeaders()
         });
 
         if (!response.ok) {
@@ -365,6 +377,7 @@ export const aiAssetService = {
         }
 
         const data = await response.json();
+        console.log(`轮询任务 ${promptId}，响应数据:`, data);
         
         if (data.status === 'completed') {
           if (onProgress) {
@@ -380,8 +393,13 @@ export const aiAssetService = {
           };
         } else if (data.status === 'error') {
           throw new Error('任务执行失败');
+        } else if (data.status === 'pending') {
+          console.log(`任务 ${promptId} 仍在处理中，继续轮询`);
+        } else {
+          console.warn(`任务 ${promptId} 状态未知: ${data.status}`);
         }
         
+        console.log(`等待 ${interval}ms 后继续轮询`);
         await new Promise(resolve => setTimeout(resolve, interval));
       } catch (error) {
         console.error(`轮询任务 ${index + 1} 状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
@@ -391,6 +409,7 @@ export const aiAssetService = {
           }
           throw error;
         }
+        console.log(`等待 ${interval}ms 后重试`);
         await new Promise(resolve => setTimeout(resolve, interval));
       }
     }
@@ -445,7 +464,7 @@ export const aiAssetService = {
 
   // 生成多个音频（后端批量生成，立即返回任务ID）
   generateMultipleAudio: async (prompt, options = {}) => {
-    const { count = 4, lyrics, duration = 30, user_id, organization_id } = options;
+    const { count = 2, lyrics, duration = 30, user_id, organization_id } = options;
 
     try {
       const requestBody = {
@@ -459,9 +478,7 @@ export const aiAssetService = {
 
       const response = await fetch('/api/ai/generate-audio', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(requestBody)
       });
 
@@ -501,7 +518,9 @@ export const aiAssetService = {
             i,
             prompt,
             60,
-            2000
+            2000,
+            undefined,
+            task.apiUrl
           );
           completedAudios.push(audioResult);
         } catch (error) {
@@ -526,14 +545,23 @@ export const aiAssetService = {
     const { count = 4, width = 600, height = 400, user_id, organization_id } = options;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/ai/image-to-image`, {
+      // 处理图片 URL，确保服务器可以访问
+      let processedUrl = imageUrl;
+      if (imageUrl.startsWith('/')) {
+        processedUrl = `${imageUrl}`;
+        console.log('相对路径:', processedUrl);
+      } else if (imageUrl.includes('localhost:517') || imageUrl.includes('127.0.0.1:517')) {
+        const urlObj = new URL(imageUrl);
+        processedUrl = `${urlObj.pathname}`;
+        console.log('前端地址转换为相对路径:', processedUrl);
+      }
+
+      const response = await fetch('/api/ai/image-to-image', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           prompt,
-          imageUrl,
+          imageUrl: processedUrl,
           count,
           width,
           height,
@@ -578,7 +606,9 @@ export const aiAssetService = {
             i,
             prompt,
             60,
-            2000
+            2000,
+            undefined,
+            task.apiUrl
           );
           completedImages.push(imageResult);
         } catch (error) {

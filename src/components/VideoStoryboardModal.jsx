@@ -1,16 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { X, Plus, Trash2, RefreshCw, Image as ImageIcon, Video, Wand2, ChevronLeft, ChevronRight, Check, Clock, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, Plus, Trash2, RefreshCw, Image as ImageIcon, Video, Wand2, ChevronLeft, ChevronRight, Check, AlertCircle, Download } from 'lucide-react';
 import videoStoryboardService from '../services/videoStoryboardService';
-import { aiAssetService } from '../services/aiAssetService';
 import { uploadService } from '../services/uploadService';
+import poppyImg from '../assets/ip/poppy.png';
+import ediImg from '../assets/ip/edi.png';
+import rollyImg from '../assets/ip/rolly.png';
+import miloImg from '../assets/ip/milo.png';
+import aceImg from '../assets/ip/ace.png';
 
 // 步骤定义
 const STEPS = [
-  { id: 1, title: '基本信息', description: '输入视频描述和参考图片' },
-  { id: 2, title: '人物参考', description: '生成或确认人物参考图' },
-  { id: 3, title: '分镜脚本', description: '生成分镜步骤' },
-  { id: 4, title: '分镜图片', description: '为每个分镜生成图片' },
-  { id: 5, title: '生成视频', description: '合成最终视频' }
+  { id: 1, title: '基本信息', description: '输入视频描述' },
+  { id: 2, title: '分镜详情', description: '查看分镜信息' },
+  { id: 3, title: '生成视频', description: '合成最终视频' }
+];
+
+// 图片比例选项
+const ASPECT_RATIOS = [
+  { id: '16:9', label: '16:9', width: 1280, height: 720, description: '横屏宽屏' },
+  { id: '4:3', label: '4:3', width: 1280, height: 960, description: '标准横屏' },
+  { id: '1:1', label: '1:1', width: 1280, height: 1280, description: '正方形' },
+  { id: '3:4', label: '3:4', width: 960, height: 1280, description: '标准竖屏' },
+  { id: '9:16', label: '9:16', width: 720, height: 1280, description: '竖屏长图' },
+];
+
+// IP角色数据（与RoleSelection.jsx保持一致）
+const IP_CHARACTERS = [
+  { id: 'poppy', name: 'Poppy', color: '粉色', colorHex: '#FFB6C1', description: '粉色角色', thumbnail: poppyImg, available: true },
+  { id: 'edi', name: 'Edi', color: '蓝色', colorHex: '#87CEEB', description: '蓝色角色', thumbnail: ediImg, available: true },
+  { id: 'rolly', name: 'Rolly', color: '橘色', colorHex: '#FFA500', description: '橘色角色', thumbnail: rollyImg, available: true },
+  { id: 'milo', name: 'Milo', color: '黄色', colorHex: '#FFD700', description: '黄色角色', thumbnail: miloImg, available: true },
+  { id: 'ace', name: 'Ace', color: '紫色', colorHex: '#9370DB', description: '紫色角色', thumbnail: aceImg, available: true },
 ];
 
 /**
@@ -21,7 +41,6 @@ export const VideoStoryboardModal = ({
   isOpen,
   onClose,
   initialDescription = '',
-  initialReferenceImages = [],
   onConfirm,
   userId = null,
   organizationId = null
@@ -30,26 +49,25 @@ export const VideoStoryboardModal = ({
   const [currentStep, setCurrentStep] = useState(1);
   
   // 步骤1：基本信息
-  const [description, setDescription] = useState(initialDescription);
-  const [videoDuration, setVideoDuration] = useState(10);
-  const [uploadedReferenceImages, setUploadedReferenceImages] = useState(initialReferenceImages);
-  const [uploadingImages, setUploadingImages] = useState({}); // file name -> boolean
+  const [storyCore, setStoryCore] = useState('');
+  const [selectedAspectRatio, setSelectedAspectRatio] = useState(ASPECT_RATIOS[0]); // 默认16:9
+  const [selectedIPs, setSelectedIPs] = useState([]); // 选中的IP列表
   
-  // 步骤2：人物参考图生成
-  const [generatedCharacterImages, setGeneratedCharacterImages] = useState([]);
-  const [selectedCharacterImage, setSelectedCharacterImage] = useState(null);
-  const [isGeneratingCharacters, setIsGeneratingCharacters] = useState(false);
-  
-  // 步骤3：分镜脚本
+  // 步骤2：分镜生成
   const [storyboardTitle, setStoryboardTitle] = useState('');
   const [scenes, setScenes] = useState([]);
   const [isGeneratingScript, setIsGeneratingScript] = useState(false);
   const [editingScene, setEditingScene] = useState(null); // { sceneId, field } 或 null
-  
-  // 步骤4：分镜图片
   const [isGeneratingSceneImage, setIsGeneratingSceneImage] = useState({}); // sceneId -> boolean
+  const [uploadingSceneImage, setUploadingSceneImage] = useState({}); // sceneId -> boolean
   
-  // 步骤5：视频生成
+  // 分镜详细信息
+  const [storyboardData, setStoryboardData] = useState(null); // 存储完整的storyboardData
+  const [voiceInfo, setVoiceInfo] = useState(null); // 配音信息
+  const [characterPrompt, setCharacterPrompt] = useState(''); // 角色提示词
+  const [videoSize, setVideoSize] = useState({ width: 1920, height: 1080 }); // 视频尺寸，默认16:9
+  
+  // 步骤3：视频生成
   const [isComposingVideo, setIsComposingVideo] = useState(false);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState(null);
   
@@ -70,240 +88,254 @@ export const VideoStoryboardModal = ({
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [previewImage]);
 
-  // 初始化
-  useEffect(() => {
-    if (isOpen) {
-      setCurrentStep(1);
-      setDescription(initialDescription);
-      setVideoDuration(10);
-      setUploadedReferenceImages(initialReferenceImages);
-      setUploadingImages({});
-      setGeneratedCharacterImages([]);
-      setSelectedCharacterImage(null);
-      setStoryboardTitle('');
-      setScenes([]);
-      setIsGeneratingSceneImage({});
-      setIsComposingVideo(false);
-      setGeneratedVideoUrl(null);
-      setError(null);
-      setPreviewImage(null);
-    }
-  }, [isOpen, initialDescription, initialReferenceImages]);
+  const hasAutoGenerated = useRef(false);
 
-  // 获取最终参考图片（上传的或生成的）
-  const getFinalReferenceImages = () => {
-    if (uploadedReferenceImages.length > 0) {
-      return uploadedReferenceImages;
+  // 同步 videoSize 和 selectedAspectRatio
+  useEffect(() => {
+    if (!storyboardData) {
+      setVideoSize({ width: selectedAspectRatio.width, height: selectedAspectRatio.height });
     }
-    return selectedCharacterImage ? [selectedCharacterImage] : [];
+  }, [selectedAspectRatio, storyboardData]);
+
+  // 初始化（仅在 isOpen 从 false→true 时执行一次）
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setCurrentStep(1);
+    setStoryCore('');
+    setSelectedAspectRatio(ASPECT_RATIOS[0]);
+    setSelectedIPs([]);
+    setStoryboardTitle('');
+    setScenes([]);
+    setIsGeneratingSceneImage({});
+    setIsComposingVideo(false);
+    setGeneratedVideoUrl(null);
+    setError(null);
+    setPreviewImage(null);
+    setStoryboardData(null);
+    setVideoSize({ width: ASPECT_RATIOS[0].width, height: ASPECT_RATIOS[0].height });
+    hasAutoGenerated.current = false;
+  }, [isOpen]);
+
+  // 自动生成分镜脚本和图片（已禁用，现在在handleStep1Next中调用webhook）
+  // useEffect(() => {
+  //   if (currentStep === 2 && scenes.length === 0 && !isGeneratingScript && !hasAutoGenerated.current) {
+  //     hasAutoGenerated.current = true;
+  //     generateStoryboardScript();
+  //   }
+  //   if (currentStep !== 2) {
+  //     hasAutoGenerated.current = false;
+  //   }
+  // }, [currentStep, scenes.length]);
+
+  // 获取最终参考图片（不再使用，返回空数组）
+  const getFinalReferenceImages = () => {
+    return [];
+  };
+
+  // 获取组合的视频描述（三个维度）
+  const getCombinedDescription = () => {
+    const selectedIPNames = selectedIPs.map(id => {
+      const ip = IP_CHARACTERS.find(p => p.id === id);
+      return ip ? ip.name : '';
+    }).filter(name => name).join('、');
+    
+    let description = `故事核心要素：${storyCore}`;
+    if (selectedIPNames) {
+      description += `\nIP选择：${selectedIPNames}`;
+    }
+    return description;
   };
 
   // ========== 步骤1：基本信息 ==========
   
-  // 上传参考图片（仅支持1张）
-  const handleUploadReferenceImage = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setError(null);
-
-    const fileName = file.name;
-    setUploadingImages(prev => ({ ...prev, [fileName]: true }));
-    
-    try {
-      // 先验证文件
-      const validation = uploadService.validateFile(file, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 10);
-      if (!validation.valid) {
-        setError(validation.error || '文件验证失败');
-      return;
-    }
-    
-      // 上传文件获取URL
-      const uploadResult = await uploadService.uploadFile(file, 'reference-images');
-      
-      if (uploadResult.success && uploadResult.url) {
-        // 仅保留一张参考图片，如已存在则替换
-        setUploadedReferenceImages([uploadResult.url]);
-      } else {
-        setError(uploadResult.error || '上传失败');
-      }
-    } catch (err) {
-      console.error('上传参考图片失败:', err);
-      setError('上传失败: ' + err.message);
-    } finally {
-      setUploadingImages(prev => {
-        const newState = { ...prev };
-        delete newState[fileName];
-        return newState;
-      });
-      // 清空文件输入，允许重复上传同一文件
-      e.target.value = '';
-    }
-  };
-
-  // 删除上传的参考图片
-  const handleRemoveUploadedImage = (index) => {
-    setUploadedReferenceImages(prev => prev.filter((_, i) => i !== index));
-  };
-
   // 步骤1下一步
-  const handleStep1Next = () => {
-    if (!description.trim()) {
-      setError('请输入视频描述');
+  const handleStep1Next = async () => {
+    if (!storyCore.trim()) {
+      setError('请填写故事核心要素');
       return;
     }
-    
-    if (uploadedReferenceImages.length > 0) {
-      // 已上传参考图，直接跳到步骤3
-      setCurrentStep(3);
-    } else {
-      // 未上传参考图，跳到步骤2生成人物参考图
-      setCurrentStep(2);
-      generateCharacterImages();
-    }
-  };
 
-  // ========== 步骤2：人物参考图生成 ==========
-  
-  // 生成人物参考图（抽卡模式，4张）
-  const generateCharacterImages = async () => {
-    setIsGeneratingCharacters(true);
-    setError(null);
-    
-    try {
-      // 构建人物生成提示词
-      const characterPrompt = `${description}，人物特写，正面，清晰面部特征，高质量，细节丰富`;
-      
-      // 调用AI生成4张图片
-      const result = await aiAssetService.generateMultipleImages(
-        characterPrompt,
-        {
-          count: 4,
-          width: 512,
-          height: 512,
-          user_id: userId,
-          organization_id: organizationId
-        }
-      );
-
-      if (!result.success || !result.tasks || result.tasks.length === 0) {
-        throw new Error('生成人物参考图失败');
-      }
-      
-      // 轮询所有任务
-      const images = [];
-      for (const task of result.tasks) {
-        try {
-          const imageResult = await aiAssetService.pollTaskAndUpload(
-            task.promptId,
-            0,
-            characterPrompt,
-            60,
-            2000
-          );
-          images.push(imageResult.url);
-        } catch (err) {
-          console.error('生成单张人物图失败:', err);
-          // 使用占位图
-          const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-          images.push(`https://placehold.co/512x512/${randomColor}/FFF?text=Character+${images.length + 1}`);
-        }
-      }
-      
-      setGeneratedCharacterImages(images);
-    } catch (err) {
-      setError('生成人物参考图失败: ' + err.message);
-      // 使用占位图
-      const placeholderImages = [];
-      for (let i = 0; i < 4; i++) {
-        const randomColor = Math.floor(Math.random() * 16777215).toString(16);
-        placeholderImages.push(`https://placehold.co/512x512/${randomColor}/FFF?text=Character+${i + 1}`);
-      }
-      setGeneratedCharacterImages(placeholderImages);
-    } finally {
-      setIsGeneratingCharacters(false);
-    }
-  };
-
-  // 重新生成人物参考图
-  const handleRegenerateCharacters = () => {
-    setSelectedCharacterImage(null);
-    generateCharacterImages();
-  };
-
-  // 步骤2下一步
-  const handleStep2Next = () => {
-    if (!selectedCharacterImage) {
-      setError('请选择一张人物参考图');
+    if (selectedIPs.length === 0) {
+      setError('请选择一个IP角色');
       return;
     }
-    setCurrentStep(3);
-  };
 
-  // ========== 步骤3：分镜脚本 ==========
-  
-  // 生成分镜脚本
-  const generateStoryboardScript = async () => {
     setIsGeneratingScript(true);
     setError(null);
-    
+
     try {
-      const referenceImages = getFinalReferenceImages();
-      const result = await videoStoryboardService.generateStoryboardScript(
-        description,
-        referenceImages,
-        videoDuration
-      );
+      console.log('开始调用webhook生成图片...');
+      console.log('选择的视频比例:', selectedAspectRatio);
+      console.log('selectedAspectRatio.width:', selectedAspectRatio.width);
+      console.log('selectedAspectRatio.height:', selectedAspectRatio.height);
       
-      setStoryboardTitle(result.title);
-      setScenes(result.scenes.map((scene, index) => ({
-        ...scene,
-        id: `scene-${index + 1}`,
-        generatedImage: null,
-        status: 'pending'
-      })));
+      const result = await videoStoryboardService.callWebhookGenerateImages(
+        selectedIPs[0],
+        selectedAspectRatio.id,
+        storyCore,
+        selectedAspectRatio.width,
+        selectedAspectRatio.height
+      );
+
+      console.log('生成分镜结果:', result);
+
+      if (result && result.storyboardData) {
+        console.log('storyboardData:', result.storyboardData);
+        
+        const { 
+          storyboard_images_filepath, 
+          storyboard_prompts, 
+          voice, 
+          character_prompt,
+          video_width,
+          video_height,
+          storyboard_image_prompts
+        } = result.storyboardData.data;
+        
+        console.log('N8N返回的视频尺寸:', video_width, 'x', video_height);
+        console.log('第一步选择的视频尺寸:', selectedAspectRatio.width, 'x', selectedAspectRatio.height);
+        
+        // 强制使用第一步选择的尺寸
+        const finalVideoWidth = selectedAspectRatio.width;
+        const finalVideoHeight = selectedAspectRatio.height;
+        
+        // 存储完整的storyboardData，确保包含视频尺寸
+        const completeStoryboardData = {
+          ...result.storyboardData,
+          video_width: finalVideoWidth,
+          video_height: finalVideoHeight
+        };
+        
+        setStoryboardData(completeStoryboardData);
+        setVoiceInfo(voice);
+        setCharacterPrompt(character_prompt);
+        setVideoSize({ width: finalVideoWidth, height: finalVideoHeight });
+        
+        console.log('最终使用的视频尺寸:', finalVideoWidth, 'x', finalVideoHeight);
+        
+        if (storyboard_images_filepath && Array.isArray(storyboard_images_filepath) && storyboard_images_filepath.length > 0) {
+          console.log('找到图片路径:', storyboard_images_filepath);
+          console.log('找到分镜提示词:', storyboard_prompts);
+          console.log('找到配音信息:', voice);
+          console.log('找到角色提示词:', character_prompt);
+          console.log('找到分镜图片提示词:', storyboard_image_prompts);
+          
+          const newScenes = storyboard_images_filepath.map((imagePath, index) => {
+            const imageUrl = imagePath.startsWith('/home/node/files/') 
+              ? `/api/ai/serve-image?path=${encodeURIComponent(imagePath)}`
+              : imagePath;
+            
+            return {
+              id: `scene-${index + 1}`,
+              sequence: index + 1,
+              description: storyboard_prompts && storyboard_prompts[index] ? storyboard_prompts[index].description : `分镜${index + 1}`,
+              prompt: storyboard_prompts && storyboard_prompts[index] ? storyboard_prompts[index].prompt : '',
+              duration: storyboard_prompts && storyboard_prompts[index] ? storyboard_prompts[index].duration : 3,
+              generatedImage: imageUrl,
+              imagePrompt: storyboard_image_prompts && storyboard_image_prompts[index] ? storyboard_image_prompts[index].prompt : '',
+              thoughtProcess: storyboard_image_prompts && storyboard_image_prompts[index] ? storyboard_image_prompts[index].thought_process : '',
+              status: 'completed'
+            };
+          });
+          
+          setScenes(newScenes);
+          setStoryboardTitle(storyCore);
+          setCurrentStep(2);
+          console.log('成功生成分镜，跳转到步骤2');
+        } else {
+          console.error('未找到图片数据');
+          throw new Error('未找到图片数据');
+        }
+      } else {
+        console.error('返回数据格式错误:', result);
+        throw new Error('未返回有效数据');
+      }
     } catch (err) {
-      setError('生成分镜脚本失败: ' + err.message);
+      console.error('生成分镜失败:', err);
+      setError('生成分镜失败: ' + err.message);
     } finally {
       setIsGeneratingScript(false);
     }
   };
 
-  // 步骤3下一步
-  const handleStep3Next = () => {
-    if (scenes.length === 0) {
-      setError('请先生成分镜脚本');
-      return;
-    }
-    setCurrentStep(4);
-  };
-
-  // ========== 步骤4：分镜图片 ==========
-  
   // 生成分镜图片
-  const handleGenerateSceneImage = async (sceneId) => {
-    const scene = scenes.find(s => s.id === sceneId);
+  const handleGenerateSceneImage = async (sceneId, sceneOverride = null) => {
+    const scene = sceneOverride || scenes.find(s => s.id === sceneId);
     if (!scene) return;
 
     setIsGeneratingSceneImage(prev => ({ ...prev, [sceneId]: true }));
     setError(null);
 
     try {
-      const referenceImages = getFinalReferenceImages();
-      const imageUrl = await videoStoryboardService.generateSceneImage(
-        scene,
-        referenceImages,
-        userId,
-        organizationId
+      console.log('重新生成图片，场景:', scene);
+      
+      // 使用 imagePrompt（图片提示词）而不是 prompt（视频提示词）
+      const prompt = scene.imagePrompt || scene.prompt;
+      
+      // 获取视频尺寸
+      const width = videoSize.width;
+      const height = videoSize.height;
+      
+      // 获取角色名称
+      const role = selectedIPs[0] || 'poppy'; // 默认使用 poppy
+      
+      console.log('调用重新生成图片API，参数:', { width, height, role, prompt });
+      
+      // 调用重新生成图片API并轮询
+      const result = await videoStoryboardService.regeneImageWithPolling(
+        width,
+        height,
+        role,
+        prompt
       );
+      
+      console.log('重新生成图片结果:', result);
+      
+      // 更新场景的图片URL
+      let newImageUrl;
+      if (typeof result === 'string') {
+        newImageUrl = result;
+      } else if (result.storyboardData) {
+        // 后端返回格式：{ status: 'completed', storyboardData: { data: 'http://...' } }
+        if (typeof result.storyboardData === 'string') {
+          newImageUrl = result.storyboardData;
+        } else if (result.storyboardData.data) {
+          newImageUrl = result.storyboardData.data;
+        } else {
+          console.error('storyboardData格式未知:', result.storyboardData);
+          throw new Error('未找到图片URL');
+        }
+      } else if (result.image_url) {
+        newImageUrl = result.image_url;
+      } else if (result.url) {
+        newImageUrl = result.url;
+      } else if (result.data) {
+        // 可能直接是 { data: 'http://...' }
+        if (typeof result.data === 'string') {
+          newImageUrl = result.data;
+        } else {
+          console.error('data格式未知:', result.data);
+          throw new Error('未找到图片URL');
+        }
+      } else {
+        console.error('未知的返回格式:', result);
+        throw new Error('未找到图片URL');
+      }
+      
+      console.log('新图片URL:', newImageUrl);
       
       setScenes(prev => prev.map(s => 
         s.id === sceneId 
-          ? { ...s, generatedImage: imageUrl, status: 'completed' }
+          ? { ...s, generatedImage: newImageUrl, status: 'completed' }
           : s
       ));
+      
+      return newImageUrl;
     } catch (err) {
-      setError('生成分镜图片失败: ' + err.message);
+      console.error('重新生成图片失败:', err);
+      setError('重新生成图片失败: ' + err.message);
+      return null;
     } finally {
       setIsGeneratingSceneImage(prev => ({ ...prev, [sceneId]: false }));
     }
@@ -318,17 +350,127 @@ export const VideoStoryboardModal = ({
     }
   };
 
-  // 步骤4下一步
-  const handleStep4Next = () => {
-    const completedScenes = scenes.filter(s => s.generatedImage);
-    if (completedScenes.length === 0) {
-      setError('请至少生成一个分镜图片');
-      return;
-    }
-    setCurrentStep(5);
+  // 添加新分镜
+  const handleAddScene = () => {
+    const newSceneId = `scene-${Date.now()}`;
+    const newScene = {
+      id: newSceneId,
+      sequence: scenes.length + 1,
+      description: '',
+      prompt: '',
+      duration: 3,
+      generatedImage: null,
+      imagePrompt: '',
+      thoughtProcess: '',
+      status: 'pending'
+    };
+    setScenes([...scenes, newScene]);
   };
 
-  // ========== 步骤5：生成视频 ==========
+  // 删除分镜
+  const handleDeleteScene = (sceneId) => {
+    const updatedScenes = scenes
+      .filter(scene => scene.id !== sceneId)
+      .map((scene, index) => ({
+        ...scene,
+        sequence: index + 1
+      }));
+    setScenes(updatedScenes);
+  };
+
+  // 上移分镜
+  const handleMoveSceneUp = (sceneId) => {
+    const index = scenes.findIndex(s => s.id === sceneId);
+    if (index <= 0) return; // 已经是第一个
+    
+    const newScenes = [...scenes];
+    [newScenes[index - 1], newScenes[index]] = [newScenes[index], newScenes[index - 1]];
+    
+    // 更新序号
+    const updatedScenes = newScenes.map((scene, idx) => ({
+      ...scene,
+      sequence: idx + 1
+    }));
+    
+    setScenes(updatedScenes);
+  };
+
+  // 下移分镜
+  const handleMoveSceneDown = (sceneId) => {
+    const index = scenes.findIndex(s => s.id === sceneId);
+    if (index >= scenes.length - 1) return; // 已经是最后一个
+    
+    const newScenes = [...scenes];
+    [newScenes[index], newScenes[index + 1]] = [newScenes[index + 1], newScenes[index]];
+    
+    // 更新序号
+    const updatedScenes = newScenes.map((scene, idx) => ({
+      ...scene,
+      sequence: idx + 1
+    }));
+    
+    setScenes(updatedScenes);
+  };
+
+  // 上传分镜图片
+  const handleUploadSceneImage = async (sceneId, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setError(null);
+    setUploadingSceneImage(prev => ({ ...prev, [sceneId]: true }));
+
+    try {
+      const validation = uploadService.validateFile(file, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 10);
+      if (!validation.valid) {
+        setError(validation.error || '文件验证失败');
+        return;
+      }
+
+      const uploadResult = await uploadService.uploadFile(file, 'scene-images');
+
+      if (uploadResult.success && uploadResult.url) {
+        setScenes(prev => prev.map(scene => 
+          scene.id === sceneId 
+            ? { ...scene, generatedImage: uploadResult.url, status: 'completed' }
+            : scene
+        ));
+      } else {
+        setError(uploadResult.error || '上传失败');
+      }
+    } catch (err) {
+      console.error('上传分镜图片失败:', err);
+      setError('上传失败: ' + err.message);
+    } finally {
+      setUploadingSceneImage(prev => {
+        const newState = { ...prev };
+        delete newState[sceneId];
+        return newState;
+      });
+      e.target.value = '';
+    }
+  };
+
+  // 更新分镜信息
+  const handleUpdateScene = (sceneId, field, value) => {
+    setScenes(prev => prev.map(scene => 
+      scene.id === sceneId 
+        ? { ...scene, [field]: value }
+        : scene
+    ));
+  };
+
+  // 步骤2下一步 → 跳到步骤3（生成视频）
+  const handleStep2Next = () => {
+    const completedScenes = scenes.filter(s => s.generatedImage);
+    if (completedScenes.length === 0) {
+      setError('请先生成至少一张分镜图片');
+      return;
+    }
+    setCurrentStep(3);
+  };
+
+  // ========== 步骤3：生成视频 ==========
   
   // 合成视频
   const handleComposeVideo = async () => {
@@ -336,14 +478,91 @@ export const VideoStoryboardModal = ({
     setError(null);
 
     try {
-      const videoUrl = await videoStoryboardService.composeVideo(
-        scenes,
-        storyboardTitle,
-        userId,
-        organizationId
-      );
-      setGeneratedVideoUrl(videoUrl);
+      console.log('开始生成视频...');
+      console.log('当前分镜数据:', scenes);
+      
+      // 从当前的 scenes 数据构建请求数据
+      const storyboard_images_filepath = scenes.map(scene => {
+        // 如果图片URL是本地代理路径，转换回原始路径
+        if (scene.generatedImage && scene.generatedImage.includes('/api/ai/serve-image')) {
+          const urlParams = new URLSearchParams(scene.generatedImage.split('?')[1]);
+          return urlParams.get('path') || scene.generatedImage;
+        }
+        return scene.generatedImage || '';
+      });
+      
+      const storyboard_prompts = scenes.map(scene => ({
+        prompt: scene.prompt || '',
+        duration: scene.duration || 3,
+        description: scene.description || ''
+      }));
+      
+      const storyboard_image_prompts = scenes.map(scene => ({
+        prompt: scene.imagePrompt || scene.prompt || '',
+        thought_process: scene.thoughtProcess || ''
+      }));
+      
+      // 构建完整的请求数据
+      const requestData = {
+        storyboard_images_filepath,
+        storyboard_prompts,
+        video_width: videoSize.width,
+        video_height: videoSize.height,
+        voice: voiceInfo || storyboardData?.voice || {},
+        storyboard_image_prompts
+      };
+      
+      console.log('构建的请求数据:', JSON.stringify(requestData, null, 2));
+      
+      // 验证必要字段
+      const requiredFields = [
+        'storyboard_images_filepath',
+        'storyboard_prompts',
+        'video_width',
+        'video_height',
+        'voice',
+        'storyboard_image_prompts'
+      ];
+      
+      const missingFields = requiredFields.filter(field => !requestData[field]);
+      if (missingFields.length > 0) {
+        console.error('缺少必要字段:', missingFields);
+        throw new Error(`缺少必要字段: ${missingFields.join(', ')}`);
+      }
+      
+      console.log('数据验证通过，所有必要字段都存在');
+      console.log('图片数量:', requestData.storyboard_images_filepath.length);
+      console.log('提示词数量:', requestData.storyboard_prompts.length);
+      console.log('视频尺寸:', requestData.video_width, 'x', requestData.video_height);
+      console.log('配音角色数量:', requestData.voice.characters_timbre?.length);
+      console.log('配音脚本数量:', requestData.voice.voice_scripts?.length);
+      
+      const result = await videoStoryboardService.generateVideoWithPolling(requestData);
+      
+      console.log('视频生成结果:', result);
+      
+      // 检查返回的视频数据
+      if (result && result.videoData) {
+        // videoData 可能是字符串（直接是URL）或对象
+        let videoUrl;
+        if (typeof result.videoData === 'string') {
+          videoUrl = result.videoData;
+        } else {
+          videoUrl = result.videoData.video_url || result.videoData.url || result.videoData.videoUrl || result.videoData.data;
+        }
+        
+        if (videoUrl) {
+          console.log('视频URL:', videoUrl);
+          setGeneratedVideoUrl(videoUrl);
+        } else {
+          console.error('视频数据结构:', result.videoData);
+          throw new Error('未找到视频URL');
+        }
+      } else {
+        throw new Error('未返回视频数据');
+      }
     } catch (err) {
+      console.error('合成视频失败:', err);
       setError('合成视频失败: ' + err.message);
     } finally {
       setIsComposingVideo(false);
@@ -354,8 +573,7 @@ export const VideoStoryboardModal = ({
   const handleConfirm = () => {
     onConfirm({
       title: storyboardTitle,
-      description,
-      duration: videoDuration,
+      description: getCombinedDescription(),
       referenceImages: getFinalReferenceImages(),
       scenes,
       videoUrl: generatedVideoUrl
@@ -371,7 +589,7 @@ export const VideoStoryboardModal = ({
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
               currentStep === step.id ? 'bg-purple-100 border-2 border-purple-600' :
               currentStep > step.id ? 'bg-green-100 border-2 border-green-600' :
-              'bg-slate-100 border-2 border-slate-300'
+              'bg-[#fcfbf9] border-2 border-[#d1d5db]'
             }`}>
               {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
             </div>
@@ -387,299 +605,383 @@ export const VideoStoryboardModal = ({
 
   // 渲染步骤1：基本信息
   const renderStep1 = () => (
-    <div className="space-y-6">
+    <div className="relative">
+      {isGeneratingScript && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-xl">
+          <RefreshCw className="w-10 h-10 text-purple-500 animate-spin mb-4" />
+          <p className="text-slate-600 font-medium">正在生成分镜图片...</p>
+          <p className="text-sm text-slate-400 mt-1">请稍候，这可能需要几分钟</p>
+        </div>
+      )}
+      
       <div>
         <label className="text-sm font-medium text-slate-700 mb-2 block">
-          视频描述 <span className="text-red-500">*</span>
+          故事核心要素 <span className="text-red-500">*</span>
         </label>
         <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="描述你想要的视频内容，例如：一个关于数字学习的儿童教育视频，通过有趣的动画和互动帮助小朋友认识1-10的数字..."
-          className="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none resize-none h-32"
+          value={storyCore}
+          onChange={(e) => setStoryCore(e.target.value)}
+          placeholder="例如：poppy在花园里玩耍"
+          className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-24 transition-all"
+          disabled={isGeneratingScript}
         />
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700 mb-2 block flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          视频时长
+        <label className="text-sm font-medium text-slate-700 mb-2 block">
+          图片比例
         </label>
-        <div className="flex items-center gap-4">
-          <input
-            type="range"
-            min="3"
-            max="15"
-            step="1"
-            value={videoDuration}
-            onChange={(e) => setVideoDuration(Number(e.target.value))}
-            className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-500"
-          />
-          <span className="text-sm font-medium text-slate-700 min-w-[60px]">
-            {videoDuration} 秒
-          </span>
+        <div className="grid grid-cols-5 gap-2">
+          {ASPECT_RATIOS.map((ratio) => (
+            <button
+              key={ratio.id}
+              onClick={() => setSelectedAspectRatio(ratio)}
+              disabled={isGeneratingScript}
+              className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                selectedAspectRatio.id === ratio.id
+                  ? 'border-purple-500 bg-purple-50 text-purple-700'
+                  : 'border-2 border-[#e5e3db] hover:border-[#2d2d2d] text-[#2d2d2d] hover:bg-[#fffbe6]'
+              }`}
+            >
+              <div 
+                className="bg-current rounded-sm mb-1"
+                style={{
+                  width: ratio.id === '16:9' ? '32px' :
+                         ratio.id === '4:3' ? '24px' :
+                         ratio.id === '1:1' ? '20px' :
+                         ratio.id === '3:4' ? '15px' : '12px',
+                  height: ratio.id === '16:9' ? '18px' :
+                          ratio.id === '4:3' ? '18px' :
+                          ratio.id === '1:1' ? '20px' :
+                          ratio.id === '3:4' ? '20px' : '21px'
+                }}
+              />
+              <span className="text-xs font-medium">{ratio.label}</span>
+            </button>
+          ))}
         </div>
+        <p className="text-xs text-slate-400 mt-1">
+          已选择：{selectedAspectRatio.label} ({selectedAspectRatio.width}×{selectedAspectRatio.height}) - {selectedAspectRatio.description}
+        </p>
       </div>
 
       <div>
         <label className="text-sm font-medium text-slate-700 mb-2 block">
-          人物参考图片 <span className="text-slate-400 font-normal">（可选，仅支持1张）</span>
+          IP选择（单选）
         </label>
-        <p className="text-xs text-slate-500 mb-3">
-          上传人物参考图片可以保持视频中人物形象的一致性。如果不上传，AI会自动生成人物参考图。
+        <p className="text-xs text-slate-400 mb-3">
+          选择要出现在视频中的IP角色
         </p>
-        <div className="grid grid-cols-3 gap-3">
-          {uploadedReferenceImages[0] && (
-            <div className="relative group aspect-square">
-              <img 
-                src={uploadedReferenceImages[0]} 
-                alt="人物参考"
-                className="w-full h-full object-cover rounded-lg border border-slate-200"
-              />
+        <div className="flex gap-3 flex-wrap">
+          {IP_CHARACTERS.map((ip) => {
+            const isSelected = selectedIPs.includes(ip.id);
+            const isAvailable = ip.available !== false;
+            return (
               <button
-                onClick={() => handleRemoveUploadedImage(0)}
-                className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                key={ip.id}
+                onClick={() => {
+                  if (!isAvailable) return;
+                  if (isSelected) {
+                    setSelectedIPs([]);
+                  } else {
+                    setSelectedIPs([ip.id]);
+                  }
+                }}
+                disabled={!isAvailable || isGeneratingScript}
+                className={`relative flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all w-24 shrink-0 ${
+                  !isAvailable
+                    ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                    : isSelected
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-[#e5e3db] hover:border-[#2d2d2d] hover:bg-[#fffbe6]'
+                }`}
               >
-                <Trash2 className="w-3 h-3" />
+                {isSelected && isAvailable && (
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center z-10">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                <img
+                  src={ip.thumbnail}
+                  alt={ip.name}
+                  className="w-full h-30 object-cover rounded-lg"
+                />
+                <span className={`text-xs font-medium mt-1.5 ${!isAvailable ? 'text-gray-400' : 'text-slate-800'}`}>
+                  {ip.name}
+                </span>
+                <span
+                  className="text-xs px-2 py-0.5 rounded-full mt-1"
+                  style={{
+                    backgroundColor: ip.colorHex,
+                    color: '#FFF'
+                  }}
+                >
+                  {ip.color}
+                </span>
               </button>
-            </div>
-          )}
-          {Object.keys(uploadingImages).length > 0 && (
-            <div className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-purple-300 rounded-lg bg-purple-50">
-              <RefreshCw className="w-6 h-6 text-purple-600 animate-spin mb-1" />
-              <span className="text-xs text-purple-600">上传中...</span>
-            </div>
-          )}
-          {uploadedReferenceImages.length === 0 && Object.keys(uploadingImages).length === 0 && (
-            <label className="flex flex-col items-center justify-center aspect-square border-2 border-dashed border-slate-300 rounded-lg cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-colors">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleUploadReferenceImage}
-                disabled={Object.keys(uploadingImages).length > 0}
-              />
-              <Plus className="w-6 h-6 text-slate-400 mb-1" />
-              <span className="text-xs text-slate-500">上传图片</span>
-            </label>
-          )}
+            );
+          })}
         </div>
       </div>
     </div>
   );
 
-  // 渲染步骤2：人物参考图
+  // 渲染步骤2：分镜图片详情
   const renderStep2 = () => (
     <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-          <div>
-            <h4 className="text-sm font-medium text-blue-800">人物参考图</h4>
-            <p className="text-xs text-blue-600 mt-1">
-              由于您没有上传人物参考图片，AI已根据视频描述生成了4张人物参考图。请选择一张最符合您期望的图片作为视频中的人物形象。
+      {/* 分镜脚本部分 */}
+      {scenes.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-4">
+            <p className="text-yellow-700">
+              未找到分镜数据，请返回步骤1重新生成
             </p>
           </div>
         </div>
-      </div>
-
-      {isGeneratingCharacters ? (
-        <div className="text-center py-12">
-          <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-purple-600" />
-          <p className="text-slate-600">正在生成人物参考图...</p>
-          <p className="text-sm text-slate-400 mt-1">请稍候，大约需要30-60秒</p>
-        </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4">
-            {generatedCharacterImages.map((img, index) => (
-              <div
-                key={index}
-                onClick={() => setSelectedCharacterImage(img)}
-                className={`relative cursor-pointer rounded-lg overflow-hidden border-2 transition-all ${
-                  selectedCharacterImage === img 
-                    ? 'border-purple-500 ring-2 ring-purple-200' 
-                    : 'border-slate-200 hover:border-purple-300'
-                }`}
-              >
-                <img 
-                  src={img} 
-                  alt={`人物参考${index + 1}`}
-                  className="w-full aspect-square object-cover"
-                />
-                {selectedCharacterImage === img && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center">
-                    <Check className="w-4 h-4 text-white" />
+          {/* 视频信息概览 */}
+          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
+            <h4 className="font-medium text-purple-800 mb-3">视频信息</h4>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-slate-500">标题：</span>
+                <span className="font-medium text-slate-700">{storyboardTitle}</span>
+              </div>
+              <div>
+                <span className="text-slate-500">分镜数量：</span>
+                <span className="font-medium text-slate-700">{scenes.length} 个</span>
+              </div>
+              <div>
+                <span className="text-slate-500">视频尺寸：</span>
+                <span className="font-medium text-slate-700">{videoSize.width} × {videoSize.height}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 角色提示词 */}
+          {characterPrompt && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 mb-2">角色描述</h4>
+              <p className="text-sm text-blue-700">{characterPrompt}</p>
+            </div>
+          )}
+
+          {/* 配音信息 */}
+          {voiceInfo && voiceInfo.voice_scripts && voiceInfo.voice_scripts.length > 0 && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <h4 className="font-medium text-green-800 mb-3">配音信息</h4>
+              <div className="space-y-2">
+                {voiceInfo.characters_timbre && voiceInfo.characters_timbre.length > 0 && (
+                  <div className="text-sm text-green-700 mb-2">
+                    <span className="font-medium">音色：</span>
+                    {voiceInfo.characters_timbre.map((timbre, index) => (
+                      <span key={index} className="ml-2 px-2 py-0.5 bg-green-100 rounded text-xs">
+                        {timbre.timbre_name} - {timbre.timbre_des}
+                      </span>
+                    ))}
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs py-1 text-center">
-                  选项 {index + 1}
+                <div className="grid grid-cols-1 gap-2">
+                  {voiceInfo.voice_scripts.map((script, index) => (
+                    <div key={index} className="flex items-center gap-2 text-sm bg-white p-2 rounded border border-green-100">
+                      <span className="text-green-600 font-mono text-xs">
+                        [{(script.start_time / 1000).toFixed(1)}s - {(script.end_time / 1000).toFixed(1)}s]
+                      </span>
+                      <span className="text-slate-700">{script.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 分镜图片部分 */}
+          <div className="flex items-center justify-between">
+            <h4 className="font-medium text-slate-700">分镜详情</h4>
+            <button
+              onClick={handleAddScene}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm"
+            >
+              <Plus className="w-4 h-4" />
+              添加分镜
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 overflow-y-auto">
+            {scenes.map((scene) => (
+              <div key={scene.id} className="border-2 border-[#e5e3db] rounded-xl overflow-hidden transition-all hover:border-[#2d2d2d]">
+                <div className="flex gap-4 p-4">
+                  {/* 图片 */}
+                  <div className="w-64 shrink-0 flex flex-col justify-center">
+                    <div className="h-36 bg-slate-100 relative rounded-lg overflow-hidden flex items-center justify-center mb-2">
+                      {/* Loading 覆盖层 */}
+                      {isGeneratingSceneImage[scene.id] && (
+                        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+                          <div className="text-white text-center">
+                            <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
+                            <span className="text-sm">重新生成中...</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {scene.generatedImage ? (
+                        <button
+                          type="button"
+                          onClick={() => setPreviewImage({ url: scene.generatedImage, alt: `分镜${scene.sequence}` })}
+                          className="w-full h-full cursor-zoom-in flex items-center justify-center"
+                          title="点击放大查看"
+                        >
+                          <img
+                            src={scene.generatedImage}
+                            alt={`分镜${scene.sequence}`}
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </button>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                          <ImageIcon className="w-8 h-8" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* 图片操作按钮 */}
+                    <div className="flex gap-1">
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        onChange={(e) => handleUploadSceneImage(scene.id, e)}
+                        className="hidden"
+                        id={`upload-scene-${scene.id}`}
+                      />
+                      <label
+                        htmlFor={`upload-scene-${scene.id}`}
+                        className={`flex-1 px-2 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded text-center cursor-pointer transition-colors ${
+                          uploadingSceneImage[scene.id] ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        {uploadingSceneImage[scene.id] ? (
+                          <span className="flex items-center justify-center gap-1">
+                            <RefreshCw className="w-3 h-3 animate-spin" />
+                            上传中...
+                          </span>
+                        ) : (
+                          '上传图片'
+                        )}
+                      </label>
+                    </div>
+                  </div>
+                  
+                  {/* 信息 */}
+                  <div className="flex-1 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h5 className="font-medium text-slate-700">分镜 {scene.sequence}</h5>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                          时长: {scene.duration}s
+                        </span>
+                        {/* 排序按钮 */}
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => handleMoveSceneUp(scene.id)}
+                            disabled={scenes.findIndex(s => s.id === scene.id) === 0}
+                            className="px-2 py-1 text-xs border border-slate-200 text-slate-600 rounded hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="上移"
+                          >
+                            <ChevronLeft className="w-3 h-3 rotate-90" />
+                          </button>
+                          <button
+                            onClick={() => handleMoveSceneDown(scene.id)}
+                            disabled={scenes.findIndex(s => s.id === scene.id) === scenes.length - 1}
+                            className="px-2 py-1 text-xs border border-slate-200 text-slate-600 rounded hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            title="下移"
+                          >
+                            <ChevronLeft className="w-3 h-3 -rotate-90" />
+                          </button>
+                        </div>
+                        <button
+                          onClick={() => handleGenerateSceneImage(scene.id)}
+                          disabled={isGeneratingSceneImage[scene.id]}
+                          className="px-3 py-1 text-xs border border-purple-200 text-purple-600 rounded hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center gap-1"
+                        >
+                          {isGeneratingSceneImage[scene.id] ? (
+                            <>
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                              生成中...
+                            </>
+                          ) : scene.generatedImage ? (
+                            <>
+                              <RefreshCw className="w-3 h-3" />
+                              重新生成
+                            </>
+                          ) : (
+                            <>
+                              <Wand2 className="w-3 h-3" />
+                              生成图片
+                            </>
+                          )}
+                        </button>
+                        <button
+                          onClick={() => handleDeleteScene(scene.id)}
+                          className="px-3 py-1 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50 transition-colors flex items-center gap-1"
+                          title="删除分镜"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs text-slate-500 font-medium">描述：</label>
+                      <textarea
+                        value={scene.description}
+                        onChange={(e) => handleUpdateScene(scene.id, 'description', e.target.value)}
+                        className="w-full mt-1 p-2 text-sm border border-slate-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        rows={2}
+                        placeholder="输入分镜描述..."
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs text-slate-500 font-medium">提示词：</label>
+                      <textarea
+                        value={scene.prompt}
+                        onChange={(e) => handleUpdateScene(scene.id, 'prompt', e.target.value)}
+                        className="w-full mt-1 p-2 text-sm border border-slate-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-slate-50"
+                        rows={2}
+                        placeholder="输入提示词..."
+                      />
+                    </div>
+                    
+                    {/* {scene.imagePrompt && (
+                      <div>
+                        <span className="text-xs text-slate-500 font-medium">图片提示词：</span>
+                        <p className="text-sm text-slate-600 mt-1 bg-blue-50 p-2 rounded">{scene.imagePrompt}</p>
+                      </div>
+                    )}
+                     */}
+                    {scene.thoughtProcess && (
+                      <details className="text-xs">
+                        <summary className="cursor-pointer text-slate-500 hover:text-slate-700">
+                          查看思考过程
+                        </summary>
+                        <p className="mt-2 text-slate-600 bg-gray-50 p-2 rounded whitespace-pre-wrap">
+                          {scene.thoughtProcess}
+                        </p>
+                      </details>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-
-          <button
-            onClick={handleRegenerateCharacters}
-            disabled={isGeneratingCharacters}
-            className="w-full px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            重新生成人物参考图
-          </button>
         </>
       )}
     </div>
   );
 
-  // 渲染步骤3：分镜脚本
+  // 渲染步骤3：生成视频
   const renderStep3 = () => (
-    <div className="space-y-6">
-      {scenes.length === 0 ? (
-        <div className="text-center py-8">
-          <button
-            onClick={generateStoryboardScript}
-            disabled={isGeneratingScript}
-            className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2 mx-auto"
-          >
-            {isGeneratingScript ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                生成分镜脚本中...
-              </>
-            ) : (
-              <>
-                <Wand2 className="w-4 h-4" />
-                点击生成分镜脚本
-              </>
-            )}
-          </button>
-          <p className="text-sm text-slate-400 mt-3">
-            AI将根据视频描述和人物参考图生成分镜脚本
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-            <h4 className="font-medium text-purple-800">{storyboardTitle}</h4>
-            <p className="text-xs text-purple-600 mt-1">
-              共 {scenes.length} 个分镜，预计时长 {videoDuration} 秒
-            </p>
-          </div>
-
-          <div className="border border-slate-200 rounded-lg overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">序号</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">时长</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">景别</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">运镜</th>
-                  <th className="px-4 py-2 text-left font-medium text-slate-700">画面内容</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {scenes.map((scene) => (
-                  <tr key={scene.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 text-slate-600">{scene.sequence}</td>
-                    <td className="px-4 py-3 text-slate-600">{scene.duration}</td>
-                    <td className="px-4 py-3 text-slate-600">{scene.shotType}</td>
-                    <td className="px-4 py-3 text-slate-600">{scene.cameraMovement}</td>
-                    <td className="px-4 py-3 text-slate-600 max-w-xs truncate">{scene.content}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <button
-            onClick={generateStoryboardScript}
-            disabled={isGeneratingScript}
-            className="w-full px-4 py-2 border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center gap-2"
-          >
-            <RefreshCw className="w-4 h-4" />
-            重新生成分镜脚本
-          </button>
-        </>
-      )}
-    </div>
-  );
-
-  // 渲染步骤4：分镜图片
-  const renderStep4 = () => (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h4 className="font-medium text-slate-700">分镜图片生成</h4>
-        <button
-          onClick={handleGenerateAllSceneImages}
-          disabled={Object.values(isGeneratingSceneImage).some(v => v)}
-          className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-1"
-        >
-          <Wand2 className="w-3 h-3" />
-          生成全部
-        </button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 overflow-y-auto">
-        {scenes.map((scene) => (
-          <div key={scene.id} className="border border-slate-200 rounded-lg overflow-hidden">
-            <div className="aspect-video bg-slate-100 relative">
-              {scene.generatedImage ? (
-                <button
-                  type="button"
-                  onClick={() => setPreviewImage({ url: scene.generatedImage, alt: `分镜${scene.sequence}` })}
-                  className="w-full h-full cursor-zoom-in"
-                  title="点击放大查看"
-                >
-                <img
-                  src={scene.generatedImage}
-                  alt={`分镜${scene.sequence}`}
-                  className="w-full h-full object-cover"
-                />
-                </button>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-slate-400">
-                  <ImageIcon className="w-8 h-8" />
-                </div>
-              )}
-            </div>
-            <div className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-700">分镜 {scene.sequence}</span>
-                <span className="text-xs text-slate-500">{scene.duration}</span>
-              </div>
-              <p className="text-xs text-slate-500 mb-2 line-clamp-2">{scene.content}</p>
-              <button
-                onClick={() => handleGenerateSceneImage(scene.id)}
-                disabled={isGeneratingSceneImage[scene.id]}
-                className="w-full px-3 py-1.5 text-xs border border-purple-200 text-purple-600 rounded hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center justify-center gap-1"
-              >
-                {isGeneratingSceneImage[scene.id] ? (
-                  <>
-                    <RefreshCw className="w-3 h-3 animate-spin" />
-                    生成中...
-                  </>
-                ) : scene.generatedImage ? (
-                  <>
-                    <RefreshCw className="w-3 h-3" />
-                    重新生成
-                  </>
-                ) : (
-                  <>
-                    <Wand2 className="w-3 h-3" />
-                    生成图片
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  // 渲染步骤5：生成视频
-  const renderStep5 = () => (
     <div className="space-y-6">
       {!generatedVideoUrl ? (
         <div className="text-center py-8">
@@ -730,14 +1032,6 @@ export const VideoStoryboardModal = ({
               className="w-full h-full"
             />
           </div>
-
-          <button
-            onClick={handleConfirm}
-            className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 mx-auto"
-          >
-            <Check className="w-5 h-5" />
-            确认并添加到画布
-          </button>
         </div>
       )}
     </div>
@@ -749,17 +1043,66 @@ export const VideoStoryboardModal = ({
       case 1: return renderStep1();
       case 2: return renderStep2();
       case 3: return renderStep3();
-      case 4: return renderStep4();
-      case 5: return renderStep5();
       default: return null;
     }
   };
 
   // 渲染底部按钮
   const renderFooterButtons = () => {
-    // 步骤5有特殊的按钮逻辑
-    if (currentStep === 5) {
-      return null; // 步骤5的按钮在内容区域
+    // 步骤3的特殊按钮逻辑
+    if (currentStep === 3) {
+      if (generatedVideoUrl) {
+        // 视频已生成，显示上一步和确认按钮
+        return (
+          <div className="flex justify-between">
+            <button
+              onClick={() => setCurrentStep(prev => prev - 1)}
+              className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all flex items-center gap-2 font-medium"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              上一步
+            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  if (generatedVideoUrl) {
+                    const link = document.createElement('a');
+                    link.href = generatedVideoUrl;
+                    link.download = `video_${Date.now()}.mp4`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }
+                }}
+                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+              >
+                <Download className="w-5 h-5" />
+                下载视频
+              </button>
+              {/* 暂时屏蔽确认按钮 */}
+              {/* <button
+                onClick={handleConfirm}
+                className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+              >
+                <Check className="w-5 h-5" />
+                确认并添加到画布
+              </button> */}
+            </div>
+          </div>
+        );
+      }
+      // 视频未生成，显示上一步按钮
+      return (
+        <div className="flex justify-start">
+          <button
+            onClick={() => setCurrentStep(prev => prev - 1)}
+            className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all flex items-center gap-2 font-medium"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            上一步
+          </button>
+        </div>
+      );
     }
 
     return (
@@ -767,7 +1110,7 @@ export const VideoStoryboardModal = ({
         <button
           onClick={() => setCurrentStep(prev => prev - 1)}
           disabled={currentStep === 1}
-          className="px-6 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+          className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
         >
           <ChevronLeft className="w-4 h-4" />
           上一步
@@ -776,40 +1119,27 @@ export const VideoStoryboardModal = ({
         {currentStep === 1 && (
           <button
             onClick={handleStep1Next}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+            disabled={isGeneratingScript}
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
-            下一步
-            <ChevronRight className="w-4 h-4" />
+            {isGeneratingScript ? (
+              <>
+                <RefreshCw className="w-4 h-4 animate-spin" />
+                生成分镜中...
+              </>
+            ) : (
+              <>
+                下一步
+                <ChevronRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         )}
 
         {currentStep === 2 && (
           <button
             onClick={handleStep2Next}
-            disabled={!selectedCharacterImage}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
-          >
-            下一步
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-
-        {currentStep === 3 && (
-          <button
-            onClick={handleStep3Next}
-            disabled={scenes.length === 0}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
-          >
-            下一步
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-
-        {currentStep === 4 && (
-          <button
-            onClick={handleStep4Next}
-            // 分镜图全部生成后才能进入下一步
-            disabled={scenes.length === 0 || scenes.some(s => !s.generatedImage)}
+            disabled={isGeneratingScript}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
           >
             下一步
@@ -826,7 +1156,7 @@ export const VideoStoryboardModal = ({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[740px] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between shrink-0">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-purple-600 p-2 rounded-lg text-white">
               <Video className="w-5 h-5" />
@@ -862,7 +1192,7 @@ export const VideoStoryboardModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-200">
+        <div className="p-6 border-t-2 border-[#e5e3db]">
           {renderFooterButtons()}
         </div>
       </div>

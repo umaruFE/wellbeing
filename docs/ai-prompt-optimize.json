@@ -1,0 +1,151 @@
+{
+  "name": "ai-prompt-optimize",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-prompt-optimize",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook 接收",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "id": "webhook-1",
+      "webhookId": "ai-prompt-optimize"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取提示词优化模板\nconst item = $input.first()?.json || {};\nconst taskType = item.body?.task_type || item.task_type || 'extract-keywords';\nconst originalPrompt = item.body?.prompt || item.prompt || '';\nconst selectedRoles = item.body?.selectedRoles || [];\n\nconst promptTemplates = {\n  'video': `你是一个专业的视频提示词优化专家。请将用户的简单描述扩展为详细的视频生成提示词。\n\n要求：\n1. 详细描述场景、环境、光线、色彩、氛围\n2. 描述角色的动作、表情、位置\n3. 包含镜头运动建议（如推、拉、摇、移等）\n4. 风格关键词：扁平矢量插画、2D动画风格、低饱和度平涂色彩\n\n直接输出优化后的提示词，不要其他解释。`,\n\n  'storyboard': `你是一个专业的分镜提示词优化专家。请将用户的简单描述扩展为适合分镜制作的详细提示词。\n\n要求：\n1. 分解为多个分镜场景\n2. 每个分镜包含：场景描述、角色动作、镜头角度\n3. 保持风格一致性\n4. 风格关键词：扁平矢量插画、2D动画风格、低饱和度平涂色彩\n\n输出格式：\n[\n  {\"scene\": 1, \"description\": \"场景1描述\", \"characters\": \"角色动作\"},\n  {\"scene\": 2, \"description\": \"场景2描述\", \"characters\": \"角色动作\"}\n]`,\n\n  'regene': `你是一个专业的图像优化专家。请将用户的简单描述扩展为详细的图像生成提示词。\n\n要求：\n1. 详细描述角色外观、表情、动作、位置\n2. 详细描述背景环境\n3. 添加风格关键词：扁平矢量插画、2D扁平设计、低饱和度平涂色彩、单线风格\n4. 添加质量增强词：高清、细腻、精致\n\n直接输出优化后的提示词。`,\n\n  'extract-keywords': `你是一个专业的场景描述分析助手。你的任务是从用户的场景描述中提取：\n1. 背景环境描述（不包含任何角色的描述）\n2. 每个IP角色的具体动作描述\n\n必须以JSON格式返回，不要输出任何其他文字：\n{\n  \"background\": \"背景环境描述\",\n  \"roles\": {\n    \"poppy\": \"角色动作描述\",\n    \"edi\": \"角色动作描述\",\n    \"rolly\": \"角色动作描述\",\n    \"milo\": \"角色动作描述\",\n    \"ace\": \"角色动作描述\"\n  }\n}\n\n重要规则：\n\n【IP角色固有属性守则 - 必须严格遵守】\n所有角色均为\"非人类卡通生物\"，其视觉特征必须严格遵循以下限制：\n- **禁止添加衣物**：它们不穿任何衣服、内衣、背心、外套、裤子或裙子。\n- **禁止添加鞋帽**：它们始终赤脚，不穿鞋子、袜子、运动鞋，也不戴帽子。\n- **禁止添加头发**：它们没有头发，不存在\"发丝飞扬\"、\"马尾\"、\"短发\"等描述。\n- **禁止拟人化细节**：没有睫毛、眼影、指甲、脚趾、肚脐或明显的肌肉线条。\n- **五官特征**：眼睛是极简的纯黑实心圆点，嘴巴是简单的黑色线条，没有任何复杂的瞳孔、白眼球或唇色。\n- **肢体特征**：四肢为极简的细长管状（线条状），手脚是圆润的末端，没有手指和脚趾的区分。\n\n【背景描述要求】\n- 必须详细丰富，包含：时间、天气、光线、色调、氛围、环境元素、关键状态\n- 必须包含的风格关键词：扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字\n- 禁止出现任何角色或小动物\n\n【角色动作描述要求】\n- 只描述角色本身，不包含任何背景、环境、场景元素\n- 详细具体：具体动作、姿态细节、表情神态、与小物件的互动\n- 允许小物件：家具（椅子、桌子等）、小物品（书本、杯子、玩具、望远镜等道具）\n- 绝对禁止：天空、太阳、月亮、星星、地面、建筑、树木等任何背景元素\n\n直接输出JSON，不要输出任何其他文字！`,\n\n  'extract-character': `你是一个专业的角色描述提取助手。请从用户的场景描述中提取每个IP角色的具体描述。\n\n请以JSON格式返回：\n{\n  \"characters\": {\n    \"poppy\": \"角色poppy的详细描述，包含外观、表情、动作等\",\n    \"edi\": \"角色edi的详细描述\"\n  }\n}\n\n【IP角色固有属性守则 - 必须严格遵守】\n所有角色均为\"非人类卡通生物\"：\n- 眼睛是极简的纯黑实心圆点\n- 嘴巴是简单的黑色线条\n- 四肢为极简的细长管状（线条状）\n- 手脚是圆润的末端，没有手指和脚趾\n- 不穿任何衣物\n- 没有头发\n\n直接输出JSON，不要其他解释。`,\n\n  'optimize': `请优化以下提示词，使其更加详细、精准、符合专业要求。\n\n要求：\n1. 扩展场景描述，增加细节\n2. 明确角色动作和表情\n3. 添加风格关键词：扁平矢量插画、2D动画风格、低饱和度平涂色彩\n4. 保持提示词清晰、有条理\n\n直接输出优化后的提示词。`,\n\n  'general': `请优化以下提示词，使其更加详细、精准、符合专业要求。\n\n要求：\n1. 扩展场景描述，增加细节\n2. 明确角色动作和表情\n3. 添加风格关键词：扁平矢量插画、2D动画风格、低饱和度平涂色彩\n4. 保持提示词清晰、有条理\n\n直接输出优化后的提示词。`\n};\n\nconst systemPrompt = promptTemplates[taskType] || promptTemplates['general'];\n\nreturn [{\n  json: {\n    task_type: taskType,\n    original_prompt: originalPrompt,\n    chatInput: originalPrompt,\n    system_prompt: systemPrompt,\n    selectedRoles: selectedRoles\n  }\n}];"
+      },
+      "name": "获取优化模板",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [500, 300],
+      "id": "build-prompt"
+    },
+    {
+      "parameters": {
+        "hasOutputParser": false,
+        "text": "={{ $json.system_prompt }}",
+        "options": {
+          "chatReply": "chatInput"
+        }
+      },
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [750, 300],
+      "id": "ai-agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3.5",
+          "mode": "list",
+          "cachedResultName": "Qwen3.5"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [700, 500],
+      "id": "chat-model",
+      "credentials": {
+        "openAiApi": {
+          "id": "gM924akHUPCvr5sE",
+          "name": "supper center"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析 AI Agent 响应\nconst response = $input.first()?.json || {};\n\n// 提取内容\nlet content = '';\nif (response?.output) {\n  content = typeof response.output === 'string' ? response.output : JSON.stringify(response.output);\n} else if (response?.text) {\n  content = response.text;\n}\n\n// 尝试解析 JSON\nlet result = {\n  status: 'success',\n  background: '',\n  roles: {},\n  raw: content\n};\n\n// 清理可能有的 markdown 代码块\ncontent = content.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/, '').trim();\n\ntry {\n  const json = JSON.parse(content);\n  \n  if (json.background && json.roles) {\n    result.background = json.background;\n    result.roles = json.roles;\n  } else if (json.state || json.cities || json.background || json.roles) {\n    result.background = json.background || json.state || json.scene || '';\n    \n    if (json.cities && Array.isArray(json.cities)) {\n      const roleMap = {};\n      json.cities.forEach(item => {\n        const match = String(item).match(/^([a-zA-Z]+)(.+)$/);\n        if (match) {\n          roleMap[match[1].toLowerCase()] = match[2].trim();\n        }\n      });\n      result.roles = roleMap;\n    } else if (json.roles) {\n      result.roles = json.roles;\n    }\n  }\n} catch (e) {\n  result.raw = content;\n}\n\nreturn [{ json: result }];"
+      },
+      "name": "解析输出",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1000, 300],
+      "id": "parse-output"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1250, 300],
+      "id": "respond"
+    }
+  ],
+  "connections": {
+    "Webhook 接收": {
+      "main": [
+        [
+          {
+            "node": "获取优化模板",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取优化模板": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "解析输出",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析输出": {
+      "main": [
+        [
+          {
+            "node": "返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "rJBGrJFQgJDXTaGe",
+  "tags": []
+}

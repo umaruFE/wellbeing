@@ -155,9 +155,9 @@ export const VideoMaterialManagement = () => {
   };
 
   return (
-    <div className="h-full flex flex-col bg-slate-50">
+    <div className="h-full flex flex-col bg-[#fcfbf9]">
       {/* 顶部操作栏 */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
+      <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="relative">
@@ -167,7 +167,7 @@ export const VideoMaterialManagement = () => {
                 placeholder="搜索视频素材..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none w-64"
+                className="pl-10 pr-4 py-2 border-2 border-[#e5e3db] rounded-xl text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none w-64 transition-all duration-200"
               />
             </div>
             <span className="text-sm text-slate-500">
@@ -186,7 +186,7 @@ export const VideoMaterialManagement = () => {
             <button
               onClick={triggerVideoSelect}
               disabled={uploading}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 border-2 border-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:text-[#2d2d2d] disabled:opacity-50 shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] transition-all duration-200"
             >
               {uploading ? (
                 <>
@@ -221,7 +221,7 @@ export const VideoMaterialManagement = () => {
             {filteredVideos.map((video) => (
               <div
                 key={video.id}
-                className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow"
+                className="bg-white rounded-[24px] border-2 border-[#e5e3db] overflow-hidden cursor-pointer transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
               >
                 {/* 视频预览 */}
                 <div className="relative aspect-video bg-slate-900">
@@ -260,17 +260,17 @@ export const VideoMaterialManagement = () => {
                       {video.description}
                     </p>
                   )}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t-2 border-[#e5e3db]">
                     <button
                       onClick={() => openModal('edit', video)}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-[#2d2d2d] hover:bg-[#fffbe6] border border-transparent hover:border-[#2d2d2d] rounded-xl transition-all duration-200 font-medium"
                     >
                       <Edit className="w-3.5 h-3.5" />
                       编辑
                     </button>
                     <button
                       onClick={() => handleDelete(video.id)}
-                      className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 border border-transparent hover:border-red-600 rounded-xl transition-all duration-200 font-medium"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       删除
@@ -286,8 +286,8 @@ export const VideoMaterialManagement = () => {
       {/* 添加/编辑模态框 */}
       {modalType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+          <div className="bg-white rounded-[24px] border-2 border-[#e5e3db] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b-2 border-[#e5e3db]">
               <h3 className="text-lg font-semibold text-slate-800">
                 {modalType === 'add' ? '添加视频素材' : '编辑视频素材'}
               </h3>
@@ -321,7 +321,7 @@ export const VideoMaterialManagement = () => {
                   value={modalData.name || ''}
                   onChange={(e) => handleInputChange('name', e.target.value)}
                   placeholder="请输入视频名称"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                 />
               </div>
 
@@ -335,7 +335,7 @@ export const VideoMaterialManagement = () => {
                   onChange={(e) => handleInputChange('description', e.target.value)}
                   placeholder="请输入视频描述（可选）"
                   rows={3}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                  className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none transition-all duration-200"
                 />
               </div>
 
@@ -349,7 +349,7 @@ export const VideoMaterialManagement = () => {
                   value={modalData.tags?.join(', ') || ''}
                   onChange={(e) => handleInputChange('tags', e.target.value.split(',').map(t => t.trim()))}
                   placeholder="标签1, 标签2, 标签3（可选）"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                 />
               </div>
 
@@ -363,7 +363,7 @@ export const VideoMaterialManagement = () => {
                   value={modalData.camera_movement || ''}
                   onChange={(e) => handleInputChange('camera_movement', e.target.value)}
                   placeholder="请输入运镜方式（可选）"
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                  className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                 />
               </div>
 
@@ -377,22 +377,22 @@ export const VideoMaterialManagement = () => {
                   onChange={(e) => handleInputChange('scene_content', e.target.value)}
                   placeholder="请输入画面内容描述（可选）"
                   rows={3}
-                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                  className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none transition-all duration-200"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-200 bg-slate-50">
+            <div className="flex items-center justify-end gap-3 p-6 border-t-2 border-[#e5e3db] bg-[#fcfbf9]">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-[#2d2d2d] border-2 border-[#e5e3db] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all duration-200 font-medium"
               >
                 取消
               </button>
               <button
                 onClick={modalType === 'add' ? handleConfirmAdd : handleConfirmEdit}
                 disabled={!modalData.name}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:text-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] transition-all duration-200 font-bold"
               >
                 <Check className="w-4 h-4" />
                 {modalType === 'add' ? '添加' : '保存'}

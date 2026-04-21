@@ -132,7 +132,7 @@ export const VoiceManagementPage = () => {
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-white">
+      <div className="h-full flex items-center justify-center bg-[#fcfbf9]">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-500">加载中...</p>
@@ -142,13 +142,13 @@ export const VoiceManagementPage = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-slate-50">
+    <div className="h-screen flex flex-col bg-[#fcfbf9]">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-              <Music className="w-6 h-6 text-blue-600" />
+              <Music className="w-6 h-6 text-[#2d2d2d]" />
               声音管理
             </h1>
             <p className="text-sm text-slate-500 mt-1">上传和管理您的声音文件</p>
@@ -156,8 +156,8 @@ export const VoiceManagementPage = () => {
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-              uploading ? 'bg-slate-300 text-slate-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'
+            className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-200 font-medium shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] ${
+              uploading ? 'bg-[#d1d5db] text-[#6b7280] cursor-not-allowed border-2 border-[#d1d5db]' : 'border-2 border-[#2d2d2d] hover:bg-[#fffbe6] hover:text-[#2d2d2d]'
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -167,7 +167,7 @@ export const VoiceManagementPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4">
+      <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] px-6 py-4">
         <div className="flex items-center gap-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -176,7 +176,7 @@ export const VoiceManagementPage = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="搜索声音..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              className="w-full pl-10 pr-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -188,10 +188,10 @@ export const VoiceManagementPage = () => {
                   <button
                     key={emotion.id}
                     onClick={() => setFilterEmotion(emotion.id)}
-                    className={`px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                    className={`px-3 py-2 rounded-xl flex items-center gap-2 transition-all duration-200 font-medium ${
                       filterEmotion === emotion.id
-                        ? 'bg-blue-100 text-blue-600'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-[#fffbe6] text-[#2d2d2d] border-2 border-[#2d2d2d]'
+                        : 'bg-[#fcfbf9] text-slate-600 border-2 border-[#e5e3db] hover:border-[#2d2d2d] hover:bg-[#fffbe6]'
                     }`}
                   >
                     <Icon className={`w-4 h-4 ${emotion.color || ''}`} />
@@ -210,11 +210,11 @@ export const VoiceManagementPage = () => {
           {filteredVoices.map(voice => (
             <div
               key={voice.id}
-              className="bg-white rounded-lg border border-slate-200 p-5 hover:shadow-lg transition-shadow"
+              className="bg-[#fcfbf9] rounded-[24px] border-2 border-[#e5e3db] p-5 transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <div className="w-12 h-12 bg-[#fffbe6] rounded-xl flex items-center justify-center border-2 border-[#e5e3db]">
                     {getEmotionIcon(voice.emotion)}
                   </div>
                   <div>
@@ -223,14 +223,14 @@ export const VoiceManagementPage = () => {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-4 text-sm text-slate-600">
                   <span className="flex items-center gap-1">
                     <Music className="w-4 h-4" />
                     {voice.duration}
                   </span>
-                  <span className="px-2 py-1 bg-slate-100 rounded text-xs">
+                  <span className="px-2 py-1 bg-[#fffbe6] border border-[#e5e3db] rounded text-xs">
                     {emotions.find(e => e.id === voice.emotion)?.name || voice.emotion}
                   </span>
                 </div>
@@ -239,10 +239,10 @@ export const VoiceManagementPage = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handlePlay(voice.id)}
-                  className={`flex-1 px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors ${
+                  className={`flex-1 px-3 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-medium ${
                     playingId === voice.id
-                      ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                      ? 'bg-red-50 text-red-600 border-2 border-red-200 hover:border-red-600 hover:bg-red-100'
+                      : 'bg-[#fffbe6] text-[#2d2d2d] border-2 border-[#e5e3db] hover:border-[#2d2d2d] hover:bg-[#fffbe6]'
                   }`}
                 >
                   {playingId === voice.id ? (
@@ -259,7 +259,7 @@ export const VoiceManagementPage = () => {
                 </button>
                 <button
                   onClick={() => handleDelete(voice.id)}
-                  className="px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors"
+                  className="px-3 py-2 bg-red-50 text-red-600 border-2 border-red-200 rounded-xl hover:border-red-600 hover:bg-red-100 transition-all duration-200"
                   title="删除"
                 >
                   <Trash2 className="w-4 h-4" />

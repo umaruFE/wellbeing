@@ -23,7 +23,10 @@ import {
   Users,
   Settings,
   Video,
-  RefreshCw
+  RefreshCw,
+  Wand2,
+  Clapperboard,
+  Mic
 } from 'lucide-react';
 import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from '../modules/course-management/ppt-canvas/CanvasView';
@@ -37,7 +40,7 @@ export const MainLayout = () => {
   const location = useLocation();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [expandedMenus, setExpandedMenus] = useState(['materials']); // 默认展开素材管理
+  const [expandedMenus, setExpandedMenus] = useState(['knowledge']); // 默认展开素材管理
 
   // 课程编辑状态
   const [appState, setAppState] = useState('welcome');
@@ -90,6 +93,7 @@ export const MainLayout = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(requestBody)
       });
@@ -268,6 +272,7 @@ export const MainLayout = () => {
         method,
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
         },
         body: JSON.stringify(requestBody)
       });
@@ -384,6 +389,19 @@ export const MainLayout = () => {
         { path: '/voices', label: '声音', icon: Music },
       ]
     },
+    {
+      id: 'ai-tools',
+      label: 'AI工具',
+      icon: Wand2,
+      description: 'AI智能生成',
+      roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
+      children: [
+        { path: '/test/ip-scene', label: 'IP场景生成', icon: Wand2 },
+        { path: '/test/video-generator', label: '视频生成', icon: Clapperboard },
+        { path: '/test/voice-generator', label: '声音生成', icon: Mic },
+        { path: '/audio-generator', label: '音频生成', icon: Music },
+      ]
+    },
     // 超级管理端（带二级菜单）
     // { 
     //   id: 'super-admin', 
@@ -495,38 +513,27 @@ export const MainLayout = () => {
     return false;
   };
 
-  // 判断父菜单是否展开
-  const isParentExpanded = (path) => {
-    for (const item of menuItems) {
-      if (item.children) {
-        const found = item.children.find(child => child.path === path);
-        if (found) return expandedMenus.includes(item.id);
-      }
-    }
-    return false;
-  };
+  // 展开状态直接用 isExpanded 变量，不需要额外函数
 
   return (
-    <div className="h-screen flex font-sans bg-slate-50">
+    <div className="h-screen flex font-sans bg-[#fcfbf9]">
       {/* 左侧边栏 */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white border-r border-slate-200 flex flex-col transition-all duration-300 z-30`}>
+      <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-[#fcfbf9] border-r border-[#e5e3db] flex flex-col transition-all duration-300 z-30`}>
         {/* Logo区域 */}
-        <div className="h-14 flex items-center px-4 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-1.5 rounded text-white shadow-sm shrink-0">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            {!sidebarCollapsed && (
-              <div className="flex flex-col">
-                <span className="font-bold text-sm text-slate-800">CourseGen AI</span>
-                <span className="text-[10px] text-slate-500">管理控制台</span>
-              </div>
-            )}
+        <div className="flex items-center p-6 border-b border-[#e5e3db] gap-3">
+          <div className="bg-[#f0ad4e] text-white p-1.5 rounded-lg border-2 border-[#2d2d2d] shrink-0">
+            <Sparkles className="w-5 h-5" />
           </div>
+          {!sidebarCollapsed && (
+            <div className="flex flex-col">
+              <span className="font-bold text-lg leading-tight tracking-wide text-[#2d2d2d]">CourseGen AI</span>
+              <span className="text-xs text-gray-500 font-medium">管理控制台</span>
+            </div>
+          )}
         </div>
 
         {/* 导航菜单 */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="flex-1 py-4 px-3 overflow-y-auto space-y-1">
           {accessibleMenuItems.map(item => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -547,18 +554,20 @@ export const MainLayout = () => {
                   <>
                     <button
                       onClick={() => toggleMenu(item.id)}
-                      className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
-                        isActive || isParentExpanded(location.pathname)
-                          ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                          : 'text-slate-600 hover:bg-slate-50'
-                      }`}
+                      className={`w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors group ${
+                        isActive || isExpanded
+                          ? 'bg-[#cde0c5] text-[#2d2d2d] border-2 border-[#2d2d2d] shadow-[2px_2px_0px_0px_rgba(45,45,45,1)]'
+                          : 'text-gray-600 hover:bg-gray-100 border-2 border-transparent'
+                      } ${sidebarCollapsed ? 'justify-center' : ''}`}
                     >
-                      <Icon className="w-4 h-4 shrink-0" />
+                      <div className={isActive || isExpanded ? 'text-green-950' : 'text-gray-500 group-hover:text-gray-800'}>
+                        <Icon className="w-5 h-5 shrink-0" />
+                      </div>
                       {!sidebarCollapsed && (
-                        <div className="flex-1 text-left">
-                          <div className="font-medium text-sm">{item.label}</div>
+                        <div className="flex-1">
+                          <div className="font-bold text-[15px] leading-tight">{item.label}</div>
                           {item.description && (
-                            <div className="text-xs text-slate-400">{item.description}</div>
+                            <div className="text-[11px] mt-0.5 text-gray-400">{item.description}</div>
                           )}
                         </div>
                       )}
@@ -569,7 +578,7 @@ export const MainLayout = () => {
 
                     {/* 二级菜单 */}
                     {!sidebarCollapsed && isExpanded && (
-                      <div className="bg-slate-50">
+                      <div className="ml-9 mt-1 space-y-1 relative before:absolute before:left-[-12px] before:top-0 before:bottom-4 before:w-px before:bg-gray-200">
                         {accessibleChildren.map(child => {
                           const ChildIcon = child.icon;
                           const childIsActive = location.pathname === child.path;
@@ -577,14 +586,14 @@ export const MainLayout = () => {
                             <button
                               key={child.path}
                               onClick={() => navigate(child.path)}
-                              className={`w-full pl-12 pr-4 py-2 flex items-center gap-2 transition-colors ${
+                              className={`w-full flex items-center gap-3 py-2 px-4 rounded-lg cursor-pointer transition-colors text-sm border-2 ${
                                 childIsActive
-                                  ? 'bg-blue-100/50 text-blue-600 border-r-2 border-blue-600'
-                                  : 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+                                  ? 'bg-[#e8efe4] text-[#1a1a1a] border-[#b8c9b0] font-semibold shadow-none'
+                                  : 'text-gray-600 border-transparent hover:text-gray-900 hover:bg-gray-100 font-medium'
                               }`}
                             >
-                              <ChildIcon className="w-3.5 h-3.5" />
-                              <span className="text-sm">{child.label}</span>
+                              <ChildIcon className={`w-4 h-4 shrink-0 ${childIsActive ? 'text-[#2d5a27]' : ''}`} />
+                              <span className="text-left">{child.label}</span>
                             </button>
                           );
                         })}
@@ -596,18 +605,20 @@ export const MainLayout = () => {
                   <button
                     key={item.path}
                     onClick={() => navigate(item.path)}
-                    className={`w-full px-4 py-2.5 flex items-center gap-3 transition-colors ${
+                    className={`w-full flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-colors group ${
                       isActive
-                        ? 'bg-blue-50 text-blue-600 border-r-2 border-blue-600'
-                        : 'text-slate-600 hover:bg-slate-50'
-                    }`}
+                        ? 'bg-[#cde0c5] text-[#2d2d2d] border-2 border-[#2d2d2d] shadow-[2px_2px_0px_0px_rgba(45,45,45,1)]'
+                        : 'text-gray-600 hover:bg-gray-100 border-2 border-transparent'
+                    } ${sidebarCollapsed ? 'justify-center' : ''}`}
                   >
-                    <Icon className="w-4 h-4 shrink-0" />
+                    <div className={isActive ? 'text-green-950' : 'text-gray-500 group-hover:text-gray-800'}>
+                      <Icon className="w-5 h-5 shrink-0" />
+                    </div>
                     {!sidebarCollapsed && (
-                      <div className="text-left">
-                        <div className="font-medium text-sm">{item.label}</div>
+                      <div className="flex-1">
+                        <div className="font-bold text-[15px] leading-tight">{item.label}</div>
                         {item.description && (
-                          <div className="text-xs text-slate-400">{item.description}</div>
+                          <div className="text-[11px] mt-0.5 text-gray-400">{item.description}</div>
                         )}
                       </div>
                     )}
@@ -619,27 +630,27 @@ export const MainLayout = () => {
         </nav>
 
         {/* 收起/展开按钮 */}
-        <div className="p-3 border-t border-slate-200">
+        <div className="p-4 border-t border-[#e5e3db]">
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="w-full flex items-center justify-center gap-2 px-3 py-1.5 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors"
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-800 px-2 w-full"
             title={sidebarCollapsed ? "展开菜单" : "收起菜单"}
           >
-            <ChevronRight className={`w-4 h-4 transition-transform ${sidebarCollapsed ? '' : 'rotate-180'}`} />
-            {!sidebarCollapsed && <span className="text-xs">收起</span>}
+            <ChevronLeft className={`w-4 h-4 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+            {!sidebarCollapsed && <span>收起</span>}
           </button>
         </div>
 
         {/* 用户信息 */}
-        <div className="p-3 border-t border-slate-200">
+        <div className="p-4 border-t border-[#e5e3db]">
           <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'gap-3'}`}>
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0">
+            <div className="w-10 h-10 bg-[#f4b886] rounded-full border border-gray-800 flex items-center justify-center text-sm font-bold shrink-0">
               {user?.name?.charAt(0) || 'U'}
             </div>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-slate-800 truncate">{user?.name || '用户'}</div>
-                <div className="text-xs text-slate-500 truncate">
+                <div className="font-bold text-sm text-[#2d2d2d] truncate">{user?.name || '用户'}</div>
+                <div className="text-xs text-gray-500 truncate">
                   {user?.role && ROLE_NAMES[user?.role] ? ROLE_NAMES[user.role] : '未知角色'}
                 </div>
               </div>
@@ -647,10 +658,10 @@ export const MainLayout = () => {
             {!sidebarCollapsed && (
               <button
                 onClick={handleLogout}
-                className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                className="p-1.5 text-gray-400 hover:text-gray-700 rounded transition-colors"
                 title="退出登录"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-[18px] h-[18px]" />
               </button>
             )}
           </div>
@@ -661,7 +672,7 @@ export const MainLayout = () => {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* 顶部栏 - 仅在课程编辑时显示 */}
         {isInCourseEditor && (
-          <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shrink-0">
+          <header className="h-14 bg-[#fcfbf9] border-b-2 border-[#e5e3db] flex items-center justify-between px-4 shrink-0">
             <div className="flex items-center gap-4">
               <span className="text-sm font-medium text-slate-700">
                 {appConfig?.unit || '自定义课程'}
@@ -670,7 +681,7 @@ export const MainLayout = () => {
 
             <div className="flex items-center gap-2">
               {/* 视图切换 */}
-              <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200 mr-4">
+              <div className="flex items-center bg-[#fcfbf9] p-1 rounded-xl border-2 border-[#e5e3db] mr-4">
                 <button
                   onClick={() => {
                     setIsComponentReady(false);
@@ -780,7 +791,7 @@ export const MainLayout = () => {
           {isCreatePage && (
             <>
               {isLoadingCourse && (
-                <div className="flex-1 flex items-center justify-center bg-slate-50">
+                <div className="flex-1 flex items-center justify-center bg-[#fcfbf9]">
                   <div className="text-center space-y-4">
                     <div className="relative w-16 h-16 mx-auto">
                       <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>

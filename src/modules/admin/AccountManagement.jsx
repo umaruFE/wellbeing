@@ -64,7 +64,7 @@ export const AccountManagement = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="搜索账号..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full pl-10 pr-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none"
           />
         </div>
       </div>
@@ -80,9 +80,9 @@ export const AccountManagement = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div className="bg-white rounded-xl border-2 border-[#e5e3db] overflow-hidden">
         <table className="w-full">
-          <thead className="bg-slate-50 border-b border-slate-200">
+          <thead className="bg-[#fcfbf9] border-b-2 border-[#e5e3db]">
             <tr>
               <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">用户名</th>
               <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">姓名</th>
@@ -94,7 +94,7 @@ export const AccountManagement = () => {
           </thead>
           <tbody>
             {filteredAccounts.map(account => (
-              <tr key={account.id} className="border-b border-slate-100 hover:bg-slate-50">
+              <tr key={account.id} className="border-b border-[#e5e3db] hover:bg-[#fffbe6]">
                 <td className="px-4 py-3 text-sm text-slate-800">{account.username}</td>
                 <td className="px-4 py-3 text-sm text-slate-600">{account.name}</td>
                 <td className="px-4 py-3 text-sm text-slate-600">{account.organizationName}</td>

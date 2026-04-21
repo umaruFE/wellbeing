@@ -58,7 +58,7 @@ export const HistoryVersionView = ({
   return (
     <div className="h-full flex flex-col bg-white">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-lg text-white">
               <Clock className="w-5 h-5" />
@@ -77,7 +77,7 @@ export const HistoryVersionView = ({
         </div>
 
         {/* Version Info Bar */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#fcfbf9] border-b-2 border-[#e5e3db] flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="text-sm">
               <span className="text-slate-500">版本 </span>
@@ -95,7 +95,7 @@ export const HistoryVersionView = ({
             <button
               onClick={handlePrevious}
               disabled={selectedIndex === 0}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+              className="px-4 py-2 bg-white border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
               <ChevronLeft className="w-4 h-4" />
               上一个
@@ -103,7 +103,7 @@ export const HistoryVersionView = ({
             <button
               onClick={handleNext}
               disabled={selectedIndex === historyVersions.length - 1}
-              className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
+              className="px-4 py-2 bg-white border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
               下一个
               <ChevronRight className="w-4 h-4" />
@@ -129,12 +129,12 @@ export const HistoryVersionView = ({
               )}
               
               {/* Version Data Preview */}
-              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <div className="bg-[#fcfbf9] rounded-xl p-4 border-2 border-[#e5e3db]">
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="w-4 h-4 text-slate-500" />
                   <span className="text-xs font-bold text-slate-500 uppercase">版本数据预览</span>
                 </div>
-                <pre className="text-xs text-slate-600 overflow-auto max-h-96 bg-white p-4 rounded border border-slate-200">
+                <pre className="text-xs text-[#2d2d2d] overflow-auto max-h-96 bg-white p-4 rounded-xl border-2 border-[#e5e3db]">
                   {JSON.stringify(currentVersion.data, null, 2)}
                 </pre>
               </div>

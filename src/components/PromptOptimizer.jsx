@@ -89,7 +89,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Wand2 className="w-6 h-6 text-purple-600" />
             <h3 className="font-bold text-lg text-slate-800">
@@ -109,7 +109,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
               value={originalPrompt}
               onChange={(e) => setOriginalPrompt(e.target.value)}
               placeholder="输入原始提示词..."
-              className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none resize-none h-32"
+              className="w-full p-3 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-32 transition-all"
             />
           </div>
 
@@ -124,7 +124,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
                     id={`improvement-${index}`}
                     checked={selectedImprovements.includes(improvement)}
                     onChange={() => handleImprovementToggle(improvement)}
-                    className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
+                    className="w-4 h-4 text-purple-600 border-[#d1d5db] rounded-lg focus:ring-purple-600"
                   />
                   <label htmlFor={`improvement-${index}`} className="text-sm text-slate-600">
                     {improvement}
@@ -141,7 +141,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
               value={optimizedPrompt}
               onChange={(e) => setOptimizedPrompt(e.target.value)}
               placeholder="优化后的提示词将显示在这里..."
-              className="w-full p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-purple-500 outline-none resize-none h-32"
+              className="w-full p-3 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-32 transition-all"
             />
           </div>
 
@@ -169,7 +169,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="px-4 py-2 border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center gap-2"
+              className="px-4 py-2 border-2 border-[#e5e3db] text-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all flex items-center justify-center gap-2 font-medium"
             >
               <History className="w-4 h-4" />
               历史
@@ -188,14 +188,14 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
 
           {/* 历史记录 */}
           {showHistory && (
-            <div className="mt-6 pt-6 border-t border-slate-200">
+            <div className="mt-6 pt-6 border-t-2 border-[#e5e3db]">
               <h4 className="font-medium text-slate-700 mb-3">历史优化记录</h4>
               <div className="space-y-3">
                 {history.length === 0 ? (
                   <p className="text-slate-500 text-sm">暂无历史记录</p>
                 ) : (
                   history.map((item, index) => (
-                    <div key={index} className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer" onClick={() => handleUseHistory(item)}>
+                    <div key={index} className="p-3 border-2 border-[#e5e3db] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] cursor-pointer transition-all" onClick={() => handleUseHistory(item)}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-slate-700">优化记录 {index + 1}</span>
                         <div className="flex items-center gap-1">

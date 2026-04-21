@@ -79,7 +79,7 @@ export const PromptInputModal = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-lg text-white"><Wand2 className="w-5 h-5" /></div>
             <h3 className="font-bold text-lg text-slate-800">{title}</h3>
@@ -126,7 +126,7 @@ export const PromptInputModal = ({
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={placeholder}
-                className="w-full p-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full p-4 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 rows={4}
                 disabled={isLoading}
               />
@@ -136,7 +136,7 @@ export const PromptInputModal = ({
           {/* 上传文件 */}
           {inputMode === 'upload' && (
             <div className="mb-4">
-              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-[#e5e3db] rounded-xl p-6 text-center">
                 <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                 <p className="text-sm text-slate-500 mb-3">点击或拖拽文件到此处上传</p>
                 <input 
@@ -154,7 +154,7 @@ export const PromptInputModal = ({
                 </label>
                 {referenceImage && (
                   <div className="mt-3 relative inline-block">
-                    <img src={referenceImage} alt="预览" className="w-24 h-24 object-cover rounded border border-slate-200" />
+                    <img src={referenceImage} alt="预览" className="w-24 h-24 object-cover rounded-xl border-2 border-[#e5e3db]" />
                     <button 
                       onClick={() => setReferenceImage(null)}
                       className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
@@ -174,7 +174,7 @@ export const PromptInputModal = ({
               <select 
                 value={imageSize}
                 onChange={(e) => setImageSize(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 disabled={isLoading}
               >
                 <option value="1024x1024">1024x1024</option>
@@ -191,7 +191,7 @@ export const PromptInputModal = ({
               <select 
                 value={videoStyle}
                 onChange={(e) => setVideoStyle(e.target.value)}
-                className="w-full p-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 disabled={isLoading}
               >
                 <option value="realistic">写实风格</option>
@@ -209,7 +209,7 @@ export const PromptInputModal = ({
               <div className="flex flex-wrap gap-2 mb-2">
                 {videoReferenceImages.map((img, index) => (
                   <div key={index} className="relative">
-                    <img src={img} alt="参考" className="w-16 h-16 object-cover rounded border border-slate-200" />
+                    <img src={img} alt="参考" className="w-16 h-16 object-cover rounded-xl border-2 border-[#e5e3db]" />
                     <button 
                       onClick={() => removeVideoReferenceImage(index)}
                       className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors"
@@ -219,7 +219,7 @@ export const PromptInputModal = ({
                   </div>
                 ))}
                 {videoReferenceImages.length < 4 && (
-                  <div className="w-16 h-16 border-2 border-dashed border-slate-200 rounded flex items-center justify-center cursor-pointer hover:border-blue-400 transition-colors">
+                  <div className="w-16 h-16 border-2 border-dashed border-[#e5e3db] rounded-xl flex items-center justify-center cursor-pointer hover:border-[#2d2d2d] transition-colors">
                     <input 
                       type="file" 
                       accept="image/*"
@@ -249,7 +249,7 @@ export const PromptInputModal = ({
                 <select 
                   value={audioConfig.style}
                   onChange={(e) => setAudioConfig({ ...audioConfig, style: e.target.value })}
-                  className="w-full p-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                   disabled={isLoading}
                 >
                   <option value="male">男声</option>
@@ -261,7 +261,7 @@ export const PromptInputModal = ({
                 <select 
                   value={audioConfig.language}
                   onChange={(e) => setAudioConfig({ ...audioConfig, language: e.target.value })}
-                  className="w-full p-3 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                   disabled={isLoading}
                 >
                   <option value="zh">中文</option>
@@ -274,7 +274,7 @@ export const PromptInputModal = ({
                   value={lyrics}
                   onChange={(e) => setLyrics(e.target.value)}
                   placeholder="请输入要转换为音频的文本..."
-                  className="w-full p-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full p-4 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                   rows={3}
                   disabled={isLoading}
                 />
@@ -282,7 +282,7 @@ export const PromptInputModal = ({
             </div>
           )}
         </div>
-        <div className="p-6 border-t border-slate-200 flex gap-3">
+        <div className="p-6 border-t-2 border-[#e5e3db] flex gap-3">
           <button 
             onClick={onClose} 
             className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"
@@ -399,7 +399,7 @@ export const VideoStoryboardModal = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-purple-600 p-2 rounded-lg text-white"><Video className="w-5 h-5" /></div>
             <h3 className="font-bold text-lg text-slate-800">视频分镜设置</h3>
@@ -414,7 +414,7 @@ export const VideoStoryboardModal = ({
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="请输入视频内容描述..."
-                className="w-full p-4 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                className="w-full p-4 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 rows={3}
                 disabled={isGenerating}
               />
@@ -433,7 +433,7 @@ export const VideoStoryboardModal = ({
               </div>
               <div className="space-y-3">
                 {scenes.map((scene, index) => (
-                  <div key={scene.id} className="border border-slate-200 rounded-lg p-4">
+                  <div key={scene.id} className="border-2 border-[#e5e3db] rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-700">场景 {index + 1}</span>
                       <button 
@@ -450,7 +450,7 @@ export const VideoStoryboardModal = ({
                         <input
                           value={scene.description}
                           onChange={(e) => updateScene(scene.id, 'description', e.target.value)}
-                          className="w-full p-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          className="w-full p-2 border-2 border-[#e5e3db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                           disabled={isGenerating}
                         />
                       </div>
@@ -462,7 +462,7 @@ export const VideoStoryboardModal = ({
                           max="30"
                           value={scene.duration}
                           onChange={(e) => updateScene(scene.id, 'duration', parseInt(e.target.value) || 1)}
-                          className="w-full p-2 border border-slate-200 rounded text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                          className="w-full p-2 border-2 border-[#e5e3db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                           disabled={isGenerating}
                         />
                       </div>
@@ -477,7 +477,7 @@ export const VideoStoryboardModal = ({
               <div className="flex flex-wrap gap-2 mb-2">
                 {referenceImages.map((img, index) => (
                   <div key={index} className="relative">
-                    <img src={img} alt="参考" className="w-20 h-20 object-cover rounded border border-slate-200" />
+                    <img src={img} alt="参考" className="w-20 h-20 object-cover rounded-xl border-2 border-[#e5e3db]" />
                     <button 
                       onClick={() => removeReferenceImage(index)}
                       className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors"
@@ -487,7 +487,7 @@ export const VideoStoryboardModal = ({
                   </div>
                 ))}
                 {referenceImages.length < 4 && (
-                  <div className="w-20 h-20 border-2 border-dashed border-slate-200 rounded flex items-center justify-center cursor-pointer hover:border-purple-400 transition-colors">
+                  <div className="w-20 h-20 border-2 border-dashed border-[#e5e3db] rounded-xl flex items-center justify-center cursor-pointer hover:border-[#2d2d2d] transition-colors">
                     <input 
                       type="file" 
                       accept="image/*"
@@ -509,7 +509,7 @@ export const VideoStoryboardModal = ({
             </div>
           </div>
         </div>
-        <div className="p-6 border-t border-slate-200 flex gap-3">
+        <div className="p-6 border-t-2 border-[#e5e3db] flex gap-3">
           <button 
             onClick={onClose} 
             className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"

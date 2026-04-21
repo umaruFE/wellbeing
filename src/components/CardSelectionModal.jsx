@@ -70,7 +70,7 @@ export const CardSelectionModal = ({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between shrink-0">
+        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl ${isAudioType ? 'bg-gradient-to-br from-blue-500 to-cyan-500' : 'bg-gradient-to-br from-purple-500 to-pink-500'}`}>
               {isAudioType ? <Music className="w-5 h-5 text-white" /> : <RefreshCw className="w-5 h-5 text-white" />}
@@ -227,7 +227,7 @@ export const CardSelectionModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-200 bg-slate-50 shrink-0">
+        <div className="p-6 border-t-2 border-[#e5e3db] bg-[#fcfbf9] shrink-0">
           <div className="flex items-center justify-between">
             <div className="text-sm text-slate-500">
               {selectedIndex !== null
@@ -242,7 +242,7 @@ export const CardSelectionModal = ({
                   setPlayingIndex(null);
                   onClose();
                 }}
-                className="px-6 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors font-medium"
+                className="px-6 py-2.5 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all font-medium"
               >
                 取消
               </button>

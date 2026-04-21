@@ -129,7 +129,7 @@ export const PptImageManagement = () => {
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-white">
+      <div className="h-full flex items-center justify-center bg-[#fcfbf9]">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-500">加载中...</p>
@@ -141,7 +141,7 @@ export const PptImageManagement = () => {
   return (
     <div className="h-full flex flex-col">
       {/* 头部 */}
-      <div className="bg-white border-b border-slate-200 px-6 py-4 shrink-0">
+      <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold text-slate-800">PPT风格图片</h2>
@@ -149,7 +149,7 @@ export const PptImageManagement = () => {
           </div>
           <button
             onClick={() => openModal('add')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+            className="px-4 py-2 border-2 border-[#2d2d2d] rounded-xl hover:bg-[#fffbe6] hover:text-[#2d2d2d] flex items-center gap-2 transition-all duration-200 font-medium shadow-[2px_2px_0px_0px_rgba(45,45,45,1)]"
           >
             <Upload className="w-4 h-4" />
             上传图片
@@ -164,7 +164,7 @@ export const PptImageManagement = () => {
           {pptImages.map((img) => (
             <div
               key={img.id}
-              className="relative group bg-white rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all duration-200"
+              className="relative group bg-[#fcfbf9] rounded-[24px] border-2 border-[#e5e3db] overflow-hidden transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
             >
               {/* 预览区域 */}
               <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
@@ -178,13 +178,13 @@ export const PptImageManagement = () => {
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2">
                   <button
                     onClick={() => openModal('edit', img)}
-                    className="p-2 bg-white rounded-lg hover:bg-blue-50 text-blue-600 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200"
+                    className="p-2 bg-[#fcfbf9] rounded-lg hover:bg-blue-50 text-blue-600 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200"
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => openModal('delete', img)}
-                    className="p-2 bg-white rounded-lg hover:bg-red-50 text-red-600 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 delay-75"
+                    className="p-2 bg-[#fcfbf9] rounded-lg hover:bg-red-50 text-red-600 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-200 delay-75"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -220,9 +220,9 @@ export const PptImageManagement = () => {
       {/* 模态框 */}
       {modalType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+          <div className="bg-[#fcfbf9] rounded-[24px] border-2 border-[#e5e3db] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] w-full max-w-md mx-4">
             {/* 头部 */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-[#e5e3db]">
               <h3 className="text-lg font-semibold text-slate-800">
                 {modalType === 'add' && '上传图片'}
                 {modalType === 'edit' && '编辑图片'}
@@ -247,7 +247,7 @@ export const PptImageManagement = () => {
                 <div className="space-y-4">
                   {/* 图片上传预览 */}
                   <div
-                    className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors cursor-pointer"
+                    className="border-2 border-dashed border-[#e5e3db] rounded-xl p-6 text-center hover:border-[#2d2d2d] transition-all duration-200 cursor-pointer bg-[#fcfbf9]"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     {modalData.file ? (
@@ -284,7 +284,7 @@ export const PptImageManagement = () => {
                       type="text"
                       value={modalData.name || modalData.file?.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                       placeholder="请输入图片名称"
                     />
                   </div>
@@ -295,7 +295,7 @@ export const PptImageManagement = () => {
                       type="text"
                       value={modalData.tags || (Array.isArray(modalData.tags) ? modalData.tags.join(',') : '')}
                       onChange={(e) => setModalData({ ...modalData, tags: e.target.value })}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                      className="w-full px-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all duration-200"
                       placeholder="如：动物, 可爱, 彩色"
                     />
                   </div>
@@ -304,10 +304,10 @@ export const PptImageManagement = () => {
             </div>
 
             {/* 底部按钮 */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-200">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t-2 border-[#e5e3db]">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-[#2d2d2d] border-2 border-[#e5e3db] rounded-xl hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all duration-200 font-medium"
                 disabled={uploading}
               >
                 取消
@@ -318,10 +318,10 @@ export const PptImageManagement = () => {
                   if (modalType === 'edit') handleEdit();
                   if (modalType === 'delete') handleDelete();
                 }}
-                className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 ${
+                className={`px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] ${
                   modalType === 'delete'
-                    ? 'bg-red-600 text-white hover:bg-red-700'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                    ? 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] hover:bg-red-600 hover:border-red-600'
+                    : 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d] hover:bg-[#fffbe6] hover:text-[#2d2d2d]'
                 }`}
                 disabled={uploading}
               >
