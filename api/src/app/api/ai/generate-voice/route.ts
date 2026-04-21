@@ -163,27 +163,44 @@ export async function GET(request: NextRequest) {
 
     console.log('[generate-voice] 查询执行状态:', executionId);
 
-    // 调用 N8N 查询执行状态
-    const result = await n8nClient.call('ai-task-status', {
-      executionId,
-      workflowType: 'voice'
+    // 调用 N8N API 查询执行状态
+    const executionStatus = await n8nClient.pollExecution(executionId, {
+      maxAttempts: 1,
+      interval: 0
     });
 
-    console.log('[generate-voice] N8N 响应:', result);
+    console.log('[generate-voice] 执行状态:', executionStatus);
 
     // 根据状态返回结果
-    if (result.status === 'completed') {
-      return NextResponse.json({
-        success: true,
-        status: 'completed',
-        url: result.url,
-        filename: result.filename
-      }, { headers: corsHeaders() });
-    } else if (result.status === 'error') {
+    if (executionStatus.status === 'completed') {
+      console.log('[generate-voice] 执行完成，获取音频资源...');
+
+      try {
+        // 通过 get-resource webhook 获取音频资源
+        const resourceData = await n8nClient.call('get-resource', { execution_id: executionId }, { method: 'GET' });
+        console.log('[generate-voice] 音频资源数据:', resourceData);
+
+        return NextResponse.json({
+          success: true,
+          status: 'completed',
+          url: resourceData?.url || resourceData?.audio_url,
+          filename: resourceData?.filename
+        }, { headers: corsHeaders() });
+
+      } catch (error) {
+        console.error('[generate-voice] 获取音频资源失败:', error);
+        return NextResponse.json({
+          success: false,
+          status: 'error',
+          error: '获取音频资源失败'
+        }, { headers: corsHeaders() });
+      }
+
+    } else if (executionStatus.status === 'error') {
       return NextResponse.json({
         success: false,
         status: 'error',
-        error: result.error || '任务执行失败'
+        error: '任务执行失败'
       }, { headers: corsHeaders() });
     } else {
       return NextResponse.json({

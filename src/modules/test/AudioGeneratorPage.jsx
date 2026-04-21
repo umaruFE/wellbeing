@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Music, Wand2, Play, Pause, Download, Loader2 } from 'lucide-react';
-import { useAuth } from '../../../contexts/AuthContext';
-import apiService from '../../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const AUDIO_STYLES = [
   { id: 'happy', name: '开心', tags: 'happy, cheerful, upbeat' },
@@ -25,7 +24,7 @@ export const AudioGeneratorPage = () => {
   const [duration, setDuration] = useState(30);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
-  const [results, setResults] = useState([]); // [{ id, url, prompt }]
+  const [results, setResults] = useState([]);
   const [playingId, setPlayingId] = useState(null);
   const [audioRefs] = useState({});
 
@@ -61,46 +60,38 @@ export const AudioGeneratorPage = () => {
 
       const data = await res.json();
 
-      if (!data.tasks || data.tasks.length === 0) {
-        throw new Error('未返回有效的音频任务');
+      if (!data.executionId) {
+        throw new Error('未返回有效的执行ID');
       }
 
-      // 轮询每个任务的生成状态
-      const audioItems = data.tasks.map((task, i) => ({
-        id: `audio-${Date.now()}-${i}`,
-        promptId: task.promptId,
+      const audioItem = {
+        id: `audio-${Date.now()}`,
+        executionId: data.executionId,
         prompt: prompt.trim(),
         url: null,
         status: 'pending'
-      }));
-      setResults(prev => [...prev, ...audioItems]);
+      };
+      setResults(prev => [...prev, audioItem]);
 
-      // 逐个轮询获取音频 URL
-      for (const item of audioItems) {
-        try {
-          const maxAttempts = 60;
-          for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            await new Promise(r => setTimeout(r, 2000));
-            const statusRes = await fetch(`/api/ai/task-status/${item.promptId}`, {
-              headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
-            });
-            if (statusRes.ok) {
-              const statusData = await statusRes.json();
-              if (statusData.status === 'completed' && statusData.url) {
-                setResults(prev =>
-                  prev.map(r => r.id === item.id ? { ...r, url: statusData.url, status: 'done' } : r)
-                );
-                break;
-              } else if (statusData.status === 'error') {
-                setResults(prev =>
-                  prev.map(r => r.id === item.id ? { ...r, status: 'error' } : r)
-                );
-                break;
-              }
-            }
+      const maxAttempts = 60;
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        await new Promise(r => setTimeout(r, 3000));
+        const statusRes = await fetch(`/api/ai/generate-audio?executionId=${audioItem.executionId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
+        });
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (statusData.status === 'completed' && statusData.results && statusData.results.length > 0) {
+            setResults(prev =>
+              prev.map(r => r.id === audioItem.id ? { ...r, url: statusData.results[0].url, status: 'done' } : r)
+            );
+            break;
+          } else if (statusData.status === 'error') {
+            setResults(prev =>
+              prev.map(r => r.id === audioItem.id ? { ...r, status: 'error' } : r)
+            );
+            break;
           }
-        } catch (e) {
-          console.error(`轮询任务 ${item.promptId} 失败:`, e);
         }
       }
     } catch (err) {
@@ -140,7 +131,6 @@ export const AudioGeneratorPage = () => {
 
   return (
     <div className="min-h-screen bg-[#fcfbf9]">
-      {/* 顶部导航栏 */}
       <header className="bg-white border-b-2 border-[#e5e3db] sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
@@ -152,20 +142,18 @@ export const AudioGeneratorPage = () => {
           </button>
           <h1 className="text-lg font-bold text-slate-800 flex items-center gap-2">
             <Music className="w-5 h-5 text-blue-600" />
-            AI音频生成
+            AI音乐生成
           </h1>
         </div>
       </header>
 
       <div className="max-w-4xl mx-auto p-6 space-y-6">
-        {/* 生成表单卡片 */}
         <div className="bg-white rounded-2xl border-2 border-[#e5e3db] shadow-sm p-6">
           <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
             <Wand2 className="w-4 h-4 text-blue-600" />
             生成设置
           </h2>
 
-          {/* 文本输入 */}
           <div className="mb-5">
             <label className="text-sm font-medium text-slate-700 mb-2 block">
               文字内容 <span className="text-red-500">*</span>
@@ -173,14 +161,13 @@ export const AudioGeneratorPage = () => {
             <textarea
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
-              placeholder="输入要转换为语音的文字内容，例如：一棵苹果树上结满了红彤彤的苹果，小兔子蹦蹦跳跳地跑过来……"
+              placeholder="输入要转换为音乐的故事或旁白内容，例如：一棵苹果树上结满了红彤彤的苹果，小兔子蹦蹦跳跳地跑过来……"
               rows={4}
               className="w-full border-2 border-[#e5e3db] rounded-xl px-4 py-3 text-sm resize-none
                 focus:border-[#2d2d2d] focus:ring-2 focus:ring-[#2d2d2d]/10 outline-none transition-all"
             />
           </div>
 
-          {/* 风格选择 */}
           <div className="mb-5">
             <label className="text-sm font-medium text-slate-700 mb-2 block">音频风格</label>
             <div className="flex flex-wrap gap-2">
@@ -200,7 +187,6 @@ export const AudioGeneratorPage = () => {
             </div>
           </div>
 
-          {/* 时长选择 */}
           <div className="mb-5">
             <label className="text-sm font-medium text-slate-700 mb-2 block">音频时长</label>
             <div className="flex gap-2">
@@ -246,7 +232,6 @@ export const AudioGeneratorPage = () => {
           </button>
         </div>
 
-        {/* 生成结果列表 */}
         {results.length > 0 && (
           <div className="bg-white rounded-2xl border-2 border-[#e5e3db] shadow-sm p-6">
             <h2 className="text-base font-bold text-slate-800 mb-4">生成结果</h2>
@@ -301,14 +286,13 @@ export const AudioGeneratorPage = () => {
           </div>
         )}
 
-        {/* 功能说明 */}
         <div className="bg-white rounded-2xl border-2 border-[#e5e3db] shadow-sm p-6">
           <h2 className="text-base font-bold text-slate-800 mb-4">使用说明</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div className="bg-blue-50 rounded-xl p-4">
               <div className="text-2xl mb-2">✍️</div>
               <h3 className="font-medium text-slate-800 text-sm mb-1">输入文字</h3>
-              <p className="text-xs text-slate-500">输入要转换为语音的故事或旁白内容</p>
+              <p className="text-xs text-slate-500">输入要转换为音乐的故事或旁白内容</p>
             </div>
             <div className="bg-blue-50 rounded-xl p-4">
               <div className="text-2xl mb-2">🎭</div>
