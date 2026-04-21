@@ -25,9 +25,16 @@ class N8NClient {
    * @returns {Promise<object>} Workflow 执行结果
    */
   async call(workflowName, payload, options = {}) {
-    const webhookUrl = `${this.baseUrl}/webhook/${workflowName}`;
     const timeout = options.timeout || 60000;
     const method = options.method || 'POST';
+
+    let webhookUrl = `${this.baseUrl}/webhook/${workflowName}`;
+
+    // GET 请求将 payload 转为 query string
+    if (method === 'GET' && payload) {
+      const params = new URLSearchParams(payload).toString();
+      if (params) webhookUrl += `?${params}`;
+    }
 
     console.log(`[n8n.call] ${method} ${webhookUrl}`);
     console.log(`[n8n.call] API Key: ${this.apiKey ? '已设置' : '未设置'}`);
@@ -63,8 +70,12 @@ class N8NClient {
         throw new Error(`N8N调用失败: ${response.status}`);
       }
 
-      const result = await response.json();
-      console.log(`[n8n.call] 响应结果:`, result);
+      const resultText = await response.text();
+      console.log(`[n8n.call] 响应结果: ${resultText || '(空响应)'}`);
+      if (!resultText.trim()) {
+        return null;
+      }
+      const result = JSON.parse(resultText);
       return result;
 
     } catch (error) {

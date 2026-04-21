@@ -191,7 +191,7 @@ export const VideoStoryboardModal = ({
           video_width,
           video_height,
           storyboard_image_prompts
-        } = result.storyboardData;
+        } = result.storyboardData.data;
         
         console.log('N8N返回的视频尺寸:', video_width, 'x', video_height);
         console.log('第一步选择的视频尺寸:', selectedAspectRatio.width, 'x', selectedAspectRatio.height);

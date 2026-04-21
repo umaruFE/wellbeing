@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
 
       try {
         // 调用 get-images webhook 获取图片 (GET 请求)
-        const storyboardData = await n8nClient.call('get-images', { executionId }, { method: 'GET' });
+        const storyboardData = await n8nClient.call('get-images', { execution_id: executionId }, { method: 'GET' });
         console.log('[generate-storyboard] 分镜图片数据:', storyboardData);
 
         return NextResponse.json({
@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
           data: {
             executionId: executionId,
             status: 'completed',
-            ...storyboardData
+            storyboardData
           }
         }, { headers: corsHeaders() });
 
