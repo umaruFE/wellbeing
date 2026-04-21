@@ -28,14 +28,14 @@ const SPEED_OPTIONS = [
 ];
 
 const EMOTION_OPTIONS = [
-  { id: 'neutral', label: '中性', description: '平静自然的语气' },
-  { id: 'cheerful', label: '愉快', description: '开心快乐的语气' },
-  { id: 'sad', label: '悲伤', description: '低沉悲伤的语气' },
-  { id: 'angry', label: '愤怒', description: '生气激动的语气' },
-  { id: 'fearful', label: '恐惧', description: '害怕紧张的语气' },
-  { id: 'excited', label: '兴奋', description: '激动兴奋的语气' },
-  { id: 'gentle', label: '温柔', description: '柔和温暖的语气' },
-  { id: 'serious', label: '严肃', description: '认真严肃的语气' },
+  { id: 'neutral', label: '中性', description: '平静自然的语气', emotion_prompt: '' },
+  { id: 'cheerful', label: '愉快', description: '开心快乐的语气', emotion_prompt: '开心快乐的语气' },
+  { id: 'sad', label: '悲伤', description: '低沉悲伤的语气', emotion_prompt: '低沉悲伤的语气' },
+  { id: 'angry', label: '愤怒', description: '生气激动的语气', emotion_prompt: '生气激动的语气' },
+  { id: 'fearful', label: '恐惧', description: '害怕紧张的语气', emotion_prompt: '害怕紧张的语气' },
+  { id: 'excited', label: '兴奋', description: '激动兴奋的语气', emotion_prompt: '激动兴奋的语气' },
+  { id: 'gentle', label: '温柔', description: '柔和温暖的语气', emotion_prompt: '柔和温暖的语气' },
+  { id: 'serious', label: '严肃', description: '认真严肃的语气', emotion_prompt: '认真严肃的语气' },
 ];
 
 export const VoiceGeneratorPage = () => {
@@ -113,7 +113,7 @@ export const VoiceGeneratorPage = () => {
           text: text.trim(),
           voice_id: selectedVoice.id,
           speed: speed.id,
-          emotion: emotion.id,
+          emotion_prompt: emotion.emotion_prompt,
           user_id: userId,
           organization_id: organizationId
         })

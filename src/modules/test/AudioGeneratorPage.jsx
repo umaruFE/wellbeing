@@ -23,10 +23,11 @@ export const AudioGeneratorPage = () => {
   const [selectedStyle, setSelectedStyle] = useState(AUDIO_STYLES[0]);
   const [duration, setDuration] = useState(30);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState(null);
-  const [results, setResults] = useState([]);
-  const [playingId, setPlayingId] = useState(null);
-  const [audioRefs] = useState({});
+  const [result, setResult] = useState(null); // { id, url, status }
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [audioRef, setAudioRef] = useState(null); // 音频播放器引用
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -35,6 +36,7 @@ export const AudioGeneratorPage = () => {
     }
     setError(null);
     setIsGenerating(true);
+    setResult(null);
 
     try {
       const res = await fetch('/api/ai/generate-audio', {
@@ -59,66 +61,62 @@ export const AudioGeneratorPage = () => {
       }
 
       const data = await res.json();
+      const executionId = data.executionId;
 
-      if (!data.executionId) {
-        throw new Error('未返回有效的执行ID');
-      }
+      setResult({ id: `audio-${Date.now()}`, executionId, url: null, status: 'pending' });
+      setIsGenerating(false);
+      setIsPolling(true);
 
-      const audioItem = {
-        id: `audio-${Date.now()}`,
-        executionId: data.executionId,
-        prompt: prompt.trim(),
-        url: null,
-        status: 'pending'
-      };
-      setResults(prev => [...prev, audioItem]);
-
-      const maxAttempts = 60;
-      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      // 轮询获取音频
+      for (let attempt = 0; attempt < 60; attempt++) {
         await new Promise(r => setTimeout(r, 3000));
-        const statusRes = await fetch(`/api/ai/generate-audio?executionId=${audioItem.executionId}`, {
+        const statusRes = await fetch(`/api/ai/generate-audio?executionId=${executionId}`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token') || ''}` }
         });
         if (statusRes.ok) {
           const statusData = await statusRes.json();
+          console.log('轮询结果:', statusData);
           if (statusData.status === 'completed' && statusData.results && statusData.results.length > 0) {
-            setResults(prev =>
-              prev.map(r => r.id === audioItem.id ? { ...r, url: statusData.results[0].url, status: 'done' } : r)
-            );
-            break;
+            // 后端已经处理了资源获取，直接使用返回的 url
+            setResult(prev => ({ ...prev, url: statusData.results[0].url, status: 'done' }));
+            setIsPolling(false);
+            return;
           } else if (statusData.status === 'error') {
-            setResults(prev =>
-              prev.map(r => r.id === audioItem.id ? { ...r, status: 'error' } : r)
-            );
-            break;
+            setResult(prev => ({ ...prev, status: 'error' }));
+            setIsPolling(false);
+            setError('生成失败，请重试');
+            return;
           }
         }
       }
+
+      setResult(prev => ({ ...prev, status: 'error' }));
+      setError('生成超时，请重试');
     } catch (err) {
       setError('生成失败: ' + err.message);
+      setResult(prev => prev ? { ...prev, status: 'error' } : null);
     } finally {
       setIsGenerating(false);
+      setIsPolling(false);
     }
   };
 
-  const togglePlay = (id, url) => {
-    if (playingId === id) {
-      setPlayingId(null);
-      if (audioRefs[id]) {
-        audioRefs[id].pause();
-        audioRefs[id].currentTime = 0;
-      }
+  const togglePlay = () => {
+    if (!result?.url) return;
+
+    if (isPlaying) {
+      audioRef?.pause();
+      setIsPlaying(false);
     } else {
-      Object.values(audioRefs).forEach(a => { if (a) { a.pause(); a.currentTime = 0; } });
-      setPlayingId(id);
-      if (url && !audioRefs[id]) {
-        const audio = new Audio(url);
-        audioRefs[id] = audio;
-        audio.onended = () => setPlayingId(null);
-        audio.play().catch(() => setPlayingId(null));
-      } else if (audioRefs[id]) {
-        audioRefs[id].play().catch(() => setPlayingId(null));
+      if (!audioRef) {
+        const audio = new Audio(result.url);
+        audio.onended = () => setIsPlaying(false);
+        setAudioRef(audio);
+        audio.play().catch(() => setIsPlaying(false));
+      } else {
+        audioRef.play().catch(() => setIsPlaying(false));
       }
+      setIsPlaying(true);
     }
   };
 
@@ -130,7 +128,7 @@ export const AudioGeneratorPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfbf9]">
+    <div className="min-h-screen h-screen bg-[#fcfbf9] overflow-y-auto">
       <header className="bg-white border-b-2 border-[#e5e3db] sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
@@ -147,7 +145,7 @@ export const AudioGeneratorPage = () => {
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="max-w-4xl mx-auto p-6 space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
         <div className="bg-white rounded-2xl border-2 border-[#e5e3db] shadow-sm p-6">
           <h2 className="text-base font-bold text-slate-800 mb-4 flex items-center gap-2">
             <Wand2 className="w-4 h-4 text-blue-600" />
@@ -218,10 +216,10 @@ export const AudioGeneratorPage = () => {
             className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700
               disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
           >
-            {isGenerating ? (
+            {(isGenerating || isPolling) ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
-                生成中，请稍候...
+                {isGenerating ? '提交中...' : '生成中，请稍候...'}
               </>
             ) : (
               <>
@@ -232,57 +230,49 @@ export const AudioGeneratorPage = () => {
           </button>
         </div>
 
-        {results.length > 0 && (
+        {/* 生成结果 */}
+        {result && (
           <div className="bg-white rounded-2xl border-2 border-[#e5e3db] shadow-sm p-6">
             <h2 className="text-base font-bold text-slate-800 mb-4">生成结果</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {results.slice().reverse().map(item => (
-                <div
-                  key={item.id}
-                  className="border border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <p className="text-sm text-slate-600 line-clamp-2 flex-1 mr-2">{item.prompt}</p>
-                    <span className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                      item.status === 'done' ? 'bg-green-100 text-green-700' :
-                      item.status === 'error' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
-                      {item.status === 'done' ? '已完成' : item.status === 'error' ? '失败' : '生成中'}
-                    </span>
+
+            {result.status === 'pending' ? (
+              <div className="flex items-center gap-3 text-slate-500">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>正在生成音乐，请稍候...</span>
+              </div>
+            ) : result.status === 'done' && result.url ? (
+              <div className="border border-[#e5e3db] rounded-xl p-4">
+                <div className="mb-3">
+                  <p className="text-sm text-slate-600 line-clamp-3">{prompt}</p>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">已完成</span>
+                    <span className="text-xs text-slate-400">{selectedStyle.name} · {duration}秒</span>
                   </div>
-                  {item.status === 'done' && item.url ? (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => togglePlay(item.id, item.url)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium border-2 transition-colors flex items-center justify-center gap-1 ${
-                          playingId === item.id
-                            ? 'border-red-300 bg-red-50 text-red-600'
-                            : 'border-[#e5e3db] text-slate-700 hover:border-[#2d2d2d] hover:bg-[#fffbe6]'
-                        }`}
-                      >
-                        {playingId === item.id ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                        {playingId === item.id ? '暂停' : '播放'}
-                      </button>
-                      <button
-                        onClick={() => handleDownload(item.url)}
-                        className="px-3 py-2 rounded-lg border-2 border-[#e5e3db] text-slate-600 hover:border-[#2d2d2d] hover:bg-[#fffbe6] transition-colors"
-                        title="下载"
-                      >
-                        <Download className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : item.status === 'pending' ? (
-                    <div className="flex items-center gap-2 text-sm text-slate-400">
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      等待生成...
-                    </div>
-                  ) : (
-                    <p className="text-sm text-red-500">生成失败，请重试</p>
-                  )}
                 </div>
-              ))}
-            </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={togglePlay}
+                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium border-2 transition-colors flex items-center justify-center gap-2 ${
+                      isPlaying
+                        ? 'border-red-300 bg-red-50 text-red-600'
+                        : 'border-[#e5e3db] text-slate-700 hover:border-[#2d2d2d]'
+                    }`}
+                  >
+                    {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                    {isPlaying ? '暂停' : '播放'}
+                  </button>
+                  <button
+                    onClick={() => handleDownload(result.url)}
+                    className="px-4 py-2 rounded-lg border-2 border-[#e5e3db] text-slate-600 hover:border-[#2d2d2d] transition-colors"
+                    title="下载"
+                  >
+                    <Download className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-red-500 text-sm">生成失败，请重试</div>
+            )}
           </div>
         )}
 

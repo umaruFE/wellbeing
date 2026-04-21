@@ -175,8 +175,18 @@ export async function GET(request: NextRequest) {
       console.log('[generate-audio] 执行完成，获取音频资源...');
 
       try {
-        // 通过 get-resource webhook 获取音频资源
-        const resourceData = await n8nClient.call('get-resource', { execution_id: executionId }, { method: 'GET' });
+        // 通过 get-resource webhook 获取资源
+        const resourceUrl = `${process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678'}/webhook/get-resource?execution_id=${executionId}`;
+        console.log('[generate-audio] 获取音频资源:', resourceUrl);
+
+        const resourceResponse = await fetch(resourceUrl, {
+          method: 'GET',
+          headers: {
+            'X-N8N-API-KEY': process.env.N8N_API_KEY
+          }
+        });
+
+        const resourceData = await resourceResponse.json();
         console.log('[generate-audio] 音频资源数据:', resourceData);
 
         // 返回音频结果数组
@@ -186,7 +196,7 @@ export async function GET(request: NextRequest) {
           success: true,
           status: 'completed',
           results: results.map((item, index) => ({
-            url: item?.url || item?.audio_url,
+            url: item?.url || item?.audio_url || item?.output?.url,
             filename: item?.filename || `audio_${index + 1}.mp3`
           }))
         }, { headers: corsHeaders() });

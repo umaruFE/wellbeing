@@ -47,18 +47,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       text,
-      voice,
+      voice_id,
       speed = 1.0,
       pitch = 1.0,
+      emotion_prompt,
       user_id,
       organization_id
     } = body;
 
     console.log('[generate-voice] 收到生成语音请求:', {
       textLength: text?.length,
-      voice,
+      voice_id,
       speed,
-      pitch
+      pitch,
+      emotion_prompt
     });
 
     // 参数验证
@@ -72,9 +74,10 @@ export async function POST(request: NextRequest) {
     // 准备 N8N 调用参数
     const n8nPayload = {
       text,
-      voice: voice || 'zh-CN-XiaoxiaoNeural',
+      voice_id: voice_id || 'zh-CN-XiaoxiaoNeural',
       speed,
       pitch,
+      emotion_prompt,
       user_id,
       organization_id,
       timestamp: Date.now()
