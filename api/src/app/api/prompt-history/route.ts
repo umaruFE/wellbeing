@@ -49,13 +49,12 @@ export async function GET(request: Request) {
       processed_user_id = user_id;
     }
 
-    const query = db.from('prompt_history').select('*', { count: 'exact' }).eq('user_id', processed_user_id);
-    
-    if (prompt_type) {
-      query.eq('prompt_type', prompt_type);
-    }
-    
-    query.order('created_at', { ascending: false }).limit(parseInt(limit));
+    const query = db
+      .from('prompt_history')
+      .select('*', { count: 'exact' })
+      .eq('user_id', processed_user_id)
+      .order('created_at', { ascending: false })
+      .limit(parseInt(limit));
 
     const { data, error } = await query;
 
