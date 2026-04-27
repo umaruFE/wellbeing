@@ -79,15 +79,15 @@ export const PromptInputModal = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-lg text-white"><Wand2 className="w-5 h-5" /></div>
-            <h3 className="font-bold text-lg text-slate-800">{title}</h3>
+            <div className="bg-info p-2 rounded-lg text-white"><Wand2 className="w-5 h-5" /></div>
+            <h3 className="font-bold text-lg text-primary">{title}</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-primary-placeholder hover:text-primary-secondary transition-colors"><X className="w-5 h-5" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
-          <p className="text-sm text-slate-600 mb-4">{description}</p>
+          <p className="text-sm text-primary-secondary mb-4">{description}</p>
           
           {/* 输入模式选择 */}
           {assetType && (
@@ -95,14 +95,14 @@ export const PromptInputModal = ({
               <div className="flex items-center gap-4 mb-3">
                 <button 
                   onClick={() => setInputMode('ai')}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${inputMode === 'ai' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${inputMode === 'ai' ? 'bg-info text-white' : 'bg-surface-alt text-primary-secondary hover:bg-stroke'}`}
                 >
                   AI生成
                 </button>
                 {assetType === 'text' && (
                   <button 
                     onClick={() => setInputMode('direct')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${inputMode === 'direct' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${inputMode === 'direct' ? 'bg-info text-white' : 'bg-surface-alt text-primary-secondary hover:bg-stroke'}`}
                   >
                     直接输入
                   </button>
@@ -110,7 +110,7 @@ export const PromptInputModal = ({
                 {(assetType === 'image' || assetType === 'video') && (
                   <button 
                     onClick={() => setInputMode('upload')}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${inputMode === 'upload' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${inputMode === 'upload' ? 'bg-info text-white' : 'bg-surface-alt text-primary-secondary hover:bg-stroke'}`}
                   >
                     上传文件
                   </button>
@@ -126,7 +126,7 @@ export const PromptInputModal = ({
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder={placeholder}
-                className="w-full p-4 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                className="w-full p-4 border-2 border-stroke-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 rows={4}
                 disabled={isLoading}
               />
@@ -136,9 +136,9 @@ export const PromptInputModal = ({
           {/* 上传文件 */}
           {inputMode === 'upload' && (
             <div className="mb-4">
-              <div className="border-2 border-dashed border-[#e5e3db] rounded-xl p-6 text-center">
-                <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-sm text-slate-500 mb-3">点击或拖拽文件到此处上传</p>
+              <div className="border-2 border-dashed border-stroke-light rounded-xl p-6 text-center">
+                <Upload className="w-8 h-8 text-primary-placeholder mx-auto mb-2" />
+                <p className="text-sm text-primary-muted mb-3">点击或拖拽文件到此处上传</p>
                 <input 
                   type="file" 
                   accept={assetType === 'image' ? 'image/*' : assetType === 'video' ? 'video/*' : '*'}
@@ -148,16 +148,16 @@ export const PromptInputModal = ({
                 />
                 <label 
                   htmlFor="file-upload"
-                  className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium cursor-pointer hover:bg-slate-200 transition-colors"
+                  className="px-4 py-2 bg-surface-alt text-primary-secondary rounded-lg text-sm font-medium cursor-pointer hover:bg-stroke transition-colors"
                 >
                   选择文件
                 </label>
                 {referenceImage && (
                   <div className="mt-3 relative inline-block">
-                    <img src={referenceImage} alt="预览" className="w-24 h-24 object-cover rounded-xl border-2 border-[#e5e3db]" />
+                    <img src={referenceImage} alt="预览" className="w-24 h-24 object-cover rounded-xl border-2 border-stroke-light" />
                     <button 
                       onClick={() => setReferenceImage(null)}
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors"
+                      className="absolute top-0 right-0 bg-error text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-error transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -170,11 +170,11 @@ export const PromptInputModal = ({
           {/* 图片尺寸选择 */}
           {assetType === 'image' && inputMode === 'ai' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">图片尺寸</label>
+              <label className="block text-sm font-medium text-primary-secondary mb-2">图片尺寸</label>
               <select 
                 value={imageSize}
                 onChange={(e) => setImageSize(e.target.value)}
-                className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                className="w-full p-3 border-2 border-stroke-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 disabled={isLoading}
               >
                 <option value="1024x1024">1024x1024</option>
@@ -187,11 +187,11 @@ export const PromptInputModal = ({
           {/* 视频风格选择 */}
           {assetType === 'video' && inputMode === 'ai' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">视频风格</label>
+              <label className="block text-sm font-medium text-primary-secondary mb-2">视频风格</label>
               <select 
                 value={videoStyle}
                 onChange={(e) => setVideoStyle(e.target.value)}
-                className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                className="w-full p-3 border-2 border-stroke-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 disabled={isLoading}
               >
                 <option value="realistic">写实风格</option>
@@ -205,21 +205,21 @@ export const PromptInputModal = ({
           {/* 视频参考图片上传 */}
           {assetType === 'video' && inputMode === 'ai' && (
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-700 mb-2">参考图片 (最多4张)</label>
+              <label className="block text-sm font-medium text-primary-secondary mb-2">参考图片 (最多4张)</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {videoReferenceImages.map((img, index) => (
                   <div key={index} className="relative">
-                    <img src={img} alt="参考" className="w-16 h-16 object-cover rounded-xl border-2 border-[#e5e3db]" />
+                    <img src={img} alt="参考" className="w-16 h-16 object-cover rounded-xl border-2 border-stroke-light" />
                     <button 
                       onClick={() => removeVideoReferenceImage(index)}
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors"
+                      className="absolute top-0 right-0 bg-error text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-error transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
                 {videoReferenceImages.length < 4 && (
-                  <div className="w-16 h-16 border-2 border-dashed border-[#e5e3db] rounded-xl flex items-center justify-center cursor-pointer hover:border-[#2d2d2d] transition-colors">
+                  <div className="w-16 h-16 border-2 border-dashed border-stroke-light rounded-xl flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
                     <input 
                       type="file" 
                       accept="image/*"
@@ -232,8 +232,8 @@ export const PromptInputModal = ({
                       htmlFor="video-reference-upload"
                       className="cursor-pointer flex flex-col items-center justify-center"
                     >
-                      <Plus className="w-4 h-4 text-slate-400" />
-                      <span className="text-[10px] text-slate-500">添加</span>
+                      <Plus className="w-4 h-4 text-primary-placeholder" />
+                      <span className="text-[10px] text-primary-muted">添加</span>
                     </label>
                   </div>
                 )}
@@ -245,11 +245,11 @@ export const PromptInputModal = ({
           {assetType === 'audio' && inputMode === 'ai' && (
             <div className="space-y-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">语音风格</label>
+                <label className="block text-sm font-medium text-primary-secondary mb-2">语音风格</label>
                 <select 
                   value={audioConfig.style}
                   onChange={(e) => setAudioConfig({ ...audioConfig, style: e.target.value })}
-                  className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                  className="w-full p-3 border-2 border-stroke-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                   disabled={isLoading}
                 >
                   <option value="male">男声</option>
@@ -257,11 +257,11 @@ export const PromptInputModal = ({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">语言</label>
+                <label className="block text-sm font-medium text-primary-secondary mb-2">语言</label>
                 <select 
                   value={audioConfig.language}
                   onChange={(e) => setAudioConfig({ ...audioConfig, language: e.target.value })}
-                  className="w-full p-3 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                  className="w-full p-3 border-2 border-stroke-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                   disabled={isLoading}
                 >
                   <option value="zh">中文</option>
@@ -269,12 +269,12 @@ export const PromptInputModal = ({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">歌词/文本</label>
+                <label className="block text-sm font-medium text-primary-secondary mb-2">歌词/文本</label>
                 <textarea
                   value={lyrics}
                   onChange={(e) => setLyrics(e.target.value)}
                   placeholder="请输入要转换为音频的文本..."
-                  className="w-full p-4 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                  className="w-full p-4 border-2 border-stroke-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                   rows={3}
                   disabled={isLoading}
                 />
@@ -282,17 +282,17 @@ export const PromptInputModal = ({
             </div>
           )}
         </div>
-        <div className="p-6 border-t-2 border-[#e5e3db] flex gap-3">
+        <div className="p-6 border-t-2 border-stroke-light flex gap-3">
           <button 
             onClick={onClose} 
-            className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"
+            className="flex-1 py-3 bg-surface-alt text-primary-secondary rounded-lg font-medium hover:bg-stroke transition-colors"
             disabled={isLoading}
           >
             取消
           </button>
           <button 
             onClick={handleConfirm} 
-            className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+            className="flex-1 py-3 bg-info text-white rounded-lg font-medium hover:bg-info-active transition-colors flex items-center justify-center gap-2"
             disabled={isLoading}
           >
             {isLoading ? (
@@ -399,22 +399,22 @@ export const VideoStoryboardModal = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col">
-        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-purple-600 p-2 rounded-lg text-white"><Video className="w-5 h-5" /></div>
-            <h3 className="font-bold text-lg text-slate-800">视频分镜设置</h3>
+            <h3 className="font-bold text-lg text-primary">视频分镜设置</h3>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-primary-placeholder hover:text-primary-secondary transition-colors"><X className="w-5 h-5" /></button>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">视频描述</label>
+              <label className="block text-sm font-medium text-primary-secondary mb-2">视频描述</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="请输入视频内容描述..."
-                className="w-full p-4 border-2 border-[#e5e3db] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                className="w-full p-4 border-2 border-stroke-light rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                 rows={3}
                 disabled={isGenerating}
               />
@@ -422,10 +422,10 @@ export const VideoStoryboardModal = ({
             
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-slate-700">分镜设置</label>
+                <label className="block text-sm font-medium text-primary-secondary">分镜设置</label>
                 <button 
                   onClick={addScene}
-                  className="text-sm text-purple-600 hover:text-purple-700 transition-colors flex items-center gap-1"
+                  className="text-sm text-purple hover:text-purple-700 transition-colors flex items-center gap-1"
                   disabled={isGenerating}
                 >
                   <Plus className="w-3 h-3" /> 添加场景
@@ -433,12 +433,12 @@ export const VideoStoryboardModal = ({
               </div>
               <div className="space-y-3">
                 {scenes.map((scene, index) => (
-                  <div key={scene.id} className="border-2 border-[#e5e3db] rounded-xl p-4">
+                  <div key={scene.id} className="border-2 border-stroke-light rounded-xl p-4">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-slate-700">场景 {index + 1}</span>
+                      <span className="text-sm font-medium text-primary-secondary">场景 {index + 1}</span>
                       <button 
                         onClick={() => removeScene(scene.id)}
-                        className="text-slate-400 hover:text-red-500 transition-colors"
+                        className="text-primary-placeholder hover:text-error transition-colors"
                         disabled={isGenerating || scenes.length <= 1}
                       >
                         <X className="w-4 h-4" />
@@ -446,23 +446,23 @@ export const VideoStoryboardModal = ({
                     </div>
                     <div className="space-y-2">
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">场景描述</label>
+                        <label className="block text-xs text-primary-muted mb-1">场景描述</label>
                         <input
                           value={scene.description}
                           onChange={(e) => updateScene(scene.id, 'description', e.target.value)}
-                          className="w-full p-2 border-2 border-[#e5e3db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                          className="w-full p-2 border-2 border-stroke-light rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                           disabled={isGenerating}
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-slate-500 mb-1">时长 (秒)</label>
+                        <label className="block text-xs text-primary-muted mb-1">时长 (秒)</label>
                         <input
                           type="number"
                           min="1"
                           max="30"
                           value={scene.duration}
                           onChange={(e) => updateScene(scene.id, 'duration', parseInt(e.target.value) || 1)}
-                          className="w-full p-2 border-2 border-[#e5e3db] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
+                          className="w-full p-2 border-2 border-stroke-light rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#2d2d2d] focus:border-transparent transition-all"
                           disabled={isGenerating}
                         />
                       </div>
@@ -473,21 +473,21 @@ export const VideoStoryboardModal = ({
             </div>
             
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">参考图片 (最多4张)</label>
+              <label className="block text-sm font-medium text-primary-secondary mb-2">参考图片 (最多4张)</label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {referenceImages.map((img, index) => (
                   <div key={index} className="relative">
-                    <img src={img} alt="参考" className="w-20 h-20 object-cover rounded-xl border-2 border-[#e5e3db]" />
+                    <img src={img} alt="参考" className="w-20 h-20 object-cover rounded-xl border-2 border-stroke-light" />
                     <button 
                       onClick={() => removeReferenceImage(index)}
-                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600 transition-colors"
+                      className="absolute top-0 right-0 bg-error text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-error transition-colors"
                     >
                       <X className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
                 {referenceImages.length < 4 && (
-                  <div className="w-20 h-20 border-2 border-dashed border-[#e5e3db] rounded-xl flex items-center justify-center cursor-pointer hover:border-[#2d2d2d] transition-colors">
+                  <div className="w-20 h-20 border-2 border-dashed border-stroke-light rounded-xl flex items-center justify-center cursor-pointer hover:border-primary transition-colors">
                     <input 
                       type="file" 
                       accept="image/*"
@@ -500,8 +500,8 @@ export const VideoStoryboardModal = ({
                       htmlFor="video-storyboard-upload"
                       className="cursor-pointer flex flex-col items-center justify-center"
                     >
-                      <Plus className="w-4 h-4 text-slate-400" />
-                      <span className="text-[10px] text-slate-500">添加</span>
+                      <Plus className="w-4 h-4 text-primary-placeholder" />
+                      <span className="text-[10px] text-primary-muted">添加</span>
                     </label>
                   </div>
                 )}
@@ -509,10 +509,10 @@ export const VideoStoryboardModal = ({
             </div>
           </div>
         </div>
-        <div className="p-6 border-t-2 border-[#e5e3db] flex gap-3">
+        <div className="p-6 border-t-2 border-stroke-light flex gap-3">
           <button 
             onClick={onClose} 
-            className="flex-1 py-3 bg-slate-100 text-slate-700 rounded-lg font-medium hover:bg-slate-200 transition-colors"
+            className="flex-1 py-3 bg-surface-alt text-primary-secondary rounded-lg font-medium hover:bg-stroke transition-colors"
             disabled={isGenerating}
           >
             取消

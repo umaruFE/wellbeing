@@ -357,9 +357,9 @@ export const CanvasEditor = ({
     <div className="h-full flex flex-col overflow-y-auto">
       {background || isLoadingBackground || Object.keys(loadingRoles).some(key => loadingRoles[key]) ? (
         <>
-          <div className="p-3 bg-gray-50 border-b border-gray-200">
+          <div className="p-3 bg-surface-alt border-b border-stroke">
             <div className="flex items-center justify-center gap-2">
-              <span className="text-sm font-medium text-slate-700">选择角色：</span>
+              <span className="text-sm font-medium text-primary-secondary">选择角色：</span>
               <div className="flex gap-2">
                 {Object.keys(roles).map((roleName) => (
                   <button
@@ -368,7 +368,7 @@ export const CanvasEditor = ({
                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                       selectedRole === roleName
                         ? 'bg-purple-600 text-white'
-                        : 'bg-white border border-gray-300 text-slate-700 hover:bg-gray-50'
+                        : 'bg-white border border-stroke-light text-primary-secondary hover:bg-surface-alt'
                     }`}
                   >
                     {roleName}
@@ -378,12 +378,12 @@ export const CanvasEditor = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-center bg-gray-100 p-4">
+          <div className="flex items-center justify-center bg-surface-alt p-4">
             <canvas
               ref={canvasRef}
               width={700}
               height={500}
-              className="border-2 border-gray-300 rounded-lg cursor-move bg-white shadow-lg flex-shrink-0"
+              className="border-2 border-stroke-light rounded-lg cursor-move bg-white shadow-lg flex-shrink-0"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -392,28 +392,28 @@ export const CanvasEditor = ({
           </div>
 
           {selectedRole && (
-            <div className="p-3 bg-gray-50 border-t border-gray-200">
+            <div className="p-3 bg-surface-alt border-t border-stroke">
               <div className="flex items-center justify-center gap-4 flex-wrap">
-                <span className="text-sm font-medium text-slate-700">
+                <span className="text-sm font-medium text-primary-secondary">
                   已选择: {selectedRole}
                 </span>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleScaleChange(-0.1)}
-                    className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
                     title="缩小"
                   >
                     <ZoomOut className="w-4 h-4" />
                   </button>
 
-                  <span className="text-sm text-slate-600 w-16 text-center">
+                  <span className="text-sm text-primary-secondary w-16 text-center">
                     {Math.round((rolePositions[selectedRole]?.scale || 1) * 100)}%
                   </span>
 
                   <button
                     onClick={() => handleScaleChange(0.1)}
-                    className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
                     title="放大"
                   >
                     <ZoomIn className="w-4 h-4" />
@@ -423,19 +423,19 @@ export const CanvasEditor = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleRotationChange(-15)}
-                    className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
                     title="逆时针旋转"
                   >
                     <RotateCw className="w-4 h-4 transform -scale-x-100" />
                   </button>
 
-                  <span className="text-sm text-slate-600 w-12 text-center">
+                  <span className="text-sm text-primary-secondary w-12 text-center">
                     {rolePositions[selectedRole]?.rotation || 0}°
                   </span>
 
                   <button
                     onClick={() => handleRotationChange(15)}
-                    className="p-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 transition-colors"
+                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
                     title="顺时针旋转"
                   >
                     <RotateCw className="w-4 h-4" />
@@ -447,8 +447,8 @@ export const CanvasEditor = ({
                     onClick={() => handleFlipChange('x')}
                     className={`p-2 rounded-lg border transition-colors ${
                       rolePositions[selectedRole]?.flipX
-                        ? 'bg-purple-100 border-purple-400 text-purple-600'
-                        : 'bg-white border-gray-300 hover:bg-gray-50 text-slate-700'
+                        ? 'bg-purple-100 border-purple-400 text-purple'
+                        : 'bg-white border-stroke-light hover:bg-surface-alt text-primary-secondary'
                     }`}
                     title="水平翻转"
                   >
@@ -459,8 +459,8 @@ export const CanvasEditor = ({
                     onClick={() => handleFlipChange('y')}
                     className={`p-2 rounded-lg border transition-colors ${
                       rolePositions[selectedRole]?.flipY
-                        ? 'bg-purple-100 border-purple-400 text-purple-600'
-                        : 'bg-white border-gray-300 hover:bg-gray-50 text-slate-700'
+                        ? 'bg-purple-100 border-purple-400 text-purple'
+                        : 'bg-white border-stroke-light hover:bg-surface-alt text-primary-secondary'
                     }`}
                     title="垂直翻转"
                   >
@@ -472,13 +472,13 @@ export const CanvasEditor = ({
           )}
         </>
       ) : (
-        <div className="flex-1 flex items-center justify-center bg-gray-100">
+        <div className="flex-1 flex items-center justify-center bg-surface-alt">
           <div className="text-center">
-            <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Move className="w-12 h-12 text-gray-400" />
+            <div className="w-24 h-24 bg-stroke rounded-full flex items-center justify-center mx-auto mb-4">
+              <Move className="w-12 h-12 text-primary-placeholder" />
             </div>
-            <p className="text-gray-500 text-lg font-medium">画布编辑器</p>
-            <p className="text-gray-400 text-sm mt-2">生成资源后，可在此编辑角色位置</p>
+            <p className="text-primary-muted text-lg font-medium">画布编辑器</p>
+            <p className="text-primary-placeholder text-sm mt-2">生成资源后，可在此编辑角色位置</p>
           </div>
         </div>
       )}

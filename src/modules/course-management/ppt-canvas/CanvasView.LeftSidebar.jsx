@@ -34,17 +34,17 @@ export const CanvasViewLeftSidebar = ({
   const getPhaseColor = (phase) => isCourseDataArray ? phase.color : phase.color;
 
   return (
-    <aside className="w-64 bg-white border-r-2 border-[#e5e3db] flex flex-col shrink-0 z-10">
-      <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fcfbf9]">
+    <aside className="w-64 bg-white border-r-2 border-stroke-light flex flex-col shrink-0 z-10">
+      <div className="p-4 border-b-2 border-stroke-light bg-surface">
         <div className="flex items-center justify-between">
-          <h1 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-blue-600" /> 课程编排
+          <h1 className="font-bold text-lg text-primary flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-info" /> 课程编排
           </h1>
-          <button onClick={onLeftToggle} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onLeftToggle} className="text-primary-placeholder hover:text-primary-secondary">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-xs text-slate-500 mt-1 truncate">
+        <p className="text-xs text-primary-muted mt-1 truncate">
           {isCourseDataArray && courseData[0]?.slides?.[0]?.phase 
             ? courseData[0].slides[0].phase 
             : '课程编排'}
@@ -58,7 +58,7 @@ export const CanvasViewLeftSidebar = ({
           const phaseColor = getPhaseColor(phase);
           
           return (
-            <div key={phaseKey} className="rounded-xl overflow-hidden border-2 border-[#e5e3db] bg-white">
+            <div key={phaseKey} className="rounded-xl overflow-hidden border-2 border-stroke-light bg-white">
               <button 
                 onClick={() => onTogglePhase(phaseKey)} 
                 className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phaseColor.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
@@ -71,18 +71,18 @@ export const CanvasViewLeftSidebar = ({
                 </span>
               </button>
               {expandedPhases.includes(phaseKey) && (
-                <div className="bg-[#fcfbf9] border-t-2 border-[#e5e3db]">
+                <div className="bg-surface border-t-2 border-stroke-light">
                   {phaseSteps.map((step) => (
                     <div 
                       key={step.id} 
-                      className={`group/step border-b-2 border-[#e5e3db] last:border-0 hover:bg-[#fcfbf9] transition-all flex items-center ${activeStepId === step.id ? 'bg-[#fcfbf9]' : ''}`}
+                      className={`group/step border-b-2 border-stroke-light last:border-0 hover:bg-surface transition-all flex items-center ${activeStepId === step.id ? 'bg-surface' : ''}`}
                     >
                       <button 
                         onClick={() => onStepClick(phaseKey, step.id)} 
                         className={`flex-1 text-left p-2 pl-8 text-xs transition-all flex items-start gap-2 ${
                           activeStepId === step.id 
-                            ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600' 
-                            : 'text-slate-600'
+                            ? 'text-info-active font-semibold border-l-4 border-l-blue-600' 
+                            : 'text-primary-secondary'
                         }`}
                       >
                         <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
@@ -93,7 +93,7 @@ export const CanvasViewLeftSidebar = ({
                           e.stopPropagation();
                           onDeleteStep(phaseKey, step.id);
                         }}
-                        className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
+                        className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-error-light rounded text-error transition-all shrink-0"
                         title="删除环节"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -102,7 +102,7 @@ export const CanvasViewLeftSidebar = ({
                   ))}
                   <button 
                     onClick={() => onAddStep(phaseKey)}
-                    className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
+                    className="w-full text-center py-2 text-xs text-primary-placeholder hover:text-info-hover flex items-center justify-center gap-1 transition-colors"
                   >
                     <Plus className="w-3 h-3" /> 新增环节
                   </button>

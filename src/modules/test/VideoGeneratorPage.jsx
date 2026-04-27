@@ -19,22 +19,22 @@ export const VideoGeneratorPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-surface-alt">
       {/* 顶部导航栏 */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <header className="bg-white border-b border-stroke sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
               title="返回"
             >
-              <ArrowLeft className="w-5 h-5 text-slate-600" />
+              <ArrowLeft className="w-5 h-5 text-primary-secondary" />
             </button>
-            <h1 className="text-lg font-bold text-slate-800">AI视频生成器</h1>
+            <h1 className="text-lg font-bold text-primary">AI视频生成器</h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-primary-muted">
               {user ? user.name || user.email || '用户' : '未登录'}
             </span>
           </div>
@@ -47,12 +47,12 @@ export const VideoGeneratorPage = () => {
           <div className="bg-white rounded-xl shadow-lg p-8">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video className="w-8 h-8 text-purple-600" />
+                <Video className="w-8 h-8 text-purple" />
               </div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-4">
+              <h1 className="text-3xl font-bold text-dark mb-4">
                 AI视频分镜生成器
               </h1>
-              <p className="text-gray-600 mb-8">
+              <p className="text-primary-secondary mb-8">
                 通过AI智能分析，一键生成分镜脚本和图片，并合成精美视频
               </p>
 
@@ -65,44 +65,44 @@ export const VideoGeneratorPage = () => {
               </button>
             </div>
 
-            <div className="border-t border-gray-200 pt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">功能特点：</h2>
+            <div className="border-t border-stroke pt-8">
+              <h2 className="text-xl font-semibold text-dark mb-4">功能特点：</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-purple-50 rounded-lg p-4 text-center">
                   <div className="text-2xl mb-2">📝</div>
-                  <h3 className="font-medium text-gray-800 mb-1">智能分镜</h3>
-                  <p className="text-sm text-gray-500">AI自动分析故事内容，生成专业的分镜脚本</p>
+                  <h3 className="font-medium text-dark mb-1">智能分镜</h3>
+                  <p className="text-sm text-primary-muted">AI自动分析故事内容，生成专业的分镜脚本</p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4 text-center">
                   <div className="text-2xl mb-2">🎨</div>
-                  <h3 className="font-medium text-gray-800 mb-1">精美图片</h3>
-                  <p className="text-sm text-gray-500">支持多种风格，生成分镜图片保持视觉一致性</p>
+                  <h3 className="font-medium text-dark mb-1">精美图片</h3>
+                  <p className="text-sm text-primary-muted">支持多种风格，生成分镜图片保持视觉一致性</p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4 text-center">
                   <div className="text-2xl mb-2">🎬</div>
-                  <h3 className="font-medium text-gray-800 mb-1">视频合成</h3>
-                  <p className="text-sm text-gray-500">基于LTX-Video模型，生成流畅连贯的视频</p>
+                  <h3 className="font-medium text-dark mb-1">视频合成</h3>
+                  <p className="text-sm text-primary-muted">基于LTX-Video模型，生成流畅连贯的视频</p>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-gray-200 pt-8 mt-8">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">使用步骤：</h2>
-              <ol className="space-y-3 text-gray-700">
+            <div className="border-t border-stroke pt-8 mt-8">
+              <h2 className="text-xl font-semibold text-dark mb-4">使用步骤：</h2>
+              <ol className="space-y-3 text-primary-secondary">
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-medium">1</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">1</span>
                   <span>填写故事核心要素和整体风格描述</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-medium">2</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">2</span>
                   <span>AI自动生成分镜脚本和图片</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-medium">3</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">3</span>
                   <span>预览并调整分镜图片</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-medium">4</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">4</span>
                   <span>点击生成视频，等待AI合成最终作品</span>
                 </li>
               </ol>

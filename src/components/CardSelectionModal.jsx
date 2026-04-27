@@ -70,14 +70,14 @@ export const CardSelectionModal = ({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between shrink-0">
+        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-xl ${isAudioType ? 'bg-gradient-to-br from-blue-500 to-cyan-500' : 'bg-gradient-to-br from-purple-500 to-pink-500'}`}>
               {isAudioType ? <Music className="w-5 h-5 text-white" /> : <RefreshCw className="w-5 h-5 text-white" />}
             </div>
             <div>
-              <h3 className="font-bold text-xl text-slate-800">{isAudioType ? '选择音频' : title}</h3>
-              <p className="text-sm text-slate-500">
+              <h3 className="font-bold text-xl text-primary">{isAudioType ? '选择音频' : title}</h3>
+              <p className="text-sm text-primary-muted">
                 共 {itemCount} 个{itemType === 'audio' ? '音频' : '图片'}，选择你喜欢的一个
               </p>
             </div>
@@ -88,9 +88,9 @@ export const CardSelectionModal = ({
               setPlayingIndex(null);
               onClose();
             }}
-            className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+            className="p-2 hover:bg-surface-alt rounded-xl transition-colors"
           >
-            <X className="w-5 h-5 text-slate-400" />
+            <X className="w-5 h-5 text-primary-placeholder" />
           </button>
         </div>
 
@@ -99,18 +99,18 @@ export const CardSelectionModal = ({
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
               <div className="relative">
-                <div className={`w-16 h-16 border-4 rounded-full animate-spin ${isAudioType ? 'border-blue-200 border-t-blue-600' : 'border-purple-200 border-t-purple-600'}`}></div>
+                <div className={`w-16 h-16 border-4 rounded-full animate-spin ${isAudioType ? 'border-info-border border-t-blue-600' : 'border-purple-200 border-t-purple-600'}`}></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  {isAudioType ? <Music className="w-6 h-6 text-blue-600 animate-pulse" /> : <RefreshCw className="w-6 h-6 text-purple-600 animate-spin" />}
+                  {isAudioType ? <Music className="w-6 h-6 text-info animate-pulse" /> : <RefreshCw className="w-6 h-6 text-purple animate-spin" />}
                 </div>
               </div>
-              <p className="text-slate-500 animate-pulse">
+              <p className="text-primary-muted animate-pulse">
                 {isAudioType ? '正在生成音频...' : '正在生成图片...'}
               </p>
             </div>
           ) : images.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400 space-y-4">
-              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center h-64 text-primary-placeholder space-y-4">
+              <div className="w-20 h-20 bg-surface-alt rounded-full flex items-center justify-center">
                 {isAudioType ? <Music className="w-10 h-10" /> : <RefreshCw className="w-10 h-10" />}
               </div>
               <p>暂无可选择的{itemType === 'audio' ? '音频' : '图片'}</p>
@@ -128,8 +128,8 @@ export const CardSelectionModal = ({
                         ? 'ring-2 ring-blue-500 ring-offset-1'
                         : 'ring-2 ring-purple-500 ring-offset-1'
                       : isAudioType
-                        ? 'hover:ring-1 hover:ring-blue-300 hover:ring-offset-1'
-                        : 'hover:ring-1 hover:ring-purple-300 hover:ring-offset-1'
+                        ? 'hover:ring-1 hover:ring-info-border hover:ring-offset-1'
+                        : 'hover:ring-1 hover:ring-purple-light hover:ring-offset-1'
                     }
                     ${image.loading ? 'cursor-wait' : ''}
                   `}
@@ -140,12 +140,12 @@ export const CardSelectionModal = ({
                     {image.loading ? (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="relative mb-3">
-                          <div className={`w-12 h-12 border-4 rounded-full animate-spin ${isAudioType ? 'border-blue-200 border-t-blue-600' : 'border-purple-200 border-t-purple-600'}`}></div>
+                          <div className={`w-12 h-12 border-4 rounded-full animate-spin ${isAudioType ? 'border-info-border border-t-blue-600' : 'border-purple-200 border-t-purple-600'}`}></div>
                           <div className="absolute inset-0 flex items-center justify-center">
-                            {isAudioType ? <Music className="w-5 h-5 text-blue-600 animate-pulse" /> : <RefreshCw className="w-5 h-5 text-purple-600 animate-spin" />}
+                            {isAudioType ? <Music className="w-5 h-5 text-info animate-pulse" /> : <RefreshCw className="w-5 h-5 text-purple animate-spin" />}
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 animate-pulse">生成中...</p>
+                        <p className="text-xs text-primary-muted animate-pulse">生成中...</p>
                       </div>
                     ) : image.isAudio || (image.url && image.url.includes('audio')) ? (
                       // 音频卡片
@@ -153,7 +153,7 @@ export const CardSelectionModal = ({
                         <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-full flex items-center justify-center mb-3">
                           <Music className="w-8 h-8 text-white" />
                         </div>
-                        <p className="text-xs text-slate-500 text-center line-clamp-2">
+                        <p className="text-xs text-primary-muted text-center line-clamp-2">
                           {image.prompt || `音频 ${index + 1}`}
                         </p>
                         {/* 音频播放按钮 */}
@@ -162,8 +162,8 @@ export const CardSelectionModal = ({
                             onClick={(e) => handlePlayAudio(index, e)}
                             className={`mt-3 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors ${
                               playingIndex === index
-                                ? 'bg-blue-500 text-white'
-                                : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
+                                ? 'bg-info-light0 text-white'
+                                : 'bg-info-light text-info hover:bg-info-light'
                             }`}
                           >
                             <Volume2 className="w-3 h-3" />
@@ -190,7 +190,7 @@ export const CardSelectionModal = ({
                         }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-slate-400">
+                      <div className="w-full h-full flex items-center justify-center text-primary-placeholder">
                         {isAudioType ? <Music className="w-12 h-12" /> : <RefreshCw className="w-12 h-12" />}
                       </div>
                     )}
@@ -211,7 +211,7 @@ export const CardSelectionModal = ({
 
                   {/* 选中标记 */}
                   {selectedIndex === index && (
-                    <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center ${isAudioType ? 'bg-blue-500' : 'bg-purple-500'}`}>
+                    <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center ${isAudioType ? 'bg-info-light0' : 'bg-purple-500'}`}>
                       <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
@@ -227,9 +227,9 @@ export const CardSelectionModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-[#e5e3db] bg-[#fcfbf9] shrink-0">
+        <div className="p-6 border-t-2 border-stroke-light bg-surface shrink-0">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-slate-500">
+            <div className="text-sm text-primary-muted">
               {selectedIndex !== null
                 ? `已选择第 ${selectedIndex + 1} 个${itemType === 'audio' ? '音频' : '图片'}`
                 : `请选择一个${itemType === 'audio' ? '音频' : '图片'}`
@@ -242,7 +242,7 @@ export const CardSelectionModal = ({
                   setPlayingIndex(null);
                   onClose();
                 }}
-                className="px-6 py-2.5 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all font-medium"
+                className="px-6 py-2.5 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all font-medium"
               >
                 取消
               </button>
@@ -255,7 +255,7 @@ export const CardSelectionModal = ({
                     ? isAudioType
                       ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-black hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/25'
                       : 'bg-gradient-to-r from-purple-500 to-pink-500 text-black hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25'
-                    : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                    : 'bg-stroke text-primary-placeholder cursor-not-allowed'
                   }
                 `}
               >

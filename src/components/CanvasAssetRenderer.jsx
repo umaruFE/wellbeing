@@ -58,7 +58,7 @@ export const CanvasAssetRenderer = ({
 
   if (assets.length === 0 && isEditable) {
     return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-300 pointer-events-none">
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-primary-placeholder pointer-events-none">
         <Type className="w-16 h-16 mb-4" />
         <p className="text-sm font-medium">画布为空，请使用上方工具栏添加素材</p>
       </div>
@@ -98,7 +98,7 @@ export const CanvasAssetRenderer = ({
             }}
             className={`${isEditable && !isEditing ? 'cursor-move select-none' : ''} group/asset 
               ${selectedAssetId === asset.id && isEditable && !isEditing ? 'ring-2 ring-blue-500 z-50 shadow-2xl' : ''}
-              ${isEditable && selectedAssetId !== asset.id && !isEditing ? 'hover:ring-1 hover:ring-blue-300' : ''}
+              ${isEditable && selectedAssetId !== asset.id && !isEditing ? 'hover:ring-1 hover:ring-info-border' : ''}
               transition-shadow duration-75`}
           >
             {/* 右上角复制和删除按钮 - 仅在可编辑模式下显示 */}
@@ -109,7 +109,7 @@ export const CanvasAssetRenderer = ({
                     e.stopPropagation();
                     onCopyAsset?.(asset.id);
                   }}
-                  className="p-1.5 bg-blue-500 text-white rounded shadow-sm hover:bg-blue-600 transition-colors"
+                  className="p-1.5 bg-info-light0 text-white rounded shadow-sm hover:bg-info transition-colors"
                   title="复制"
                 >
                   <Copy className="w-3 h-3" />
@@ -119,7 +119,7 @@ export const CanvasAssetRenderer = ({
                     e.stopPropagation();
                     onDeleteAsset?.(asset.id);
                   }}
-                  className="p-1.5 bg-red-500 text-white rounded shadow-sm hover:bg-red-600 transition-colors"
+                  className="p-1.5 bg-error text-white rounded shadow-sm hover:bg-error transition-colors"
                   title="删除"
                 >
                   <Trash2 className="w-3 h-3" />
@@ -131,19 +131,19 @@ export const CanvasAssetRenderer = ({
             {isEditable && selectedAssetId === asset.id && !isEditing && (
               <>
                 {/* Resize Handles */}
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-nw-resize z-50"></div>
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-ne-resize z-50"></div>
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-sw-resize z-50"></div>
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-blue-500 rounded-full cursor-se-resize z-50"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-nw-resize z-50"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-ne-resize z-50"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-sw-resize z-50"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-se-resize z-50"></div>
                 
                 {/* Rotation Handle */}
                 <div 
                   className="absolute -top-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center cursor-grab active:cursor-grabbing z-50"
                   onMouseDown={(e) => onMouseDown?.(e, asset.id, 'rotating')}
                 >
-                  <div className="w-px h-4 bg-blue-500"></div>
-                  <div className="w-5 h-5 bg-white border border-blue-500 rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
-                    <RotateCw className="w-3 h-3 text-blue-500" />
+                  <div className="w-px h-4 bg-info-light0"></div>
+                  <div className="w-5 h-5 bg-white border border-info rounded-full flex items-center justify-center shadow-sm hover:scale-110 transition-transform">
+                    <RotateCw className="w-3 h-3 text-info-hover" />
                   </div>
                 </div>
               </>
@@ -153,7 +153,7 @@ export const CanvasAssetRenderer = ({
             {asset.type === 'text' ? (
               isEditing ? (
                 <textarea
-                  className="w-full h-full bg-white/95 border-2 border-blue-500 rounded p-2 font-sans resize-none outline-none"
+                  className="w-full h-full bg-white/95 border-2 border-info rounded p-2 font-sans resize-none outline-none"
                   style={{ 
                     fontSize: asset.fontSize ? `${asset.fontSize}px` : '24px',
                     fontWeight: asset.fontWeight || 'normal',
@@ -247,7 +247,7 @@ export const CanvasAssetRenderer = ({
                     />
                   )
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-slate-200 text-slate-400">
+                  <div className="w-full h-full flex items-center justify-center bg-stroke text-primary-placeholder">
                     {asset.type === 'image' ? 'No Image' : asset.type === 'video' ? 'No Video' : 'No Audio'}
                   </div>
                 )}
@@ -257,7 +257,7 @@ export const CanvasAssetRenderer = ({
                   </div>
                 )}
                 {asset.type === 'audio' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-full bg-slate-900/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
+                  <div className="absolute bottom-0 left-0 right-0 h-full bg-dark/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
                     <Music className="w-8 h-8 text-white/80" />
                     <div className="text-white text-xs font-mono">Audio Track</div>
                   </div>
