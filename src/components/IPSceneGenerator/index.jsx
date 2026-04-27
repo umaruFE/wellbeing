@@ -210,15 +210,20 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl || '')}`, {
-            headers: getAuthHeaders()
-          });
-          const data = await response.json();
+          try {
+            const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl || '')}`, {
+              headers: getAuthHeaders()
+            });
+            const data = await response.json();
 
-          if (data.status === 'completed') {
-            return data.url;
-          } else if (data.status === 'error') {
-            throw new Error('任务执行失败: ' + (data.error || '未知错误'));
+            if (data.status === 'completed') {
+              return data.url;
+            } else if (data.status === 'error') {
+              throw new Error('任务执行失败: ' + (data.error || '未知错误'));
+            }
+          } catch (error) {
+            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+            // 网络错误，继续轮询
           }
 
           await new Promise(resolve => setTimeout(resolve, interval));
@@ -346,7 +351,6 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       console.log('加载背景图:', state.generatedAssets.background);
       const backgroundImg = new Image();
-      backgroundImg.crossOrigin = 'anonymous';
       
       await new Promise((resolve, reject) => {
         backgroundImg.onload = () => {
@@ -357,10 +361,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           console.error('背景图加载失败:', e);
           reject(new Error('背景图加载失败'));
         };
-        const fullUrl = state.generatedAssets.background.startsWith('http') 
-          ? state.generatedAssets.background 
-          : `${window.location.origin}${state.generatedAssets.background}`;
-        backgroundImg.src = fullUrl;
+        backgroundImg.src = state.generatedAssets.background;
       });
 
       ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
@@ -387,7 +388,6 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
         console.log(`加载角色图: ${roleName}`, roleUrl);
         const roleImg = new Image();
-        roleImg.crossOrigin = 'anonymous';
 
         await new Promise((resolve, reject) => {
           roleImg.onload = () => {
@@ -398,10 +398,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
             console.error(`角色 ${roleName} 加载失败:`, e);
             reject(new Error(`角色 ${roleName} 加载失败`));
           };
-          const fullUrl = roleUrl.startsWith('http')
-            ? roleUrl
-            : `${window.location.origin}${roleUrl}`;
-          roleImg.src = fullUrl;
+          roleImg.src = roleUrl;
         });
 
         const bounds = getImageContentBounds(roleImg);
@@ -515,15 +512,20 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
-            headers: getAuthHeaders()
-          });
-          const data = await response.json();
+          try {
+            const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
+              headers: getAuthHeaders()
+            });
+            const data = await response.json();
 
-          if (data.status === 'completed') {
-            return data.url;
-          } else if (data.status === 'error') {
-            throw new Error('任务执行失败');
+            if (data.status === 'completed') {
+              return data.url;
+            } else if (data.status === 'error') {
+              throw new Error('任务执行失败');
+            }
+          } catch (error) {
+            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+            // 网络错误，继续轮询
           }
 
           await new Promise(resolve => setTimeout(resolve, interval));
@@ -602,15 +604,20 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
-            headers: getAuthHeaders()
-          });
-          const data = await response.json();
+          try {
+            const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
+              headers: getAuthHeaders()
+            });
+            const data = await response.json();
 
-          if (data.status === 'completed') {
-            return data.url;
-          } else if (data.status === 'error') {
-            throw new Error('任务执行失败');
+            if (data.status === 'completed') {
+              return data.url;
+            } else if (data.status === 'error') {
+              throw new Error('任务执行失败');
+            }
+          } catch (error) {
+            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+            // 网络错误，继续轮询
           }
 
           await new Promise(resolve => setTimeout(resolve, interval));
@@ -668,15 +675,20 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
       const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
-          const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
-            headers: getAuthHeaders()
-          });
-          const data = await response.json();
+          try {
+            const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl)}`, {
+              headers: getAuthHeaders()
+            });
+            const data = await response.json();
 
-          if (data.status === 'completed') {
-            return data.url;
-          } else if (data.status === 'error') {
-            throw new Error('任务执行失败');
+            if (data.status === 'completed') {
+              return data.url;
+            } else if (data.status === 'error') {
+              throw new Error('任务执行失败');
+            }
+          } catch (error) {
+            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+            // 网络错误，继续轮询
           }
 
           await new Promise(resolve => setTimeout(resolve, interval));
