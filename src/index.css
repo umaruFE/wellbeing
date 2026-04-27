@@ -1,5 +1,84 @@
 @import "tailwindcss";
 
+@theme {
+  --color-page: #F7F5F1;
+  --color-surface: #FCFBF9;
+  --color-surface-alt: #F7F5F1;
+
+  --color-primary: #333E4E;
+  --color-primary-secondary: #575F6E;
+  --color-primary-muted: #818997;
+  --color-primary-placeholder: #A4ABB8;
+
+  --color-stroke: #EFECE8;
+  --color-stroke-light: #E6E3DE;
+  --color-stroke-subtle: #F5F2EE;
+
+  --color-brand: #F4785E;
+  --color-brand-light: #FDECE8;
+  --color-brand-accent: #FFE1DA;
+  --color-brand-border: #FFC7BA;
+  --color-brand-hover: #FF846A;
+  --color-brand-active: #CF5846;
+  --color-brand-dark: #CF5846;
+
+  --color-info: #4482E5;
+  --color-info-light: #F0F8FF;
+  --color-info-border: #C7E2FF;
+  --color-info-hover: #6FA6F2;
+  --color-info-active: #3062BF;
+  --color-info-icon: #6FA6F2;
+
+  --color-success: #509F69;
+  --color-success-light: #EBF7EE;
+  --color-success-border: #BDDDC2;
+  --color-success-hover: #71AB81;
+  --color-success-active: #36784D;
+
+  --color-warning: #F5A233;
+  --color-warning-light: #FFF4E5;
+  --color-warning-border: #FFE1B8;
+  --color-warning-hover: #FFC069;
+  --color-warning-active: #D38F31;
+
+  --color-error: #CF474B;
+  --color-error-light: #FDECE8;
+  --color-error-border: #FFC7BA;
+  --color-error-hover: #FF846A;
+  --color-error-active: #A83037;
+
+  --color-purple: #9966D0;
+  --color-purple-light: #FAF0FF;
+
+  --color-card-1: #FDECE8;
+  --color-card-2: #F0F8FF;
+  --color-card-3: #FFF4E5;
+  --color-card-4: #FAF0FF;
+  --color-card-5: #FBE5E5;
+  --color-card-6: #EBF7EE;
+  --color-card-7: #FFE1DA;
+  --color-card-8: #D9EBFF;
+
+  --font-family-harmony: "HarmonyOS Sans SC", sans-serif;
+  --font-family-code: "Courier Prime", monospace;
+
+  --font-size-heading-1: 48px;
+  --font-size-heading-2: 36px;
+  --font-size-heading-3: 30px;
+  --font-size-heading-4: 24px;
+  --font-size-heading-5: 20px;
+  --font-size-heading-6: 16px;
+
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-lg: 8px;
+  --radius-xxl: 10px;
+
+  --shadow-neo: 2px 2px 0px 0px #333E4E;
+  --shadow-neo-hover: 3px 3px 0px 0px #333E4E;
+  --shadow-neo-active: 1px 1px 0px 0px #333E4E;
+}
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -15,8 +94,6 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Preserve existing styles but avoid global centering that breaks layout */
-
 a {
   font-weight: 500;
   color: #646cff;
@@ -28,7 +105,6 @@ a:hover {
 
 body {
   margin: 0;
-  /* Allow layout to span full width; avoid global flex centering */
   min-width: 320px;
   min-height: 100vh;
 }
