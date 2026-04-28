@@ -58,34 +58,34 @@ export const HistoryVersionView = ({
   return (
     <div className="h-full flex flex-col bg-white">
         {/* Header */}
-        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-lg text-white">
+            <div className="bg-info p-2 rounded-lg text-white">
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-slate-800">历史版本</h2>
-              <p className="text-xs text-slate-500">在新窗口查看历史版本，当前版本保持不变</p>
+              <h2 className="font-bold text-lg text-primary">历史版本</h2>
+              <p className="text-xs text-primary-muted">在新窗口查看历史版本，当前版本保持不变</p>
             </div>
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+            className="p-2 hover:bg-surface-alt rounded-lg text-primary-placeholder hover:text-primary-secondary transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Version Info Bar */}
-        <div className="px-6 py-4 bg-[#fcfbf9] border-b-2 border-[#e5e3db] flex items-center justify-between">
+        <div className="px-6 py-4 bg-surface border-b-2 border-stroke-light flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="text-sm">
-              <span className="text-slate-500">版本 </span>
-              <span className="font-bold text-blue-600">{selectedIndex + 1}</span>
-              <span className="text-slate-400"> / {historyVersions.length}</span>
+              <span className="text-primary-muted">版本 </span>
+              <span className="font-bold text-info">{selectedIndex + 1}</span>
+              <span className="text-primary-placeholder"> / {historyVersions.length}</span>
             </div>
             {currentVersion && (
-              <div className="text-xs text-slate-500 flex items-center gap-2">
+              <div className="text-xs text-primary-muted flex items-center gap-2">
                 <Clock className="w-3 h-3" />
                 <span>{new Date(currentVersion.timestamp).toLocaleString('zh-CN')}</span>
               </div>
@@ -95,7 +95,7 @@ export const HistoryVersionView = ({
             <button
               onClick={handlePrevious}
               disabled={selectedIndex === 0}
-              className="px-4 py-2 bg-white border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
+              className="px-4 py-2 bg-white border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
               <ChevronLeft className="w-4 h-4" />
               上一个
@@ -103,14 +103,14 @@ export const HistoryVersionView = ({
             <button
               onClick={handleNext}
               disabled={selectedIndex === historyVersions.length - 1}
-              className="px-4 py-2 bg-white border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
+              className="px-4 py-2 bg-white border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
               下一个
               <ChevronRight className="w-4 h-4" />
             </button>
             <button
               onClick={handleRestore}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+              className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info-active flex items-center gap-2 transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               恢复此版本
@@ -123,24 +123,24 @@ export const HistoryVersionView = ({
           {currentVersion ? (
             <div className="space-y-4">
               {currentVersion.description && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">{currentVersion.description}</p>
+                <div className="bg-info-light border border-info-border rounded-lg p-4">
+                  <p className="text-sm text-info-active">{currentVersion.description}</p>
                 </div>
               )}
               
               {/* Version Data Preview */}
-              <div className="bg-[#fcfbf9] rounded-xl p-4 border-2 border-[#e5e3db]">
+              <div className="bg-surface rounded-xl p-4 border-2 border-stroke-light">
                 <div className="flex items-center gap-2 mb-3">
-                  <FileText className="w-4 h-4 text-slate-500" />
-                  <span className="text-xs font-bold text-slate-500 uppercase">版本数据预览</span>
+                  <FileText className="w-4 h-4 text-primary-muted" />
+                  <span className="text-xs font-bold text-primary-muted uppercase">版本数据预览</span>
                 </div>
-                <pre className="text-xs text-[#2d2d2d] overflow-auto max-h-96 bg-white p-4 rounded-xl border-2 border-[#e5e3db]">
+                <pre className="text-xs text-dark overflow-auto max-h-96 bg-white p-4 rounded-xl border-2 border-stroke-light">
                   {JSON.stringify(currentVersion.data, null, 2)}
                 </pre>
               </div>
             </div>
           ) : (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-primary-placeholder">
               <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>暂无历史版本</p>
             </div>

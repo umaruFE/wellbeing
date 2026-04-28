@@ -83,8 +83,8 @@ export const ReadingMaterialEditor = ({
   const organizePagesByPhase = () => {
     const phaseConfig = {
       engage: { title: 'Engage (引入)', color: 'bg-purple-100 text-purple-700 border-purple-200' },
-      empower: { title: 'Empower (赋能)', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-      execute: { title: 'Execute (实践)', color: 'bg-green-100 text-green-700 border-green-200' },
+      empower: { title: 'Empower (赋能)', color: 'bg-info-light text-info-active border-info-border' },
+      execute: { title: 'Execute (实践)', color: 'bg-success-light text-success-active border-success-border' },
       elevate: { title: 'Elevate (升华)', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
     };
 
@@ -516,7 +516,7 @@ export const ReadingMaterialEditor = ({
 
   if (!pages || pages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-slate-400 space-y-4">
+      <div className="flex flex-col items-center justify-center h-64 text-primary-placeholder space-y-4">
         <p>暂无阅读材料页面</p>
         <button
           onClick={() => handleAddPage()}
@@ -558,7 +558,7 @@ export const ReadingMaterialEditor = ({
                   <div className="flex relative">
                     {/* Main Canvas Area */}
                     <div className="flex-1">
-                      <div className="flex-1 flex flex-col bg-slate-100 relative" style={{ minHeight: '600px' }}>
+                      <div className="flex-1 flex flex-col bg-surface-alt relative" style={{ minHeight: '600px' }}>
                         {/* 画布区域 */}
                         <div 
                           className="flex-1 overflow-auto p-8 flex items-center justify-center relative" 
@@ -643,18 +643,18 @@ export const ReadingMaterialEditor = ({
       </div>
 
       {/* 底部按钮区域 */}
-      <div className="border-t-2 border-[#e5e3db] bg-white p-4 flex items-center justify-between">
+      <div className="border-t-2 border-stroke-light bg-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleAddAsset(editingPageIndex, 'text')}
-            className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
           >
             <Type className="w-4 h-4" />
             文本
           </button>
           <button
             onClick={() => handleAddAsset(editingPageIndex, 'image')}
-            className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
           >
             <ImageIcon className="w-4 h-4" />
             图片

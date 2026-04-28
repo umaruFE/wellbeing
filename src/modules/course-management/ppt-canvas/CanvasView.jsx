@@ -593,7 +593,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   return (
-    <div className="flex h-full bg-[#fcfbf9] overflow-hidden">
+    <div className="flex h-full bg-surface overflow-hidden">
       {/* Left Sidebar */}
       <CanvasViewLeftSidebar
         courseData={courseData}
@@ -641,15 +641,15 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="bg-white border-b-2 border-[#e5e3db] px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border-b-2 border-stroke-light px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setIsLeftOpen(!isLeftOpen)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
             >
-              <ChevronLeft className="w-5 h-5 text-slate-600" />
+              <ChevronLeft className="w-5 h-5 text-primary-secondary" />
             </button>
-            <h2 className="text-lg font-semibold text-slate-800">
+            <h2 className="text-lg font-semibold text-primary">
               {currentStep?.title || '选择环节'}
             </h2>
           </div>
@@ -657,36 +657,36 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleUndo(history, historyIndex, setHistoryIndex, setCourseData)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 hover:bg-surface-alt rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={historyIndex <= 0}
             >
-              <Undo2 className="w-5 h-5 text-slate-600" />
+              <Undo2 className="w-5 h-5 text-primary-secondary" />
             </button>
             <button
               onClick={() => handleRedo(history, historyIndex, setHistoryIndex, setCourseData)}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="p-2 hover:bg-surface-alt rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={historyIndex >= history.length - 1}
             >
-              <Redo2 className="w-5 h-5 text-slate-600" />
+              <Redo2 className="w-5 h-5 text-primary-secondary" />
             </button>
-            <div className="h-6 w-px bg-slate-200 mx-1"></div>
+            <div className="h-6 w-px bg-stroke mx-1"></div>
             <button
               onClick={handleCopyPage}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
             >
-              <Copy className="w-5 h-5 text-slate-600" />
+              <Copy className="w-5 h-5 text-primary-secondary" />
             </button>
             {/* <button
               onClick={handleExportPPT}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors relative"
+              className="p-2 hover:bg-surface-alt rounded-lg transition-colors relative"
               disabled={isExporting}
             >
               {isExporting && (
                 <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
-                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-4 h-4 border-2 border-info border-t-transparent rounded-full animate-spin"></div>
                 </div>
               )}
-              <RefreshCw className="w-5 h-5 text-slate-600" />
+              <RefreshCw className="w-5 h-5 text-primary-secondary" />
             </button>*/}
           </div>
         </div>
@@ -733,32 +733,32 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         </div>
 
         {/* Bottom Bar */}
-        <div className="bg-white border-t-2 border-[#e5e3db] px-4 py-3 flex items-center justify-between">
+        <div className="bg-white border-t-2 border-stroke-light px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleAddAsset('text')}
-              className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+              className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
             >
               <Type className="w-4 h-4" />
               文本
             </button>
             <button
               onClick={() => handleAddAsset('image')}
-              className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+              className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
             >
               <ImageIcon className="w-4 h-4" />
               图片
             </button>
             <button
               onClick={() => handleAddAsset('video')}
-              className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+              className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
             >
               <Video className="w-4 h-4" />
               视频
             </button>
             <button
               onClick={() => handleAddAsset('audio')}
-              className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+              className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
             >
               <Music className="w-4 h-4" />
               音频
@@ -768,20 +768,20 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           <div className="flex items-center gap-2">
             {/*<button
               onClick={() => handleAddAsset('text')}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
             >
-              <Wand2 className="w-5 h-5 text-blue-600" />
+              <Wand2 className="w-5 h-5 text-info" />
             </button> */}
           </div>
         </div>
       </div>
 
       {/* Right Sidebar */}
-      <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l-2 border-[#e5e3db] flex flex-col shrink-0 z-10 shadow-[4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
+      <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l-2 border-stroke-light flex flex-col shrink-0 z-10 shadow-[4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
          {!isRightOpen && (
            <button 
              onClick={() => setIsRightOpen(true)} 
-             className="absolute top-4 right-0 bg-white p-2 rounded-l-md border-2 border-r-0 border-[#e5e3db] shadow-sm text-[#2d2d2d] hover:text-[#2d2d2d] hover:border-[#2d2d2d] z-50 transform -translate-x-full transition-all"
+             className="absolute top-4 right-0 bg-white p-2 rounded-l-md border-2 border-r-0 border-stroke-light shadow-sm text-dark hover:text-dark hover:border-primary z-50 transform -translate-x-full transition-all"
              title="展开面板"
            >
              <ChevronLeft className="w-4 h-4" />
@@ -805,53 +805,53 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                />
             ) : (
                <>
-                  <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fcfbf9] flex items-center justify-between">
-                     <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                       <Wand2 className="w-4 h-4 text-purple-600" />环节详情编辑
+                  <div className="p-4 border-b-2 border-stroke-light bg-surface flex items-center justify-between">
+                     <h3 className="font-bold text-primary flex items-center gap-2">
+                       <Wand2 className="w-4 h-4 text-purple" />环节详情编辑
                      </h3>
-                     <button onClick={() => setIsRightOpen(false)} className="text-slate-400 hover:text-slate-600" title="收起面板">
+                     <button onClick={() => setIsRightOpen(false)} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
                        <ChevronRight className="w-4 h-4" />
                      </button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-5 space-y-6">
                      <div className="space-y-4">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">时间 / Time</label>
+                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">时间 / Time</label>
                           <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-slate-400" />
+                            <Clock className="w-4 h-4 text-primary-placeholder" />
                             <input 
                               type="text" 
                               value={currentStep?.time || ''} 
                               onChange={(e) => handleInputChange('time', e.target.value)} 
-                              className="flex-1 text-sm border-2 border-[#e5e3db] rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all" 
+                              className="flex-1 text-sm border-2 border-stroke-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all" 
                             />
                           </div>
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学环节 / Step Title</label>
+                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">教学环节 / Step Title</label>
                           <input 
                             type="text" 
                             value={currentStep?.title || ''} 
                             onChange={(e) => handleInputChange('title', e.target.value)} 
-                            className="w-full text-sm border-2 border-[#e5e3db] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all" 
+                            className="w-full text-sm border-2 border-stroke-light rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all" 
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">教学目标 / Objective</label>
+                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">教学目标 / Objective</label>
                           <textarea 
                             value={currentStep?.objective || ''} 
                             onChange={(e) => handleInputChange('objective', e.target.value)} 
-                            className="w-full text-sm border-2 border-[#e5e3db] rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none transition-all" 
+                            className="w-full text-sm border-2 border-stroke-light rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none transition-all" 
                             rows={4}
                           />
                         </div>
                      </div>
-                     <hr className="border-[#e5e3db]" />
+                     <hr className="border-stroke-light" />
                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-slate-500 uppercase">本页素材 ({currentStep?.assets?.length || 0})</label>
+                          <label className="text-xs font-bold text-primary-muted uppercase">本页素材 ({currentStep?.assets?.length || 0})</label>
                           <div className="flex gap-1">
-                            <button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-slate-100 rounded text-slate-400 hover:text-purple-600">
+                            <button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-surface-alt rounded text-primary-placeholder hover:text-purple">
                               <Plus className="w-4 h-4" />
                             </button>
                           </div>
@@ -861,18 +861,18 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                             <div 
                               key={asset.id} 
                               onClick={() => setSelectedAssetId(asset.id)} 
-                              className="flex items-start gap-2 p-2 border-2 border-[#e5e3db] rounded-xl bg-white hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] cursor-pointer transition-all group"
+                              className="flex items-start gap-2 p-2 border-2 border-stroke-light rounded-xl bg-white hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] cursor-pointer transition-all group"
                             >
-                              <div className="mt-1 text-slate-400">{getAssetIcon(asset.type)}</div>
+                              <div className="mt-1 text-primary-placeholder">{getAssetIcon(asset.type)}</div>
                               <div className="flex-1 min-w-0">
-                                <div className="text-xs font-bold text-slate-700 truncate">{asset.title}</div>
-                                <div className="text-[10px] text-slate-400">{asset.type} • 点击编辑</div>
+                                <div className="text-xs font-bold text-primary-secondary truncate">{asset.title}</div>
+                                <div className="text-[10px] text-primary-placeholder">{asset.type} • 点击编辑</div>
                               </div>
                             </div>
                           ))}
                         </div>
                      </div>
-                     <div className="pt-6 mt-6 border-t-2 border-[#e5e3db] flex gap-2">
+                     <div className="pt-6 mt-6 border-t-2 border-stroke-light flex gap-2">
                         <button 
                           onClick={() => {
                             if (currentStep) {
@@ -892,7 +892,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                               setShowPageHistoryModal(true);
                             }
                           }}
-                          className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all"
+                          className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
                         >
                           <History className="w-4 h-4" />
                           历史生成
@@ -974,40 +974,40 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       {showPageHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                <div className="bg-info p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">历史生成列表 - 环节内容</h3>
-                  <p className="text-xs text-slate-500 mt-1">{currentStep?.title || '当前环节'}</p>
+                  <h3 className="font-bold text-lg text-primary">历史生成列表 - 环节内容</h3>
+                  <p className="text-xs text-primary-muted mt-1">{currentStep?.title || '当前环节'}</p>
                 </div>
               </div>
-              <button onClick={() => setShowPageHistoryModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+              <button onClick={() => setShowPageHistoryModal(false)} className="text-primary-placeholder hover:text-primary-secondary transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
               {pageHistory.filter(h => h.stepId === activeStepId).length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
+                <div className="text-center py-12 text-primary-placeholder">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无历史生成记录</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {pageHistory.filter(h => h.stepId === activeStepId).map((historyItem) => (
-                    <div key={historyItem.id} className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all">
+                    <div key={historyItem.id} className="border-2 border-stroke-light rounded-xl p-4 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] transition-all">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-medium text-slate-500">{historyItem.displayTime}</span>
+                            <span className="text-xs font-medium text-primary-muted">{historyItem.displayTime}</span>
                           </div>
-                          <div className="text-sm text-slate-700 mb-2">
+                          <div className="text-sm text-primary-secondary mb-2">
                             <div className="font-semibold">{historyItem.data.title}</div>
-                            {historyItem.data.time && <div className="text-xs text-slate-500 mt-1">时间: {historyItem.data.time}</div>}
-                            {historyItem.data.objective && <div className="text-xs text-slate-500 mt-1">目标: {historyItem.data.objective}</div>}
-                            <div className="text-xs text-slate-500 mt-1">素材数量: {historyItem.data.assets?.length || 0}</div>
+                            {historyItem.data.time && <div className="text-xs text-primary-muted mt-1">时间: {historyItem.data.time}</div>}
+                            {historyItem.data.objective && <div className="text-xs text-primary-muted mt-1">目标: {historyItem.data.objective}</div>}
+                            <div className="text-xs text-primary-muted mt-1">素材数量: {historyItem.data.assets?.length || 0}</div>
                           </div>
                         </div>
                         <button
@@ -1035,7 +1035,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                               setShowPageHistoryModal(false);
                             }
                           }}
-                          className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 transition-colors"
+                          className="px-4 py-2 bg-info text-white rounded text-sm font-bold hover:bg-info-active transition-colors"
                         >
                           恢复此版本
                         </button>

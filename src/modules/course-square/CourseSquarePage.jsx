@@ -198,23 +198,23 @@ export const CourseSquarePage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-[#fcfbf9]">
+    <div className="h-screen flex flex-col bg-surface">
       {/* Header */}
-      <div className="bg-[#fcfbf9] border-b-2 border-[#e5e3db] shrink-0">
+      <div className="bg-surface border-b-2 border-stroke-light shrink-0">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-[#2d2d2d] flex items-center gap-2">
-                <BookOpen className="w-8 h-8 text-[#2d2d2d]" />
+              <h1 className="text-3xl font-bold text-dark flex items-center gap-2">
+                <BookOpen className="w-8 h-8 text-dark" />
                 课程广场
               </h1>
-              <p className="text-slate-500 mt-1">发现优质课程，一键复制开始您的教学</p>
+              <p className="text-primary-muted mt-1">发现优质课程，一键复制开始您的教学</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode('grid')}
                 className={`p-2 rounded-lg transition-all duration-200 ${
-                  viewMode === 'grid' ? 'bg-[#fffbe6] border-2 border-[#2d2d2d] text-[#2d2d2d]' : 'text-slate-400 hover:bg-slate-100'
+                  viewMode === 'grid' ? 'bg-warning-light border-2 border-primary text-dark' : 'text-primary-placeholder hover:bg-surface-alt'
                 }`}
               >
                 <Grid className="w-5 h-5" />
@@ -222,7 +222,7 @@ export const CourseSquarePage = () => {
               <button
                 onClick={() => setViewMode('list')}
                 className={`p-2 rounded-lg transition-all duration-200 ${
-                  viewMode === 'list' ? 'bg-[#fffbe6] border-2 border-[#2d2d2d] text-[#2d2d2d]' : 'text-slate-400 hover:bg-slate-100'
+                  viewMode === 'list' ? 'bg-warning-light border-2 border-primary text-dark' : 'text-primary-placeholder hover:bg-surface-alt'
                 }`}
               >
                 <List className="w-5 h-5" />
@@ -232,13 +232,13 @@ export const CourseSquarePage = () => {
 
           {/* Search */}
           <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary-placeholder" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="搜索课程、单元、主题..."
-              className="w-full pl-12 pr-4 py-3 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-lg transition-all duration-200"
+              className="w-full pl-12 pr-4 py-3 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none text-lg transition-all duration-200"
             />
           </div>
 
@@ -250,8 +250,8 @@ export const CourseSquarePage = () => {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-200 ${
                   selectedCategory === category.id
-                    ? 'bg-[#2d2d2d] text-white border-2 border-[#2d2d2d]'
-                    : 'bg-slate-100 text-slate-700 hover:bg-[#fffbe6] hover:border-2 hover:border-[#2d2d2d]'
+                    ? 'bg-dark text-white border-2 border-primary'
+                    : 'bg-surface-alt text-primary-secondary hover:bg-warning-light hover:border-2 hover:border-primary'
                 }`}
               >
                 {category.name}
@@ -264,7 +264,7 @@ export const CourseSquarePage = () => {
       {/* Course List - 可滚动区域 */}
       <div className="flex-1 overflow-y-auto max-w-7xl mx-auto px-6 py-6 w-full">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+          <div className="bg-error-light border border-error-border text-error-active px-4 py-3 rounded-lg mb-4">
             {error}
           </div>
         )}
@@ -272,8 +272,8 @@ export const CourseSquarePage = () => {
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-slate-500">加载中...</p>
+              <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-primary-muted">加载中...</p>
             </div>
           </div>
         ) : viewMode === 'grid' ? (
@@ -281,10 +281,10 @@ export const CourseSquarePage = () => {
             {filteredCourses.map(course => (
               <div
                 key={course.id}
-                className="bg-white rounded-[24px] border-2 border-[#e5e3db] overflow-hidden cursor-pointer group transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
+                className="bg-white rounded-[24px] border-2 border-stroke-light overflow-hidden cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
               >
                 {/* 缩略图 */}
-                <div className="h-40 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] flex items-center justify-center text-6xl relative border-b-2 border-[#e5e3db]">
+                <div className="h-40 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] flex items-center justify-center text-6xl relative border-b-2 border-stroke-light">
                   {course.thumbnail}
                   {/* 复制按钮 */}
                   <button
@@ -292,7 +292,7 @@ export const CourseSquarePage = () => {
                       e.stopPropagation();
                       handleCopyCourse(course.id);
                     }}
-                    className="absolute top-3 right-3 px-3 py-1.5 bg-white border-2 border-[#2d2d2d] text-[#2d2d2d] rounded-xl text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] hover:bg-[#fffbe6]"
+                    className="absolute top-3 right-3 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-neo hover:bg-warning-light"
                   >
                     <Copy className="w-4 h-4" />
                     复制课程
@@ -301,22 +301,22 @@ export const CourseSquarePage = () => {
                 <div className="p-5">
                   {/* 标题和作者 */}
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold text-slate-800 flex-1 pr-2">{course.title}</h3>
+                    <h3 className="text-lg font-bold text-primary flex-1 pr-2">{course.title}</h3>
                   </div>
-                  <p className="text-xs text-slate-400 mb-3">by {course.author}</p>
+                  <p className="text-xs text-primary-placeholder mb-3">by {course.author}</p>
 
                   {/* 课程信息 */}
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Book className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-sm text-primary-secondary">
+                      <Book className="w-4 h-4 text-primary-placeholder" />
                       <span>{course.unit} - {course.unitCN}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Clock className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-sm text-primary-secondary">
+                      <Clock className="w-4 h-4 text-primary-placeholder" />
                       <span>{course.duration}分钟 ({course.stage})</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-slate-600">
-                      <Sparkles className="w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 text-sm text-primary-secondary">
+                      <Sparkles className="w-4 h-4 text-primary-placeholder" />
                       <span>{course.storyTheme}</span>
                     </div>
                   </div>
@@ -326,7 +326,7 @@ export const CourseSquarePage = () => {
                     {course.tags?.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 bg-[#fffbe6] text-[#2d2d2d] border border-[#e5e3db] rounded-lg text-xs font-medium"
+                        className="px-2 py-0.5 bg-warning-light text-dark border border-stroke-light rounded-lg text-xs font-medium"
                       >
                         {tag}
                       </span>
@@ -334,8 +334,8 @@ export const CourseSquarePage = () => {
                   </div>
 
                   {/* 统计数据 */}
-                  <div className="flex items-center justify-between pt-4 border-t-2 border-[#e5e3db]">
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
+                  <div className="flex items-center justify-between pt-4 border-t-2 border-stroke-light">
+                    <div className="flex items-center gap-3 text-sm text-primary-muted">
                       <div className="flex items-center gap-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                         <span className="font-medium">{course.rating}</span>
@@ -345,7 +345,7 @@ export const CourseSquarePage = () => {
                         <span>{formatNumber(course.students)}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 text-xs text-green-600">
+                    <div className="flex items-center gap-1 text-xs text-success">
                       <Copy className="w-3 h-3" />
                       <span>已复制 {course.copies} 次</span>
                     </div>
@@ -359,18 +359,18 @@ export const CourseSquarePage = () => {
             {filteredCourses.map(course => (
               <div
                 key={course.id}
-                className="bg-white rounded-[24px] border-2 border-[#e5e3db] p-5 cursor-pointer group transition-all duration-200 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] hover:-translate-y-1"
+                className="bg-white rounded-[24px] border-2 border-stroke-light p-5 cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
               >
                 <div className="flex gap-5">
                   {/* 缩略图 */}
-                  <div className="w-36 h-36 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] rounded-2xl flex items-center justify-center text-5xl shrink-0 relative border-2 border-[#e5e3db]">
+                  <div className="w-36 h-36 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] rounded-2xl flex items-center justify-center text-5xl shrink-0 relative border-2 border-stroke-light">
                     {course.thumbnail}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCopyCourse(course.id);
                       }}
-                      className="absolute -bottom-2 -right-2 px-3 py-1.5 bg-white border-2 border-[#2d2d2d] text-[#2d2d2d] rounded-xl text-sm font-bold flex items-center gap-1 shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] opacity-0 group-hover:opacity-100 transition-all hover:bg-[#fffbe6]"
+                      className="absolute -bottom-2 -right-2 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 shadow-neo opacity-0 group-hover:opacity-100 transition-all hover:bg-warning-light"
                     >
                       <Copy className="w-4 h-4" />
                       复制
@@ -381,29 +381,29 @@ export const CourseSquarePage = () => {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="text-xl font-bold text-slate-800">{course.title}</h3>
-                        <p className="text-sm text-slate-400">by {course.author}</p>
+                        <h3 className="text-xl font-bold text-primary">{course.title}</h3>
+                        <p className="text-sm text-primary-placeholder">by {course.author}</p>
                       </div>
-                      <span className="px-2 py-1 bg-[#fffbe6] border border-[#2d2d2d] text-[#2d2d2d] rounded-lg text-xs font-bold">
+                      <span className="px-2 py-1 bg-warning-light border border-primary text-dark rounded-lg text-xs font-bold">
                         {course.grade}
                       </span>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4 my-3">
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Book className="w-4 h-4 text-slate-400" />
+                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
+                        <Book className="w-4 h-4 text-primary-placeholder" />
                         <span>{course.unit} - {course.unitCN}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Clock className="w-4 h-4 text-slate-400" />
+                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
+                        <Clock className="w-4 h-4 text-primary-placeholder" />
                         <span>{course.duration}分钟 ({course.stage})</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Sparkles className="w-4 h-4 text-slate-400" />
+                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
+                        <Sparkles className="w-4 h-4 text-primary-placeholder" />
                         <span>{course.storyTheme}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-600">
-                        <Tag className="w-4 h-4 text-slate-400" />
+                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
+                        <Tag className="w-4 h-4 text-primary-placeholder" />
                         <span>{course.tags?.join(' / ')}</span>
                       </div>
                     </div>
@@ -413,7 +413,7 @@ export const CourseSquarePage = () => {
                       {course.keywords?.map((keyword, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5 bg-[#fffbe6] text-[#2d2d2d] border border-[#e5e3db] rounded-lg text-xs font-medium"
+                          className="px-2 py-0.5 bg-warning-light text-dark border border-stroke-light rounded-lg text-xs font-medium"
                         >
                           {keyword}
                         </span>
@@ -421,8 +421,8 @@ export const CourseSquarePage = () => {
                     </div>
 
                     {/* 底部统计 */}
-                    <div className="flex items-center justify-between pt-3 border-t-2 border-[#e5e3db]">
-                      <div className="flex items-center gap-4 text-sm text-slate-500">
+                    <div className="flex items-center justify-between pt-3 border-t-2 border-stroke-light">
+                      <div className="flex items-center gap-4 text-sm text-primary-muted">
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                           <span className="font-medium">{course.rating}</span>
@@ -431,7 +431,7 @@ export const CourseSquarePage = () => {
                           <Users className="w-4 h-4" />
                           <span>{formatNumber(course.students)} 学员</span>
                         </div>
-                        <div className="flex items-center gap-1 text-green-600">
+                        <div className="flex items-center gap-1 text-success">
                           <Copy className="w-4 h-4" />
                           <span>已复制 {course.copies} 次</span>
                         </div>
@@ -446,8 +446,8 @@ export const CourseSquarePage = () => {
 
         {!loading && filteredCourses.length === 0 && (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">
+            <BookOpen className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
+            <p className="text-primary-muted">
               {courses.length === 0 ? '暂无公开课程' : '未找到相关课程'}
             </p>
           </div>

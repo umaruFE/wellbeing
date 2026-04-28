@@ -818,33 +818,33 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-8xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-purple-600 p-2 rounded-lg text-white">
               <Wand2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-slate-800">IP角色场景生成器</h3>
-              <p className="text-xs text-slate-500">选择角色、设置场景、生成专业IP场景图片</p>
+              <h3 className="font-bold text-lg text-primary">IP角色场景生成器</h3>
+              <p className="text-xs text-primary-muted">选择角色、设置场景、生成专业IP场景图片</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-primary-placeholder hover:text-primary-secondary"
           >
             ✕
           </button>
         </div>
 
         <div className="flex-1 flex overflow-hidden min-h-0">
-          <div className="w-80 border-r-2 border-[#e5e3db] p-6 overflow-y-auto">
+          <div className="w-80 border-r-2 border-stroke-light p-6 overflow-y-auto">
             <RoleSelection
               selectedRoles={state.selectedRoles}
               onRoleSelect={handleRoleSelect}
             />
 
             <div className="mt-6">
-              <label className="text-sm font-medium text-slate-700 mb-2 block">图片比例</label>
+              <label className="text-sm font-medium text-primary-secondary mb-2 block">图片比例</label>
               <div className="grid grid-cols-2 gap-2">
                 {ASPECT_RATIOS.map((ratio) => (
                   <button
@@ -853,7 +853,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                     className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
                       state.aspectRatio.id === ratio.id
                         ? 'border-purple-500 bg-purple-50 text-purple-700'
-                        : 'border-[#e5e3db] hover:border-[#2d2d2d] text-[#2d2d2d] hover:bg-[#fffbe6]'
+                        : 'border-stroke-light hover:border-primary text-dark hover:bg-warning-light'
                     }`}
                   >
                     <div 
@@ -873,18 +873,18 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-primary-placeholder mt-1">
                 {state.aspectRatio.description} ({state.aspectRatio.width}×{state.aspectRatio.height})
               </p>
             </div>
 
             <div className="mt-6">
-              <label className="text-sm font-medium text-slate-700 mb-2 block">场景描述</label>
+              <label className="text-sm font-medium text-primary-secondary mb-2 block">场景描述</label>
               <textarea
                 value={state.prompt}
                 onChange={(e) => handlePromptChange(e.target.value)}
                 placeholder="描述您想要的场景，例如：美丽的绿色魔法森林，阳光透过树叶..."
-                className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none resize-none h-32 transition-all"
+                className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple focus:border-purple-500 outline-none resize-none h-32 transition-all"
                 disabled={state.isGenerating}
               />
             </div>
@@ -923,13 +923,13 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
               </div>
               
               {state.generatedAssets.background && (
-                <div className="w-80 flex-shrink-0 bg-gray-50 rounded-lg p-4 overflow-y-auto">
-                  <h4 className="text-sm font-medium text-slate-700 mb-3">提示词管理</h4>
+                <div className="w-80 flex-shrink-0 bg-surface-alt rounded-lg p-4 overflow-y-auto">
+                  <h4 className="text-sm font-medium text-primary-secondary mb-3">提示词管理</h4>
                   
                   <div className="space-y-3">
-                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                    <div className="bg-white rounded-lg p-3 border border-stroke">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-slate-600">背景图</span>
+                        <span className="text-xs font-medium text-primary-secondary">背景图</span>
                         <div className="flex gap-1">
                           {state.editingPrompts.background ? (
                             <>
@@ -943,7 +943,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                                     }
                                   }));
                                 }}
-                                className="text-xs p-1 text-green-600 hover:bg-green-50 rounded"
+                                className="text-xs p-1 text-success hover:bg-success-light rounded"
                                 title="确认"
                               >
                                 <Check className="w-3 h-3" />
@@ -958,7 +958,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                                     }
                                   }));
                                 }}
-                                className="text-xs p-1 text-red-600 hover:bg-red-50 rounded"
+                                className="text-xs p-1 text-error hover:bg-error-light rounded"
                                 title="取消"
                               >
                                 <X className="w-3 h-3" />
@@ -975,7 +975,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                                   }
                                 }));
                               }}
-                              className="text-xs p-1 text-slate-600 hover:bg-slate-100 rounded"
+                              className="text-xs p-1 text-primary-secondary hover:bg-surface-alt rounded"
                               title="编辑"
                             >
                               <Edit2 className="w-3 h-3" />
@@ -1009,22 +1009,22 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                               }
                             }));
                           }}
-                          className="w-full text-xs text-slate-500 leading-relaxed border border-gray-200 rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          className="w-full text-xs text-primary-muted leading-relaxed border border-stroke rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-transparent"
                           rows={4}
                           placeholder="背景提示词"
                           autoFocus
                         />
                       ) : (
-                        <p className="text-xs text-slate-500 leading-relaxed">
+                        <p className="text-xs text-primary-muted leading-relaxed">
                           {state.prompts.background || '暂无提示词'}
                         </p>
                       )}
                     </div>
                     
                     {state.selectedRoles.map(roleName => (
-                      <div key={roleName} className="bg-white rounded-lg p-3 border border-gray-200">
+                      <div key={roleName} className="bg-white rounded-lg p-3 border border-stroke">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-medium text-slate-600">{roleName}</span>
+                          <span className="text-xs font-medium text-primary-secondary">{roleName}</span>
                           <div className="flex gap-1">
                             {state.editingPrompts.roles[roleName] ? (
                               <>
@@ -1041,7 +1041,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                                       }
                                     }));
                                   }}
-                                  className="text-xs p-1 text-green-600 hover:bg-green-50 rounded"
+                                  className="text-xs p-1 text-success hover:bg-success-light rounded"
                                   title="确认"
                                 >
                                   <Check className="w-3 h-3" />
@@ -1059,7 +1059,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                                       }
                                     }));
                                   }}
-                                  className="text-xs p-1 text-red-600 hover:bg-red-50 rounded"
+                                  className="text-xs p-1 text-error hover:bg-error-light rounded"
                                   title="取消"
                                 >
                                   <X className="w-3 h-3" />
@@ -1079,7 +1079,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                                     }
                                   }));
                                 }}
-                                className="text-xs p-1 text-slate-600 hover:bg-slate-100 rounded"
+                                className="text-xs p-1 text-primary-secondary hover:bg-surface-alt rounded"
                                 title="编辑"
                               >
                                 <Edit2 className="w-3 h-3" />
@@ -1116,13 +1116,13 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                                 }
                               }));
                             }}
-                            className="w-full text-xs text-slate-500 leading-relaxed border border-gray-200 rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            className="w-full text-xs text-primary-muted leading-relaxed border border-stroke rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-transparent"
                             rows={4}
                             placeholder={`${roleName}提示词`}
                             autoFocus
                           />
                         ) : (
-                          <p className="text-xs text-slate-500 leading-relaxed">
+                          <p className="text-xs text-primary-muted leading-relaxed">
                             {state.prompts.roles[roleName] || '暂无提示词'}
                           </p>
                         )}
@@ -1133,16 +1133,16 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
               )}
             </div>
 
-            <div className="flex-shrink-0 p-4 border-t-2 border-[#e5e3db] bg-white">
+            <div className="flex-shrink-0 p-4 border-t-2 border-stroke-light bg-white">
               {/* <div className="mb-3">
-                <label className="text-sm font-medium text-slate-700 mb-2 block">合成方式</label>
+                <label className="text-sm font-medium text-primary-secondary mb-2 block">合成方式</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setState(prev => ({ ...prev, compositeMethod: 'canvas' }))}
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       state.compositeMethod === 'canvas'
                         ? 'bg-purple-600 text-white'
-                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6]'
+                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light'
                     }`}
                   >
                     Canvas直接合成
@@ -1152,13 +1152,13 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                     className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                       state.compositeMethod === 'ai'
                         ? 'bg-purple-600 text-white'
-                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6]'
+                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light'
                     }`}
                   >
                     AI流程合成
                   </button>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-primary-muted mt-1">
                   {state.compositeMethod === 'canvas' 
                     ? '快速合成，保持原始尺寸和位置' 
                     : 'AI风格融合，需要较长处理时间'}
@@ -1169,7 +1169,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                 <button
                   onClick={handleReset}
                   disabled={state.isGenerating || state.isCompositing}
-                  className="px-4 py-2 border-2 border-[#e5e3db] rounded-lg text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 transition-all flex items-center gap-2"
+                  className="px-4 py-2 border-2 border-stroke-light rounded-lg text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 transition-all flex items-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" />
                   重置
@@ -1194,7 +1194,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
                   {state.compositeResult && (
                     <button
                       onClick={handleDownload}
-                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 font-medium"
+                      className="px-6 py-2 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2 font-medium"
                     >
                       <Download className="w-4 h-4" />
                       下载
