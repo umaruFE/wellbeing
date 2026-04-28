@@ -89,6 +89,12 @@ function createQueryBuilder(table: string) {
       return builder;
     },
 
+    limit(limit: number) {
+      state.rangeFrom = 0;
+      state.rangeTo = limit - 1;
+      return builder;
+    },
+
     // Return a promise that executes the query
     then(onFulfilled?: any, onRejected?: any) {
       return executeSelect(state).then(onFulfilled, onRejected);

@@ -188,7 +188,6 @@ export const CanvasEditor = ({
     if (!background) return;
 
     const img = new Image();
-    img.crossOrigin = 'anonymous';
     img.onload = () => {
       backgroundImgRef.current = img;
       drawCanvasRef.current();
@@ -196,7 +195,7 @@ export const CanvasEditor = ({
     img.onerror = () => {
       console.error('[CanvasEditor] 背景图加载失败:', background);
     };
-    
+
     loadImageWithProxy(background).then(src => {
       img.src = src;
     });
@@ -217,7 +216,6 @@ export const CanvasEditor = ({
       delete roleBoundsRef.current[roleName];
 
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       img.onload = () => {
         roleImgsRef.current[roleName] = img;
         roleBoundsRef.current[roleName] = getImageContentBounds(img);
