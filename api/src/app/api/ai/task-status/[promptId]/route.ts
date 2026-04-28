@@ -120,18 +120,21 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, uploadToOS
                 filename: images[0].filename
               };
             } catch (uploadError) {
-              console.error('[task-status] OSS上传失败，使用原URL');
+              console.error('[task-status] OSS上传失败，使用代理URL');
+              const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(comfyUrl)}`;
               return {
                 status: 'completed',
-                url: comfyUrl,
+                url: proxyUrl,
                 filename: images[0].filename
               };
             }
           }
           
+          const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(comfyUrl)}`;
+          
           return {
             status: 'completed',
-            url: comfyUrl,
+            url: uploadToOSS ? proxyUrl : proxyUrl,
             filename: images[0].filename
           };
         }

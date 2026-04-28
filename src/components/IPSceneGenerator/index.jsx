@@ -376,13 +376,21 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
   };
 
   // 快速加载图片（直接使用URL，设置crossOrigin）
+  const toProxyUrl = (url) => {
+    if (url && url.includes('container.x-gpu.com')) {
+      return `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
   const loadImageFast = (url) => {
+    const proxyUrl = toProxyUrl(url);
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
       img.onerror = (e) => reject(new Error('图片加载失败'));
-      img.src = url;
+      img.src = proxyUrl;
     });
   };
 
