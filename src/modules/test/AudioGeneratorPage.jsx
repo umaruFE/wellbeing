@@ -292,7 +292,7 @@ export const AudioGeneratorPage = () => {
             <div className="bg-info-light rounded-xl p-4">
               <div className="text-2xl mb-2">🎵</div>
               <h3 className="font-medium text-primary text-sm mb-1">生成并使用</h3>
-              <p className="text-xs text-primary-muted">AI 自动生成4条音频，可直接播放或下载</p>
+              <p className="text-xs text-primary-muted">AI 自动生成1条音乐，可直接播放或下载</p>
             </div>
           </div>
         </div>

@@ -194,7 +194,7 @@ export async function GET(request: NextRequest) {
         });
 
         const resourceData = await resourceResponse.json();
-        console.log('[generate-audio] 音频资源数据:', resourceData);
+        console.log('[generate-music] 音频资源数据:', resourceData);
 
         // 返回音频结果数组
         const results = Array.isArray(resourceData) ? resourceData : [resourceData];
@@ -203,13 +203,13 @@ export async function GET(request: NextRequest) {
           success: true,
           status: 'completed',
           results: results.map((item, index) => ({
-            url: item?.url || item?.audio_url || item?.output?.url,
+            url: item?.url || item?.audio_url || item?.output?.url || item?.data,
             filename: item?.filename || `audio_${index + 1}.mp3`
           }))
         }, { headers: corsHeaders() });
 
       } catch (error) {
-        console.error('[generate-audio] 获取音频资源失败:', error);
+        console.error('[generate-music] 获取音频资源失败:', error);
         return NextResponse.json({
           success: false,
           status: 'error',
@@ -231,7 +231,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('[generate-audio] 查询失败:', error);
+    console.error('[generate-music] 查询失败:', error);
 
     return NextResponse.json(
       {
