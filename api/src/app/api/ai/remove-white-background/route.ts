@@ -68,11 +68,12 @@ async function fetchImageAsBuffer(imageUrl: string): Promise<Buffer> {
   }
   
   // 本地图片直接读取
-  let fullImageUrl = imageUrl;
-  if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-    fullImageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-  }
+  const isProduction = process.env.NODE_ENV === 'production';
+   const baseUrl = isProduction ? 'http://8.130.93.151:10002' : 'http://localhost:4000';
+   let fullImageUrl = imageUrl;
+   if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+     fullImageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+   }
   
   const response = await fetch(fullImageUrl);
   if (!response.ok) {
@@ -190,8 +191,10 @@ export async function POST(request: NextRequest) {
     .png()
     .toBuffer();
     
-    // 后端内部调用使用 127.0.0.1:4000，走内网直连，不经过 Nginx
-    const uploadUrl = new URL('/api/upload', 'http://127.0.0.1:4000');
+    // 开发环境用 localhost:4000，生产环境用 127.0.0.1:10002（Nginx 代理）
+    const isProduction = process.env.NODE_ENV === 'production';
+    const uploadBase = isProduction ? 'http://127.0.0.1:10012' : 'http://localhost:4000';
+    const uploadUrl = new URL('/api/upload', uploadBase);
     const uploadFormData = new FormData();
     const file = new File([new Uint8Array(outputBuffer)], `character-transparent-${Date.now()}.png`, { type: 'image/png' });
     uploadFormData.append('file', file);
@@ -200,13 +203,24 @@ export async function POST(request: NextRequest) {
     // 添加上传超时控制
     const uploadController = new AbortController();
     const uploadTimeoutId = setTimeout(() => uploadController.abort(), 60000); // 60秒超时
-    
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'POST',
-      body: uploadFormData,
-      signal: uploadController.signal
-    });
-    
+
+    console.log('[remove-white-background] 开始上传到:', uploadUrl.toString());
+
+    let uploadResponse;
+    try {
+      uploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        body: uploadFormData,
+        signal: uploadController.signal
+      });
+    } catch (err: unknown) {
+      clearTimeout(uploadTimeoutId);
+      const errMsg = err instanceof Error ? err.message : String(err);
+      console.error('[remove-white-background] 上传 fetch 失败:', errMsg);
+      currentConcurrent--;
+      throw new Error('上传 fetch 失败: ' + errMsg);
+    }
+
     clearTimeout(uploadTimeoutId);
 
     if (!uploadResponse.ok) {

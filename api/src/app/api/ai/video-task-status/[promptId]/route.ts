@@ -117,7 +117,9 @@ async function uploadToOSS(
   folder: string,
   contentType: string
 ): Promise<string> {
-  const uploadUrl = new URL('/api/upload', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+  const isProduction = process.env.NODE_ENV === 'production';
+  const uploadBase = isProduction ? 'http://127.0.0.1:10012' : 'http://localhost:4000';
+  const uploadUrl = new URL('/api/upload', uploadBase);
   console.log(
     `上传到OSS: ${uploadUrl.href}, filename: ${filename}, folder: ${folder}`
   );
