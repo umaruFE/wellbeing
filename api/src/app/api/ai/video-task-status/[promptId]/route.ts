@@ -124,7 +124,7 @@ async function uploadToOSS(
 
   // 使用 FormData 上传文件
   const formData = new FormData();
-  const file = new File([buffer], filename, { type: contentType });
+  const file = new File([new Uint8Array(buffer)], filename, { type: contentType });
   formData.append('file', file);
   formData.append('folder', folder);
 

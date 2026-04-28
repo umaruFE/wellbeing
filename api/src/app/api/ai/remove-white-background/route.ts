@@ -94,11 +94,11 @@ async function fetchImageAsBuffer(imageUrl: string): Promise<Buffer> {
 // 清理过期缓存
 setInterval(() => {
   const now = Date.now();
-  for (const [key, value] of imageCache.entries()) {
+  imageCache.forEach((value, key) => {
     if (now - value.timestamp > cacheExpiry) {
       imageCache.delete(key);
     }
-  }
+  });
 }, 60000); // 每分钟清理一次
 
 export async function POST(request: NextRequest) {

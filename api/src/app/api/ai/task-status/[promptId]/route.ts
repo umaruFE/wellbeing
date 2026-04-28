@@ -144,7 +144,7 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, uploadToOS
     return { status: 'pending' };
 
   } catch (error) {
-    console.error('[task-status] ComfyUI查询失败:', error.message);
+    console.error('[task-status] ComfyUI查询失败:', (error as Error).message);
     return { status: 'pending' };
   }
 }
@@ -182,8 +182,9 @@ export async function GET(
     // 如果指定直接查询 ComfyUI
     if (useComfyUI) {
       const result = await queryComfyUIHistory(promptId, apiUrl || undefined);
-      if (result.status === 'completed') {
-        console.log('[task-status] ComfyUI完成:', result.filename);
+      const resultData = result as { status?: string; filename?: string };
+      if (resultData.status === 'completed') {
+        console.log('[task-status] ComfyUI完成:', resultData.filename);
       }
       return NextResponse.json(result);
     }
@@ -194,21 +195,22 @@ export async function GET(
       workflowType
     });
 
-    if (result.status === 'completed') {
-      console.log('[task-status] N8N完成:', result.filename);
+    const resultData = result as { status?: string; filename?: string; url?: string; error?: string };
+    if (resultData.status === 'completed') {
+      console.log('[task-status] N8N完成:', resultData.filename);
     }
 
     // 根据状态返回结果
-    if (result.status === 'completed') {
+    if (resultData.status === 'completed') {
       return NextResponse.json({
         status: 'completed',
-        url: result.url,
-        filename: result.filename
+        url: resultData.url,
+        filename: resultData.filename
       });
-    } else if (result.status === 'error') {
+    } else if (resultData.status === 'error') {
       return NextResponse.json({
         status: 'error',
-        error: result.error || '任务执行失败'
+        error: resultData.error || '任务执行失败'
       });
     } else {
       return NextResponse.json({

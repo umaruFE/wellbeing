@@ -20,8 +20,9 @@ export async function OPTIONS() {
 
 // POST /api/ai/optimize-scene-prompt - 优化分镜提示词为LTX2.0格式
 export async function POST(request: NextRequest) {
+  let body: any;
   try {
-    const body = await request.json();
+    body = await request.json();
     const { scene, characterDescription, videoStyle = 'realistic' } = body;
 
     if (!scene || !scene.content) {

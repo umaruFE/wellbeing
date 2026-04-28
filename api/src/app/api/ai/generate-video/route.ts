@@ -92,12 +92,13 @@ export async function POST(request: NextRequest) {
 
     console.log('[generate-video] N8N 响应:', result);
 
+    const resultData = result as { executionId?: string; id?: string; status?: string; message?: string };
     return NextResponse.json({
       success: true,
       data: {
-        executionId: result.executionId || result.id,
-        status: result.status || 'submitted',
-        message: result.message || '视频生成任务已提交'
+        executionId: resultData.executionId || resultData.id,
+        status: resultData.status || 'submitted',
+        message: resultData.message || '视频生成任务已提交'
       }
     }, { headers: corsHeaders() });
 

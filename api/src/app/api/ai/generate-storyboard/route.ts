@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
     console.log('[generate-storyboard] N8N 响应:', result);
 
     // 提取 executionId
-    const executionId = result.executionId || result.id;
+    const resultData = result as { executionId?: string; id?: string };
+    const executionId = resultData.executionId || resultData.id;
 
     if (executionId) {
       return NextResponse.json({
@@ -146,7 +147,8 @@ export async function GET(request: NextRequest) {
 
     console.log('[generate-storyboard] 执行状态:', executionStatus);
 
-    if (executionStatus.status === 'completed') {
+    const statusData = executionStatus as { status?: string };
+    if (statusData.status === 'completed') {
       console.log('[generate-storyboard] 执行完成，获取分镜图片数据...');
 
       try {
@@ -175,7 +177,7 @@ export async function GET(request: NextRequest) {
         }, { headers: corsHeaders() });
       }
 
-    } else if (executionStatus.status === 'error') {
+    } else if (statusData.status === 'error') {
       return NextResponse.json({
         success: false,
         error: '执行失败',

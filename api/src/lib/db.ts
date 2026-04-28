@@ -50,7 +50,10 @@ function createQueryBuilder(table: string) {
     whereConditions: [],
   };
 
-  const builder = {
+  // 创建一个 Promise-like 对象，可以被 await
+  const buildPromise = () => executeSelect(state);
+
+  const builder: any = {
     select(columns: string = '*', options?: { count?: 'exact' }) {
       state.selectColumns = columns;
       state.countExact = options?.count === 'exact';
@@ -94,17 +97,18 @@ function createQueryBuilder(table: string) {
       state.rangeTo = limit - 1;
       return builder;
     },
-
-    // Return a promise that executes the query
-    then(onFulfilled?: any, onRejected?: any) {
-      return executeSelect(state).then(onFulfilled, onRejected);
-    },
   };
 
-  return builder;
+  // 添加 Promise 方法，使其可以被 await
+  builder.then = (onFulfilled?: any, onRejected?: any) => buildPromise().then(onFulfilled, onRejected);
+  builder.catch = (onRejected?: any) => buildPromise().catch(onRejected);
+  builder.finally = (onFinally?: any) => buildPromise().finally(onFinally);
+  builder[Symbol.toStringTag] = 'QueryBuilderPromise';
+
+  return builder as Promise<{ data: any[]; error: any; count: number | null }> & typeof builder;
 }
 
-async function executeSelect(state: QueryState): Promise<{ data: any[]; error: any; count: number | null }> {
+async function executeSelect(state: QueryState): Promise<{ data: any[] | null; error: any; count: number | null }> {
   const params: any[] = [];
   let paramIndex = 1;
 
@@ -249,10 +253,10 @@ async function executeSelect(state: QueryState): Promise<{ data: any[]; error: a
 function createInsertBuilder(table: string) {
   return {
     insert(data: Record<string, any>) {
-      const runInsert = async () => {
+      const runInsert = async (columns: string = '*') => {
         const cols = Object.keys(data).join(', ');
         const placeholders = Object.values(data).map((_, i) => `$${i + 1}`).join(', ');
-        const sql = `INSERT INTO ${table} (${cols}) VALUES (${placeholders}) RETURNING *`;
+        const sql = `INSERT INTO ${table} (${cols}) VALUES (${placeholders}) RETURNING ${columns}`;
         try {
           const res = await pool.query(sql, Object.values(data));
           return { data: res.rows[0], error: null };
@@ -261,14 +265,14 @@ function createInsertBuilder(table: string) {
         }
       };
       return {
-        select: () => ({ single: runInsert }),
-        single: runInsert,
+        select: (columns?: string) => ({ single: () => runInsert(columns || '*') }),
+        single: () => runInsert('*'),
       };
     },
   };
 }
 
-// Update builder
+// Update builder - 支持 .update().eq().select().single() 链式调用
 function createUpdateBuilder(table: string) {
   let updateData: Record<string, any> = {};
   let eqColumn: string | null = null;
@@ -281,29 +285,22 @@ function createUpdateBuilder(table: string) {
         eq(column: string, value: any) {
           eqColumn = column;
           eqValue = value;
+
+          const runUpdate = async () => {
+            const sets = Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`);
+            const params = [...Object.values(updateData), eqValue];
+            const sql = `UPDATE ${table} SET ${sets.join(', ')} WHERE ${eqColumn} = $${params.length} RETURNING *`;
+            try {
+              const res = await pool.query(sql, params);
+              return { data: res.rows[0], error: null };
+            } catch (err) {
+              return { data: null, error: err };
+            }
+          };
+
           return {
-            async select() {
-              const sets = Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`);
-              const params = [...Object.values(updateData), eqValue];
-              const sql = `UPDATE ${table} SET ${sets.join(', ')} WHERE ${eqColumn} = $${params.length} RETURNING *`;
-              try {
-                const res = await pool.query(sql, params);
-                return { data: res.rows[0], error: null };
-              } catch (err) {
-                return { data: null, error: err };
-              }
-            },
-            async single() {
-              const sets = Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`);
-              const params = [...Object.values(updateData), eqValue];
-              const sql = `UPDATE ${table} SET ${sets.join(', ')} WHERE ${eqColumn} = $${params.length} RETURNING *`;
-              try {
-                const res = await pool.query(sql, params);
-                return { data: res.rows[0], error: null };
-              } catch (err) {
-                return { data: null, error: err };
-              }
-            },
+            select: () => ({ single: runUpdate }),
+            single: runUpdate,
           };
         },
       };
@@ -317,17 +314,24 @@ function createDeleteBuilder(table: string) {
     delete() {
       return {
         eq(column: string, value: any) {
-          return {
-            async then(resolve: any) {
-              try {
-                const sql = `DELETE FROM ${table} WHERE ${column} = $1`;
-                await pool.query(sql, [value]);
-                return resolve({ data: null, error: null });
-              } catch (err) {
-                return resolve({ data: null, error: err });
-              }
-            },
+          const runDelete = async () => {
+            try {
+              const sql = `DELETE FROM ${table} WHERE ${column} = $1`;
+              await pool.query(sql, [value]);
+              return { data: null, error: null };
+            } catch (err) {
+              return { data: null, error: err };
+            }
           };
+
+          // 添加 Promise 方法，使其可以被 await
+          const del: any = {};
+          del.then = (onFulfilled?: any, onRejected?: any) => runDelete().then(onFulfilled, onRejected);
+          del.catch = (onRejected?: any) => runDelete().catch(onRejected);
+          del.finally = (onFinally?: any) => runDelete().finally(onFinally);
+          del[Symbol.toStringTag] = 'DeletePromise';
+
+          return del as Promise<{ data: any; error: any }> & typeof del;
         },
       };
     },
