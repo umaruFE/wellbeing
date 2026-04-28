@@ -69,7 +69,7 @@ async function fetchImageAsBuffer(imageUrl: string): Promise<Buffer> {
   
   // 本地图片直接读取
   const isProduction = process.env.NODE_ENV === 'production';
-   const baseUrl = isProduction ? 'http://8.130.93.151:10002' : 'http://localhost:4000';
+   const baseUrl = isProduction ? 'http://8.130.93.151:10012' : 'http://localhost:4000';
    let fullImageUrl = imageUrl;
    if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
      fullImageUrl = `${baseUrl}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
     
     // 开发环境用 localhost:4000，生产环境用 127.0.0.1:10002（Nginx 代理）
     const isProduction = process.env.NODE_ENV === 'production';
-    const uploadBase = isProduction ? 'http://127.0.0.1:10012' : 'http://localhost:4000';
+    const uploadBase = isProduction ? 'http://8.130.93.151:10012' : 'http://localhost:4000';
     const uploadUrl = new URL('/api/upload', uploadBase);
     const uploadFormData = new FormData();
     const file = new File([new Uint8Array(outputBuffer)], `character-transparent-${Date.now()}.png`, { type: 'image/png' });
