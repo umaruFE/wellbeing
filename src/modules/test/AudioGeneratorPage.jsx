@@ -154,12 +154,12 @@ export const AudioGeneratorPage = () => {
 
           <div className="mb-5">
             <label className="text-sm font-medium text-primary-secondary mb-2 block">
-              文字内容 <span className="text-error">*</span>
+              音乐提示词 <span className="text-error">*</span>
             </label>
             <textarea
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
-              placeholder="输入要转换为音乐的故事或旁白内容，例如：一棵苹果树上结满了红彤彤的苹果，小兔子蹦蹦跳跳地跑过来……"
+              placeholder="输入要生成的音乐内容，例如：舒缓催眠的音乐"
               rows={4}
               className="w-full border-2 border-stroke-light rounded-xl px-4 py-3 text-sm resize-none
                 focus:border-primary focus:ring-2 focus:ring-[#2d2d2d]/10 outline-none transition-all"
@@ -224,7 +224,7 @@ export const AudioGeneratorPage = () => {
             ) : (
               <>
                 <Wand2 className="w-4 h-4" />
-                开始生成（每次生成4条）
+                开始生成
               </>
             )}
           </button>

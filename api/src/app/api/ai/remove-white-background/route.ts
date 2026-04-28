@@ -190,7 +190,8 @@ export async function POST(request: NextRequest) {
     .png()
     .toBuffer();
     
-    const uploadUrl = new URL('/api/upload', process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000');
+    // 后端内部调用使用 localhost，避免通过外部网络
+    const uploadUrl = new URL('/api/upload', 'http://localhost:4000');
     const uploadFormData = new FormData();
     const file = new File([new Uint8Array(outputBuffer)], `character-transparent-${Date.now()}.png`, { type: 'image/png' });
     uploadFormData.append('file', file);

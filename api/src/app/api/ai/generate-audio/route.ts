@@ -47,30 +47,34 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       prompt,
+      storyboard_prompts,
       count = 1,
       o3ics,
       duration = 30,
+      workflow = 'gene-music',
       user_id,
       organization_id
     } = body;
 
-    console.log('[generate-audio] 收到生成音乐请求:', {
+    console.log('[generate-music] 收到生成音乐请求:', {
       promptLength: prompt?.length,
+      storyboardCount: storyboard_prompts?.length,
       count,
-      duration
+      duration,
+      workflow
     });
 
     // 参数验证
-    if (!prompt) {
+    if (!prompt && !storyboard_prompts) {
       return NextResponse.json(
-        { error: '缺少必要参数: prompt' },
+        { error: '缺少必要参数: prompt 或 storyboard_prompts' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
     // 准备 N8N 调用参数
     const n8nPayload = {
-      prompt,
+      prompt: prompt || storyboard_prompts,
       count,
       o3ics,
       duration,
@@ -79,15 +83,15 @@ export async function POST(request: NextRequest) {
       timestamp: Date.now()
     };
 
-    console.log('[generate-audio] 调用 N8N Workflow:', {
-      workflow: 'ai-audio-generation',
-      promptLength: prompt.length
+    console.log('[generate-music] 调用 N8N Workflow:', {
+      workflow,
+      promptLength: (prompt || storyboard_prompts)?.length
     });
 
     // 调用 N8N Workflow
-    const n8nResult = await n8nClient.call('ai-audio-generation', n8nPayload);
+    const n8nResult = await n8nClient.call(workflow, n8nPayload);
 
-    console.log('[generate-audio] N8N 响应:', n8nResult);
+    console.log('[generate-music] N8N 响应:', n8nResult);
 
     // 保存到数据库
     try {
@@ -111,9 +115,9 @@ export async function POST(request: NextRequest) {
         prompt_id: executionId
       });
 
-      console.log('[generate-audio] 已保存 executionId 到数据库:', executionId);
+      console.log('[generate-music] 已保存 executionId 到数据库:', executionId);
     } catch (dbError) {
-      console.error('[generate-audio] 保存到数据库失败:', dbError);
+      console.error('[generate-music] 保存到数据库失败:', dbError);
     }
 
     // 返回结果
@@ -121,12 +125,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       executionId: n8nResultData.executionId || n8nResultData.id,
-      workflowType: 'audio',
-      workflow: 'ai-audio-generation'
+      workflowType: 'music',
+      workflow: 'gene-music'
     }, { headers: corsHeaders() });
 
   } catch (error) {
-    console.error('[generate-audio] 生成失败:', error);
+    console.error('[generate-music] 生成失败:', error);
 
     return NextResponse.json(
       {
@@ -162,7 +166,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('[generate-audio] 查询执行状态:', executionId);
+    console.log('[generate-music] 查询执行状态:', executionId);
 
     // 调用 N8N API 查询执行状态
     const executionStatus = await n8nClient.pollExecution(executionId, {
@@ -170,17 +174,17 @@ export async function GET(request: NextRequest) {
       interval: 0
     });
 
-    console.log('[generate-audio] 执行状态:', executionStatus);
+    console.log('[generate-music] 执行状态:', executionStatus);
 
     // 根据状态返回结果
     const statusData = executionStatus as { status?: string };
     if (statusData.status === 'completed') {
-      console.log('[generate-audio] 执行完成，获取音频资源...');
+      console.log('[generate-music] 执行完成，获取音乐资源...');
 
       try {
         // 通过 get-resource webhook 获取资源
         const resourceUrl = `${process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678'}/webhook/get-resource?execution_id=${executionId}`;
-        console.log('[generate-audio] 获取音频资源:', resourceUrl);
+        console.log('[generate-music] 获取音乐资源:', resourceUrl);
 
         const resourceResponse = await fetch(resourceUrl, {
           method: 'GET',

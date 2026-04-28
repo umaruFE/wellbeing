@@ -196,10 +196,12 @@ export async function GET(request: NextRequest) {
         const resourceData = await resourceResponse.json();
         console.log('[generate-voice] 音频资源数据:', resourceData);
 
+        const audioUrl = resourceData?.url || resourceData?.audio_url || resourceData?.output?.url || resourceData?.data;
+
         return NextResponse.json({
           success: true,
           status: 'completed',
-          url: resourceData?.url || resourceData?.audio_url || resourceData?.output?.url,
+          url: audioUrl,
           filename: resourceData?.filename
         }, { headers: corsHeaders() });
 
