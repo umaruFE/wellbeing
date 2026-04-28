@@ -190,8 +190,8 @@ export async function POST(request: NextRequest) {
     .png()
     .toBuffer();
     
-    // 后端内部调用使用 localhost，避免通过外部网络
-    const uploadUrl = new URL('/api/upload', 'http://localhost:4000');
+    // 后端内部调用使用 127.0.0.1:4000，走内网直连，不经过 Nginx
+    const uploadUrl = new URL('/api/upload', 'http://127.0.0.1:4000');
     const uploadFormData = new FormData();
     const file = new File([new Uint8Array(outputBuffer)], `character-transparent-${Date.now()}.png`, { type: 'image/png' });
     uploadFormData.append('file', file);
