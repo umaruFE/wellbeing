@@ -377,7 +377,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
   // 快速加载图片（直接使用URL，设置crossOrigin）
   const toProxyUrl = (url) => {
-    if (url && url.includes('container.x-gpu.com')) {
+    if (url && url.startsWith('http') && url.includes('container.x-gpu.com')) {
       return `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(url)}`;
     }
     return url;
