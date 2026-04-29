@@ -20,7 +20,8 @@ import {
   FileText,
   X,
   Loader2,
-  Zap
+  Zap,
+  CheckCircle2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';

@@ -182,18 +182,8 @@ export async function GET(request: NextRequest) {
       console.log('[generate-music] 执行完成，获取音乐资源...');
 
       try {
-        // 通过 get-resource webhook 获取资源
-        const resourceUrl = `${process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678'}/webhook/get-resource?execution_id=${executionId}`;
-        console.log('[generate-music] 获取音乐资源:', resourceUrl);
-
-        const resourceResponse = await fetch(resourceUrl, {
-          method: 'GET',
-          headers: {
-            'X-N8N-API-KEY': process.env.N8N_API_KEY || ''
-          }
-        });
-
-        const resourceData = await resourceResponse.json();
+        // 通过 N8N get-resource workflow 获取资源
+        const resourceData = await n8nClient.call('get-resource', { execution_id: executionId }, { method: 'GET' });
         console.log('[generate-music] 音频资源数据:', resourceData);
 
         // 返回音频结果数组
