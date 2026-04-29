@@ -208,7 +208,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         apiUrl: t.apiUrl
       }));
 
-      const pollTask = async (taskId, apiUrl, maxAttempts = 120, interval = 3000) => {
+      const pollTask = async (taskId, apiUrl, maxAttempts = 240, interval = 3000) => {
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
           try {
             const response = await fetch(`/api/ai/task-status/${taskId}?useComfyUI=true&apiUrl=${encodeURIComponent(apiUrl || '')}`, {
@@ -231,30 +231,58 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         throw new Error('任务超时');
       };
 
-      const removeWhiteBackground = async (roleName, roleUrl) => {
+      const removeWhiteBackground = async (roleName, roleUrl, maxRetries = 3) => {
         console.log(`对角色 ${roleName} 进行白色背景去除处理...`);
-        try {
-          const removeBgResponse = await fetch('/api/ai/remove-white-background', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({
-              imageUrl: roleUrl,
-              threshold: 240
-            })
-          });
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          try {
+            // 设置45秒超时
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+              console.warn(`角色 ${roleName} 去背景请求超时，中止请求`);
+              controller.abort();
+            }, 45000);
 
-          if (removeBgResponse.ok) {
-            const removeBgData = await removeBgResponse.json();
-            console.log(`角色 ${roleName} 白色背景去除完成:`, removeBgData.url);
-            return removeBgData.url;
-          } else {
-            console.warn(`角色 ${roleName} 去背景失败，使用原图`);
+            const removeBgResponse = await fetch('/api/ai/remove-white-background', {
+              method: 'POST',
+              headers: getAuthHeaders(),
+              signal: controller.signal,
+              body: JSON.stringify({
+                imageUrl: roleUrl,
+                threshold: 240
+              })
+            });
+
+            clearTimeout(timeoutId);
+
+            if (removeBgResponse.ok) {
+              const removeBgData = await removeBgResponse.json();
+              console.log(`角色 ${roleName} 白色背景去除完成:`, removeBgData.url);
+              return removeBgData.url;
+            } else if (removeBgResponse.status === 429) {
+              // 服务器忙，等待后重试
+              console.warn(`角色 ${roleName} 去背景请求过多(429)，等待 ${attempt + 1} 秒后重试...`);
+              await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
+              continue;
+            } else {
+              console.warn(`角色 ${roleName} 去背景失败(${removeBgResponse.status})，使用原图`);
+              return roleUrl;
+            }
+          } catch (error) {
+            if (error.name === 'AbortError') {
+              console.warn(`角色 ${roleName} 去背景请求超时，使用原图`);
+              return roleUrl;
+            }
+            if (attempt < maxRetries) {
+              console.warn(`角色 ${roleName} 去背景出错，等待 ${attempt + 1} 秒后重试...`);
+              await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
+              continue;
+            }
+            console.warn(`角色 ${roleName} 去背景出错，使用原图:`, error);
             return roleUrl;
           }
-        } catch (error) {
-          console.warn(`角色 ${roleName} 去背景出错，使用原图:`, error);
-          return roleUrl;
         }
+        console.warn(`角色 ${roleName} 去背景重试次数耗尽，使用原图`);
+        return roleUrl;
       };
 
       const backgroundPromise = pollTask(backgroundTaskId, backgroundApiUrl).then(url => {
@@ -275,8 +303,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       });
 
       const rolePromises = roleTasks.map((roleTask, index) => {
+        console.log(`开始处理角色: ${roleTask.name}, taskId: ${roleTask.taskId}`);
         return pollTask(roleTask.taskId, roleTask.apiUrl)
-          .then(url => removeWhiteBackground(roleTask.name, url))
+          .then(url => {
+            console.log(`角色 ${roleTask.name} 轮询完成，URL:`, url);
+            return removeWhiteBackground(roleTask.name, url);
+          })
           .then(url => {
             console.log(`角色 ${roleTask.name} 生成完成:`, url);
             // 从之前构建的 roles 数组中获取提示词
@@ -305,6 +337,11 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
               }
             }));
             return { name: roleTask.name, url };
+          })
+          .catch(error => {
+            console.error(`角色 ${roleTask.name} 处理失败:`, error);
+            // 即使失败也要返回一个值，避免阻塞其他任务
+            return { name: roleTask.name, url: null, error: error.message };
           });
       });
 
@@ -338,6 +375,25 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
     }));
   };
 
+  // 快速加载图片（直接使用URL，设置crossOrigin）
+  const toProxyUrl = (url) => {
+    if (url && url.startsWith('http') && url.includes('container.x-gpu.com')) {
+      return `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
+
+  const loadImageFast = (url) => {
+    const proxyUrl = toProxyUrl(url);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = (e) => reject(new Error('图片加载失败'));
+      img.src = proxyUrl;
+    });
+  };
+
   const handleCanvasComposite = async () => {
     setState(prev => ({ ...prev, isCompositing: true }));
 
@@ -349,21 +405,46 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
       canvas.height = state.aspectRatio.height;
       const ctx = canvas.getContext('2d');
 
-      console.log('加载背景图:', state.generatedAssets.background);
-      const backgroundImg = new Image();
+      // 并行加载所有图片
+      console.log('并行加载所有图片...');
+      const loadPromises = [];
       
-      await new Promise((resolve, reject) => {
-        backgroundImg.onload = () => {
+      // 加载背景图
+      loadPromises.push(
+        loadImageFast(state.generatedAssets.background).then(img => {
           console.log('背景图加载成功');
-          resolve();
-        };
-        backgroundImg.onerror = (e) => {
-          console.error('背景图加载失败:', e);
-          reject(new Error('背景图加载失败'));
-        };
-        backgroundImg.src = state.generatedAssets.background;
+          return { type: 'background', img };
+        })
+      );
+
+      // 加载角色图
+      for (const roleName of state.selectedRoles) {
+        const roleUrl = state.generatedAssets.roles[roleName];
+        if (roleUrl) {
+          loadPromises.push(
+            loadImageFast(roleUrl).then(img => {
+              console.log(`角色 ${roleName} 加载成功`);
+              return { type: 'role', name: roleName, img };
+            }).catch(err => {
+              console.warn(`角色 ${roleName} 加载失败:`, err);
+              return null;
+            })
+          );
+        }
+      }
+
+      const loadedImages = await Promise.all(loadPromises);
+      const backgroundImg = loadedImages.find(item => item?.type === 'background')?.img;
+      const roleImages = {};
+      loadedImages.filter(item => item?.type === 'role').forEach(item => {
+        roleImages[item.name] = item.img;
       });
 
+      if (!backgroundImg) {
+        throw new Error('背景图加载失败');
+      }
+
+      // 绘制背景
       ctx.drawImage(backgroundImg, 0, 0, canvas.width, canvas.height);
       console.log('背景图绘制完成');
 
@@ -377,29 +458,15 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         offsetY
       } = getEditorSceneLayout(editorCanvasWidth, editorCanvasHeight, state.aspectRatio);
 
+      // 绘制角色
       for (const roleName of state.selectedRoles) {
-        const roleUrl = state.generatedAssets.roles[roleName];
+        const roleImg = roleImages[roleName];
         const position = state.canvasState.roles[roleName];
 
-        if (!roleUrl || !position) {
-          console.warn(`跳过角色 ${roleName}: 缺少URL或位置信息`);
+        if (!roleImg || !position) {
+          console.warn(`跳过角色 ${roleName}: 缺少图片或位置信息`);
           continue;
         }
-
-        console.log(`加载角色图: ${roleName}`, roleUrl);
-        const roleImg = new Image();
-
-        await new Promise((resolve, reject) => {
-          roleImg.onload = () => {
-            console.log(`角色 ${roleName} 加载成功`);
-            resolve();
-          };
-          roleImg.onerror = (e) => {
-            console.error(`角色 ${roleName} 加载失败:`, e);
-            reject(new Error(`角色 ${roleName} 加载失败`));
-          };
-          roleImg.src = roleUrl;
-        });
 
         const bounds = getImageContentBounds(roleImg);
         const { dw, dh } = getNormalizedRoleDrawSize(
@@ -425,6 +492,11 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         ctx.save();
         ctx.translate(actualX + actualWidth / 2, actualY + actualHeight / 2);
         ctx.rotate((position.rotation || 0) * Math.PI / 180);
+        // 应用镜像
+        ctx.scale(
+          position.flipX ? -1 : 1,
+          position.flipY ? -1 : 1
+        );
         ctx.drawImage(
           roleImg,
           bounds.x,
@@ -482,7 +554,9 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
           x: actualX,
           y: actualY,
           scale: roleScale / editorScale,
-          rotation: position.rotation || 0
+          rotation: position.rotation || 0,
+          flipX: position.flipX || false,
+          flipY: position.flipY || false
         };
       });
 

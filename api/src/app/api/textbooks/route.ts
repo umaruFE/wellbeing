@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
         .order('name');
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
       }
 
       // Get children for each type
       const typesWithChildren = await Promise.all(
-        (data || []).asyncForEach(async (t) => {
+        (data || []).asyncForEach(async (t: { id: string }) => {
           const { data: grades } = await db
             .from('textbook_units')
             .select('grade_id, grades(*)')
@@ -34,16 +34,16 @@ export async function GET(request: NextRequest) {
             .select('*')
             .eq('textbook_type_id', t.id);
 
-          const gradeIds = [...new Set((grades || []).map(g => g.grade_id).filter(Boolean))];
+          const gradeIds = Array.from(new Set((grades || []).map((g: { grade_id: string }) => g.grade_id).filter(Boolean)));
           const { data: gradeDetails } = gradeIds.length > 0
             ? await db.from('grades').select('*').in('id', gradeIds)
             : { data: [] };
 
           return {
             ...t,
-            children: (gradeDetails || []).map(g => ({
+            children: (gradeDetails || []).map((g: { id: string }) => ({
               ...g,
-              children: units?.filter(u => u.grade_id === g.id) || []
+              children: units?.filter((u: { grade_id: string }) => u.grade_id === g.id) || []
             }))
           };
         })
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
         .order('display_order');
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
       }
 
       return NextResponse.json({ data });
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
       const { data, error } = await query.order('created_at');
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
       }
 
       return NextResponse.json({ data });
@@ -116,12 +116,12 @@ export async function GET(request: NextRequest) {
     }
 
     // Build hierarchy
-    const result = (textbookTypes || []).map(tt => ({
+    const result = (textbookTypes || []).map((tt: { id: string; name: string }) => ({
       id: tt.id,
       name: tt.name,
       type: tt.name,
-      children: (allGrades || []).map(g => {
-        const gradeUnits = (allUnits || []).filter(u => 
+      children: (allGrades || []).map((g: { id: string; name: string }) => {
+        const gradeUnits = (allUnits || []).filter((u: { textbook_type_id: string; grade_id: string }) => 
           u.textbook_type_id === tt.id && u.grade_id === g.id
         );
         return {
@@ -130,7 +130,7 @@ export async function GET(request: NextRequest) {
           grade: g.name,
           children: gradeUnits
         };
-      }).filter(g => g.children.length > 0)
+      }).filter((g: { children: any[] }) => g.children.length > 0)
     }));
 
     return NextResponse.json({ data: result });
@@ -144,15 +144,16 @@ export async function GET(request: NextRequest) {
 }
 
 // Helper for async forEach
-Array.prototype.asyncForEach = function (callback) {
-  return new Promise((resolve) => {
-    this.forEach(async (item, index) => {
-      await callback(item, index, this);
-      if (index === this.length - 1) {
-        resolve();
-      }
-    });
-  });
+declare global {
+  interface Array<T> {
+    asyncForEach(callback: (item: T, index: number, array: T[]) => Promise<void>): Promise<void>;
+  }
+}
+
+Array.prototype.asyncForEach = async function <T>(this: T[], callback: (item: T, index: number, array: T[]) => Promise<void>): Promise<void> {
+  for (let index = 0; index < this.length; index++) {
+    await callback(this[index], index, this);
+  }
 };
 
 // POST /api/textbooks - Create textbook type, grade, or unit
@@ -170,7 +171,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
       }
       return NextResponse.json({ data: result }, { status: 201 });
     }
@@ -190,7 +191,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: (error as Error).message }, { status: 500 });
       }
       return NextResponse.json({ data: result }, { status: 201 });
     }

@@ -52,7 +52,7 @@ export async function GET(
     if (error) {
       console.error('Error fetching course:', error);
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -105,7 +105,7 @@ export async function PUT(
     let processed_user_id = userId;
     if (
       typeof userId === 'number' ||
-      (typeof userId === 'string' && !isNaN(userId) && userId !== '')
+      (typeof userId === 'string' && !isNaN(Number(userId)) && userId !== '')
     ) {
       processed_user_id = null;
     }
@@ -146,7 +146,7 @@ export async function PUT(
     if (error) {
       console.error('Error updating course:', error);
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -181,7 +181,7 @@ export async function DELETE(
     if (error) {
       console.error('Error deleting course:', error);
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }

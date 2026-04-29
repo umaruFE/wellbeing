@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     console.error('查询重新生成图片状态失败:', error);
     return NextResponse.json(
-      { error: '查询失败', details: error.message },
+      { error: '查询失败', details: (error as Error).message },
       { status: 500 }
     );
   }

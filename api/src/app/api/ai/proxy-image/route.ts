@@ -1,59 +1,82 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * 图片代理路由 - 解决 Canvas 跨域绘制问题
- * 
- * 将远程图片下载后返回，允许前端在 Canvas 中使用
- */
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: CORS_HEADERS });
+}
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const imageUrl = searchParams.get('url');
+    const mode = searchParams.get('mode') || 'base64';
 
     if (!imageUrl) {
       return NextResponse.json(
-        { error: '缺少 url 参数' },
-        { status: 400 }
+        { error: 'url parameter required' },
+        { status: 400, headers: CORS_HEADERS }
       );
     }
 
-    console.log('[proxy-image] 代理请求:', imageUrl);
-
-    // 验证 URL
     const parsedUrl = new URL(imageUrl);
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
       return NextResponse.json(
-        { error: '不支持的协议' },
-        { status: 400 }
+        { error: 'Unsupported protocol' },
+        { status: 400, headers: CORS_HEADERS }
       );
     }
 
-    // 下载图片
-    const response = await fetch(imageUrl);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
+    const response = await fetch(imageUrl, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    clearTimeout(timeoutId);
+
     if (!response.ok) {
-      throw new Error(`下载失败: ${response.status}`);
+      throw new Error(`Fetch failed: ${response.status}`);
     }
 
     const contentType = response.headers.get('content-type') || 'image/png';
     const arrayBuffer = await response.arrayBuffer();
+
+    if (mode === 'stream') {
+      return new NextResponse(arrayBuffer, {
+        status: 200,
+        headers: {
+          ...CORS_HEADERS,
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=86400',
+          'Content-Length': String(arrayBuffer.byteLength),
+        },
+      });
+    }
+
     const base64 = Buffer.from(arrayBuffer).toString('base64');
     const dataUrl = `data:${contentType};base64,${base64}`;
-
-    console.log('[proxy-image] 转换成功:', { contentType, size: arrayBuffer.byteLength });
 
     return NextResponse.json({
       success: true,
       url: dataUrl,
       contentType,
-      size: arrayBuffer.byteLength
-    });
+      size: arrayBuffer.byteLength,
+    }, { headers: CORS_HEADERS });
 
   } catch (error) {
-    console.error('[proxy-image] 代理失败:', error);
+    console.error('[proxy-image] Failed:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : '代理失败' },
-      { status: 500 }
+      { error: error instanceof Error ? error.message : 'Proxy failed' },
+      { status: 500, headers: CORS_HEADERS }
     );
   }
 }
