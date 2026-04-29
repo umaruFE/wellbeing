@@ -1,25 +1,26 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Search, 
-  Bell, 
-  Menu, 
-  ChevronDown, 
-  Sparkles, 
-  FolderOpen, 
-  ClipboardList, 
-  Zap, 
-  ArrowDown, 
-  Image as ImageIcon, 
-  Video, 
-  Music, 
-  Clock, 
-  User, 
-  CheckCircle2, 
-  FileText,
+import {
+  Search,
+  Bell,
+  Menu,
+  Sparkles,
+  Image as ImageIcon,
+  Video,
+  Music,
+  FolderOpen,
   RefreshCw,
+  ClipboardList,
+  User,
+  Users,
+  Clock,
+  ChevronDown,
+  ArrowUp,
+  ArrowDown,
+  FileText,
   X,
-  Loader2
+  Loader2,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import apiService from '../services/api';
@@ -36,10 +37,14 @@ const App = () => {
 
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   const [stats, setStats] = useState({
-    assets: { total: 0, totalCourses: 0, totalPptImages: 0, totalVideos: 0, totalVoices: 0 },
-    todayTasks: { total: 0, todayCourses: 0, todayPptImages: 0, todayVideos: 0, todayVoices: 0 },
+    courses: { total: 0 },
+    media: { images: 0, videos: 0, audios: 0 },
+    tasks: { running: 0, completed: 0, queued: 0 },
+    todayCompleted: 0,
+    compute: { used: 0, total: 40000, remaining: 40000 },
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
@@ -54,19 +59,91 @@ const App = () => {
     { id: 3, name: '课件导出-神奇大自然', status: '已完成', progress: 100 }
   ];
 
-  const runningCount = queueTasks.filter(t => t.status === '运行中').length;
-  const queuedCount = queueTasks.filter(t => t.status === '排队中').length;
-
-  const fetchDashboardStats = useCallback(async () => {
+  // 获取用户信息
+  const getUser = () => {
     try {
-      setStatsLoading(true);
-      const result = await apiService.request('/api/dashboard/stats');
-      if (result?.data) {
-        setStats(result.data);
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  const currentUser = getUser();
+
+  // 获取用户角色对应的显示名称
+  const getRoleDisplayName = (role) => {
+    const roleNames = {
+      super_admin: '超级管理员',
+      org_admin: '机构管理员',
+      research_leader: '研究组长',
+      creator: '创作者',
+      viewer: '查看者'
+    };
+    return roleNames[role] || '用户';
+  };
+
+  // 判断是否有课程编辑权限
+  const canEditCourse = ['super_admin', 'org_admin', 'research_leader', 'creator'].includes(currentUser.role);
+
+  // 计算任务统计
+  const runningCount = stats.tasks?.running || 0;
+  const completedCount = stats.todayCompleted || 0;
+
+  // 累计生成素材数
+  const totalMediaCount = (stats.media?.images || 0) + (stats.media?.videos || 0) + (stats.media?.audios || 0);
+
+  // 获取任务显示名称
+  const getTaskDisplayName = (promptType) => {
+    const names = {
+      image: '生成图片',
+      video: '生成视频',
+      audio: '生成音频',
+      voice: '生成配音',
+      character: '提取人物',
+      storyboard: '生成分镜',
+      scene: '生成场景',
+      optimize_prompt: '优化提示词',
+      generate_images: '生成图片',
+      generate_video: '生成视频'
+    };
+    return names[promptType] || '处理任务';
+  };
+
+  // 转换任务状态
+  const getTaskStatus = (status) => {
+    if (status === 'completed' || status === 'success') return '已完成';
+    if (status === 'processing' || status === 'running') return '运行中';
+    if (status === 'queued' || status === 'pending') return '排队中';
+    return '等待中';
+  };
+
+  // 获取任务进度
+  const getTaskProgress = (task) => {
+    if (task.status === 'completed' || task.status === 'success') return 100;
+    if (task.status === 'processing' || task.status === 'running') return 50;
+    return 0;
+  };
+
+  // 从后端加载数据
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 并行加载统计数据和课程列表
+      const [statsResult] = await Promise.all([
+        apiService.request('/api/stats')
+      ]);
+
+      // 更新统计数据
+      if (statsResult?.data) {
+        setStats(statsResult.data);
       }
+
+      // 加载课程列表
+      await fetchRecentCourses();
     } catch (error) {
-      console.error('获取仪表盘统计失败:', error);
+      console.error('获取仪表盘数据失败:', error);
     } finally {
+      setLoading(false);
       setStatsLoading(false);
     }
   }, []);
@@ -100,9 +177,8 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    fetchDashboardStats();
-    fetchRecentCourses();
-  }, [fetchDashboardStats, fetchRecentCourses]);
+    loadData();
+  }, [loadData]);
 
   const handleCreateCourse = () => {
     setIsModalOpen(true);
@@ -165,7 +241,7 @@ const App = () => {
             className="flex items-center gap-2 bg-brand-light border border-brand-border text-brand px-3 h-8 rounded-full text-sm font-normal hover:bg-brand-accent transition-all"
           >
             <span className="w-1.5 h-1.5 bg-brand rounded-full"></span>
-            后台任务 {runningCount + queuedCount}
+            后台任务 {runningCount}
           </button>
 
           <div className="flex items-center gap-4">
@@ -212,9 +288,10 @@ const App = () => {
               {['图片', '视频', '音频'].map((type, idx) => {
                 const Icons = [ImageIcon, Video, Music];
                 const Colors = ['text-info', 'text-purple', 'text-success'];
+                const Routes = ['/test/ip-scene', '/test/video-generator', '/test/audio-generator'];
                 const Icon = Icons[idx];
                 return (
-                  <button key={type} className="flex items-center justify-center gap-1.5 py-2 bg-surface border-2 border-stroke-light rounded-lg text-sm text-primary hover:bg-surface-alt shadow-[2px_2px_0px_0px_rgba(0,0,0,0.04)] transition-colors">
+                  <button key={type} onClick={() => navigate(Routes[idx])} className="flex items-center justify-center gap-1.5 py-2 bg-surface border-2 border-stroke-light rounded-lg text-sm text-primary hover:bg-surface-alt shadow-[2px_2px_0px_0px_rgba(0,0,0,0.04)] cursor-pointer transition-colors">
                     <Icon size={14} className={Colors[idx]} /> 创建{type}
                   </button>
                 );
@@ -241,7 +318,7 @@ const App = () => {
                   <Loader2 size={24} className="text-primary-placeholder animate-spin" />
                 ) : (
                   <>
-                    <span className="text-[30px] font-semibold text-primary leading-none">{stats.assets.total}</span>
+                    <span className="text-[30px] font-semibold text-primary leading-none">{totalMediaCount}</span>
                     <span className="text-sm text-primary-secondary">个</span>
                   </>
                 )}
@@ -280,7 +357,7 @@ const App = () => {
                   <Loader2 size={24} className="text-primary-placeholder animate-spin" />
                 ) : (
                   <>
-                    <span className="text-[30px] font-semibold text-primary leading-none">{stats.todayTasks.total}</span>
+                    <span className="text-[30px] font-semibold text-primary leading-none">{stats.tasks.completed}</span>
                     <span className="text-sm text-primary-secondary">个</span>
                   </>
                 )}
@@ -289,16 +366,16 @@ const App = () => {
 
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-info-light border border-info-border rounded-lg px-4 py-2 flex items-center justify-between">
-                <div className="text-primary text-sm font-normal">课程</div>
-                <div className="text-sm font-medium text-info">{statsLoading ? '-' : stats.todayTasks.todayCourses}</div>
+                <div className="text-primary text-sm font-normal">运行中</div>
+                <div className="text-sm font-medium text-info">{statsLoading ? '-' : stats.tasks.running}</div>
               </div>
               <div className="bg-success-light border border-success-border rounded-lg px-4 py-2 flex items-center justify-between">
-                <div className="text-primary text-sm font-normal">图片</div>
-                <div className="text-sm font-medium text-success">{statsLoading ? '-' : stats.todayTasks.todayPptImages}</div>
+                <div className="text-primary text-sm font-normal">已完成</div>
+                <div className="text-sm font-medium text-success">{statsLoading ? '-' : stats.tasks.completed}</div>
               </div>
               <div className="bg-warning-light border border-warning-border rounded-lg px-4 py-2 flex items-center justify-between">
-                <div className="text-primary text-sm font-normal">视频/音频</div>
-                <div className="text-sm font-medium text-warning">{statsLoading ? '-' : stats.todayTasks.todayVideos + stats.todayTasks.todayVoices}</div>
+                <div className="text-primary text-sm font-normal">排队中</div>
+                <div className="text-sm font-medium text-warning">{statsLoading ? '-' : stats.tasks.queued}</div>
               </div>
             </div>
           </div>

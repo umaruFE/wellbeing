@@ -37,9 +37,9 @@ export async function GET(request: NextRequest) {
       // 任务总数（查询最近的任务记录）
       db.query(`
         SELECT 
-          COUNT(*) FILTER (WHERE status IN ('pending', 'processing', 'running')) as running,
-          COUNT(*) FILTER (WHERE status = 'completed') as completed,
-          COUNT(*) FILTER (WHERE status = 'queued') as queued
+          COUNT(*) FILTER (WHERE success = true) as completed,
+          COUNT(*) FILTER (WHERE success = false) as failed,
+          COUNT(*) as total
         FROM prompt_history
         WHERE created_at >= NOW() - INTERVAL '7 days'
       `),
@@ -47,10 +47,16 @@ export async function GET(request: NextRequest) {
       db.query(`
         SELECT COUNT(*) as count 
         FROM prompt_history 
-        WHERE status = 'completed' 
+        WHERE success = true 
         AND DATE(created_at) = CURRENT_DATE
       `)
     ]);
+
+    // db.query 直接返回 pool.query 的结果
+    const coursesData = coursesResult.rows[0] || {};
+    const mediaData = mediaResult.rows[0] || {};
+    const tasksData = tasksResult.rows[0] || {};
+    const todayData = todayTasksResult.rows[0] || {};
 
     // 获取算力使用情况（从环境变量或默认配置）
     const computeUsed = 2847; // 可从 Redis 或数据库获取
@@ -58,19 +64,21 @@ export async function GET(request: NextRequest) {
 
     const stats = {
       courses: {
-        total: parseInt(coursesResult.rows[0]?.count || '0')
+        total: parseInt(coursesData.count || '0')
       },
       media: {
-        images: parseInt(mediaResult.rows[0]?.image_count || '0'),
-        videos: parseInt(mediaResult.rows[0]?.video_count || '0'),
-        audios: parseInt(mediaResult.rows[0]?.audio_count || '0')
+        images: parseInt(mediaData.image_count || '0'),
+        videos: parseInt(mediaData.video_count || '0'),
+        audios: parseInt(mediaData.audio_count || '0')
       },
       tasks: {
-        running: parseInt(tasksResult.rows[0]?.running || '0'),
-        completed: parseInt(tasksResult.rows[0]?.completed || '0'),
-        queued: parseInt(tasksResult.rows[0]?.queued || '0')
+        running: 0,
+        completed: parseInt(tasksData.completed || '0'),
+        queued: 0,
+        failed: parseInt(tasksData.failed || '0'),
+        total: parseInt(tasksData.total || '0')
       },
-      todayCompleted: parseInt(todayTasksResult.rows[0]?.count || '0'),
+      todayCompleted: parseInt(todayData.count || '0'),
       compute: {
         used: computeUsed,
         total: computeTotal,
@@ -82,7 +90,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching stats:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: String(error) },
       { status: 500 }
     );
   }

@@ -156,6 +156,11 @@ function App() {
               element={<VoiceGeneratorPage />}
             />
 
+            <Route
+              path="/test/audio-generator"
+              element={<AudioGeneratorPage />}
+            />
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

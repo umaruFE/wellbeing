@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Check } from 'lucide-react';
+import { X, Check, Loader2 } from 'lucide-react';
 import { colors, typography, shadows } from '../theme/theme';
 
 const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
@@ -19,6 +19,76 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
     theme: '',
     requirements: ''
   });
+  const [submitting, setSubmitting] = useState(false);
+
+  // 获取认证 headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
+
+  // 获取用户信息
+  const getUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  // 处理完成提交 - 调用后端 API 生成课件
+  const handleFinish = async (data) => {
+    if (submitting) return;
+    setSubmitting(true);
+
+    const user = getUser();
+    const payload = {
+      age: data.age,
+      duration: data.duration,
+      scale: data.scale,
+      title: data.title,
+      vocabulary: data.vocabulary,
+      grammar: data.grammar,
+      skills: data.skills,
+      paths: data.paths,
+      theme: data.theme,
+      requirements: data.requirements,
+      userId: user?.id || null,
+      organizationId: user?.organization_id || null
+    };
+
+    try {
+      console.log('[CreateCourseModal] 开始生成课件:', payload);
+
+      const response = await fetch('/api/ai/generate-course', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        console.log('[CreateCourseModal] 课件生成任务已提交:', result.data);
+        onFinish?.({
+          ...data,
+          executionId: result.data.executionId,
+          status: result.data.status
+        });
+        onClose();
+      } else {
+        console.error('[CreateCourseModal] 课件生成失败:', result.error);
+        alert(result.error || '课件生成失败，请重试');
+      }
+    } catch (error) {
+      console.error('[CreateCourseModal] 调用生成接口失败:', error);
+      alert('网络错误，请检查网络连接后重试');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -213,8 +283,15 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             <button onClick={() => setStep(step + 1)} className="px-10 py-2.5 rounded-xl text-white font-strong"
               style={{ backgroundColor: colors.brand.DEFAULT, boxShadow: shadows.neo, border: `2px solid ${colors.neutral.text[1]}` }}>下一步</button>
           ) : (
-            <button onClick={() => onFinish(formData)} className="px-10 py-2.5 rounded-xl text-white font-strong"
-              style={{ backgroundColor: colors.brand.DEFAULT, boxShadow: shadows.neo, border: `2px solid ${colors.neutral.text[1]}` }}>完成</button>
+            <button
+              onClick={() => handleFinish(formData)}
+              disabled={submitting}
+              className="px-10 py-2.5 rounded-xl text-white font-strong flex items-center gap-2 disabled:opacity-70"
+              style={{ backgroundColor: colors.brand.DEFAULT, boxShadow: shadows.neo, border: `2px solid ${colors.neutral.text[1]}` }}
+            >
+              {submitting && <Loader2 size={16} className="animate-spin" />}
+              {submitting ? '生成中...' : '完成'}
+            </button>
           )}
         </div>
       </div>
