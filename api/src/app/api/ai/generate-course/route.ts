@@ -99,34 +99,58 @@ export async function POST(request: NextRequest) {
       title
     });
 
-    // 调用 N8N Workflow
-    const result = await n8nClient.call('course-generator', n8nPayload);
+    // 调用 N8N Workflow（课件生成可能需要较长时间，设置5分钟超时）
+    const result = await n8nClient.call('course-generator', n8nPayload, { timeout: 300000 });
 
-    console.log('[generate-course] N8N 响应:', result);
+    console.log('[generate-course] N8N 响应类型:', typeof result, Array.isArray(result) ? '(数组)' : '');
+    console.log('[generate-course] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
 
-    // 提取 executionId
-    const executionId = result?.executionId || result?.id;
+    // N8N 返回格式: [{ "text": "{\"courseData\": {...}}" }]
+    let courseData = null;
 
-    if (executionId) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          executionId,
-          status: 'processing',
-          message: '课件生成任务已提交，请在后台任务中查看进度'
+    if (Array.isArray(result) && result.length > 0) {
+      const firstItem = result[0];
+      console.log('[generate-course] firstItem:', firstItem);
+
+      if (firstItem?.text && typeof firstItem.text === 'string') {
+        try {
+          const parsed = JSON.parse(firstItem.text);
+          console.log('[generate-course] 解析text后的类型:', typeof parsed, Array.isArray(parsed) ? '(数组)' : '');
+          console.log('[generate-course] parsed keys:', parsed ? Object.keys(parsed) : 'null');
+
+          if (parsed?.courseData) {
+            courseData = parsed.courseData;
+            console.log('[generate-course] 从parsed.courseData提取成功');
+          }
+        } catch (e) {
+          console.error('[generate-course] 解析text失败:', e.message);
         }
-      }, { headers: corsHeaders() });
-    } else {
-      // 如果没有 executionId，但有其他返回数据，说明 workflow 同步执行完成
+      } else if (firstItem?.courseData) {
+        courseData = firstItem.courseData;
+        console.log('[generate-course] 从firstItem.courseData提取成功');
+      }
+    } else if (result?.courseData) {
+      courseData = result.courseData;
+      console.log('[generate-course] 从result.courseData提取成功');
+    }
+
+    console.log('[generate-course] 最终 courseData:', courseData ? '存在' : '不存在');
+
+    if (courseData) {
       return NextResponse.json({
         success: true,
         data: {
           status: 'completed',
-          result,
+          courseData,
           message: '课件生成完成'
         }
       }, { headers: corsHeaders() });
     }
+
+    return NextResponse.json({
+      success: false,
+      error: '未能获取课件数据'
+    }, { status: 500, headers: corsHeaders() });
 
   } catch (error) {
     console.error('[generate-course] 课件生成失败:', error);

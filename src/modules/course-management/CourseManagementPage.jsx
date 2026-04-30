@@ -189,7 +189,7 @@ export const CourseManagementPage = () => {
             <div
               key={course.id}
               className="bg-white rounded-[24px] border-2 border-stroke-light p-4 cursor-pointer group transition-all duration-200 ease-out hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
-              onClick={() => navigate(`/courses/${course.id}`)}
+              onClick={() => navigate(`/courses/${course.id}/overview`)}
             >
               {/* 左右布局：左侧封面 + 右侧信息 */}
               <div className="flex gap-4">

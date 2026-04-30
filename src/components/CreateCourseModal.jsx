@@ -13,8 +13,8 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
     grammar: [],
     skills: ['听力理解', '口语表达'],
     paths: ['艺术表达', '音乐律动'],
-    theme: 'test',
-    requirements: 'teet'
+    theme: '',
+    requirements: ''
   });
   
   const [submitting, setSubmitting] = useState(false);
@@ -52,15 +52,29 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
         body: JSON.stringify(payload)
       });
       const result = await response.json();
+
       if (result.success) {
-        onFinish?.({ ...data, executionId: result.data.executionId, status: result.data.status });
-        onClose();
+        console.log('[CreateCourseModal] API响应:', result.data);
+        setSubmitting(false);
+
+        // N8N 直接返回 courseData
+        if (result.data?.courseData) {
+          console.log('[CreateCourseModal] 收到courseData:', result.data.courseData);
+          onFinish?.({
+            ...data,
+            courseData: result.data.courseData
+          });
+        } else {
+          // 没有 courseData，提示用户
+          console.log('[CreateCourseModal] 未收到courseData:', result.data);
+          alert('课件生成失败，请重试');
+        }
       } else {
-        console.error(result.error || '课件生成失败');
+        console.error('[CreateCourseModal] 课件生成失败:', result.error || '未知错误');
+        setSubmitting(false);
       }
     } catch (error) {
       console.error('网络错误，请重试');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -296,7 +310,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
               style={primaryButtonStyle}
             >
               {submitting && <Loader2 size={20} className="animate-spin" />}
-              {step === 3 ? (submitting ? '生成中...' : '完成') : '下一步'}
+              {step === 3 ? (submitting ? '提交中...' : '完成') : '下一步'}
             </button>
           </div>
         </div>

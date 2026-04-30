@@ -28,7 +28,6 @@ import {
   Clapperboard,
   Mic
 } from 'lucide-react';
-import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from '../modules/course-management/ppt-canvas/CanvasView';
 import { TableView } from '../modules/course-management/table-view/TableView';
 import { ReadingMaterialCanvasView } from '../modules/course-management/reading-material/ReadingMaterialCanvasView';
@@ -43,7 +42,7 @@ export const MainLayout = () => {
   const [expandedMenus, setExpandedMenus] = useState(['knowledge']); // 默认展开素材管理
 
   // 课程编辑状态
-  const [appState, setAppState] = useState('welcome');
+  const [appState, setAppState] = useState('app');
   const [currentView, setCurrentView] = useState('table');
   const [canvasMode, setCanvasMode] = useState('ppt');
   const [appConfig, setAppConfig] = useState(null);
@@ -135,9 +134,9 @@ export const MainLayout = () => {
     }
   };
 
-  // 重置回到欢迎页
+  // 重置 - 跳转到课程列表页
   const handleReset = () => {
-    setAppState('welcome');
+    navigate('/courses');
   };
 
   // 导出PPT
@@ -436,13 +435,35 @@ export const MainLayout = () => {
     const editingCourseId = searchParams.get('courseId');
 
     // 没有传 courseId：认为是“新建课程”，重置到欢迎页（仅在刚进入 /create 时生效）
+    const stateData = location.state;
+    if (stateData?.courseData) {
+      const config = stateData.courseConfig || {};
+      const baseConfig = {
+        unit: config.title || 'AI生成课程',
+        theme: config.theme || '',
+        age: config.age || '',
+        duration: config.duration || 40,
+        keywords: '',
+        courseData: stateData.courseData,
+      };
+      setAppConfig(baseConfig);
+      setPptCanvasConfig({ ...baseConfig, canvasData: null, readingMaterialsData: null });
+      setReadingMaterialCanvasConfig({ ...baseConfig, canvasData: null, readingMaterialsData: null });
+      setAppState('app');
+      setCurrentView('table');
+      setCurrentCourseId(null);
+      setIsComponentReady(true);
+      return;
+    }
+
     if (!editingCourseId) {
-      setAppState('welcome');
+      // 新建课程，直接进入编辑器模式
+      setAppState('app');
       setAppConfig(null);
       setCurrentCourseId(null);
       setCurrentView('table');
       setCanvasNavigation(null);
-      setIsComponentReady(false);
+      setIsComponentReady(true);
       return;
     }
 
@@ -500,7 +521,7 @@ export const MainLayout = () => {
     };
 
     loadCourse();
-  }, [isCreatePage, location.search]);
+  }, [isCreatePage, location.search, location.state]);
 
   // 判断是否为子菜单
   const isChildMenu = (path) => {
@@ -802,11 +823,7 @@ export const MainLayout = () => {
                 </div>
               )}
               
-              {!isLoadingCourse && appState === 'welcome' && (
-                <WelcomeScreen onStart={handleStartApp} />
-              )}
-
-              {isInCourseEditor && (
+              {!isLoadingCourse && isInCourseEditor && (
                 <div className="h-full flex">
                   {currentView === 'canvas' && (
                     <>

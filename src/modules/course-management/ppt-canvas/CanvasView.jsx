@@ -8,6 +8,7 @@
  * 5. 集成AI资产生成功能
  */
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Clock, 
   Image as ImageIcon, 
@@ -23,14 +24,20 @@ import {
   Copy,
   RotateCw,
   X,
-  History
+  History,
+  RefreshCw,
+  Edit3,
+  Layout,
+  BookOpen,
+  FileCheck,
+  MessageSquare,
+  Check
 } from 'lucide-react';
 import { SlideRenderer } from '../../../components/SlideRenderer';
 import { getAssetIcon } from '../../../utils';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
 import { CanvasViewLeftSidebar } from './CanvasView.LeftSidebar';
 import { CanvasViewModals } from './CanvasView.Modals';
-import { RefreshCw } from 'lucide-react';
 import { aiAssetService } from '../../../services/aiAssetService';
 import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
 import { optimizePrompt } from '../../../services/dashscope';
@@ -39,8 +46,78 @@ import { handleAssetChange, handleDeleteAsset, handleCopyAsset, handleCopyPage, 
 import { handleConfirmAddAsset, handleConfirmAddVideoAsset, handleCardSelectionConfirm, handleRegenerateAsset } from './CanvasView.asset-generation';
 import { saveToHistory, handleUndo, handleRedo } from './CanvasView.history';
 
+const colors = {
+  neutral: {
+    white: '#FFFFFF',
+    text: {
+      1: '#333E4E',
+      2: '#575F6E',
+      3: '#818997',
+      disabled: '#A4ABB8',
+    },
+    border: {
+      DEFAULT: '#E6E3DE',
+      secondary: '#EFECE8',
+    },
+    bg: {
+      layout: '#F7F5F1',
+    },
+  },
+  brand: {
+    DEFAULT: '#F4785E',
+    light: '#FDECE8',
+  },
+};
+
+const navSteps = [
+  { id: 1, label: '课程概览', icon: Layout },
+  { id: 2, label: '教案设计', icon: BookOpen },
+  { id: 3, label: 'PPT 课件', icon: FileCheck },
+  { id: 4, label: '阅读材料', icon: MessageSquare },
+];
+
+// 步骤导航项
+const StepItem = ({ step, isActive, isCompleted, onClick }) => {
+  const Icon = step.icon;
+  return (
+    <button onClick={() => onClick(step.id)} className="flex items-center gap-2 cursor-pointer">
+      <div
+        className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+        style={{
+          backgroundColor: isActive ? colors.brand.DEFAULT : (isCompleted ? colors.brand.light : colors.neutral.white),
+          border: isCompleted || isActive ? 'none' : `1.5px solid ${colors.neutral.border.DEFAULT}`,
+          color: isActive ? '#FFF' : (isCompleted ? colors.brand.DEFAULT : colors.neutral.text.disabled),
+        }}
+      >
+        {isCompleted ? <Check size={14} strokeWidth={3} /> : (isActive ? <Icon size={14} /> : <span className="text-xs font-bold">{step.id}</span>)}
+      </div>
+      <span
+        className="text-[13px] font-bold tracking-wide"
+        style={{ color: isActive || isCompleted ? colors.neutral.text[1] : colors.neutral.text.disabled }}
+      >
+        {step.label}
+      </span>
+    </button>
+  );
+};
+
 export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // 从 initialConfig 获取 courseId
+  const courseId = initialConfig?.courseId;
+
+  // 导航栏步骤点击
+  const handleNavigationStepClick = (stepId) => {
+    if (!courseId || stepId === 3) return;
+    switch (stepId) {
+      case 1: navigate(`/courses/${courseId}/overview`); break;
+      case 2: navigate(`/courses/${courseId}/lesson-plan`); break;
+      case 4: navigate(`/courses/${courseId}/reading`); break;
+      default: break;
+    }
+  };
   
   // 支持 courseData 的两种格式：对象格式（欢迎页生成）和数组格式（从数据库加载）
   const isCourseDataArray = Array.isArray(initialConfig?.courseData);
@@ -593,9 +670,46 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   return (
-    <div className="flex h-full bg-surface overflow-hidden">
-      {/* Left Sidebar */}
-      <CanvasViewLeftSidebar
+    <div className="flex flex-col h-screen" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", system-ui, sans-serif' }}>
+      {/* 顶部步骤导航栏 */}
+      <div className="p-4 pb-0 shrink-0">
+        <header className="h-[72px] bg-white rounded-2xl flex items-center justify-between px-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+          <div className="flex-1"></div>
+
+          <nav className="flex items-center justify-center flex-1 shrink-0">
+            {navSteps.map((step, index) => (
+              <React.Fragment key={step.id}>
+                <StepItem
+                  step={step}
+                  isActive={step.id === 3}
+                  isCompleted={step.id < 3}
+                  onClick={handleNavigationStepClick}
+                />
+                {index < navSteps.length - 1 && (
+                  <div className="w-10 h-px mx-3" style={{ backgroundColor: colors.neutral.border.secondary }}></div>
+                )}
+              </React.Fragment>
+            ))}
+          </nav>
+
+          <div className="flex items-center justify-end gap-3 flex-1">
+            <button className="px-4 py-1.5 rounded-lg text-[13px] font-medium border flex items-center gap-2 hover:bg-gray-50 transition-colors" style={{ borderColor: colors.neutral.border.DEFAULT, color: colors.neutral.text[1] }}>
+              <RefreshCw size={14} /> 重新生成
+            </button>
+            <button className="px-4 py-1.5 rounded-lg text-[13px] font-medium border flex items-center gap-2 hover:bg-gray-50 transition-colors" style={{ borderColor: colors.neutral.border.DEFAULT, color: colors.neutral.text[1] }}>
+              <Edit3 size={14} /> 编辑
+            </button>
+            <button className="px-6 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: '#445161' }}>
+              导出
+            </button>
+          </div>
+        </header>
+      </div>
+
+      {/* 主内容区 */}
+      <div className="flex flex-1 overflow-hidden bg-surface">
+        {/* Left Sidebar */}
+        <CanvasViewLeftSidebar
         courseData={courseData}
         expandedPhases={expandedPhases}
         activeStepId={activeStepId}
@@ -1048,6 +1162,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 });

@@ -188,6 +188,14 @@ const App = () => {
   const handleModalSubmit = (data) => {
     setIsModalOpen(false);
 
+    // 如果有 courseData，说明是 N8N 同步返回的，直接跳转到编辑页面
+    if (data.courseData) {
+      console.log('[AdminDashboard] N8N同步返回courseData，准备跳转:', data.courseData);
+      navigate('/create', { state: { courseData: data.courseData, courseConfig: data } });
+      return;
+    }
+
+    // 否则直接跳转（旧的快速流程或异步流程）
     const n8nPayload = {
       age: data.age,
       duration: data.duration,
