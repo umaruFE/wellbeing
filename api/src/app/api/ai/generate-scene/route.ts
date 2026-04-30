@@ -134,8 +134,9 @@ export async function POST(request: NextRequest) {
           console.log(`[generate-scene] ${task.type}:${task.name} 返回:`, result);
 
           // 从 N8N 结果中提取 executionId 和 comfyuiUrl（实际是 ComfyUI 的 prompt_id 和地址）
-          const promptId = result.executionId || result.prompt_id || result.id;
-          const comfyUrl = result.comfyuiUrl || task.comfyuiUrl || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+          const resultData = result as { executionId?: string; prompt_id?: string; id?: string; comfyuiUrl?: string };
+          const promptId = resultData.executionId || resultData.prompt_id || resultData.id;
+          const comfyUrl = resultData.comfyuiUrl || task.comfyuiUrl || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
           const historyUrl = `${comfyUrl}/history/${promptId}`;
 
           return {

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     const filters: Record<string, any> = {};
     
     // Handle user_id type conversion - skip filtering for numeric user_id
-    if (userId && !isNaN(userId)) {
+    if (userId && !isNaN(Number(userId))) {
       // Skip user_id filter for numeric IDs, return all courses
       console.log('Skipping user_id filter for numeric ID:', userId);
     } else if (userId) {
@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
     } catch (coursesError) {
       console.error('Error fetching courses:', coursesError);
       return NextResponse.json(
-        { error: coursesError.message },
+        { error: (coursesError as Error).message },
         { status: 500 }
       );
     }
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
 
     // Handle userId type conversion
     let processed_user_id = userId;
-    if (typeof userId === 'number' || (typeof userId === 'string' && !isNaN(userId) && userId !== '')) {
+    if (typeof userId === 'number' || (typeof userId === 'string' && !isNaN(Number(userId)) && userId !== '')) {
       processed_user_id = null;
     }
 
@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error creating course:', error);
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }

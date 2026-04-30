@@ -6,7 +6,7 @@ export async function POST(request: Request) {
     const { user_id, organization_id, prompt_type, original_prompt, generated_result, execution_time, success, error_message } = await request.json();
 
     let processed_user_id = user_id;
-    if (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id) && user_id !== '')) {
+    if (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(Number(user_id)) && user_id !== '')) {
       processed_user_id = null;
     }
 
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Error saving prompt history:', error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500 });
     }
 
     return new Response(JSON.stringify({ id: data.id }), { status: 201 });
@@ -45,23 +45,22 @@ export async function GET(request: Request) {
     }
 
     let processed_user_id = user_id;
-    if (!isNaN(user_id)) {
+    if (!isNaN(Number(user_id))) {
       processed_user_id = user_id;
     }
 
-    const query = db.from('prompt_history').select('*', { count: 'exact' }).eq('user_id', processed_user_id);
-    
-    if (prompt_type) {
-      query.eq('prompt_type', prompt_type);
-    }
-    
-    query.order('created_at', { ascending: false }).limit(parseInt(limit));
+    const query = db
+      .from('prompt_history')
+      .select('*', { count: 'exact' })
+      .eq('user_id', processed_user_id)
+      .order('created_at', { ascending: false })
+      .limit(parseInt(limit));
 
     const { data, error } = await query;
 
     if (error) {
       console.error('Error fetching prompt history:', error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500 });
     }
 
     return new Response(JSON.stringify(data), { status: 200 });

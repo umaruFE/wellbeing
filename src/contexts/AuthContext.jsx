@@ -83,6 +83,67 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // 检查 token 有效性，失败则跳转登录页
+  useEffect(() => {
+    const AUTH_ERROR_MESSAGES = ['Token已过期', 'Token无效', '无效的token', '未提供认证token', '认证失败', 'Token验证失败'];
+
+    const clearAuthAndRedirect = () => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('userId');
+      setUser(null);
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    };
+
+    const checkToken = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch('/api/auth/me', {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) {
+          let errorData = {};
+          try { errorData = await res.json(); } catch {}
+          const errorMsg = errorData?.error || '';
+          const isAuthError = AUTH_ERROR_MESSAGES.some(e => errorMsg.includes(e));
+
+          if (isAuthError) {
+            clearAuthAndRedirect();
+          }
+        }
+      } catch (error) {
+        console.warn('Token 检查失败:', error);
+      }
+    };
+
+    // 初始检查
+    checkToken();
+
+    // 每 30 秒检查一次
+    const interval = setInterval(checkToken, 30000);
+
+    // 监听其他标签页的 logout 事件
+    const handleStorageChange = (e) => {
+      if (e.key === 'token' && e.newValue === null) {
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   const login = async (username, password) => {
     // 使用相对路径，通过 Vite 代理转发到后端
     try {

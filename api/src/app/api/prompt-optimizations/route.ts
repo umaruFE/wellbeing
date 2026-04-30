@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     // Handle user_id type conversion
     // If user_id is numeric or invalid, set to null to avoid foreign key constraint errors
     let processed_user_id = user_id;
-    if (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(user_id) && user_id !== '')) {
+    if (typeof user_id === 'number' || (typeof user_id === 'string' && !isNaN(Number(user_id)) && user_id !== '')) {
       // Numeric user_id - set to null since we don't have a real user record
       processed_user_id = null;
     }
@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error('Error saving prompt optimization:', error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500 });
     }
 
     return new Response(JSON.stringify({ id: data.id }), { status: 201 });
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
 
     // Handle user_id type conversion
     // If user_id is numeric or invalid, set to null to avoid foreign key constraint errors
-    let processed_user_id = user_id;
+    let processed_user_id: string | null = user_id;
     if (typeof user_id === 'string' && !isNaN(parseInt(user_id)) && user_id !== '') {
       // Numeric user_id - set to null since we don't have a real user record
       processed_user_id = null;
@@ -88,7 +88,7 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('Error fetching prompt optimizations:', error);
-      return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+      return new Response(JSON.stringify({ error: (error as Error).message }), { status: 500 });
     }
 
     return new Response(JSON.stringify(data), { status: 200 });

@@ -1100,28 +1100,28 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         onLeftToggle={() => setIsLeftOpen(false)}
       />
       {!isLeftOpen && (
-        <button onClick={() => setIsLeftOpen(true)} className="absolute top-4 left-0 bg-white p-2 rounded-r-md border-2 border-l-0 border-[#e5e3db] shadow-sm text-[#2d2d2d] hover:text-[#2d2d2d] hover:border-[#2d2d2d] z-50 transition-all">
+        <button onClick={() => setIsLeftOpen(true)} className="absolute top-4 left-0 bg-white p-2 rounded-r-md border-2 border-l-0 border-stroke-light shadow-sm text-dark hover:text-dark hover:border-primary z-50 transition-all">
           <ChevronRight className="w-4 h-4" />
         </button>
       )}
 
       {/* MAIN CONTENT - 画布编辑器 */}
-      <main className="flex-1 flex flex-col bg-slate-100 relative overflow-hidden">
+      <main className="flex-1 flex flex-col bg-surface-alt relative overflow-hidden">
         {/* Top Bar */}
-        <div className="h-14 bg-white border-b-2 border-[#e5e3db] flex items-center justify-between px-6 shadow-sm z-10">
+        <div className="h-14 bg-white border-b-2 border-stroke-light flex items-center justify-between px-6 shadow-sm z-10">
           <div className="flex items-center gap-4 min-w-0">
             {!isLeftOpen && (
               <>
-                <button onClick={() => setIsLeftOpen(true)} className="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-1.5 rounded transition-colors" title="展开页面列表">
+                <button onClick={() => setIsLeftOpen(true)} className="text-primary-placeholder hover:text-primary-secondary hover:bg-surface-alt p-1.5 rounded transition-colors" title="展开页面列表">
                   <ChevronRight className="w-4 h-4" />
                 </button>
-                <div className="font-bold text-slate-700 flex items-center gap-2 mr-4">
+                <div className="font-bold text-primary-secondary flex items-center gap-2 mr-4">
                   <BookOpen className="w-4 h-4" />
                   <span className="text-xs">阅读材料</span>
                 </div>
               </>
             )}
-            <span className="text-sm font-medium text-slate-500 whitespace-nowrap">当前编辑:</span>
+            <span className="text-sm font-medium text-primary-muted whitespace-nowrap">当前编辑:</span>
             {selectedMaterialId && pages[editingPageIndex] && (
               <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium whitespace-nowrap">阅读材料</span>
             )}
@@ -1129,23 +1129,23 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
               页面 {(() => { if (!pages[editingPageIndex]) return 1; const filteredIndex = filteredPages.findIndex(p => p.id === pages[editingPageIndex].id); return filteredIndex >= 0 ? filteredIndex + 1 : 1; })()} / {filteredPages.length || 1}
             </span>
             {pages[editingPageIndex] && (
-              <h2 className="text-sm font-bold text-slate-800 truncate" title={pages[editingPageIndex].title}>{pages[editingPageIndex].title || `页面 ${editingPageIndex + 1}`}</h2>
+              <h2 className="text-sm font-bold text-primary truncate" title={pages[editingPageIndex].title}>{pages[editingPageIndex].title || `页面 ${editingPageIndex + 1}`}</h2>
             )}
           </div>
           
           <div className="flex items-center gap-2">
-            <button onClick={handleUndo} disabled={historyIndex === 0} className="p-2 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="撤销 (Ctrl+Z)">
+            <button onClick={handleUndo} disabled={historyIndex === 0} className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="撤销 (Ctrl+Z)">
               <RotateCcw className="w-4 h-4" />
             </button>
-            <button onClick={handleRedo} disabled={historyIndex === history.length - 1} className="p-2 hover:bg-slate-100 rounded text-slate-400 hover:text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="重做 (Ctrl+Shift+Z)">
+            <button onClick={handleRedo} disabled={historyIndex === history.length - 1} className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="重做 (Ctrl+Shift+Z)">
               <RotateCw className="w-4 h-4" />
             </button>
-            <div className="w-px h-6 bg-slate-200"></div>
+            <div className="w-px h-6 bg-stroke"></div>
             {editingPageIndex !== null && (
               <>
-                <div className="flex items-center bg-[#fcfbf9] rounded-xl p-1 border-2 border-[#e5e3db]">
-                  <button onClick={() => setCanvasAspectRatio('A4')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4' ? 'bg-white text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`} title="A4 竖版">A4 竖版</button>
-                  <button onClick={() => setCanvasAspectRatio('A4横向')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4横向' ? 'bg-white text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`} title="A4 横版">A4 横版</button>
+                <div className="flex items-center bg-surface rounded-xl p-1 border-2 border-stroke-light">
+                  <button onClick={() => setCanvasAspectRatio('A4')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4' ? 'bg-white text-indigo-600' : 'text-primary-muted hover:text-primary-secondary'}`} title="A4 竖版">A4 竖版</button>
+                  <button onClick={() => setCanvasAspectRatio('A4横向')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4横向' ? 'bg-white text-indigo-600' : 'text-primary-muted hover:text-primary-secondary'}`} title="A4 横版">A4 横版</button>
                 </div>
               </>
             )}
@@ -1185,7 +1185,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
               onDeleteAsset={handleDeleteAsset}
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-slate-400">
+            <div className="flex items-center justify-center h-full text-primary-placeholder">
               <div className="text-center">
                 <BookOpen className="w-16 h-16 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">暂无页面</p>
@@ -1205,32 +1205,32 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           
           {/* 底部添加按钮栏 */}
           {editingPageIndex !== null && (
-            <div className="bg-white border-t-2 border-[#e5e3db] px-4 py-3 flex items-center justify-between">
+            <div className="bg-white border-t-2 border-stroke-light px-4 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleAddAsset('text')}
-                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                  className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
                 >
                   <Type className="w-4 h-4" />
                   文本
                 </button>
                 <button
                   onClick={() => handleAddAsset('image')}
-                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                  className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
                 >
                   <ImageIcon className="w-4 h-4" />
                   图片
                 </button>
                 <button
                   onClick={() => handleAddAsset('video')}
-                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                  className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
                 >
                   <Video className="w-4 h-4" />
                   视频
                 </button>
                 <button
                   onClick={() => handleAddAsset('audio')}
-                  className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+                  className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
                 >
                   <Music className="w-4 h-4" />
                   音频
@@ -1243,9 +1243,9 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
 
       {/* 右侧编辑面板 */}
       {editingPageIndex !== null && (
-        <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l-2 border-[#e5e3db] flex flex-col shrink-0 z-10 shadow-[4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
+        <aside className={`${isRightOpen ? 'w-96' : 'w-0'} bg-white border-l-2 border-stroke-light flex flex-col shrink-0 z-10 shadow-[4px_0_15px_rgba(0,0,0,0.05)] transition-all duration-300 relative`}>
           {!isRightOpen && (
-            <button onClick={() => setIsRightOpen(true)} className="absolute top-4 right-0 bg-white p-2 rounded-l-md border-2 border-r-0 border-[#e5e3db] shadow-sm text-[#2d2d2d] hover:text-[#2d2d2d] hover:border-[#2d2d2d] z-50 transform -translate-x-full transition-all" title="展开面板">
+            <button onClick={() => setIsRightOpen(true)} className="absolute top-4 right-0 bg-white p-2 rounded-l-md border-2 border-r-0 border-stroke-light shadow-sm text-dark hover:text-dark hover:border-primary z-50 transform -translate-x-full transition-all" title="展开面板">
               <ChevronLeft className="w-4 h-4" />
             </button>
           )}
@@ -1267,31 +1267,31 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
               />
             ) : (
               <>
-                <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fcfbf9] flex items-center justify-between">
-                  <h3 className="font-bold text-slate-800 flex items-center gap-2">
-                    <Wand2 className="w-4 h-4 text-purple-600" />页面详情编辑
+                <div className="p-4 border-b-2 border-stroke-light bg-surface flex items-center justify-between">
+                  <h3 className="font-bold text-primary flex items-center gap-2">
+                    <Wand2 className="w-4 h-4 text-purple" />页面详情编辑
                   </h3>
-                  <button onClick={() => setIsRightOpen(false)} className="text-slate-400 hover:text-slate-600" title="收起面板">
+                  <button onClick={() => setIsRightOpen(false)} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5 space-y-3">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-500 uppercase">画板元素 ({(currentPage?.canvasAssets || []).length})</label>
+                    <label className="text-xs font-bold text-primary-muted uppercase">画板元素 ({(currentPage?.canvasAssets || []).length})</label>
                   </div>
                   <div className="space-y-2">
                     {(currentPage?.canvasAssets || []).map((asset) => (
-                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="flex items-start gap-2 p-2 border-2 border-[#e5e3db] rounded-xl bg-white hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] cursor-pointer transition-all group">
-                        <div className="mt-1 text-slate-400">{getAssetIcon(asset.type)}</div>
+                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="flex items-start gap-2 p-2 border-2 border-stroke-light rounded-xl bg-white hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] cursor-pointer transition-all group">
+                        <div className="mt-1 text-primary-placeholder">{getAssetIcon(asset.type)}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-slate-700 truncate">{asset.title || asset.type}</div>
-                          <div className="text-[10px] text-slate-400">{asset.type} • 点击编辑</div>
+                          <div className="text-xs font-bold text-primary-secondary truncate">{asset.title || asset.type}</div>
+                          <div className="text-[10px] text-primary-placeholder">{asset.type} • 点击编辑</div>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <div className="pt-6 mt-6 border-t-2 border-[#e5e3db] flex gap-2">
-                    <button onClick={saveCurrentToPageHistory} className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all">
+                  <div className="pt-6 mt-6 border-t-2 border-stroke-light flex gap-2">
+                    <button onClick={saveCurrentToPageHistory} className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all">
                       <History className="w-4 h-4" />历史生成
                     </button>
                     <button onClick={prepareForRegenerate} className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
@@ -1309,32 +1309,32 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       {showPageHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white"><History className="w-5 h-5" /></div>
+                <div className="bg-info p-2 rounded-lg text-white"><History className="w-5 h-5" /></div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">历史生成列表 - 页面内容</h3>
-                  <p className="text-xs text-slate-500 mt-1">{currentPage?.title || '当前页面'}</p>
+                  <h3 className="font-bold text-lg text-primary">历史生成列表 - 页面内容</h3>
+                  <p className="text-xs text-primary-muted mt-1">{currentPage?.title || '当前页面'}</p>
                 </div>
               </div>
-              <button onClick={() => setShowPageHistoryModal(false)} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowPageHistoryModal(false)} className="text-primary-placeholder hover:text-primary-secondary transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
               {pageHistory.filter(h => h.pageId === currentPage?.id).length === 0 ? (
-                <div className="text-center py-12 text-slate-400"><History className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>暂无历史生成记录</p></div>
+                <div className="text-center py-12 text-primary-placeholder"><History className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>暂无历史生成记录</p></div>
               ) : (
                 <div className="space-y-3">
                   {pageHistory.filter(h => h.pageId === currentPage?.id).map((historyItem) => (
-                    <div key={historyItem.id} className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all">
+                    <div key={historyItem.id} className="border-2 border-stroke-light rounded-xl p-4 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] transition-all">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2"><span className="text-xs font-medium text-slate-500">{historyItem.displayTime}</span></div>
-                          <div className="text-sm text-slate-700 mb-2">
+                          <div className="flex items-center gap-2 mb-2"><span className="text-xs font-medium text-primary-muted">{historyItem.displayTime}</span></div>
+                          <div className="text-sm text-primary-secondary mb-2">
                             <div className="font-semibold">{historyItem.data.title}</div>
-                            <div className="text-xs text-slate-500 mt-1">素材数量: {historyItem.data.canvasAssets?.length || 0}</div>
+                            <div className="text-xs text-primary-muted mt-1">素材数量: {historyItem.data.canvasAssets?.length || 0}</div>
                           </div>
                         </div>
-                        <button onClick={() => restorePageHistoryVersion(historyItem)} className="px-4 py-2 bg-blue-600 text-white rounded text-sm font-bold hover:bg-blue-700 transition-colors">恢复此版本</button>
+                        <button onClick={() => restorePageHistoryVersion(historyItem)} className="px-4 py-2 bg-info text-white rounded text-sm font-bold hover:bg-info-active transition-colors">恢复此版本</button>
                       </div>
                     </div>
                   ))}
@@ -1500,28 +1500,28 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white"><History className="w-5 h-5" /></div>
-                <div><h3 className="font-bold text-lg text-slate-800">历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : showHistoryModal.assetType === 'text' ? '文本' : ''}</h3></div>
+                <div className="bg-info p-2 rounded-lg text-white"><History className="w-5 h-5" /></div>
+                <div><h3 className="font-bold text-lg text-primary">历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : showHistoryModal.assetType === 'text' ? '文本' : ''}</h3></div>
               </div>
-              <button onClick={() => setShowHistoryModal(null)} className="text-slate-400 hover:text-slate-600 transition-colors"><X className="w-5 h-5" /></button>
+              <button onClick={() => setShowHistoryModal(null)} className="text-primary-placeholder hover:text-primary-secondary transition-colors"><X className="w-5 h-5" /></button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
               {generationHistory.filter(h => h.pageId === currentPage?.id && h.assetId === showHistoryModal.assetId && h.type === showHistoryModal.assetType).length === 0 ? (
-                <div className="text-center py-12 text-slate-400"><History className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>暂无历史生成记录</p></div>
+                <div className="text-center py-12 text-primary-placeholder"><History className="w-12 h-12 mx-auto mb-3 opacity-50" /><p>暂无历史生成记录</p></div>
               ) : (
                 <div className="space-y-3">
                   {generationHistory.filter(h => h.pageId === currentPage?.id && h.assetId === showHistoryModal.assetId && h.type === showHistoryModal.assetType).map((historyItem) => (
-                    <div key={historyItem.id} className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all">
+                    <div key={historyItem.id} className="border-2 border-stroke-light rounded-xl p-4 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] transition-all">
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2"><span className="text-xs font-medium text-slate-500">{historyItem.displayTime}</span></div>
-                          {(historyItem.type === 'image' || historyItem.type === 'video') && <img src={historyItem.url} alt="历史生成" className="w-full h-32 object-cover rounded-xl border-2 border-[#e5e3db] mb-2" />}
-                          {historyItem.type === 'text' && <div className="bg-[#fcfbf9] rounded-xl border-2 border-[#e5e3db] p-3 mb-2"><p className="text-sm text-[#2d2d2d] whitespace-pre-wrap">{historyItem.url || historyItem.content || '(空内容)'}</p></div>}
-                          {historyItem.prompt && <p className="text-xs text-[#2d2d2d] bg-[#fcfbf9] rounded-xl p-2 mt-2 border border-[#e5e3db]">提示词: {historyItem.prompt}</p>}
+                          <div className="flex items-center gap-2 mb-2"><span className="text-xs font-medium text-primary-muted">{historyItem.displayTime}</span></div>
+                          {(historyItem.type === 'image' || historyItem.type === 'video') && <img src={historyItem.url} alt="历史生成" className="w-full h-32 object-cover rounded-xl border-2 border-stroke-light mb-2" />}
+                          {historyItem.type === 'text' && <div className="bg-surface rounded-xl border-2 border-stroke-light p-3 mb-2"><p className="text-sm text-dark whitespace-pre-wrap">{historyItem.url || historyItem.content || '(空内容)'}</p></div>}
+                          {historyItem.prompt && <p className="text-xs text-dark bg-surface rounded-xl p-2 mt-2 border border-stroke-light">提示词: {historyItem.prompt}</p>}
                         </div>
-                        <button onClick={() => handleRestoreHistory(historyItem)} className="ml-4 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"><RefreshCw className="w-3 h-3" />恢复</button>
+                        <button onClick={() => handleRestoreHistory(historyItem)} className="ml-4 px-3 py-1.5 text-xs bg-info text-white rounded-lg hover:bg-info-active transition-colors flex items-center gap-1"><RefreshCw className="w-3 h-3" />恢复</button>
                       </div>
                     </div>
                   ))}

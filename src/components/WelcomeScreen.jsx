@@ -218,10 +218,10 @@ export const WelcomeScreen = ({ onStart }) => {
 
   if (step === 'generating') {
     return (
-      <div className="flex-1 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center text-white p-8 h-full w-full absolute inset-0 z-50">
+      <div className="flex-1 bg-dark/80 backdrop-blur-sm flex flex-col items-center justify-center text-white p-8 h-full w-full absolute inset-0 z-50">
         <div className="w-full max-w-md space-y-8 text-center">
           <div className="relative w-32 h-32 mx-auto">
-            <div className="absolute inset-0 border-4 border-blue-500/30 rounded-full animate-ping"></div>
+            <div className="absolute inset-0 border-4 border-info/30 rounded-full animate-ping"></div>
             <div className="absolute inset-2 border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent rounded-full animate-spin"></div>
             <div className="absolute inset-0 flex items-center justify-center">
                <span className="text-2xl font-bold">{loadingProgress}%</span>
@@ -229,7 +229,7 @@ export const WelcomeScreen = ({ onStart }) => {
           </div>
           <div className="space-y-3">
             <h2 className="text-2xl font-bold animate-pulse text-blue-200">AI 正在深度思考...</h2>
-            <p className="text-slate-400 text-lg flex items-center justify-center gap-2">
+            <p className="text-primary-placeholder text-lg flex items-center justify-center gap-2">
               <BrainCircuit className="w-4 h-4" /> {loadingText}
             </p>
           </div>
@@ -245,8 +245,8 @@ export const WelcomeScreen = ({ onStart }) => {
   }
 
   return (
-    <div className="flex-1 overflow-auto bg-[#fcfbf9] flex items-center justify-center p-4 h-full w-full">
-      <div className="max-w-5xl w-full bg-white rounded-[24px] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] overflow-hidden border-2 border-[#e5e3db]">
+    <div className="flex-1 overflow-auto bg-surface flex items-center justify-center p-4 h-full w-full">
+      <div className="max-w-5xl w-full bg-white rounded-[24px] shadow-[4px_4px_0px_0px_var(--color-dark)] overflow-hidden border-2 border-stroke-light">
         {/* 顶部标题 */}
         <div
           style={{ background: 'linear-gradient(to right, rgb(37, 99, 235), rgb(67, 56, 202))' }}
@@ -269,27 +269,27 @@ export const WelcomeScreen = ({ onStart }) => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-2">
                     <User className="w-3 h-3" /> 学生年龄 / Age
                   </label>
                   <div className="relative">
                     <select
                       value={config.age}
                       onChange={handleAgeChange}
-                      className="w-full p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all appearance-none text-sm"
+                      className="w-full p-2.5 bg-white border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all appearance-none text-sm"
                     >
                       {Object.keys(CURRICULUM_DATA).map(age => (
                         <option key={age} value={age}>{age}</option>
                       ))}
                     </select>
-                    <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                    <div className="absolute right-3 top-3 pointer-events-none text-primary-placeholder">
                       <ChevronRight className="w-3 h-3 rotate-90" />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-2">
                     <Library className="w-3 h-3" />
                     {parseInt(config.age) < 6 ? "核心主题 / Theme" : "教材单元 / Unit"}
                   </label>
@@ -298,12 +298,12 @@ export const WelcomeScreen = ({ onStart }) => {
                       <select
                         value={config.unit}
                         onChange={handleUnitChange}
-                        className="w-full p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all appearance-none text-sm"
+                        className="w-full p-2.5 bg-white border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all appearance-none text-sm"
                       >
                         {allUnitOptions.map((option, index) => {
                           if (option.type === 'header') {
                             return (
-                              <option key={index} disabled className="font-bold bg-slate-100 text-slate-600">
+                              <option key={index} disabled className="font-bold bg-surface-alt text-primary-secondary">
                                 ── {option.label} ──
                               </option>
                             );
@@ -316,7 +316,7 @@ export const WelcomeScreen = ({ onStart }) => {
                         })}
                         <option value="custom_input_option">✎ 手动输入其他...</option>
                       </select>
-                      <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                      <div className="absolute right-3 top-3 pointer-events-none text-primary-placeholder">
                         <ChevronRight className="w-3 h-3 rotate-90" />
                       </div>
                     </div>
@@ -327,12 +327,12 @@ export const WelcomeScreen = ({ onStart }) => {
                         value={config.customUnit}
                         onChange={(e) => setConfig({...config, customUnit: e.target.value})}
                         placeholder="请输入自定义单元名称..."
-                        className="flex-1 p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-sm transition-all"
+                        className="flex-1 p-2.5 bg-white border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none text-sm transition-all"
                         autoFocus
                       />
                       <button
                         onClick={() => setConfig({...config, isCustomUnit: false, unit: allUnitOptions[0]?.value || ''})}
-                        className="px-2 text-slate-400 hover:text-slate-600 text-xs whitespace-nowrap"
+                        className="px-2 text-primary-placeholder hover:text-primary-secondary text-xs whitespace-nowrap"
                       >
                         取消
                       </button>
@@ -341,14 +341,14 @@ export const WelcomeScreen = ({ onStart }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                  <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-2">
                     <Clock className="w-3 h-3" /> 上课时长 / Duration
                   </label>
                   <div className="relative">
                     <select
                       value={config.duration}
                       onChange={(e) => setConfig({...config, duration: e.target.value})}
-                      className="w-full p-2.5 bg-white border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none appearance-none text-sm transition-all"
+                      className="w-full p-2.5 bg-white border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none appearance-none text-sm transition-all"
                     >
                       <option>15分钟 (微课/学前)</option>
                       <option>30分钟 (标准课时)</option>
@@ -356,14 +356,14 @@ export const WelcomeScreen = ({ onStart }) => {
                       <option>45分钟 (公开课)</option>
                       <option>60分钟 (综合实践)</option>
                     </select>
-                    <div className="absolute right-3 top-3 pointer-events-none text-slate-400">
+                    <div className="absolute right-3 top-3 pointer-events-none text-primary-placeholder">
                       <ChevronRight className="w-3 h-3 rotate-90" />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                   <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                   <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-2">
                       <Wand2 className="w-3 h-3" />
                       剧情主题 / Story Theme
                     </label>
@@ -371,14 +371,14 @@ export const WelcomeScreen = ({ onStart }) => {
                       type="text"
                       value={config.theme}
                       onChange={(e) => setConfig({...config, theme: e.target.value})}
-                      className="w-full p-2.5 bg-[#fcfbf9] border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-sm transition-all"
+                      className="w-full p-2.5 bg-surface border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none text-sm transition-all"
                       placeholder="例如：星际救援、海底探险"
                     />
                 </div>
               </div>
 
               <div className="space-y-2">
-                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-2">
+                 <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-2">
                     <Tags className="w-3 h-3" />
                     重点关键词 / Key Words (可选)
                   </label>
@@ -386,7 +386,7 @@ export const WelcomeScreen = ({ onStart }) => {
                     type="text"
                     value={config.keywords}
                     onChange={(e) => setConfig({...config, keywords: e.target.value})}
-                    className="w-full p-2.5 bg-[#fcfbf9] border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none text-sm transition-all"
+                    className="w-full p-2.5 bg-surface border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none text-sm transition-all"
                     placeholder="例如：Red, Blue, Yellow"
                   />
               </div>
@@ -394,7 +394,7 @@ export const WelcomeScreen = ({ onStart }) => {
               <div className="pt-2">
                 <button
                   onClick={handleGenerate}
-                  className="w-full py-3 border-2 border-[#2d2d2d] rounded-xl font-bold text-base shadow-[2px_2px_0px_0px_rgba(45,45,45,1)] transition-all duration-200 hover:bg-[#fffbe6] hover:text-[#2d2d2d] flex items-center justify-center gap-2"
+                  className="w-full py-3 border-2 border-primary rounded-xl font-bold text-base shadow-neo transition-all duration-200 hover:bg-warning-light hover:text-dark flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
                   开始生成

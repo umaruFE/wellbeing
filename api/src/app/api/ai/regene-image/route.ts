@@ -82,13 +82,14 @@ export async function POST(request: NextRequest) {
     console.log('[regene-image] N8N 响应:', result);
 
     // 提取 executionId
-    const executionId = result.executionId || result.id;
+    const resultData = result as { executionId?: string; id?: string; status?: string };
+    const executionId = resultData.executionId || resultData.id;
 
     return NextResponse.json({
       success: true,
       data: {
         executionId,
-        status: result.status || 'processing'
+        status: resultData.status || 'processing'
       }
     }, { headers: corsHeaders() });
 

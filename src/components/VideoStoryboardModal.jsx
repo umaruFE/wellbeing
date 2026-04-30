@@ -585,18 +585,18 @@ export const VideoStoryboardModal = ({
     <div className="flex items-center justify-center mb-6">
       {STEPS.map((step, index) => (
         <React.Fragment key={step.id}>
-          <div className={`flex flex-col items-center ${currentStep === step.id ? 'text-purple-600' : currentStep > step.id ? 'text-green-600' : 'text-slate-400'}`}>
+          <div className={`flex flex-col items-center ${currentStep === step.id ? 'text-purple' : currentStep > step.id ? 'text-success' : 'text-primary-placeholder'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
               currentStep === step.id ? 'bg-purple-100 border-2 border-purple-600' :
-              currentStep > step.id ? 'bg-green-100 border-2 border-green-600' :
-              'bg-[#fcfbf9] border-2 border-[#d1d5db]'
+              currentStep > step.id ? 'bg-success-light border-2 border-success' :
+              'bg-surface border-2 border-gray-disabled'
             }`}>
               {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
             </div>
             <span className="text-xs mt-1 hidden sm:block">{step.title}</span>
           </div>
           {index < STEPS.length - 1 && (
-            <div className={`w-12 h-0.5 mx-2 ${currentStep > step.id ? 'bg-green-500' : 'bg-slate-200'}`} />
+            <div className={`w-12 h-0.5 mx-2 ${currentStep > step.id ? 'bg-success' : 'bg-stroke'}`} />
           )}
         </React.Fragment>
       ))}
@@ -609,26 +609,26 @@ export const VideoStoryboardModal = ({
       {isGeneratingScript && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-xl">
           <RefreshCw className="w-10 h-10 text-purple-500 animate-spin mb-4" />
-          <p className="text-slate-600 font-medium">正在生成分镜图片...</p>
-          <p className="text-sm text-slate-400 mt-1">请稍候，这可能需要几分钟</p>
+          <p className="text-primary-secondary font-medium">正在生成分镜图片...</p>
+          <p className="text-sm text-primary-placeholder mt-1">请稍候，这可能需要几分钟</p>
         </div>
       )}
       
       <div>
-        <label className="text-sm font-medium text-slate-700 mb-2 block">
-          故事核心要素 <span className="text-red-500">*</span>
+        <label className="text-sm font-medium text-primary-secondary mb-2 block">
+          故事核心要素 <span className="text-error">*</span>
         </label>
         <textarea
           value={storyCore}
           onChange={(e) => setStoryCore(e.target.value)}
           placeholder="例如：poppy在花园里玩耍"
-          className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-24 transition-all"
+          className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-24 transition-all"
           disabled={isGeneratingScript}
         />
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700 mb-2 block">
+        <label className="text-sm font-medium text-primary-secondary mb-2 block">
           图片比例
         </label>
         <div className="grid grid-cols-5 gap-2">
@@ -640,7 +640,7 @@ export const VideoStoryboardModal = ({
               className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
                 selectedAspectRatio.id === ratio.id
                   ? 'border-purple-500 bg-purple-50 text-purple-700'
-                  : 'border-2 border-[#e5e3db] hover:border-[#2d2d2d] text-[#2d2d2d] hover:bg-[#fffbe6]'
+                  : 'border-2 border-stroke-light hover:border-primary text-dark hover:bg-warning-light'
               }`}
             >
               <div 
@@ -660,16 +660,16 @@ export const VideoStoryboardModal = ({
             </button>
           ))}
         </div>
-        <p className="text-xs text-slate-400 mt-1">
+        <p className="text-xs text-primary-placeholder mt-1">
           已选择：{selectedAspectRatio.label} ({selectedAspectRatio.width}×{selectedAspectRatio.height}) - {selectedAspectRatio.description}
         </p>
       </div>
 
       <div>
-        <label className="text-sm font-medium text-slate-700 mb-2 block">
+        <label className="text-sm font-medium text-primary-secondary mb-2 block">
           IP选择（单选）
         </label>
-        <p className="text-xs text-slate-400 mb-3">
+        <p className="text-xs text-primary-placeholder mb-3">
           选择要出现在视频中的IP角色
         </p>
         <div className="flex gap-3 flex-wrap">
@@ -690,10 +690,10 @@ export const VideoStoryboardModal = ({
                 disabled={!isAvailable || isGeneratingScript}
                 className={`relative flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all w-24 shrink-0 ${
                   !isAvailable
-                    ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                    ? 'border-stroke bg-surface-alt cursor-not-allowed opacity-60'
                     : isSelected
                     ? 'border-purple-500 bg-purple-50'
-                    : 'border-[#e5e3db] hover:border-[#2d2d2d] hover:bg-[#fffbe6]'
+                    : 'border-stroke-light hover:border-primary hover:bg-warning-light'
                 }`}
               >
                 {isSelected && isAvailable && (
@@ -706,7 +706,7 @@ export const VideoStoryboardModal = ({
                   alt={ip.name}
                   className="w-full h-30 object-cover rounded-lg"
                 />
-                <span className={`text-xs font-medium mt-1.5 ${!isAvailable ? 'text-gray-400' : 'text-slate-800'}`}>
+                <span className={`text-xs font-medium mt-1.5 ${!isAvailable ? 'text-primary-placeholder' : 'text-primary'}`}>
                   {ip.name}
                 </span>
                 <span
@@ -745,38 +745,38 @@ export const VideoStoryboardModal = ({
             <h4 className="font-medium text-purple-800 mb-3">视频信息</h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-slate-500">标题：</span>
-                <span className="font-medium text-slate-700">{storyboardTitle}</span>
+                <span className="text-primary-muted">标题：</span>
+                <span className="font-medium text-primary-secondary">{storyboardTitle}</span>
               </div>
               <div>
-                <span className="text-slate-500">分镜数量：</span>
-                <span className="font-medium text-slate-700">{scenes.length} 个</span>
+                <span className="text-primary-muted">分镜数量：</span>
+                <span className="font-medium text-primary-secondary">{scenes.length} 个</span>
               </div>
               <div>
-                <span className="text-slate-500">视频尺寸：</span>
-                <span className="font-medium text-slate-700">{videoSize.width} × {videoSize.height}</span>
+                <span className="text-primary-muted">视频尺寸：</span>
+                <span className="font-medium text-primary-secondary">{videoSize.width} × {videoSize.height}</span>
               </div>
             </div>
           </div>
 
           {/* 角色提示词 */}
           {characterPrompt && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h4 className="font-medium text-blue-800 mb-2">角色描述</h4>
-              <p className="text-sm text-blue-700">{characterPrompt}</p>
+            <div className="bg-info-light border border-info-border rounded-lg p-4">
+              <h4 className="font-medium text-info-active mb-2">角色描述</h4>
+              <p className="text-sm text-info-active">{characterPrompt}</p>
             </div>
           )}
 
           {/* 配音信息 */}
           {voiceInfo && voiceInfo.voice_scripts && voiceInfo.voice_scripts.length > 0 && (
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-              <h4 className="font-medium text-green-800 mb-3">配音信息</h4>
+            <div className="bg-success-light border border-success-border rounded-lg p-4">
+              <h4 className="font-medium text-success-active mb-3">配音信息</h4>
               <div className="space-y-2">
                 {voiceInfo.characters_timbre && voiceInfo.characters_timbre.length > 0 && (
-                  <div className="text-sm text-green-700 mb-2">
+                  <div className="text-sm text-success-active mb-2">
                     <span className="font-medium">音色：</span>
                     {voiceInfo.characters_timbre.map((timbre, index) => (
-                      <span key={index} className="ml-2 px-2 py-0.5 bg-green-100 rounded text-xs">
+                      <span key={index} className="ml-2 px-2 py-0.5 bg-success-light rounded text-xs">
                         {timbre.timbre_name} - {timbre.timbre_des}
                       </span>
                     ))}
@@ -784,11 +784,11 @@ export const VideoStoryboardModal = ({
                 )}
                 <div className="grid grid-cols-1 gap-2">
                   {voiceInfo.voice_scripts.map((script, index) => (
-                    <div key={index} className="flex items-center gap-2 text-sm bg-white p-2 rounded border border-green-100">
-                      <span className="text-green-600 font-mono text-xs">
+                    <div key={index} className="flex items-center gap-2 text-sm bg-white p-2 rounded border border-success-border">
+                      <span className="text-success font-mono text-xs">
                         [{(script.start_time / 1000).toFixed(1)}s - {(script.end_time / 1000).toFixed(1)}s]
                       </span>
-                      <span className="text-slate-700">{script.text}</span>
+                      <span className="text-primary-secondary">{script.text}</span>
                     </div>
                   ))}
                 </div>
@@ -798,7 +798,7 @@ export const VideoStoryboardModal = ({
 
           {/* 分镜图片部分 */}
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-slate-700">分镜详情</h4>
+            <h4 className="font-medium text-primary-secondary">分镜详情</h4>
             <button
               onClick={handleAddScene}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm"
@@ -810,11 +810,11 @@ export const VideoStoryboardModal = ({
 
           <div className="grid grid-cols-1 gap-4 overflow-y-auto">
             {scenes.map((scene) => (
-              <div key={scene.id} className="border-2 border-[#e5e3db] rounded-xl overflow-hidden transition-all hover:border-[#2d2d2d]">
+              <div key={scene.id} className="border-2 border-stroke-light rounded-xl overflow-hidden transition-all hover:border-primary">
                 <div className="flex gap-4 p-4">
                   {/* 图片 */}
                   <div className="w-64 shrink-0 flex flex-col justify-center">
-                    <div className="h-36 bg-slate-100 relative rounded-lg overflow-hidden flex items-center justify-center mb-2">
+                    <div className="h-36 bg-surface-alt relative rounded-lg overflow-hidden flex items-center justify-center mb-2">
                       {/* Loading 覆盖层 */}
                       {isGeneratingSceneImage[scene.id] && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
@@ -839,7 +839,7 @@ export const VideoStoryboardModal = ({
                           />
                         </button>
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <div className="w-full h-full flex items-center justify-center text-primary-placeholder">
                           <ImageIcon className="w-8 h-8" />
                         </div>
                       )}
@@ -856,7 +856,7 @@ export const VideoStoryboardModal = ({
                       />
                       <label
                         htmlFor={`upload-scene-${scene.id}`}
-                        className={`flex-1 px-2 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded text-center cursor-pointer transition-colors ${
+                        className={`flex-1 px-2 py-1.5 text-xs bg-surface-alt hover:bg-stroke rounded text-center cursor-pointer transition-colors ${
                           uploadingSceneImage[scene.id] ? 'opacity-50 cursor-not-allowed' : ''
                         }`}
                       >
@@ -875,7 +875,7 @@ export const VideoStoryboardModal = ({
                   {/* 信息 */}
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
-                      <h5 className="font-medium text-slate-700">分镜 {scene.sequence}</h5>
+                      <h5 className="font-medium text-primary-secondary">分镜 {scene.sequence}</h5>
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
                           时长: {scene.duration}s
@@ -885,7 +885,7 @@ export const VideoStoryboardModal = ({
                           <button
                             onClick={() => handleMoveSceneUp(scene.id)}
                             disabled={scenes.findIndex(s => s.id === scene.id) === 0}
-                            className="px-2 py-1 text-xs border border-slate-200 text-slate-600 rounded hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="px-2 py-1 text-xs border border-stroke text-primary-secondary rounded hover:bg-surface-alt disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title="上移"
                           >
                             <ChevronLeft className="w-3 h-3 rotate-90" />
@@ -893,7 +893,7 @@ export const VideoStoryboardModal = ({
                           <button
                             onClick={() => handleMoveSceneDown(scene.id)}
                             disabled={scenes.findIndex(s => s.id === scene.id) === scenes.length - 1}
-                            className="px-2 py-1 text-xs border border-slate-200 text-slate-600 rounded hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            className="px-2 py-1 text-xs border border-stroke text-primary-secondary rounded hover:bg-surface-alt disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                             title="下移"
                           >
                             <ChevronLeft className="w-3 h-3 -rotate-90" />
@@ -902,7 +902,7 @@ export const VideoStoryboardModal = ({
                         <button
                           onClick={() => handleGenerateSceneImage(scene.id)}
                           disabled={isGeneratingSceneImage[scene.id]}
-                          className="px-3 py-1 text-xs border border-purple-200 text-purple-600 rounded hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center gap-1"
+                          className="px-3 py-1 text-xs border border-purple-200 text-purple rounded hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center gap-1"
                         >
                           {isGeneratingSceneImage[scene.id] ? (
                             <>
@@ -923,7 +923,7 @@ export const VideoStoryboardModal = ({
                         </button>
                         <button
                           onClick={() => handleDeleteScene(scene.id)}
-                          className="px-3 py-1 text-xs border border-red-200 text-red-600 rounded hover:bg-red-50 transition-colors flex items-center gap-1"
+                          className="px-3 py-1 text-xs border border-error-border text-error rounded hover:bg-error-light transition-colors flex items-center gap-1"
                           title="删除分镜"
                         >
                           <Trash2 className="w-3 h-3" />
@@ -932,22 +932,22 @@ export const VideoStoryboardModal = ({
                     </div>
                     
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">描述：</label>
+                      <label className="text-xs text-primary-muted font-medium">描述：</label>
                       <textarea
                         value={scene.description}
                         onChange={(e) => handleUpdateScene(scene.id, 'description', e.target.value)}
-                        className="w-full mt-1 p-2 text-sm border border-slate-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        className="w-full mt-1 p-2 text-sm border border-stroke rounded focus:ring-2 focus:ring-purple focus:border-transparent"
                         rows={2}
                         placeholder="输入分镜描述..."
                       />
                     </div>
                     
                     <div>
-                      <label className="text-xs text-slate-500 font-medium">提示词：</label>
+                      <label className="text-xs text-primary-muted font-medium">提示词：</label>
                       <textarea
                         value={scene.prompt}
                         onChange={(e) => handleUpdateScene(scene.id, 'prompt', e.target.value)}
-                        className="w-full mt-1 p-2 text-sm border border-slate-200 rounded focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-slate-50"
+                        className="w-full mt-1 p-2 text-sm border border-stroke rounded focus:ring-2 focus:ring-purple focus:border-transparent bg-surface-alt"
                         rows={2}
                         placeholder="输入提示词..."
                       />
@@ -955,17 +955,17 @@ export const VideoStoryboardModal = ({
                     
                     {/* {scene.imagePrompt && (
                       <div>
-                        <span className="text-xs text-slate-500 font-medium">图片提示词：</span>
-                        <p className="text-sm text-slate-600 mt-1 bg-blue-50 p-2 rounded">{scene.imagePrompt}</p>
+                        <span className="text-xs text-primary-muted font-medium">图片提示词：</span>
+                        <p className="text-sm text-primary-secondary mt-1 bg-info-light p-2 rounded">{scene.imagePrompt}</p>
                       </div>
                     )}
                      */}
                     {scene.thoughtProcess && (
                       <details className="text-xs">
-                        <summary className="cursor-pointer text-slate-500 hover:text-slate-700">
+                        <summary className="cursor-pointer text-primary-muted hover:text-primary-secondary">
                           查看思考过程
                         </summary>
-                        <p className="mt-2 text-slate-600 bg-gray-50 p-2 rounded whitespace-pre-wrap">
+                        <p className="mt-2 text-primary-secondary bg-surface-alt p-2 rounded whitespace-pre-wrap">
                           {scene.thoughtProcess}
                         </p>
                       </details>
@@ -987,10 +987,10 @@ export const VideoStoryboardModal = ({
         <div className="text-center py-8">
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
             <h4 className="font-medium text-purple-800 mb-2">准备生成视频</h4>
-            <p className="text-sm text-purple-600">
+            <p className="text-sm text-purple">
               已生成 {scenes.filter(s => s.generatedImage).length} 个分镜图片
             </p>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-primary-muted mt-2">
               点击下方按钮开始合成最终视频
             </p>
           </div>
@@ -1015,17 +1015,17 @@ export const VideoStoryboardModal = ({
         </div>
       ) : (
         <div className="text-center py-8">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <Check className="w-6 h-6 text-green-600" />
+          <div className="bg-success-light border border-success-border rounded-lg p-6 mb-6">
+            <div className="w-12 h-12 bg-success-light rounded-full flex items-center justify-center mx-auto mb-3">
+              <Check className="w-6 h-6 text-success" />
             </div>
-            <h4 className="font-medium text-green-800 mb-2">视频生成成功！</h4>
-            <p className="text-sm text-green-600">
+            <h4 className="font-medium text-success-active mb-2">视频生成成功！</h4>
+            <p className="text-sm text-success">
               {storyboardTitle}
             </p>
           </div>
 
-          <div className="aspect-video bg-slate-900 rounded-lg overflow-hidden mb-6">
+          <div className="aspect-video bg-dark rounded-lg overflow-hidden mb-6">
             <video
               src={generatedVideoUrl}
               controls
@@ -1057,7 +1057,7 @@ export const VideoStoryboardModal = ({
           <div className="flex justify-between">
             <button
               onClick={() => setCurrentStep(prev => prev - 1)}
-              className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all flex items-center gap-2 font-medium"
+              className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all flex items-center gap-2 font-medium"
             >
               <ChevronLeft className="w-4 h-4" />
               上一步
@@ -1074,7 +1074,7 @@ export const VideoStoryboardModal = ({
                     document.body.removeChild(link);
                   }
                 }}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                className="px-6 py-3 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2"
               >
                 <Download className="w-5 h-5" />
                 下载视频
@@ -1096,7 +1096,7 @@ export const VideoStoryboardModal = ({
         <div className="flex justify-start">
           <button
             onClick={() => setCurrentStep(prev => prev - 1)}
-            className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all flex items-center gap-2 font-medium"
+            className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all flex items-center gap-2 font-medium"
           >
             <ChevronLeft className="w-4 h-4" />
             上一步
@@ -1110,7 +1110,7 @@ export const VideoStoryboardModal = ({
         <button
           onClick={() => setCurrentStep(prev => prev - 1)}
           disabled={currentStep === 1}
-          className="px-6 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
+          className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
         >
           <ChevronLeft className="w-4 h-4" />
           上一步
@@ -1156,19 +1156,19 @@ export const VideoStoryboardModal = ({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[740px] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between shrink-0">
+        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="bg-purple-600 p-2 rounded-lg text-white">
               <Video className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-slate-800">AI视频生成</h3>
-              <p className="text-xs text-slate-500">{STEPS.find(s => s.id === currentStep)?.description}</p>
+              <h3 className="font-bold text-lg text-primary">AI视频生成</h3>
+              <p className="text-xs text-primary-muted">{STEPS.find(s => s.id === currentStep)?.description}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-primary-placeholder hover:text-primary-secondary"
           >
             <X className="w-5 h-5" />
           </button>
@@ -1184,7 +1184,7 @@ export const VideoStoryboardModal = ({
           {renderCurrentStep()}
           
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-lg flex items-center gap-2">
+            <div className="mt-4 p-3 bg-error-light border border-error-border text-error text-sm rounded-lg flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
@@ -1192,7 +1192,7 @@ export const VideoStoryboardModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-[#e5e3db]">
+        <div className="p-6 border-t-2 border-stroke-light">
           {renderFooterButtons()}
         </div>
       </div>
@@ -1209,7 +1209,7 @@ export const VideoStoryboardModal = ({
             <button
               type="button"
               onClick={closePreviewImage}
-              className="absolute -top-3 -right-3 bg-white/90 hover:bg-white text-slate-700 rounded-full p-2 shadow"
+              className="absolute -top-3 -right-3 bg-white/90 hover:bg-white text-primary-secondary rounded-full p-2 shadow"
               aria-label="关闭预览"
             >
               <X className="w-5 h-5" />

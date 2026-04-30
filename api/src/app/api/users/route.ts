@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     let query = db
       .from('users')
       .select(`*, organization:organizations(*)`)
-      .order('created_at', { ascending: false });
+      .order('users.created_at', { ascending: false });
 
     if (organizationId) {
       query = query.eq('organization_id', organizationId);

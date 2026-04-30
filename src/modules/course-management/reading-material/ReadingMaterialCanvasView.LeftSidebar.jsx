@@ -40,17 +40,17 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
   const getPhaseColor = (phase) => isCourseDataArray ? phase.color : phase.color;
 
   return (
-    <aside className="w-64 bg-white border-r-2 border-[#e5e3db] flex flex-col shrink-0 z-10">
-      <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fcfbf9]">
+    <aside className="w-64 bg-white border-r-2 border-stroke-light flex flex-col shrink-0 z-10">
+      <div className="p-4 border-b-2 border-stroke-light bg-surface">
         <div className="flex items-center justify-between">
-          <h1 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-blue-600" /> 课程编排
+          <h1 className="font-bold text-lg text-primary flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-info" /> 课程编排
           </h1>
-          <button onClick={onLeftToggle} className="text-slate-400 hover:text-slate-600">
+          <button onClick={onLeftToggle} className="text-primary-placeholder hover:text-primary-secondary">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
-        <p className="text-xs text-slate-500 mt-1 truncate">
+        <p className="text-xs text-primary-muted mt-1 truncate">
           {isCourseDataArray && courseData[0]?.slides?.[0]?.phase 
             ? courseData[0].slides[0].phase 
             : '课程编排'}
@@ -64,7 +64,7 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
           const phaseColor = getPhaseColor(phase);
           
           return (
-            <div key={phaseKey} className="rounded-xl overflow-hidden border-2 border-[#e5e3db] bg-white">
+            <div key={phaseKey} className="rounded-xl overflow-hidden border-2 border-stroke-light bg-white">
               <button
                 onClick={() => onTogglePhase(phaseKey)}
                 className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phaseColor.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
@@ -75,7 +75,7 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                 </span>
               </button>
               {expandedPhases.includes(phaseKey) && (
-                <div className="bg-[#fcfbf9] border-t-2 border-[#e5e3db]">
+                <div className="bg-surface border-t-2 border-stroke-light">
                   {phaseSteps.map((step) => {
                     // 获取该环节的所有页面
                     const stepPages = pages.filter(p => p.slideId === step.id);
@@ -91,11 +91,11 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                     const materials = Array.from(materialsMap.entries());
 
                     return (
-                      <div key={step.id} className="border-b-2 border-[#e5e3db] last:border-0">
+                      <div key={step.id} className="border-b-2 border-stroke-light last:border-0">
                         {/* 环节标题 */}
                         <div
-                          className={`group/step hover:bg-blue-50 transition-all flex items-center ${
-                            activeStepId === step.id && !selectedMaterialId ? 'bg-blue-100' : ''
+                          className={`group/step hover:bg-info-light transition-all flex items-center ${
+                            activeStepId === step.id && !selectedMaterialId ? 'bg-info-light' : ''
                           }`}
                         >
                           <button
@@ -105,14 +105,14 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                             }}
                             className={`flex-1 text-left p-2 pl-4 text-xs transition-all flex items-start gap-2 ${
                               activeStepId === step.id && !selectedMaterialId
-                                ? 'text-blue-800 font-semibold border-l-4 border-l-blue-600'
-                                : 'text-slate-600'
+                                ? 'text-info-active font-semibold border-l-4 border-l-blue-600'
+                                : 'text-primary-secondary'
                             }`}
                           >
                             <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
                             <span className="line-clamp-2">{step.title}</span>
                             {stepPages.length > 0 && (
-                              <span className="text-[10px] text-slate-400 ml-auto">
+                              <span className="text-[10px] text-primary-placeholder ml-auto">
                                 {materials.length}个材料
                               </span>
                             )}
@@ -122,7 +122,7 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                               e.stopPropagation();
                               onDeleteStep(phaseKey, step.id);
                             }}
-                            className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-red-100 rounded text-red-500 transition-all shrink-0"
+                            className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-error-light rounded text-error transition-all shrink-0"
                             title="删除环节"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -130,9 +130,9 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                         </div>
 
                         {/* 阅读材料列表 */}
-                        <div className="bg-[#fcfbf9]/50 pl-4 border-t-2 border-[#e5e3db]">
+                        <div className="bg-surface/50 pl-4 border-t-2 border-stroke-light">
                           <div className="px-2 py-1 flex items-center justify-between group/material-header">
-                            <div className="text-[10px] font-medium text-slate-500 uppercase">
+                            <div className="text-[10px] font-medium text-primary-muted uppercase">
                               阅读材料 ({materials.length})
                             </div>
                             <button
@@ -154,7 +154,7 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                             const isSelected = selectedMaterialId === materialId && activeStepId === step.id;
 
                             return (
-                              <div key={materialId} className="border-b-2 border-[#e5e3db] last:border-0 group/material-row">
+                              <div key={materialId} className="border-b-2 border-stroke-light last:border-0 group/material-row">
                                 <div className="flex items-center">
                                   <button
                                     onClick={() => {
@@ -164,14 +164,14 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                                     className={`flex-1 text-left p-2 pl-6 text-xs transition-all flex items-center gap-2 group/material-item ${
                                       isSelected
                                         ? 'text-indigo-700 font-semibold bg-indigo-50 border-l-2 border-l-indigo-500'
-                                        : 'text-slate-500 hover:text-slate-700 hover:bg-slate-100'
+                                        : 'text-primary-muted hover:text-primary-secondary hover:bg-surface-alt'
                                     }`}
                                     title={materialTitle}
                                   >
-                                    <BookOpen className={`w-3 h-3 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-slate-400'}`} />
+                                    <BookOpen className={`w-3 h-3 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-primary-placeholder'}`} />
                                     <span className="line-clamp-1 flex-1 text-left">{materialTitle}</span>
                                     <div className="flex items-center gap-1 shrink-0">
-                                      <span className="text-[10px] text-slate-400">{materialPages.length}页</span>
+                                      <span className="text-[10px] text-primary-placeholder">{materialPages.length}页</span>
                                       {isSelected && (
                                         <ChevronRight className="w-3 h-3 text-indigo-600" />
                                       )}
@@ -197,7 +197,7 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                   })}
                   <button
                     onClick={() => onAddStep(phaseKey)}
-                    className="w-full text-center py-2 text-xs text-slate-400 hover:text-blue-500 flex items-center justify-center gap-1 transition-colors"
+                    className="w-full text-center py-2 text-xs text-primary-placeholder hover:text-info-hover flex items-center justify-center gap-1 transition-colors"
                   >
                     <Plus className="w-3 h-3" /> 新增环节
                   </button>

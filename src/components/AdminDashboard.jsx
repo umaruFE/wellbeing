@@ -1,321 +1,516 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import {
+  Search,
+  Bell,
+  Menu,
   Sparkles,
-  BookOpen,
-  Music,
-  ChevronRight,
-  Clock,
-  Image,
+  Image as ImageIcon,
   Video,
-  Activity,
+  Music,
+  FolderOpen,
+  RefreshCw,
+  ClipboardList,
+  User,
+  Users,
+  Clock,
+  ChevronDown,
+  ArrowUp,
+  ArrowDown,
+  FileText,
+  X,
+  Loader2,
   Zap,
-  RefreshCw
+  CheckCircle2
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import apiService from '../services/api';
+import { cardBgClasses } from '../theme/theme';
+import CreateCourseModal from './CreateCourseModal';
 
-export const AdminDashboard = () => {
-  const { user, ROLE_NAMES } = useAuth();
+const App = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [activeTab, setActiveTab] = useState('课程');
+  const [showQueuePanel, setShowQueuePanel] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  const [stats, setStats] = useState({
+    courses: { total: 0 },
+    media: { images: 0, videos: 0, audios: 0 },
+    tasks: { running: 0, completed: 0, queued: 0 },
+    todayCompleted: 0,
+    compute: { used: 0, total: 40000, remaining: 40000 },
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const computeUsage = {
+    used: 2847,
+    total: 40000
+  };
+
+  const queueTasks = [
+    { id: 1, name: 'AI视频生成-动物世界1', status: '运行中', progress: 45 },
+    { id: 2, name: '素材同步-背景音乐', status: '排队中', progress: 0 },
+    { id: 3, name: '课件导出-神奇大自然', status: '已完成', progress: 100 }
+  ];
+
+  // 获取用户信息
+  const getUser = () => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || '{}');
+    } catch {
+      return {};
+    }
+  };
+
+  const currentUser = getUser();
 
   // 获取用户角色对应的显示名称
-  const roleDisplayName = user?.role && ROLE_NAMES[user?.role] ? ROLE_NAMES[user.role] : '用户';
+  const getRoleDisplayName = (role) => {
+    const roleNames = {
+      super_admin: '超级管理员',
+      org_admin: '机构管理员',
+      research_leader: '研究组长',
+      creator: '创作者',
+      viewer: '查看者'
+    };
+    return roleNames[role] || '用户';
+  };
 
   // 判断是否有课程编辑权限
-  const canEditCourse = ['super_admin', 'org_admin', 'research_leader', 'creator'].includes(user?.role);
+  const canEditCourse = ['super_admin', 'org_admin', 'research_leader', 'creator'].includes(currentUser.role);
 
-  // 模拟统计数据
-  const stats = [
-    { label: '课程总数', value: '156', icon: BookOpen, color: 'bg-blue-500' },
-    { label: 'AI 生成素材', value: '2.4k', icon: Image, color: 'bg-purple-500', sub: '图片 1.8k / 视频 0.6k' },
-    // { label: '待审记录', value: '23', icon: AlertCircle, color: 'bg-orange-500' },
-  ];
+  // 计算任务统计
+  const runningCount = stats.tasks?.running || 0;
+  const completedCount = stats.todayCompleted || 0;
 
-  // 模拟最近课程数据 - 增加缩略图和音视频标签
-  const recentCourses = [
-    {
-      id: 1,
-      title: '心理健康基础知识',
-      status: '已完成',
-      time: '2小时前',
-      slides: 24,
-      thumbnail: null,
-      hasAudio: true,
-      hasVideo: true
-    },
-    {
-      id: 2,
-      title: '情绪管理技巧',
-      status: '进行中',
-      time: '1天前',
-      slides: 12,
-      thumbnail: null,
-      hasAudio: true,
-      hasVideo: false
-    },
-    {
-      id: 3,
-      title: '压力应对策略',
-      status: '已完成',
-      time: '3天前',
-      slides: 18,
-      thumbnail: null,
-      hasAudio: false,
-      hasVideo: true
-    },
-    {
-      id: 4,
-      title: '人际关系沟通',
-      status: '待审核',
-      time: '5天前',
-      slides: 16,
-      thumbnail: null,
-      hasAudio: true,
-      hasVideo: true
-    },
-  ];
+  // 累计生成素材数
+  const totalMediaCount = (stats.media?.images || 0) + (stats.media?.videos || 0) + (stats.media?.audios || 0);
 
-  // 模拟任务队列数据
-  const [queueTasks, setQueueTasks] = useState([
-    { id: 1, name: '生成课程封面', progress: 75, status: '进行中' },
-    { id: 2, name: '转录音频内容', progress: 100, status: '已完成' },
-    { id: 3, name: '生成教学视频', progress: 32, status: '进行中' },
-  ]);
+  // 获取任务显示名称
+  const getTaskDisplayName = (promptType) => {
+    const names = {
+      image: '生成图片',
+      video: '生成视频',
+      audio: '生成音频',
+      voice: '生成配音',
+      character: '提取人物',
+      storyboard: '生成分镜',
+      scene: '生成场景',
+      optimize_prompt: '优化提示词',
+      generate_images: '生成图片',
+      generate_video: '生成视频'
+    };
+    return names[promptType] || '处理任务';
+  };
 
-  // 模拟算力消耗
-  const [computeUsage, setComputeUsage] = useState({
-    used: 2847,
-    total: 40000,
-    syncProgress: 68
-  });
+  // 转换任务状态
+  const getTaskStatus = (status) => {
+    if (status === 'completed' || status === 'success') return '已完成';
+    if (status === 'processing' || status === 'running') return '运行中';
+    if (status === 'queued' || status === 'pending') return '排队中';
+    return '等待中';
+  };
 
-  // 浮动窗口显示状态
-  const [showQueuePanel, setShowQueuePanel] = useState(true);
+  // 获取任务进度
+  const getTaskProgress = (task) => {
+    if (task.status === 'completed' || task.status === 'success') return 100;
+    if (task.status === 'processing' || task.status === 'running') return 50;
+    return 0;
+  };
 
-  // 定时刷新数据
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setQueueTasks(prev => prev.map(task =>
-        task.status === '进行中' && task.progress < 100
-          ? { ...task, progress: Math.min(100, task.progress + Math.random() * 5) }
-          : task
-      ));
-    }, 2000);
-    return () => clearInterval(interval);
+  // 从后端加载数据
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      // 并行加载统计数据和课程列表
+      const [statsResult] = await Promise.all([
+        apiService.request('/api/stats')
+      ]);
+
+      // 更新统计数据
+      if (statsResult?.data) {
+        setStats(statsResult.data);
+      }
+
+      // 加载课程列表
+      await fetchRecentCourses();
+    } catch (error) {
+      console.error('获取仪表盘数据失败:', error);
+    } finally {
+      setLoading(false);
+      setStatsLoading(false);
+    }
   }, []);
 
+  const fetchRecentCourses = useCallback(async () => {
+    try {
+      setCoursesLoading(true);
+      const result = await apiService.getCourses({ limit: '8', page: '1' });
+      const list = result?.data || [];
+      setCourses(list.map((course, i) => ({
+        id: course.id,
+        title: course.title || course.unit || '未命名课程',
+        status: course.status === 'published' ? '已发布' : '草稿',
+        age: course.age_group || '--',
+        duration: course.duration ? `${course.duration}分钟` : '--',
+        capacity: '--',
+        date: course.created_at
+          ? new Date(course.created_at).toLocaleString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '/')
+          : '--',
+        imgBg: cardBgClasses[i % 8],
+      })));
+    } catch (error) {
+      console.error('获取最近课程失败:', error);
+      setCourses([]);
+    } finally {
+      setCoursesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handleCreateCourse = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalSubmit = (data) => {
+    setIsModalOpen(false);
+
+    const n8nPayload = {
+      age: data.age,
+      duration: data.duration,
+      scale: data.scale,
+      title: data.title,
+      vocabulary: data.vocabulary,
+      grammar: data.grammar,
+      skills: data.skills,
+      paths: data.paths,
+      theme: data.theme,
+      requirements: data.requirements,
+      userId: user?.id || null,
+      organizationId: user?.organization_id || null,
+      createdAt: new Date().toISOString(),
+    };
+
+    console.log('n8n Payload:', JSON.stringify(n8nPayload, null, 2));
+
+    navigate('/create', { state: { courseConfig: n8nPayload } });
+  };
+
+  const handleCourseClick = (courseId) => {
+    navigate(`/create?courseId=${courseId}`);
+  };
+
   return (
-    <div className="p-8 h-full overflow-y-auto relative mx-auto pb-20">
-      {/* 欢迎区域 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-6 mb-2">
-          <div className="transform scale-150 origin-left flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-[#f4b886] border border-gray-800 flex items-center justify-center">
-              <span className="text-sm font-bold text-[#2d2d2d]">{user?.name?.charAt(0) || 'U'}</span>
-            </div>
-          </div>
-          <div className="ml-4">
-            <h1 className="text-3xl font-bold mb-1 flex items-center gap-2 text-[#2d2d2d]">
-              欢迎回来，{user?.name || '用户'}
-            </h1>
-            <p className="text-gray-500 text-sm">
-              您的角色是：<span className="font-medium text-blue-600">{roleDisplayName}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 第一行：统计卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* 课程总数 */}
-        <div className="bg-white rounded-[24px] p-6 border border-[#e5e3db] shadow-sm flex justify-between items-center relative overflow-hidden group hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/courses')}>
-          <div className="z-10">
-            <div className="bg-[#a5c29b] text-white p-2 rounded-xl inline-block mb-3 border border-[#2d2d2d]">
-              <BookOpen size={20} />
-            </div>
-            <div className="text-3xl font-bold font-mono tracking-tight mb-1 text-[#2d2d2d]">{stats[0].value}</div>
-            <div className="text-sm text-gray-500 font-medium">{stats[0].label}</div>
-          </div>
-        </div>
-
-        {/* AI 生成素材 */}
-        <div className="bg-white rounded-[24px] p-6 border border-[#e5e3db] shadow-sm flex justify-between items-center relative overflow-hidden">
-          <div className="z-10">
-            <div className="bg-[#f0ad4e] text-white p-2 rounded-xl inline-block mb-3 border border-[#2d2d2d]">
-              <Image size={20} />
-            </div>
-            <div className="text-3xl font-bold font-mono tracking-tight mb-1 text-[#2d2d2d]">{stats[1].value}</div>
-            <div className="text-sm font-semibold text-gray-700">{stats[1].label}</div>
-            {stats[1].sub && (
-              <div className="text-xs text-gray-400 mt-1">{stats[1].sub}</div>
-            )}
-          </div>
-        </div>
-
-        {/* 创建新课程 */}
-        {canEditCourse && (
-          <div className="bg-[#f47d64] rounded-[24px] p-6 border-2 border-[#2d2d2d] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] relative overflow-hidden flex flex-col justify-between group cursor-pointer hover:translate-y-[-2px] hover:shadow-[6px_6px_0px_0px_rgba(45,45,45,1)] transition-all" onClick={() => navigate('/create')}>
-            <div className="relative z-10 text-white">
-              <h2 className="text-xl font-bold mb-2 tracking-wide">创建新课程</h2>
-              <p className="text-white/90 text-sm mb-6 max-w-[160px] leading-relaxed">基于 AI 快速生成专业的课件内容</p>
-              <button className="bg-[#fbdf9b] text-[#2d2d2d] font-bold py-2.5 px-5 rounded-full border-2 border-[#2d2d2d] text-sm flex items-center gap-1 hover:bg-[#fce5b1] transition-colors shadow-[2px_2px_0px_0px_rgba(45,45,45,1)]">
-                + 开始创建 <ChevronRight size={16} strokeWidth={3} />
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 第二行：AI 算力资源监控 */}
-      <div className="bg-white rounded-[24px] p-6 border border-[#e5e3db] shadow-sm mb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-[#f0ad4e]" size={20} fill="#f0ad4e" />
-            <h3 className="font-bold text-lg text-[#2d2d2d]">AI 算力资源</h3>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500 bg-gray-50 py-1 px-3 rounded-full border border-gray-200">
-            <RefreshCw size={12} className="animate-spin-slow" /> 实时同步中
-          </div>
-        </div>
-        <div className="mb-2"><span className="text-sm text-gray-600 font-medium">已消耗算力</span></div>
-
-        <div className="relative w-full h-8 mt-4 flex items-center">
-          <div className="absolute w-full h-1 bg-gray-200 rounded-full"></div>
-          <div className="absolute h-1 bg-green-800 rounded-full z-10" style={{ width: `${(computeUsage.used / computeUsage.total) * 100}%` }}></div>
-        </div>
-
-        <div className="flex justify-between mt-4 text-sm">
-          <span className="text-gray-500 font-medium">剩余算力: <strong className="text-gray-800">{(computeUsage.total - computeUsage.used).toLocaleString()}</strong></span>
-          <div className="text-right">
-            <span className="font-bold font-mono text-lg block leading-none mb-1">{computeUsage.used.toLocaleString()} / {computeUsage.total.toLocaleString()}</span>
-            <span className="text-xs text-gray-400">同步进度: {computeUsage.syncProgress}%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* 最近课程 */}
-      <div className="bg-white rounded-2xl p-5 border border-[#e5e3db] shadow-sm mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-xl text-[#2d2d2d]">最近课程</h3>
-          <button
-            onClick={() => navigate('/courses')}
-            className="text-sm text-gray-500 hover:text-gray-800 font-medium"
-          >
-            查看全部
+    <div className="min-h-screen bg-page text-primary font-harmony">
+      
+      {/* 顶部导航栏 */}
+      <header className="bg-surface h-[60px] flex items-center justify-between px-5 border-b border-stroke-subtle sticky top-0 z-10">
+        <div className="flex items-center gap-4">
+          <button className="text-primary-muted hover:text-primary transition-colors">
+            <Menu size={20} strokeWidth={2} />
           </button>
+          <h1 className="text-base font-semibold text-primary">工作看板</h1>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {recentCourses.map((course) => (
-            <div
-              key={course.id}
-              className="min-w-[280px] bg-white rounded-[20px] border border-[#e5e3db] shadow-sm overflow-hidden group hover:shadow-md hover:-translate-y-1 transition-all cursor-pointer"
-            >
-              {/* 缩略图预览 */}
-              <div className={`h-24 bg-gradient-to-br flex items-center justify-center border-b border-[#e5e3db]/50 ${
-                course.id === 1 ? 'from-[#ffe2e2] to-[#f3e5f5]' :
-                course.id === 2 ? 'from-[#e3f2fd] to-[#f3e5f5]' :
-                course.id === 3 ? 'from-[#fff3e0] to-[#fce4ec]' :
-                'from-[#e8f5e9] to-[#e0f7fa]'
-              }`}>
-                <div className="bg-white/40 p-3 rounded-2xl backdrop-blur-sm border border-white/50">
-                  {course.id === 1 && <Sparkles className="w-7 h-7 text-gray-600" />}
-                  {course.id === 2 && <BookOpen className="w-7 h-7 text-gray-600" />}
-                  {course.id === 3 && <Activity className="w-7 h-7 text-gray-600" />}
-                  {course.id === 4 && <Video className="w-7 h-7 text-gray-600" />}
+
+        <div className="flex items-center gap-5">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={16} className="text-primary-muted" />
+            </div>
+            <input
+              type="text"
+              placeholder="Input"
+              className="bg-white border border-stroke-light rounded-full h-8 pl-8 pr-4 text-sm w-[280px] focus:outline-none focus:border-primary-placeholder transition-all text-primary placeholder-primary-placeholder"
+            />
+          </div>
+
+          <button 
+            onClick={() => setShowQueuePanel(!showQueuePanel)}
+            className="flex items-center gap-2 bg-brand-light border border-brand-border text-brand px-3 h-8 rounded-full text-sm font-normal hover:bg-brand-accent transition-all"
+          >
+            <span className="w-1.5 h-1.5 bg-brand rounded-full"></span>
+            后台任务 {runningCount}
+          </button>
+
+          <div className="flex items-center gap-4">
+            <button className="text-primary-muted hover:text-primary transition-colors relative">
+              <Bell size={20} />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+            </button>
+            <div className="flex items-center gap-2 cursor-pointer group">
+              <div className="w-8 h-8 rounded-full bg-stroke border border-stroke-light overflow-hidden">
+                <div className="w-full h-full bg-brand flex items-center justify-center text-white text-[10px]">
+                  {user?.name?.charAt(0) || 'AD'}
                 </div>
               </div>
-              <div className="p-4">
-                <h4 className="font-bold text-[#2d2d2d] mb-3 truncate">{course.title}</h4>
-                <div className="flex items-center justify-between">
-                  <div className="flex gap-2 text-gray-400">
-                    {course.hasAudio && <Music size={14} />}
-                    {course.hasVideo && <Video size={14} />}
-                  </div>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
-                    course.status === '已完成'
-                      ? 'bg-green-100 text-green-700'
-                      : course.status === '进行中'
-                      ? 'bg-purple-100 text-purple-700'
-                      : 'bg-gray-100 text-gray-600'
-                  }`}>
-                    {course.status}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-400 mt-4 flex items-center gap-1">
-                  <Clock size={10} /> {course.time}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <footer className="mt-8 text-xs text-gray-400">© 2024 CourseGen AI</footer>
-
-      {/* 全局反馈 - 浮动悬窗显示 Redis 队列任务进度 */}
-      {showQueuePanel && (
-        <div className="fixed bottom-6 right-6 w-80 bg-[#f4fae8] rounded-2xl border-2 border-[#2d2d2d] shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] z-50 overflow-hidden flex flex-col">
-          {/* 头部 */}
-          <div className="bg-[#b4d2a6] px-4 py-3 border-b-2 border-[#2d2d2d] flex justify-between items-center">
-            <div className="flex items-center gap-2 font-bold text-gray-800">
-              <Zap size={16} fill="currentColor" /> 任务队列监控
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setShowQueuePanel(false)}
-                className="text-gray-600 hover:text-black"
-              >
-                <ChevronRight className="w-4 h-4 rotate-45" />
-              </button>
+              <span className="text-sm font-normal text-primary group-hover:text-primary">{user?.name || 'Admin'}</span>
+              <ChevronDown size={14} className="text-primary-placeholder" />
             </div>
           </div>
-          {/* 任务列表 */}
-          <div className="p-4 space-y-4 bg-white/50">
+        </div>
+      </header>
+
+      {/* 主内容区 */}
+      <main className="p-5 max-w-[1440px] mx-auto">
+        
+        {/* 顶部三卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+          
+          {/* 卡片 1: 开始创作 */}
+          <div className="bg-surface rounded-xl p-5 border border-stroke flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-6">
+              <Sparkles size={16} className="text-brand" />
+              <h2 className="text-base font-semibold text-primary">开始创作</h2>
+            </div>
+            
+            <div className="flex justify-center mb-6">
+              <button
+                onClick={handleCreateCourse}
+                className="bg-brand text-surface px-8 py-2.5 rounded-full text-sm font-normal flex items-center gap-1.5 border-2 border-primary shadow-neo hover:bg-brand-hover transition-all"
+              >
+                <span className="text-lg font-light leading-none mb-[2px]">+</span> 创建新课程
+              </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2">
+              {['图片', '视频', '音频'].map((type, idx) => {
+                const Icons = [ImageIcon, Video, Music];
+                const Colors = ['text-info', 'text-purple', 'text-success'];
+                const Routes = ['/test/ip-scene', '/test/video-generator', '/test/audio-generator'];
+                const Icon = Icons[idx];
+                return (
+                  <button key={type} onClick={() => navigate(Routes[idx])} className="flex items-center justify-center gap-1.5 py-2 bg-surface border-2 border-stroke-light rounded-lg text-sm text-primary hover:bg-surface-alt shadow-[2px_2px_0px_0px_rgba(0,0,0,0.04)] cursor-pointer transition-colors">
+                    <Icon size={14} className={Colors[idx]} /> 创建{type}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 卡片 2: 素材与资产 */}
+          <div className="bg-surface rounded-xl p-5 border border-stroke flex flex-col justify-between">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <FolderOpen size={16} className="text-brand" />
+                <h2 className="text-base font-semibold text-primary">素材与资产</h2>
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-primary bg-surface border border-stroke-light px-2 h-[22px] rounded">
+                <RefreshCw size={12} className="animate-spin-slow text-info-icon" /> 实时同步中
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between mt-2 mb-6">
+              <div className="text-sm text-primary-secondary font-normal">累计生成素材</div>
+              <div className="flex items-baseline gap-1">
+                {statsLoading ? (
+                  <Loader2 size={24} className="text-primary-placeholder animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-[30px] font-semibold text-primary leading-none">{totalMediaCount}</span>
+                    <span className="text-sm text-primary-secondary">个</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between bg-surface-alt border border-stroke-subtle rounded-lg px-3 py-2.5">
+              <div className="flex items-center gap-1.5 text-sm text-primary-secondary whitespace-nowrap mr-4">
+                <Zap size={14} className="text-warning fill-current"/> 剩余算力
+              </div>
+              <div className="flex items-center gap-3 flex-1 justify-end">
+                <span className="text-sm font-medium text-primary whitespace-nowrap">
+                  {(computeUsage.total - computeUsage.used).toLocaleString()} / {computeUsage.total / 1000}k
+                </span>
+                <div className="flex-1 max-w-[120px] min-w-[60px] bg-stroke rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className="bg-warning h-full rounded-full transition-all duration-500"
+                    style={{ width: `${(1 - computeUsage.used/computeUsage.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 卡片 3: 今日任务概览 */}
+          <div className="bg-surface rounded-xl p-5 border border-stroke flex flex-col justify-between">
+            <div className="flex items-center gap-2 mb-4">
+              <ClipboardList size={16} className="text-brand" />
+              <h2 className="text-base font-semibold text-primary">今日任务概览</h2>
+            </div>
+
+            <div className="flex items-center justify-between mt-2 mb-6">
+              <div className="text-sm text-primary-secondary font-normal">今日累计完成</div>
+              <div className="flex items-baseline gap-1">
+                {statsLoading ? (
+                  <Loader2 size={24} className="text-primary-placeholder animate-spin" />
+                ) : (
+                  <>
+                    <span className="text-[30px] font-semibold text-primary leading-none">{stats.tasks.completed}</span>
+                    <span className="text-sm text-primary-secondary">个</span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-info-light border border-info-border rounded-lg px-4 py-2 flex items-center justify-between">
+                <div className="text-primary text-sm font-normal">运行中</div>
+                <div className="text-sm font-medium text-info">{statsLoading ? '-' : stats.tasks.running}</div>
+              </div>
+              <div className="bg-success-light border border-success-border rounded-lg px-4 py-2 flex items-center justify-between">
+                <div className="text-primary text-sm font-normal">已完成</div>
+                <div className="text-sm font-medium text-success">{statsLoading ? '-' : stats.tasks.completed}</div>
+              </div>
+              <div className="bg-warning-light border border-warning-border rounded-lg px-4 py-2 flex items-center justify-between">
+                <div className="text-primary text-sm font-normal">排队中</div>
+                <div className="text-sm font-medium text-warning">{statsLoading ? '-' : stats.tasks.queued}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 最近创建列表区 */}
+        <div className="bg-surface rounded-xl border border-stroke p-5">
+          <div className="flex items-center justify-between mb-5">
+            <div className="flex items-center gap-4">
+              <h3 className="text-base font-semibold text-primary mr-2">最近创建</h3>
+              <div className="flex items-center bg-surface-alt p-1 rounded-lg">
+                {['课程', '图片', '视频', '音频'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex items-center px-4 py-1.5 rounded-md text-sm transition-all ${
+                      activeTab === tab 
+                        ? 'bg-surface text-primary font-medium' 
+                        : 'text-primary-secondary hover:text-primary font-normal bg-transparent'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <button className="flex items-center gap-1 text-sm text-brand font-normal hover:text-brand-dark transition-colors">
+              按更新时间 <ArrowDown size={14} />
+            </button>
+          </div>
+
+          {activeTab === '课程' && (
+            coursesLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader2 size={24} className="text-primary-placeholder animate-spin" />
+                <span className="ml-2 text-sm text-primary-placeholder">加载中...</span>
+              </div>
+            ) : courses.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-primary-placeholder">
+                <FileText size={40} strokeWidth={1.5} className="mb-3 opacity-40" />
+                <p className="text-sm">暂无课程，点击上方按钮创建</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {courses.map((course) => (
+                  <div 
+                    key={course.id}
+                    onClick={() => handleCourseClick(course.id)}
+                    className="group cursor-pointer bg-surface rounded-xl border-2 border-transparent transition-all duration-200 overflow-hidden flex flex-col relative
+                      shadow-[0_0_0_1px_#EFECE8]
+                      hover:border-primary 
+                      hover:shadow-neo"
+                  >
+                    <div className={`w-full h-32 ${course.imgBg} flex items-center justify-center relative border-b border-stroke-subtle`}>
+                      <div className="opacity-40 transform group-hover:scale-105 transition-transform duration-300">
+                        <ImageIcon size={40} strokeWidth={1.5} className="text-primary" />
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 flex-1 flex flex-col">
+                      <div className="flex items-start justify-between mb-3">
+                        <h4 className="font-semibold text-sm text-primary line-clamp-1 flex-1">{course.title}</h4>
+                        <span className={`text-xs px-2 h-[22px] rounded flex items-center justify-center flex-shrink-0 ml-2 border ${
+                          course.status === '已发布' 
+                            ? 'bg-success-light text-primary border-success-border' 
+                            : 'bg-surface text-primary border-stroke-light'
+                        }`}>
+                          {course.status === '已发布' ? <CheckCircle2 size={12} className="mr-1 text-success" /> : <FileText size={12} className="mr-1 text-primary-secondary" />}
+                          {course.status}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm font-normal text-primary-secondary mb-4">
+                        <span className="flex items-center gap-1"><User size={14} className="text-brand"/> {course.age}</span>
+                        <span className="w-0.5 h-0.5 bg-stroke rounded-full"></span>
+                        <span className="flex items-center gap-1"><Clock size={14} className="text-brand"/> {course.duration}</span>
+                      </div>
+
+                      <div className="text-xs font-normal text-primary-placeholder flex items-center gap-1 mt-auto">
+                        <Clock size={12} className="text-primary-placeholder" />
+                        {course.date}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+
+          {activeTab !== '课程' && (
+            <div className="flex flex-col items-center justify-center py-16 text-primary-placeholder">
+              {activeTab === '图片' && <ImageIcon size={40} strokeWidth={1.5} className="mb-3 opacity-40" />}
+              {activeTab === '视频' && <Video size={40} strokeWidth={1.5} className="mb-3 opacity-40" />}
+              {activeTab === '音频' && <Music size={40} strokeWidth={1.5} className="mb-3 opacity-40" />}
+              <p className="text-sm">暂无{activeTab}数据</p>
+            </div>
+          )}
+        </div>
+      </main>
+
+      {/* 任务监控浮窗 */}
+      {showQueuePanel && (
+        <div className="fixed bottom-6 right-6 w-80 bg-surface rounded-xl border border-stroke z-50 overflow-hidden flex flex-col shadow-xl">
+          <div className="bg-surface px-4 py-2.5 border-b border-stroke-subtle flex justify-between items-center">
+            <div className="flex items-center gap-1.5 font-semibold text-sm text-primary">
+              <Zap size={14} className="text-info fill-current" /> 后台任务监控
+            </div>
+            <button onClick={() => setShowQueuePanel(false)} className="text-primary-muted hover:text-primary">
+              <X size={14} />
+            </button>
+          </div>
+          <div className="p-4 space-y-4 max-h-64 overflow-y-auto">
             {queueTasks.map((task) => (
               <div key={task.id} className="space-y-1.5">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-semibold text-gray-800">{task.name}</span>
-                  <span className={`text-xs ${
-                    task.status === '已完成' ? 'text-green-600' : 'text-[#f0ad4e]'
-                  }`}>
-                    {task.status === '已完成' ? '完成' : `${Math.round(task.progress)}%`}
-                  </span>
+                <div className="flex items-center justify-between text-sm text-primary">
+                  <span>{task.name}</span>
+                  <span className="text-xs text-primary-secondary">{task.status}</span>
                 </div>
-                <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden border border-gray-300">
-                  <div
-                    className={`h-full rounded-full transition-all duration-300 ${
-                      task.status === '已完成'
-                        ? 'bg-green-500'
-                        : task.id === 1 ? 'bg-[#f0ad4e]'
-                        : 'bg-[#f47d64]'
-                    }`}
-                    style={{ width: `${task.progress}%` }}
-                  />
+                <div className="w-full bg-stroke h-1 rounded-full overflow-hidden">
+                  <div className="bg-info h-full" style={{ width: `${task.progress}%` }}></div>
                 </div>
               </div>
             ))}
           </div>
-          {/* 底部统计 */}
-          <div className="bg-white px-4 py-2 border-t border-[#e5e3db] flex items-center justify-between text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Zap size={12} /> Redis 队列
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="flex items-center gap-1"><RefreshCw size={10} className="animate-spin-slow" /> 运行中 {queueTasks.filter(t => t.status === '进行中').length}</span>
-            </div>
-          </div>
         </div>
       )}
 
-      {/* 恢复悬浮窗按钮 */}
-      {!showQueuePanel && (
-        <button
-          onClick={() => setShowQueuePanel(true)}
-          className="fixed bottom-6 right-6 bg-[#b4d2a6] text-gray-800 p-3 rounded-full shadow-lg hover:bg-[#a3c193] transition-colors z-50 border-2 border-[#2d2d2d]"
-        >
-          <Zap className="w-5 h-5" />
-        </button>
-      )}
+      <CreateCourseModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onFinish={handleModalSubmit}
+      />
     </div>
   );
 };
+
+export default App;
