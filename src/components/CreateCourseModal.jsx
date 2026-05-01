@@ -108,12 +108,9 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
   };
 
   const handleAddTag = (e, field, value, setter, inputRef) => {
-    // 跳过中文输入法的中间状态
     if (e?.nativeEvent?.isComposing) return;
-    if (e?.key === 'Enter') {
-      e.preventDefault();
-    }
-    // 优先使用传入的 value，否则从 ref 获取
+    if (e?.key !== 'Enter') return;
+    e.preventDefault();
     const rawValue = value !== undefined ? value : (inputRef?.current?.value || '');
     const trimmedValue = rawValue.trim();
     if (trimmedValue) {
