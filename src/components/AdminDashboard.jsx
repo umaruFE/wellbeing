@@ -278,7 +278,7 @@ const App = () => {
   };
 
   const handleCourseClick = (courseId) => {
-    navigate(`/create?courseId=${courseId}`);
+    navigate(`/courses/${courseId}/overview`);
   };
 
   return (
