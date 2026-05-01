@@ -107,7 +107,7 @@ export const CourseManagementPage = () => {
 
   // 编辑课程：跳转到创建页并携带 courseId，让编辑器直接进入表格模式
   const handleEditCourse = (courseId) => {
-    navigate(`/create?courseId=${courseId}`);
+    navigate(`/courses/${courseId}/overview`);
   };
 
   const handleDeleteCourse = async (courseId) => {
