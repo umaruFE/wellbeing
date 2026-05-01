@@ -21,7 +21,7 @@ import {
   Settings,
   AlertCircle
 } from 'lucide-react';
-import { CourseStepNavigation } from '../../../components/CourseStepNavigation';
+import { useCourseLayout } from '../../../components/CourseLayout';
 import apiService from '../../../services/api';
 
 const colors = {
@@ -274,6 +274,7 @@ const LessonPlanBoard = ({ courseId, onStepClick, currentStep }) => {
 // ============================================================
 const LessonPlanPage = () => {
   const { courseId } = useParams();
+  const { setTitle, setActions } = useCourseLayout();
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -295,9 +296,35 @@ const LessonPlanPage = () => {
     fetchCourse();
   }, [courseId]);
 
+  useEffect(() => {
+    const displayTitle = courseData?.title || '未命名课程';
+    setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{safeRender(displayTitle)}</span>);
+    setActions(
+      <>
+        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
+          <RefreshCw size={12} /> 所有更改已保存
+        </span>
+        <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
+             style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
+          后台任务 2
+        </div>
+        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
+                style={{ backgroundColor: '#4C5866' }}>
+          导出
+        </button>
+        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: colors.brand.DEFAULT }}>
+          发布
+        </button>
+      </>
+    );
+    return () => { setTitle(null); setActions(null); };
+  }, [courseData, setTitle, setActions]);
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.neutral.bg.layout }}>
+      <div className="flex items-center justify-center h-full" style={{ backgroundColor: colors.neutral.bg.layout }}>
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-brand-coral border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p style={{ color: colors.neutral.text[2] }}>加载中...</p>
@@ -306,47 +333,11 @@ const LessonPlanPage = () => {
     );
   }
 
-  const displayData = {
-    title: courseData?.title || 'Unit 3: Animals (神奇的动物)',
-  };
-
-  const title = <span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{safeRender(displayData.title)}</span>;
-
-  const actions = (
-    <>
-      <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-        <RefreshCw size={12} /> 所有更改已保存
-      </span>
-      <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
-           style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
-        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
-        后台任务 2
-      </div>
-      <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
-              style={{ backgroundColor: '#4C5866' }}>
-        导出
-      </button>
-      <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: colors.brand.DEFAULT }}>
-        发布
-      </button>
-    </>
-  );
-
   return (
     <div
-      className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden font-sans"
+      className="flex flex-col flex-1 min-w-0 h-full overflow-hidden font-sans"
       style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", system-ui, sans-serif' }}
     >
-      <div className="p-6 pb-0 shrink-0">
-        <CourseStepNavigation
-          courseId={courseId}
-          currentStep={2}
-          title={title}
-          actions={actions}
-        />
-      </div>
-
       <main className="flex-1 overflow-y-auto p-6 pt-6">
         <div className="max-w-[1600px] mx-auto">
           <LessonPlanBoard courseId={courseId} />

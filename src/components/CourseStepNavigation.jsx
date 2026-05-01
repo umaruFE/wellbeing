@@ -34,7 +34,7 @@ const colors = {
 export const steps = [
   { id: 1, label: '课程概览', icon: Layout },
   { id: 2, label: '教案设计', icon: BookOpen },
-  { id: 3, label: 'PPT 课件', icon: FileCheck },
+  { id: 3, label: 'PPT课件', icon: FileCheck },
   { id: 4, label: '阅读材料', icon: MessageSquare },
 ];
 

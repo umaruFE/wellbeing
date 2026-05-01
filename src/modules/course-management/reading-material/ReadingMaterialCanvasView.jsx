@@ -27,6 +27,7 @@ import { PromptInputModal } from '../../../components/PromptInputModal';
 import { VideoStoryboardModal } from '../../../components/VideoStoryboardModal';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
+import { useCourseLayout } from '../../../components/CourseLayout';
 import { aiAssetService } from '../../../services/aiAssetService';
 import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
 
@@ -53,58 +54,36 @@ const colors = {
   },
 };
 
-const navSteps = [
-  { id: 1, label: '课程概览', icon: Layout },
-  { id: 2, label: '教案设计', icon: BookOpen },
-  { id: 3, label: 'PPT 课件', icon: FileCheck },
-  { id: 4, label: '阅读材料', icon: MessageSquare },
-];
-
-// 步骤导航项
-const StepItem = ({ step, isActive, isCompleted, onClick }) => {
-  const Icon = step.icon;
-  return (
-    <button onClick={() => onClick(step.id)} className="flex items-center gap-2 cursor-pointer">
-      <div
-        className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
-        style={{
-          backgroundColor: isActive ? colors.brand.DEFAULT : (isCompleted ? colors.brand.light : colors.neutral.white),
-          border: isCompleted || isActive ? 'none' : `1.5px solid ${colors.neutral.border.DEFAULT}`,
-          color: isActive ? '#FFF' : (isCompleted ? colors.brand.DEFAULT : colors.neutral.text.disabled),
-        }}
-      >
-        {isCompleted ? <Check size={14} strokeWidth={3} /> : (isActive ? <Icon size={14} /> : <span className="text-xs font-bold">{step.id}</span>)}
-      </div>
-      <span
-        className="text-[13px] font-bold tracking-wide"
-        style={{ color: isActive || isCompleted ? colors.neutral.text[1] : colors.neutral.text.disabled }}
-      >
-        {step.label}
-      </span>
-    </button>
-  );
-};
-
-/**
- * ReadingMaterialCanvasView - 阅读材料画布模式视图
- * 独立的画布视图，专门用于编辑阅读材料
- */
 export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const navigate = useNavigate();
+  const { setTitle, setActions } = useCourseLayout();
   
-  // 从 initialConfig 获取 courseId
   const courseId = initialConfig?.courseId;
 
-  // 导航栏步骤点击
-  const handleNavigationStepClick = (stepId) => {
-    if (!courseId || stepId === 4) return;
-    switch (stepId) {
-      case 1: navigate(`/courses/${courseId}/overview`); break;
-      case 2: navigate(`/courses/${courseId}/lesson-plan`); break;
-      case 3: navigate(`/courses/${courseId}/ppt`); break;
-      default: break;
-    }
-  };
+  useEffect(() => {
+    setTitle(null);
+    setActions(
+      <>
+        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
+          <RefreshCw size={12} /> 所有更改已保存
+        </span>
+        <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
+             style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
+          后台任务 2
+        </div>
+        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
+                style={{ backgroundColor: '#4C5866' }}>
+          导出
+        </button>
+        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: colors.brand.DEFAULT }}>
+          发布
+        </button>
+      </>
+    );
+    return () => { setTitle(null); setActions(null); };
+  }, [setTitle, setActions]);
 
   const initialData = initialConfig?.courseData || {};
   const isCourseDataArray = Array.isArray(initialData);
@@ -1158,44 +1137,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   };
 
   return (
-    <div className="flex flex-col h-screen" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", system-ui, sans-serif' }}>
-      {/* 顶部步骤导航栏 */}
-      <div className="p-4 pb-0 shrink-0">
-        <header className="h-[72px] bg-white rounded-2xl flex items-center justify-between px-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-          <div className="flex-1"></div>
-
-          <nav className="flex items-center justify-center flex-1 shrink-0">
-            {navSteps.map((step, index) => (
-              <React.Fragment key={step.id}>
-                <StepItem
-                  step={step}
-                  isActive={step.id === 4}
-                  isCompleted={step.id < 4}
-                  onClick={handleNavigationStepClick}
-                />
-                {index < navSteps.length - 1 && (
-                  <div className="w-10 h-px mx-3" style={{ backgroundColor: colors.neutral.border.secondary }}></div>
-                )}
-              </React.Fragment>
-            ))}
-          </nav>
-
-          <div className="flex items-center justify-end gap-3 flex-1">
-            <button className="px-4 py-1.5 rounded-lg text-[13px] font-medium border flex items-center gap-2 hover:bg-gray-50 transition-colors" style={{ borderColor: colors.neutral.border.DEFAULT, color: colors.neutral.text[1] }}>
-              <RefreshCw size={14} /> 重新生成
-            </button>
-            <button className="px-4 py-1.5 rounded-lg text-[13px] font-medium border flex items-center gap-2 hover:bg-gray-50 transition-colors" style={{ borderColor: colors.neutral.border.DEFAULT, color: colors.neutral.text[1] }}>
-              <Edit3 size={14} /> 编辑
-            </button>
-            <button className="px-6 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: '#445161' }}>
-              导出全部
-            </button>
-          </div>
-        </header>
-      </div>
-
-      {/* 主内容区 */}
-      <div className="flex-1 flex overflow-hidden relative">
+    <div className="flex flex-1 h-full overflow-hidden relative">
       {/* LEFT SIDEBAR */}
       <ReadingMaterialCanvasViewLeftSidebar
         courseData={courseData}
@@ -1645,7 +1587,6 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           </div>
         </div>
       )}
-      </div>
       </div>
   );
 });

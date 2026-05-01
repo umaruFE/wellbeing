@@ -10,11 +10,9 @@ import {
   Compass,
   MessageSquare,
   Smile,
-  FileCheck,
-  ChevronLeft,
-  ChevronRight
+  FileCheck
 } from 'lucide-react';
-import { CourseStepNavigation } from '../../../components/CourseStepNavigation';
+import { useCourseLayout } from '../../../components/CourseLayout';
 import apiService from '../../../services/api';
 
 const colors = {
@@ -52,6 +50,7 @@ const colors = {
 const CourseOverviewPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { setTitle, setActions } = useCourseLayout();
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -86,6 +85,32 @@ const CourseOverviewPage = () => {
     backgroundColor: colors.brand.DEFAULT,
     color: colors.neutral.white,
   };
+
+  useEffect(() => {
+    const displayTitle = courseData?.title || '未命名课程';
+    setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{displayTitle}</span>);
+    setActions(
+      <>
+        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
+          <RefreshCw size={12} /> 所有更改已保存
+        </span>
+        <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
+             style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
+          后台任务 2
+        </div>
+        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
+                style={{ backgroundColor: '#4C5866' }}>
+          导出
+        </button>
+        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
+                style={{ backgroundColor: colors.brand.DEFAULT }}>
+          发布
+        </button>
+      </>
+    );
+    return () => { setTitle(null); setActions(null); };
+  }, [courseData, setTitle, setActions]);
 
   const ObjectiveCard = ({ icon, title, color, content }) => (
     <div className="bg-white rounded-[24px] p-8 border flex gap-6 transition-all hover:translate-y-[-4px] hover:shadow-xl relative overflow-hidden group"
@@ -131,36 +156,7 @@ const CourseOverviewPage = () => {
   };
 
   return (
-    <div className="min-h-screen p-6" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif' }}>
-      <CourseStepNavigation
-        courseId={courseId}
-        currentStep={1}
-        title={null}
-        actions={
-          <>
-            <button
-              className="px-5 py-2 rounded-xl font-bold flex items-center gap-2 hover:translate-y-[-2px] active:translate-y-[1px] active:shadow-none transition-all"
-              style={neoButtonStyle}
-            >
-              <RefreshCw size={16} /> 重新生成
-            </button>
-            <button
-              onClick={() => navigate(`/create?courseId=${courseId}`)}
-              className="px-5 py-2 rounded-xl font-bold flex items-center gap-2 hover:translate-y-[-2px] active:translate-y-[1px] active:shadow-none transition-all"
-              style={neoButtonStyle}
-            >
-              <Edit3 size={16} /> 编辑
-            </button>
-            <button
-              className="px-6 py-2 rounded-xl font-bold hover:translate-y-[-2px] transition-all text-white"
-              style={{ ...neoButtonStyle, backgroundColor: colors.success.DEFAULT, border: `2px solid ${colors.neutral.text[1]}` }}
-            >
-              导出
-            </button>
-          </>
-        }
-      />
-
+    <div className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif' }}>
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start max-w-[1400px] mx-auto">
         {/* Left: Course Core Info */}

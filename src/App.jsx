@@ -11,6 +11,7 @@ import CourseOverviewPage from './modules/course-management/course-overview/Cour
 import LessonPlanPage from './modules/course-management/lesson-plan/LessonPlanPage';
 import { CanvasView } from './modules/course-management/ppt-canvas/CanvasView';
 import { ReadingMaterialCanvasView } from './modules/course-management/reading-material/ReadingMaterialCanvasView';
+import { CourseLayout } from './components/CourseLayout';
 import CreateCoursePage from './modules/course-management/create-course/CreateCoursePage';
 import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
 import { VoiceManagementPage } from './modules/material-management/audio/VoiceManagementPage';
@@ -68,41 +69,12 @@ function App() {
               }
             />
 
-            <Route
-              path="/courses/:courseId/overview"
-              element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <CourseOverviewPage />
-                </RequireAuth>
-              }
-            />
-
-            <Route
-              path="/courses/:courseId/lesson-plan"
-              element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <LessonPlanPage />
-                </RequireAuth>
-              }
-            />
-
-            <Route
-              path="/courses/:courseId/ppt"
-              element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <CanvasView initialConfig={{ courseId: 'temp' }} />
-                </RequireAuth>
-              }
-            />
-
-            <Route
-              path="/courses/:courseId/reading"
-              element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <ReadingMaterialCanvasView initialConfig={{ courseId: 'temp' }} />
-                </RequireAuth>
-              }
-            />
+            <Route path="/courses/:courseId" element={<CourseLayout />}>
+              <Route path="overview" element={<CourseOverviewPage />} />
+              <Route path="lesson-plan" element={<LessonPlanPage />} />
+              <Route path="ppt" element={<CanvasView initialConfig={{ courseId: 'temp' }} />} />
+              <Route path="reading" element={<ReadingMaterialCanvasView initialConfig={{ courseId: 'temp' }} />} />
+            </Route>
 
             <Route
               path="/course-square"
