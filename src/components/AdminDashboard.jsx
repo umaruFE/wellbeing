@@ -236,7 +236,9 @@ const App = () => {
           theme: data.theme,
           keywords: keywordsList,
           courseData: parsedCourseData,
-          status: 'draft'
+          status: 'draft',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || user?.organization_id || null
         };
 
         const result = await apiService.createCourse(saveData);

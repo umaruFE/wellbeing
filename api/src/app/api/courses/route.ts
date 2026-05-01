@@ -25,21 +25,15 @@ export async function GET(request: NextRequest) {
 
     const filters: Record<string, any> = {};
     
-    // Handle user_id type conversion - skip filtering for numeric user_id
-    if (userId && !isNaN(Number(userId))) {
-      // Skip user_id filter for numeric IDs, return all courses
-      console.log('Skipping user_id filter for numeric ID:', userId);
-    } else if (userId) {
-      filters.user_id = userId;
+    if (userId) {
+      filters.user_id = !isNaN(Number(userId)) ? Number(userId) : userId;
     }
     
     if (status) filters.status = status;
     if (isPublic === 'true') filters.is_public = true;
 
-    // Pagination
     const offset = (page - 1) * limit;
 
-    // Get courses using db client
     let courses;
     try {
       const result = await db.query(
@@ -58,7 +52,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get total count
     let total = 0;
     try {
       const countResult = await db.query(
@@ -118,8 +111,8 @@ export async function POST(request: NextRequest) {
 
     // Handle userId type conversion
     let processed_user_id = userId;
-    if (typeof userId === 'number' || (typeof userId === 'string' && !isNaN(Number(userId)) && userId !== '')) {
-      processed_user_id = null;
+    if (typeof userId === 'string' && !isNaN(Number(userId)) && userId !== '') {
+      processed_user_id = Number(userId);
     }
 
     const courseRecord = {
