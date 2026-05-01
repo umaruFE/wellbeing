@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   RefreshCw,
   Edit3,
@@ -127,47 +127,46 @@ const ObjectiveCard = ({ icon, title, color, content, className = '' }) => (
 const CreateCoursePageContent = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const courseId = searchParams.get('courseId');
-
+  
   const [currentStep, setCurrentStep] = useState(1);
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 如果有 courseId，跳转到课程概览页面
+  // 从 state 中获取课程数据，然后跳转
   useEffect(() => {
+    const stateData = location.state?.courseData;
+    if (stateData) {
+      setCourseData(stateData);
+      const id = stateData.id;
+      if (id) {
+        navigate(`/courses/${id}/overview`, { replace: true });
+        return;
+      }
+    }
+    // 如果有 URL 中的 courseId 也跳转
     if (courseId) {
       navigate(`/courses/${courseId}/overview`, { replace: true });
       return;
     }
-
-    const fetchCourse = async () => {
-      try {
-        // 只有新建课程时才需要获取默认数据
-        const result = await apiService.getCourse('default');
-        setCourseData(result.data || result);
-        console.log('[CreateCoursePage] 课程数据:', result.data || result);
-      } catch (err) {
-        console.error('[CreateCoursePage] 获取课程失败:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchCourse();
-  }, [courseId, navigate]);
+    setLoading(false);
+  }, [location.state, courseId, navigate]);
 
   const handleStepClick = (stepId) => {
     setCurrentStep(stepId);
+    const targetCourseId = courseId || location.state?.courseData?.id;
     switch (stepId) {
       case 1:
         break;
       case 2:
-        navigate(`/create?courseId=${courseId}&view=table`);
+        navigate(`/create?courseId=${targetCourseId}&view=table`);
         break;
       case 3:
-        navigate(`/create?courseId=${courseId}&view=canvas`);
+        navigate(`/create?courseId=${targetCourseId}&view=canvas`);
         break;
       case 4:
-        navigate(`/create?courseId=${courseId}&view=reading`);
+        navigate(`/create?courseId=${targetCourseId}&view=reading`);
         break;
       default:
         break;
@@ -246,7 +245,7 @@ const CreateCoursePageContent = () => {
                   <button 
                     onClick={() => handleStepClick(step.id)}
                     className="flex items-center gap-2 cursor-pointer"
-                    disabled={!courseId && step.id > 1}
+                    disabled={!courseId && !location.state?.courseData?.id && step.id > 1}
                   >
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${!isActive && 'border'}`}
                          style={{ 

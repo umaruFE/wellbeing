@@ -15,6 +15,40 @@ function corsHeaders() {
   };
 }
 
+function repairTruncatedJson(text) {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{' || ch === '[') depth++;
+    if (ch === '}' || ch === ']') depth--;
+  }
+
+  if (inString) {
+    const lastQuote = trimmed.lastIndexOf('"');
+    if (lastQuote > 0) {
+      const beforeQuote = trimmed.substring(0, lastQuote).trimEnd();
+      const trailingComma = beforeQuote.endsWith(',') ? beforeQuote.slice(0, -1).trimEnd() : beforeQuote;
+      return trailingComma + '}'.repeat(Math.max(depth, 0));
+    }
+  }
+
+  if (depth > 0) {
+    return trimmed + '}'.repeat(depth);
+  }
+
+  return null;
+}
+
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
@@ -113,18 +147,53 @@ export async function POST(request: NextRequest) {
       console.log('[generate-course] firstItem:', firstItem);
 
       if (firstItem?.text && typeof firstItem.text === 'string') {
+        const text = firstItem.text.trim();
+        console.log('[generate-course] text长度:', text.length, '前100字符:', text.substring(0, 100));
+        
         try {
-          const parsed = JSON.parse(firstItem.text);
-          console.log('[generate-course] 解析text后的类型:', typeof parsed, Array.isArray(parsed) ? '(数组)' : '');
-          console.log('[generate-course] parsed keys:', parsed ? Object.keys(parsed) : 'null');
+          // 尝试直接解析
+          courseData = JSON.parse(text);
+          console.log('[generate-course] 直接解析text成功');
+        } catch (e1) {
+          // 如果直接解析失败，尝试修复并重新解析
+          console.log('[generate-course] 直接解析失败，尝试修复JSON:', e1.message);
+          try {
+            // 修复常见的 JSON 格式问题：
+            // 1. 单引号替换为双引号（仅在属性名和字符串值中）
+            let fixedText = text;
+            
+            // 修复属性名中的单引号: 'name' -> "name"
+            fixedText = fixedText.replace(/'([^']+)'\s*:/g, '"$1":');
+            
+            // 修复字符串值中的单引号: : 'value' -> : "value"
+            // 使用更精确的正则来匹配字符串值
+            fixedText = fixedText.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (match, value) => {
+              // 转义字符串中可能存在的特殊字符
+              const escaped = value.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
+              return `: "${escaped}"`;
+            });
+            
+            courseData = JSON.parse(fixedText);
+            console.log('[generate-course] 修复后解析成功');
+          } catch (e2) {
+            console.error('[generate-course] 修复后仍然解析失败:', e2.message);
 
-          if (parsed?.courseData) {
-            courseData = parsed.courseData;
-            console.log('[generate-course] 从parsed.courseData提取成功');
+            // 第三次尝试：修复截断的 JSON（AI 输出被 max_tokens 截断）
+            try {
+              const repaired = repairTruncatedJson(text);
+              if (repaired) {
+                courseData = JSON.parse(repaired);
+                console.log('[generate-course] 截断修复成功');
+              }
+            } catch (e3) {
+              console.error('[generate-course] 截断修复也失败:', e3.message);
+            }
           }
-        } catch (e) {
-          console.error('[generate-course] 解析text失败:', e.message);
         }
+      } else if (typeof firstItem?.text === 'object') {
+        // text 已经是对象了
+        courseData = firstItem.text.courseData || firstItem.text;
+        console.log('[generate-course] text已是对象');
       } else if (firstItem?.courseData) {
         courseData = firstItem.courseData;
         console.log('[generate-course] 从firstItem.courseData提取成功');

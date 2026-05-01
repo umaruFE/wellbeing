@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { X, Check, Loader2 } from 'lucide-react';
 import { colors, typography, shadows } from '../theme/theme';
 
@@ -20,8 +20,35 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
   const [submitting, setSubmitting] = useState(false);
   const [vocabInput, setVocabInput] = useState('');
   const [grammarInput, setGrammarInput] = useState('');
+  const vocabInputRef = useRef(null);
+  const grammarInputRef = useRef(null);
+  const [errors, setErrors] = useState({});
 
   if (!isOpen) return null;
+
+  // 验证表单
+  const validateStep = (currentStep) => {
+    const newErrors = {};
+    if (currentStep === 1) {
+      if (!formData.title?.trim()) {
+        newErrors.title = '请输入课程名称';
+      }
+    }
+    if (currentStep === 3) {
+      if (!formData.theme?.trim()) {
+        newErrors.theme = '请输入情境主题';
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 处理下一步
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      setStep(step + 1);
+    }
+  };
 
   // --- 业务逻辑 ---
   const getAuthHeaders = () => {
@@ -59,7 +86,6 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
 
         // N8N 直接返回 courseData
         if (result.data?.courseData) {
-          console.log('[CreateCourseModal] 收到courseData:', result.data.courseData);
           onFinish?.({
             ...data,
             courseData: result.data.courseData
@@ -72,19 +98,31 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
       } else {
         console.error('[CreateCourseModal] 课件生成失败:', result.error || '未知错误');
         setSubmitting(false);
+        alert(result.error || '课件生成失败，请重试');
       }
     } catch (error) {
       console.error('网络错误，请重试');
       setSubmitting(false);
+      alert('网络错误，请检查网络连接后重试');
     }
   };
 
-  const handleAddTag = (e, field, value, setter) => {
-    if (e.key === 'Enter' && value.trim()) {
+  const handleAddTag = (e, field, value, setter, inputRef) => {
+    // 跳过中文输入法的中间状态
+    if (e?.nativeEvent?.isComposing) return;
+    if (e?.key === 'Enter') {
       e.preventDefault();
-      if (!formData[field].includes(value.trim())) {
-        setFormData({ ...formData, [field]: [...formData[field], value.trim()] });
-      }
+    }
+    // 优先使用传入的 value，否则从 ref 获取
+    const rawValue = value !== undefined ? value : (inputRef?.current?.value || '');
+    const trimmedValue = rawValue.trim();
+    if (trimmedValue) {
+      setFormData(prev => {
+        if (!prev[field].includes(trimmedValue)) {
+          return { ...prev, [field]: [...prev[field], trimmedValue] };
+        }
+        return prev;
+      });
       setter('');
     }
   };
@@ -178,8 +216,9 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <section>
                 <label className="block text-sm font-bold mb-3 text-[#333E4E]">课程名称 <span className="text-orange-500">*</span></label>
-                <input type="text" placeholder="请输入课程名称" value={formData.title} onChange={e => updateField('title', e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#F4785E] transition-all" />
+                <input type="text" placeholder="请输入课程名称" value={formData.title} onChange={e => { updateField('title', e.target.value); setErrors(prev => ({ ...prev, title: '' })); }}
+                  className={`w-full px-4 py-3.5 rounded-xl border transition-all focus:outline-none ${errors.title ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-[#F4785E]'}`} />
+                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
               </section>
               <div className="grid grid-cols-2 gap-8">
                 <section>
@@ -221,24 +260,67 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                 <div className="grid grid-cols-2 gap-px bg-[#F9F9F9] rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="p-6">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">词汇</span>
-                    <div className="min-h-[110px] mt-4 bg-white rounded-xl p-3 flex flex-wrap gap-2 content-start border border-transparent focus-within:border-orange-200 transition-all">
+                    <div className="min-h-[110px] mt-4 bg-white rounded-xl p-3 flex flex-wrap gap-2 content-start border border-transparent focus-within:border-orange-200 transition-all relative">
                       {formData.vocabulary.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-orange-50 text-[#F4785E] rounded text-xs border border-orange-100 flex items-center gap-1">
-                          {tag} <X size={12} className="cursor-pointer" onClick={() => updateField('vocabulary', formData.vocabulary.filter(t => t !== tag))} />
+                        <span key={tag} className="px-3 py-1 rounded-full border border-orange-200 bg-orange-50 text-orange-500 text-sm font-medium flex items-center gap-1">
+                          {tag}
+                          <X size={14} className="cursor-pointer hover:text-orange-700" onClick={() => updateField('vocabulary', formData.vocabulary.filter(t => t !== tag))} />
                         </span>
                       ))}
-                      <textarea className="w-full h-12 bg-transparent outline-none text-sm resize-none" placeholder="输入内容" value={vocabInput} 
-                        onChange={e => setVocabInput(e.target.value)} onKeyDown={e => handleAddTag(e, 'vocabulary', vocabInput, setVocabInput)} />
+                      <textarea ref={vocabInputRef} className="w-full h-12 bg-transparent outline-none text-sm resize-none" placeholder="输入内容" value={vocabInput} 
+                        onChange={e => setVocabInput(e.target.value)} onKeyDown={e => handleAddTag(e, 'vocabulary', vocabInput, setVocabInput, vocabInputRef)} />
+                      {vocabInput && (
+                        <button type="button" onClick={() => {
+                          const val = vocabInputRef.current?.value || vocabInput;
+                          if (val.trim()) {
+                            setFormData(prev => {
+                              if (!prev.vocabulary.includes(val.trim())) {
+                                return { ...prev, vocabulary: [...prev.vocabulary, val.trim()] };
+                              }
+                              return prev;
+                            });
+                            setVocabInput('');
+                            vocabInputRef.current.value = '';
+                          }
+                        }}
+                          className="absolute top-3 right-3 w-5 h-5 rounded-full border border-orange-300 text-orange-400 hover:bg-orange-50 flex justify-center text-xs font-bold">
+                          +
+                        </button>
+                      )}
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-2 font-medium italic">输入后按回车添加</p>
+                    <p className="text-[11px] text-gray-400 mt-2 font-medium italic">输入内容后点击右侧 + 添加</p>
                   </div>
                   <div className="p-6 border-l border-gray-200">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">语法/句型</span>
-                    <div className="min-h-[110px] mt-4 bg-white rounded-xl p-3 border border-transparent focus-within:border-orange-200 transition-all">
-                      <textarea className="w-full h-12 bg-transparent outline-none text-sm resize-none" placeholder="输入内容" value={grammarInput} 
-                        onChange={e => setGrammarInput(e.target.value)} onKeyDown={e => handleAddTag(e, 'grammar', grammarInput, setGrammarInput)} />
+                    <div className="min-h-[110px] mt-4 bg-white rounded-xl p-3 flex flex-wrap gap-2 content-start border border-transparent focus-within:border-orange-200 transition-all relative">
+                      {formData.grammar.map(tag => (
+                        <span key={tag} className="px-3 py-1 rounded-full border border-orange-200 bg-orange-50 text-orange-500 text-sm font-medium flex items-center gap-1">
+                          {tag}
+                          <X size={14} className="cursor-pointer hover:text-orange-700" onClick={() => updateField('grammar', formData.grammar.filter(t => t !== tag))} />
+                        </span>
+                      ))}
+                      <textarea ref={grammarInputRef} className="w-full h-12 bg-transparent outline-none text-sm resize-none" placeholder="输入内容" value={grammarInput} 
+                        onChange={e => setGrammarInput(e.target.value)} onKeyDown={e => handleAddTag(e, 'grammar', grammarInput, setGrammarInput, grammarInputRef)} />
+                      {grammarInput && (
+                        <button type="button" onClick={() => {
+                          const val = grammarInputRef.current?.value || grammarInput;
+                          if (val.trim()) {
+                            setFormData(prev => {
+                              if (!prev.grammar.includes(val.trim())) {
+                                return { ...prev, grammar: [...prev.grammar, val.trim()] };
+                              }
+                              return prev;
+                            });
+                            setGrammarInput('');
+                            if (grammarInputRef.current) grammarInputRef.current.value = '';
+                          }
+                        }}
+                          className="absolute top-3 right-3 w-5 h-5 rounded-full border border-orange-300 text-orange-400 hover:bg-orange-50 flex justify-center text-xs font-bold">
+                          +
+                        </button>
+                      )}
                     </div>
-                    <p className="text-[11px] text-gray-400 mt-2 font-medium italic">输入后按回车添加</p>
+                    <p className="text-[11px] text-gray-400 mt-2 font-medium italic">输入内容后点击右侧 + 添加</p>
                   </div>
                 </div>
               </section>
@@ -270,8 +352,9 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                   <label className="block text-sm font-bold text-[#333E4E]">情境主题 <span className="text-orange-500">*</span></label>
                   <button className="text-sm px-4 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-all shadow-sm">自动匹配</button>
                 </div>
-                <input type="text" value={formData.theme} onChange={e => updateField('theme', e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#F4785E] transition-all" placeholder="请输入情境主题" />
+                <input type="text" value={formData.theme} onChange={e => { updateField('theme', e.target.value); setErrors(prev => ({ ...prev, theme: '' })); }}
+                  className={`w-full px-4 py-3.5 rounded-xl border transition-all focus:outline-none ${errors.theme ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-[#F4785E]'}`} placeholder="请输入情境主题" />
+                {errors.theme && <p className="text-red-500 text-xs mt-1">{errors.theme}</p>}
                 <div className="flex flex-wrap gap-3 mt-4">
                   {['森林探险', '海底世界', '太空旅行', '童话城堡', '农场生活', '城市探索'].map(t => (
                     <button key={t} onClick={() => updateField('theme', t)} 
@@ -304,7 +387,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             {step > 1 && <button onClick={onClose} className="font-bold text-neutral-400 hover:text-neutral-600 px-4 transition-colors">取消</button>}
             
             <button 
-              onClick={() => step < 3 ? setStep(step + 1) : handleFinish(formData)}
+              onClick={() => step < 3 ? handleNextStep() : handleFinish(formData)}
               disabled={submitting}
               className="px-12 py-3 rounded-xl font-bold transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none flex items-center gap-2 group disabled:opacity-70"
               style={primaryButtonStyle}

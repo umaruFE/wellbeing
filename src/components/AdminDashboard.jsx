@@ -185,13 +185,71 @@ const App = () => {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = (data) => {
+  const handleModalSubmit = async (data) => {
     setIsModalOpen(false);
 
-    // 如果有 courseData，说明是 N8N 同步返回的，直接跳转到编辑页面
+    // 如果有 courseData，说明是 N8N 同步返回的，需要先保存到数据库获取 id
     if (data.courseData) {
-      console.log('[AdminDashboard] N8N同步返回courseData，准备跳转:', data.courseData);
-      navigate('/create', { state: { courseData: data.courseData, courseConfig: data } });
+      // 递归解析 courseData 中的 JSON 字符串字段
+      const parseDeep = (obj) => {
+        if (typeof obj === 'string') {
+          try {
+            const parsed = JSON.parse(obj);
+            return parseDeep(parsed);
+          } catch {
+            return obj;
+          }
+        }
+        if (Array.isArray(obj)) {
+          return obj.map(item => parseDeep(item));
+        }
+        if (obj && typeof obj === 'object') {
+          const result = {};
+          for (const key of Object.keys(obj)) {
+            result[key] = parseDeep(obj[key]);
+          }
+          return result;
+        }
+        return obj;
+      };
+
+      let parsedCourseData = data.courseData;
+      if (typeof data.courseData === 'string') {
+        parsedCourseData = JSON.parse(data.courseData);
+      }
+      parsedCourseData = parseDeep(parsedCourseData);
+
+      // 保存课程到数据库
+      try {
+        // keywords 应该是数组格式
+        const keywordsList = [data.vocabulary, data.grammar]
+          .filter(Boolean)
+          .flatMap(v => Array.isArray(v) ? v : v.split(',').map(k => k.trim()))
+          .filter(Boolean);
+
+        const saveData = {
+          title: parsedCourseData.courseOverview?.courseTitle || data.title,
+          description: parsedCourseData.courseOverview?.overallContext || '',
+          ageGroup: data.age,
+          unit: data.scale,
+          duration: data.duration,
+          theme: data.theme,
+          keywords: keywordsList,
+          courseData: parsedCourseData,
+          status: 'draft'
+        };
+
+        const result = await apiService.createCourse(saveData);
+        if (result.data?.id) {
+          navigate(`/courses/${result.data.id}/overview`);
+        } else {
+          console.error('保存课程失败，没有返回 id');
+          alert('保存课程失败，请重试');
+        }
+      } catch (err) {
+        console.error('保存课程失败:', err);
+        alert('保存课程失败，请重试');
+      }
       return;
     }
 
