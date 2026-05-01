@@ -15,7 +15,7 @@ function corsHeaders() {
   };
 }
 
-function repairTruncatedJson(text) {
+function repairTruncatedJson(text: string): string | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
 
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
           // 尝试直接解析
           courseData = JSON.parse(text);
           console.log('[generate-course] 直接解析text成功');
-        } catch (e1) {
+        } catch (e1: any) {
           // 如果直接解析失败，尝试修复并重新解析
           console.log('[generate-course] 直接解析失败，尝试修复JSON:', e1.message);
           try {
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
             
             // 修复字符串值中的单引号: : 'value' -> : "value"
             // 使用更精确的正则来匹配字符串值
-            fixedText = fixedText.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (match, value) => {
+            fixedText = fixedText.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (match: string, value: string) => {
               // 转义字符串中可能存在的特殊字符
               const escaped = value.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
               return `: "${escaped}"`;
@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
             
             courseData = JSON.parse(fixedText);
             console.log('[generate-course] 修复后解析成功');
-          } catch (e2) {
+          } catch (e2: any) {
             console.error('[generate-course] 修复后仍然解析失败:', e2.message);
 
             // 第三次尝试：修复截断的 JSON（AI 输出被 max_tokens 截断）
@@ -185,7 +185,7 @@ export async function POST(request: NextRequest) {
                 courseData = JSON.parse(repaired);
                 console.log('[generate-course] 截断修复成功');
               }
-            } catch (e3) {
+            } catch (e3: any) {
               console.error('[generate-course] 截断修复也失败:', e3.message);
             }
           }
