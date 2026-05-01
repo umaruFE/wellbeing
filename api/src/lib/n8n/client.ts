@@ -10,7 +10,20 @@
 const N8N_API_BASE = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY;
 
+interface CallOptions {
+  method?: string;
+  timeout?: number;
+}
+
+interface PollOptions {
+  maxAttempts?: number;
+  interval?: number;
+}
+
 class N8NClient {
+  baseUrl: string;
+  apiKey: string | undefined;
+
   constructor() {
     this.baseUrl = N8N_API_BASE;
     this.apiKey = N8N_API_KEY;
@@ -22,9 +35,10 @@ class N8NClient {
    * @param {object} payload - 传递给 Workflow 的参数
    * @param {object} options - 额外选项
    * @param {string} options.method - HTTP 方法，默认 POST
+   * @param {number} options.timeout - 超时时间（毫秒），默认 60000
    * @returns {Promise<object>} Workflow 执行结果
    */
-  async call(workflowName, payload, options = {}) {
+  async call(workflowName: string, payload: Record<string, any> = {}, options: CallOptions = {}): Promise<any> {
     const timeout = options.timeout || 60000;
     const method = options.method || 'POST';
 
@@ -32,7 +46,7 @@ class N8NClient {
 
     // GET 请求将 payload 转为 query string
     if (method === 'GET' && payload) {
-      const params = new URLSearchParams(payload).toString();
+      const params = new URLSearchParams(payload as Record<string, string>).toString();
       if (params) webhookUrl += `?${params}`;
     }
 
@@ -43,7 +57,7 @@ class N8NClient {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      const fetchOptions = {
+      const fetchOptions: RequestInit = {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +92,7 @@ class N8NClient {
       const result = JSON.parse(resultText);
       return result;
 
-    } catch (error) {
+    } catch (error: any) {
       if (error.name === 'AbortError') {
         throw new Error(`N8N调用超时: ${timeout}ms`);
       }
@@ -89,12 +103,13 @@ class N8NClient {
   /**
    * 获取 API 请求头
    */
-  getHeaders() {
+  getHeaders(): Record<string, string> {
     // N8N REST API 使用 X-N8N-API-KEY header
+    const headers: Record<string, string> = {};
     if (this.apiKey) {
-      return { 'X-N8N-API-KEY': this.apiKey };
+      headers['X-N8N-API-KEY'] = this.apiKey;
     }
-    return {};
+    return headers;
   }
 
   /**
@@ -103,7 +118,7 @@ class N8NClient {
    * @param {object} options - 轮询选项
    * @returns {Promise<object>} 执行结果
    */
-  async pollExecution(executionId, options = {}) {
+  async pollExecution(executionId: string, options: PollOptions = {}): Promise<any> {
     const maxAttempts = options.maxAttempts || 60;
     const interval = options.interval || 3000;
 
@@ -151,7 +166,7 @@ class N8NClient {
    * @param {string} executionId - 执行ID
    * @returns {Promise<object>} 结果数据
    */
-  async getExecutionData(executionId) {
+  async getExecutionData(executionId: string): Promise<any> {
     const response = await fetch(
       `${this.baseUrl}/api/v1/executions/${executionId}?includeData=true`,
       {
