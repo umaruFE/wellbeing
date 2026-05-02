@@ -131,6 +131,16 @@ const CourseOverviewPage = () => {
     </div>
   );
 
+  const parsedCourseData = React.useMemo(() => {
+    if (!courseData) return null;
+    let inner = courseData.course_data;
+    if (typeof inner === 'string') {
+      try { inner = JSON.parse(inner); } catch { inner = null; }
+    }
+    const n8nData = inner?.text?.courseData || inner?.courseData || inner || {};
+    return { ...courseData, parsedCourseData: n8nData };
+  }, [courseData]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.neutral.bg.layout }}>
@@ -141,16 +151,6 @@ const CourseOverviewPage = () => {
       </div>
     );
   }
-
-  const parsedCourseData = React.useMemo(() => {
-    if (!courseData) return null;
-    let inner = courseData.course_data;
-    if (typeof inner === 'string') {
-      try { inner = JSON.parse(inner); } catch { inner = null; }
-    }
-    const n8nData = inner?.text?.courseData || inner?.courseData || inner || {};
-    return { ...courseData, parsedCourseData: n8nData };
-  }, [courseData]);
 
   const displayData = parsedCourseData?.parsedCourseData?.courseOverview || {
     courseTitle: courseData?.title || '未命名课程',

@@ -104,12 +104,12 @@ export const CourseStepNavigation = ({
   return (
     <header className="h-[72px] bg-white rounded-2xl flex items-center justify-between px-6 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
       {/* 左侧区域 */}
-      <div className="flex-1 flex items-center gap-3">
-        {title}
+      <div className="w-[160px] shrink-0 flex items-center gap-3 min-w-0">
+        <div className="truncate w-full">{title}</div>
       </div>
 
       {/* 中间导航 */}
-      <nav className="flex items-center justify-center flex-1 shrink-0">
+      <nav className="flex items-center justify-center flex-1 min-w-0">
         {steps.map((step, index) => (
           <React.Fragment key={step.id}>
             <StepItem
@@ -126,7 +126,7 @@ export const CourseStepNavigation = ({
       </nav>
 
       {/* 右侧操作区域 */}
-      <div className="flex items-center justify-end gap-3 flex-1">
+      <div className="w-[380px] shrink-0 flex items-center justify-end gap-3">
         {actions}
       </div>
     </header>
