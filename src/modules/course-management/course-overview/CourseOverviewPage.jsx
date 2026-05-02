@@ -122,9 +122,9 @@ const CourseOverviewPage = () => {
       <div className="flex-1">
         <h4 className="font-bold text-lg mb-3 flex items-center justify-between" style={{ color: colors.neutral.text[1] }}>
           {title}
-          <Edit3 size={16} className="opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-gray-300 hover:text-gray-500" />
+          {/* <Edit3 size={16} className="opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-gray-300 hover:text-gray-500" /> */}
         </h4>
-        <p className="text-sm leading-relaxed font-medium" style={{ color: colors.neutral.text[2] }}>
+        <p className="text-sm leading-relaxed font-medium max-h-22 overflow-y-auto pr-2" style={{ color: colors.neutral.text[2] }}>
           {content}
         </p>
       </div>
@@ -137,7 +137,24 @@ const CourseOverviewPage = () => {
     if (typeof inner === 'string') {
       try { inner = JSON.parse(inner); } catch { inner = null; }
     }
-    const n8nData = inner?.text?.courseData || inner?.courseData || inner || {};
+
+    let n8nData = null;
+    if (inner?.text?.courseData) {
+      n8nData = inner.text.courseData;
+    } else if (inner?.courseData) {
+      n8nData = inner.courseData;
+    } else if (inner?.courseOverview) {
+      n8nData = inner;
+    } else if (inner) {
+      n8nData = inner;
+    } else {
+      n8nData = {};
+    }
+
+    if (typeof n8nData === 'string') {
+      try { n8nData = JSON.parse(n8nData); } catch { n8nData = {}; }
+    }
+
     return { ...courseData, parsedCourseData: n8nData };
   }, [courseData]);
 
@@ -173,10 +190,10 @@ const CourseOverviewPage = () => {
         <div className="lg:col-span-4 bg-white p-8 border shadow-sm"
           style={{ borderRadius: '32px', borderColor: colors.neutral.border.secondary }}>
 
-          <h2 className="text-3xl font-bold mb-3" style={{ color: colors.neutral.text[1] }}>{displayData.courseTitle}</h2>
+          <h2 className="text-2xl font-bold mb-3" style={{ color: colors.neutral.text[1] }}>{displayData.courseTitle}</h2>
           <span className="inline-block px-4 py-1.5 text-xs font-bold rounded-xl mb-8"
             style={{ backgroundColor: colors.brand.bg, color: colors.brand.DEFAULT }}>
-            {courseData?.theme || '森林探险'}
+            {courseData?.theme || ''}
           </span>
 
           <div className="flex items-center gap-5 mb-10 text-sm font-medium" style={{ color: colors.neutral.text[2] }}>
@@ -261,7 +278,7 @@ const CourseOverviewPage = () => {
                 icon={<FileCheck />}
                 title="终极产出任务"
                 color={colors.brand.DEFAULT}
-                content={displayData.finalTask}
+                content={displayData.finalTask || displayData.finalOutput || displayData.outputTask || '暂无产出任务'}
               />
             </div>
           </div>
