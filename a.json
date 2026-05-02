@@ -1,0 +1,130 @@
+{
+  text: {
+    courseData: {
+      courseOverview: {
+        courseTitle: The Magic Cake Book / 魔法蛋糕书,
+        corePhilosophy: PERMA + SEL + 体验驱动,
+        overallContext: 在阳光农场里， 小兔子Robby发现了一本会发光的魔法书。 每次打开书， 里面就会出现一个美味的蛋糕！ 但是魔法书有个秘密： 只有当你真心地说出I like cake并愿意与朋友分享时， 蛋糕才会变得又大又好吃。 小动物们需要学习如何请求帮助和分享物品， 才能一起享受蛋糕。,
+        languageGoals: {
+          vocabulary: eat,
+          cake,
+          book,
+          like,
+          grammar: I like cake
+        },
+        selGoals: 培养请求帮助和主动分享物品的社会情感技能， 学习用礼貌语言表达需求， 体验合作带来的快乐。,
+        permaGoals: Positive Emotions(通过分享和赞美获得积极情绪),
+        Relationships(建立友善互助的同伴关系),
+        Meaning(理解分享的价值),
+        Accomplishment(完成手工和表演任务),
+        Engagement(沉浸于魔法叙事和律动)。,
+        finalTask: 每个孩子制作一个立体蛋糕手工（ 彩色卡纸、 黏土和装饰）， 并在全班合唱I Like Cake chant时， 用英文向同伴说Can I use your... ? （例如彩色笔、 胶水等） 来请求分享工具， 最后一起展示蛋糕并说出I like cake!。,
+        themeImagePrompt: 扁平矢量插画， 粗细均匀的黑色轮廓线， 单线风格， 2 D扁平设计， 无渐变， 无阴影， 低饱和度的平涂色彩、 和谐的柔和色调、 连贯的配色方案， 简化但风格化的背景环境， 清晰的环境线稿， 非写实扁平插画， 角色的符号化表情， 干净亲和的美学， 沉浸式叙事扁平背景， 画面无人物无文字。 阳光农场全景， 中央有一本打开的巨大魔法书， 书页散发着柔和金色光芒， 光芒中浮出一个诱人的蛋糕， 周围是农场栅栏、 稻草堆和小花朵朵， 天空有白云和太阳， 整体温馨田园风。
+      },
+      engage: {
+        title: Engage(引入),
+        color: bg - purple - 100 text - purple - 700 border - purple - 200,
+        steps: [{
+          id: e1,
+          time: 5 - 10 分钟,
+          title: 魔法书出现了！,
+          objective: 通过神秘故事吸引注意力， 建立情感连接， 引出核心词汇cake和book。,
+          activity: 教师拿出一个装饰成魔法书的道具（ 或用图片代替）， 讲述发现魔法书的故事。 提问： What is in the magic book ? 引导孩子猜测， 然后揭示蛋糕图片。,
+          script: 小朋友们， 快看！ Teacher带来了一个神秘的东西。（ 展示魔法书） Wow!这是一本会发光的魔法书！ 它来自阳光农场。 让我们轻轻打开它……（ 假装翻开） 哇！ 里面出现了一个什么东西？ Look!是一个蛋糕！ cake!蛋糕！ 我们一起来说： cake～ 你们喜欢蛋糕吗？ 喜欢的朋友请举手！ 哦， 书里还有一句话： I like cake.谁想来试试？,
+          assets: [{
+            id: asset - e1,
+            type: image,
+            title: 魔法书打开出现蛋糕,
+            prompt: 扁平矢量插画， 粗细均匀的黑色轮廓线， 单线风格， 2 D扁平设计， 无渐变， 无阴影， 低饱和度的平涂色彩、 和谐的柔和色调、 连贯的配色方案， 简化但风格化的背景环境， 清晰的环境线稿， 非写实扁平插画， 角色的符号化表情， 干净亲和的美学， 沉浸式叙事扁平背景， 画面无人物无文字。 一本厚实的魔法书摊开放在农场草地上， 书页中央有一颗发光的小圆球， 圆球内有一个可爱的蛋糕， 蛋糕上有奶油花纹和樱桃， 周围散落着几朵小花和一片三叶草。
+          }]
+        }]
+      },
+      empower: {
+        title: Empower(赋能),
+        color: bg - blue - 100 text - blue - 700 border - blue - 200,
+        steps: [{
+          id: em1,
+          time: 10 - 15 分钟,
+          title: 学唱魔法口令： I like cake!,
+          objective: 学习核心词汇和句型， 通过音乐律动强化记忆， 培养积极情绪。,
+          activity: 教师带领孩子们用拍手、 跺脚等方式配合节奏 chant: I like cake,
+          cake,
+          cake!I like cake,
+          yummy,
+          yummy!然后引入 eat 和 book。 用动作表示 eat（ 假装吃） 和 book（ 合掌打开）。 再次 chant 加入新词。,
+          script: 好了， 魔法书告诉我们， 要说对咒语才能让蛋糕变大！ 咒语是： I like cake。 来， 让我们一起站起来， 拍拍手， 踩踩脚！ Ready ? Go!(一边拍手一边 chant) I like cake,
+          cake,
+          cake!I like cake,
+          yummy,
+          yummy!（重复） Great!现在我们把吃蛋糕的动作加上： I eat cake（ 做吃的动作） 很好！ 还有一个词 book， 我们魔法书啊， 可以说 I like book？ 不， 书不能吃， 但我们可以说 I like the magic book。 来， 一起做动作： book（ 双手合十打开）。,
+          assets: [{
+            id: asset - em1,
+            type: image,
+            title: 农场里的小动物们 chant 场景,
+            prompt: 扁平矢量插画， 粗细均匀的黑色轮廓线， 单线风格， 2 D扁平设计， 无渐变， 无阴影， 低饱和度的平涂色彩、 和谐的柔和色调、 连贯的配色方案， 简化但风格化的背景环境， 清晰的环境线稿， 非写实扁平插画， 角色的符号化表情， 干净亲和的美学， 沉浸式叙事扁平背景， 画面无人物无文字。 农场的一片空地， 中间有一个半圆形的舞台， 舞台上画着音符和蛋糕图案， 周围有稻草垛、 栅栏和几棵苹果树， 地面上散落着彩色字母卡片， 远处有云朵和小鸟。
+          }]
+        }, {
+          id: em2,
+          time: 10 - 15 分钟,
+          title: 分享工具大挑战： Can I use your... ? ,
+          objective: 嵌入社交情感技能， 学习用 Can I use your... ? 请求帮助和分享物品， 结合词汇 book 和实物（ 如彩笔、 胶水） 进行口语练习。,
+          activity: 教师拿出装着各种文具（ 彩笔、 剪刀、 胶水） 的篮子， 示范请求： Can I use your crayon ? 然后引导孩子两两结对， 一个问一个答 Sure,
+          here you are.或 Yes,
+          you can.最后把文具用于制作蛋糕手工的预备环节。,
+          script: 魔法书还有一个秘密： 只有愿意分享工具的朋友才能做出最美味的蛋糕！ 看， Teacher这里有一些工具—— a book,
+          crayons,
+          glue,
+          scissors.如果你想要用别人的工具， 可以说： Can I use your… ? 比如： Can I use your crayon ? 对方就可以说： Sure!Here you are.现在， 跟你的搭档练习一下。 首先， A问B： Can I use your book ? 哦， 我们的book是魔法书， 但也可以练习。 来， 一起试试！,
+          assets : [{
+            id: asset - em2,
+            type: image,
+            title: 农场小木桌上摆放的文具,
+            prompt: 扁平矢量插画， 粗细均匀的黑色轮廓线， 单线风格， 2 D扁平设计， 无渐变， 无阴影， 低饱和度的平涂色彩、 和谐的柔和色调、 连贯的配色方案， 简化但风格化的背景环境， 清晰的环境线稿， 非写实扁平插画， 角色的符号化表情， 干净亲和的美学， 沉浸式叙事扁平背景， 画面无人物无文字。 一个木制小桌上整齐摆放着彩色蜡笔、 小罐胶水、 安全剪刀和一本书， 书封面有蛋糕图案， 旁边还有一片绿色树叶和一颗小草莓装饰， 背景是农场红谷仓的侧面和蓝天。
+          }]
+        }]
+      },
+      execute: {
+        title: Execute(实践),
+        color: bg - green - 100 text - green - 700 border - green - 200,
+        steps: [{
+          id: ex1,
+          time: 15 - 20 分钟,
+          title: 制作立体蛋糕手工,
+          objective: 通过艺术表达完成终极产出任务， 在制作过程中运用 Can I use your... ? 请求工具， 巩固语言与社交技能。,
+          activity: 每个孩子领到一份材料包（ 卡纸、 黏土、 贴纸等）， 制作一个立体蛋糕。 教师巡回引导， 鼓励孩子互相借用工具， 用英文交流。 完成后， 孩子们把蛋糕摆在一起， 形成一个大蛋糕。,
+          script: 现在， 我们要亲自动手做出魔法蛋糕！ 每人有一个材料包， 里面有彩色卡纸、 黏土和亮片。 但是如果你缺少某种工具， 记得用我们学过的魔法句子： Can I use your... ? 比如： Can I use your glue ? 或者 Can I use your red paper ? 对方答应后要说 Thank you!好了， 开始做蛋糕吧！ Make your cake!I like cake!,
+          assets: [{
+            id: asset - ex1,
+            type: image,
+            title: 手工制作台和立体蛋糕材料,
+            prompt: 扁平矢量插画， 粗细均匀的黑色轮廓线， 单线风格， 2 D扁平设计， 无渐变， 无阴影， 低饱和度的平涂色彩、 和谐的柔和色调、 连贯的配色方案， 简化但风格化的背景环境， 清晰的环境线稿， 非写实扁平插画， 角色的符号化表情， 干净亲和的美学， 沉浸式叙事扁平背景， 画面无人物无文字。 一张长桌上铺着格子桌布， 上面散落着彩色卡纸、 黏土球、 亮片、 剪刀、 胶水， 中央有一个尚未完成的立体蛋糕模型（ 纸板底座， 上面有黏土做的奶油和樱桃）， 旁边有一把尺子和几颗星星贴纸， 背景是农场的木栅栏和阳光。
+          }]
+        }]
+      },
+      elevate: {
+        title: Elevate(升华),
+        color: bg - yellow - 100 text - yellow - 700 border - yellow - 200,
+        steps: [{
+          id: el1,
+          time: 5 - 10 分钟,
+          title: 分享蛋糕秀与反思,
+          objective: 通过展示与表演建立积极情绪闭环， 内化分享的快乐， 巩固语言。,
+          activity: 孩子们围成一圈， 每人手持自己的蛋糕手工， 一起高唱I Like Cake chant， 然后依次用英文介绍自己的蛋糕（ I like cake,
+          it
+          is yummy!）。最后教师引导反思： 我们今天学会了什么？ 帮助别人的感觉怎么样？,
+          script: 太棒了！ 每个小朋友都做出了自己的魔法蛋糕！ 现在让我们把蛋糕举高高， 一起唱我们的咒语： I like cake,
+          cake,
+          cake!I like cake,
+          yummy,
+          yummy!（加入律动） Great!现在请每个人用英文向大家介绍你的蛋糕： I like cake.哇， 你们都是最棒的魔法师！ 问大家一个问题： 今天当我们说Can I use your glue ? 的时候， 朋友借给我们了， 心情怎么样？ Happy!对， 分享让快乐加倍！ 让我们把蛋糕放在一起， 给魔法书一个大大的蛋糕盛宴！,
+          assets : [{
+            id: asset - el1,
+            type: image,
+            title: 所有立体蛋糕聚集在魔法书旁,
+            prompt: 扁平矢量插画， 粗细均匀的黑色轮廓线， 单线风格， 2 D扁平设计， 无渐变， 无阴影， 低饱和度的平涂色彩、 和谐的柔和色调、 连贯的配色方案， 简化但风格化的背景环境， 清晰的环境线稿， 非写实扁平插画， 角色的符号化表情， 干净亲和的美学， 沉浸式叙事扁平背景， 画面无人物无文字。 农场草地上， 魔法书再次打开， 周围环绕着十几个彩色立体蛋糕， 蛋糕大小不一， 有圆形、 方形、 星形， 上面有奶油、 糖果和水果装饰， 空中飘着小亮片和音符， 背景是绚丽的晚霞和风车。
+          }]
+        }]
+      }
+    }
+  }
+}

@@ -297,7 +297,7 @@ const LessonPlanPage = () => {
   }, [courseId]);
 
   useEffect(() => {
-    const displayTitle = courseData?.title || '未命名课程';
+    const displayTitle = courseData?.title || '';
     setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{safeRender(displayTitle)}</span>);
     setActions(
       <>

@@ -72,8 +72,8 @@ function App() {
             <Route path="/courses/:courseId" element={<CourseLayout />}>
               <Route path="overview" element={<CourseOverviewPage />} />
               <Route path="lesson-plan" element={<LessonPlanPage />} />
-              <Route path="ppt" element={<CanvasView initialConfig={{ courseId: 'temp' }} />} />
-              <Route path="reading" element={<ReadingMaterialCanvasView initialConfig={{ courseId: 'temp' }} />} />
+              <Route path="ppt" element={<CanvasView />} />
+              <Route path="reading" element={<ReadingMaterialCanvasView />} />
             </Route>
 
             <Route

@@ -46,6 +46,7 @@ import { handleAssetChange, handleDeleteAsset, handleCopyAsset, handleCopyPage, 
 import { handleConfirmAddAsset, handleConfirmAddVideoAsset, handleCardSelectionConfirm, handleRegenerateAsset } from './CanvasView.asset-generation';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import { saveToHistory, handleUndo, handleRedo } from './CanvasView.history';
+import apiService from '../../../services/api';
 
 const colors = {
   neutral: {
@@ -73,12 +74,24 @@ const colors = {
 export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { courseId: routeCourseId } = useParams();
   const { setTitle, setActions } = useCourseLayout();
   
-  const courseId = initialConfig?.courseId;
+  const courseId = initialConfig?.courseId || routeCourseId;
 
   useEffect(() => {
-    setTitle(null);
+    const loadTitle = async () => {
+      if (courseId) {
+        try {
+          const result = await apiService.getCourse(courseId);
+          const course = result.data || result;
+          setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{course.title || '未命名课程'}</span>);
+        } catch {
+          setTitle(null);
+        }
+      }
+    };
+    loadTitle();
     setActions(
       <>
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">

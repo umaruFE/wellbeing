@@ -87,7 +87,7 @@ const CourseOverviewPage = () => {
   };
 
   useEffect(() => {
-    const displayTitle = courseData?.title || '未命名课程';
+    const displayTitle = courseData?.title || '';
     setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{displayTitle}</span>);
     setActions(
       <>
@@ -142,7 +142,17 @@ const CourseOverviewPage = () => {
     );
   }
 
-  const displayData = courseData?.courseData?.courseOverview || {
+  const parsedCourseData = React.useMemo(() => {
+    if (!courseData) return null;
+    let inner = courseData.course_data;
+    if (typeof inner === 'string') {
+      try { inner = JSON.parse(inner); } catch { inner = null; }
+    }
+    const n8nData = inner?.text?.courseData || inner?.courseData || inner || {};
+    return { ...courseData, parsedCourseData: n8nData };
+  }, [courseData]);
+
+  const displayData = parsedCourseData?.parsedCourseData?.courseOverview || {
     courseTitle: courseData?.title || '未命名课程',
     corePhilosophy: 'PERMA + SEL + 体验驱动',
     overallContext: courseData?.concept || '暂无课程概述',

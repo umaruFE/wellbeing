@@ -1,5 +1,5 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   BookOpen,
   ChevronLeft,
@@ -29,6 +29,7 @@ import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import { aiAssetService } from '../../../services/aiAssetService';
+import apiService from '../../../services/api';
 import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
 
 const colors = {
@@ -56,12 +57,24 @@ const colors = {
 
 export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const navigate = useNavigate();
+  const { courseId: routeCourseId } = useParams();
   const { setTitle, setActions } = useCourseLayout();
   
-  const courseId = initialConfig?.courseId;
+  const courseId = initialConfig?.courseId || routeCourseId;
 
   useEffect(() => {
-    setTitle(null);
+    const loadTitle = async () => {
+      if (courseId) {
+        try {
+          const result = await apiService.getCourse(courseId);
+          const course = result.data || result;
+          setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{course.title || '未命名课程'}</span>);
+        } catch {
+          setTitle(null);
+        }
+      }
+    };
+    loadTitle();
     setActions(
       <>
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
