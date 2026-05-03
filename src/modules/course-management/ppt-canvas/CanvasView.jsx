@@ -169,13 +169,57 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     return mergedData;
   };
   
+  const resolveCourseData = (raw) => {
+    if (!raw) return raw;
+    let data = raw;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch { return raw; }
+    }
+    if (data && data.courseData && typeof data.courseData === 'object' && !Array.isArray(data.courseData)) {
+      if (data.courseData.engage || data.courseData.empower || data.courseData.execute || data.courseData.elevate) {
+        return data.courseData;
+      }
+    }
+    return data;
+  };
+
   const [courseData, setCourseData] = useState(() => {
-    const initialCourseData = initialConfig?.courseData || {};
+    const initialCourseData = resolveCourseData(initialConfig?.courseData) || {};
     const canvasData = initialConfig?.canvasData || null;
     const readingMaterialsData = initialConfig?.readingMaterialsData || null;
-    
     return mergeData(initialCourseData, canvasData, readingMaterialsData);
   });
+
+  const [isCourseDataLoaded, setIsCourseDataLoaded] = useState(!!initialConfig?.courseData);
+
+  useEffect(() => {
+    if (isCourseDataLoaded || !courseId) return;
+    const loadCourseData = async () => {
+      try {
+        const result = await apiService.getCourse(courseId);
+        const course = result?.data || result;
+        let raw = course.courseData || course.data || course.course_data || null;
+        const resolved = resolveCourseData(raw);
+        const canvasData = course.canvas_data || null;
+        const readingMaterialsData = course.reading_materials_data || null;
+        const merged = mergeData(resolved || {}, canvasData, readingMaterialsData);
+        setCourseData(merged);
+        setIsCourseDataLoaded(true);
+
+        const isArr = Array.isArray(merged);
+        const firstPhase = isArr ? merged[0]?.id : Object.keys(merged)[0];
+        const firstStepId = isArr
+          ? merged[0]?.slides?.[0]?.id
+          : merged[firstPhase]?.steps?.[0]?.id;
+        if (firstPhase) setActivePhase(firstPhase);
+        if (firstStepId) setActiveStepId(firstStepId);
+        setExpandedPhases(isArr ? merged.map(p => p.id) : Object.keys(merged));
+      } catch (err) {
+        console.error('[CanvasView] loadCourseData failed:', err);
+      }
+    };
+    loadCourseData();
+  }, [courseId, isCourseDataLoaded]);
   
   // 辅助函数：获取 phase 数据
   const getPhaseData = (phaseKey) => {
@@ -668,47 +712,56 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     <div className="flex flex-1 h-full overflow-hidden bg-surface">
         {/* Left Sidebar */}
         <CanvasViewLeftSidebar
-        courseData={courseData}
-        expandedPhases={expandedPhases}
-        activeStepId={activeStepId}
-        onTogglePhase={togglePhase}
-        onStepClick={handleStepClick}
-        onAddStep={handleAddStep}
-        onDeleteStep={(phaseKey, stepId) => {
-          if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
-          
-          const newCourseData = JSON.parse(JSON.stringify(courseData));
-          const isArray = Array.isArray(newCourseData);
-          const phase = isArray 
-            ? newCourseData.find(p => p.id === phaseKey)
-            : newCourseData[phaseKey];
-          if (!phase) return;
-          
-          phase.slides = phase.slides.filter(s => s.id !== stepId);
-          
-          if (activeStepId === stepId) {
-            if (phase.slides.length > 0) {
-              setActiveStepId(phase.slides[0].id);
+          courseData={courseData}
+          expandedPhases={expandedPhases}
+          activeStepId={activeStepId}
+          onTogglePhase={togglePhase}
+          onStepClick={handleStepClick}
+          onAddStep={handleAddStep}
+          onDeleteStep={(phaseKey, stepId) => {
+            if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
+            
+            const newCourseData = JSON.parse(JSON.stringify(courseData));
+            const isArray = Array.isArray(newCourseData);
+            const phase = isArray 
+              ? newCourseData.find(p => p.id === phaseKey)
+              : newCourseData[phaseKey];
+            if (!phase) return;
+            
+            const stepsOrSlides = phase.steps || phase.slides;
+            if (!stepsOrSlides) return;
+            
+            if (isArray) {
+              phase.slides = phase.slides.filter(s => s.id !== stepId);
             } else {
-              const otherPhase = isArray
-                ? newCourseData.find(p => p.id !== phaseKey && p.slides.length > 0)
-                : Object.entries(newCourseData).find(([key, p]) => 
-                    key !== phaseKey && p.slides.length > 0
-                  );
-              if (otherPhase) {
-                setActivePhase(isArray ? otherPhase.id : otherPhase[0]);
-                setActiveStepId(isArray ? otherPhase.slides[0].id : otherPhase[1].slides[0].id);
+              phase.steps = phase.steps.filter(s => s.id !== stepId);
+            }
+            
+            if (activeStepId === stepId) {
+              const remaining = phase.steps || phase.slides || [];
+              if (remaining.length > 0) {
+                setActiveStepId(remaining[0].id);
+              } else {
+                const otherPhase = isArray
+                  ? newCourseData.find(p => p.id !== phaseKey && (p.steps || p.slides || []).length > 0)
+                  : Object.entries(newCourseData).find(([key, p]) => 
+                      key !== phaseKey && (p.steps || p.slides || []).length > 0
+                    );
+                if (otherPhase) {
+                  const otherSteps = isArray ? otherPhase.steps || otherPhase.slides : otherPhase[1].steps || otherPhase[1].slides;
+                  setActivePhase(isArray ? otherPhase.id : otherPhase[0]);
+                  setActiveStepId(otherSteps[0]?.id);
+                }
               }
             }
-          }
-          
-          setCourseData(newCourseData);
-          saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
-          setSelectedAssetId(null);
-        }}
-        isLeftOpen={isLeftOpen}
-        onLeftToggle={() => setIsLeftOpen(!isLeftOpen)}
-      />
+            
+            setCourseData(newCourseData);
+            saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+            setSelectedAssetId(null);
+          }}
+          isLeftOpen={isLeftOpen}
+          onLeftToggle={() => setIsLeftOpen(!isLeftOpen)}
+        />
 
       {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col overflow-hidden">

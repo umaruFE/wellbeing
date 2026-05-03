@@ -434,7 +434,7 @@ export const MainLayout = () => {
     const searchParams = new URLSearchParams(location.search || '');
     const editingCourseId = searchParams.get('courseId');
 
-    // 没有传 courseId：认为是“新建课程”，重置到欢迎页（仅在刚进入 /create 时生效）
+    // 没有传 courseId：认为是"新建课程"，重置到欢迎页（仅在刚进入 /create 时生效）
     const stateData = location.state;
     if (stateData?.courseData) {
       const config = stateData.courseConfig || {};
@@ -489,7 +489,18 @@ export const MainLayout = () => {
             ? course.keywords.join(',')
             : (course.keywords || ''),
           // TableView 会用到的课程结构数据（字段名不确定时做兼容）
-          courseData: course.courseData || course.data || course.course_data || null,
+          courseData: (() => {
+            let raw = course.courseData || course.data || course.course_data || null;
+            if (typeof raw === 'string') {
+              try { raw = JSON.parse(raw); } catch { raw = null; }
+            }
+            if (raw && raw.courseData && typeof raw.courseData === 'object' && !Array.isArray(raw.courseData)) {
+              if (raw.courseData.engage || raw.courseData.empower || raw.courseData.execute || raw.courseData.elevate) {
+                return raw.courseData;
+              }
+            }
+            return raw;
+          })(),
         };
 
         // 为 PPT 画布创建独立配置（只包含 canvasData）

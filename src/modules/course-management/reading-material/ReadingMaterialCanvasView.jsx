@@ -98,7 +98,21 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     return () => { setTitle(null); setActions(null); };
   }, [setTitle, setActions]);
 
-  const initialData = initialConfig?.courseData || {};
+  const resolveCourseData = (raw) => {
+    if (!raw) return raw;
+    let data = raw;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch { return raw; }
+    }
+    if (data && data.courseData && typeof data.courseData === 'object' && !Array.isArray(data.courseData)) {
+      if (data.courseData.engage || data.courseData.empower || data.courseData.execute || data.courseData.elevate) {
+        return data.courseData;
+      }
+    }
+    return data;
+  };
+
+  const initialData = resolveCourseData(initialConfig?.courseData) || {};
   const isCourseDataArray = Array.isArray(initialData);
   const canvasData = initialConfig?.canvasData || null;
   const readingMaterialsData = initialConfig?.readingMaterialsData || null;
@@ -158,6 +172,37 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [courseData, setCourseData] = useState(() => {
     return mergeData(initialData, canvasData, readingMaterialsData);
   });
+
+  const [isCourseDataLoaded, setIsCourseDataLoaded] = useState(Object.keys(initialData).length > 0);
+
+  useEffect(() => {
+    if (isCourseDataLoaded || !courseId) return;
+    const loadCourseData = async () => {
+      try {
+        const result = await apiService.getCourse(courseId);
+        const course = result?.data || result;
+        let raw = course.courseData || course.data || course.course_data || null;
+        const resolved = resolveCourseData(raw);
+        const canvasData = course.canvas_data || null;
+        const readingMaterialsData = course.reading_materials_data || null;
+        const merged = mergeData(resolved || {}, canvasData, readingMaterialsData);
+        setCourseData(merged);
+        setIsCourseDataLoaded(true);
+
+        const isArr = Array.isArray(merged);
+        const firstPhase = isArr ? merged[0]?.id : Object.keys(merged)[0];
+        const firstStepId = isArr
+          ? merged[0]?.slides?.[0]?.id
+          : merged[firstPhase]?.steps?.[0]?.id;
+        if (firstPhase) setActivePhase(firstPhase);
+        if (firstStepId) setActiveStepId(firstStepId);
+        setExpandedPhases(isArr ? merged.map(p => p.id) : Object.keys(merged));
+      } catch (err) {
+        console.error('[RM CanvasView] loadCourseData failed:', err);
+      }
+    };
+    loadCourseData();
+  }, [courseId, isCourseDataLoaded]);
   
   const [activePhase, setActivePhase] = useState(
     isCourseDataArray 
@@ -346,7 +391,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           (phase.slides || []).map(slide => ({ ...slide, phaseKey: phase.id }))
         )
       : Object.values(courseData).flatMap(phase => 
-          phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
+          (phase.steps || []).map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps && courseData[k].steps.includes(step)) }))
         );
     
     let newPages = allSteps.map((step, index) => {
@@ -1157,7 +1202,6 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         expandedPhases={expandedPhases}
         activeStepId={activeStepId}
         selectedMaterialId={selectedMaterialId}
-        pages={pages}
         onTogglePhase={togglePhase}
         onStepClick={handleStepClick}
         onAddStep={handleAddStep}
@@ -1165,6 +1209,10 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         onSelectMaterial={setSelectedMaterialId}
         onAddReadingMaterial={setShowAddReadingMaterialModal}
         onAddPageToMaterial={setShowAddPageToMaterialModal}
+        onDeletePage={(assetId) => {
+          if (!confirm('确定要删除这个素材吗？此操作无法撤销。')) return;
+          handleDeleteAsset(assetId);
+        }}
         isLeftOpen={isLeftOpen}
         onLeftToggle={() => setIsLeftOpen(false)}
       />

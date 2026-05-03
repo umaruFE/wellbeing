@@ -1,23 +1,41 @@
-import React from 'react';
-import { 
-  BookOpen, 
-  ChevronDown, 
-  ChevronRight, 
-  Plus, 
+import React, { useState, useMemo } from 'react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Plus,
   Trash2,
-  FileText 
+  Layout,
+  FileText
 } from 'lucide-react';
 
-/**
- * ReadingMaterialCanvasViewLeftSidebar - 阅读材料画布视图左侧边栏
- * 包含环节列表和阅读材料管理
- */
-export const ReadingMaterialCanvasViewLeftSidebar = ({ 
+const COLOR_MAP = {
+  purple: '#8B5CF6',
+  blue: '#3B82F6',
+  green: '#10B981',
+  yellow: '#F59E0B',
+  gray: '#6B7280'
+};
+
+const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
+
+const parsePhaseColor = (colorStr) => {
+  const m = colorStr?.match(/text-(\w+)-\d+/);
+  return COLOR_MAP[m?.[1]] || COLOR_MAP.gray;
+};
+
+const getPhaseList = (courseData) => {
+  if (!courseData) return [];
+  if (Array.isArray(courseData)) return courseData;
+  return PHASE_ORDER
+    .filter(k => courseData[k])
+    .map(k => ({ key: k, ...courseData[k] }));
+};
+
+export const ReadingMaterialCanvasViewLeftSidebar = ({
   courseData,
   expandedPhases,
   activeStepId,
   selectedMaterialId,
-  pages,
   onTogglePhase,
   onStepClick,
   onAddStep,
@@ -25,179 +43,178 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
   onSelectMaterial,
   onAddReadingMaterial,
   onAddPageToMaterial,
+  onDeletePage,
   isLeftOpen,
   onLeftToggle
 }) => {
   if (!isLeftOpen) return null;
 
-  const isCourseDataArray = Array.isArray(courseData);
-  
-  const phases = isCourseDataArray ? courseData : Object.entries(courseData).map(([key, phase]) => ({ key, ...phase }));
-  
-  const getPhaseKey = (phase) => isCourseDataArray ? phase.id : phase.key;
-  const getPhaseSteps = (phase) => isCourseDataArray ? phase.slides : phase.steps;
-  const getPhaseLabel = (phase) => isCourseDataArray ? phase.label : phase.title;
-  const getPhaseColor = (phase) => isCourseDataArray ? phase.color : phase.color;
+  const phases = getPhaseList(courseData);
+  const isArr = Array.isArray(courseData);
+
+  const [expandedSteps, setExpandedSteps] = useState(() => {
+    const init = {};
+    phases.forEach(p => {
+      (p.steps || p.slides || []).forEach(s => { init[s.id] = true; });
+    });
+    return init;
+  });
+
+  const [expandedMaterials, setExpandedMaterials] = useState({});
+
+  const toggleStep = (id) => setExpandedSteps(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleMaterial = (id) => setExpandedMaterials(prev => ({ ...prev, [id]: !prev[id] }));
+
+  const totalSteps = useMemo(() => {
+    return phases.reduce((sum, p) => sum + (p.steps || p.slides || []).length, 0);
+  }, [phases]);
+
+  const getPhaseKey = (p) => isArr ? p.id : p.key;
+  const getSteps = (p) => p.steps || p.slides || [];
+  const getLabel = (p) => isArr ? p.label : p.title;
+  const getColor = (p) => p.color;
 
   return (
-    <aside className="w-64 bg-white border-r-2 border-stroke-light flex flex-col shrink-0 z-10">
-      <div className="p-4 border-b-2 border-stroke-light bg-surface">
+    <aside className="w-72 bg-white border-r border-gray-200 flex flex-col shrink-0 z-10 h-full">
+      <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <h1 className="font-bold text-lg text-primary flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-info" /> 课程编排
-          </h1>
-          <button onClick={onLeftToggle} className="text-primary-placeholder hover:text-primary-secondary">
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <h1 className="font-bold text-[15px] text-gray-800">课程大纲</h1>
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-500 rounded-full text-[11px] font-medium">
+              材料 {totalSteps}
+            </span>
+            <button onClick={onLeftToggle} className="text-gray-400 hover:text-gray-600 p-0.5">
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <p className="text-xs text-primary-muted mt-1 truncate">
-          {isCourseDataArray && courseData[0]?.slides?.[0]?.phase 
-            ? courseData[0].slides[0].phase 
-            : '课程编排'}
-        </p>
       </div>
-      <div className="flex-1 overflow-y-auto p-2 space-y-2">
+
+      <div className="flex-1 overflow-y-auto py-2">
         {phases.map((phase) => {
           const phaseKey = getPhaseKey(phase);
-          const phaseSteps = getPhaseSteps(phase);
-          const phaseLabel = getPhaseLabel(phase);
-          const phaseColor = getPhaseColor(phase);
-          
+          const steps = getSteps(phase);
+          const label = getLabel(phase);
+          const dotColor = parsePhaseColor(getColor(phase));
+
           return (
-            <div key={phaseKey} className="rounded-xl overflow-hidden border-2 border-stroke-light bg-white">
+            <div key={phaseKey} className="mb-1">
               <button
                 onClick={() => onTogglePhase(phaseKey)}
-                className={`w-full flex items-center justify-between p-3 text-left font-bold text-sm transition-colors ${phaseColor.replace('text-', 'bg-opacity-10 ')} hover:bg-opacity-20`}
+                className="w-full flex items-center gap-2 px-4 py-2 text-left hover:bg-gray-50 transition-colors"
               >
-                <span className="flex items-center gap-2">
-                  {expandedPhases.includes(phaseKey) ? <ChevronDown className="w-4 h-4"/> : <ChevronRight className="w-4 h-4"/>}
-                  {phaseLabel}
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: dotColor }} />
+                <span className="text-[13px] font-bold text-gray-700 uppercase tracking-wide">
+                  {label}
                 </span>
               </button>
+
               {expandedPhases.includes(phaseKey) && (
-                <div className="bg-surface border-t-2 border-stroke-light">
-                  {phaseSteps.map((step) => {
-                    // 获取该环节的所有页面
-                    const stepPages = pages.filter(p => p.slideId === step.id);
-                    // 按materialId分组
-                    const materialsMap = new Map();
-                    stepPages.forEach(page => {
-                      const materialId = page.materialId || 'default';
-                      if (!materialsMap.has(materialId)) {
-                        materialsMap.set(materialId, []);
-                      }
-                      materialsMap.get(materialId).push(page);
-                    });
-                    const materials = Array.from(materialsMap.entries());
+                <div className="px-2">
+                  {steps.map((step) => {
+                    const isExpanded = expandedSteps[step.id];
+                    const isActive = activeStepId === step.id;
+                    const assets = (step.assets || []).filter(a => a.type === 'image');
 
                     return (
-                      <div key={step.id} className="border-b-2 border-stroke-light last:border-0">
-                        {/* 环节标题 */}
+                      <div key={step.id} className="mb-1">
                         <div
-                          className={`group/step hover:bg-info-light transition-all flex items-center ${
-                            activeStepId === step.id && !selectedMaterialId ? 'bg-info-light' : ''
+                          className={`group flex items-center gap-1 rounded-lg px-2 py-1.5 transition-all cursor-pointer ${
+                            isActive && !selectedMaterialId ? 'bg-blue-50' : 'hover:bg-gray-50'
                           }`}
                         >
                           <button
-                            onClick={() => {
-                              onStepClick(phaseKey, step.id);
-                              onSelectMaterial(null);
-                            }}
-                            className={`flex-1 text-left p-2 pl-4 text-xs transition-all flex items-start gap-2 ${
-                              activeStepId === step.id && !selectedMaterialId
-                                ? 'text-info-active font-semibold border-l-4 border-l-blue-600'
-                                : 'text-primary-secondary'
+                            onClick={() => toggleStep(step.id)}
+                            className="p-0.5 text-gray-400 hover:text-gray-600 shrink-0"
+                          >
+                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+                          </button>
+
+                          <button
+                            onClick={() => onStepClick(phaseKey, step.id)}
+                            className={`flex-1 text-left text-[12px] font-medium truncate ${
+                              isActive && !selectedMaterialId ? 'text-blue-600' : 'text-gray-600'
                             }`}
                           >
-                            <span className="shrink-0 mt-0.5"><FileText className="w-3 h-3" /></span>
-                            <span className="line-clamp-2">{step.title}</span>
-                            {stepPages.length > 0 && (
-                              <span className="text-[10px] text-primary-placeholder ml-auto">
-                                {materials.length}个材料
-                              </span>
-                            )}
+                            {step.title}
                           </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDeleteStep(phaseKey, step.id);
-                            }}
-                            className="p-2 mr-2 opacity-0 group-hover/step:opacity-100 hover:bg-error-light rounded text-error transition-all shrink-0"
-                            title="删除环节"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
 
-                        {/* 阅读材料列表 */}
-                        <div className="bg-surface/50 pl-4 border-t-2 border-stroke-light">
-                          <div className="px-2 py-1 flex items-center justify-between group/material-header">
-                            <div className="text-[10px] font-medium text-primary-muted uppercase">
-                              阅读材料 ({materials.length})
-                            </div>
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
+                              {assets.length}
+                            </span>
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onAddReadingMaterial({ stepId: step.id, phaseKey });
-                              }}
-                              className="opacity-0 group-hover/material-header:opacity-100 p-1 hover:bg-indigo-100 rounded text-indigo-600 transition-all"
-                              title="新增阅读材料"
+                              onClick={(e) => { e.stopPropagation(); onDeleteStep(phaseKey, step.id); }}
+                              className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded text-red-400 hover:text-red-600 transition-all shrink-0"
+                              title="删除环节"
                             >
-                              <Plus className="w-3 h-3" />
+                              <Trash2 className="w-3 h-3" />
                             </button>
                           </div>
-                          {materials.length > 0 && materials.map(([materialId, materialPages]) => {
-                            const isDefault = materialId === 'default';
-                            const materialTitle = isDefault
-                              ? '默认阅读材料'
-                              : materialPages[0]?.title || `阅读材料 ${materialId.slice(-4)}`;
-                            const isSelected = selectedMaterialId === materialId && activeStepId === step.id;
+                        </div>
 
-                            return (
-                              <div key={materialId} className="border-b-2 border-stroke-light last:border-0 group/material-row">
-                                <div className="flex items-center">
+                        {isExpanded && (
+                          <div className="ml-5 pl-2 border-l-2 border-gray-100">
+                            {assets.map((asset, index) => {
+                              const isAssetActive = isActive;
+                              return (
+                                <div
+                                  key={asset.id}
+                                  onClick={() => {
+                                    onStepClick(phaseKey, step.id);
+                                    onSelectMaterial(asset.id);
+                                  }}
+                                  className={`group/page flex items-center gap-2 py-1 px-2 rounded-lg cursor-pointer transition-all mb-0.5 ${
+                                    isAssetActive ? 'bg-blue-50 ring-1 ring-blue-200' : 'hover:bg-gray-50'
+                                  }`}
+                                >
+                                  <span className={`text-[10px] font-medium w-3 text-center shrink-0 ${
+                                    isAssetActive ? 'text-blue-500' : 'text-gray-400'
+                                  }`}>
+                                    {index + 1}
+                                  </span>
+
+                                  <div className={`w-12 h-8 rounded overflow-hidden border shrink-0 ${
+                                    isAssetActive ? 'border-blue-300' : 'border-gray-200'
+                                  }`}>
+                                    {asset.url ? (
+                                      <img src={asset.url} alt="" className="w-full h-full object-cover" />
+                                    ) : (
+                                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                        <Layout className="w-3 h-3 text-gray-300" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <span className="text-[10px] text-gray-500 truncate flex-1">{asset.title}</span>
+
                                   <button
-                                    onClick={() => {
-                                      onStepClick(phaseKey, step.id);
-                                      onSelectMaterial(materialId);
-                                    }}
-                                    className={`flex-1 text-left p-2 pl-6 text-xs transition-all flex items-center gap-2 group/material-item ${
-                                      isSelected
-                                        ? 'text-indigo-700 font-semibold bg-indigo-50 border-l-2 border-l-indigo-500'
-                                        : 'text-primary-muted hover:text-primary-secondary hover:bg-surface-alt'
-                                    }`}
-                                    title={materialTitle}
+                                    onClick={(e) => { e.stopPropagation(); onDeletePage(asset.id); }}
+                                    className="p-0.5 opacity-0 group-hover/page:opacity-100 hover:bg-red-50 rounded text-red-400 hover:text-red-600 transition-all shrink-0"
+                                    title="删除页面"
                                   >
-                                    <BookOpen className={`w-3 h-3 shrink-0 ${isSelected ? 'text-indigo-600' : 'text-primary-placeholder'}`} />
-                                    <span className="line-clamp-1 flex-1 text-left">{materialTitle}</span>
-                                    <div className="flex items-center gap-1 shrink-0">
-                                      <span className="text-[10px] text-primary-placeholder">{materialPages.length}页</span>
-                                      {isSelected && (
-                                        <ChevronRight className="w-3 h-3 text-indigo-600" />
-                                      )}
-                                    </div>
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      onAddPageToMaterial({ stepId: step.id, materialId });
-                                    }}
-                                    className="opacity-0 group-hover/material-row:opacity-100 p-1 mr-2 hover:bg-indigo-100 rounded text-indigo-600 transition-all"
-                                    title="新增页面"
-                                  >
-                                    <Plus className="w-3 h-3" />
+                                    <Trash2 className="w-2.5 h-2.5" />
                                   </button>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
+                              );
+                            })}
+
+                            <button
+                              onClick={() => onAddReadingMaterial({ stepId: step.id, phaseKey })}
+                              className="w-full mt-1 mb-2 py-2 border-2 border-dashed border-blue-200 rounded-lg text-blue-500 text-[11px] font-medium flex items-center justify-center gap-1 hover:bg-blue-50 hover:border-blue-300 transition-all"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              添加阅读材料
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
+
                   <button
                     onClick={() => onAddStep(phaseKey)}
-                    className="w-full text-center py-2 text-xs text-primary-placeholder hover:text-info-hover flex items-center justify-center gap-1 transition-colors"
+                    className="w-full text-center py-2 text-[11px] text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 transition-colors mt-1"
                   >
                     <Plus className="w-3 h-3" /> 新增环节
                   </button>
