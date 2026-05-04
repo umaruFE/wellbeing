@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Plus,
   Trash2,
@@ -75,7 +76,7 @@ export const CanvasViewLeftSidebar = ({
               幻灯片 {totalSteps}
             </span>
             <button onClick={onLeftToggle} className="text-gray-400 hover:text-gray-600 p-0.5">
-              <ChevronRight className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -168,7 +169,7 @@ export const CanvasViewLeftSidebar = ({
                             ))}
 
                             <button
-                              onClick={() => onStepClick(phaseKey, step.id)}
+                              onClick={() => onAddStep(phaseKey)}
                               className="w-full mt-1 mb-2 py-2 border-2 border-dashed border-orange-200 rounded-lg text-orange-500 text-[11px] font-medium flex items-center justify-center gap-1 hover:bg-orange-50 hover:border-orange-300 transition-all"
                             >
                               <Plus className="w-3.5 h-3.5" />
@@ -180,12 +181,12 @@ export const CanvasViewLeftSidebar = ({
                     );
                   })}
 
-                  <button
+                  {/* <button
                     onClick={() => onAddStep(phaseKey)}
                     className="w-full text-center py-2 text-[11px] text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 transition-colors mt-1"
                   >
                     <Plus className="w-3 h-3" /> 新增环节
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>

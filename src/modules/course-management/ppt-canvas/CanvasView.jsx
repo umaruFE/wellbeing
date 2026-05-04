@@ -36,6 +36,7 @@ import {
 import { SlideRenderer } from '../../../components/SlideRenderer';
 import { getAssetIcon } from '../../../utils';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
+import CanvasTopBar from '../../../components/CanvasTopBar';
 import { CanvasViewLeftSidebar } from './CanvasView.LeftSidebar';
 import { CanvasViewModals } from './CanvasView.Modals';
 import { aiAssetService } from '../../../services/aiAssetService';
@@ -415,8 +416,33 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleAddStep = (phaseKey) => {
-    setPromptModalConfig({ type: 'session', phaseKey });
-    setShowPromptModal(true);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    const phase = newCourseData[phaseKey];
+    if (!phase) return;
+
+    const steps = phase.steps || phase.slides || [];
+    const newStep = {
+      id: `${phaseKey}-${Date.now()}`,
+      title: `幻灯片 ${steps.length + 1}`,
+      time: '',
+      objective: '',
+      assets: [],
+      canvasAssets: []
+    };
+
+    steps.push(newStep);
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+    setActivePhase(phaseKey);
+    setActiveStepId(newStep.id);
+    setSelectedAssetId(null);
+
+    if (courseId) {
+      const payload = typeof newCourseData === 'string' ? newCourseData : newCourseData;
+      apiService.updateCourse(courseId, { courseData: payload }).catch(err => {
+        console.error('自动保存失败:', err);
+      });
+    }
   };
 
   const handleAddStepAtEnd = () => {
@@ -766,55 +792,33 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="bg-white border-b-2 border-stroke-light px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsLeftOpen(!isLeftOpen)}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 text-primary-secondary" />
-            </button>
-            <h2 className="text-lg font-semibold text-primary">
-              {currentStep?.title || '选择环节'}
-            </h2>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleUndo(history, historyIndex, setHistoryIndex, setCourseData)}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={historyIndex <= 0}
-            >
-              <Undo2 className="w-5 h-5 text-primary-secondary" />
-            </button>
-            <button
-              onClick={() => handleRedo(history, historyIndex, setHistoryIndex, setCourseData)}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={historyIndex >= history.length - 1}
-            >
-              <Redo2 className="w-5 h-5 text-primary-secondary" />
-            </button>
-            <div className="h-6 w-px bg-stroke mx-1"></div>
+        <CanvasTopBar
+          isLeftOpen={isLeftOpen}
+          onToggleLeft={() => setIsLeftOpen(!isLeftOpen)}
+          moduleLabel="PPT 课件"
+          moduleIcon="layout"
+          currentTitle={currentStep?.title || '选择环节'}
+          pageInfo={(() => {
+            const phaseSteps = currentPhaseData?.steps || currentPhaseData?.slides || [];
+            const stepIdx = phaseSteps.findIndex(s => s.id === activeStepId);
+            return `${stepIdx >= 0 ? stepIdx + 1 : 1} / ${phaseSteps.length || 1}`;
+          })()}
+          tagLabel="PPT"
+          accentColor="orange"
+          onUndo={() => handleUndo(history, historyIndex, setHistoryIndex, setCourseData)}
+          onRedo={() => handleRedo(history, historyIndex, setHistoryIndex, setCourseData)}
+          canUndo={historyIndex > 0}
+          canRedo={historyIndex < history.length - 1}
+          extraActions={
             <button
               onClick={handleCopyPage}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary transition-colors"
+              title="复制页面"
             >
-              <Copy className="w-5 h-5 text-primary-secondary" />
+              <Copy className="w-4 h-4" />
             </button>
-            {/* <button
-              onClick={handleExportPPT}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors relative"
-              disabled={isExporting}
-            >
-              {isExporting && (
-                <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
-                  <div className="w-4 h-4 border-2 border-info border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
-              <RefreshCw className="w-5 h-5 text-primary-secondary" />
-            </button>*/}
-          </div>
-        </div>
+          }
+        />
 
         {/* Canvas */}
         <div 
@@ -843,7 +847,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
             />
           </div>
           
-          {activeStepId && (
+          {/* {activeStepId && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30" style={{left: '58%'}}>
               <button
                 onClick={handleAddStepAtEnd}
@@ -854,7 +858,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 在末尾新增PPT
               </button>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Bottom Bar */}

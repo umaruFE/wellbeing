@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Plus,
   Trash2,
@@ -78,13 +79,13 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
     <aside className="w-72 bg-white border-r border-gray-200 flex flex-col shrink-0 z-10 h-full">
       <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <h1 className="font-bold text-[15px] text-gray-800">课程大纲</h1>
+          <div className="font-bold text-[15px] text-gray-800">课程大纲</div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 bg-blue-50 text-blue-500 rounded-full text-[11px] font-medium">
               材料 {totalSteps}
             </span>
             <button onClick={onLeftToggle} className="text-gray-400 hover:text-gray-600 p-0.5">
-              <ChevronRight className="w-4 h-4" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -212,12 +213,12 @@ export const ReadingMaterialCanvasViewLeftSidebar = ({
                     );
                   })}
 
-                  <button
+                  {/* <button
                     onClick={() => onAddStep(phaseKey)}
                     className="w-full text-center py-2 text-[11px] text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 transition-colors mt-1"
                   >
                     <Plus className="w-3 h-3" /> 新增环节
-                  </button>
+                  </button> */}
                 </div>
               )}
             </div>

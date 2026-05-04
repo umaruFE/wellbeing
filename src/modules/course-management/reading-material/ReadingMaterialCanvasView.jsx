@@ -28,6 +28,7 @@ import { VideoStoryboardModal } from '../../../components/VideoStoryboardModal';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
 import { useCourseLayout } from '../../../components/CourseLayout';
+import CanvasTopBar from '../../../components/CanvasTopBar';
 import { aiAssetService } from '../../../services/aiAssetService';
 import apiService from '../../../services/api';
 import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
@@ -628,6 +629,44 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     }, 1500);
   };
 
+  const handleAddReadingMaterialDirect = ({ stepId, phaseKey: stepPhaseKey }) => {
+    const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
+    const canvasSize = getCanvasSize();
+    const newMaterialId = `material-${stepId}-${Date.now()}`;
+    const phaseKey = stepPhaseKey || activePhase;
+    const newPage = {
+      id: `page-${newMaterialId}-1`,
+      slideId: stepId,
+      materialId: newMaterialId,
+      phaseKey,
+      pageNumber: 1,
+      title: `阅读材料 ${pages.filter(p => p.slideId === stepId).length + 1}`,
+      width: canvasSize.width,
+      height: canvasSize.height,
+      canvasAssets: [],
+      blocks: [],
+      prompt: ''
+    };
+    const newPages = [...pages, newPage];
+    setPages(newPages);
+    saveToHistory(newPages);
+    setActiveStepId(stepId);
+    setSelectedStepId(stepId);
+    setSelectedMaterialId(newMaterialId);
+    const newPageIndex = newPages.findIndex(p => p.id === newPage.id);
+    if (newPageIndex >= 0) setEditingPageIndex(newPageIndex);
+
+    if (courseId) {
+      apiService.updateCourse(courseId, {
+        readingMaterialsData: newPages.reduce((acc, p) => {
+          if (!acc[p.slideId]) acc[p.slideId] = [];
+          acc[p.slideId].push(p);
+          return acc;
+        }, {})
+      }).catch(err => console.error('自动保存失败:', err));
+    }
+  };
+
   // 添加新环节
   const handleAddStep = (phaseKey) => {
     setPromptModalConfig({ type: 'session', phaseKey });
@@ -721,6 +760,21 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     const newCourseData = { ...courseData };
     Object.values(newCourseData).forEach(phase => { phase.steps = phase.steps.filter(step => step.id !== currentPage.slideId); });
     setCourseData(newCourseData);
+  };
+
+  const handleCopyPage = () => {
+    const currentPage = pages[editingPageIndex];
+    if (!currentPage) return;
+    const copiedPage = JSON.parse(JSON.stringify(currentPage));
+    copiedPage.id = `page-${Date.now()}`;
+    copiedPage.title = `${currentPage.title || '未命名页面'} (副本)`;
+    copiedPage.pageNumber = editingPageIndex + 2;
+    const newPages = [...pages];
+    newPages.splice(editingPageIndex + 1, 0, copiedPage);
+    const renumbered = newPages.map((p, i) => ({ ...p, pageNumber: i + 1 }));
+    setPages(renumbered);
+    saveToHistory(renumbered);
+    setEditingPageIndex(editingPageIndex + 1);
   };
 
   // 添加资产
@@ -1207,7 +1261,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         onAddStep={handleAddStep}
         onDeleteStep={handleDeleteStep}
         onSelectMaterial={setSelectedMaterialId}
-        onAddReadingMaterial={setShowAddReadingMaterialModal}
+        onAddReadingMaterial={handleAddReadingMaterialDirect}
         onAddPageToMaterial={setShowAddPageToMaterialModal}
         onDeletePage={(assetId) => {
           if (!confirm('确定要删除这个素材吗？此操作无法撤销。')) return;
@@ -1216,58 +1270,46 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         isLeftOpen={isLeftOpen}
         onLeftToggle={() => setIsLeftOpen(false)}
       />
-      {!isLeftOpen && (
+      {/* {!isLeftOpen && (
         <button onClick={() => setIsLeftOpen(true)} className="absolute top-4 left-0 bg-white p-2 rounded-r-md border-2 border-l-0 border-stroke-light shadow-sm text-dark hover:text-dark hover:border-primary z-50 transition-all">
           <ChevronRight className="w-4 h-4" />
         </button>
-      )}
+      )} */}
 
       {/* MAIN CONTENT - 画布编辑器 */}
       <main className="flex-1 flex flex-col bg-surface-alt relative overflow-hidden">
         {/* Top Bar */}
-        <div className="h-14 bg-white border-b-2 border-stroke-light flex items-center justify-between px-6 shadow-sm z-10">
-          <div className="flex items-center gap-4 min-w-0">
-            {!isLeftOpen && (
+        <CanvasTopBar
+          isLeftOpen={isLeftOpen}
+          onToggleLeft={() => setIsLeftOpen(true)}
+          moduleLabel="阅读材料"
+          moduleIcon="book"
+          currentTitle={pages[editingPageIndex]?.title || `页面 ${editingPageIndex + 1}`}
+          pageInfo={` ${(() => { const fp = filteredPages; const ci = fp.findIndex(p => p.id === pages[editingPageIndex]?.id); return `${ci >= 0 ? ci + 1 : 1} / ${fp.length || 1}`; })()}`}
+          tagLabel={'阅读材料'}
+          accentColor="indigo"
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={historyIndex > 0}
+          canRedo={historyIndex < history.length - 1}
+          extraActions={
+            editingPageIndex !== null ? (
               <>
-                <button onClick={() => setIsLeftOpen(true)} className="text-primary-placeholder hover:text-primary-secondary hover:bg-surface-alt p-1.5 rounded transition-colors" title="展开页面列表">
-                  <ChevronRight className="w-4 h-4" />
+                <button
+                  onClick={handleCopyPage}
+                  className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary transition-colors"
+                  title="复制页面"
+                >
+                  <Copy className="w-4 h-4" />
                 </button>
-                <div className="font-bold text-primary-secondary flex items-center gap-2 mr-4">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="text-xs">阅读材料</span>
-                </div>
-              </>
-            )}
-            <span className="text-sm font-medium text-primary-muted whitespace-nowrap">当前编辑:</span>
-            {selectedMaterialId && pages[editingPageIndex] && (
-              <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium whitespace-nowrap">阅读材料</span>
-            )}
-            <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold whitespace-nowrap">
-              页面 {(() => { if (!pages[editingPageIndex]) return 1; const filteredIndex = filteredPages.findIndex(p => p.id === pages[editingPageIndex].id); return filteredIndex >= 0 ? filteredIndex + 1 : 1; })()} / {filteredPages.length || 1}
-            </span>
-            {pages[editingPageIndex] && (
-              <h2 className="text-sm font-bold text-primary truncate" title={pages[editingPageIndex].title}>{pages[editingPageIndex].title || `页面 ${editingPageIndex + 1}`}</h2>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button onClick={handleUndo} disabled={historyIndex === 0} className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="撤销 (Ctrl+Z)">
-              <RotateCcw className="w-4 h-4" />
-            </button>
-            <button onClick={handleRedo} disabled={historyIndex === history.length - 1} className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="重做 (Ctrl+Shift+Z)">
-              <RotateCw className="w-4 h-4" />
-            </button>
-            <div className="w-px h-6 bg-stroke"></div>
-            {editingPageIndex !== null && (
-              <>
                 <div className="flex items-center bg-surface rounded-xl p-1 border-2 border-stroke-light">
                   <button onClick={() => setCanvasAspectRatio('A4')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4' ? 'bg-white text-indigo-600' : 'text-primary-muted hover:text-primary-secondary'}`} title="A4 竖版">A4 竖版</button>
                   <button onClick={() => setCanvasAspectRatio('A4横向')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4横向' ? 'bg-white text-indigo-600' : 'text-primary-muted hover:text-primary-secondary'}`} title="A4 横版">A4 横版</button>
                 </div>
               </>
-            )}
-          </div>
-        </div>
+            ) : null
+          }
+        />
         
         {/* Canvas Editor */}
         <div className="flex-1 overflow-hidden relative flex flex-col">
@@ -1311,14 +1353,14 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
             </div>
           )}
           
-          {selectedStepId && (
+          {/* {selectedStepId && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30" style={{left: '67%'}}>
               <button onClick={handleAddPageToStep} className="px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-600 rounded-full shadow-lg hover:bg-indigo-50 hover:border-indigo-400 transition-all flex items-center gap-2 font-bold text-sm" title="在此环节末尾添加新页面">
                 <Copy className="w-5 h-5" />
                 在末尾添加新页面
               </button>
             </div>
-          )}
+          )} */}
           
           {/* 底部添加按钮栏 */}
           {editingPageIndex !== null && (
