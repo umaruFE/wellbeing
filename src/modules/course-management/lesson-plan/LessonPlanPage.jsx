@@ -86,7 +86,7 @@ const PHASE_CONFIG = {
 
 const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
 
-const LessonPlanBoard = ({ courseData, onCourseDataUpdate }) => {
+const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   const [expandedItems, setExpandedItems] = useState({});
   const [openMenuPhase, setOpenMenuPhase] = useState(null);
   const [regeneratingPhase, setRegeneratingPhase] = useState(null);
@@ -211,6 +211,12 @@ const LessonPlanBoard = ({ courseData, onCourseDataUpdate }) => {
         newCourseData.course_data = innerData;
       }
       if (onCourseDataUpdate) onCourseDataUpdate(newCourseData);
+
+      if (courseId) {
+        apiService.updateCourse(courseId, { courseData: newCourseData.course_data }).catch(err => {
+          console.error('自动保存失败:', err);
+        });
+      }
     }
   };
 
@@ -721,7 +727,7 @@ const LessonPlanPage = () => {
     >
       <main className="flex-1 overflow-y-auto p-6 pt-6">
         <div className="max-w-[1600px] mx-auto">
-          <LessonPlanBoard courseData={courseData} onCourseDataUpdate={setCourseData} />
+          <LessonPlanBoard courseData={courseData} courseId={courseId} onCourseDataUpdate={setCourseData} />
         </div>
       </main>
     </div>

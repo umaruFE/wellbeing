@@ -69,7 +69,7 @@ export const CanvasViewLeftSidebar = ({
     <aside className="w-72 bg-white border-r border-gray-200 flex flex-col shrink-0 z-10 h-full">
       <div className="px-4 py-3 border-b border-gray-100">
         <div className="flex items-center justify-between">
-          <h1 className="font-bold text-[15px] text-gray-800">课程大纲</h1>
+          <div className="font-bold text-[15px] text-gray-800">课程大纲</div>
           <div className="flex items-center gap-2">
             <span className="px-2 py-0.5 bg-orange-50 text-orange-500 rounded-full text-[11px] font-medium">
               幻灯片 {totalSteps}

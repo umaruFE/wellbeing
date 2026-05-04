@@ -44,7 +44,7 @@ export const CourseLayout = () => {
               actions={navActions}
             />
           </div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto p-4">
             <Outlet />
           </div>
         </div>
