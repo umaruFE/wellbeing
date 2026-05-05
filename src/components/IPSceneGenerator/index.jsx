@@ -25,7 +25,7 @@ const getAuthHeaders = () => {
   return headers;
 };
 
-export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) => {
+export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizationId }) => {
   const [state, setState] = useState({
     selectedRoles: [],
     aspectRatio: ASPECT_RATIOS[0],
@@ -520,6 +520,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         compositeResult: compositeDataUrl
       }));
 
+      if (onConfirm) onConfirm({ url: compositeDataUrl });
+
     } catch (error) {
       console.error('Canvas合成失败:', error);
       alert(`Canvas合成失败: ${error.message}`);
@@ -614,6 +616,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         isCompositing: false,
         compositeResult: compositeUrl
       }));
+
+      if (onConfirm) onConfirm({ url: compositeUrl });
 
     } catch (error) {
       console.error('AI合成失败:', error);

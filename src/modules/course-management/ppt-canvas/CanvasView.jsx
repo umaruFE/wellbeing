@@ -31,7 +31,8 @@ import {
   BookOpen,
   FileCheck,
   MessageSquare,
-  Check
+  Check,
+  Mic
 } from 'lucide-react';
 import { SlideRenderer } from '../../../components/SlideRenderer';
 import { getAssetIcon } from '../../../utils';
@@ -47,6 +48,7 @@ import { handleAssetChange, handleDeleteAsset, handleCopyAsset, handleCopyPage, 
 import { handleConfirmAddAsset, handleConfirmAddVideoAsset, handleCardSelectionConfirm, handleRegenerateAsset } from './CanvasView.asset-generation';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import { saveToHistory, handleUndo, handleRedo } from './CanvasView.history';
+import AssetGeneratorModal from '../../../components/AssetGeneratorModal';
 import apiService from '../../../services/api';
 
 const colors = {
@@ -333,6 +335,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptModalConfig, setPromptModalConfig] = useState({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
+  const [showAssetGeneratorModal, setShowAssetGeneratorModal] = useState(false);
+  const [assetGeneratorType, setAssetGeneratorType] = useState(null);
   const [showRegeneratePageModal, setShowRegeneratePageModal] = useState(false);
   const [isRegeneratingPage, setIsRegeneratingPage] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -550,8 +554,48 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       setIsRightOpen(true);
       return;
     }
-    setPromptModalConfig({ type: 'element', assetType: type, phaseKey: activePhase });
-    setShowPromptModal(true);
+    setAssetGeneratorType(type);
+    setShowAssetGeneratorModal(true);
+  };
+
+  const handleAssetGenerated = ({ type, url, title }) => {
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    const phase = Array.isArray(newCourseData)
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    if (!phase) return;
+    const stepsOrSlides = phase.steps || phase.slides;
+    const step = stepsOrSlides?.find(s => s.id === activeStepId);
+    if (!step) return;
+
+    const assetType = type === 'audio' ? 'audio' : type;
+    const newAsset = {
+      id: Date.now().toString(),
+      type: assetType,
+      title: title || assetType,
+      url: url,
+      content: '',
+      prompt: '',
+      referenceImage: null,
+      x: 50, y: 50,
+      width: assetType === 'audio' ? 300 : 400,
+      height: assetType === 'audio' ? 100 : 300,
+      rotation: 0
+    };
+    if (!step.assets) step.assets = [];
+    if (!step.canvasAssets) step.canvasAssets = [];
+    step.assets.push(newAsset);
+    step.canvasAssets.push(newAsset);
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+    setSelectedAssetId(newAsset.id);
+    setIsRightOpen(true);
+
+    if (courseId) {
+      apiService.updateCourse(courseId, { courseData: newCourseData.course_data || newCourseData }).catch(err => {
+        console.error('自动保存失败:', err);
+      });
+    }
   };
 
   const handleExportPPT = () => {
@@ -925,6 +969,13 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               <Music className="w-4 h-4" />
               音频
             </button>
+            <button
+              onClick={() => handleAddAsset('voice')}
+              className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+            >
+              <Mic className="w-4 h-4" />
+              声音
+            </button>
           </div>
           
           <div className="flex items-center gap-2">
@@ -1129,6 +1180,15 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         activePhase={activePhase}
         activeStepId={activeStepId}
         onRestoreHistory={handleRestoreHistory}
+        userId={user?.id}
+        organizationId={user?.organizationId}
+      />
+
+      <AssetGeneratorModal
+        isOpen={showAssetGeneratorModal}
+        onClose={() => { setShowAssetGeneratorModal(false); setAssetGeneratorType(null); }}
+        assetType={assetGeneratorType}
+        onGenerated={handleAssetGenerated}
         userId={user?.id}
         organizationId={user?.organizationId}
       />

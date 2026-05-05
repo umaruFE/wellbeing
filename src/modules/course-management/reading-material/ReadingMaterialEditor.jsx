@@ -32,12 +32,15 @@ import {
   List,
   FileText,
   BookOpen,
-  Copy
+  Copy,
+  Music,
+  Mic
 } from 'lucide-react';
 import { getAssetIcon } from '../../../utils';
 import { PromptInputModal } from '../../../components/PromptInputModal';
 import { CardSelectionModal } from '../../../components/CardSelectionModal';
 import { CanvasAssetRenderer } from '../../../components/CanvasAssetRenderer';
+import AssetGeneratorModal from '../../../components/AssetGeneratorModal';
 
 /**
  * ReadingMaterialEditor - 阅读材料画板编辑器
@@ -77,7 +80,9 @@ export const ReadingMaterialEditor = ({
   // 图片抽卡选择模态框状态
   const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
   const [cardSelectionImages, setCardSelectionImages] = useState([]);
-  const [pendingAssetConfig, setPendingAssetConfig] = useState(null); // 待确认的资源配置
+  const [pendingAssetConfig, setPendingAssetConfig] = useState(null);
+  const [showAssetGeneratorModal, setShowAssetGeneratorModal] = useState(false);
+  const [assetGeneratorType, setAssetGeneratorType] = useState(null);
 
   // 按阶段组织页面 - 使用与CanvasView相同的结构
   const organizePagesByPhase = () => {
@@ -176,8 +181,34 @@ export const ReadingMaterialEditor = ({
       }
       return;
     }
-    setPromptModalConfig({ pageId, assetType: type });
-    setShowPromptModal(true);
+    setAssetGeneratorType(type);
+    setShowAssetGeneratorModal(true);
+  };
+
+  const handleAssetGenerated = ({ type, url, title }) => {
+    const pageId = editingPageIndex;
+    const newPages = JSON.parse(JSON.stringify(pages));
+    const page = newPages.find(p => p.id === pages[pageId]?.id);
+    if (!page) return;
+
+    const assetType = type === 'audio' ? 'audio' : type;
+    const newAsset = {
+      id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: assetType,
+      title: title || assetType,
+      url: url,
+      content: '',
+      prompt: '',
+      referenceImage: null,
+      x: 50, y: 50,
+      width: assetType === 'audio' ? 300 : 400,
+      height: assetType === 'audio' ? 100 : 300,
+      rotation: 0
+    };
+    if (!page.canvasAssets) page.canvasAssets = [];
+    page.canvasAssets.push(newAsset);
+    onPagesChange(newPages);
+    onSelectedAssetIdChange(newAsset.id);
   };
 
   // 确认添加资产
@@ -685,6 +716,27 @@ export const ReadingMaterialEditor = ({
             <ImageIcon className="w-4 h-4" />
             图片
           </button>
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'video')}
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+          >
+            <Video className="w-4 h-4" />
+            视频
+          </button>
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'audio')}
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+          >
+            <Music className="w-4 h-4" />
+            音频
+          </button>
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'voice')}
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+          >
+            <Mic className="w-4 h-4" />
+            声音
+          </button>
         </div>
         {/* <button
           onClick={handleExportPDF}
@@ -731,6 +783,15 @@ export const ReadingMaterialEditor = ({
         images={cardSelectionImages}
         isLoading={isGeneratingAsset}
         onConfirm={handleCardSelectionConfirm}
+      />
+
+      <AssetGeneratorModal
+        isOpen={showAssetGeneratorModal}
+        onClose={() => { setShowAssetGeneratorModal(false); setAssetGeneratorType(null); }}
+        assetType={assetGeneratorType}
+        onGenerated={(result) => { handleAssetGenerated(result); setShowAssetGeneratorModal(false); setAssetGeneratorType(null); }}
+        userId={null}
+        organizationId={null}
       />
     </div>
   );
