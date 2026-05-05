@@ -517,6 +517,39 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleAddAsset = (type) => {
+    if (type === 'text') {
+      const newCourseData = JSON.parse(JSON.stringify(courseData));
+      const phase = Array.isArray(newCourseData)
+        ? newCourseData.find(p => p.id === activePhase)
+        : newCourseData[activePhase];
+      if (!phase) return;
+      const stepsOrSlides = phase.steps || phase.slides;
+      const step = stepsOrSlides?.find(s => s.id === activeStepId);
+      if (!step) return;
+      const newAsset = {
+        id: Date.now().toString(),
+        type: 'text',
+        title: '文本',
+        url: '',
+        content: '双击编辑文本',
+        prompt: '',
+        referenceImage: null,
+        x: 100, y: 100, width: 300, height: 100, rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+      if (!step.assets) step.assets = [];
+      if (!step.canvasAssets) step.canvasAssets = [];
+      step.assets.push(newAsset);
+      step.canvasAssets.push(newAsset);
+      setCourseData(newCourseData);
+      saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+      setSelectedAssetId(newAsset.id);
+      setIsRightOpen(true);
+      return;
+    }
     setPromptModalConfig({ type: 'element', assetType: type, phaseKey: activePhase });
     setShowPromptModal(true);
   };

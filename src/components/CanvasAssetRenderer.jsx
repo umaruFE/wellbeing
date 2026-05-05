@@ -56,13 +56,8 @@ export const CanvasAssetRenderer = ({
     }
   };
 
-  if (assets.length === 0 && isEditable) {
-    return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-primary-placeholder pointer-events-none">
-        <Type className="w-16 h-16 mb-4" />
-        <p className="text-sm font-medium">画布为空，请使用上方工具栏添加素材</p>
-      </div>
-    );
+  if (assets.length === 0) {
+    return null;
   }
 
   return (
@@ -72,6 +67,8 @@ export const CanvasAssetRenderer = ({
     }}>
       {assets.map((asset, index) => {
         const isEditing = currentEditingAssetId === asset.id;
+
+        if (asset.type !== 'text' && !asset.url) return null;
 
         return (
           <div
@@ -217,39 +214,20 @@ export const CanvasAssetRenderer = ({
                   {asset.content || "双击编辑文本"}
                 </div>
               )
-            ) : (
+            ) : asset.url ? (
               <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
-                {(() => {
-                  try {
-                    console.log('[CanvasAssetRenderer] render non-text asset:', {
-                      id: asset.id,
-                      type: asset.type,
-                      url: asset.url,
-                      title: asset.title,
-                    });
-                  } catch (e) {
-                    // 避免渲染时报错影响 UI
-                  }
-                  return null;
-                })()}
-                {asset.url ? (
-                  asset.type === 'video' ? (
-                    <video
-                      src={asset.url}
-                      className="w-full h-full object-cover block select-none pointer-events-none"
-                      controls={false}
-                    />
-                  ) : (
-                    <img 
-                      src={asset.url} 
-                      alt={asset.title} 
-                      className="w-full h-full object-cover block select-none pointer-events-none" 
-                    />
-                  )
+                {asset.type === 'video' ? (
+                  <video
+                    src={asset.url}
+                    className="w-full h-full object-cover block select-none pointer-events-none"
+                    controls={false}
+                  />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-stroke text-primary-placeholder">
-                    {asset.type === 'image' ? 'No Image' : asset.type === 'video' ? 'No Video' : 'No Audio'}
-                  </div>
+                  <img 
+                    src={asset.url} 
+                    alt={asset.title} 
+                    className="w-full h-full object-cover block select-none pointer-events-none" 
+                  />
                 )}
                 {asset.type === 'video' && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
@@ -263,7 +241,7 @@ export const CanvasAssetRenderer = ({
                   </div>
                 )}
               </div>
-            )}
+            ) : null}
           </div>
         );
       })}

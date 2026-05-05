@@ -151,6 +151,31 @@ export const ReadingMaterialEditor = ({
 
   // 添加资产 - 显示提示词输入模态框
   const handleAddAsset = (pageId, type) => {
+    if (type === 'text') {
+      const newAsset = {
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'text',
+        title: '文本',
+        url: '',
+        content: '双击编辑文本',
+        prompt: '',
+        referenceImage: null,
+        x: 100, y: 100, width: 400, height: 150, rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+      const newPages = JSON.parse(JSON.stringify(pages));
+      const page = newPages.find(p => p.id === pages[pageId]?.id);
+      if (page) {
+        if (!page.canvasAssets) page.canvasAssets = [];
+        page.canvasAssets.push(newAsset);
+        onPagesChange(newPages);
+        onSelectedAssetIdChange(newAsset.id);
+      }
+      return;
+    }
     setPromptModalConfig({ pageId, assetType: type });
     setShowPromptModal(true);
   };
@@ -544,24 +569,25 @@ export const ReadingMaterialEditor = ({
         {/* 左侧目录树 */}
         {/* 中间内容区域 */}
         <div className="flex-1 overflow-auto">
-          <div className="space-y-8 p-4">
+          <div className="space-y-8 p-4" style={{ minWidth: 'fit-content' }}>
             {pages.map((page, pageIndex) => {
               const isEditing = editingPageIndex === pageIndex;
               const assets = page.canvasAssets || [];
               const selectedAsset = selectedAssetId ? assets.find(a => a.id === selectedAssetId) : null;
 
               return (
-                <div key={page.id} className="bg-white overflow-hidden">
+                <div key={page.id} className="overflow-visible">
                   {/* Page Header */}
 
                   {/* Content Area */}
                   <div className="flex relative">
                     {/* Main Canvas Area */}
-                    <div className="flex-1">
-                      <div className="flex-1 flex flex-col bg-surface-alt relative" style={{ minHeight: '600px' }}>
+                    <div>
+                      <div className="flex flex-col bg-surface-alt relative" style={{ minHeight: '600px' }}>
                         {/* 画布区域 */}
                         <div 
-                          className="flex-1 overflow-auto p-8 flex items-center justify-center relative" 
+                          className="flex-1 overflow-auto p-8 flex items-center justify-center relative"
+                          style={{ minWidth: `calc(${canvasSize.width}px + 64px)` }} 
                           onClick={() => {
                             setSelectedAssetId(null);
                             // 如果正在编辑文本，保存并退出编辑模式

@@ -785,6 +785,33 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     }
     const currentPage = pages[editingPageIndex];
     if (!currentPage) { alert('当前页面不存在'); return; }
+
+    if (assetType === 'text') {
+      const newAsset = {
+        id: Date.now().toString(),
+        type: 'text',
+        title: '文本',
+        url: '',
+        content: '双击编辑文本',
+        prompt: '',
+        referenceImage: null,
+        x: 100, y: 100, width: 300, height: 100, rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+      const newPages = JSON.parse(JSON.stringify(pages));
+      const page = newPages[editingPageIndex];
+      if (!page.canvasAssets) page.canvasAssets = [];
+      page.canvasAssets.push(newAsset);
+      setPages(newPages);
+      saveToHistory(newPages);
+      setSelectedAssetId(newAsset.id);
+      setIsRightOpen(true);
+      return;
+    }
+
     setPromptModalConfig({ type: 'asset', pageId: currentPage.id, assetType });
     setShowPromptModal(true);
   };
