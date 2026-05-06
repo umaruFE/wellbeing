@@ -188,9 +188,12 @@ const App = () => {
   const handleModalSubmit = async (data) => {
     setIsModalOpen(false);
 
-    // 如果有 courseData，说明是 N8N 同步返回的，需要先保存到数据库获取 id
+    if (data.courseId) {
+      navigate(`/courses/${data.courseId}/overview`);
+      return;
+    }
+
     if (data.courseData) {
-      // 递归解析 courseData 中的 JSON 字符串字段
       const parseDeep = (obj) => {
         if (typeof obj === 'string') {
           try {
@@ -219,16 +222,14 @@ const App = () => {
       }
       parsedCourseData = parseDeep(parsedCourseData);
 
-      // 保存课程到数据库
       try {
-        // keywords 应该是数组格式
         const keywordsList = [data.vocabulary, data.grammar]
           .filter(Boolean)
           .flatMap(v => Array.isArray(v) ? v : v.split(',').map(k => k.trim()))
           .filter(Boolean);
 
         const saveData = {
-          title: parsedCourseData.courseOverview?.courseTitle || data.title,
+          title: parsedCourseData.courseOverview?.courseTitle || data.theme || '未命名课程',
           description: parsedCourseData.courseOverview?.overallContext || '',
           ageGroup: data.age,
           unit: data.scale,
@@ -260,7 +261,7 @@ const App = () => {
       age: data.age,
       duration: data.duration,
       scale: data.scale,
-      title: data.title,
+      title: data.theme || '未命名课程',
       vocabulary: data.vocabulary,
       grammar: data.grammar,
       skills: data.skills,

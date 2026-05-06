@@ -11,7 +11,8 @@ import {
   MessageSquare,
   Smile,
   FileCheck,
-  Loader2
+  Loader2,
+  Wand2
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import apiService from '../../../services/api';
@@ -56,7 +57,57 @@ const CourseOverviewPage = () => {
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isGeneratingCourse, setIsGeneratingCourse] = useState(false);
   const contentRef = useRef(null);
+
+  const handleGenerateCourse = async () => {
+    if (!courseId || isGeneratingCourse) return;
+    setIsGeneratingCourse(true);
+    try {
+      const payload = {
+        age: courseData.age_group || '7-9岁',
+        duration: courseData.duration || '60分钟',
+        scale: courseData.capacity || courseData.unit || '9-15人',
+        vocabulary: courseData.keywords || [],
+        grammar: [],
+        skills: [],
+        paths: [],
+        theme: courseData.theme || '',
+        requirements: '',
+        courseOverview: displayData,
+        userId: courseData.user_id || null,
+        organizationId: courseData.organization_id || null
+      };
+      const response = await fetch('/api/ai/generate-course', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (result.success && result.data?.courseData) {
+        const courseDataResult = result.data.courseData;
+        const mergedCourseData = {
+          courseOverview: displayData,
+          ...courseDataResult
+        };
+        await apiService.updateCourse(courseId, {
+          courseData: mergedCourseData,
+          title: displayData.courseTitle || courseData.title
+        });
+        navigate(`/courses/${courseId}/lesson-plan`);
+      } else {
+        alert(result.error || '教案生成失败，请重试');
+      }
+    } catch (err) {
+      console.error('生成教案失败:', err);
+      alert('生成教案失败，请重试');
+    } finally {
+      setIsGeneratingCourse(false);
+    }
+  };
 
   const handleExportCourse = async () => {
     if (!contentRef.current) return;
@@ -208,7 +259,7 @@ const CourseOverviewPage = () => {
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start max-w-[1400px] mx-auto">
         {/* Left: Course Core Info */}
-        <div className="lg:col-span-4 bg-white p-8 border shadow-sm"
+        <div className="lg:col-span-4 bg-white p-8 border shadow-sm lg:sticky lg:top-24"
           style={{ borderRadius: '32px', borderColor: colors.neutral.border.secondary }}>
 
           <h2 className="text-2xl font-bold mb-3" style={{ color: colors.neutral.text[1] }}>{displayData.courseTitle}</h2>
@@ -304,6 +355,21 @@ const CourseOverviewPage = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-[1400px] mx-auto mt-10 flex justify-center">
+        <button
+          onClick={handleGenerateCourse}
+          disabled={isGeneratingCourse}
+          className="px-10 py-4 rounded-2xl text-base font-bold text-white transition-all flex items-center gap-3 shadow-lg hover:shadow-xl hover:translate-y-[-2px] active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ backgroundColor: colors.brand.DEFAULT, border: `2px solid ${colors.neutral.text[1]}`, boxShadow: `4px 4px 0px 0px ${colors.neutral.text[1]}` }}
+        >
+          {isGeneratingCourse ? (
+            <><Loader2 size={22} className="animate-spin" /> 正在生成教案设计...</>
+          ) : (
+            <><Wand2 size={22} /> 生成教案设计</>
+          )}
+        </button>
       </div>
     </div>
   );

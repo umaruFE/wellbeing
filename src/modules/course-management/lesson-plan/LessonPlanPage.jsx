@@ -158,6 +158,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
         title: phase?.title || config.label,
         color: config.color,
         lightBg: config.lightBg,
+        objective: steps.map(s => s.objective).filter(Boolean).join('；') || '',
         count: steps.length,
         time: steps.length > 0
           ? steps.reduce((acc, s) => {
@@ -371,9 +372,14 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
         <div key={col.id} className="flex flex-col bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden">
 
           <div className="p-4 flex items-start justify-between text-white shrink-0" style={{ backgroundColor: col.color }}>
-            <div>
+            <div className="flex-1 min-w-0">
               <h3 className="font-bold text-[15px] uppercase tracking-wide">{safeRender(col.title)}</h3>
               <p className="text-[11px] opacity-80 mt-1">{col.count}个环节</p>
+              {col.objective && (
+                <p className="text-[11px] opacity-70 mt-2 leading-relaxed line-clamp-3" title={col.objective}>
+                  {col.objective}
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2 relative">
               {col.time && (

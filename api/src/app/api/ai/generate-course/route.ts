@@ -62,7 +62,6 @@ export async function OPTIONS() {
  * @param age - 学生年龄
  * @param duration - 课程时长
  * @param scale - 班级规模
- * @param title - 课程名称
  * @param vocabulary - 核心词汇
  * @param grammar - 语法/句型
  * @param skills - 语言能力培养侧重（数组）
@@ -84,45 +83,40 @@ export async function POST(request: NextRequest) {
       age,
       duration,
       scale,
-      title,
       vocabulary,
       grammar,
       skills,
       paths,
       theme,
       requirements,
+      courseOverview,
       userId,
       organizationId
     } = body;
 
     console.log('[generate-course] 收到生成课件请求:', {
-      title,
       age,
       duration,
       scale,
       theme
     });
 
-    // 参数验证
-    if (!title) {
-      return NextResponse.json(
-        { error: '缺少必要参数: title' },
-        { status: 400, headers: corsHeaders() }
-      );
-    }
-
     // 构建 N8N 调用参数
     const n8nPayload = {
       age,
       duration,
       scale,
-      title,
+      title: theme || '未命名课程',
       vocabulary,
       grammar,
       skills: skills || [],
       paths: paths || [],
       theme,
       requirements,
+      course_overview: courseOverview ? JSON.stringify(courseOverview) : '',
+      course_overview_text: courseOverview
+        ? `已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：\n标题：${courseOverview.courseTitle || ''}\n情境：${courseOverview.overallContext || ''}\n语言目标：词汇=${courseOverview.languageGoals?.vocabulary || ''}，句型=${courseOverview.languageGoals?.grammar || ''}\nSEL目标：${courseOverview.selGoals || ''}\nPERMA目标：${courseOverview.permaGoals || ''}\n产出任务：${courseOverview.finalTask || ''}`
+        : '',
       userId,
       organizationId,
       timestamp: Date.now()
@@ -130,7 +124,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[generate-course] 调用 N8N Workflow:', {
       workflow: 'course-generator',
-      title
+      theme
     });
 
     // 调用 N8N Workflow（课件生成可能需要较长时间，设置5分钟超时）
