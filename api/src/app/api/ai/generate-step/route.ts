@@ -29,6 +29,9 @@ export async function POST(request: NextRequest) {
       existingStepCount,
       currentSteps,
       otherPhases,
+      insertIndex,
+      prevStep,
+      nextStep,
       userId,
       organizationId
     } = body;
@@ -63,6 +66,9 @@ export async function POST(request: NextRequest) {
       existingStepCount: existingStepCount || 0,
       currentSteps: currentSteps || [],
       otherPhases: otherPhases || null,
+      insertIndex: insertIndex != null ? insertIndex : (existingStepCount || 0),
+      prevStep: prevStep || null,
+      nextStep: nextStep || null,
       userId,
       organizationId,
       timestamp: Date.now()

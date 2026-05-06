@@ -16,7 +16,8 @@ import {
   Settings,
   AlertCircle,
   Check,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import apiService from '../../../services/api';
@@ -258,7 +259,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
   const [addingStepPhase, setAddingStepPhase] = useState(null);
 
-  const handleAddStep = async (phaseKey) => {
+  const handleAddStep = async (phaseKey, insertIndex) => {
     setAddingStepPhase(phaseKey);
 
     try {
@@ -288,15 +289,21 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
           grammar: [],
           theme: courseData?.theme || '',
           existingStepCount: currentSteps.length,
-          currentSteps: currentSteps.map(s => ({ title: s.title, time: s.time })),
+          currentSteps: currentSteps.map(s => ({ title: s.title, time: s.time, objective: s.objective })),
           otherPhases,
+          insertIndex: insertIndex != null ? insertIndex : currentSteps.length,
+          prevStep: insertIndex != null && insertIndex > 0 ? currentSteps[insertIndex - 1] : null,
+          nextStep: insertIndex != null && insertIndex < currentSteps.length ? currentSteps[insertIndex] : null,
         })
       });
 
       const result = await response.json();
 
       if (result.success && result.data?.step) {
-        updatePhaseSteps(phaseKey, [...currentSteps, result.data.step]);
+        const idx = insertIndex != null ? insertIndex : currentSteps.length;
+        const newSteps = [...currentSteps];
+        newSteps.splice(idx, 0, result.data.step);
+        updatePhaseSteps(phaseKey, newSteps);
       }
     } catch (err) {
       console.error('添加环节失败:', err);
@@ -356,6 +363,24 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
     } finally {
       setRegeneratingStep(null);
     }
+  };
+
+  const handleDeleteStep = (phaseKey, stepId) => {
+    let inner = courseData?.course_data;
+    if (typeof inner === 'string') {
+      try { inner = JSON.parse(inner); } catch { inner = null; }
+    }
+    let phases = null;
+    if (inner?.text?.courseData) phases = inner.text.courseData;
+    else if (inner?.courseData) phases = inner.courseData;
+    else if (inner?.[phaseKey]) phases = inner;
+
+    const phase = phases?.[phaseKey];
+    if (!phase) return;
+    const currentSteps = Array.isArray(phase.steps) ? phase.steps : [];
+    const newSteps = currentSteps.filter(s => s.id !== stepId);
+    updatePhaseSteps(phaseKey, newSteps);
+    setOpenMenuStep(null);
   };
 
   if (boardColumns.length === 0) {
@@ -419,26 +444,27 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             </div>
           </div>
 
-          <div className="p-4 flex-1 overflow-y-auto bg-white flex flex-col gap-3">
+          <div className="p-4 flex-1 overflow-y-auto bg-white flex flex-col gap-1">
 
-            <button
-              onClick={() => handleAddStep(col.id)}
-              disabled={addingStepPhase === col.id}
-              className="w-full py-3 border-[1.5px] border-dashed border-gray-200 text-gray-400 rounded-xl text-[13px] font-medium flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {addingStepPhase === col.id ? (
-                <><RefreshCw size={16} className="animate-spin" /> AI 生成中...</>
-              ) : (
-                <><Plus size={16} /> 添加环节</>
-              )}
-            </button>
-
-            {col.items.map(item => {
+            {col.items.map((item, index) => {
               const isExpanded = !!expandedItems[item.id];
               return (
-                <div key={item.id}
-                     className={`bg-white rounded-xl transition-all ${isExpanded ? 'border-[1.5px] shadow-sm' : 'border border-gray-100 hover:border-gray-200'}`}
-                     style={{ borderColor: isExpanded ? col.color : undefined }}>
+                <React.Fragment key={item.id}>
+                  <button
+                    onClick={() => handleAddStep(col.id, index)}
+                    disabled={addingStepPhase === col.id}
+                    className="w-full py-1 flex items-center justify-center text-gray-300 hover:text-gray-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed group/insert"
+                  >
+                    <div className="flex items-center gap-2 opacity-0 group-hover/insert:opacity-100 transition-opacity">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <Plus size={12} />
+                      <span className="text-[10px] font-medium">插入</span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                  </button>
+                  <div
+                       className={`bg-white rounded-xl transition-all ${isExpanded ? 'border-[1.5px] shadow-sm' : 'border border-gray-100 hover:border-gray-200'}`}
+                       style={{ borderColor: isExpanded ? col.color : undefined }}>
 
                   <div className="p-3.5 flex items-center justify-between cursor-pointer" onClick={() => toggleCard(item.id)}>
                     <div className="flex items-center gap-2 min-w-0">
@@ -479,6 +505,16 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                               >
                                 <RefreshCw size={13} className="text-gray-400" />
                                 重新生成
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteStep(col.id, item.id);
+                                }}
+                                className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                              >
+                                <Trash2 size={13} />
+                                删除
                               </button>
                             </div>
                           )}
@@ -647,6 +683,16 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                                     <RefreshCw size={13} className="text-gray-400" />
                                     重新生成
                                   </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDeleteStep(col.id, item.id);
+                                    }}
+                                    className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                  >
+                                    <Trash2 size={13} />
+                                    删除
+                                  </button>
                                 </div>
                               )}
                             </div>
@@ -656,6 +702,20 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                     </div>
                   )}
                 </div>
+                {index === col.items.length - 1 && (
+                  <button
+                    onClick={() => handleAddStep(col.id)}
+                    disabled={addingStepPhase === col.id}
+                    className="w-full py-2.5 mt-1 border-[1.5px] border-dashed border-gray-200 text-gray-400 rounded-xl text-[12px] font-medium flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {addingStepPhase === col.id ? (
+                      <><RefreshCw size={14} className="animate-spin" /> AI 生成中...</>
+                    ) : (
+                      <><Plus size={14} /> 添加环节</>
+                    )}
+                  </button>
+                )}
+              </React.Fragment>
               );
             })}
           </div>
