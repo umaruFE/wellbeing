@@ -19,7 +19,8 @@ import {
   FileCheck,
   MessageSquare,
   Check,
-  Edit3
+  Edit3,
+  Loader2
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
 import { getAssetIcon } from '../../../utils';
@@ -28,6 +29,7 @@ import { VideoStoryboardModal } from '../../../components/VideoStoryboardModal';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
 import { useCourseLayout } from '../../../components/CourseLayout';
+import { exportMultipleToPDF, exportToZip } from '../../../utils/exportUtils';
 import CanvasTopBar from '../../../components/CanvasTopBar';
 import { aiAssetService } from '../../../services/aiAssetService';
 import apiService from '../../../services/api';
@@ -86,9 +88,12 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
           后台任务 2
         </div>
-        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
-                style={{ backgroundColor: '#4C5866' }}>
-          导出
+        <button
+          onClick={handleExportPDF}
+          disabled={isExporting}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
         </button>
         <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: colors.brand.DEFAULT }}>
@@ -363,6 +368,10 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [editingPageIndex, setEditingPageIndex] = useState(0);
   const [selectedStepId, setSelectedStepId] = useState(null);
   const [selectedMaterialId, setSelectedMaterialId] = useState(null);
+
+  // 导出用 refs
+  const canvasContainerRef = useRef(null);
+  const pageRefs = useRef({});
   
   const filteredPages = selectedMaterialId
     ? pages.filter(page => page.materialId === selectedMaterialId)
@@ -736,9 +745,45 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   };
 
   // 导出PDF
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setIsExporting(true);
-    setTimeout(() => { setIsExporting(false); alert("PDF 导出成功！"); }, 2000);
+    try {
+      const pageElements = [];
+
+      // 收集所有页面元素
+      filteredPages.forEach((page, index) => {
+        // 找到当前页面容器
+        const pageElement = pageRefs.current[page.id];
+        if (pageElement) {
+          pageElements.push(pageElement);
+        }
+      });
+
+      // 如果没有找到，尝试使用 container ref
+      if (pageElements.length === 0 && canvasContainerRef.current) {
+        // 查找所有 .page-container 类的元素
+        const pageContainers = canvasContainerRef.current.querySelectorAll('[class*="page-container"], [class*="canvas-wrapper"], [class*="reading-page"]');
+        if (pageContainers.length > 0) {
+          pageContainers.forEach(container => pageElements.push(container));
+        }
+      }
+
+      if (pageElements.length === 0) {
+        alert('没有找到可导出的阅读材料页面');
+        setIsExporting(false);
+        return;
+      }
+
+      // 导出为 ZIP
+      const zipFilename = `阅读材料_${Date.now()}.zip`;
+      await exportToZip(pageElements, zipFilename, 'reading');
+      alert(`阅读材料导出成功！共 ${pageElements.length} 页`);
+    } catch (err) {
+      console.error('导出失败:', err);
+      alert('导出失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // 删除当前页面
@@ -1339,7 +1384,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
         />
         
         {/* Canvas Editor */}
-        <div className="flex-1 overflow-hidden relative flex flex-col">
+        <div ref={canvasContainerRef} className="flex-1 overflow-hidden relative flex flex-col">
           {filteredPages.length > 0 ? (
             <ReadingMaterialEditor
               pages={filteredPages}

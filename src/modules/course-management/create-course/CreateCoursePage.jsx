@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import {
   RefreshCw,
@@ -11,8 +11,10 @@ import {
   FileCheck,
   Layout,
   BookOpen,
-  Smile
+  Smile,
+  Loader2
 } from 'lucide-react';
+import { exportToPDF } from '../../../utils/exportUtils';
 
 const apiService = {
   getCourse: async (courseId) => {
@@ -129,10 +131,26 @@ const CreateCoursePageContent = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const courseId = searchParams.get('courseId');
-  
+  const contentRef = useRef(null);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCourse = async () => {
+    if (!contentRef.current) return;
+    setIsExporting(true);
+    try {
+      const filename = `创建课程_${courseData?.title || 'untitled'}_${Date.now()}.pdf`;
+      await exportToPDF(contentRef.current, filename);
+    } catch (err) {
+      console.error('导出失败:', err);
+      alert('导出失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   // 从 state 中获取课程数据，然后跳转
   useEffect(() => {
@@ -227,7 +245,7 @@ const CreateCoursePageContent = () => {
   };
 
   return (
-    <div className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden font-sans" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", system-ui, sans-serif' }}>
+    <div ref={contentRef} className="flex flex-col flex-1 min-w-0 h-screen overflow-hidden font-sans" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", system-ui, sans-serif' }}>
       
       {/* 顶部悬浮外层容器 */}
       <div className="p-6 pb-0 shrink-0">
@@ -277,9 +295,12 @@ const CreateCoursePageContent = () => {
                     style={{ borderColor: colors.neutral.border.DEFAULT, color: colors.neutral.text[1] }}>
               <Edit3 size={14} /> 编辑
             </button>
-            <button className="px-6 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: '#445161' }}>
-              导出
+            <button
+              onClick={handleExportCourse}
+              disabled={isExporting}
+              className="px-6 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              style={{ backgroundColor: '#445161' }}>
+              {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
             </button>
           </div>
         </header>

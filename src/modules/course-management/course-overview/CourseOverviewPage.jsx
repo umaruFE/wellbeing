@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   RefreshCw,
@@ -10,10 +10,12 @@ import {
   Compass,
   MessageSquare,
   Smile,
-  FileCheck
+  FileCheck,
+  Loader2
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import apiService from '../../../services/api';
+import { exportToPDF } from '../../../utils/exportUtils';
 
 const colors = {
   neutral: {
@@ -53,6 +55,22 @@ const CourseOverviewPage = () => {
   const { setTitle, setActions } = useCourseLayout();
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const contentRef = useRef(null);
+
+  const handleExportCourse = async () => {
+    if (!contentRef.current) return;
+    setIsExporting(true);
+    try {
+      const filename = `课程概览_${courseData?.title || 'untitled'}_${Date.now()}.pdf`;
+      await exportToPDF(contentRef.current, filename);
+    } catch (err) {
+      console.error('导出失败:', err);
+      alert('导出失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchCourse = async () => {
@@ -99,9 +117,12 @@ const CourseOverviewPage = () => {
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
           后台任务 2
         </div>
-        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
-                style={{ backgroundColor: '#4C5866' }}>
-          导出
+        <button
+          onClick={handleExportCourse}
+          disabled={isExporting}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
         </button>
         <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: colors.brand.DEFAULT }}>
@@ -183,7 +204,7 @@ const CourseOverviewPage = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif' }}>
+    <div ref={contentRef} className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: colors.neutral.bg.layout, fontFamily: '"HarmonyOS Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif' }}>
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start max-w-[1400px] mx-auto">
         {/* Left: Course Core Info */}

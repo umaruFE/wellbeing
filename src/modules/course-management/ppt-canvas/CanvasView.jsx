@@ -9,12 +9,12 @@
  */
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  Clock, 
-  Image as ImageIcon, 
-  Type, 
-  Video, 
-  Music, 
+import {
+  Clock,
+  Image as ImageIcon,
+  Type,
+  Video,
+  Music,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -28,12 +28,14 @@ import {
   RefreshCw,
   Edit3,
   Layout,
+  Loader2,
   BookOpen,
   FileCheck,
   MessageSquare,
   Check,
   Mic
 } from 'lucide-react';
+import { exportMultipleToPDF, exportToZip } from '../../../utils/exportUtils';
 import { SlideRenderer } from '../../../components/SlideRenderer';
 import { getAssetIcon } from '../../../utils';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
@@ -105,9 +107,12 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
           后台任务 2
         </div>
-        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
-                style={{ backgroundColor: '#4C5866' }}>
-          导出
+        <button
+          onClick={handleExportPPT}
+          disabled={isExporting}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
         </button>
         <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: colors.brand.DEFAULT }}>
@@ -598,9 +603,59 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     }
   };
 
-  const handleExportPPT = () => {
+  const handleExportPPT = async () => {
     setIsExporting(true);
-    setTimeout(() => { setIsExporting(false); alert("PPT 导出成功！"); }, 2000);
+    try {
+      // 遍历所有幻灯片并截图
+      const canvasElements = [];
+      const originalActiveStepId = activeStepId;
+      const allSlideIds = allSteps.map(s => s.id);
+
+      if (allSlideIds.length === 0) {
+        alert('没有可导出的幻灯片');
+        setIsExporting(false);
+        return;
+      }
+
+      // 逐个切换幻灯片并截图
+      for (let i = 0; i < allSlideIds.length; i++) {
+        const stepId = allSlideIds[i];
+        const stepInfo = allSteps.find(s => s.id === stepId);
+
+        // 切换到目标幻灯片
+        setActiveStepId(stepId);
+        if (stepInfo?.phaseKey) setActivePhase(stepInfo.phaseKey);
+
+        // 等待渲染完成
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        // 截图当前画布
+        const canvasElement = canvasRef.current;
+        if (canvasElement) {
+          canvasElements.push(canvasElement);
+        }
+      }
+
+      // 恢复原始幻灯片
+      setActiveStepId(originalActiveStepId);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      if (canvasElements.length === 0) {
+        alert('没有找到可导出的幻灯片');
+        setIsExporting(false);
+        return;
+      }
+
+      // 导出为 ZIP
+      const zipFilename = `PPT课件_${Date.now()}.zip`;
+      await exportToZip(canvasElements, zipFilename, 'slide');
+      alert(`PPT 导出成功！共 ${canvasElements.length} 张幻灯片`);
+    } catch (err) {
+      console.error('导出失败:', err);
+      alert('导出失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleNavigatePreview = (direction) => {
