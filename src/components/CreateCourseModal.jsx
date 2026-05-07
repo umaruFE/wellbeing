@@ -82,7 +82,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
           ageGroup: data.age,
           unit: data.scale,
           duration: data.duration,
-          theme: data.theme,
+          theme: overview.theme || data.theme,
           keywords: keywordsList,
           courseData: { courseOverview: overview },
           status: 'draft',

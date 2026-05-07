@@ -26,6 +26,8 @@ export async function POST(request: NextRequest) {
       paths,
       theme,
       requirements,
+      adjustments,
+      existingOverview,
       userId,
       organizationId
     } = body;
@@ -42,6 +44,8 @@ export async function POST(request: NextRequest) {
       paths: paths || [],
       theme: theme || '',
       requirements: requirements || '',
+      adjustments: adjustments || '',
+      existing_overview: existingOverview ? (typeof existingOverview === 'string' ? existingOverview : JSON.stringify(existingOverview)) : '',
       userId,
       organizationId,
       timestamp: Date.now()

@@ -12,7 +12,8 @@ import {
   Smile,
   FileCheck,
   Loader2,
-  Wand2
+  Wand2,
+  X
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import apiService from '../../../services/api';
@@ -58,7 +59,68 @@ const CourseOverviewPage = () => {
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isGeneratingCourse, setIsGeneratingCourse] = useState(false);
+  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
+  const [regenerateAdjustments, setRegenerateAdjustments] = useState('');
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const contentRef = useRef(null);
+
+  const handleRegenerateOverview = async () => {
+    if (isRegenerating) return;
+    setIsRegenerating(true);
+    try {
+      const payload = {
+        age: courseData.age_group || '7-9岁',
+        duration: courseData.duration || '60分钟',
+        scale: courseData.capacity || courseData.unit || '9-15人',
+        vocabulary: courseData.keywords || [],
+        grammar: [],
+        skills: courseData.skills || [],
+        paths: courseData.paths || [],
+        theme: courseData.theme || '',
+        requirements: '',
+        adjustments: regenerateAdjustments,
+        existingOverview: displayData,
+        userId: courseData.user_id || null,
+        organizationId: courseData.organization_id || null
+      };
+      const response = await fetch('/api/ai/generate-course-overview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
+        body: JSON.stringify(payload)
+      });
+      const result = await response.json();
+      if (result.success && result.data?.courseOverview) {
+        const newOverview = result.data.courseOverview;
+        const updatedCourseData = {
+          ...courseData,
+          theme: newOverview.theme || courseData.theme || '',
+          title: newOverview.courseTitle || courseData.title,
+          course_data: {
+            ...(typeof courseData.course_data === 'string' ? JSON.parse(courseData.course_data) : courseData.course_data),
+            courseOverview: newOverview
+          }
+        };
+        await apiService.updateCourse(courseId, {
+          courseData: updatedCourseData.course_data,
+          title: updatedCourseData.title,
+          theme: updatedCourseData.theme
+        });
+        setCourseData(updatedCourseData);
+        setShowRegenerateModal(false);
+        setRegenerateAdjustments('');
+      } else {
+        alert(result.error || '重新生成失败，请重试');
+      }
+    } catch (err) {
+      console.error('重新生成失败:', err);
+      alert('重新生成失败，请重试');
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
   const handleGenerateCourse = async () => {
     if (!courseId || isGeneratingCourse) return;
@@ -163,11 +225,11 @@ const CourseOverviewPage = () => {
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
           <RefreshCw size={12} /> 所有更改已保存
         </span>
-        <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
+        {/* <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
              style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
           后台任务 2
-        </div>
+        </div> */}
         <button
           onClick={handleExportCourse}
           disabled={isExporting}
@@ -265,15 +327,15 @@ const CourseOverviewPage = () => {
           <h2 className="text-2xl font-bold mb-3" style={{ color: colors.neutral.text[1] }}>{displayData.courseTitle}</h2>
           <span className="inline-block px-4 py-1.5 text-xs font-bold rounded-xl mb-8"
             style={{ backgroundColor: colors.brand.bg, color: colors.brand.DEFAULT }}>
-            {courseData?.theme || ''}
+            {courseData?.theme || displayData.theme || ''}
           </span>
 
           <div className="flex items-center gap-5 mb-10 text-sm font-medium" style={{ color: colors.neutral.text[2] }}>
-            <span className="flex items-center gap-2"><Users size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.age_group || '7-9岁'}</span>
+            <span className="flex items-center gap-1"><Users size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.age_group || '7-9岁'}</span>
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.neutral.border.DEFAULT }}></span>
-            <span className="flex items-center gap-2"><Clock size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.duration || '40分钟'}</span>
+            <span className="flex items-center gap-1"><Clock size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.duration || '40分钟'}</span>
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.neutral.border.DEFAULT }}></span>
-            <span className="flex items-center gap-2"><Target size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.capacity || '9-15人'}</span>
+            <span className="flex items-center gap-1"><Target size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.capacity || '9-15人'}</span>
           </div>
 
           {/* Core Philosophy */}
@@ -317,7 +379,15 @@ const CourseOverviewPage = () => {
         <div className="lg:col-span-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold" style={{ color: colors.neutral.text[1] }}>课程目标解构</h3>
-            <span className="text-xs font-bold text-gray-400 bg-gray-100 px-3 py-1 rounded-full uppercase tracking-widest">Analysis</span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowRegenerateModal(true)}
+                className="px-4 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-colors hover:bg-gray-100"
+                style={{ color: colors.neutral.text[2], border: `1px solid ${colors.neutral.border.DEFAULT}` }}
+              >
+                <RefreshCw size={13} /> 重新生成
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -371,6 +441,57 @@ const CourseOverviewPage = () => {
           )}
         </button>
       </div>
+
+      {showRegenerateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
+          <div className="bg-white rounded-[24px] p-8 w-full max-w-[520px] shadow-2xl border" style={{ borderColor: colors.neutral.border.secondary }}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold" style={{ color: colors.neutral.text[1] }}>重新生成概览</h3>
+              <button
+                onClick={() => { setShowRegenerateModal(false); setRegenerateAdjustments(''); }}
+                className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <X size={20} className="text-gray-400" />
+              </button>
+            </div>
+
+            <div className="mb-6">
+              <label className="text-[13px] font-bold block mb-2" style={{ color: colors.neutral.text[1] }}>调整要求</label>
+              <textarea
+                value={regenerateAdjustments}
+                onChange={e => setRegenerateAdjustments(e.target.value)}
+                placeholder="描述你希望调整的内容，例如：&#10;- 情境主题改为海底探险&#10;- 增加更多SEL目标&#10;- 降低语言难度"
+                rows={4}
+                className="w-full px-4 py-3 rounded-[16px] border text-[13px] resize-none focus:outline-none focus:ring-2 transition-all"
+                style={{ borderColor: colors.neutral.border.DEFAULT, focusRingColor: colors.brand.DEFAULT }}
+              />
+              <p className="text-[11px] mt-1.5" style={{ color: colors.neutral.text[3] }}>留空则完全重新生成</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowRegenerateModal(false); setRegenerateAdjustments(''); }}
+                className="flex-1 py-3 rounded-xl text-[13px] font-bold transition-colors hover:bg-gray-50"
+                style={{ border: `1.5px solid ${colors.neutral.border.DEFAULT}`, color: colors.neutral.text[2] }}
+              >
+                取消
+              </button>
+              <button
+                onClick={handleRegenerateOverview}
+                disabled={isRegenerating}
+                className="flex-1 py-3 rounded-xl text-[13px] font-bold text-white transition-all disabled:opacity-60"
+                style={{ backgroundColor: colors.brand.DEFAULT }}
+              >
+                {isRegenerating ? (
+                  <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin" /> 生成中...</span>
+                ) : (
+                  <span className="flex items-center justify-center gap-2"><RefreshCw size={16} /> 重新生成</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

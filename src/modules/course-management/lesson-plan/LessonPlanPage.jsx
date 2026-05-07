@@ -757,11 +757,11 @@ const LessonPlanPage = () => {
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
           <RefreshCw size={12} /> 所有更改已保存
         </span>
-        <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
+        {/* <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
              style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
           后台任务 2
-        </div>
+        </div> */}
         <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white"
                 style={{ backgroundColor: '#4C5866' }}>
           导出
