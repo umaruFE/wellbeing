@@ -3,6 +3,104 @@ import { X, Loader2, Play, Pause, Download, Volume2, Music, Mic, Image, Wand2 } 
 import { IPSceneGenerator } from './IPSceneGenerator';
 import { VideoStoryboardModal } from './VideoStoryboardModal';
 
+const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
+  const [prompt, setPrompt] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState(null);
+  const [progress, setProgress] = useState('');
+
+  const handleGenerate = async () => {
+    if (!prompt.trim()) { setError('请输入图片描述'); return; }
+    setError(null);
+    setIsGenerating(true);
+    setProgress('正在提交生成请求...');
+
+    try {
+      const response = await fetch('/api/ai/free-image-generation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+          width: 1024,
+          height: 1024,
+          user_id: userId,
+          organization_id: organizationId
+        })
+      });
+
+      const result = await response.json();
+      if (!result.success || !result.tasks || result.tasks.length === 0) {
+        throw new Error(result.error || '图片生成请求失败');
+      }
+
+      const taskId = result.tasks[0].promptId;
+      const apiUrl = result.tasks[0].apiUrl;
+      setProgress('图片生成中，请稍候...');
+
+      let generatedUrl = null;
+      for (let attempt = 0; attempt < 60; attempt++) {
+        await new Promise(r => setTimeout(r, 3000));
+        const statusUrl = `/api/ai/task-status/${taskId}${apiUrl ? `?apiUrl=${encodeURIComponent(apiUrl)}` : ''}`;
+        const statusRes = await fetch(statusUrl);
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (statusData.status === 'completed' && statusData.url) {
+            generatedUrl = statusData.url;
+            break;
+          } else if (statusData.status === 'error') {
+            throw new Error(statusData.error || '图片生成失败');
+          }
+        }
+        setProgress(`图片生成中... (${attempt + 1})`);
+      }
+
+      if (generatedUrl) {
+        onGenerated({ type: 'image', url: generatedUrl, title: `AI生图 - ${prompt.substring(0, 15)}...` });
+      } else {
+        throw new Error('图片生成超时');
+      }
+    } catch (err) {
+      setError(err.message || '图片生成失败');
+    } finally {
+      setIsGenerating(false);
+      setProgress('');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+        <Wand2 className="w-5 h-5 text-blue-500" /> AI 生图
+      </h3>
+      <textarea
+        value={prompt}
+        onChange={e => setPrompt(e.target.value)}
+        placeholder="描述你想要生成的图片，例如：&#10;一棵开满彩色苹果的魔法树，树下有藤编篮子，童话风格"
+        rows={4}
+        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-blue-400"
+      />
+      {error && <p className="text-xs text-red-500">{error}</p>}
+      {progress && (
+        <p className="text-xs text-gray-500 flex items-center gap-1">
+          <Loader2 size={12} className="animate-spin" /> {progress}
+        </p>
+      )}
+      <button
+        onClick={handleGenerate}
+        disabled={isGenerating || !prompt.trim()}
+        className="w-full py-2.5 rounded-lg text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        style={{ backgroundColor: '#4482E5' }}
+      >
+        {isGenerating ? (
+          <><Loader2 size={16} className="animate-spin" /> 生成中...</>
+        ) : (
+          <><Wand2 size={16} /> 生成图片</>
+        )}
+      </button>
+    </div>
+  );
+};
+
 const VOICE_OPTIONS = [
   { id: '活力女声', name: '活力女声', description: '充满活力的女性声音' },
   { id: '不羁男声', name: '不羁男声', description: '自由不羁的男性声音' },
@@ -313,7 +411,7 @@ export const AssetGeneratorModal = ({
             />
           );
         }
-        return null;
+        return <AIImagePanel onGenerated={(result) => { onGenerated(result); handleClose(); }} userId={userId} organizationId={organizationId} />;
 
       case 'video':
         return (
