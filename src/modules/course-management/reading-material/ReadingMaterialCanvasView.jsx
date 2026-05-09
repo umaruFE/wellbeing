@@ -1481,7 +1481,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
             </button>
           )}
           <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
-            {selectedAsset ? (
+            {selectedAsset && (
               <AssetEditorPanel
                 selectedAsset={selectedAsset}
                 onClose={() => setSelectedAssetId(null)}
@@ -1496,41 +1496,6 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
                 isRightOpen={isRightOpen}
                 onToggleRightOpen={() => setIsRightOpen(false)}
               />
-            ) : (
-              <>
-                <div className="p-4 border-b-2 border-stroke-light bg-surface flex items-center justify-between">
-                  <h3 className="font-bold text-primary flex items-center gap-2">
-                    <Wand2 className="w-4 h-4 text-purple" />页面详情编辑
-                  </h3>
-                  <button onClick={() => setIsRightOpen(false)} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-primary-muted uppercase">画板元素 ({(currentPage?.canvasAssets || []).length})</label>
-                  </div>
-                  <div className="space-y-2">
-                    {(currentPage?.canvasAssets || []).map((asset) => (
-                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="flex items-start gap-2 p-2 border-2 border-stroke-light rounded-xl bg-white hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] cursor-pointer transition-all group">
-                        <div className="mt-1 text-primary-placeholder">{getAssetIcon(asset.type)}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-primary-secondary truncate">{asset.title || asset.type}</div>
-                          <div className="text-[10px] text-primary-placeholder">{asset.type} • 点击编辑</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-6 mt-6 border-t-2 border-stroke-light flex gap-2">
-                    <button onClick={saveCurrentToPageHistory} className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all">
-                      <History className="w-4 h-4" />历史生成
-                    </button>
-                    <button onClick={prepareForRegenerate} className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-                      <RefreshCw className="w-4 h-4" />重新生成
-                    </button>
-                  </div>
-                </div>
-              </>
             )}
           </div>
         </aside>

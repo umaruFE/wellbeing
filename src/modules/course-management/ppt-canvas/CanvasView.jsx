@@ -1056,7 +1056,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
            </button>
          )}
          <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
-            {selectedAsset ? (
+            {selectedAsset && (
                <AssetEditorPanel
                  selectedAsset={selectedAsset}
                  onClose={() => setSelectedAssetId(null)}
@@ -1071,127 +1071,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                  isRightOpen={isRightOpen}
                  onToggleRightOpen={() => setIsRightOpen(false)}
                />
-            ) : (
-               <>
-                  <div className="p-4 border-b-2 border-stroke-light bg-surface flex items-center justify-between">
-                     <h3 className="font-bold text-primary flex items-center gap-2">
-                       <Wand2 className="w-4 h-4 text-purple" />环节详情编辑
-                     </h3>
-                     <button onClick={() => setIsRightOpen(false)} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
-                       <ChevronRight className="w-4 h-4" />
-                     </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                     <div className="space-y-4">
-                        <div>
-                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">时间 / Time</label>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-primary-placeholder" />
-                            <input 
-                              type="text" 
-                              value={currentStep?.time || ''} 
-                              onChange={(e) => handleInputChange('time', e.target.value)} 
-                              className="flex-1 text-sm border-2 border-stroke-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all" 
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">教学环节 / Step Title</label>
-                          <input 
-                            type="text" 
-                            value={currentStep?.title || ''} 
-                            onChange={(e) => handleInputChange('title', e.target.value)} 
-                            className="w-full text-sm border-2 border-stroke-light rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all" 
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">教学目标 / Objective</label>
-                          <textarea 
-                            value={currentStep?.objective || ''} 
-                            onChange={(e) => handleInputChange('objective', e.target.value)} 
-                            className="w-full text-sm border-2 border-stroke-light rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none transition-all" 
-                            rows={4}
-                          />
-                        </div>
-                     </div>
-                     <hr className="border-stroke-light" />
-                     <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-primary-muted uppercase">本页素材 ({currentStep?.assets?.length || 0})</label>
-                          <div className="flex gap-1">
-                            <button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-surface-alt rounded text-primary-placeholder hover:text-purple">
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {currentStep?.assets?.map((asset) => (
-                            <div 
-                              key={asset.id} 
-                              onClick={() => setSelectedAssetId(asset.id)} 
-                              className="flex items-start gap-2 p-2 border-2 border-stroke-light rounded-xl bg-white hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] cursor-pointer transition-all group"
-                            >
-                              <div className="mt-1 text-primary-placeholder">{getAssetIcon(asset.type)}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-bold text-primary-secondary truncate">{asset.title}</div>
-                                <div className="text-[10px] text-primary-placeholder">{asset.type} • 点击编辑</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                     </div>
-                     <div className="pt-6 mt-6 border-t-2 border-stroke-light flex gap-2">
-                        <button 
-                          onClick={() => {
-                            if (currentStep) {
-                              const historyItem = {
-                                id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                stepId: activeStepId,
-                                data: JSON.parse(JSON.stringify({
-                                  title: currentStep.title,
-                                  time: currentStep.time,
-                                  objective: currentStep.objective,
-                                  assets: currentStep.assets || []
-                                })),
-                                timestamp: new Date().toISOString(),
-                                displayTime: new Date().toLocaleString('zh-CN')
-                              };
-                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
-                              setShowPageHistoryModal(true);
-                            }
-                          }}
-                          className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
-                        >
-                          <History className="w-4 h-4" />
-                          历史生成
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if (currentStep) {
-                              const historyItem = {
-                                id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                stepId: activeStepId,
-                                data: JSON.parse(JSON.stringify({
-                                  title: currentStep.title,
-                                  time: currentStep.time,
-                                  objective: currentStep.objective,
-                                  assets: currentStep.assets || []
-                                })),
-                                timestamp: new Date().toISOString(),
-                                displayTime: new Date().toLocaleString('zh-CN')
-                              };
-                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
-                              setShowRegeneratePageModal(true);
-                            }
-                          }}
-                          className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          重新生成
-                        </button>
-                     </div>
-                  </div>
-               </>
             )}
          </div>
       </aside>
