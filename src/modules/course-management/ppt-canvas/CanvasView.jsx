@@ -420,6 +420,13 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         const pres = new pptxgen();
         pres.layout = 'LAYOUT_16x9';
 
+        const canvasElement = canvasRef.current;
+        const canvasRect = canvasElement?.getBoundingClientRect();
+        const canvasW = canvasRect?.width || 960;
+        const canvasH = canvasRect?.height || 540;
+        const pptW = 10;
+        const pptH = 5.625;
+
         for (let i = 0; i < allSlideIds.length; i++) {
           const stepId = allSlideIds[i];
           const stepInfo = currentAllSteps.find(s => s.id === stepId);
@@ -442,22 +449,45 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 const res = await fetch(proxyUrl);
                 const data = await res.json();
                 if (data.url) {
-                  const scaleX = 10 / 960;
-                  const scaleY = 5.625 / 540;
+                  const scaleX = pptW / canvasW;
+                  const scaleY = pptH / canvasH;
+                  const containerW = (asset.width || 300) * scaleX;
+                  const containerH = (asset.height || 200) * scaleY;
+
+                  let imgW = containerW;
+                  let imgH = containerH;
+                  try {
+                    const imgObj = await new Promise((resolve, reject) => {
+                      const img = new Image();
+                      img.onload = () => resolve(img);
+                      img.onerror = reject;
+                      img.src = data.url;
+                    });
+                    const naturalW = imgObj.naturalWidth;
+                    const naturalH = imgObj.naturalHeight;
+                    const imgRatio = naturalW / naturalH;
+                    const containerRatio = containerW / containerH;
+                    if (imgRatio > containerRatio) {
+                      imgH = containerW / imgRatio;
+                    } else {
+                      imgW = containerH * imgRatio;
+                    }
+                  } catch {}
+
                   slide.addImage({
                     data: data.url,
-                    x: (asset.x || 0) * scaleX,
-                    y: (asset.y || 0) * scaleY,
-                    w: (asset.width || 300) * scaleX,
-                    h: (asset.height || 200) * scaleY,
+                    x: (asset.x || 0) * scaleX + (containerW - imgW) / 2,
+                    y: (asset.y || 0) * scaleY + (containerH - imgH) / 2,
+                    w: imgW,
+                    h: imgH,
                   });
                 }
               } catch (err) {
                 console.error('导出图片失败:', err.message);
               }
             } else if (asset.type === 'text' && asset.content) {
-              const scaleX = 10 / 960;
-              const scaleY = 5.625 / 540;
+              const scaleX = pptW / canvasW;
+              const scaleY = pptH / canvasH;
               const fontSize = Math.round((asset.fontSize || 16) * scaleX * 1.2);
               slide.addText(asset.content, {
                 x: (asset.x || 0) * scaleX,
@@ -1028,11 +1058,12 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
         {/* Canvas */}
         <div 
-          className="flex-1 overflow-auto p-8 flex items-center justify-center relative"
+          className="flex-1 overflow-auto relative"
           onClick={handleCanvasClick}
         >
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]" onClick={(e) => e.stopPropagation()}></div>
-          <div ref={canvasRef} className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+          <div style={{ minWidth: 1024, minHeight: 620, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', boxSizing: 'border-box' }}>
+          <div ref={canvasRef} className="w-[960px] h-[540px] shrink-0 bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200">
             <SlideRenderer
               assets={currentStep?.assets || currentStep?.canvasAssets || []}
               isEditable={true}
@@ -1052,7 +1083,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               onCanvasClick={handleCanvasClick}
             />
           </div>
-          
+          </div>
           {/* {activeStepId && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30" style={{left: '58%'}}>
               <button
