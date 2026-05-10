@@ -48,13 +48,15 @@ export async function POST(request: NextRequest) {
 
     const resultData = n8nResult as { executionId?: string; id?: string; comfyuiUrl?: string };
     const executionId = resultData.executionId || resultData.id;
+    const comfyuiUrl = resultData.comfyuiUrl || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+    const historyUrl = `${comfyuiUrl}/history/${executionId}`;
 
     return NextResponse.json({
       success: true,
       tasks: [{
         type: 'scene',
         promptId: executionId,
-        apiUrl: resultData.comfyuiUrl
+        apiUrl: historyUrl
       }],
       workflowType: 'image'
     }, { headers: corsHeaders() });
