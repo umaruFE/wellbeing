@@ -97,31 +97,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       }
     };
     loadTitle();
-    setActions(
-      <>
-        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-          <RefreshCw size={12} /> 所有更改已保存
-        </span>
-        {/* <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
-             style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
-          后台任务 2
-        </div> */}
-        <button
-          onClick={handleExportPPT}
-          disabled={isExporting}
-          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
-          style={{ backgroundColor: '#4C5866' }}>
-          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
-        </button>
-        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: colors.brand.DEFAULT }}>
-          发布
-        </button>
-      </>
-    );
-    return () => { setTitle(null); setActions(null); };
-  }, [setTitle, setActions]);
+  }, [courseId, setTitle]);
 
   const isCourseDataArray = Array.isArray(initialConfig?.courseData);
   
@@ -272,6 +248,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false); 
   const [isExporting, setIsExporting] = useState(false);     
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   
   // Selection State
   const [selectedAssetId, setSelectedAssetId] = useState(null);
@@ -407,7 +385,120 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     if (!phase) return [];
     return (phase.steps || phase.slides || []).map(slide => ({...slide, phaseKey}));
   });
+  const allStepsRef = React.useRef(allSteps);
+  allStepsRef.current = allSteps;
+  const courseDataRef = React.useRef(courseData);
+  courseDataRef.current = courseData;
   const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
+
+  useEffect(() => {
+    const handleSave = async () => {
+      if (!courseId) return;
+      setIsSaving(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData: courseDataRef.current });
+      } catch (err) {
+        console.error('保存失败:', err);
+        alert('保存失败，请重试');
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    const handleExport = async () => {
+      setIsExporting(true);
+      try {
+        const currentAllSteps = allStepsRef.current;
+        const canvasElements = [];
+        const originalActiveStepId = activeStepId;
+        const allSlideIds = currentAllSteps.map(s => s.id);
+
+        if (allSlideIds.length === 0) {
+          alert('没有可导出的幻灯片');
+          setIsExporting(false);
+          return;
+        }
+
+        for (let i = 0; i < allSlideIds.length; i++) {
+          const stepId = allSlideIds[i];
+          const stepInfo = currentAllSteps.find(s => s.id === stepId);
+
+          setActiveStepId(stepId);
+          if (stepInfo?.phaseKey) setActivePhase(stepInfo.phaseKey);
+
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          const canvasElement = canvasRef.current;
+          if (canvasElement) {
+            canvasElements.push(canvasElement);
+          }
+        }
+
+        setActiveStepId(originalActiveStepId);
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        if (canvasElements.length === 0) {
+          alert('没有找到可导出的幻灯片');
+          setIsExporting(false);
+          return;
+        }
+
+        const zipFilename = `PPT课件_${Date.now()}.zip`;
+        await exportToZip(canvasElements, zipFilename, 'slide');
+        alert(`PPT 导出成功！共 ${canvasElements.length} 张幻灯片`);
+      } catch (err) {
+        console.error('导出失败:', err);
+        alert('导出失败，请重试');
+      } finally {
+        setIsExporting(false);
+      }
+    };
+
+    const handlePublish = async () => {
+      if (!courseId) { alert('缺少课程ID'); return; }
+      setIsPublishing(true);
+      try {
+        const payload = courseDataRef.current;
+        await apiService.updateCourse(courseId, { courseData: payload, status: 'published' });
+        alert('发布成功！');
+      } catch (err) {
+        console.error('发布失败:', err);
+        alert('发布失败，请重试');
+      } finally {
+        setIsPublishing(false);
+      }
+    };
+
+    setActions(
+      <>
+        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
+        </span>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
+        </button>
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
+        </button>
+        <button
+          onClick={handlePublish}
+          disabled={isPublishing}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: colors.brand.DEFAULT }}>
+          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
+        </button>
+      </>
+    );
+    return () => { setActions(null); };
+  }, [setActions, isExporting, isSaving, isPublishing, activeStepId]);
 
   // --- Handlers ---
   const togglePhase = (phaseKey) => {
@@ -448,8 +539,12 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
     if (courseId) {
       const payload = typeof newCourseData === 'string' ? newCourseData : newCourseData;
-      apiService.updateCourse(courseId, { courseData: payload }).catch(err => {
+      setIsSaving(true);
+      apiService.updateCourse(courseId, { courseData: payload }).then(() => {
+        setIsSaving(false);
+      }).catch(err => {
         console.error('自动保存失败:', err);
+        setIsSaving(false);
       });
     }
   };
@@ -597,64 +692,13 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     setIsRightOpen(true);
 
     if (courseId) {
-      apiService.updateCourse(courseId, { courseData: newCourseData.course_data || newCourseData }).catch(err => {
+      setIsSaving(true);
+      apiService.updateCourse(courseId, { courseData: newCourseData.course_data || newCourseData }).then(() => {
+        setIsSaving(false);
+      }).catch(err => {
         console.error('自动保存失败:', err);
+        setIsSaving(false);
       });
-    }
-  };
-
-  const handleExportPPT = async () => {
-    setIsExporting(true);
-    try {
-      // 遍历所有幻灯片并截图
-      const canvasElements = [];
-      const originalActiveStepId = activeStepId;
-      const allSlideIds = allSteps.map(s => s.id);
-
-      if (allSlideIds.length === 0) {
-        alert('没有可导出的幻灯片');
-        setIsExporting(false);
-        return;
-      }
-
-      // 逐个切换幻灯片并截图
-      for (let i = 0; i < allSlideIds.length; i++) {
-        const stepId = allSlideIds[i];
-        const stepInfo = allSteps.find(s => s.id === stepId);
-
-        // 切换到目标幻灯片
-        setActiveStepId(stepId);
-        if (stepInfo?.phaseKey) setActivePhase(stepInfo.phaseKey);
-
-        // 等待渲染完成
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // 截图当前画布
-        const canvasElement = canvasRef.current;
-        if (canvasElement) {
-          canvasElements.push(canvasElement);
-        }
-      }
-
-      // 恢复原始幻灯片
-      setActiveStepId(originalActiveStepId);
-      await new Promise(resolve => setTimeout(resolve, 300));
-
-      if (canvasElements.length === 0) {
-        alert('没有找到可导出的幻灯片');
-        setIsExporting(false);
-        return;
-      }
-
-      // 导出为 ZIP
-      const zipFilename = `PPT课件_${Date.now()}.zip`;
-      await exportToZip(canvasElements, zipFilename, 'slide');
-      alert(`PPT 导出成功！共 ${canvasElements.length} 张幻灯片`);
-    } catch (err) {
-      console.error('导出失败:', err);
-      alert('导出失败，请重试');
-    } finally {
-      setIsExporting(false);
     }
   };
 

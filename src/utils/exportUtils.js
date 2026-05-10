@@ -2,6 +2,33 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import JSZip from 'jszip';
 
+function fixOklabColors(clonedDoc, targetEl) {
+  clonedDoc.querySelectorAll('style').forEach(styleEl => {
+    const text = styleEl.textContent || '';
+    if (/okl(?:ab|ch)/i.test(text)) {
+      styleEl.textContent = text.replace(/[^;{}]*okl(?:ab|ch)[^;{}]*;?/gi, '');
+    }
+  });
+
+  clonedDoc.querySelectorAll('[style]').forEach(el => {
+    const style = el.getAttribute('style');
+    if (style && /okl(?:ab|ch)/i.test(style)) {
+      el.setAttribute('style', style.replace(/[^;]*okl(?:ab|ch)[^;]*;?/gi, ''));
+    }
+  });
+
+  targetEl.querySelectorAll('*').forEach(el => {
+    const s = el.style;
+    for (let i = 0; i < s.length; i++) {
+      const prop = s[i];
+      const val = s.getPropertyValue(prop);
+      if (val && /okl(?:ab|ch)/i.test(val)) {
+        s.removeProperty(prop);
+      }
+    }
+  });
+}
+
 /**
  * 导出元素为 PDF（单页）
  */
@@ -15,6 +42,7 @@ export async function exportToPDF(element, filename = 'export.pdf') {
     useCORS: true,
     logging: false,
     backgroundColor: '#ffffff',
+    onclone: (clonedDoc, clonedEl) => fixOklabColors(clonedDoc, clonedEl),
   });
 
   const imgData = canvas.toDataURL('image/png');
@@ -52,6 +80,7 @@ export async function exportMultipleToPDF(elements, filename = 'export.pdf', tit
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      onclone: (clonedDoc, clonedEl) => fixOklabColors(clonedDoc, clonedEl),
     });
 
     const imgData = canvas.toDataURL('image/png');
@@ -83,6 +112,7 @@ export async function exportToZip(elements, zipFilename = 'export.zip', prefix =
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
+      onclone: (clonedDoc, clonedEl) => fixOklabColors(clonedDoc, clonedEl),
     });
 
     const imgData = canvas.toDataURL('image/png').split(',')[1];
@@ -111,6 +141,7 @@ export async function exportToPNG(element, filename = 'export.png') {
     useCORS: true,
     logging: false,
     backgroundColor: '#ffffff',
+    onclone: (clonedDoc, clonedEl) => fixOklabColors(clonedDoc, clonedEl),
   });
 
   const link = document.createElement('a');
