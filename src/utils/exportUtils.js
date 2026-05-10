@@ -2,24 +2,30 @@ import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import JSZip from 'jszip';
 
+function replaceOklabFn(css) {
+  return css
+    .replace(/oklab\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/gi, '#000000')
+    .replace(/oklch\((?:[^()]|\((?:[^()]|\([^()]*\))*\))*\)/gi, '#000000');
+}
+
 function fixOklabColors(clonedDoc, targetEl) {
   clonedDoc.querySelectorAll('style').forEach(styleEl => {
     const text = styleEl.textContent || '';
     if (/okl(?:ab|ch)/i.test(text)) {
-      styleEl.textContent = text.replace(/[^;{}]*okl(?:ab|ch)[^;{}]*;?/gi, '');
+      styleEl.textContent = replaceOklabFn(text);
     }
   });
 
   clonedDoc.querySelectorAll('[style]').forEach(el => {
     const style = el.getAttribute('style');
     if (style && /okl(?:ab|ch)/i.test(style)) {
-      el.setAttribute('style', style.replace(/[^;]*okl(?:ab|ch)[^;]*;?/gi, ''));
+      el.setAttribute('style', replaceOklabFn(style));
     }
   });
 
   targetEl.querySelectorAll('*').forEach(el => {
     const s = el.style;
-    for (let i = 0; i < s.length; i++) {
+    for (let i = s.length - 1; i >= 0; i--) {
       const prop = s[i];
       const val = s.getPropertyValue(prop);
       if (val && /okl(?:ab|ch)/i.test(val)) {

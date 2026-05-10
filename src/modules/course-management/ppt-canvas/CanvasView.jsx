@@ -35,7 +35,7 @@ import {
   Check,
   Mic
 } from 'lucide-react';
-import { exportMultipleToPDF, exportToZip } from '../../../utils/exportUtils';
+import pptxgen from 'pptxgenjs';
 import { SlideRenderer } from '../../../components/SlideRenderer';
 import { getAssetIcon } from '../../../utils';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
@@ -409,8 +409,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       setIsExporting(true);
       try {
         const currentAllSteps = allStepsRef.current;
-        const canvasElements = [];
-        const originalActiveStepId = activeStepId;
         const allSlideIds = currentAllSteps.map(s => s.id);
 
         if (allSlideIds.length === 0) {
@@ -419,33 +417,65 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           return;
         }
 
+        const pres = new pptxgen();
+        pres.layout = 'LAYOUT_16x9';
+
         for (let i = 0; i < allSlideIds.length; i++) {
           const stepId = allSlideIds[i];
           const stepInfo = currentAllSteps.find(s => s.id === stepId);
+          const assets = stepInfo?.assets || stepInfo?.canvasAssets || [];
 
-          setActiveStepId(stepId);
-          if (stepInfo?.phaseKey) setActivePhase(stepInfo.phaseKey);
+          const slide = pres.addSlide();
+          slide.background = { color: 'FFFFFF' };
 
-          await new Promise(resolve => setTimeout(resolve, 500));
+          if (stepInfo?.title) {
+            slide.addText(stepInfo.title, {
+              x: 0.3, y: 0.1, w: 9.4, h: 0.4,
+              fontSize: 14, bold: true, color: '333333',
+            });
+          }
 
-          const canvasElement = canvasRef.current;
-          if (canvasElement) {
-            canvasElements.push(canvasElement);
+          for (const asset of assets) {
+            if (asset.type === 'image' && asset.url) {
+              try {
+                const proxyUrl = `/api/ai/proxy-image?url=${encodeURIComponent(asset.url)}`;
+                const res = await fetch(proxyUrl);
+                const data = await res.json();
+                if (data.url) {
+                  const scaleX = 10 / 960;
+                  const scaleY = 5.625 / 540;
+                  slide.addImage({
+                    data: data.url,
+                    x: (asset.x || 0) * scaleX,
+                    y: (asset.y || 0) * scaleY,
+                    w: (asset.width || 300) * scaleX,
+                    h: (asset.height || 200) * scaleY,
+                  });
+                }
+              } catch (err) {
+                console.error('导出图片失败:', err.message);
+              }
+            } else if (asset.type === 'text' && asset.content) {
+              const scaleX = 10 / 960;
+              const scaleY = 5.625 / 540;
+              const fontSize = Math.round((asset.fontSize || 16) * scaleX * 1.2);
+              slide.addText(asset.content, {
+                x: (asset.x || 0) * scaleX,
+                y: (asset.y || 0) * scaleY,
+                w: (asset.width || 300) * scaleX,
+                h: (asset.height || 100) * scaleY,
+                fontSize,
+                color: asset.color || '333333',
+                fontFace: 'Microsoft YaHei',
+                wrap: true,
+                valign: 'top',
+              });
+            }
           }
         }
 
-        setActiveStepId(originalActiveStepId);
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        if (canvasElements.length === 0) {
-          alert('没有找到可导出的幻灯片');
-          setIsExporting(false);
-          return;
-        }
-
-        const zipFilename = `PPT课件_${Date.now()}.zip`;
-        await exportToZip(canvasElements, zipFilename, 'slide');
-        alert(`PPT 导出成功！共 ${canvasElements.length} 张幻灯片`);
+        await pres.writeFile({ fileName: `PPT课件_${Date.now()}.pptx` });
+        alert(`PPT 导出成功！共 ${allSlideIds.length} 张幻灯片`);
       } catch (err) {
         console.error('导出失败:', err);
         alert('导出失败，请重试');
