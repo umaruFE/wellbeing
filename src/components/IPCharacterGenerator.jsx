@@ -45,6 +45,10 @@ const pollTaskAndUpload = async (taskId, apiUrl, maxAttempts = 240, interval = 3
       const data = await response.json();
 
       if (data.status === 'completed') {
+        if (data.url) {
+          return { url: data.url, filename: data.filename || '' };
+        }
+
         const outputs = data.outputs || data.result?.outputs || {};
         const saveImageNode = Object.values(outputs).find(node => node.images && node.images.length > 0);
         if (!saveImageNode) throw new Error('未找到生成的图片');
@@ -87,6 +91,8 @@ const pollTaskAndUpload = async (taskId, apiUrl, maxAttempts = 240, interval = 3
 const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organizationId }) => {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [prompt, setPrompt] = useState('');
+  const [width, setWidth] = useState(1024);
+  const [height, setHeight] = useState(1024);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [error, setError] = useState(null);
@@ -106,7 +112,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
         headers: getAuthHeaders(),
         body: JSON.stringify({
           backgroundPrompt: '',
-          roles: [{ name: selectedCharacter.id, prompt: rolePrompt }],
+          roles: [{ name: selectedCharacter.id, prompt: rolePrompt, width, height }],
           user_id: userId,
           organization_id: organizationId
         })
@@ -191,6 +197,38 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
             />
           </div>
 
+          <div>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">图片尺寸</label>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">宽</span>
+                <input
+                  type="number"
+                  value={width}
+                  onChange={e => setWidth(Number(e.target.value))}
+                  min={256}
+                  max={4096}
+                  step={64}
+                  className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:border-purple-400 transition-all"
+                />
+              </div>
+              <span className="text-gray-400 text-sm">×</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs text-gray-500">高</span>
+                <input
+                  type="number"
+                  value={height}
+                  onChange={e => setHeight(Number(e.target.value))}
+                  min={256}
+                  max={4096}
+                  step={64}
+                  className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:border-purple-400 transition-all"
+                />
+              </div>
+              <span className="text-[11px] text-gray-400">px</span>
+            </div>
+          </div>
+
           {error && (
             <div className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg">{error}</div>
           )}
@@ -227,7 +265,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
               {isGenerating ? (
                 <><Loader2 size={14} className="animate-spin" /> 生成中...</>
               ) : (
-                <><Wand2 size={14} /> 生成人物</>
+                <><Wand2 size={14} /> 生成图片</>
               )}
             </button>
           )}

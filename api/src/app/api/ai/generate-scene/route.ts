@@ -118,8 +118,8 @@ export async function POST(request: NextRequest) {
           character_name: role.name,
           prompt: role.prompt,
           negative_prompt: 'blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background details',
-          width: 1024,
-          height: 1024
+          width: role.width || 1024,
+          height: role.height || 1024
         },
         workflowName: (!backgroundPrompt && roles.length === 1) ? 'ai-single-ip-character' : 'ai-image-generation'
       });
