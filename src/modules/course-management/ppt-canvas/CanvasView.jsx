@@ -500,26 +500,17 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               });
             } else if (asset.type === 'video' && asset.url) {
               try {
-                const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
-                const res = await fetch(proxyUrl);
-                if (res.ok) {
-                  const buffer = await res.arrayBuffer();
-                  const bytes = new Uint8Array(buffer);
-                  let binary = '';
-                  for (let i = 0; i < bytes.length; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                  }
-                  const base64 = btoa(binary);
-                  const contentType = res.headers.get('content-type') || 'video/mp4';
-                  slide.addMedia({
-                    type: 'video',
-                    data: `data:${contentType};base64,${base64}`,
-                    x: assetX,
-                    y: assetY,
-                    w: assetW,
-                    h: assetH,
-                  });
-                }
+                const mediaUrl = asset.url.includes('localhost') || asset.url.startsWith('/')
+                  ? asset.url
+                  : `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
+                slide.addMedia({
+                  type: 'video',
+                  path: mediaUrl,
+                  x: assetX,
+                  y: assetY,
+                  w: assetW,
+                  h: assetH,
+                });
               } catch (err) {
                 console.error('导出视频失败:', err.message);
                 slide.addText('▶ 视频播放', {
@@ -530,26 +521,17 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               }
             } else if (asset.type === 'audio' && asset.url) {
               try {
-                const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
-                const res = await fetch(proxyUrl);
-                if (res.ok) {
-                  const buffer = await res.arrayBuffer();
-                  const bytes = new Uint8Array(buffer);
-                  let binary = '';
-                  for (let i = 0; i < bytes.length; i++) {
-                    binary += String.fromCharCode(bytes[i]);
-                  }
-                  const base64 = btoa(binary);
-                  const contentType = res.headers.get('content-type') || 'audio/mpeg';
-                  slide.addMedia({
-                    type: 'audio',
-                    data: `data:${contentType};base64,${base64}`,
-                    x: assetX,
-                    y: assetY,
-                    w: assetW,
-                    h: Math.min(assetH, 0.6),
-                  });
-                }
+                const mediaUrl = asset.url.includes('localhost') || asset.url.startsWith('/')
+                  ? asset.url
+                  : `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
+                slide.addMedia({
+                  type: 'audio',
+                  path: mediaUrl,
+                  x: assetX,
+                  y: assetY,
+                  w: assetW,
+                  h: Math.min(assetH, 0.6),
+                });
               } catch (err) {
                 console.error('导出音频失败:', err.message);
                 slide.addText('♪ 音频', {
