@@ -388,19 +388,19 @@ export const MainLayout = () => {
         { path: '/voices', label: '声音', icon: Music },
       ]
     },
-    {
-      id: 'ai-tools',
-      label: 'AI工具',
-      icon: Wand2,
-      description: 'AI智能生成',
-      roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
-      children: [
-        { path: '/test/ip-scene', label: 'IP场景生成', icon: Wand2 },
-        { path: '/test/video-generator', label: '视频生成', icon: Clapperboard },
-        { path: '/test/voice-generator', label: '声音生成', icon: Mic },
-        { path: '/audio-generator', label: '音频生成', icon: Music },
-      ]
-    },
+    // {
+    //   id: 'ai-tools',
+    //   label: 'AI工具',
+    //   icon: Wand2,
+    //   description: 'AI智能生成',
+    //   roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
+    //   children: [
+    //     { path: '/test/ip-scene', label: 'IP场景生成', icon: Wand2 },
+    //     { path: '/test/video-generator', label: '视频生成', icon: Clapperboard },
+    //     { path: '/test/voice-generator', label: '声音生成', icon: Mic },
+    //     { path: '/audio-generator', label: '音频生成', icon: Music },
+    //   ]
+    // },
     // 超级管理端（带二级菜单）
     // { 
     //   id: 'super-admin', 

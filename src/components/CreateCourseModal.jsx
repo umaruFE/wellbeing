@@ -247,10 +247,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                       className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
                       placeholder="请输入核心词汇，用逗号或换行分隔"
                       value={Array.isArray(formData.vocabulary) ? formData.vocabulary.join(', ') : (formData.vocabulary || '')}
-                      onChange={e => {
-                        const val = e.target.value;
-                        updateField('vocabulary', val.split(/[,，\n]/).map(v => v.trim()).filter(Boolean));
-                      }}
+                      onChange={e => updateField('vocabulary', e.target.value)}
                     />
                   </div>
                   <div className="p-6 border-l border-gray-200">
@@ -259,10 +256,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                       className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
                       placeholder="请输入核心句型，用逗号或换行分隔"
                       value={Array.isArray(formData.grammar) ? formData.grammar.join(', ') : (formData.grammar || '')}
-                      onChange={e => {
-                        const val = e.target.value;
-                        updateField('grammar', val.split(/[,，\n]/).map(v => v.trim()).filter(Boolean));
-                      }}
+                      onChange={e => updateField('grammar', e.target.value)}
                     />
                   </div>
                 </div>
