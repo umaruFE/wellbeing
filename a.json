@@ -1,162 +1,156 @@
 {
+    "success": true,
     "data": {
-        "id": "208592d1-0de1-4725-baf4-5a2e090f3f06",
-        "user_id": "a60de280-e685-4e11-b69b-72ec1b723a22",
-        "organization_id": null,
-        "title": "森林篝火晚会",
-        "description": "",
-        "age_group": "9-12岁",
-        "unit": "≥ 16人",
-        "duration": "120分钟",
-        "theme": "森林探险",
-        "keywords": [
-            "apple",
-            "orange"
-        ],
-        "status": "draft",
-        "is_public": false,
-        "view_count": 0,
-        "copy_count": 0,
-        "created_at": "2026-05-02T17:21:13.630Z",
-        "updated_at": "2026-05-02T17:21:13.630Z",
-        "course_data": {
+        "status": "completed",
+        "courseData": {
             "courseData": {
+                "courseOverview": {
+                    "courseTitle": "Apple Magic Forest: 寻找彩虹苹果树",
+                    "corePhilosophy": "PERMA + SEL + 体验驱动",
+                    "overallContext": "在遥远的快乐森林深处，隐藏着一棵神奇的彩虹苹果树。树上的苹果不是普通的苹果，而是会发光、会唱歌的魔法苹果！但最近，森林里的小动物们发现彩虹苹果树失去了光彩，苹果都变成了灰色。原来，只有孩子们用发自内心的善意和合作，才能唤醒苹果的魔法。小精灵Lily告诉大家，每个孩子都需要找到一颗属于自己的“勇气种子”，通过完成三个任务——分享、鼓励和感谢——来让种子发芽，最终让彩虹苹果树重新绽放光芒。在这段旅程中，孩子们将用英语说出苹果的颜色、味道和感受，并用歌声和舞蹈庆祝苹果树的复活。故事的最后，每个孩子都会收获一颗属于自己的彩虹苹果，带回家作为友谊和努力的纪念。",
+                    "languageGoals": {
+                        "vocabulary": "apple, red, green, yellow, big, small, sweet, sour, tree, seed",
+                        "grammar": "This is a... / I like... / Can I have...? / Thank you."
+                    },
+                    "selGoals": "自我意识——识别并表达自己对苹果的喜好和情绪；社交技能——学会用礼貌用语请求和分享苹果；人际关系——在合作完成任务时表达感谢与鼓励。",
+                    "permaGoals": "Positive Emotions（期待、快乐、成就感）；Relationships（合作分享、相互感谢）；Meaning（通过自己的行动让森林变得更美好）。",
+                    "finalTask": "艺术共创：每个孩子用彩色卡纸剪出一个苹果形状，并在上面画上自己的笑脸或祝福语，然后一起贴在教室的“彩虹苹果树”上，组成一棵集体完成的彩虹苹果树，并齐唱改编的歌曲《Apple Tree Song》。",
+                    "themeImagePrompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，角色的符号化表情，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，快乐森林深处，一棵巨大的苹果树，树枝上挂着灰色苹果，树下有小精灵Lily的魔法光圈，周围是柔和的森林色调"
+                },
                 "engage": {
+                    "title": "Engage (引入)",
                     "color": "bg-purple-100 text-purple-700 border-purple-200",
                     "steps": [
                         {
                             "id": "e1",
-                            "time": "15分钟",
-                            "title": "风精灵的邀请函",
+                            "time": "9分钟",
+                            "title": "小精灵的求助信",
+                            "objective": "语言目标：理解并说出核心词汇 apple, tree；SEL目标：激发好奇心和对森林的关心（自我意识——意识到需要帮助）。",
+                            "activity": "情境导入：教师扮演小精灵Lily，展示一封来自森林的求助信和一颗灰色的苹果，邀请孩子们一起拯救彩虹苹果树。",
+                            "activitySteps": "①教师戴上精灵翅膀和帽子，神秘地拿出一个密封的棕色信封，上面画着一棵大树和灰色苹果。\n②教师打开信封，抽出一封手写信和一颗灰色塑料苹果，用悲伤的语气读出信的内容：\"Hello children! I'm Lily. Rainbow apple tree is sad. Apples turn gray! Can you help? Find the magic seed!\"\n③教师提问：\"What color is the apple?\" 引导回答 \"Gray\"。然后展示图片，指着树说 \"This is a tree\"。\n④孩子们围坐成圆圈，教师传递灰色苹果，每个孩子摸一摸，说出 \"Apple\"。\n⑤教师鼓励孩子们一起喊出口号：\"We can help!\"，营造使命感。",
+                            "scenario": "教室入口装饰成森林入口，墙面贴上绿植和花朵贴纸。教师出示的信封带有闪光粉，内有一张手绘森林地图（简笔画）。中间放一个篮子，篮子中是灰色苹果（用灰色丙烯涂过的塑料苹果）。灯光调暗，使用手电筒打光到信件上增加神秘感。",
+                            "script": "（轻轻敲门声）叮咚！Who's there? 哇，小朋友们，看！这里有一封神秘的信。Let's open it together! （打开信封，拿出灰色苹果）Oh no! Look at this apple! It's gray！灰色苹果！森林里的小精灵Lily说，彩虹苹果树失去了颜色。She needs our help! 你们愿意帮助她吗？Great! Let's say together: \"We can help!\" 现在，每个人都摸一摸这个灰色苹果，告诉大家：This is an apple. 非常棒！让我们一起踏上拯救彩虹苹果树的冒险吧！",
                             "assets": [
                                 {
                                     "id": "asset-e1",
                                     "type": "image",
-                                    "title": "森林篝火与丢失的水果",
-                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的森林背景，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，森林中有一堆燃烧的篝火，旁边地上有半露的苹果和橙子，远处有树洞和草丛，色调柔和暖色"
+                                    "title": "小精灵Lily的求助信和灰色苹果",
+                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，一个棕色信封打开着，旁边放着一颗灰色苹果，信封上有树叶图案和闪光星星，背景是浅绿色森林色调"
                                 }
-                            ],
-                            "script": "小朋友们，晚上好！Good evening, little explorers! 今天我们要进入一片神奇的森林——星光森林。看，森林中间有一堆篝火在闪烁（展示图片），小动物们正准备开篝火晚会呢！可是，出大事了！小松鼠的apple不见了，小兔子的orange也丢了。他们好伤心啊。Look! This is an apple. 苹果——apple. 再来一次，apple. 这个是orange, 橙子——orange. 谁能帮帮他们？你们愿意做勇敢的小探险家吗？Great! 那我们分成四组：松鼠组、兔子组、小鸟组和小熊组，一起出发找水果吧！",
-                            "activity": "教师播放轻柔的森林音效，展示森林篝火的图片。教师讲述故事开头：小松鼠和小兔子丢了水果，需要帮助。教师举起苹果和橙子的实物或卡片，教读apple和orange，全班跟读。然后教师提问：Who can help them? 请学生举手并用中文或简单英语表达意愿。分组：将全班分成4个小组（每组4-5人），每组代表一种小动物（松鼠组、兔子组、小鸟组、小熊组）。",
-                            "objective": "语言目标：听懂并说出核心词汇apple和orange；SEL目标：社会意识——感受故事中帮助他人的情感，激发参与动机。"
+                            ]
                         }
-                    ],
-                    "title": "Engage (引入)"
-                },
-                "elevate": {
-                    "color": "bg-yellow-100 text-yellow-700 border-yellow-200",
-                    "steps": [
-                        {
-                            "id": "el1",
-                            "time": "21分钟",
-                            "title": "星光下的感谢圈",
-                            "assets": [
-                                {
-                                    "id": "asset-el1",
-                                    "type": "image",
-                                    "title": "星光与感谢花环",
-                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的森林夜晚，篝火周围散落着彩色水果卡片，卡片组成一个环形，背景星空闪烁，地面有苹果和橙子图案，无人物无文字，清晰的环境线稿，干净亲和的美学"
-                                }
-                            ],
-                            "script": "小探险家们，我们今天的冒险就要结束了。Feel proud? 你们帮助了小松鼠和小兔子，找到了apple和orange，还一起做了美丽的拼盘画，唱了动听的歌。现在我们来做一个感谢圈。每人拿一张水果卡片，在背面写一句感谢的话给一个朋友。可以写“Thank you for sharing the orange.” 或者“Thank you, my friend.” 写好后，走到他面前，看着他的眼睛说。谁先来？... Thank you! 我们现在把卡片贴在水果拼盘周围，变成一个爱的花环。记住，幸福就是分享和感谢。最后我们一起唱那首水果歌，然后和身边的朋友拥抱一下！",
-                            "activity": "所有学生围坐成圈，中间放置水果拼盘画和篝火装饰。教师先引导反思：今天我们帮小动物找到了什么？学会了哪些话？谁帮助了你？请学生用简单英语或中文分享。然后进行“感谢传递”活动：每个学生拿到一张手绘苹果或橙子卡片，在卡片背面写（或画）一句感谢的话给一位同伴，使用句型“Thank you for helping me with the apple/orange.” 或更简单的“Thank you, friend!” 写好后，按顺序站起来，走到要感谢的人面前，把卡片递给他并说出感谢。最后全班一起将卡片贴到水果拼盘画的周围，形成一个“感谢花环”。教师总结：帮助别人和分享让所有人都快乐，这就是幸福。最后一起唱一遍歌曲，结束课程。",
-                            "objective": "语言目标：综合运用apple/orange和感谢句型进行真实表达；SEL目标：人际关系技能——向同伴表达感谢，感受积极的社交反馈；PERMA意义：通过反思体验成就感和归属感。"
-                        }
-                    ],
-                    "title": "Elevate (升华)"
+                    ]
                 },
                 "empower": {
+                    "title": "Empower (赋能)",
                     "color": "bg-blue-100 text-blue-700 border-blue-200",
                     "steps": [
                         {
                             "id": "em1",
-                            "time": "24分钟",
-                            "title": "探寻水果的秘密",
+                            "time": "12分钟",
+                            "title": "任务一：分享红色和绿色的苹果",
+                            "objective": "语言目标：掌握词汇 red, green, apple 和句型 \"This is a red/green apple\" \"Can I have...?\"；SEL目标：社交技能——用礼貌语言请求分享物品，体验分享的快乐。",
+                            "activity": "实物感知与角色扮演：孩子们分成两组，扮演小动物采摘果园里的红色和绿色苹果，用英文描述并互相分享。",
+                            "activitySteps": "①教师拿出两个篮子，一个装满红色塑料苹果，一个装绿色。教师示范：拿起红色苹果说 \"This is a red apple. I like red apples.\" 然后转向旁边小朋友说 \"Can I have a green apple?\" 对方回答 \"Here you are!\" 教师说 \"Thank you!\"\n②孩子们两人一组，每组一个篮子（红绿苹果混合），互相练习对话：A: \"This is a red apple. Can I have a green apple?\" B: \"Here you are!\" A: \"Thank you!\" 然后交换角色。\n③教师巡回指导，鼓励孩子们使用完整句子，并注意眼神接触和微笑。\n④请两到三组上台展示，全体鼓掌。教师总结：\"Sharing makes us happy!\" 并将一颗金色种子（贴纸）贴在教室的“种子收集板”上。",
+                            "scenario": "教室一角布置成“果园”：绿色背景布上贴纸苹果树，地上铺人工草坪，两个竹篮分别放红色和绿色塑料苹果。孩子们戴上动物头饰（兔子、松鼠等），教师戴小精灵头饰。种子收集板是一块大展板，提前画好一个花盆，每完成一个任务贴一颗种子贴纸。",
+                            "script": "小朋友们，我们找到第一颗勇气种子啦！但是要让它发芽，需要先完成第一个任务——Sharing！分享！看，这里有很多苹果。Red apple, green apple. 请你们像刚才老师示范的那样，用礼貌的语言请求分享。Remember: Can I have a ...? 然后要说 Thank you! 来，两人一组，开始吧！哇，你们说得太好了！\"Thank you!\" 真温暖。我们种下了第一颗种子！(贴贴纸) Look! The seed is glowing!",
                             "assets": [
                                 {
                                     "id": "asset-em1",
                                     "type": "image",
-                                    "title": "教室角落的水果藏宝图",
-                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的教室场景，有书架、桌子、窗帘，桌下露出一半的苹果和橙子，墙上贴有森林符号，无人物无文字，清晰的环境线稿，干净亲和的美学"
+                                    "title": "果园里的红色和绿色苹果",
+                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，两个竹篮，一个装满红色苹果，一个装满绿色苹果，背景是绿色果树和草地，天空中有一颗闪亮的金色种子"
                                 }
-                            ],
-                            "script": "小朋友们，风精灵给我们留了线索！水果就藏在教室里。Look around! 你们能发现apple和orange吗？首先，我们来学一个魔法口令：当你想请求一个水果时，要说“May I have an orange, please?” 跟我念，May I have an orange, please? 很好！现在我们来玩寻宝游戏。每组派一个小勇士出来，我说“Find an apple!”, 你就快去找到apple的卡片，然后回到组里，大家一起大声说“This is an apple!” 明白了吗？Ready? Go find an apple! 哇，松鼠组找到了！大家一起说——This is an apple! Perfect! 下一轮：Find an orange! 注意要礼貌地说“May I have an orange, please?”哦，小鸟组拿到了，说——That is an orange! 太棒了！",
-                            "activity": "教师创设情境：风精灵把水果藏在了教室的不同角落（提前布置好apple和orange的卡片或实物）。每个小组需要合作完成寻宝任务。教师先示范：走到一个藏点，拿起苹果卡片说“This is an apple.” 然后请学生重复。然后教师教授礼貌请求句型：“May I have an orange, please?” 学生跟读。随后进行“水果寻宝”游戏：每组轮流派一名代表，根据教师的口令（如“Find an apple!”）去找到对应的水果卡片，并带回小组。找到后小组一起说“This is an apple.” 如果找到的是橙色卡片则说“That is an orange.” 用时最短且发音正确的小组得分。游戏重复2-3轮。",
-                            "objective": "语言目标：熟练运用apple和orange进行指认和简单表达（This is an apple. That is an orange.）；SEL目标：社会意识——在模拟情境中理解他人的需要，学习礼貌请求。"
+                            ]
                         },
                         {
                             "id": "em2",
-                            "time": "24分钟",
-                            "title": "分享与感谢的魔法",
+                            "time": "12分钟",
+                            "title": "任务二：鼓励同伴品尝酸甜苹果",
+                            "objective": "语言目标：掌握词汇 sweet, sour, big, small 和句型 \"This apple is sweet/sour\" \"I like...\"；SEL目标：人际关系技能——学会鼓励他人，用积极语言表达支持。",
+                            "activity": "感官探索与鼓励游戏：孩子们蒙眼尝苹果（安全实物道具），并用形容词描述味道，同伴用英语鼓励 \"You can do it!\" \"Good job!\"",
+                            "activitySteps": "①教师准备切好的苹果块（真苹果，红色和绿色），放在纸盘中。先展示一个红色大苹果：\"Big red apple. This is a big apple.\" 再展示小绿色苹果：\"Small green apple.\" 同时教 sweet（甜）和 sour（酸）的手势（甜：摸肚子微笑；酸：皱眉）。\n②邀请一名志愿者上前，蒙上眼罩（或闭眼），教师让他闻一闻并尝一小块苹果。其他孩子询问 \"Is it sweet or sour?\" 志愿者回答 \"It's sweet!\" 或 \"It's sour!\"。教师引导其他孩子说 \"Good job!\" \"You are amazing!\" 给予鼓励。\n③分组进行：4-5人一组，每组一个盘子（含两种苹果块），每人轮流尝一块并描述，其他组员鼓励。\n④教师总结：\"Encouraging words are magic! They make our friends feel happy!\" 然后在种子收集板上贴上第二颗种子贴纸。",
+                            "scenario": "教室中间铺野餐垫，上面放白色纸盘，切好的苹果块用保鲜膜覆盖。眼罩用彩色丝巾代替。背景音乐播放轻快的森林鸟鸣。教师提前将红绿苹果切好，注意分块大小合适，确保安全卫生。",
+                            "script": "第二个任务来啦！我们需要用鼓励的话语让朋友更勇敢。Let's try! 看，这里有 big red apple 和 small green apple. 老师先来尝一口，嗯...Mmm, it's sweet! 甜！现在轮到你们了。谁来试一试？别怕，你的朋友们会鼓励你！大家一起说 \"You can do it!\" （对蒙眼的志愿者）你现在尝一小块，然后告诉大家：It's sweet or sour? 对！\"It's sweet!\" 大家快说 \"Good job!\" 太棒了！看，第二颗种子也发芽了！Great teamwork!",
                             "assets": [
                                 {
                                     "id": "asset-em2",
                                     "type": "image",
-                                    "title": "小动物分享水果的场景",
-                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的森林空地，中间有野餐布，上面摆着苹果和橙子，周围有树桩和花朵，无人物无文字，清晰的环境线稿，干净亲和的美学"
+                                    "title": "小朋友蒙眼品尝酸甜苹果",
+                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，一个白色盘子中放着红色和绿色苹果块，旁边有一条彩色丝巾，背景是野餐垫和草地，上方有两颗闪光的金色种子"
                                 }
-                            ],
-                            "script": "探险家们，你们找到的水果现在可以互相分享啦！Sharing is caring! 现在我们来练习礼貌请求。看老师示范：May I have an orange, please? 然后你说“Here you are.” 我再说“Thank you!” 大家一起来试试。现在我们玩“水果传传乐”，音乐开始就传这个水果球，音乐停，拿到球的小朋友要站起来，对旁边的小伙伴说“May I have an apple, please?” 对方把苹果卡片递给你，你再说“Thank you!” 准备好？Music on! ... Stop! 小红，请对小明说。Great! 大家都是有礼貌的小精灵！",
-                            "activity": "教师将学生围坐成半圆，准备装有苹果和橙子卡片的篮子。教师示范角色扮演：拿起一个橙子卡片，走到一位学生面前说“May I have an orange, please?” 学生将卡片递给他，老师回应“Thank you!” 然后互换角色。接着进行“水果传传乐”活动：播放背景音乐（水果主题曲），学生传递一个水果（软球或卡片），音乐停止时手持水果的学生需要站起来，对旁边同学用英语请求另一个水果。例如：A说“May I have an apple, please?” B将苹果卡片递给A，A说“Thank you!” 然后B继续。每组内练习3-4次。最后教师邀请几组到前面展示对话。",
-                            "objective": "语言目标：能运用句型“May I have an apple/orange?” 和 “Thank you!” 进行简单对话；SEL目标：人际关系技能——学会用礼貌语言请求和表达感谢，体验分享的快乐。"
+                            ]
                         }
-                    ],
-                    "title": "Empower (赋能)"
+                    ]
                 },
                 "execute": {
+                    "title": "Execute (实践)",
                     "color": "bg-green-100 text-green-700 border-green-200",
                     "steps": [
                         {
                             "id": "ex1",
-                            "time": "18分钟",
-                            "title": "水果拼盘大创作",
+                            "time": "9分钟",
+                            "title": "制作彩虹苹果卡片",
+                            "objective": "语言目标：运用句型 \"This is a...\" \"I like...\" 描述自己的苹果；SEL目标：自我表达与创造性，通过艺术表达自己的情感。",
+                            "activity": "艺术手工：每个孩子从彩色卡纸上剪下一个苹果形状，并用彩色笔在苹果上画自己的笑脸或写上祝福语（如 \"Thank you\" \"I like you\" 等简单的英文）。",
+                            "activitySteps": "①教师展示成品范例：一个红色卡纸苹果上画了笑脸，写着 \"I like red apples!\" 另一个绿色苹果上写着 \"Thank you!\" 并用贴纸装饰。\n②分发剪刀、彩色卡纸（红、黄、绿）、胶棒、彩色笔和贴纸。老师示范剪苹果形状：将卡纸对折，画半圆剪下，打开就是一个对称苹果。\n③孩子们开始制作。教师用英语引导：\"What color is your apple?\" 孩子回答 \"Red.\" 教师再问 \"What do you want to draw?\" 鼓励孩子画笑脸或爱心。\n④完成的孩子将苹果举起来，用句型介绍给全班：\"This is a red apple. I like it!\" 全班回应 \"Nice apple!\" 或 \"Thank you!\"\n⑤收集所有苹果卡片，准备贴到彩虹树上。",
+                            "scenario": "手工区铺好桌布，每张桌上放一盒彩色水笔、剪刀（圆头安全剪刀）、贴纸（星星、爱心）、胶棒。背景板上一棵大树的轮廓（之前贴好的棕色树干和绿色树冠，没有苹果）。教师提前做好范例苹果挂在黑板上。",
+                            "script": "第三颗种子也种下啦！现在我们要用双手创造魔法苹果，让彩虹树复活！Let's make our own magic apples! 看，老师这个红色苹果，上面画了一个笑脸，写上了 \"I like red apples.\" 你喜欢什么颜色的苹果？Red, green or yellow? Choose one! 然后剪下来，画上你最喜欢的图案。可以画笑脸，也可以写 \"Thank you\" 或 \"I like you\"。完成后，我们要把它贴到彩虹树上哦！小朋友们，开始吧！Wow, your apple is so beautiful! 待会儿请用英语介绍你的苹果。",
                             "assets": [
                                 {
                                     "id": "asset-ex1",
                                     "type": "image",
-                                    "title": "空的水果拼盘模板",
-                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的白色圆形大盘子，盘子上有预留的圆形轮廓，旁边放着几支彩色画笔和剪刀，背景是浅色木桌，无人物无文字，清晰的环境线稿"
+                                    "title": "手工制作彩虹苹果卡片",
+                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，桌面上有彩色卡纸、剪刀、胶棒，散落着红色、绿色、黄色卡纸剪出的苹果形状，其中一个苹果上画了笑脸和爱心，旁边有一棵大树的轮廓"
                                 }
-                            ],
-                            "script": "现在我们要用艺术来庆祝水果派对！Let's make a fruit platter! 每组有一张大盘子一样的纸，你们要画上apple和orange，还可以画其他水果。记得分工合作：两人画苹果，两人画橙子，一人画篝火。画的时候可以互相说英语，比如“This apple is big.” “Orange is orange.” 老师会放轻音乐，大家一起创作。完成后我们把所有拼盘贴到篝火周围，变成一个大派对！Ready? Go!",
-                            "activity": "每组发放一张大画纸（模拟大盘子）、水彩笔、彩色纸、胶棒、剪刀和苹果、橙子形状的模板。教师展示一张水果拼盘画的范例。任务：小组合作创作一幅“森林篝火水果拼盘画”，必须包含apple和orange以及至少另外两种水果（可自选画其他水果）。组员分工：两个人负责画苹果，两个人负责画橙子，一个人负责装饰篝火背景。创作过程中鼓励使用英语交流，如“This apple is red.” “I need more orange color.” 教师巡回指导，用英语提问：What's this? It's an apple. 完成后每组将作品贴到教室前面的篝火背景板上。",
-                            "objective": "语言目标：在艺术创作中运用核心词汇描述水果（This is red apple, orange orange）；SEL目标：负责任的决策——与组员合作分工，尊重他人创意，完成共同作品。"
+                            ]
                         },
                         {
                             "id": "ex2",
-                            "time": "18分钟",
-                            "title": "篝火边的水果之歌",
+                            "time": "9分钟",
+                            "title": "共同点亮彩虹苹果树",
+                            "objective": "语言目标：综合运用所有核心词汇和句型，集体演唱改编歌曲；SEL目标：合作与贡献，感受集体成就带来的积极情绪。",
+                            "activity": "集体粘贴与合唱：孩子们轮流将自制苹果粘贴到大树干上，形成彩虹苹果树，然后齐唱《Apple Tree Song》。",
+                            "activitySteps": "①教师提前将大树轮廓展板放在教室前方，树冠区域贴满双面胶备用。\n②孩子们排成队，每人手持自己的苹果卡片，走到树前，大声说 \"This is my apple. I like it!\" 然后粘贴到树冠上。\n③所有苹果粘贴完毕后，教师带领孩子们站成半圆，播放背景音乐（简单旋律，如《Row Row Row Your Boat》的调子）。\n④教师教唱改编歌词：\"Apple tree, apple tree, beautiful and bright. Red and green and yellow, shining in the light. Thank you, thank you, we are friends. Apple tree comes back to life!\" 重复两遍。\n⑤配合简单动作：双手举高摇摆（树），指苹果（颜色），拍手（Thank you），拥抱自己（friends）。\n⑥最后全体欢呼：\"Rainbow apple tree is alive!\" 教师将第三颗金色种子贴纸贴在收集板的花盆顶部，宣布种子已经长成大树。",
+                            "scenario": "大展板上的树干用棕色卡纸粘贴，树冠提前画好浅绿色轮廓，没有苹果。双面胶分散贴在树冠区域。背景播放轻快的森林音乐。教师准备小音箱和麦克风（可选）。歌曲旋律提前录好或用钢琴弹奏。",
+                            "script": "现在，我们每个人都要把自己的魔法苹果贴到树上。请走到树前，大声告诉我们：\"This is my red apple. I like it!\" 大家给你鼓掌！开始吧！... 哇，看！树上有了这么多彩色的苹果！彩虹苹果树复活了！Let's sing a song to celebrate! 跟我一起唱：Apple tree, apple tree, beautiful and bright... Red and green and yellow, shining in the light... Thank you, thank you, we are friends... Apple tree comes back to life! 太棒了！我们成功了！Now the rainbow apple tree is alive!",
                             "assets": [
                                 {
                                     "id": "asset-ex2",
                                     "type": "image",
-                                    "title": "篝火与歌声的夜晚",
-                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的森林篝火场景，篝火火焰用橙色和红色线条表现，周围有一圈小石头，远处有星星和月亮，地面散落着苹果和橙子，无人物无文字，清晰的环境线稿，温暖调色"
+                                    "title": "彩虹苹果树被点亮",
+                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，一棵大树，树冠上挂满了红色、绿色、黄色的苹果，树冠发出柔和的光芒，树下有一个花盆，花盆里有一棵长成的大树苗，背景是星光点点的夜空"
                                 }
-                            ],
-                            "script": "让我们用歌声结束探险！Here is a special song! 先听老师唱一遍。Apple, orange, red and round, Share them all on the ground. Thank you friend, thank you so, Around the fire, let's go! 现在跟我做动作：apple——双手举圆，orange——画圈，share——分享手势，thank you——鞠躬，around the fire——转圈。大家一起唱！Great! 现在每组轮流表演，其他人做动作。最后我们手拉手围成圈，围着篝火唱起来！",
-                            "activity": "教师先播放一段简单的旋律（可用《Apple Round the Tree》改编）。展示歌词海报：\nApple, orange, red and round,\nShare them all on the ground.\nThank you friend, thank you so,\nAround the fire, let's go! \n教师逐句教唱，并配合动作：唱到apple时双手举圆，orange时双手画圈，share时做分享手势，thank you时鞠躬，around the fire时转圈。全班一起练习2-3遍。然后分组展示：一组演唱时，其他组做动作。最后所有组站成圆圈，围着模拟篝火（用红色和橙色纸条做的火焰），边唱边绕圈走。",
-                            "objective": "语言目标：能跟随旋律歌唱包含apple和orange的英文歌曲，并做出对应动作；SEL目标：积极情绪——通过音乐和律动体验快乐，增强集体归属感。"
+                            ]
                         }
-                    ],
-                    "title": "Execute (实践)"
+                    ]
                 },
-                "courseOverview": {
-                    "selGoals": "社会意识——学会礼貌地请求和分享；人际关系技能——在合作中表达感谢与善意；自我管理——耐心等待和轮流表达",
-                    "finalTask": "艺术表达：每组合作绘制一幅大型水果拼盘画（包含苹果和橙子），并贴到篝火背景上；音乐律动：集体演唱改编的英文水果歌《Apple and Orange Round the Fire》并加入律动动作。",
-                    "permaGoals": "Positive Emotions（期待与欢乐）、Relationships（合作分享）、Meaning（通过帮助他人创造美好回忆）、Achievement（完成水果拼盘画和歌曲表演）",
-                    "courseTitle": "森林篝火水果派对 (Forest Fruit Campfire Party)",
-                    "languageGoals": {
-                        "grammar": "orange",
-                        "vocabulary": "apple"
-                    },
-                    "corePhilosophy": "PERMA + SEL + 体验驱动",
-                    "overallContext": "在幽静的星光森林里，小动物们正筹备一场盛大的篝火晚会。每个小动物都要带一种水果来分享，但是淘气的小松鼠发现自己的苹果不见了，而小兔子也找不到她最爱的橙子。原来是森林里的风精灵不小心把水果藏到了不同的角落。小探险家们（学生）需要帮助小动物们找到苹果和橙子，学习用英语请求和分享，最后一起用水果制作一幅巨大的拼盘画，并围着篝火唱歌跳舞，感受友谊与分享的快乐。",
-                    "themeImagePrompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，角色的符号化表情，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，森林中央有一堆温暖的篝火，周围散落着苹果和橙子，背景是星空和树木剪影，整体色调柔和温暖"
+                "elevate": {
+                    "title": "Elevate (升华)",
+                    "color": "bg-yellow-100 text-yellow-700 border-yellow-200",
+                    "steps": [
+                        {
+                            "id": "el1",
+                            "time": "9分钟",
+                            "title": "收获感恩的彩虹苹果",
+                            "objective": "语言目标：复习核心句型并表达感谢；SEL目标：感恩与自我肯定，内化积极情感，建立快乐记忆。",
+                            "activity": "反思与感恩环节：每个孩子分享今天最开心的一件事，并得到一颗真实的彩虹苹果贴纸或小苹果礼物，然后以“Thank you circle”结束。",
+                            "activitySteps": "①孩子们围坐成圆圈，教师拿着一个装有彩虹苹果贴纸的魔法袋（或小苹果软糖，注意过敏情况）。\n②教师先示范：\"Today, I feel happy because we worked together. Thank you, everyone!\" 然后传一个麦克风或毛绒玩具。接到的小朋友用中文或英文说一句感谢的话，例如 \"Thank you, Lily!\" \"Thank you, my friend!\" 或者 \"I liked sharing apples!\"\n③每个孩子发言后，教师从魔法袋中取出一个彩虹苹果贴纸粘贴在孩子手上或胸前，并说 \"You are a magic helper!\"\n④最后，全体手拉手，齐声说 \"We saved the rainbow apple tree! Thank you, friends!\" 然后一起做苹果树动作（双手举高摇摆）并发出“嘻嘻哈哈”的笑声。\n⑤教师总结：\"每一个苹果都代表你们的善意，带回家记住这份快乐！\" 发送实物奖励（彩虹苹果贴纸或小苹果钥匙扣），课程结束。",
+                            "scenario": "教室中间的圆圈区域，地上放一个装饰着树叶和花朵的垫子。魔法袋用金色布料制作，上面贴有彩虹苹果图案。每个孩子获得一个彩虹苹果贴纸（五种颜色渐变）。背景播放轻柔的感恩音乐。",
+                            "script": "我们做了一件超级棒的事情！Thank you, everyone! 现在让我们围成一个感恩圈。老师先说：Today I feel happy because we helped the rainbow apple tree. Thank you, my little friends! 现在，把毛绒小熊传给下一位，轮到你了。你可以说 \"Thank you, Lily!\" 或者 \"I liked sharing!\" 任何你想感谢的话都可以。... （传完一圈）Now, let's stand up, hold hands, and say together: We saved the rainbow apple tree! Thank you, friends! 今天每个小朋友都会得到一颗彩虹苹果贴纸，它代表着你的善意和努力。Take it home and remember: you are a magic helper! 再见，下次冒险再见！",
+                            "assets": [
+                                {
+                                    "id": "asset-el1",
+                                    "type": "image",
+                                    "title": "感恩圈与彩虹苹果贴纸",
+                                    "prompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，一个圆形坐垫上散落着几颗彩虹色苹果贴纸，旁边有一个金色魔法袋，背景是充满小星星的温馨房间，墙上有一幅挂着的彩虹苹果树画"
+                                }
+                            ]
+                        }
+                    ]
                 }
             }
         },
-        "canvas_data": {},
-        "reading_materials_data": {}
+        "message": "课件生成完成"
     }
 }

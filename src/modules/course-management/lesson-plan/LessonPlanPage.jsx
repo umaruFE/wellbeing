@@ -21,6 +21,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
+import { useAuth } from '../../../contexts/AuthContext';
 import apiService from '../../../services/api';
 
 const colors = {
@@ -89,6 +90,7 @@ const PHASE_CONFIG = {
 const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
 
 const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
+  const { user } = useAuth();
   const [expandedItems, setExpandedItems] = useState({});
   const [openMenuPhase, setOpenMenuPhase] = useState(null);
   const [regeneratingPhase, setRegeneratingPhase] = useState(null);
@@ -104,6 +106,8 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
       time: item.time || '',
       objective: item.objective || '',
       activity: item.activity || '',
+      activitySteps: item.activitySteps || '',
+      scenario: item.scenario || '',
       script: item.script || '',
     });
   };
@@ -174,6 +178,8 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
           time: step.time,
           objective: step.objective,
           activity: step.activity,
+          activitySteps: step.activitySteps,
+          scenario: step.scenario,
           script: step.script,
           assets: step.assets || [],
         })),
@@ -216,7 +222,11 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
       if (onCourseDataUpdate) onCourseDataUpdate(newCourseData);
 
       if (courseId) {
-        apiService.updateCourse(courseId, { courseData: newCourseData.course_data }).catch(err => {
+        apiService.updateCourse(courseId, {
+          courseData: newCourseData.course_data,
+          userId: user?.id || courseData?.user_id || null,
+          organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
+        }).catch(err => {
           console.error('自动保存失败:', err);
         });
       }
@@ -401,11 +411,6 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-[15px] uppercase tracking-wide">{safeRender(col.title)}</h3>
               <p className="text-[11px] opacity-80 mt-1">{col.count}个环节</p>
-              {col.objective && (
-                <p className="text-[11px] opacity-70 mt-2 leading-relaxed line-clamp-3" title={col.objective}>
-                  {col.objective}
-                </p>
-              )}
             </div>
             <div className="flex items-center gap-2 relative">
               {col.time && (
@@ -444,6 +449,14 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
               )}
             </div>
           </div>
+
+          {col.objective && (
+            <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 shrink-0 h-24 overflow-y-auto">
+              <p className="text-[11px] text-gray-600 leading-relaxed">
+                {col.objective}
+              </p>
+            </div>
+          )}
 
           <div className="p-4 flex-1 overflow-y-auto bg-white flex flex-col gap-1">
 
@@ -560,9 +573,27 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                           <div>
                             <label className="text-[11px] font-bold text-gray-500 block mb-1">活动概述</label>
                             <textarea
-                              rows={3}
+                              rows={2}
                               value={editForm.activity}
                               onChange={e => setEditForm(f => ({ ...f, activity: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-bold text-gray-500 block mb-1">活动流程</label>
+                            <textarea
+                              rows={3}
+                              value={editForm.activitySteps}
+                              onChange={e => setEditForm(f => ({ ...f, activitySteps: e.target.value }))}
+                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-bold text-gray-500 block mb-1">情境创设</label>
+                            <textarea
+                              rows={2}
+                              value={editForm.scenario}
+                              onChange={e => setEditForm(f => ({ ...f, scenario: e.target.value }))}
                               className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
                             />
                           </div>
@@ -614,7 +645,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                               <div className="pl-5 grid grid-cols-2 gap-4">
                                 <div>
                                   <span className="text-[11px] font-bold text-gray-500 block mb-1">活动流程</span>
-                                  <span className="text-[12px] text-gray-600">{safeRender(item.activity)}</span>
+                                  <span className="text-[12px] text-gray-600">{safeRender(item.activitySteps || item.activity)}</span>
                                 </div>
                                 <div>
                                   <span className="text-[11px] font-bold text-gray-500 block mb-1">教学资源</span>
@@ -628,13 +659,13 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                             </div>
                           )}
 
-                          {item.script && (
+                          {(item.scenario || item.script) && (
                             <div className="mb-4">
                               <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
                                 <Compass size={14} />
                                 <span className="text-xs font-bold">情境创设</span>
                               </div>
-                              <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.script)}</p>
+                              <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.scenario || item.script)}</p>
                             </div>
                           )}
 
@@ -728,6 +759,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
 const LessonPlanPage = () => {
   const { courseId } = useParams();
+  const { user } = useAuth();
   const { setTitle, setActions } = useCourseLayout();
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -760,7 +792,11 @@ const LessonPlanPage = () => {
       if (!courseId) return;
       setIsSaving(true);
       try {
-        await apiService.updateCourse(courseId, { courseData });
+        await apiService.updateCourse(courseId, {
+          courseData,
+          userId: user?.id || courseData?.user_id || null,
+          organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
+        });
       } catch (err) {
         console.error('保存失败:', err);
         alert('保存失败，请重试');
@@ -773,7 +809,12 @@ const LessonPlanPage = () => {
       if (!courseId) return;
       setIsPublishing(true);
       try {
-        await apiService.updateCourse(courseId, { courseData, status: 'published' });
+        await apiService.updateCourse(courseId, {
+          courseData,
+          status: 'published',
+          userId: user?.id || courseData?.user_id || null,
+          organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
+        });
         alert('发布成功！');
       } catch (err) {
         console.error('发布失败:', err);

@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
+import { useAuth } from '../../../contexts/AuthContext';
 import apiService from '../../../services/api';
 import { exportToPDF } from '../../../utils/exportUtils';
 
@@ -54,6 +55,7 @@ const colors = {
 const CourseOverviewPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { setTitle, setActions } = useCourseLayout();
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -108,7 +110,9 @@ const CourseOverviewPage = () => {
         await apiService.updateCourse(courseId, {
           courseData: updatedCourseData.course_data,
           title: updatedCourseData.title,
-          theme: updatedCourseData.theme
+          theme: updatedCourseData.theme,
+          userId: user?.id || courseData?.user_id || null,
+          organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
         });
         setCourseData(updatedCourseData);
         setShowRegenerateModal(false);
@@ -159,7 +163,9 @@ const CourseOverviewPage = () => {
         };
         await apiService.updateCourse(courseId, {
           courseData: mergedCourseData,
-          title: displayData.courseTitle || courseData.title
+          title: displayData.courseTitle || courseData.title,
+          userId: user?.id || courseData?.user_id || null,
+          organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
         });
         navigate(`/courses/${courseId}/lesson-plan`);
       } else {
@@ -227,7 +233,11 @@ const CourseOverviewPage = () => {
       if (!courseId) return;
       setIsSaving(true);
       try {
-        await apiService.updateCourse(courseId, { courseData });
+        await apiService.updateCourse(courseId, {
+          courseData,
+          userId: user?.id || courseData?.user_id || null,
+          organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
+        });
       } catch (err) {
         console.error('保存失败:', err);
         alert('保存失败，请重试');
@@ -240,7 +250,12 @@ const CourseOverviewPage = () => {
       if (!courseId) return;
       setIsPublishing(true);
       try {
-        await apiService.updateCourse(courseId, { courseData, status: 'published' });
+        await apiService.updateCourse(courseId, {
+          courseData,
+          status: 'published',
+          userId: user?.id || courseData?.user_id || null,
+          organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
+        });
         alert('发布成功！');
       } catch (err) {
         console.error('发布失败:', err);

@@ -695,7 +695,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         type: 'text',
         title: '文本',
         url: '',
-        content: '双击编辑文本',
+        content: '',
         prompt: '',
         referenceImage: null,
         x: 100, y: 100, width: 300, height: 100, rotation: 0,

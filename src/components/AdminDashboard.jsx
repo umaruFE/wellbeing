@@ -489,7 +489,7 @@ const App = () => {
                 <p className="text-sm">暂无课程，点击上方按钮创建</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[420px] overflow-y-auto pr-1">
                 {courses.map((course) => (
                   <div 
                     key={course.id}
