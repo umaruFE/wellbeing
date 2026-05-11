@@ -1063,30 +1063,32 @@ export const VideoStoryboardModal = ({
               上一步
             </button>
             <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  if (generatedVideoUrl) {
-                    const link = document.createElement('a');
-                    link.href = generatedVideoUrl;
-                    link.download = `video_${Date.now()}.mp4`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }
-                }}
-                className="px-6 py-3 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2"
-              >
-                <Download className="w-5 h-5" />
-                下载视频
-              </button>
-              {/* 暂时屏蔽确认按钮 */}
-              {/* <button
-                onClick={handleConfirm}
-                className="px-8 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
-              >
-                <Check className="w-5 h-5" />
-                确认并添加到画布
-              </button> */}
+              {onConfirm ? (
+                <button
+                  onClick={handleConfirm}
+                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                >
+                  <Check className="w-5 h-5" />
+                  加载到画布
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    if (generatedVideoUrl) {
+                      const link = document.createElement('a');
+                      link.href = generatedVideoUrl;
+                      link.download = `video_${Date.now()}.mp4`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }
+                  }}
+                  className="px-6 py-3 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2"
+                >
+                  <Download className="w-5 h-5" />
+                  下载视频
+                </button>
+              )}
             </div>
           </div>
         );

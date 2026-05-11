@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { RotateCw, Play, Music, Copy, Trash2, Type } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { RotateCw, Play, Pause, Music, Copy, Trash2, Type } from 'lucide-react';
 
 /**
  * CanvasAssetRenderer - 共用的画布资产渲染组件
@@ -235,16 +235,122 @@ export const CanvasAssetRenderer = ({
                   </div>
                 )}
                 {asset.type === 'audio' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-full bg-dark/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
-                    <Music className="w-8 h-8 text-white/80" />
-                    <div className="text-white text-xs font-mono">Audio Track</div>
-                  </div>
+                  <AudioPlayer url={asset.url} title={asset.title} />
                 )}
               </div>
             ) : null}
           </div>
         );
       })}
+    </div>
+  );
+};
+
+const AudioPlayer = ({ url, title }) => {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = useCallback((e) => {
+    e.stopPropagation();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    setCurrentTime(audio.currentTime);
+    if (audio.duration) {
+      setProgress((audio.currentTime / audio.duration) * 100);
+    }
+  }, []);
+
+  const handleLoadedMetadata = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio && audio.duration) {
+      setDuration(audio.duration);
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+  }, []);
+
+  const handleSeek = useCallback((e) => {
+    e.stopPropagation();
+    const audio = audioRef.current;
+    if (!audio || !audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+    audio.currentTime = ratio * audio.duration;
+  }, []);
+
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div
+      className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center gap-2 p-3 backdrop-blur-sm"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <audio
+        ref={audioRef}
+        src={url}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        preload="metadata"
+      />
+
+      <div className="flex items-center gap-2 w-full">
+        <button
+          onClick={togglePlay}
+          className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors shrink-0"
+        >
+          {isPlaying ? (
+            <Pause className="w-4 h-4 text-white" fill="white" />
+          ) : (
+            <Play className="w-4 h-4 text-white ml-0.5" fill="white" />
+          )}
+        </button>
+
+        <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+          <div
+            className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+            onClick={handleSeek}
+          >
+            <div
+              className="h-full bg-white/80 rounded-full transition-[width] duration-100"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-white/60 font-mono">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1.5 text-white/70">
+        <Music className="w-3 h-3" />
+        <span className="text-[11px] truncate max-w-[200px]">{title || 'Audio'}</span>
+      </div>
     </div>
   );
 };

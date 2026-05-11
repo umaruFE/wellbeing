@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
+};
+
 // GET /api/courses - Get courses list
 export async function GET(request: NextRequest) {
   try {

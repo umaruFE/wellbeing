@@ -443,19 +443,21 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           }
 
           for (const asset of assets) {
+            const scaleX = pptW / canvasW;
+            const scaleY = pptH / canvasH;
+            const assetX = (asset.x || 0) * scaleX;
+            const assetY = (asset.y || 0) * scaleY;
+            const assetW = (asset.width || 300) * scaleX;
+            const assetH = (asset.height || 200) * scaleY;
+
             if (asset.type === 'image' && asset.url) {
               try {
                 const proxyUrl = `/api/ai/proxy-image?url=${encodeURIComponent(asset.url)}`;
                 const res = await fetch(proxyUrl);
                 const data = await res.json();
                 if (data.url) {
-                  const scaleX = pptW / canvasW;
-                  const scaleY = pptH / canvasH;
-                  const containerW = (asset.width || 300) * scaleX;
-                  const containerH = (asset.height || 200) * scaleY;
-
-                  let imgW = containerW;
-                  let imgH = containerH;
+                  let imgW = assetW;
+                  let imgH = assetH;
                   try {
                     const imgObj = await new Promise((resolve, reject) => {
                       const img = new Image();
@@ -463,21 +465,19 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                       img.onerror = reject;
                       img.src = data.url;
                     });
-                    const naturalW = imgObj.naturalWidth;
-                    const naturalH = imgObj.naturalHeight;
-                    const imgRatio = naturalW / naturalH;
-                    const containerRatio = containerW / containerH;
+                    const imgRatio = imgObj.naturalWidth / imgObj.naturalHeight;
+                    const containerRatio = assetW / assetH;
                     if (imgRatio > containerRatio) {
-                      imgH = containerW / imgRatio;
+                      imgH = assetW / imgRatio;
                     } else {
-                      imgW = containerH * imgRatio;
+                      imgW = assetH * imgRatio;
                     }
                   } catch {}
 
                   slide.addImage({
                     data: data.url,
-                    x: (asset.x || 0) * scaleX + (containerW - imgW) / 2,
-                    y: (asset.y || 0) * scaleY + (containerH - imgH) / 2,
+                    x: assetX + (assetW - imgW) / 2,
+                    y: assetY + (assetH - imgH) / 2,
                     w: imgW,
                     h: imgH,
                   });
@@ -486,20 +486,78 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 console.error('导出图片失败:', err.message);
               }
             } else if (asset.type === 'text' && asset.content) {
-              const scaleX = pptW / canvasW;
-              const scaleY = pptH / canvasH;
               const fontSize = Math.round((asset.fontSize || 16) * scaleX * 1.2);
               slide.addText(asset.content, {
-                x: (asset.x || 0) * scaleX,
-                y: (asset.y || 0) * scaleY,
-                w: (asset.width || 300) * scaleX,
-                h: (asset.height || 100) * scaleY,
+                x: assetX,
+                y: assetY,
+                w: assetW,
+                h: assetH,
                 fontSize,
                 color: asset.color || '333333',
                 fontFace: 'Microsoft YaHei',
                 wrap: true,
                 valign: 'top',
               });
+            } else if (asset.type === 'video' && asset.url) {
+              try {
+                const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                  const buffer = await res.arrayBuffer();
+                  const bytes = new Uint8Array(buffer);
+                  let binary = '';
+                  for (let i = 0; i < bytes.length; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                  }
+                  const base64 = btoa(binary);
+                  const contentType = res.headers.get('content-type') || 'video/mp4';
+                  slide.addMedia({
+                    type: 'video',
+                    data: `data:${contentType};base64,${base64}`,
+                    x: assetX,
+                    y: assetY,
+                    w: assetW,
+                    h: assetH,
+                  });
+                }
+              } catch (err) {
+                console.error('导出视频失败:', err.message);
+                slide.addText('▶ 视频播放', {
+                  x: assetX, y: assetY, w: assetW, h: assetH,
+                  fontSize: 14, color: '666666', align: 'center', valign: 'middle',
+                  fill: { color: 'F0F0F0' },
+                });
+              }
+            } else if (asset.type === 'audio' && asset.url) {
+              try {
+                const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                  const buffer = await res.arrayBuffer();
+                  const bytes = new Uint8Array(buffer);
+                  let binary = '';
+                  for (let i = 0; i < bytes.length; i++) {
+                    binary += String.fromCharCode(bytes[i]);
+                  }
+                  const base64 = btoa(binary);
+                  const contentType = res.headers.get('content-type') || 'audio/mpeg';
+                  slide.addMedia({
+                    type: 'audio',
+                    data: `data:${contentType};base64,${base64}`,
+                    x: assetX,
+                    y: assetY,
+                    w: assetW,
+                    h: Math.min(assetH, 0.6),
+                  });
+                }
+              } catch (err) {
+                console.error('导出音频失败:', err.message);
+                slide.addText('♪ 音频', {
+                  x: assetX, y: assetY, w: assetW, h: Math.min(assetH, 0.6),
+                  fontSize: 12, color: '666666', align: 'center', valign: 'middle',
+                  fill: { color: 'F0F0F0' },
+                });
+              }
             }
           }
         }

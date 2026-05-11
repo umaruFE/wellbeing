@@ -269,7 +269,7 @@ const VoiceGeneratorPanel = ({ onGenerated, userId, organizationId }) => {
           ))}
         </div>
       </div>
-      <div className="flex gap-4">
+      <div className="flex flex-col gap-4">
         <div className="flex-1">
           <label className="text-xs font-medium text-gray-500 block mb-2">语速</label>
           <div className="flex gap-1">
@@ -415,7 +415,10 @@ export const AssetGeneratorModal = ({
   };
 
   const handleVideoConfirm = (data) => {
-    if (data?.scenes?.length > 0) {
+    const videoUrl = data?.videoUrl;
+    if (videoUrl) {
+      onGenerated({ type: 'video', url: videoUrl, title: data.title || 'AI生成视频' });
+    } else if (data?.scenes?.length > 0) {
       const scene = data.scenes[0];
       if (scene.imageUrl || scene.url) {
         onGenerated({ type: 'video', url: scene.imageUrl || scene.url, title: data.title || '视频分镜' });
