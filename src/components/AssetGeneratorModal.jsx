@@ -5,6 +5,8 @@ import { VideoStoryboardModal } from './VideoStoryboardModal';
 
 const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
   const [prompt, setPrompt] = useState('');
+  const [width, setWidth] = useState(1024);
+  const [height, setHeight] = useState(1024);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState(null);
   const [progress, setProgress] = useState('');
@@ -21,8 +23,8 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: prompt.trim(),
-          width: 1024,
-          height: 1024,
+          width: width,
+          height: height,
           user_id: userId,
           organization_id: organizationId
         })
@@ -40,7 +42,7 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
       let generatedUrl = null;
       for (let attempt = 0; attempt < 60; attempt++) {
         await new Promise(r => setTimeout(r, 3000));
-        const statusUrl = `/api/ai/task-status/${taskId}${apiUrl ? `?apiUrl=${encodeURIComponent(apiUrl)}` : ''}`;
+        const statusUrl = `/api/ai/task-status/${taskId}?useComfyUI=true${apiUrl ? `&apiUrl=${encodeURIComponent(apiUrl)}` : ''}`;
         const statusRes = await fetch(statusUrl);
         if (statusRes.ok) {
           const statusData = await statusRes.json();
@@ -79,6 +81,32 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
         rows={4}
         className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-blue-400"
       />
+      <div className="flex items-center gap-3">
+        <div className="flex-1">
+          <label className="text-xs text-gray-500 mb-1 block">宽度 (px)</label>
+          <input
+            type="number"
+            value={width}
+            onChange={e => setWidth(Number(e.target.value))}
+            min={256}
+            max={4096}
+            step={64}
+            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="text-xs text-gray-500 mb-1 block">高度 (px)</label>
+          <input
+            type="number"
+            value={height}
+            onChange={e => setHeight(Number(e.target.value))}
+            min={256}
+            max={4096}
+            step={64}
+            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"
+          />
+        </div>
+      </div>
       {error && <p className="text-xs text-red-500">{error}</p>}
       {progress && (
         <p className="text-xs text-gray-500 flex items-center gap-1">

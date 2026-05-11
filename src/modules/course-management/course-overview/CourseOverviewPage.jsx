@@ -58,6 +58,8 @@ const CourseOverviewPage = () => {
   const [courseData, setCourseData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [isGeneratingCourse, setIsGeneratingCourse] = useState(false);
   const [showRegenerateModal, setShowRegenerateModal] = useState(false);
   const [regenerateAdjustments, setRegenerateAdjustments] = useState('');
@@ -220,31 +222,64 @@ const CourseOverviewPage = () => {
   useEffect(() => {
     const displayTitle = courseData?.title || '';
     setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{displayTitle}</span>);
+
+    const handleSave = async () => {
+      if (!courseId) return;
+      setIsSaving(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData });
+      } catch (err) {
+        console.error('保存失败:', err);
+        alert('保存失败，请重试');
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    const handlePublish = async () => {
+      if (!courseId) return;
+      setIsPublishing(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData, status: 'published' });
+        alert('发布成功！');
+      } catch (err) {
+        console.error('发布失败:', err);
+        alert('发布失败，请重试');
+      } finally {
+        setIsPublishing(false);
+      }
+    };
+
     setActions(
       <>
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-          <RefreshCw size={12} /> 所有更改已保存
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
         </span>
-        {/* <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
-             style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
-          后台任务 2
-        </div> */}
         <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
+        </button>
+        {/* <button
           onClick={handleExportCourse}
           disabled={isExporting}
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
           style={{ backgroundColor: '#4C5866' }}>
           {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
-        </button>
-        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: colors.brand.DEFAULT }}>
-          发布
+        </button> */}
+        <button
+          onClick={handlePublish}
+          disabled={isPublishing}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: colors.brand.DEFAULT }}>
+          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
         </button>
       </>
     );
     return () => { setTitle(null); setActions(null); };
-  }, [courseData, setTitle, setActions]);
+  }, [courseData, courseId, isExporting, isSaving, isPublishing, setTitle, setActions]);
 
   const ObjectiveCard = ({ icon, title, color, content }) => (
     <div className="bg-white rounded-[24px] p-8 border flex gap-6 transition-all hover:translate-y-[-4px] hover:shadow-xl relative overflow-hidden group"

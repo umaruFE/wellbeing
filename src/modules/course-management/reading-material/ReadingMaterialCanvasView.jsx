@@ -78,31 +78,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
       }
     };
     loadTitle();
-    setActions(
-      <>
-        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-          <RefreshCw size={12} /> 所有更改已保存
-        </span>
-        {/* <div className="px-2.5 py-1 rounded-full text-[11px] font-bold flex items-center gap-1.5"
-             style={{ backgroundColor: colors.brand.light, color: colors.brand.DEFAULT }}>
-          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.brand.DEFAULT }}></span>
-          后台任务 2
-        </div> */}
-        <button
-          onClick={handleExportPDF}
-          disabled={isExporting}
-          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
-          style={{ backgroundColor: '#4C5866' }}>
-          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
-        </button>
-        <button className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: colors.brand.DEFAULT }}>
-          发布
-        </button>
-      </>
-    );
-    return () => { setTitle(null); setActions(null); };
-  }, [setTitle, setActions]);
+  }, [courseId, setTitle]);
 
   const resolveCourseData = (raw) => {
     if (!raw) return raw;
@@ -225,6 +201,8 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [isLeftOpen, setIsLeftOpen] = useState(true);
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [expandedPhases, setExpandedPhases] = useState(
     isCourseDataArray 
       ? initialData?.map(phase => phase.id) 
@@ -233,7 +211,68 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [canvasAspectRatio, setCanvasAspectRatio] = useState('A4');
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
-  
+  const courseDataRef = React.useRef(courseData);
+  courseDataRef.current = courseData;
+
+  useEffect(() => {
+    const handleSave = async () => {
+      if (!courseId) return;
+      setIsSaving(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData: courseDataRef.current });
+      } catch (err) {
+        console.error('保存失败:', err);
+        alert('保存失败，请重试');
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    const handlePublish = async () => {
+      if (!courseId) return;
+      setIsPublishing(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData: courseDataRef.current, status: 'published' });
+        alert('发布成功！');
+      } catch (err) {
+        console.error('发布失败:', err);
+        alert('发布失败，请重试');
+      } finally {
+        setIsPublishing(false);
+      }
+    };
+
+    setActions(
+      <>
+        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
+        </span>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
+        </button>
+        <button
+          onClick={handleExportPDF}
+          disabled={isExporting}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
+        </button>
+        <button
+          onClick={handlePublish}
+          disabled={isPublishing}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: colors.brand.DEFAULT }}>
+          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
+        </button>
+      </>
+    );
+    return () => { setActions(null); };
+  }, [isExporting, isSaving, isPublishing, setActions]);
+
   // 辅助函数：获取 phase 数据
   const getPhaseData = (phaseKey) => {
     if (isCourseDataArray) {
@@ -1481,7 +1520,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
             </button>
           )}
           <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
-            {selectedAsset ? (
+            {selectedAsset && (
               <AssetEditorPanel
                 selectedAsset={selectedAsset}
                 onClose={() => setSelectedAssetId(null)}
@@ -1496,41 +1535,6 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
                 isRightOpen={isRightOpen}
                 onToggleRightOpen={() => setIsRightOpen(false)}
               />
-            ) : (
-              <>
-                <div className="p-4 border-b-2 border-stroke-light bg-surface flex items-center justify-between">
-                  <h3 className="font-bold text-primary flex items-center gap-2">
-                    <Wand2 className="w-4 h-4 text-purple" />页面详情编辑
-                  </h3>
-                  <button onClick={() => setIsRightOpen(false)} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-primary-muted uppercase">画板元素 ({(currentPage?.canvasAssets || []).length})</label>
-                  </div>
-                  <div className="space-y-2">
-                    {(currentPage?.canvasAssets || []).map((asset) => (
-                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="flex items-start gap-2 p-2 border-2 border-stroke-light rounded-xl bg-white hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] cursor-pointer transition-all group">
-                        <div className="mt-1 text-primary-placeholder">{getAssetIcon(asset.type)}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-primary-secondary truncate">{asset.title || asset.type}</div>
-                          <div className="text-[10px] text-primary-placeholder">{asset.type} • 点击编辑</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-6 mt-6 border-t-2 border-stroke-light flex gap-2">
-                    <button onClick={saveCurrentToPageHistory} className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all">
-                      <History className="w-4 h-4" />历史生成
-                    </button>
-                    <button onClick={prepareForRegenerate} className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-                      <RefreshCw className="w-4 h-4" />重新生成
-                    </button>
-                  </div>
-                </div>
-              </>
             )}
           </div>
         </aside>

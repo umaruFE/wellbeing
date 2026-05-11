@@ -23,6 +23,9 @@ dependencies:
   pg:
     specifier: ^8.19.0
     version: 8.20.0
+  pptxgenjs:
+    specifier: ^4.0.1
+    version: 4.0.1
   react:
     specifier: ^19.2.0
     version: 19.2.4
@@ -1039,6 +1042,12 @@ packages:
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==, tarball: https://registry.npmmirror.com/@types/json-schema/-/json-schema-7.0.15.tgz}
     dev: true
 
+  /@types/node@22.19.18:
+    resolution: {integrity: sha512-9v00a+dn2yWVsYDEunWC4g/TcRKVq3r8N5FuZp7u0SGrPvdN9c2yXI9bBuf5Fl0hNCb+QTIePTn5pJs2pwBOQQ==, tarball: https://registry.npmmirror.com/@types/node/-/node-22.19.18.tgz}
+    dependencies:
+      undici-types: 6.21.0
+    dev: false
+
   /@types/pako@2.0.4:
     resolution: {integrity: sha512-VWDCbrLeVXJM9fihYodcLiIv0ku+AlOa/TQ1SvYOaBuyrSKgEcro95LJyIsJ4vSo6BXIxOKxiJAat04CmST9Fw==, tarball: https://registry.npmmirror.com/@types/pako/-/pako-2.0.4.tgz}
     dev: false
@@ -1800,6 +1809,10 @@ packages:
       text-segmentation: 1.0.3
     dev: false
 
+  /https@1.0.0:
+    resolution: {integrity: sha512-4EC57ddXrkaF0x83Oj8sM6SLQHAWXw90Skqu2M4AEWENZ3F02dFJE/GARA8igO79tcgYqGrD7ae4f5L3um2lgg==, tarball: https://registry.npmmirror.com/https/-/https-1.0.0.tgz}
+    dev: false
+
   /humanize-ms@1.2.1:
     resolution: {integrity: sha512-Fl70vYtsAFb/C06PTS9dZBo7ihau+Tu/DNCk/OyHhea07S+aeMWpFFkUaXRa8fI+ScZbEI8dfSxwY7gxZ9SAVQ==, tarball: https://registry.npmmirror.com/humanize-ms/-/humanize-ms-1.2.1.tgz}
     dependencies:
@@ -1817,6 +1830,14 @@ packages:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==, tarball: https://registry.npmmirror.com/ignore/-/ignore-5.3.2.tgz}
     engines: {node: '>= 4'}
     dev: true
+
+  /image-size@1.2.1:
+    resolution: {integrity: sha512-rH+46sQJ2dlwfjfhCyNx5thzrv+dtmBIhPHk0zgRUukHzZ/kRueTJXoYYsclBaKcSMBWuGbOFXtioLpzTb5euw==, tarball: https://registry.npmmirror.com/image-size/-/image-size-1.2.1.tgz}
+    engines: {node: '>=16.x'}
+    hasBin: true
+    dependencies:
+      queue: 6.0.2
+    dev: false
 
   /immediate@3.0.6:
     resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==, tarball: https://registry.npmmirror.com/immediate/-/immediate-3.0.6.tgz}
@@ -2399,6 +2420,15 @@ packages:
       xtend: 4.0.2
     dev: false
 
+  /pptxgenjs@4.0.1:
+    resolution: {integrity: sha512-TeJISr8wouAuXw4C1F/mC33xbZs/FuEG6nH9FG1Zj+nuPcGMP5YRHl6X+j3HSUnS1f3at6k75ZZXPMZlA5Lj9A==, tarball: https://registry.npmmirror.com/pptxgenjs/-/pptxgenjs-4.0.1.tgz}
+    dependencies:
+      '@types/node': 22.19.18
+      https: 1.0.0
+      image-size: 1.2.1
+      jszip: 3.10.1
+    dev: false
+
   /prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==, tarball: https://registry.npmmirror.com/prelude-ls/-/prelude-ls-1.2.1.tgz}
     engines: {node: '>= 0.8.0'}
@@ -2425,6 +2455,12 @@ packages:
     engines: {node: '>=0.6'}
     dependencies:
       side-channel: 1.1.0
+    dev: false
+
+  /queue@6.0.2:
+    resolution: {integrity: sha512-iHZWu+q3IdFZFX36ro/lKBkSvfkztY5Y7HMiPlOUjhupPcG2JMfst2KKEpu5XndviX/3UhFbRngUPNKtgvtZiA==, tarball: https://registry.npmmirror.com/queue/-/queue-6.0.2.tgz}
+    dependencies:
+      inherits: 2.0.4
     dev: false
 
   /raf@3.4.1:
@@ -2752,6 +2788,10 @@ packages:
     dependencies:
       prelude-ls: 1.2.1
     dev: true
+
+  /undici-types@6.21.0:
+    resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==, tarball: https://registry.npmmirror.com/undici-types/-/undici-types-6.21.0.tgz}
+    dev: false
 
   /unescape@1.0.1:
     resolution: {integrity: sha512-O0+af1Gs50lyH1nUu3ZyYS1cRh01Q/kUKatTOkSs7jukXE6/NebucDVxyiDsA9AQ4JC1V1jUH9EO8JX2nMDgGQ==, tarball: https://registry.npmmirror.com/unescape/-/unescape-1.0.1.tgz}

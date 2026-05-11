@@ -1,6 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -46,16 +45,6 @@ export const CanvasViewLeftSidebar = ({
 
   const phases = getPhaseList(courseData);
   const isArr = Array.isArray(courseData);
-
-  const [expandedSteps, setExpandedSteps] = useState(() => {
-    const init = {};
-    phases.forEach(p => {
-      (p.steps || p.slides || []).forEach(s => { init[s.id] = true; });
-    });
-    return init;
-  });
-
-  const toggleStep = (id) => setExpandedSteps(prev => ({ ...prev, [id]: !prev[id] }));
 
   const totalSteps = useMemo(() => {
     return phases.reduce((sum, p) => sum + (p.steps || p.slides || []).length, 0);
@@ -104,89 +93,48 @@ export const CanvasViewLeftSidebar = ({
               {expandedPhases.includes(phaseKey) && (
                 <div className="px-2">
                   {steps.map((step) => {
-                    const isExpanded = expandedSteps[step.id];
                     const isActive = activeStepId === step.id;
+                    const firstImage = (step.assets || []).find(a => a.type === 'image' && a.url);
 
                     return (
                       <div key={step.id} className="mb-1">
                         <div
-                          className={`group flex items-center gap-1 rounded-lg px-2 py-1.5 transition-all cursor-pointer ${
+                          onClick={() => onStepClick(phaseKey, step.id)}
+                          className={`group flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all cursor-pointer ${
                             isActive ? 'bg-orange-50' : 'hover:bg-gray-50'
                           }`}
                         >
-                          <button
-                            onClick={() => toggleStep(step.id)}
-                            className="p-0.5 text-gray-400 hover:text-gray-600 shrink-0"
-                          >
-                            {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                          </button>
-
-                          <button
-                            onClick={() => onStepClick(phaseKey, step.id)}
-                            className={`flex-1 text-left text-[12px] font-medium truncate ${
-                              isActive ? 'text-orange-600' : 'text-gray-600'
-                            }`}
-                          >
-                            {step.title}
-                          </button>
-
-                          <div className="flex items-center gap-1">
-                            <span className="text-[11px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
-                              {(step.assets || []).length}
-                            </span>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); onDeleteStep(phaseKey, step.id); }}
-                              className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded text-red-400 hover:text-red-600 transition-all shrink-0"
-                              title="删除环节"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-
-                        {isExpanded && (
-                          <div className="ml-5 pl-2 border-l-2 border-gray-100">
-                            {(step.assets || []).filter(a => a.type === 'image').map((asset, index) => (
-                              <div
-                                key={asset.id}
-                                onClick={() => onStepClick(phaseKey, step.id)}
-                                className="group/page flex items-center gap-2 py-1.5 px-2 rounded-lg cursor-pointer transition-all mb-1 hover:bg-gray-50"
-                              >
-                                <span className="text-[11px] font-medium w-4 text-center shrink-0 text-gray-400">
-                                  {index + 1}
-                                </span>
-                                <div className="w-16 h-10 rounded-md overflow-hidden border border-gray-200 shrink-0">
-                                  {asset.url ? (
-                                    <img src={asset.url} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                                      <Layout className="w-4 h-4 text-gray-300" />
-                                    </div>
-                                  )}
-                                </div>
-                                <span className="text-[10px] text-gray-400 truncate flex-1">{asset.title}</span>
+                          <div className="w-14 h-9 rounded-md overflow-hidden border border-gray-200 shrink-0">
+                            {firstImage ? (
+                              <img src={firstImage.url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                <Layout className="w-4 h-4 text-gray-300" />
                               </div>
-                            ))}
-
-                            <button
-                              onClick={() => onAddStep(phaseKey)}
-                              className="w-full mt-1 mb-2 py-2 border-2 border-dashed border-orange-200 rounded-lg text-orange-500 text-[11px] font-medium flex items-center justify-center gap-1 hover:bg-orange-50 hover:border-orange-300 transition-all"
-                            >
-                              <Plus className="w-3.5 h-3.5" />
-                              添加幻灯片
-                            </button>
+                            )}
                           </div>
-                        )}
+                          <span className={`flex-1 text-[12px] font-medium truncate ${isActive ? 'text-orange-600' : 'text-gray-600'}`}>
+                            {step.title}
+                          </span>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); onDeleteStep(phaseKey, step.id); }}
+                            className="p-1 opacity-0 group-hover:opacity-100 hover:bg-red-50 rounded text-red-400 hover:text-red-600 transition-all shrink-0"
+                            title="删除幻灯片"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
                     );
                   })}
 
-                  {/* <button
+                  <button
                     onClick={() => onAddStep(phaseKey)}
-                    className="w-full text-center py-2 text-[11px] text-gray-400 hover:text-gray-600 flex items-center justify-center gap-1 transition-colors mt-1"
+                    className="w-full mt-1 mb-2 py-2 border-2 border-dashed border-orange-200 rounded-lg text-orange-500 text-[11px] font-medium flex items-center justify-center gap-1 hover:bg-orange-50 hover:border-orange-300 transition-all"
                   >
-                    <Plus className="w-3 h-3" /> 新增环节
-                  </button> */}
+                    <Plus className="w-3.5 h-3.5" />
+                    添加幻灯片
+                  </button>
                 </div>
               )}
             </div>
