@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Loader2, Play, Pause, Download, Volume2, Music, Mic, Image, Wand2 } from 'lucide-react';
 import { IPSceneGenerator } from './IPSceneGenerator';
+import IPCharacterGenerator from './IPCharacterGenerator';
 import { VideoStoryboardModal } from './VideoStoryboardModal';
 
 const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
@@ -172,30 +173,42 @@ const DURATION_OPTIONS = [15, 30, 60, 90];
 const ImageTypeSelector = ({ onSelect }) => (
   <div className="space-y-4">
     <h3 className="text-base font-bold text-gray-800">选择图片生成方式</h3>
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-3 gap-3">
       <button
         onClick={() => onSelect('ai')}
-        className="p-6 border-2 border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left group"
+        className="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
       >
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-            <Wand2 className="w-5 h-5 text-blue-600" />
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+            <Wand2 className="w-4 h-4 text-blue-600" />
           </div>
-          <span className="font-bold text-gray-800">AI 生图</span>
+          <span className="font-bold text-sm text-gray-800">AI 生图</span>
         </div>
-        <p className="text-xs text-gray-500">输入提示词，AI 生成图片</p>
+        <p className="text-[11px] text-gray-500">输入提示词生成图片</p>
       </button>
       <button
         onClick={() => onSelect('ip')}
-        className="p-6 border-2 border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all text-left group"
+        className="p-5 border-2 border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all text-left"
       >
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-            <Image className="w-5 h-5 text-purple-600" />
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+            <Image className="w-4 h-4 text-purple-600" />
           </div>
-          <span className="font-bold text-gray-800">IP 角色场景</span>
+          <span className="font-bold text-sm text-gray-800">IP 场景</span>
         </div>
-        <p className="text-xs text-gray-500">选择 IP 角色，生成带角色的场景图</p>
+        <p className="text-[11px] text-gray-500">选角色生成场景图</p>
+      </button>
+      <button
+        onClick={() => onSelect('ip-character')}
+        className="p-5 border-2 border-gray-200 rounded-xl hover:border-orange-400 hover:bg-orange-50 transition-all text-left"
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
+            <Image className="w-4 h-4 text-orange-600" />
+          </div>
+          <span className="font-bold text-sm text-gray-800">IP 人物</span>
+        </div>
+        <p className="text-[11px] text-gray-500">生成单个人物图</p>
       </button>
     </div>
   </div>
@@ -442,6 +455,17 @@ export const AssetGeneratorModal = ({
             />
           );
         }
+        if (imageMode === 'ip-character') {
+          return (
+            <IPCharacterGenerator
+              isOpen={true}
+              onClose={handleClose}
+              onConfirm={(result) => { onGenerated(result); handleClose(); }}
+              userId={userId}
+              organizationId={organizationId}
+            />
+          );
+        }
         return <AIImagePanel onGenerated={(result) => { onGenerated(result); handleClose(); }} userId={userId} organizationId={organizationId} />;
 
       case 'video':
@@ -466,7 +490,7 @@ export const AssetGeneratorModal = ({
     }
   };
 
-  const isIPMode = assetType === 'image' && imageMode === 'ip';
+  const isIPMode = assetType === 'image' && (imageMode === 'ip' || imageMode === 'ip-character');
   const isVideoMode = assetType === 'video';
 
   if (isIPMode || isVideoMode) {
