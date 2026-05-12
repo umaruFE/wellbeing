@@ -249,12 +249,30 @@ export const MainLayout = () => {
         if (step.canvasAssets) delete step.canvasAssets;
         if (step.readingMaterials) delete step.readingMaterials;
         if (step.blocks) delete step.blocks;
+        if (step.assets && Array.isArray(step.assets)) {
+          step.assets = step.assets.map(a => {
+            const { referenceImage, ...rest } = a;
+            return rest;
+          });
+        }
         return step;
       };
       if (Array.isArray(slimCourseData)) {
         slimCourseData.forEach(phase => (phase.slides || []).forEach(stripStep));
       } else {
         Object.values(slimCourseData).forEach(phase => (phase.steps || []).forEach(stripStep));
+      }
+
+      if (canvasData) {
+        Object.keys(canvasData).forEach(slideId => {
+          const entry = canvasData[slideId];
+          if (entry.canvasAssets && Array.isArray(entry.canvasAssets)) {
+            entry.canvasAssets = entry.canvasAssets.map(a => {
+              const { referenceImage, ...rest } = a;
+              return rest;
+            });
+          }
+        });
       }
 
       const requestBody = {
@@ -269,8 +287,8 @@ export const MainLayout = () => {
         keywords: appConfig?.keywords || [],
         isPublic: false,
         courseData: slimCourseData,
-        canvasData,
-        readingMaterialsData,
+        ...(canvasData && Object.keys(canvasData).length > 0 ? { canvasData } : {}),
+        ...(readingMaterialsData && Object.keys(readingMaterialsData).length > 0 ? { readingMaterialsData } : {}),
       };
       
       const isUpdate = !!currentCourseId;

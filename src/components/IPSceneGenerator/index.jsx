@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Wand2, Download, RotateCcw, Loader2, Edit2, X, Check } from 'lucide-react';
 import RoleSelection from './RoleSelection';
 import CanvasEditor from './CanvasEditor';
+import { uploadService } from '../../services/uploadService';
 import {
   getImageContentBounds,
   getEditorSceneLayout,
@@ -519,6 +520,20 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
         isCompositing: false,
         compositeResult: compositeDataUrl
       }));
+
+      try {
+        const res = await fetch(compositeDataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `ip-scene-${Date.now()}.png`, { type: 'image/png' });
+        const uploadResult = await uploadService.uploadFile(file, 'ip-scenes');
+        if (uploadResult.success && uploadResult.url) {
+          setState(prev => ({ ...prev, compositeResult: uploadResult.url }));
+          if (onConfirm) onConfirm({ url: uploadResult.url });
+          return;
+        }
+      } catch (uploadErr) {
+        console.warn('上传合成图到OSS失败，使用base64:', uploadErr);
+      }
 
       if (onConfirm) onConfirm({ url: compositeDataUrl });
 

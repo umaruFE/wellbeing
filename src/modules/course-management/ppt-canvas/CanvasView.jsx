@@ -452,36 +452,42 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
             if (asset.type === 'image' && asset.url) {
               try {
-                const proxyUrl = `/api/ai/proxy-image?url=${encodeURIComponent(asset.url)}`;
-                const res = await fetch(proxyUrl);
-                const data = await res.json();
-                if (data.url) {
-                  let imgW = assetW;
-                  let imgH = assetH;
-                  try {
-                    const imgObj = await new Promise((resolve, reject) => {
-                      const img = new Image();
-                      img.onload = () => resolve(img);
-                      img.onerror = reject;
-                      img.src = data.url;
-                    });
-                    const imgRatio = imgObj.naturalWidth / imgObj.naturalHeight;
-                    const containerRatio = assetW / assetH;
-                    if (imgRatio > containerRatio) {
-                      imgH = assetW / imgRatio;
-                    } else {
-                      imgW = assetH * imgRatio;
-                    }
-                  } catch {}
-
-                  slide.addImage({
-                    data: data.url,
-                    x: assetX + (assetW - imgW) / 2,
-                    y: assetY + (assetH - imgH) / 2,
-                    w: imgW,
-                    h: imgH,
-                  });
+                let imageDataUrl = asset.url;
+                if (!asset.url.startsWith('data:')) {
+                  const proxyUrl = `/api/ai/proxy-image?url=${encodeURIComponent(asset.url)}`;
+                  const res = await fetch(proxyUrl);
+                  const data = await res.json();
+                  if (data.url) {
+                    imageDataUrl = data.url;
+                  } else {
+                    throw new Error('代理图片失败');
+                  }
                 }
+                let imgW = assetW;
+                let imgH = assetH;
+                try {
+                  const imgObj = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = imageDataUrl;
+                  });
+                  const imgRatio = imgObj.naturalWidth / imgObj.naturalHeight;
+                  const containerRatio = assetW / assetH;
+                  if (imgRatio > containerRatio) {
+                    imgH = assetW / imgRatio;
+                  } else {
+                    imgW = assetH * imgRatio;
+                  }
+                } catch {}
+
+                slide.addImage({
+                  data: imageDataUrl,
+                  x: assetX + (assetW - imgW) / 2,
+                  y: assetY + (assetH - imgH) / 2,
+                  w: imgW,
+                  h: imgH,
+                });
               } catch (err) {
                 console.error('导出图片失败:', err.message);
               }
