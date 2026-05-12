@@ -14,6 +14,14 @@ const IP_CHARACTERS = [
   { id: 'ace', name: 'Ace', color: '紫色', colorHex: '#9370DB', thumbnail: aceImg },
 ];
 
+const ASPECT_RATIOS = [
+  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
+  { id: '4:3', label: '4:3', width: 1024, height: 768, description: '标准横屏' },
+  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
+  { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
+  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: '竖屏长图' },
+];
+
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json' };
@@ -91,8 +99,7 @@ const pollTaskAndUpload = async (taskId, apiUrl, maxAttempts = 240, interval = 3
 const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organizationId }) => {
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const [prompt, setPrompt] = useState('');
-  const [width, setWidth] = useState(1024);
-  const [height, setHeight] = useState(1024);
+  const [selectedRatio, setSelectedRatio] = useState(ASPECT_RATIOS[2]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState(null);
   const [error, setError] = useState(null);
@@ -112,7 +119,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
         headers: getAuthHeaders(),
         body: JSON.stringify({
           backgroundPrompt: '',
-          roles: [{ name: selectedCharacter.id, prompt: rolePrompt, width, height }],
+          roles: [{ name: selectedCharacter.id, prompt: rolePrompt, width: selectedRatio.width, height: selectedRatio.height }],
           user_id: userId,
           organization_id: organizationId
         })
@@ -133,7 +140,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
     } finally {
       setIsGenerating(false);
     }
-  }, [selectedCharacter, prompt, userId, organizationId]);
+  }, [selectedCharacter, prompt, selectedRatio, userId, organizationId]);
 
   const handleConfirm = () => {
     if (!generatedImageUrl || !onConfirm) return;
@@ -198,35 +205,38 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">图片尺寸</label>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-500">宽</span>
-                <input
-                  type="number"
-                  value={width}
-                  onChange={e => setWidth(Number(e.target.value))}
-                  min={256}
-                  max={4096}
-                  step={64}
-                  className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:border-purple-400 transition-all"
-                />
-              </div>
-              <span className="text-gray-400 text-sm">×</span>
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-gray-500">高</span>
-                <input
-                  type="number"
-                  value={height}
-                  onChange={e => setHeight(Number(e.target.value))}
-                  min={256}
-                  max={4096}
-                  step={64}
-                  className="w-24 px-3 py-2 border-2 border-gray-200 rounded-lg text-sm text-center focus:outline-none focus:border-purple-400 transition-all"
-                />
-              </div>
-              <span className="text-[11px] text-gray-400">px</span>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">图片比例</label>
+            <div className="grid grid-cols-5 gap-2">
+              {ASPECT_RATIOS.map((ratio) => (
+                <button
+                  key={ratio.id}
+                  onClick={() => setSelectedRatio(ratio)}
+                  className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                    selectedRatio.id === ratio.id
+                      ? 'border-purple-400 bg-purple-50 text-purple-700'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  <div
+                    className="bg-current rounded-sm mb-1"
+                    style={{
+                      width: ratio.id === '16:9' ? '32px' :
+                             ratio.id === '4:3' ? '24px' :
+                             ratio.id === '1:1' ? '20px' :
+                             ratio.id === '3:4' ? '15px' : '12px',
+                      height: ratio.id === '16:9' ? '18px' :
+                              ratio.id === '4:3' ? '18px' :
+                              ratio.id === '1:1' ? '20px' :
+                              ratio.id === '3:4' ? '20px' : '21px'
+                    }}
+                  />
+                  <span className="text-xs font-medium">{ratio.label}</span>
+                </button>
+              ))}
             </div>
+            <p className="text-[11px] text-gray-400 mt-1">
+              {selectedRatio.description} ({selectedRatio.width}×{selectedRatio.height})
+            </p>
           </div>
 
           {error && (
