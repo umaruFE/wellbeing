@@ -942,9 +942,15 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
     const canvasSize = getCanvasSize();
     
-    // 使用用户选择的尺寸，如果没有则使用默认值
-    let w = imageSize?.width || 300;
-    let h = imageSize?.height || 200;
+    let w = 300;
+    let h = 200;
+    if (typeof imageSize === 'string' && imageSize.includes('x')) {
+      const [pw, ph] = imageSize.split('x').map(Number);
+      if (pw && ph) { w = pw; h = ph; }
+    } else if (imageSize && typeof imageSize === 'object') {
+      w = imageSize.width || 300;
+      h = imageSize.height || 200;
+    }
     if (type === 'text') { w = 400; h = 150; }
     
     let generatedUrl = '';
