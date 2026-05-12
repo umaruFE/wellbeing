@@ -217,11 +217,9 @@ export const CanvasAssetRenderer = ({
             ) : asset.url ? (
               <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
                 {asset.type === 'video' ? (
-                  <video
-                    src={asset.url}
-                    className="w-full h-full object-cover block select-none pointer-events-none"
-                    controls={false}
-                  />
+                  <VideoPlayer url={asset.url} title={asset.title} />
+                ) : asset.type === 'audio' ? (
+                  <AudioPlayer url={asset.url} title={asset.title} />
                 ) : (
                   <img 
                     src={asset.url} 
@@ -229,19 +227,139 @@ export const CanvasAssetRenderer = ({
                     className="w-full h-full object-cover block select-none pointer-events-none" 
                   />
                 )}
-                {asset.type === 'video' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                    <Play className="w-12 h-12 text-white opacity-80" />
-                  </div>
-                )}
-                {asset.type === 'audio' && (
-                  <AudioPlayer url={asset.url} title={asset.title} />
-                )}
               </div>
             ) : null}
           </div>
         );
       })}
+    </div>
+  );
+};
+
+const VideoPlayer = ({ url, title }) => {
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showControls, setShowControls] = useState(true);
+
+  const togglePlay = useCallback((e) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    setCurrentTime(video.currentTime);
+    if (video.duration) {
+      setProgress((video.currentTime / video.duration) * 100);
+    }
+  }, []);
+
+  const handleLoadedMetadata = useCallback(() => {
+    const video = videoRef.current;
+    if (video && video.duration) {
+      setDuration(video.duration);
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    setShowControls(true);
+  }, []);
+
+  const handleSeek = useCallback((e) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video || !video.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+    video.currentTime = ratio * video.duration;
+  }, []);
+
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div
+      className="absolute inset-0 group/video"
+      onClick={(e) => e.stopPropagation()}
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => { if (isPlaying) setShowControls(false); }}
+    >
+      <video
+        ref={videoRef}
+        src={url}
+        className="w-full h-full object-cover block select-none"
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        preload="metadata"
+        playsInline
+      />
+
+      {!isPlaying && (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+          onClick={togglePlay}
+        >
+          <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center hover:bg-white/35 transition-colors">
+            <Play className="w-7 h-7 text-white ml-1" fill="white" />
+          </div>
+        </div>
+      )}
+
+      {isPlaying && (
+        <div
+          className="absolute inset-0 cursor-pointer"
+          onClick={togglePlay}
+        />
+      )}
+
+      <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 transition-opacity duration-200 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={togglePlay}
+            className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors shrink-0"
+          >
+            {isPlaying ? (
+              <Pause className="w-3.5 h-3.5 text-white" fill="white" />
+            ) : (
+              <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="white" />
+            )}
+          </button>
+
+          <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+            <div
+              className="w-full h-1 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+              onClick={handleSeek}
+            >
+              <div
+                className="h-full bg-white/80 rounded-full transition-[width] duration-100"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[9px] text-white/60 font-mono">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

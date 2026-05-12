@@ -244,6 +244,19 @@ export const MainLayout = () => {
         readingMaterialsData = readingMaterialCanvasRef.current.getReadingMaterialsData();
       }
 
+      const slimCourseData = JSON.parse(JSON.stringify(courseData));
+      const stripStep = (step) => {
+        if (step.canvasAssets) delete step.canvasAssets;
+        if (step.readingMaterials) delete step.readingMaterials;
+        if (step.blocks) delete step.blocks;
+        return step;
+      };
+      if (Array.isArray(slimCourseData)) {
+        slimCourseData.forEach(phase => (phase.slides || []).forEach(stripStep));
+      } else {
+        Object.values(slimCourseData).forEach(phase => (phase.steps || []).forEach(stripStep));
+      }
+
       const requestBody = {
         userId: user?.id || 1,
         organizationId: user?.organizationId || null,
@@ -255,11 +268,8 @@ export const MainLayout = () => {
         theme: appConfig?.theme || '',
         keywords: appConfig?.keywords || [],
         isPublic: false,
-        // 把当前表格/画布结构一并保存到后端
-        courseData,
-        // 保存画布元素数据
+        courseData: slimCourseData,
         canvasData,
-        // 保存阅读材料数据
         readingMaterialsData,
       };
       
