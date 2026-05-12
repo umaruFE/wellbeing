@@ -151,8 +151,8 @@ export const CourseManagementPage = () => {
       <div className="mx-auto p-8 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="w-12 h-12 rounded-xl bg-green-soft flex items-center justify-center border-2 border-primary flex-shrink-0">
-              <BookOpen className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-brand flex items-center justify-center border-2 border-primary flex-shrink-0">
+              <BookOpen className="w-6 text-white h-6" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-dark">课程管理</h1>
@@ -161,7 +161,7 @@ export const CourseManagementPage = () => {
           </div>
           <button
             onClick={handleCreateCourse}
-            className="px-5 py-2.5 bg-brand-coral text-white rounded-full font-bold flex items-center gap-2 transition-colors border-2 border-primary shadow-neo hover:shadow-neo-hover hover:translate-[-1px,-1px]"
+            className="px-5 py-2.5 text-white bg-brand rounded-full font-bold flex items-center gap-2 transition-colors border-2 border-primary shadow-neo hover:shadow-neo-hover hover:translate-[-1px,-1px]"
           >
             <Plus className="w-4 h-4" />
             创建课程

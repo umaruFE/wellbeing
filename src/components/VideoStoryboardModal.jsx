@@ -881,7 +881,7 @@ export const VideoStoryboardModal = ({
                           时长: {scene.duration}s
                         </span>
                         {/* 排序按钮 */}
-                        <div className="flex gap-1">
+                        {/* <div className="flex gap-1">
                           <button
                             onClick={() => handleMoveSceneUp(scene.id)}
                             disabled={scenes.findIndex(s => s.id === scene.id) === 0}
@@ -898,7 +898,7 @@ export const VideoStoryboardModal = ({
                           >
                             <ChevronLeft className="w-3 h-3 -rotate-90" />
                           </button>
-                        </div>
+                        </div> */}
                         <button
                           onClick={() => handleGenerateSceneImage(scene.id)}
                           disabled={isGeneratingSceneImage[scene.id]}
