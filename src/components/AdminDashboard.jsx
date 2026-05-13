@@ -185,14 +185,83 @@ const App = () => {
     setIsModalOpen(true);
   };
 
-  const handleModalSubmit = (data) => {
+  const handleModalSubmit = async (data) => {
     setIsModalOpen(false);
 
+    if (data.courseId) {
+      navigate(`/courses/${data.courseId}/overview`);
+      return;
+    }
+
+    if (data.courseData) {
+      const parseDeep = (obj) => {
+        if (typeof obj === 'string') {
+          try {
+            const parsed = JSON.parse(obj);
+            return parseDeep(parsed);
+          } catch {
+            return obj;
+          }
+        }
+        if (Array.isArray(obj)) {
+          return obj.map(item => parseDeep(item));
+        }
+        if (obj && typeof obj === 'object') {
+          const result = {};
+          for (const key of Object.keys(obj)) {
+            result[key] = parseDeep(obj[key]);
+          }
+          return result;
+        }
+        return obj;
+      };
+
+      let parsedCourseData = data.courseData;
+      if (typeof data.courseData === 'string') {
+        parsedCourseData = JSON.parse(data.courseData);
+      }
+      parsedCourseData = parseDeep(parsedCourseData);
+
+      try {
+        const keywordsList = [data.vocabulary, data.grammar]
+          .filter(Boolean)
+          .flatMap(v => Array.isArray(v) ? v : v.split(',').map(k => k.trim()))
+          .filter(Boolean);
+
+        const saveData = {
+          title: parsedCourseData.courseOverview?.courseTitle || data.theme || '未命名课程',
+          description: parsedCourseData.courseOverview?.overallContext || '',
+          ageGroup: data.age,
+          unit: data.scale,
+          duration: data.duration,
+          theme: data.theme,
+          keywords: keywordsList,
+          courseData: parsedCourseData,
+          status: 'draft',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || user?.organization_id || null
+        };
+
+        const result = await apiService.createCourse(saveData);
+        if (result.data?.id) {
+          navigate(`/courses/${result.data.id}/overview`);
+        } else {
+          console.error('保存课程失败，没有返回 id');
+          alert('保存课程失败，请重试');
+        }
+      } catch (err) {
+        console.error('保存课程失败:', err);
+        alert('保存课程失败，请重试');
+      }
+      return;
+    }
+
+    // 否则直接跳转（旧的快速流程或异步流程）
     const n8nPayload = {
       age: data.age,
       duration: data.duration,
       scale: data.scale,
-      title: data.title,
+      title: data.theme || '未命名课程',
       vocabulary: data.vocabulary,
       grammar: data.grammar,
       skills: data.skills,
@@ -210,7 +279,7 @@ const App = () => {
   };
 
   const handleCourseClick = (courseId) => {
-    navigate(`/create?courseId=${courseId}`);
+    navigate(`/courses/${courseId}/overview`);
   };
 
   return (
@@ -420,7 +489,7 @@ const App = () => {
                 <p className="text-sm">暂无课程，点击上方按钮创建</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-h-[420px] overflow-y-auto pr-1">
                 {courses.map((course) => (
                   <div 
                     key={course.id}

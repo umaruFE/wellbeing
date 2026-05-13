@@ -5,23 +5,41 @@ import { colors, typography, shadows } from '../theme/theme';
 const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    title: '',
     age: '7-9岁',
     duration: '60分钟',
     scale: '9-15人',
     vocabulary: [],
     grammar: [],
-    skills: ['听力理解', '口语表达'],
-    paths: ['艺术表达', '音乐律动'],
-    theme: 'test',
-    requirements: 'teet'
+    skills: [],
+    paths: [],
+    theme: '',
+    requirements: ''
   });
   
   const [submitting, setSubmitting] = useState(false);
-  const [vocabInput, setVocabInput] = useState('');
-  const [grammarInput, setGrammarInput] = useState('');
+  const [autoTheme, setAutoTheme] = useState(false);
+  const [errors, setErrors] = useState({});
 
   if (!isOpen) return null;
+
+  // 验证表单
+  const validateStep = (currentStep) => {
+    const newErrors = {};
+    if (currentStep === 3) {
+      if (!autoTheme && !formData.theme?.trim()) {
+        newErrors.theme = '请输入情境主题或选择自动匹配';
+      }
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 处理下一步
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      setStep(step + 1);
+    }
+  };
 
   // --- 业务逻辑 ---
   const getAuthHeaders = () => {
@@ -37,41 +55,65 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
 
   const handleFinish = async (data) => {
     if (submitting) return;
-    if (!data.title?.trim()) {
-      setStep(1);
-      return;
-    }
     setSubmitting(true);
     const user = getUser();
     const payload = { ...data, userId: user?.id || null, organizationId: user?.organization_id || null };
 
     try {
-      const response = await fetch('/api/ai/generate-course', {
+      const response = await fetch('/api/ai/generate-course-overview', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(payload)
       });
       const result = await response.json();
-      if (result.success) {
-        onFinish?.({ ...data, executionId: result.data.executionId, status: result.data.status });
-        onClose();
+
+      if (result.success && result.data?.courseOverview) {
+        console.log('[CreateCourseModal] 概览API响应:', result.data);
+        const overview = result.data.courseOverview;
+
+        const keywordsList = [data.vocabulary, data.grammar]
+          .filter(Boolean)
+          .flatMap(v => Array.isArray(v) ? v : v.split(',').map(k => k.trim()))
+          .filter(Boolean);
+
+        const saveData = {
+          title: overview.courseTitle || data.theme || '未命名课程',
+          description: overview.overallContext || '',
+          ageGroup: data.age,
+          unit: data.scale,
+          duration: data.duration,
+          theme: overview.theme || data.theme,
+          keywords: keywordsList,
+          courseData: { courseOverview: overview },
+          status: 'draft',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || user?.organization_id || null
+        };
+
+        try {
+          const saveResult = await (await import('../services/api')).default.createCourse(saveData);
+          if (saveResult.data?.id) {
+            setSubmitting(false);
+            onFinish?.({ ...data, courseId: saveResult.data.id, courseOverview: overview, title: overview.courseTitle });
+          } else {
+            console.error('保存课程失败，没有返回 id');
+            setSubmitting(false);
+            alert('保存课程失败，请重试');
+          }
+        } catch (err) {
+          console.error('保存课程失败:', err);
+          setSubmitting(false);
+          alert('保存课程失败，请重试');
+        }
       } else {
-        console.error(result.error || '课件生成失败');
+        console.error('[CreateCourseModal] 概览生成失败:', result.error || '未知错误');
+        setSubmitting(false);
+        alert(result.error || '课程概览生成失败，请重试');
       }
     } catch (error) {
       console.error('网络错误，请重试');
-    } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleAddTag = (e, field, value, setter) => {
-    if (e.key === 'Enter' && value.trim()) {
-      e.preventDefault();
-      if (!formData[field].includes(value.trim())) {
-        setFormData({ ...formData, [field]: [...formData[field], value.trim()] });
-      }
-      setter('');
+      alert('网络错误，请检查网络连接后重试');
     }
   };
 
@@ -162,11 +204,6 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
         <div className="px-10 py-4 min-h-[460px]">
           {step === 1 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">课程名称 <span className="text-orange-500">*</span></label>
-                <input type="text" placeholder="请输入课程名称" value={formData.title} onChange={e => updateField('title', e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#F4785E] transition-all" />
-              </section>
               <div className="grid grid-cols-2 gap-8">
                 <section>
                   <label className="block text-sm font-bold mb-3">学生年龄 <span className="text-orange-500">*</span></label>
@@ -203,46 +240,33 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <section>
                 <label className="block text-sm font-bold mb-3 text-[#333E4E]">核心语言目标</label>
-                {/* 灰底分栏卡片布局 */}
                 <div className="grid grid-cols-2 gap-px bg-[#F9F9F9] rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="p-6">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">词汇</span>
-                    <div className="min-h-[110px] mt-4 bg-white rounded-xl p-3 flex flex-wrap gap-2 content-start border border-transparent focus-within:border-orange-200 transition-all">
-                      {formData.vocabulary.map(tag => (
-                        <span key={tag} className="px-2 py-1 bg-orange-50 text-[#F4785E] rounded text-xs border border-orange-100 flex items-center gap-1">
-                          {tag} <X size={12} className="cursor-pointer" onClick={() => updateField('vocabulary', formData.vocabulary.filter(t => t !== tag))} />
-                        </span>
-                      ))}
-                      <textarea className="w-full h-12 bg-transparent outline-none text-sm resize-none" placeholder="输入内容" value={vocabInput} 
-                        onChange={e => setVocabInput(e.target.value)} onKeyDown={e => handleAddTag(e, 'vocabulary', vocabInput, setVocabInput)} />
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-2 font-medium italic">输入后按回车添加</p>
+                    <textarea
+                      className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
+                      placeholder="请输入核心词汇，用逗号或换行分隔"
+                      value={Array.isArray(formData.vocabulary) ? formData.vocabulary.join(', ') : (formData.vocabulary || '')}
+                      onChange={e => updateField('vocabulary', e.target.value)}
+                    />
                   </div>
                   <div className="p-6 border-l border-gray-200">
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">语法/句型</span>
-                    <div className="min-h-[110px] mt-4 bg-white rounded-xl p-3 border border-transparent focus-within:border-orange-200 transition-all">
-                      <textarea className="w-full h-12 bg-transparent outline-none text-sm resize-none" placeholder="输入内容" value={grammarInput} 
-                        onChange={e => setGrammarInput(e.target.value)} onKeyDown={e => handleAddTag(e, 'grammar', grammarInput, setGrammarInput)} />
-                    </div>
-                    <p className="text-[11px] text-gray-400 mt-2 font-medium italic">输入后按回车添加</p>
+                    <textarea
+                      className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
+                      placeholder="请输入核心句型，用逗号或换行分隔"
+                      value={Array.isArray(formData.grammar) ? formData.grammar.join(', ') : (formData.grammar || '')}
+                      onChange={e => updateField('grammar', e.target.value)}
+                    />
                   </div>
                 </div>
               </section>
               <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">语言能力培养侧重 <span className="font-normal text-gray-400 ml-1">(可多选)</span></label>
+                <label className="block text-sm font-bold mb-3 text-[#333E4E]">语言能力培养侧重</label>
                 <div className="flex flex-wrap gap-3">
-                  {['听力理解', '口语表达', '阅读理解', '书面表达', '综合能力'].map(s => (
+                  {['听力理解', '口语表达', '阅读理解', '书面表达'].map(s => (
                     <CustomCheckbox key={s} label={s} isSelected={formData.skills.includes(s)} 
                       onClick={() => updateField('skills', formData.skills.includes(s) ? formData.skills.filter(i => i !== s) : [...formData.skills, s])} />
-                  ))}
-                </div>
-              </section>
-              <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">主导幸福力体验路径 <span className="font-normal text-gray-400 ml-1">(可多选)</span></label>
-                <div className="flex flex-wrap gap-3">
-                  {['艺术表达', '体感探索', '音乐律动', '自动匹配'].map(p => (
-                    <CustomCheckbox key={p} label={p} isSelected={formData.paths.includes(p)} 
-                      onClick={() => updateField('paths', formData.paths.includes(p) ? formData.paths.filter(i => i !== p) : [...formData.paths, p])} />
                   ))}
                 </div>
               </section>
@@ -254,16 +278,40 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
               <section>
                 <div className="flex justify-between items-center mb-3">
                   <label className="block text-sm font-bold text-[#333E4E]">情境主题 <span className="text-orange-500">*</span></label>
-                  <button className="text-sm px-4 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 transition-all shadow-sm">自动匹配</button>
+                  <button 
+                    onClick={() => { 
+                      setAutoTheme(!autoTheme); 
+                      if (!autoTheme) updateField('theme', '');
+                      setErrors(prev => ({ ...prev, theme: '' }));
+                    }}
+                    className={`text-sm px-4 py-1.5 rounded-xl border transition-all shadow-sm ${autoTheme ? 'border-[#F4785E] text-[#F4785E] bg-[#FDECE8] font-bold' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}>
+                    {autoTheme ? '✓ AI自动匹配' : '自动匹配'}
+                  </button>
                 </div>
-                <input type="text" value={formData.theme} onChange={e => updateField('theme', e.target.value)}
-                  className="w-full px-4 py-3.5 rounded-xl border border-gray-200 focus:outline-none focus:border-[#F4785E] transition-all" placeholder="请输入情境主题" />
-                <div className="flex flex-wrap gap-3 mt-4">
-                  {['森林探险', '海底世界', '太空旅行', '童话城堡', '农场生活', '城市探索'].map(t => (
-                    <button key={t} onClick={() => updateField('theme', t)} 
-                      className={`px-4 py-1.5 rounded-full border text-xs transition-all ${
-                        formData.theme === t ? 'bg-[#FDECE8] border-[#F4785E] text-[#F4785E]' : 'bg-[#F9F9F9] border-transparent text-gray-500 hover:bg-gray-200'
-                      }`}>{t}</button>
+                <input type="text" 
+                  value={autoTheme ? 'AI将根据课程信息自动生成情境主题' : formData.theme} 
+                  onChange={e => { if (!autoTheme) { updateField('theme', e.target.value); setErrors(prev => ({ ...prev, theme: '' })); } }}
+                  disabled={autoTheme}
+                  className={`w-full px-4 py-3.5 rounded-xl border transition-all focus:outline-none ${autoTheme ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed' : errors.theme ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-[#F4785E]'}`} 
+                  placeholder="请输入情境主题" />
+                {errors.theme && <p className="text-red-500 text-xs mt-1">{errors.theme}</p>}
+                {!autoTheme && (
+                  <div className="flex flex-wrap gap-3 mt-4">
+                    {['森林探险', '海底世界', '太空旅行', '童话城堡', '农场生活', '城市探索'].map(t => (
+                      <button key={t} onClick={() => updateField('theme', t)} 
+                        className={`px-4 py-1.5 rounded-full border text-xs transition-all ${
+                          formData.theme === t ? 'bg-[#FDECE8] border-[#F4785E] text-[#F4785E]' : 'bg-[#F9F9F9] border-transparent text-gray-500 hover:bg-gray-200'
+                        }`}>{t}</button>
+                    ))}
+                  </div>
+                )}
+              </section>
+              <section>
+                <label className="block text-sm font-bold mb-3 text-[#333E4E]">主导幸福力体验路径 <span className="font-normal text-gray-400 ml-1">(不选则AI自动匹配)</span></label>
+                <div className="flex flex-wrap gap-3">
+                  {['艺术表达', '体感探索', '音乐律动'].map(p => (
+                    <CustomCheckbox key={p} label={p} isSelected={formData.paths.includes(p)} 
+                      onClick={() => updateField('paths', formData.paths.includes(p) ? formData.paths.filter(i => i !== p) : [...formData.paths, p])} />
                   ))}
                 </div>
               </section>
@@ -290,13 +338,13 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             {step > 1 && <button onClick={onClose} className="font-bold text-neutral-400 hover:text-neutral-600 px-4 transition-colors">取消</button>}
             
             <button 
-              onClick={() => step < 3 ? setStep(step + 1) : handleFinish(formData)}
+              onClick={() => step < 3 ? handleNextStep() : handleFinish(formData)}
               disabled={submitting}
               className="px-12 py-3 rounded-xl font-bold transition-all active:translate-x-[4px] active:translate-y-[4px] active:shadow-none flex items-center gap-2 group disabled:opacity-70"
               style={primaryButtonStyle}
             >
               {submitting && <Loader2 size={20} className="animate-spin" />}
-              {step === 3 ? (submitting ? '生成中...' : '完成') : '下一步'}
+              {step === 3 ? (submitting ? '提交中...' : '完成') : '下一步'}
             </button>
           </div>
         </div>

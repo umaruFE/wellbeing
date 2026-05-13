@@ -28,7 +28,6 @@ import {
   Clapperboard,
   Mic
 } from 'lucide-react';
-import { WelcomeScreen } from './WelcomeScreen';
 import { CanvasView } from '../modules/course-management/ppt-canvas/CanvasView';
 import { TableView } from '../modules/course-management/table-view/TableView';
 import { ReadingMaterialCanvasView } from '../modules/course-management/reading-material/ReadingMaterialCanvasView';
@@ -43,7 +42,7 @@ export const MainLayout = () => {
   const [expandedMenus, setExpandedMenus] = useState(['knowledge']); // 默认展开素材管理
 
   // 课程编辑状态
-  const [appState, setAppState] = useState('welcome');
+  const [appState, setAppState] = useState('app');
   const [currentView, setCurrentView] = useState('table');
   const [canvasMode, setCanvasMode] = useState('ppt');
   const [appConfig, setAppConfig] = useState(null);
@@ -135,9 +134,9 @@ export const MainLayout = () => {
     }
   };
 
-  // 重置回到欢迎页
+  // 重置 - 跳转到课程列表页
   const handleReset = () => {
-    setAppState('welcome');
+    navigate('/courses');
   };
 
   // 导出PPT
@@ -245,6 +244,37 @@ export const MainLayout = () => {
         readingMaterialsData = readingMaterialCanvasRef.current.getReadingMaterialsData();
       }
 
+      const slimCourseData = JSON.parse(JSON.stringify(courseData));
+      const stripStep = (step) => {
+        if (step.canvasAssets) delete step.canvasAssets;
+        if (step.readingMaterials) delete step.readingMaterials;
+        if (step.blocks) delete step.blocks;
+        if (step.assets && Array.isArray(step.assets)) {
+          step.assets = step.assets.map(a => {
+            const { referenceImage, ...rest } = a;
+            return rest;
+          });
+        }
+        return step;
+      };
+      if (Array.isArray(slimCourseData)) {
+        slimCourseData.forEach(phase => (phase.slides || []).forEach(stripStep));
+      } else {
+        Object.values(slimCourseData).forEach(phase => (phase.steps || []).forEach(stripStep));
+      }
+
+      if (canvasData) {
+        Object.keys(canvasData).forEach(slideId => {
+          const entry = canvasData[slideId];
+          if (entry.canvasAssets && Array.isArray(entry.canvasAssets)) {
+            entry.canvasAssets = entry.canvasAssets.map(a => {
+              const { referenceImage, ...rest } = a;
+              return rest;
+            });
+          }
+        });
+      }
+
       const requestBody = {
         userId: user?.id || 1,
         organizationId: user?.organizationId || null,
@@ -256,12 +286,9 @@ export const MainLayout = () => {
         theme: appConfig?.theme || '',
         keywords: appConfig?.keywords || [],
         isPublic: false,
-        // 把当前表格/画布结构一并保存到后端
-        courseData,
-        // 保存画布元素数据
-        canvasData,
-        // 保存阅读材料数据
-        readingMaterialsData,
+        courseData: slimCourseData,
+        ...(canvasData && Object.keys(canvasData).length > 0 ? { canvasData } : {}),
+        ...(readingMaterialsData && Object.keys(readingMaterialsData).length > 0 ? { readingMaterialsData } : {}),
       };
       
       const isUpdate = !!currentCourseId;
@@ -389,19 +416,19 @@ export const MainLayout = () => {
         { path: '/voices', label: '声音', icon: Music },
       ]
     },
-    {
-      id: 'ai-tools',
-      label: 'AI工具',
-      icon: Wand2,
-      description: 'AI智能生成',
-      roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
-      children: [
-        { path: '/test/ip-scene', label: 'IP场景生成', icon: Wand2 },
-        { path: '/test/video-generator', label: '视频生成', icon: Clapperboard },
-        { path: '/test/voice-generator', label: '声音生成', icon: Mic },
-        { path: '/audio-generator', label: '音频生成', icon: Music },
-      ]
-    },
+    // {
+    //   id: 'ai-tools',
+    //   label: 'AI工具',
+    //   icon: Wand2,
+    //   description: 'AI智能生成',
+    //   roles: ['super_admin', 'org_admin', 'research_leader', 'creator'],
+    //   children: [
+    //     { path: '/test/ip-scene', label: 'IP场景生成', icon: Wand2 },
+    //     { path: '/test/video-generator', label: '视频生成', icon: Clapperboard },
+    //     { path: '/test/voice-generator', label: '声音生成', icon: Mic },
+    //     { path: '/audio-generator', label: '音频生成', icon: Music },
+    //   ]
+    // },
     // 超级管理端（带二级菜单）
     // { 
     //   id: 'super-admin', 
@@ -435,14 +462,36 @@ export const MainLayout = () => {
     const searchParams = new URLSearchParams(location.search || '');
     const editingCourseId = searchParams.get('courseId');
 
-    // 没有传 courseId：认为是“新建课程”，重置到欢迎页（仅在刚进入 /create 时生效）
+    // 没有传 courseId：认为是"新建课程"，重置到欢迎页（仅在刚进入 /create 时生效）
+    const stateData = location.state;
+    if (stateData?.courseData) {
+      const config = stateData.courseConfig || {};
+      const baseConfig = {
+        unit: config.title || 'AI生成课程',
+        theme: config.theme || '',
+        age: config.age || '',
+        duration: config.duration || 40,
+        keywords: '',
+        courseData: stateData.courseData,
+      };
+      setAppConfig(baseConfig);
+      setPptCanvasConfig({ ...baseConfig, canvasData: null, readingMaterialsData: null });
+      setReadingMaterialCanvasConfig({ ...baseConfig, canvasData: null, readingMaterialsData: null });
+      setAppState('app');
+      setCurrentView('table');
+      setCurrentCourseId(null);
+      setIsComponentReady(true);
+      return;
+    }
+
     if (!editingCourseId) {
-      setAppState('welcome');
+      // 新建课程，直接进入编辑器模式
+      setAppState('app');
       setAppConfig(null);
       setCurrentCourseId(null);
       setCurrentView('table');
       setCanvasNavigation(null);
-      setIsComponentReady(false);
+      setIsComponentReady(true);
       return;
     }
 
@@ -468,7 +517,18 @@ export const MainLayout = () => {
             ? course.keywords.join(',')
             : (course.keywords || ''),
           // TableView 会用到的课程结构数据（字段名不确定时做兼容）
-          courseData: course.courseData || course.data || course.course_data || null,
+          courseData: (() => {
+            let raw = course.courseData || course.data || course.course_data || null;
+            if (typeof raw === 'string') {
+              try { raw = JSON.parse(raw); } catch { raw = null; }
+            }
+            if (raw && raw.courseData && typeof raw.courseData === 'object' && !Array.isArray(raw.courseData)) {
+              if (raw.courseData.engage || raw.courseData.empower || raw.courseData.execute || raw.courseData.elevate) {
+                return raw.courseData;
+              }
+            }
+            return raw;
+          })(),
         };
 
         // 为 PPT 画布创建独立配置（只包含 canvasData）
@@ -500,7 +560,7 @@ export const MainLayout = () => {
     };
 
     loadCourse();
-  }, [isCreatePage, location.search]);
+  }, [isCreatePage, location.search, location.state]);
 
   // 判断是否为子菜单
   const isChildMenu = (path) => {
@@ -802,11 +862,7 @@ export const MainLayout = () => {
                 </div>
               )}
               
-              {!isLoadingCourse && appState === 'welcome' && (
-                <WelcomeScreen onStart={handleStartApp} />
-              )}
-
-              {isInCourseEditor && (
+              {!isLoadingCourse && isInCourseEditor && (
                 <div className="h-full flex">
                   {currentView === 'canvas' && (
                     <>

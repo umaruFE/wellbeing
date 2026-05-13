@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BookOpen, Plus, Edit3, Trash2, Upload, Search, Filter, Clock, Users, Sparkles, LayoutTemplate, ChevronDown } from 'lucide-react';
+import { BookOpen, Plus, Edit3, Trash2, Upload, Search, Filter, Clock, Users, Sparkles, LayoutTemplate, ChevronDown, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
+
+const PAGE_SIZE = 9;
 
 export const CourseManagementPage = () => {
   const { user } = useAuth();
@@ -11,9 +13,14 @@ export const CourseManagementPage = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const filterRef = useRef(null);
+  const scrollContainerRef = useRef(null);
+  const sentinelRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -23,35 +30,68 @@ export const CourseManagementPage = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [filterOpen]);
 
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
+  const normalizeCourses = (rawCourses) =>
+    rawCourses.map(c => ({
+      ...c,
+      createdAt: c.createdAt || c.created_at || null,
+      updatedAt: c.updatedAt || c.updated_at || null,
+    }));
+
+  const fetchCourses = useCallback(async (pageNum = 1, append = false) => {
+    try {
+      if (append) {
+        setLoadingMore(true);
+      } else {
         setLoading(true);
-        const params = {};
-        if (user?.id) {
-          params.userId = user.id;
-        }
-        const result = await apiService.getCourses(params);
-        const rawCourses = result.data || [];
-        // 规范字段名：后端是 snake_case（created_at/updated_at），前端用 camelCase
-        const normalized = rawCourses.map(c => ({
-          ...c,
-          createdAt: c.createdAt || c.created_at || null,
-          updatedAt: c.updatedAt || c.updated_at || null,
-        }));
+      }
+      const params = { page: pageNum, limit: PAGE_SIZE };
+      if (user?.id) {
+        params.userId = user.id;
+      }
+      const result = await apiService.getCourses(params);
+      const rawCourses = result.data || [];
+      const normalized = normalizeCourses(rawCourses);
+      const total = result.pagination?.total ?? 0;
+
+      if (append) {
+        setCourses(prev => [...prev, ...normalized]);
+      } else {
         setCourses(normalized);
-        setError(null);
-      } catch (err) {
-        console.error('获取课程列表失败:', err);
+      }
+      setHasMore(pageNum * PAGE_SIZE < total);
+      setError(null);
+    } catch (err) {
+      console.error('获取课程列表失败:', err);
+      if (!append) {
         setError('加载课程失败');
         setCourses([]);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchCourses();
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, [user?.id]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchCourses(1, false);
+  }, [fetchCourses]);
+
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loading && !loadingMore) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchCourses(nextPage, true);
+        }
+      },
+      { root: scrollContainerRef.current, threshold: 0.1 }
+    );
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, page, fetchCourses]);
 
   const filteredCourses = courses.filter(course => {
     const matchesSearch = (course.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,7 +107,7 @@ export const CourseManagementPage = () => {
 
   // 编辑课程：跳转到创建页并携带 courseId，让编辑器直接进入表格模式
   const handleEditCourse = (courseId) => {
-    navigate(`/create?courseId=${courseId}`);
+    navigate(`/courses/${courseId}/overview`);
   };
 
   const handleDeleteCourse = async (courseId) => {
@@ -106,13 +146,13 @@ export const CourseManagementPage = () => {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-surface">
+    <div className="h-full overflow-y-auto bg-surface" ref={scrollContainerRef}>
       {/* Header */}
       <div className="mx-auto p-8 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-6">
-            <div className="w-12 h-12 rounded-xl bg-green-soft flex items-center justify-center border-2 border-primary flex-shrink-0">
-              <BookOpen className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 rounded-xl bg-brand flex items-center justify-center border-2 border-primary flex-shrink-0">
+              <BookOpen className="w-6 text-white h-6" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-dark">课程管理</h1>
@@ -121,7 +161,7 @@ export const CourseManagementPage = () => {
           </div>
           <button
             onClick={handleCreateCourse}
-            className="px-5 py-2.5 bg-brand-coral text-white rounded-full font-bold flex items-center gap-2 transition-colors border-2 border-primary shadow-neo hover:shadow-neo-hover hover:translate-[-1px,-1px]"
+            className="px-5 py-2.5 text-white bg-brand rounded-full font-bold flex items-center gap-2 transition-colors border-2 border-primary shadow-neo hover:shadow-neo-hover hover:translate-[-1px,-1px]"
           >
             <Plus className="w-4 h-4" />
             创建课程
@@ -189,7 +229,7 @@ export const CourseManagementPage = () => {
             <div
               key={course.id}
               className="bg-white rounded-[24px] border-2 border-stroke-light p-4 cursor-pointer group transition-all duration-200 ease-out hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
-              onClick={() => navigate(`/courses/${course.id}`)}
+              onClick={() => navigate(`/courses/${course.id}/overview`)}
             >
               {/* 左右布局：左侧封面 + 右侧信息 */}
               <div className="flex gap-4">
@@ -286,6 +326,19 @@ export const CourseManagementPage = () => {
             <p className="text-primary-muted">暂无课程</p>
           </div>
         )}
+
+        {loadingMore && (
+          <div className="flex items-center justify-center py-6">
+            <Loader2 className="w-5 h-5 text-primary-muted animate-spin" />
+            <span className="ml-2 text-sm text-primary-muted">加载更多...</span>
+          </div>
+        )}
+
+        {!hasMore && courses.length > 0 && (
+          <div className="text-center py-4 text-xs text-primary-muted">已加载全部课程</div>
+        )}
+
+        <div ref={sentinelRef} className="h-1" />
       </div>
     </div>
   );

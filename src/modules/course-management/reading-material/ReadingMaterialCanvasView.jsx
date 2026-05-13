@@ -1,4 +1,5 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { 
   BookOpen,
   ChevronLeft,
@@ -13,7 +14,13 @@ import {
   Image as ImageIcon,
   Type,
   Video,
-  Music
+  Music,
+  Layout,
+  FileCheck,
+  MessageSquare,
+  Check,
+  Edit3,
+  Loader2
 } from 'lucide-react';
 import { ReadingMaterialEditor } from './ReadingMaterialEditor';
 import { getAssetIcon } from '../../../utils';
@@ -21,15 +28,73 @@ import { PromptInputModal } from '../../../components/PromptInputModal';
 import { VideoStoryboardModal } from '../../../components/VideoStoryboardModal';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
 import { ReadingMaterialCanvasViewLeftSidebar } from './ReadingMaterialCanvasView.LeftSidebar';
+import { useCourseLayout } from '../../../components/CourseLayout';
+import { exportMultipleToPDF, exportToZip } from '../../../utils/exportUtils';
+import CanvasTopBar from '../../../components/CanvasTopBar';
 import { aiAssetService } from '../../../services/aiAssetService';
+import apiService from '../../../services/api';
 import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
 
-/**
- * ReadingMaterialCanvasView - 阅读材料画布模式视图
- * 独立的画布视图，专门用于编辑阅读材料
- */
+const colors = {
+  neutral: {
+    white: '#FFFFFF',
+    text: {
+      1: '#333E4E',
+      2: '#575F6E',
+      3: '#818997',
+      disabled: '#A4ABB8',
+    },
+    border: {
+      DEFAULT: '#E6E3DE',
+      secondary: '#EFECE8',
+    },
+    bg: {
+      layout: '#F7F5F1',
+    },
+  },
+  brand: {
+    DEFAULT: '#F4785E',
+    light: '#FDECE8',
+  },
+};
+
 export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
-  const initialData = initialConfig?.courseData || {};
+  const navigate = useNavigate();
+  const { courseId: routeCourseId } = useParams();
+  const { setTitle, setActions } = useCourseLayout();
+  
+  const courseId = initialConfig?.courseId || routeCourseId;
+
+  useEffect(() => {
+    const loadTitle = async () => {
+      if (courseId) {
+        try {
+          const result = await apiService.getCourse(courseId);
+          const course = result.data || result;
+          setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{course.title || '未命名课程'}</span>);
+        } catch {
+          setTitle(null);
+        }
+      }
+    };
+    loadTitle();
+  }, [courseId, setTitle]);
+
+  const resolveCourseData = (raw) => {
+    if (!raw) return raw;
+    let data = raw;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch { return raw; }
+    }
+    if (data && data.courseData && typeof data.courseData === 'object' && !Array.isArray(data.courseData)) {
+      if (data.courseData.engage || data.courseData.empower || data.courseData.execute || data.courseData.elevate) {
+        return data.courseData;
+      }
+    }
+    return data;
+  };
+
+  const initialData = resolveCourseData(initialConfig?.courseData) || {};
   const isCourseDataArray = Array.isArray(initialData);
   const canvasData = initialConfig?.canvasData || null;
   const readingMaterialsData = initialConfig?.readingMaterialsData || null;
@@ -89,6 +154,37 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [courseData, setCourseData] = useState(() => {
     return mergeData(initialData, canvasData, readingMaterialsData);
   });
+
+  const [isCourseDataLoaded, setIsCourseDataLoaded] = useState(Object.keys(initialData).length > 0);
+
+  useEffect(() => {
+    if (isCourseDataLoaded || !courseId) return;
+    const loadCourseData = async () => {
+      try {
+        const result = await apiService.getCourse(courseId);
+        const course = result?.data || result;
+        let raw = course.courseData || course.data || course.course_data || null;
+        const resolved = resolveCourseData(raw);
+        const canvasData = course.canvas_data || null;
+        const readingMaterialsData = course.reading_materials_data || null;
+        const merged = mergeData(resolved || {}, canvasData, readingMaterialsData);
+        setCourseData(merged);
+        setIsCourseDataLoaded(true);
+
+        const isArr = Array.isArray(merged);
+        const firstPhase = isArr ? merged[0]?.id : Object.keys(merged)[0];
+        const firstStepId = isArr
+          ? merged[0]?.slides?.[0]?.id
+          : merged[firstPhase]?.steps?.[0]?.id;
+        if (firstPhase) setActivePhase(firstPhase);
+        if (firstStepId) setActiveStepId(firstStepId);
+        setExpandedPhases(isArr ? merged.map(p => p.id) : Object.keys(merged));
+      } catch (err) {
+        console.error('[RM CanvasView] loadCourseData failed:', err);
+      }
+    };
+    loadCourseData();
+  }, [courseId, isCourseDataLoaded]);
   
   const [activePhase, setActivePhase] = useState(
     isCourseDataArray 
@@ -105,6 +201,8 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [isLeftOpen, setIsLeftOpen] = useState(true);
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [expandedPhases, setExpandedPhases] = useState(
     isCourseDataArray 
       ? initialData?.map(phase => phase.id) 
@@ -113,7 +211,68 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [canvasAspectRatio, setCanvasAspectRatio] = useState('A4');
   const [selectedAssetId, setSelectedAssetId] = useState(null);
   const [generatingAssetId, setGeneratingAssetId] = useState(null);
-  
+  const courseDataRef = React.useRef(courseData);
+  courseDataRef.current = courseData;
+
+  useEffect(() => {
+    const handleSave = async () => {
+      if (!courseId) return;
+      setIsSaving(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData: courseDataRef.current });
+      } catch (err) {
+        console.error('保存失败:', err);
+        alert('保存失败，请重试');
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    const handlePublish = async () => {
+      if (!courseId) return;
+      setIsPublishing(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData: courseDataRef.current, status: 'published' });
+        alert('发布成功！');
+      } catch (err) {
+        console.error('发布失败:', err);
+        alert('发布失败，请重试');
+      } finally {
+        setIsPublishing(false);
+      }
+    };
+
+    setActions(
+      <>
+        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
+        </span>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
+        </button>
+        <button
+          onClick={handleExportPDF}
+          disabled={isExporting}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
+        </button>
+        <button
+          onClick={handlePublish}
+          disabled={isPublishing}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: colors.brand.DEFAULT }}>
+          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
+        </button>
+      </>
+    );
+    return () => { setActions(null); };
+  }, [isExporting, isSaving, isPublishing, setActions]);
+
   // 辅助函数：获取 phase 数据
   const getPhaseData = (phaseKey) => {
     if (isCourseDataArray) {
@@ -248,6 +407,10 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   const [editingPageIndex, setEditingPageIndex] = useState(0);
   const [selectedStepId, setSelectedStepId] = useState(null);
   const [selectedMaterialId, setSelectedMaterialId] = useState(null);
+
+  // 导出用 refs
+  const canvasContainerRef = useRef(null);
+  const pageRefs = useRef({});
   
   const filteredPages = selectedMaterialId
     ? pages.filter(page => page.materialId === selectedMaterialId)
@@ -277,7 +440,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           (phase.slides || []).map(slide => ({ ...slide, phaseKey: phase.id }))
         )
       : Object.values(courseData).flatMap(phase => 
-          phase.steps.map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps.includes(step)) }))
+          (phase.steps || []).map(step => ({ ...step, phaseKey: Object.keys(courseData).find(k => courseData[k].steps && courseData[k].steps.includes(step)) }))
         );
     
     let newPages = allSteps.map((step, index) => {
@@ -514,6 +677,44 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     }, 1500);
   };
 
+  const handleAddReadingMaterialDirect = ({ stepId, phaseKey: stepPhaseKey }) => {
+    const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
+    const canvasSize = getCanvasSize();
+    const newMaterialId = `material-${stepId}-${Date.now()}`;
+    const phaseKey = stepPhaseKey || activePhase;
+    const newPage = {
+      id: `page-${newMaterialId}-1`,
+      slideId: stepId,
+      materialId: newMaterialId,
+      phaseKey,
+      pageNumber: 1,
+      title: `阅读材料 ${pages.filter(p => p.slideId === stepId).length + 1}`,
+      width: canvasSize.width,
+      height: canvasSize.height,
+      canvasAssets: [],
+      blocks: [],
+      prompt: ''
+    };
+    const newPages = [...pages, newPage];
+    setPages(newPages);
+    saveToHistory(newPages);
+    setActiveStepId(stepId);
+    setSelectedStepId(stepId);
+    setSelectedMaterialId(newMaterialId);
+    const newPageIndex = newPages.findIndex(p => p.id === newPage.id);
+    if (newPageIndex >= 0) setEditingPageIndex(newPageIndex);
+
+    if (courseId) {
+      apiService.updateCourse(courseId, {
+        readingMaterialsData: newPages.reduce((acc, p) => {
+          if (!acc[p.slideId]) acc[p.slideId] = [];
+          acc[p.slideId].push(p);
+          return acc;
+        }, {})
+      }).catch(err => console.error('自动保存失败:', err));
+    }
+  };
+
   // 添加新环节
   const handleAddStep = (phaseKey) => {
     setPromptModalConfig({ type: 'session', phaseKey });
@@ -583,9 +784,45 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   };
 
   // 导出PDF
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     setIsExporting(true);
-    setTimeout(() => { setIsExporting(false); alert("PDF 导出成功！"); }, 2000);
+    try {
+      const pageElements = [];
+
+      // 收集所有页面元素
+      filteredPages.forEach((page, index) => {
+        // 找到当前页面容器
+        const pageElement = pageRefs.current[page.id];
+        if (pageElement) {
+          pageElements.push(pageElement);
+        }
+      });
+
+      // 如果没有找到，尝试使用 container ref
+      if (pageElements.length === 0 && canvasContainerRef.current) {
+        // 查找所有 .page-container 类的元素
+        const pageContainers = canvasContainerRef.current.querySelectorAll('[class*="page-container"], [class*="canvas-wrapper"], [class*="reading-page"]');
+        if (pageContainers.length > 0) {
+          pageContainers.forEach(container => pageElements.push(container));
+        }
+      }
+
+      if (pageElements.length === 0) {
+        alert('没有找到可导出的阅读材料页面');
+        setIsExporting(false);
+        return;
+      }
+
+      // 导出为 ZIP
+      const zipFilename = `阅读材料_${Date.now()}.zip`;
+      await exportToZip(pageElements, zipFilename, 'reading');
+      alert(`阅读材料导出成功！共 ${pageElements.length} 页`);
+    } catch (err) {
+      console.error('导出失败:', err);
+      alert('导出失败，请重试');
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // 删除当前页面
@@ -609,6 +846,21 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     setCourseData(newCourseData);
   };
 
+  const handleCopyPage = () => {
+    const currentPage = pages[editingPageIndex];
+    if (!currentPage) return;
+    const copiedPage = JSON.parse(JSON.stringify(currentPage));
+    copiedPage.id = `page-${Date.now()}`;
+    copiedPage.title = `${currentPage.title || '未命名页面'} (副本)`;
+    copiedPage.pageNumber = editingPageIndex + 2;
+    const newPages = [...pages];
+    newPages.splice(editingPageIndex + 1, 0, copiedPage);
+    const renumbered = newPages.map((p, i) => ({ ...p, pageNumber: i + 1 }));
+    setPages(renumbered);
+    saveToHistory(renumbered);
+    setEditingPageIndex(editingPageIndex + 1);
+  };
+
   // 添加资产
   const handleAddAsset = (assetType) => {
     if (editingPageIndex === null || editingPageIndex < 0 || editingPageIndex >= pages.length) {
@@ -617,6 +869,33 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     }
     const currentPage = pages[editingPageIndex];
     if (!currentPage) { alert('当前页面不存在'); return; }
+
+    if (assetType === 'text') {
+      const newAsset = {
+        id: Date.now().toString(),
+        type: 'text',
+        title: '文本',
+        url: '',
+        content: '双击编辑文本',
+        prompt: '',
+        referenceImage: null,
+        x: 100, y: 100, width: 300, height: 100, rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+      const newPages = JSON.parse(JSON.stringify(pages));
+      const page = newPages[editingPageIndex];
+      if (!page.canvasAssets) page.canvasAssets = [];
+      page.canvasAssets.push(newAsset);
+      setPages(newPages);
+      saveToHistory(newPages);
+      setSelectedAssetId(newAsset.id);
+      setIsRightOpen(true);
+      return;
+    }
+
     setPromptModalConfig({ type: 'asset', pageId: currentPage.id, assetType });
     setShowPromptModal(true);
   };
@@ -663,9 +942,15 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
     const getCanvasSize = () => canvasAspectRatio === 'A4' ? { width: 680, height: 960 } : { width: 960, height: 680 };
     const canvasSize = getCanvasSize();
     
-    // 使用用户选择的尺寸，如果没有则使用默认值
-    let w = imageSize?.width || 300;
-    let h = imageSize?.height || 200;
+    let w = 300;
+    let h = 200;
+    if (typeof imageSize === 'string' && imageSize.includes('x')) {
+      const [pw, ph] = imageSize.split('x').map(Number);
+      if (pw && ph) { w = pw; h = ph; }
+    } else if (imageSize && typeof imageSize === 'object') {
+      w = imageSize.width || 300;
+      h = imageSize.height || 200;
+    }
     if (type === 'text') { w = 400; h = 150; }
     
     let generatedUrl = '';
@@ -1081,79 +1366,70 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
   };
 
   return (
-    <div className="flex-1 flex overflow-hidden relative">
+    <div className="flex flex-1 h-full overflow-hidden relative">
       {/* LEFT SIDEBAR */}
       <ReadingMaterialCanvasViewLeftSidebar
         courseData={courseData}
         expandedPhases={expandedPhases}
         activeStepId={activeStepId}
         selectedMaterialId={selectedMaterialId}
-        pages={pages}
         onTogglePhase={togglePhase}
         onStepClick={handleStepClick}
         onAddStep={handleAddStep}
         onDeleteStep={handleDeleteStep}
         onSelectMaterial={setSelectedMaterialId}
-        onAddReadingMaterial={setShowAddReadingMaterialModal}
+        onAddReadingMaterial={handleAddReadingMaterialDirect}
         onAddPageToMaterial={setShowAddPageToMaterialModal}
+        onDeletePage={(assetId) => {
+          if (!confirm('确定要删除这个素材吗？此操作无法撤销。')) return;
+          handleDeleteAsset(assetId);
+        }}
         isLeftOpen={isLeftOpen}
         onLeftToggle={() => setIsLeftOpen(false)}
       />
-      {!isLeftOpen && (
+      {/* {!isLeftOpen && (
         <button onClick={() => setIsLeftOpen(true)} className="absolute top-4 left-0 bg-white p-2 rounded-r-md border-2 border-l-0 border-stroke-light shadow-sm text-dark hover:text-dark hover:border-primary z-50 transition-all">
           <ChevronRight className="w-4 h-4" />
         </button>
-      )}
+      )} */}
 
       {/* MAIN CONTENT - 画布编辑器 */}
       <main className="flex-1 flex flex-col bg-surface-alt relative overflow-hidden">
         {/* Top Bar */}
-        <div className="h-14 bg-white border-b-2 border-stroke-light flex items-center justify-between px-6 shadow-sm z-10">
-          <div className="flex items-center gap-4 min-w-0">
-            {!isLeftOpen && (
+        <CanvasTopBar
+          isLeftOpen={isLeftOpen}
+          onToggleLeft={() => setIsLeftOpen(true)}
+          moduleLabel="阅读材料"
+          moduleIcon="book"
+          currentTitle={pages[editingPageIndex]?.title || `页面 ${editingPageIndex + 1}`}
+          pageInfo={` ${(() => { const fp = filteredPages; const ci = fp.findIndex(p => p.id === pages[editingPageIndex]?.id); return `${ci >= 0 ? ci + 1 : 1} / ${fp.length || 1}`; })()}`}
+          tagLabel={'阅读材料'}
+          accentColor="indigo"
+          onUndo={handleUndo}
+          onRedo={handleRedo}
+          canUndo={historyIndex > 0}
+          canRedo={historyIndex < history.length - 1}
+          extraActions={
+            editingPageIndex !== null ? (
               <>
-                <button onClick={() => setIsLeftOpen(true)} className="text-primary-placeholder hover:text-primary-secondary hover:bg-surface-alt p-1.5 rounded transition-colors" title="展开页面列表">
-                  <ChevronRight className="w-4 h-4" />
+                <button
+                  onClick={handleCopyPage}
+                  className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary transition-colors"
+                  title="复制页面"
+                >
+                  <Copy className="w-4 h-4" />
                 </button>
-                <div className="font-bold text-primary-secondary flex items-center gap-2 mr-4">
-                  <BookOpen className="w-4 h-4" />
-                  <span className="text-xs">阅读材料</span>
-                </div>
-              </>
-            )}
-            <span className="text-sm font-medium text-primary-muted whitespace-nowrap">当前编辑:</span>
-            {selectedMaterialId && pages[editingPageIndex] && (
-              <span className="px-2 py-1 bg-indigo-50 text-indigo-600 rounded text-xs font-medium whitespace-nowrap">阅读材料</span>
-            )}
-            <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-bold whitespace-nowrap">
-              页面 {(() => { if (!pages[editingPageIndex]) return 1; const filteredIndex = filteredPages.findIndex(p => p.id === pages[editingPageIndex].id); return filteredIndex >= 0 ? filteredIndex + 1 : 1; })()} / {filteredPages.length || 1}
-            </span>
-            {pages[editingPageIndex] && (
-              <h2 className="text-sm font-bold text-primary truncate" title={pages[editingPageIndex].title}>{pages[editingPageIndex].title || `页面 ${editingPageIndex + 1}`}</h2>
-            )}
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button onClick={handleUndo} disabled={historyIndex === 0} className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="撤销 (Ctrl+Z)">
-              <RotateCcw className="w-4 h-4" />
-            </button>
-            <button onClick={handleRedo} disabled={historyIndex === history.length - 1} className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors" title="重做 (Ctrl+Shift+Z)">
-              <RotateCw className="w-4 h-4" />
-            </button>
-            <div className="w-px h-6 bg-stroke"></div>
-            {editingPageIndex !== null && (
-              <>
                 <div className="flex items-center bg-surface rounded-xl p-1 border-2 border-stroke-light">
                   <button onClick={() => setCanvasAspectRatio('A4')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4' ? 'bg-white text-indigo-600' : 'text-primary-muted hover:text-primary-secondary'}`} title="A4 竖版">A4 竖版</button>
                   <button onClick={() => setCanvasAspectRatio('A4横向')} className={`px-3 py-1 rounded text-xs font-medium transition-colors ${canvasAspectRatio === 'A4横向' ? 'bg-white text-indigo-600' : 'text-primary-muted hover:text-primary-secondary'}`} title="A4 横版">A4 横版</button>
                 </div>
               </>
-            )}
-          </div>
-        </div>
+            ) : null
+          }
+        />
         
         {/* Canvas Editor */}
-        <div className="flex-1 overflow-hidden relative flex flex-col">
+        <div ref={canvasContainerRef} className="flex-1 overflow-hidden relative flex flex-col">
           {filteredPages.length > 0 ? (
             <ReadingMaterialEditor
               pages={filteredPages}
@@ -1194,14 +1470,14 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
             </div>
           )}
           
-          {selectedStepId && (
+          {/* {selectedStepId && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30" style={{left: '67%'}}>
               <button onClick={handleAddPageToStep} className="px-6 py-3 bg-white border-2 border-indigo-300 text-indigo-600 rounded-full shadow-lg hover:bg-indigo-50 hover:border-indigo-400 transition-all flex items-center gap-2 font-bold text-sm" title="在此环节末尾添加新页面">
                 <Copy className="w-5 h-5" />
                 在末尾添加新页面
               </button>
             </div>
-          )}
+          )} */}
           
           {/* 底部添加按钮栏 */}
           {editingPageIndex !== null && (
@@ -1250,7 +1526,7 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
             </button>
           )}
           <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
-            {selectedAsset ? (
+            {selectedAsset && (
               <AssetEditorPanel
                 selectedAsset={selectedAsset}
                 onClose={() => setSelectedAssetId(null)}
@@ -1265,41 +1541,6 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
                 isRightOpen={isRightOpen}
                 onToggleRightOpen={() => setIsRightOpen(false)}
               />
-            ) : (
-              <>
-                <div className="p-4 border-b-2 border-stroke-light bg-surface flex items-center justify-between">
-                  <h3 className="font-bold text-primary flex items-center gap-2">
-                    <Wand2 className="w-4 h-4 text-purple" />页面详情编辑
-                  </h3>
-                  <button onClick={() => setIsRightOpen(false)} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-5 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-primary-muted uppercase">画板元素 ({(currentPage?.canvasAssets || []).length})</label>
-                  </div>
-                  <div className="space-y-2">
-                    {(currentPage?.canvasAssets || []).map((asset) => (
-                      <div key={asset.id} onClick={() => setSelectedAssetId(asset.id)} className="flex items-start gap-2 p-2 border-2 border-stroke-light rounded-xl bg-white hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] cursor-pointer transition-all group">
-                        <div className="mt-1 text-primary-placeholder">{getAssetIcon(asset.type)}</div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-primary-secondary truncate">{asset.title || asset.type}</div>
-                          <div className="text-[10px] text-primary-placeholder">{asset.type} • 点击编辑</div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="pt-6 mt-6 border-t-2 border-stroke-light flex gap-2">
-                    <button onClick={saveCurrentToPageHistory} className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all">
-                      <History className="w-4 h-4" />历史生成
-                    </button>
-                    <button onClick={prepareForRegenerate} className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-                      <RefreshCw className="w-4 h-4" />重新生成
-                    </button>
-                  </div>
-                </div>
-              </>
             )}
           </div>
         </aside>
@@ -1531,6 +1772,6 @@ export const ReadingMaterialCanvasView = forwardRef(({ navigation, initialConfig
           </div>
         </div>
       )}
-    </div>
+      </div>
   );
 });

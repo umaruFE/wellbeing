@@ -253,12 +253,31 @@ async function executeSelect(state: QueryState): Promise<{ data: any[] | null; e
 function createInsertBuilder(table: string) {
   return {
     insert(data: Record<string, any>) {
+      // 将 JavaScript 数组转换为 PostgreSQL 数组格式
+      const processValue = (val: any): any => {
+        if (Array.isArray(val)) {
+          // PostgreSQL 数组格式: {"item1", "item2", ...}
+          const items = val.map(item => {
+            if (item === null || item === undefined) return 'NULL';
+            const str = String(item).replace(/"/g, '\\"');
+            return `"${str}"`;
+          });
+          return `{${items.join(',')}}`;
+        }
+        return val;
+      };
+
+      const processedData: Record<string, any> = {};
+      for (const [key, value] of Object.entries(data)) {
+        processedData[key] = processValue(value);
+      }
+
       const runInsert = async (columns: string = '*') => {
-        const cols = Object.keys(data).join(', ');
-        const placeholders = Object.values(data).map((_, i) => `$${i + 1}`).join(', ');
+        const cols = Object.keys(processedData).join(', ');
+        const placeholders = Object.values(processedData).map((_, i) => `$${i + 1}`).join(', ');
         const sql = `INSERT INTO ${table} (${cols}) VALUES (${placeholders}) RETURNING ${columns}`;
         try {
-          const res = await pool.query(sql, Object.values(data));
+          const res = await pool.query(sql, Object.values(processedData));
           return { data: res.rows[0], error: null };
         } catch (err) {
           return { data: null, error: err };

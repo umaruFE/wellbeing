@@ -15,6 +15,40 @@ function corsHeaders() {
   };
 }
 
+function repairTruncatedJson(text: string): string | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = 0; i < trimmed.length; i++) {
+    const ch = trimmed[i];
+    if (escape) { escape = false; continue; }
+    if (ch === '\\') { escape = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === '{' || ch === '[') depth++;
+    if (ch === '}' || ch === ']') depth--;
+  }
+
+  if (inString) {
+    const lastQuote = trimmed.lastIndexOf('"');
+    if (lastQuote > 0) {
+      const beforeQuote = trimmed.substring(0, lastQuote).trimEnd();
+      const trailingComma = beforeQuote.endsWith(',') ? beforeQuote.slice(0, -1).trimEnd() : beforeQuote;
+      return trailingComma + '}'.repeat(Math.max(depth, 0));
+    }
+  }
+
+  if (depth > 0) {
+    return trimmed + '}'.repeat(depth);
+  }
+
+  return null;
+}
+
 export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
@@ -28,7 +62,6 @@ export async function OPTIONS() {
  * @param age - 学生年龄
  * @param duration - 课程时长
  * @param scale - 班级规模
- * @param title - 课程名称
  * @param vocabulary - 核心词汇
  * @param grammar - 语法/句型
  * @param skills - 语言能力培养侧重（数组）
@@ -50,45 +83,40 @@ export async function POST(request: NextRequest) {
       age,
       duration,
       scale,
-      title,
       vocabulary,
       grammar,
       skills,
       paths,
       theme,
       requirements,
+      courseOverview,
       userId,
       organizationId
     } = body;
 
     console.log('[generate-course] 收到生成课件请求:', {
-      title,
       age,
       duration,
       scale,
       theme
     });
 
-    // 参数验证
-    if (!title) {
-      return NextResponse.json(
-        { error: '缺少必要参数: title' },
-        { status: 400, headers: corsHeaders() }
-      );
-    }
-
     // 构建 N8N 调用参数
     const n8nPayload = {
       age,
       duration,
       scale,
-      title,
+      title: theme || '未命名课程',
       vocabulary,
       grammar,
       skills: skills || [],
       paths: paths || [],
       theme,
       requirements,
+      course_overview: courseOverview ? JSON.stringify(courseOverview) : '',
+      course_overview_text: courseOverview
+        ? `已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：\n标题：${courseOverview.courseTitle || ''}\n情境：${courseOverview.overallContext || ''}\n语言目标：词汇=${courseOverview.languageGoals?.vocabulary || ''}，句型=${courseOverview.languageGoals?.grammar || ''}\nSEL目标：${courseOverview.selGoals || ''}\nPERMA目标：${courseOverview.permaGoals || ''}\n产出任务：${courseOverview.finalTask || ''}`
+        : '',
       userId,
       organizationId,
       timestamp: Date.now()
@@ -96,37 +124,96 @@ export async function POST(request: NextRequest) {
 
     console.log('[generate-course] 调用 N8N Workflow:', {
       workflow: 'course-generator',
-      title
+      theme
     });
 
-    // 调用 N8N Workflow
-    const result = await n8nClient.call('course-generator', n8nPayload);
+    // 调用 N8N Workflow（课件生成可能需要较长时间，设置5分钟超时）
+    const result = await n8nClient.call('course-generator', n8nPayload, { timeout: 300000 });
 
-    console.log('[generate-course] N8N 响应:', result);
+    console.log('[generate-course] N8N 响应类型:', typeof result, Array.isArray(result) ? '(数组)' : '');
+    console.log('[generate-course] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
 
-    // 提取 executionId
-    const executionId = result?.executionId || result?.id;
+    // N8N 返回格式: [{ "text": "{\"courseData\": {...}}" }]
+    let courseData = null;
 
-    if (executionId) {
-      return NextResponse.json({
-        success: true,
-        data: {
-          executionId,
-          status: 'processing',
-          message: '课件生成任务已提交，请在后台任务中查看进度'
+    if (Array.isArray(result) && result.length > 0) {
+      const firstItem = result[0];
+      console.log('[generate-course] firstItem:', firstItem);
+
+      if (firstItem?.text && typeof firstItem.text === 'string') {
+        const text = firstItem.text.trim();
+        console.log('[generate-course] text长度:', text.length, '前100字符:', text.substring(0, 100));
+        
+        try {
+          // 尝试直接解析
+          courseData = JSON.parse(text);
+          console.log('[generate-course] 直接解析text成功');
+        } catch (e1: any) {
+          // 如果直接解析失败，尝试修复并重新解析
+          console.log('[generate-course] 直接解析失败，尝试修复JSON:', e1.message);
+          try {
+            // 修复常见的 JSON 格式问题：
+            // 1. 单引号替换为双引号（仅在属性名和字符串值中）
+            let fixedText = text;
+            
+            // 修复属性名中的单引号: 'name' -> "name"
+            fixedText = fixedText.replace(/'([^']+)'\s*:/g, '"$1":');
+            
+            // 修复字符串值中的单引号: : 'value' -> : "value"
+            // 使用更精确的正则来匹配字符串值
+            fixedText = fixedText.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (match: string, value: string) => {
+              // 转义字符串中可能存在的特殊字符
+              const escaped = value.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
+              return `: "${escaped}"`;
+            });
+            
+            courseData = JSON.parse(fixedText);
+            console.log('[generate-course] 修复后解析成功');
+          } catch (e2: any) {
+            console.error('[generate-course] 修复后仍然解析失败:', e2.message);
+
+            // 第三次尝试：修复截断的 JSON（AI 输出被 max_tokens 截断）
+            try {
+              const repaired = repairTruncatedJson(text);
+              if (repaired) {
+                courseData = JSON.parse(repaired);
+                console.log('[generate-course] 截断修复成功');
+              }
+            } catch (e3: any) {
+              console.error('[generate-course] 截断修复也失败:', e3.message);
+            }
+          }
         }
-      }, { headers: corsHeaders() });
-    } else {
-      // 如果没有 executionId，但有其他返回数据，说明 workflow 同步执行完成
+      } else if (typeof firstItem?.text === 'object') {
+        // text 已经是对象了
+        courseData = firstItem.text.courseData || firstItem.text;
+        console.log('[generate-course] text已是对象');
+      } else if (firstItem?.courseData) {
+        courseData = firstItem.courseData;
+        console.log('[generate-course] 从firstItem.courseData提取成功');
+      }
+    } else if (result?.courseData) {
+      courseData = result.courseData;
+      console.log('[generate-course] 从result.courseData提取成功');
+    }
+
+    console.log('[generate-course] 最终 courseData:', courseData ? '存在' : '不存在');
+
+    if (courseData) {
       return NextResponse.json({
         success: true,
         data: {
           status: 'completed',
-          result,
+          courseData,
           message: '课件生成完成'
         }
       }, { headers: corsHeaders() });
     }
+
+    return NextResponse.json({
+      success: false,
+      error: '未能获取课件数据'
+    }, { status: 500, headers: corsHeaders() });
 
   } catch (error) {
     console.error('[generate-course] 课件生成失败:', error);

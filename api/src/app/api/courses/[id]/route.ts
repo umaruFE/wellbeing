@@ -102,20 +102,16 @@ export async function PUT(
       readingMaterialsData,
     } = body;
 
-    let processed_user_id = userId;
-    if (
-      typeof userId === 'number' ||
-      (typeof userId === 'string' && !isNaN(Number(userId)) && userId !== '')
-    ) {
-      processed_user_id = null;
-    }
-
     const updateData: any = {
       updated_at: new Date().toISOString(),
     };
 
-    if (typeof processed_user_id !== 'undefined') {
-      updateData.user_id = processed_user_id;
+    if (typeof userId !== 'undefined' && userId !== null) {
+      if (typeof userId === 'number') {
+        updateData.user_id = userId;
+      } else if (typeof userId === 'string' && !isNaN(Number(userId)) && userId !== '') {
+        updateData.user_id = Number(userId);
+      }
     }
     if (typeof organizationId !== 'undefined') {
       updateData.organization_id = organizationId;

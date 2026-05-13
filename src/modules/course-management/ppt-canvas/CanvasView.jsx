@@ -8,12 +8,13 @@
  * 5. 集成AI资产生成功能
  */
 import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { 
-  Clock, 
-  Image as ImageIcon, 
-  Type, 
-  Video, 
-  Music, 
+import { useParams, useNavigate } from 'react-router-dom';
+import {
+  Clock,
+  Image as ImageIcon,
+  Type,
+  Video,
+  Music,
   ChevronLeft,
   ChevronRight,
   Plus,
@@ -23,26 +24,81 @@ import {
   Copy,
   RotateCw,
   X,
-  History
+  History,
+  RefreshCw,
+  Edit3,
+  Layout,
+  Loader2,
+  BookOpen,
+  FileCheck,
+  MessageSquare,
+  Check,
+  Mic
 } from 'lucide-react';
+import pptxgen from 'pptxgenjs';
 import { SlideRenderer } from '../../../components/SlideRenderer';
 import { getAssetIcon } from '../../../utils';
 import { AssetEditorPanel } from '../../../components/AssetEditorPanel';
+import CanvasTopBar from '../../../components/CanvasTopBar';
 import { CanvasViewLeftSidebar } from './CanvasView.LeftSidebar';
 import { CanvasViewModals } from './CanvasView.Modals';
-import { RefreshCw } from 'lucide-react';
 import { aiAssetService } from '../../../services/aiAssetService';
 import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
 import { optimizePrompt } from '../../../services/dashscope';
 import { useAuth } from '../../../contexts/AuthContext';
 import { handleAssetChange, handleDeleteAsset, handleCopyAsset, handleCopyPage, handleLayerChange, handleReferenceUpload } from './CanvasView.assets';
 import { handleConfirmAddAsset, handleConfirmAddVideoAsset, handleCardSelectionConfirm, handleRegenerateAsset } from './CanvasView.asset-generation';
+import { useCourseLayout } from '../../../components/CourseLayout';
 import { saveToHistory, handleUndo, handleRedo } from './CanvasView.history';
+import AssetGeneratorModal from '../../../components/AssetGeneratorModal';
+import apiService from '../../../services/api';
+
+const colors = {
+  neutral: {
+    white: '#FFFFFF',
+    text: {
+      1: '#333E4E',
+      2: '#575F6E',
+      3: '#818997',
+      disabled: '#A4ABB8',
+    },
+    border: {
+      DEFAULT: '#E6E3DE',
+      secondary: '#EFECE8',
+    },
+    bg: {
+      layout: '#F7F5F1',
+    },
+  },
+  brand: {
+    DEFAULT: '#F4785E',
+    light: '#FDECE8',
+  },
+};
 
 export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const { courseId: routeCourseId } = useParams();
+  const { setTitle, setActions } = useCourseLayout();
   
-  // 支持 courseData 的两种格式：对象格式（欢迎页生成）和数组格式（从数据库加载）
+  const courseId = initialConfig?.courseId || routeCourseId;
+
+  useEffect(() => {
+    const loadTitle = async () => {
+      if (courseId) {
+        try {
+          const result = await apiService.getCourse(courseId);
+          const course = result.data || result;
+          setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{course.title || '未命名课程'}</span>);
+        } catch {
+          setTitle(null);
+        }
+      }
+    };
+    loadTitle();
+  }, [courseId, setTitle]);
+
   const isCourseDataArray = Array.isArray(initialConfig?.courseData);
   
   // 合并 courseData、canvasData 和 readingMaterialsData
@@ -97,13 +153,57 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     return mergedData;
   };
   
+  const resolveCourseData = (raw) => {
+    if (!raw) return raw;
+    let data = raw;
+    if (typeof data === 'string') {
+      try { data = JSON.parse(data); } catch { return raw; }
+    }
+    if (data && data.courseData && typeof data.courseData === 'object' && !Array.isArray(data.courseData)) {
+      if (data.courseData.engage || data.courseData.empower || data.courseData.execute || data.courseData.elevate) {
+        return data.courseData;
+      }
+    }
+    return data;
+  };
+
   const [courseData, setCourseData] = useState(() => {
-    const initialCourseData = initialConfig?.courseData || {};
+    const initialCourseData = resolveCourseData(initialConfig?.courseData) || {};
     const canvasData = initialConfig?.canvasData || null;
     const readingMaterialsData = initialConfig?.readingMaterialsData || null;
-    
     return mergeData(initialCourseData, canvasData, readingMaterialsData);
   });
+
+  const [isCourseDataLoaded, setIsCourseDataLoaded] = useState(!!initialConfig?.courseData);
+
+  useEffect(() => {
+    if (isCourseDataLoaded || !courseId) return;
+    const loadCourseData = async () => {
+      try {
+        const result = await apiService.getCourse(courseId);
+        const course = result?.data || result;
+        let raw = course.courseData || course.data || course.course_data || null;
+        const resolved = resolveCourseData(raw);
+        const canvasData = course.canvas_data || null;
+        const readingMaterialsData = course.reading_materials_data || null;
+        const merged = mergeData(resolved || {}, canvasData, readingMaterialsData);
+        setCourseData(merged);
+        setIsCourseDataLoaded(true);
+
+        const isArr = Array.isArray(merged);
+        const firstPhase = isArr ? merged[0]?.id : Object.keys(merged)[0];
+        const firstStepId = isArr
+          ? merged[0]?.slides?.[0]?.id
+          : merged[firstPhase]?.steps?.[0]?.id;
+        if (firstPhase) setActivePhase(firstPhase);
+        if (firstStepId) setActiveStepId(firstStepId);
+        setExpandedPhases(isArr ? merged.map(p => p.id) : Object.keys(merged));
+      } catch (err) {
+        console.error('[CanvasView] loadCourseData failed:', err);
+      }
+    };
+    loadCourseData();
+  }, [courseId, isCourseDataLoaded]);
   
   // 辅助函数：获取 phase 数据
   const getPhaseData = (phaseKey) => {
@@ -148,6 +248,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const [isRightOpen, setIsRightOpen] = useState(true);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false); 
   const [isExporting, setIsExporting] = useState(false);     
+  const [isSaving, setIsSaving] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   
   // Selection State
   const [selectedAssetId, setSelectedAssetId] = useState(null);
@@ -216,6 +318,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   // 提示词输入模态框状态
   const [showPromptModal, setShowPromptModal] = useState(false);
   const [promptModalConfig, setPromptModalConfig] = useState({ type: null, assetType: null, phaseKey: null, addAtEnd: false });
+  const [showAssetGeneratorModal, setShowAssetGeneratorModal] = useState(false);
+  const [assetGeneratorType, setAssetGeneratorType] = useState(null);
   const [showRegeneratePageModal, setShowRegeneratePageModal] = useState(false);
   const [isRegeneratingPage, setIsRegeneratingPage] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -281,7 +385,226 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     if (!phase) return [];
     return (phase.steps || phase.slides || []).map(slide => ({...slide, phaseKey}));
   });
+  const allStepsRef = React.useRef(allSteps);
+  allStepsRef.current = allSteps;
+  const courseDataRef = React.useRef(courseData);
+  courseDataRef.current = courseData;
   const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
+
+  useEffect(() => {
+    const handleSave = async () => {
+      if (!courseId) return;
+      setIsSaving(true);
+      try {
+        await apiService.updateCourse(courseId, { courseData: courseDataRef.current });
+      } catch (err) {
+        console.error('保存失败:', err);
+        alert('保存失败，请重试');
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    const handleExport = async () => {
+      setIsExporting(true);
+      try {
+        const currentAllSteps = allStepsRef.current;
+        const allSlideIds = currentAllSteps.map(s => s.id);
+
+        if (allSlideIds.length === 0) {
+          alert('没有可导出的幻灯片');
+          setIsExporting(false);
+          return;
+        }
+
+        const pres = new pptxgen();
+        pres.layout = 'LAYOUT_16x9';
+
+        const canvasElement = canvasRef.current;
+        const canvasRect = canvasElement?.getBoundingClientRect();
+        const canvasW = canvasRect?.width || 960;
+        const canvasH = canvasRect?.height || 540;
+        const pptW = 10;
+        const pptH = 5.625;
+
+        for (let i = 0; i < allSlideIds.length; i++) {
+          const stepId = allSlideIds[i];
+          const stepInfo = currentAllSteps.find(s => s.id === stepId);
+          const assets = stepInfo?.assets || stepInfo?.canvasAssets || [];
+
+          const slide = pres.addSlide();
+          slide.background = { color: 'FFFFFF' };
+
+          if (stepInfo?.title) {
+            slide.addText(stepInfo.title, {
+              x: 0.3, y: 0.1, w: 9.4, h: 0.4,
+              fontSize: 14, bold: true, color: '333333',
+            });
+          }
+
+          for (const asset of assets) {
+            const scaleX = pptW / canvasW;
+            const scaleY = pptH / canvasH;
+            const assetX = (asset.x || 0) * scaleX;
+            const assetY = (asset.y || 0) * scaleY;
+            const assetW = (asset.width || 300) * scaleX;
+            const assetH = (asset.height || 200) * scaleY;
+
+            if (asset.type === 'image' && asset.url) {
+              try {
+                let imageDataUrl = asset.url;
+                if (!asset.url.startsWith('data:')) {
+                  const proxyUrl = `/api/ai/proxy-image?url=${encodeURIComponent(asset.url)}`;
+                  const res = await fetch(proxyUrl);
+                  const data = await res.json();
+                  if (data.url) {
+                    imageDataUrl = data.url;
+                  } else {
+                    throw new Error('代理图片失败');
+                  }
+                }
+                let imgW = assetW;
+                let imgH = assetH;
+                try {
+                  const imgObj = await new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.onerror = reject;
+                    img.src = imageDataUrl;
+                  });
+                  const imgRatio = imgObj.naturalWidth / imgObj.naturalHeight;
+                  const containerRatio = assetW / assetH;
+                  if (imgRatio > containerRatio) {
+                    imgH = assetW / imgRatio;
+                  } else {
+                    imgW = assetH * imgRatio;
+                  }
+                } catch {}
+
+                slide.addImage({
+                  data: imageDataUrl,
+                  x: assetX + (assetW - imgW) / 2,
+                  y: assetY + (assetH - imgH) / 2,
+                  w: imgW,
+                  h: imgH,
+                });
+              } catch (err) {
+                console.error('导出图片失败:', err.message);
+              }
+            } else if (asset.type === 'text' && asset.content) {
+              const fontSize = Math.round((asset.fontSize || 16) * scaleX * 1.2);
+              slide.addText(asset.content, {
+                x: assetX,
+                y: assetY,
+                w: assetW,
+                h: assetH,
+                fontSize,
+                color: asset.color || '333333',
+                fontFace: 'Microsoft YaHei',
+                wrap: true,
+                valign: 'top',
+              });
+            } else if (asset.type === 'video' && asset.url) {
+              try {
+                const mediaUrl = asset.url.includes('localhost') || asset.url.startsWith('/')
+                  ? asset.url
+                  : `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
+                slide.addMedia({
+                  type: 'video',
+                  path: mediaUrl,
+                  x: assetX,
+                  y: assetY,
+                  w: assetW,
+                  h: assetH,
+                });
+              } catch (err) {
+                console.error('导出视频失败:', err.message);
+                slide.addText('▶ 视频播放', {
+                  x: assetX, y: assetY, w: assetW, h: assetH,
+                  fontSize: 14, color: '666666', align: 'center', valign: 'middle',
+                  fill: { color: 'F0F0F0' },
+                });
+              }
+            } else if (asset.type === 'audio' && asset.url) {
+              try {
+                const mediaUrl = asset.url.includes('localhost') || asset.url.startsWith('/')
+                  ? asset.url
+                  : `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
+                slide.addMedia({
+                  type: 'audio',
+                  path: mediaUrl,
+                  x: assetX,
+                  y: assetY,
+                  w: assetW,
+                  h: Math.min(assetH, 0.6),
+                });
+              } catch (err) {
+                console.error('导出音频失败:', err.message);
+                slide.addText('♪ 音频', {
+                  x: assetX, y: assetY, w: assetW, h: Math.min(assetH, 0.6),
+                  fontSize: 12, color: '666666', align: 'center', valign: 'middle',
+                  fill: { color: 'F0F0F0' },
+                });
+              }
+            }
+          }
+        }
+
+        await pres.writeFile({ fileName: `PPT课件_${Date.now()}.pptx` });
+        alert(`PPT 导出成功！共 ${allSlideIds.length} 张幻灯片`);
+      } catch (err) {
+        console.error('导出失败:', err);
+        alert('导出失败，请重试');
+      } finally {
+        setIsExporting(false);
+      }
+    };
+
+    const handlePublish = async () => {
+      if (!courseId) { alert('缺少课程ID'); return; }
+      setIsPublishing(true);
+      try {
+        const payload = courseDataRef.current;
+        await apiService.updateCourse(courseId, { courseData: payload, status: 'published' });
+        alert('发布成功！');
+      } catch (err) {
+        console.error('发布失败:', err);
+        alert('发布失败，请重试');
+      } finally {
+        setIsPublishing(false);
+      }
+    };
+
+    setActions(
+      <>
+        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
+        </span>
+        <button
+          onClick={handleSave}
+          disabled={isSaving}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
+        </button>
+        <button
+          onClick={handleExport}
+          disabled={isExporting}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
+          style={{ backgroundColor: '#4C5866' }}>
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
+        </button>
+        <button
+          onClick={handlePublish}
+          disabled={isPublishing}
+          className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          style={{ backgroundColor: colors.brand.DEFAULT }}>
+          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
+        </button>
+      </>
+    );
+    return () => { setActions(null); };
+  }, [setActions, isExporting, isSaving, isPublishing, activeStepId]);
 
   // --- Handlers ---
   const togglePhase = (phaseKey) => {
@@ -299,8 +622,37 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleAddStep = (phaseKey) => {
-    setPromptModalConfig({ type: 'session', phaseKey });
-    setShowPromptModal(true);
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    const phase = newCourseData[phaseKey];
+    if (!phase) return;
+
+    const steps = phase.steps || phase.slides || [];
+    const newStep = {
+      id: `${phaseKey}-${Date.now()}`,
+      title: `幻灯片 ${steps.length + 1}`,
+      time: '',
+      objective: '',
+      assets: [],
+      canvasAssets: []
+    };
+
+    steps.push(newStep);
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+    setActivePhase(phaseKey);
+    setActiveStepId(newStep.id);
+    setSelectedAssetId(null);
+
+    if (courseId) {
+      const payload = typeof newCourseData === 'string' ? newCourseData : newCourseData;
+      setIsSaving(true);
+      apiService.updateCourse(courseId, { courseData: payload }).then(() => {
+        setIsSaving(false);
+      }).catch(err => {
+        console.error('自动保存失败:', err);
+        setIsSaving(false);
+      });
+    }
   };
 
   const handleAddStepAtEnd = () => {
@@ -375,13 +727,85 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   const handleAddAsset = (type) => {
-    setPromptModalConfig({ type: 'element', assetType: type, phaseKey: activePhase });
-    setShowPromptModal(true);
+    if (type === 'text') {
+      const newCourseData = JSON.parse(JSON.stringify(courseData));
+      const phase = Array.isArray(newCourseData)
+        ? newCourseData.find(p => p.id === activePhase)
+        : newCourseData[activePhase];
+      if (!phase) return;
+      const stepsOrSlides = phase.steps || phase.slides;
+      const step = stepsOrSlides?.find(s => s.id === activeStepId);
+      if (!step) return;
+      const newAsset = {
+        id: Date.now().toString(),
+        type: 'text',
+        title: '文本',
+        url: '',
+        content: '',
+        prompt: '',
+        referenceImage: null,
+        x: 100, y: 100, width: 300, height: 100, rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+      if (!step.assets) step.assets = [];
+      if (!step.canvasAssets) step.canvasAssets = [];
+      step.assets.push(newAsset);
+      step.canvasAssets.push(newAsset);
+      setCourseData(newCourseData);
+      saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+      setSelectedAssetId(newAsset.id);
+      setIsRightOpen(true);
+      return;
+    }
+    setAssetGeneratorType(type);
+    setShowAssetGeneratorModal(true);
   };
 
-  const handleExportPPT = () => {
-    setIsExporting(true);
-    setTimeout(() => { setIsExporting(false); alert("PPT 导出成功！"); }, 2000);
+  const handleAssetGenerated = ({ type, url, title }) => {
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    const phase = Array.isArray(newCourseData)
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    if (!phase) return;
+    const stepsOrSlides = phase.steps || phase.slides;
+    const step = stepsOrSlides?.find(s => s.id === activeStepId);
+    if (!step) return;
+
+    const assetType = type === 'audio' ? 'audio' : type;
+    const newAsset = {
+      id: Date.now().toString(),
+      type: assetType,
+      title: title || assetType,
+      url: url,
+      content: '',
+      prompt: '',
+      referenceImage: null,
+      x: 50, y: 50,
+      width: assetType === 'audio' ? 300 : 400,
+      height: assetType === 'audio' ? 100 : 300,
+      rotation: 0
+    };
+    if (!step.assets) step.assets = [];
+    if (!step.canvasAssets) step.canvasAssets = [];
+    step.assets.push(newAsset);
+    step.canvasAssets.push(newAsset);
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+    setSelectedAssetId(newAsset.id);
+    setIsRightOpen(true);
+
+    if (courseId) {
+      setIsSaving(true);
+      apiService.updateCourse(courseId, { courseData: newCourseData.course_data || newCourseData }).then(() => {
+        setIsSaving(false);
+      }).catch(err => {
+        console.error('自动保存失败:', err);
+        setIsSaving(false);
+      });
+    }
   };
 
   const handleNavigatePreview = (direction) => {
@@ -593,111 +1017,99 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   };
 
   return (
-    <div className="flex h-full bg-surface overflow-hidden">
-      {/* Left Sidebar */}
-      <CanvasViewLeftSidebar
-        courseData={courseData}
-        expandedPhases={expandedPhases}
-        activeStepId={activeStepId}
-        onTogglePhase={togglePhase}
-        onStepClick={handleStepClick}
-        onAddStep={handleAddStep}
-        onDeleteStep={(phaseKey, stepId) => {
-          if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
-          
-          const newCourseData = JSON.parse(JSON.stringify(courseData));
-          const isArray = Array.isArray(newCourseData);
-          const phase = isArray 
-            ? newCourseData.find(p => p.id === phaseKey)
-            : newCourseData[phaseKey];
-          if (!phase) return;
-          
-          phase.slides = phase.slides.filter(s => s.id !== stepId);
-          
-          if (activeStepId === stepId) {
-            if (phase.slides.length > 0) {
-              setActiveStepId(phase.slides[0].id);
+    <div className="flex flex-1 h-full overflow-hidden bg-surface">
+        {/* Left Sidebar */}
+        <CanvasViewLeftSidebar
+          courseData={courseData}
+          expandedPhases={expandedPhases}
+          activeStepId={activeStepId}
+          onTogglePhase={togglePhase}
+          onStepClick={handleStepClick}
+          onAddStep={handleAddStep}
+          onDeleteStep={(phaseKey, stepId) => {
+            if (!confirm('确定要删除这个环节吗？此操作无法撤销。')) return;
+            
+            const newCourseData = JSON.parse(JSON.stringify(courseData));
+            const isArray = Array.isArray(newCourseData);
+            const phase = isArray 
+              ? newCourseData.find(p => p.id === phaseKey)
+              : newCourseData[phaseKey];
+            if (!phase) return;
+            
+            const stepsOrSlides = phase.steps || phase.slides;
+            if (!stepsOrSlides) return;
+            
+            if (isArray) {
+              phase.slides = phase.slides.filter(s => s.id !== stepId);
             } else {
-              const otherPhase = isArray
-                ? newCourseData.find(p => p.id !== phaseKey && p.slides.length > 0)
-                : Object.entries(newCourseData).find(([key, p]) => 
-                    key !== phaseKey && p.slides.length > 0
-                  );
-              if (otherPhase) {
-                setActivePhase(isArray ? otherPhase.id : otherPhase[0]);
-                setActiveStepId(isArray ? otherPhase.slides[0].id : otherPhase[1].slides[0].id);
+              phase.steps = phase.steps.filter(s => s.id !== stepId);
+            }
+            
+            if (activeStepId === stepId) {
+              const remaining = phase.steps || phase.slides || [];
+              if (remaining.length > 0) {
+                setActiveStepId(remaining[0].id);
+              } else {
+                const otherPhase = isArray
+                  ? newCourseData.find(p => p.id !== phaseKey && (p.steps || p.slides || []).length > 0)
+                  : Object.entries(newCourseData).find(([key, p]) => 
+                      key !== phaseKey && (p.steps || p.slides || []).length > 0
+                    );
+                if (otherPhase) {
+                  const otherSteps = isArray ? otherPhase.steps || otherPhase.slides : otherPhase[1].steps || otherPhase[1].slides;
+                  setActivePhase(isArray ? otherPhase.id : otherPhase[0]);
+                  setActiveStepId(otherSteps[0]?.id);
+                }
               }
             }
-          }
-          
-          setCourseData(newCourseData);
-          saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
-          setSelectedAssetId(null);
-        }}
-        isLeftOpen={isLeftOpen}
-        onLeftToggle={() => setIsLeftOpen(!isLeftOpen)}
-      />
+            
+            setCourseData(newCourseData);
+            saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+            setSelectedAssetId(null);
+          }}
+          isLeftOpen={isLeftOpen}
+          onLeftToggle={() => setIsLeftOpen(!isLeftOpen)}
+        />
 
       {/* Main Canvas Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <div className="bg-white border-b-2 border-stroke-light px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setIsLeftOpen(!isLeftOpen)}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 text-primary-secondary" />
-            </button>
-            <h2 className="text-lg font-semibold text-primary">
-              {currentStep?.title || '选择环节'}
-            </h2>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleUndo(history, historyIndex, setHistoryIndex, setCourseData)}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={historyIndex <= 0}
-            >
-              <Undo2 className="w-5 h-5 text-primary-secondary" />
-            </button>
-            <button
-              onClick={() => handleRedo(history, historyIndex, setHistoryIndex, setCourseData)}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={historyIndex >= history.length - 1}
-            >
-              <Redo2 className="w-5 h-5 text-primary-secondary" />
-            </button>
-            <div className="h-6 w-px bg-stroke mx-1"></div>
+        <CanvasTopBar
+          isLeftOpen={isLeftOpen}
+          onToggleLeft={() => setIsLeftOpen(!isLeftOpen)}
+          moduleLabel="PPT 课件"
+          moduleIcon="layout"
+          currentTitle={currentStep?.title || '选择环节'}
+          pageInfo={(() => {
+            const phaseSteps = currentPhaseData?.steps || currentPhaseData?.slides || [];
+            const stepIdx = phaseSteps.findIndex(s => s.id === activeStepId);
+            return `${stepIdx >= 0 ? stepIdx + 1 : 1} / ${phaseSteps.length || 1}`;
+          })()}
+          tagLabel="PPT"
+          accentColor="orange"
+          onUndo={() => handleUndo(history, historyIndex, setHistoryIndex, setCourseData)}
+          onRedo={() => handleRedo(history, historyIndex, setHistoryIndex, setCourseData)}
+          canUndo={historyIndex > 0}
+          canRedo={historyIndex < history.length - 1}
+          extraActions={
             <button
               onClick={handleCopyPage}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
+              className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary transition-colors"
+              title="复制页面"
             >
-              <Copy className="w-5 h-5 text-primary-secondary" />
+              <Copy className="w-4 h-4" />
             </button>
-            {/* <button
-              onClick={handleExportPPT}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors relative"
-              disabled={isExporting}
-            >
-              {isExporting && (
-                <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
-                  <div className="w-4 h-4 border-2 border-info border-t-transparent rounded-full animate-spin"></div>
-                </div>
-              )}
-              <RefreshCw className="w-5 h-5 text-primary-secondary" />
-            </button>*/}
-          </div>
-        </div>
+          }
+        />
 
         {/* Canvas */}
         <div 
-          className="flex-1 overflow-auto p-8 flex items-center justify-center relative"
+          className="flex-1 overflow-auto relative"
           onClick={handleCanvasClick}
         >
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]" onClick={(e) => e.stopPropagation()}></div>
-          <div ref={canvasRef} className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200">
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+          <div style={{ minWidth: 1024, minHeight: 620, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', boxSizing: 'border-box' }}>
+          <div ref={canvasRef} className="w-[960px] h-[540px] shrink-0 bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200">
             <SlideRenderer
               assets={currentStep?.assets || currentStep?.canvasAssets || []}
               isEditable={true}
@@ -717,8 +1129,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               onCanvasClick={handleCanvasClick}
             />
           </div>
-          
-          {activeStepId && (
+          </div>
+          {/* {activeStepId && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30" style={{left: '58%'}}>
               <button
                 onClick={handleAddStepAtEnd}
@@ -729,7 +1141,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 在末尾新增PPT
               </button>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Bottom Bar */}
@@ -763,6 +1175,13 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
               <Music className="w-4 h-4" />
               音频
             </button>
+            <button
+              onClick={() => handleAddAsset('voice')}
+              className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+            >
+              <Mic className="w-4 h-4" />
+              声音
+            </button>
           </div>
           
           <div className="flex items-center gap-2">
@@ -788,7 +1207,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
            </button>
          )}
          <div className={`flex flex-col h-full ${!isRightOpen && 'hidden'}`}>
-            {selectedAsset ? (
+            {selectedAsset && (
                <AssetEditorPanel
                  selectedAsset={selectedAsset}
                  onClose={() => setSelectedAssetId(null)}
@@ -803,127 +1222,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                  isRightOpen={isRightOpen}
                  onToggleRightOpen={() => setIsRightOpen(false)}
                />
-            ) : (
-               <>
-                  <div className="p-4 border-b-2 border-stroke-light bg-surface flex items-center justify-between">
-                     <h3 className="font-bold text-primary flex items-center gap-2">
-                       <Wand2 className="w-4 h-4 text-purple" />环节详情编辑
-                     </h3>
-                     <button onClick={() => setIsRightOpen(false)} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
-                       <ChevronRight className="w-4 h-4" />
-                     </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-5 space-y-6">
-                     <div className="space-y-4">
-                        <div>
-                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">时间 / Time</label>
-                          <div className="flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-primary-placeholder" />
-                            <input 
-                              type="text" 
-                              value={currentStep?.time || ''} 
-                              onChange={(e) => handleInputChange('time', e.target.value)} 
-                              className="flex-1 text-sm border-2 border-stroke-light rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all" 
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">教学环节 / Step Title</label>
-                          <input 
-                            type="text" 
-                            value={currentStep?.title || ''} 
-                            onChange={(e) => handleInputChange('title', e.target.value)} 
-                            className="w-full text-sm border-2 border-stroke-light rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all" 
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">教学目标 / Objective</label>
-                          <textarea 
-                            value={currentStep?.objective || ''} 
-                            onChange={(e) => handleInputChange('objective', e.target.value)} 
-                            className="w-full text-sm border-2 border-stroke-light rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none transition-all" 
-                            rows={4}
-                          />
-                        </div>
-                     </div>
-                     <hr className="border-stroke-light" />
-                     <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="text-xs font-bold text-primary-muted uppercase">本页素材 ({currentStep?.assets?.length || 0})</label>
-                          <div className="flex gap-1">
-                            <button onClick={() => handleAddAsset('image')} className="p-1 hover:bg-surface-alt rounded text-primary-placeholder hover:text-purple">
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          {currentStep?.assets?.map((asset) => (
-                            <div 
-                              key={asset.id} 
-                              onClick={() => setSelectedAssetId(asset.id)} 
-                              className="flex items-start gap-2 p-2 border-2 border-stroke-light rounded-xl bg-white hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] cursor-pointer transition-all group"
-                            >
-                              <div className="mt-1 text-primary-placeholder">{getAssetIcon(asset.type)}</div>
-                              <div className="flex-1 min-w-0">
-                                <div className="text-xs font-bold text-primary-secondary truncate">{asset.title}</div>
-                                <div className="text-[10px] text-primary-placeholder">{asset.type} • 点击编辑</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                     </div>
-                     <div className="pt-6 mt-6 border-t-2 border-stroke-light flex gap-2">
-                        <button 
-                          onClick={() => {
-                            if (currentStep) {
-                              const historyItem = {
-                                id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                stepId: activeStepId,
-                                data: JSON.parse(JSON.stringify({
-                                  title: currentStep.title,
-                                  time: currentStep.time,
-                                  objective: currentStep.objective,
-                                  assets: currentStep.assets || []
-                                })),
-                                timestamp: new Date().toISOString(),
-                                displayTime: new Date().toLocaleString('zh-CN')
-                              };
-                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
-                              setShowPageHistoryModal(true);
-                            }
-                          }}
-                          className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
-                        >
-                          <History className="w-4 h-4" />
-                          历史生成
-                        </button>
-                        <button 
-                          onClick={() => {
-                            if (currentStep) {
-                              const historyItem = {
-                                id: `page-history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                                stepId: activeStepId,
-                                data: JSON.parse(JSON.stringify({
-                                  title: currentStep.title,
-                                  time: currentStep.time,
-                                  objective: currentStep.objective,
-                                  assets: currentStep.assets || []
-                                })),
-                                timestamp: new Date().toISOString(),
-                                displayTime: new Date().toLocaleString('zh-CN')
-                              };
-                              setPageHistory(prev => [historyItem, ...prev].slice(0, 50));
-                              setShowRegeneratePageModal(true);
-                            }
-                          }}
-                          className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                        >
-                          <RefreshCw className="w-4 h-4" />
-                          重新生成
-                        </button>
-                     </div>
-                  </div>
-               </>
             )}
          </div>
       </aside>
@@ -967,6 +1265,15 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         activePhase={activePhase}
         activeStepId={activeStepId}
         onRestoreHistory={handleRestoreHistory}
+        userId={user?.id}
+        organizationId={user?.organizationId}
+      />
+
+      <AssetGeneratorModal
+        isOpen={showAssetGeneratorModal}
+        onClose={() => { setShowAssetGeneratorModal(false); setAssetGeneratorType(null); }}
+        assetType={assetGeneratorType}
+        onGenerated={handleAssetGenerated}
         userId={user?.id}
         organizationId={user?.organizationId}
       />
@@ -1048,6 +1355,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           </div>
         </div>
       )}
-    </div>
+      </div>
   );
 });

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { RotateCw, Play, Music, Copy, Trash2, Type } from 'lucide-react';
+import React, { useState, useRef, useCallback } from 'react';
+import { RotateCw, Play, Pause, Music, Copy, Trash2, Type } from 'lucide-react';
 
 /**
  * CanvasAssetRenderer - 共用的画布资产渲染组件
@@ -56,13 +56,8 @@ export const CanvasAssetRenderer = ({
     }
   };
 
-  if (assets.length === 0 && isEditable) {
-    return (
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-primary-placeholder pointer-events-none">
-        <Type className="w-16 h-16 mb-4" />
-        <p className="text-sm font-medium">画布为空，请使用上方工具栏添加素材</p>
-      </div>
-    );
+  if (assets.length === 0) {
+    return null;
   }
 
   return (
@@ -72,6 +67,8 @@ export const CanvasAssetRenderer = ({
     }}>
       {assets.map((asset, index) => {
         const isEditing = currentEditingAssetId === asset.id;
+
+        if (asset.type !== 'text' && !asset.url) return null;
 
         return (
           <div
@@ -225,56 +222,261 @@ export const CanvasAssetRenderer = ({
                   {asset.content || "双击编辑文本"}
                 </div>
               )
-            ) : (
+            ) : asset.url ? (
               <div className="w-full h-full relative bg-black rounded overflow-hidden shadow-sm">
-                {(() => {
-                  try {
-                    console.log('[CanvasAssetRenderer] render non-text asset:', {
-                      id: asset.id,
-                      type: asset.type,
-                      url: asset.url,
-                      title: asset.title,
-                    });
-                  } catch (e) {
-                    // 避免渲染时报错影响 UI
-                  }
-                  return null;
-                })()}
-                {asset.url ? (
-                  asset.type === 'video' ? (
-                    <video
-                      src={asset.url}
-                      className="w-full h-full object-cover block select-none pointer-events-none"
-                      controls={false}
-                    />
-                  ) : (
-                    <img 
-                      src={asset.url} 
-                      alt={asset.title} 
-                      className="w-full h-full object-cover block select-none pointer-events-none" 
-                    />
-                  )
+                {asset.type === 'video' ? (
+                  <VideoPlayer url={asset.url} title={asset.title} />
+                ) : asset.type === 'audio' ? (
+                  <AudioPlayer url={asset.url} title={asset.title} />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-stroke text-primary-placeholder">
-                    {asset.type === 'image' ? 'No Image' : asset.type === 'video' ? 'No Video' : 'No Audio'}
-                  </div>
-                )}
-                {asset.type === 'video' && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30 pointer-events-none">
-                    <Play className="w-12 h-12 text-white opacity-80" />
-                  </div>
-                )}
-                {asset.type === 'audio' && (
-                  <div className="absolute bottom-0 left-0 right-0 h-full bg-dark/80 flex flex-col items-center justify-center gap-2 backdrop-blur-sm">
-                    <Music className="w-8 h-8 text-white/80" />
-                    <div className="text-white text-xs font-mono">Audio Track</div>
-                  </div>
+                  <img 
+                    src={asset.url} 
+                    alt={asset.title} 
+                    className="w-full h-full object-cover block select-none pointer-events-none" 
+                  />
                 )}
               </div>
-            )}
+            ) : null}
           </div>
         );
       })}
+    </div>
+  );
+};
+
+const VideoPlayer = ({ url, title }) => {
+  const videoRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [showControls, setShowControls] = useState(true);
+
+  const togglePlay = useCallback((e) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video) return;
+    if (isPlaying) {
+      video.pause();
+    } else {
+      video.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    setCurrentTime(video.currentTime);
+    if (video.duration) {
+      setProgress((video.currentTime / video.duration) * 100);
+    }
+  }, []);
+
+  const handleLoadedMetadata = useCallback(() => {
+    const video = videoRef.current;
+    if (video && video.duration) {
+      setDuration(video.duration);
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    setShowControls(true);
+  }, []);
+
+  const handleSeek = useCallback((e) => {
+    e.stopPropagation();
+    const video = videoRef.current;
+    if (!video || !video.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+    video.currentTime = ratio * video.duration;
+  }, []);
+
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div
+      className="absolute inset-0 group/video"
+      onClick={(e) => e.stopPropagation()}
+      onMouseEnter={() => setShowControls(true)}
+      onMouseLeave={() => { if (isPlaying) setShowControls(false); }}
+    >
+      <video
+        ref={videoRef}
+        src={url}
+        className="w-full h-full object-cover block select-none"
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        preload="metadata"
+        playsInline
+      />
+
+      {!isPlaying && (
+        <div
+          className="absolute inset-0 flex items-center justify-center bg-black/30 cursor-pointer"
+          onClick={togglePlay}
+        >
+          <div className="w-14 h-14 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center hover:bg-white/35 transition-colors">
+            <Play className="w-7 h-7 text-white ml-1" fill="white" />
+          </div>
+        </div>
+      )}
+
+      {isPlaying && (
+        <div
+          className="absolute inset-0 cursor-pointer"
+          onClick={togglePlay}
+        />
+      )}
+
+      <div className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2 transition-opacity duration-200 ${showControls || !isPlaying ? 'opacity-100' : 'opacity-0'}`}>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={togglePlay}
+            className="w-7 h-7 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors shrink-0"
+          >
+            {isPlaying ? (
+              <Pause className="w-3.5 h-3.5 text-white" fill="white" />
+            ) : (
+              <Play className="w-3.5 h-3.5 text-white ml-0.5" fill="white" />
+            )}
+          </button>
+
+          <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+            <div
+              className="w-full h-1 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+              onClick={handleSeek}
+            >
+              <div
+                className="h-full bg-white/80 rounded-full transition-[width] duration-100"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-[9px] text-white/60 font-mono">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const AudioPlayer = ({ url, title }) => {
+  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  const togglePlay = useCallback((e) => {
+    e.stopPropagation();
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play();
+    }
+    setIsPlaying(!isPlaying);
+  }, [isPlaying]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    setCurrentTime(audio.currentTime);
+    if (audio.duration) {
+      setProgress((audio.currentTime / audio.duration) * 100);
+    }
+  }, []);
+
+  const handleLoadedMetadata = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio && audio.duration) {
+      setDuration(audio.duration);
+    }
+  }, []);
+
+  const handleEnded = useCallback(() => {
+    setIsPlaying(false);
+    setProgress(0);
+    setCurrentTime(0);
+  }, []);
+
+  const handleSeek = useCallback((e) => {
+    e.stopPropagation();
+    const audio = audioRef.current;
+    if (!audio || !audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const ratio = x / rect.width;
+    audio.currentTime = ratio * audio.duration;
+  }, []);
+
+  const formatTime = (seconds) => {
+    if (!seconds || isNaN(seconds)) return '0:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div
+      className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex flex-col items-center justify-center gap-2 p-3 backdrop-blur-sm"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <audio
+        ref={audioRef}
+        src={url}
+        onTimeUpdate={handleTimeUpdate}
+        onLoadedMetadata={handleLoadedMetadata}
+        onEnded={handleEnded}
+        preload="metadata"
+      />
+
+      <div className="flex items-center gap-2 w-full">
+        <button
+          onClick={togglePlay}
+          className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors shrink-0"
+        >
+          {isPlaying ? (
+            <Pause className="w-4 h-4 text-white" fill="white" />
+          ) : (
+            <Play className="w-4 h-4 text-white ml-0.5" fill="white" />
+          )}
+        </button>
+
+        <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+          <div
+            className="w-full h-1.5 bg-white/20 rounded-full cursor-pointer overflow-hidden"
+            onClick={handleSeek}
+          >
+            <div
+              className="h-full bg-white/80 rounded-full transition-[width] duration-100"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] text-white/60 font-mono">
+            <span>{formatTime(currentTime)}</span>
+            <span>{formatTime(duration)}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-1.5 text-white/70">
+        <Music className="w-3 h-3" />
+        <span className="text-[11px] truncate max-w-[200px]">{title || 'Audio'}</span>
+      </div>
     </div>
   );
 };

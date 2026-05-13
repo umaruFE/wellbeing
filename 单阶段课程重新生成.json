@@ -1,0 +1,180 @@
+{
+  "name": "单阶段课程重新生成",
+  "nodes": [
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"steps\": [\n    {\n      \"id\": \"string\",\n      \"time\": \"string\",\n      \"title\": \"string\",\n      \"objective\": \"string\",\n      \"activity\": \"string\",\n      \"script\": \"string\",\n      \"assets\": [\n        {\n          \"id\": \"string\",\n          \"type\": \"string\",\n          \"title\": \"string\",\n          \"prompt\": \"string\"\n        }\n      ]\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [224, 336],
+      "id": "b579f425-6c14-44e8-916d-73979eecc901",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "maxTokens": 8192
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-32, 336],
+      "id": "c679ddb4-2390-4d29-a7b4-c4db00223824",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "e0fdb4b6-4ba5-4fc6-867e-2de41abd3d65",
+      "name": "返回阶段JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [528, 128]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-phase-regenerator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f4ce9941-42be-432d-9966-2b766a833610",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-384, 128],
+      "webhookId": "course-phase-regen-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json.body;\n\nconst phaseInfo = {\n  engage: {\n    label: 'Engage (引入)',\n    description: '建立情感连接与情境导入，激发好奇心和参与动机',\n    stepCount: 1,\n    timeRatio: '15%'\n  },\n  empower: {\n    label: 'Empower (赋能)',\n    description: '输入语言知识与SEL技能，进行体感探索',\n    stepCount: 2,\n    timeRatio: '40%'\n  },\n  execute: {\n    label: 'Execute (实践)',\n    description: '通过艺术表达完成终极产出任务，体验合作分享',\n    stepCount: 2,\n    timeRatio: '30%'\n  },\n  elevate: {\n    label: 'Elevate (升华)',\n    description: '反思、内化并建立积极情绪闭环',\n    stepCount: 1,\n    timeRatio: '15%'\n  }\n};\n\nconst phaseKey = input.phaseKey || 'engage';\nconst info = phaseInfo[phaseKey];\n\nlet otherPhasesStr = '无';\nif (input.currentCourseData) {\n  try {\n    const courseData = typeof input.currentCourseData === 'string' \n      ? JSON.parse(input.currentCourseData) \n      : input.currentCourseData;\n    const otherPhases = {};\n    for (const [key, value] of Object.entries(courseData)) {\n      if (key !== phaseKey && key !== 'courseOverview') {\n        otherPhases[key] = { title: value.title, steps: value.steps };\n      }\n    }\n    otherPhasesStr = JSON.stringify(otherPhases, null, 2);\n  } catch (e) {\n    otherPhasesStr = '无法解析';\n  }\n}\n\nreturn {\n  age: input.age || '7-9岁',\n  duration: input.duration || '60分钟',\n  scale: input.scale || '≤ 8人',\n  title: input.title || '未命名课件',\n  vocabulary: (input.vocabulary && input.vocabulary.length > 0) \n    ? (Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : input.vocabulary)\n    : '请根据主题推荐词汇',\n  grammar: (input.grammar && input.grammar.length > 0) \n    ? (Array.isArray(input.grammar) ? input.grammar.join(', ') : input.grammar)\n    : '请根据主题推荐句型',\n  theme: input.theme || '默认主题',\n  requirements: input.requirements || '',\n  phaseKey: phaseKey,\n  phaseLabel: info.label,\n  phaseDescription: info.description,\n  stepCount: info.stepCount,\n  timeRatio: info.timeRatio,\n  otherPhases: otherPhasesStr\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-176, 128],
+      "id": "a384a546-42fa-4b2b-8177-4274b90694fb",
+      "name": "参数组装"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师，擅长将 SEL（社会情感学习）和 PERMA 幸福模型无缝融入英语教学。\n\n# Task\n请仅根据以下课程信息，为「{{ $json.phaseLabel }}」阶段重新生成 {{ $json.stepCount }} 个步骤的教学内容。这些步骤必须与已有其他阶段形成连贯的故事叙事。\n\n# Core Framework\n你必须严格遵循以下教学法：\n1. 核心理念：以\"幸福力\"为终极目标，通过\"英语+体验路径\"实现儿童三维成长。\n2. 4E 学习闭环中的「{{ $json.phaseLabel }}」阶段定位：{{ $json.phaseDescription }}\n3. 叙事要求：生成的步骤必须与以下已有阶段串联在一个完整的、具有沉浸感的故事叙事中。\n\n# 课程信息\n- 学生年龄：{{ $json.age }}\n- 课程时长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 课程标题：{{ $json.title }}\n- 核心词汇：{{ $json.vocabulary }}\n- 核心句型：{{ $json.grammar }}\n- 情境主题：{{ $json.theme }}\n- 特殊要求：{{ $json.requirements }}\n\n# 本阶段要求\n- 阶段名称：{{ $json.phaseLabel }}\n- 步骤数量：{{ $json.stepCount }} 个\n- 时长占比：约 {{ $json.timeRatio }}\n- 所有步骤的 time 累加应合理，符合总课程时长 {{ $json.duration }} 的比例\n\n# 其他已有阶段（请保持叙事一致，切勿修改这些内容）\n{{ $json.otherPhases }}\n\n# Step 字段规范\n每个 step 必须包含以下字段：\n- `id`: 使用 \"{{ $json.phaseKey }}\" 的缩写 + 序号（如 engage 用 e1, empower 用 em1/em2, execute 用 ex1/ex2, elevate 用 el1）\n- `time`: 具体时长，如 \"5-10分钟\"\n- `title`: 环节标题，富有想象力和故事感，与整体叙事一致\n- `objective`: 教学目标，必须同时包含语言目标和 SEL 目标\n- `activity`: 活动描述，包含具体的活动流程、师生互动方式、分组形式等\n- `script`: 教师讲稿，亲切、有感染力，符合7-9岁儿童心理特征，中英文穿插（讲稿主体为中文，指令性语言带英文），必须包含情境创设内容\n- `assets`: 教学资源数组，每个资源包含 `id`, `type`(固定\"image\"), `title`, `prompt`\n\n## 教学资源要求\n- 每个 step 必须生成 1 个 `assets` 资源\n- `assets[].title` 应描述具体的教学资源名称\n- `assets[].prompt` 必须严格遵守：扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字\n\n# Style Requirements\n- 教师讲稿：亲切、富有感染力，中英文穿插\n- 生图提示词：严格遵守扁平矢量插画的特定美学风格\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据\n- 输出格式：{ \"steps\": [...] }\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [32, 128],
+      "id": "b91e69c6-a80d-45cc-af0b-2e049a68dbf0",
+      "name": "Basic LLM Chain"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "phaseKey": "engage",
+            "title": "森林派对",
+            "age": "7-9岁",
+            "duration": "60分钟",
+            "scale": "9-15人",
+            "vocabulary": ["apple", "orange"],
+            "grammar": ["Can I have your apple/orange, please?"],
+            "theme": "森林探险",
+            "requirements": "",
+            "currentCourseData": {}
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/course-phase-regenerator",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        []
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数组装",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数组装": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "返回阶段JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a1b2c3d4-be01-4b28-b964-f8e94bcf93ce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "tags": []
+}

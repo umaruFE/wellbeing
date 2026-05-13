@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Wand2, Download, RotateCcw, Loader2, Edit2, X, Check } from 'lucide-react';
 import RoleSelection from './RoleSelection';
 import CanvasEditor from './CanvasEditor';
+import { uploadService } from '../../services/uploadService';
 import {
   getImageContentBounds,
   getEditorSceneLayout,
@@ -25,7 +26,7 @@ const getAuthHeaders = () => {
   return headers;
 };
 
-export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) => {
+export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizationId }) => {
   const [state, setState] = useState({
     selectedRoles: [],
     aspectRatio: ASPECT_RATIOS[0],
@@ -377,7 +378,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
 
   // 快速加载图片（直接使用URL，设置crossOrigin）
   const toProxyUrl = (url) => {
-    if (url && url.startsWith('http') && url.includes('container.x-gpu.com')) {
+    if (url && url.startsWith('http') && !url.includes('localhost') && !url.includes('127.0.0.1')) {
       return `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(url)}`;
     }
     return url;
@@ -520,6 +521,22 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         compositeResult: compositeDataUrl
       }));
 
+      try {
+        const res = await fetch(compositeDataUrl);
+        const blob = await res.blob();
+        const file = new File([blob], `ip-scene-${Date.now()}.png`, { type: 'image/png' });
+        const uploadResult = await uploadService.uploadFile(file, 'ip-scenes');
+        if (uploadResult.success && uploadResult.url) {
+          setState(prev => ({ ...prev, compositeResult: uploadResult.url }));
+          if (onConfirm) onConfirm({ url: uploadResult.url });
+          return;
+        }
+      } catch (uploadErr) {
+        console.warn('上传合成图到OSS失败，使用base64:', uploadErr);
+      }
+
+      if (onConfirm) onConfirm({ url: compositeDataUrl });
+
     } catch (error) {
       console.error('Canvas合成失败:', error);
       alert(`Canvas合成失败: ${error.message}`);
@@ -614,6 +631,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, userId, organizationId }) =>
         isCompositing: false,
         compositeResult: compositeUrl
       }));
+
+      if (onConfirm) onConfirm({ url: compositeUrl });
 
     } catch (error) {
       console.error('AI合成失败:', error);

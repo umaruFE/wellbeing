@@ -51,10 +51,10 @@ const IPSceneTestPage = () => {
         <div className="bg-white rounded-xl shadow-lg p-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-dark mb-4">
-              IP角色场景生成器测试页面
+              IP角色场景生成器
             </h1>
             <p className="text-primary-secondary mb-8">
-              点击下方按钮打开IP角色场景生成器，测试完整功能流程
+              点击下方按钮打开IP角色场景生成器
             </p>
             
             {/* 登录状态提示 */}
