@@ -5,7 +5,7 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { RequireAuth } from './components/RequireAuth';
 import { LoginPage } from './modules/auth/LoginPage';
 import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
-import { MainLayout } from './components/MainLayout';
+import { Layout } from './figma-restore/Layout';
 import { CourseManagementPage } from './modules/course-management/CourseManagementPage';
 import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
 import { VoiceManagementPage } from './modules/material-management/audio/VoiceManagementPage';
@@ -19,6 +19,8 @@ import { AccountManagement } from './modules/admin/AccountManagement';
 import IPSceneTestPage from './modules/test/IPSceneTestPage';
 import { VideoGeneratorPage } from './modules/test/VideoGeneratorPage';
 import { VoiceGeneratorPage } from './modules/test/VoiceGeneratorPage';
+import { AdminDashboard } from './figma-restore/AdminDashboard';
+import DesignSystemPreview from './modules/design-system/DesignSystemPreview';
 
 function App() {
   return (
@@ -27,10 +29,16 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/unauthorized" element={<UnauthorizedPage />} />
+
+          <Route
+            path="/design-system"
+            element={<DesignSystemPreview />}
+          />
+
           <Route
             element={
               <ProtectedRoute>
-                <MainLayout />
+                <Layout />
               </ProtectedRoute>
             }
           >
@@ -39,7 +47,7 @@ function App() {
               path="/"
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'viewer']}>
-                  <div />
+                  <AdminDashboard />
                 </RequireAuth>
               }
             />

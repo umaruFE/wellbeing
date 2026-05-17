@@ -1,7 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { ConfigProvider } from 'antd'
 import './index.css'
 import App from './App.jsx'
+import { appAntdTheme } from './theme/buildAntdTheme'
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -11,7 +13,9 @@ if (!rootElement) {
     const root = createRoot(rootElement);
     root.render(
       <StrictMode>
-        <App />
+        <ConfigProvider theme={appAntdTheme}>
+          <App />
+        </ConfigProvider>
       </StrictMode>
     );
   } catch (error) {
