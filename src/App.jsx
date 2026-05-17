@@ -7,6 +7,12 @@ import { LoginPage } from './modules/auth/LoginPage';
 import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
 import { Layout } from './figma-restore/Layout';
 import { CourseManagementPage } from './modules/course-management/CourseManagementPage';
+import CourseOverviewPage from './modules/course-management/course-overview/CourseOverviewPage';
+import LessonPlanPage from './modules/course-management/lesson-plan/LessonPlanPage';
+import { CanvasView } from './modules/course-management/ppt-canvas/CanvasView';
+import { ReadingMaterialCanvasView } from './modules/course-management/reading-material/ReadingMaterialCanvasView';
+import { CourseLayout } from './components/CourseLayout';
+import CreateCoursePage from './modules/course-management/create-course/CreateCoursePage';
 import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
 import { VoiceManagementPage } from './modules/material-management/audio/VoiceManagementPage';
 import { AudioGeneratorPage } from './modules/test/AudioGeneratorPage';
@@ -57,7 +63,7 @@ function App() {
               path="/create"
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <div />
+                  <CreateCoursePage />
                 </RequireAuth>
               }
             />
@@ -70,6 +76,13 @@ function App() {
                 </RequireAuth>
               }
             />
+
+            <Route path="/courses/:courseId" element={<CourseLayout />}>
+              <Route path="overview" element={<CourseOverviewPage />} />
+              <Route path="lesson-plan" element={<LessonPlanPage />} />
+              <Route path="ppt" element={<CanvasView />} />
+              <Route path="reading" element={<ReadingMaterialCanvasView />} />
+            </Route>
 
             <Route
               path="/course-square"
@@ -162,6 +175,11 @@ function App() {
             <Route
               path="/test/voice-generator"
               element={<VoiceGeneratorPage />}
+            />
+
+            <Route
+              path="/test/audio-generator"
+              element={<AudioGeneratorPage />}
             />
 
             <Route path="*" element={<Navigate to="/" replace />} />

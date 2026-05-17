@@ -67,7 +67,8 @@ export async function POST(request: NextRequest) {
     console.log('[optimize-prompt] N8N 响应:', result);
 
     // 提取结果
-    const optimizedPrompt = result.optimized_prompt || result.optimizedPrompt || originalPrompt;
+    const resultData = result as { optimized_prompt?: string; optimizedPrompt?: string };
+    const optimizedPrompt = resultData.optimized_prompt || resultData.optimizedPrompt || originalPrompt;
 
     // 返回结果
     return NextResponse.json({

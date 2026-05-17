@@ -1,8 +1,8 @@
 export const BookmarkIcon = ({ phase }) => {
-  let colorClass = "text-slate-400";
+  let colorClass = "text-primary-placeholder";
   if (phase === 'Engage') colorClass = "text-purple-500";
-  if (phase === 'Empower') colorClass = "text-blue-500";
-  if (phase === 'Execute') colorClass = "text-green-500";
+  if (phase === 'Empower') colorClass = "text-info-hover";
+  if (phase === 'Execute') colorClass = "text-success";
   if (phase === 'Elevate') colorClass = "text-yellow-500";
   
   return (

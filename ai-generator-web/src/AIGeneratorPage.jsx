@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ImageIcon, Video, Download, Sparkles, Plus, Trash2, Camera, Film, X, Wand2, Upload, Check, Clock, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Wand2 as OptimizeIcon, Music } from 'lucide-react';
 import { aiAssetService } from './services/aiAssetService';
-import { extractCharacterFromDescription, generateCharacterReferenceImages, generateStoryboardScript, generateSceneImage, composeVideo } from './services/videoStoryboardService';
+import { extractCharacterFromDescription, generateCharacterReferenceImages, generateStoryboardScript, generateSceneImage, composeVideo, submitVideoTask, checkVideoTaskStatus } from './services/videoStoryboardService';
 import PromptOptimizer from './components/PromptOptimizer';
 
 const ASPECT_RATIOS = [
@@ -108,6 +108,9 @@ export const AIGeneratorPage = () => {
   const [isGeneratingSceneImage, setIsGeneratingSceneImage] = useState({});
   const [isComposingVideo, setIsComposingVideo] = useState(false);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState(null);
+  const [videoTaskId, setVideoTaskId] = useState(null);
+  const [videoPollCount, setVideoPollCount] = useState(0);
+  const videoPollRef = useRef(null);
   
   // 处理图片生成
   const [showPromptOptimizer, setShowPromptOptimizer] = useState(false);
@@ -632,36 +635,74 @@ export const AIGeneratorPage = () => {
     setVideoStep(5);
   };
   
-  // 步骤5：合成视频
   const handleComposeVideo = async () => {
     setIsComposingVideo(true);
     setVideoError(null);
+    setGeneratedVideoUrl(null);
+    setVideoPollCount(0);
 
     try {
-      const videoUrl = await composeVideo(
-        scenes,
-        storyboardTitle,
-        null,
-        null
-      );
-      setGeneratedVideoUrl(videoUrl);
-      
-      // 添加到生成结果
-      const newVideo = {
-        url: videoUrl,
-        title: storyboardTitle || videoStoryCore.substring(0, 20) || '生成的视频',
-        duration: `${videoDuration}秒`,
-        thumbnail: scenes[0]?.generatedImage || `https://picsum.photos/seed/${Date.now()}/800/450`,
-        description: `故事核心：${videoStoryCore}\n风格：${videoOverallStyle}\n角色：${videoCharacterSetting}`
-      };
-      
-      setGeneratedVideos(prev => [...prev, newVideo]);
+      const taskId = await submitVideoTask(scenes, storyboardTitle, null, null);
+      setVideoTaskId(taskId);
     } catch (err) {
-      setVideoError('合成视频失败: ' + err.message);
-    } finally {
+      setVideoError('提交视频生成任务失败: ' + err.message);
       setIsComposingVideo(false);
     }
   };
+
+  const handleCancelVideoGeneration = () => {
+    if (videoPollRef.current) {
+      clearInterval(videoPollRef.current);
+      videoPollRef.current = null;
+    }
+    setVideoTaskId(null);
+    setIsComposingVideo(false);
+    setVideoPollCount(0);
+    setVideoError('已取消视频生成');
+  };
+
+  useEffect(() => {
+    if (!videoTaskId) return;
+
+    videoPollRef.current = setInterval(async () => {
+      try {
+        const result = await checkVideoTaskStatus(videoTaskId);
+        setVideoPollCount(prev => prev + 1);
+
+        if (result.status === 'completed') {
+          clearInterval(videoPollRef.current);
+          videoPollRef.current = null;
+          setVideoTaskId(null);
+          setIsComposingVideo(false);
+          setGeneratedVideoUrl(result.url);
+
+          const newVideo = {
+            url: result.url,
+            title: storyboardTitle || videoStoryCore.substring(0, 20) || '生成的视频',
+            duration: `${videoDuration}秒`,
+            thumbnail: scenes[0]?.generatedImage || `https://picsum.photos/seed/${Date.now()}/800/450`,
+            description: `故事核心：${videoStoryCore}\n风格：${videoOverallStyle}\n角色：${videoCharacterSetting}`
+          };
+          setGeneratedVideos(prev => [...prev, newVideo]);
+        } else if (result.status === 'failed') {
+          clearInterval(videoPollRef.current);
+          videoPollRef.current = null;
+          setVideoTaskId(null);
+          setIsComposingVideo(false);
+          setVideoError('视频生成失败: ' + (result.error || '未知错误'));
+        }
+      } catch (err) {
+        console.error('轮询视频状态失败:', err);
+      }
+    }, 5000);
+
+    return () => {
+      if (videoPollRef.current) {
+        clearInterval(videoPollRef.current);
+        videoPollRef.current = null;
+      }
+    };
+  }, [videoTaskId]);
   
   // 处理参考图片上传
   const handleReferenceUpload = (e) => {
@@ -1149,12 +1190,32 @@ export const AIGeneratorPage = () => {
                   poster={scenes[0]?.generatedImage}
                 />
               </div>
+            ) : isComposingVideo && videoTaskId ? (
+              <div className="text-center py-8">
+                <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6 mb-4">
+                  <RefreshCw className="w-10 h-10 text-purple-500 mx-auto mb-3 animate-spin" />
+                  <h4 className="font-medium text-purple-800 dark:text-purple-400 mb-2">视频正在后台生成中</h4>
+                  <p className="text-sm text-purple-600 dark:text-purple-500 mb-1">
+                    已查询 {videoPollCount} 次，每 5 秒自动检查一次
+                  </p>
+                  <p className="text-xs text-purple-400 dark:text-purple-600">
+                    您可以切换到其他标签页继续操作，生成完成后会自动显示
+                  </p>
+                </div>
+                <button
+                  onClick={handleCancelVideoGeneration}
+                  className="flex items-center gap-2 px-4 py-2 text-sm text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all mx-auto"
+                >
+                  <X className="w-4 h-4" />
+                  取消生成
+                </button>
+              </div>
             ) : (
               <div className="text-center py-8">
                 <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-6 mb-4">
                   <h4 className="font-medium text-purple-800 dark:text-purple-400 mb-2">视频生成</h4>
                   <p className="text-sm text-purple-600 dark:text-purple-500">
-                    点击按钮开始合成最终视频
+                    点击按钮开始合成最终视频，生成将在后台进行
                   </p>
                 </div>
               </div>
@@ -1418,7 +1479,7 @@ export const AIGeneratorPage = () => {
                     </button>
                   )}
                   
-                  {videoStep === 5 && !generatedVideoUrl && (
+                  {videoStep === 5 && !generatedVideoUrl && !videoTaskId && (
                     <button
                       onClick={handleComposeVideo}
                       disabled={isComposingVideo}
@@ -1427,7 +1488,7 @@ export const AIGeneratorPage = () => {
                       {isComposingVideo ? (
                         <>
                           <RefreshCw className="w-4 h-4 animate-spin" />
-                          生成中...
+                          提交中...
                         </>
                       ) : (
                         <>
@@ -1437,11 +1498,24 @@ export const AIGeneratorPage = () => {
                       )}
                     </button>
                   )}
+
+                  {videoStep === 5 && videoTaskId && (
+                    <button
+                      onClick={handleCancelVideoGeneration}
+                      className="flex items-center gap-2 px-6 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-all"
+                    >
+                      <X className="w-4 h-4" />
+                      取消生成
+                    </button>
+                  )}
                   
                   {videoStep === 5 && generatedVideoUrl && (
                     <button
                       onClick={() => {
-                        // 重置所有状态，开始新的视频生成
+                        if (videoPollRef.current) {
+                          clearInterval(videoPollRef.current);
+                          videoPollRef.current = null;
+                        }
                         setVideoStep(1);
                         setVideoStoryCore('');
                         setVideoOverallStyle('');
@@ -1457,6 +1531,8 @@ export const AIGeneratorPage = () => {
                         setIsGeneratingSceneImage({});
                         setIsComposingVideo(false);
                         setGeneratedVideoUrl(null);
+                        setVideoTaskId(null);
+                        setVideoPollCount(0);
                       }}
                       className="flex items-center gap-2 px-6 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-all"
                     >

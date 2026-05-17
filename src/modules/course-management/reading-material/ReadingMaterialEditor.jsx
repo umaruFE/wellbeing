@@ -32,12 +32,15 @@ import {
   List,
   FileText,
   BookOpen,
-  Copy
+  Copy,
+  Music,
+  Mic
 } from 'lucide-react';
 import { getAssetIcon } from '../../../utils';
 import { PromptInputModal } from '../../../components/PromptInputModal';
 import { CardSelectionModal } from '../../../components/CardSelectionModal';
 import { CanvasAssetRenderer } from '../../../components/CanvasAssetRenderer';
+import AssetGeneratorModal from '../../../components/AssetGeneratorModal';
 
 /**
  * ReadingMaterialEditor - 阅读材料画板编辑器
@@ -77,14 +80,16 @@ export const ReadingMaterialEditor = ({
   // 图片抽卡选择模态框状态
   const [showCardSelectionModal, setShowCardSelectionModal] = useState(false);
   const [cardSelectionImages, setCardSelectionImages] = useState([]);
-  const [pendingAssetConfig, setPendingAssetConfig] = useState(null); // 待确认的资源配置
+  const [pendingAssetConfig, setPendingAssetConfig] = useState(null);
+  const [showAssetGeneratorModal, setShowAssetGeneratorModal] = useState(false);
+  const [assetGeneratorType, setAssetGeneratorType] = useState(null);
 
   // 按阶段组织页面 - 使用与CanvasView相同的结构
   const organizePagesByPhase = () => {
     const phaseConfig = {
       engage: { title: 'Engage (引入)', color: 'bg-purple-100 text-purple-700 border-purple-200' },
-      empower: { title: 'Empower (赋能)', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-      execute: { title: 'Execute (实践)', color: 'bg-green-100 text-green-700 border-green-200' },
+      empower: { title: 'Empower (赋能)', color: 'bg-info-light text-info-active border-info-border' },
+      execute: { title: 'Execute (实践)', color: 'bg-success-light text-success-active border-success-border' },
       elevate: { title: 'Elevate (升华)', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
     };
 
@@ -151,8 +156,59 @@ export const ReadingMaterialEditor = ({
 
   // 添加资产 - 显示提示词输入模态框
   const handleAddAsset = (pageId, type) => {
-    setPromptModalConfig({ pageId, assetType: type });
-    setShowPromptModal(true);
+    if (type === 'text') {
+      const newAsset = {
+        id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type: 'text',
+        title: '文本',
+        url: '',
+        content: '双击编辑文本',
+        prompt: '',
+        referenceImage: null,
+        x: 100, y: 100, width: 400, height: 150, rotation: 0,
+        fontSize: 24,
+        fontWeight: 'normal',
+        color: '#1e293b',
+        textAlign: 'center'
+      };
+      const newPages = JSON.parse(JSON.stringify(pages));
+      const page = newPages.find(p => p.id === pages[pageId]?.id);
+      if (page) {
+        if (!page.canvasAssets) page.canvasAssets = [];
+        page.canvasAssets.push(newAsset);
+        onPagesChange(newPages);
+        onSelectedAssetIdChange(newAsset.id);
+      }
+      return;
+    }
+    setAssetGeneratorType(type);
+    setShowAssetGeneratorModal(true);
+  };
+
+  const handleAssetGenerated = ({ type, url, title }) => {
+    const pageId = editingPageIndex;
+    const newPages = JSON.parse(JSON.stringify(pages));
+    const page = newPages.find(p => p.id === pages[pageId]?.id);
+    if (!page) return;
+
+    const assetType = type === 'audio' ? 'audio' : type;
+    const newAsset = {
+      id: `asset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: assetType,
+      title: title || assetType,
+      url: url,
+      content: '',
+      prompt: '',
+      referenceImage: null,
+      x: 50, y: 50,
+      width: assetType === 'audio' ? 300 : 400,
+      height: assetType === 'audio' ? 100 : 300,
+      rotation: 0
+    };
+    if (!page.canvasAssets) page.canvasAssets = [];
+    page.canvasAssets.push(newAsset);
+    onPagesChange(newPages);
+    onSelectedAssetIdChange(newAsset.id);
   };
 
   // 确认添加资产
@@ -516,7 +572,7 @@ export const ReadingMaterialEditor = ({
 
   if (!pages || pages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-slate-400 space-y-4">
+      <div className="flex flex-col items-center justify-center h-64 text-primary-placeholder space-y-4">
         <p>暂无阅读材料页面</p>
         <button
           onClick={() => handleAddPage()}
@@ -544,24 +600,25 @@ export const ReadingMaterialEditor = ({
         {/* 左侧目录树 */}
         {/* 中间内容区域 */}
         <div className="flex-1 overflow-auto">
-          <div className="space-y-8 p-4">
+          <div className="space-y-8 p-4" style={{ minWidth: 'fit-content' }}>
             {pages.map((page, pageIndex) => {
               const isEditing = editingPageIndex === pageIndex;
               const assets = page.canvasAssets || [];
               const selectedAsset = selectedAssetId ? assets.find(a => a.id === selectedAssetId) : null;
 
               return (
-                <div key={page.id} className="bg-white overflow-hidden">
+                <div key={page.id} className="overflow-visible">
                   {/* Page Header */}
 
                   {/* Content Area */}
                   <div className="flex relative">
                     {/* Main Canvas Area */}
-                    <div className="flex-1">
-                      <div className="flex-1 flex flex-col bg-slate-100 relative" style={{ minHeight: '600px' }}>
+                    <div>
+                      <div className="flex flex-col bg-surface-alt relative" style={{ minHeight: '600px' }}>
                         {/* 画布区域 */}
                         <div 
-                          className="flex-1 overflow-auto p-8 flex items-center justify-center relative" 
+                          className="flex-1 overflow-auto p-8 flex items-center justify-center relative"
+                          style={{ minWidth: `calc(${canvasSize.width}px + 64px)` }} 
                           onClick={() => {
                             setSelectedAssetId(null);
                             // 如果正在编辑文本，保存并退出编辑模式
@@ -643,21 +700,42 @@ export const ReadingMaterialEditor = ({
       </div>
 
       {/* 底部按钮区域 */}
-      <div className="border-t-2 border-[#e5e3db] bg-white p-4 flex items-center justify-between">
+      <div className="border-t-2 border-stroke-light bg-white p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             onClick={() => handleAddAsset(editingPageIndex, 'text')}
-            className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
           >
             <Type className="w-4 h-4" />
             文本
           </button>
           <button
             onClick={() => handleAddAsset(editingPageIndex, 'image')}
-            className="flex items-center gap-1 px-3 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors text-sm"
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
           >
             <ImageIcon className="w-4 h-4" />
             图片
+          </button>
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'video')}
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+          >
+            <Video className="w-4 h-4" />
+            视频
+          </button>
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'audio')}
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+          >
+            <Music className="w-4 h-4" />
+            音频
+          </button>
+          <button
+            onClick={() => handleAddAsset(editingPageIndex, 'voice')}
+            className="flex items-center gap-1 px-3 py-2 bg-surface-alt text-primary-secondary rounded-lg hover:bg-stroke transition-colors text-sm"
+          >
+            <Mic className="w-4 h-4" />
+            声音
           </button>
         </div>
         {/* <button
@@ -705,6 +783,15 @@ export const ReadingMaterialEditor = ({
         images={cardSelectionImages}
         isLoading={isGeneratingAsset}
         onConfirm={handleCardSelectionConfirm}
+      />
+
+      <AssetGeneratorModal
+        isOpen={showAssetGeneratorModal}
+        onClose={() => { setShowAssetGeneratorModal(false); setAssetGeneratorType(null); }}
+        assetType={assetGeneratorType}
+        onGenerated={(result) => { handleAssetGenerated(result); setShowAssetGeneratorModal(false); setAssetGeneratorType(null); }}
+        userId={null}
+        organizationId={null}
       />
     </div>
   );

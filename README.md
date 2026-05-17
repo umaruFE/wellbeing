@@ -66,7 +66,7 @@ src/
 ├── services/           # 服务层
 │   ├── aiAssetService.js    # AI资产生成服务
 │   ├── api.js               # API基础服务
-│   ├── dashscope.js         # 大模型服务
+│   ├── dashscope.js         # n8n API 调用服务
 │   ├── promptService.js     # 提示词服务
 │   └── uploadService.js     # 文件上传服务
 ├── utils/              # 工具函数

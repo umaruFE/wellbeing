@@ -46,18 +46,18 @@ export const AssetEditorPanel = ({
 
   return (
     <>
-      <div className="p-4 border-b-2 border-[#e5e3db] bg-[#fffbe6] flex items-center justify-between">
+      <div className="p-4 border-b-2 border-stroke-light bg-warning-light flex items-center justify-between">
         <div className="flex items-center gap-2">
           {getAssetIcon(selectedAsset.type)}
-          <h3 className="font-bold text-blue-800">编辑元素</h3>
+          <h3 className="font-bold text-info-active">编辑元素</h3>
         </div>
         <div className="flex items-center gap-2">
           {onToggleRightOpen && (
-            <button onClick={onToggleRightOpen} className="text-slate-400 hover:text-slate-600" title="收起面板">
+            <button onClick={onToggleRightOpen} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
-          <button onClick={onClose} className="text-slate-500 hover:text-slate-700">
+          <button onClick={onClose} className="text-primary-muted hover:text-primary-secondary">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -65,21 +65,21 @@ export const AssetEditorPanel = ({
       
       {/* 图层操作 */}
       {onLayerChange && (
-        <div className="px-4 py-2 border-b-2 border-[#e5e3db] bg-white flex items-center justify-between">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
+        <div className="px-4 py-2 border-b-2 border-stroke-light bg-white flex items-center justify-between">
+          <span className="text-[10px] font-bold text-primary-placeholder uppercase tracking-wider flex items-center gap-1">
             <Layers className="w-3 h-3" /> 图层
           </span>
           <div className="flex gap-1">
-            <button onClick={() => onLayerChange(selectedAsset.id, 'front')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置顶">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'front')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="置顶">
               <ChevronsUp className="w-4 h-4" />
             </button>
-            <button onClick={() => onLayerChange(selectedAsset.id, 'forward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="上移">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'forward')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="上移">
               <ArrowUp className="w-4 h-4" />
             </button>
-            <button onClick={() => onLayerChange(selectedAsset.id, 'backward')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="下移">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'backward')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="下移">
               <ArrowDown className="w-4 h-4" />
             </button>
-            <button onClick={() => onLayerChange(selectedAsset.id, 'back')} className="p-1.5 hover:bg-slate-100 rounded text-slate-600" title="置底">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'back')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="置底">
               <ChevronsDown className="w-4 h-4" />
             </button>
           </div>
@@ -90,51 +90,51 @@ export const AssetEditorPanel = ({
         {/* 尺寸和旋转 */}
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">宽 Width</label>
-            <div className="flex items-center border-2 border-[#e5e3db] rounded-xl px-2 bg-[#fcfbf9]">
+            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">宽 Width</label>
+            <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.width || 300)} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'width', parseInt(e.target.value))} 
                 className="w-full text-xs bg-transparent py-1.5 outline-none"
               />
-              <span className="text-[10px] text-slate-400">px</span>
+              <span className="text-[10px] text-primary-placeholder">px</span>
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">高 Height</label>
-            <div className="flex items-center border-2 border-[#e5e3db] rounded-xl px-2 bg-[#fcfbf9]">
+            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">高 Height</label>
+            <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.height || 200)} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'height', parseInt(e.target.value))} 
                 className="w-full text-xs bg-transparent py-1.5 outline-none"
               />
-              <span className="text-[10px] text-slate-400">px</span>
+              <span className="text-[10px] text-primary-placeholder">px</span>
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">旋转 Rotate</label>
-            <div className="flex items-center border-2 border-[#e5e3db] rounded-xl px-2 bg-[#fcfbf9]">
+            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">旋转 Rotate</label>
+            <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.rotation || 0)} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'rotation', parseInt(e.target.value))} 
                 className="w-full text-xs bg-transparent py-1.5 outline-none"
               />
-              <span className="text-[10px] text-slate-400">°</span>
+              <span className="text-[10px] text-primary-placeholder">°</span>
             </div>
           </div>
         </div>
 
         {/* 标题 */}
         <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">标题 / Name</label>
+          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">标题 / Name</label>
           <input 
             type="text" 
             value={selectedAsset.title || ''} 
             onChange={(e) => onAssetChange(selectedAsset.id, 'title', e.target.value)} 
-            className="w-full text-sm border-2 border-[#e5e3db] rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all"
+            className="w-full text-sm border-2 border-stroke-light rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all"
           />
         </div>
 
@@ -143,29 +143,29 @@ export const AssetEditorPanel = ({
           <div className="space-y-4">
             {/* 文本内容 */}
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase mb-1 block">文本内容 / Content</label>
+              <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">文本内容 / Content</label>
               <textarea 
                 value={selectedAsset.content || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'content', e.target.value)} 
-                className="w-full text-sm border-2 border-[#e5e3db] rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none transition-all h-32 resize-none"
+                className="w-full text-sm border-2 border-stroke-light rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all h-32 resize-none"
               />
             </div>
             
             {/* AI 生成提示词 (文本) */}
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
+              <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
                 <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
               </label>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 
                 placeholder="描述你想要生成的文本内容..." 
-                className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none h-24 resize-none mb-2"
+                className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple outline-none h-24 resize-none mb-2"
               />
               <div className="flex gap-2 mb-2">
                 <button 
                   onClick={() => onShowHistoryModal?.({ assetId: selectedAsset.id, assetType: selectedAsset.type })}
-                  className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
                 >
                   <History className="w-4 h-4" />
                   历史生成
@@ -183,12 +183,12 @@ export const AssetEditorPanel = ({
             {/* 文本样式选项 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-slate-500 uppercase">文本样式</label>
+                <label className="text-xs font-bold text-primary-muted uppercase">文本样式</label>
               </div>
               
               {/* 字号 */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">字号 Font Size</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">字号 Font Size</label>
                 <div className="flex items-center gap-2">
                   <input 
                     type="number" 
@@ -196,22 +196,22 @@ export const AssetEditorPanel = ({
                     max="200" 
                     value={selectedAsset.fontSize || 24} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'fontSize', parseInt(e.target.value) || 24)} 
-                    className="flex-1 text-xs border-2 border-[#e5e3db] rounded-lg px-2 py-1.5 bg-[#fcfbf9] outline-none transition-all"
+                    className="flex-1 text-xs border-2 border-stroke-light rounded-lg px-2 py-1.5 bg-surface outline-none transition-all"
                   />
-                  <span className="text-[10px] text-slate-400">px</span>
+                  <span className="text-[10px] text-primary-placeholder">px</span>
                 </div>
               </div>
 
               {/* 加粗 */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">字重 Font Weight</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">字重 Font Weight</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'fontWeight', 'normal')}
                     className={`flex-1 px-3 py-2 rounded border text-xs transition-colors ${
                       (selectedAsset.fontWeight || 'normal') === 'normal' 
-                        ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
+                        ? 'bg-info-light border-info-border text-info-active' 
+                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
                   >
                     正常
@@ -220,8 +220,8 @@ export const AssetEditorPanel = ({
                     onClick={() => onAssetChange(selectedAsset.id, 'fontWeight', 'bold')}
                     className={`flex-1 px-3 py-2 rounded border text-xs transition-colors flex items-center justify-center gap-1 ${
                       selectedAsset.fontWeight === 'bold' 
-                        ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
+                        ? 'bg-info-light border-info-border text-info-active' 
+                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
                   >
                     <Bold className="w-3 h-3" />
@@ -232,7 +232,7 @@ export const AssetEditorPanel = ({
 
               {/* 文本颜色 */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block flex items-center gap-1">
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block flex items-center gap-1">
                   <Palette className="w-3 h-3" /> 文本颜色 Color
                 </label>
                 <div className="flex items-center gap-2">
@@ -240,13 +240,13 @@ export const AssetEditorPanel = ({
                     type="color" 
                     value={selectedAsset.color || '#1e293b'} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'color', e.target.value)} 
-                    className="w-12 h-10 rounded-xl border-2 border-[#e5e3db] cursor-pointer transition-all hover:border-[#2d2d2d]"
+                    className="w-12 h-10 rounded-xl border-2 border-stroke-light cursor-pointer transition-all hover:border-primary"
                   />
                   <input 
                     type="text" 
                     value={selectedAsset.color || '#1e293b'} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'color', e.target.value)} 
-                    className="flex-1 text-xs border-2 border-[#e5e3db] rounded-lg px-2 py-1.5 bg-[#fcfbf9] outline-none font-mono transition-all"
+                    className="flex-1 text-xs border-2 border-stroke-light rounded-lg px-2 py-1.5 bg-surface outline-none font-mono transition-all"
                     placeholder="#000000"
                   />
                 </div>
@@ -254,14 +254,14 @@ export const AssetEditorPanel = ({
 
               {/* 文本对齐 */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">对齐方式 Align</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">对齐方式 Align</label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'textAlign', 'left')}
                     className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       (selectedAsset.textAlign || 'center') === 'left' 
-                        ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
+                        ? 'bg-info-light border-info-border text-info-active' 
+                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
                     title="左对齐"
                   >
@@ -271,8 +271,8 @@ export const AssetEditorPanel = ({
                     onClick={() => onAssetChange(selectedAsset.id, 'textAlign', 'center')}
                     className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       (selectedAsset.textAlign || 'center') === 'center' 
-                        ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
+                        ? 'bg-info-light border-info-border text-info-active' 
+                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
                     title="居中"
                   >
@@ -282,8 +282,8 @@ export const AssetEditorPanel = ({
                     onClick={() => onAssetChange(selectedAsset.id, 'textAlign', 'right')}
                     className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       selectedAsset.textAlign === 'right' 
-                        ? 'bg-blue-50 border-blue-300 text-blue-700' 
-                        : 'bg-white border-2 border-[#e5e3db] text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d]'
+                        ? 'bg-info-light border-info-border text-info-active' 
+                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
                     title="右对齐"
                   >
@@ -294,7 +294,7 @@ export const AssetEditorPanel = ({
 
               {/* 描边 */}
               <div>
-                <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">描边 Stroke</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">描边 Stroke</label>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <input 
@@ -308,16 +308,16 @@ export const AssetEditorPanel = ({
                           onAssetChange(selectedAsset.id, 'strokeColor', null);
                         }
                       }} 
-                      className="w-4 h-4 text-[#2d2d2d] border-2 border-[#e5e3db] rounded focus:ring-[#2d2d2d]"
+                      className="w-4 h-4 text-dark border-2 border-stroke-light rounded focus:ring-[#2d2d2d]"
                     />
-                    <span className="text-xs text-slate-600">启用描边</span>
+                    <span className="text-xs text-primary-secondary">启用描边</span>
                   </div>
                   {selectedAsset.strokeWidth && selectedAsset.strokeWidth > 0 && (
                     <div className="space-y-2 pl-6">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] text-slate-500">描边宽度</span>
-                          <span className="text-[10px] text-slate-400">{selectedAsset.strokeWidth}px</span>
+                          <span className="text-[10px] text-primary-muted">描边宽度</span>
+                          <span className="text-[10px] text-primary-placeholder">{selectedAsset.strokeWidth}px</span>
                         </div>
                         <input 
                           type="range" 
@@ -334,18 +334,18 @@ export const AssetEditorPanel = ({
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] text-slate-500">描边颜色</label>
+                        <label className="text-[10px] text-primary-muted">描边颜色</label>
                         <input 
                           type="color" 
                           value={selectedAsset.strokeColor || '#000000'} 
                           onChange={(e) => onAssetChange(selectedAsset.id, 'strokeColor', e.target.value)} 
-                          className="w-10 h-8 rounded-lg border-2 border-[#e5e3db] cursor-pointer transition-all hover:border-[#2d2d2d]"
+                          className="w-10 h-8 rounded-lg border-2 border-stroke-light cursor-pointer transition-all hover:border-primary"
                         />
                         <input 
                           type="text" 
                           value={selectedAsset.strokeColor || '#000000'} 
                           onChange={(e) => onAssetChange(selectedAsset.id, 'strokeColor', e.target.value)} 
-                          className="flex-1 text-xs border-2 border-[#e5e3db] rounded-lg px-2 py-1 bg-[#fcfbf9] outline-none font-mono transition-all"
+                          className="flex-1 text-xs border-2 border-stroke-light rounded-lg px-2 py-1 bg-surface outline-none font-mono transition-all"
                         />
                       </div>
                     </div>
@@ -360,13 +360,13 @@ export const AssetEditorPanel = ({
             {(selectedAsset.type === 'image' || selectedAsset.type === 'video') && (
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                  <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-1">
                     <Upload className="w-3 h-3" /> 参考图片 (可选)
                   </label>
-                  <span className="text-[10px] bg-[#fcfbf9] text-[#2d2d2d] px-1.5 py-0.5 rounded-lg border border-[#e5e3db]">Optional</span>
+                  <span className="text-[10px] bg-surface text-dark px-1.5 py-0.5 rounded-lg border border-stroke-light">Optional</span>
                 </div>
                 {!selectedAsset.referenceImage ? (
-                  <div className="border-2 border-dashed border-[#e5e3db] rounded-xl p-4 flex flex-col items-center justify-center bg-[#fcfbf9] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all cursor-pointer relative group/upload">
+                  <div className="border-2 border-dashed border-stroke-light rounded-xl p-4 flex flex-col items-center justify-center bg-surface hover:bg-warning-light hover:border-primary transition-all cursor-pointer relative group/upload">
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -385,19 +385,19 @@ export const AssetEditorPanel = ({
                       }}
                     />
                     <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform">
-                      <Upload className="w-5 h-5 text-slate-400" />
+                      <Upload className="w-5 h-5 text-primary-placeholder" />
                     </div>
-                    <span className="text-xs text-slate-500 font-medium">点击上传参考图片</span>
-                    <span className="text-[10px] text-slate-400 mt-1">仅用于风格辅助，非必传</span>
+                    <span className="text-xs text-primary-muted font-medium">点击上传参考图片</span>
+                    <span className="text-[10px] text-primary-placeholder mt-1">仅用于风格辅助，非必传</span>
                   </div>
                 ) : (
                   <div className="space-y-2">
                     <div className="relative group/ref">
-                      <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border-2 border-[#e5e3db] opacity-90" />
+                      <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border-2 border-stroke-light opacity-90" />
                       <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
                       <button 
                         onClick={() => onAssetChange(selectedAsset.id, 'referenceImage', null)} 
-                        className="absolute top-2 right-2 bg-white text-slate-600 hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity"
+                        className="absolute top-2 right-2 bg-white text-primary-secondary hover:text-error p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity"
                         title="移除参考图"
                       >
                         <X className="w-3.5 h-3.5" />
@@ -410,19 +410,19 @@ export const AssetEditorPanel = ({
             
             {/* AI 生成提示词 */}
             <div>
-              <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
+              <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
                 <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
               </label>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 
                 placeholder="描述你想要生成的画面..." 
-                className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple-500 outline-none h-24 resize-none mb-2"
+                className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple outline-none h-24 resize-none mb-2"
               />
               <div className="flex gap-2 mb-2">
                 <button 
                   onClick={() => onShowHistoryModal?.({ assetId: selectedAsset.id, assetType: selectedAsset.type })}
-                  className="flex-1 py-2 bg-slate-100 text-slate-600 rounded text-sm font-bold hover:bg-slate-200 flex items-center justify-center gap-2 transition-all"
+                  className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
                 >
                   <History className="w-4 h-4" />
                   历史生成
@@ -441,13 +441,13 @@ export const AssetEditorPanel = ({
             {selectedAsset.type === 'audio' && (
               <>
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
-                    <Music className="w-3 h-3 text-blue-500" /> 风格 / Style
+                  <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
+                    <Music className="w-3 h-3 text-info-hover" /> 风格 / Style
                   </label>
                   <select
                     value={selectedAsset.style || ''}
                     onChange={(e) => onAssetChange(selectedAsset.id, 'style', e.target.value)}
-                    className="w-full text-sm border border-blue-200 bg-blue-50 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full text-sm border border-info-border bg-info-light rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value="">自动选择</option>
                     <option value="pop, catchy, upbeat">流行 Pop</option>
@@ -468,8 +468,8 @@ export const AssetEditorPanel = ({
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
-                    <Clock className="w-3 h-3 text-blue-500" /> 时长 / Duration
+                  <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
+                    <Clock className="w-3 h-3 text-info-hover" /> 时长 / Duration
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -479,25 +479,25 @@ export const AssetEditorPanel = ({
                       step="5"
                       value={selectedAsset.duration || 30}
                       onChange={(e) => onAssetChange(selectedAsset.id, 'duration', Number(e.target.value))}
-                      className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                      className="flex-1 h-2 bg-stroke rounded-lg appearance-none cursor-pointer accent-blue-500"
                     />
-                    <span className="text-sm font-medium text-slate-700 min-w-[50px]">
+                    <span className="text-sm font-medium text-primary-secondary min-w-[50px]">
                       {selectedAsset.duration || 30} 秒
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="text-xs font-bold text-slate-500 uppercase mb-1 flex items-center gap-2">
-                    <Wand2 className="w-3 h-3 text-blue-500" /> 歌词 / Lyrics
+                  <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
+                    <Wand2 className="w-3 h-3 text-info-hover" /> 歌词 / Lyrics
                   </label>
                   <textarea 
                     value={selectedAsset.lyrics || ''} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'lyrics', e.target.value)} 
                     placeholder="输入歌词内容，留空则生成纯音乐..." 
-                    className="w-full text-sm border border-blue-200 bg-blue-50 rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
+                    className="w-full text-sm border border-info-border bg-info-light rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1">
+                  <p className="text-[10px] text-primary-placeholder mt-1">
                     提示：输入歌词后，AI会根据歌词生成歌曲；留空则生成纯音乐
                   </p>
                 </div>
@@ -507,16 +507,16 @@ export const AssetEditorPanel = ({
         )}
 
         {/* 操作按钮 */}
-        <div className="pt-6 mt-6 border-t-2 border-[#e5e3db] space-y-2">
+        <div className="pt-6 mt-6 border-t-2 border-stroke-light space-y-2">
           <button 
             onClick={() => onCopyAsset?.(selectedAsset.id)} 
-            className="w-full py-2 text-blue-500 border border-blue-200 rounded text-sm font-bold hover:bg-blue-50 flex items-center justify-center gap-2"
+            className="w-full py-2 text-info-hover border border-info-border rounded text-sm font-bold hover:bg-info-light flex items-center justify-center gap-2"
           >
             <Copy className="w-4 h-4" /> 复制此元素
           </button>
           <button 
             onClick={() => onDeleteAsset?.(selectedAsset.id)} 
-            className="w-full py-2 text-red-500 border border-red-200 rounded text-sm font-bold hover:bg-red-50 flex items-center justify-center gap-2"
+            className="w-full py-2 text-error border border-error-border rounded text-sm font-bold hover:bg-error-light flex items-center justify-center gap-2"
           >
             <Trash2 className="w-4 h-4" /> 删除此元素 (Del)
           </button>

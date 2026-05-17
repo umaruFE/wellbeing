@@ -467,19 +467,18 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
   // 先优化提示词为LTX2.0格式
   let optimizedPrompt = scene.content;
   try {
-    const response = await fetch('/api/ai/optimize-scene-prompt', {
+    const response = await fetch('/api/ai/optimize-prompt', {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
-        scene,
-        characterDescription: stylePrompt,
-        videoStyle: 'realistic'
+        originalPrompt: scene.content,
+        elementType: 'storyboard'
       })
     });
     
     if (response.ok) {
       const data = await response.json();
-      optimizedPrompt = data.prompt || scene.content;
+      optimizedPrompt = data.optimizedPrompt || scene.content;
       console.log(`分镜${scene.sequence || ''} 原始提示词:`, scene.content);
       console.log(`分镜${scene.sequence || ''} 优化后提示词:`, optimizedPrompt);
     }

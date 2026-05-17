@@ -47,18 +47,20 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       text,
-      voice,
+      voice_id,
       speed = 1.0,
       pitch = 1.0,
+      emotion_prompt,
       user_id,
       organization_id
     } = body;
 
     console.log('[generate-voice] 收到生成语音请求:', {
       textLength: text?.length,
-      voice,
+      voice_id,
       speed,
-      pitch
+      pitch,
+      emotion_prompt
     });
 
     // 参数验证
@@ -72,9 +74,10 @@ export async function POST(request: NextRequest) {
     // 准备 N8N 调用参数
     const n8nPayload = {
       text,
-      voice: voice || 'zh-CN-XiaoxiaoNeural',
+      voice_id: voice_id || 'zh-CN-XiaoxiaoNeural',
       speed,
       pitch,
+      emotion_prompt,
       user_id,
       organization_id,
       timestamp: Date.now()
@@ -96,7 +99,8 @@ export async function POST(request: NextRequest) {
       const validUserId = (user_id && uuidRegex.test(user_id)) ? user_id : null;
       const validOrganizationId = (organization_id && uuidRegex.test(organization_id)) ? organization_id : null;
 
-      const executionId = n8nResult.executionId || n8nResult.id;
+      const n8nResultData = n8nResult as { executionId?: string; id?: string };
+      const executionId = n8nResultData.executionId || n8nResultData.id;
 
       await db.from('prompt_history').insert({
         user_id: validUserId,
@@ -117,9 +121,10 @@ export async function POST(request: NextRequest) {
     }
 
     // 返回结果
+    const n8nResultData = n8nResult as { executionId?: string; id?: string };
     return NextResponse.json({
       success: true,
-      executionId: n8nResult.executionId || n8nResult.id,
+      executionId: n8nResultData.executionId || n8nResultData.id,
       workflowType: 'voice',
       workflow: 'ai-voice-generation'
     }, { headers: corsHeaders() });
@@ -172,7 +177,8 @@ export async function GET(request: NextRequest) {
     console.log('[generate-voice] 执行状态:', executionStatus);
 
     // 根据状态返回结果
-    if (executionStatus.status === 'completed') {
+    const statusData = executionStatus as { status?: string; finished?: boolean };
+    if (statusData.status === 'completed') {
       console.log('[generate-voice] 执行完成，获取音频资源...');
 
       try {
@@ -183,17 +189,19 @@ export async function GET(request: NextRequest) {
         const resourceResponse = await fetch(resourceUrl, {
           method: 'GET',
           headers: {
-            'X-N8N-API-KEY': process.env.N8N_API_KEY
+            'X-N8N-API-KEY': process.env.N8N_API_KEY || ''
           }
         });
 
         const resourceData = await resourceResponse.json();
         console.log('[generate-voice] 音频资源数据:', resourceData);
 
+        const audioUrl = resourceData?.url || resourceData?.audio_url || resourceData?.output?.url || resourceData?.data;
+
         return NextResponse.json({
           success: true,
           status: 'completed',
-          url: resourceData?.url || resourceData?.audio_url || resourceData?.output?.url,
+          url: audioUrl,
           filename: resourceData?.filename
         }, { headers: corsHeaders() });
 
@@ -206,7 +214,7 @@ export async function GET(request: NextRequest) {
         }, { headers: corsHeaders() });
       }
 
-    } else if (executionStatus.status === 'error') {
+    } else if (statusData.status === 'error') {
       return NextResponse.json({
         success: false,
         status: 'error',

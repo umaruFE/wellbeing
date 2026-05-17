@@ -1,0 +1,143 @@
+{
+  "name": "课程概览生成",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-overview-generator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a1b2c3d4-overview-001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-384, 128],
+      "webhookId": "course-overview-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json.body;\n\nreturn {\n  age: input.age || '7-9岁',\n  duration: input.duration || '60分钟',\n  scale: input.scale || '9-15人',\n  vocabulary: (input.vocabulary && input.vocabulary.length > 0) \n    ? (Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : input.vocabulary)\n    : '请根据主题推荐词汇',\n  grammar: (input.grammar && input.grammar.length > 0) \n    ? (Array.isArray(input.grammar) ? input.grammar.join(', ') : input.grammar)\n    : '请根据主题推荐句型',\n  skills_text: (input.skills && input.skills.length > 0) \n    ? (Array.isArray(input.skills) ? input.skills.join(', ') : input.skills)\n    : '',\n  paths_text: (input.paths && input.paths.length > 0) \n    ? (Array.isArray(input.paths) ? input.paths.join(', ') : input.paths)\n    : '',\n  theme: input.theme || '默认主题',\n  requirements: input.requirements || '',\n  adjustments: input.adjustments || '',\n  existing_overview: input.existing_overview || ''\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-176, 128],
+      "id": "a1b2c3d4-overview-002",
+      "name": "参数组装"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "maxTokens": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [-32, 336],
+      "id": "a1b2c3d4-overview-003",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"courseOverview\": {\n    \"courseTitle\": \"string\",\n    \"corePhilosophy\": \"string\",\n    \"overallContext\": \"string\",\n    \"languageGoals\": {\n      \"vocabulary\": \"string\",\n      \"grammar\": \"string\"\n    },\n    \"selGoals\": \"string\",\n    \"permaGoals\": \"string\",\n    \"finalTask\": \"string\",\n    \"themeImagePrompt\": \"string\"\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [224, 336],
+      "id": "a1b2c3d4-overview-004",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师，擅长将 SEL（社会情感学习）和 PERMA 幸福模型无缝融入英语教学。\n\n# Task\n根据输入的课程参数，生成课程概览信息，包括标题、情境、教学目标等。\n\n# Core Framework\n1. 核心理念：以\"幸福力\"为终极目标，通过\"英语+体验路径\"实现儿童三维成长。\n2. 4E 学习闭环：Engage (吸引) → Empower (赋能) → Execute (执行) → Elevate (升华)\n3. 叙事要求：所有环节必须串联在一个完整的、具有沉浸感的故事叙事中。\n\n# Input\n- 学生年龄：{{ $json.age }}\n- 课程时长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 核心词汇：{{ $json.vocabulary }}\n- 核心句型：{{ $json.grammar }}\n- 侧重能力：{{ $json.skills_text }}（如果为空，请根据学生年龄、主题和核心词汇自主选择最合适的1-2个能力侧重）\n- 体验路径：{{ $json.paths_text }}（如果为空，请根据学生年龄和主题自主选择最合适的1-2个体验路径）\n- 初始主题：{{ $json.theme }}（如果为空，请根据学生年龄、核心词汇和体验路径自主设计一个富有想象力的情境主题）\n- 特殊要求：{{ $json.requirements }}\n\n# 已有课程概览（如果以下内容不为空，请基于此概览进行调整优化，而非从头生成）\n{{ $json.existing_overview }}\n\n# 调整要求（如果以下内容不为空，请按照用户的具体要求对概览进行调整）\n{{ $json.adjustments }}\n\n# Style Requirements\n- 标题：吸引人、富有想象力，中英文结合，与主题和核心词汇呼应\n- 情境描述：生动、有画面感，200-300字\n- 生图提示词：扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字\n- 严禁将结果嵌套在其他键之中\n- 严禁在 JSON 中使用中文全角引号\n\n### 请严格按照以下格式输出：\n{\n  \"courseOverview\": {\n    \"courseTitle\": \"[AI自主生成吸引人的中英文标题，结合主题、核心词汇和故事情境]\",\n    \"theme\": \"[2-4个字的情境主题关键词，如：森林探险、海底奇遇、太空漫游，用于标签展示]\",\n    \"corePhilosophy\": \"PERMA + SEL + 体验驱动\",\n    \"overallContext\": \"[详细的故事背景描述，200-300字，包含故事起因、发展和结局的伏笔，富有想象力和沉浸感]\",\n    \"languageGoals\": {\n      \"vocabulary\": \"[基于输入的核心词汇，整理并补充的词汇学习目标]\",\n      \"grammar\": \"[基于输入的核心句型，整理并补充的语法学习目标]\"\n    },\n    \"selGoals\": \"[具体的SEL能力目标]\",\n    \"permaGoals\": \"[对应的幸福力目标]\",\n    \"finalTask\": \"[具体的可视化产出任务]\",\n    \"themeImagePrompt\": \"扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，[加入与课程主题和故事情境相关的具体场景描述]\"\n  }\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [128, 128],
+      "id": "a1b2c3d4-overview-005",
+      "name": "概览生成"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "a1b2c3d4-overview-006",
+      "name": "返回概览JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [528, 128]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数组装",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数组装": {
+      "main": [
+        [
+          {
+            "node": "概览生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "概览生成": {
+      "main": [
+        [
+          {
+            "node": "返回概览JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "概览生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "概览生成",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

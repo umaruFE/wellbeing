@@ -90,20 +90,20 @@ export const CanvasViewModals = ({
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                <div className="bg-info p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">
+                  <h3 className="font-bold text-lg text-primary">
                     历史生成列表 - {showHistoryModal.assetType === 'image' ? '图片' : showHistoryModal.assetType === 'video' ? '视频' : showHistoryModal.assetType === 'text' ? '文本' : showHistoryModal.assetType === 'audio' ? '音频' : ''}
                   </h3>
                 </div>
               </div>
               <button 
                 onClick={() => setShowHistoryModal(null)} 
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-primary-placeholder hover:text-primary-secondary transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -117,7 +117,7 @@ export const CanvasViewModals = ({
                   h.type === showHistoryModal.assetType
                 )
                 .length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
+                <div className="text-center py-12 text-primary-placeholder">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无历史生成记录</p>
                 </div>
@@ -133,12 +133,12 @@ export const CanvasViewModals = ({
                     .map((historyItem) => (
                       <div 
                         key={historyItem.id} 
-                        className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all"
+                        className="border-2 border-stroke-light rounded-xl p-4 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] transition-all"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-xs font-medium text-slate-500">
+                              <span className="text-xs font-medium text-primary-muted">
                                 {historyItem.displayTime}
                               </span>
                             </div>
@@ -146,22 +146,22 @@ export const CanvasViewModals = ({
                               <img 
                                 src={historyItem.url} 
                                 alt="历史生成" 
-                                className="w-full h-32 object-cover rounded-xl border-2 border-[#e5e3db] mb-2"
+                                className="w-full h-32 object-cover rounded-xl border-2 border-stroke-light mb-2"
                               />
                             ) : (
-                              <div className="w-full h-16 bg-[#fcfbf9] rounded-xl border-2 border-[#e5e3db] flex items-center justify-center mb-2">
-                                <Music className="w-6 h-6 text-slate-400" />
+                              <div className="w-full h-16 bg-surface rounded-xl border-2 border-stroke-light flex items-center justify-center mb-2">
+                                <Music className="w-6 h-6 text-primary-placeholder" />
                               </div>
                             )}
                             {historyItem.prompt && (
-                              <p className="text-xs text-[#2d2d2d] bg-[#fcfbf9] rounded-xl p-2 mt-2 border border-[#e5e3db]">
+                              <p className="text-xs text-dark bg-surface rounded-xl p-2 mt-2 border border-stroke-light">
                                 {historyItem.prompt}
                               </p>
                             )}
                           </div>
                           <button
                             onClick={() => onRestoreHistory(historyItem)}
-                            className="ml-4 px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                            className="ml-4 px-3 py-1.5 text-xs bg-info text-white rounded-lg hover:bg-info-active transition-colors flex items-center gap-1"
                           >
                             <RefreshCw className="w-3 h-3" />
                             恢复

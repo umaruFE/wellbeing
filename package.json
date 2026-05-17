@@ -12,8 +12,12 @@
   "dependencies": {
     "ali-oss": "^6.23.0",
     "antd": "^5.29.3",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "jszip": "^3.10.1",
     "lucide-react": "^0.562.0",
     "pg": "^8.19.0",
+    "pptxgenjs": "^4.0.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.12.0",

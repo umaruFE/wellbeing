@@ -63,15 +63,15 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // 3. 参数验证
-    if (!backgroundPrompt) {
+    if (!backgroundPrompt && roles.length === 0) {
       return NextResponse.json(
-        { error: '缺少必要参数: backgroundPrompt' },
+        { error: '缺少必要参数: backgroundPrompt 或 roles' },
         { status: 400, headers: corsHeaders() }
       );
     }
 
     console.log('[generate-scene] 开始生成:', {
-      backgroundPrompt: backgroundPrompt.substring(0, 50) + '...',
+      backgroundPrompt: backgroundPrompt ? backgroundPrompt.substring(0, 50) + '...' : '(无背景)',
       roleCount: roles.length,
       backgroundWidth,
       backgroundHeight
@@ -91,18 +91,20 @@ export async function POST(request: NextRequest) {
     const tasks = [];
 
     // 背景图任务
-    tasks.push({
-      type: 'background',
-      name: null,
-      comfyuiUrl: COMFYUI_URLS.bg,
-      payload: {
-        name: 'bg',  // 背景用 bg 作为 name
-        prompt: backgroundPrompt,
-        negative_prompt: 'blurry, low quality, deformed, ugly, bad anatomy, disfigured, poorly drawn face, mutation, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body',
-        width: backgroundWidth,
-        height: backgroundHeight
-      }
-    });
+    if (backgroundPrompt) {
+      tasks.push({
+        type: 'background',
+        name: null,
+        comfyuiUrl: COMFYUI_URLS.bg,
+        payload: {
+          name: 'bg',
+          prompt: backgroundPrompt,
+          negative_prompt: 'blurry, low quality, deformed, ugly, bad anatomy, disfigured, poorly drawn face, mutation, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body',
+          width: backgroundWidth,
+          height: backgroundHeight
+        }
+      });
+    }
 
     // 角色图任务
     for (const role of roles) {
@@ -112,12 +114,14 @@ export async function POST(request: NextRequest) {
         name: role.name,
         comfyuiUrl: COMFYUI_URLS[roleName] || COMFYUI_URLS.bg,
         payload: {
-          name: role.name,  // 传递角色名称给 N8N Workflow
+          name: role.name,
+          character_name: role.name,
           prompt: role.prompt,
-          negative_prompt: 'blurry, low quality, deformed, ugly, bad anatomy, disfigured, poorly drawn face, mutation, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body',
-          width: 1024,
-          height: 1024
-        }
+          negative_prompt: 'blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background details',
+          width: role.width || 1024,
+          height: role.height || 1024
+        },
+        workflowName: (!backgroundPrompt && roles.length === 1) ? 'ai-single-ip-character' : 'ai-image-generation'
       });
     }
 
@@ -127,15 +131,16 @@ export async function POST(request: NextRequest) {
     const taskResults = await Promise.all(
       tasks.map(async (task) => {
         try {
-          console.log(`[generate-scene] 调用 ${task.type}: ${task.name || 'N/A'}`);
+          const workflowName = task.workflowName || 'ai-image-generation';
+          console.log(`[generate-scene] 调用 ${task.type}: ${task.name || 'N/A'} (workflow: ${workflowName})`);
 
-          // 使用 n8nClient 调用 ai-image-generation Workflow
-          const result = await n8nClient.call('ai-image-generation', task.payload);
+          const result = await n8nClient.call(workflowName, task.payload);
           console.log(`[generate-scene] ${task.type}:${task.name} 返回:`, result);
 
           // 从 N8N 结果中提取 executionId 和 comfyuiUrl（实际是 ComfyUI 的 prompt_id 和地址）
-          const promptId = result.executionId || result.prompt_id || result.id;
-          const comfyUrl = result.comfyuiUrl || task.comfyuiUrl || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+          const resultData = result as { executionId?: string; prompt_id?: string; id?: string; comfyuiUrl?: string };
+          const promptId = resultData.executionId || resultData.prompt_id || resultData.id;
+          const comfyUrl = resultData.comfyuiUrl || task.comfyuiUrl || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
           const historyUrl = `${comfyUrl}/history/${promptId}`;
 
           return {

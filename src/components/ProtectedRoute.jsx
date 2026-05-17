@@ -8,7 +8,7 @@ export const ProtectedRoute = ({ children, requiredRoles = null }) => {
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="text-slate-500">加载中...</div>
+        <div className="text-primary-muted">加载中...</div>
       </div>
     );
   }

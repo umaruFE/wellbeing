@@ -80,9 +80,10 @@ export async function POST(request: NextRequest) {
     console.log('[extract-keywords] N8N 响应:', result);
 
     // 5. 返回结果
+    const resultData = result as { data?: object };
     return NextResponse.json({
       success: true,
-      data: result.data || result
+      data: resultData.data || result
     }, { headers: corsHeaders() });
 
   } catch (error) {

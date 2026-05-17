@@ -60,10 +60,10 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
 
   return (
     <div>
-      <label className="text-sm font-medium text-slate-700 mb-2 block">
+      <label className="text-sm font-medium text-primary-secondary mb-2 block">
         选择角色 ({selectedRoles.length}/5)
       </label>
-      <p className="text-xs text-slate-400 mb-3">
+      <p className="text-xs text-primary-placeholder mb-3">
         选择要出现在场景中的IP角色
       </p>
       
@@ -79,10 +79,10 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
               disabled={!isAvailable}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
                 !isAvailable
-                  ? 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-60'
+                  ? 'border-stroke bg-surface-alt cursor-not-allowed opacity-60'
                   : isSelected
                   ? 'border-purple-500 bg-purple-50'
-                  : 'border-[#e5e3db] hover:border-[#2d2d2d] hover:bg-[#fffbe6]'
+                  : 'border-stroke-light hover:border-primary hover:bg-warning-light'
               }`}
             >
               <div className="relative">
@@ -100,7 +100,7 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
               
               <div className="flex-1 text-left">
                 <div className="flex items-center gap-2">
-                  <span className={`font-medium ${isAvailable ? 'text-slate-800' : 'text-gray-400'}`}>
+                  <span className={`font-medium ${isAvailable ? 'text-primary' : 'text-primary-placeholder'}`}>
                     {character.name}
                   </span>
                   <span 
@@ -117,7 +117,7 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
                     {character.color}
                   </span>
                 </div>
-                <p className={`text-xs ${isAvailable ? 'text-slate-500' : 'text-red-400'}`}>
+                <p className={`text-xs ${isAvailable ? 'text-primary-muted' : 'text-error'}`}>
                   {character.description}
                 </p>
               </div>

@@ -167,8 +167,8 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
         };
         const phaseColors = {
           engage: 'bg-purple-50 border-purple-200 text-purple-800',
-          empower: 'bg-blue-50 border-blue-200 text-blue-800',
-          execute: 'bg-green-50 border-green-200 text-green-800',
+          empower: 'bg-info-light border-info-border text-info-active',
+          execute: 'bg-success-light border-success-border text-success-active',
           elevate: 'bg-yellow-50 border-yellow-200 text-yellow-800'
         };
 
@@ -253,7 +253,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
 
   const handleAddPhase = () => {
     const newId = `Phase-${Date.now()}`;
-    setPhases([...phases, { id: newId, label: 'New Phase (新阶段)', color: 'bg-gray-50 border-gray-200 text-gray-800', slides: [] }]);
+    setPhases([...phases, { id: newId, label: 'New Phase (新阶段)', color: 'bg-surface-alt border-stroke text-dark', slides: [] }]);
   };
 
   const handleDeletePhase = (phaseId) => {
@@ -1153,20 +1153,20 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
 
 
   return (
-    <div className="flex-1 flex flex-col bg-[#fcfbf9] text-[#2d2d2d] font-sans overflow-hidden">
+    <div className="flex-1 flex flex-col bg-surface text-dark font-sans overflow-hidden">
       <ImagePreviewModal src={previewImage} onClose={() => setPreviewImage(null)} />
       
       {/* 工具栏 */}
-      {/* <div className="bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between">
+      {/* <div className="bg-white border-b border-stroke px-6 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowHistoryView(true)}
-            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
+            className="px-4 py-2 bg-surface-alt hover:bg-stroke text-primary-secondary rounded-lg text-sm font-medium flex items-center gap-2 transition-colors"
           >
             <History className="w-4 h-4" />
             历史版本
           </button>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs text-primary-placeholder">
             版本 {currentVersionIndex + 1} / {historyVersions.length || 1}
           </div>
         </div>
@@ -1176,17 +1176,17 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
         <div className="max-w-[1600px] mx-auto space-y-8">
            {phases.map((phase) => {
              return (
-               <div key={phase.id} className="bg-white shadow-sm border-2 border-[#e5e3db] rounded-xl overflow-hidden group/phase transition-all hover:border-[#2d2d2d]">
-                 <div className={`p-4 border-b-2 border-[#e5e3db] flex justify-between items-center ${phase.color.replace('text-', 'bg-opacity-10 ')}`}>
+               <div key={phase.id} className="bg-white shadow-sm border-2 border-stroke-light rounded-xl overflow-hidden group/phase transition-all hover:border-primary">
+                 <div className={`p-4 border-b-2 border-stroke-light flex justify-between items-center ${phase.color.replace('text-', 'bg-opacity-10 ')}`}>
                     <div className="flex items-center gap-2 flex-1">
                         <BookmarkIcon phase={phase.id.split('-')[0]} />
                         <input type="text" value={phase.label} onChange={(e) => handleEditPhaseLabel(phase.id, e.target.value)} className={`text-lg font-bold bg-transparent outline-none w-full ${phase.color}`} />
                     </div>
                     <div className="flex items-center gap-2">
-                        <div className="text-xs font-medium px-2 py-1 bg-white/50 rounded-full text-slate-500">{phase.slides.length} 个环节</div>
+                        <div className="text-xs font-medium px-2 py-1 bg-white/50 rounded-full text-primary-muted">{phase.slides.length} 个环节</div>
                         <button 
                           onClick={() => setShowPhaseHistoryModal({ phaseId: phase.id })} 
-                          className="px-2 py-1 text-xs font-medium text-slate-600 hover:text-blue-600 hover:bg-white/50 rounded transition-colors flex items-center gap-1"
+                          className="px-2 py-1 text-xs font-medium text-primary-secondary hover:text-info hover:bg-white/50 rounded transition-colors flex items-center gap-1"
                           title="历史生成阶段"
                         >
                           <History className="w-3.5 h-3.5" />
@@ -1194,18 +1194,18 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                         </button>
                         <button 
                           onClick={() => setShowRegeneratePhaseModal({ phaseId: phase.id })} 
-                          className="px-2 py-1 text-xs font-medium text-slate-600 hover:text-orange-600 hover:bg-white/50 rounded transition-colors flex items-center gap-1"
+                          className="px-2 py-1 text-xs font-medium text-primary-secondary hover:text-warning hover:bg-white/50 rounded transition-colors flex items-center gap-1"
                           title="重新生成阶段"
                         >
                           <RefreshCw className="w-3.5 h-3.5" />
                           重新生成
                         </button>
-                        <button onClick={() => handleDeletePhase(phase.id)} className="p-1.5 hover:bg-white/50 text-red-400 hover:text-red-600 rounded transition-colors opacity-0 group-hover/phase:opacity-100" title="删除整个阶段"><Trash2 className="w-4 h-4" /></button>
+                        <button onClick={() => handleDeletePhase(phase.id)} className="p-1.5 hover:bg-white/50 text-error hover:text-error rounded transition-colors opacity-0 group-hover/phase:opacity-100" title="删除整个阶段"><Trash2 className="w-4 h-4" /></button>
                     </div>
                  </div>
                  <div className="overflow-x-auto">
                    <table className="w-full text-sm text-left">
-                     <thead className="bg-[#fcfbf9] text-[#2d2d2d] font-bold uppercase text-xs">
+                     <thead className="bg-surface text-dark font-bold uppercase text-xs">
                        <tr>
                            <th className="p-4 w-32">时长/环节</th>
                            <th className="p-4 w-40">教学目标</th>
@@ -1219,20 +1219,20 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                      <tbody className="divide-y divide-slate-100">
                        {phase.slides.length > 0 ? (
                          phase.slides.map((slide) => (
-                           <tr key={slide.id} className="hover:bg-[#fffbe6] group transition-all">
+                           <tr key={slide.id} className="hover:bg-warning-light group transition-all">
                              {/* 时长/环节 - 合并单元格 */}
                              <td className="p-4 align-top">
                                <div className="space-y-2">
                                  <input 
                                    value={slide.duration} 
                                    onChange={(e) => updateSlideField(phase.id, slide.id, 'duration', e.target.value)} 
-                                   className="w-full bg-transparent border-b border-transparent focus:border-blue-400 outline-none font-medium text-blue-600 transition-colors text-xs" 
+                                   className="w-full bg-transparent border-b border-transparent focus:border-info-border outline-none font-medium text-info transition-colors text-xs" 
                                    placeholder="时长"
                                  />
                                  <textarea 
                                    value={slide.title} 
                                    onChange={(e) => updateSlideField(phase.id, slide.id, 'title', e.target.value)} 
-                                   className="w-full bg-transparent text-xs font-bold text-slate-700 resize-none outline-none focus:bg-white rounded" 
+                                   className="w-full bg-transparent text-xs font-bold text-primary-secondary resize-none outline-none focus:bg-white rounded" 
                                    rows={2} 
                                    placeholder="环节标题..."
                                  />
@@ -1246,14 +1246,14 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                    value={slide.objectives} 
                                    onChange={(e) => updateSlideField(phase.id, slide.id, 'objectives', e.target.value)} 
                                    onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })}
-                                   className={`flex-1 bg-transparent text-xs text-slate-500 resize-none outline-none focus:bg-white rounded border border-transparent focus:border-blue-200 p-1 ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'objectives' ? 'ring-2 ring-blue-300' : ''}`}
+                                   className={`flex-1 bg-transparent text-xs text-primary-muted resize-none outline-none focus:bg-white rounded border border-transparent focus:border-info-border p-1 ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'objectives' ? 'ring-2 ring-info-border' : ''}`}
                                    rows={6} 
                                    placeholder="输入教学目标..."
                                  />
                                  <div className="flex flex-col gap-1 pt-1">
                                    <button 
                                      onClick={() => setShowHistoryModal({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })} 
-                                     className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                                     className="p-1 text-primary-placeholder hover:text-info transition-colors"
                                      title="历史生成"
                                    >
                                      <History className="w-3.5 h-3.5" />
@@ -1261,7 +1261,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                    <button 
                                      onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'objectives' })} 
                                      disabled={generatingMedia[`${slide.id}-objectives`]}
-                                     className="p-1 text-slate-400 hover:text-blue-600 transition-colors disabled:opacity-50"
+                                     className="p-1 text-primary-placeholder hover:text-info transition-colors disabled:opacity-50"
                                      title="重新生成"
                                    >
                                      <RefreshCw className={`w-3.5 h-3.5 ${generatingMedia[`${slide.id}-objectives`] ? 'animate-spin' : ''}`} />
@@ -1278,14 +1278,14 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                      value={slide.activities} 
                                      onChange={(e) => updateSlideField(phase.id, slide.id, 'activities', e.target.value)} 
                                      onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'activity' })}
-                                     className={`flex-1 bg-transparent border border-transparent focus:border-blue-200 focus:bg-white rounded p-1 resize-none text-slate-700 leading-relaxed whitespace-pre-wrap transition-colors text-xs ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'activity' ? 'ring-2 ring-purple-300' : ''}`}
+                                     className={`flex-1 bg-transparent border border-transparent focus:border-info-border focus:bg-white rounded p-1 resize-none text-primary-secondary leading-relaxed whitespace-pre-wrap transition-colors text-xs ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'activity' ? 'ring-2 ring-purple-light' : ''}`}
                                      rows={6} 
                                      placeholder="详细的活动步骤..."
                                    />
                                    <div className="flex flex-col gap-1 pt-1">
                                      <button 
                                        onClick={() => setShowHistoryModal({ phaseId: phase.id, slideId: slide.id, field: 'activities' })} 
-                                       className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                                       className="p-1 text-primary-placeholder hover:text-info transition-colors"
                                        title="历史生成"
                                      >
                                        <History className="w-3.5 h-3.5" />
@@ -1293,7 +1293,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                      <button 
                                        onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'activity' })} 
                                        disabled={generatingMedia[`${slide.id}-activity`]}
-                                       className="p-1 text-slate-400 hover:text-purple-600 transition-colors disabled:opacity-50"
+                                       className="p-1 text-primary-placeholder hover:text-purple transition-colors disabled:opacity-50"
                                        title="重新生成"
                                      >
                                        <RefreshCw className={`w-3.5 h-3.5 ${generatingMedia[`${slide.id}-activity`] ? 'animate-spin' : ''}`} />
@@ -1311,13 +1311,13 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                       value={slide.script} 
                                       onChange={(e) => updateSlideField(phase.id, slide.id, 'script', e.target.value)} 
                                       onClick={() => setSelectedField({ phaseId: phase.id, slideId: slide.id, field: 'script' })}
-                                      className={`flex-1 bg-[#fcfbf9] border-2 border-[#e5e3db] focus:border-[#2d2d2d] focus:bg-white rounded-xl p-2 resize-none text-xs text-[#2d2d2d] leading-relaxed transition-all h-full min-h-[120px] ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'script' ? 'ring-2 ring-[#2d2d2d]' : ''}`}
+                                      className={`flex-1 bg-surface border-2 border-stroke-light focus:border-primary focus:bg-white rounded-xl p-2 resize-none text-xs text-dark leading-relaxed transition-all h-full min-h-[120px] ${selectedField?.phaseId === phase.id && selectedField?.slideId === slide.id && selectedField?.field === 'script' ? 'ring-2 ring-[#2d2d2d]' : ''}`}
                                       placeholder="输入教师讲稿..."
                                     />
                                     <div className="flex flex-col gap-1 pt-2">
                                       <button 
                                         onClick={() => setShowHistoryModal({ phaseId: phase.id, slideId: slide.id, field: 'script' })} 
-                                        className="p-1 text-slate-400 hover:text-blue-600 transition-colors"
+                                        className="p-1 text-primary-placeholder hover:text-info transition-colors"
                                         title="历史生成"
                                       >
                                         <History className="w-3.5 h-3.5" />
@@ -1325,7 +1325,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                       <button 
                                         onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'script' })} 
                                         disabled={generatingMedia[`${slide.id}-script`]}
-                                        className="p-1 text-slate-400 hover:text-green-600 transition-colors disabled:opacity-50"
+                                        className="p-1 text-primary-placeholder hover:text-success transition-colors disabled:opacity-50"
                                         title="重新生成"
                                       >
                                         <RefreshCw className={`w-3.5 h-3.5 ${generatingMedia[`${slide.id}-script`] ? 'animate-spin' : ''}`} />
@@ -1341,7 +1341,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                    {slide.pptSlides && slide.pptSlides.length > 0 ? (
                                      <>
                                        {slide.pptSlides.map((ppt, idx) => (
-                                         <div key={ppt.id} className="relative group/media w-full aspect-video bg-[#fcfbf9] rounded-xl border-2 border-[#e5e3db] overflow-hidden flex items-center justify-center transition-all hover:border-[#2d2d2d]">
+                                         <div key={ppt.id} className="relative group/media w-full aspect-video bg-surface rounded-xl border-2 border-stroke-light overflow-hidden flex items-center justify-center transition-all hover:border-primary">
                                            <img 
                                              src={ppt.image} 
                                              alt={`PPT ${idx + 1}`} 
@@ -1363,7 +1363,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                                  handleDeletePPT(phase.id, slide.id, ppt.id);
                                                }} 
                                                title="删除PPT" 
-                                               className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 backdrop-blur-sm"
+                                               className="p-1.5 bg-error/80 text-white rounded hover:bg-error backdrop-blur-sm"
                                              >
                                                <Trash2 className="w-3 h-3" />
                                              </button>
@@ -1373,7 +1373,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                        ))}
                                          <button 
                                            onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
-                                           className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
+                                           className="w-full py-1.5 text-xs text-info border border-info-border rounded hover:bg-info-light transition-colors flex items-center justify-center gap-1"
                                          >
                                            <RefreshCw className="w-4 h-4" />
                                            <span className="text-[10px]">重新生成PPT</span>
@@ -1389,7 +1389,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                      </>
                                    ) : slide.image ? (
                                      <>
-                                       <div className="relative group/media w-full aspect-video bg-[#fcfbf9] rounded-xl border-2 border-[#e5e3db] overflow-hidden flex items-center justify-center transition-all hover:border-[#2d2d2d]">
+                                       <div className="relative group/media w-full aspect-video bg-surface rounded-xl border-2 border-stroke-light overflow-hidden flex items-center justify-center transition-all hover:border-primary">
                                          <img 
                                            src={slide.image} 
                                            alt="PPT Slide" 
@@ -1410,7 +1410,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                        </div>
                                        <button 
                                          onClick={() => handleRegeneratePPT(phase.id, slide.id)} 
-                                         className="w-full py-1.5 text-xs text-blue-600 border border-blue-200 rounded hover:bg-blue-50 transition-colors flex items-center justify-center gap-1"
+                                         className="w-full py-1.5 text-xs text-info border border-info-border rounded hover:bg-info-light transition-colors flex items-center justify-center gap-1"
                                        >
                                          <RefreshCw className="w-4 h-4" />
                                          <span className="text-[10px]">重新生成PPT</span>
@@ -1426,7 +1426,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                    ) : (
                                      <button 
                                        onClick={() => handleRegenerateMedia(phase.id, slide.id, 'image')} 
-                                       className="flex flex-col items-center gap-1 text-[#9ca3af] hover:text-[#2d2d2d] transition-colors w-full aspect-video border-2 border-dashed border-[#d1d5db] rounded-lg"
+                                       className="flex flex-col items-center gap-1 text-muted-text hover:text-dark transition-colors w-full aspect-video border-2 border-dashed border-gray-disabled rounded-lg"
                                      >
                                        <ImageIcon className="w-6 h-6" />
                                        <span className="text-[10px]">生成PPT页面</span>
@@ -1441,11 +1441,11 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                  <div className="space-y-2">
                                    {slide.readingMaterials && slide.readingMaterials.length > 0 ? (
                                      <>
-                                       <div className="text-[10px] text-slate-500 font-medium mb-1">
+                                       <div className="text-[10px] text-primary-muted font-medium mb-1">
                                          共 {slide.readingMaterials.length} 个阅读材料
                                        </div>
                                        {slide.readingMaterials.map((material, idx) => (
-                                         <div key={material.id} className="relative group/material w-full aspect-[3/4] bg-[#fcfbf9] rounded-xl border-2 border-[#e5e3db] overflow-hidden flex flex-col transition-all hover:border-[#2d2d2d]">
+                                         <div key={material.id} className="relative group/material w-full aspect-[3/4] bg-surface rounded-xl border-2 border-stroke-light overflow-hidden flex flex-col transition-all hover:border-primary">
                                            <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-1.5 z-10">
                                              <div className="flex items-center justify-between">
                                                <span className="text-[10px] text-white font-medium truncate flex-1" title={material.title || `阅读材料 ${idx + 1}`}>
@@ -1514,14 +1514,14 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                                        handleDeleteReadingMaterial(phase.id, slide.id, material.id);
                                                      }} 
                                                      title="删除阅读材料" 
-                                                     className="p-1.5 bg-red-500/80 text-white rounded hover:bg-red-600 backdrop-blur-sm"
+                                                     className="p-1.5 bg-error/80 text-white rounded hover:bg-error backdrop-blur-sm"
                                                    >
                                                      <Trash2 className="w-3 h-3" />
                                                    </button>
                                                  </div>
                                                </>
                                              ) : (
-                                               <div className="flex flex-col items-center gap-1 text-slate-400 w-full h-full justify-center">
+                                               <div className="flex flex-col items-center gap-1 text-primary-placeholder w-full h-full justify-center">
                                                  <BookOpen className="w-6 h-6" />
                                                  <span className="text-[10px]">{material.title || `阅读材料 ${idx + 1}`}</span>
                                                </div>
@@ -1544,7 +1544,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                          // 显示提示词输入模态框
                                          setShowReadingMaterialPromptModal({ phaseId: phase.id, slideId: slide.id });
                                        }}
-                                       className="flex flex-col items-center gap-1 text-[#9ca3af] hover:text-[#2d2d2d] transition-colors w-full aspect-[3/4] border-2 border-dashed border-[#d1d5db] rounded-lg"
+                                       className="flex flex-col items-center gap-1 text-muted-text hover:text-dark transition-colors w-full aspect-[3/4] border-2 border-dashed border-gray-disabled rounded-lg"
                                      >
                                        <BookOpen className="w-6 h-6" />
                                        <span className="text-[10px]">生成阅读材料</span>
@@ -1571,14 +1571,14 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                <div className="flex flex-col gap-2 items-center">
                                  <button 
                                    onClick={() => handleCopySlide(phase.id, slide.id)} 
-                                   className="p-2 hover:bg-blue-50 text-slate-300 hover:text-blue-500 rounded transition-colors" 
+                                   className="p-2 hover:bg-info-light text-primary-placeholder hover:text-info-hover rounded transition-colors" 
                                    title="复制此环节"
                                  >
                                    <Copy className="w-4 h-4" />
                                  </button>
                                  <button 
                                    onClick={() => setShowHistorySessionModal({ phaseId: phase.id, slideId: slide.id })}
-                                   className="p-2 rounded transition-colors hover:bg-blue-50 text-slate-300 hover:text-blue-500"
+                                   className="p-2 rounded transition-colors hover:bg-info-light text-primary-placeholder hover:text-info-hover"
                                    title="历史生成环节"
                                  >
                                    <History className="w-4 h-4" />
@@ -1586,14 +1586,14 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                                  <button 
                                    onClick={() => setShowRegenerateModal({ phaseId: phase.id, slideId: slide.id, field: 'session' })}
                                    disabled={generatingMedia[`${slide.id}-session`]}
-                                   className="p-2 rounded transition-colors hover:bg-orange-50 text-slate-300 hover:text-orange-500 disabled:opacity-50"
+                                   className="p-2 rounded transition-colors hover:bg-warning-light text-primary-placeholder hover:text-warning disabled:opacity-50"
                                    title="重新生成本环节"
                                  >
                                    <RefreshCw className={`w-4 h-4 ${generatingMedia[`${slide.id}-session`] ? 'animate-spin' : ''}`} />
                                  </button>
                                  <button 
                                    onClick={() => handleDeleteRow(phase.id, slide.id)} 
-                                   className="p-2 hover:bg-red-50 text-slate-300 hover:text-red-500 rounded transition-colors" 
+                                   className="p-2 hover:bg-error-light text-primary-placeholder hover:text-error rounded transition-colors" 
                                    title="删除此行"
                                  >
                                    <Trash2 className="w-4 h-4" />
@@ -1603,25 +1603,25 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                            </tr>
                          ))
                        ) : (
-                         <tr><td colSpan="7" className="p-8 text-center text-slate-400 text-sm">此阶段暂无教学环节，请点击下方按钮添加。</td></tr>
+                         <tr><td colSpan="7" className="p-8 text-center text-primary-placeholder text-sm">此阶段暂无教学环节，请点击下方按钮添加。</td></tr>
                        )}
                      </tbody>
                    </table>
                  </div>
-                 <div className="p-3 border-t-2 border-[#e5e3db] bg-[#fcfbf9]">
-                    <button onClick={() => handleAddRow(phase.id)} className="w-full py-2 border-2 border-dashed border-[#d1d5db] rounded-lg text-[#9ca3af] text-xs font-bold hover:border-[#2d2d2d] hover:text-[#2d2d2d] hover:bg-[#fcfbf9] transition-all flex items-center justify-center gap-2"><Plus className="w-3 h-3" /> 添加 {phase.label.split(' ')[0]} 环节</button>
+                 <div className="p-3 border-t-2 border-stroke-light bg-surface">
+                    <button onClick={() => handleAddRow(phase.id)} className="w-full py-2 border-2 border-dashed border-gray-disabled rounded-lg text-muted-text text-xs font-bold hover:border-primary hover:text-dark hover:bg-surface transition-all flex items-center justify-center gap-2"><Plus className="w-3 h-3" /> 添加 {phase.label.split(' ')[0]} 环节</button>
                  </div>
                </div>
              );
            })}
-           <button onClick={handleAddPhase} className="w-full py-4 border-2 border-dashed border-[#d1d5db] rounded-xl text-[#9ca3af] font-bold hover:border-[#2d2d2d] hover:text-[#2d2d2d] hover:bg-[#fcfbf9] transition-all flex items-center justify-center gap-2"><Plus className="w-5 h-5" /> 添加新的课程阶段 (New Phase)</button>
+           <button onClick={handleAddPhase} className="w-full py-4 border-2 border-dashed border-gray-disabled rounded-xl text-muted-text font-bold hover:border-primary hover:text-dark hover:bg-surface transition-all flex items-center justify-center gap-2"><Plus className="w-5 h-5" /> 添加新的课程阶段 (New Phase)</button>
         </div>
       </div>
 
       {/* 历史版本查看 - 侧边栏显示，不关闭当前版本 */}
       {showHistoryView && (
         <div className="fixed inset-0 z-50 pointer-events-none">
-          <div className="absolute right-0 top-0 bottom-0 w-[50%] min-w-[600px] bg-white border-l-4 border-blue-500 shadow-2xl pointer-events-auto">
+          <div className="absolute right-0 top-0 bottom-0 w-[50%] min-w-[600px] bg-white border-l-4 border-info shadow-2xl pointer-events-auto">
             <HistoryVersionView
               historyVersions={historyVersions}
               currentVersionIndex={currentVersionIndex}
@@ -1752,23 +1752,23 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
       {showHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                <div className="bg-info p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">
+                  <h3 className="font-bold text-lg text-primary">
                     历史生成列表 - {getFieldDisplayName(showHistoryModal.field)}
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-primary-muted mt-1">
                     {phases.find(p => p.id === showHistoryModal.phaseId)?.slides.find(s => s.id === showHistoryModal.slideId)?.title || '当前环节'}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowHistoryModal(null)} 
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-primary-placeholder hover:text-primary-secondary transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1781,7 +1781,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                   h.field === showHistoryModal.field
                 )
                 .length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
+                <div className="text-center py-12 text-primary-placeholder">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无历史生成记录</p>
                 </div>
@@ -1796,28 +1796,28 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                     .map((historyItem, index) => (
                       <div 
                         key={historyItem.id} 
-                        className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all"
+                        className="border-2 border-stroke-light rounded-xl p-4 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] transition-all"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-medium text-slate-500">
+                              <span className="text-xs font-medium text-primary-muted">
                                 {historyItem.displayTime}
                               </span>
-                              <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-600 rounded-full">
+                              <span className="text-xs px-2 py-0.5 bg-info-light text-info rounded-full">
                                 {historyItem.type === 'regenerate' ? '重新生成' : '生成'}
                               </span>
                             </div>
                           </div>
                           <button
                             onClick={() => handleRestoreHistory(historyItem)}
-                            className="px-3 py-1.5 text-xs bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-1"
+                            className="px-3 py-1.5 text-xs bg-info text-white rounded-lg hover:bg-info-active transition-colors flex items-center gap-1"
                           >
                             <RefreshCw className="w-3 h-3" />
                             恢复
                           </button>
                         </div>
-                        <div className="bg-[#fcfbf9] rounded-xl p-3 text-xs text-[#2d2d2d] whitespace-pre-wrap max-h-40 overflow-y-auto border-2 border-[#e5e3db]">
+                        <div className="bg-surface rounded-xl p-3 text-xs text-dark whitespace-pre-wrap max-h-40 overflow-y-auto border-2 border-stroke-light">
                           {historyItem.content || '(空内容)'}
                         </div>
                       </div>
@@ -1833,23 +1833,23 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
       {showPhaseHistoryModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                <div className="bg-info p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">
+                  <h3 className="font-bold text-lg text-primary">
                     历史生成列表 - 阶段
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-primary-muted mt-1">
                     {phases.find(p => p.id === showPhaseHistoryModal.phaseId)?.label || '当前阶段'}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowPhaseHistoryModal(null)} 
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-primary-placeholder hover:text-primary-secondary transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1858,7 +1858,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
               {phaseGenerationHistory
                 .filter(h => h.phaseId === showPhaseHistoryModal.phaseId)
                 .length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
+                <div className="text-center py-12 text-primary-placeholder">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无历史生成记录</p>
                 </div>
@@ -1869,25 +1869,25 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                     .map((historyItem, index) => (
                       <div 
                         key={historyItem.id} 
-                        className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all"
+                        className="border-2 border-stroke-light rounded-xl p-4 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] transition-all"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-medium text-slate-500">
+                              <span className="text-xs font-medium text-primary-muted">
                                 版本 {index + 1}
                               </span>
-                              <span className="text-xs text-slate-400">
+                              <span className="text-xs text-primary-placeholder">
                                 {historyItem.displayTime}
                               </span>
                             </div>
-                            <div className="text-xs text-slate-600 mt-2">
+                            <div className="text-xs text-primary-secondary mt-2">
                               包含 {historyItem.data.slides.length} 个环节
                             </div>
                           </div>
                           <button
                             onClick={() => handleRestorePhaseHistory(historyItem)}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
+                            className="px-3 py-1.5 bg-info hover:bg-info-active text-white text-xs font-medium rounded transition-colors"
                           >
                             恢复此版本
                           </button>
@@ -1905,23 +1905,23 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
       {showHistorySessionModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="bg-blue-600 p-2 rounded-lg text-white">
+                <div className="bg-info p-2 rounded-lg text-white">
                   <History className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">
+                  <h3 className="font-bold text-lg text-primary">
                     历史生成列表 - 环节
                   </h3>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-primary-muted mt-1">
                     {phases.find(p => p.id === showHistorySessionModal.phaseId)?.slides.find(s => s.id === showHistorySessionModal.slideId)?.title || '当前环节'}
                   </p>
                 </div>
               </div>
               <button 
                 onClick={() => setShowHistorySessionModal(null)} 
-                className="text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-primary-placeholder hover:text-primary-secondary transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1934,7 +1934,7 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                   h.data // 环节历史记录有data字段
                 )
                 .length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
+                <div className="text-center py-12 text-primary-placeholder">
                   <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                   <p>暂无历史生成记录</p>
                 </div>
@@ -1949,25 +1949,25 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
                     .map((historyItem, index) => (
                       <div 
                         key={historyItem.id} 
-                        className="border-2 border-[#e5e3db] rounded-xl p-4 hover:border-[#2d2d2d] hover:shadow-[4px_4px_0px_0px_rgba(45,45,45,1)] transition-all"
+                        className="border-2 border-stroke-light rounded-xl p-4 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] transition-all"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-xs font-medium text-slate-500">
+                              <span className="text-xs font-medium text-primary-muted">
                                 版本 {index + 1}
                               </span>
-                              <span className="text-xs text-slate-400">
+                              <span className="text-xs text-primary-placeholder">
                                 {historyItem.displayTime}
                               </span>
                             </div>
-                            <div className="text-xs text-slate-600 mt-2">
+                            <div className="text-xs text-primary-secondary mt-2">
                               标题: {historyItem.data.title || '(无标题)'}
                             </div>
                           </div>
                           <button
                             onClick={() => handleRestoreSessionHistory(historyItem)}
-                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors"
+                            className="px-3 py-1.5 bg-info hover:bg-info-active text-white text-xs font-medium rounded transition-colors"
                           >
                             恢复此版本
                           </button>
@@ -1985,36 +1985,36 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
       {showGenerateModal && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-            <div className="p-6 border-b-2 border-[#e5e3db] flex items-center justify-between">
+            <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="bg-purple-600 p-2 rounded-lg text-white">
                   <Wand2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-slate-800">
+                  <h3 className="font-bold text-lg text-primary">
                     {showGenerateModal.type === 'activity' ? '生成教学活动' : 
                      showGenerateModal.type === 'script' ? '生成讲稿' : '生成教学环节'}
                   </h3>
                 </div>
               </div>
-              <button onClick={() => { setShowGenerateModal(null); setGeneratePrompt(''); }} className="text-slate-400 hover:text-slate-600">
+              <button onClick={() => { setShowGenerateModal(null); setGeneratePrompt(''); }} className="text-primary-placeholder hover:text-primary-secondary">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 block">提示词（可选）</label>
+                <label className="text-sm font-medium text-primary-secondary mb-2 block">提示词（可选）</label>
                 <textarea
                   value={generatePrompt}
                   onChange={(e) => setGeneratePrompt(e.target.value)}
                   placeholder="输入你的需求，例如：'设计一个互动游戏环节' 或 '生成一段鼓励性讲稿'"
-                  className="w-full border-2 border-[#e5e3db] rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none resize-none h-24 transition-all"
+                  className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-24 transition-all"
                 />
               </div>
               <div className="flex gap-3">
                 <button
                   onClick={() => { setShowGenerateModal(null); setGeneratePrompt(''); }}
-                  className="flex-1 px-4 py-2 border-2 border-[#e5e3db] rounded-xl text-[#2d2d2d] hover:bg-[#fffbe6] hover:border-[#2d2d2d] transition-all font-medium"
+                  className="flex-1 px-4 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all font-medium"
                 >
                   取消
                 </button>

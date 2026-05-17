@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       name: name || character_name,  // N8N 用 name 判断角色
       character_name,
       roles,
-      user_id: user.id,
+      user_id: user?.id,
       organization_id,
       timestamp: Date.now()
     };
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
       workflow: 'ai-image-generation',
       workflow_type,
       prompt: prompt.substring(0, 50) + '...',
-      user_id: user.id
+      user_id: user?.id
     });
 
     // 5. 调用 N8N Workflow
@@ -119,7 +119,8 @@ export async function POST(request: NextRequest) {
       const validUserId = (user_id && uuidRegex.test(user_id)) ? user_id : null;
       const validOrganizationId = (organization_id && uuidRegex.test(organization_id)) ? organization_id : null;
 
-      const executionId = n8nResult.executionId || n8nResult.id;
+      const n8nResultData = n8nResult as { executionId?: string; id?: string; comfyuiUrl?: string };
+      const executionId = n8nResultData.executionId || n8nResultData.id;
 
       await db.from('prompt_history').insert({
         user_id: validUserId,
@@ -140,13 +141,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 7. 返回结果（包含 comfyuiUrl 让前端可以直接轮询）
+    const n8nResultData = n8nResult as { executionId?: string; id?: string; comfyuiUrl?: string };
     return NextResponse.json({
       success: true,
       tasks: [{
         type: workflow_type,
         name: character_name,
-        promptId: n8nResult.executionId || n8nResult.id,
-        apiUrl: n8nResult.comfyuiUrl
+        promptId: n8nResultData.executionId || n8nResultData.id,
+        apiUrl: n8nResultData.comfyuiUrl
       }],
       workflowType: workflow_type,
       workflow: 'ai-image-generation'

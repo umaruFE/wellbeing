@@ -460,19 +460,18 @@ export const generateSceneImage = async (scene, referenceImages = [], userId = n
   // 先优化提示词为LTX2.0格式
   let optimizedPrompt = scene.content;
   try {
-    const response = await fetch('/api/ai/optimize-scene-prompt', {
+    const response = await fetch('/api/ai/optimize-prompt', {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
-        scene,
-        characterDescription: stylePrompt,
-        videoStyle: 'realistic'
+        originalPrompt: scene.content,
+        elementType: 'storyboard'
       })
     });
     
     if (response.ok) {
       const data = await response.json();
-      optimizedPrompt = data.prompt || scene.content;
+      optimizedPrompt = data.optimizedPrompt || scene.content;
       console.log(`分镜${scene.sequence || ''} 原始提示词:`, scene.content);
       console.log(`分镜${scene.sequence || ''} 优化后提示词:`, optimizedPrompt);
     }
@@ -663,6 +662,66 @@ export const composeVideo = async (scenes, _title = '', userId = null, organizat
   }
 };
 
+export const submitVideoTask = async (scenes, _title = '', userId = null, organizationId = null) => {
+  const sceneImages = (scenes || [])
+    .filter(s => s && s.generatedImage)
+    .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+    .map(s => s.generatedImage);
+
+  if (sceneImages.length === 0) {
+    throw new Error('没有可用的分镜图片');
+  }
+
+  const videoPrompt = scenes.map(s => s.content).join('，');
+
+  const response = await fetch('/api/ai/generate-video', {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      prompt: videoPrompt,
+      imageUrls: sceneImages,
+      imageUrl: sceneImages[0],
+      duration: 5,
+      user_id: userId,
+      organization_id: organizationId
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || '提交视频生成任务失败');
+  }
+
+  const data = await response.json();
+
+  if (!data.success || !data.promptId) {
+    throw new Error('提交视频生成任务失败');
+  }
+
+  return data.promptId;
+};
+
+export const checkVideoTaskStatus = async (promptId) => {
+  const response = await fetch(`/api/ai/video-task-status/${promptId}`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  });
+
+  if (!response.ok) {
+    throw new Error(`查询任务状态失败: ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (data.status === 'completed') {
+    return { status: 'completed', url: data.url };
+  } else if (data.status === 'error' || data.status === 'failed') {
+    return { status: 'failed', error: data.error || '任务执行失败' };
+  }
+
+  return { status: 'pending' };
+};
+
 // 导出默认对象
 export default {
   extractCharacterFromDescription,
@@ -672,5 +731,7 @@ export default {
   generateStoryboardScript,
   generateSceneImage,
   composeVideo,
-  pollTaskAndGetVideoUrl
+  pollTaskAndGetVideoUrl,
+  submitVideoTask,
+  checkVideoTaskStatus
 };

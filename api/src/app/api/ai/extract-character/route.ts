@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
     console.log('[extract-character] N8N 响应:', result);
 
     // 提取结果
-    const character = result.character || result.data?.character || '一个通用卡通人物';
+    const resultData = result as { character?: string; data?: { character?: string } };
+    const character = resultData.character || resultData.data?.character || '一个通用卡通人物';
 
     // 返回结果
     return NextResponse.json({

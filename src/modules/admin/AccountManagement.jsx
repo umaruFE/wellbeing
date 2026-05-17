@@ -58,56 +58,56 @@ export const AccountManagement = () => {
       {/* Search */}
       <div className="mb-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary-placeholder" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="搜索账号..."
-            className="w-full pl-10 pr-4 py-2 border-2 border-[#e5e3db] rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-[#2d2d2d] outline-none"
+            className="w-full pl-10 pr-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none"
           />
         </div>
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-800">账号列表</h2>
+        <h2 className="text-lg font-semibold text-primary">账号列表</h2>
         <button
           onClick={handleCreateAccount}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2 transition-colors"
+          className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info-active flex items-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
           创建账号
         </button>
       </div>
 
-      <div className="bg-white rounded-xl border-2 border-[#e5e3db] overflow-hidden">
+      <div className="bg-white rounded-xl border-2 border-stroke-light overflow-hidden">
         <table className="w-full">
-          <thead className="bg-[#fcfbf9] border-b-2 border-[#e5e3db]">
+          <thead className="bg-surface border-b-2 border-stroke-light">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">用户名</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">姓名</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">所属机构</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">角色</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700">创建时间</th>
-              <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700">操作</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">用户名</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">姓名</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">所属机构</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">角色</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">创建时间</th>
+              <th className="px-4 py-3 text-right text-sm font-semibold text-primary-secondary">操作</th>
             </tr>
           </thead>
           <tbody>
             {filteredAccounts.map(account => (
-              <tr key={account.id} className="border-b border-[#e5e3db] hover:bg-[#fffbe6]">
-                <td className="px-4 py-3 text-sm text-slate-800">{account.username}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{account.name}</td>
-                <td className="px-4 py-3 text-sm text-slate-600">{account.organizationName}</td>
+              <tr key={account.id} className="border-b border-stroke-light hover:bg-warning-light">
+                <td className="px-4 py-3 text-sm text-primary">{account.username}</td>
+                <td className="px-4 py-3 text-sm text-primary-secondary">{account.name}</td>
+                <td className="px-4 py-3 text-sm text-primary-secondary">{account.organizationName}</td>
                 <td className="px-4 py-3 text-sm">
-                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                  <span className="px-2 py-1 bg-info-light text-info-active rounded text-xs">
                     {ROLE_NAMES[account.role] || account.role}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-sm text-slate-500">{account.createdAt}</td>
+                <td className="px-4 py-3 text-sm text-primary-muted">{account.createdAt}</td>
                 <td className="px-4 py-3 text-right">
                   <button
                     onClick={() => handleDeleteAccount(account.id)}
-                    className="text-red-500 hover:text-red-700"
+                    className="text-error hover:text-error-active"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -118,8 +118,8 @@ export const AccountManagement = () => {
         </table>
         {filteredAccounts.length === 0 && (
           <div className="text-center py-12">
-            <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500">暂无账号</p>
+            <Users className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
+            <p className="text-primary-muted">暂无账号</p>
           </div>
         )}
       </div>

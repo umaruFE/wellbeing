@@ -101,9 +101,10 @@ export async function GET(request: NextRequest) {
     // 先查询执行状态
     const executionStatus = await queryExecutionStatus(executionId);
     
-    console.log('执行状态:', executionStatus.status, '是否完成:', executionStatus.finished);
+    const statusData = executionStatus as { status?: string; finished?: boolean; error?: string };
+    console.log('执行状态:', statusData.status, '是否完成:', statusData.finished);
     
-    if (executionStatus.status === 'success' && executionStatus.finished) {
+    if (statusData.status === 'success' && statusData.finished) {
       console.log('执行完成，获取视频数据...');
       
       try {
@@ -138,12 +139,12 @@ export async function GET(request: NextRequest) {
           }
         });
       }
-    } else if (executionStatus.status === 'error' || executionStatus.status === 'failed') {
+    } else if (statusData.status === 'error' || statusData.status === 'failed') {
       console.error('执行失败，详细状态:', JSON.stringify(executionStatus, null, 2));
       return NextResponse.json({
         success: false,
         error: '执行失败',
-        details: executionStatus.error || 'N8N工作流执行失败',
+        details: statusData.error || 'N8N工作流执行失败',
         executionStatus: executionStatus,
         data: {
           executionId: executionId,
