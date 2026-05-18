@@ -52,6 +52,8 @@ import { useCourseLayout } from '../../../components/CourseLayout';
 import { saveToHistory, handleUndo, handleRedo } from './CanvasView.history';
 import AssetGeneratorModal from '../../../components/AssetGeneratorModal';
 import apiService from '../../../services/api';
+import { TemplateSelectionModal } from './CanvasView.TemplateModal';
+import { getTemplateById, getTemplatesForStep, getTemplateStyleForStep } from './templates';
 
 const colors = {
   neutral: {
@@ -83,21 +85,6 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const { setTitle, setActions } = useCourseLayout();
   
   const courseId = initialConfig?.courseId || routeCourseId;
-
-  useEffect(() => {
-    const loadTitle = async () => {
-      if (courseId) {
-        try {
-          const result = await apiService.getCourse(courseId);
-          const course = result.data || result;
-          setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{course.title || '未命名课程'}</span>);
-        } catch {
-          setTitle(null);
-        }
-      }
-    };
-    loadTitle();
-  }, [courseId, setTitle]);
 
   const isCourseDataArray = Array.isArray(initialConfig?.courseData);
   
@@ -132,6 +119,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     } else {
       // 对象格式
       Object.entries(mergedData).forEach(([phaseKey, phase]) => {
+        if (!phase) return;
         (phase.steps || []).forEach(step => {
           // 清空原有的 canvasAssets 和 readingMaterials（不使用 course_data 中的数据）
           step.canvasAssets = [];
@@ -182,6 +170,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       try {
         const result = await apiService.getCourse(courseId);
         const course = result?.data || result;
+        
+        setTitle(<span className="font-bold text-[15px]" style={{ color: colors.neutral.text[1] }}>{course.title || '未命名课程'}</span>);
+        
         let raw = course.courseData || course.data || course.course_data || null;
         const resolved = resolveCourseData(raw);
         const canvasData = course.canvas_data || null;
@@ -200,10 +191,60 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         setExpandedPhases(isArr ? merged.map(p => p.id) : Object.keys(merged));
       } catch (err) {
         console.error('[CanvasView] loadCourseData failed:', err);
+        setTitle(null);
       }
     };
     loadCourseData();
-  }, [courseId, isCourseDataLoaded]);
+  }, [courseId, isCourseDataLoaded, setTitle]);
+
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const selectedTemplate = selectedTemplateId ? getTemplateById(selectedTemplateId) : null;
+
+  useEffect(() => {
+    if (!courseData) return;
+    if (selectedTemplateId) return;
+    const isArray = Array.isArray(courseData);
+    const phases = isArray ? courseData : Object.values(courseData);
+    if (!phases || phases.length === 0) return;
+    const hasAssets = phases.some(p => {
+      if (!p) return false;
+      const steps = p.steps || p.slides || [];
+      return steps.some(s => (s.canvasAssets && s.canvasAssets.length > 0) || (s.assets && s.assets.some(a => a.url)));
+    });
+    if (!hasAssets) {
+      setShowTemplateModal(true);
+    }
+  }, [courseData, selectedTemplateId]);
+
+  const handleTemplateConfirm = (templateId, autoLayout) => {
+    setSelectedTemplateId(templateId);
+    setShowTemplateModal(false);
+
+    if (autoLayout) {
+      const template = getTemplateById(templateId);
+      const newCourseData = JSON.parse(JSON.stringify(courseData));
+      const isArray = Array.isArray(newCourseData);
+
+      const phases = isArray ? newCourseData : Object.values(newCourseData);
+      const allSteps = phases.flatMap(p => p.steps || p.slides || []);
+      phases.forEach(phase => {
+        const steps = phase.steps || phase.slides || [];
+        steps.forEach(step => {
+          const textAssets = getTemplatesForStep(step, template, allSteps);
+          step.canvasAssets = textAssets;
+          step.assets = [...(step.assets || []), ...textAssets];
+        });
+      });
+
+      setCourseData(newCourseData);
+      saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+    }
+  };
+
+  const handleTemplateSkip = () => {
+    setShowTemplateModal(false);
+  };
   
   // 辅助函数：获取 phase 数据
   const getPhaseData = (phaseKey) => {
@@ -389,6 +430,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   allStepsRef.current = allSteps;
   const courseDataRef = React.useRef(courseData);
   courseDataRef.current = courseData;
+  const selectedTemplateRef = React.useRef(selectedTemplate);
+  selectedTemplateRef.current = selectedTemplate;
   const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
 
   useEffect(() => {
@@ -433,13 +476,16 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           const assets = stepInfo?.assets || stepInfo?.canvasAssets || [];
 
           const slide = pres.addSlide();
-          slide.background = { color: 'FFFFFF' };
-
-          if (stepInfo?.title) {
-            slide.addText(stepInfo.title, {
-              x: 0.3, y: 0.1, w: 9.4, h: 0.4,
-              fontSize: 14, bold: true, color: '333333',
-            });
+          const tpl = selectedTemplateRef.current;
+          if (tpl) {
+            const stepStyle = getTemplateStyleForStep(tpl, stepInfo, currentAllSteps);
+            if (stepStyle.pptxBackground) {
+              slide.background = stepStyle.pptxBackground;
+            } else {
+              slide.background = { color: 'FFFFFF' };
+            }
+          } else {
+            slide.background = { color: 'FFFFFF' };
           }
 
           for (const asset of assets) {
@@ -483,16 +529,16 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
                 slide.addImage({
                   data: imageDataUrl,
-                  x: assetX + (assetW - imgW) / 2,
-                  y: assetY + (assetH - imgH) / 2,
-                  w: imgW,
-                  h: imgH,
+                  x: assetX,
+                  y: assetY,
+                  w: assetW,
+                  h: assetH,
                 });
               } catch (err) {
                 console.error('导出图片失败:', err.message);
               }
             } else if (asset.type === 'text' && asset.content) {
-              const fontSize = Math.round((asset.fontSize || 16) * scaleX * 1.2);
+              const fontSize = Math.round(asset.fontSize || 16);
               slide.addText(asset.content, {
                 x: assetX,
                 y: assetY,
@@ -502,50 +548,67 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                 color: asset.color || '333333',
                 fontFace: 'Microsoft YaHei',
                 wrap: true,
+                bold: asset.fontWeight === 'bold',
+                align: asset.textAlign || 'left',
                 valign: 'top',
               });
             } else if (asset.type === 'video' && asset.url) {
-              try {
-                const mediaUrl = asset.url.includes('localhost') || asset.url.startsWith('/')
-                  ? asset.url
-                  : `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
-                slide.addMedia({
-                  type: 'video',
-                  path: mediaUrl,
-                  x: assetX,
-                  y: assetY,
-                  w: assetW,
-                  h: assetH,
-                });
-              } catch (err) {
-                console.error('导出视频失败:', err.message);
-                slide.addText('▶ 视频播放', {
-                  x: assetX, y: assetY, w: assetW, h: assetH,
-                  fontSize: 14, color: '666666', align: 'center', valign: 'middle',
-                  fill: { color: 'F0F0F0' },
-                });
-              }
+              slide.addShape('rect', {
+                x: assetX, y: assetY, w: assetW, h: assetH,
+                fill: { color: '#1A1A1A' },
+                line: { width: 0 },
+              });
+              const playBtnSize = Math.min(assetW, assetH, 1);
+              const playBtnX = assetX + (assetW - playBtnSize) / 2;
+              const playBtnY = assetY + (assetH - playBtnSize) / 2;
+              slide.addShape('ellipse', {
+                x: playBtnX, y: playBtnY, w: playBtnSize, h: playBtnSize,
+                fill: { color: '#4B5563' },
+                line: { width: 0 },
+              });
+              const triangleSize = playBtnSize * 0.35;
+              const triangleX = playBtnX + playBtnSize / 2 - triangleSize / 3;
+              const triangleY = playBtnY + playBtnSize / 2 - triangleSize / 2;
+              slide.addShape('triangle', {
+                x: triangleX, y: triangleY, w: triangleSize, h: triangleSize,
+                fill: { color: '#FFFFFF' },
+                line: { width: 0 },
+              });
             } else if (asset.type === 'audio' && asset.url) {
-              try {
-                const mediaUrl = asset.url.includes('localhost') || asset.url.startsWith('/')
-                  ? asset.url
-                  : `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(asset.url)}`;
-                slide.addMedia({
-                  type: 'audio',
-                  path: mediaUrl,
-                  x: assetX,
-                  y: assetY,
-                  w: assetW,
-                  h: Math.min(assetH, 0.6),
-                });
-              } catch (err) {
-                console.error('导出音频失败:', err.message);
-                slide.addText('♪ 音频', {
-                  x: assetX, y: assetY, w: assetW, h: Math.min(assetH, 0.6),
-                  fontSize: 12, color: '666666', align: 'center', valign: 'middle',
-                  fill: { color: 'F0F0F0' },
-                });
-              }
+              const audioBarHeight = Math.min(assetH, 0.6);
+              slide.addShape('rect', {
+                x: assetX, y: assetY, w: assetW, h: audioBarHeight,
+                fill: { color: '#1E293B' },
+                line: { width: 0 },
+              });
+              const playBtnSize = audioBarHeight * 0.55;
+              const playBtnX = assetX + audioBarHeight * 0.22;
+              const playBtnY = assetY + (audioBarHeight - playBtnSize) / 2;
+              slide.addShape('ellipse', {
+                x: playBtnX, y: playBtnY, w: playBtnSize, h: playBtnSize,
+                fill: { color: '#475569' },
+                line: { width: 0 },
+              });
+              const triangleSize = playBtnSize * 0.35;
+              const triangleX = playBtnX + playBtnSize / 2 - triangleSize / 3;
+              const triangleY = playBtnY + playBtnSize / 2 - triangleSize / 2;
+              slide.addShape('triangle', {
+                x: triangleX, y: triangleY, w: triangleSize, h: triangleSize,
+                fill: { color: '#FFFFFF' },
+                line: { width: 0 },
+              });
+              const title = asset.title || '音频';
+              slide.addText(title, {
+                x: assetX + audioBarHeight * 1.15,
+                y: assetY,
+                w: assetW - audioBarHeight * 1.5,
+                h: audioBarHeight,
+                fontSize: Math.round(audioBarHeight * 22),
+                color: '#94A3B8',
+                fontFace: 'Microsoft YaHei',
+                align: 'left',
+                valign: 'middle',
+              });
             }
           }
         }
@@ -944,7 +1007,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         });
       }
       return readingMaterialsData;
-    }
+    },
+    getSelectedTemplateId: () => selectedTemplateId,
+    setSelectedTemplateId: (id) => setSelectedTemplateId(id),
   }));
 
   const saveGenerationHistory = (assetId, assetType, url, prompt) => {
@@ -1109,7 +1174,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         >
           <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
           <div style={{ minWidth: 1024, minHeight: 620, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', boxSizing: 'border-box' }}>
-          <div ref={canvasRef} className="w-[960px] h-[540px] shrink-0 bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200">
+          <div ref={canvasRef} className="w-[960px] h-[540px] shrink-0 bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200" style={selectedTemplate && currentStep ? getTemplateStyleForStep(selectedTemplate, currentStep, allSteps).backgroundStyle : undefined}>
             <SlideRenderer
               assets={currentStep?.assets || currentStep?.canvasAssets || []}
               isEditable={true}
@@ -1355,6 +1420,12 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
           </div>
         </div>
       )}
+
+      <TemplateSelectionModal
+        isOpen={showTemplateModal}
+        onClose={handleTemplateSkip}
+        onConfirm={handleTemplateConfirm}
+      />
       </div>
   );
 });
