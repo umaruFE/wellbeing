@@ -26,6 +26,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       },
+      '/ppt': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        secure: false,
+      },
       '/ai': {
         target: 'https://8afbu10k60e64svm-8188.container.x-gpu.com',
         changeOrigin: true,
