@@ -73,15 +73,17 @@ export const CanvasAssetRenderer = ({
         return (
           <div
             key={asset.id}
-            onMouseDown={(e) => {
-              if (isEditable && !isEditing) {
-                onMouseDown?.(e, asset.id, 'dragging');
-              }
-            }}
             onClick={(e) => {
               e.stopPropagation();
-              if (isEditable && !isEditing && onClick) {
-                onClick(asset.id);
+              if (isEditable && !isEditing) {
+                onAssetSelect?.(asset.id);
+                onClick?.(asset.id);
+              }
+            }}
+            onMouseDown={(e) => {
+              if (isEditable && !isEditing) {
+                e.stopPropagation();
+                onMouseDown?.(e, asset.id, 'dragging');
               }
             }}
             style={{ 
