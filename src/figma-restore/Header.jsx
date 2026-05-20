@@ -23,7 +23,7 @@ export const Header = ({ title = '工作看板' }) => {
       <span className="breadcrumb-link">{title}</span>
       <div className="header-right">
         <Input
-          placeholder="Input"
+          placeholder="搜索"
           prefix={<Search size={14} />}
           style={{
             border: '2px solid #333e4e',
@@ -46,37 +46,11 @@ export const Header = ({ title = '工作看板' }) => {
             <BellOff className="bell-icon" size={18} />
           </div>
           <Dropdown overlay={menu}>
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '10px',
-                cursor: 'pointer',
-              }}
-            >
-              <div
-                style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '1166px',
-                  backgroundColor: '#f3f2ed',
-                }}
-              />
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  borderRadius: '8px',
-                  padding: '0 16px 0 8px',
-                  height: '32px',
-                  fontSize: '14px',
-                  lineHeight: '22px',
-                  color: '#333e4e',
-                }}
-              >
-                <span>Admin</span>
-                <ChevronDown size={12} />
+            <div className="user-wrapper">
+              <div className="user-avatar" />
+              <div className="user-info">
+                <span className="user-name">Admin</span>
+                <ChevronDown className="user-arrow" size={12} />
               </div>
             </div>
           </Dropdown>
@@ -84,14 +58,14 @@ export const Header = ({ title = '工作看板' }) => {
       </div>
       
       <Drawer
-        title="任务中心"
         placement="right"
         onClose={() => setDrawerVisible(false)}
         open={drawerVisible}
         width={420}
         bodyStyle={{ padding: 0 }}
+        headerStyle={{ display: 'none' }}
       >
-        <TaskCenter />
+        <TaskCenter onClose={() => setDrawerVisible(false)} />
       </Drawer>
     </div>
   );

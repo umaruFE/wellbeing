@@ -1,32 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { Row, Col, Button, Segmented, Tag, Progress } from 'antd';
-import { BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown } from 'lucide-react';
+import { 
+  BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
+  Sparkles, Plus, Package, RefreshCw, Zap, ListTodo, Clock, Award, Users
+} from 'lucide-react';
 import './AdminDashboard.css';
-
-const iconBasePath = '/assets/adminDashboard/';
-
-const icons = {
-  sparkles: `${iconBasePath}mp83qdgb-1p10wq7.svg`,
-  plusOrange: `${iconBasePath}mp83qdgb-44u4iyo.svg`,
-  image: `${iconBasePath}mp83qdgb-73acic7.svg`,
-  video: `${iconBasePath}mp83qdgb-1yrsh5b.svg`,
-  audio: `${iconBasePath}mp83qdgb-5mzsqrc.svg`,
-  asset: `${iconBasePath}mp83tzl7-5dcnjsd.svg`,
-  sync: `${iconBasePath}mp83tzl7-rbjgzut.svg`,
-  zap: `${iconBasePath}mp83tzl7-4p8q9jz.svg`,
-  task: `${iconBasePath}mp83wrxv-twpvdou.svg`,
-  course: `${iconBasePath}mp83zqvk-fic0t94.svg`,
-  imageTab: `${iconBasePath}mp83zqvk-wgd09lf.svg`,
-  videoTab: `${iconBasePath}mp83zqvk-607tqq9.svg`,
-  audioTab: `${iconBasePath}mp83zqvk-j7e3u9f.svg`,
-  sort: `${iconBasePath}mp83zqvk-plh92hc.svg`,
-  draft: `${iconBasePath}mp83zqvk-azl5lmg.svg`,
-  grade: `${iconBasePath}mp83zqvk-drw1xd7.svg`,
-  duration: `${iconBasePath}mp83zqvk-x8ix1m7.svg`,
-  students: `${iconBasePath}mp83zqvk-p2tff8j.svg`,
-  time: `${iconBasePath}mp83zqvk-8qgmjkv.svg`,
-  published: `${iconBasePath}mp83zqvk-f719d8a.svg`,
-};
 
 const mockCourses = [
   { id: 1, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20over%20desert%20landscape%20cartoon%20style&image_size=landscape_4_3' },
@@ -37,6 +15,41 @@ const mockCourses = [
   { id: 6, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=landscape_4_3' },
   { id: 7, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'published', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20hot%20air%20balloon%20over%20red%20rock%20canyon%20cartoon%20style&image_size=landscape_4_3' },
   { id: 8, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20camping%20in%20forest%20at%20night%20cartoon%20style&image_size=landscape_4_3' },
+];
+
+const mockImages = [
+  { id: 1, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20with%20telescope%20cyberpunk%20city%20cartoon%20style&image_size=square', title: '赛博朋克城市夜景', dimensions: '1024 × 1024', time: '2026/04/13 10:06:30', size: '2.3 MB' },
+  { id: 2, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20cooking%20in%20kitchen%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:05:20', size: '1.8 MB' },
+  { id: 3, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20having%20party%20at%20night%20city%20scene%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:04:15', size: '3.1 MB' },
+  { id: 4, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20hot%20air%20balloon%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:03:00', size: '2.7 MB' },
+  { id: 5, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20waiting%20at%20bus%20stop%20in%20rainy%20city%20cartoon%20style&image_size=square', title: '赛博朋克城市夜景', dimensions: '1024 × 1024', time: '2026/04/13 10:02:45', size: '1.5 MB' },
+  { id: 6, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20having%20picnic%20on%20beach%20tropical%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:01:30', size: '2.0 MB' },
+  { id: 7, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20camping%20in%20forest%20at%20night%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:00:15', size: '2.9 MB' },
+  { id: 8, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 09:59:00', size: '1.2 MB' },
+];
+
+const mockVideos = [
+  { id: 1, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20with%20telescope%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'published', time: '2026/04/13 10:06:30' },
+  { id: 2, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20having%20picnic%20on%20beach%20tropical%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
+  { id: 3, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
+  { id: 4, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20waiting%20at%20bus%20stop%20in%20rainy%20city%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
+  { id: 5, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
+  { id: 6, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20cooking%20in%20kitchen%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
+  { id: 7, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20camping%20in%20forest%20at%20night%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
+  { id: 8, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
+];
+
+const mockAudios = [
+  { id: 1, title: '轻松背景音乐(BGM)', duration: '05:20', time: '2026/04/13 10:06:30', color: 'green' },
+  { id: 2, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'gold' },
+  { id: 3, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'blue' },
+  { id: 4, title: '轻松背景音乐(BGM)', duration: '05:20', time: '2026/04/13 10:06:30', color: 'orange' },
+  { id: 5, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'purple' },
+  { id: 6, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'green' },
+  { id: 7, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'gold' },
+  { id: 8, title: '轻松背景音乐(BGM)', duration: '05:20', time: '2026/04/13 10:06:30', color: 'purple' },
+  { id: 9, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'blue' },
+  { id: 10, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'orange' },
 ];
 
 const StatusTag = ({ status }) => {
@@ -70,75 +83,142 @@ const CourseCard = ({ course }) => (
         <StatusTag status={course.status} />
       </div>
       <div className="course-meta">
-        <img src={icons.grade} style={{ width: 12, height: 12 }} />
+        <Award size={12} />
         <span className="meta-text">{course.grade}</span>
         <span className="meta-divider">·</span>
-        <img src={icons.duration} style={{ width: 12, height: 12 }} />
+        <Clock size={12} />
         <span className="meta-text">{course.duration}</span>
         <span className="meta-divider">·</span>
-        <img src={icons.students} style={{ width: 12, height: 12 }} />
+        <Users size={12} />
         <span className="meta-text">{course.students}</span>
       </div>
       <div className="course-time">
-        <img src={icons.time} style={{ width: 14, height: 14 }} />
+        <Clock size={14} />
         <span className="time-text">{course.time}</span>
       </div>
     </div>
   </div>
 );
 
-const CreateSection = () => (
-  <div className="stat-card">
-    <div className="card-header">
-      <img src={icons.sparkles} style={{ width: 18, height: 18 }} />
-      <span className="title">开始创作</span>
+const ImageCard = ({ image, onClick }) => (
+  <div className="image-card" onClick={onClick}>
+    <img src={image.url} alt={image.title || `Image ${image.id}`} className="image-card-img" />
+    <div className="image-card-overlay">
+      <div className="image-card-title">{image.title}</div>
+      <div className="image-card-dimensions">{image.dimensions}</div>
     </div>
-    <div className="create-section-content">
-      <Button
-        type="primary"
-        size="large"
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px',
-          border: '2px solid #333e4e',
-          borderRadius: '9999px',
-          boxShadow: '3px 3px 0px 0px #333e4e',
-          backgroundColor: '#f4785e',
-          padding: '0 14px',
-          height: '40px',
-          fontWeight: 500,
-          fontSize: '16px',
-          color: '#ffffff',
-        }}
-      >
-        <img src={icons.plusOrange} style={{ width: 16, height: 16 }} />
-        <span>创建新课程</span>
-      </Button>
-      <div className="create-section-buttons">
-        {[{ icon: icons.image, label: '创建图片' }, { icon: icons.video, label: '创建视频' }, { icon: icons.audio, label: '创建音频' }].map(({ icon, label }) => (
-          <Button
-            key={label}
-            size="middle"
+  </div>
+);
+
+const VideoCard = ({ video }) => (
+  <div className="video-card">
+    <div className="video-card-body">
+      <img src={video.thumbnail} alt={video.title} className="video-card-thumbnail" />
+      <div className="video-play-btn">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="24" cy="24" r="24" fill="rgba(0,0,0,0.6)" />
+          <path d="M30 24L18 16V32L30 24Z" fill="white" />
+        </svg>
+      </div>
+      <div className="video-duration">
+        {video.duration}
+      </div>
+    </div>
+    <div className="video-card-footer">
+      <div className="video-title-row">
+        <span className="video-title">{video.title}</span>
+        {video.status !== 'published' && (
+          <Tag
+            color={video.status === 'published' ? 'success' : undefined}
             style={{
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              flex: 1,
-              border: '2px solid #333e4e',
-              borderRadius: '8px',
-              boxShadow: '3px 3px 0px 0px rgba(0,0,0,0.15)',
-              backgroundColor: '#ffffff',
-              padding: '0 15px',
-              height: '40px',
+              gap: '4px',
+              borderRadius: '100px',
+              padding: '0 7px',
+              height: '22px',
+              fontSize: '12px',
               fontWeight: 500,
-              fontSize: '14px',
+              border: '1px solid #333e4e',
+              backgroundColor: '#fcfbf9',
               color: '#333e4e',
             }}
           >
-            <img src={icon} style={{ width: 16, height: 16 }} />
+            <FileText size={12} />
+            <span>草稿</span>
+          </Tag>
+        )}
+      </div>
+      <div className="video-time">
+        <Clock size={14} />
+        <span className="video-time-text">{video.time}</span>
+      </div>
+    </div>
+  </div>
+);
+
+const colorMap = {
+  green: '#bdddc2',
+  gold: '#ffd294',
+  blue: '#9ecaff',
+  orange: '#ff9a85',
+  purple: '#c29edf',
+};
+
+const AudioCard = ({ audio }) => {
+  const color = colorMap[audio.color] || '#bdddc2';
+  
+  return (
+    <div className="audio-card">
+      <div className="audio-card-body" style={{ backgroundColor: color }}>
+        <div className="audio-waveform">
+          {Array.from({ length: 30 }).map((_, i) => (
+            <div
+              key={i}
+              className="audio-bar"
+              style={{
+                height: `${Math.random() * 30 + 10}px`,
+              }}
+            />
+          ))}
+        </div>
+        <div className="audio-duration">{audio.duration}</div>
+      </div>
+      <div className="audio-card-footer">
+        <span className="audio-title">{audio.title}</span>
+        <div className="audio-time">
+          <Clock size={14} />
+          <span className="audio-time-text">{audio.time}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const CreateSection = () => (
+  <div className="create-section">
+    <div className="section-header">
+      <div className="section-title-wrapper">
+        <Sparkles size={18} />
+        <div className="section-title title-4">
+          <span className="title-text">开始创作</span>
+          <div className="title-decoration" />
+          <div className="title-dots">
+            <span className="dot-large" />
+            <span className="dot-small" />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div className="create-section-content">
+      <Button className="create-course-btn">
+        <Plus size={16} />
+        <span>创建新课程</span>
+      </Button>
+      <div className="create-section-buttons">
+        {[{ icon: Image, label: '创建图片' }, { icon: Video, label: '创建视频' }, { icon: Music, label: '创建音频' }].map(({ icon: Icon, label }) => (
+          <Button key={label} className="create-btn">
+            <Icon size={16} />
             <span>{label}</span>
           </Button>
         ))}
@@ -148,240 +228,48 @@ const CreateSection = () => (
 );
 
 const AssetSection = () => (
-  <div 
-    className="stat-card"
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'flex-start',
-      border: '1px solid #e8e3dd',
-      borderRadius: '12px',
-      backgroundColor: '#ffffff',
-      padding: '19px',
-      width: '469px',
-      height: '178px',
-      rowGap: '16px',
-    }}
-  >
-    <div 
-      style={{
-        display: 'flex',
-        flexShrink: 0,
-        alignItems: 'center',
-        alignSelf: 'stretch',
-        justifyContent: 'space-between',
-        height: '24px',
-      }}
-    >
-      <div 
-        style={{
-          display: 'inline-flex',
-          flexShrink: 0,
-          alignItems: 'center',
-          columnGap: '8px',
-          height: '23px',
-        }}
-      >
-        <img 
-          src={icons.asset} 
-          style={{ 
-            width: '18px', 
-            height: '18px',
-            flexShrink: 0,
-          }} 
-        />
-        <span 
-          style={{
-            flexShrink: 0,
-            lineHeight: '24px',
-            letterSpacing: '0',
-            color: '#333e4e',
-            fontSize: '16px',
-            fontWeight: 700,
-          }}
-        >
-          素材与资产
-        </span>
+  <div className="asset-section">
+    <div className="section-header">
+      <div className="section-title-wrapper">
+        <Package size={18} />
+        <div className="section-title title-5">
+          <span className="title-text">素材与资产</span>
+          <div className="title-decoration" />
+          <div className="title-dots">
+            <span className="dot-large" />
+            <span className="dot-small" />
+          </div>
+        </div>
       </div>
-      <Tag
-        style={{
-          display: 'inline-flex',
-          flexShrink: 0,
-          alignItems: 'center',
-          columnGap: '4px',
-          border: '1px solid #333e4e',
-          borderRadius: '100px',
-          backgroundColor: '#fcfbf9',
-          padding: '0 7px',
-          height: '22px',
-        }}
-      >
-        <img 
-          src={icons.sync} 
-          style={{ 
-            width: '12px', 
-            height: '12px',
-            flexShrink: 0,
-          }} 
-          className="animate-spin"
-        />
-        <span 
-          style={{
-            flexShrink: 0,
-            lineHeight: '20px',
-            letterSpacing: '0',
-            color: '#333e4e',
-            fontSize: '12px',
-            fontWeight: 500,
-          }}
-        >
-          实时同步中
-        </span>
+      <Tag className="sync-tag">
+        <RefreshCw size={12} className="animate-spin" />
+        <span>实时同步中</span>
       </Tag>
     </div>
-    <div 
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        flexShrink: 0,
-        alignItems: 'flex-start',
-        alignSelf: 'stretch',
-        justifyContent: 'center',
-        rowGap: '16px',
-      }}
-    >
-      <div 
-        style={{
-          display: 'flex',
-          flexShrink: 0,
-          alignItems: 'center',
-          alignSelf: 'stretch',
-          justifyContent: 'space-between',
-          minWidth: '412px',
-          height: '40px',
-        }}
-      >
-        <span 
-          style={{
-            flexShrink: 0,
-            lineHeight: '22px',
-            letterSpacing: '0',
-            color: '#575f6e',
-            fontSize: '14px',
-            fontWeight: 500,
-          }}
-        >
-          累计生成素材
-        </span>
-        <div 
-          style={{
-            display: 'inline-flex',
-            flexShrink: 0,
-            alignItems: 'center',
-            columnGap: '4px',
-          }}
-        >
-          <span 
-            style={{
-              flexShrink: 0,
-              lineHeight: '38px',
-              letterSpacing: '0',
-              color: '#333e4e',
-              fontSize: '30px',
-              fontWeight: 700,
-            }}
-          >
-            265
-          </span>
-          <span 
-            style={{
-              display: 'flex',
-              flexShrink: 0,
-              alignItems: 'flex-end',
-              width: '12px',
-              height: '32px',
-              lineHeight: '20px',
-              letterSpacing: '0',
-              color: '#818997',
-              fontSize: '12px',
-              fontWeight: 500,
-            }}
-          >
-            个
-          </span>
+    <div className="asset-content">
+      <div className="asset-stats-row">
+        <span className="info-text">累计生成素材</span>
+        <div className="stat-number-wrapper">
+          <span className="stat-number">265</span>
+          <span className="stat-label">个</span>
         </div>
       </div>
-      <div 
-        style={{
-          display: 'flex',
-          flexShrink: 0,
-          alignItems: 'center',
-          alignSelf: 'stretch',
-          justifyContent: 'space-between',
-          border: '1px solid #e8e3dd',
-          borderRadius: '8px',
-          backgroundColor: '#fcfbf9',
-          padding: '7px 16px',
-          height: '40px',
-        }}
-      >
-        <div 
-          style={{
-            display: 'inline-flex',
-            flexShrink: 0,
-            alignItems: 'center',
-            columnGap: '4px',
-          }}
-        >
-          <img 
-            src={icons.zap} 
-            style={{ 
-              width: '14px', 
-              height: '14px',
-              flexShrink: 0,
-            }} 
-          />
-          <span 
-            style={{
-              flexShrink: 0,
-              lineHeight: '22px',
-              letterSpacing: '0',
-              color: '#575f6e',
-              fontSize: '14px',
-              fontWeight: 500,
-            }}
-          >
-            剩余算力
-          </span>
+      <div className="power-row">
+        <div className="power-info">
+          <Zap size={14} />
+          <span className="power-label">剩余算力</span>
         </div>
-        <div 
-          style={{
-            display: 'inline-flex',
-            flexShrink: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-            columnGap: '8px',
-            height: '15px',
-          }}
-        >
-          <span 
-            style={{
-              flexShrink: 0,
-              lineHeight: '22px',
-              letterSpacing: '0',
-              fontSize: '14px',
-              fontWeight: 500,
-            }}
-          >
-            <span style={{ color: '#333e4e' }}>37,153</span>
-            <span style={{ color: '#818997' }}>/ 40k</span>
+        <div className="power-content">
+          <span className="power-value">
+            <span className="power-current">37,153</span>
+            <span className="power-total">/ 40k</span>
           </span>
           <Progress 
             percent={92.88} 
             strokeColor="#f5a233"
             strokeWidth={6}
             showInfo={false}
-            style={{ width: '117px' }}
+            className="power-progress"
           />
         </div>
       </div>
@@ -390,10 +278,19 @@ const AssetSection = () => (
 );
 
 const TaskSection = () => (
-  <div className="stat-card">
-    <div className="card-header">
-      <img src={icons.task} style={{ width: 18, height: 18 }} />
-      <span className="title">今日任务概览</span>
+  <div className="task-section">
+    <div className="section-header">
+      <div className="section-title-wrapper">
+        <ListTodo size={18} />
+        <div className="section-title title-6">
+          <span className="title-text">今日任务概览</span>
+          <div className="title-decoration" />
+          <div className="title-dots">
+            <span className="dot-large" />
+            <span className="dot-small" />
+          </div>
+        </div>
+      </div>
     </div>
     <div className="task-content">
       <div className="task-stats-row">
@@ -404,17 +301,17 @@ const TaskSection = () => (
         </div>
       </div>
       <div className="task-cards-row">
-        <div className="task-card-running">
-          <span className="task-label task-label-running">运行中</span>
-          <span className="task-value task-value-running">0</span>
+        <div className="task-card task-card-running">
+          <span className="task-label">运行中</span>
+          <span className="task-value">0</span>
         </div>
-        <div className="task-card-done">
-          <span className="task-label task-label-done">已完成</span>
-          <span className="task-value task-value-done">5</span>
+        <div className="task-card task-card-done">
+          <span className="task-label">已完成</span>
+          <span className="task-value">5</span>
         </div>
-        <div className="task-card-queue">
-          <span className="task-label task-label-queue">排队中</span>
-          <span className="task-value task-value-queue">2</span>
+        <div className="task-card task-card-queue">
+          <span className="task-label">排队中</span>
+          <span className="task-value">2</span>
         </div>
       </div>
     </div>
@@ -422,7 +319,8 @@ const TaskSection = () => (
 );
 
 const RecentSection = () => {
-  const [activeTab, setActiveTab] = useState('courses');
+  const [activeTab, setActiveTab] = useState('audio');
+  const [selectedImage, setSelectedImage] = useState(null);
   
   const tabs = [
     { id: 'courses', icon: BookOpen, label: '课程' },
@@ -431,64 +329,117 @@ const RecentSection = () => {
     { id: 'audio', icon: Music, label: '音频' },
   ];
 
-  const coursesToShow = useMemo(() => mockCourses, []);
+  const handleImageClick = useCallback((image) => {
+    setSelectedImage(image);
+  }, []);
 
-  return (
-    <div className="recent-container">
-      <div className="recent-header">
-        <div className="recent-title-row">
-          <span className="title">最近创建</span>
-          <Segmented
-            options={tabs.map(tab => {
-              const IconComponent = tab.icon;
-              return {
-                label: (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <IconComponent size={14} />
-                    <span>{tab.label}</span>
-                  </span>
-                ),
-                value: tab.id,
-              };
-            })}
-            value={activeTab}
-            onChange={setActiveTab}
-            style={{
-              border: '1.5px solid #333E4E',
-              borderRadius: '8px',
-            }}
-          />
-        </div>
-        <Button
-          type="text"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-            width: '92px',
-            height: '32px',
-            fontSize: '14px',
-            fontWeight: 500,
-            lineHeight: '22px',
-            color: '#f4785e',
-            padding: 0,
-          }}
-        >
-          <span>按更新时间</span>
-          <ChevronsUpDown size={14} />
-        </Button>
-      </div>
-      <div className="recent-content">
-        {[coursesToShow.slice(0, 4), coursesToShow.slice(4, 8)].map((row, rowIndex) => (
+  const handleClosePreview = useCallback(() => {
+    setSelectedImage(null);
+  }, []);
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'courses':
+        return [mockCourses.slice(0, 4), mockCourses.slice(4, 8)].map((row, rowIndex) => (
           <div key={rowIndex} className="recent-row">
             {row.map(course => (
               <CourseCard key={course.id} course={course} />
             ))}
           </div>
-        ))}
+        ));
+      case 'images':
+        return [mockImages.slice(0, 4), mockImages.slice(4, 8)].map((row, rowIndex) => (
+          <div key={rowIndex} className="recent-images-row">
+            {row.map(image => (
+              <ImageCard key={image.id} image={image} onClick={() => handleImageClick(image)} />
+            ))}
+          </div>
+        ));
+      case 'videos':
+        return [mockVideos.slice(0, 4), mockVideos.slice(4, 8)].map((row, rowIndex) => (
+          <div key={rowIndex} className="recent-videos-row">
+            {row.map(video => (
+              <VideoCard key={video.id} video={video} />
+            ))}
+          </div>
+        ));
+      case 'audio':
+        return [mockAudios.slice(0, 5), mockAudios.slice(5, 10)].map((row, rowIndex) => (
+          <div key={rowIndex} className="recent-audios-row">
+            {row.map(audio => (
+              <AudioCard key={audio.id} audio={audio} />
+            ))}
+          </div>
+        ));
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      <div className="recent-container">
+        <div className="recent-header">
+          <div className="recent-title-row">
+            <div className="recent-title-wrapper title-4">
+              <span className="title">最近创建</span>
+              <div className="title-decoration" />
+              <div className="title-dots">
+                <span className="dot-large" />
+                <span className="dot-small" />
+              </div>
+            </div>
+            <Segmented
+              options={tabs.map(tab => {
+                const IconComponent = tab.icon;
+                return {
+                  label: (
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <IconComponent size={14} />
+                      <span>{tab.label}</span>
+                    </span>
+                  ),
+                  value: tab.id,
+                };
+              })}
+              value={activeTab}
+              onChange={setActiveTab}
+              style={{
+                border: '2px solid #333E4E',
+                borderRadius: '9999px',
+                backgroundColor: '#f3f2ed',
+              }}
+            />
+          </div>
+          <div className="recent-sort-btn">
+            <span>按更新时间</span>
+            <ChevronsUpDown size={14} />
+          </div>
+        </div>
+        <div className="recent-content">
+          {renderContent()}
+        </div>
       </div>
-    </div>
+      {selectedImage && (
+        <div className="image-preview-overlay" onClick={handleClosePreview}>
+          <div className="image-preview-card" onClick={(e) => e.stopPropagation()}>
+            <button className="image-preview-close" onClick={handleClosePreview}>
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 5L5 15M5 5L15 15" stroke="#575f6e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <img src={selectedImage.url} alt="Preview" className="image-preview-img" />
+            <div className="image-preview-info">
+              <div className="image-preview-time">
+                <img src={icons.time} style={{ width: 14, height: 14 }} />
+                <span>{selectedImage.time}</span>
+              </div>
+              <span className="image-preview-size">{selectedImage.size}</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
