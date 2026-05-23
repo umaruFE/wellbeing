@@ -1,8 +1,8 @@
 export const createCourseSteps = [
-  { title: '设定起点', subtitle: 'Set the Course' },
-  { title: '构思任务', subtitle: 'Design the Adventure' },
-  { title: '选择路径', subtitle: 'Choose the Path' },
-  { title: '添加魔法', subtitle: 'Add Your Magic' },
+  { title: '设定课程起点', subtitle: 'Set the Course' },
+  { title: '构思情境任务', subtitle: 'Design the Adventure' },
+  { title: '选择体验路径', subtitle: 'Choose the Path' },
+  { title: '添加个性魔法', subtitle: 'Add Your Magic' },
 ];
 
 export const ageOptions = ['3-6岁', '7-9岁', '9-12岁'];
@@ -70,8 +70,8 @@ export const defaultCreateCourseValues = {
   age: '7-9岁',
   duration: '60分钟',
   classSize: '9-15人',
-  vocabularies: [],
-  grammars: [],
+  vocabularies: ['Dennis', 'James', 'Ricky'],
+  grammars: ['Dennis', 'James', 'Ricky'],
   languageSkills: ['听力理解', '口语表达'],
   taskName: '',
   storyContext: '',
@@ -79,5 +79,5 @@ export const defaultCreateCourseValues = {
   experiencePath: '艺术表达',
   specialRequirements: '',
   attachments: [],
-  atmosphere: undefined,
+  atmosphere: '神秘探险感',
 };

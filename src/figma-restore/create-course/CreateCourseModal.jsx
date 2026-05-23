@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { Button, Form, Modal, Steps, message } from 'antd';
+import { Button, Form, Modal, message } from 'antd';
 import { CreateCourseStepFour } from './CreateCourseStepFour';
 import { CreateCourseStepOne } from './CreateCourseStepOne';
 import { CreateCourseStepThree } from './CreateCourseStepThree';
@@ -92,37 +92,58 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     <CreateCourseStepFour key="step-4" />,
   ];
 
+  const modalTitle = (
+    <div className="fr-create-modal-title">
+      <span>创建课程</span>
+      <i className="fr-create-title-mark" />
+      <i className="fr-create-title-dot large" />
+      <i className="fr-create-title-dot small" />
+    </div>
+  );
+
+  const modalFooter = (
+    <div className="fr-create-footer-bar">
+      <Button
+        onClick={() => setCurrent(value => value - 1)}
+        className={`fr-create-btn-cancel fr-create-prev ${current === 0 ? 'hidden' : ''}`}
+      >
+        上一步
+      </Button>
+      <div className="fr-create-footer-actions">
+        <Button onClick={handleCancel} className="fr-create-btn-cancel">取消</Button>
+        <Button onClick={handleNext} className="fr-create-btn-next">
+          {current === createCourseSteps.length - 1 ? '完成' : '下一步'}
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <Modal
       className="fr-create-modal"
-      title={<span className="fr-create-title">创建课程<span /></span>}
+      title={modalTitle}
       open={open}
       onCancel={handleCancel}
-      width={1020}
+      width={858}
       centered
       destroyOnHidden
-      footer={[
-        current > 0 ? (
-          <Button key="prev" onClick={() => setCurrent(value => value - 1)}>
-            上一步
-          </Button>
-        ) : <span key="space" />,
-        <div key="actions" className="fr-create-footer-actions">
-          <Button onClick={handleCancel}>取消</Button>
-          <Button type="primary" onClick={handleNext}>
-            {current === createCourseSteps.length - 1 ? '完成' : '下一步'}
-          </Button>
-        </div>,
-      ]}
+      footer={modalFooter}
       afterOpenChange={(visible) => {
         if (visible) resetFlow();
       }}
     >
-      <Steps
-        className="fr-create-steps"
-        current={current}
-        items={createCourseSteps.map(step => ({ title: step.title }))}
-      />
+      <div className="fr-create-steps">
+        {createCourseSteps.map((step, index) => (
+          <div
+            key={step.title}
+            className={`fr-create-step-item ${index === current ? 'active' : ''} ${index < current ? 'process' : ''}`}
+          >
+            <span className="fr-create-step-number">{index < current ? '✓' : index + 1}</span>
+            <span className="fr-create-step-label">{step.title}</span>
+            {index < createCourseSteps.length - 1 && <div className="fr-create-step-tail" />}
+          </div>
+        ))}
+      </div>
 
       <Form
         form={form}

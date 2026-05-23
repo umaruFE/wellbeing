@@ -3,13 +3,13 @@ import { Button, Checkbox, Form, Input, Radio, Select, Upload } from 'antd';
 import {
   Clock,
   Heart,
-  Image as ImageIcon,
+  ListChecks,
   MessageSquare,
   Paperclip,
+  PencilLine,
   RefreshCw,
-  Route,
   ShieldCheck,
-  Sparkles,
+  Star,
   Target,
   Users,
   X,
@@ -35,7 +35,7 @@ const journeyItems = [
   { title: 'Engage 情境启动', color: '#ff705f', key: 'engage' },
   { title: 'Empower 语言赋能', color: '#3b82f6', key: 'empower' },
   { title: 'Execute 创作运用', color: '#4f9f69', key: 'execute' },
-  { title: 'Elevate 回顾升华', color: '#9b62d1', key: 'elevate' },
+  { title: 'Execute 创作运用', color: '#9b62d1', key: 'elevate' },
 ];
 
 export function CourseMapView({ course, onCourseChange, onNext }) {
@@ -115,7 +115,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={() => setRegenOpen(true)}>
             重新生成
           </Button>
-          <Button className="btn-ghost primary" onClick={openEdit}>编辑输入</Button>
+          <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>编辑</Button>
         </div>
       </div>
 
@@ -137,7 +137,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
             <div className="course-map-v2-core">
               <div className="course-map-v2-core-title">
-                <Sparkles size={18} />
+                <Star size={18} />
                 核心情境
                 <span>Storyline</span>
               </div>
@@ -146,12 +146,21 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
             <div className="course-map-v2-cover">
               <div className="overview-hero-img">
-                <div className="img-placeholder">
-                  <ImageIcon size={42} />
-                  <span>点击生成课程封面</span>
+                <div className="course-map-cover-art" aria-hidden="true">
+                  <div className="cm-kitchen-wall">
+                    <span className="cm-cabinet left" />
+                    <span className="cm-hood" />
+                    <span className="cm-cabinet right" />
+                    <span className="cm-stove" />
+                    <span className="cm-counter" />
+                  </div>
+                  <div className="cm-character pear"><span className="cm-eye one" /><span className="cm-eye two" /><span className="cm-mouth" /></div>
+                  <div className="cm-character brain"><span className="cm-eye one" /><span className="cm-eye two" /><span className="cm-mouth" /></div>
+                  <div className="cm-character orange"><span className="cm-eye one" /><span className="cm-eye two" /><span className="cm-mouth" /></div>
+                  <div className="cm-floor" />
                 </div>
                 <div className="img-overlay">
-                  <Button>重新生成</Button>
+                  <Button icon={<RefreshCw size={16} />}>重新生成</Button>
                 </div>
               </div>
             </div>
@@ -178,14 +187,14 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
               <CourseGoal icon={Heart} title="成长罗盘" en="Growth Compass" color="#9b62d1">
                 {map.growth}
               </CourseGoal>
-              <CourseGoal icon={Route} title="核心体验" en="How We Learn" color="#4f9f69">
+              <CourseGoal icon={Users} title="核心体验" en="How We Learn" color="#4f9f69">
                 {map.experience}
               </CourseGoal>
 
               <article className="course-map-v2-goal wide">
                 <div className="course-map-v2-goal-title">
-                  <span className="course-map-v2-icon" style={{ '--goal-color': '#f59e0b' }}>
-                    <Route size={18} />
+                  <span className="course-map-v2-icon" style={{ '--goal-color': '#ff705f' }}>
+                    <ListChecks size={18} />
                   </span>
                   课堂旅程
                   <span className="course-map-v2-title-en">Class Journey</span>
@@ -204,10 +213,6 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   ))}
                 </div>
               </article>
-            </div>
-
-            <div className="overview-actions">
-              <Button className="btn-next-step" type="primary" onClick={onNext}>进入教案设计</Button>
             </div>
           </section>
         </div>

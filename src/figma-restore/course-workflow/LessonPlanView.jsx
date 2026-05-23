@@ -3,10 +3,11 @@ import { Button, Form, Input, InputNumber } from 'antd';
 import {
   ChevronRight,
   Clock,
+  ClipboardList,
   Copy,
   Heart,
   Image as ImageIcon,
-  Info,
+  ListChecks,
   MoreVertical,
   Plus,
   RefreshCw,
@@ -15,6 +16,7 @@ import {
   Sparkles,
   SlidersHorizontal,
   Star,
+  Target,
   Trash2,
   X,
 } from 'lucide-react';
@@ -393,7 +395,7 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
                 <span className="tbl-phase-title">{phase.title}</span>
                 <span className="tbl-phase-cn">{phase.name}</span>
                 <button className="tbl-phase-edit-btn" title="查看阶段详情" aria-label="查看阶段详情">
-                  <Info size={13} />
+                  <MoreVertical size={14} />
                 </button>
               </div>
             </div>
@@ -439,34 +441,35 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
                         >
                           <MoreVertical size={14} />
                         </button>
-                        <StepMenu
-                          open={menuKey === cardKey}
-                          onRegen={() => {
-                            setMenuKey(null);
-                            openAddStep(phase);
-                          }}
-                          onAdjust={() => openAdjust(phase.key, index, step)}
-                          onEdit={() => openEdit(phase.key, index, step)}
-                        />
+                        {!isOpen && (
+                          <StepMenu
+                            open={menuKey === cardKey}
+                            onRegen={() => {
+                              setMenuKey(null);
+                              openAddStep(phase);
+                            }}
+                            onAdjust={() => openAdjust(phase.key, index, step)}
+                          />
+                        )}
                       </div>
                     </div>
 
                     <div className="step-detail" data-brief-enhanced="1" onClick={(event) => event.stopPropagation()}>
                       <div className="step-brief-list">
                         <div className="step-brief-item">
-                          <div className="step-detail-label">语言目标</div>
+                          <div className="step-detail-label"><Target size={13} />语言目标</div>
                           <div className="step-detail-body tbl-lo" contentEditable suppressContentEditableWarning spellCheck={false}>
                             {step.goal}
                           </div>
                         </div>
                         <div className="step-brief-item">
-                          <div className="step-detail-label">活动概述</div>
+                          <div className="step-detail-label"><ClipboardList size={13} />活动概述</div>
                           <div className="step-detail-body" contentEditable suppressContentEditableWarning spellCheck={false}>
                             {step.activity}
                           </div>
                         </div>
                         <div className="step-brief-item">
-                          <div className="step-detail-label">活动流程</div>
+                          <div className="step-detail-label"><ListChecks size={13} />活动流程</div>
                           <div className="step-flow-card">
                             <div className="step-flow-list">
                               {buildStepFlowItems(step).map((item) => (
@@ -499,6 +502,17 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
                         onEdit={() => openEdit(phase.key, index, step)}
                         onAdjust={() => openAdjust(phase.key, index, step)}
                         onMore={() => setMenuKey(menuKey === cardKey ? null : cardKey)}
+                        menu={(
+                          <StepMenu
+                            open={isOpen && menuKey === cardKey}
+                            placement="footer"
+                            onRegen={() => {
+                              setMenuKey(null);
+                              openAddStep(phase);
+                            }}
+                            onAdjust={() => openAdjust(phase.key, index, step)}
+                          />
+                        )}
                       />
                     </div>
                   </article>
@@ -507,10 +521,6 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
             </div>
           </section>
         ))}
-      </div>
-
-      <div className="tbl-next-row">
-        <Button className="btn-next-step" type="primary" onClick={onNext}>进入 PPT 课件</Button>
       </div>
 
       {addOpen && (
@@ -784,9 +794,9 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
   );
 }
 
-function StepMenu({ open, onRegen, onAdjust }) {
+function StepMenu({ open, onRegen, onAdjust, placement }) {
   return (
-    <div className={`step-menu-dropdown ${open ? 'open' : ''}`}>
+    <div className={`step-menu-dropdown ${placement === 'footer' ? 'footer-menu' : ''} ${open ? 'open' : ''}`}>
       <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />重新生成</button>
       <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />调整环节</button>
       <button type="button" className="step-menu-item"><Heart size={12} />收藏此环节</button>

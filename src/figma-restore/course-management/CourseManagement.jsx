@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { BookOpen, Plus } from 'lucide-react';
 import { CreateCourseModal } from '../create-course';
 import { CourseWorkflow } from '../course-workflow';
 import { CourseCard } from './CourseCard';
 import { CourseToolbar } from './CourseToolbar';
 import { demoCourses } from './courseData';
+import apiService from '../../services/api';
 import './CourseManagement.css';
 
 export function CourseManagement({
@@ -13,13 +14,47 @@ export function CourseManagement({
   onOpenCourse,
   onEditCourse,
 }) {
-  const [courses, setCourses] = useState(initialCourses);
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
-  const [openMenuId, setOpenMenuId] = useState(null);
-  const [filterOpen, setFilterOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [workflowCourse, setWorkflowCourse] = useState(null);
+
+  const fetchCourses = useCallback(async () => {
+    try {
+      setCoursesLoading(true);
+      const result = await apiService.getCourses();
+      const list = result?.data || [];
+      setCourses(list.map((course, i) => ({
+        id: course.id,
+        title: course.title || course.unit || '未命名课程',
+        unit: course.unit || course.title || '未命名课程',
+        status: course.status === 'published' ? 'published' : 'draft',
+        age: course.age_group || '--',
+        grade: course.age_group ? `G${course.age_group.split('-')[0]}` : '--',
+        duration: course.duration ? `${course.duration}分钟` : '--',
+        theme: course.theme || '情境任务',
+        updatedAt: course.created_at
+          ? new Date(course.created_at).toLocaleDateString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+            }).replace(/\//g, '/')
+          : '--',
+        accent: ['#ff705d', '#4482e5', '#9966d0', '#509f69', '#edb100', '#f4785e'][i % 6],
+        coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
+        active: i === 0,
+      })));
+    } catch (error) {
+      console.error('获取课程列表失败:', error);
+      setCourses(demoCourses);
+    } finally {
+      setCoursesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCourses();
+  }, [fetchCourses]);
 
   const counts = useMemo(() => ({
     all: courses.length,
@@ -36,22 +71,6 @@ export function CourseManagement({
       return matchesStatus && (!keyword || haystack.includes(keyword));
     });
   }, [courses, search, status]);
-
-  const handleTogglePublish = (targetCourse) => {
-    setCourses(currentCourses => currentCourses.map(course => {
-      if (course.id !== targetCourse.id) return course;
-      return {
-        ...course,
-        status: course.status === 'published' ? 'draft' : 'published',
-      };
-    }));
-    setOpenMenuId(null);
-  };
-
-  const handleDelete = (targetCourse) => {
-    setCourses(currentCourses => currentCourses.filter(course => course.id !== targetCourse.id));
-    setOpenMenuId(null);
-  };
 
   const handleStatusChange = (nextStatus) => {
     setStatus(nextStatus);
@@ -128,7 +147,7 @@ export function CourseManagement({
               handleCreateClick();
             }}
           >
-            <Plus size={22} />
+            <Plus size={16} />
             创建新课程
           </button>
         </header>
@@ -138,19 +157,20 @@ export function CourseManagement({
             search={search}
             status={status}
             counts={counts}
-            isFilterOpen={filterOpen}
             onSearchChange={setSearch}
-            onFilterToggle={() => setFilterOpen(value => !value)}
             onStatusChange={handleStatusChange}
           />
 
-          {filteredCourses.length > 0 ? (
+          {coursesLoading ? (
+            <div className="fr-cm-loading">
+              <span className="loading-text">加载中...</span>
+            </div>
+          ) : filteredCourses.length > 0 ? (
             <div className="fr-cm-grid">
               {filteredCourses.map(course => (
                 <CourseCard
                   key={course.id}
                   course={course}
-                  isMenuOpen={openMenuId === course.id}
                   onOpen={(item) => {
                     if (onOpenCourse) {
                       onOpenCourse(item);
@@ -158,13 +178,6 @@ export function CourseManagement({
                     }
                     setWorkflowCourse(item);
                   }}
-                  onEdit={(item) => {
-                    setOpenMenuId(null);
-                    onEditCourse?.(item);
-                  }}
-                  onMenuToggle={(id) => setOpenMenuId(current => current === id ? null : id)}
-                  onTogglePublish={handleTogglePublish}
-                  onDelete={handleDelete}
                 />
               ))}
             </div>

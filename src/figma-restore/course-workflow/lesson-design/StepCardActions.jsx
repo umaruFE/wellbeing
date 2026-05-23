@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen, Edit3, MoreVertical, SlidersHorizontal } from 'lucide-react';
 
-export function StepCardActions({ onDetail, onEdit, onAdjust, onMore }) {
+export function StepCardActions({ onDetail, onEdit, onAdjust, onMore, menu }) {
   return (
     <div className="step-card-footer">
       <button type="button" className="step-card-action" onClick={onDetail}>
@@ -16,9 +16,12 @@ export function StepCardActions({ onDetail, onEdit, onAdjust, onMore }) {
         <SlidersHorizontal size={14} />
         调整参数
       </button>
-      <button type="button" className="step-card-action icon" onClick={onMore} aria-label="更多操作">
-        <MoreVertical size={14} />
-      </button>
+      <span className="step-card-more-wrap">
+        <button type="button" className="step-card-action icon" onClick={onMore} aria-label="更多操作">
+          <MoreVertical size={14} />
+        </button>
+        {menu}
+      </span>
     </div>
   );
 }
