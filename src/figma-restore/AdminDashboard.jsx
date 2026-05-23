@@ -1,21 +1,11 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Button, Segmented, Tag, Progress } from 'antd';
 import { 
   BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
   Sparkles, Plus, Package, RefreshCw, Zap, ListTodo, Clock, Award, Users
 } from 'lucide-react';
+import apiService from '../services/api';
 import './AdminDashboard.css';
-
-const mockCourses = [
-  { id: 1, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20over%20desert%20landscape%20cartoon%20style&image_size=landscape_4_3' },
-  { id: 2, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'published', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20waiting%20at%20bus%20stop%20in%20rainy%20city%20cartoon%20style&image_size=landscape_4_3' },
-  { id: 3, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20having%20picnic%20on%20beach%20tropical%20cartoon%20style&image_size=landscape_4_3' },
-  { id: 4, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20on%20stage%20with%20spotlight%20performing%20cartoon%20style&image_size=landscape_4_3' },
-  { id: 5, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20cooking%20in%20kitchen%20cartoon%20style&image_size=landscape_4_3' },
-  { id: 6, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=landscape_4_3' },
-  { id: 7, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'published', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20hot%20air%20balloon%20over%20red%20rock%20canyon%20cartoon%20style&image_size=landscape_4_3' },
-  { id: 8, title: '神奇的动物世界', grade: '7-9岁', duration: '40分钟', students: '9-15人', time: '2026/04/13 10:06:30', status: 'draft', thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20camping%20in%20forest%20at%20night%20cartoon%20style&image_size=landscape_4_3' },
-];
 
 const mockImages = [
   { id: 1, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20with%20telescope%20cyberpunk%20city%20cartoon%20style&image_size=square', title: '赛博朋克城市夜景', dimensions: '1024 × 1024', time: '2026/04/13 10:06:30', size: '2.3 MB' },
@@ -318,7 +308,7 @@ const TaskSection = () => (
   </div>
 );
 
-const RecentSection = () => {
+const RecentSection = ({ courses, coursesLoading }) => {
   const [activeTab, setActiveTab] = useState('audio');
   const [selectedImage, setSelectedImage] = useState(null);
   
@@ -340,7 +330,22 @@ const RecentSection = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'courses':
-        return [mockCourses.slice(0, 4), mockCourses.slice(4, 8)].map((row, rowIndex) => (
+        if (coursesLoading) {
+          return (
+            <div className="loading-container">
+              <span className="loading-text">加载中...</span>
+            </div>
+          );
+        }
+        if (!courses || courses.length === 0) {
+          return (
+            <div className="empty-container">
+              <FileText size={40} className="empty-icon" />
+              <span className="empty-text">暂无课程</span>
+            </div>
+          );
+        }
+        return [courses.slice(0, 4), courses.slice(4, 8)].map((row, rowIndex) => (
           <div key={rowIndex} className="recent-row">
             {row.map(course => (
               <CourseCard key={course.id} course={course} />
@@ -431,7 +436,7 @@ const RecentSection = () => {
             <img src={selectedImage.url} alt="Preview" className="image-preview-img" />
             <div className="image-preview-info">
               <div className="image-preview-time">
-                <img src={icons.time} style={{ width: 14, height: 14 }} />
+                <Clock size={14} />
                 <span>{selectedImage.time}</span>
               </div>
               <span className="image-preview-size">{selectedImage.size}</span>
@@ -444,6 +449,41 @@ const RecentSection = () => {
 };
 
 export const AdminDashboard = () => {
+  const [courses, setCourses] = useState([]);
+  const [coursesLoading, setCoursesLoading] = useState(true);
+
+  const fetchRecentCourses = useCallback(async () => {
+    try {
+      setCoursesLoading(true);
+      const result = await apiService.getCourses({ limit: '8', page: '1' });
+      const list = result?.data || [];
+      setCourses(list.map((course, i) => ({
+        id: course.id,
+        title: course.title || course.unit || '未命名课程',
+        grade: course.age_group || '--',
+        duration: course.duration ? `${course.duration}分钟` : '--',
+        students: '--',
+        time: course.created_at
+          ? new Date(course.created_at).toLocaleString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '/')
+          : '--',
+        status: course.status === 'published' ? 'published' : 'draft',
+        thumbnail: `https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20cartoon%20style&image_size=landscape_4_3`,
+      })));
+    } catch (error) {
+      console.error('获取最近课程失败:', error);
+      setCourses([]);
+    } finally {
+      setCoursesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRecentCourses();
+  }, [fetchRecentCourses]);
+
   return (
     <div className="admin-dashboard">
       <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
@@ -451,7 +491,7 @@ export const AdminDashboard = () => {
         <Col xs={24} lg={8}><AssetSection /></Col>
         <Col xs={24} lg={8}><TaskSection /></Col>
       </Row>
-      <RecentSection />
+      <RecentSection courses={courses} coursesLoading={coursesLoading} />
     </div>
   );
 };
