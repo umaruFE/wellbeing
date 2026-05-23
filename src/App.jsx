@@ -5,6 +5,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { RequireAuth } from './components/RequireAuth';
 import { LoginPage } from './modules/auth/LoginPage';
 import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
+import { MainLayout } from './components/MainLayout';
+
 import { Layout } from './figma-restore/Layout';
 import { CourseManagementPage } from './modules/course-management/CourseManagementPage';
 import CourseOverviewPage from './modules/course-management/course-overview/CourseOverviewPage';
@@ -26,6 +28,7 @@ import IPSceneTestPage from './modules/test/IPSceneTestPage';
 import { VideoGeneratorPage } from './modules/test/VideoGeneratorPage';
 import { VoiceGeneratorPage } from './modules/test/VoiceGeneratorPage';
 import { AdminDashboard } from './figma-restore/AdminDashboard';
+import { CourseManagement } from './figma-restore/course-management';
 import DesignSystemPreview from './modules/design-system/DesignSystemPreview';
 
 function App() {
@@ -44,6 +47,7 @@ function App() {
           <Route
             element={
               <ProtectedRoute>
+                {/* <MainLayout /> */}
                 <Layout />
               </ProtectedRoute>
             }
@@ -73,6 +77,15 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
                   <CourseManagementPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/figma-courses"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'viewer']}>
+                  <CourseManagement />
                 </RequireAuth>
               }
             />

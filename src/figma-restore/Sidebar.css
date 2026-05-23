@@ -98,6 +98,7 @@
   height: 40px;
   cursor: pointer;
   transition: all 0.2s ease;
+  text-decoration: none;
 }
 
 .menu-item:hover {
@@ -135,10 +136,18 @@
   cursor: pointer;
   transition: background 0.2s ease;
   border-radius: 6px;
+  text-decoration: none;
 }
 
 .submenu-item:hover {
   background: #f3f2ed;
+}
+
+.submenu-item.active {
+  border: 2px solid #333e4e;
+  border-radius: 8px;
+  box-shadow: 3px 3px 0px 0px #333e4e;
+  background: #cde0c5;
 }
 
 .submenu-item-icon {

@@ -1,5 +1,17 @@
 import React from 'react';
-import { LayoutDashboard, BookOpen, Compass, Image, Music, Video, FileText, Users, Settings, ChevronRight } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import {
+  BookOpen,
+  ChevronRight,
+  Compass,
+  FileText,
+  Image,
+  LayoutDashboard,
+  Music,
+  Settings,
+  Users,
+  Video,
+} from 'lucide-react';
 import './Sidebar.css';
 
 const menuItems = [
@@ -8,35 +20,51 @@ const menuItems = [
     id: 'dashboard',
     label: '工作看板',
     icon: LayoutDashboard,
-    active: true,
+    path: '/',
+    end: true,
   },
   {
     type: 'group',
     title: '课程',
     items: [
-      { id: 'course-manage', label: '课程管理', icon: BookOpen },
-      { id: 'course-plaza', label: '课程广场', icon: Compass },
+      { id: 'course-manage', label: '课程管理', icon: BookOpen, path: '/figma-courses' },
+      { id: 'course-plaza', label: '课程广场', icon: Compass, path: '/course-square' },
     ],
   },
   {
     type: 'group',
     title: '素材库',
     items: [
-      { id: 'image-library', label: '图片库', icon: Image },
-      { id: 'audio-library', label: '音频库', icon: Music },
-      { id: 'video-library', label: '视频库', icon: Video },
-      { id: 'material', label: '教材资源', icon: FileText },
+      { id: 'image-library', label: '图片库', icon: Image, path: '/ppt-images' },
+      { id: 'audio-library', label: '音频库', icon: Music, path: '/voices' },
+      { id: 'video-library', label: '视频库', icon: Video, path: '/video-materials' },
+      { id: 'material', label: '教材资源', icon: FileText, path: '/knowledge-base' },
     ],
   },
   {
     type: 'group',
     title: '系统管理',
     items: [
-      { id: 'user-manage', label: '用户管理', icon: Users },
-      { id: 'settings', label: '系统设置', icon: Settings },
+      { id: 'user-manage', label: '用户管理', icon: Users, path: '/accounts' },
+      { id: 'settings', label: '系统设置', icon: Settings, path: '/super-admin' },
     ],
   },
 ];
+
+const MenuLink = ({ item, className, iconClassName, textClassName }) => {
+  const IconComponent = item.icon;
+
+  return (
+    <NavLink
+      to={item.path}
+      end={item.end}
+      className={({ isActive }) => `${className} ${isActive ? 'active' : ''}`}
+    >
+      <IconComponent className={iconClassName} size={14} />
+      <span className={textClassName}>{item.label}</span>
+    </NavLink>
+  );
+};
 
 export const Sidebar = () => {
   return (
@@ -51,29 +79,29 @@ export const Sidebar = () => {
         <div className="sidebar-menu">
           {menuItems.map((item) => {
             if (item.type === 'item') {
-              const IconComponent = item.icon;
               return (
-                <div
+                <MenuLink
                   key={item.id}
-                  className={`menu-item ${item.active ? 'active' : ''}`}
-                >
-                  <IconComponent className="menu-item-icon" size={14} />
-                  <span className="menu-item-text">{item.label}</span>
-                </div>
+                  item={item}
+                  className="menu-item"
+                  iconClassName="menu-item-icon"
+                  textClassName="menu-item-text"
+                />
               );
             }
+
             return (
               <div key={item.title} className="menu-group">
                 <div className="menu-group-title">{item.title}</div>
-                {item.items.map((subItem) => {
-                  const SubIconComponent = subItem.icon;
-                  return (
-                    <div key={subItem.id} className="submenu-item">
-                      <SubIconComponent className="submenu-item-icon" size={14} />
-                      <span className="submenu-item-text">{subItem.label}</span>
-                    </div>
-                  );
-                })}
+                {item.items.map((subItem) => (
+                  <MenuLink
+                    key={subItem.id}
+                    item={subItem}
+                    className="submenu-item"
+                    iconClassName="submenu-item-icon"
+                    textClassName="submenu-item-text"
+                  />
+                ))}
               </div>
             );
           })}
