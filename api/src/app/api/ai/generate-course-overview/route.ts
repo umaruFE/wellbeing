@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
     console.log('[generate-course-overview] 调用 N8N:', { workflow: 'course-overview-generator' });
 
-    const result = await n8nClient.call('course-overview-generator', n8nPayload, { timeout: 120000 });
+    const result = await n8nClient.call('course-overview-generator', n8nPayload, { timeout: 300000 });
 
     console.log('[generate-course-overview] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
 
