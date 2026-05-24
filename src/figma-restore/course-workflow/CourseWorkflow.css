@@ -140,6 +140,7 @@ body.fr-workflow-route-active .header{display:none}
 .course-map-v2-cover .img-placeholder svg{color:#ff705f}
 .course-map-v2-cover .img-overlay{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(37,49,66,.16));opacity:0;transition:opacity .18s ease}
 .course-map-v2-cover .overview-hero-img:hover .img-overlay{opacity:1}
+.course-map-theme-image{width:100%;height:100%;min-height:342px;object-fit:cover;border-radius:0;display:block}
 .course-map-v2-panel{padding:28px 24px 24px}
 .course-map-v2-panel-title{color:#1f2937;font-size:22px;font-weight:800;margin:0}
 .course-map-v2-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:20px;margin-bottom:24px;border-bottom:2px solid #e8e4dc}

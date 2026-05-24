@@ -57,36 +57,14 @@ export async function POST(request: NextRequest) {
 
     console.log('[generate-course-overview] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
 
-    let courseOverview = null;
-
-    if (Array.isArray(result) && result.length > 0) {
-      const firstItem = result[0];
-
-      if (firstItem?.text && typeof firstItem.text === 'string') {
-        const text = firstItem.text.trim();
-        try {
-          const parsed = JSON.parse(text);
-          courseOverview = parsed.courseOverview || parsed;
-        } catch {
-          try {
-            const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            const parsed = JSON.parse(cleaned);
-            courseOverview = parsed.courseOverview || parsed;
-          } catch (e) {
-            console.error('[generate-course-overview] JSON解析失败:', e);
-          }
-        }
-      } else if (firstItem?.courseOverview) {
-        courseOverview = firstItem.courseOverview;
-      } else if (firstItem?.output?.courseOverview) {
-        courseOverview = firstItem.output.courseOverview;
-      }
-    }
+    const firstItem = Array.isArray(result) ? result[0] : result;
+    const courseOverview = firstItem?.data?.courseOverview || firstItem?.courseOverview || null;
+    const themeImageUrl = firstItem?.data?.themeImageUrl || firstItem?.themeImageUrl || null;
 
     if (courseOverview) {
       return NextResponse.json({
         success: true,
-        data: { courseOverview }
+        data: { courseOverview, themeImageUrl }
       }, { headers: corsHeaders() });
     }
 

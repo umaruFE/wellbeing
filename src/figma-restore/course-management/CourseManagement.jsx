@@ -142,6 +142,8 @@ export function CourseManagement({
       specialRequirements: values.specialRequirements,
       atmosphere: values.atmosphere,
       attachments: values.attachments,
+      courseOverview: values.courseOverview,
+      themeImageUrl: values.themeImageUrl,
     };
 
     setCourses(currentCourses => [newCourse, ...currentCourses]);
