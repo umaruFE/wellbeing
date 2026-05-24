@@ -73,21 +73,22 @@
     },
     {
       "parameters": {
-        "jsCode": "const overview = $input.item.json.courseOverview;\nconst seed = Math.floor(Math.random() * 1000000000000);\nconst imagePrompt = overview.themeImagePrompt || '扁平矢量插画，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，卡通风格的儿童教室场景';\n\nconst workflow = {\n  \"2\": {\n    \"inputs\": {\n      \"unet_name\": \"qwen_image_fp8_e4m3fn.safetensors\",\n      \"weight_dtype\": \"fp8_e4m3fn\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": { \"title\": \"Load Diffusion Model\" }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_2.5_vl_7b_fp8_scaled.safetensors\",\n      \"type\": \"qwen_image\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": { \"title\": \"Load CLIP\" }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"vae_name\": \"qwen_image_vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": { \"title\": \"Load VAE\" }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"shift\": 3.1000000000000005,\n      \"model\": [\"12\", 0]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\",\n    \"_meta\": { \"title\": \"ModelSamplingAuraFlow\" }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": imagePrompt,\n      \"clip\": [\"3\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"CLIP Text Encode (Prompt)\" }\n  },\n  \"8\": {\n    \"inputs\": {\n      \"text\": \"模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物\",\n      \"clip\": [\"3\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"CLIP Text Encode (Negative)\" }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"width\": 1344,\n      \"height\": 768,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyLatentImage\",\n    \"_meta\": { \"title\": \"Empty Latent Image\" }\n  },\n  \"10\": {\n    \"inputs\": {\n      \"seed\": seed,\n      \"steps\": 8,\n      \"cfg\": 1,\n      \"sampler_name\": \"res_multistep\",\n      \"scheduler\": \"sgm_uniform\",\n      \"denoise\": 1,\n      \"model\": [\"6\", 0],\n      \"positive\": [\"7\", 0],\n      \"negative\": [\"8\", 0],\n      \"latent_image\": [\"9\", 0]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": { \"title\": \"KSampler\" }\n  },\n  \"12\": {\n    \"inputs\": {\n      \"lora_name\": \"Qwen-Image-Lightning-8steps-V1.0.safetensors\",\n      \"strength_model\": 1,\n      \"model\": [\"2\", 0]\n    },\n    \"class_type\": \"LoraLoaderModelOnly\",\n    \"_meta\": { \"title\": \"LoraLoaderModelOnly\" }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"course-theme\",\n      \"images\": [\"15\", 0]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": { \"title\": \"Save Image\" }\n  },\n  \"15\": {\n    \"inputs\": {\n      \"samples\": [\"10\", 0],\n      \"vae\": [\"4\", 0]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": { \"title\": \"VAE Decode\" }\n  }\n};\n\nreturn {\n  courseOverview: overview,\n  imageWorkflow: JSON.stringify(workflow)\n};"
+        "jsCode": "const raw = $input.item.json;\nconst overview = raw.courseOverview || raw;\nconst seed = Math.floor(Math.random() * 1000000000000);\nconst imagePrompt = overview.themeImagePrompt || '扁平矢量插画，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，卡通风格的儿童教室场景';\n\nconst workflow = {\n  \"2\": {\n    \"inputs\": {\n      \"unet_name\": \"qwen_image_fp8_e4m3fn.safetensors\",\n      \"weight_dtype\": \"fp8_e4m3fn\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": { \"title\": \"Load Diffusion Model\" }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_2.5_vl_7b_fp8_scaled.safetensors\",\n      \"type\": \"qwen_image\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": { \"title\": \"Load CLIP\" }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"vae_name\": \"qwen_image_vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": { \"title\": \"Load VAE\" }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"shift\": 3.1000000000000005,\n      \"model\": [\"12\", 0]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\",\n    \"_meta\": { \"title\": \"ModelSamplingAuraFlow\" }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": imagePrompt,\n      \"clip\": [\"3\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"CLIP Text Encode (Prompt)\" }\n  },\n  \"8\": {\n    \"inputs\": {\n      \"text\": \"模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物\",\n      \"clip\": [\"3\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"CLIP Text Encode (Negative)\" }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"width\": 1344,\n      \"height\": 768,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyLatentImage\",\n    \"_meta\": { \"title\": \"Empty Latent Image\" }\n  },\n  \"10\": {\n    \"inputs\": {\n      \"seed\": seed,\n      \"steps\": 8,\n      \"cfg\": 1,\n      \"sampler_name\": \"res_multistep\",\n      \"scheduler\": \"sgm_uniform\",\n      \"denoise\": 1,\n      \"model\": [\"6\", 0],\n      \"positive\": [\"7\", 0],\n      \"negative\": [\"8\", 0],\n      \"latent_image\": [\"9\", 0]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": { \"title\": \"KSampler\" }\n  },\n  \"12\": {\n    \"inputs\": {\n      \"lora_name\": \"Qwen-Image-Lightning-8steps-V1.0.safetensors\",\n      \"strength_model\": 1,\n      \"model\": [\"2\", 0]\n    },\n    \"class_type\": \"LoraLoaderModelOnly\",\n    \"_meta\": { \"title\": \"LoraLoaderModelOnly\" }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"course-theme\",\n      \"images\": [\"15\", 0]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": { \"title\": \"Save Image\" }\n  },\n  \"15\": {\n    \"inputs\": {\n      \"samples\": [\"10\", 0],\n      \"vae\": [\"4\", 0]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": { \"title\": \"VAE Decode\" }\n  }\n};\n\nreturn {\n  courseOverview: overview,\n  comfyuiPayload: JSON.stringify({ prompt: workflow })\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [112, 128],
       "id": "a1b2c3d4-overview-007",
-      "name": "组装图片工作流"
+      "name": "构建图片工作流"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "http://comfyui:8188/prompt",
+        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/prompt",
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": {{ JSON.parse($json.imageWorkflow) }}\n}",
+        "specifyBody": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ $json.comfyuiPayload }}",
         "options": {
           "timeout": 30000
         }
@@ -100,13 +101,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const promptId = $input.item.json.prompt_id;\nconst courseOverview = $('组装图片工作流').first().json.courseOverview;\n\nconst maxAttempts = 60;\nfor (let i = 0; i < maxAttempts; i++) {\n  await new Promise(r => setTimeout(r, 3000));\n  \n  try {\n    const res = await fetch(`http://comfyui:8188/history/${promptId}`);\n    const data = await res.json();\n    const taskData = Object.values(data)[0];\n    \n    if (taskData && taskData.outputs) {\n      const images = taskData.outputs['14']?.images || [];\n      if (images.length > 0) {\n        const img = images[0];\n        const imageUrl = `/ai/view?filename=${img.filename}&subfolder=${img.subfolder || ''}&type=${img.type || 'output'}`;\n        return {\n          courseOverview,\n          themeImageUrl: imageUrl\n        };\n      }\n    }\n    \n    if (taskData?.status?.status_str === 'error') {\n      return {\n        courseOverview,\n        themeImageUrl: null,\n        error: '图片生成失败'\n      };\n    }\n  } catch (e) {\n    // 继续重试\n  }\n}\n\nreturn {\n  courseOverview,\n  themeImageUrl: null,\n  error: '图片生成超时'\n};"
+        "jsCode": "const promptId = $input.item.json.prompt_id;\nconst courseOverview = $('构建图片工作流').first().json.courseOverview;\n\nconst maxAttempts = 60;\nfor (let i = 0; i < maxAttempts; i++) {\n  await new Promise(r => setTimeout(r, 3000));\n  \n  try {\n    const res = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/history/${promptId}`,\n      json: true\n    });\n    const taskData = Object.values(res)[0];\n    \n    if (taskData && taskData.outputs) {\n      const images = taskData.outputs['14']?.images || [];\n      if (images.length > 0) {\n        const img = images[0];\n        const imageUrl = `/ai/view?filename=${img.filename}&subfolder=${img.subfolder || ''}&type=${img.type || 'output'}`;\n        return {\n          courseOverview,\n          themeImageUrl: imageUrl\n        };\n      }\n    }\n    \n    if (taskData?.status?.status_str === 'error') {\n      return {\n        courseOverview,\n        themeImageUrl: null,\n        error: '图片生成失败'\n      };\n    }\n  } catch (e) {\n    // 继续重试\n  }\n}\n\nreturn {\n  courseOverview,\n  themeImageUrl: null,\n  error: '图片生成超时'\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [528, 128],
       "id": "a1b2c3d4-overview-009",
-      "name": "等待图片生成"
+      "name": "等待图片完成"
     },
     {
       "parameters": {
@@ -148,7 +149,7 @@
       "main": [
         [
           {
-            "node": "组装图片工作流",
+            "node": "构建图片工作流",
             "type": "main",
             "index": 0
           }
@@ -177,7 +178,7 @@
         ]
       ]
     },
-    "组装图片工作流": {
+    "构建图片工作流": {
       "main": [
         [
           {
@@ -192,14 +193,14 @@
       "main": [
         [
           {
-            "node": "等待图片生成",
+            "node": "等待图片完成",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "等待图片生成": {
+    "等待图片完成": {
       "main": [
         [
           {

@@ -159,7 +159,7 @@ export function CourseManagement({
   }
 
   return (
-    <section className="fr-courses" onClick={() => setOpenMenuId(null)}>
+    <section className="fr-courses">
       <div className="fr-cm-page">
         <header className="fr-cm-hero">
           <div className="fr-cm-hero-left">

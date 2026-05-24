@@ -77,7 +77,7 @@ export function CreateCourseStepOne() {
 
       <div className="fr-create-two">
         <Form.Item
-          label={<span><span className="required">*</span>核心词汇<span className="hint">（输入后按回车添加）</span></span>}
+          label={<span><span className="required">*</span>核心词汇</span>}
           name="vocabularies"
           className="fr-create-form-item"
         >
@@ -92,7 +92,7 @@ export function CreateCourseStepOne() {
         </Form.Item>
 
         <Form.Item
-          label={<span><span className="required">*</span>语法/句型<span className="hint">（输入后按回车添加）</span></span>}
+          label={<span><span className="required">*</span>语法/句型</span>}
           name="grammars"
           className="fr-create-form-item"
         >
@@ -108,7 +108,7 @@ export function CreateCourseStepOne() {
       </div>
 
       <Form.Item 
-        label={<span><span className="required">*</span>语言能力培养侧重<span className="hint">(可多选)</span></span>} 
+        label={<span>语言能力培养侧重<span className="hint">(可多选)</span></span>} 
         name="languageSkills"
         className="fr-create-form-item"
       >

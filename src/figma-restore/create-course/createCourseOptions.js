@@ -16,7 +16,7 @@ export const languageSkillOptions = [
   { label: '口语表达', value: '口语表达' },
   { label: '阅读理解', value: '阅读理解' },
   { label: '书面表达', value: '书面表达' },
-  { label: '综合能力', value: '综合能力' },
+  // { label: '综合能力', value: '综合能力' },
 ];
 
 export const atmosphereOptions = [
@@ -70,14 +70,14 @@ export const defaultCreateCourseValues = {
   age: '7-9岁',
   duration: '60分钟',
   classSize: '9-15人',
-  vocabularies: ['Dennis', 'James', 'Ricky'],
-  grammars: ['Dennis', 'James', 'Ricky'],
-  languageSkills: ['听力理解', '口语表达'],
+  vocabularies: [],
+  grammars: [],
+  languageSkills: [],
   taskName: '',
   storyContext: '',
   keyOutcome: '',
-  experiencePath: '艺术表达',
+  experiencePath: '',
   specialRequirements: '',
   attachments: [],
-  atmosphere: '神秘探险感',
+  atmosphere: '',
 };
