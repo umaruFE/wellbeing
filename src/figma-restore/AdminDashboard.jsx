@@ -1,46 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Button, Segmented, Tag, Progress } from 'antd';
+import { useNavigate } from 'react-router-dom';
 import { 
   BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
-  Sparkles, Plus, Package, RefreshCw, Zap, ListTodo, Clock, Award, Users
+  Sparkles, Plus, Package, RefreshCw, Zap, ListTodo, Clock, Award, Users,
+  Loader2
 } from 'lucide-react';
 import apiService from '../services/api';
+import { CreateCourseModal } from './create-course';
 import './AdminDashboard.css';
 
-const mockImages = [
-  { id: 1, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20with%20telescope%20cyberpunk%20city%20cartoon%20style&image_size=square', title: '赛博朋克城市夜景', dimensions: '1024 × 1024', time: '2026/04/13 10:06:30', size: '2.3 MB' },
-  { id: 2, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20cooking%20in%20kitchen%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:05:20', size: '1.8 MB' },
-  { id: 3, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20having%20party%20at%20night%20city%20scene%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:04:15', size: '3.1 MB' },
-  { id: 4, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20hot%20air%20balloon%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:03:00', size: '2.7 MB' },
-  { id: 5, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20waiting%20at%20bus%20stop%20in%20rainy%20city%20cartoon%20style&image_size=square', title: '赛博朋克城市夜景', dimensions: '1024 × 1024', time: '2026/04/13 10:02:45', size: '1.5 MB' },
-  { id: 6, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20having%20picnic%20on%20beach%20tropical%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:01:30', size: '2.0 MB' },
-  { id: 7, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20camping%20in%20forest%20at%20night%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 10:00:15', size: '2.9 MB' },
-  { id: 8, url: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=square', title: '复古咖啡馆插画', dimensions: '1024 × 1024', time: '2026/04/13 09:59:00', size: '1.2 MB' },
-];
-
-const mockVideos = [
-  { id: 1, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20with%20telescope%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'published', time: '2026/04/13 10:06:30' },
-  { id: 2, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20having%20picnic%20on%20beach%20tropical%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
-  { id: 3, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
-  { id: 4, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20waiting%20at%20bus%20stop%20in%20rainy%20city%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
-  { id: 5, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20pink%20monster%20in%20hot%20air%20balloon%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
-  { id: 6, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20cooking%20in%20kitchen%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
-  { id: 7, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20camping%20in%20forest%20at%20night%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
-  { id: 8, thumbnail: 'https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20in%20asian%20night%20market%20lanterns%20cartoon%20style&image_size=square', title: 'AI发展史科普视频', duration: '05:20', status: 'draft', time: '2026/04/13 10:06:30' },
-];
-
-const mockAudios = [
-  { id: 1, title: '轻松背景音乐(BGM)', duration: '05:20', time: '2026/04/13 10:06:30', color: 'green' },
-  { id: 2, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'gold' },
-  { id: 3, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'blue' },
-  { id: 4, title: '轻松背景音乐(BGM)', duration: '05:20', time: '2026/04/13 10:06:30', color: 'orange' },
-  { id: 5, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'purple' },
-  { id: 6, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'green' },
-  { id: 7, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'gold' },
-  { id: 8, title: '轻松背景音乐(BGM)', duration: '05:20', time: '2026/04/13 10:06:30', color: 'purple' },
-  { id: 9, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'blue' },
-  { id: 10, title: '英文课文朗读语音', duration: '05:20', time: '2026/04/13 10:06:30', color: 'orange' },
-];
+const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
+  const [errored, setErrored] = useState(!src);
+  if (errored || !src) {
+    return (
+      <div className={className} style={{ ...style, background: '#f0eee9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {Icon ? <Icon size={36} style={{ color: '#c4bfb6' }} strokeWidth={1.5} /> : null}
+      </div>
+    );
+  }
+  return <img src={src} alt={alt} className={className} style={style} onError={() => setErrored(true)} />;
+};
 
 const StatusTag = ({ status }) => {
   const isPublished = status === 'published';
@@ -64,9 +44,9 @@ const StatusTag = ({ status }) => {
   );
 };
 
-const CourseCard = ({ course }) => (
-  <div className="course-card">
-    <img src={course.thumbnail} alt={course.title} className="course-image" />
+const CourseCard = ({ course, onClick }) => (
+  <div className="course-card" onClick={onClick} style={{ cursor: 'pointer' }}>
+    <PlaceholderImg src={course.thumbnail} alt={course.title} className="course-image" icon={BookOpen} />
     <div className="course-footer">
       <div className="course-footer-row">
         <span className="course-title">{course.title}</span>
@@ -92,7 +72,7 @@ const CourseCard = ({ course }) => (
 
 const ImageCard = ({ image, onClick }) => (
   <div className="image-card" onClick={onClick}>
-    <img src={image.url} alt={image.title || `Image ${image.id}`} className="image-card-img" />
+    <PlaceholderImg src={image.url} alt={image.title || `Image ${image.id}`} className="image-card-img" icon={Image} />
     <div className="image-card-overlay">
       <div className="image-card-title">{image.title}</div>
       <div className="image-card-dimensions">{image.dimensions}</div>
@@ -103,7 +83,7 @@ const ImageCard = ({ image, onClick }) => (
 const VideoCard = ({ video }) => (
   <div className="video-card">
     <div className="video-card-body">
-      <img src={video.thumbnail} alt={video.title} className="video-card-thumbnail" />
+      <PlaceholderImg src={video.thumbnail} alt={video.title} className="video-card-thumbnail" icon={Video} />
       <div className="video-play-btn">
         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="24" cy="24" r="24" fill="rgba(0,0,0,0.6)" />
@@ -119,7 +99,6 @@ const VideoCard = ({ video }) => (
         <span className="video-title">{video.title}</span>
         {video.status !== 'published' && (
           <Tag
-            color={video.status === 'published' ? 'success' : undefined}
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -147,17 +126,10 @@ const VideoCard = ({ video }) => (
   </div>
 );
 
-const colorMap = {
-  green: '#bdddc2',
-  gold: '#ffd294',
-  blue: '#9ecaff',
-  orange: '#ff9a85',
-  purple: '#c29edf',
-};
+const audioColors = ['#bdddc2', '#ffd294', '#9ecaff', '#ff9a85', '#c29edf'];
 
-const AudioCard = ({ audio }) => {
-  const color = colorMap[audio.color] || '#bdddc2';
-  
+const AudioCard = ({ audio, index }) => {
+  const color = audioColors[index % audioColors.length];
   return (
     <div className="audio-card">
       <div className="audio-card-body" style={{ backgroundColor: color }}>
@@ -166,9 +138,7 @@ const AudioCard = ({ audio }) => {
             <div
               key={i}
               className="audio-bar"
-              style={{
-                height: `${Math.random() * 30 + 10}px`,
-              }}
+              style={{ height: `${Math.random() * 30 + 10}px` }}
             />
           ))}
         </div>
@@ -185,7 +155,14 @@ const AudioCard = ({ audio }) => {
   );
 };
 
-const CreateSection = () => (
+const EmptyState = ({ icon: Icon, text }) => (
+  <div className="empty-container">
+    <Icon size={40} className="empty-icon" />
+    <span className="empty-text">{text}</span>
+  </div>
+);
+
+const CreateSection = ({ onCreateCourse, navigate }) => (
   <div className="create-section">
     <div className="section-header">
       <div className="section-title-wrapper">
@@ -201,13 +178,17 @@ const CreateSection = () => (
       </div>
     </div>
     <div className="create-section-content">
-      <Button className="create-course-btn">
+      <Button className="create-course-btn" onClick={onCreateCourse}>
         <Plus size={16} />
         <span>创建新课程</span>
       </Button>
       <div className="create-section-buttons">
-        {[{ icon: Image, label: '创建图片' }, { icon: Video, label: '创建视频' }, { icon: Music, label: '创建音频' }].map(({ icon: Icon, label }) => (
-          <Button key={label} className="create-btn">
+        {[
+          { icon: Image, label: '创建图片', route: '/test/ip-scene' },
+          { icon: Video, label: '创建视频', route: '/test/video-generator' },
+          { icon: Music, label: '创建音频', route: '/test/audio-generator' },
+        ].map(({ icon: Icon, label, route }) => (
+          <Button key={label} className="create-btn" onClick={() => navigate(route)}>
             <Icon size={16} />
             <span>{label}</span>
           </Button>
@@ -217,57 +198,70 @@ const CreateSection = () => (
   </div>
 );
 
-const AssetSection = () => (
-  <div className="asset-section">
-    <div className="section-header">
-      <div className="section-title-wrapper">
-        <Package size={18} />
-        <div className="section-title title-5">
-          <span className="title-text">素材与资产</span>
-          <div className="title-decoration" />
-          <div className="title-dots">
-            <span className="dot-large" />
-            <span className="dot-small" />
+const AssetSection = ({ stats, statsLoading }) => {
+  const totalMediaCount = (stats.media?.images || 0) + (stats.media?.videos || 0) + (stats.media?.audios || 0);
+  const computeUsage = stats.compute || { used: 0, total: 40000, remaining: 40000 };
+  const remaining = computeUsage.total - computeUsage.used;
+  const percent = computeUsage.total > 0 ? (remaining / computeUsage.total) * 100 : 100;
+
+  return (
+    <div className="asset-section">
+      <div className="section-header">
+        <div className="section-title-wrapper">
+          <Package size={18} />
+          <div className="section-title title-5">
+            <span className="title-text">素材与资产</span>
+            <div className="title-decoration" />
+            <div className="title-dots">
+              <span className="dot-large" />
+              <span className="dot-small" />
+            </div>
+          </div>
+        </div>
+        <Tag className="sync-tag">
+          <RefreshCw size={12} className="animate-spin" />
+          <span>实时同步中</span>
+        </Tag>
+      </div>
+      <div className="asset-content">
+        <div className="asset-stats-row">
+          <span className="info-text">累计生成素材</span>
+          <div className="stat-number-wrapper">
+            {statsLoading ? (
+              <Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} />
+            ) : (
+              <>
+                <span className="stat-number">{totalMediaCount}</span>
+                <span className="stat-label">个</span>
+              </>
+            )}
+          </div>
+        </div>
+        <div className="power-row">
+          <div className="power-info">
+            <Zap size={14} />
+            <span className="power-label">剩余算力</span>
+          </div>
+          <div className="power-content">
+            <span className="power-value">
+              <span className="power-current">{remaining.toLocaleString()}</span>
+              <span className="power-total">/ {computeUsage.total / 1000}k</span>
+            </span>
+            <Progress
+              percent={percent}
+              strokeColor="#f5a233"
+              strokeWidth={6}
+              showInfo={false}
+              className="power-progress"
+            />
           </div>
         </div>
       </div>
-      <Tag className="sync-tag">
-        <RefreshCw size={12} className="animate-spin" />
-        <span>实时同步中</span>
-      </Tag>
     </div>
-    <div className="asset-content">
-      <div className="asset-stats-row">
-        <span className="info-text">累计生成素材</span>
-        <div className="stat-number-wrapper">
-          <span className="stat-number">265</span>
-          <span className="stat-label">个</span>
-        </div>
-      </div>
-      <div className="power-row">
-        <div className="power-info">
-          <Zap size={14} />
-          <span className="power-label">剩余算力</span>
-        </div>
-        <div className="power-content">
-          <span className="power-value">
-            <span className="power-current">37,153</span>
-            <span className="power-total">/ 40k</span>
-          </span>
-          <Progress 
-            percent={92.88} 
-            strokeColor="#f5a233"
-            strokeWidth={6}
-            showInfo={false}
-            className="power-progress"
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-);
+  );
+};
 
-const TaskSection = () => (
+const TaskSection = ({ stats, statsLoading }) => (
   <div className="task-section">
     <div className="section-header">
       <div className="section-title-wrapper">
@@ -286,32 +280,37 @@ const TaskSection = () => (
       <div className="task-stats-row">
         <span className="info-text">今日累计完成</span>
         <div className="stat-number-wrapper">
-          <span className="stat-number">47</span>
-          <span className="stat-label">个</span>
+          {statsLoading ? (
+            <Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} />
+          ) : (
+            <>
+              <span className="stat-number">{stats.tasks?.completed || 0}</span>
+              <span className="stat-label">个</span>
+            </>
+          )}
         </div>
       </div>
       <div className="task-cards-row">
         <div className="task-card task-card-running">
           <span className="task-label">运行中</span>
-          <span className="task-value">0</span>
+          <span className="task-value">{statsLoading ? '-' : (stats.tasks?.running || 0)}</span>
         </div>
         <div className="task-card task-card-done">
           <span className="task-label">已完成</span>
-          <span className="task-value">5</span>
+          <span className="task-value">{statsLoading ? '-' : (stats.tasks?.completed || 0)}</span>
         </div>
         <div className="task-card task-card-queue">
           <span className="task-label">排队中</span>
-          <span className="task-value">2</span>
+          <span className="task-value">{statsLoading ? '-' : (stats.tasks?.queued || 0)}</span>
         </div>
       </div>
     </div>
   </div>
 );
 
-const RecentSection = ({ courses, coursesLoading }) => {
-  const [activeTab, setActiveTab] = useState('audio');
-  const [selectedImage, setSelectedImage] = useState(null);
-  
+const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesLoading, videos, videosLoading, audios, audiosLoading }) => {
+  const [activeTab, setActiveTab] = useState('courses');
+
   const tabs = [
     { id: 'courses', icon: BookOpen, label: '课程' },
     { id: 'images', icon: Image, label: '图片' },
@@ -319,145 +318,124 @@ const RecentSection = ({ courses, coursesLoading }) => {
     { id: 'audio', icon: Music, label: '音频' },
   ];
 
-  const handleImageClick = useCallback((image) => {
-    setSelectedImage(image);
-  }, []);
-
-  const handleClosePreview = useCallback(() => {
-    setSelectedImage(null);
-  }, []);
+  const renderRow = (items, renderFn, rowSize) => {
+    const rows = [];
+    for (let i = 0; i < items.length; i += rowSize) {
+      rows.push(items.slice(i, i + rowSize));
+    }
+    return rows.map((row, ri) => <div key={ri} className="recent-row">{row.map(renderFn)}</div>);
+  };
 
   const renderContent = () => {
     switch (activeTab) {
       case 'courses':
-        if (coursesLoading) {
-          return (
-            <div className="loading-container">
-              <span className="loading-text">加载中...</span>
-            </div>
-          );
-        }
-        if (!courses || courses.length === 0) {
-          return (
-            <div className="empty-container">
-              <FileText size={40} className="empty-icon" />
-              <span className="empty-text">暂无课程</span>
-            </div>
-          );
-        }
-        return [courses.slice(0, 4), courses.slice(4, 8)].map((row, rowIndex) => (
-          <div key={rowIndex} className="recent-row">
-            {row.map(course => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        ));
+        if (coursesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
+        if (!courses || courses.length === 0) return <EmptyState icon={FileText} text="暂无课程，点击上方按钮创建" />;
+        return renderRow(courses, course => <CourseCard key={course.id} course={course} onClick={() => onCourseClick(course.id)} />, 4);
       case 'images':
-        return [mockImages.slice(0, 4), mockImages.slice(4, 8)].map((row, rowIndex) => (
-          <div key={rowIndex} className="recent-images-row">
-            {row.map(image => (
-              <ImageCard key={image.id} image={image} onClick={() => handleImageClick(image)} />
-            ))}
-          </div>
-        ));
+        if (imagesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
+        if (!images || images.length === 0) return <EmptyState icon={Image} text="暂无图片素材" />;
+        return renderRow(images, image => <ImageCard key={image.id} image={image} onClick={() => {}} />, 4);
       case 'videos':
-        return [mockVideos.slice(0, 4), mockVideos.slice(4, 8)].map((row, rowIndex) => (
-          <div key={rowIndex} className="recent-videos-row">
-            {row.map(video => (
-              <VideoCard key={video.id} video={video} />
-            ))}
-          </div>
-        ));
+        if (videosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
+        if (!videos || videos.length === 0) return <EmptyState icon={Video} text="暂无视频素材" />;
+        return renderRow(videos, video => <VideoCard key={video.id} video={video} />, 4);
       case 'audio':
-        return [mockAudios.slice(0, 5), mockAudios.slice(5, 10)].map((row, rowIndex) => (
-          <div key={rowIndex} className="recent-audios-row">
-            {row.map(audio => (
-              <AudioCard key={audio.id} audio={audio} />
-            ))}
-          </div>
-        ));
+        if (audiosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
+        if (!audios || audios.length === 0) return <EmptyState icon={Music} text="暂无音频素材" />;
+        return renderRow(audios, (audio, idx) => <AudioCard key={audio.id} audio={audio} index={idx} />, 5);
       default:
         return null;
     }
   };
 
   return (
-    <>
-      <div className="recent-container">
-        <div className="recent-header">
-          <div className="recent-title-row">
-            <div className="recent-title-wrapper title-4">
-              <span className="title">最近创建</span>
-              <div className="title-decoration" />
-              <div className="title-dots">
-                <span className="dot-large" />
-                <span className="dot-small" />
-              </div>
+    <div className="recent-container">
+      <div className="recent-header">
+        <div className="recent-title-row">
+          <div className="recent-title-wrapper title-4">
+            <span className="title">最近创建</span>
+            <div className="title-decoration" />
+            <div className="title-dots">
+              <span className="dot-large" />
+              <span className="dot-small" />
             </div>
-            <Segmented
-              options={tabs.map(tab => {
-                const IconComponent = tab.icon;
-                return {
-                  label: (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <IconComponent size={14} />
-                      <span>{tab.label}</span>
-                    </span>
-                  ),
-                  value: tab.id,
-                };
-              })}
-              value={activeTab}
-              onChange={setActiveTab}
-              style={{
-                border: '2px solid #333E4E',
-                borderRadius: '9999px',
-                backgroundColor: '#f3f2ed',
-              }}
-            />
           </div>
-          <div className="recent-sort-btn">
-            <span>按更新时间</span>
-            <ChevronsUpDown size={14} />
-          </div>
+          <Segmented
+            options={tabs.map(tab => {
+              const IconComponent = tab.icon;
+              return {
+                label: (
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <IconComponent size={14} />
+                    <span>{tab.label}</span>
+                  </span>
+                ),
+                value: tab.id,
+              };
+            })}
+            value={activeTab}
+            onChange={setActiveTab}
+            style={{
+              border: '2px solid #333E4E',
+              borderRadius: '9999px',
+              backgroundColor: '#f3f2ed',
+            }}
+          />
         </div>
-        <div className="recent-content">
-          {renderContent()}
+        <div className="recent-sort-btn">
+          <span>按更新时间</span>
+          <ChevronsUpDown size={14} />
         </div>
       </div>
-      {selectedImage && (
-        <div className="image-preview-overlay" onClick={handleClosePreview}>
-          <div className="image-preview-card" onClick={(e) => e.stopPropagation()}>
-            <button className="image-preview-close" onClick={handleClosePreview}>
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15 5L5 15M5 5L15 15" stroke="#575f6e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <img src={selectedImage.url} alt="Preview" className="image-preview-img" />
-            <div className="image-preview-info">
-              <div className="image-preview-time">
-                <Clock size={14} />
-                <span>{selectedImage.time}</span>
-              </div>
-              <span className="image-preview-size">{selectedImage.size}</span>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      <div className="recent-content">
+        {renderContent()}
+      </div>
+    </div>
   );
 };
 
 export const AdminDashboard = () => {
+  const navigate = useNavigate();
+
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [images, setImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(true);
+  const [videos, setVideos] = useState([]);
+  const [videosLoading, setVideosLoading] = useState(true);
+  const [audios, setAudios] = useState([]);
+  const [audiosLoading, setAudiosLoading] = useState(true);
+
+  const [stats, setStats] = useState({
+    courses: { total: 0 },
+    media: { images: 0, videos: 0, audios: 0 },
+    tasks: { running: 0, completed: 0, queued: 0 },
+    todayCompleted: 0,
+    compute: { used: 0, total: 40000, remaining: 40000 },
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    try {
+      const statsResult = await apiService.request('/api/stats');
+      if (statsResult?.data) {
+        setStats(statsResult.data);
+      }
+    } catch (error) {
+      console.error('获取统计数据失败:', error);
+    } finally {
+      setStatsLoading(false);
+    }
+  }, []);
 
   const fetchRecentCourses = useCallback(async () => {
     try {
       setCoursesLoading(true);
       const result = await apiService.getCourses({ limit: '8', page: '1' });
       const list = result?.data || [];
-      setCourses(list.map((course, i) => ({
+      setCourses(list.map(course => ({
         id: course.id,
         title: course.title || course.unit || '未命名课程',
         grade: course.age_group || '--',
@@ -470,7 +448,7 @@ export const AdminDashboard = () => {
             }).replace(/\//g, '/')
           : '--',
         status: course.status === 'published' ? 'published' : 'draft',
-        thumbnail: `https://neeko-copilot.bytedance.net/api/text_to_image?prompt=cute%20monsters%20cartoon%20style&image_size=landscape_4_3`,
+        thumbnail: course.thumbnail || '',
       })));
     } catch (error) {
       console.error('获取最近课程失败:', error);
@@ -480,18 +458,132 @@ export const AdminDashboard = () => {
     }
   }, []);
 
+  const fetchRecentImages = useCallback(async () => {
+    try {
+      setImagesLoading(true);
+      const result = await apiService.getPptImages({ limit: '8' });
+      const list = result?.data || [];
+      setImages(list.map(img => ({
+        id: img.id,
+        url: img.image_url || img.url || '',
+        title: img.title || img.prompt?.substring(0, 20) || '未命名图片',
+        dimensions: img.width && img.height ? `${img.width} × ${img.height}` : '--',
+        time: img.created_at
+          ? new Date(img.created_at).toLocaleString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '/')
+          : '--',
+        size: '--',
+      })));
+    } catch (error) {
+      console.error('获取图片失败:', error);
+      setImages([]);
+    } finally {
+      setImagesLoading(false);
+    }
+  }, []);
+
+  const fetchRecentVideos = useCallback(async () => {
+    try {
+      setVideosLoading(true);
+      const result = await apiService.getVideos({ limit: '8' });
+      const list = result?.data || [];
+      setVideos(list.map(video => ({
+        id: video.id,
+        thumbnail: video.thumbnail_url || video.thumbnail || '',
+        title: video.title || '未命名视频',
+        duration: video.duration || '--:--',
+        status: video.status || 'draft',
+        time: video.created_at
+          ? new Date(video.created_at).toLocaleString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '/')
+          : '--',
+      })));
+    } catch (error) {
+      console.error('获取视频失败:', error);
+      setVideos([]);
+    } finally {
+      setVideosLoading(false);
+    }
+  }, []);
+
+  const fetchRecentAudios = useCallback(async () => {
+    try {
+      setAudiosLoading(true);
+      const result = await apiService.getVoiceConfigs();
+      const list = (result?.data || result || []).slice(0, 10);
+      setAudios(list.map(audio => ({
+        id: audio.id,
+        title: audio.name || audio.title || '未命名音频',
+        duration: audio.duration || '--:--',
+        time: audio.created_at
+          ? new Date(audio.created_at).toLocaleString('zh-CN', {
+              year: 'numeric', month: '2-digit', day: '2-digit',
+              hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            }).replace(/\//g, '/')
+          : '--',
+      })));
+    } catch (error) {
+      console.error('获取音频失败:', error);
+      setAudios([]);
+    } finally {
+      setAudiosLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
+    loadData();
     fetchRecentCourses();
-  }, [fetchRecentCourses]);
+    fetchRecentImages();
+    fetchRecentVideos();
+    fetchRecentAudios();
+  }, [loadData, fetchRecentCourses, fetchRecentImages, fetchRecentVideos, fetchRecentAudios]);
+
+  const handleCreateCourse = () => {
+    setCreateOpen(true);
+  };
+
+  const handleCreateSubmit = (values) => {
+    setCreateOpen(false);
+    navigate('/figma-courses', { state: { newCourse: values } });
+  };
+
+  const handleCourseClick = () => {
+    navigate('/figma-courses');
+  };
 
   return (
     <div className="admin-dashboard">
       <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
-        <Col xs={24} lg={8}><CreateSection /></Col>
-        <Col xs={24} lg={8}><AssetSection /></Col>
-        <Col xs={24} lg={8}><TaskSection /></Col>
+        <Col xs={24} lg={8}>
+          <CreateSection onCreateCourse={handleCreateCourse} navigate={navigate} />
+        </Col>
+        <Col xs={24} lg={8}>
+          <AssetSection stats={stats} statsLoading={statsLoading} />
+        </Col>
+        <Col xs={24} lg={8}>
+          <TaskSection stats={stats} statsLoading={statsLoading} />
+        </Col>
       </Row>
-      <RecentSection courses={courses} coursesLoading={coursesLoading} />
+      <RecentSection
+        courses={courses}
+        coursesLoading={coursesLoading}
+        onCourseClick={handleCourseClick}
+        images={images}
+        imagesLoading={imagesLoading}
+        videos={videos}
+        videosLoading={videosLoading}
+        audios={audios}
+        audiosLoading={audiosLoading}
+      />
+      <CreateCourseModal
+        open={createOpen}
+        onCancel={() => setCreateOpen(false)}
+        onSubmit={handleCreateSubmit}
+      />
     </div>
   );
 };

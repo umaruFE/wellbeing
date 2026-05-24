@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { BookOpen, Plus } from 'lucide-react';
 import { CreateCourseModal } from '../create-course';
 import { CourseWorkflow } from '../course-workflow';
@@ -20,6 +21,38 @@ export function CourseManagement({
   const [status, setStatus] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [workflowCourse, setWorkflowCourse] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.newCourse && !workflowCourse) {
+      const values = location.state.newCourse;
+      const course = {
+        id: values.id,
+        title: values.courseTitle || '新课程',
+        unit: values.courseTitle || '新课程',
+        status: 'draft',
+        age: values.age,
+        grade: 'Draft',
+        duration: values.duration,
+        theme: values.taskName || values.experiencePath || '情境任务',
+        updatedAt: new Date().toLocaleDateString('zh-CN'),
+        accent: '#ff705d',
+        coverTone: 'coral',
+        classSize: values.classSize,
+        storyContext: values.storyContext,
+        keyOutcome: values.keyOutcome,
+        vocabularies: values.vocabularies,
+        grammars: values.grammars,
+        languageSkills: values.languageSkills,
+        experiencePath: values.experiencePath,
+        specialRequirements: values.specialRequirements,
+        atmosphere: values.atmosphere,
+        attachments: values.attachments,
+      };
+      setWorkflowCourse(course);
+      window.history.replaceState({}, '');
+    }
+  }, [location.state, workflowCourse]);
 
   const fetchCourses = useCallback(async () => {
     try {
