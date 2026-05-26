@@ -89,7 +89,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   };
 
   const handleRegenImage = async () => {
-    const themeImagePrompt = course.courseOverview?.themeImagePrompt;
+    const themeImagePrompt = map.themeImagePrompt;
     if (!themeImagePrompt) {
       return;
     }
@@ -203,7 +203,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   <Button
                     icon={<RefreshCw size={16} />}
                     loading={regenImage}
-                    disabled={regenImage || !course.courseOverview?.themeImagePrompt}
+                    disabled={regenImage || !map.themeImagePrompt}
                     onClick={handleRegenImage}
                   >
                     {regenImage ? '生成中...' : '重新生成'}

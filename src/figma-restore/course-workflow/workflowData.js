@@ -152,8 +152,42 @@ export const readingTemplates = [
   },
 ];
 
+function extractFieldFromText(text, fieldName) {
+  const regex = new RegExp(`"${fieldName}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`, 's');
+  const match = text.match(regex);
+  if (!match) return null;
+  try {
+    return JSON.parse('"' + match[1] + '"');
+  } catch {
+    return match[1].replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
+  }
+}
+
 export function buildCourseMap(course = {}) {
-  const overview = course.courseOverview || {};
+  let overview = course.courseOverview || {};
+  const rawText = overview.text && typeof overview.text === 'string' ? overview.text : null;
+
+  if (rawText) {
+    try {
+      overview = JSON.parse(rawText);
+      overview = overview.courseOverview || overview;
+    } catch {
+      overview = {
+        courseTitle: extractFieldFromText(rawText, 'courseTitle'),
+        theme: extractFieldFromText(rawText, 'theme'),
+        overallContext: extractFieldFromText(rawText, 'overallContext'),
+        themeImagePrompt: extractFieldFromText(rawText, 'themeImagePrompt'),
+        selGoals: extractFieldFromText(rawText, 'selGoals'),
+        permaGoals: extractFieldFromText(rawText, 'permaGoals'),
+        finalTask: extractFieldFromText(rawText, 'finalTask'),
+        languageGoals: (() => {
+          const vocab = extractFieldFromText(rawText, 'vocabulary');
+          const gram = extractFieldFromText(rawText, 'grammar');
+          return (vocab || gram) ? { vocabulary: vocab, grammar: gram } : null;
+        })(),
+      };
+    }
+  }
   const title = overview.courseTitle || course.courseTitle || course.title || '\u65B0\u8BFE\u7A0B';
   const taskName = course.taskName || course.theme || '\u60C5\u5883\u4EFB\u52A1';
   const path = course.experiencePath || overview.theme || '\u827A\u672F\u8868\u8FBE';
@@ -182,5 +216,6 @@ export function buildCourseMap(course = {}) {
     growth: [overview.selGoals, overview.permaGoals].filter(Boolean).join('\n') || `\u5728\u201C${taskName}\u201D\u4E2D\u53D1\u5C55\u8868\u8FBE\u3001\u534F\u4F5C\u548C\u521B\u9020\u6027\u89E3\u51B3\u95EE\u9898\u80FD\u529B\u3002`,
     experience: `\u901A\u8FC7${path}\u5B8C\u6210\u63A2\u7D22\u3001\u8868\u8FBE\u4E0E\u4F5C\u54C1\u4EA7\u51FA\u3002`,
     themeImageUrl: course.themeImageUrl || null,
+    themeImagePrompt: overview.themeImagePrompt || null,
   };
 }
