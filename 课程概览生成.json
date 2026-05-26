@@ -3,27 +3,88 @@
   "nodes": [
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "course-overview-generator",
-        "responseMode": "responseNode",
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
         "options": {}
       },
-      "id": "a1b2c3d4-overview-001",
-      "name": "Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [-600, 128],
-      "webhookId": "course-overview-01"
+      "id": "39c1a35c-6a9d-4ef1-8504-6c3dcbbd8a69",
+      "name": "返回完整结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4496,
+        192
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.item.json.body;\n\nreturn {\n  age: input.age || '7-9岁',\n  duration: input.duration || '60分钟',\n  scale: input.scale || '9-15人',\n  vocabulary: (input.vocabulary && input.vocabulary.length > 0) \n    ? (Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : input.vocabulary)\n    : '请根据主题推荐词汇',\n  grammar: (input.grammar && input.grammar.length > 0) \n    ? (Array.isArray(input.grammar) ? input.grammar.join(', ') : input.grammar)\n    : '请根据主题推荐句型',\n  skills_text: (input.skills && input.skills.length > 0) \n    ? (Array.isArray(input.skills) ? input.skills.join(', ') : input.skills)\n    : '',\n  paths_text: (input.paths && input.paths.length > 0) \n    ? (Array.isArray(input.paths) ? input.paths.join(', ') : input.paths)\n    : '',\n  theme: input.theme || '默认主题',\n  requirements: input.requirements || '',\n  adjustments: input.adjustments || '',\n  existing_overview: input.existing_overview || '',\n  course_title: input.courseTitle || '',\n  task_name: input.taskName || '',\n  story_context: input.storyContext || '',\n  key_outcome: input.keyOutcome || '',\n  atmosphere: input.atmosphere || '',\n  attachments: (input.attachments && input.attachments.length > 0)\n    ? (Array.isArray(input.attachments) ? input.attachments.join(', ') : input.attachments)\n    : ''\n};"
+        "jsCode": "const promptId = $input.item.json.prompt_id;\n\n// 🌟 核心精简：直接去拿“概览生成”那个节点输出的纯净 JSON，彻底抛弃中间的 ComfyUI 工作流参数\nconst cleanCourseOverview = $('构建图片工作流').first().json.courseOverview;\n\nconst comfyUrl = \"https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com\";\nconst maxAttempts = 600;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  // 每 3 秒查一次\n  await new Promise(r => setTimeout(r, 3000));\n  \n  try {\n    const res = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${comfyUrl}/history/${promptId}`,\n      json: true\n    });\n    \n    const taskData = Object.values(res)[0];\n    \n    if (taskData && taskData.outputs) {\n      const images = taskData.outputs['10']?.images || [];\n      if (images.length > 0) {\n        const img = images[0];\n        const imageUrl = `${comfyUrl}/view?filename=${img.filename}&subfolder=${img.subfolder || ''}&type=${img.type || 'output'}`;\n        \n        // 🎉 这里是最后输出给 Webhook 的结果：只有概览文本和图片地址，极其干净！\n        return {\n          courseOverview: cleanCourseOverview,\n          themeImageUrl: imageUrl\n        };\n      }\n    }\n    \n    if (taskData?.status?.status_str === 'error') {\n      return {\n        courseOverview: cleanCourseOverview,\n        themeImageUrl: null,\n        error: '图片生成失败(ComfyUI内部报错)'\n      };\n    }\n  } catch (e) {\n    console.log(\"轮询报错，继续重试:\", e.message);\n  }\n}\n\n// 超时情况的返回\nreturn {\n  courseOverview: cleanCourseOverview,\n  themeImageUrl: null,\n  error: '图片生成超时'\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-400, 128],
-      "id": "a1b2c3d4-overview-002",
-      "name": "参数组装"
+      "position": [
+        4288,
+        192
+      ],
+      "id": "6b4de76d-7752-4f0d-b18a-657bec143f42",
+      "name": "等待图片完成"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/prompt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{JSON.stringify($json.comfyuiPayload)}}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        192
+      ],
+      "id": "a0f3013c-f830-456f-8fab-f655e04bb184",
+      "name": "提交ComfyUI任务"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取前置节点的数据，并做兼容处理（防止大模型输出包裹在 text 字段中）\nconst raw = $input.item.json;\nlet overview = raw.courseOverview;\n\nif (!overview && raw.text) {\n  try {\n    overview = JSON.parse(raw.text).courseOverview;\n  } catch(e) {}\n}\nif (!overview) {\n  overview = raw; // 兜底逻辑\n}\n\n// 2. 生成随机种子，确保每次调用的画面都不一样\nconst seed = Math.floor(Math.random() * 1000000000000);\n\n// 3. 动态提示词（可替换为你从上游取到的动态变量）\nconst imagePrompt = \"扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，角色的符号化表情，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字, flat vector illustration, uniform thick black outlines, beautiful lush green magical forest, tall trees, sunlight filtering through leaves, wild nature, empty scene, absolutely no people.\";\n\n// 4. 构建 ComfyUI 工作流\nconst workflow = {\n  \"1\": {\n    \"inputs\": {\n      \"unet_name\": \"z_image_turbo_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": { \"title\": \"UNet加载器\" }\n  },\n  \"2\": {\n    \"inputs\": { \"vae_name\": \"ae.safetensors\" },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": { \"title\": \"加载VAE\" }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_3_4b.safetensors\",\n      \"type\": \"lumina2\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": { \"title\": \"加载CLIP\" }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"shift\": 3,\n      \"model\": [ \"1\", 0 ]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\",\n    \"_meta\": { \"title\": \"采样算法（AuraFlow）\" }\n  },\n  \"5\": {\n    \"inputs\": {\n      \"width\": 2048,\n      \"height\": 1152,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptySD3LatentImage\",\n    \"_meta\": { \"title\": \"空Latent图像（SD3）\" }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"text\": imagePrompt,\n      \"clip\": [ \"3\", 0 ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"1. 万能场景正向提示词\" }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": \"people, humans, characters, animals, blurry, realistic, 3d, complex gradients, dark shadows.human, realistic, detailed face\",\n      \"clip\": [ \"3\", 0 ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"2. 背景负面提示词\" }\n  },\n  \"8\": {\n    \"inputs\": {\n      \"seed\": seed,\n      \"steps\": 15,\n      \"cfg\": 1.5,\n      \"sampler_name\": \"euler\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [ \"4\", 0 ],\n      \"positive\": [ \"6\", 0 ],\n      \"negative\": [ \"7\", 0 ],\n      \"latent_image\": [ \"5\", 0 ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": { \"title\": \"3. 生成场景\" }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"samples\": [ \"8\", 0 ],\n      \"vae\": [ \"2\", 0 ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": { \"title\": \"背景解码\" }\n  },\n  \"10\": {\n    \"inputs\": {\n      \"filename_prefix\": \"Universal_Scene\",\n      \"images\": [ \"9\", 0 ]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": { \"title\": \"保存纯净背景\" }\n  }\n};\n\n// 5. 返回组装好的对象，将大模型生成的概览数据一起透传下去\nreturn {\n  courseOverview: overview, \n  comfyuiPayload: { \n    prompt: workflow \n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3920,
+        192
+      ],
+      "id": "0d132115-3996-452a-98d4-a709e76f31fe",
+      "name": "构建图片工作流"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师，擅长将 SEL（社会情感学习）和 PERMA 幸福模型无缝融入英语教学。\n\n# Task\n根据输入的课程参数，生成课程概览信息，包括标题、情境、教学目标等。\n\n# Core Framework\n1. 核心理念：以\"幸福力\"为终极目标，通过\"英语+体验路径\"实现儿童三维成长。\n2. 4E 学习闭环：Engage (吸引) → Empower (赋能) → Execute (执行) → Elevate (升华)\n3. 叙事要求：所有环节必须串联在一个完整的、具有沉浸感的故事叙事中。\n\n# Input\n- 课程名称：{{ $json.course_title }}（如果为空，请根据主题自主生成吸引人的中英文标题）\n- 学生年龄：{{ $json.age }}\n- 课程时长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 核心词汇：{{ $json.vocabulary }}\n- 核心句型：{{ $json.grammar }}\n- 侧重能力：{{ $json.skills_text }}（如果为空，请根据学生年龄、主题和核心词汇自主选择最合适的1-2个能力侧重）\n- 体验路径：{{ $json.paths_text }}（如果为空，请根据学生年龄和主题自主选择最合适的1-2个体验路径）\n- 初始主题：{{ $json.theme }}（如果为空，请根据学生年龄、核心词汇和体验路径自主设计一个富有想象力的情境主题）\n- 任务名称：{{ $json.task_name }}（如果为空，请根据主题和情境自主设计一个富有挑战性的任务名称）\n- 故事情境：{{ $json.story_context }}（如果已有内容，请在此基础上润色扩展；如果为空则自主生成富有画面感的情境）\n- 终极产出/作品：{{ $json.key_outcome }}（如果已有内容，请据此设计 finalTask；如果为空则自主设计具体的可视化产出任务）\n- 氛围偏好：{{ $json.atmosphere }}（如果为\"AI 自动匹配\"或空，请根据主题自动选择最合适的氛围，如神秘探险感、戏剧表演感、温馨治愈感、团队协作感）\n- 附件信息：{{ $json.attachments }}（如果有附件，请在设计时参考附件内容）\n- 特殊要求：{{ $json.requirements }}\n\n# 已有课程概览（如果以下内容不为空，请基于此概览进行调整优化，而非从头生成）\n{{ $json.existing_overview }}\n\n# 调整要求（如果以下内容不为空，请按照用户的具体要求对概览进行调整）\n{{ $json.adjustments }}\n\n# Style Requirements\n- 标题：吸引人、富有想象力，中英文结合，与主题和核心词汇呼应\n- 情境描述：生动、有画面感，200-300字\n- 生图提示词：扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字\n- 严禁将结果嵌套在其他键之中\n- 严禁在 JSON 中使用中文全角引号\n\n### 请严格按照以下格式输出：\n{\n  \"courseOverview\": {\n    \"courseTitle\": \"[AI自主生成吸引人的中英文标题，结合主题、核心词汇和故事情境]\",\n    \"theme\": \"[2-4个字的情境主题关键词，如：森林探险、海底奇遇、太空漫游，用于标签展示]\",\n    \"corePhilosophy\": \"PERMA + SEL + 体验驱动\",\n    \"overallContext\": \"[详细的故事背景描述，200-300字，包含故事起因、发展和结局的伏笔，富有想象力和沉浸感]\",\n    \"languageGoals\": {\n      \"vocabulary\": \"[基于输入的核心词汇，整理并补充的词汇学习目标]\",\n      \"grammar\": \"[基于输入的核心句型，整理并补充的语法学习目标]\"\n    },\n    \"selGoals\": \"[具体的SEL能力目标]\",\n    \"permaGoals\": \"[对应的幸福力目标]\",\n    \"finalTask\": \"[具体的可视化产出任务]\",\n    \"themeImagePrompt\": \"扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，[加入与课程主题和故事情境相关的具体场景描述]\"\n  }\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        3664,
+        192
+      ],
+      "id": "9ab8e5f6-221f-445b-be87-de00e8cdbc1f",
+      "name": "概览生成"
     },
     {
       "parameters": {
@@ -39,8 +100,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [-256, 336],
-      "id": "a1b2c3d4-overview-003",
+      "position": [
+        3504,
+        400
+      ],
+      "id": "17ebcddf-b6ee-4627-9ca2-426517877699",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -51,94 +115,106 @@
     },
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"courseOverview\": {\n    \"courseTitle\": \"string\",\n    \"theme\": \"string\",\n    \"corePhilosophy\": \"string\",\n    \"overallContext\": \"string\",\n    \"languageGoals\": {\n      \"vocabulary\": \"string\",\n      \"grammar\": \"string\"\n    },\n    \"selGoals\": \"string\",\n    \"permaGoals\": \"string\",\n    \"finalTask\": \"string\",\n    \"themeImagePrompt\": \"string\"\n  }\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [0, 336],
-      "id": "a1b2c3d4-overview-004",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师，擅长将 SEL（社会情感学习）和 PERMA 幸福模型无缝融入英语教学。\n\n# Task\n根据输入的课程参数，生成课程概览信息，包括标题、情境、教学目标等。\n\n# Core Framework\n1. 核心理念：以\"幸福力\"为终极目标，通过\"英语+体验路径\"实现儿童三维成长。\n2. 4E 学习闭环：Engage (吸引) → Empower (赋能) → Execute (执行) → Elevate (升华)\n3. 叙事要求：所有环节必须串联在一个完整的、具有沉浸感的故事叙事中。\n\n# Input\n- 课程名称：{{ $json.course_title }}（如果为空，请根据主题自主生成吸引人的中英文标题）\n- 学生年龄：{{ $json.age }}\n- 课程时长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 核心词汇：{{ $json.vocabulary }}\n- 核心句型：{{ $json.grammar }}\n- 侧重能力：{{ $json.skills_text }}（如果为空，请根据学生年龄、主题和核心词汇自主选择最合适的1-2个能力侧重）\n- 体验路径：{{ $json.paths_text }}（如果为空，请根据学生年龄和主题自主选择最合适的1-2个体验路径）\n- 初始主题：{{ $json.theme }}（如果为空，请根据学生年龄、核心词汇和体验路径自主设计一个富有想象力的情境主题）\n- 任务名称：{{ $json.task_name }}（如果为空，请根据主题和情境自主设计一个富有挑战性的任务名称）\n- 故事情境：{{ $json.story_context }}（如果已有内容，请在此基础上润色扩展；如果为空则自主生成富有画面感的情境）\n- 终极产出/作品：{{ $json.key_outcome }}（如果已有内容，请据此设计 finalTask；如果为空则自主设计具体的可视化产出任务）\n- 氛围偏好：{{ $json.atmosphere }}（如果为\"AI 自动匹配\"或空，请根据主题自动选择最合适的氛围，如神秘探险感、戏剧表演感、温馨治愈感、团队协作感）\n- 附件信息：{{ $json.attachments }}（如果有附件，请在设计时参考附件内容）\n- 特殊要求：{{ $json.requirements }}\n\n# 已有课程概览（如果以下内容不为空，请基于此概览进行调整优化，而非从头生成）\n{{ $json.existing_overview }}\n\n# 调整要求（如果以下内容不为空，请按照用户的具体要求对概览进行调整）\n{{ $json.adjustments }}\n\n# Style Requirements\n- 标题：吸引人、富有想象力，中英文结合，与主题和核心词汇呼应\n- 情境描述：生动、有画面感，200-300字\n- 生图提示词：扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字\n- 严禁将结果嵌套在其他键之中\n- 严禁在 JSON 中使用中文全角引号\n\n### 请严格按照以下格式输出：\n{\n  \"courseOverview\": {\n    \"courseTitle\": \"[AI自主生成吸引人的中英文标题，结合主题、核心词汇和故事情境]\",\n    \"theme\": \"[2-4个字的情境主题关键词，如：森林探险、海底奇遇、太空漫游，用于标签展示]\",\n    \"corePhilosophy\": \"PERMA + SEL + 体验驱动\",\n    \"overallContext\": \"[详细的故事背景描述，200-300字，包含故事起因、发展和结局的伏笔，富有想象力和沉浸感]\",\n    \"languageGoals\": {\n      \"vocabulary\": \"[基于输入的核心词汇，整理并补充的词汇学习目标]\",\n      \"grammar\": \"[基于输入的核心句型，整理并补充的语法学习目标]\"\n    },\n    \"selGoals\": \"[具体的SEL能力目标]\",\n    \"permaGoals\": \"[对应的幸福力目标]\",\n    \"finalTask\": \"[具体的可视化产出任务]\",\n    \"themeImagePrompt\": \"扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，[加入与课程主题和故事情境相关的具体场景描述]\"\n  }\n}",
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.9,
-      "position": [-96, 128],
-      "id": "a1b2c3d4-overview-005",
-      "name": "概览生成"
-    },
-    {
-      "parameters": {
-        "jsCode": "const raw = $input.item.json;\nconst overview = raw.courseOverview || raw;\nconst seed = Math.floor(Math.random() * 1000000000000);\nconst imagePrompt = overview.themeImagePrompt || '扁平矢量插画，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，卡通风格的儿童教室场景';\n\nconst workflow = {\n  \"2\": {\n    \"inputs\": {\n      \"unet_name\": \"qwen_image_fp8_e4m3fn.safetensors\",\n      \"weight_dtype\": \"fp8_e4m3fn\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": { \"title\": \"Load Diffusion Model\" }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_2.5_vl_7b_fp8_scaled.safetensors\",\n      \"type\": \"qwen_image\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": { \"title\": \"Load CLIP\" }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"vae_name\": \"qwen_image_vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": { \"title\": \"Load VAE\" }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"shift\": 3.1000000000000005,\n      \"model\": [\"12\", 0]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\",\n    \"_meta\": { \"title\": \"ModelSamplingAuraFlow\" }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": imagePrompt,\n      \"clip\": [\"3\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"CLIP Text Encode (Prompt)\" }\n  },\n  \"8\": {\n    \"inputs\": {\n      \"text\": \"模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物\",\n      \"clip\": [\"3\", 0]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": { \"title\": \"CLIP Text Encode (Negative)\" }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"width\": 1344,\n      \"height\": 768,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyLatentImage\",\n    \"_meta\": { \"title\": \"Empty Latent Image\" }\n  },\n  \"10\": {\n    \"inputs\": {\n      \"seed\": seed,\n      \"steps\": 8,\n      \"cfg\": 1,\n      \"sampler_name\": \"res_multistep\",\n      \"scheduler\": \"sgm_uniform\",\n      \"denoise\": 1,\n      \"model\": [\"6\", 0],\n      \"positive\": [\"7\", 0],\n      \"negative\": [\"8\", 0],\n      \"latent_image\": [\"9\", 0]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": { \"title\": \"KSampler\" }\n  },\n  \"12\": {\n    \"inputs\": {\n      \"lora_name\": \"Qwen-Image-Lightning-8steps-V1.0.safetensors\",\n      \"strength_model\": 1,\n      \"model\": [\"2\", 0]\n    },\n    \"class_type\": \"LoraLoaderModelOnly\",\n    \"_meta\": { \"title\": \"LoraLoaderModelOnly\" }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"course-theme\",\n      \"images\": [\"15\", 0]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": { \"title\": \"Save Image\" }\n  },\n  \"15\": {\n    \"inputs\": {\n      \"samples\": [\"10\", 0],\n      \"vae\": [\"4\", 0]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": { \"title\": \"VAE Decode\" }\n  }\n};\n\nreturn {\n  courseOverview: overview,\n  comfyuiPayload: JSON.stringify({ prompt: workflow })\n};"
+        "jsCode": "const input = $input.item.json.body;\n\nreturn {\n  age: input.age || '7-9岁',\n  duration: input.duration || '60分钟',\n  scale: input.scale || '9-15人',\n  vocabulary: (input.vocabulary && input.vocabulary.length > 0) \n    ? (Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : input.vocabulary)\n    : '请根据主题推荐词汇',\n  grammar: (input.grammar && input.grammar.length > 0) \n    ? (Array.isArray(input.grammar) ? input.grammar.join(', ') : input.grammar)\n    : '请根据主题推荐句型',\n  skills_text: (input.skills && input.skills.length > 0) \n    ? (Array.isArray(input.skills) ? input.skills.join(', ') : input.skills)\n    : '',\n  paths_text: (input.paths && input.paths.length > 0) \n    ? (Array.isArray(input.paths) ? input.paths.join(', ') : input.paths)\n    : '',\n  theme: input.theme || '默认主题',\n  requirements: input.requirements || '',\n  adjustments: input.adjustments || '',\n  existing_overview: input.existing_overview || '',\n  course_title: input.courseTitle || '',\n  task_name: input.taskName || '',\n  story_context: input.storyContext || '',\n  key_outcome: input.keyOutcome || '',\n  atmosphere: input.atmosphere || '',\n  attachments: (input.attachments && input.attachments.length > 0)\n    ? (Array.isArray(input.attachments) ? input.attachments.join(', ') : input.attachments)\n    : ''\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [112, 128],
-      "id": "a1b2c3d4-overview-007",
-      "name": "构建图片工作流"
+      "position": [
+        3360,
+        192
+      ],
+      "id": "ad1046ea-783a-45d9-9a96-6277c0ba6200",
+      "name": "参数组装"
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/prompt",
-        "sendBody": true,
-        "specifyBody": "raw",
-        "rawContentType": "application/json",
-        "body": "={{ $json.comfyuiPayload }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [320, 128],
-      "id": "a1b2c3d4-overview-008",
-      "name": "提交ComfyUI任务"
-    },
-    {
-      "parameters": {
-        "jsCode": "const promptId = $input.item.json.prompt_id;\nconst courseOverview = $('构建图片工作流').first().json.courseOverview;\n\nconst maxAttempts = 60;\nfor (let i = 0; i < maxAttempts; i++) {\n  await new Promise(r => setTimeout(r, 3000));\n  \n  try {\n    const res = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/history/${promptId}`,\n      json: true\n    });\n    const taskData = Object.values(res)[0];\n    \n    if (taskData && taskData.outputs) {\n      const images = taskData.outputs['14']?.images || [];\n      if (images.length > 0) {\n        const img = images[0];\n        const imageUrl = `/ai/view?filename=${img.filename}&subfolder=${img.subfolder || ''}&type=${img.type || 'output'}`;\n        return {\n          courseOverview,\n          themeImageUrl: imageUrl\n        };\n      }\n    }\n    \n    if (taskData?.status?.status_str === 'error') {\n      return {\n        courseOverview,\n        themeImageUrl: null,\n        error: '图片生成失败'\n      };\n    }\n  } catch (e) {\n    // 继续重试\n  }\n}\n\nreturn {\n  courseOverview,\n  themeImageUrl: null,\n  error: '图片生成超时'\n};"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [528, 128],
-      "id": "a1b2c3d4-overview-009",
-      "name": "等待图片完成"
-    },
-    {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+        "httpMethod": "POST",
+        "path": "course-overview-generator",
+        "responseMode": "responseNode",
         "options": {}
       },
-      "id": "a1b2c3d4-overview-006",
-      "name": "返回完整结果",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [736, 128]
+      "id": "134885af-02f6-40cd-8f89-7923d8a4fc49",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        192
+      ],
+      "webhookId": "course-overview-01"
     }
   ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "273"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "age": "7-9岁",
+            "duration": "60分钟",
+            "scale": "9-15人",
+            "vocabulary": [],
+            "grammar": [],
+            "skills": [],
+            "paths": [],
+            "theme": "",
+            "requirements": "",
+            "adjustments": "",
+            "existing_overview": "",
+            "userId": "a60de280-e685-4e11-b69b-72ec1b723a22",
+            "organizationId": null,
+            "timestamp": 1779645556125
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/course-overview-generator",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
   "connections": {
-    "Webhook": {
+    "等待图片完成": {
       "main": [
         [
           {
-            "node": "参数组装",
+            "node": "返回完整结果",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "参数组装": {
+    "提交ComfyUI任务": {
       "main": [
         [
           {
-            "node": "概览生成",
+            "node": "等待图片完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建图片工作流": {
+      "main": [
+        [
+          {
+            "node": "提交ComfyUI任务",
             "type": "main",
             "index": 0
           }
@@ -167,49 +243,38 @@
         ]
       ]
     },
-    "Structured Output Parser": {
-      "ai_outputParser": [
+    "参数组装": {
+      "main": [
         [
           {
             "node": "概览生成",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "构建图片工作流": {
-      "main": [
-        [
-          {
-            "node": "提交ComfyUI任务",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "提交ComfyUI任务": {
+    "Webhook": {
       "main": [
         [
           {
-            "node": "等待图片完成",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "等待图片完成": {
-      "main": [
-        [
-          {
-            "node": "返回完整结果",
+            "node": "参数组装",
             "type": "main",
             "index": 0
           }
         ]
       ]
     }
-  }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "b8eb4d94-011f-418e-ab53-f23799d967ea",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "YqdU9s7KibknkR1F",
+  "tags": []
 }

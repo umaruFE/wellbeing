@@ -141,6 +141,7 @@ body.fr-workflow-route-active .header{display:none}
 .course-map-v2-cover .img-overlay{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:center;padding:14px;background:linear-gradient(180deg,rgba(255,255,255,0),rgba(37,49,66,.16));opacity:0;transition:opacity .18s ease}
 .course-map-v2-cover .overview-hero-img:hover .img-overlay{opacity:1}
 .course-map-theme-image{width:100%;height:100%;min-height:342px;object-fit:cover;border-radius:0;display:block}
+.view-map-active .course-map-v2-cover .overview-hero-img{height:100%;min-height:342px;border-radius:0;background:#f8ead0;position:relative;overflow:hidden}
 .course-map-v2-panel{padding:28px 24px 24px}
 .course-map-v2-panel-title{color:#1f2937;font-size:22px;font-weight:800;margin:0}
 .course-map-v2-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding-bottom:20px;margin-bottom:24px;border-bottom:2px solid #e8e4dc}
@@ -233,7 +234,6 @@ body.fr-workflow-route-active .header{display:none}
 .view-map-active .course-map-v2-core-title span{color:#ff705f;font-size:14px;font-weight:900;margin:0}
 .view-map-active .course-map-v2-core-text{position:relative;z-index:1;color:#253142;font-size:15px;line-height:20px;font-weight:500;height:60px;overflow:hidden}
 .view-map-active .course-map-v2-cover{flex:1;min-height:0;border:2px dashed #253142;border-radius:13px;background:#f8ead0;overflow:hidden}
-.view-map-active .course-map-v2-cover .overview-hero-img{height:100%;min-height:0;border-radius:0;background:#f8ead0;position:relative;overflow:hidden}
 .view-map-active .course-map-v2-cover .img-overlay{opacity:1;position:absolute;inset:128px 0 auto;display:flex;justify-content:center;padding:0;background:transparent;pointer-events:none}
 .view-map-active .course-map-v2-cover .img-overlay .ant-btn{height:44px;border:2px solid #253142!important;border-radius:9px!important;background:#fff!important;color:#253142!important;font-size:16px!important;font-weight:800!important;box-shadow:3px 3px 0 #253142!important;padding:0 17px!important;pointer-events:auto}
 .course-map-cover-art{position:absolute;inset:0;background:#f8ead0;overflow:hidden}

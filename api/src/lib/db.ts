@@ -12,8 +12,8 @@ const pool = new Pool({
   user: process.env.DB_USER || 'wellbeing_user',
   password: process.env.DB_PASSWORD || 'your_password',
   max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 15000,
   maxUses: 7500,
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
@@ -276,12 +276,27 @@ function createInsertBuilder(table: string) {
         const cols = Object.keys(processedData).join(', ');
         const placeholders = Object.values(processedData).map((_, i) => `$${i + 1}`).join(', ');
         const sql = `INSERT INTO ${table} (${cols}) VALUES (${placeholders}) RETURNING ${columns}`;
-        try {
-          const res = await pool.query(sql, Object.values(processedData));
-          return { data: res.rows[0], error: null };
-        } catch (err) {
-          return { data: null, error: err };
+        const values = Object.values(processedData);
+        const maxRetries = 2;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+          try {
+            const res = await pool.query(sql, values);
+            return { data: res.rows[0], error: null };
+          } catch (err: any) {
+            const isConnectionError = err?.message?.includes('Connection') ||
+              err?.message?.includes('timeout') ||
+              err?.code === '57P01' ||
+              err?.code === '08003' ||
+              err?.code === '08006';
+            if (isConnectionError && attempt < maxRetries) {
+              console.warn(`[db.insert] 连接失败(尝试${attempt + 1}/${maxRetries + 1}), 重试中...`);
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              continue;
+            }
+            return { data: null, error: err };
+          }
         }
+        return { data: null, error: new Error('Insert failed after retries') };
       };
       return {
         select: (columns?: string) => ({ single: () => runInsert(columns || '*') }),

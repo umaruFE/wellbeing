@@ -44,6 +44,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const [editOpen, setEditOpen] = React.useState(false);
   const [regenOpen, setRegenOpen] = React.useState(false);
   const [regenerating, setRegenerating] = React.useState(false);
+  const [regenImage, setRegenImage] = React.useState(false);
   const map = buildCourseMap(course);
 
   const taskName = course.taskName || course.theme || '情境任务';
@@ -85,6 +86,37 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       attachments: attachments.length ? attachments : course.attachments,
     });
     setEditOpen(false);
+  };
+
+  const handleRegenImage = async () => {
+    const themeImagePrompt = course.courseOverview?.themeImagePrompt;
+    if (!themeImagePrompt) {
+      return;
+    }
+    setRegenImage(true);
+    try {
+      const token = localStorage.getItem('token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const response = await fetch('/api/ai/regenerate-theme-image', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          courseId: course.id,
+          themeImagePrompt,
+        }),
+      });
+      const result = await response.json();
+
+      if (result.success && result.themeImageUrl) {
+        onCourseChange?.({ ...course, themeImageUrl: result.themeImageUrl });
+      }
+    } catch (err) {
+      console.error('重新生成图片失败:', err);
+    } finally {
+      setRegenImage(false);
+    }
   };
 
   const fillRegenTip = (tip) => {
@@ -168,7 +200,14 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   </div>
                 )}
                 <div className="img-overlay">
-                  <Button icon={<RefreshCw size={16} />}>重新生成</Button>
+                  <Button
+                    icon={<RefreshCw size={16} />}
+                    loading={regenImage}
+                    disabled={regenImage || !course.courseOverview?.themeImagePrompt}
+                    onClick={handleRegenImage}
+                  >
+                    {regenImage ? '生成中...' : '重新生成'}
+                  </Button>
                 </div>
               </div>
             </div>

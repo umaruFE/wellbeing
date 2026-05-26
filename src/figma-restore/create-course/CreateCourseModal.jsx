@@ -150,7 +150,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         duration: values.duration,
         theme: theme,
         keywords: keywordsList,
-        courseData: overview ? { courseOverview: overview } : {},
+        courseData: overview ? { courseOverview: overview, themeImageUrl } : {},
         themeImageUrl,
         status: 'draft',
         userId: user?.id || null,

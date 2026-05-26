@@ -48,6 +48,8 @@ export function CourseManagement({
         specialRequirements: values.specialRequirements,
         atmosphere: values.atmosphere,
         attachments: values.attachments,
+        courseOverview: values.courseOverview,
+        themeImageUrl: values.themeImageUrl,
       };
       setWorkflowCourse(course);
       window.history.replaceState({}, '');
@@ -76,6 +78,8 @@ export function CourseManagement({
         accent: ['#ff705d', '#4482e5', '#9966d0', '#509f69', '#edb100', '#f4785e'][i % 6],
         coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
         active: i === 0,
+        courseOverview: course.course_data?.courseOverview || null,
+        themeImageUrl: course.course_data?.themeImageUrl || course.theme_image_url || null,
       })));
     } catch (error) {
       console.error('获取课程列表失败:', error);
