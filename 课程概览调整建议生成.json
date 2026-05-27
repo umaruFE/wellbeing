@@ -1,0 +1,171 @@
+{
+  "name": "课程概览调整建议生成",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-overview-adjustment-tips-generator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "a6a6d9e0-ec03-4e20-879f-8ce631a795c7",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        240,
+        240
+      ],
+      "webhookId": "course-overview-adjustment-tips-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json.body || {};\nconst overview = input.courseOverview || {};\n\nreturn {\n  courseTitle: input.courseTitle || overview.courseTitle || '',\n  theme: input.theme || overview.theme || '',\n  age: input.age || '',\n  duration: input.duration || '',\n  scale: input.scale || '',\n  vocabulary: Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : (input.vocabulary || ''),\n  grammar: Array.isArray(input.grammar) ? input.grammar.join(', ') : (input.grammar || ''),\n  skills: Array.isArray(input.skills) ? input.skills.join(', ') : (input.skills || ''),\n  paths: Array.isArray(input.paths) ? input.paths.join(', ') : (input.paths || ''),\n  storyContext: input.storyContext || overview.overallContext || '',\n  keyOutcome: input.keyOutcome || overview.finalTask || '',\n  selGoals: overview.selGoals || '',\n  permaGoals: overview.permaGoals || ''\n};"
+      },
+      "id": "5c4d2f66-9604-4801-a5ab-ad72e65b778d",
+      "name": "参数组装",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Role\n你是一位儿童英语课程体验设计顾问，擅长根据现有课程概览，为用户生成可直接点击使用的“重新生成调整需求参考”。\n\n# Task\n基于输入的课程信息，生成 4-6 条中文调整建议。每条建议都应该像用户会输入到重新生成弹窗里的自然语言提示词，具体、可执行、有差异。\n\n# Course Info\n- 课程标题：{{ $json.courseTitle }}\n- 主题：{{ $json.theme }}\n- 年龄：{{ $json.age }}\n- 课长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 词汇：{{ $json.vocabulary }}\n- 句型/语法：{{ $json.grammar }}\n- 能力侧重：{{ $json.skills }}\n- 体验路径：{{ $json.paths }}\n- 故事情境：{{ $json.storyContext }}\n- 终极产出：{{ $json.keyOutcome }}\n- SEL目标：{{ $json.selGoals }}\n- PERMA目标：{{ $json.permaGoals }}\n\n# Requirements\n- 建议要覆盖不同调整方向，例如：故事情境、4E课堂旅程、语言工具箱、最终产出、SEL/PERMA成长体验、课堂互动机制。\n- 每条 25-60 个中文字，避免空泛词，如“更有趣”“更丰富”。\n- 不要输出 Markdown，不要解释。\n- 只输出有效 JSON。\n\n# Output JSON\n{\n  \"tips\": [\n    \"希望...\",\n    \"希望...\"\n  ]\n}"
+      },
+      "id": "12aa31b3-3d45-4af7-8d0d-0c6f2415c82d",
+      "name": "调整建议生成",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        720,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "maxTokens": 1024
+        }
+      },
+      "id": "18045773-5961-4b09-94aa-81ce1e62c6dd",
+      "name": "OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        464
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json;\nlet tips = [];\n\nif (Array.isArray(raw.tips)) {\n  tips = raw.tips;\n} else if (raw.text) {\n  const text = String(raw.text).trim().replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/```$/i, '').trim();\n  try {\n    const parsed = JSON.parse(text);\n    tips = Array.isArray(parsed.tips) ? parsed.tips : [];\n  } catch (error) {\n    tips = text.split(/\\n+/).map(line => line.replace(/^[-\\d.、\\s]+/, '').trim());\n  }\n}\n\ntips = tips\n  .map(tip => String(tip || '').trim())\n  .filter(Boolean)\n  .slice(0, 6);\n\nif (tips.length === 0) {\n  tips = [\n    '希望故事情境更有悬念，让学生从一封任务信或线索卡进入挑战。',\n    '希望Execute阶段加入小组合作竞赛，让最终产出更有挑战性。',\n    '希望语言工具箱更聚焦口语输出，增加可反复套用的课堂句型。',\n    '希望成长目标更突出团队协作、情绪表达和解决问题后的成就感。'\n  ];\n}\n\nreturn { tips };"
+      },
+      "id": "55fc2fd4-98a2-429f-9226-5951519cb3de",
+      "name": "整理输出",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: { tips: $json.tips } }) }}",
+        "options": {}
+      },
+      "id": "2166c421-5cb5-4fc2-bf40-7cff4f90d8cc",
+      "name": "返回建议",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        240
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数组装",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数组装": {
+      "main": [
+        [
+          {
+            "node": "调整建议生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "调整建议生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "调整建议生成": {
+      "main": [
+        [
+          {
+            "node": "整理输出",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "整理输出": {
+      "main": [
+        [
+          {
+            "node": "返回建议",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "24f47f53-d387-4b5f-bdf8-353dc19997f8",
+  "meta": {
+    "instanceId": "local-template"
+  },
+  "id": "courseOverviewAdjustmentTips",
+  "tags": []
+}

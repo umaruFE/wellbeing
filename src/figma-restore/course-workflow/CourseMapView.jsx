@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Checkbox, Form, Input, Radio, Select, Upload } from 'antd';
+import { Button, Checkbox, Form, Input, message, Radio, Select, Upload } from 'antd';
 import {
   Clock,
   Heart,
@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import { buildCourseMap } from './workflowData';
+import apiService from '../../services/api';
 
 const { TextArea } = Input;
 
@@ -24,7 +25,7 @@ const classSizeOptions = ['≤ 8人', '9-15人', '≥ 16人'];
 const languageSkillOptions = ['听力理解', '口语表达', '阅读理解', '书面表达', '综合能力'];
 const pathOptions = ['艺术表达', '体感探索', '音乐律动', 'AI 自动匹配'];
 const atmosphereOptions = ['神秘探险感', '戏剧表演感', '温馨治愈感', '团队协作感', 'AI 自动匹配'];
-const regenTips = [
+const fallbackRegenTips = [
   '希望在Execute创作运用阶段能有一个小组竞赛游戏，让产出更有挑战性。',
   '情境可以更科幻一些，比如在外星球完成这个任务。',
   '希望Engage情境启动更有悬念，像收到一封神秘任务信。',
@@ -38,6 +39,26 @@ const journeyItems = [
   { title: 'Execute 创作运用', color: '#9b62d1', key: 'elevate' },
 ];
 
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
+
+function getUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function toArray(value) {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
 export function CourseMapView({ course, onCourseChange, onNext }) {
   const [editForm] = Form.useForm();
   const [regenForm] = Form.useForm();
@@ -45,6 +66,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const [regenOpen, setRegenOpen] = React.useState(false);
   const [regenerating, setRegenerating] = React.useState(false);
   const [regenImage, setRegenImage] = React.useState(false);
+  const [regenTips, setRegenTips] = React.useState(fallbackRegenTips);
+  const [loadingRegenTips, setLoadingRegenTips] = React.useState(false);
   const map = buildCourseMap(course);
 
   const taskName = course.taskName || course.theme || '情境任务';
@@ -124,19 +147,140 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     regenForm.setFieldValue('request', current ? `${current}；${tip}` : tip);
   };
 
+  const loadRegenTips = async () => {
+    const user = getUser();
+    setLoadingRegenTips(true);
+
+    try {
+      const response = await fetch('/api/ai/generate-course-overview-adjustment-tips', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          courseOverview: course.courseOverview || null,
+          courseTitle: course.courseTitle || course.title || map.title,
+          age: course.age || map.age,
+          duration: course.duration || map.duration,
+          scale: course.classSize || map.classSize,
+          vocabulary: toArray(course.vocabularies),
+          grammar: toArray(course.grammars),
+          skills: toArray(course.languageSkills),
+          paths: course.experiencePath ? [course.experiencePath] : [],
+          theme: course.theme || course.taskName || map.path,
+          storyContext: course.storyContext || map.storyline,
+          keyOutcome: course.keyOutcome || map.keyOutcome,
+          userId: user?.id || course.userId || null,
+          organizationId: user?.organizationId || user?.organization_id || course.organizationId || null,
+        }),
+      });
+
+      const result = await response.json();
+      const tips = result?.data?.tips;
+
+      if (!response.ok || !result.success || !Array.isArray(tips) || tips.length === 0) {
+        throw new Error(result.error || '调整建议生成失败');
+      }
+
+      setRegenTips(tips);
+    } catch (err) {
+      console.warn('生成课程地图调整建议失败，使用默认建议:', err);
+      setRegenTips(fallbackRegenTips);
+    } finally {
+      setLoadingRegenTips(false);
+    }
+  };
+
+  const openRegen = () => {
+    setRegenOpen(true);
+    loadRegenTips();
+  };
+
   const submitRegen = async () => {
     const values = await regenForm.validateFields();
+    const request = values.request?.trim();
+    const user = getUser();
+
     setRegenOpen(false);
     setRegenerating(true);
-    window.setTimeout(() => {
-      const request = values.request?.trim();
+
+    try {
+      const response = await fetch('/api/ai/generate-course-overview', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          courseTitle: course.courseTitle || course.title || map.title,
+          age: course.age || map.age,
+          duration: course.duration || map.duration,
+          scale: course.classSize || map.classSize,
+          vocabulary: toArray(course.vocabularies),
+          grammar: toArray(course.grammars),
+          skills: toArray(course.languageSkills),
+          paths: course.experiencePath ? [course.experiencePath] : [],
+          theme: course.theme || course.taskName || map.path,
+          taskName: course.taskName || course.theme || '',
+          storyContext: course.storyContext || map.storyline,
+          keyOutcome: course.keyOutcome || map.keyOutcome,
+          atmosphere: course.atmosphere || '',
+          requirements: course.specialRequirements || '',
+          attachments: toArray(course.attachments),
+          adjustments: request || '',
+          existingOverview: course.courseOverview || null,
+          userId: user?.id || course.userId || null,
+          organizationId: user?.organizationId || user?.organization_id || course.organizationId || null,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.data?.courseOverview) {
+        throw new Error(result.error || '课程概览生成失败');
+      }
+
+      const overview = result.data.courseOverview;
+      const themeImageUrl = result.data.themeImageUrl || course.themeImageUrl || null;
+      const nextCourse = {
+        ...course,
+        title: overview.courseTitle || course.title,
+        courseTitle: overview.courseTitle || course.courseTitle,
+        theme: overview.theme || course.theme,
+        courseOverview: overview,
+        courseData: {
+          ...(course.courseData || {}),
+          courseOverview: overview,
+          themeImageUrl,
+        },
+        themeImageUrl,
+      };
+
+      onCourseChange?.(nextCourse);
+
+      if (course.id && !String(course.id).startsWith('created-')) {
+        try {
+          await apiService.updateCourse(course.id, {
+            title: nextCourse.title,
+            description: overview.overallContext || course.description || '',
+            theme: nextCourse.theme,
+            ageGroup: nextCourse.age,
+            duration: nextCourse.duration,
+            unit: nextCourse.classSize,
+            courseData: nextCourse.courseData,
+          });
+        } catch (err) {
+          console.warn('保存重新生成课程概览失败:', err);
+        }
+      }
+
+      message.success('课程地图已重新生成');
+      regenForm.resetFields();
+    } catch (err) {
+      console.error('重新生成课程概览失败:', err);
+      message.error(err?.message || '课程概览生成失败，请稍后重试');
       onCourseChange?.({
         ...course,
         storyContext: request ? `${map.storyline} 根据调整需求：${request}` : map.storyline,
       });
+    } finally {
       setRegenerating(false);
-      regenForm.resetFields();
-    }, 900);
+    }
   };
 
   return (
@@ -144,7 +288,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       <div className="overview-panel-header">
         <h2 className="overview-panel-title">课程地图|Course Map</h2>
         <div className="overview-panel-actions">
-          <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={() => setRegenOpen(true)}>
+          <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={openRegen}>
             重新生成
           </Button>
           <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>编辑</Button>
@@ -284,11 +428,15 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
               </Form>
               <div className="regen-tips">
                 <span className="regen-tip-label">AI生成调整需求参考：</span>
-                {regenTips.map((tip) => (
-                  <button type="button" className="regen-tip-chip" key={tip} onClick={() => fillRegenTip(tip)}>
-                    {tip}
-                  </button>
-                ))}
+                {loadingRegenTips ? (
+                  <span className="regen-tip-chip">AI 生成中...</span>
+                ) : (
+                  regenTips.map((tip) => (
+                    <button type="button" className="regen-tip-chip" key={tip} onClick={() => fillRegenTip(tip)}>
+                      {tip}
+                    </button>
+                  ))
+                )}
               </div>
             </div>
             <div className="modal-ft">
