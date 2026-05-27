@@ -87,6 +87,15 @@ export async function POST(request: NextRequest) {
       requirements,
       adjustments,
       existingOverview,
+      existing_overview,
+      courseOverview: inputCourseOverview,
+      courseTitle,
+      taskName,
+      storyContext,
+      keyOutcome,
+      atmosphere,
+      attachments,
+      specialRequirements,
       userId,
       organizationId
     } = body;
@@ -102,9 +111,19 @@ export async function POST(request: NextRequest) {
       skills: skills || [],
       paths: paths || [],
       theme: theme || '',
-      requirements: requirements || '',
+      requirements: requirements || specialRequirements || '',
       adjustments: adjustments || '',
-      existing_overview: existingOverview ? (typeof existingOverview === 'string' ? existingOverview : JSON.stringify(existingOverview)) : '',
+      existing_overview: existingOverview || existing_overview || inputCourseOverview
+        ? (typeof (existingOverview || existing_overview || inputCourseOverview) === 'string'
+            ? (existingOverview || existing_overview || inputCourseOverview)
+            : JSON.stringify(existingOverview || existing_overview || inputCourseOverview))
+        : '',
+      courseTitle: courseTitle || '',
+      taskName: taskName || '',
+      storyContext: storyContext || '',
+      keyOutcome: keyOutcome || '',
+      atmosphere: atmosphere || '',
+      attachments: attachments || [],
       userId,
       organizationId,
       timestamp: Date.now()
