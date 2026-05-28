@@ -4,21 +4,21 @@ import { Sparkles, Zap } from 'lucide-react';
 
 const { TextArea } = Input;
 
-export function CreateCourseStepTwo({ canPolish, onApplyIdea, onPolish }) {
+export function CreateCourseStepTwo({ canPolish, ideaLoading, polishLoading, onApplyIdea, onPolish }) {
   return (
     <>
       <div className="fr-create-step-head">
         <div>
           <div className="fr-create-step-title">构思情境任务 <span className="en">| Design the Adventure</span></div>
-          <div className="fr-create-step-subtitle">设计一个需要用到这个“工具箱”的有趣故事和挑战。</div>
+          <div className="fr-create-step-subtitle">设计一个需要用到这个"工具箱"的有趣故事和挑战。</div>
         </div>
       </div>
 
       <div className="fr-create-ai-row">
         <div>需要从零开始时获取 AI 创意灵感；已经有想法时，可让 AI 基于当前内容润色表达。</div>
         <div className="fr-create-ai-actions">
-          <Button className="fr-create-ai-btn idea" icon={<Zap size={16} />} onClick={onApplyIdea}>获取AI创意灵感</Button>
-          <Button className="fr-create-ai-btn polish" icon={<Sparkles size={16} />} onClick={onPolish} disabled={!canPolish}>AI润色当前内容</Button>
+          <Button className="fr-create-ai-btn idea" icon={<Zap size={16} />} onClick={onApplyIdea} loading={ideaLoading}>获取AI创意灵感</Button>
+          <Button className="fr-create-ai-btn polish" icon={<Sparkles size={16} />} onClick={onPolish} disabled={!canPolish} loading={polishLoading}>AI润色当前内容</Button>
         </div>
       </div>
 

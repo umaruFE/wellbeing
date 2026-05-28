@@ -101,13 +101,73 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const saveEdit = async () => {
     const values = await editForm.validateFields();
     const attachments = (values.attachments || []).map((file) => file.name).filter(Boolean);
+    const user = getUser();
+
+    const n8nPayload = {
+      courseTitle: values.courseTitle,
+      age: values.age,
+      duration: values.duration,
+      scale: values.classSize,
+      vocabulary: values.vocabularies || [],
+      grammar: values.grammars || [],
+      skills: values.languageSkills || [],
+      paths: values.experiencePath ? [values.experiencePath] : [],
+      theme: values.taskName || '',
+      taskName: values.taskName || '',
+      storyContext: values.storyContext || '',
+      keyOutcome: values.keyOutcome || '',
+      atmosphere: values.atmosphere || '',
+      specialRequirements: values.specialRequirements || '',
+      attachments,
+    };
+
+    setRegenImage(true);
+
+    let overview = null;
+    let themeImageUrl = null;
+
+    try {
+      const response = await fetch('/api/ai/generate-course-overview', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(n8nPayload),
+      });
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        overview = result.data.courseOverview || result.data;
+        themeImageUrl = result.data.themeImageUrl || null;
+      }
+    } catch (err) {
+      console.error('生成课程概览失败:', err);
+    } finally {
+      setRegenImage(false);
+    }
+
+    const courseTitle = overview?.courseTitle || values.courseTitle || '未命名课程';
+    const theme = overview?.theme || values.taskName || '';
+
     onCourseChange?.({
       ...course,
-      ...values,
-      title: values.courseTitle,
-      theme: values.taskName,
+      title: courseTitle,
+      theme,
+      courseOverview: overview ? { text: JSON.stringify(overview) } : course.courseOverview,
+      themeImageUrl: themeImageUrl || course.themeImageUrl,
+      age: values.age,
+      duration: values.duration,
+      classSize: values.classSize,
+      vocabularies: values.vocabularies || [],
+      grammars: values.grammars || [],
+      languageSkills: values.languageSkills || ['听力理解', '口语表达'],
+      taskName: values.taskName,
+      storyContext: values.storyContext,
+      keyOutcome: values.keyOutcome,
+      experiencePath: values.experiencePath,
+      specialRequirements: values.specialRequirements,
+      atmosphere: values.atmosphere,
       attachments: attachments.length ? attachments : course.attachments,
     });
+
     setEditOpen(false);
   };
 
@@ -534,7 +594,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
             </div>
             <div className="modal-ft">
               <button type="button" className="mo-btn-cancel" onClick={() => setEditOpen(false)}>取消</button>
-              <button type="button" className="mo-btn-primary" onClick={saveEdit}>保存并刷新地图</button>
+              <button type="button" className="mo-btn-primary" onClick={saveEdit} disabled={regenImage}>
+                {regenImage ? '生成中...' : '保存并刷新地图'}
+              </button>
             </div>
           </div>
         </div>

@@ -36,6 +36,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
   const [current, setCurrent] = useState(0);
   const [ideaIndex, setIdeaIndex] = useState(-1);
   const [submitting, setSubmitting] = useState(false);
+  const [ideaLoading, setIdeaLoading] = useState(false);
+  const [polishLoading, setPolishLoading] = useState(false);
   const watchedValues = Form.useWatch([], form);
 
   const canPolish = useMemo(() => {
@@ -55,27 +57,85 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     onCancel?.();
   };
 
-  const handleApplyIdea = () => {
-    const nextIndex = (ideaIndex + 1) % adventureIdeas.length;
-    const idea = adventureIdeas[nextIndex];
-    setIdeaIndex(nextIndex);
-    form.setFieldsValue(idea);
+  const handleApplyIdea = async () => {
+    if (ideaLoading) return;
+    setIdeaLoading(true);
+    try {
+      const values = form.getFieldsValue();
+      const payload = {
+        courseTitle: values.courseTitle,
+        age: values.age,
+        duration: values.duration,
+        scale: values.classSize,
+        vocabulary: values.vocabularies || [],
+        grammar: values.grammars || [],
+        skills: values.languageSkills || [],
+        paths: values.experiencePath ? [values.experiencePath] : [],
+        taskName: values.taskName || '',
+        storyContext: values.storyContext || '',
+        keyOutcome: values.keyOutcome || '',
+      };
+      const response = await fetch('/api/ai/generate-course-idea', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (result.success && result.data) {
+        const data = result.data;
+        const textData = data.text ? (() => { try { return JSON.parse(data.text); } catch { return data; } })() : data;
+        form.setFieldsValue({
+          taskName: textData.taskName || data.taskName || '',
+          storyContext: textData.storyContext || data.storyContext || '',
+          keyOutcome: textData.keyOutcome || data.keyOutcome || '',
+        });
+        message.success('已生成 AI 创意灵感');
+      } else {
+        message.error(result.error || '创意生成失败');
+      }
+    } catch (err) {
+      console.error('获取AI创意灵感失败:', err);
+      message.error('创意生成失败，请稍后重试');
+    } finally {
+      setIdeaLoading(false);
+    }
   };
 
-  const handlePolish = () => {
-    const values = form.getFieldsValue(['taskName', 'storyContext', 'keyOutcome']);
-    const title = values.taskName?.trim() || '这场奇遇任务';
-
-    form.setFieldsValue({
-      taskName: title,
-      storyContext: values.storyContext
-        ? `围绕"${title}"，${values.storyContext.trim()}。孩子们将带着明确角色进入情境，通过观察、交流与合作创作，自然使用目标语言完成挑战。`
-        : `围绕"${title}"，孩子们将化身任务中的关键角色，在充满画面感的情境中寻找线索、交流想法，并合作完成挑战。`,
-      keyOutcome: values.keyOutcome
-        ? `最终，${values.keyOutcome.trim()}，并用目标语言进行清晰、有趣的展示。`
-        : `最终，每个小组将完成一份与"${title}"相关的创意作品，并用目标语言进行展示与分享。`,
-    });
-    message.success('已润色当前内容');
+  const handlePolish = async () => {
+    if (polishLoading) return;
+    setPolishLoading(true);
+    try {
+      const values = form.getFieldsValue(['taskName', 'storyContext', 'keyOutcome', 'courseTitle']);
+      const payload = {
+        courseTitle: values.courseTitle || '',
+        taskName: values.taskName?.trim() || '',
+        storyContext: values.storyContext?.trim() || '',
+        keyOutcome: values.keyOutcome?.trim() || '',
+      };
+      const response = await fetch('/api/ai/polish-course-content', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (result.success && result.data) {
+        const data = result.data;
+        const textData = data.text ? (() => { try { return JSON.parse(data.text); } catch { return data; } })() : data;
+        form.setFieldsValue({
+          taskName: textData.taskName || data.taskName || payload.taskName,
+          storyContext: textData.storyContext || data.storyContext || payload.storyContext,
+          keyOutcome: textData.keyOutcome || data.keyOutcome || payload.keyOutcome,
+        });
+        message.success('已润色当前内容');
+      } else {
+        message.error(result.error || '内容润色失败');
+      }
+    } catch (err) {
+      console.error('AI润色失败:', err);
+      message.error('内容润色失败，请稍后重试');
+    } finally {
+      setPolishLoading(false);
+    }
   };
 
   const handleNext = async () => {
@@ -185,7 +245,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
   const stepContent = [
     <CreateCourseStepOne key="step-1" />,
-    <CreateCourseStepTwo key="step-2" canPolish={canPolish} onApplyIdea={handleApplyIdea} onPolish={handlePolish} />,
+    <CreateCourseStepTwo key="step-2" canPolish={canPolish} ideaLoading={ideaLoading} polishLoading={polishLoading} onApplyIdea={handleApplyIdea} onPolish={handlePolish} />,
     <CreateCourseStepThree key="step-3" />,
     <CreateCourseStepFour key="step-4" />,
   ];

@@ -1,0 +1,96 @@
+{
+  "name": "course-idea-generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-idea-generator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b1c2d3e4-0001-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [200, 200],
+      "webhookId": "course-idea-gen-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json.body;\n\nreturn {\n  courseTitle: input.courseTitle || '未命名课程',\n  age: input.age || '7-9岁',\n  duration: input.duration || '60分钟',\n  scale: input.scale || '9-15人',\n  vocabulary: (input.vocabulary && input.vocabulary.length > 0)\n    ? (Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : input.vocabulary)\n    : '请根据主题推荐词汇',\n  grammar: (input.grammar && input.grammar.length > 0)\n    ? (Array.isArray(input.grammar) ? input.grammar.join(', ') : input.grammar)\n    : '请根据主题推荐句型',\n  skills: (input.skills && input.skills.length > 0)\n    ? (Array.isArray(input.skills) ? input.skills.join(', ') : input.skills)\n    : '',\n  paths: (input.paths && input.paths.length > 0)\n    ? (Array.isArray(input.paths) ? input.paths.join(', ') : input.paths)\n    : '',\n  theme: input.theme || '',\n  taskName: input.taskName || '',\n  storyContext: input.storyContext || '',\n  keyOutcome: input.keyOutcome || ''\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [420, 200],
+      "id": "b1c2d3e4-0002-4000-8000-000000000002",
+      "name": "参数组装"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师，擅长将 SEL 和 PERMA 融入英语教学。\n\n# Task\n根据输入的课程参数，生成一个吸引人的创意情境任务，包括任务名称、故事情境和终极产出。\n\n# Input\n- 课程名称：{{ $json.courseTitle }}\n- 学生年龄：{{ $json.age }}\n- 课程时长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 核心词汇：{{ $json.vocabulary }}\n- 核心句型：{{ $json.grammar }}\n- 侧重能力：{{ $json.skills }}\n- 体验路径：{{ $json.paths }}\n- 已有任务名称：{{ $json.taskName }}\n- 已有故事情境：{{ $json.storyContext }}\n- 已有终极产出：{{ $json.keyOutcome }}\n\n# Requirements\n- 如果已有内容不为空，请基于已有内容进行创意扩展和优化，而非完全替换\n- 如果已有内容为空，请自主生成一个全新且富有想象力的创意\n- 任务名称：简短有吸引力，中英文结合，3-15字，能激发孩子好奇心\n- 故事情境：按【角色】-【场景】-【问题/需求】-【要做的关键事】思路展开，100-200字\n- 终极产出：具体可操作，与任务名称和情境紧密关联\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字\n\n### 输出格式：\n{\n  \"taskName\": \"创意任务名称\",\n  \"storyContext\": \"故事情境描述\",\n  \"keyOutcome\": \"终极产出/作品描述\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [640, 200],
+      "id": "b1c2d3e4-0003-4000-8000-000000000003",
+      "name": "创意生成"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "maxTokens": 2048
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [640, 400],
+      "id": "b1c2d3e4-0004-4000-8000-000000000004",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+        "options": {}
+      },
+      "id": "b1c2d3e4-0005-4000-8000-000000000005",
+      "name": "返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [860, 200]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "参数组装", "type": "main", "index": 0 }]]
+    },
+    "参数组装": {
+      "main": [[{ "node": "创意生成", "type": "main", "index": 0 }]]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "创意生成", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "创意生成": {
+      "main": [[{ "node": "返回结果", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  }
+}
