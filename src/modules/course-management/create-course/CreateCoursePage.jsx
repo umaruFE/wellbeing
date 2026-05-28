@@ -81,7 +81,7 @@ const steps = [
   { id: 1, label: '课程概览', icon: Layout },
   { id: 2, label: '教案设计', icon: BookOpen },
   { id: 3, label: 'PPT 课件', icon: FileCheck },
-  { id: 4, label: '阅读材料', icon: MessageSquare },
+  // { id: 4, label: '阅读材料', icon: MessageSquare },
 ];
 
 // 安全渲染函数：防止后端返回对象或意外 React 节点导致 "Objects are not valid as a React child" 崩溃
