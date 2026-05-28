@@ -108,6 +108,14 @@ export async function POST(request: NextRequest) {
     });
 
     // 构建 N8N 调用参数
+    let overview = courseOverview || null;
+    if (overview && typeof overview === 'object' && overview.text) {
+      try { overview = JSON.parse(overview.text); } catch {}
+    }
+    if (overview && overview.courseOverview) {
+      overview = overview.courseOverview;
+    }
+
     const n8nPayload = {
       age,
       duration,
@@ -125,9 +133,9 @@ export async function POST(request: NextRequest) {
       keyOutcome: keyOutcome || '',
       atmosphere: atmosphere || '',
       specialRequirements: specialRequirements || '',
-      course_overview: courseOverview ? JSON.stringify(courseOverview) : '',
-      course_overview_text: courseOverview
-        ? `已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：\n标题：${courseOverview.courseTitle || ''}\n情境：${courseOverview.overallContext || ''}\n语言目标：词汇=${courseOverview.languageGoals?.vocabulary || ''}，句型=${courseOverview.languageGoals?.grammar || ''}\nSEL目标：${courseOverview.selGoals || ''}\nPERMA目标：${courseOverview.permaGoals || ''}\n产出任务：${courseOverview.finalTask || ''}\n生图提示词：${courseOverview.themeImagePrompt || ''}`
+      course_overview: overview ? JSON.stringify(overview) : '',
+      course_overview_text: overview
+        ? `已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：\n标题：${overview.courseTitle || ''}\n情境：${overview.overallContext || ''}\n语言目标：词汇=${overview.languageGoals?.vocabulary || ''}，句型=${overview.languageGoals?.grammar || ''}\nSEL目标：${overview.selGoals || ''}\nPERMA目标：${overview.permaGoals || ''}\n产出任务：${overview.finalTask || ''}\n生图提示词：${overview.themeImagePrompt || ''}`
         : '',
       userId,
       organizationId,
