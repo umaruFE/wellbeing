@@ -1,0 +1,1 @@
+export { PptCoursewareView } from './PptCoursewareView';
