@@ -23,7 +23,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
 
   const content = [
     <CourseMapView key="map" course={course} onCourseChange={setCourse} onNext={() => setCurrent(1)} />,
-    <LessonPlanView key="lesson" phases={phases} onPhasesChange={setPhases} onNext={() => setCurrent(2)} />,
+    <LessonPlanView key="lesson" course={course} phases={phases} onPhasesChange={setPhases} onNext={() => setCurrent(2)} />,
     <PptCoursewareView key="ppt" onNext={() => setCurrent(3)} initialCourseData={course.courseData} />,
     <ReadingMaterialView key="reading" course={course} materials={materials} onMaterialsChange={setMaterials} />,
   ];

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
+import { buildCourseMap } from './workflowData';
 import {
   ChevronRight,
   Clock,
@@ -62,159 +63,71 @@ const defaultDraft = {
   scenario: '',
 };
 
-const lessonDesignPhases = [
-  {
-    key: 'eng',
-    phase: 'Engage',
-    title: 'E-Engage',
-    name: '引入',
-    duration: '15 分钟',
-    steps: [
-      {
-        title: '星际信号接收站',
-        duration: '8分钟',
-        goal: '通过沉浸式情境激发好奇心，建立学习动机',
-        activity: '全班扮演宇飞船控制台员',
-        flow: '教师激活AI生成图像，引入情境',
-        resources: 'AI图像生成设备、投影仪',
-        scenario: '星际信号接收站场景',
-        teacherScript: '大家注意！激活频道1——动物星球信号已锁定！',
-      },
-      {
-        title: '动物能量球在哪里？',
-        duration: '8分钟',
-        goal: '自然语言方位介词，建立个人意义感',
-        activity: '展示透明亚克力能量球',
-        flow: '教师出示能量球，引导学生观察',
-        resources: '透明亚克力能量球、毛绒动物玩具',
-        scenario: '能量球发现场景',
-        teacherScript: '看！这就是Nebula的能量球——里面住着谁？',
-      },
-    ],
-  },
-  {
-    key: 'emp',
-    phase: 'Empower',
-    title: 'E-Empower',
-    name: '赋能',
-    duration: '15 分钟',
-    steps: [
-      {
-        title: '救援地图解码器',
-        duration: '8分钟',
-        goal: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
-        activity: '教师用AI闪卡展示动物图像',
-        flow: '学生跟读并做TPR动作',
-        resources: 'AI闪卡、动物图片',
-        scenario: '救援地图解码场景',
-        teacherScript: "Look at the map! There's a cat — where is it? Point! It's ON the rock!",
-      },
-      {
-        title: '动物位置快闪挑战',
-        duration: '5分钟',
-        goal: '在快速辨认中巩固 in / on / under 的听辨与口头回应',
-        activity: '学生根据闪卡和教师指令快速做动作或回答',
-        flow: '快速示范：教师展示动物与位置卡。\n听音判断：学生根据指令站到对应区域。\n同伴互问：两人一组用 Where is...? 互相提问。\n全班校对：教师强化易错发音和介词。',
-        resources: '动物闪卡、位置地垫、计时器',
-        scenario: '控制台正在解锁救援路线，需要快速输入正确位置密码',
-        teacherScript: 'Where is the fox? Is it in the box or under the box?',
-      },
-      {
-        title: '小队口令训练',
-        duration: '4分钟',
-        goal: '用目标句型完成小组内低压力输出',
-        activity: '小队轮流发布位置口令并完成动作回应',
-        flow: '分配角色：队长发布口令。\n轮流挑战：队员按口令移动动物卡。\n语言升级：加入完整回答 It is...。\n小队加分：完成三轮获得能量徽章。',
-        resources: '动物卡、任务徽章、小队计分板',
-        scenario: '救援小队进行出发前的口令校准',
-        teacherScript: 'Captain, give your team one command. Team, answer in a full sentence.',
-      },
-    ],
-  },
-  {
-    key: 'exc',
-    phase: 'Execute',
-    title: 'E-Execute',
-    name: '实践',
-    duration: '15 分钟',
-    steps: [
-      {
-        title: '建造动物家园发射台',
-        duration: '8分钟',
-        goal: '在真实任务驱动下综合运用方位介词与句型',
-        activity: '小组合作布置动物家园模型',
-        flow: '学生选择动物、摆放位置并描述位置关系',
-        resources: '积木、动物卡、位置标签',
-        scenario: '动物星球基地建设现场',
-        teacherScript: 'Put the rabbit under the tree. Tell your team where it is.',
-      },
-      {
-        title: '动物家园设计图',
-        duration: '5分钟',
-        goal: '把口语表达转化为可视化设计，强化空间关系表达',
-        activity: '学生画出动物家园草图并标注位置',
-        flow: '选择动物：每组领取三张动物卡。\n绘制草图：画出树、河、房子等场景。\n标注位置：写下 in / on / under。\n同伴检查：互相读出位置并修正。',
-        resources: '设计纸、彩笔、动物贴纸',
-        scenario: '发射台需要先提交动物家园建设蓝图',
-        teacherScript: 'Draw your animal home. Write one sentence: The cat is on the roof.',
-      },
-      {
-        title: '小组搭建与彩排',
-        duration: '6分钟',
-        goal: '在协作中整合语言工具并准备最终展示',
-        activity: '小组搭建模型并练习介绍台词',
-        flow: '分工搭建：学生负责动物、场景、介绍。\n语言排练：每人至少说一句位置句。\n教师巡视：及时提供词汇和句型支持。\n完成定稿：准备展示顺序。',
-        resources: '积木、纸板、动物模型、句型提示卡',
-        scenario: '动物星球基地进入最终组装阶段',
-        teacherScript: 'Everyone needs one sentence. Practice with your group before launch.',
-      },
-      {
-        title: '救援路线测试',
-        duration: '4分钟',
-        goal: '用问答方式验证作品中的位置表达是否清晰',
-        activity: '小组互访并根据对方描述找到动物',
-        flow: '互访开始：一组描述，另一组寻找。\n提问确认：Where is the...?。\n修正表达：根据同伴反应调整句子。\n记录亮点：写下一个最清楚的表达。',
-        resources: '互评卡、路线贴纸、动物模型',
-        scenario: '发射前最后一次路线校准',
-        teacherScript: 'Ask your friends. Can they find the animal with your English?',
-      },
-    ],
-  },
-  {
-    key: 'elv',
-    phase: 'Elevate',
-    title: 'E-Elevate',
-    name: '升华',
-    duration: '15 分钟',
-    steps: [
-      {
-        title: '星球救援发布会',
-        duration: '8分钟',
-        goal: '通过展示与反馈建立成就感，迁移课堂语言到真实表达',
-        activity: '每组展示动物家园并接受同伴提问',
-        flow: '小组展示、同伴提问、教师总结语言亮点',
-        resources: '展示台、贴纸奖励、评价卡',
-        scenario: '救援任务总结发布会',
-        teacherScript: 'Tell us your animal home. Where is the cat? What did your team make?',
-      },
-      {
-        title: '救援徽章复盘',
-        duration: '5分钟',
-        goal: '回顾语言收获和团队协作体验，形成可迁移的成长感',
-        activity: '学生选择一枚徽章并说出自己的课堂贡献',
-        flow: '选择徽章：语言星、合作星、创意星。\n说出证据：学生用一句话描述贡献。\n同伴感谢：对队友表达感谢。\n教师总结：连接到下次真实使用场景。',
-        resources: '徽章贴纸、出口条、反思卡',
-        scenario: '救援任务完成后的成长认证仪式',
-        teacherScript: 'Choose one badge. Why did you earn it today?',
-      },
-    ],
-  },
+const emptyPhases = [
+  { key: 'eng', phase: 'Engage', title: 'E-Engage', name: '引入', duration: '15 分钟', steps: [] },
+  { key: 'emp', phase: 'Empower', title: 'E-Empower', name: '赋能', duration: '15 分钟', steps: [] },
+  { key: 'exc', phase: 'Execute', title: 'E-Execute', name: '实践', duration: '15 分钟', steps: [] },
+  { key: 'elv', phase: 'Elevate', title: 'E-Elevate', name: '升华', duration: '15 分钟', steps: [] },
 ];
 
-export function LessonPlanView({ onPhasesChange, onNext }) {
+function resolvePhasesFromCourse(course) {
+  let courseData = course?.courseData || course?.course_data;
+  if (typeof courseData === 'string') {
+    try { courseData = JSON.parse(courseData); } catch { courseData = null; }
+  }
+  if (!courseData) return null;
+
+  let phases = null;
+  if (courseData?.text?.courseData) {
+    try { phases = typeof courseData.text.courseData === 'string' ? JSON.parse(courseData.text.courseData) : courseData.text.courseData; } catch { phases = null; }
+  } else if (courseData?.courseData) {
+    phases = courseData.courseData;
+  } else if (courseData?.engage || courseData?.empower || courseData?.execute || courseData?.elevate) {
+    phases = courseData;
+  }
+  if (!phases) return null;
+
+  const phaseMapping = { engage: 'eng', empower: 'emp', execute: 'exc', elevate: 'elv' };
+  const nameMapping = { engage: '引入', empower: '赋能', execute: '实践', elevate: '升华' };
+
+  return Object.entries(phaseMapping).map(([longKey, shortKey]) => {
+    const phase = phases[longKey];
+    const steps = Array.isArray(phase?.steps) ? phase.steps : [];
+    return {
+      key: shortKey,
+      phase: longKey.charAt(0).toUpperCase() + longKey.slice(1),
+      title: phase?.title || `E-${longKey.charAt(0).toUpperCase() + longKey.slice(1)}`,
+      name: nameMapping[longKey],
+      duration: steps.length > 0
+        ? steps.reduce((acc, s) => { const m = (s.time || s.duration || '').match(/(\d+)/); return acc + (m ? parseInt(m[1]) : 0); }, 0) + ' 分钟'
+        : '15 分钟',
+      steps: steps.map((step) => ({
+        id: step.id,
+        title: step.title || '',
+        duration: step.time || step.duration || '',
+        goal: step.objective || step.goal || '',
+        activity: step.activity || '',
+        flow: step.activitySteps || step.flow || '',
+        resources: step.resources || '',
+        scenario: step.scenario || '',
+        teacherScript: step.script || step.teacherScript || '',
+      })),
+    };
+  });
+}
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext }) {
   const [addForm] = Form.useForm();
-  const [data, setData] = React.useState(lessonDesignPhases);
-  const [openCards, setOpenCards] = React.useState(() => new Set(['eng-1', 'emp-0', 'exc-0', 'elv-0']));
+  const [data, setData] = React.useState(emptyPhases);
+  const [loading, setLoading] = React.useState(true);
+  const [openCards, setOpenCards] = React.useState(() => new Set());
   const [menuKey, setMenuKey] = React.useState(null);
   const [editing, setEditing] = React.useState(null);
   const [detailTarget, setDetailTarget] = React.useState(null);
@@ -226,6 +139,74 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
   const [genMode, setGenMode] = React.useState('ai');
   const [selectedClassic, setSelectedClassic] = React.useState(null);
   const [ideaText, setIdeaText] = React.useState('');
+  const [regenPhase, setRegenPhase] = React.useState(null);
+  const [regenStep, setRegenStep] = React.useState(null);
+  const [addingStep, setAddingStep] = React.useState(null);
+
+  const generateCalledRef = React.useRef(false);
+
+  React.useEffect(() => {
+    const existing = resolvePhasesFromCourse(course);
+    if (existing && existing.some((p) => p.steps.length > 0)) {
+      setData(existing);
+      setLoading(false);
+      return;
+    }
+
+    if (generateCalledRef.current) return;
+    generateCalledRef.current = true;
+
+    const generateLesson = async () => {
+      try {
+        const map = buildCourseMap(course);
+
+        let parsedOverview = course.courseOverview || null;
+        if (parsedOverview?.text && typeof parsedOverview.text === 'string') {
+          try { parsedOverview = JSON.parse(parsedOverview.text); } catch {}
+        }
+        if (parsedOverview?.courseOverview) parsedOverview = parsedOverview.courseOverview;
+
+        const payload = {
+          courseTitle: course.courseTitle || course.title || map.title || '',
+          age: (course.ageGroup || course.age || '').replace(/--/g, '') || '7-9岁',
+          duration: (course.duration || '').replace(/--/g, '').replace('分钟', '') || '60',
+          scale: (course.classSize || course.unit || '').replace(/--/g, '') || '',
+          vocabulary: course.vocabularies || course.keywords || [],
+          grammar: course.grammars || [],
+          skills: course.languageSkills || [],
+          paths: course.experiencePath ? [course.experiencePath] : [],
+          theme: course.theme || map.path || '',
+          taskName: course.taskName || '',
+          storyContext: course.storyContext || map.storyline || '',
+          keyOutcome: course.keyOutcome || map.keyOutcome || '',
+          atmosphere: course.atmosphere || '',
+          specialRequirements: course.specialRequirements || '',
+          courseOverview: parsedOverview,
+        };
+
+        const response = await fetch('/api/ai/generate-course', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(payload),
+        });
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          const resolved = resolvePhasesFromCourse({ courseData: result.data });
+          if (resolved) {
+            setData(resolved);
+            onPhasesChange?.(resolved);
+          }
+        }
+      } catch (err) {
+        console.error('生成教案失败:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    generateLesson();
+  }, []);
 
   const updateData = (next) => {
     setData(next);
@@ -372,6 +353,195 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
     setAdjustTarget(null);
   };
 
+  const longPhaseKey = (shortKey) => {
+    const map = { eng: 'engage', emp: 'empower', exc: 'execute', elv: 'elevate' };
+    return map[shortKey] || shortKey;
+  };
+
+  const handleRegeneratePhase = async (phaseKey) => {
+    setRegenPhase(phaseKey);
+    try {
+      const response = await fetch('/api/ai/regenerate-phase', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          phaseKey: longPhaseKey(phaseKey),
+          title: course?.courseTitle || course?.title || '',
+          age: course?.ageGroup || course?.age || '7-9岁',
+          duration: course?.duration || '60分钟',
+          scale: course?.classSize || '',
+          vocabulary: course?.vocabularies || course?.keywords || [],
+          grammar: course?.grammars || [],
+          theme: course?.theme || '',
+          currentCourseData: dataToCoursePhases(),
+        }),
+      });
+      const result = await response.json();
+      if (result.success && result.data?.steps) {
+        const newSteps = result.data.steps.map(normalizeStep);
+        updateData(data.map((phase) =>
+          phase.key === phaseKey ? { ...phase, steps: newSteps } : phase
+        ));
+      }
+    } catch (err) {
+      console.error('重新生成阶段失败:', err);
+    } finally {
+      setRegenPhase(null);
+    }
+  };
+
+  const handleAddStep = async (phaseKey, insertIndex) => {
+    setAddingStep(phaseKey);
+    try {
+      const phase = data.find((p) => p.key === phaseKey);
+      const currentSteps = phase?.steps || [];
+      const idx = insertIndex != null ? insertIndex : currentSteps.length;
+
+      const otherPhases = {};
+      data.forEach((p) => {
+        if (p.key !== phaseKey) {
+          otherPhases[longPhaseKey(p.key)] = { title: p.title, steps: p.steps };
+        }
+      });
+
+      const response = await fetch('/api/ai/generate-step', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          phaseKey: longPhaseKey(phaseKey),
+          title: course?.courseTitle || course?.title || '',
+          age: course?.ageGroup || course?.age || '7-9岁',
+          duration: course?.duration || '60分钟',
+          scale: course?.classSize || '',
+          vocabulary: course?.vocabularies || course?.keywords || [],
+          grammar: course?.grammars || [],
+          theme: course?.theme || '',
+          existingStepCount: currentSteps.length,
+          currentSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration, objective: s.goal })),
+          otherPhases,
+          insertIndex: idx,
+          prevStep: idx > 0 ? currentSteps[idx - 1] : null,
+          nextStep: idx < currentSteps.length ? currentSteps[idx] : null,
+        }),
+      });
+      const result = await response.json();
+      if (result.success && result.data?.step) {
+        const newStep = normalizeStep(result.data.step);
+        const newSteps = [...currentSteps];
+        newSteps.splice(idx, 0, newStep);
+        updateData(data.map((p) =>
+          p.key === phaseKey ? { ...p, steps: newSteps } : p
+        ));
+        setOpenCards((prev) => new Set(prev).add(`${phaseKey}-${idx}`));
+      }
+    } catch (err) {
+      console.error('添加环节失败:', err);
+    } finally {
+      setAddingStep(null);
+    }
+  };
+
+  const handleRegenerateStep = async (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    const currentSteps = phase?.steps || [];
+    const currentStep = currentSteps[stepIndex];
+    const cardKey = `${phaseKey}-${stepIndex}`;
+    setRegenStep(cardKey);
+    try {
+      const siblingSteps = currentSteps.filter((_, i) => i !== stepIndex);
+      const otherPhases = {};
+      data.forEach((p) => {
+        if (p.key !== phaseKey) {
+          otherPhases[longPhaseKey(p.key)] = { title: p.title, steps: p.steps };
+        }
+      });
+
+      const response = await fetch('/api/ai/regenerate-step', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          phaseKey: longPhaseKey(phaseKey),
+          stepId: currentStep?.id,
+          title: course?.courseTitle || course?.title || '',
+          age: course?.ageGroup || course?.age || '7-9岁',
+          duration: course?.duration || '60分钟',
+          scale: course?.classSize || '',
+          vocabulary: course?.vocabularies || course?.keywords || [],
+          grammar: course?.grammars || [],
+          theme: course?.theme || '',
+          currentStep: currentStep ? { id: currentStep.id, title: currentStep.title, time: currentStep.duration, objective: currentStep.goal } : null,
+          siblingSteps: siblingSteps.map((s) => ({ title: s.title, time: s.duration })),
+          otherPhases,
+        }),
+      });
+      const result = await response.json();
+      if (result.success && result.data?.step) {
+        const newStep = normalizeStep(result.data.step);
+        updateData(data.map((p) =>
+          p.key === phaseKey
+            ? { ...p, steps: p.steps.map((s, i) => (i === stepIndex ? newStep : s)) }
+            : p
+        ));
+      }
+    } catch (err) {
+      console.error('重新生成环节失败:', err);
+    } finally {
+      setRegenStep(null);
+    }
+  };
+
+  const handleDeleteStep = (phaseKey, stepIndex) => {
+    updateData(data.map((p) =>
+      p.key === phaseKey
+        ? { ...p, steps: p.steps.filter((_, i) => i !== stepIndex) }
+        : p
+    ));
+    setMenuKey(null);
+  };
+
+  const dataToCoursePhases = () => {
+    const result = {};
+    data.forEach((phase) => {
+      result[longPhaseKey(phase.key)] = {
+        title: phase.title,
+        steps: phase.steps.map((s) => ({
+          id: s.id,
+          title: s.title,
+          time: s.duration,
+          objective: s.goal,
+          activity: s.activity,
+          activitySteps: s.flow,
+          scenario: s.scenario,
+          script: s.teacherScript,
+        })),
+      };
+    });
+    return result;
+  };
+
+  const normalizeStep = (step) => ({
+    id: step.id,
+    title: step.title || '',
+    duration: step.time || step.duration || '',
+    goal: step.objective || step.goal || '',
+    activity: step.activity || '',
+    flow: step.activitySteps || step.flow || '',
+    resources: step.resources || '',
+    scenario: step.scenario || '',
+    teacherScript: step.script || step.teacherScript || '',
+  });
+
+  if (loading) {
+    return (
+      <div id="ed-tbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
+        <div style={{ textAlign: 'center' }}>
+          <div className="tbl-loading-spinner" />
+          <p style={{ color: '#818997', marginTop: 12 }}>正在生成教案...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="ed-tbl">
       <div className="tbl-inner-toolbar">
@@ -394,9 +564,21 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
               <div className="tbl-phase-hd-left">
                 <span className="tbl-phase-title">{phase.title}</span>
                 <span className="tbl-phase-cn">{phase.name}</span>
-                <button className="tbl-phase-edit-btn" title="查看阶段详情" aria-label="查看阶段详情">
-                  <MoreVertical size={14} />
+                <button className="tbl-phase-edit-btn" title="阶段操作" aria-label="阶段操作"
+                  onClick={() => {
+                    if (regenPhase === phase.key) return;
+                    const next = menuKey === `phase-${phase.key}` ? null : `phase-${phase.key}`;
+                    setMenuKey(next);
+                  }}>
+                  {regenPhase === phase.key ? <RefreshCw size={14} className="animate-spin" /> : <MoreVertical size={14} />}
                 </button>
+                {menuKey === `phase-${phase.key}` && (
+                  <div className="step-menu-dropdown open phase-menu">
+                    <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); handleRegeneratePhase(phase.key); }}>
+                      <RefreshCw size={12} />重新生成
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <div className="tbl-phase-meta">
@@ -406,9 +588,9 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
 
             <div className="tbl-steps-list">
               <div className="tbl-add-step-top">
-                <button type="button" className="tbl-add-step-btn" onClick={() => openAddStep(phase)}>
-                  <Plus size={12} />
-                  添加环节
+                <button type="button" className="tbl-add-step-btn" onClick={() => handleAddStep(phase.key)} disabled={addingStep === phase.key}>
+                  {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
+                  {addingStep === phase.key ? '生成中...' : '添加环节'}
                 </button>
               </div>
 
@@ -446,9 +628,10 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
                             open={menuKey === cardKey}
                             onRegen={() => {
                               setMenuKey(null);
-                              openAddStep(phase);
+                              handleRegenerateStep(phase.key, index);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
+                            onDelete={() => handleDeleteStep(phase.key, index)}
                           />
                         )}
                       </div>
@@ -508,9 +691,10 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
                             placement="footer"
                             onRegen={() => {
                               setMenuKey(null);
-                              openAddStep(phase);
+                              handleRegenerateStep(phase.key, index);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
+                            onDelete={() => handleDeleteStep(phase.key, index)}
                           />
                         )}
                       />
@@ -794,7 +978,7 @@ export function LessonPlanView({ onPhasesChange, onNext }) {
   );
 }
 
-function StepMenu({ open, onRegen, onAdjust, placement }) {
+function StepMenu({ open, onRegen, onAdjust, onDelete, placement }) {
   return (
     <div className={`step-menu-dropdown ${placement === 'footer' ? 'footer-menu' : ''} ${open ? 'open' : ''}`}>
       <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />重新生成</button>
@@ -802,7 +986,7 @@ function StepMenu({ open, onRegen, onAdjust, placement }) {
       <button type="button" className="step-menu-item"><Heart size={12} />收藏此环节</button>
       <button type="button" className="step-menu-item"><Copy size={12} />置顶</button>
       <div className="step-menu-sep" />
-      <button type="button" className="step-menu-item danger"><Trash2 size={12} />删除</button>
+      <button type="button" className="step-menu-item danger" onClick={onDelete}><Trash2 size={12} />删除</button>
     </div>
   );
 }

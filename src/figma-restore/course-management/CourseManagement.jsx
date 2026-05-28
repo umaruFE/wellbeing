@@ -66,9 +66,9 @@ export function CourseManagement({
         title: course.title || course.unit || '未命名课程',
         unit: course.unit || course.title || '未命名课程',
         status: course.status === 'published' ? 'published' : 'draft',
-        age: course.age_group || '--',
+        age: course.age_group || course.course_data?.age || '--',
         grade: course.age_group ? `G${course.age_group.split('-')[0]}` : '--',
-        duration: course.duration ? `${course.duration}分钟` : '--',
+        duration: course.duration || course.course_data?.duration || '--',
         theme: course.theme || '情境任务',
         updatedAt: course.created_at
           ? new Date(course.created_at).toLocaleDateString('zh-CN', {
@@ -80,6 +80,16 @@ export function CourseManagement({
         active: i === 0,
         courseOverview: course.course_data?.courseOverview || null,
         themeImageUrl: course.course_data?.themeImageUrl || course.theme_image_url || null,
+        classSize: course.course_data?.classSize || course.unit || '',
+        vocabularies: course.course_data?.vocabularies || [],
+        grammars: course.course_data?.grammars || [],
+        languageSkills: course.course_data?.languageSkills || [],
+        experiencePath: course.course_data?.experiencePath || '',
+        taskName: course.course_data?.taskName || '',
+        storyContext: course.course_data?.storyContext || '',
+        keyOutcome: course.course_data?.keyOutcome || '',
+        atmosphere: course.course_data?.atmosphere || '',
+        specialRequirements: course.course_data?.specialRequirements || '',
       })));
     } catch (error) {
       console.error('获取课程列表失败:', error);

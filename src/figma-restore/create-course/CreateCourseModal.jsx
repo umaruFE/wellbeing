@@ -149,7 +149,9 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       if (submitting) return;
       setSubmitting(true);
 
-      const values = await form.validateFields();
+      const stepValues = await form.validateFields();
+      const values = form.getFieldsValue(true);
+      Object.assign(values, stepValues);
       const user = getUser();
       const attachments = (values.attachments || []).map(file => file.name).filter(Boolean);
 
@@ -210,7 +212,22 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         duration: values.duration,
         theme: theme,
         keywords: keywordsList,
-        courseData: overview ? { courseOverview: overview, themeImageUrl } : {},
+        courseData: {
+          courseOverview: overview,
+          themeImageUrl,
+          age: values.age,
+          duration: values.duration,
+          classSize: values.classSize,
+          vocabularies: values.vocabularies || [],
+          grammars: values.grammars || [],
+          languageSkills: values.languageSkills || [],
+          experiencePath: values.experiencePath || '',
+          taskName: values.taskName || '',
+          storyContext: values.storyContext || '',
+          keyOutcome: values.keyOutcome || '',
+          atmosphere: values.atmosphere || '',
+          specialRequirements: values.specialRequirements || '',
+        },
         themeImageUrl,
         status: 'draft',
         userId: user?.id || null,
@@ -236,6 +253,18 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         themeImageUrl,
         title: courseTitle,
         theme,
+        age: values.age,
+        duration: values.duration,
+        classSize: values.classSize,
+        vocabularies: values.vocabularies || [],
+        grammars: values.grammars || [],
+        languageSkills: values.languageSkills || [],
+        experiencePath: values.experiencePath || '',
+        taskName: values.taskName || '',
+        storyContext: values.storyContext || '',
+        keyOutcome: values.keyOutcome || '',
+        atmosphere: values.atmosphere || '',
+        specialRequirements: values.specialRequirements || '',
       });
     } catch {
       setSubmitting(false);

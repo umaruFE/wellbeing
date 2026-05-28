@@ -80,6 +80,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
+      courseTitle,
       age,
       duration,
       scale,
@@ -90,6 +91,11 @@ export async function POST(request: NextRequest) {
       theme,
       requirements,
       courseOverview,
+      taskName,
+      storyContext,
+      keyOutcome,
+      atmosphere,
+      specialRequirements,
       userId,
       organizationId
     } = body;
@@ -106,16 +112,22 @@ export async function POST(request: NextRequest) {
       age,
       duration,
       scale,
-      title: theme || '未命名课程',
+      title: courseTitle || theme || '未命名课程',
+      courseTitle: courseTitle || '',
       vocabulary,
       grammar,
       skills: skills || [],
       paths: paths || [],
       theme,
-      requirements,
+      requirements: requirements || specialRequirements || '',
+      taskName: taskName || '',
+      storyContext: storyContext || '',
+      keyOutcome: keyOutcome || '',
+      atmosphere: atmosphere || '',
+      specialRequirements: specialRequirements || '',
       course_overview: courseOverview ? JSON.stringify(courseOverview) : '',
       course_overview_text: courseOverview
-        ? `已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：\n标题：${courseOverview.courseTitle || ''}\n情境：${courseOverview.overallContext || ''}\n语言目标：词汇=${courseOverview.languageGoals?.vocabulary || ''}，句型=${courseOverview.languageGoals?.grammar || ''}\nSEL目标：${courseOverview.selGoals || ''}\nPERMA目标：${courseOverview.permaGoals || ''}\n产出任务：${courseOverview.finalTask || ''}`
+        ? `已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：\n标题：${courseOverview.courseTitle || ''}\n情境：${courseOverview.overallContext || ''}\n语言目标：词汇=${courseOverview.languageGoals?.vocabulary || ''}，句型=${courseOverview.languageGoals?.grammar || ''}\nSEL目标：${courseOverview.selGoals || ''}\nPERMA目标：${courseOverview.permaGoals || ''}\n产出任务：${courseOverview.finalTask || ''}\n生图提示词：${courseOverview.themeImagePrompt || ''}`
         : '',
       userId,
       organizationId,
