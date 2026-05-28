@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
 import { buildCourseMap } from './workflowData';
+import apiService from '../../services/api';
 import {
   ChevronRight,
   Clock,
@@ -192,10 +193,23 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         const result = await response.json();
 
         if (result.success && result.data) {
-          const resolved = resolvePhasesFromCourse({ courseData: result.data });
+          const courseDataRaw = result.data.courseData || result.data;
+          const resolved = resolvePhasesFromCourse({ courseData: courseDataRaw });
           if (resolved) {
             setData(resolved);
             onPhasesChange?.(resolved);
+          }
+
+          if (course?.id && !String(course.id).startsWith('created-')) {
+            try {
+              const existingCourseData = course.courseData || {};
+              const lessonData = courseDataRaw?.courseData || courseDataRaw;
+              await apiService.updateCourse(course.id, {
+                courseData: { ...existingCourseData, ...lessonData },
+              });
+            } catch (saveErr) {
+              console.warn('保存教案到数据库失败:', saveErr);
+            }
           }
         }
       } catch (err) {

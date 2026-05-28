@@ -15,6 +15,54 @@ function corsHeaders() {
   };
 }
 
+function sanitizeAiJson(raw: string): string {
+  const out: string[] = [];
+  let inStr = false;
+  let esc = false;
+
+  for (let i = 0; i < raw.length; i++) {
+    const ch = raw.codePointAt(i) || 0;
+    const c = String.fromCodePoint(ch);
+
+    if (esc) {
+      out.push(c);
+      esc = false;
+      continue;
+    }
+
+    if (c === '\\' && inStr) {
+      out.push(c);
+      esc = true;
+      continue;
+    }
+
+    if (c === '"') {
+      out.push('"');
+      inStr = !inStr;
+      continue;
+    }
+
+    if (inStr) {
+      if (ch === 0x201C || ch === 0x201D) { out.push('\\', '"'); continue; }
+      if (ch === 0x2018 || ch === 0x2019) { out.push("'"); continue; }
+      if (ch === 0x300A || ch === 0x300B) { out.push('\\', '"'); continue; }
+      if (ch === 10) { out.push('\\', 'n'); continue; }
+      if (ch === 13) { continue; }
+      if (ch === 9) { out.push('\\', 't'); continue; }
+    } else {
+      if (ch === 0x201C || ch === 0x201D || ch === 0x300A || ch === 0x300B) {
+        out.push('"');
+        inStr = !inStr;
+        continue;
+      }
+    }
+
+    out.push(c);
+  }
+
+  return out.join('');
+}
+
 function repairTruncatedJson(text: string): string | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
@@ -161,28 +209,27 @@ export async function POST(request: NextRequest) {
       console.log('[generate-course] firstItem:', firstItem);
 
       if (firstItem?.text && typeof firstItem.text === 'string') {
-        const text = firstItem.text.trim();
+        let text = firstItem.text.trim();
+        text = text.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
         console.log('[generate-course] text长度:', text.length, '前100字符:', text.substring(0, 100));
         
+        let cleaned = sanitizeAiJson(text);
+        console.log('[generate-course] cleaned前200字符:', cleaned.substring(0, 200));
+
         try {
-          // 尝试直接解析
-          courseData = JSON.parse(text);
+          courseData = JSON.parse(cleaned);
           console.log('[generate-course] 直接解析text成功');
         } catch (e1: any) {
-          // 如果直接解析失败，尝试修复并重新解析
+          const pos = parseInt(e1.message.match(/position\s+(\d+)/)?.[1] || '0');
+          if (pos > 0) {
+            console.log('[generate-course] 错误位置附近:', JSON.stringify(cleaned.substring(Math.max(0, pos - 50), pos + 50)));
+          }
           console.log('[generate-course] 直接解析失败，尝试修复JSON:', e1.message);
           try {
-            // 修复常见的 JSON 格式问题：
-            // 1. 单引号替换为双引号（仅在属性名和字符串值中）
-            let fixedText = text;
+            let fixedText = cleaned;
             
-            // 修复属性名中的单引号: 'name' -> "name"
             fixedText = fixedText.replace(/'([^']+)'\s*:/g, '"$1":');
-            
-            // 修复字符串值中的单引号: : 'value' -> : "value"
-            // 使用更精确的正则来匹配字符串值
             fixedText = fixedText.replace(/:\s*'([^'\\]*(?:\\.[^'\\]*)*)'/g, (match: string, value: string) => {
-              // 转义字符串中可能存在的特殊字符
               const escaped = value.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
               return `: "${escaped}"`;
             });
@@ -192,9 +239,8 @@ export async function POST(request: NextRequest) {
           } catch (e2: any) {
             console.error('[generate-course] 修复后仍然解析失败:', e2.message);
 
-            // 第三次尝试：修复截断的 JSON（AI 输出被 max_tokens 截断）
             try {
-              const repaired = repairTruncatedJson(text);
+              const repaired = repairTruncatedJson(cleaned);
               if (repaired) {
                 courseData = JSON.parse(repaired);
                 console.log('[generate-course] 截断修复成功');
