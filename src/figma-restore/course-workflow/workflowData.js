@@ -2,7 +2,7 @@ export const workflowSteps = [
   { key: 'map', title: '课程地图' },
   { key: 'lesson', title: '教案设计' },
   { key: 'ppt', title: 'PPT 课件' },
-  { key: 'reading', title: '阅读材料' },
+  // { key: 'reading', title: '阅读材料' },
 ];
 
 export const phaseTemplates = [
