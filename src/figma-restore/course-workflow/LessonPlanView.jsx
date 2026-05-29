@@ -22,6 +22,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { AdjustStepModal } from './lesson-design/AdjustStepModal';
 import { EditStepModal } from './lesson-design/EditStepModal';
 import { StepCardActions } from './lesson-design/StepCardActions';
@@ -145,6 +146,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [regenPhaseConfirm, setRegenPhaseConfirm] = React.useState(null);
   const [regenStep, setRegenStep] = React.useState(null);
   const [addingStep, setAddingStep] = React.useState(null);
+  const [generateDraftLoading, setGenerateDraftLoading] = React.useState(false);
+
+  const { user } = useAuth();
 
   const generateCalledRef = React.useRef(false);
 
@@ -323,6 +327,121 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     });
   };
 
+  const parseFlowStepsForForm = (flow, teacherScript) => {
+    const flowLines = (flow || '').split('\n').filter(Boolean);
+    const scriptLines = (teacherScript || '').split('\n').filter(Boolean);
+
+    const distributeScript = scriptLines.length <= 1 && teacherScript;
+    const scriptChunks = distributeScript
+      ? chunkArray(teacherScript.split(/[。！？]+/).filter((s) => s.trim()), Math.max(1, flowLines.length || defaultFlowSteps.length))
+      : [];
+
+    const defaultCues = {
+      '创设悬念': '用神秘、轻声的语气开场，展示关键道具或画面。',
+      '朗读来信': '放慢语速朗读重点内容，配合表情和手势帮助理解。',
+      '情绪感知': '引导学生观察、体会角色感受，用面部表情或肢体模仿。',
+      '发布任务': '明确任务身份和挑战，推动学生进入下一环节。',
+    };
+
+    const steps = flowLines.map((line, i) => {
+      const colonIndex = line.indexOf('：');
+      const title = colonIndex > -1 ? line.slice(0, colonIndex) : line;
+      const desc = colonIndex > -1 ? line.slice(colonIndex + 1) : '';
+      let teacher = '';
+      let cue = '';
+
+      if (distributeScript) {
+        teacher = scriptChunks[i].length > 0 ? scriptChunks[i].join('。') + '。' : '';
+        cue = defaultCues[title] || '';
+      } else if (scriptLines[i]) {
+        const cueMatch = scriptLines[i].match(/【动作\/引导】(.*)$/);
+        if (cueMatch) {
+          cue = cueMatch[1].trim();
+          teacher = scriptLines[i].replace(/【动作\/引导】.*$/, '').trim();
+        } else {
+          teacher = scriptLines[i].trim();
+          cue = defaultCues[title] || '';
+        }
+      }
+
+      return { title, desc, teacher, cue };
+    });
+
+    if (steps.length > 0) return steps;
+
+    return defaultFlowSteps.map((s, i) => ({
+      title: s.title,
+      desc: s.desc,
+      teacher: scriptChunks[i] && scriptChunks[i].length > 0 ? scriptChunks[i].join('。') + '。' : '',
+      cue: s.cue,
+    }));
+  };
+
+  const chunkArray = (arr, count) => {
+    const size = Math.max(1, Math.ceil(arr.length / count));
+    return Array.from({ length: count }, (_, i) => arr.slice(i * size, (i + 1) * size));
+  };
+
+  const handleGenerateDraft = async (isClassic = false) => {
+    const phase = addPhase;
+    if (!phase) return;
+
+    setGenerateDraftLoading(true);
+    try {
+      const targetPhase = data.find((p) => p.key === phase.key);
+      const currentSteps = targetPhase?.steps || [];
+
+      const otherPhases = {};
+      data.forEach((p) => {
+        if (p.key !== phase.key) {
+          otherPhases[longPhaseKey(p.key)] = { title: p.title, steps: p.steps };
+        }
+      });
+
+      const response = await fetch('/api/ai/regenerate-step', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          phaseKey: longPhaseKey(phase.key),
+          stepId: `${longPhaseKey(phase.key)}-draft`,
+          title: course?.courseTitle || course?.title || '',
+          age: course?.ageGroup || course?.age || '7-9岁',
+          duration: course?.duration || '60分钟',
+          scale: course?.classSize || '',
+          vocabulary: course?.vocabularies || course?.keywords || [],
+          grammar: course?.grammars || [],
+          theme: course?.theme || '',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
+          requirements: isClassic ? `经典活动：${selectedClassic}` : (ideaText || ''),
+          currentStep: null,
+          siblingSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration })),
+          otherPhases,
+        }),
+      });
+      const result = await response.json();
+
+      if (result.success && result.data?.step) {
+        const step = normalizeStep(result.data.step);
+        const timeMatch = String(step.duration || '').match(/(\d+)/);
+
+        addForm.setFieldsValue({
+          title: step.title || '',
+          time: timeMatch ? parseInt(timeMatch[1]) : 8,
+          goal: step.goal || '',
+          activity: step.activity || '',
+          flowSteps: parseFlowStepsForForm(step.flow, step.teacherScript),
+          resources: step.resources || '',
+          scenario: step.scenario || '',
+        });
+      }
+    } catch (err) {
+      console.error('生成草案失败:', err);
+    } finally {
+      setGenerateDraftLoading(false);
+    }
+  };
+
   const addDraftStep = async () => {
     const values = await addForm.validateFields();
     const target = addPhase || data[0];
@@ -415,6 +534,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           vocabulary: course?.vocabularies || course?.keywords || [],
           grammar: course?.grammars || [],
           theme: course?.theme || '',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
           currentCourseData: dataToCoursePhases(),
         }),
       });
@@ -458,6 +579,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           vocabulary: course?.vocabularies || course?.keywords || [],
           grammar: course?.grammars || [],
           theme: course?.theme || '',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
           existingStepCount: currentSteps.length,
           currentSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration, objective: s.goal })),
           otherPhases,
@@ -511,6 +634,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           vocabulary: course?.vocabularies || course?.keywords || [],
           grammar: course?.grammars || [],
           theme: course?.theme || '',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
           currentStep: currentStep ? { id: currentStep.id, title: currentStep.title, time: currentStep.duration, objective: currentStep.goal } : null,
           siblingSteps: siblingSteps.map((s) => ({ title: s.title, time: s.duration })),
           otherPhases,
@@ -817,9 +942,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                     onChange={(event) => setIdeaText(event.target.value)}
                     placeholder={'描述你想要设计的活动核心思路，AI 将生成完整活动方案\n例如：设计一个让学生通过角色扮演来练习目标句型的活动'}
                   />
-                  <button type="button" className="as-gen-btn" onClick={() => fillDraftFromIdea()}>
+                  <button type="button" className="as-gen-btn" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <Sparkles size={14} />
-                    AI 生成草案
+                    {generateDraftLoading ? '生成中...' : 'AI 生成草案'}
                   </button>
                 </div>
 
@@ -833,7 +958,6 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                         key={activity.name}
                         onClick={() => {
                           setSelectedClassic(activity.name);
-                          fillDraftFromIdea('', activity.name);
                         }}
                       >
                         <div className="as-classic-icon">{activity.icon}</div>
@@ -844,9 +968,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                   </div>
                   {selectedClassic && <div className="as-selected-hint">已选择：<strong>{selectedClassic}</strong></div>}
                   {selectedClassic && (
-                    <button type="button" className="as-gen-btn classic-gen" onClick={() => fillDraftFromIdea('', selectedClassic)}>
+                    <button type="button" className="as-gen-btn classic-gen" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
                       <Sparkles size={14} />
-                      AI 生成草案
+                      {generateDraftLoading ? '生成中...' : 'AI 生成草案'}
                     </button>
                   )}
                 </div>
@@ -870,8 +994,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               <div className="as-right-panel">
                 <div className="as-right-hd">
                   <span className="as-right-title">📝 活动草案</span>
-                  <span className={`as-right-tag ${genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
-                    {genMode === 'ai' ? '等待生成...' : genMode === 'classic' ? '等待选择...' : '选择收藏环节'}
+                  <span className={`as-right-tag ${generateDraftLoading ? 'ai' : genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
+                    {generateDraftLoading ? 'AI 生成中...' : genMode === 'ai' ? '等待生成...' : genMode === 'classic' ? '等待选择...' : '选择收藏环节'}
                   </span>
                 </div>
 
@@ -992,9 +1116,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 </Form>
 
                 <div className="as-right-ft">
-                  <button className="as-regen-btn" type="button" onClick={() => fillDraftFromIdea()}>
+                  <button className="as-regen-btn" type="button" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <RefreshCw size={11} />
-                    重新生成
+                    {generateDraftLoading ? '生成中...' : '重新生成'}
                   </button>
                 </div>
               </div>
