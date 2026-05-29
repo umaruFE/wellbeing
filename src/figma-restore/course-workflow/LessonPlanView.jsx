@@ -336,12 +336,12 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       ? chunkArray(teacherScript.split(/[。！？]+/).filter((s) => s.trim()), Math.max(1, flowLines.length || defaultFlowSteps.length))
       : [];
 
-    const defaultCues = {
-      '创设悬念': '用神秘、轻声的语气开场，展示关键道具或画面。',
-      '朗读来信': '放慢语速朗读重点内容，配合表情和手势帮助理解。',
-      '情绪感知': '引导学生观察、体会角色感受，用面部表情或肢体模仿。',
-      '发布任务': '明确任务身份和挑战，推动学生进入下一环节。',
-    };
+    const defaultCues = [
+      '用神秘、轻声的语气开场，展示关键道具或画面，引发学生好奇心。',
+      '朗读或展示核心内容，放慢语速，配合表情和手势帮助理解。',
+      '引导学生观察、体会角色感受，用面部表情或肢体模仿情绪。',
+      '明确任务身份和最终挑战，推动学生进入下一环节。',
+    ];
 
     const steps = flowLines.map((line, i) => {
       const colonIndex = line.indexOf('：');
@@ -352,7 +352,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
       if (distributeScript) {
         teacher = scriptChunks[i].length > 0 ? scriptChunks[i].join('。') + '。' : '';
-        cue = defaultCues[title] || '';
+        cue = defaultCues[i] || '';
       } else if (scriptLines[i]) {
         const cueMatch = scriptLines[i].match(/【动作\/引导】(.*)$/);
         if (cueMatch) {
@@ -360,7 +360,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           teacher = scriptLines[i].replace(/【动作\/引导】.*$/, '').trim();
         } else {
           teacher = scriptLines[i].trim();
-          cue = defaultCues[title] || '';
+          cue = defaultCues[i] || '';
         }
       }
 
@@ -398,7 +398,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         }
       });
 
-      const response = await fetch('/api/ai/regenerate-step', {
+      const response = await fetch('/api/ai/generate-step', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
