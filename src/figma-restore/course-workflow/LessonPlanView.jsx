@@ -137,10 +137,12 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [adjustChips, setAdjustChips] = React.useState([]);
   const [addOpen, setAddOpen] = React.useState(false);
   const [addPhase, setAddPhase] = React.useState(null);
+  const [regenTarget, setRegenTarget] = React.useState(null);
   const [genMode, setGenMode] = React.useState('ai');
   const [selectedClassic, setSelectedClassic] = React.useState(null);
   const [ideaText, setIdeaText] = React.useState('');
   const [regenPhase, setRegenPhase] = React.useState(null);
+  const [regenPhaseConfirm, setRegenPhaseConfirm] = React.useState(null);
   const [regenStep, setRegenStep] = React.useState(null);
   const [addingStep, setAddingStep] = React.useState(null);
 
@@ -256,12 +258,26 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setMenuKey(null);
   };
 
-  const openAddStep = (phase) => {
+  const openAddStep = (phase, step) => {
     setAddPhase(phase);
     setGenMode('ai');
     setSelectedClassic(null);
     setIdeaText('');
-    addForm.setFieldsValue(defaultDraft);
+    if (step) {
+      const timeMatch = String(step.duration || '').match(/(\d+)/);
+      setRegenTarget({ phaseKey: phase.key, step });
+      addForm.setFieldsValue({
+        title: step.title || '',
+        time: timeMatch ? parseInt(timeMatch[1]) : 8,
+        goal: step.goal || '',
+        activity: step.activity || '',
+        resources: step.resources || '',
+        scenario: step.scenario || '',
+      });
+    } else {
+      setRegenTarget(null);
+      addForm.setFieldsValue(defaultDraft);
+    }
     setAddOpen(true);
   };
 
@@ -330,13 +346,25 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       flow,
       resources: values.resources || '',
       scenario: values.scenario || '',
-      teacherScript: teacherScript || 'Let’s try this mission together. Listen, speak, and help your team.',
+      teacherScript: teacherScript || 'Let\u2019s try this mission together. Listen, speak, and help your team.',
     };
-    updateData(data.map((phase) => (
-      phase.key === target.key ? { ...phase, steps: [...phase.steps, nextStep] } : phase
-    )));
-    setOpenCards((prev) => new Set(prev).add(`${target.key}-${target.steps.length}`));
+
+    if (regenTarget) {
+      updateData(data.map((phase) => {
+        if (phase.key !== regenTarget.phaseKey) return phase;
+        return {
+          ...phase,
+          steps: phase.steps.map((s) => (s === regenTarget.step ? nextStep : s)),
+        };
+      }));
+    } else {
+      updateData(data.map((phase) => (
+        phase.key === target.key ? { ...phase, steps: [...phase.steps, nextStep] } : phase
+      )));
+      setOpenCards((prev) => new Set(prev).add(`${target.key}-${target.steps.length}`));
+    }
     setAddOpen(false);
+    setRegenTarget(null);
   };
 
   const saveEdit = (values) => {
@@ -588,7 +616,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 </button>
                 {menuKey === `phase-${phase.key}` && (
                   <div className="step-menu-dropdown open phase-menu">
-                    <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); handleRegeneratePhase(phase.key); }}>
+                    <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); setRegenPhaseConfirm(phase.key); }}>
                       <RefreshCw size={12} />重新生成
                     </button>
                   </div>
@@ -602,7 +630,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
             <div className="tbl-steps-list">
               <div className="tbl-add-step-top">
-                <button type="button" className="tbl-add-step-btn" onClick={() => handleAddStep(phase.key)} disabled={addingStep === phase.key}>
+                <button type="button" className="tbl-add-step-btn" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
                   {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
                   {addingStep === phase.key ? '生成中...' : '添加环节'}
                 </button>
@@ -642,7 +670,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                             open={menuKey === cardKey}
                             onRegen={() => {
                               setMenuKey(null);
-                              handleRegenerateStep(phase.key, index);
+                              openAddStep(phase, step);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
                             onDelete={() => handleDeleteStep(phase.key, index)}
@@ -705,7 +733,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                             placement="footer"
                             onRegen={() => {
                               setMenuKey(null);
-                              handleRegenerateStep(phase.key, index);
+                              openAddStep(phase, step);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
                             onDelete={() => handleDeleteStep(phase.key, index)}
@@ -721,17 +749,40 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         ))}
       </div>
 
+      {regenPhaseConfirm && (
+        <div className="mo on" onMouseDown={(event) => event.target === event.currentTarget && setRegenPhaseConfirm(null)}>
+          <div className="modal" style={{ width: 'min(420px, 90vw)', background: '#fff', borderRadius: 16, border: '2px solid #253142', boxShadow: '6px 6px 0 rgba(37,49,66,.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="modal-hd">
+              <div className="modal-t">重新生成阶段</div>
+              <button type="button" className="modal-x" onClick={() => setRegenPhaseConfirm(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '18px 24px' }}>
+              <p style={{ fontSize: 14, color: '#575F6E', lineHeight: 1.6 }}>
+                确定要重新生成此阶段的所有环节吗？当前阶段的内容将被 AI 重新生成并替换。
+              </p>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-cancel" onClick={() => setRegenPhaseConfirm(null)}>取消</button>
+              <button type="button" className="mo-btn-primary" onClick={() => { const pk = regenPhaseConfirm; setRegenPhaseConfirm(null); handleRegeneratePhase(pk); }}>
+                <RefreshCw size={13} />
+                确认重新生成
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {addOpen && (
-        <div className="mo on" id="mo-add-step" onMouseDown={(event) => event.target === event.currentTarget && setAddOpen(false)}>
+        <div className="mo on" id="mo-add-step" onMouseDown={(event) => event.target === event.currentTarget && (setAddOpen(false), setRegenTarget(null))}>
           <div className="modal modal-add-step">
             <div className="modal-hd">
               <div>
                 <div className="modal-t" id="addStepTitle">
-                  添加 <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
+                  {regenTarget ? '重新生成' : '添加'} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
                 </div>
                 <div id="asPhaseTag">Unit 3 · 三年级 G3</div>
               </div>
-              <button type="button" className="modal-x" onClick={() => setAddOpen(false)} aria-label="关闭"><X size={22} /></button>
+              <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); }} aria-label="关闭"><X size={22} /></button>
             </div>
 
             <div className="modal-body as-modal-body">
@@ -950,10 +1001,10 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             </div>
 
             <div className="modal-ft">
-              <button type="button" className="as-ft-cancel" onClick={() => setAddOpen(false)}>取消</button>
+              <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); }}>取消</button>
               <div className="as-ft-spacer" />
               <button type="button" className="as-ft-confirm" id="asConfirmBtn" onClick={addDraftStep}>
-                添加到大纲
+                {regenTarget ? '确认重新生成' : '添加到大纲'}
               </button>
             </div>
           </div>

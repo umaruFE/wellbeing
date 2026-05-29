@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   RefreshCw,
-  Edit3,
   Clock,
   Target,
   Compass,
@@ -13,44 +12,31 @@ import {
   MoreVertical,
   Plus,
   FileText,
-  Settings,
-  AlertCircle,
-  Check,
-  X,
   Trash2,
-  Loader2
+  Loader2,
+  BookOpen,
+  Edit3,
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import { useAuth } from '../../../contexts/AuthContext';
 import apiService from '../../../services/api';
+import { AdjustStepModal } from '../../../figma-restore/course-workflow/lesson-design/AdjustStepModal';
+import { EditStepModal } from '../../../figma-restore/course-workflow/lesson-design/EditStepModal';
+import { StepDetailModal } from '../../../figma-restore/course-workflow/lesson-design/StepDetailModal';
+import '../../../figma-restore/course-workflow/CourseWorkflow.css';
 
 const colors = {
   neutral: {
     white: '#FFFFFF',
-    text: {
-      1: '#333E4E',
-      2: '#575F6E',
-      3: '#818997',
-      disabled: '#A4ABB8',
-    },
-    border: {
-      DEFAULT: '#E6E3DE',
-      secondary: '#EFECE8',
-    },
-    bg: {
-      layout: '#F7F5F1',
-    },
-    fill: {
-      gray1: '#FCFBF9',
-    }
+    text: { 1: '#333E4E', 2: '#575F6E', 3: '#818997', disabled: '#A4ABB8' },
+    border: { DEFAULT: '#E6E3DE', secondary: '#EFECE8' },
+    bg: { layout: '#F7F5F1' },
+    fill: { gray1: '#FCFBF9' },
   },
-  brand: {
-    DEFAULT: '#F4785E',
-    light: '#FDECE8',
-  },
+  brand: { DEFAULT: '#F4785E', light: '#FDECE8' },
   info: { DEFAULT: '#4482E5' },
   success: { DEFAULT: '#509F69' },
-  purple: { DEFAULT: '#9E64E8' }
+  purple: { DEFAULT: '#9E64E8' },
 };
 
 const safeRender = (data) => {
@@ -65,29 +51,21 @@ const safeRender = (data) => {
 };
 
 const PHASE_CONFIG = {
-  engage: {
-    label: 'E-ENGAGE 引入',
-    color: colors.purple.DEFAULT,
-    lightBg: '#F5F0FF',
-  },
-  empower: {
-    label: 'E-EMPOWER 赋能',
-    color: colors.info.DEFAULT,
-    lightBg: '#F0F8FF',
-  },
-  execute: {
-    label: 'E-EXECUTE 实践',
-    color: colors.success.DEFAULT,
-    lightBg: '#EBF7EE',
-  },
-  elevate: {
-    label: 'E-ELEVATE 升华',
-    color: colors.brand.DEFAULT,
-    lightBg: '#FDECE8',
-  },
+  engage: { label: 'E-ENGAGE 引入', color: colors.purple.DEFAULT, lightBg: '#F5F0FF' },
+  empower: { label: 'E-EMPOWER 赋能', color: colors.info.DEFAULT, lightBg: '#F0F8FF' },
+  execute: { label: 'E-EXECUTE 实践', color: colors.success.DEFAULT, lightBg: '#EBF7EE' },
+  elevate: { label: 'E-ELEVATE 升华', color: colors.brand.DEFAULT, lightBg: '#FDECE8' },
 };
 
 const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
+
+const normalizeStep = (step) => ({
+  ...step,
+  goal: step.goal ?? '',
+  flow: step.flow ?? '',
+  teacherScript: step.teacherScript ?? '',
+  resources: step.resources ?? '',
+});
 
 const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   const { user } = useAuth();
@@ -96,39 +74,13 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   const [regeneratingPhase, setRegeneratingPhase] = useState(null);
   const [openMenuStep, setOpenMenuStep] = useState(null);
   const [regeneratingStep, setRegeneratingStep] = useState(null);
-  const [editingStep, setEditingStep] = useState(null);
-  const [editForm, setEditForm] = useState({});
+  const [addingStepPhase, setAddingStepPhase] = useState(null);
 
-  const startEdit = (item) => {
-    setEditingStep(item.id);
-    setEditForm({
-      title: item.title || '',
-      time: item.time || '',
-      objective: item.objective || '',
-      activity: item.activity || '',
-      activitySteps: item.activitySteps || '',
-      scenario: item.scenario || '',
-      script: item.script || '',
-    });
-  };
-
-  const cancelEdit = () => {
-    setEditingStep(null);
-    setEditForm({});
-  };
-
-  const saveEdit = (phaseKey, stepId) => {
-    const coursePhases = resolveCoursePhases();
-    const phase = coursePhases?.[phaseKey];
-    if (!phase?.steps) return;
-    const newSteps = phase.steps.map(s => {
-      if (s.id !== stepId) return s;
-      return { ...s, ...editForm };
-    });
-    updatePhaseSteps(phaseKey, newSteps);
-    setEditingStep(null);
-    setEditForm({});
-  };
+  const [editTarget, setEditTarget] = useState(null);
+  const [detailTarget, setDetailTarget] = useState(null);
+  const [adjustTarget, setAdjustTarget] = useState(null);
+  const [adjustText, setAdjustText] = useState('');
+  const [adjustChips, setAdjustChips] = useState([]);
 
   useEffect(() => {
     if (!openMenuPhase && !openMenuStep) return;
@@ -136,60 +88,6 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
     document.addEventListener('click', close);
     return () => document.removeEventListener('click', close);
   }, [openMenuPhase, openMenuStep]);
-
-  const boardColumns = useMemo(() => {
-    let inner = courseData?.course_data;
-    if (typeof inner === 'string') {
-      try { inner = JSON.parse(inner); } catch { inner = null; }
-    }
-
-    let coursePhases = null;
-    if (inner?.text?.courseData) {
-      coursePhases = inner.text.courseData;
-    } else if (inner?.courseData) {
-      coursePhases = inner.courseData;
-    } else if (inner?.engage || inner?.empower || inner?.execute || inner?.elevate) {
-      coursePhases = inner;
-    }
-
-    if (!coursePhases) return [];
-
-    return PHASE_ORDER.map(phaseKey => {
-      const phase = coursePhases[phaseKey];
-      const config = PHASE_CONFIG[phaseKey];
-      const steps = Array.isArray(phase?.steps) ? phase.steps : [];
-
-      return {
-        id: phaseKey,
-        title: phase?.title || config.label,
-        color: config.color,
-        lightBg: config.lightBg,
-        objective: steps.map(s => s.objective).filter(Boolean).join('；') || '',
-        count: steps.length,
-        time: steps.length > 0
-          ? steps.reduce((acc, s) => {
-              const m = s.time?.match(/(\d+)/);
-              return acc + (m ? parseInt(m[1]) : 0);
-            }, 0) + '分钟'
-          : '',
-        items: steps.map(step => ({
-          id: step.id,
-          title: step.title,
-          time: step.time,
-          objective: step.objective,
-          activity: step.activity,
-          activitySteps: step.activitySteps,
-          scenario: step.scenario,
-          script: step.script,
-          assets: step.assets || [],
-        })),
-      };
-    });
-  }, [courseData]);
-
-  const toggleCard = (itemId) => {
-    setExpandedItems(prev => ({ ...prev, [itemId]: !prev[itemId] }));
-  };
 
   const resolveCoursePhases = () => {
     let inner = courseData?.course_data;
@@ -200,6 +98,47 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
     if (inner?.courseData) return inner.courseData;
     if (inner?.engage || inner?.empower || inner?.execute || inner?.elevate) return inner;
     return null;
+  };
+
+  const boardColumns = useMemo(() => {
+    const coursePhases = resolveCoursePhases();
+    if (!coursePhases) return [];
+
+    return PHASE_ORDER.map((phaseKey) => {
+      const phase = coursePhases[phaseKey];
+      const config = PHASE_CONFIG[phaseKey];
+      const steps = Array.isArray(phase?.steps) ? phase.steps.map(normalizeStep) : [];
+
+      return {
+        id: phaseKey,
+        title: phase?.title || config.label,
+        color: config.color,
+        lightBg: config.lightBg,
+        goalSummary: steps.map((s) => s.goal).filter(Boolean).join('；') || '',
+        count: steps.length,
+        time: steps.length > 0
+          ? steps.reduce((acc, s) => {
+              const m = s.duration?.match(/(\d+)/);
+              return acc + (m ? parseInt(m[1]) : 0);
+            }, 0) + '分钟'
+          : '',
+        items: steps.map((step) => ({
+          id: step.id,
+          title: step.title,
+          duration: step.duration,
+          goal: step.goal,
+          activity: step.activity,
+          flow: step.flow,
+          resources: step.resources,
+          scenario: step.scenario,
+          teacherScript: step.teacherScript,
+        })),
+      };
+    });
+  }, [courseData]);
+
+  const toggleCard = (itemId) => {
+    setExpandedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
 
   const updatePhaseSteps = (phaseKey, newSteps) => {
@@ -219,60 +158,64 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
       } else {
         newCourseData.course_data = innerData;
       }
-      if (onCourseDataUpdate) onCourseDataUpdate(newCourseData);
+      onCourseDataUpdate?.(newCourseData);
 
       if (courseId) {
         apiService.updateCourse(courseId, {
           courseData: newCourseData.course_data,
           userId: user?.id || courseData?.user_id || null,
           organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
-        }).catch(err => {
-          console.error('自动保存失败:', err);
-        });
+        }).catch((err) => console.error('自动保存失败:', err));
       }
     }
   };
 
+  const getAuthHeaders = () => {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = localStorage.getItem('token');
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    return headers;
+  };
+
+  const buildBasePayload = () => ({
+    title: courseData?.title || '',
+    age: courseData?.age_group || '7-9岁',
+    duration: courseData?.duration || '60分钟',
+    scale: courseData?.unit || '',
+    vocabulary: courseData?.keywords || [],
+    grammar: [],
+    theme: courseData?.theme || '',
+    userId: user?.id || courseData?.user_id || null,
+    organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
+  });
+
   const handleRegeneratePhase = async (phaseKey) => {
     setOpenMenuPhase(null);
     setRegeneratingPhase(phaseKey);
-
     try {
       const coursePhases = resolveCoursePhases();
-
       const response = await fetch('/api/ai/regenerate-phase', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
+          ...buildBasePayload(),
           phaseKey,
-          title: courseData?.title || '',
-          age: courseData?.age_group || '7-9岁',
-          duration: courseData?.duration || '60分钟',
-          scale: courseData?.unit || '',
-          vocabulary: courseData?.keywords || [],
-          grammar: [],
-          theme: courseData?.theme || '',
           currentCourseData: coursePhases,
-        })
+        }),
       });
-
       const result = await response.json();
-
       if (result.success && result.data?.steps) {
         updatePhaseSteps(phaseKey, result.data.steps);
       }
     } catch (err) {
-      console.error('重新生成失败:', err);
+      console.error('重新生成阶段失败:', err);
     } finally {
       setRegeneratingPhase(null);
     }
   };
 
-  const [addingStepPhase, setAddingStepPhase] = useState(null);
-
   const handleAddStep = async (phaseKey, insertIndex) => {
     setAddingStepPhase(phaseKey);
-
     try {
       const coursePhases = resolveCoursePhases();
       const phase = coursePhases?.[phaseKey];
@@ -289,25 +232,18 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
       const response = await fetch('/api/ai/generate-step', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
+          ...buildBasePayload(),
           phaseKey,
-          title: courseData?.title || '',
-          age: courseData?.age_group || '7-9岁',
-          duration: courseData?.duration || '60分钟',
-          scale: courseData?.unit || '',
-          vocabulary: courseData?.keywords || [],
-          grammar: [],
-          theme: courseData?.theme || '',
           existingStepCount: currentSteps.length,
-          currentSteps: currentSteps.map(s => ({ title: s.title, time: s.time, objective: s.objective })),
+          currentSteps: currentSteps.map((s) => ({ title: s.title, duration: s.duration, goal: s.goal })),
           otherPhases,
           insertIndex: insertIndex != null ? insertIndex : currentSteps.length,
           prevStep: insertIndex != null && insertIndex > 0 ? currentSteps[insertIndex - 1] : null,
           nextStep: insertIndex != null && insertIndex < currentSteps.length ? currentSteps[insertIndex] : null,
-        })
+        }),
       });
-
       const result = await response.json();
 
       if (result.success && result.data?.step) {
@@ -326,14 +262,12 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   const handleRegenerateStep = async (phaseKey, stepId) => {
     setOpenMenuStep(null);
     setRegeneratingStep(stepId);
-
     try {
       const coursePhases = resolveCoursePhases();
       const phase = coursePhases?.[phaseKey];
       const currentSteps = phase?.steps || [];
-
-      const currentStep = currentSteps.find(s => s.id === stepId);
-      const siblingSteps = currentSteps.filter(s => s.id !== stepId);
+      const currentStep = currentSteps.find((s) => s.id === stepId);
+      const siblingSteps = currentSteps.filter((s) => s.id !== stepId);
 
       const otherPhases = {};
       if (coursePhases) {
@@ -346,27 +280,22 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
       const response = await fetch('/api/ai/regenerate-step', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
+          ...buildBasePayload(),
           phaseKey,
           stepId,
-          title: courseData?.title || '',
-          age: courseData?.age_group || '7-9岁',
-          duration: courseData?.duration || '60分钟',
-          scale: courseData?.unit || '',
-          vocabulary: courseData?.keywords || [],
-          grammar: [],
-          theme: courseData?.theme || '',
-          currentStep: currentStep ? { id: currentStep.id, title: currentStep.title, time: currentStep.time, objective: currentStep.objective } : null,
-          siblingSteps: siblingSteps.map(s => ({ title: s.title, time: s.time })),
+          currentStep: currentStep
+            ? { id: currentStep.id, title: currentStep.title, duration: currentStep.duration, goal: currentStep.goal }
+            : null,
+          siblingSteps: siblingSteps.map((s) => ({ title: s.title, duration: s.duration })),
           otherPhases,
-        })
+        }),
       });
-
       const result = await response.json();
 
       if (result.success && result.data?.step) {
-        const newSteps = currentSteps.map(s => s.id === stepId ? result.data.step : s);
+        const newSteps = currentSteps.map((s) => (s.id === stepId ? result.data.step : s));
         updatePhaseSteps(phaseKey, newSteps);
       }
     } catch (err) {
@@ -377,20 +306,80 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   };
 
   const handleDeleteStep = (phaseKey, stepId) => {
-    let inner = courseData?.course_data;
-    if (typeof inner === 'string') {
-      try { inner = JSON.parse(inner); } catch { inner = null; }
-    }
-    let phases = null;
-    if (inner?.text?.courseData) phases = inner.text.courseData;
-    else if (inner?.courseData) phases = inner.courseData;
-    else if (inner?.[phaseKey]) phases = inner;
-
-    const phase = phases?.[phaseKey];
+    const coursePhases = resolveCoursePhases();
+    const phase = coursePhases?.[phaseKey];
     if (!phase) return;
-    const currentSteps = Array.isArray(phase.steps) ? phase.steps : [];
-    const newSteps = currentSteps.filter(s => s.id !== stepId);
+    const newSteps = (phase.steps || []).filter((s) => s.id !== stepId);
     updatePhaseSteps(phaseKey, newSteps);
+    setOpenMenuStep(null);
+  };
+
+  const openAdjust = (phaseKey, stepIndex, step) => {
+    const phase = boardColumns.find((c) => c.id === phaseKey);
+    setAdjustTarget({ phaseKey, stepIndex, step, phase });
+    setAdjustText('');
+    setAdjustChips([]);
+    setOpenMenuStep(null);
+  };
+
+  const confirmAdjust = async () => {
+    if (!adjustTarget || !adjustText.trim()) return;
+    const { phaseKey, stepIndex, step } = adjustTarget;
+    setAdjustTarget(null);
+
+    const coursePhases = resolveCoursePhases();
+    const phase = coursePhases?.[phaseKey];
+    const currentSteps = phase?.steps || [];
+
+    setRegeneratingStep(step.id);
+    try {
+      const response = await fetch('/api/ai/adjust-step', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          ...buildBasePayload(),
+          phaseKey,
+          stepId: step.id,
+          currentStep: normalizeStep(step),
+          adjustment: adjustText.trim(),
+          adjustmentTags: adjustChips,
+          siblingSteps: currentSteps.map((s) => ({ title: s.title, duration: s.duration })),
+        }),
+      });
+      const result = await response.json();
+
+      if (result.success && result.data?.step) {
+        const newSteps = currentSteps.map((s, i) => (i === stepIndex ? result.data.step : s));
+        updatePhaseSteps(phaseKey, newSteps);
+      }
+    } catch (err) {
+      console.error('调整环节失败:', err);
+    } finally {
+      setRegeneratingStep(null);
+      setAdjustText('');
+      setAdjustChips([]);
+    }
+  };
+
+  const openEdit = (phaseKey, stepIndex, step) => {
+    setEditTarget({ phaseKey, stepIndex, step: normalizeStep(step) });
+    setOpenMenuStep(null);
+  };
+
+  const saveEdit = (updatedStep) => {
+    if (!editTarget) return;
+    const { phaseKey, stepIndex } = editTarget;
+    const coursePhases = resolveCoursePhases();
+    const phase = coursePhases?.[phaseKey];
+    if (!phase?.steps) return;
+    const newSteps = phase.steps.map((s, i) => (i === stepIndex ? updatedStep : s));
+    updatePhaseSteps(phaseKey, newSteps);
+    setEditTarget(null);
+  };
+
+  const openDetail = (phaseKey, stepIndex, step) => {
+    const phase = boardColumns.find((c) => c.id === phaseKey);
+    setDetailTarget({ phaseKey, stepIndex, step: normalizeStep(step), phase });
     setOpenMenuStep(null);
   };
 
@@ -403,8 +392,9 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   }
 
   return (
+    <>
     <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-140px)] min-h-[600px]">
-      {boardColumns.map(col => (
+      {boardColumns.map((col) => (
         <div key={col.id} className="flex flex-col bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden">
 
           <div className="p-4 flex items-start justify-between text-white shrink-0" style={{ backgroundColor: col.color }}>
@@ -424,10 +414,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                 </div>
               ) : (
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setOpenMenuPhase(openMenuPhase === col.id ? null : col.id);
-                  }}
+                  onClick={(e) => { e.stopPropagation(); setOpenMenuPhase(openMenuPhase === col.id ? null : col.id); }}
                   className="p-1 rounded hover:bg-white/20 transition-colors"
                 >
                   <MoreVertical size={16} className="opacity-80" />
@@ -436,10 +423,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
               {openMenuPhase === col.id && (
                 <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 min-w-[140px]">
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRegeneratePhase(col.id);
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleRegeneratePhase(col.id); }}
                     className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   >
                     <RefreshCw size={13} className="text-gray-400" />
@@ -450,16 +434,13 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             </div>
           </div>
 
-          {col.objective && (
+          {col.goalSummary && (
             <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 shrink-0 h-24 overflow-y-auto">
-              <p className="text-[11px] text-gray-600 leading-relaxed">
-                {col.objective}
-              </p>
+              <p className="text-[11px] text-gray-600 leading-relaxed">{col.goalSummary}</p>
             </div>
           )}
 
           <div className="p-4 flex-1 overflow-y-auto bg-white flex flex-col gap-1">
-
             {col.items.map((item, index) => {
               const isExpanded = !!expandedItems[item.id];
               return (
@@ -477,283 +458,192 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                     </div>
                   </button>
                   <div
-                       className={`bg-white rounded-xl transition-all ${isExpanded ? 'border-[1.5px] shadow-sm' : 'border border-gray-100 hover:border-gray-200'}`}
-                       style={{ borderColor: isExpanded ? col.color : undefined }}>
-
-                  <div className="p-3.5 flex items-center justify-between cursor-pointer" onClick={() => toggleCard(item.id)}>
-                    <div className="flex items-center gap-2 min-w-0">
-                      {isExpanded ? <ChevronDown size={16} className="text-gray-400 shrink-0" /> : <ChevronRight size={16} className="text-gray-400 shrink-0" />}
-                      <div className="w-6 h-6 rounded flex items-center justify-center text-white shrink-0" style={{ backgroundColor: col.color }}>
-                        <Layout size={12} strokeWidth={2.5} />
-                      </div>
-                      <span className="text-[13px] font-bold text-gray-800 truncate">{safeRender(item.title)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {item.time && (
-                        <span className="px-2 py-0.5 rounded text-[11px] font-bold"
-                              style={{ color: col.color, backgroundColor: col.lightBg, border: `1px solid ${col.color}30` }}>
-                          {safeRender(item.time)}
-                        </span>
-                      )}
-                      {regeneratingStep === item.id ? (
-                        <RefreshCw size={14} className="text-gray-400 animate-spin" />
-                      ) : (
-                        <div className="relative">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuStep(openMenuStep === item.id ? null : item.id);
-                            }}
-                            className="p-0.5 rounded hover:bg-gray-100 transition-colors"
-                          >
-                            <MoreVertical size={14} className="text-gray-300" />
-                          </button>
-                          {openMenuStep === item.id && (
-                            <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 min-w-[140px]">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRegenerateStep(col.id, item.id);
-                                }}
-                                className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                              >
-                                <RefreshCw size={13} className="text-gray-400" />
-                                重新生成
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteStep(col.id, item.id);
-                                }}
-                                className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                              >
-                                <Trash2 size={13} />
-                                删除
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {isExpanded && (
-                    <div className="px-4 pb-4">
-                      <div className="border-t border-gray-100 mb-4"></div>
-
-                      {editingStep === item.id ? (
-                        <div className="flex flex-col gap-3">
-                          <div>
-                            <label className="text-[11px] font-bold text-gray-500 block mb-1">环节标题</label>
-                            <input
-                              type="text"
-                              value={editForm.title}
-                              onChange={e => setEditForm(f => ({ ...f, title: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-blue-400"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-bold text-gray-500 block mb-1">时长</label>
-                            <input
-                              type="text"
-                              value={editForm.time}
-                              onChange={e => setEditForm(f => ({ ...f, time: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-blue-400"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-bold text-gray-500 block mb-1">教学目标</label>
-                            <textarea
-                              rows={2}
-                              value={editForm.objective}
-                              onChange={e => setEditForm(f => ({ ...f, objective: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-bold text-gray-500 block mb-1">活动概述</label>
-                            <textarea
-                              rows={2}
-                              value={editForm.activity}
-                              onChange={e => setEditForm(f => ({ ...f, activity: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-bold text-gray-500 block mb-1">活动流程</label>
-                            <textarea
-                              rows={3}
-                              value={editForm.activitySteps}
-                              onChange={e => setEditForm(f => ({ ...f, activitySteps: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-bold text-gray-500 block mb-1">情境创设</label>
-                            <textarea
-                              rows={2}
-                              value={editForm.scenario}
-                              onChange={e => setEditForm(f => ({ ...f, scenario: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[11px] font-bold text-gray-500 block mb-1">教师讲稿 (Script)</label>
-                            <textarea
-                              rows={5}
-                              value={editForm.script}
-                              onChange={e => setEditForm(f => ({ ...f, script: e.target.value }))}
-                              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-[12px] focus:outline-none focus:border-blue-400 resize-none"
-                            />
-                          </div>
-                          <div className="flex items-center gap-2 pt-2">
-                            <button
-                              onClick={() => saveEdit(col.id, item.id)}
-                              className="flex-1 py-1.5 rounded-lg text-white text-[12px] font-bold flex items-center justify-center gap-1.5 transition-opacity hover:opacity-90"
-                              style={{ backgroundColor: col.color }}
-                            >
-                              <Check size={13} /> 保存
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
-                            >
-                              <X size={13} /> 取消
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <>
-                          {item.objective && (
-                            <div className="mb-4">
-                              <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
-                                <Target size={14} />
-                                <span className="text-xs font-bold">教学目标</span>
-                              </div>
-                              <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.objective)}</p>
-                            </div>
-                          )}
-
-                          {item.activity && (
-                            <div className="mb-4">
-                              <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
-                                <FileText size={14} />
-                                <span className="text-xs font-bold">活动概述</span>
-                              </div>
-                              <p className="text-[12px] text-gray-600 pl-5 mb-2">{safeRender(item.activity)}</p>
-
-                              <div className="pl-5 grid grid-cols-2 gap-4">
-                                <div>
-                                  <span className="text-[11px] font-bold text-gray-500 block mb-1">活动流程</span>
-                                  <span className="text-[12px] text-gray-600">{safeRender(item.activitySteps || item.activity)}</span>
-                                </div>
-                                <div>
-                                  <span className="text-[11px] font-bold text-gray-500 block mb-1">教学资源</span>
-                                  <span className="text-[12px] text-gray-600">
-                                    {item.assets && item.assets.length > 0
-                                      ? item.assets.map(a => safeRender(a.title)).join('、')
-                                      : '暂无'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-
-                          {(item.scenario || item.script) && (
-                            <div className="mb-4">
-                              <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
-                                <Compass size={14} />
-                                <span className="text-xs font-bold">情境创设</span>
-                              </div>
-                              <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.scenario || item.script)}</p>
-                            </div>
-                          )}
-
-                          {item.script && (
-                            <div className="relative p-3.5 rounded-xl mt-2 overflow-hidden" style={{ backgroundColor: col.lightBg }}>
-                              <span className="absolute right-2 bottom-[-10px] text-[70px] font-serif leading-none" style={{ color: `${col.color}15` }}>"</span>
-                              <div className="flex items-center gap-1.5 mb-2" style={{ color: col.color }}>
-                                <MessageSquare size={14} />
-                                <span className="text-xs font-bold">教师语言与引导 (Script)</span>
-                              </div>
-                              <p className="text-[13px] relative z-10 font-bold" style={{ color: col.color }}>
-                                {safeRender(item.script)}
-                              </p>
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-                            <button
-                              onClick={() => startEdit(item)}
-                              className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
-                            >
-                              <Edit3 size={13} /> 编辑
-                            </button>
-                            <div className="relative">
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuStep(openMenuStep === item.id ? null : item.id);
-                                }}
-                                className="py-1.5 px-2 border border-gray-200 rounded-lg text-gray-400 hover:bg-gray-50 transition-colors"
-                              >
-                                {regeneratingStep === item.id ? (
-                                  <RefreshCw size={13} className="animate-spin" />
-                                ) : (
-                                  <MoreVertical size={13} />
-                                )}
-                              </button>
-                              {openMenuStep === item.id && (
-                                <div className="absolute right-0 bottom-full mb-1 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 min-w-[140px]">
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleRegenerateStep(col.id, item.id);
-                                    }}
-                                    className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                                  >
-                                    <RefreshCw size={13} className="text-gray-400" />
-                                    重新生成
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDeleteStep(col.id, item.id);
-                                    }}
-                                    className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-                                  >
-                                    <Trash2 size={13} />
-                                    删除
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-                {index === col.items.length - 1 && (
-                  <button
-                    onClick={() => handleAddStep(col.id)}
-                    disabled={addingStepPhase === col.id}
-                    className="w-full py-2.5 mt-1 border-[1.5px] border-dashed border-gray-200 text-gray-400 rounded-xl text-[12px] font-medium flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className={`bg-white rounded-xl transition-all ${isExpanded ? 'border-[1.5px] shadow-sm' : 'border border-gray-100 hover:border-gray-200'}`}
+                    style={{ borderColor: isExpanded ? col.color : undefined }}
                   >
-                    {addingStepPhase === col.id ? (
-                      <><RefreshCw size={14} className="animate-spin" /> AI 生成中...</>
-                    ) : (
-                      <><Plus size={14} /> 添加环节</>
+                    <div className="p-3.5 flex items-center justify-between cursor-pointer" onClick={() => toggleCard(item.id)}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        {isExpanded
+                          ? <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                          : <ChevronRight size={16} className="text-gray-400 shrink-0" />}
+                        <div className="w-6 h-6 rounded flex items-center justify-center text-white shrink-0" style={{ backgroundColor: col.color }}>
+                          <Layout size={12} strokeWidth={2.5} />
+                        </div>
+                        <span className="text-[13px] font-bold text-gray-800 truncate">{safeRender(item.title)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {item.duration && (
+                          <span
+                            className="px-2 py-0.5 rounded text-[11px] font-bold"
+                            style={{ color: col.color, backgroundColor: col.lightBg, border: `1px solid ${col.color}30` }}
+                          >
+                            {safeRender(item.duration)}
+                          </span>
+                        )}
+                        {regeneratingStep === item.id ? (
+                          <RefreshCw size={14} className="text-gray-400 animate-spin" />
+                        ) : (
+                          <div className="relative">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setOpenMenuStep(openMenuStep === item.id ? null : item.id); }}
+                              className="p-0.5 rounded hover:bg-gray-100 transition-colors"
+                            >
+                              <MoreVertical size={14} className="text-gray-300" />
+                            </button>
+                            {openMenuStep === item.id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 min-w-[140px]">
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleRegenerateStep(col.id, item.id); }}
+                                  className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                >
+                                  <RefreshCw size={13} className="text-gray-400" /> 重新生成
+                                </button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteStep(col.id, item.id); }}
+                                  className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                >
+                                  <Trash2 size={13} /> 删除
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {isExpanded && (
+                      <div className="px-4 pb-4">
+                        <div className="border-t border-gray-100 mb-4" />
+
+                        {item.goal && (
+                          <div className="mb-4">
+                            <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
+                              <Target size={14} />
+                              <span className="text-xs font-bold">教学目标</span>
+                            </div>
+                            <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.goal)}</p>
+                          </div>
+                        )}
+
+                        {item.activity && (
+                          <div className="mb-4">
+                            <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
+                              <FileText size={14} />
+                              <span className="text-xs font-bold">活动概述</span>
+                            </div>
+                            <p className="text-[12px] text-gray-600 pl-5 mb-2">{safeRender(item.activity)}</p>
+                            <div className="pl-5 grid grid-cols-2 gap-4">
+                              <div>
+                                <span className="text-[11px] font-bold text-gray-500 block mb-1">活动流程</span>
+                                <span className="text-[12px] text-gray-600">{safeRender(item.flow || item.activity)}</span>
+                              </div>
+                              <div>
+                                <span className="text-[11px] font-bold text-gray-500 block mb-1">教学资源</span>
+                                <span className="text-[12px] text-gray-600">
+                                  {item.resources || '暂无'}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {(item.scenario || item.teacherScript) && (
+                          <div className="mb-4">
+                            <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
+                              <Compass size={14} />
+                              <span className="text-xs font-bold">情境创设</span>
+                            </div>
+                            <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.scenario || item.teacherScript)}</p>
+                          </div>
+                        )}
+
+                        {item.teacherScript && (
+                          <div className="relative p-3.5 rounded-xl mt-2 overflow-hidden" style={{ backgroundColor: col.lightBg }}>
+                            <span className="absolute right-2 bottom-[-10px] text-[70px] font-serif leading-none" style={{ color: `${col.color}15` }}>"</span>
+                            <div className="flex items-center gap-1.5 mb-2" style={{ color: col.color }}>
+                              <MessageSquare size={14} />
+                              <span className="text-xs font-bold">教师语言与引导</span>
+                            </div>
+                            <p className="text-[13px] relative z-10 font-bold" style={{ color: col.color }}>
+                              {safeRender(item.teacherScript)}
+                            </p>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
+                          <button
+                            onClick={() => openDetail(col.id, index, item)}
+                            className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
+                          >
+                            <BookOpen size={13} /> 详情
+                          </button>
+                          <button
+                            onClick={() => openEdit(col.id, index, item)}
+                            className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
+                          >
+                            <Edit3 size={13} /> 编辑
+                          </button>
+                          <button
+                            onClick={() => openAdjust(col.id, index, item)}
+                            className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
+                          >
+                            调整参数
+                          </button>
+                        </div>
+                      </div>
                     )}
-                  </button>
-                )}
-              </React.Fragment>
+                  </div>
+                  {index === col.items.length - 1 && (
+                    <button
+                      onClick={() => handleAddStep(col.id)}
+                      disabled={addingStepPhase === col.id}
+                      className="w-full py-2.5 mt-1 border-[1.5px] border-dashed border-gray-200 text-gray-400 rounded-xl text-[12px] font-medium flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {addingStepPhase === col.id ? (
+                        <><RefreshCw size={14} className="animate-spin" /> AI 生成中...</>
+                      ) : (
+                        <><Plus size={14} /> 添加环节</>
+                      )}
+                    </button>
+                  )}
+                </React.Fragment>
               );
             })}
           </div>
         </div>
       ))}
     </div>
+
+    <EditStepModal
+      open={!!editTarget}
+      step={editTarget?.step}
+      onClose={() => setEditTarget(null)}
+      onSave={saveEdit}
+    />
+
+    <StepDetailModal
+      open={!!detailTarget}
+      step={detailTarget?.step}
+      phase={detailTarget?.phase}
+      onClose={() => setDetailTarget(null)}
+      onEdit={() => {
+        if (detailTarget) {
+          openEdit(detailTarget.phaseKey, detailTarget.stepIndex, detailTarget.step);
+          setDetailTarget(null);
+        }
+      }}
+    />
+
+    <AdjustStepModal
+      open={!!adjustTarget}
+      value={adjustText}
+      selected={adjustChips}
+      onChange={setAdjustText}
+      onToggle={(chip) => setAdjustChips((prev) => prev.includes(chip) ? prev.filter((c) => c !== chip) : [...prev, chip])}
+      onClose={() => setAdjustTarget(null)}
+      onConfirm={confirmAdjust}
+    />
+    </>
   );
 };
 
@@ -768,10 +658,7 @@ const LessonPlanPage = () => {
 
   useEffect(() => {
     const fetchCourse = async () => {
-      if (!courseId) {
-        setLoading(false);
-        return;
-      }
+      if (!courseId) { setLoading(false); return; }
       try {
         const result = await apiService.getCourse(courseId);
         setCourseData(result.data || result);
@@ -799,7 +686,6 @@ const LessonPlanPage = () => {
         });
       } catch (err) {
         console.error('保存失败:', err);
-        alert('保存失败，请重试');
       } finally {
         setIsSaving(false);
       }
@@ -815,10 +701,8 @@ const LessonPlanPage = () => {
           userId: user?.id || courseData?.user_id || null,
           organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
         });
-        alert('发布成功！');
       } catch (err) {
         console.error('发布失败:', err);
-        alert('发布失败，请重试');
       } finally {
         setIsPublishing(false);
       }
@@ -827,20 +711,22 @@ const LessonPlanPage = () => {
     setActions(
       <>
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 已保存</>}
         </span>
         <button
           onClick={handleSave}
           disabled={isSaving}
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
-          style={{ backgroundColor: '#4C5866' }}>
+          style={{ backgroundColor: '#4C5866' }}
+        >
           {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
         </button>
         <button
           onClick={handlePublish}
           disabled={isPublishing}
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-          style={{ backgroundColor: colors.brand.DEFAULT }}>
+          style={{ backgroundColor: colors.brand.DEFAULT }}
+        >
           {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
         </button>
       </>
@@ -852,7 +738,7 @@ const LessonPlanPage = () => {
     return (
       <div className="flex items-center justify-center h-full" style={{ backgroundColor: colors.neutral.bg.layout }}>
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-brand-coral border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: `${colors.brand.DEFAULT} transparent ${colors.brand.DEFAULT} ${colors.brand.DEFAULT}` }} />
           <p style={{ color: colors.neutral.text[2] }}>加载中...</p>
         </div>
       </div>
