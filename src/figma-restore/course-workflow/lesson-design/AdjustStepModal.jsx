@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { Input } from 'antd';
 
 const { TextArea } = Input;
@@ -21,7 +21,7 @@ const groups = [
   ['叙事与连贯性', ['过渡衔接', '任务导向']],
 ];
 
-export function AdjustStepModal({ open, value, selected = [], onChange, onToggle, onClose, onConfirm }) {
+export function AdjustStepModal({ open, loading = false, value, selected = [], onChange, onToggle, onClose, onConfirm }) {
   if (!open) return null;
 
   const fillTip = (text) => {
@@ -88,10 +88,10 @@ export function AdjustStepModal({ open, value, selected = [], onChange, onToggle
           </div>
         </div>
         <div className="modal-ft">
-          <button type="button" className="mo-btn-cancel" onClick={onClose}>取消</button>
-          <button type="button" className="mo-btn-primary" disabled={!value.trim()} onClick={onConfirm}>
-            <Check size={13} />
-            确认调整
+          <button type="button" className="mo-btn-cancel" disabled={loading} onClick={onClose}>取消</button>
+          <button type="button" className="mo-btn-primary" disabled={!value.trim() || loading} onClick={onConfirm}>
+            {loading ? <Loader2 size={13} style={{ animation: 'spin .8s linear infinite' }} /> : <Check size={13} />}
+            {loading ? '调整中...' : '确认调整'}
           </button>
         </div>
       </div>

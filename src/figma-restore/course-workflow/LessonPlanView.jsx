@@ -136,6 +136,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [adjustTarget, setAdjustTarget] = React.useState(null);
   const [adjustText, setAdjustText] = React.useState('');
   const [adjustChips, setAdjustChips] = React.useState([]);
+  const [adjustLoading, setAdjustLoading] = React.useState(false);
   const [addOpen, setAddOpen] = React.useState(false);
   const [addPhase, setAddPhase] = React.useState(null);
   const [regenTarget, setRegenTarget] = React.useState(null);
@@ -147,6 +148,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [regenStep, setRegenStep] = React.useState(null);
   const [addingStep, setAddingStep] = React.useState(null);
   const [generateDraftLoading, setGenerateDraftLoading] = React.useState(false);
+  const [savedSteps, setSavedSteps] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('saved-wellbeing-steps') || '[]'); }
+    catch { return []; }
+  });
+  const [toast, setToast] = React.useState('');
 
   const { user } = useAuth();
 
@@ -228,9 +234,51 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     generateLesson();
   }, []);
 
-  const updateData = (next) => {
-    setData(next);
-    onPhasesChange?.(next);
+  const updateData = async (next) => {
+    const phaseKeyMap = { eng: 'engage', emp: 'empower', exc: 'execute', elv: 'elevate' };
+
+    const updated = next.map((phase) => {
+      const totalMin = phase.steps.reduce((acc, s) => {
+        const m = (s.duration || '').match(/(\d+)/);
+        return acc + (m ? parseInt(m[1]) : 0);
+      }, 0);
+      return {
+        ...phase,
+        duration: totalMin > 0 ? `${totalMin} 分钟` : phase.duration,
+      };
+    });
+
+    setData(updated);
+    onPhasesChange?.(updated);
+
+    if (course?.id && !String(course.id).startsWith('created-')) {
+      try {
+        const courseData = {};
+        updated.forEach((phase) => {
+          courseData[phaseKeyMap[phase.key]] = {
+            title: phase.title,
+            steps: phase.steps.map((s) => ({
+              id: s.id,
+              title: s.title,
+              time: s.duration,
+              objective: s.goal,
+              activity: s.activity,
+              activitySteps: s.flow,
+              scenario: s.scenario,
+              script: s.teacherScript,
+            })),
+          };
+        });
+        await apiService.updateCourse(course.id, { courseData });
+      } catch (err) {
+        console.warn('自动保存教案失败:', err);
+      }
+    }
+  };
+
+  const toastMessage = (text) => {
+    setToast(text);
+    setTimeout(() => setToast(''), 2000);
   };
 
   const toggleCard = (cardKey) => {
@@ -498,13 +546,15 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setDetailTarget(null);
   };
 
-  const confirmAdjust = () => {
-    if (!adjustTarget || !adjustText.trim()) return;
+  const confirmAdjust = async () => {
+    if (!adjustTarget || !adjustText.trim() || adjustLoading) return;
     const requirements = adjustChips.length > 0
       ? `${adjustText.trim()}（调整方向：${adjustChips.join('、')}）`
       : adjustText.trim();
+    setAdjustLoading(true);
+    await handleRegenerateStep(adjustTarget.phaseKey, adjustTarget.stepIndex, requirements);
+    setAdjustLoading(false);
     setAdjustTarget(null);
-    handleRegenerateStep(adjustTarget.phaseKey, adjustTarget.stepIndex, requirements);
   };
 
   const longPhaseKey = (shortKey) => {
@@ -660,6 +710,79 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setMenuKey(null);
   };
 
+  const handleSaveStep = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    const step = phase?.steps?.[stepIndex];
+    if (!step) {
+      console.warn('[saveStep] 未找到环节:', { phaseKey, stepIndex });
+      return;
+    }
+    const record = {
+      savedAt: Date.now(),
+      title: step.title,
+      goal: step.goal,
+      activity: step.activity,
+      flow: step.flow,
+      duration: step.duration,
+      resources: step.resources,
+      scenario: step.scenario,
+      teacherScript: step.teacherScript,
+    };
+    const updated = [record, ...savedSteps.filter((s) => s.title !== record.title)];
+    setSavedSteps(updated);
+    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
+    setMenuKey(null);
+    toastMessage(`已收藏「${record.title}」`);
+  };
+
+  const handleUnsaveStep = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    const step = phase?.steps?.[stepIndex];
+    if (!step) return;
+    const updated = savedSteps.filter((s) => s.title !== step.title);
+    setSavedSteps(updated);
+    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
+    setMenuKey(null);
+    toastMessage(`已取消收藏「${step.title}」`);
+  };
+
+  const isStepSaved = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    const step = phase?.steps?.[stepIndex];
+    if (!step) return false;
+    return savedSteps.some((s) => s.title === step.title);
+  };
+
+  const handlePinStep = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    if (!phase || stepIndex <= 0) return;
+    const steps = [...phase.steps];
+    const [pinned] = steps.splice(stepIndex, 1);
+    steps.unshift(pinned);
+    updateData(data.map((p) => (p.key === phaseKey ? { ...p, steps } : p)));
+    setMenuKey(null);
+    toastMessage('已置顶到该阶段首位');
+  };
+
+  const handleSelectSavedStep = (record) => {
+    const timeMatch = (record.duration || '').match(/(\d+)/);
+    addForm.setFieldsValue({
+      title: record.title || '',
+      time: timeMatch ? parseInt(timeMatch[1]) : 8,
+      goal: record.goal || '',
+      activity: record.activity || '',
+      flowSteps: parseFlowStepsForForm(record.flow, record.teacherScript),
+      resources: record.resources || '',
+      scenario: record.scenario || '',
+    });
+  };
+
+  const handleDeleteSavedStep = (record) => {
+    const updated = savedSteps.filter((s) => s.savedAt !== record.savedAt);
+    setSavedSteps(updated);
+    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
+  };
+
   const dataToCoursePhases = () => {
     const result = {};
     data.forEach((phase) => {
@@ -705,6 +828,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
   return (
     <div id="ed-tbl">
+      {toast && <div className="tbl-toast">{toast}</div>}
       <div className="tbl-inner-toolbar">
         <div className="tbl-ib-left">
           <button type="button" className="tbl-ib-btn" disabled title="撤回 (Ctrl+Z)"><RotateCcw size={14} /></button>
@@ -792,6 +916,10 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                               openAddStep(phase, step);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
+                            onSave={() => handleSaveStep(phase.key, index)}
+                            onUnsave={() => handleUnsaveStep(phase.key, index)}
+                            isSaved={isStepSaved(phase.key, index)}
+                            onPin={() => handlePinStep(phase.key, index)}
                             onDelete={() => handleDeleteStep(phase.key, index)}
                           />
                         )}
@@ -855,6 +983,10 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                               openAddStep(phase, step);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
+                            onSave={() => handleSaveStep(phase.key, index)}
+                            onUnsave={() => handleUnsaveStep(phase.key, index)}
+                            isSaved={isStepSaved(phase.key, index)}
+                            onPin={() => handlePinStep(phase.key, index)}
                             onDelete={() => handleDeleteStep(phase.key, index)}
                           />
                         )}
@@ -970,18 +1102,34 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 </div>
 
                 <div className={`as-gen-panel ${genMode === 'mine' ? 'active' : ''}`} id="asPanel-mine">
-                  <div id="asSavedList" className="as-saved-empty">
-                    暂无收藏环节或保存的活动<br />
-                    <span>在环节卡片右上角菜单中点击「收藏此环节」存入此处</span>
-                  </div>
-                  <div id="asCurrentDraft">
-                    <div className="as-current-title">当前草案</div>
-                    <div className="as-current-summary">
-                      环节名称：<span>—</span><br />
-                      教学目标：<span>—</span>
+                  {savedSteps.length === 0 ? (
+                    <div id="asSavedList" className="as-saved-empty">
+                      暂无收藏环节或保存的活动<br />
+                      <span>在环节卡片右上角菜单中点击「收藏此环节」存入此处</span>
                     </div>
-                    <button type="button">★ 保存到我的收藏</button>
-                  </div>
+                  ) : (
+                    <div id="asSavedList" className="as-saved-list">
+                      {savedSteps.map((record) => (
+                        <div
+                          className="as-saved-item"
+                          key={record.savedAt}
+                          onClick={() => handleSelectSavedStep(record)}
+                        >
+                          <div className="as-saved-item-main">
+                            <div className="as-saved-item-title">{record.title}</div>
+                            <div className="as-saved-item-meta">{record.duration} · {record.goal?.slice(0, 50)}{(record.goal?.length || 0) > 50 ? '...' : ''}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="as-saved-item-del"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteSavedStep(record); }}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1148,6 +1296,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       />
       <AdjustStepModal
         open={!!adjustTarget}
+        loading={adjustLoading}
         value={adjustText}
         selected={adjustChips}
         onChange={setAdjustText}
@@ -1161,13 +1310,16 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   );
 }
 
-function StepMenu({ open, onRegen, onAdjust, onDelete, placement }) {
+function StepMenu({ open, onRegen, onAdjust, onSave, onUnsave, isSaved, onPin, onDelete, placement }) {
   return (
     <div className={`step-menu-dropdown ${placement === 'footer' ? 'footer-menu' : ''} ${open ? 'open' : ''}`}>
       <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />重新生成</button>
       <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />调整环节</button>
-      <button type="button" className="step-menu-item"><Heart size={12} />收藏此环节</button>
-      <button type="button" className="step-menu-item"><Copy size={12} />置顶</button>
+      <button type="button" className="step-menu-item" onClick={isSaved ? onUnsave : onSave}>
+        <Heart size={12} fill={isSaved ? '#ff705f' : 'none'} />
+        {isSaved ? '取消收藏' : '收藏此环节'}
+      </button>
+      <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />置顶</button>
       <div className="step-menu-sep" />
       <button type="button" className="step-menu-item danger" onClick={onDelete}><Trash2 size={12} />删除</button>
     </div>
