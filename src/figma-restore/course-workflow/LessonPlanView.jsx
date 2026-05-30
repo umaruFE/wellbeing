@@ -500,18 +500,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
   const confirmAdjust = () => {
     if (!adjustTarget || !adjustText.trim()) return;
-    updateData(data.map((phase) => {
-      if (phase.key !== adjustTarget.phaseKey) return phase;
-      return {
-        ...phase,
-        steps: phase.steps.map((step, index) => (
-          index === adjustTarget.stepIndex
-            ? { ...step, goal: `${step.goal}\n调整方向：${adjustText.trim()}` }
-            : step
-        )),
-      };
-    }));
+    const requirements = adjustChips.length > 0
+      ? `${adjustText.trim()}（调整方向：${adjustChips.join('、')}）`
+      : adjustText.trim();
     setAdjustTarget(null);
+    handleRegenerateStep(adjustTarget.phaseKey, adjustTarget.stepIndex, requirements);
   };
 
   const longPhaseKey = (shortKey) => {
@@ -606,7 +599,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     }
   };
 
-  const handleRegenerateStep = async (phaseKey, stepIndex) => {
+  const handleRegenerateStep = async (phaseKey, stepIndex, requirements = '') => {
     const phase = data.find((p) => p.key === phaseKey);
     const currentSteps = phase?.steps || [];
     const currentStep = currentSteps[stepIndex];
@@ -621,7 +614,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         }
       });
 
-      const response = await fetch('/api/ai/regenerate-step', {
+      const response = await fetch('/api/ai/generate-step', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -634,6 +627,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           vocabulary: course?.vocabularies || course?.keywords || [],
           grammar: course?.grammars || [],
           theme: course?.theme || '',
+          requirements,
           userId: user?.id || null,
           organizationId: user?.organizationId || null,
           currentStep: currentStep ? { id: currentStep.id, title: currentStep.title, time: currentStep.duration, objective: currentStep.goal } : null,
