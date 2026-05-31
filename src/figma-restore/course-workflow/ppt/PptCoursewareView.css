@@ -2238,216 +2238,398 @@
 
 /* PPT left outline restored from the supplied design frame. */
 .ppt-courseware .ppt-left {
-  width: 263px;
-  min-width: 263px;
+  width: 231px;
+  min-width: 231px;
   background: #ffffff;
-  border-right: 1px solid #dedbd4;
+  border-right: 1px solid #e5e1db;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .ppt-courseware .ppt-left-head {
   height: 48px;
   padding: 0 16px;
-  border-bottom: 1px solid #dedbd4;
-  font-size: 14px;
-  font-weight: 800;
-  color: #253142;
-  letter-spacing: 0;
+  border-bottom: 1px solid #e5e1db;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333e4e;
+  display: flex;
+  align-items: center;
 }
 
 .ppt-courseware .ppt-left-scroll {
-  padding: 18px 15px 20px 16px;
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
   background: #ffffff;
 }
 
 .ppt-courseware .ppt-phase {
-  margin: 0 0 24px;
+  margin-bottom: 16px;
 }
 
-.ppt-courseware .ppt-phase-label {
-  min-height: 18px;
-  padding: 0 0 13px 14px;
-  margin: 0;
-  color: #253142;
-  font-size: 14px;
-  line-height: 18px;
-  font-weight: 900;
-  letter-spacing: 0;
-}
-
-.ppt-courseware .ppt-phase-label::before {
-  left: 0;
-  top: 1px;
-  width: 6px;
-  height: 14px;
-  border-radius: 999px;
-}
-
-.ppt-courseware .ppt-step-block {
-  position: relative;
-  margin: 0 0 12px;
-}
-
-.ppt-courseware .ppt-step-item {
-  width: 232px;
-  height: 40px;
-  min-height: 40px;
-  margin: 0;
-  padding: 0 12px 0 12px;
-  border: 1.5px solid #d6d2ca;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #7c8798;
+.ppt-courseware .ppt-phase-header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 7px;
-  box-shadow: 2px 3px 0 rgba(37, 49, 66, 0.14);
+  gap: 8px;
+  padding: 8px 16px;
 }
 
-.ppt-courseware .ppt-step-item::before,
-.ppt-courseware .ppt-step-item::after {
-  display: none;
+.ppt-courseware .ppt-phase-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
 }
 
-.ppt-courseware .ppt-step-item svg {
-  flex: 0 0 auto;
+.ppt-courseware .ppt-phase-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333e4e;
+  line-height: 22px;
 }
 
-.ppt-courseware .ppt-step-icon {
+.ppt-courseware .ppt-step-list {
+  padding-left: 16px;
+}
+
+.ppt-courseware .ppt-step-container {
+  margin-bottom: 8px;
+}
+
+.ppt-courseware .ppt-first-step-wrapper {
+  width: 100%;
+}
+
+.ppt-courseware .ppt-first-step-card {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #ffffff;
+  border: 2px solid #e5e1db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.2s;
+  width: 100%;
+}
+
+.ppt-courseware .ppt-first-step-card:hover {
+  background: #f7f5f1;
+}
+
+.ppt-courseware .ppt-first-step-card.active {
+  background: var(--phase-bg);
+  border-color: var(--phase-border);
+  box-shadow: 3px 3px 0 var(--phase-shadow);
+}
+
+.ppt-courseware .ppt-first-step-card svg {
+  color: #818997;
+  flex-shrink: 0;
+}
+
+.ppt-courseware .ppt-first-step-card.active svg {
+  color: var(--phase-color);
+}
+
+.ppt-courseware .ppt-first-step-card .ppt-step-icon {
   width: 20px;
   height: 20px;
-  min-width: 20px;
   border-radius: 5px;
-  background: currentColor;
-  color: #ffffff;
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  background: var(--phase-color);
 }
 
-.ppt-courseware .ppt-step-title {
+.ppt-courseware .ppt-first-step-card .ppt-step-name {
   flex: 1;
-  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333e4e;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: #253142;
-  font-size: 14px;
-  font-weight: 800;
 }
 
-.ppt-courseware .ppt-step-item b {
-  width: 22px;
-  min-width: 22px;
-  height: 22px;
-  border: 1.5px solid currentColor;
-  font-size: 13px;
-  line-height: 1;
+.ppt-courseware .ppt-first-step-card.active .ppt-step-name {
+  color: var(--phase-color);
+  font-weight: 600;
 }
 
-.ppt-courseware .ppt-phase-engage .ppt-step-item { color: var(--ppt-purple); }
-.ppt-courseware .ppt-phase-empower .ppt-step-item { color: var(--ppt-blue); }
-.ppt-courseware .ppt-phase-execute .ppt-step-item { color: var(--ppt-green); }
-.ppt-courseware .ppt-phase-elevate .ppt-step-item { color: var(--ppt-coral); }
-
-.ppt-courseware .ppt-step-item.on {
-  background: #f6edff;
-  border-color: var(--ppt-purple);
-  color: var(--ppt-purple);
-  box-shadow: 2px 3px 0 rgba(155, 99, 220, 0.22);
+.ppt-courseware .ppt-first-step-card .ppt-step-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 100px;
+  background: var(--phase-bg);
+  color: var(--phase-color);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 7px;
+  border: 1px solid var(--phase-border);
 }
 
-.ppt-courseware .ppt-phase-empower .ppt-step-item.on {
-  background: #edf4ff;
-  border-color: var(--ppt-blue);
-  color: var(--ppt-blue);
-}
-
-.ppt-courseware .ppt-phase-execute .ppt-step-item.on {
-  background: #edf8f1;
-  border-color: var(--ppt-green);
-  color: var(--ppt-green);
-}
-
-.ppt-courseware .ppt-phase-elevate .ppt-step-item.on {
-  background: #fff1ed;
-  border-color: var(--ppt-coral);
-  color: var(--ppt-coral);
-}
-
-.ppt-courseware .ppt-step-item.on .ppt-step-title {
-  color: currentColor;
-}
-
-.ppt-courseware .ppt-thumb-wrap {
+.ppt-courseware .ppt-slide-preview-wrapper {
   position: relative;
-  margin: 12px 0 13px;
-  padding: 0 0 0 38px;
-  gap: 13px;
+  margin-top: 12px;
+  padding-left: 28px;
 }
 
-.ppt-courseware .ppt-thumb-wrap::before {
+.ppt-courseware .ppt-slide-connector-line {
+  position: absolute;
   left: 20px;
-  top: 9px;
-  bottom: 9px;
-  width: 1.5px;
-  background: #c9ced8;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e8e3dd;
 }
 
-.ppt-courseware .ppt-thumb {
-  width: 193px;
-  height: 110px;
-  margin: 0;
-  border: 1.5px solid transparent;
-  border-radius: 7px;
-  background: #eef3f6;
-  box-shadow: none;
-  overflow: visible;
+.ppt-courseware .ppt-slide-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
-.ppt-courseware .ppt-thumb::after {
-  left: -35px;
-  top: 50%;
+.ppt-courseware .ppt-slide-row {
+  position: relative;
+}
+
+.ppt-courseware .ppt-slide-row .ppt-slide-number {
+  position: absolute;
+  left: -24px;
+  top: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #333e4e;
+  width: 16px;
+  text-align: right;
+  height: 20px;
+  line-height: 20px;
+}
+
+.ppt-courseware .ppt-slide-thumb-wrapper {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ppt-courseware .ppt-slide-indicator-box {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-top: 53px;
+}
+
+.ppt-courseware .ppt-slide-dot {
   width: 8px;
   height: 8px;
-  background: #b6beca;
+  border-radius: 9999px;
+  background: #a4abb8;
 }
 
-.ppt-courseware .ppt-thumb.on {
-  border-color: #253142;
-  box-shadow: none;
+.ppt-courseware .ppt-slide-dot.active {
+  background: #333e4e;
 }
 
-.ppt-courseware .ppt-thumb.on::after {
-  background: #253142;
+.ppt-courseware .ppt-slide-line {
+  width: 16px;
+  height: 1px;
+  background: #a4abb8;
 }
 
-.ppt-courseware .ppt-thumb-index {
+.ppt-courseware .ppt-slide-thumb {
+  width: 193px;
+  height: 114px;
+  border-radius: 8px;
+  border: 1px solid #c7c3bd;
+  background: #ffffff;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.ppt-courseware .ppt-slide-thumb::before {
+  content: "";
   position: absolute;
-  left: -38px;
-  top: 0;
-  width: 12px;
-  height: 18px;
-  color: #253142;
-  font-size: 13px;
-  font-weight: 900;
-  line-height: 18px;
+  left: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #a4abb8;
   z-index: 2;
 }
 
-.ppt-courseware .ppt-thumb .ppt-demo-scene {
-  border-radius: 6px;
-  transform: scale(0.371);
-  transform-origin: top left;
+.ppt-courseware .ppt-slide-thumb.active {
+  border-color: #333e4e;
+  background: #fff6f4;
+  box-shadow: 3px 3px 0 #333e4e;
 }
 
-.ppt-courseware .ppt-thumb-add {
+.ppt-courseware .ppt-slide-thumb.active::before {
+  background: #333e4e;
+}
+
+.ppt-courseware .ppt-slide-thumb .ppt-demo-scene {
+  transform: scale(0.37);
+  transform-origin: top left;
+  border-radius: 6px;
+}
+
+.ppt-courseware .ppt-add-slide-btn {
+  width: 193px;
   height: 36px;
-  border: 1.5px dashed #253142;
+  border: 2px dashed #333e4e;
+  border-radius: 8px;
   background: #ffffff;
-  color: #253142;
-  display: grid;
-  place-items: center;
+  color: #333e4e;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
+}
+
+.ppt-courseware .ppt-add-slide-btn:hover {
+  background: #f7f5f1;
+}
+
+.ppt-courseware .ppt-step-container-inner {
+  display: flex;
+  gap: 8px;
+}
+
+.ppt-courseware .ppt-step-connector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.ppt-courseware .ppt-step-connector .ppt-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 10px;
+}
+
+.ppt-courseware .ppt-step-connector .ppt-step-line {
+  width: 2px;
+  flex: 1;
+  min-height: 36px;
+  background: #e5e1db;
+  margin: 4px 0;
+}
+
+.ppt-courseware .ppt-step-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  background: #ffffff;
+  border: 2px solid #e5e1db;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.2s;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.ppt-courseware .ppt-step-card:hover {
+  background: #f7f5f1;
+}
+
+.ppt-courseware .ppt-step-card.active {
+  background: var(--phase-bg);
+  border-color: var(--phase-border);
+}
+
+.ppt-courseware .ppt-step-card svg {
+  color: #818997;
+  flex-shrink: 0;
+}
+
+.ppt-courseware .ppt-step-card.active svg {
+  color: var(--phase-color);
+}
+
+.ppt-courseware .ppt-step-card .ppt-step-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  background: var(--phase-color);
+}
+
+.ppt-courseware .ppt-step-card .ppt-step-name {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333e4e;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ppt-courseware .ppt-step-card.active .ppt-step-name {
+  color: var(--phase-color);
+  font-weight: 600;
+}
+
+.ppt-courseware .ppt-step-card .ppt-step-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  border-radius: 100px;
+  background: var(--phase-bg);
+  color: var(--phase-color);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 0 7px;
+}
+
+.ppt-courseware .ppt-add-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 16px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  padding: 10px;
+  border: 2px dashed #d8d3cb;
+  border-radius: 8px;
+  color: #818997;
+  cursor: pointer;
+  background: #ffffff;
+  transition: all 0.2s;
+}
+
+.ppt-courseware .ppt-add-step:hover {
+  border-color: #f4785e;
+  color: #f4785e;
+  background: #fff5f2;
 }
 
 /* Final layout guards: keep the three-column editor inside the viewport. */
@@ -2558,4 +2740,2406 @@
   .ppt-courseware .ppt-canvas-scroll {
     padding: 20px;
   }
+}
+
+/* PPT outline: 1:1 restore of the supplied left course outline frame. */
+#ed-ppt.ppt-courseware .ppt-left {
+  flex: 0 0 263px;
+  width: 263px;
+  min-width: 263px;
+  background: #020202;
+  border-right: 0;
+}
+
+#ed-ppt .ppt-left-head {
+  display: none;
+}
+
+#ed-ppt .ppt-left-scroll {
+  padding: 17px 16px 24px;
+  scrollbar-width: none;
+}
+
+#ed-ppt .ppt-left-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+#ed-ppt .ppt-phase {
+  margin: 0 0 22px;
+}
+
+#ed-ppt .ppt-phase-header {
+  height: 18px;
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+#ed-ppt .ppt-phase-dot {
+  width: 6px;
+  height: 14px;
+  border-radius: 999px;
+}
+
+#ed-ppt .ppt-phase-title {
+  color: #263142;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+#ed-ppt .ppt-step-list {
+  padding: 0;
+}
+
+#ed-ppt .ppt-step-container {
+  margin: 0 0 10px;
+}
+
+#ed-ppt .ppt-first-step-card,
+#ed-ppt .ppt-step-card {
+  width: 231px;
+  min-height: 38px;
+  gap: 6px;
+  padding: 0 11px;
+  border: 1px solid #d9d4cc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: 2px 2px 0 #d8d3cb;
+}
+
+#ed-ppt .ppt-first-step-card.active,
+#ed-ppt .ppt-step-card.active {
+  background: var(--phase-bg);
+  border: 2px solid var(--phase-border);
+  box-shadow: 3px 3px 0 var(--phase-shadow);
+}
+
+#ed-ppt .ppt-first-step-card > svg,
+#ed-ppt .ppt-step-card > svg {
+  width: 14px;
+  height: 14px;
+  color: #6b7686;
+}
+
+#ed-ppt .ppt-first-step-card.active > svg,
+#ed-ppt .ppt-step-card.active > svg {
+  color: var(--phase-color);
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-icon,
+#ed-ppt .ppt-step-card .ppt-step-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: #ffffff;
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-icon svg,
+#ed-ppt .ppt-step-card .ppt-step-icon svg {
+  width: 12px;
+  height: 12px;
+  color: currentColor;
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-name,
+#ed-ppt .ppt-step-card .ppt-step-name {
+  color: #364153;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+#ed-ppt .ppt-first-step-card.active .ppt-step-name,
+#ed-ppt .ppt-step-card.active .ppt-step-name {
+  color: var(--phase-color);
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-count,
+#ed-ppt .ppt-step-card .ppt-step-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1.5px solid var(--phase-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--phase-color);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#ed-ppt .ppt-slide-preview-wrapper {
+  margin-top: 10px;
+  padding-left: 38px;
+  position: relative;
+}
+
+#ed-ppt .ppt-slide-connector-line {
+  left: 20px;
+  top: 0;
+  bottom: 2px;
+  width: 2px;
+  background: #e7e2dc;
+}
+
+#ed-ppt .ppt-slide-row {
+  min-height: 126px;
+  position: relative;
+}
+
+#ed-ppt .ppt-slide-row:last-child {
+  min-height: 34px;
+}
+
+#ed-ppt .ppt-slide-row:last-child .ppt-slide-dot {
+  display: none;
+}
+
+#ed-ppt .ppt-slide-row .ppt-slide-number {
+  left: -38px;
+  top: 1px;
+  width: 12px;
+  color: #263142;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+}
+
+#ed-ppt .ppt-slide-thumb-wrapper {
+  position: relative;
+  gap: 0;
+}
+
+#ed-ppt .ppt-slide-indicator-box {
+  position: absolute;
+  left: -34px;
+  top: 53px;
+  width: 34px;
+  gap: 0;
+  margin-top: 0;
+}
+
+#ed-ppt .ppt-slide-dot {
+  width: 8px;
+  height: 8px;
+  background: #dbe1e8;
+}
+
+#ed-ppt .ppt-slide-dot.active {
+  background: #253142;
+}
+
+#ed-ppt .ppt-slide-line {
+  width: 17px;
+  height: 1px;
+  background: #dbe1e8;
+}
+
+#ed-ppt .ppt-slide-thumb {
+  width: 193px;
+  height: 114px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-slide-thumb.active {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: 3px 3px 0 #253142;
+}
+
+#ed-ppt .ppt-slide-thumb::before {
+  display: none;
+}
+
+#ed-ppt .ppt-design-thumb {
+  width: 193px;
+  height: 114px;
+  border-radius: 6px;
+  background-image: url("./Container.png");
+  background-size: 263px 864px;
+  background-repeat: no-repeat;
+}
+
+#ed-ppt .ppt-design-thumb.thumb-0 {
+  background-position: -55px -102px;
+}
+
+#ed-ppt .ppt-design-thumb.thumb-1 {
+  background-position: -55px -228px;
+}
+
+#ed-ppt .ppt-add-slide-btn {
+  width: 193px;
+  height: 34px;
+  border: 2px dashed #263142;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #263142;
+  box-shadow: 3px 3px 0 rgba(255, 255, 255, 0.28);
+  padding: 0;
+}
+
+#ed-ppt .ppt-step-container-inner {
+  display: block;
+}
+
+#ed-ppt .ppt-step-connector,
+#ed-ppt .ppt-add-step {
+  display: none;
+}
+
+/* Selected text layer and editor panel restored from 课程详情-PPT 课件-选中文本.png. */
+#ed-ppt .ppt-layer[data-layer-type="text"] {
+  overflow: visible;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="text"] .ppt-layer-text {
+  align-items: center;
+  justify-content: center;
+  color: #f4785e;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  font-size: 32px;
+  font-weight: 900;
+  line-height: 46px;
+  letter-spacing: 0;
+  -webkit-text-stroke: 0;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-layer-frame {
+  inset: -3px;
+  border: 2px solid #253142;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #253142;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.nw { left: -7px; top: -7px; }
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.n { top: -7px; }
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.ne { right: -7px; top: -7px; }
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.e { right: -7px; }
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.se { right: -7px; bottom: -7px; }
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.s { bottom: -7px; }
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.sw { left: -7px; bottom: -7px; }
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.w { left: -7px; }
+
+#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-rotate-handle {
+  display: none;
+}
+
+#ed-ppt .ppt-text-config-panel {
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  background: #ffffff;
+  border-left: 1px solid #e2ded7;
+  color: #253142;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement {
+  height: 100%;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .element-panel-head {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement #panelElementTitle {
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .element-panel-close {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  background: transparent;
+  color: #8a94a4;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-text-config-panel .video-form-body {
+  padding: 17px 16px 24px;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-text-config-panel .video-form-group {
+  margin-bottom: 14px;
+}
+
+#ed-ppt .ppt-text-config-panel .video-form-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+#ed-ppt .ppt-text-config-panel .video-form-input,
+#ed-ppt .ppt-text-config-panel .ant-input.video-form-input,
+#ed-ppt .ppt-text-config-panel .ant-input-number.video-form-input {
+  height: 36px;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-text-config-panel .ant-input-number.video-form-input {
+  width: 100%;
+  padding: 0;
+}
+
+#ed-ppt .ppt-text-config-panel .ant-input-number-input-wrap {
+  width: 100%;
+  height: 100%;
+}
+
+#ed-ppt .ppt-text-config-panel .ant-input-number-input {
+  width: 100%;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 25px 0 10px;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#ed-ppt .ppt-text-config-panel .video-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+#ed-ppt .ppt-text-config-panel .video-input-unit {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #8a94a4;
+  font-size: 12px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+#ed-ppt .ppt-text-config-panel .text-dim-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-style-row {
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-font-select {
+  width: 100%;
+  height: 36px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-font-select .ant-select-selector {
+  height: 36px;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  box-shadow: none;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+#ed-ppt .ppt-text-config-panel .text-font-select .ant-select-selection-item {
+  line-height: 34px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-control-row {
+  display: grid;
+  grid-template-columns: 94px 94px 1fr;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-button-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 30px;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-text-config-panel .text-seg-btn.ant-btn {
+  width: 100%;
+  height: 30px;
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid #d6dce5;
+  border-radius: 0;
+  background: #ffffff;
+  color: #8a94a4;
+  box-shadow: none;
+  padding: 0;
+}
+
+#ed-ppt .ppt-text-config-panel .text-seg-btn.ant-btn:last-child {
+  border-right: 0;
+}
+
+#ed-ppt .ppt-text-config-panel .text-seg-btn.ant-btn.on {
+  background: #ede9e3;
+  color: #253142;
+}
+
+#ed-ppt .ppt-text-config-panel .text-hex-wrap {
+  height: 30px;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+#ed-ppt .ppt-text-config-panel .text-hex-wrap span {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex: 0 0 20px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-hex-wrap .ant-input {
+  height: 26px;
+  border: 0;
+  padding: 0;
+  color: #647084;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-text-config-panel .text-stroke-row {
+  display: grid;
+  grid-template-columns: 1fr 80px;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-stroke-row .text-hex-wrap {
+  height: 36px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-content-area.ant-input {
+  height: 112px;
+  min-height: 112px;
+  padding: 10px 12px;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 700;
+  resize: none;
+  box-shadow: none;
+}
+
+/* Final selected-video header/button lock. Keep this block at EOF. */
+#ed-ppt .ppt-video-config-panel #panelElement .element-panel-head {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement #panelElementTitle {
+  flex: 1;
+  min-width: 0;
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .element-panel-close {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8a94a4;
+  box-shadow: none;
+  padding: 0;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-form-body,
+#ed-ppt .ppt-video-config-panel #panelElement .video-action-row {
+  overflow: visible;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn {
+  border: 2px solid #ff705d !important;
+  background: #ffffff !important;
+  color: #ff705d !important;
+  box-shadow: 3px 3px 0 #ff705d !important;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:focus,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:active,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:focus,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:active {
+  border-color: #ff705d !important;
+  background: #ffffff !important;
+  color: #ff705d !important;
+  box-shadow: 3px 3px 0 #ff705d !important;
+}
+
+/* Project AntD theme final override for selected PPT panels. */
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .fi,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-input,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-input-number,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-select-selector,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form textarea.ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .fi,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-input-number,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-select-selector,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form textarea.ant-input {
+  border: 2px solid #d1d5db !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+  color: #374151 !important;
+  font-size: 13px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-input:focus,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-input-focused,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-select-focused .ant-select-selector,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-input-number-focused,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-input:focus,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-input-focused,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-select-focused .ant-select-selector,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-input-number-focused {
+  border-color: #ff705f !important;
+  box-shadow: 0 0 0 3px rgba(255, 112, 95, 0.14) !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form textarea.ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form textarea.ant-input {
+  resize: vertical !important;
+  line-height: 1.6 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-input-number-input,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-input-number-input {
+  padding: 4px 11px !important;
+  height: 32px !important;
+  color: #374151 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-select-selector,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-select-selector {
+  min-height: 32px !important;
+  padding: 0 11px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-select-selection-item,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .ant-select-selection-placeholder,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-select-selection-item,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .ant-select-selection-placeholder {
+  line-height: 30px !important;
+  color: #374151 !important;
+  font-size: 13px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .toggle-switch,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .toggle-switch {
+  background: #d1d5db !important;
+  border: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .toggle-switch.ant-switch-checked,
+#ed-ppt .ppt-text-config-panel #panelElement.overview-ant-form .toggle-switch.ant-switch-checked:hover,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .toggle-switch.ant-switch-checked,
+#ed-ppt .ppt-video-config-panel #panelElement.overview-ant-form .toggle-switch.ant-switch-checked:hover {
+  background: #F4785E !important;
+}
+
+/* EOF text control row lock. */
+#ed-ppt .ppt-text-config-panel #panelElement .text-control-row {
+  grid-template-columns: 60px 60px minmax(0, 1fr) !important;
+  gap: 6px !important;
+  margin-bottom: 10px !important;
+  align-items: center !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-button-group {
+  width: 60px !important;
+  min-width: 60px !important;
+  height: 28px !important;
+  display: flex !important;
+  overflow: hidden !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 28px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  color: #8a94a4 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn + .text-seg-btn.ant-btn {
+  border-left: 1px solid #d6dce5 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap.text-color-compact {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+/* AntD default skin restore for both text and video panels. Keep layout only. */
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input.video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input-number.video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .text-content-area.ant-input,
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap .ant-input,
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select .ant-select-selector,
+#ed-ppt .ppt-text-config-panel #panelElement .text-button-group,
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn,
+#ed-ppt .ppt-text-config-panel #panelElement .video-panel-btn.ant-btn,
+#ed-ppt .ppt-text-config-panel #panelElement .toggle-switch,
+#ed-ppt .ppt-video-config-panel #panelElement .video-form-input,
+#ed-ppt .ppt-video-config-panel #panelElement .ant-input.video-form-input,
+#ed-ppt .ppt-video-config-panel #panelElement .ant-input-number.video-form-input,
+#ed-ppt .ppt-video-config-panel #panelElement .text-content-area.ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement .text-hex-wrap .ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement .text-font-select .ant-select-selector,
+#ed-ppt .ppt-video-config-panel #panelElement .text-button-group,
+#ed-ppt .ppt-video-config-panel #panelElement .text-seg-btn.ant-btn,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.ant-btn,
+#ed-ppt .ppt-video-config-panel #panelElement .toggle-switch {
+  background: #ffffff !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input.video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input-number.video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .text-content-area.ant-input,
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap .ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement .video-form-input,
+#ed-ppt .ppt-video-config-panel #panelElement .ant-input.video-form-input,
+#ed-ppt .ppt-video-config-panel #panelElement .ant-input-number.video-form-input,
+#ed-ppt .ppt-video-config-panel #panelElement .text-content-area.ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement .text-hex-wrap .ant-input {
+  color: rgba(0, 0, 0, 0.88) !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input-number-input,
+#ed-ppt .ppt-video-config-panel #panelElement .ant-input-number-input {
+  padding: 4px 11px !important;
+  height: 32px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select .ant-select-selector,
+#ed-ppt .ppt-video-config-panel #panelElement .text-font-select .ant-select-selector {
+  height: 32px !important;
+  padding: 0 11px !important;
+  border-color: #d9d9d9 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn,
+#ed-ppt .ppt-video-config-panel #panelElement .text-seg-btn.ant-btn,
+#ed-ppt .ppt-text-config-panel #panelElement .video-panel-btn.ant-btn,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.ant-btn {
+  border-color: #d9d9d9 !important;
+  background: #ffffff !important;
+  color: rgba(0, 0, 0, 0.88) !important;
+  box-shadow: none !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn + .text-seg-btn.ant-btn,
+#ed-ppt .ppt-video-config-panel #panelElement .text-seg-btn.ant-btn + .text-seg-btn.ant-btn {
+  border-left: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .toggle-switch,
+#ed-ppt .ppt-video-config-panel #panelElement .toggle-switch {
+  background: #d9d9d9 !important;
+  border: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .toggle-switch.ant-switch-checked,
+#ed-ppt .ppt-text-config-panel #panelElement .toggle-switch.ant-switch-checked:hover,
+#ed-ppt .ppt-video-config-panel #panelElement .toggle-switch.ant-switch-checked,
+#ed-ppt .ppt-video-config-panel #panelElement .toggle-switch.ant-switch-checked:hover {
+  background: #1677ff !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap,
+#ed-ppt .ppt-video-config-panel #panelElement .text-hex-wrap {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap .ant-input,
+#ed-ppt .ppt-video-config-panel #panelElement .text-hex-wrap .ant-input {
+  border-color: #d9d9d9 !important;
+}
+
+/* Final text input reset to AntD defaults. */
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input.video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input-number.video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .text-content-area.ant-input,
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap .ant-input {
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select .ant-select-selector {
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .video-input-wrap .video-input-unit {
+  color: #8a94a4 !important;
+}
+
+/* EOF text control lock. */
+#ed-ppt .ppt-text-config-panel #panelElement .text-control-row {
+  grid-template-columns: 60px 60px minmax(0, 1fr) !important;
+  gap: 6px !important;
+  margin-bottom: 10px !important;
+  align-items: center !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-control-row > * {
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-button-group {
+  width: 60px !important;
+  min-width: 60px !important;
+  height: 28px !important;
+  display: flex !important;
+  overflow: hidden !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 28px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  color: #8a94a4 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn + .text-seg-btn.ant-btn {
+  border-left: 1px solid #d6dce5 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap.text-color-compact {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap.text-color-compact .ant-input {
+  font-size: 12px !important;
+}
+
+/* Final text control row lock at EOF. */
+#ed-ppt .ppt-text-config-panel #panelElement .text-control-row {
+  grid-template-columns: 76px 76px minmax(0, 1fr) !important;
+  gap: 8px !important;
+  margin-bottom: 12px !important;
+  align-items: center !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-control-row > * {
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-button-group {
+  width: 76px !important;
+  min-width: 76px !important;
+  height: 30px !important;
+  display: flex !important;
+  overflow: hidden !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  height: 30px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  color: #8a94a4 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn + .text-seg-btn.ant-btn {
+  border-left: 1px solid #d6dce5 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap.text-color-compact {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap.text-color-compact .ant-input {
+  font-size: 12px !important;
+}
+
+/* Final text-panel control lock. These overrides must remain at EOF. */
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-body {
+  padding: 16px 16px 22px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-group {
+  margin-bottom: 12px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-label {
+  margin-bottom: 6px !important;
+  color: #253142 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  line-height: 17px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-dim-grid {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-style-row {
+  grid-template-columns: minmax(0, 1fr) 78px !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+  align-items: end !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select {
+  height: 36px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select .ant-select-selector {
+  height: 36px !important;
+  padding: 0 10px !important;
+  border: 1.5px solid #253142 !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  background: #ffffff !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select .ant-select-selection-item,
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select .ant-select-selection-placeholder {
+  line-height: 34px !important;
+  color: #253142 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-font-select .ant-select-arrow {
+  color: #8a94a4 !important;
+  inset-inline-end: 10px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input.video-form-input,
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input-number.video-form-input {
+  height: 36px !important;
+  border: 1.5px solid #253142 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  color: #253142 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input-number-input {
+  height: 34px !important;
+  padding: 0 16px 0 10px !important;
+  color: #253142 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .video-input-unit {
+  right: 6px !important;
+  color: #8a94a4 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-control-row {
+  grid-template-columns: 82px 82px minmax(0, 1fr) !important;
+  gap: 10px !important;
+  margin-bottom: 12px !important;
+  align-items: center !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-control-row > * {
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-button-group {
+  height: 30px !important;
+  border: 1.5px solid #253142 !important;
+  border-radius: 6px !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  overflow: hidden !important;
+  background: #ffffff !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn {
+  height: 30px !important;
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  border: 0 !important;
+  border-right: 0 !important;
+  border-radius: 0 !important;
+  background: #ffffff !important;
+  color: #8a94a4 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn + .text-seg-btn.ant-btn {
+  border-left: 1.5px solid #d6dce5 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn.on {
+  background: #ede9e3 !important;
+  color: #253142 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-seg-btn.ant-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap {
+  height: 30px !important;
+  border: 1.5px solid #253142 !important;
+  border-radius: 6px !important;
+  background: #ffffff !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  padding: 0 8px !important;
+  box-sizing: border-box !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-color-compact {
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap span {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex: 0 0 20px;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-hex-wrap .ant-input {
+  height: 26px !important;
+  border: 0 !important;
+  padding: 0 !important;
+  color: #647084 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-stroke-row {
+  grid-template-columns: minmax(0, 1fr) 78px !important;
+  gap: 10px !important;
+  margin-bottom: 14px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-stroke-row > * {
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-stroke-row .text-hex-wrap {
+  height: 36px !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-dim-grid .video-input-wrap,
+#ed-ppt .ppt-text-config-panel #panelElement .text-stroke-row .video-input-wrap {
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .ant-input-number-input-wrap {
+  min-width: 0 !important;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .text-content-area.ant-input {
+  height: 112px !important;
+  min-height: 112px !important;
+  padding: 10px 12px !important;
+  border: 1.5px solid #253142 !important;
+  border-radius: 6px !important;
+  color: #253142 !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  resize: none !important;
+  box-shadow: none !important;
+}
+
+/* Final selected-text panel lock. */
+#ed-ppt .ppt-text-config-panel #panelElement .element-panel-head {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement #panelElementTitle {
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-text-config-panel #panelElement .video-form-body {
+  padding: 17px 16px 24px;
+}
+
+/* Final selected-video header/button lock. Keep this block at EOF. */
+#ed-ppt .ppt-video-config-panel #panelElement .element-panel-head {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement #panelElementTitle {
+  flex: 1;
+  min-width: 0;
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .element-panel-close {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8a94a4;
+  box-shadow: none;
+  padding: 0;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-form-body,
+#ed-ppt .ppt-video-config-panel #panelElement .video-action-row {
+  overflow: visible;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn {
+  border: 2px solid #ff705d !important;
+  background: #ffffff !important;
+  color: #ff705d !important;
+  box-shadow: 3px 3px 0 #ff705d !important;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:focus,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:active,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:focus,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:active {
+  border-color: #ff705d !important;
+  background: #ffffff !important;
+  color: #ff705d !important;
+  box-shadow: 3px 3px 0 #ff705d !important;
+}
+
+/* Last-mile selected video button override; keep after all restored panel rules. */
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn {
+  border: 2px solid #ff705d;
+  background: #ffffff;
+  color: #ff705d;
+  box-shadow: 3px 3px 0 #ff705d;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:focus,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:focus {
+  border-color: #ff705d;
+  background: #ffffff;
+  color: #ff705d;
+  box-shadow: 3px 3px 0 #ff705d;
+}
+
+/* Final selected-video panel overrides. These must stay after legacy panel rules. */
+#ed-ppt .ppt-video-config-panel #panelElement .video-form-group > .video-form-label {
+  margin-bottom: 8px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-size-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-input-wrap .ant-input-number.video-form-input {
+  width: 100%;
+  padding: 0;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-input-wrap .ant-input-number-input-wrap {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-input-wrap .ant-input-number-input {
+  width: 100%;
+  height: 34px;
+  box-sizing: border-box;
+  padding: 0 18px 0 8px;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: left;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-input-wrap .video-input-unit {
+  right: 6px;
+  color: #8a94a4;
+  pointer-events: none;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .ant-switch.toggle-switch.ant-switch-checked,
+#ed-ppt .ppt-video-config-panel #panelElement .ant-switch.toggle-switch.ant-switch-checked:hover {
+  background: #ff705d;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .ant-switch.toggle-switch.ant-switch-checked .ant-switch-handle {
+  inset-inline-start: calc(100% - 20px);
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn {
+  border: 2px solid #ff705d;
+  background: #ffffff;
+  color: #ff705d;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:focus {
+  border-color: #ff705d;
+  background: #ffffff;
+  color: #ff705d;
+}
+
+/* Layout safety: keep the right editing panel visible on every viewport. */
+#ed-ppt.ppt-courseware {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+#ed-ppt.ppt-courseware .ppt-left {
+  flex: 0 0 267px;
+  width: 267px;
+  min-width: 267px;
+  max-width: 267px;
+}
+
+#ed-ppt.ppt-courseware .ppt-canvas {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  overflow: hidden;
+}
+
+#ed-ppt.ppt-courseware .ppt-right,
+#ed-ppt.ppt-courseware .ppt-generate-panel.gp {
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+}
+
+/* Right canvas/layer panel restored from Container (2).png, 320x919. */
+#ed-ppt .ppt-right-canvas-panel {
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  background: #ffffff;
+  border-left: 1px solid #e2ded7;
+  color: #253142;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-right-head {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 18px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-right-body {
+  padding: 17px 16px 24px;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-right-body section {
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-panel-label {
+  margin: 0 0 9px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+  text-transform: none;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-right-body .ppt-bg-section {
+  margin-bottom: 30px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-card {
+  width: 288px;
+  height: 48px;
+  padding: 0 12px;
+  border: 1.5px solid #c8c2b9;
+  border-radius: 6px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-title {
+  flex: 1;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row button {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid #253142;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 0;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row .swatch-0 {
+  border-color: #253142;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row .swatch-1 {
+  border-color: #253142;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row .swatch-2 {
+  border-color: #ffd5cc;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row .swatch-3 {
+  border-color: #9ecbff;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row .swatch-4 {
+  border-color: #d3b7ff;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-row button.on {
+  outline: 0;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-section .ppt-panel-label {
+  margin-bottom: 8px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-list {
+  gap: 8px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-row {
+  width: 288px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 10px 0 12px;
+  border: 1.5px solid #c8c2b9;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 4px 4px 0 #d9d6d1;
+  color: #253142;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-row.is-muted {
+  color: #98a2b3;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-icon {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 16px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-icon svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.2;
+}
+
+#ed-ppt .ppt-right-canvas-panel .type-image .ppt-layer-icon {
+  color: #8bbcff;
+}
+
+#ed-ppt .ppt-right-canvas-panel .type-video .ppt-layer-icon {
+  color: #a866e8;
+}
+
+#ed-ppt .ppt-right-canvas-panel .type-audio .ppt-layer-icon {
+  color: #54bd76;
+}
+
+#ed-ppt .ppt-right-canvas-panel .type-text .ppt-layer-icon {
+  color: #ff705d;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-row strong {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: currentColor;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-eye {
+  width: 18px;
+  height: 18px;
+  color: #8a94a4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 18px;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-layer-eye svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2.2;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-next {
+  display: none;
+}
+
+/* Selected video layer and editor panel restored from 课程详情-PPT 课件-选中视频 (1).png. */
+#ed-ppt .ppt-layer[data-layer-type="video"] {
+  overflow: visible;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="video"] .ppt-video-layer {
+  border-radius: 0;
+  background-image: url("./课程详情-PPT 课件-选中视频 (1).png");
+  background-size: 288%;
+  background-position: 56.55% 47.18%;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="video"] .ppt-video-layer .ppt-demo-scene {
+  display: none;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="video"] .ppt-video-play {
+  width: 42px;
+  height: 42px;
+  background: #253142;
+  border: 2px solid #ffffff;
+  color: #ffffff;
+  font-size: 18px;
+  padding-left: 3px;
+}
+
+#ed-ppt .ppt-layer[data-layer-type="video"] .ppt-video-duration {
+  right: 9px;
+  bottom: 8px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(37, 49, 66, 0.85);
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-layer.sel .ppt-layer-frame {
+  inset: -2px;
+  border: 2px solid #253142;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-layer.sel .ppt-resize-handle {
+  width: 8px;
+  height: 8px;
+  border: 2px solid #253142;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.nw { left: -6px; top: -6px; }
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.n { top: -6px; }
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.ne { right: -6px; top: -6px; }
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.e { right: -6px; }
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.se { right: -6px; bottom: -6px; }
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.s { bottom: -6px; }
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.sw { left: -6px; bottom: -6px; }
+#ed-ppt .ppt-layer.sel .ppt-resize-handle.w { left: -6px; }
+
+#ed-ppt .ppt-layer.sel .ppt-rotate-handle {
+  display: none;
+}
+
+#ed-ppt .ppt-layer-actions {
+  top: -38px;
+  right: 0;
+  gap: 0;
+  height: 30px;
+  border-radius: 4px;
+  background: #ff705d;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-layer-actions button {
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 0;
+  background: #ff705d;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-layer-actions button:last-child {
+  color: #ffffff;
+  border: 0;
+}
+
+#ed-ppt .ppt-video-config-panel {
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+  background: #ffffff;
+  border-left: 1px solid #e2ded7;
+  color: #253142;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement {
+  height: 100%;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-video-config-panel .element-panel-head {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElementTitle {
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-video-config-panel .element-panel-close {
+  width: 24px;
+  height: 24px;
+  color: #8a94a4;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-video-config-panel .video-form-body {
+  padding: 16px;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-video-config-panel .video-form-group {
+  margin-bottom: 14px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-form-label {
+  margin-bottom: 7px;
+  color: #253142;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 17px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-form-input {
+  height: 36px;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+#ed-ppt .ppt-video-config-panel .ant-input.video-form-input {
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-video-config-panel .ant-input-number.video-form-input {
+  width: 100%;
+  padding: 0;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-video-config-panel .ant-input-number.video-form-input .ant-input-number-input-wrap,
+#ed-ppt .ppt-video-config-panel .ant-input-number.video-form-input .ant-input-number-input {
+  height: 100%;
+}
+
+#ed-ppt .ppt-video-config-panel .ant-input-number.video-form-input .ant-input-number-input {
+  padding: 0 22px 0 8px;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+#ed-ppt .ppt-video-config-panel .video-size-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-size-grid .video-form-label {
+  margin-bottom: 7px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-input-wrap .video-form-input {
+  padding-right: 0;
+}
+
+#ed-ppt .ppt-video-config-panel .video-input-unit {
+  right: 7px;
+  color: #8a94a4;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+#ed-ppt .ppt-video-config-panel .video-metric-card {
+  border: 1.5px solid #c8c2b9;
+  border-radius: 6px;
+  background: #fffdf9;
+  padding: 10px 12px 12px;
+  margin-bottom: 18px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-meta-row {
+  min-height: 26px;
+  padding: 0;
+  border: 0;
+  align-items: center;
+  font-size: 13px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-meta-row .k {
+  color: #8a94a4;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-video-config-panel .video-meta-row .v {
+  color: #253142;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 11px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stat-box {
+  height: 59px;
+  border: 1.5px solid #c8c2b9;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stat-box span {
+  color: #8a94a4;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stat-box strong {
+  color: #253142;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-video-config-panel .video-toggle-row {
+  min-height: 34px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-video-config-panel .toggle-switch {
+  width: 42px;
+  height: 22px;
+  background: #d9dde3;
+  min-width: 42px;
+  border: 0;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-video-config-panel .toggle-switch .ant-switch-handle {
+  width: 18px;
+  height: 18px;
+  top: 2px;
+  inset-inline-start: 2px;
+}
+
+#ed-ppt .ppt-video-config-panel .toggle-switch .ant-switch-handle::before {
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-video-config-panel .toggle-switch i {
+  width: 18px;
+  height: 18px;
+}
+
+#ed-ppt .ppt-video-config-panel .toggle-switch.ant-switch-checked {
+  background: #ff705d;
+}
+
+#ed-ppt .ppt-video-config-panel .toggle-switch.ant-switch-checked .ant-switch-handle {
+  inset-inline-start: calc(100% - 20px);
+}
+
+#ed-ppt .ppt-video-config-panel .video-action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-panel-btn {
+  height: 38px;
+  min-height: 38px;
+  border: 2px solid #253142;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: 3px 3px 0 #253142;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-video-config-panel .video-panel-btn.ant-btn {
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate {
+  border: 2px solid #ff705d;
+  background: #ffffff;
+  color: #ff705d;
+  box-shadow: 3px 3px 0 #ff705d;
+}
+
+/* Final AntD control corrections for selected-video panel. */
+#ed-ppt .ppt-video-config-panel .video-form-group > .video-form-label {
+  margin-bottom: 8px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-size-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+#ed-ppt .ppt-video-config-panel .video-input-wrap .ant-input-number.video-form-input {
+  width: 100%;
+  padding: 0;
+}
+
+#ed-ppt .ppt-video-config-panel .video-input-wrap .ant-input-number-input-wrap {
+  width: 100%;
+}
+
+#ed-ppt .ppt-video-config-panel .video-input-wrap .ant-input-number-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 16px 0 8px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-input-wrap .video-input-unit {
+  right: 6px;
+  pointer-events: none;
+}
+
+#ed-ppt .ppt-video-config-panel .ant-switch.toggle-switch.ant-switch-checked,
+#ed-ppt .ppt-video-config-panel .ant-switch.toggle-switch.ant-switch-checked:hover {
+  background: #ff705d;
+}
+
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn {
+  border: 2px solid #ff705d;
+  background: #ffffff;
+  color: #ff705d;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:focus {
+  border-color: #ff705d;
+  background: #ffffff;
+  color: #ff705d;
+}
+
+/* Center PPT canvas restored from 课程详情-PPT 课件-未选中元素@2x.png. */
+#ed-ppt .ppt-canvas {
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  background: #f2f1ed;
+}
+
+#ed-ppt .ppt-right,
+#ed-ppt .ppt-generate-panel.gp {
+  flex: 0 0 320px;
+  width: 320px;
+  min-width: 320px;
+  max-width: 320px;
+}
+
+#ed-ppt .ppt-canvas-bar {
+  height: 48px;
+  min-height: 48px;
+  min-width: 0;
+  padding: 0 28px 0 34px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2ded7;
+  gap: 16px;
+}
+
+#ed-ppt .ppt-canvas-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #8a94a4;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+  letter-spacing: 0;
+}
+
+#ed-ppt .ppt-canvas-info strong {
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-canvas-info b {
+  color: #ff705d;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-canvas-info span {
+  width: 17px;
+}
+
+#ed-ppt .ppt-tool-group {
+  margin-left: auto;
+  flex: 0 0 auto;
+  gap: 9px;
+}
+
+#ed-ppt .ppt-tool-group button {
+  width: 36px;
+  height: 36px;
+  border: 2px solid #253142;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: 3px 3px 0 #253142;
+}
+
+#ed-ppt .ppt-tool-group button svg {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.4;
+}
+
+#ed-ppt .ppt-tool-group button:hover,
+#ed-ppt .ppt-tool-group button.on {
+  border-color: #253142;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 #253142;
+}
+
+#ed-ppt .ppt-canvas-scroll {
+  min-width: 0;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(64px, 6.1vw, 120px) 32px 96px;
+  background: #f2f1ed;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-slide {
+  width: min(1236px, calc((100% - 64px) / 0.68));
+  min-width: 0;
+  height: auto;
+  max-width: none;
+  aspect-ratio: 1236 / 685;
+  border: 0;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(37, 49, 66, 0.12);
+  overflow: hidden;
+  transform-origin: top center;
+}
+
+#ed-ppt .ppt-empty {
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+
+#ed-ppt .ppt-canvas-design-image {
+  position: absolute;
+  left: 25.24%;
+  top: 15.33%;
+  width: 48.81%;
+  height: 42.49%;
+  background-image: url("./课程详情-PPT 课件-选中视频.png");
+  background-size: 421.463% 337.801%;
+  background-position: 56.553% 46.821%;
+  background-repeat: no-repeat;
+}
+
+#ed-ppt .ppt-zoom-bar {
+  left: 50%;
+  bottom: 120px;
+  min-height: 42px;
+  height: 42px;
+  min-width: 170px;
+  gap: 13px;
+  padding: 0 16px;
+  border: 2px solid #253142;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 #253142;
+}
+
+#ed-ppt .ppt-zoom-bar button {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #8a94a4;
+  padding: 0;
+}
+
+#ed-ppt .ppt-zoom-bar button svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.5;
+}
+
+#ed-ppt .ppt-zoom-bar span {
+  min-width: 37px;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-zoom-bar button:last-child {
+  position: relative;
+  margin-left: 5px;
+}
+
+#ed-ppt .ppt-zoom-bar button:last-child::before {
+  content: "";
+  position: absolute;
+  left: -13px;
+  top: 0;
+  width: 1px;
+  height: 20px;
+  background: #e2e6ee;
+}
+
+/* Final PPT outline pass based on Container (1).png, 267x919. */
+#ed-ppt.ppt-courseware .ppt-left {
+  flex: 0 0 267px;
+  width: 267px;
+  min-width: 267px;
+  background: #ffffff;
+  border-right: 1px solid #e2ded7;
+}
+
+#ed-ppt .ppt-left-head {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-left-scroll {
+  padding: 18px 16px 32px;
+  background: #ffffff;
+  scrollbar-width: none;
+}
+
+#ed-ppt .ppt-phase {
+  margin: 0 0 24px;
+}
+
+#ed-ppt .ppt-phase-header {
+  height: 19px;
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+#ed-ppt .ppt-phase-dot {
+  width: 6px;
+  height: 14px;
+  border-radius: 999px;
+}
+
+#ed-ppt .ppt-phase-title {
+  color: #253142;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 19px;
+}
+
+#ed-ppt .ppt-step-list {
+  padding: 0;
+}
+
+#ed-ppt .ppt-step-container {
+  margin: 0 0 11px;
+}
+
+#ed-ppt .ppt-first-step-card,
+#ed-ppt .ppt-step-card {
+  width: 232px;
+  height: 40px;
+  min-height: 40px;
+  gap: 7px;
+  padding: 0 10px 0 12px;
+  border: 1.5px solid #d6d2ca;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: 2px 2px 0 rgba(37, 49, 66, 0.16);
+}
+
+#ed-ppt .ppt-first-step-card.active,
+#ed-ppt .ppt-step-card.active {
+  border: 2px solid var(--phase-border);
+  background: var(--phase-bg);
+  box-shadow: 3px 3px 0 var(--phase-shadow);
+}
+
+#ed-ppt .ppt-first-step-card > svg,
+#ed-ppt .ppt-step-card > svg {
+  width: 14px;
+  height: 14px;
+  color: #6b7686;
+}
+
+#ed-ppt .ppt-first-step-card.active > svg,
+#ed-ppt .ppt-step-card.active > svg {
+  color: var(--phase-color);
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-icon,
+#ed-ppt .ppt-step-card .ppt-step-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  color: #ffffff;
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-name,
+#ed-ppt .ppt-step-card .ppt-step-name {
+  color: #364153;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-first-step-card.active .ppt-step-name,
+#ed-ppt .ppt-step-card.active .ppt-step-name {
+  color: var(--phase-color);
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-count,
+#ed-ppt .ppt-step-card .ppt-step-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1.5px solid var(--phase-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--phase-color);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 19px;
+}
+
+#ed-ppt .ppt-slide-preview-wrapper {
+  margin-top: 10px;
+  padding-left: 39px;
+  position: relative;
+}
+
+#ed-ppt .ppt-slide-connector-line {
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e2ded7;
+}
+
+#ed-ppt .ppt-slide-row {
+  min-height: 127px;
+  position: relative;
+}
+
+#ed-ppt .ppt-slide-row.ppt-slide-add-row {
+  min-height: 36px;
+}
+
+#ed-ppt .ppt-slide-row.ppt-slide-add-row .ppt-slide-dot {
+  display: none;
+}
+
+#ed-ppt .ppt-slide-row .ppt-slide-number {
+  left: -39px;
+  top: 1px;
+  width: 12px;
+  height: 18px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: left;
+}
+
+#ed-ppt .ppt-slide-thumb-wrapper {
+  position: relative;
+  gap: 0;
+}
+
+#ed-ppt .ppt-slide-indicator-box {
+  position: absolute;
+  left: -35px;
+  top: 53px;
+  width: 35px;
+  gap: 0;
+  margin-top: 0;
+}
+
+#ed-ppt .ppt-slide-dot {
+  width: 8px;
+  height: 8px;
+  background: #b6beca;
+}
+
+#ed-ppt .ppt-slide-dot.active {
+  background: #253142;
+}
+
+#ed-ppt .ppt-slide-line {
+  width: 18px;
+  height: 1.5px;
+  background: #b6beca;
+}
+
+#ed-ppt .ppt-slide-thumb {
+  width: 193px;
+  height: 113px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-slide-thumb.active {
+  background: transparent;
+  box-shadow: 3px 3px 0 #253142;
+}
+
+#ed-ppt .ppt-slide-thumb::before {
+  display: none;
+}
+
+#ed-ppt .ppt-design-thumb {
+  width: 193px;
+  height: 113px;
+  border-radius: 6px;
+  background-image: url("./Container (1).png");
+  background-size: 267px 919px;
+  background-repeat: no-repeat;
+}
+
+#ed-ppt .ppt-design-thumb.thumb-0 {
+  background-position: -55px -149px;
+}
+
+#ed-ppt .ppt-design-thumb.thumb-1 {
+  background-position: -55px -276px;
+}
+
+#ed-ppt .ppt-add-slide-btn {
+  width: 193px;
+  height: 36px;
+  border: 1.5px dashed #253142;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: none;
+  padding: 0;
+}
+
+#ed-ppt .ppt-add-slide-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}
+
+#ed-ppt .ppt-step-container-inner {
+  display: block;
+}
+
+#ed-ppt .ppt-step-connector,
+#ed-ppt .ppt-add-step {
+  display: none;
+}
+
+/* Final selected-video header/button lock. Keep this block at EOF. */
+#ed-ppt .ppt-video-config-panel #panelElement .element-panel-head {
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement #panelElementTitle {
+  flex: 1;
+  min-width: 0;
+  color: #253142;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .element-panel-close {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #8a94a4;
+  box-shadow: none;
+  padding: 0;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-form-body,
+#ed-ppt .ppt-video-config-panel #panelElement .video-action-row {
+  overflow: visible;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn {
+  border: 2px solid #ff705d !important;
+  background: #ffffff !important;
+  color: #ff705d !important;
+  box-shadow: 3px 3px 0 #ff705d !important;
+}
+
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:focus,
+#ed-ppt .ppt-video-config-panel #panelElement .video-panel-btn.regenerate.ant-btn:active,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:hover,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:focus,
+#ed-ppt .ppt-video-config-panel .video-panel-btn.regenerate.ant-btn:active {
+  border-color: #ff705d !important;
+  background: #ffffff !important;
+  color: #ff705d !important;
+  box-shadow: 3px 3px 0 #ff705d !important;
 }

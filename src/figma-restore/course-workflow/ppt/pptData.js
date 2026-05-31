@@ -71,6 +71,7 @@ export function createMediaLayer(type, overrides = {}) {
 
 function createSlide(index, title) {
   const isCover = index === 0;
+  const isSelectedTextDemo = index === 1;
   return {
     id: `slide-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     title: `${title} ${index + 1}`,
@@ -91,7 +92,29 @@ function createSlide(index, title) {
           createMediaLayer('video', { x: 260, y: 148, width: 360, height: 220 }),
           createMediaLayer('audio', { x: 72, y: 340, width: 250, height: 74 }),
         ]
-      : [],
+      : isSelectedTextDemo
+        ? [
+            createTextLayer({
+              id: 'demo-selected-text-layer',
+              title: '标题文字1',
+              content: '星际信号接收站',
+              x: 320,
+              y: 202,
+              width: 300,
+              height: 46,
+              rotation: 0,
+              fontFamily: '思源黑体 (Bold)',
+              fontSize: 32,
+              fontWeight: 'bold',
+              fontStyle: 'normal',
+              textDecoration: 'none',
+              color: '#F4785E',
+              strokeColor: '#F4785E',
+              strokeWidth: 2,
+              textAlign: 'center',
+            }),
+          ]
+        : [],
   };
 }
 

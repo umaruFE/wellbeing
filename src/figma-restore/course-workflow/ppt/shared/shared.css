@@ -1,0 +1,20 @@
+/* PPT 课件模块主入口样式 */
+
+/* CSS 变量 */
+:root {
+  --ppt-ink: #253142;
+  --ppt-muted: #7c8798;
+  --ppt-line: #dedbd4;
+  --ppt-paper: #ffffff;
+  --ppt-purple: #9b63dc;
+  --ppt-blue: #3f83e8;
+  --ppt-green: #4caf72;
+  --ppt-coral: #ff705d;
+}
+
+/* 导入各模块样式 */
+@import './shared/shared.css';
+@import './outline/outline.css';
+@import './canvas/canvas.css';
+@import './rightPanel/rightPanel.css';
+@import './assetPanel/assetPanel.css';

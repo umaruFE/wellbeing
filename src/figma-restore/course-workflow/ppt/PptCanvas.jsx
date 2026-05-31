@@ -1,5 +1,5 @@
 import React from 'react';
-import { Copy, Image, Maximize2, Minus, Music, Plus, RotateCw, Trash2, Type, Video } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Image, Maximize2, Minus, Music, Plus, RotateCw, Trash2, Type, Video } from 'lucide-react';
 import { PptDemoScene } from './PptDemoScene';
 
 const SLIDE_WIDTH = 940;
@@ -17,6 +17,7 @@ function LayerContent({ layer }) {
         className="ppt-layer-text"
         style={{
           fontSize: layer.fontSize,
+          fontFamily: layer.fontFamily,
           fontWeight: layer.fontWeight,
           fontStyle: layer.fontStyle,
           textDecoration: layer.textDecoration,
@@ -220,7 +221,7 @@ export function PptCanvas({
         >
           {(!slide?.layers || slide.layers.length === 0) && (
             <div className="ppt-empty">
-              <PptDemoScene />
+              <div className="ppt-canvas-design-image" aria-hidden="true" />
             </div>
           )}
 
@@ -262,6 +263,12 @@ export function PptCanvas({
                       <RotateCw size={12} />
                     </button>
                     <div className="ppt-layer-actions">
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title="上移">
+                        <ArrowUp size={13} />
+                      </button>
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title="下移">
+                        <ArrowDown size={13} />
+                      </button>
                       <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDuplicateLayer} title="复制">
                         <Copy size={13} />
                       </button>

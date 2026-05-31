@@ -10,12 +10,16 @@ export function PptCoursewareView({ onNext, initialCourseData }) {
   const [course, setCourse] = React.useState(() => buildInitialPptCourse(initialCourseData));
   const firstPhase = course[0];
   const firstStep = firstPhase?.steps[0];
-  const firstSlide = firstStep?.slides[0];
+  const firstSlide = firstStep?.slides[1] || firstStep?.slides[0];
 
   const [activePhaseKey, setActivePhaseKey] = React.useState(firstPhase?.key || 'engage');
   const [activeStepId, setActiveStepId] = React.useState(firstStep?.id || null);
   const [activeSlideId, setActiveSlideId] = React.useState(firstSlide?.id || null);
-  const [selectedLayerId, setSelectedLayerId] = React.useState(null);
+  const [selectedLayerId, setSelectedLayerId] = React.useState(
+    firstSlide?.layers?.find((layer) => layer.type === 'text')?.id
+      || firstSlide?.layers?.find((layer) => layer.type === 'video')?.id
+      || null
+  );
   const [assetPanelType, setAssetPanelType] = React.useState(null);
 
   const { step, slide } = findActiveSlide(course, activePhaseKey, activeStepId, activeSlideId);
