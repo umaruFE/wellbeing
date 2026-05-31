@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       phaseKey,
+      stepId,
       title,
       age,
       duration,
@@ -28,6 +29,8 @@ export async function POST(request: NextRequest) {
       requirements,
       existingStepCount,
       currentSteps,
+      currentStep,
+      siblingSteps,
       otherPhases,
       insertIndex,
       prevStep,
@@ -36,7 +39,9 @@ export async function POST(request: NextRequest) {
       organizationId
     } = body;
 
-    console.log('[generate-step] 收到请求:', { phaseKey, title, existingStepCount });
+    const isRegenerate = !!stepId;
+
+    console.log('[generate-step] 收到请求:', { phaseKey, title, mode: isRegenerate ? 'regenerate' : 'generate', stepId });
 
     if (!phaseKey || !title) {
       return NextResponse.json(
@@ -53,30 +58,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const n8nPayload = {
-      phaseKey,
-      title,
-      age: age || '7-9岁',
-      duration: duration || '60分钟',
-      scale: scale || '≤ 8人',
-      vocabulary: vocabulary || [],
-      grammar: grammar || [],
-      theme: theme || '',
-      requirements: requirements || '',
-      existingStepCount: existingStepCount || 0,
-      currentSteps: currentSteps || [],
-      otherPhases: otherPhases || null,
-      insertIndex: insertIndex != null ? insertIndex : (existingStepCount || 0),
-      prevStep: prevStep || null,
-      nextStep: nextStep || null,
-      userId,
-      organizationId,
-      timestamp: Date.now()
-    };
+    let workflowName: string;
+    let n8nPayload: Record<string, unknown>;
 
-    console.log('[generate-step] 调用 N8N:', { workflow: 'course-step-generator', phaseKey });
+    if (isRegenerate) {
+      workflowName = 'course-step-regenerator';
+      n8nPayload = {
+        phaseKey,
+        stepId,
+        title,
+        age: age || '7-9岁',
+        duration: duration || '60分钟',
+        scale: scale || '≤ 8人',
+        vocabulary: vocabulary || [],
+        grammar: grammar || [],
+        theme: theme || '',
+        requirements: requirements || '',
+        currentStep: currentStep || null,
+        siblingSteps: siblingSteps || [],
+        otherPhases: otherPhases || null,
+        userId,
+        organizationId,
+        timestamp: Date.now()
+      };
+    } else {
+      workflowName = 'course-step-generator';
+      n8nPayload = {
+        phaseKey,
+        title,
+        age: age || '7-9岁',
+        duration: duration || '60分钟',
+        scale: scale || '≤ 8人',
+        vocabulary: vocabulary || [],
+        grammar: grammar || [],
+        theme: theme || '',
+        requirements: requirements || '',
+        existingStepCount: existingStepCount || 0,
+        currentSteps: currentSteps || [],
+        otherPhases: otherPhases || null,
+        insertIndex: insertIndex != null ? insertIndex : (existingStepCount || 0),
+        prevStep: prevStep || null,
+        nextStep: nextStep || null,
+        userId,
+        organizationId,
+        timestamp: Date.now()
+      };
+    }
 
-    const result = await n8nClient.call('course-step-generator', n8nPayload, { timeout: 300000 });
+    console.log('[generate-step] 调用 N8N:', { workflow: workflowName, phaseKey });
+
+    const result = await n8nClient.call(workflowName, n8nPayload, { timeout: 300000 });
 
     console.log('[generate-step] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
 
@@ -116,8 +147,9 @@ export async function POST(request: NextRequest) {
         success: true,
         data: {
           phaseKey,
+          ...(isRegenerate ? { stepId } : {}),
           step,
-          message: '新环节生成完成'
+          message: isRegenerate ? '步骤重新生成完成' : '新环节生成完成'
         }
       }, { headers: corsHeaders() });
     }

@@ -22,6 +22,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { AdjustStepModal } from './lesson-design/AdjustStepModal';
 import { EditStepModal } from './lesson-design/EditStepModal';
 import { StepCardActions } from './lesson-design/StepCardActions';
@@ -135,14 +136,25 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [adjustTarget, setAdjustTarget] = React.useState(null);
   const [adjustText, setAdjustText] = React.useState('');
   const [adjustChips, setAdjustChips] = React.useState([]);
+  const [adjustLoading, setAdjustLoading] = React.useState(false);
   const [addOpen, setAddOpen] = React.useState(false);
   const [addPhase, setAddPhase] = React.useState(null);
+  const [regenTarget, setRegenTarget] = React.useState(null);
   const [genMode, setGenMode] = React.useState('ai');
   const [selectedClassic, setSelectedClassic] = React.useState(null);
   const [ideaText, setIdeaText] = React.useState('');
   const [regenPhase, setRegenPhase] = React.useState(null);
+  const [regenPhaseConfirm, setRegenPhaseConfirm] = React.useState(null);
   const [regenStep, setRegenStep] = React.useState(null);
   const [addingStep, setAddingStep] = React.useState(null);
+  const [generateDraftLoading, setGenerateDraftLoading] = React.useState(false);
+  const [savedSteps, setSavedSteps] = React.useState(() => {
+    try { return JSON.parse(localStorage.getItem('saved-wellbeing-steps') || '[]'); }
+    catch { return []; }
+  });
+  const [toast, setToast] = React.useState('');
+
+  const { user } = useAuth();
 
   const generateCalledRef = React.useRef(false);
 
@@ -222,9 +234,51 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     generateLesson();
   }, []);
 
-  const updateData = (next) => {
-    setData(next);
-    onPhasesChange?.(next);
+  const updateData = async (next) => {
+    const phaseKeyMap = { eng: 'engage', emp: 'empower', exc: 'execute', elv: 'elevate' };
+
+    const updated = next.map((phase) => {
+      const totalMin = phase.steps.reduce((acc, s) => {
+        const m = (s.duration || '').match(/(\d+)/);
+        return acc + (m ? parseInt(m[1]) : 0);
+      }, 0);
+      return {
+        ...phase,
+        duration: totalMin > 0 ? `${totalMin} 分钟` : phase.duration,
+      };
+    });
+
+    setData(updated);
+    onPhasesChange?.(updated);
+
+    if (course?.id && !String(course.id).startsWith('created-')) {
+      try {
+        const courseData = {};
+        updated.forEach((phase) => {
+          courseData[phaseKeyMap[phase.key]] = {
+            title: phase.title,
+            steps: phase.steps.map((s) => ({
+              id: s.id,
+              title: s.title,
+              time: s.duration,
+              objective: s.goal,
+              activity: s.activity,
+              activitySteps: s.flow,
+              scenario: s.scenario,
+              script: s.teacherScript,
+            })),
+          };
+        });
+        await apiService.updateCourse(course.id, { courseData });
+      } catch (err) {
+        console.warn('自动保存教案失败:', err);
+      }
+    }
+  };
+
+  const toastMessage = (text) => {
+    setToast(text);
+    setTimeout(() => setToast(''), 2000);
   };
 
   const toggleCard = (cardKey) => {
@@ -256,12 +310,26 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setMenuKey(null);
   };
 
-  const openAddStep = (phase) => {
+  const openAddStep = (phase, step) => {
     setAddPhase(phase);
     setGenMode('ai');
     setSelectedClassic(null);
     setIdeaText('');
-    addForm.setFieldsValue(defaultDraft);
+    if (step) {
+      const timeMatch = String(step.duration || '').match(/(\d+)/);
+      setRegenTarget({ phaseKey: phase.key, step });
+      addForm.setFieldsValue({
+        title: step.title || '',
+        time: timeMatch ? parseInt(timeMatch[1]) : 8,
+        goal: step.goal || '',
+        activity: step.activity || '',
+        resources: step.resources || '',
+        scenario: step.scenario || '',
+      });
+    } else {
+      setRegenTarget(null);
+      addForm.setFieldsValue(defaultDraft);
+    }
     setAddOpen(true);
   };
 
@@ -307,6 +375,121 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     });
   };
 
+  const parseFlowStepsForForm = (flow, teacherScript) => {
+    const flowLines = (flow || '').split('\n').filter(Boolean);
+    const scriptLines = (teacherScript || '').split('\n').filter(Boolean);
+
+    const distributeScript = scriptLines.length <= 1 && teacherScript;
+    const scriptChunks = distributeScript
+      ? chunkArray(teacherScript.split(/[。！？]+/).filter((s) => s.trim()), Math.max(1, flowLines.length || defaultFlowSteps.length))
+      : [];
+
+    const defaultCues = [
+      '用神秘、轻声的语气开场，展示关键道具或画面，引发学生好奇心。',
+      '朗读或展示核心内容，放慢语速，配合表情和手势帮助理解。',
+      '引导学生观察、体会角色感受，用面部表情或肢体模仿情绪。',
+      '明确任务身份和最终挑战，推动学生进入下一环节。',
+    ];
+
+    const steps = flowLines.map((line, i) => {
+      const colonIndex = line.indexOf('：');
+      const title = colonIndex > -1 ? line.slice(0, colonIndex) : line;
+      const desc = colonIndex > -1 ? line.slice(colonIndex + 1) : '';
+      let teacher = '';
+      let cue = '';
+
+      if (distributeScript) {
+        teacher = scriptChunks[i].length > 0 ? scriptChunks[i].join('。') + '。' : '';
+        cue = defaultCues[i] || '';
+      } else if (scriptLines[i]) {
+        const cueMatch = scriptLines[i].match(/【动作\/引导】(.*)$/);
+        if (cueMatch) {
+          cue = cueMatch[1].trim();
+          teacher = scriptLines[i].replace(/【动作\/引导】.*$/, '').trim();
+        } else {
+          teacher = scriptLines[i].trim();
+          cue = defaultCues[i] || '';
+        }
+      }
+
+      return { title, desc, teacher, cue };
+    });
+
+    if (steps.length > 0) return steps;
+
+    return defaultFlowSteps.map((s, i) => ({
+      title: s.title,
+      desc: s.desc,
+      teacher: scriptChunks[i] && scriptChunks[i].length > 0 ? scriptChunks[i].join('。') + '。' : '',
+      cue: s.cue,
+    }));
+  };
+
+  const chunkArray = (arr, count) => {
+    const size = Math.max(1, Math.ceil(arr.length / count));
+    return Array.from({ length: count }, (_, i) => arr.slice(i * size, (i + 1) * size));
+  };
+
+  const handleGenerateDraft = async (isClassic = false) => {
+    const phase = addPhase;
+    if (!phase) return;
+
+    setGenerateDraftLoading(true);
+    try {
+      const targetPhase = data.find((p) => p.key === phase.key);
+      const currentSteps = targetPhase?.steps || [];
+
+      const otherPhases = {};
+      data.forEach((p) => {
+        if (p.key !== phase.key) {
+          otherPhases[longPhaseKey(p.key)] = { title: p.title, steps: p.steps };
+        }
+      });
+
+      const response = await fetch('/api/ai/generate-step', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          phaseKey: longPhaseKey(phase.key),
+          stepId: `${longPhaseKey(phase.key)}-draft`,
+          title: course?.courseTitle || course?.title || '',
+          age: course?.ageGroup || course?.age || '7-9岁',
+          duration: course?.duration || '60分钟',
+          scale: course?.classSize || '',
+          vocabulary: course?.vocabularies || course?.keywords || [],
+          grammar: course?.grammars || [],
+          theme: course?.theme || '',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
+          requirements: isClassic ? `经典活动：${selectedClassic}` : (ideaText || ''),
+          currentStep: null,
+          siblingSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration })),
+          otherPhases,
+        }),
+      });
+      const result = await response.json();
+
+      if (result.success && result.data?.step) {
+        const step = normalizeStep(result.data.step);
+        const timeMatch = String(step.duration || '').match(/(\d+)/);
+
+        addForm.setFieldsValue({
+          title: step.title || '',
+          time: timeMatch ? parseInt(timeMatch[1]) : 8,
+          goal: step.goal || '',
+          activity: step.activity || '',
+          flowSteps: parseFlowStepsForForm(step.flow, step.teacherScript),
+          resources: step.resources || '',
+          scenario: step.scenario || '',
+        });
+      }
+    } catch (err) {
+      console.error('生成草案失败:', err);
+    } finally {
+      setGenerateDraftLoading(false);
+    }
+  };
+
   const addDraftStep = async () => {
     const values = await addForm.validateFields();
     const target = addPhase || data[0];
@@ -330,13 +513,25 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       flow,
       resources: values.resources || '',
       scenario: values.scenario || '',
-      teacherScript: teacherScript || 'Let’s try this mission together. Listen, speak, and help your team.',
+      teacherScript: teacherScript || 'Let\u2019s try this mission together. Listen, speak, and help your team.',
     };
-    updateData(data.map((phase) => (
-      phase.key === target.key ? { ...phase, steps: [...phase.steps, nextStep] } : phase
-    )));
-    setOpenCards((prev) => new Set(prev).add(`${target.key}-${target.steps.length}`));
+
+    if (regenTarget) {
+      updateData(data.map((phase) => {
+        if (phase.key !== regenTarget.phaseKey) return phase;
+        return {
+          ...phase,
+          steps: phase.steps.map((s) => (s === regenTarget.step ? nextStep : s)),
+        };
+      }));
+    } else {
+      updateData(data.map((phase) => (
+        phase.key === target.key ? { ...phase, steps: [...phase.steps, nextStep] } : phase
+      )));
+      setOpenCards((prev) => new Set(prev).add(`${target.key}-${target.steps.length}`));
+    }
     setAddOpen(false);
+    setRegenTarget(null);
   };
 
   const saveEdit = (values) => {
@@ -351,19 +546,14 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setDetailTarget(null);
   };
 
-  const confirmAdjust = () => {
-    if (!adjustTarget || !adjustText.trim()) return;
-    updateData(data.map((phase) => {
-      if (phase.key !== adjustTarget.phaseKey) return phase;
-      return {
-        ...phase,
-        steps: phase.steps.map((step, index) => (
-          index === adjustTarget.stepIndex
-            ? { ...step, goal: `${step.goal}\n调整方向：${adjustText.trim()}` }
-            : step
-        )),
-      };
-    }));
+  const confirmAdjust = async () => {
+    if (!adjustTarget || !adjustText.trim() || adjustLoading) return;
+    const requirements = adjustChips.length > 0
+      ? `${adjustText.trim()}（调整方向：${adjustChips.join('、')}）`
+      : adjustText.trim();
+    setAdjustLoading(true);
+    await handleRegenerateStep(adjustTarget.phaseKey, adjustTarget.stepIndex, requirements);
+    setAdjustLoading(false);
     setAdjustTarget(null);
   };
 
@@ -387,6 +577,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           vocabulary: course?.vocabularies || course?.keywords || [],
           grammar: course?.grammars || [],
           theme: course?.theme || '',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
           currentCourseData: dataToCoursePhases(),
         }),
       });
@@ -430,6 +622,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           vocabulary: course?.vocabularies || course?.keywords || [],
           grammar: course?.grammars || [],
           theme: course?.theme || '',
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
           existingStepCount: currentSteps.length,
           currentSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration, objective: s.goal })),
           otherPhases,
@@ -455,7 +649,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     }
   };
 
-  const handleRegenerateStep = async (phaseKey, stepIndex) => {
+  const handleRegenerateStep = async (phaseKey, stepIndex, requirements = '') => {
     const phase = data.find((p) => p.key === phaseKey);
     const currentSteps = phase?.steps || [];
     const currentStep = currentSteps[stepIndex];
@@ -470,7 +664,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         }
       });
 
-      const response = await fetch('/api/ai/regenerate-step', {
+      const response = await fetch('/api/ai/generate-step', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
@@ -483,6 +677,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           vocabulary: course?.vocabularies || course?.keywords || [],
           grammar: course?.grammars || [],
           theme: course?.theme || '',
+          requirements,
+          userId: user?.id || null,
+          organizationId: user?.organizationId || null,
           currentStep: currentStep ? { id: currentStep.id, title: currentStep.title, time: currentStep.duration, objective: currentStep.goal } : null,
           siblingSteps: siblingSteps.map((s) => ({ title: s.title, time: s.duration })),
           otherPhases,
@@ -511,6 +708,79 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         : p
     ));
     setMenuKey(null);
+  };
+
+  const handleSaveStep = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    const step = phase?.steps?.[stepIndex];
+    if (!step) {
+      console.warn('[saveStep] 未找到环节:', { phaseKey, stepIndex });
+      return;
+    }
+    const record = {
+      savedAt: Date.now(),
+      title: step.title,
+      goal: step.goal,
+      activity: step.activity,
+      flow: step.flow,
+      duration: step.duration,
+      resources: step.resources,
+      scenario: step.scenario,
+      teacherScript: step.teacherScript,
+    };
+    const updated = [record, ...savedSteps.filter((s) => s.title !== record.title)];
+    setSavedSteps(updated);
+    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
+    setMenuKey(null);
+    toastMessage(`已收藏「${record.title}」`);
+  };
+
+  const handleUnsaveStep = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    const step = phase?.steps?.[stepIndex];
+    if (!step) return;
+    const updated = savedSteps.filter((s) => s.title !== step.title);
+    setSavedSteps(updated);
+    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
+    setMenuKey(null);
+    toastMessage(`已取消收藏「${step.title}」`);
+  };
+
+  const isStepSaved = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    const step = phase?.steps?.[stepIndex];
+    if (!step) return false;
+    return savedSteps.some((s) => s.title === step.title);
+  };
+
+  const handlePinStep = (phaseKey, stepIndex) => {
+    const phase = data.find((p) => p.key === phaseKey);
+    if (!phase || stepIndex <= 0) return;
+    const steps = [...phase.steps];
+    const [pinned] = steps.splice(stepIndex, 1);
+    steps.unshift(pinned);
+    updateData(data.map((p) => (p.key === phaseKey ? { ...p, steps } : p)));
+    setMenuKey(null);
+    toastMessage('已置顶到该阶段首位');
+  };
+
+  const handleSelectSavedStep = (record) => {
+    const timeMatch = (record.duration || '').match(/(\d+)/);
+    addForm.setFieldsValue({
+      title: record.title || '',
+      time: timeMatch ? parseInt(timeMatch[1]) : 8,
+      goal: record.goal || '',
+      activity: record.activity || '',
+      flowSteps: parseFlowStepsForForm(record.flow, record.teacherScript),
+      resources: record.resources || '',
+      scenario: record.scenario || '',
+    });
+  };
+
+  const handleDeleteSavedStep = (record) => {
+    const updated = savedSteps.filter((s) => s.savedAt !== record.savedAt);
+    setSavedSteps(updated);
+    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
   };
 
   const dataToCoursePhases = () => {
@@ -558,6 +828,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
   return (
     <div id="ed-tbl">
+      {toast && <div className="tbl-toast">{toast}</div>}
       <div className="tbl-inner-toolbar">
         <div className="tbl-ib-left">
           <button type="button" className="tbl-ib-btn" disabled title="撤回 (Ctrl+Z)"><RotateCcw size={14} /></button>
@@ -588,7 +859,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 </button>
                 {menuKey === `phase-${phase.key}` && (
                   <div className="step-menu-dropdown open phase-menu">
-                    <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); handleRegeneratePhase(phase.key); }}>
+                    <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); setRegenPhaseConfirm(phase.key); }}>
                       <RefreshCw size={12} />重新生成
                     </button>
                   </div>
@@ -602,7 +873,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
             <div className="tbl-steps-list">
               <div className="tbl-add-step-top">
-                <button type="button" className="tbl-add-step-btn" onClick={() => handleAddStep(phase.key)} disabled={addingStep === phase.key}>
+                <button type="button" className="tbl-add-step-btn" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
                   {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
                   {addingStep === phase.key ? '生成中...' : '添加环节'}
                 </button>
@@ -642,9 +913,13 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                             open={menuKey === cardKey}
                             onRegen={() => {
                               setMenuKey(null);
-                              handleRegenerateStep(phase.key, index);
+                              openAddStep(phase, step);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
+                            onSave={() => handleSaveStep(phase.key, index)}
+                            onUnsave={() => handleUnsaveStep(phase.key, index)}
+                            isSaved={isStepSaved(phase.key, index)}
+                            onPin={() => handlePinStep(phase.key, index)}
                             onDelete={() => handleDeleteStep(phase.key, index)}
                           />
                         )}
@@ -705,9 +980,13 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                             placement="footer"
                             onRegen={() => {
                               setMenuKey(null);
-                              handleRegenerateStep(phase.key, index);
+                              openAddStep(phase, step);
                             }}
                             onAdjust={() => openAdjust(phase.key, index, step)}
+                            onSave={() => handleSaveStep(phase.key, index)}
+                            onUnsave={() => handleUnsaveStep(phase.key, index)}
+                            isSaved={isStepSaved(phase.key, index)}
+                            onPin={() => handlePinStep(phase.key, index)}
                             onDelete={() => handleDeleteStep(phase.key, index)}
                           />
                         )}
@@ -721,17 +1000,40 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         ))}
       </div>
 
+      {regenPhaseConfirm && (
+        <div className="mo on" onMouseDown={(event) => event.target === event.currentTarget && setRegenPhaseConfirm(null)}>
+          <div className="modal" style={{ width: 'min(420px, 90vw)', background: '#fff', borderRadius: 16, border: '2px solid #253142', boxShadow: '6px 6px 0 rgba(37,49,66,.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="modal-hd">
+              <div className="modal-t">重新生成阶段</div>
+              <button type="button" className="modal-x" onClick={() => setRegenPhaseConfirm(null)}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '18px 24px' }}>
+              <p style={{ fontSize: 14, color: '#575F6E', lineHeight: 1.6 }}>
+                确定要重新生成此阶段的所有环节吗？当前阶段的内容将被 AI 重新生成并替换。
+              </p>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-cancel" onClick={() => setRegenPhaseConfirm(null)}>取消</button>
+              <button type="button" className="mo-btn-primary" onClick={() => { const pk = regenPhaseConfirm; setRegenPhaseConfirm(null); handleRegeneratePhase(pk); }}>
+                <RefreshCw size={13} />
+                确认重新生成
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {addOpen && (
-        <div className="mo on" id="mo-add-step" onMouseDown={(event) => event.target === event.currentTarget && setAddOpen(false)}>
+        <div className="mo on" id="mo-add-step" onMouseDown={(event) => event.target === event.currentTarget && (setAddOpen(false), setRegenTarget(null))}>
           <div className="modal modal-add-step">
             <div className="modal-hd">
               <div>
                 <div className="modal-t" id="addStepTitle">
-                  添加 <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
+                  {regenTarget ? '重新生成' : '添加'} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
                 </div>
                 <div id="asPhaseTag">Unit 3 · 三年级 G3</div>
               </div>
-              <button type="button" className="modal-x" onClick={() => setAddOpen(false)} aria-label="关闭"><X size={22} /></button>
+              <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); }} aria-label="关闭"><X size={22} /></button>
             </div>
 
             <div className="modal-body as-modal-body">
@@ -766,9 +1068,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                     onChange={(event) => setIdeaText(event.target.value)}
                     placeholder={'描述你想要设计的活动核心思路，AI 将生成完整活动方案\n例如：设计一个让学生通过角色扮演来练习目标句型的活动'}
                   />
-                  <button type="button" className="as-gen-btn" onClick={() => fillDraftFromIdea()}>
+                  <button type="button" className="as-gen-btn" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <Sparkles size={14} />
-                    AI 生成草案
+                    {generateDraftLoading ? '生成中...' : 'AI 生成草案'}
                   </button>
                 </div>
 
@@ -782,7 +1084,6 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                         key={activity.name}
                         onClick={() => {
                           setSelectedClassic(activity.name);
-                          fillDraftFromIdea('', activity.name);
                         }}
                       >
                         <div className="as-classic-icon">{activity.icon}</div>
@@ -793,34 +1094,50 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                   </div>
                   {selectedClassic && <div className="as-selected-hint">已选择：<strong>{selectedClassic}</strong></div>}
                   {selectedClassic && (
-                    <button type="button" className="as-gen-btn classic-gen" onClick={() => fillDraftFromIdea('', selectedClassic)}>
+                    <button type="button" className="as-gen-btn classic-gen" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
                       <Sparkles size={14} />
-                      AI 生成草案
+                      {generateDraftLoading ? '生成中...' : 'AI 生成草案'}
                     </button>
                   )}
                 </div>
 
                 <div className={`as-gen-panel ${genMode === 'mine' ? 'active' : ''}`} id="asPanel-mine">
-                  <div id="asSavedList" className="as-saved-empty">
-                    暂无收藏环节或保存的活动<br />
-                    <span>在环节卡片右上角菜单中点击「收藏此环节」存入此处</span>
-                  </div>
-                  <div id="asCurrentDraft">
-                    <div className="as-current-title">当前草案</div>
-                    <div className="as-current-summary">
-                      环节名称：<span>—</span><br />
-                      教学目标：<span>—</span>
+                  {savedSteps.length === 0 ? (
+                    <div id="asSavedList" className="as-saved-empty">
+                      暂无收藏环节或保存的活动<br />
+                      <span>在环节卡片右上角菜单中点击「收藏此环节」存入此处</span>
                     </div>
-                    <button type="button">★ 保存到我的收藏</button>
-                  </div>
+                  ) : (
+                    <div id="asSavedList" className="as-saved-list">
+                      {savedSteps.map((record) => (
+                        <div
+                          className="as-saved-item"
+                          key={record.savedAt}
+                          onClick={() => handleSelectSavedStep(record)}
+                        >
+                          <div className="as-saved-item-main">
+                            <div className="as-saved-item-title">{record.title}</div>
+                            <div className="as-saved-item-meta">{record.duration} · {record.goal?.slice(0, 50)}{(record.goal?.length || 0) > 50 ? '...' : ''}</div>
+                          </div>
+                          <button
+                            type="button"
+                            className="as-saved-item-del"
+                            onClick={(e) => { e.stopPropagation(); handleDeleteSavedStep(record); }}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="as-right-panel">
                 <div className="as-right-hd">
                   <span className="as-right-title">📝 活动草案</span>
-                  <span className={`as-right-tag ${genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
-                    {genMode === 'ai' ? '等待生成...' : genMode === 'classic' ? '等待选择...' : '选择收藏环节'}
+                  <span className={`as-right-tag ${generateDraftLoading ? 'ai' : genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
+                    {generateDraftLoading ? 'AI 生成中...' : genMode === 'ai' ? '等待生成...' : genMode === 'classic' ? '等待选择...' : '选择收藏环节'}
                   </span>
                 </div>
 
@@ -941,19 +1258,19 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 </Form>
 
                 <div className="as-right-ft">
-                  <button className="as-regen-btn" type="button" onClick={() => fillDraftFromIdea()}>
+                  <button className="as-regen-btn" type="button" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <RefreshCw size={11} />
-                    重新生成
+                    {generateDraftLoading ? '生成中...' : '重新生成'}
                   </button>
                 </div>
               </div>
             </div>
 
             <div className="modal-ft">
-              <button type="button" className="as-ft-cancel" onClick={() => setAddOpen(false)}>取消</button>
+              <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); }}>取消</button>
               <div className="as-ft-spacer" />
               <button type="button" className="as-ft-confirm" id="asConfirmBtn" onClick={addDraftStep}>
-                添加到大纲
+                {regenTarget ? '确认重新生成' : '添加到大纲'}
               </button>
             </div>
           </div>
@@ -979,6 +1296,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       />
       <AdjustStepModal
         open={!!adjustTarget}
+        loading={adjustLoading}
         value={adjustText}
         selected={adjustChips}
         onChange={setAdjustText}
@@ -992,13 +1310,16 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   );
 }
 
-function StepMenu({ open, onRegen, onAdjust, onDelete, placement }) {
+function StepMenu({ open, onRegen, onAdjust, onSave, onUnsave, isSaved, onPin, onDelete, placement }) {
   return (
     <div className={`step-menu-dropdown ${placement === 'footer' ? 'footer-menu' : ''} ${open ? 'open' : ''}`}>
       <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />重新生成</button>
       <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />调整环节</button>
-      <button type="button" className="step-menu-item"><Heart size={12} />收藏此环节</button>
-      <button type="button" className="step-menu-item"><Copy size={12} />置顶</button>
+      <button type="button" className="step-menu-item" onClick={isSaved ? onUnsave : onSave}>
+        <Heart size={12} fill={isSaved ? '#ff705f' : 'none'} />
+        {isSaved ? '取消收藏' : '收藏此环节'}
+      </button>
+      <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />置顶</button>
       <div className="step-menu-sep" />
       <button type="button" className="step-menu-item danger" onClick={onDelete}><Trash2 size={12} />删除</button>
     </div>

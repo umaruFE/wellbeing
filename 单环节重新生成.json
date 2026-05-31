@@ -1,0 +1,245 @@
+{
+  "name": "单环节重新生成",
+  "nodes": [
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"step\": {\n    \"id\": \"string\",\n    \"time\": \"string\",\n    \"title\": \"string\",\n    \"objective\": \"string\",\n    \"activity\": \"string\",\n    \"activitySteps\": \"string\",\n    \"script\": \"string\",\n    \"resources\": \"string\",\n    \"scenario\": \"string\",\n    \"assets\": [\n      {\n        \"id\": \"string\",\n        \"type\": \"string\",\n        \"title\": \"string\",\n        \"prompt\": \"string\"\n      }\n    ]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        608,
+        208
+      ],
+      "id": "20bf254b-8672-44e4-98e1-79e775b705ae",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "maxTokens": 4096
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        352,
+        208
+      ],
+      "id": "9e985fe6-3304-41f3-bb76-45f11b409304",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "30b4200f-52bf-41a7-aa20-6bd37290a6fe",
+      "name": "返回步骤JSON",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-step-regenerator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "43be07e5-633f-4e38-8f82-608e4a583ce2",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "course-step-regen-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json.body;\n\nconst phaseInfo = {\n  engage: { label: 'Engage (引入)', description: '建立情感连接与情境导入，激发好奇心和参与动机' },\n  empower: { label: 'Empower (赋能)', description: '输入语言知识与SEL技能，进行体感探索' },\n  execute: { label: 'Execute (实践)', description: '通过艺术表达完成终极产出任务，体验合作分享' },\n  elevate: { label: 'Elevate (升华)', description: '反思、内化并建立积极情绪闭环' }\n};\n\nconst phaseKey = input.phaseKey || 'engage';\nconst info = phaseInfo[phaseKey];\n\nlet currentStepStr = '无';\nif (input.currentStep) {\n  const s = input.currentStep;\n  currentStepStr = `ID: ${s.id}\\n标题: ${s.title}\\n时长: ${s.time}\\n目标: ${s.objective || ''}`;\n}\n\nlet siblingStepsStr = '无';\nif (input.siblingSteps && input.siblingSteps.length > 0) {\n  siblingStepsStr = input.siblingSteps.map((s, i) => `${i+1}. ${s.title} (${s.time})`).join('\\n');\n}\n\nlet otherPhasesStr = '无';\nif (input.otherPhases) {\n  try {\n    otherPhasesStr = typeof input.otherPhases === 'string' ? input.otherPhases : JSON.stringify(input.otherPhases, null, 2);\n  } catch (e) {\n    otherPhasesStr = '无法解析';\n  }\n}\n\nreturn {\n  age: input.age || '7-9岁',\n  duration: input.duration || '60分钟',\n  scale: input.scale || '≤ 8人',\n  title: input.title || '未命名课件',\n  vocabulary: (input.vocabulary && input.vocabulary.length > 0) \n    ? (Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : input.vocabulary)\n    : '请根据主题推荐词汇',\n  grammar: (input.grammar && input.grammar.length > 0) \n    ? (Array.isArray(input.grammar) ? input.grammar.join(', ') : input.grammar)\n    : '请根据主题推荐句型',\n  theme: input.theme || '默认主题',\n  requirements: input.requirements || input.userIdea || '',\n  classicName: input.classicName || '',\n  phaseKey: phaseKey,\n  phaseLabel: info.label,\n  phaseDescription: info.description,\n  stepId: input.stepId || '',\n  currentStep: currentStepStr,\n  siblingSteps: siblingStepsStr,\n  otherPhases: otherPhasesStr\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ad5758eb-0db1-46fa-846b-7f0ac21f76dc",
+      "name": "参数组装"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师，擅长将 SEL（社会情感学习）和 PERMA 幸福模型无缝融入英语教学。\n\n# Task\n请根据以下课程信息，为「{{ $json.phaseLabel }}」阶段重新生成一个教学步骤，替换当前步骤。新步骤必须与同阶段其他步骤以及整体叙事保持连贯。\n\n# 课程信息\n- 学生年龄：{{ $json.age }}\n- 课程时长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 课程标题：{{ $json.title }}\n- 核心词汇：{{ $json.vocabulary }}\n- 核心句型：{{ $json.grammar }}\n- 情境主题：{{ $json.theme }}\n- 特殊要求：{{ $json.requirements }}\n\n# 本阶段信息\n- 阶段名称：{{ $json.phaseLabel }}\n- 阶段定位：{{ $json.phaseDescription }}\n\n# 当前要替换的步骤\n{{ $json.currentStep }}\n\n# 同阶段其他步骤（保持叙事连贯）\n{{ $json.siblingSteps }}\n\n# 其他阶段（保持整体叙事一致）\n{{ $json.otherPhases }}\n\n# Step 字段规范\n生成的步骤必须包含以下字段：\n- `id`: 固定为 \"{{ $json.stepId }}\"\n- `time`: 具体时长，如 \"5-10分钟\"\n- `title`: 环节标题，富有想象力和故事感，与整体叙事一致\n- `objective`: 教学目标，必须同时包含语言目标和 SEL 目标\n- `activity`: 活动描述，包含具体的活动流程、师生互动方式、分组形式等\n- `activitySteps`: 结构化的课堂执行流程，按真实上课顺序拆分为4个步骤。每行格式为\"步骤名称：活动内容描述\"，用换行分隔，例如\"创设悬念：教师展示一张神秘的地图，引导学生猜测各种水果。\\n朗读来信：教师朗读水果的英文名称，让学生跟读。\\n情绪感知：教师让学生通过面部表情表现对不同水果的感受。\\n发布任务：分组完成任务，并展示成果。\"\n- `script`: 教师讲稿，亲切、有感染力，符合7-9岁儿童心理特征，中英文穿插（讲稿主体为中文，指令性语言带英文），必须包含情境创设内容\n- `resources`: 教学资源清单，用顿号或逗号分隔，例如\"任务卡、图片卡、计时器、奖励贴纸\"\n- `scenario`: 简短的情境创设描述（一句话），例如\"教室变为神秘的森林入口，学生以探险队身份迎接任务挑战。\"\n- `assets`: 教学资源数组，包含 1 个资源：`{ \"id\": \"asset-{{ $json.stepId }}\", \"type\": \"image\", \"title\": \"资源名称\", \"prompt\": \"生图提示词\" }`\n- `assets[].prompt` 必须严格遵守：扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字\n\n# Style Requirements\n- 教师讲稿：亲切、富有感染力，中英文穿插\n- 生图提示词：严格遵守扁平矢量插画的特定美学风格\n\n# Output Constraint（严格遵守！少一个字段都会导致前端报错）\n你必须输出一个完整的 JSON 对象，包含以下全部字段，缺一不可：\n{\n  \"step\": {\n    \"id\": \"{{ $json.stepId }}\",\n    \"time\": \"6-10分钟\",\n    \"title\": \"富有想象力的环节标题\",\n    \"objective\": \"语言目标：...；SEL目标：...\",\n    \"activity\": \"该环节的活动描述（约150-300字）\",\n    \"activitySteps\": \"创设悬念：第一步的描述\\n朗读来信：第二步的描述\\n情绪感知：第三步的描述\\n发布任务：第四步的描述\",\n    \"script\": \"该环节的教师讲稿（亲切、中英文穿插）\",\n    \"resources\": \"任务卡、图片卡、计时器、奖励贴纸\",\n    \"scenario\": \"教室变为神秘的森林入口，学生以探险队身份迎接任务挑战。\",\n    \"assets\": [\n      {\n        \"id\": \"asset-{{ $json.stepId }}\",\n        \"type\": \"image\",\n        \"title\": \"资源名称\",\n        \"prompt\": \"扁平矢量插画，粗细均匀的黑色轮廓线...\"\n      }\n    ]\n  }\n}\n- 以上 12 个字段（id, time, title, objective, activity, activitySteps, script, resources, scenario, assets）一个都不能少\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字\n- 直接输出上述 JSON，不要用 ```json 包裹",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        0
+      ],
+      "id": "189651c6-31ba-4e8b-89a4-6d95a3aa3da3",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析 LLM 输出的 JSON 文本\nlet raw = $input.item.json;\n\n// 如果 LLM 输出有 text 字段，从中提取 JSON\nif (raw.text && typeof raw.text === 'string') {\n  const match = raw.text.match(/\\{[\\s\\S]*\\}/);\n  if (match) {\n    try { raw = JSON.parse(match[0]); } catch (e) {}\n  }\n}\n\nconst step = (raw.step && typeof raw.step === 'object') ? raw.step : raw;\n\n// 补充 activitySteps\nif (!step.activitySteps || step.activitySteps.trim() === '') {\n  const activity = step.activity || '';\n  const sentences = activity.split(/[。！？]+/).filter(s => s.trim());\n  const stepNames = ['创设悬念', '朗读来信', '情绪感知', '发布任务'];\n  const size = Math.ceil(sentences.length / 4);\n  const parts = [];\n  for (let i = 0; i < 4; i++) {\n    const chunk = sentences.slice(i * size, (i + 1) * size);\n    parts.push(stepNames[i] + '：' + (chunk.length > 0 ? chunk.join('。') + '。' : ''));\n  }\n  step.activitySteps = parts.join('\\n');\n}\n\n// 补充 resources（从 assets[].title 提取）\nif (!step.resources || step.resources.trim() === '') {\n  const assets = Array.isArray(step.assets) ? step.assets : [];\n  step.resources = assets.map(a => a.title || '').filter(Boolean).join('、');\n}\n\n// 补充 scenario（从 activity 第一句截取）\nif (!step.scenario || step.scenario.trim() === '') {\n  const activity = step.activity || '';\n  const first = activity.split(/[。！？]/)[0] || '';\n  step.scenario = first.length > 60 ? first.slice(0, 60).replace(/[，、]$/, '') : first;\n}\n\nreturn { step: step };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        0
+      ],
+      "id": "e8c7b0a9-5d3f-4a2e-8c61-1f9d0e8a4b2c",
+      "name": "补充缺失字段"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "phaseKey": "empower",
+            "stepId": "em2",
+            "title": "森林派对",
+            "age": "7-9岁",
+            "duration": "60分钟",
+            "scale": "9-15人",
+            "vocabulary": [
+              "apple",
+              "orange"
+            ],
+            "grammar": [
+              "Can I have your apple/orange, please?"
+            ],
+            "theme": "森林探险",
+            "currentStep": {
+              "id": "em2",
+              "title": "水果感知体验",
+              "time": "10-15分钟"
+            },
+            "siblingSteps": [
+              {
+                "title": "神秘邀请",
+                "time": "5-10分钟"
+              }
+            ],
+            "otherPhases": {}
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/course-step-regenerator",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数组装",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数组装": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "补充缺失字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "补充缺失字段": {
+      "main": [
+        [
+          {
+            "node": "返回步骤JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "14236d91-4b08-4a44-a067-1a9be7a9555f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "LWHWfOpAfpyKujIV",
+  "tags": []
+}
