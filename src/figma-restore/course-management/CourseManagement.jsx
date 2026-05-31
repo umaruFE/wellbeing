@@ -17,6 +17,9 @@ export function CourseManagement({
 }) {
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
@@ -56,12 +59,18 @@ export function CourseManagement({
     }
   }, [location.state, workflowCourse]);
 
-  const fetchCourses = useCallback(async () => {
+  const fetchCourses = useCallback(async (pageNum = 1, append = false) => {
     try {
-      setCoursesLoading(true);
-      const result = await apiService.getCourses();
+      if (pageNum === 1) {
+        setCoursesLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const result = await apiService.getCourses({ page: String(pageNum), limit: '12' });
       const list = result?.data || [];
-      setCourses(list.map((course, i) => ({
+      const pagination = result?.pagination || {};
+      const mapped = list.map((course, i) => ({
         id: course.id,
         title: course.title || course.unit || '未命名课程',
         unit: course.unit || course.title || '未命名课程',
@@ -91,18 +100,33 @@ export function CourseManagement({
         keyOutcome: course.course_data?.keyOutcome || '',
         atmosphere: course.course_data?.atmosphere || '',
         specialRequirements: course.course_data?.specialRequirements || '',
-      })));
+      }));
+
+      if (append) {
+        setCourses(prev => [...prev, ...mapped]);
+      } else {
+        setCourses(mapped);
+      }
+
+      setHasMore(pageNum < (pagination.totalPages || 1));
+      setPage(pageNum);
     } catch (error) {
       console.error('获取课程列表失败:', error);
-      setCourses(demoCourses);
+      if (!append) setCourses(demoCourses);
     } finally {
       setCoursesLoading(false);
+      setLoadingMore(false);
     }
   }, []);
 
   useEffect(() => {
     fetchCourses();
   }, [fetchCourses]);
+
+  const loadMoreCourses = () => {
+    if (loadingMore || !hasMore) return;
+    fetchCourses(page + 1, true);
+  };
 
   const counts = useMemo(() => ({
     all: courses.length,
@@ -164,6 +188,7 @@ export function CourseManagement({
     setCourses(currentCourses => [newCourse, ...currentCourses]);
     setCreateOpen(false);
     setWorkflowCourse(newCourse);
+    fetchCourses(1);
   };
 
   if (workflowCourse) {
@@ -216,21 +241,35 @@ export function CourseManagement({
               <span className="loading-text">加载中...</span>
             </div>
           ) : filteredCourses.length > 0 ? (
-            <div className="fr-cm-grid">
-              {filteredCourses.map(course => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  onOpen={(item) => {
-                    if (onOpenCourse) {
-                      onOpenCourse(item);
-                      return;
-                    }
-                    setWorkflowCourse(item);
-                  }}
-                />
-              ))}
-            </div>
+            <>
+              <div className="fr-cm-grid">
+                {filteredCourses.map(course => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    onOpen={(item) => {
+                      if (onOpenCourse) {
+                        onOpenCourse(item);
+                        return;
+                      }
+                      setWorkflowCourse(item);
+                    }}
+                  />
+                ))}
+              </div>
+              {hasMore && (
+                <div className="fr-cm-load-more">
+                  <button
+                    type="button"
+                    className="fr-cm-load-more-btn"
+                    onClick={loadMoreCourses}
+                    disabled={loadingMore}
+                  >
+                    {loadingMore ? '加载中...' : '加载更多'}
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
             <div className="fr-cm-empty">
               <BookOpen size={30} />
