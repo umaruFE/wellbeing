@@ -1,5 +1,6 @@
 import React from 'react';
 import { ChevronDown, ChevronRight, FileText, Plus } from 'lucide-react';
+import './css/PptOutline.css';
 
 const phaseLabels = {
   engage: 'E-ENGAGE 引入',

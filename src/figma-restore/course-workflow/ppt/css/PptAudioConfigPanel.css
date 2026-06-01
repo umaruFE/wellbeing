@@ -1,0 +1,33 @@
+#ed-ppt .ppt-audio-config-panel .ant-form-item {
+  margin-bottom: 24px;
+}
+
+#ed-ppt .ppt-audio-config-panel .audio-info-card {
+  border: 1.5px solid #c8c2b9;
+  border-radius: 6px;
+  background: #fffdf9;
+  padding: 10px 12px;
+  margin-bottom: 24px;
+}
+
+#ed-ppt .ppt-audio-config-panel .audio-meta-row {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #8a94a4;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-audio-config-panel .audio-meta-row strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -1,3 +1,5 @@
+import './css/PptDemoScene.css';
+
 export function PptDemoScene() {
   return (
     <div className="ppt-demo-scene" aria-hidden="true">

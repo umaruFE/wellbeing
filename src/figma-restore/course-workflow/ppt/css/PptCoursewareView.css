@@ -1,0 +1,253 @@
+.ppt-courseware {
+  --ppt-ink: #253142;
+  --ppt-muted: #7c8798;
+  --ppt-line: #dedbd4;
+  --ppt-paper: #ffffff;
+  --ppt-purple: #9b63dc;
+  --ppt-blue: #3f83e8;
+  --ppt-green: #4caf72;
+  --ppt-coral: #ff705d;
+  height: calc(100vh - 61px);
+  display: flex;
+  overflow: hidden;
+  background: #f4f2ec;
+  color: var(--ppt-ink);
+}
+
+.ppt-courseware button,
+.ppt-courseware input,
+.ppt-courseware textarea {
+  font: inherit;
+}
+
+.ppt-wizard-body {
+  padding: 16px 14px 20px;
+}
+
+.ppt-wiz-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.ppt-wiz-field > span {
+  color: var(--ppt-ink);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ppt-wiz-field textarea,
+.ppt-wiz-field input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 102px;
+  border: 2px solid #253142;
+  border-radius: 9px;
+  padding: 10px 12px;
+  background: #fff;
+  color: var(--ppt-ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: 0;
+}
+
+.ppt-choice-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ppt-choice-row.two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ppt-choice-row button {
+  min-height: 34px;
+  border: 2px solid #d8d2c8;
+  border-radius: 8px;
+  background: #fff;
+  color: #626b7c;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ppt-choice-row button.on,
+.ppt-choice-row button:hover {
+  border-color: var(--ppt-coral);
+  background: #fff1ed;
+  color: var(--ppt-coral);
+}
+
+.ppt-scene-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ppt-scene-grid button {
+  border: 2px solid #d8d2c8;
+  border-radius: 9px;
+  background: #fff;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 0;
+}
+
+.ppt-scene-grid button.on {
+  border-color: var(--ppt-coral);
+}
+
+.ppt-scene-grid span {
+  display: block;
+  padding: 6px 4px 7px;
+  color: #626b7c;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ppt-wiz-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.ppt-wiz-summary div {
+  min-height: 58px;
+  border: 2px solid #d8d2c8;
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.ppt-wiz-summary span {
+  color: #7c8798;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.ppt-wiz-summary b {
+  color: var(--ppt-ink);
+  font-size: 15px;
+}
+
+.ppt-spin {
+  color: var(--ppt-coral);
+  animation: ppt-spin 1s linear infinite;
+}
+
+@keyframes ppt-spin {
+  to { transform: rotate(360deg); }
+}
+
+.ppt-audio-preview {
+  height: 78px;
+  background: linear-gradient(135deg, #253142, #59667a);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+#ed-ppt .tg.video-type-grid {
+  grid-template-columns: 1fr;
+}
+
+#ed-ppt .fi {
+  width: 100%;
+  box-sizing: border-box;
+  border: 2px solid #253142;
+  border-radius: 8px;
+  background: #fff;
+  color: #253142;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 13px;
+  outline: 0;
+}
+
+#ed-ppt textarea.fi {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+#ed-ppt .btn {
+  min-height: 38px;
+  border-radius: 9px;
+  border: 2px solid #253142;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 900;
+  flex: 1;
+}
+
+#ed-ppt .btn-pri {
+  border-color: #ff705d;
+  background: #ff705d;
+  color: #fff;
+}
+
+#ed-ppt .btn-ghost {
+  background: #fff;
+  color: #253142;
+}
+
+#ed-ppt .image-replace-drop {
+  width: 100%;
+  min-height: 74px;
+  border: 2px dashed #d8d2c8;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: #667085;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#ed-ppt .image-replace-drop:hover {
+  border-color: #ff705d;
+  background: #fff7f3;
+  color: #ff705d;
+}
+
+/* Final layout guards: keep the three-column editor inside the viewport. */
+.ppt-courseware {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.ppt-courseware *,
+.ppt-courseware *::before,
+.ppt-courseware *::after {
+  box-sizing: border-box;
+}
+
+/* Layout safety: keep the right editing panel visible on every viewport. */
+#ed-ppt.ppt-courseware {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}

@@ -52,7 +52,7 @@ export function createMediaLayer(type, overrides = {}) {
   const config = {
     image: { title: '主题意境图', width: 300, height: 190, x: 88, y: 150, icon: 'image' },
     video: { title: '银河交通图叙事视频', width: 350, height: 210, x: 256, y: 130, icon: 'video' },
-    audio: { title: '星际背景音效', width: 280, height: 82, x: 140, y: 300, icon: 'audio' },
+    audio: { title: '星际背景音效', width: 280, height: 52, x: 140, y: 300, icon: 'audio' },
   }[type];
 
   return {
@@ -90,7 +90,7 @@ function createSlide(index, title) {
             strokeWidth: 1,
           }),
           createMediaLayer('video', { x: 260, y: 148, width: 360, height: 220 }),
-          createMediaLayer('audio', { x: 72, y: 340, width: 250, height: 74 }),
+          createMediaLayer('audio', { x: 72, y: 340, width: 250, height: 52 }),
         ]
       : isSelectedTextDemo
         ? [

@@ -3,8 +3,8 @@ import { buildInitialPptCourse, createMediaLayer, createTextLayer } from './pptD
 import { cloneData, findActiveSlide } from './pptUtils';
 import { PptOutline } from './PptOutline';
 import { PptCanvas } from './PptCanvas';
-import { PptRightPanel } from './PptRightPanel';
-import './PptCoursewareView.css';
+import { PptRightPanel } from './right-panel/PptRightPanel';
+import './css/PptCoursewareView.css';
 
 export function PptCoursewareView({ onNext, initialCourseData }) {
   const [course, setCourse] = React.useState(() => buildInitialPptCourse(initialCourseData));
@@ -115,6 +115,15 @@ export function PptCoursewareView({ onNext, initialCourseData }) {
     if (selectedLayerId) updateLayerById(selectedLayerId, patch);
   };
 
+  const toggleLayerHidden = (layerId) => {
+    updateCourse((draft) => {
+      const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+      const layer = active.slide?.layers.find((item) => item.id === layerId);
+      if (layer) layer.hidden = !layer.hidden;
+    });
+    if (selectedLayerId === layerId) setSelectedLayerId(null);
+  };
+
   const duplicateLayer = () => {
     updateCourse((draft) => {
       const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
@@ -179,6 +188,7 @@ export function PptCoursewareView({ onNext, initialCourseData }) {
         onSelectLayer={setSelectedLayerId}
         onUpdateSlide={updateSlide}
         onUpdateLayer={updateSelectedLayer}
+        onToggleLayerHidden={toggleLayerHidden}
         onDuplicateLayer={duplicateLayer}
         onDeleteLayer={deleteLayer}
         onNext={onNext}

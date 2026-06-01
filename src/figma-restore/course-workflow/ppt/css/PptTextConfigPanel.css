@@ -1,0 +1,141 @@
+#ed-ppt .ppt-text-config-panel .text-dim-grid,
+#ed-ppt .ppt-text-config-panel .text-style-grid {
+  display: grid;
+  gap: 12px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-dim-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+#ed-ppt .ppt-text-config-panel .text-style-grid {
+  grid-template-columns: minmax(0, 1fr) 80px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-control-grid {
+  display: grid;
+  grid-template-columns: 94px 94px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-segment {
+  height: 30px;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-text-config-panel .text-segment .ant-radio-button-wrapper {
+  height: 30px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #8a94a4;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#ed-ppt .ppt-text-config-panel .text-segment .ant-radio-button-wrapper::before {
+  display: none;
+}
+
+#ed-ppt .ppt-text-config-panel .text-segment .ant-radio-button-wrapper-checked {
+  background: #ede9e3;
+  color: #253142;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-field {
+  height: 30px;
+  min-width: 0;
+  border: 1.5px solid #253142;
+  border-radius: 6px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  overflow: hidden;
+  line-height: 1;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-picker {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  flex: 0 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border:none;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-picker .ant-color-picker-trigger {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-picker .ant-color-picker-trigger:hover,
+#ed-ppt .ppt-text-config-panel .text-color-picker .ant-color-picker-trigger:focus {
+  background: transparent;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-picker .ant-color-picker-color-block {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 4px;
+  margin: 0;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-picker .ant-color-picker-color-block-inner {
+  inset: 0;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-value {
+  min-width: 0;
+  overflow: hidden;
+  color: #647084;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-field.is-compact {
+  padding: 0 8px;
+  gap: 8px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-stroke-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 80px;
+  gap: 12px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-stroke-grid .text-color-field {
+  height: 36px;
+}

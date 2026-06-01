@@ -1,0 +1,309 @@
+/* Left course outline. */
+#ed-ppt.ppt-courseware .ppt-left {
+  flex: 0 0 267px;
+  width: 267px;
+  min-width: 267px;
+  background: #ffffff;
+  border-right: 1px solid #e2ded7;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-left-head {
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e2ded7;
+  background: #ffffff;
+  color: #253142;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 20px;
+}
+
+#ed-ppt .ppt-left-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px 16px 32px;
+  background: #ffffff;
+  scrollbar-width: none;
+}
+
+#ed-ppt .ppt-left-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+#ed-ppt .ppt-phase {
+  margin: 0 0 24px;
+}
+
+#ed-ppt .ppt-phase-header {
+  height: 19px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+#ed-ppt .ppt-phase-dot {
+  width: 6px;
+  height: 14px;
+  border-radius: 999px;
+  flex: 0 0 6px;
+}
+
+#ed-ppt .ppt-phase-title {
+  color: #253142;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 19px;
+}
+
+#ed-ppt .ppt-step-list {
+  padding: 0;
+}
+
+#ed-ppt .ppt-step-container {
+  margin: 0 0 11px;
+}
+
+#ed-ppt .ppt-first-step-wrapper {
+  width: 100%;
+}
+
+#ed-ppt .ppt-step-container-inner {
+  display: block;
+}
+
+#ed-ppt .ppt-step-connector,
+#ed-ppt .ppt-add-step {
+  display: none;
+}
+
+#ed-ppt .ppt-first-step-card,
+#ed-ppt .ppt-step-card {
+  width: 232px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0 10px 0 12px;
+  border: 1.5px solid #d6d2ca;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: 2px 2px 0 rgba(37, 49, 66, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+#ed-ppt .ppt-first-step-card.active,
+#ed-ppt .ppt-step-card.active {
+  border: 2px solid var(--phase-border);
+  background: var(--phase-bg);
+  box-shadow: 3px 3px 0 var(--phase-shadow);
+}
+
+#ed-ppt .ppt-first-step-card > svg,
+#ed-ppt .ppt-step-card > svg {
+  width: 14px;
+  height: 14px;
+  color: #6b7686;
+  flex: 0 0 14px;
+}
+
+#ed-ppt .ppt-first-step-card.active > svg,
+#ed-ppt .ppt-step-card.active > svg {
+  color: var(--phase-color);
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-icon,
+#ed-ppt .ppt-step-card .ppt-step-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-icon svg,
+#ed-ppt .ppt-step-card .ppt-step-icon svg {
+  width: 12px;
+  height: 12px;
+  color: currentColor;
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-name,
+#ed-ppt .ppt-step-card .ppt-step-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #364153;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-first-step-card.active .ppt-step-name,
+#ed-ppt .ppt-step-card.active .ppt-step-name {
+  color: var(--phase-color);
+}
+
+#ed-ppt .ppt-first-step-card .ppt-step-count,
+#ed-ppt .ppt-step-card .ppt-step-count {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border: 1.5px solid var(--phase-border);
+  border-radius: 999px;
+  background: #ffffff;
+  color: var(--phase-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 19px;
+}
+
+#ed-ppt .ppt-slide-preview-wrapper {
+  margin-top: 10px;
+  padding-left: 39px;
+  position: relative;
+}
+
+#ed-ppt .ppt-slide-connector-line {
+  position: absolute;
+  left: 20px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e2ded7;
+}
+
+#ed-ppt .ppt-slide-row {
+  min-height: 127px;
+  position: relative;
+}
+
+#ed-ppt .ppt-slide-row.ppt-slide-add-row {
+  min-height: 36px;
+}
+
+#ed-ppt .ppt-slide-row.ppt-slide-add-row .ppt-slide-dot {
+  display: none;
+}
+
+#ed-ppt .ppt-slide-row .ppt-slide-number {
+  position: absolute;
+  left: -39px;
+  top: 1px;
+  width: 12px;
+  height: 18px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 18px;
+  text-align: left;
+}
+
+#ed-ppt .ppt-slide-thumb-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+#ed-ppt .ppt-slide-indicator-box {
+  position: absolute;
+  left: -35px;
+  top: 53px;
+  width: 35px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 0;
+}
+
+#ed-ppt .ppt-slide-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #b6beca;
+}
+
+#ed-ppt .ppt-slide-dot.active {
+  background: #253142;
+}
+
+#ed-ppt .ppt-slide-line {
+  width: 18px;
+  height: 1.5px;
+  background: #b6beca;
+}
+
+#ed-ppt .ppt-slide-thumb {
+  width: 193px;
+  height: 113px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+#ed-ppt .ppt-slide-thumb.active {
+  background: transparent;
+  box-shadow: 3px 3px 0 #253142;
+}
+
+#ed-ppt .ppt-design-thumb {
+  width: 193px;
+  height: 113px;
+  border-radius: 6px;
+  background-image: url("../Container (1).png");
+  background-size: 267px 919px;
+  background-repeat: no-repeat;
+}
+
+#ed-ppt .ppt-design-thumb.thumb-0 {
+  background-position: -55px -149px;
+}
+
+#ed-ppt .ppt-design-thumb.thumb-1 {
+  background-position: -55px -276px;
+}
+
+#ed-ppt .ppt-add-slide-btn {
+  width: 193px;
+  height: 36px;
+  border: 1.5px dashed #253142;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+#ed-ppt .ppt-add-slide-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 2;
+}

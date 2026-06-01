@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowDown, ArrowUp, Copy, Image, Maximize2, Minus, Music, Plus, RotateCw, Trash2, Type, Video } from 'lucide-react';
 import { PptDemoScene } from './PptDemoScene';
+import './css/PptCanvas.css';
 
 const SLIDE_WIDTH = 940;
 const SLIDE_HEIGHT = 529;
@@ -44,9 +45,9 @@ function LayerContent({ layer }) {
   if (layer.type === 'audio') {
     return (
       <div className="ppt-audio-layer">
-        <Music size={18} />
-        <span>{layer.title}</span>
-        <b>{layer.duration || '02:16'}</b>
+        <span className="ppt-audio-play">▶</span>
+        <strong>{layer.title}</strong>
+        <span className="ppt-audio-progress" />
       </div>
     );
   }
@@ -225,7 +226,7 @@ export function PptCanvas({
             </div>
           )}
 
-          {slide?.layers?.map((layer, index) => {
+          {slide?.layers?.filter((layer) => !layer.hidden).map((layer, index) => {
             const selected = selectedLayerId === layer.id;
             return (
               <div

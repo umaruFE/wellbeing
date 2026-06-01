@@ -1,0 +1,92 @@
+#ed-ppt .ppt-video-config-panel .video-size-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-info-card {
+  border: 1.5px solid #c8c2b9;
+  border-radius: 6px;
+  background: #fffdf9;
+  padding: 10px 12px 12px;
+  margin: 1px 0 24px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-meta-row {
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #8a94a4;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-video-config-panel .video-meta-row strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 11px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stat-grid div {
+  height: 59px;
+  border: 1.5px solid #c8c2b9;
+  border-radius: 6px;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stat-grid span {
+  color: #8a94a4;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-video-config-panel .video-stat-grid strong {
+  color: #253142;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-video-config-panel .video-switch-list {
+  display: grid;
+  gap: 11px;
+  margin-bottom: 24px;
+}
+
+#ed-ppt .ppt-video-config-panel .video-switch-list label {
+  min-height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-video-config-panel .ant-switch.ant-switch-checked {
+  background: #ff705d;
+}
+
+#ed-ppt .ppt-video-config-panel .ant-switch.ant-switch-checked:hover {
+  background: #ff705d;
+}

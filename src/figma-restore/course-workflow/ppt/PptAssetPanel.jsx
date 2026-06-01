@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image, Music, Video } from 'lucide-react';
 import { PptDemoScene } from './PptDemoScene';
+import './css/PptAssetPanel.css';
 
 const assetGroups = {
   image: {

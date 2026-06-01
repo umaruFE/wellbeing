@@ -1,0 +1,56 @@
+#ed-ppt .ppt-image-config-panel .image-size-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+#ed-ppt .ppt-image-config-panel .image-replace-drop {
+  width: 100%;
+  min-height: 102px;
+  border: 1.5px dashed #253142;
+  border-radius: 6px;
+  background: #fffdf9;
+  color: #253142;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 0 24px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-image-config-panel .image-replace-drop svg {
+  color: #8a94a4;
+}
+
+#ed-ppt .ppt-image-config-panel .image-replace-drop:hover {
+  border-color: #ff705d;
+  background: #fff7f3;
+  color: #ff705d;
+}
+
+#ed-ppt .ppt-image-config-panel .image-replace-drop:hover svg {
+  color: #ff705d;
+}
+
+#ed-ppt .ppt-image-config-panel .image-ai-section {
+  margin-bottom: 12px;
+}
+
+#ed-ppt .ppt-image-config-panel .image-ai-title {
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #ff705d;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-image-config-panel .image-ai-title svg {
+  flex: 0 0 auto;
+}
