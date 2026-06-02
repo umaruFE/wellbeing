@@ -19,7 +19,7 @@ function normalizeTips(value: any): string[] {
         : [];
 
   return rawTips
-    .map((tip) => String(tip || '').trim())
+    .map((tip: any) => String(tip || '').trim())
     .filter(Boolean)
     .slice(0, 6);
 }
