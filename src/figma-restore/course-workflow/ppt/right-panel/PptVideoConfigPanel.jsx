@@ -51,14 +51,14 @@ export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLaye
         </div>
 
         <div className="video-info-card">
-          <div className="video-meta-row"><span>视频类型</span><strong>{selectedLayer.videoMeta?.videoType || '体能闯关'}</strong></div>
-          <div className="video-meta-row"><span>时长</span><strong>{selectedLayer.duration || '02:16'}</strong></div>
-          <div className="video-meta-row"><span>场景 / 模板</span><strong>{selectedLayer.videoMeta?.scene || '森林 / 拯救型'}</strong></div>
-          <div className="video-meta-row"><span>IP 角色</span><strong>{selectedLayer.videoMeta?.chars || 'Poppy, Edi'}</strong></div>
+          <div className="video-meta-row"><span>视频类型</span><strong>{selectedLayer.videoMeta?.videoType || '未设置'}</strong></div>
+          <div className="video-meta-row"><span>时长</span><strong>{selectedLayer.duration || '未设置'}</strong></div>
+          <div className="video-meta-row"><span>场景 / 模板</span><strong>{selectedLayer.videoMeta?.scene || '未设置'}</strong></div>
+          <div className="video-meta-row"><span>IP 角色</span><strong>{selectedLayer.videoMeta?.chars || '未设置'}</strong></div>
 
           <div className="video-stat-grid">
-            <div><span>词汇数</span><strong>{selectedLayer.videoMeta?.vocab || 12}</strong></div>
-            <div><span>句型数</span><strong>{selectedLayer.videoMeta?.sents || 5}</strong></div>
+            <div><span>词汇数</span><strong>{selectedLayer.videoMeta?.vocab || 0}</strong></div>
+            <div><span>句型数</span><strong>{selectedLayer.videoMeta?.sents || 0}</strong></div>
           </div>
         </div>
 

@@ -32,11 +32,11 @@ export function PptAudioConfigPanel({
         <div className="audio-info-card">
           <div className="audio-meta-row">
             <span>音频类型</span>
-            <strong>{selectedLayer.audioMeta?.audioType || '情绪氛围BGM'}</strong>
+            <strong>{selectedLayer.audioMeta?.audioType || '未设置'}</strong>
           </div>
           <div className="audio-meta-row">
             <span>时长</span>
-            <strong>{selectedLayer.duration || '02:16'}</strong>
+            <strong>{selectedLayer.duration || '未设置'}</strong>
           </div>
         </div>
 

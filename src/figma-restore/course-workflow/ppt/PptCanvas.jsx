@@ -33,11 +33,23 @@ function LayerContent({ layer }) {
   }
 
   if (layer.type === 'video') {
+    if (layer.url) {
+      return (
+        <video
+          className="ppt-video-layer"
+          src={layer.url}
+          controls
+          muted={layer.videoMeta?.muted}
+          loop={layer.videoMeta?.loop}
+        />
+      );
+    }
+
     return (
       <div className="ppt-video-layer">
         <PptDemoScene />
         <div className="ppt-video-play">▶</div>
-        <div className="ppt-video-duration">{layer.duration || '02:16'}</div>
+        {layer.duration && <div className="ppt-video-duration">{layer.duration}</div>}
       </div>
     );
   }
@@ -45,11 +57,15 @@ function LayerContent({ layer }) {
   if (layer.type === 'audio') {
     return (
       <div className="ppt-audio-layer">
-        <span className="ppt-audio-play">▶</span>
+        {layer.url ? <audio src={layer.url} controls /> : <span className="ppt-audio-play">▶</span>}
         <strong>{layer.title}</strong>
-        <span className="ppt-audio-progress" />
+        {!layer.url && <span className="ppt-audio-progress" />}
       </div>
     );
+  }
+
+  if (layer.url) {
+    return <img className="ppt-image-layer" src={layer.url} alt={layer.title || 'PPT 图片素材'} />;
   }
 
   return (

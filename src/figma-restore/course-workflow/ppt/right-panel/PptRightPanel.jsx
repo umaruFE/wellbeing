@@ -8,14 +8,6 @@ import '../css/PptRightPanel.css';
 
 const swatches = ['#253142', '#ffffff', '#fff1ed', '#eaf4ff', '#f0e7ff'];
 
-const fallbackLayers = [
-  { id: 'demo-image-muted', type: 'image', title: 'landscape 主题意境图', muted: true, hidden: true },
-  { id: 'demo-image', type: 'image', title: 'landscape 主题意境图' },
-  { id: 'demo-video', type: 'video', title: '银河交通图叙事视频' },
-  { id: 'demo-audio', type: 'audio', title: '星际背景音效' },
-  { id: 'demo-text', type: 'text', title: '太空探险指引文字' },
-];
-
 function LayerGlyph({ type }) {
   if (type === 'text') return <Type size={15} />;
   if (type === 'audio') return <Music size={16} />;
@@ -30,7 +22,7 @@ function CanvasLayerPanel({
   onUpdateSlide,
   onToggleLayerHidden,
 }) {
-  const layers = slide?.layers?.length ? slide.layers : fallbackLayers;
+  const layers = slide?.layers || [];
 
   return (
     <aside className="ppt-right ppt-right-canvas-panel">
@@ -59,17 +51,16 @@ function CanvasLayerPanel({
           <div className="ppt-panel-label">元素列表</div>
           <div className="ppt-layer-list">
             {layers.map((layer) => {
-              const realLayer = slide?.layers?.find((item) => item.id === layer.id);
               const active = selectedLayerId === layer.id;
               return (
                 <div
                   role="button"
-                  tabIndex={realLayer ? 0 : -1}
+                  tabIndex={0}
                   key={layer.id}
-                  className={`ppt-layer-row ${active ? 'is-selected' : ''} ${layer.muted || layer.hidden ? 'is-muted' : ''} type-${layer.type}`}
-                  onClick={() => realLayer && onSelectLayer(layer.id)}
+                  className={`ppt-layer-row ${active ? 'is-selected' : ''} ${layer.hidden ? 'is-muted' : ''} type-${layer.type}`}
+                  onClick={() => onSelectLayer(layer.id)}
                   onKeyDown={(event) => {
-                    if (realLayer && (event.key === 'Enter' || event.key === ' ')) onSelectLayer(layer.id);
+                    if (event.key === 'Enter' || event.key === ' ') onSelectLayer(layer.id);
                   }}
                 >
                   <span className="ppt-layer-icon"><LayerGlyph type={layer.type} /></span>
@@ -77,10 +68,9 @@ function CanvasLayerPanel({
                   <button
                     type="button"
                     className="ppt-layer-eye"
-                    disabled={!realLayer}
                     onClick={(event) => {
                       event.stopPropagation();
-                      if (realLayer) onToggleLayerHidden(layer.id);
+                      onToggleLayerHidden(layer.id);
                     }}
                     aria-label={layer.hidden ? '显示图层' : '隐藏图层'}
                     title={layer.hidden ? '显示图层' : '隐藏图层'}
