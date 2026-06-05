@@ -1,5 +1,5 @@
 import { Eye, EyeOff, Image, Music, Type, Video } from 'lucide-react';
-import { PptAssetPanel } from '../PptAssetPanel';
+import { PptAssetPanel } from '../right-asset-panel';
 import { PptAudioConfigPanel } from './PptAudioConfigPanel';
 import { PptImageConfigPanel } from './PptImageConfigPanel';
 import { PptTextConfigPanel } from './PptTextConfigPanel';
