@@ -16,13 +16,13 @@ import { ReadingMaterialCanvasView } from './modules/course-management/reading-m
 import { CourseLayout } from './components/CourseLayout';
 import CreateCoursePage from './modules/course-management/create-course/CreateCoursePage';
 import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
-import { VoiceManagementPage } from './modules/material-management/audio/VoiceManagementPage';
 import { AudioGeneratorPage } from './modules/test/AudioGeneratorPage';
 import { SuperAdminPage } from './modules/admin/SuperAdminPage';
 import { KnowledgeBasePage } from './modules/material-management/KnowledgeBasePage';
-import { PptImageManagement } from './modules/material-management/image/PptImageManagement';
+import { ImageLibrary } from './figma-restore/image-library';
+import { AudioLibrary } from './figma-restore/audio-library';
+import { VideoLibrary } from './figma-restore/video-library';
 import { IpCharacterManagement } from './modules/material-management/IpCharacterManagement';
-import { VideoMaterialManagement } from './modules/material-management/video/VideoMaterialManagement';
 import { AccountManagement } from './modules/admin/AccountManagement';
 import IPSceneTestPage from './modules/test/IPSceneTestPage';
 import { VideoGeneratorPage } from './modules/test/VideoGeneratorPage';
@@ -106,7 +106,7 @@ function App() {
               path="/voices"
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <VoiceManagementPage />
+                  <AudioLibrary />
                 </RequireAuth>
               }
             />
@@ -134,7 +134,7 @@ function App() {
               path="/ppt-images"
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <PptImageManagement />
+                  <ImageLibrary />
                 </RequireAuth>
               }
             />
@@ -152,7 +152,7 @@ function App() {
               path="/video-materials"
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <VideoMaterialManagement />
+                  <VideoLibrary />
                 </RequireAuth>
               }
             />

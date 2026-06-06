@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Input, Dropdown, Menu, Drawer } from 'antd';
 import { Search, BellOff, ChevronDown } from 'lucide-react';
 import { TaskCenter } from './TaskCenter';
@@ -6,6 +7,17 @@ import './Header.css';
 
 export const Header = ({ title = '工作看板' }) => {
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const location = useLocation();
+  const pageTitle = {
+    '/': '工作看板',
+    '/figma-courses': '课程管理',
+    '/ppt-images': '图片库',
+    '/voices': '音频库',
+    '/video-materials': '视频库',
+    '/knowledge-base': '教材资源',
+    '/accounts': '用户管理',
+    '/super-admin': '系统设置',
+  }[location.pathname] || title;
   
   const menu = (
     <Menu>
@@ -20,7 +32,7 @@ export const Header = ({ title = '工作看板' }) => {
 
   return (
     <div className="header">
-      <span className="breadcrumb-link">{title}</span>
+      <span className="breadcrumb-link">{pageTitle}</span>
       <div className="header-right">
         <Input
           placeholder="搜索"
