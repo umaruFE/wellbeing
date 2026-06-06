@@ -25,6 +25,14 @@ const typeOptions = [
   { label: '体能闯关', value: '体能闯关' },
 ];
 
+function formatMediaTime(value) {
+  if (!Number.isFinite(value) || value <= 0) return '00:00';
+  const totalSeconds = Math.floor(value);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 function VideoArt({ asset, playing, onToggle }) {
   return (
     <div className={`fr-vid-frame tone-${asset.tone}`}>
@@ -61,8 +69,26 @@ function InfoRows({ rows }) {
 }
 
 function VideoPreviewModal({ asset, open, onClose }) {
+  const videoRef = React.useRef(null);
+  const [progress, setProgress] = React.useState({ current: 0, duration: 0 });
+
+  React.useEffect(() => {
+    setProgress({ current: 0, duration: 0 });
+  }, [asset?.id, open]);
+
   if (!asset) return null;
   const isAi = asset.source === 'AI生成' || asset.source === '课程同步';
+  const progressPercent = progress.duration > 0 ? Math.min((progress.current / progress.duration) * 100, 100) : 0;
+  const durationLabel = progress.duration > 0 ? formatMediaTime(progress.duration) : asset.duration;
+
+  const updateProgress = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    setProgress({
+      current: video.currentTime || 0,
+      duration: Number.isFinite(video.duration) ? video.duration : 0,
+    });
+  };
 
   return (
     <Modal
@@ -87,13 +113,21 @@ function VideoPreviewModal({ asset, open, onClose }) {
       <div className="fr-vid-preview-body">
         <div className="fr-vid-preview-player">
           {asset.objectUrl ? (
-            <video className="fr-vid-preview-video" src={asset.objectUrl} controls />
+            <video
+              ref={videoRef}
+              className="fr-vid-preview-video"
+              src={asset.objectUrl}
+              controls
+              onLoadedMetadata={updateProgress}
+              onTimeUpdate={updateProgress}
+              onEnded={updateProgress}
+            />
           ) : (
             <VideoArt asset={asset} playing={false} onToggle={() => message.info('示例素材暂无真实视频文件，请上传本地视频后播放')} />
           )}
           <div className="fr-vid-progress">
-            <div className="fr-vid-time-row"><span>00:00</span><span>{asset.duration}</span></div>
-            <div className="fr-vid-track"><span style={{ width: '30%' }} /></div>
+            <div className="fr-vid-time-row"><span>{formatMediaTime(progress.current)}</span><span>{durationLabel}</span></div>
+            <div className="fr-vid-track"><span style={{ width: `${progressPercent}%` }} /></div>
           </div>
         </div>
         <aside className="fr-vid-preview-panel">

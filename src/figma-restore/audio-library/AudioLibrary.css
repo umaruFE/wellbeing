@@ -391,6 +391,7 @@
 }
 
 .fr-aud-track {
+  position: relative;
   height: 8px;
   border: 2px solid #333e4e;
   border-radius: 999px;
@@ -400,8 +401,14 @@
 
 .fr-aud-track span {
   display: block;
-  height: 100%;
-  background: var(--fr-primary);
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  min-width: 0;
+  border-radius: inherit;
+  background: #ff6b5d;
+  transition: width .18s linear;
 }
 
 .fr-aud-preview-panel {

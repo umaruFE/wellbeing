@@ -24,6 +24,14 @@ const typeOptions = [
   { label: '音效', value: '音效' },
 ];
 
+function formatMediaTime(value) {
+  if (!Number.isFinite(value) || value <= 0) return '00:00';
+  const totalSeconds = Math.floor(value);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
 function WaveArt({ asset, playing, onToggle }) {
   return (
     <div className={`fr-aud-wave tone-${asset.tone}`}>
@@ -54,9 +62,14 @@ function InfoRows({ rows }) {
   );
 }
 
-function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay }) {
+function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay, progress }) {
   if (!asset) return null;
   const isAi = asset.source === 'AI生成';
+  const isCurrentAsset = progress.assetId === asset.id;
+  const activeDuration = isCurrentAsset ? progress.duration : 0;
+  const progressPercent = activeDuration > 0 ? Math.min((progress.current / activeDuration) * 100, 100) : 0;
+  const currentLabel = isCurrentAsset ? formatMediaTime(progress.current) : '00:00';
+  const durationLabel = activeDuration > 0 ? formatMediaTime(activeDuration) : asset.duration;
 
   return (
     <Modal
@@ -82,8 +95,8 @@ function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay }) {
         <div className="fr-aud-preview-player">
           <WaveArt asset={asset} playing={playing} onToggle={onTogglePlay} />
           <div className="fr-aud-progress">
-            <div className="fr-aud-time-row"><span>00:00</span><span>{asset.duration}</span></div>
-            <div className="fr-aud-track"><span style={{ width: playing ? '55%' : '35%' }} /></div>
+            <div className="fr-aud-time-row"><span>{currentLabel}</span><span>{durationLabel}</span></div>
+            <div className="fr-aud-track"><span style={{ width: `${progressPercent}%` }} /></div>
           </div>
         </div>
         <aside className="fr-aud-preview-panel">
@@ -130,6 +143,7 @@ export function AudioLibrary() {
   const [previewAsset, setPreviewAsset] = React.useState(null);
   const [deleteAsset, setDeleteAsset] = React.useState(null);
   const [playingId, setPlayingId] = React.useState(null);
+  const [playProgress, setPlayProgress] = React.useState({ assetId: null, current: 0, duration: 0 });
   const audioRef = React.useRef(null);
 
   const filteredAssets = React.useMemo(() => {
@@ -174,6 +188,7 @@ export function AudioLibrary() {
       audioRef.current = null;
     }
     setPlayingId(null);
+    setPlayProgress({ assetId: null, current: 0, duration: 0 });
   }, []);
 
   const handlePlayAudio = React.useCallback((asset) => {
@@ -191,15 +206,34 @@ export function AudioLibrary() {
 
     const audio = new Audio(asset.objectUrl);
     audioRef.current = audio;
-    audio.onended = () => setPlayingId(null);
+    const updateProgress = () => {
+      setPlayProgress({
+        assetId: asset.id,
+        current: audio.currentTime || 0,
+        duration: Number.isFinite(audio.duration) ? audio.duration : 0,
+      });
+    };
+    audio.onloadedmetadata = updateProgress;
+    audio.ontimeupdate = updateProgress;
+    audio.onended = () => {
+      setPlayingId(null);
+      const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
+      setPlayProgress({ assetId: asset.id, current: duration, duration });
+    };
     audio.play()
-      .then(() => setPlayingId(asset.id))
+      .then(() => {
+        setPlayingId(asset.id);
+        updateProgress();
+      })
       .catch(() => {
         audioRef.current = null;
         setPlayingId(null);
+        setPlayProgress({ assetId: null, current: 0, duration: 0 });
         message.warning('音频播放失败，请检查文件格式');
       });
   }, [playingId, stopAudio]);
+
+  React.useEffect(() => stopAudio, [stopAudio]);
 
   const handleDeleteAsset = (asset) => {
     setAssets(current => current.filter(item => item.id !== asset.id));
@@ -304,6 +338,7 @@ export function AudioLibrary() {
         onClose={() => setPreviewAsset(null)}
         playing={previewAsset?.id === playingId}
         onTogglePlay={() => previewAsset && handlePlayAudio(previewAsset)}
+        progress={playProgress}
       />
 
       <Modal

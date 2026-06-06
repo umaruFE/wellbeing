@@ -206,8 +206,8 @@
 
 .fr-vid-progress { padding: 12px 18px 16px; }
 .fr-vid-time-row { display: flex; justify-content: space-between; color: #626b7c; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
-.fr-vid-track { height: 8px; border: 2px solid #333e4e; border-radius: 999px; background: #ffffff; overflow: hidden; }
-.fr-vid-track span { display: block; height: 100%; background: var(--fr-primary); }
+.fr-vid-track { position: relative; height: 8px; border: 2px solid #333e4e; border-radius: 999px; background: #ffffff; overflow: hidden; }
+.fr-vid-track span { display: block; position: absolute; left: 0; top: 0; bottom: 0; min-width: 0; border-radius: inherit; background: #ff6b5d; transition: width .18s linear; }
 
 .fr-vid-preview-panel { border: 2px solid #d8d2c8; border-radius: 12px; background: #ffffff; box-shadow: 3px 3px 0 rgba(51, 62, 78, .1); padding: 18px; display: flex; flex-direction: column; gap: 12px; }
 .fr-vid-preview-panel section { border-top: 2px solid #f0ede7; padding-top: 12px; }
