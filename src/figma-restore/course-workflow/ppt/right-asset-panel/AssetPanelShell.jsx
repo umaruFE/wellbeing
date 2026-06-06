@@ -1,6 +1,29 @@
+import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, X } from 'lucide-react';
 
 export function AssetPanelShell({ title, onBack, onClose, children, footer, className = '' }) {
+  const scrollRef = useRef(null);
+  const [scrollable, setScrollable] = useState(false);
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element) return undefined;
+
+    const updateScrollable = () => {
+      setScrollable(element.scrollHeight > element.clientHeight + 1);
+    };
+
+    updateScrollable();
+    const observer = new ResizeObserver(updateScrollable);
+    observer.observe(element);
+    Array.from(element.children).forEach((child) => observer.observe(child));
+    window.addEventListener('resize', updateScrollable);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateScrollable);
+    };
+  }, [children]);
+
   return (
     <aside className={`ppt-right ppt-asset-panel ${className}`}>
       <div className="ppt-asset-head">
@@ -14,7 +37,7 @@ export function AssetPanelShell({ title, onBack, onClose, children, footer, clas
           <X size={15} />
         </button>
       </div>
-      <div className="ppt-asset-scroll">{children}</div>
+      <div ref={scrollRef} className={`ppt-asset-scroll ${scrollable ? 'is-scrollable' : ''}`}>{children}</div>
       {footer ? <div className="ppt-asset-footer">{footer}</div> : null}
     </aside>
   );

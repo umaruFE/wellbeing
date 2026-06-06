@@ -1,5 +1,7 @@
-import React from 'react';
-import { Check, Clock, Music, Play, RefreshCw, Sparkles } from 'lucide-react';
+﻿import React from 'react';
+import { Activity, BookOpen, Check, Clock, Dumbbell, Flame, Music, Palette, Play, Sparkles, Trophy, UserRound, Zap } from 'lucide-react';
+import audioSoonDialogue from './assets/audio-soon-dialogue.svg';
+import audioSoonMeditation from './assets/audio-soon-meditation.svg';
 import { audioConfig } from './assetPanelData';
 import { FieldBlock, OptionGrid, Tip } from './AssetControls';
 import { GenerationProgress } from './GenerationProgress';
@@ -44,6 +46,58 @@ const c1Durations = [
   ['3分钟', '适合长篇故事 / 深度沉浸'],
 ];
 
+const c2Activities = [
+  ['互动体能', Dumbbell],
+  ['艺术创作', Palette],
+  ['瘦身冥想', UserRound],
+  ['专注练习', BookOpen],
+  ['成果展示', Trophy],
+  ['课间休息', UserRound],
+];
+
+const c2Tempos = [
+  ['慢速 60-80 BPM', '冥想 / 放松 / 睡前', Clock],
+  ['中速 80-100 BPM', '日常活动 / 绘画 / 手工', Activity],
+  ['快速 100-140 BPM', '比赛 / 游戏 / 体能闯关', Zap],
+];
+
+const c3Templates = [
+  ['课堂问候', '👋', 'Hello! Good morning! How are you today?'],
+  ['水果主题', '🍎', 'apple\nbanana\norange\npear'],
+  ['颜色主题', '🎨', 'red\nyellow\nblue\ngreen'],
+  ['数字歌', '✣', 'one\ntwo\nthree\nfour\nfive'],
+];
+
+const c3Voices = [
+  ['女声', '温暖亲切', '#cbb7ff'],
+  ['男声', '清晰有力', '#ffffff'],
+  ['童声', '活泼可爱', '#9ad7ad'],
+];
+
+const c3Speeds = [
+  ['慢速', '适合初学', Clock],
+  ['正常', '日常跟读', Activity],
+  ['快速', '挑战跟读', Zap],
+];
+
+const c5Themes = [
+  ['水果认知', '🍎'],
+  ['颜色学习', '🎨'],
+  ['数字歌', '✚'],
+  ['身体部位', '♡'],
+  ['动物叫声', '🦁'],
+  ['家庭成员', '👨‍👩‍👧'],
+  ['天气歌', '☁'],
+  ['星期歌', '◇'],
+];
+
+const c5Styles = [
+  ['轻快流行', '活泼欢快 · 适合律动'],
+  ['童谣摇滚', '节奏感强 · 适合跟唱'],
+  ['说唱节奏', '朗朗上口 · 适合跟读'],
+  ['温馨民谣', '柔和舒缓 · 适合睡前'],
+];
+
 function AudioStepper({ steps, step }) {
   return (
     <div className="ppt-audio-stepper">
@@ -52,17 +106,16 @@ function AudioStepper({ steps, step }) {
           <span className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}>
             <b>{step > index ? <Check size={11} /> : index + 1}</b>{item.replace('选择', '').replace('生成结果', '生成')}
           </span>
-          {index < steps.length - 1 ? <i>›</i> : null}
+          {index < steps.length - 1 ? <i>—</i> : null}
         </React.Fragment>
       ))}
     </div>
   );
 }
 
-function C1Stepper({ step, done = false }) {
-  const items = ['情绪', '时长', '生成'];
+function C1Stepper({ step, done = false, items = ['情绪', '时长', '生成'] }) {
   return (
-    <div className="ppt-c1-stepper">
+    <div className={`ppt-c1-stepper ${items.length === 4 ? 'is-four' : ''}`}>
       {items.map((item, index) => (
         <React.Fragment key={item}>
           <span className={`${step === index ? 'is-active' : ''} ${step > index || done ? 'is-done' : ''}`}>
@@ -72,6 +125,382 @@ function C1Stepper({ step, done = false }) {
         </React.Fragment>
       ))}
     </div>
+  );
+}
+
+function C5AudioWizard({ asset, onInsert, onTitleChange }) {
+  const [step, setStep] = React.useState(0);
+  const [values, setValues] = React.useState({
+    topic: '水果认知 颜色学习 天气歌 身体部位 星期歌',
+    style: '轻快流行',
+    lyrics: 'Apple, apple, red and round,\nBanana, banana, yellow is found.\nSing the colors, clap with me,\nLearning fruits is fun and easy!',
+  });
+  const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
+  const isGenerating = step === 3;
+  const isResult = step === 4;
+
+  React.useEffect(() => {
+    onTitleChange?.('教学歌曲');
+  }, [onTitleChange]);
+
+  React.useEffect(() => {
+    if (step !== 3) return undefined;
+    const timer = window.setTimeout(() => setStep(4), 1400);
+    return () => window.clearTimeout(timer);
+  }, [step]);
+
+  const toggleTheme = (theme) => {
+    const parts = values.topic.split(/\s+/).filter(Boolean);
+    const next = parts.includes(theme) ? parts.filter((item) => item !== theme) : [...parts, theme];
+    setValue('topic', next.join(' '));
+  };
+
+  return (
+    <>
+      <C1Stepper step={isResult ? 3 : step} done={isResult} items={['主题', '风格', '歌词', '生成']} />
+      {step === 0 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">输入歌曲主题</div>
+          <input
+            className="ppt-c5-topic-input"
+            value={values.topic}
+            onChange={(event) => setValue('topic', event.target.value)}
+          />
+          <div className="ppt-audio-section-title is-muted">推荐主题</div>
+          <div className="ppt-c5-chip-row">
+            {c5Themes.map(([name, icon]) => (
+              <button type="button" key={name} className={values.topic.includes(name) ? 'is-active' : ''} onClick={() => toggleTheme(name)}>
+                {icon ? <span>{icon}</span> : null}{name}
+              </button>
+            ))}
+          </div>
+          <div className="ppt-c1-tip">建议选择贴近教学进度的核心主题，AI将自动生成适合儿童演唱的英文歌词</div>
+        </div>
+      ) : null}
+      {step === 1 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">选择音乐风格</div>
+          <div className="ppt-c1-emotion-grid ppt-c5-style-grid">
+            {c5Styles.map(([name, desc]) => (
+              <button type="button" key={name} className={values.style === name ? 'is-active' : ''} onClick={() => setValue('style', name)}>
+                <strong><Music size={30} /></strong>
+                <span>{name}</span>
+                <em>{desc}</em>
+              </button>
+            ))}
+          </div>
+          <div className="ppt-c1-tip ppt-c5-style-tip"><Flame size={14} />系统将生成原声版（带歌词演唱） + 伴奏版（纯乐器），方便不同场景使用</div>
+        </div>
+      ) : null}
+      {step === 2 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">AI生成歌词</div>
+          <div className="ppt-c3-textbox ppt-c5-lyrics-box">
+            <textarea value={values.lyrics} onChange={(event) => setValue('lyrics', event.target.value)} />
+          </div>
+          <div className="ppt-c1-tip">可直接编辑歌词内容，再生成歌曲音频</div>
+        </div>
+      ) : null}
+      {isGenerating ? (
+        <div className="ppt-c1-generating">
+          <span className="ppt-c1-spinner" />
+          <strong>正在生成教学歌曲...</strong>
+          <em>{values.style} · 原声版 + 伴奏版</em>
+          <div className="ppt-c1-progress"><i /></div>
+          <p>正在编曲 · 合成儿童演唱音频...</p>
+        </div>
+      ) : null}
+      {isResult ? (
+        <div className="ppt-c1-result">
+          <div className="ppt-c1-result-sub">{values.style} · 生成完成</div>
+          <article>
+            <div>
+              <strong>教学歌曲_01.mp3</strong>
+              <span><Music size={14} />原声版</span>
+            </div>
+            <section>
+              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <i><b /></i>
+              <em>1:20</em>
+            </section>
+          </article>
+        </div>
+      ) : null}
+      <div className="ppt-inline-footer ppt-c1-footer">
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
+        {step === 1 ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)} aria-label="上一步"><span aria-hidden="true">←</span></button>
+            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>AI生成歌词 ★</button>
+          </>
+        ) : null}
+        {step === 2 ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>上一步</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => setStep(3)}>生成歌曲</button>
+          </>
+        ) : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>取消</button> : null}
+        {isResult ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(3)}>重新生成</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
+          </>
+        ) : null}
+      </div>
+    </>
+  );
+}
+const audioComingSoonCopy = {
+  C4: {
+    desc: ['支持多角色对话场景生成', 'AI自动分配不同音色'],
+    image: audioSoonDialogue,
+  },
+  C6: {
+    desc: ['支持语音旁白 + 背景音乐同步生成', '适合情绪放松、睡前冥想等场景'],
+    image: audioSoonMeditation,
+  },
+};
+
+function AudioComingSoon({ asset, onClose, onTitleChange }) {
+  const copy = audioComingSoonCopy[asset.code] || { desc: [asset.desc] };
+
+  React.useEffect(() => {
+    onTitleChange?.(asset.title);
+  }, [asset.title, onTitleChange]);
+
+  return (
+    <>
+      <div className="ppt-audio-soon">
+        <img src={copy.image || audioSoonDialogue} alt="" />
+        <strong>{asset.title}</strong>
+        <p>
+          {copy.desc.map((line) => (
+            <span key={line}>{line}</span>
+          ))}
+        </p>
+        <em><Clock size={14} />即将上线</em>
+      </div>
+      <div className="ppt-audio-soon-footer">
+        <button type="button" onClick={onClose}>关闭</button>
+      </div>
+    </>
+  );
+}
+
+function C3AudioWizard({ asset, onInsert, onTitleChange }) {
+  const [step, setStep] = React.useState(0);
+  const [values, setValues] = React.useState({ text: '', voice: '女声', speed: '正常', template: '课堂问候' });
+  const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
+  const isGenerating = step === 2;
+  const isResult = step === 3;
+  const lineCount = values.text.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).length;
+
+  React.useEffect(() => {
+    onTitleChange?.('跟读朗读');
+  }, [onTitleChange]);
+
+  React.useEffect(() => {
+    if (step !== 2) return undefined;
+    const timer = window.setTimeout(() => setStep(3), 1400);
+    return () => window.clearTimeout(timer);
+  }, [step]);
+
+  const applyTemplate = (name, text) => {
+    setValues((current) => ({ ...current, template: name, text }));
+  };
+
+  return (
+    <>
+      <C1Stepper step={isResult ? 2 : step} done={isResult} items={['输入文本', '发音人', '生成']} />
+      {step === 0 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">快捷模板</div>
+          <div className="ppt-c3-template-row">
+            {c3Templates.map(([name, icon, text]) => (
+              <button type="button" key={name} className={values.template === name ? 'is-active' : ''} onClick={() => applyTemplate(name, text)}>
+                <span>{icon}</span>{name}
+              </button>
+            ))}
+          </div>
+          <div className="ppt-audio-section-title">输入朗读内容</div>
+          <div className="ppt-c3-textbox">
+            <textarea
+              value={values.text}
+              placeholder={'请输入英文单词、短语或句子，支持批量输入（每行一条）\n\n例：'}
+              onChange={(event) => setValue('text', event.target.value)}
+            />
+          </div>
+          <div className="ppt-c3-count-row">
+            <span>每行一条，自动拆分为多个音频</span>
+            <strong>{lineCount} 条</strong>
+          </div>
+        </div>
+      ) : null}
+      {step === 1 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">选择发音人</div>
+          <div className="ppt-c1-emotion-grid ppt-c3-voice-grid">
+            {c3Voices.map(([name, desc, color]) => (
+              <button type="button" key={name} className={values.voice === name ? 'is-active' : ''} onClick={() => setValue('voice', name)}>
+                <strong style={{ background: color }}><UserRound size={18} /></strong>
+                <span>{name}</span>
+                <em>{desc}</em>
+              </button>
+            ))}
+          </div>
+          <div className="ppt-c3-speed-head">
+            <span>语速</span>
+            <strong>{values.speed}</strong>
+          </div>
+          <div className="ppt-c1-emotion-grid ppt-c3-speed-grid">
+            {c3Speeds.map(([name, desc, Icon]) => (
+              <button type="button" key={name} className={values.speed === name ? 'is-active' : ''} onClick={() => setValue('speed', name)}>
+                <strong><Icon size={18} /></strong>
+                <span>{name}</span>
+                <em>{desc}</em>
+              </button>
+            ))}
+          </div>
+          <div className="ppt-c1-tip">童声 + 慢速适合K2/G1入门阶段，正常语速适合G2-G4跟读练习</div>
+        </div>
+      ) : null}
+      {isGenerating ? (
+        <div className="ppt-c1-generating">
+          <span className="ppt-c1-spinner" />
+          <strong>正在生成跟读朗读...</strong>
+          <em>{values.voice} · {values.speed}</em>
+          <div className="ppt-c1-progress"><i /></div>
+          <p>正在拆分文本 · 合成朗读音频...</p>
+        </div>
+      ) : null}
+      {isResult ? (
+        <div className="ppt-c1-result">
+          <div className="ppt-c1-result-sub">{values.voice} · {values.speed} · 生成完成</div>
+          <article>
+            <div>
+              <strong>跟读朗读_01.mp3</strong>
+              <span><Music size={14} />朗读音频</span>
+            </div>
+            <section>
+              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <i><b /></i>
+              <em>0:45</em>
+            </section>
+          </article>
+        </div>
+      ) : null}
+      <div className="ppt-inline-footer ppt-c1-footer">
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
+        {step === 1 ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>生成朗读</button>
+          </>
+        ) : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
+        {isResult ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
+          </>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
+function C2AudioWizard({ asset, onInsert, onTitleChange }) {
+  const [step, setStep] = React.useState(0);
+  const [values, setValues] = React.useState({ activity: '互动体能', tempo: '中速 80-100 BPM' });
+  const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
+  const isGenerating = step === 2;
+  const isResult = step === 3;
+  const tempoLabel = values.tempo.split(' ')[0];
+
+  React.useEffect(() => {
+    onTitleChange?.('活动背景音乐');
+  }, [onTitleChange]);
+
+  React.useEffect(() => {
+    if (step !== 2) return undefined;
+    const timer = window.setTimeout(() => setStep(3), 1400);
+    return () => window.clearTimeout(timer);
+  }, [step]);
+
+  return (
+    <>
+      <C1Stepper step={isResult ? 2 : step} done={isResult} items={['活动类型', '节奏', '生成']} />
+      {step === 0 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">选择活动类型</div>
+          <div className="ppt-c1-emotion-grid ppt-c2-activity-grid">
+            {c2Activities.map(([name, Icon]) => (
+              <button type="button" key={name} className={values.activity === name ? 'is-active' : ''} onClick={() => setValue('activity', name)}>
+                <strong><Icon size={20} /></strong><span>{name}</span>
+              </button>
+            ))}
+          </div>
+          <div className="ppt-c1-tip">每种活动类型预设对应乐器与节奏风格，互动体能以鼓点为主，瘦身冥想以长音为主</div>
+        </div>
+      ) : null}
+      {step === 1 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">选择节奏速度</div>
+          <div className="ppt-c1-duration-list">
+            {c2Tempos.map(([name, desc, Icon]) => (
+              <button type="button" key={name} className={values.tempo === name ? 'is-active' : ''} onClick={() => setValue('tempo', name)}>
+                <i><Icon size={16} /></i>
+                <span><strong>{name}</strong><em>{desc}</em></span>
+                <b />
+              </button>
+            ))}
+          </div>
+          <div className="ppt-c1-tip">BPM决定背景音乐的律动强度，请根据活动节奏选择合适的配速</div>
+        </div>
+      ) : null}
+      {isGenerating ? (
+        <div className="ppt-c1-generating">
+          <span className="ppt-c1-spinner" />
+          <strong>正在生成活动BGM...</strong>
+          <em>{values.activity} · {tempoLabel}</em>
+          <div className="ppt-c1-progress"><i /></div>
+          <p>正在组装活动Prompt · 匹配乐器与节奏...</p>
+        </div>
+      ) : null}
+      {isResult ? (
+        <div className="ppt-c1-result">
+          <div className="ppt-c1-result-sub">{values.activity} · {tempoLabel} · 生成完成</div>
+          <article>
+            <div>
+              <strong>活动BGM_01.mp3</strong>
+              <span><Music size={14} />活动配乐</span>
+            </div>
+            <section>
+              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <i><b /></i>
+              <em>1:30</em>
+            </section>
+          </article>
+        </div>
+      ) : null}
+      <div className="ppt-inline-footer ppt-c1-footer">
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
+        {step === 1 ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>生成BGM</button>
+          </>
+        ) : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
+        {isResult ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
+          </>
+        ) : null}
+      </div>
+    </>
   );
 }
 
@@ -149,18 +578,18 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
         </div>
       ) : null}
       <div className="ppt-inline-footer ppt-c1-footer">
-        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步 →</button> : null}
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
         {step === 1 ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>←</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>生成BGM ★</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>生成BGM</button>
           </>
         ) : null}
         {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
         {isResult ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}><RefreshCw size={16} />重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布 →</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
           </>
         ) : null}
       </div>
@@ -168,9 +597,21 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
   );
 }
 
-export function AudioAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
+export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChange }) {
   if (asset.code === 'C1') {
     return <C1AudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
+  }
+  if (asset.code === 'C2') {
+    return <C2AudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
+  }
+  if (asset.code === 'C3') {
+    return <C3AudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
+  }
+  if (asset.code === 'C5') {
+    return <C5AudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
+  }
+  if (['C4', 'C6'].includes(asset.code)) {
+    return <AudioComingSoon asset={asset} onClose={onClose || onBack} onTitleChange={onTitleChange} />;
   }
 
   const cfg = audioConfig[asset.code] || audioConfig.C1;

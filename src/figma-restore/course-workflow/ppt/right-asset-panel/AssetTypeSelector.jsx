@@ -33,7 +33,7 @@ export function AssetTypeSelector({ type, onSelect }) {
       <section className="ppt-asset-type-section">
         <div className="ppt-asset-sec-title">素材库</div>
         <button type="button" className="ppt-asset-library-btn">
-          <Library size={15} />
+          {type === 'audio' ? null : <Library size={15} />}
           从已有素材库选择
         </button>
       </section>

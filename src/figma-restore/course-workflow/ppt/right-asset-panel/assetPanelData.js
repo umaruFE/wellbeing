@@ -1,4 +1,4 @@
-import {
+﻿import {
   Activity,
   BookOpen,
   Bot,
@@ -14,6 +14,7 @@ import {
   Music,
   Network,
   Palette,
+  Smile,
   Sparkles,
   Speech,
   Volume2,
@@ -35,14 +36,13 @@ export const imageAssetTypes = [
 ];
 
 export const audioAssetTypes = [
-  { code: 'C1', title: '情绪氛围BGM', desc: '纯器乐', tone: 'coral', icon: Music },
+  { code: 'C1', title: '情绪氛围BGM', desc: '纯器乐', tone: 'coral', icon: Smile },
   { code: 'C2', title: '活动背景乐', desc: '游戏/冥想', tone: 'purple', icon: Volume2 },
   { code: 'C3', title: '跟读朗读', desc: 'TTS', tone: 'green', icon: Mic },
   { code: 'C4', title: '情景对话', desc: '多角色', tone: 'blue', icon: Speech },
-  { code: 'C5', title: '教学歌曲', desc: 'AI词+音乐', tone: 'purple', icon: Bot },
+  { code: 'C5', title: '教学歌曲', desc: 'AI词+音乐', tone: 'purple', icon: Mic },
   { code: 'C6', title: '冥想引导', desc: '语音+背景', tone: 'coral', icon: Wind },
 ];
-
 export const videoAssetTypes = [
   { code: 'V1', title: '体能闯关视频', desc: '单角色·5步向导', tone: 'blue', icon: Dumbbell },
   { code: 'VM', title: '情境叙事视频', desc: '世界观·叙事CG', tone: 'purple', icon: Clapperboard },

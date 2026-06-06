@@ -10,12 +10,27 @@ import '../css/PptAssetPanel.css';
 const titleByType = {
   image: '插入图文素材',
   video: '插入视频素材',
-  audio: '插入素材',
+  audio: '插入音频素材',
 };
+
+const fallbackTitle = '插入素材';
+
+function isAssetForType(asset, type) {
+  if (!asset || !type) return false;
+  if (type === 'image') return asset.code?.startsWith('B');
+  if (type === 'audio') return asset.code?.startsWith('C');
+  if (type === 'video') return asset.code?.startsWith('V');
+  return true;
+}
 
 export function PptAssetPanel({ type, onClose, onInsert }) {
   const [asset, setAsset] = React.useState(null);
-  const [panelTitle, setPanelTitle] = React.useState(titleByType[type] || '插入素材');
+  const [panelTitle, setPanelTitle] = React.useState(titleByType[type] || fallbackTitle);
+
+  React.useEffect(() => {
+    setAsset(null);
+    setPanelTitle(titleByType[type] || fallbackTitle);
+  }, [type]);
 
   const handleInsert = (kind, selectedAsset) => {
     onInsert(kind, buildGeneratedPatch(kind, selectedAsset));
@@ -26,21 +41,23 @@ export function PptAssetPanel({ type, onClose, onInsert }) {
     setPanelTitle(item.title);
   };
 
+  const validAsset = isAssetForType(asset, type) ? asset : null;
+
   let content = <AssetTypeSelector type={type} onSelect={chooseAsset} />;
-  if (asset && type === 'image') {
-    content = <ImageAssetWizard asset={asset} onBack={() => { setAsset(null); setPanelTitle(titleByType[type] || '插入素材'); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
+  if (validAsset && type === 'image') {
+    content = <ImageAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(titleByType[type] || fallbackTitle); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
   }
-  if (asset && type === 'video') {
-    content = <VideoAssetWizard asset={asset} onBack={() => { setAsset(null); setPanelTitle(titleByType[type] || '插入素材'); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
+  if (validAsset && type === 'video') {
+    content = <VideoAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(titleByType[type] || fallbackTitle); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
   }
-  if (asset && type === 'audio') {
-    content = <AudioAssetWizard asset={asset} onBack={() => { setAsset(null); setPanelTitle(titleByType[type] || '插入素材'); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
+  if (validAsset && type === 'audio') {
+    content = <AudioAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(titleByType[type] || fallbackTitle); }} onClose={onClose} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
   }
 
   return (
     <AssetPanelShell
       title={panelTitle}
-      onBack={asset ? () => { setAsset(null); setPanelTitle(titleByType[type] || '插入素材'); } : null}
+      onBack={validAsset ? () => { setAsset(null); setPanelTitle(titleByType[type] || fallbackTitle); } : null}
       onClose={onClose}
       className={`ppt-asset-panel-${type || 'all'}`}
     >

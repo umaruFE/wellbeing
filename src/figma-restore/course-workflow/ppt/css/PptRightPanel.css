@@ -19,10 +19,10 @@
 }
 
 #ed-ppt .ppt-right-canvas-panel {
-  flex: 0 0 320px;
-  width: 320px;
-  min-width: 320px;
-  max-width: 320px;
+  flex: 0 0 400px;
+  width: 400px;
+  min-width: 400px;
+  max-width: 400px;
   border-left: 1px solid #e2ded7;
 }
 
@@ -240,10 +240,10 @@
   .ppt-video-config-panel,
   .ppt-audio-config-panel
 ) {
-  flex: 0 0 320px;
-  width: 320px;
-  min-width: 320px;
-  max-width: 320px;
+  flex: 0 0 400px;
+  width: 400px;
+  min-width: 400px;
+  max-width: 400px;
   border-left: 1px solid #e2ded7;
   background: #ffffff;
   color: #253142;

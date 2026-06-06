@@ -457,8 +457,9 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
   const isComicImage = asset.code === 'B10';
   const isActionImage = asset.code === 'B11';
   return (
-    <>
-      <div className="ppt-img-focused-form">
+    <div className="ppt-img-flow">
+      <div className="ppt-img-flow-body">
+        <div className="ppt-img-focused-form">
         {isComicImage ? (
           <FixedRatioBar ratio="16:9" />
         ) : isKnowledgeImage ? (
@@ -655,13 +656,14 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             ) : null}
           </>
         ) : null}
+        </div>
       </div>
       <div className="ppt-inline-footer ppt-img-footer">
         <button type="button" className="ppt-primary-btn" onClick={onGenerate}>
           <Sparkles size={14} />生成图片
         </button>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -804,11 +806,13 @@ function StorybookImageWizard({ values, setValue, onGenerate }) {
   const [generating, setGenerating] = React.useState(false);
 
   return (
-    <>
-      <StorybookStepper step={step} generating={generating} />
-      {step === 0 ? <StorybookPasteStep values={values} setValue={setValue} /> : null}
-      {step === 1 ? <StorybookPreviewStep values={values} /> : null}
-      {step === 2 ? <StorybookGenerateStep /> : null}
+    <div className="ppt-img-flow">
+      <div className="ppt-img-flow-body">
+        <StorybookStepper step={step} generating={generating} />
+        {step === 0 ? <StorybookPasteStep values={values} setValue={setValue} /> : null}
+        {step === 1 ? <StorybookPreviewStep values={values} /> : null}
+        {step === 2 ? <StorybookGenerateStep /> : null}
+      </div>
       <div className="ppt-inline-footer ppt-img-footer">
         {step === 1 ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button> : null}
         <button
@@ -827,7 +831,7 @@ function StorybookImageWizard({ values, setValue, onGenerate }) {
           {step === 0 ? '下一步：确认分镜内容' : step === 1 ? '开始生成 5 张' : '生成中...'}
         </button>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -1038,13 +1042,21 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     else onTitleChange?.(focusedImageTitles[asset.code] || asset.title);
   }, [asset.code, asset.title, onTitleChange, stage]);
 
+  React.useEffect(() => {
+    if (stage !== 'generating') return undefined;
+    const timer = window.setTimeout(() => {
+      setSelectedIndex(0);
+      setStage('result');
+    }, 1600);
+    return () => window.clearTimeout(timer);
+  }, [stage]);
+
   if (stage === 'generating') {
     return (
       <GenerationProgress
         title="AI 正在生成图片"
         subtitle={`${values.style} · ${values.ratio}`}
         batch={asset.code === 'B3' || asset.code === 'B11' ? { done: 2, total: 6, unit: '张' } : null}
-        onViewResult={() => setStage('result')}
       />
     );
   }

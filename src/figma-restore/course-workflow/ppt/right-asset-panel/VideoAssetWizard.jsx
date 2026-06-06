@@ -335,11 +335,13 @@ function FitnessVideoFlow({ asset, onBack, onTitleChange }) {
   }, [asset.title, onTitleChange]);
 
   return (
-    <>
-      <VideoStepper step={step} />
-      {step === 0 ? <SceneRoleStep values={values} setValue={setValue} /> : null}
-      {step === 1 ? <VocabSentenceStep values={values} setValue={setValue} /> : null}
-      {step === 2 ? <ConfirmStep values={values} generating={generating} /> : null}
+    <div className="ppt-video-flow">
+      <div className="ppt-video-flow-body">
+        <VideoStepper step={step} />
+        {step === 0 ? <SceneRoleStep values={values} setValue={setValue} /> : null}
+        {step === 1 ? <VocabSentenceStep values={values} setValue={setValue} /> : null}
+        {step === 2 ? <ConfirmStep values={values} generating={generating} /> : null}
+      </div>
       <div className="ppt-v1-footer">
         {generating ? (
           <button type="button" className="ppt-v1-primary is-disabled">正在生成</button>
@@ -361,7 +363,7 @@ function FitnessVideoFlow({ asset, onBack, onTitleChange }) {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -768,13 +770,15 @@ function StoryVideoFlow({ asset, onBack, onTitleChange }) {
   }, [asset.title, onTitleChange, step]);
 
   return (
-    <>
-      <StoryStepper step={step} />
-      {step === 0 ? <StoryRoleStep values={values} setValue={setValue} /> : null}
-      {step === 1 ? <StoryNarrativeStep values={values} setValue={setValue} /> : null}
-      {step === 2 ? <StoryScriptStep /> : null}
-      {step === 3 ? <StoryStoryboardStep values={values} setValue={setValue} /> : null}
-      {step === 4 ? <StoryGenerateStep values={values} generating={generating} /> : null}
+    <div className="ppt-video-flow">
+      <div className="ppt-video-flow-body">
+        <StoryStepper step={step} />
+        {step === 0 ? <StoryRoleStep values={values} setValue={setValue} /> : null}
+        {step === 1 ? <StoryNarrativeStep values={values} setValue={setValue} /> : null}
+        {step === 2 ? <StoryScriptStep /> : null}
+        {step === 3 ? <StoryStoryboardStep values={values} setValue={setValue} /> : null}
+        {step === 4 ? <StoryGenerateStep values={values} generating={generating} /> : null}
+      </div>
       <div className="ppt-v1-footer">
         {generating ? (
           <button type="button" className="ppt-v1-primary is-disabled">正在生成</button>
@@ -796,6 +800,6 @@ function StoryVideoFlow({ asset, onBack, onTitleChange }) {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
