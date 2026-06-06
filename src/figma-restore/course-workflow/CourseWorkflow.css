@@ -14,9 +14,7 @@ body.fr-workflow-route-active .header{display:none}
 .fr-autosave{display:flex;align-items:center;gap:8px;color:#818997;font-size:14px;font-weight:500;margin-right:18px}
 .fr-autosave span{width:11px;height:7px;border:1.5px solid #818997;border-radius:999px;background:#fff;box-sizing:border-box;position:relative}
 .fr-autosave span:after{content:"";position:absolute;right:1px;top:50%;width:3px;height:3px;border-radius:999px;background:#818997;transform:translateY(-50%)}
-.fr-task-pill{height:36px;background:#fff5f2;border:2px solid #ff705f;border-radius:999px;padding:0 14px;font-size:16px;font-weight:800;color:#ff705f;display:flex;align-items:center;gap:8px;box-sizing:border-box;margin-right:12px}
-.fr-task-pill span{width:8px;height:8px;border-radius:999px;background:#ff705f;box-shadow:0 0 0 3px #fff5f2;flex:0 0 8px}
-.fr-task-pill b{color:#ff705f;font-weight:800}
+.fr-editor-tb .fr-task-button{margin-right:12px;flex:0 0 auto}
 .fr-export-btn.ant-btn,.fr-publish-btn.ant-btn{height:36px;border:2px solid #253142!important;border-radius:8px!important;font-size:16px!important;font-weight:800!important;box-shadow:3px 3px 0 #253142!important;color:#fff!important}
 .fr-export-btn.ant-btn{min-width:59px;background:#509f69!important;margin-right:13px;padding:0 12px!important}
 .fr-publish-btn.ant-btn{min-width:59px;background:#d95643!important;padding:0 14px!important}

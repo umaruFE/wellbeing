@@ -6,7 +6,7 @@ import { PptCanvas } from './PptCanvas';
 import { PptRightPanel } from './right-panel/PptRightPanel';
 import './css/PptCoursewareView.css';
 
-export function PptCoursewareView({ onNext, initialCourseData }) {
+export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset, onConsumeTaskAsset }) {
   const [course, setCourse] = React.useState(() => buildInitialPptCourse(initialCourseData));
   const firstPhase = course[0];
   const firstStep = firstPhase?.steps[0];
@@ -80,7 +80,7 @@ export function PptCoursewareView({ onNext, initialCourseData }) {
     setSelectedLayerId(null);
   };
 
-  const insertGeneratedAsset = (type, patch = {}) => {
+  const insertGeneratedAsset = React.useCallback((type, patch = {}) => {
     const count = slide?.layers.length || 0;
     const nextLayer = createMediaLayer(type, {
       x: 88 + count * 18,
@@ -94,7 +94,16 @@ export function PptCoursewareView({ onNext, initialCourseData }) {
     });
     setAssetPanelType(null);
     setSelectedLayerId(nextLayer.id);
-  };
+  }, [activePhaseKey, activeStepId, activeSlideId, slide?.layers.length, updateCourse]);
+
+  const consumedTaskAssetRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!pendingTaskAsset?.requestId || consumedTaskAssetRef.current === pendingTaskAsset.requestId) return;
+    consumedTaskAssetRef.current = pendingTaskAsset.requestId;
+    insertGeneratedAsset(pendingTaskAsset.type, pendingTaskAsset.patch || {});
+    onConsumeTaskAsset?.();
+  }, [insertGeneratedAsset, onConsumeTaskAsset, pendingTaskAsset]);
 
   const updateSlide = (patch) => {
     updateCourse((draft) => {

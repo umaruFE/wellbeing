@@ -1,11 +1,13 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button, Drawer } from 'antd';
 import { ArrowLeft, Download, Redo2, Undo2 } from 'lucide-react';
+import { TaskCenter } from '../TaskCenter';
 import { CourseMapView } from './CourseMapView';
 import { LessonPlanView } from './LessonPlanView';
 import { PptCoursewareView } from './PptCoursewareView';
 import { ReadingMaterialView } from './ReadingMaterialView';
 import { phaseTemplates, readingTemplates, workflowSteps } from './workflowData';
+import '../Header.css';
 import './CourseWorkflow.css';
 
 export function CourseWorkflow({ initialCourse, onBack }) {
@@ -13,6 +15,8 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   const [course, setCourse] = React.useState(initialCourse || {});
   const [phases, setPhases] = React.useState(phaseTemplates);
   const [materials, setMaterials] = React.useState(readingTemplates);
+  const [taskDrawerVisible, setTaskDrawerVisible] = React.useState(false);
+  const [pendingPptAsset, setPendingPptAsset] = React.useState(null);
 
   React.useEffect(() => {
     document.body.classList.add('fr-workflow-route-active');
@@ -21,10 +25,25 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     };
   }, []);
 
+  const insertTaskAssetToPpt = React.useCallback((asset) => {
+    setPendingPptAsset({
+      ...asset,
+      requestId: `task-asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    });
+    setCurrent(2);
+    setTaskDrawerVisible(false);
+  }, []);
+
   const content = [
     <CourseMapView key="map" course={course} onCourseChange={setCourse} onNext={() => setCurrent(1)} />,
     <LessonPlanView key="lesson" course={course} phases={phases} onPhasesChange={setPhases} onNext={() => setCurrent(2)} />,
-    <PptCoursewareView key="ppt" onNext={() => setCurrent(3)} initialCourseData={phases} />,
+    <PptCoursewareView
+      key="ppt"
+      onNext={() => setCurrent(3)}
+      initialCourseData={phases}
+      pendingTaskAsset={pendingPptAsset}
+      onConsumeTaskAsset={() => setPendingPptAsset(null)}
+    />,
     <ReadingMaterialView key="reading" course={course} materials={materials} onMaterialsChange={setMaterials} />,
   ];
 
@@ -58,12 +77,26 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           <button type="button" aria-label="重做"><Redo2 size={16} /></button>
         </div>
         <div className="fr-autosave"><span />所有更改已保存</div>
-        <div className="fr-task-pill"><span />后台任务 <b>2</b></div>
+        <button className="task-button fr-task-button" type="button" onClick={() => setTaskDrawerVisible(true)}>
+          <div className="task-dot" />
+          <span className="task-text">后台任务 2</span>
+        </button>
         <Button className="fr-export-btn" icon={<Download size={15} />}>导出</Button>
         <Button className="fr-publish-btn">发布</Button>
       </header>
 
       {content[current]}
+
+      <Drawer
+        placement="right"
+        onClose={() => setTaskDrawerVisible(false)}
+        open={taskDrawerVisible}
+        width={420}
+        bodyStyle={{ padding: 0 }}
+        headerStyle={{ display: 'none' }}
+      >
+        <TaskCenter onClose={() => setTaskDrawerVisible(false)} onInsertTaskAsset={insertTaskAssetToPpt} />
+      </Drawer>
     </section>
   );
 }
