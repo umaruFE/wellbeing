@@ -1,4 +1,5 @@
 import React from 'react';
+import { Input } from 'antd';
 import { Check, Sparkles, X } from 'lucide-react';
 import poppy from '../../../../assets/ip/poppy.png';
 import edi from '../../../../assets/ip/edi.png';
@@ -82,7 +83,7 @@ function SceneRoleStep({ values, setValue }) {
       </div>
 
       <div className="ppt-v1-scene-prompt">
-        <textarea placeholder="例：太空场景，宇宙飞船驾驶舱" maxLength={40} />
+        <Input.TextArea placeholder="例：太空场景，宇宙飞船驾驶舱" maxLength={40} />
         <div>
           <span>0 / 40</span>
           <button type="button"><Sparkles size={14} />帮我写</button>
@@ -170,7 +171,7 @@ function WordSentenceFields({
             <span key={word}>{word}<button type="button" onClick={() => removeWord(word)} aria-label={`删除 ${word}`}><X size={12} /></button></span>
           ))}
         </div>
-        <textarea
+        <Input.TextArea
           value={wordDraft}
           placeholder="输入后按 Enter 添加..."
           onChange={(event) => setWordDraft(event.target.value)}
@@ -194,7 +195,7 @@ function WordSentenceFields({
       {addingSentence ? (
         <div className="ppt-v1-sentence-add-row">
           <span>⠿</span>
-          <input
+          <Input
             autoFocus
             value={sentenceDraft}
             placeholder="输入句型，按 Enter 确认..."

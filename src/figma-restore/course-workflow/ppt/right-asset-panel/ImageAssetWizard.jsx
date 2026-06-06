@@ -1,4 +1,5 @@
 import React from 'react';
+import { Input } from 'antd';
 import {
   BookOpen,
   CircleDot,
@@ -327,7 +328,7 @@ function ActionSelector({ values, setValue }) {
             </button>
           )) : <span>从下方选择或搜索添加动作...</span>}
         </div>
-        <input
+        <Input
           className="ppt-img-text-input"
           value={draft}
           placeholder="搜索动作，或输入后按 Enter 新增"
@@ -366,7 +367,7 @@ function ScenePromptBox({ value, onChange }) {
     <div className="ppt-img-section">
       <div className="ppt-img-label">描述场景 <span>（中英文均可）</span></div>
       <div className="ppt-img-prompt-box">
-        <textarea
+        <Input.TextArea
           value={value}
           placeholder="例：太空场景，宇宙飞船驾驶舱"
           maxLength={40}
@@ -420,7 +421,7 @@ function FlashcardWordEditor({ values, setValue }) {
             </button>
           ))}
         </div>
-        <input
+        <Input
           value={draft}
           placeholder="输入词汇后按 Enter 添加..."
           onChange={(event) => setDraft(event.target.value)}
@@ -479,7 +480,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <div className="ppt-asset-divider" />
             <div className="ppt-img-section">
               <div className="ppt-img-label">故事场景描述</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.storyScene || ''}
                 placeholder="例：森林里的小木屋，秋天傍晚"
@@ -488,7 +489,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             </div>
             <div className="ppt-img-section">
               <div className="ppt-img-label">角色描述（可选）</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.storyCharacter || ''}
                 placeholder="例：戴眼镜的小女孩，橙色外套"
@@ -503,7 +504,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <ActivityThemePicker value={values.theme} onChange={(value) => setValue('theme', value)} />
             <div className="ppt-img-section">
               <div className="ppt-img-label">活动标题</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.activityTitle || ''}
                 placeholder="例：Animal Sports Day / 星际音乐会"
@@ -520,7 +521,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <div className="ppt-asset-divider" />
             <div className="ppt-img-section">
               <div className="ppt-img-label">场景名称</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.topicScene || ''}
                 placeholder="例：厨房 Kitchen"
@@ -529,7 +530,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             </div>
             <div className="ppt-img-section">
               <div className="ppt-img-label">标注词汇（每行一个，至少5个）</div>
-              <textarea
+              <Input.TextArea
                 className="ppt-img-textarea-input"
                 value={values.topicWords || ''}
                 placeholder={'冰箱 refrigerator\n炉灶 stove\n水龙头 faucet'}
@@ -545,7 +546,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <TextLayoutPicker value={values.textLayout} onChange={(value) => setValue('textLayout', value)} />
             <div className="ppt-img-section">
               <div className="ppt-img-label">文字内容（谜题、对话等）</div>
-              <textarea
+              <Input.TextArea
                 className="ppt-img-textarea-input is-text-card"
                 value={values.textContent || ''}
                 placeholder={'例：What can fly but has no wings?\n——A dream!'}
@@ -554,7 +555,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             </div>
             <div className="ppt-img-section">
               <div className="ppt-img-label">背景场景描述</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.textBackground || ''}
                 placeholder="例：神秘森林，夜晚，星光"
@@ -567,7 +568,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
           <>
             <div className="ppt-img-section">
               <div className="ppt-img-label">中心主题词</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.knowledgeTopic || ''}
                 placeholder="例：Present Tense 现在时"
@@ -576,7 +577,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             </div>
             <div className="ppt-img-section">
               <div className="ppt-img-label">知识点/分支内容（每行一条）</div>
-              <textarea
+              <Input.TextArea
                 className="ppt-img-textarea-input"
                 value={values.knowledgeItems || ''}
                 placeholder={'Simple Present: 主语+动词原形\nPresent Continuous: 主语+am/is/are+V-ing\n用法：表示习惯性动作'}
@@ -596,7 +597,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <div className="ppt-asset-divider" />
             <div className="ppt-img-section">
               <div className="ppt-img-label">目标短语/句型</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.phrase || ''}
                 placeholder="例：Can I have...? / I want to..."
@@ -605,7 +606,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             </div>
             <div className="ppt-img-section">
               <div className="ppt-img-label">故事主角</div>
-              <input
+              <Input
                 className="ppt-img-text-input"
                 value={values.comicCharacter || ''}
                 placeholder="例：一只爱吃糖的北极熊"
@@ -614,7 +615,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             </div>
             <div className="ppt-img-section">
               <div className="ppt-img-label">故事情节（可选，留空则AI自由发挥）</div>
-              <textarea
+              <Input.TextArea
                 className="ppt-img-textarea-input"
                 value={values.plot || ''}
                 placeholder="例：第1格：主角发现冰淇淋店..."
@@ -646,7 +647,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             {asset.code === 'B2' ? (
               <div className="ppt-img-section">
                 <div className="ppt-img-label">叠加文字内容</div>
-                <input
+                <Input
                   className="ppt-img-text-input"
                   value={values.overlayText || ''}
                   placeholder="例:Reach for the Stars!"
@@ -698,7 +699,7 @@ function StorybookPasteStep({ values, setValue }) {
     <div className="ppt-storybook-body">
       <div className="ppt-img-section">
         <div className="ppt-img-label">故事名称</div>
-        <input
+        <Input
           className="ppt-img-text-input"
           value={values.storybookTitle || ''}
           placeholder="给你的绘本起个名字吧..."
@@ -707,7 +708,7 @@ function StorybookPasteStep({ values, setValue }) {
       </div>
       <div className="ppt-img-section">
         <div className="ppt-img-label-row"><span>故事内容</span><em>{(values.storybookContent || '').length} 字</em></div>
-        <textarea
+        <Input.TextArea
           className="ppt-storybook-textarea"
           value={values.storybookContent || ''}
           placeholder="请粘贴您的故事内容，AI 将自动为您拆分成多页绘本分镜..."
@@ -849,7 +850,7 @@ function ImageTypeContent({ asset, values, setValue }) {
           maxLength={40}
         />
         <FieldBlock label="叠加文字内容">
-          <input value={values.overlayText || ''} placeholder="例:Reach for the Stars!" onChange={updateText('overlayText')} />
+          <Input value={values.overlayText || ''} placeholder="例:Reach for the Stars!" onChange={updateText('overlayText')} />
         </FieldBlock>
       </>
     );
@@ -864,7 +865,7 @@ function ImageTypeContent({ asset, values, setValue }) {
               <span>apple x</span>
               <span>banana x</span>
             </div>
-            <textarea
+            <Input.TextArea
               value={values.words || 'apple\nbanana'}
               onChange={updateText('words')}
               placeholder="输入词汇后按回车添加"
@@ -885,10 +886,10 @@ function ImageTypeContent({ asset, values, setValue }) {
     return (
       <>
         <FieldBlock label="故事场景描述">
-          <input value={values.storyScene || ''} placeholder="例：森林里的小木屋，秋天傍晚" onChange={updateText('storyScene')} />
+          <Input value={values.storyScene || ''} placeholder="例：森林里的小木屋，秋天傍晚" onChange={updateText('storyScene')} />
         </FieldBlock>
         <FieldBlock label="角色描述（可选）">
-          <input value={values.storyCharacter || ''} placeholder="例：戴眼镜的小女孩，橙色外套" onChange={updateText('storyCharacter')} />
+          <Input value={values.storyCharacter || ''} placeholder="例：戴眼镜的小女孩，橙色外套" onChange={updateText('storyCharacter')} />
         </FieldBlock>
       </>
     );
@@ -898,7 +899,7 @@ function ImageTypeContent({ asset, values, setValue }) {
     return (
       <>
         <FieldBlock label="活动标题">
-          <input value={values.activityTitle || ''} placeholder="例：Animal Sports Day / 星际音乐会" onChange={updateText('activityTitle')} />
+          <Input value={values.activityTitle || ''} placeholder="例：Animal Sports Day / 星际音乐会" onChange={updateText('activityTitle')} />
         </FieldBlock>
         <Tip>AI 根据主题类型和活动标题自动生成画面，无需描述提示词</Tip>
       </>
@@ -909,10 +910,10 @@ function ImageTypeContent({ asset, values, setValue }) {
     return (
       <>
         <FieldBlock label="场景名称">
-          <input value={values.mapScene || ''} placeholder="例：厨房 Kitchen" onChange={updateText('mapScene')} />
+          <Input value={values.mapScene || ''} placeholder="例：厨房 Kitchen" onChange={updateText('mapScene')} />
         </FieldBlock>
         <FieldBlock label="标注词汇（每行一个，至少5个）">
-          <textarea
+          <Input.TextArea
             value={values.mapWords || ''}
             onChange={updateText('mapWords')}
             placeholder={'冰箱 refrigerator\n炉灶 stove\n水龙头 faucet\n砧板 cutting board\n微波炉 microwave'}
@@ -930,14 +931,14 @@ function ImageTypeContent({ asset, values, setValue }) {
           <OptionGrid options={['对话气泡', '卷轴', '卡片框']} value={values.bubble || '对话气泡'} onChange={(value) => setValue('bubble', value)} columns={3} />
         </FieldBlock>
         <FieldBlock label="文字内容（谜题、对话等）">
-          <textarea
+          <Input.TextArea
             value={values.textContent || ''}
             onChange={updateText('textContent')}
             placeholder={'例：What can fly but has no wings?\n--A dream!'}
           />
         </FieldBlock>
         <FieldBlock label="背景场景描述">
-          <input value={values.textBg || ''} placeholder="例：神秘森林，夜晚，星光" onChange={updateText('textBg')} />
+          <Input value={values.textBg || ''} placeholder="例：神秘森林，夜晚，星光" onChange={updateText('textBg')} />
         </FieldBlock>
       </>
     );
@@ -947,10 +948,10 @@ function ImageTypeContent({ asset, values, setValue }) {
     return (
       <>
         <FieldBlock label="中心主题词">
-          <input value={values.center || ''} placeholder="例：Present Tense 现在时" onChange={updateText('center')} />
+          <Input value={values.center || ''} placeholder="例：Present Tense 现在时" onChange={updateText('center')} />
         </FieldBlock>
         <FieldBlock label="知识点/分支内容（每行一条）">
-          <textarea
+          <Input.TextArea
             value={values.knowledge || ''}
             onChange={updateText('knowledge')}
             placeholder={'Simple Present: 主语+动词原形\nPresent Continuous: 主语+am/is/are+V-ing\n用法：表示习惯性动作\n例句：She reads every day.'}
@@ -966,13 +967,13 @@ function ImageTypeContent({ asset, values, setValue }) {
       <>
         <label className="ppt-check-row"><input type="checkbox" defaultChecked /> 含对话气泡文字</label>
         <FieldBlock label="目标短语/句型">
-          <input value={values.phrase || ''} placeholder="例：Can I have...? / I want to..." onChange={updateText('phrase')} />
+          <Input value={values.phrase || ''} placeholder="例：Can I have...? / I want to..." onChange={updateText('phrase')} />
         </FieldBlock>
         <FieldBlock label="故事主角">
-          <input value={values.comicCharacter || ''} placeholder="例：一只爱吃糖的北极熊" onChange={updateText('comicCharacter')} />
+          <Input value={values.comicCharacter || ''} placeholder="例：一只爱吃糖的北极熊" onChange={updateText('comicCharacter')} />
         </FieldBlock>
         <FieldBlock label="故事情节（可选，留空则AI自由发挥）">
-          <textarea value={values.plot || ''} placeholder="例：第1格：主角发现冰淇淋店..." onChange={updateText('plot')} />
+          <Input.TextArea value={values.plot || ''} placeholder="例：第1格：主角发现冰淇淋店..." onChange={updateText('plot')} />
         </FieldBlock>
         <Tip>固定4格漫画布局，AI自动编排起承转合</Tip>
       </>
@@ -986,7 +987,7 @@ function ImageTypeContent({ asset, values, setValue }) {
           <span>从下方选择或搜索添加动作...</span>
         </div>
         <FieldBlock label="搜索动作">
-          <input value={values.actionSearch || ''} placeholder="搜索动作，或输入后按 Enter 新增" onChange={updateText('actionSearch')} />
+          <Input value={values.actionSearch || ''} placeholder="搜索动作，或输入后按 Enter 新增" onChange={updateText('actionSearch')} />
         </FieldBlock>
       </>
     );

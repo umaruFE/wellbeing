@@ -1,4 +1,5 @@
 ﻿import React from 'react';
+import { Input } from 'antd';
 import { Activity, BookOpen, Check, Clock, Dumbbell, Flame, Music, Palette, Play, Sparkles, Trophy, UserRound, Zap } from 'lucide-react';
 import audioSoonDialogue from './assets/audio-soon-dialogue.svg';
 import audioSoonMeditation from './assets/audio-soon-meditation.svg';
@@ -11,14 +12,14 @@ function AudioField({ field, value, onChange }) {
   if (field.type === 'textarea') {
     return (
       <FieldBlock label={field.label}>
-        <textarea value={value || ''} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} />
+        <Input.TextArea value={value || ''} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} />
       </FieldBlock>
     );
   }
   if (field.type === 'input') {
     return (
       <FieldBlock label={field.label}>
-        <input value={value || ''} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} />
+        <Input value={value || ''} placeholder={field.placeholder} onChange={(event) => onChange(event.target.value)} />
       </FieldBlock>
     );
   }
@@ -161,7 +162,7 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
       {step === 0 ? (
         <div className="ppt-c1-body">
           <div className="ppt-audio-section-title">输入歌曲主题</div>
-          <input
+          <Input
             className="ppt-c5-topic-input"
             value={values.topic}
             onChange={(event) => setValue('topic', event.target.value)}
@@ -196,7 +197,7 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
         <div className="ppt-c1-body">
           <div className="ppt-audio-section-title">AI生成歌词</div>
           <div className="ppt-c3-textbox ppt-c5-lyrics-box">
-            <textarea value={values.lyrics} onChange={(event) => setValue('lyrics', event.target.value)} />
+            <Input.TextArea value={values.lyrics} onChange={(event) => setValue('lyrics', event.target.value)} />
           </div>
           <div className="ppt-c1-tip">可直接编辑歌词内容，再生成歌曲音频</div>
         </div>
@@ -325,7 +326,7 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
           </div>
           <div className="ppt-audio-section-title">输入朗读内容</div>
           <div className="ppt-c3-textbox">
-            <textarea
+            <Input.TextArea
               value={values.text}
               placeholder={'请输入英文单词、短语或句子，支持批量输入（每行一条）\n\n例：'}
               onChange={(event) => setValue('text', event.target.value)}

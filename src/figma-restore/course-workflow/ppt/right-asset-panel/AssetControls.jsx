@@ -1,3 +1,4 @@
+import { Input } from 'antd';
 import { WandSparkles } from 'lucide-react';
 
 export function OptionGrid({ options, value, onChange, columns = 3, className = '' }) {
@@ -34,7 +35,7 @@ export function FieldBlock({ label, children }) {
 export function PromptField({ label, value, onChange, placeholder, maxLength = 80 }) {
   return (
     <FieldBlock label={label}>
-      <textarea
+      <Input.TextArea
         value={value}
         maxLength={maxLength}
         placeholder={placeholder}

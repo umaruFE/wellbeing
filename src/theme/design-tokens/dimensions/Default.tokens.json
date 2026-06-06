@@ -172,7 +172,7 @@
     "Line Width": {
       "lineWidth": {
         "$type": "number",
-        "$value": 1.5,
+        "$value": 2,
         "$extensions": {
           "com.figma.variableId": "VariableID:5006:2143",
           "com.figma.scopes": [
