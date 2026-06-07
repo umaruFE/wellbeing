@@ -1,7 +1,7 @@
 import { Library } from 'lucide-react';
 import { getAssetGroups } from './assetPanelData';
 
-export function AssetTypeSelector({ type, onSelect }) {
+export function AssetTypeSelector({ type, onSelect, onOpenLibrary }) {
   return (
     <div className="ppt-asset-selector">
       {getAssetGroups(type).map((group) => (
@@ -32,7 +32,7 @@ export function AssetTypeSelector({ type, onSelect }) {
 
       <section className="ppt-asset-type-section">
         <div className="ppt-asset-sec-title">素材库</div>
-        <button type="button" className="ppt-asset-library-btn">
+        <button type="button" className="ppt-asset-library-btn" onClick={onOpenLibrary}>
           {type === 'audio' ? null : <Library size={15} />}
           从已有素材库选择
         </button>

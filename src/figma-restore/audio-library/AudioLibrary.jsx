@@ -1,7 +1,9 @@
 import React from 'react';
-import { Download, Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Upload as UploadIcon, X } from 'lucide-react';
+import { Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Upload as UploadIcon } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import './AudioLibrary.css';
+import { AudioPreviewModal } from './AudioPreviewModal';
+import { TaskDetailModal, createCanvasAssetPayload } from '../TaskDetailModal';
 
 const AUDIO_ASSETS = [
   { id: 'aud-calm', name: '安静氛围BGM_01.mp3', source: 'AI生成', type: 'BGM', format: 'MP3', fileSize: '2.4 MB', duration: '1:00', created: '2026/04/13 10:06:30', tone: 'lavender', info: { audioType: '情绪氛围 BGM', theme: 'Quiet classroom', style: '安静 / 温暖', lyric: '无歌词' } },
@@ -24,13 +26,28 @@ const typeOptions = [
   { label: '音效', value: '音效' },
 ];
 
-function formatMediaTime(value) {
-  if (!Number.isFinite(value) || value <= 0) return '00:00';
-  const totalSeconds = Math.floor(value);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
+const createAudioTaskDetail = (asset) => ({
+  type: 'audio',
+  title: asset.name,
+  count: 'x 1 首',
+  course: '音频库素材',
+  status: 'done',
+  statusText: '已完成',
+  submit: asset.created,
+  engine: `音频素材 · ${asset.format}`,
+  progress: 100,
+  prompt: asset.source === 'AI生成'
+    ? `${asset.info.audioType}，主题 ${asset.info.theme}，风格 ${asset.info.style}。`
+    : `手动上传音频素材：${asset.name}`,
+  spec: `${asset.duration} · ${asset.format} · ${asset.fileSize}`,
+  tracks: [asset.name],
+  config: [
+    ['音频类型', asset.info.audioType],
+    ['主题', asset.info.theme],
+    ['风格', asset.info.style],
+    ['格式', asset.format],
+  ],
+});
 
 function WaveArt({ asset, playing, onToggle }) {
   return (
@@ -49,99 +66,14 @@ function WaveArt({ asset, playing, onToggle }) {
   );
 }
 
-function InfoRows({ rows }) {
-  return (
-    <div className="fr-aud-info-list">
-      {rows.map(([label, value]) => (
-        <div className="fr-aud-info-row" key={label}>
-          <label>{label}</label>
-          <span>{value}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay, progress }) {
-  if (!asset) return null;
-  const isAi = asset.source === 'AI生成';
-  const isCurrentAsset = progress.assetId === asset.id;
-  const activeDuration = isCurrentAsset ? progress.duration : 0;
-  const progressPercent = activeDuration > 0 ? Math.min((progress.current / activeDuration) * 100, 100) : 0;
-  const currentLabel = isCurrentAsset ? formatMediaTime(progress.current) : '00:00';
-  const durationLabel = activeDuration > 0 ? formatMediaTime(activeDuration) : asset.duration;
-
-  return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      centered
-      width={760}
-      className="fr-aud-modal fr-aud-preview-modal"
-      closeIcon={<X size={22} />}
-      title={(
-        <div className="fr-aud-detail-head">
-          <div className="fr-aud-modal-title">{asset.name}</div>
-          <div className="fr-aud-modal-tags">
-            <Tag color="error">{asset.type}</Tag>
-            <Tag>{asset.source}</Tag>
-            <Tag>{asset.format}</Tag>
-          </div>
-        </div>
-      )}
-    >
-      <div className="fr-aud-preview-body">
-        <div className="fr-aud-preview-player">
-          <WaveArt asset={asset} playing={playing} onToggle={onTogglePlay} />
-          <div className="fr-aud-progress">
-            <div className="fr-aud-time-row"><span>{currentLabel}</span><span>{durationLabel}</span></div>
-            <div className="fr-aud-track"><span style={{ width: `${progressPercent}%` }} /></div>
-          </div>
-        </div>
-        <aside className="fr-aud-preview-panel">
-          <section>
-            <h3>基础信息</h3>
-            <InfoRows rows={[
-              ['来源', asset.source],
-              ['格式', asset.format],
-              ['文件大小', asset.fileSize],
-              ['创建时间', asset.created],
-              ['时长', asset.duration],
-            ]} />
-          </section>
-          <section>
-            <h3>{isAi ? '生成信息' : '上传信息'}</h3>
-            <InfoRows rows={isAi ? [
-              ['音频类型', asset.info.audioType],
-              ['主题', asset.info.theme],
-              ['风格', asset.info.style],
-              ['歌词', asset.info.lyric],
-            ] : [
-              ['上传者', 'Admin'],
-              ['原文件名', `${asset.name}`],
-              ['文件大小', asset.fileSize],
-            ]} />
-          </section>
-        </aside>
-      </div>
-      <div className="fr-aud-modal-footer">
-        <Button onClick={onClose}>关闭</Button>
-        <Button icon={<Download size={14} />} onClick={() => message.success('已开始下载音频')}>
-          下载
-        </Button>
-      </div>
-    </Modal>
-  );
-}
-
-export function AudioLibrary() {
+export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
   const [assets, setAssets] = React.useState(AUDIO_ASSETS);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [type, setType] = React.useState('');
   const [previewAsset, setPreviewAsset] = React.useState(null);
   const [deleteAsset, setDeleteAsset] = React.useState(null);
+  const [taskDetail, setTaskDetail] = React.useState(null);
   const [playingId, setPlayingId] = React.useState(null);
   const [playProgress, setPlayProgress] = React.useState({ assetId: null, current: 0, duration: 0 });
   const audioRef = React.useRef(null);
@@ -253,8 +185,16 @@ export function AudioLibrary() {
     if (key === 'delete') setDeleteAsset(asset);
   };
 
+  const handleInsertToCanvas = (asset) => {
+    const task = createAudioTaskDetail(asset);
+    onInsertTaskAsset?.(createCanvasAssetPayload(task));
+    stopAudio();
+    setPreviewAsset(null);
+    setTaskDetail(null);
+  };
+
   return (
-    <section className="fr-aud-lib">
+    <section className={`fr-aud-lib ${variant === 'ppt-picker' ? 'ppt-library-picker' : ''}`}>
       <div className="fr-aud-page">
         <header className="fr-aud-hero">
           <div className="fr-aud-hero-left">
@@ -339,6 +279,19 @@ export function AudioLibrary() {
         playing={previewAsset?.id === playingId}
         onTogglePlay={() => previewAsset && handlePlayAudio(previewAsset)}
         progress={playProgress}
+        onViewTask={(asset) => {
+          stopAudio();
+          setTaskDetail(createAudioTaskDetail(asset));
+          setPreviewAsset(null);
+        }}
+        onInsertCanvas={onInsertTaskAsset ? handleInsertToCanvas : null}
+      />
+
+      <TaskDetailModal
+        task={taskDetail}
+        open={Boolean(taskDetail)}
+        onClose={() => setTaskDetail(null)}
+        onInsertTaskAsset={onInsertTaskAsset}
       />
 
       <Modal

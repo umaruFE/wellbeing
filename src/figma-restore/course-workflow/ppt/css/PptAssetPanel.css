@@ -4948,3 +4948,57 @@
 #ed-ppt .ppt-vm-summary-card {
   background: #f6f4ee;
 }
+
+#ed-ppt .ppt-library-picker {
+  min-height: 100%;
+  background: #ffffff;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-page, .fr-vid-page, .fr-aud-page) {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-hero, .fr-vid-hero, .fr-aud-hero) {
+  display: none;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-panel, .fr-vid-panel, .fr-aud-panel) {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  background: transparent;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-toolbar, .fr-vid-toolbar, .fr-aud-toolbar) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-filter-group, .fr-vid-filter-group, .fr-aud-filter-group) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-grid, .fr-vid-grid, .fr-aud-grid) {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-card, .fr-vid-card, .fr-aud-card) {
+  min-width: 0;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-name, .fr-vid-name, .fr-aud-name) {
+  white-space: normal;
+}
+
+#ed-ppt .ppt-library-picker :is(.fr-img-empty, .fr-vid-empty, .fr-aud-empty) {
+  min-height: 220px;
+}

@@ -2,6 +2,8 @@ import React from 'react';
 import { BookOpen, Eye, FileText, Image, Monitor, MoreVertical, Plus, Search, Trash2, Upload as UploadIcon, X } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import './ImageLibrary.css';
+import { AssetPreviewModal } from './AssetPreviewModal';
+import { TaskDetailModal, createCanvasAssetPayload } from '../TaskDetailModal';
 
 const IMAGE_ASSETS = [
   { id: 'img-air', name: '星际信号接收站主题图', source: 'AI生成', type: '主题意境图', size: '1024 × 1024', created: '2026/04/13 10:06:30', scene: 'air' },
@@ -28,6 +30,29 @@ const typeOptions = [
   { label: '故事配图', value: '故事配图' },
 ];
 
+const createImageTaskDetail = (asset) => ({
+  type: 'image',
+  title: asset.name,
+  count: 'x 1 张',
+  course: '图片库素材',
+  status: 'done',
+  statusText: '已完成',
+  submit: asset.created,
+  engine: `${asset.type} · ${asset.source}`,
+  progress: 100,
+  prompt: asset.source === 'AI生成'
+    ? `生成${asset.name}，风格适合课堂演示与课件画布。`
+    : `手动上传图片素材：${asset.name}`,
+  spec: `${asset.size} · PNG`,
+  scenes: [asset.scene, asset.scene, asset.scene, asset.scene],
+  config: [
+    ['素材类型', asset.type],
+    ['来源', asset.source],
+    ['图片尺寸', asset.size],
+    ['格式', 'PNG'],
+  ],
+});
+
 const insertConfigs = {
   cover: {
     name: '课程地图封面',
@@ -52,14 +77,6 @@ const insertConfigs = {
   },
 };
 
-function imageAssetPrompt(asset) {
-  if (asset.source !== 'AI生成') return '';
-  if (asset.type === '闪卡') return '生成儿童友好的英文词汇闪卡，画面清晰、背景简洁，适合课堂展示和打印。';
-  if (asset.type === '故事配图') return '生成神奇动物主题故事配图，童趣线条插画，角色友好，适合阅读材料与课堂讲述。';
-  if (asset.type === 'PPT素材') return '生成适合 PPT 画布使用的课堂背景图，保留主体留白，画面温暖明亮。';
-  return '生成神奇动物世界主题意境图，卡通插画风格，温暖色调，适合课程封面和课堂导入。';
-}
-
 function SceneArt({ scene, src, alt }) {
   if (src) {
     return <img className="fr-img-real-image" src={src} alt={alt || ''} />;
@@ -72,76 +89,6 @@ function SceneArt({ scene, src, alt }) {
       <span className="shape orb c" />
       <span className="shape block d" />
     </div>
-  );
-}
-
-function InfoRows({ rows }) {
-  return (
-    <div className="fr-img-info-list">
-      {rows.map(([label, value]) => (
-        <div className="fr-img-info-row" key={label}>
-          <label>{label}</label>
-          <span>{value}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function AssetPreviewModal({ asset, open, onClose, onInsert, onViewTask }) {
-  if (!asset) return null;
-  const isAi = asset.source === 'AI生成';
-
-  return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      centered
-      width={1040}
-      className="fr-img-modal fr-img-preview-modal"
-      closeIcon={<X size={22} />}
-      title={(
-        <div className="fr-img-detail-head">
-          <div className="fr-img-modal-title">{asset.name}</div>
-          <div className="fr-img-modal-tags">
-            <Tag color="error">{asset.type}</Tag>
-            <Tag>{asset.source}</Tag>
-            <Tag>PNG</Tag>
-          </div>
-        </div>
-      )}
-    >
-      <div className="fr-img-preview-body">
-        <div className="fr-img-preview-art">
-          <SceneArt scene={asset.scene} src={asset.previewUrl} alt={asset.name} />
-        </div>
-        <aside className="fr-img-preview-panel">
-          <section>
-            <h3>基础信息</h3>
-            <InfoRows rows={[
-              ['来源', asset.source],
-              ['格式', 'PNG'],
-              ['图片尺寸', asset.size],
-              ['创建时间', asset.created],
-            ]} />
-          </section>
-          <section>
-            <h3>{isAi ? '生成信息' : '上传信息'}</h3>
-            <InfoRows rows={isAi ? [
-              ['生成提示词', imageAssetPrompt(asset)],
-            ] : [
-              ['上传者', 'Admin'],
-              ['原文件名', `${asset.name.replace(/\s+/g, '_')}.png`],
-              ['文件大小', '1.8 MB'],
-            ]} />
-          </section>
-        </aside>
-      </div>
-      <div className="fr-img-modal-footer">
-        <Button onClick={onClose}>关闭</Button>
-      </div>
-    </Modal>
   );
 }
 
@@ -286,7 +233,7 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
   );
 }
 
-export function ImageLibrary() {
+export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
   const [assets, setAssets] = React.useState(IMAGE_ASSETS);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
@@ -294,6 +241,7 @@ export function ImageLibrary() {
   const [previewAsset, setPreviewAsset] = React.useState(null);
   const [insertAsset, setInsertAsset] = React.useState(null);
   const [deleteAsset, setDeleteAsset] = React.useState(null);
+  const [taskDetail, setTaskDetail] = React.useState(null);
 
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -341,6 +289,13 @@ export function ImageLibrary() {
     message.success(`已将「${asset.name}」插入到「${cfg.name}」`);
   };
 
+  const handleInsertToCanvas = (asset) => {
+    const task = createImageTaskDetail(asset);
+    onInsertTaskAsset?.(createCanvasAssetPayload(task));
+    setPreviewAsset(null);
+    setTaskDetail(null);
+  };
+
   const handleDeleteAsset = (asset) => {
     setAssets(current => current.filter(item => item.id !== asset.id));
     setPreviewAsset(current => (current?.id === asset.id ? null : current));
@@ -362,7 +317,7 @@ export function ImageLibrary() {
   };
 
   return (
-    <section className="fr-img-lib">
+    <section className={`fr-img-lib ${variant === 'ppt-picker' ? 'ppt-library-picker' : ''}`}>
       <div className="fr-img-page">
         <header className="fr-img-hero">
           <div className="fr-img-hero-left">
@@ -453,11 +408,18 @@ export function ImageLibrary() {
         asset={previewAsset}
         open={Boolean(previewAsset)}
         onClose={() => setPreviewAsset(null)}
-        onInsert={(asset) => {
+        onViewTask={(asset) => {
+          setTaskDetail(createImageTaskDetail(asset));
           setPreviewAsset(null);
-          setInsertAsset(asset);
         }}
-        onViewTask={() => message.info('已打开对应生成任务详情')}
+        onInsertCanvas={onInsertTaskAsset ? handleInsertToCanvas : null}
+      />
+
+      <TaskDetailModal
+        task={taskDetail}
+        open={Boolean(taskDetail)}
+        onClose={() => setTaskDetail(null)}
+        onInsertTaskAsset={onInsertTaskAsset}
       />
 
       <InsertModal

@@ -1,7 +1,9 @@
 import React from 'react';
-import { Download, Eye, FileVideo, MoreVertical, Pause, Play, Search, Trash2, Upload as UploadIcon, Video, X } from 'lucide-react';
+import { Eye, FileVideo, MoreVertical, Pause, Play, Search, Trash2, Upload as UploadIcon, Video } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import './VideoLibrary.css';
+import { VideoPreviewModal } from './VideoPreviewModal';
+import { TaskDetailModal, createCanvasAssetPayload } from '../TaskDetailModal';
 
 const VIDEO_ASSETS = [
   { id: 'vid-space', name: '太空探索动画', source: 'AI生成', type: '动画片段', format: 'MP4', fileSize: '18.6 MB', duration: '0:45', ratio: '16:9', created: '2026/04/13 10:22:06', tone: 'blue', info: { videoType: '情境叙事视频', scene: '太空探索', language: 'planet / rocket / stars', spec: '16:9 · 课堂导入短片' } },
@@ -25,13 +27,33 @@ const typeOptions = [
   { label: '体能闯关', value: '体能闯关' },
 ];
 
-function formatMediaTime(value) {
-  if (!Number.isFinite(value) || value <= 0) return '00:00';
-  const totalSeconds = Math.floor(value);
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-}
+const createVideoTaskDetail = (asset) => ({
+  type: 'video',
+  title: asset.name,
+  count: 'x 1 个',
+  course: '视频库素材',
+  status: 'done',
+  statusText: '已完成',
+  submit: asset.created,
+  engine: `视频素材 · ${asset.format}`,
+  progress: 100,
+  prompt: asset.source === 'AI生成' || asset.source === '课程同步'
+    ? `${asset.info.videoType}，场景 ${asset.info.scene}，核心语言 ${asset.info.language}。`
+    : `手动上传视频素材：${asset.name}`,
+  spec: `${asset.duration} · ${asset.ratio} · ${asset.format}`,
+  hero: asset.tone === 'blue' ? 'classroom' : asset.tone === 'mint' ? 'camp' : asset.tone === 'peach' ? 'kitchen' : 'stage',
+  shots: [
+    asset.info.scene || asset.name,
+    asset.info.language || '课堂语言输入',
+    asset.info.spec || '输出课堂视频素材',
+  ],
+  config: [
+    ['视频类型', asset.info.videoType],
+    ['场景', asset.info.scene],
+    ['视频比例', asset.ratio],
+    ['格式', asset.format],
+  ],
+});
 
 function VideoArt({ asset, playing, onToggle }) {
   return (
@@ -55,125 +77,14 @@ function VideoArt({ asset, playing, onToggle }) {
   );
 }
 
-function InfoRows({ rows }) {
-  return (
-    <div className="fr-vid-info-list">
-      {rows.map(([label, value]) => (
-        <div className="fr-vid-info-row" key={label}>
-          <label>{label}</label>
-          <span>{value}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function VideoPreviewModal({ asset, open, onClose }) {
-  const videoRef = React.useRef(null);
-  const [progress, setProgress] = React.useState({ current: 0, duration: 0 });
-
-  React.useEffect(() => {
-    setProgress({ current: 0, duration: 0 });
-  }, [asset?.id, open]);
-
-  if (!asset) return null;
-  const isAi = asset.source === 'AI生成' || asset.source === '课程同步';
-  const progressPercent = progress.duration > 0 ? Math.min((progress.current / progress.duration) * 100, 100) : 0;
-  const durationLabel = progress.duration > 0 ? formatMediaTime(progress.duration) : asset.duration;
-
-  const updateProgress = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    setProgress({
-      current: video.currentTime || 0,
-      duration: Number.isFinite(video.duration) ? video.duration : 0,
-    });
-  };
-
-  return (
-    <Modal
-      open={open}
-      onCancel={onClose}
-      footer={null}
-      centered
-      width={760}
-      className="fr-vid-modal fr-vid-preview-modal"
-      closeIcon={<X size={22} />}
-      title={(
-        <div className="fr-vid-detail-head">
-          <div className="fr-vid-modal-title">{asset.name}</div>
-          <div className="fr-vid-modal-tags">
-            <Tag color="error">{asset.type}</Tag>
-            <Tag>{asset.source}</Tag>
-            <Tag>{asset.format}</Tag>
-          </div>
-        </div>
-      )}
-    >
-      <div className="fr-vid-preview-body">
-        <div className="fr-vid-preview-player">
-          {asset.objectUrl ? (
-            <video
-              ref={videoRef}
-              className="fr-vid-preview-video"
-              src={asset.objectUrl}
-              controls
-              onLoadedMetadata={updateProgress}
-              onTimeUpdate={updateProgress}
-              onEnded={updateProgress}
-            />
-          ) : (
-            <VideoArt asset={asset} playing={false} onToggle={() => message.info('示例素材暂无真实视频文件，请上传本地视频后播放')} />
-          )}
-          <div className="fr-vid-progress">
-            <div className="fr-vid-time-row"><span>{formatMediaTime(progress.current)}</span><span>{durationLabel}</span></div>
-            <div className="fr-vid-track"><span style={{ width: `${progressPercent}%` }} /></div>
-          </div>
-        </div>
-        <aside className="fr-vid-preview-panel">
-          <section>
-            <h3>基础信息</h3>
-            <InfoRows rows={[
-              ['来源', asset.source],
-              ['格式', asset.format],
-              ['文件大小', asset.fileSize],
-              ['视频比例', asset.ratio],
-              ['创建时间', asset.created],
-              ['时长', asset.duration],
-            ]} />
-          </section>
-          <section>
-            <h3>{isAi ? '生成信息' : '上传信息'}</h3>
-            <InfoRows rows={isAi ? [
-              ['视频类型', asset.info.videoType],
-              ['场景', asset.info.scene],
-              ['核心语言', asset.info.language],
-              ['输出规格', asset.info.spec],
-            ] : [
-              ['上传者', 'Admin'],
-              ['原文件名', `${asset.name}.${asset.format.toLowerCase()}`],
-              ['文件大小', asset.fileSize],
-            ]} />
-          </section>
-        </aside>
-      </div>
-      <div className="fr-vid-modal-footer">
-        <Button onClick={onClose}>关闭</Button>
-        <Button icon={<Download size={14} />} onClick={() => message.success('已开始下载视频')}>
-          下载
-        </Button>
-      </div>
-    </Modal>
-  );
-}
-
-export function VideoLibrary() {
+export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
   const [assets, setAssets] = React.useState(VIDEO_ASSETS);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [type, setType] = React.useState('');
   const [previewAsset, setPreviewAsset] = React.useState(null);
   const [deleteAsset, setDeleteAsset] = React.useState(null);
+  const [taskDetail, setTaskDetail] = React.useState(null);
   const [playingId, setPlayingId] = React.useState(null);
 
   const filteredAssets = React.useMemo(() => {
@@ -228,6 +139,14 @@ export function VideoLibrary() {
     setPlayingId(current => (current === asset.id ? null : asset.id));
   };
 
+  const handleInsertToCanvas = (asset) => {
+    const task = createVideoTaskDetail(asset);
+    onInsertTaskAsset?.(createCanvasAssetPayload(task));
+    setPlayingId(null);
+    setPreviewAsset(null);
+    setTaskDetail(null);
+  };
+
   const handleMenuClick = ({ key, domEvent }, asset) => {
     domEvent?.stopPropagation();
     if (key === 'detail') {
@@ -238,7 +157,7 @@ export function VideoLibrary() {
   };
 
   return (
-    <section className="fr-vid-lib">
+    <section className={`fr-vid-lib ${variant === 'ppt-picker' ? 'ppt-library-picker' : ''}`}>
       <div className="fr-vid-page">
         <header className="fr-vid-hero">
           <div className="fr-vid-hero-left">
@@ -310,7 +229,24 @@ export function VideoLibrary() {
         </section>
       </div>
 
-      <VideoPreviewModal asset={previewAsset} open={Boolean(previewAsset)} onClose={() => setPreviewAsset(null)} />
+      <VideoPreviewModal
+        asset={previewAsset}
+        open={Boolean(previewAsset)}
+        onClose={() => setPreviewAsset(null)}
+        onViewTask={(asset) => {
+          setPlayingId(null);
+          setTaskDetail(createVideoTaskDetail(asset));
+          setPreviewAsset(null);
+        }}
+        onInsertCanvas={onInsertTaskAsset ? handleInsertToCanvas : null}
+      />
+
+      <TaskDetailModal
+        task={taskDetail}
+        open={Boolean(taskDetail)}
+        onClose={() => setTaskDetail(null)}
+        onInsertTaskAsset={onInsertTaskAsset}
+      />
 
       <Modal
         open={Boolean(deleteAsset)}
