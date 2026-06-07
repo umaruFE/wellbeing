@@ -1,5 +1,14 @@
 import React from 'react';
-import { Clock, Edit3 } from 'lucide-react';
+import {
+  BookOpen,
+  Clock,
+  Crosshair,
+  Edit3,
+  FileText,
+  MessageCircle,
+  Sparkles,
+  Target,
+} from 'lucide-react';
 import { buildStepExecutionItems, splitStepResources } from './lessonDesignUtils';
 
 function InfoBlock({ iconClass, icon, title, children }) {
@@ -41,18 +50,18 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
 
           <div className="sdm-scroll">
             <div className="sdm-overview">
-              <div className="sdm-overview-card">
-                <InfoBlock iconClass="lang" icon="◎" title="语言目标">
+              <div className="sdm-overview-card lang">
+                <InfoBlock iconClass="lang" icon={<Target size={15} />} title="语言目标">
                   <div className="sdm-info-content">{step.goal || '待补充'}</div>
                 </InfoBlock>
               </div>
-              <div className="sdm-overview-card">
-                <InfoBlock iconClass="activity" icon="□" title="活动概述">
+              <div className="sdm-overview-card activity">
+                <InfoBlock iconClass="activity" icon={<FileText size={15} />} title="活动概述">
                   <div className="sdm-info-content">{step.activity || '待补充'}</div>
                 </InfoBlock>
               </div>
-              <div className="sdm-overview-card">
-                <InfoBlock iconClass="resource" icon="▣" title="教学资源">
+              <div className="sdm-overview-card resource">
+                <InfoBlock iconClass="resource" icon={<BookOpen size={15} />} title="教学资源">
                   {resources.length ? (
                     <div className="sdm-tag-list">
                       {resources.map((item) => <span className="sdm-tag" key={item}>{item}</span>)}
@@ -62,40 +71,53 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
                   )}
                 </InfoBlock>
               </div>
-              <div className="sdm-overview-card">
-                <InfoBlock iconClass="scene" icon="⌖" title="情境创设">
+              <div className="sdm-overview-card scene">
+                <InfoBlock iconClass="scene" icon={<Sparkles size={15} />} title="情境创设">
                   <div className="sdm-info-content">{step.scenario || '通过角色身份、任务线索和空间布置，快速建立沉浸感。'}</div>
                 </InfoBlock>
               </div>
             </div>
 
-            <div className="sdm-divider"><span>TEACHING EXECUTION 教学执行</span></div>
+            <div className="sdm-section-title">活动流程详情</div>
 
             <div className="sdm-execution">
               {executionItems.map((item, index) => (
                 <div className="sdm-exec-item" key={`${item.title}-${index}`}>
                   <div className="sdm-exec-num">{index + 1}</div>
                   <div className="sdm-exec-card">
-                    <div className="sdm-exec-card-head">
+                    <div className="sdm-exec-left">
                       <h4 className="sdm-exec-title">{item.title}</h4>
-                      <p className="sdm-exec-desc"><span className="sdm-play" /><span>{item.desc}</span></p>
+                      <p className="sdm-exec-desc">{item.desc}</p>
                     </div>
-                    <div className="sdm-exec-card-body">
-                      <div className="sdm-stage-cue"><span>上课提示</span><div>{item.stageCue}</div></div>
-                      <div className="sdm-script-list">
-                        {item.lines.map((line, lineIndex) => (
-                          <div className="sdm-teacher-line" key={`${line.text}-${lineIndex}`}>
-                            <span className="sdm-t-badge">T</span>
-                            <div>
-                              <p className="sdm-teacher-text">{line.text}</p>
-                              <div className="sdm-script-meta">
-                                {line.cue && <span className="sdm-teacher-cue">{line.cue}</span>}
-                                {line.response && <span className="sdm-student-response">可能回应：{line.response}</span>}
+                    <div className="sdm-script-panel">
+                      {item.lines.map((line, lineIndex) => (
+                        <div className="sdm-script-line" key={`${line.text}-${lineIndex}`}>
+                          <span className="sdm-script-icon"><MessageCircle size={15} /></span>
+                          <div className="sdm-script-copy">
+                            <p className="sdm-teacher-text">{line.text}</p>
+                            {line.cue && (
+                              <div className="sdm-cue-line">
+                                <span className="sdm-cue-icon"><Crosshair size={14} /></span>
+                                {line.cue}
                               </div>
-                            </div>
+                            )}
+                            {line.response && (
+                              <div className="sdm-cue-line">
+                                <span className="sdm-cue-icon"><Crosshair size={14} /></span>
+                                可能回应：{line.response}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
+                        </div>
+                      ))}
+                      {!item.lines.length && item.stageCue && (
+                        <div className="sdm-script-line">
+                          <span className="sdm-script-icon"><MessageCircle size={15} /></span>
+                          <div className="sdm-script-copy">
+                            <p className="sdm-teacher-text">{item.stageCue}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

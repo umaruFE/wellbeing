@@ -930,13 +930,13 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                       <div className="step-brief-list">
                         <div className="step-brief-item">
                           <div className="step-detail-label"><Target size={13} />语言目标</div>
-                          <div className="step-detail-body tbl-lo" contentEditable suppressContentEditableWarning spellCheck={false}>
+                          <div className="step-detail-body tbl-lo">
                             {step.goal}
                           </div>
                         </div>
                         <div className="step-brief-item">
                           <div className="step-detail-label"><ClipboardList size={13} />活动概述</div>
-                          <div className="step-detail-body" contentEditable suppressContentEditableWarning spellCheck={false}>
+                          <div className="step-detail-body">
                             {step.activity}
                           </div>
                         </div>
@@ -958,13 +958,13 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                         </div>
                         <div className="step-hidden-fields">
                           <div className="step-detail-label">活动流程原文</div>
-                          <div className="step-detail-body" contentEditable suppressContentEditableWarning spellCheck={false}>{step.flow}</div>
+                          <div className="step-detail-body">{step.flow}</div>
                           <div className="step-detail-label">教学资源</div>
-                          <div className="step-detail-body" contentEditable suppressContentEditableWarning spellCheck={false}>{step.resources}</div>
+                          <div className="step-detail-body">{step.resources}</div>
                           <div className="step-detail-label">情境创设</div>
-                          <div className="step-detail-body" contentEditable suppressContentEditableWarning spellCheck={false}>{step.scenario}</div>
+                          <div className="step-detail-body">{step.scenario}</div>
                           <div className="step-detail-label">教师语言与引导</div>
-                          <div className="step-script tbl-script" contentEditable suppressContentEditableWarning spellCheck={false}>
+                          <div className="step-script tbl-script">
                             <span className="tbl-q">“</span>{step.teacherScript}
                           </div>
                         </div>
