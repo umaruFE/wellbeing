@@ -7,6 +7,7 @@ import { audioConfig } from './assetPanelData';
 import { FieldBlock, OptionGrid, Tip } from './AssetControls';
 import { GenerationProgress } from './GenerationProgress';
 import { GeneratedAssetResults } from './GeneratedAssetResults';
+import apiService from '../../../../utils/apiService';
 
 function AudioField({ field, value, onChange }) {
   if (field.type === 'textarea') {
@@ -28,6 +29,50 @@ function AudioField({ field, value, onChange }) {
       <OptionGrid options={field.options} value={value || field.options[0]} onChange={onChange} columns={field.options.length > 3 ? 4 : 3} />
     </FieldBlock>
   );
+}
+
+function durationToSeconds(value) {
+  const match = String(value || '').match(/(\d+)/);
+  if (!match) return 60;
+  const amount = Number(match[1]);
+  return String(value).includes('分钟') ? amount * 60 : amount;
+}
+
+function speedToNumber(value) {
+  if (value === '慢速') return 0.85;
+  if (value === '快速') return 1.15;
+  return 1;
+}
+
+function buildAudioPrompt(asset, values) {
+  if (asset.code === 'C1') return `生成情绪氛围BGM，情绪：${values.emotion || '安静'}，时长：${values.duration || '1分钟'}，纯器乐，适合儿童英语PPT课堂。`;
+  if (asset.code === 'C2') return `生成活动背景乐，活动类型：${values.activity || '互动体能'}，节奏：${values.tempo || '中速'}，适合儿童英语课堂活动。`;
+  if (asset.code === 'C3') return values.text || 'Hello! Good morning! How are you today?';
+  if (asset.code === 'C5') return `生成教学歌曲，主题：${values.topic || '儿童英语课堂'}，风格：${values.style || '轻快流行'}，歌词：${values.lyrics || 'AI自动生成英文歌词'}`;
+  return `生成${asset.title}，${asset.desc || ''}`;
+}
+
+async function submitAudioAsset(asset, values) {
+  const response = await apiService.post('/api/ai/generate-ppt-asset', {
+    assetType: 'audio',
+    assetCode: asset.code,
+    assetName: asset.title,
+    prompt: buildAudioPrompt(asset, values),
+    options: {
+      emotion: values.emotion,
+      audioDuration: values.duration || '1分钟',
+      duration: durationToSeconds(values.duration),
+      activity: values.activity,
+      tempo: values.tempo,
+      text: values.text,
+      voice: values.voice,
+      speed: speedToNumber(values.speed),
+      topic: values.topic,
+      style: values.style,
+      lyrics: values.lyrics,
+    },
+  });
+  return response.asset || response.assets?.[0];
 }
 
 const c1Emotions = [
@@ -131,6 +176,8 @@ function C1Stepper({ step, done = false, items = ['情绪', '时长', '生成'] 
 
 function C5AudioWizard({ asset, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
+  const [generatedAsset, setGeneratedAsset] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     topic: '水果认知 颜色学习 天气歌 身体部位 星期歌',
     style: '轻快流行',
@@ -144,11 +191,18 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
     onTitleChange?.('教学歌曲');
   }, [onTitleChange]);
 
-  React.useEffect(() => {
-    if (step !== 3) return undefined;
-    const timer = window.setTimeout(() => setStep(4), 1400);
-    return () => window.clearTimeout(timer);
-  }, [step]);
+  const generateAudio = async () => {
+    setStep(3);
+    setErrorMessage('');
+    try {
+      const generated = await submitAudioAsset(asset, values);
+      setGeneratedAsset(generated);
+      setStep(4);
+    } catch (error) {
+      setErrorMessage(error.message || '音频生成任务提交失败');
+      setStep(2);
+    }
+  };
 
   const toggleTheme = (theme) => {
     const parts = values.topic.split(/\s+/).filter(Boolean);
@@ -227,6 +281,7 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
           </article>
         </div>
       ) : null}
+      {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
         {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
         {step === 1 ? (
@@ -238,14 +293,14 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
         {step === 2 ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => setStep(3)}>生成歌曲</button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成歌曲</button>
           </>
         ) : null}
         {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>取消</button> : null}
         {isResult ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(3)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
           </>
         ) : null}
       </div>
@@ -289,8 +344,97 @@ function AudioComingSoon({ asset, onClose, onTitleChange }) {
   );
 }
 
+function SimpleAudioWizard({ asset, onInsert, onTitleChange }) {
+  const [step, setStep] = React.useState(0);
+  const [generatedAsset, setGeneratedAsset] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [values, setValues] = React.useState({
+    text: asset.code === 'C4'
+      ? 'A: What can you see?\nB: I can see a lion.\nA: Great job!'
+      : 'Close your eyes. Take a deep breath. Listen to the music and relax.',
+    voice: '女声',
+    speed: '正常',
+    duration: '1分钟',
+  });
+  const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
+  const isGenerating = step === 1;
+  const isResult = step === 2;
+
+  React.useEffect(() => {
+    onTitleChange?.(asset.title);
+  }, [asset.title, onTitleChange]);
+
+  const generateAudio = async () => {
+    setStep(1);
+    setErrorMessage('');
+    try {
+      const generated = await submitAudioAsset(asset, values);
+      setGeneratedAsset(generated);
+      setStep(2);
+    } catch (error) {
+      setErrorMessage(error.message || '音频生成任务提交失败');
+      setStep(0);
+    }
+  };
+
+  return (
+    <>
+      <C1Stepper step={isResult ? 1 : step} done={isResult} items={['内容', '生成']} />
+      {step === 0 ? (
+        <div className="ppt-c1-body">
+          <div className="ppt-audio-section-title">{asset.code === 'C4' ? '输入对话脚本' : '输入引导词'}</div>
+          <div className="ppt-c3-textbox">
+            <Input.TextArea value={values.text} onChange={(event) => setValue('text', event.target.value)} />
+          </div>
+          <div className="ppt-audio-section-title">音色与时长</div>
+          <OptionGrid options={['女声', '男声', '童声']} value={values.voice} onChange={(value) => setValue('voice', value)} columns={3} />
+          <OptionGrid options={['30秒', '1分钟', '2分钟']} value={values.duration} onChange={(value) => setValue('duration', value)} columns={3} />
+          {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
+        </div>
+      ) : null}
+      {isGenerating ? (
+        <div className="ppt-c1-generating">
+          <span className="ppt-c1-spinner" />
+          <strong>正在生成{asset.title}...</strong>
+          <em>{values.voice} · {values.duration}</em>
+          <div className="ppt-c1-progress"><i /></div>
+          <p>正在调用语音生成流程...</p>
+        </div>
+      ) : null}
+      {isResult ? (
+        <div className="ppt-c1-result">
+          <div className="ppt-c1-result-sub">{values.voice} · {values.duration} · 任务已提交</div>
+          <article>
+            <div>
+              <strong>{asset.title}_01.mp3</strong>
+              <span><Music size={14} />生成音频</span>
+            </div>
+            <section>
+              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <i><b /></i>
+              <em>{values.duration}</em>
+            </section>
+          </article>
+        </div>
+      ) : null}
+      <div className="ppt-inline-footer ppt-c1-footer">
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成音频</button> : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>取消</button> : null}
+        {isResult ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={generateAudio}>重新生成</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
+          </>
+        ) : null}
+      </div>
+    </>
+  );
+}
+
 function C3AudioWizard({ asset, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
+  const [generatedAsset, setGeneratedAsset] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({ text: '', voice: '女声', speed: '正常', template: '课堂问候' });
   const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
   const isGenerating = step === 2;
@@ -301,11 +445,18 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
     onTitleChange?.('跟读朗读');
   }, [onTitleChange]);
 
-  React.useEffect(() => {
-    if (step !== 2) return undefined;
-    const timer = window.setTimeout(() => setStep(3), 1400);
-    return () => window.clearTimeout(timer);
-  }, [step]);
+  const generateAudio = async () => {
+    setStep(2);
+    setErrorMessage('');
+    try {
+      const generated = await submitAudioAsset(asset, values);
+      setGeneratedAsset(generated);
+      setStep(3);
+    } catch (error) {
+      setErrorMessage(error.message || '朗读音频生成任务提交失败');
+      setStep(1);
+    }
+  };
 
   const applyTemplate = (name, text) => {
     setValues((current) => ({ ...current, template: name, text }));
@@ -391,19 +542,20 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
           </article>
         </div>
       ) : null}
+      {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
         {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
         {step === 1 ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>生成朗读</button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成朗读</button>
           </>
         ) : null}
         {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
         {isResult ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
           </>
         ) : null}
       </div>
@@ -413,6 +565,8 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
 
 function C2AudioWizard({ asset, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
+  const [generatedAsset, setGeneratedAsset] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({ activity: '互动体能', tempo: '中速 80-100 BPM' });
   const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
   const isGenerating = step === 2;
@@ -423,11 +577,18 @@ function C2AudioWizard({ asset, onInsert, onTitleChange }) {
     onTitleChange?.('活动背景音乐');
   }, [onTitleChange]);
 
-  React.useEffect(() => {
-    if (step !== 2) return undefined;
-    const timer = window.setTimeout(() => setStep(3), 1400);
-    return () => window.clearTimeout(timer);
-  }, [step]);
+  const generateAudio = async () => {
+    setStep(2);
+    setErrorMessage('');
+    try {
+      const generated = await submitAudioAsset(asset, values);
+      setGeneratedAsset(generated);
+      setStep(3);
+    } catch (error) {
+      setErrorMessage(error.message || '活动背景乐生成任务提交失败');
+      setStep(1);
+    }
+  };
 
   return (
     <>
@@ -485,19 +646,20 @@ function C2AudioWizard({ asset, onInsert, onTitleChange }) {
           </article>
         </div>
       ) : null}
+      {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
         {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
         {step === 1 ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>生成BGM</button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成BGM</button>
           </>
         ) : null}
         {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
         {isResult ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
           </>
         ) : null}
       </div>
@@ -507,6 +669,8 @@ function C2AudioWizard({ asset, onInsert, onTitleChange }) {
 
 function C1AudioWizard({ asset, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
+  const [generatedAsset, setGeneratedAsset] = React.useState(null);
+  const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({ emotion: '安静', duration: '1分钟' });
   const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
   const isGenerating = step === 2;
@@ -516,11 +680,18 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
     onTitleChange?.(asset.title);
   }, [asset.title, onTitleChange]);
 
-  React.useEffect(() => {
-    if (step !== 2) return undefined;
-    const timer = window.setTimeout(() => setStep(3), 1400);
-    return () => window.clearTimeout(timer);
-  }, [step]);
+  const generateAudio = async () => {
+    setStep(2);
+    setErrorMessage('');
+    try {
+      const generated = await submitAudioAsset(asset, values);
+      setGeneratedAsset(generated);
+      setStep(3);
+    } catch (error) {
+      setErrorMessage(error.message || '情绪BGM生成任务提交失败');
+      setStep(1);
+    }
+  };
 
   return (
     <>
@@ -578,19 +749,20 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
           </article>
         </div>
       ) : null}
+      {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
         {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
         {step === 1 ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>生成BGM</button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成BGM</button>
           </>
         ) : null}
         {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
         {isResult ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', asset)}>插入画布</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
           </>
         ) : null}
       </div>
@@ -612,7 +784,7 @@ export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChan
     return <C5AudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
   }
   if (['C4', 'C6'].includes(asset.code)) {
-    return <AudioComingSoon asset={asset} onClose={onClose || onBack} onTitleChange={onTitleChange} />;
+    return <SimpleAudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
   }
 
   const cfg = audioConfig[asset.code] || audioConfig.C1;

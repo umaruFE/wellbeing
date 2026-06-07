@@ -39,6 +39,21 @@ async function ensureCourseDataColumn() {
 // Initialize column on startup
 ensureCourseDataColumn();
 
+function toJsonbValue(value: unknown) {
+  if (value === null) return null;
+
+  if (typeof value === 'string') {
+    try {
+      JSON.parse(value);
+      return value;
+    } catch {
+      return JSON.stringify(value);
+    }
+  }
+
+  return JSON.stringify(value);
+}
+
 // GET /api/courses/[id] - Get single course
 export async function GET(
   request: NextRequest,
@@ -126,15 +141,15 @@ export async function PUT(
     if (typeof isPublic !== 'undefined') updateData.is_public = isPublic;
     if (typeof status !== 'undefined') updateData.status = status;
     if (typeof courseData !== 'undefined') {
-      updateData.course_data = courseData;
+      updateData.course_data = toJsonbValue(courseData);
     }
     
     if (typeof canvasData !== 'undefined') {
-      updateData.canvas_data = canvasData;
+      updateData.canvas_data = toJsonbValue(canvasData);
     }
     
     if (typeof readingMaterialsData !== 'undefined') {
-      updateData.reading_materials_data = readingMaterialsData;
+      updateData.reading_materials_data = toJsonbValue(readingMaterialsData);
     }
 
     const { data, error } = await db.from('courses').update(updateData).eq('id', id).select().single();
@@ -191,4 +206,3 @@ export async function DELETE(
     );
   }
 }
-

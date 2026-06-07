@@ -1988,6 +1988,14 @@
   border-radius: 5px;
   background: #f5f7fb;
   color: var(--ppt-ink);
+  overflow: hidden;
+}
+
+#ed-ppt .ppt-result-panel.kind-image .ppt-result-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 #ed-ppt .ppt-result-panel.kind-image .ppt-result-card:nth-child(1) .ppt-result-thumb {
