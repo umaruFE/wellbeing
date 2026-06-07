@@ -1,5 +1,5 @@
 import React from 'react';
-import { CirclePlus, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { Button, Modal, Tag } from 'antd';
 
 function imageAssetPrompt(asset) {
@@ -38,7 +38,7 @@ function InfoRows({ rows }) {
   );
 }
 
-export function AssetPreviewModal({ asset, open, onClose, onViewTask, onInsertCanvas }) {
+export function AssetPreviewModal({ asset, open, onClose, onViewTask }) {
   if (!asset) return null;
   const isAi = asset.source === 'AI生成';
 
@@ -93,11 +93,6 @@ export function AssetPreviewModal({ asset, open, onClose, onViewTask, onInsertCa
           <Button onClick={() => onViewTask(asset)}>查看生成任务</Button>
         )}
         <Button onClick={onClose}>关闭</Button>
-        {onInsertCanvas && (
-          <Button className="tdm-action-primary" type="primary" icon={<CirclePlus size={15} />} onClick={() => onInsertCanvas(asset)}>
-            插入画布
-          </Button>
-        )}
       </div>
     </Modal>
   );

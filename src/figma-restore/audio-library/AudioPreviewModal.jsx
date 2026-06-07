@@ -1,5 +1,5 @@
 import React from 'react';
-import { CirclePlus, Download, Pause, Play, X } from 'lucide-react';
+import { Download, Pause, Play, X } from 'lucide-react';
 import { Button, Modal, Tag, message } from 'antd';
 
 function formatMediaTime(value) {
@@ -67,7 +67,7 @@ function getAudioGenerationRows(asset) {
   ];
 }
 
-export function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay, progress, onViewTask, onInsertCanvas }) {
+export function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay, progress, onViewTask }) {
   if (!asset) return null;
   const isAi = asset.source === 'AI生成';
   const isCurrentAsset = progress.assetId === asset.id;
@@ -133,11 +133,6 @@ export function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay,
         <Button icon={<Download size={14} />} onClick={() => message.success('已开始下载音频')}>
           下载
         </Button>
-        {onInsertCanvas && (
-          <Button className="tdm-action-primary" type="primary" icon={<CirclePlus size={15} />} onClick={() => onInsertCanvas(asset)}>
-            插入画布
-          </Button>
-        )}
       </div>
     </Modal>
   );

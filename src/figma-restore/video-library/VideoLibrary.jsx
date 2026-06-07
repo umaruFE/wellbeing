@@ -3,9 +3,9 @@ import { Eye, FileVideo, MoreVertical, Pause, Play, Search, Trash2, Upload as Up
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import './VideoLibrary.css';
 import { VideoPreviewModal } from './VideoPreviewModal';
-import { TaskDetailModal, createCanvasAssetPayload } from '../TaskDetailModal';
+import { TaskDetailModal } from '../TaskDetailModal';
 
-const VIDEO_ASSETS = [
+export const VIDEO_ASSETS = [
   { id: 'vid-space', name: '太空探索动画', source: 'AI生成', type: '动画片段', format: 'MP4', fileSize: '18.6 MB', duration: '0:45', ratio: '16:9', created: '2026/04/13 10:22:06', tone: 'blue', info: { videoType: '情境叙事视频', scene: '太空探索', language: 'planet / rocket / stars', spec: '16:9 · 课堂导入短片' } },
   { id: 'vid-friends', name: '动物朋友情景剧', source: 'AI生成', type: '情景剧', format: 'MP4', fileSize: '31.4 MB', duration: '1:20', ratio: '16:9', created: '2026/04/13 10:31:18', tone: 'mint', info: { videoType: '情景对话视频', scene: '动物朋友合作', language: 'Hello / Help me', spec: '16:9 · 小组讨论' } },
   { id: 'vid-fruit', name: '水果主题知识讲解', source: '课程同步', type: '知识讲解', format: 'MP4', fileSize: '42.8 MB', duration: '2:15', ratio: '16:9', created: '2026/04/12 15:42:30', tone: 'peach', info: { videoType: '知识讲解视频', scene: '水果词汇', language: 'apple / banana / orange', spec: '16:9 · 讲解素材' } },
@@ -27,7 +27,7 @@ const typeOptions = [
   { label: '体能闯关', value: '体能闯关' },
 ];
 
-const createVideoTaskDetail = (asset) => ({
+export const createVideoTaskDetail = (asset) => ({
   type: 'video',
   title: asset.name,
   count: 'x 1 个',
@@ -139,14 +139,6 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
     setPlayingId(current => (current === asset.id ? null : asset.id));
   };
 
-  const handleInsertToCanvas = (asset) => {
-    const task = createVideoTaskDetail(asset);
-    onInsertTaskAsset?.(createCanvasAssetPayload(task));
-    setPlayingId(null);
-    setPreviewAsset(null);
-    setTaskDetail(null);
-  };
-
   const handleMenuClick = ({ key, domEvent }, asset) => {
     domEvent?.stopPropagation();
     if (key === 'detail') {
@@ -238,7 +230,6 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
           setTaskDetail(createVideoTaskDetail(asset));
           setPreviewAsset(null);
         }}
-        onInsertCanvas={onInsertTaskAsset ? handleInsertToCanvas : null}
       />
 
       <TaskDetailModal

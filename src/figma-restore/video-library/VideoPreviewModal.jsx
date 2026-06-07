@@ -1,5 +1,5 @@
 import React from 'react';
-import { CirclePlus, Download, Pause, Play, X } from 'lucide-react';
+import { Download, Pause, Play, X } from 'lucide-react';
 import { Button, Modal, Tag, message } from 'antd';
 
 function formatMediaTime(value) {
@@ -75,7 +75,7 @@ function getVideoGenerationRows(asset) {
   ];
 }
 
-export function VideoPreviewModal({ asset, open, onClose, onViewTask, onInsertCanvas }) {
+export function VideoPreviewModal({ asset, open, onClose, onViewTask }) {
   const videoRef = React.useRef(null);
   const [progress, setProgress] = React.useState({ current: 0, duration: 0 });
 
@@ -167,11 +167,6 @@ export function VideoPreviewModal({ asset, open, onClose, onViewTask, onInsertCa
         <Button icon={<Download size={14} />} onClick={() => message.success('已开始下载视频')}>
           下载
         </Button>
-        {onInsertCanvas && (
-          <Button className="tdm-action-primary" type="primary" icon={<CirclePlus size={15} />} onClick={() => onInsertCanvas(asset)}>
-            插入画布
-          </Button>
-        )}
       </div>
     </Modal>
   );

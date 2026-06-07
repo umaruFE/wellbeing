@@ -3,9 +3,9 @@ import { Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Uploa
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import './AudioLibrary.css';
 import { AudioPreviewModal } from './AudioPreviewModal';
-import { TaskDetailModal, createCanvasAssetPayload } from '../TaskDetailModal';
+import { TaskDetailModal } from '../TaskDetailModal';
 
-const AUDIO_ASSETS = [
+export const AUDIO_ASSETS = [
   { id: 'aud-calm', name: '安静氛围BGM_01.mp3', source: 'AI生成', type: 'BGM', format: 'MP3', fileSize: '2.4 MB', duration: '1:00', created: '2026/04/13 10:06:30', tone: 'lavender', info: { audioType: '情绪氛围 BGM', theme: 'Quiet classroom', style: '安静 / 温暖', lyric: '无歌词' } },
   { id: 'aud-jump', name: 'Jump! Run! 体能旁白', source: 'AI生成', type: '旁白', format: 'WAV', fileSize: '5.8 MB', duration: '0:45', created: '2026/04/13 10:09:14', tone: 'mint', info: { audioType: '跟读旁白', theme: 'TPR warm-up', style: '活泼 / 清晰', lyric: 'Jump! Run! Go!' } },
   { id: 'aud-fruit', name: '水果歌 Fruit Song.mp3', source: 'AI生成', type: '歌曲', format: 'MP3', fileSize: '3.9 MB', duration: '1:30', created: '2026/04/13 10:18:42', tone: 'peach', info: { audioType: '教学歌曲', theme: 'Fruit vocabulary', style: '轻快', lyric: '水果词汇与简单句型' } },
@@ -26,7 +26,7 @@ const typeOptions = [
   { label: '音效', value: '音效' },
 ];
 
-const createAudioTaskDetail = (asset) => ({
+export const createAudioTaskDetail = (asset) => ({
   type: 'audio',
   title: asset.name,
   count: 'x 1 首',
@@ -185,14 +185,6 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
     if (key === 'delete') setDeleteAsset(asset);
   };
 
-  const handleInsertToCanvas = (asset) => {
-    const task = createAudioTaskDetail(asset);
-    onInsertTaskAsset?.(createCanvasAssetPayload(task));
-    stopAudio();
-    setPreviewAsset(null);
-    setTaskDetail(null);
-  };
-
   return (
     <section className={`fr-aud-lib ${variant === 'ppt-picker' ? 'ppt-library-picker' : ''}`}>
       <div className="fr-aud-page">
@@ -284,7 +276,6 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
           setTaskDetail(createAudioTaskDetail(asset));
           setPreviewAsset(null);
         }}
-        onInsertCanvas={onInsertTaskAsset ? handleInsertToCanvas : null}
       />
 
       <TaskDetailModal

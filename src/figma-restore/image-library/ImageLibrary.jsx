@@ -3,9 +3,9 @@ import { BookOpen, Eye, FileText, Image, Monitor, MoreVertical, Plus, Search, Tr
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import './ImageLibrary.css';
 import { AssetPreviewModal } from './AssetPreviewModal';
-import { TaskDetailModal, createCanvasAssetPayload } from '../TaskDetailModal';
+import { TaskDetailModal } from '../TaskDetailModal';
 
-const IMAGE_ASSETS = [
+export const IMAGE_ASSETS = [
   { id: 'img-air', name: '星际信号接收站主题图', source: 'AI生成', type: '主题意境图', size: '1024 × 1024', created: '2026/04/13 10:06:30', scene: 'air' },
   { id: 'img-kitchen', name: '动物厨房任务背景', source: 'AI生成', type: 'PPT素材', size: '1920 × 1080', created: '2026/04/13 10:08:12', scene: 'kitchen' },
   { id: 'img-beach', name: '海滩动物合作场景', source: 'AI生成', type: '故事配图', size: '1024 × 1024', created: '2026/04/13 10:12:08', scene: 'beach' },
@@ -30,7 +30,7 @@ const typeOptions = [
   { label: '故事配图', value: '故事配图' },
 ];
 
-const createImageTaskDetail = (asset) => ({
+export const createImageTaskDetail = (asset) => ({
   type: 'image',
   title: asset.name,
   count: 'x 1 张',
@@ -289,13 +289,6 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
     message.success(`已将「${asset.name}」插入到「${cfg.name}」`);
   };
 
-  const handleInsertToCanvas = (asset) => {
-    const task = createImageTaskDetail(asset);
-    onInsertTaskAsset?.(createCanvasAssetPayload(task));
-    setPreviewAsset(null);
-    setTaskDetail(null);
-  };
-
   const handleDeleteAsset = (asset) => {
     setAssets(current => current.filter(item => item.id !== asset.id));
     setPreviewAsset(current => (current?.id === asset.id ? null : current));
@@ -412,7 +405,6 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
           setTaskDetail(createImageTaskDetail(asset));
           setPreviewAsset(null);
         }}
-        onInsertCanvas={onInsertTaskAsset ? handleInsertToCanvas : null}
       />
 
       <TaskDetailModal
