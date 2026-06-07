@@ -1031,7 +1031,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 <div className="modal-t" id="addStepTitle">
                   {regenTarget ? '重新生成' : '添加'} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
                 </div>
-                <div id="asPhaseTag">Unit 3 · 三年级 G3</div>
+                <div id="asPhaseTag">
+                  {course?.courseTitle || course?.title || 'Unit 3: Animals（神奇的动物）'} · {course?.ageGroup || course?.age || '8-9岁'} / {course?.grade || '三年级 G3'}
+                </div>
               </div>
               <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); }} aria-label="关闭"><X size={22} /></button>
             </div>
@@ -1135,7 +1137,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
               <div className="as-right-panel">
                 <div className="as-right-hd">
-                  <span className="as-right-title">📝 活动草案</span>
+                  <span className="as-right-title">活动草案</span>
                   <span className={`as-right-tag ${generateDraftLoading ? 'ai' : genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
                     {generateDraftLoading ? 'AI 生成中...' : genMode === 'ai' ? '等待生成...' : genMode === 'classic' ? '等待选择...' : '选择收藏环节'}
                   </span>
@@ -1194,28 +1196,23 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                                       />
                                     </Form.Item>
                                   </div>
-                                  <div className="flow-step-section guidance">
-                                    <div className="flow-step-section-title">教师引导</div>
-                                    <div className="flow-step-script-grid">
-                                      <div>
-                                        <div className="flow-step-mini-label">教师语言</div>
-                                        <Form.Item name={[field.name, 'teacher']} noStyle>
-                                          <TextArea
-                                            className="flow-step-input flow-step-script"
-                                            placeholder="例如：Shhh... Listen, everyone."
-                                          />
-                                        </Form.Item>
-                                      </div>
-                                      <div>
-                                        <div className="flow-step-mini-label">动作/引导提示</div>
-                                        <Form.Item name={[field.name, 'cue']} noStyle>
-                                          <TextArea
-                                            className="flow-step-input flow-step-cue"
-                                            placeholder="例如：神秘地举起信封；停顿等待学生自然回应"
-                                          />
-                                        </Form.Item>
-                                      </div>
-                                    </div>
+                                  <div className="flow-step-section guidance teacher-script">
+                                    <div className="flow-step-section-title">教师引导 / 教师语言</div>
+                                    <Form.Item name={[field.name, 'teacher']} noStyle>
+                                      <TextArea
+                                        className="flow-step-input flow-step-script"
+                                        placeholder="例如：Shhh... Listen, everyone."
+                                      />
+                                    </Form.Item>
+                                  </div>
+                                  <div className="flow-step-section guidance action-cue">
+                                    <div className="flow-step-section-title">动作 / 引导提示</div>
+                                    <Form.Item name={[field.name, 'cue']} noStyle>
+                                      <TextArea
+                                        className="flow-step-input flow-step-cue"
+                                        placeholder="例如：神秘地举起信封；停顿等待学生自然回应"
+                                      />
+                                    </Form.Item>
                                   </div>
                                 </div>
                               </div>
@@ -1270,6 +1267,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); }}>取消</button>
               <div className="as-ft-spacer" />
               <button type="button" className="as-ft-confirm" id="asConfirmBtn" onClick={addDraftStep}>
+                <span className="add-plus" aria-hidden="true">+</span>
                 {regenTarget ? '确认重新生成' : '添加到大纲'}
               </button>
             </div>

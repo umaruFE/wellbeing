@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import { Input } from 'antd';
 
 const { TextArea } = Input;
@@ -21,17 +21,34 @@ const groups = [
   ['叙事与连贯性', ['过渡衔接', '任务导向']],
 ];
 
-export function AdjustStepModal({ open, loading = false, value, selected = [], onChange, onToggle, onClose, onConfirm }) {
+function appendPhrase(currentValue, text) {
+  const current = currentValue.trim();
+  if (!current) return text;
+  return `${current}${/[，,；;]$/.test(current) ? '' : '，'}${text}`;
+}
+
+export function AdjustStepModal({
+  open,
+  loading = false,
+  value,
+  selected = [],
+  onChange,
+  onToggle,
+  onClose,
+  onConfirm,
+}) {
+  const textareaRef = React.useRef(null);
+
   if (!open) return null;
 
   const fillTip = (text) => {
-    const current = value.trim();
-    onChange(current ? `${current}${/[，,；;]$/.test(current) ? '' : '，'}${text}` : text);
+    onChange(appendPhrase(value, text));
+    requestAnimationFrame(() => textareaRef.current?.focus?.());
   };
 
   const toggleChip = (chip) => {
     onToggle(chip);
-    if (!value.includes(chip)) {
+    if (!selected.includes(chip) && !value.includes(chip)) {
       const current = value.trim();
       onChange(current ? `${current}${/[，,；;]$/.test(current) ? '' : '；'}${chip}` : chip);
     }
@@ -42,13 +59,18 @@ export function AdjustStepModal({ open, loading = false, value, selected = [], o
       <div className="modal adjust-step-modal">
         <div className="modal-hd">
           <div className="modal-t">调整环节</div>
-          <button type="button" className="modal-x" onClick={onClose} aria-label="关闭">×</button>
+          <button type="button" className="modal-x" onClick={onClose} aria-label="关闭">
+            <X size={22} />
+          </button>
         </div>
+
         <div className="modal-body adjust-step-body">
           <div className="adjust-modal-wrap">
             <div className="adjust-section">
               <div className="adjust-section-label">调整思路（必填）</div>
               <TextArea
+                id="adjust-step-intent"
+                ref={textareaRef}
                 className="adjust-textarea"
                 value={value}
                 onChange={(event) => onChange(event.target.value)}
@@ -59,7 +81,9 @@ export function AdjustStepModal({ open, loading = false, value, selected = [], o
                 <div className="adjust-tip-label">思路提示词（点击直接填入）</div>
                 <div className="adjust-chip-row">
                   {tipChips.map(([label, text]) => (
-                    <button type="button" className="adjust-chip" key={label} onClick={() => fillTip(text)}>{label}</button>
+                    <button type="button" className="adjust-chip" key={label} onClick={() => fillTip(text)}>
+                      {label}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -87,10 +111,11 @@ export function AdjustStepModal({ open, loading = false, value, selected = [], o
             </div>
           </div>
         </div>
+
         <div className="modal-ft">
           <button type="button" className="mo-btn-cancel" disabled={loading} onClick={onClose}>取消</button>
           <button type="button" className="mo-btn-primary" disabled={!value.trim() || loading} onClick={onConfirm}>
-            {loading ? <Loader2 size={13} style={{ animation: 'spin .8s linear infinite' }} /> : <Check size={13} />}
+            {loading ? <Loader2 size={15} className="adjust-spin" /> : <Check size={15} />}
             {loading ? '调整中...' : '确认调整'}
           </button>
         </div>
