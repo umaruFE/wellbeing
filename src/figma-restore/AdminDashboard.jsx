@@ -557,7 +557,7 @@ export const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      <Row gutter={[20, 20]} style={{ marginBottom: 20 }}>
+      <Row className="dashboard-top-modules" gutter={[20, 20]} style={{ marginBottom: 20 }}>
         <Col xs={24} lg={8}>
           <CreateSection onCreateCourse={handleCreateCourse} navigate={navigate} />
         </Col>

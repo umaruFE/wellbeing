@@ -1319,6 +1319,132 @@
   line-height: 24px;
 }
 
+.dashboard-top-modules {
+  width: 100%;
+}
+
+.dashboard-top-modules .ant-col {
+  min-width: 0;
+}
+
+.dashboard-top-modules .create-section,
+.dashboard-top-modules .asset-section,
+.dashboard-top-modules .task-section {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.dashboard-top-modules .section-header,
+.dashboard-top-modules .asset-stats-row,
+.dashboard-top-modules .task-stats-row,
+.dashboard-top-modules .power-row,
+.dashboard-top-modules .task-card {
+  min-width: 0;
+}
+
+.dashboard-top-modules .asset-stats-row {
+  min-width: 0;
+}
+
+.dashboard-top-modules .info-text,
+.dashboard-top-modules .power-label,
+.dashboard-top-modules .task-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-top-modules .power-content,
+.dashboard-top-modules .power-progress {
+  min-width: 0;
+}
+
+.dashboard-top-modules .power-progress {
+  flex: 1 1 92px;
+  max-width: 117px;
+}
+
+@media (max-width: 1399px) {
+  .dashboard-top-modules .create-section,
+  .dashboard-top-modules .asset-section,
+  .dashboard-top-modules .task-section {
+    padding: 20px;
+  }
+
+  .dashboard-top-modules .create-section-buttons,
+  .dashboard-top-modules .task-cards-row {
+    gap: 10px;
+  }
+
+  .dashboard-top-modules .create-btn {
+    padding: 0 10px !important;
+  }
+
+  .dashboard-top-modules .task-card,
+  .dashboard-top-modules .task-card-running,
+  .dashboard-top-modules .task-card-done,
+  .dashboard-top-modules .task-card-queue {
+    padding-inline: 12px;
+  }
+}
+
+@media (max-width: 1199px) {
+  .dashboard-top-modules .create-section,
+  .dashboard-top-modules .asset-section,
+  .dashboard-top-modules .task-section {
+    height: auto;
+    min-height: 184px;
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-dashboard {
+    padding: 16px;
+  }
+
+  .dashboard-top-modules .ant-col {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+
+  .dashboard-top-modules .create-section,
+  .dashboard-top-modules .asset-section,
+  .dashboard-top-modules .task-section {
+    padding: 18px;
+  }
+
+  .dashboard-top-modules .section-header {
+    height: auto;
+    gap: 8px;
+  }
+
+  .dashboard-top-modules .create-section-buttons,
+  .dashboard-top-modules .task-cards-row {
+    flex-wrap: wrap;
+  }
+
+  .dashboard-top-modules .create-btn,
+  .dashboard-top-modules .task-card,
+  .dashboard-top-modules .task-card-running,
+  .dashboard-top-modules .task-card-done,
+  .dashboard-top-modules .task-card-queue {
+    flex: 1 1 140px;
+  }
+
+  .dashboard-top-modules .power-row {
+    height: auto;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+  }
+
+  .dashboard-top-modules .power-content {
+    flex: 1 1 180px;
+    justify-content: flex-end;
+  }
+}
+
 .image-preview-overlay {
   position: fixed;
   top: 0;
