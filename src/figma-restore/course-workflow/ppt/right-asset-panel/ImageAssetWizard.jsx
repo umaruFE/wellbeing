@@ -19,6 +19,7 @@ import edi from '../../../../assets/ip/edi.png';
 import rolly from '../../../../assets/ip/rolly.png';
 import milo from '../../../../assets/ip/milo.png';
 import ace from '../../../../assets/ip/ace.png';
+import apiService from '../../../../utils/apiService';
 import {
   actionOptions,
   activityThemes,
@@ -137,6 +138,85 @@ const ipCharacters = [
   { name: 'Milo', image: milo },
   { name: 'Ace', image: ace },
 ];
+
+const imagePromptBuilders = {
+  B1: (values) => `生成PPT主题意境背景图，无文字。场景：${values.scene || '儿童英语课堂主题场景'}。风格：${values.style}。`,
+  B2: (values) => `生成PPT意境海报图，包含图文排版。场景：${values.scene || '课堂主题场景'}。叠加文字：${values.overlayText || '课程主题标题'}。风格：${values.style}。`,
+  B3: (values) => `批量生成统一版式的词汇闪卡。词汇：${(values.flashWords || []).join(', ') || values.words || 'apple, banana'}。${values.includeChinese !== false ? '包含中文释义。' : '不包含中文释义。'}${values.includePhonetic ? '包含音标。' : ''}`,
+  B4: (values) => `生成故事配图，预留${values.whitespace || '底部'}文字区域。故事场景：${values.storyScene || '儿童绘本故事场景'}。角色描述：${values.storyCharacter || '无指定角色'}。风格：${values.style}。`,
+  B5: (values) => `生成活动氛围图。活动主题：${values.theme || '体能'}。活动标题：${values.activityTitle || '课堂活动'}。画面适合PPT课堂导入。风格：${values.style}。`,
+  B6: (values) => `生成主题词图谱，场景词汇标注。场景：${values.topicScene || '课堂主题场景'}。标注词汇：${values.topicWords || '至少5个主题词汇'}。`,
+  B7: (values) => `生成文本配图。文字框样式：${values.textLayout || '对话气泡'}。文字内容：${values.textContent || '课堂问题或短对话'}。背景：${values.textBackground || '课堂主题背景'}。风格：${values.style}。`,
+  B8: (values) => `生成知识总结图。图表类型：${values.chart || '思维导图'}。中心主题：${values.knowledgeTopic || '课程知识点'}。分支内容：${values.knowledgeItems || '核心知识点列表'}。`,
+  B9: (values) => `生成多页绘本故事配图，保持角色一致。故事名：${values.storybookTitle || '绘本故事'}。故事内容：${values.storybookContent || '儿童英语绘本故事'}。风格：${values.storybookStyle || '水彩绘本'}。阅读年级：${values.storybookGrade || '小学低年级'}。`,
+  B10: (values) => `生成四格漫画，固定四格布局。漫画风格：${values.comicStyle || 'Q版萌系'}。${values.comicDialogue !== false ? '包含对话气泡文字。' : '不包含文字。'}目标短语/句型：${values.phrase || '课堂目标句型'}。主角：${values.comicCharacter || '儿童友好角色'}。情节：${values.plot || 'AI自动编排起承转合'}。`,
+  B11: (values) => `生成动作示意图。IP角色：${values.character || 'Poppy'}。动作类型：${values.actionType || '瑜伽 / 姿势'}。动作：${(values.actions || [values.action]).filter(Boolean).join(', ')}。要求清晰展示动作姿态，适合TPR课堂。`,
+};
+
+function splitLines(text) {
+  return String(text || '').split(/\n|,|，/).map((item) => item.trim()).filter(Boolean);
+}
+
+function buildBatchItems(asset, values) {
+  if (asset.code === 'B3') return values.flashWords?.length ? values.flashWords : splitLines(values.words);
+  if (asset.code === 'B11') return values.actions?.length ? values.actions : [values.action].filter(Boolean);
+  if (asset.code === 'B9') return splitLines(values.storybookContent).map((text, index) => ({ page: index + 1, text }));
+  return undefined;
+}
+
+function buildImageGenerationRequest(asset, values) {
+  const promptBuilder = imagePromptBuilders[asset.code] || imagePromptBuilders.B1;
+  const batchItems = buildBatchItems(asset, values);
+  return {
+    assetType: 'image',
+    assetCode: asset.code,
+    assetName: asset.title,
+    prompt: promptBuilder(values),
+    options: {
+      imageRatio: values.ratio,
+      imageStyle: values.style,
+      imageSubtype: asset.code,
+      whitespace: values.whitespace,
+      activityTheme: values.theme,
+      chart: values.chart,
+      comicStyle: values.comicStyle,
+      character: values.character,
+      actionType: values.actionType,
+      batchItems,
+      includeChinese: values.includeChinese !== false,
+      includePhonetic: !!values.includePhonetic,
+      comicDialogue: values.comicDialogue !== false,
+      textLayout: values.textLayout,
+      rawValues: values,
+    },
+  };
+}
+
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+async function pollGeneratedImage(asset) {
+  if (asset.url || !asset.taskId || !asset.statusUrl) return asset;
+
+  for (let attempt = 0; attempt < 60; attempt += 1) {
+    await wait(3000);
+    const status = await apiService.get(asset.statusUrl);
+    if (status.status === 'completed' && status.url) {
+      return {
+        ...asset,
+        url: status.url,
+        filename: status.filename,
+        status: 'completed',
+      };
+    }
+    if (status.status === 'error') {
+      throw new Error(status.error || '图片生成失败');
+    }
+  }
+
+  return asset;
+}
 
 const actionChips = [
   'Tree pose',
@@ -1151,32 +1231,26 @@ function StorybookGenerateStep() {
 
 function StorybookImageWizard({ values, setValue, onGenerate }) {
   const [step, setStep] = React.useState(0);
-  const [generating, setGenerating] = React.useState(false);
 
   return (
     <div className="ppt-img-flow">
       <div className="ppt-img-flow-body">
-        <StorybookStepper step={step} generating={generating} />
+        <StorybookStepper step={step} generating={false} />
         {step === 0 ? <StorybookPasteStep values={values} setValue={setValue} /> : null}
         {step === 1 ? <StorybookPreviewStep values={values} /> : null}
-        {step === 2 ? <StorybookGenerateStep /> : null}
       </div>
       <div className="ppt-inline-footer ppt-img-footer">
         {step === 1 ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button> : null}
         <button
           type="button"
-          className={`ppt-primary-btn ${generating ? 'is-disabled' : ''}`}
+          className="ppt-primary-btn"
           onClick={() => {
             if (step === 0) setStep(1);
-            else if (step === 1) {
-              setGenerating(true);
-              setStep(2);
-            } else onGenerate();
+            else onGenerate();
           }}
-          disabled={generating}
         >
           <Sparkles size={14} />
-          {step === 0 ? '下一步：确认分镜内容' : step === 1 ? '开始生成 5 张' : '生成中...'}
+          {step === 0 ? '下一步：确认分镜内容' : '开始生成图片'}
         </button>
       </div>
     </div>
@@ -1354,6 +1428,8 @@ function ImageTypeContent({ asset, values, setValue }) {
 export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
   const [stage, setStage] = React.useState('form');
   const [selectedIndex, setSelectedIndex] = React.useState(0);
+  const [results, setResults] = React.useState([]);
+  const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     ratio: asset.code === 'B3' ? '3:4' : asset.code === 'B4' ? '9:16' : '16:9',
     style: asset.code === 'B4' ? '写实摄影' : '卡通插画',
@@ -1397,14 +1473,29 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     else onTitleChange?.(focusedImageTitles[asset.code] || asset.title);
   }, [asset.code, asset.title, onTitleChange, stage]);
 
-  React.useEffect(() => {
-    if (stage !== 'generating') return undefined;
-    const timer = window.setTimeout(() => {
+  const handleGenerate = React.useCallback(async () => {
+    setStage('generating');
+    setErrorMessage('');
+    try {
+      const request = buildImageGenerationRequest(asset, values);
+      const response = await apiService.post('/api/ai/generate-ppt-asset', request);
+      const nextResults = (response.assets?.length ? response.assets : [response.asset]).filter(Boolean).map((item, index) => ({
+        ...item,
+        title: item.title || `${asset.title} ${index + 1}`,
+        assetCode: asset.code,
+        imageSubtype: response.imageSubtype,
+        width: item.width,
+        height: item.height,
+      }));
+      const completedResults = await Promise.all(nextResults.map(pollGeneratedImage));
+      setResults(completedResults);
       setSelectedIndex(0);
       setStage('result');
-    }, 1600);
-    return () => window.clearTimeout(timer);
-  }, [stage]);
+    } catch (error) {
+      setErrorMessage(error.message || '图片生成失败，请稍后重试');
+      setStage('form');
+    }
+  }, [asset, values]);
 
   if (stage === 'generating') {
     return (
@@ -1417,14 +1508,15 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
   }
 
   if (stage === 'result') {
+    const selectedResult = results[selectedIndex] || results[0] || null;
     return (
       <GeneratedAssetResults
         kind="image"
-        asset={asset}
+        asset={{ ...asset, results }}
         selectedIndex={selectedIndex}
         onSelect={setSelectedIndex}
-        onRegenerate={() => setStage('generating')}
-        onInsert={() => onInsert('image', asset)}
+        onRegenerate={handleGenerate}
+        onInsert={() => onInsert('image', { ...asset, ...selectedResult, title: selectedResult?.title || asset.title })}
       />
     );
   }
@@ -1435,17 +1527,25 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
 
   if (['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B10', 'B11'].includes(asset.code)) {
     return (
-      <FocusedImageForm
-        asset={asset}
-        values={values}
-        setValue={setValue}
-        onGenerate={() => setStage('generating')}
-      />
+      <>
+        <FocusedImageForm
+          asset={asset}
+          values={values}
+          setValue={setValue}
+          onGenerate={handleGenerate}
+        />
+        {errorMessage ? <div className="ppt-img-ai-tip">{errorMessage}</div> : null}
+      </>
     );
   }
 
   if (asset.code === 'B9') {
-    return <StorybookImageWizard values={values} setValue={setValue} onGenerate={() => setStage('generating')} />;
+    return (
+      <>
+        <StorybookImageWizard values={values} setValue={setValue} onGenerate={handleGenerate} />
+        {errorMessage ? <div className="ppt-img-ai-tip">{errorMessage}</div> : null}
+      </>
+    );
   }
 
   return (
@@ -1473,7 +1573,8 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
 
       </div>
       <div className="ppt-inline-footer">
-        <button type="button" className="ppt-primary-btn" onClick={() => setStage('generating')}>
+        {errorMessage ? <Tip>{errorMessage}</Tip> : null}
+        <button type="button" className="ppt-primary-btn" onClick={handleGenerate}>
           <Sparkles size={14} />生成图片
         </button>
       </div>

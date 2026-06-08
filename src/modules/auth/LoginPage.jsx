@@ -97,7 +97,7 @@ export const LoginPage = () => {
           </form>
 
           {/* Demo Accounts */}
-          <div className="mt-6 pt-6 border-t-2 border-stroke-light">
+          {/* <div className="mt-6 pt-6 border-t-2 border-stroke-light">
             <p className="text-xs text-slate-500 mb-3 text-center"></p>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-surface p-2 rounded-xl border-2 border-stroke-light">
@@ -121,7 +121,7 @@ export const LoginPage = () => {
                 <div className="text-slate-500">viewer</div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 import { n8nClient } from '@/lib/n8n/client';
+import { createGenerationTask } from '@/lib/background-tasks';
 
 /**
  * N8N 图片生成路由
@@ -73,6 +74,9 @@ export async function POST(request: NextRequest) {
       name,
       character_name,
       roles,
+      course_id,
+      course_title,
+      title,
       user_id,
       organization_id
     } = body;
@@ -142,14 +146,51 @@ export async function POST(request: NextRequest) {
 
     // 7. 返回结果（包含 comfyuiUrl 让前端可以直接轮询）
     const n8nResultData = n8nResult as { executionId?: string; id?: string; comfyuiUrl?: string };
+    const promptId = n8nResultData.executionId || n8nResultData.id;
+    const statusUrl = promptId
+      ? `/api/ai/task-status/${promptId}?useComfyUI=true${n8nResultData.comfyuiUrl ? `&apiUrl=${encodeURIComponent(n8nResultData.comfyuiUrl)}` : ''}`
+      : null;
+    let backgroundTask = null;
+
+    try {
+      backgroundTask = await createGenerationTask({
+        userId: user?.id,
+        organizationId: organization_id || user?.organizationId || null,
+        courseId: course_id || null,
+        type: 'image',
+        title: title || character_name || name || '图片生成',
+        count: Number(count) || 1,
+        related: course_title || '',
+        provider: 'n8n',
+        externalTaskId: promptId || null,
+        statusUrl,
+        input: {
+          workflow_type,
+          prompt,
+          width,
+          height,
+          count,
+          reference_image,
+          video_style,
+          name: name || character_name,
+          character_name,
+          roles,
+        },
+      });
+    } catch (taskError) {
+      console.error('[generate-images] 创建后台任务失败:', taskError);
+    }
+
     return NextResponse.json({
       success: true,
       tasks: [{
         type: workflow_type,
         name: character_name,
-        promptId: n8nResultData.executionId || n8nResultData.id,
+        promptId,
         apiUrl: n8nResultData.comfyuiUrl
       }],
+      backgroundTaskId: backgroundTask?.id || null,
+      backgroundTask,
       workflowType: workflow_type,
       workflow: 'ai-image-generation'
     }, { headers: corsHeaders() });

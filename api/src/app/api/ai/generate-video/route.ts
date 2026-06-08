@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { authenticate } from '@/lib/auth';
+import { createGenerationTask } from '@/lib/background-tasks';
 
 /**
  * N8N 视频生成路由
@@ -42,6 +44,14 @@ export async function OPTIONS() {
  */
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await authenticate(request);
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error || '认证失败' },
+        { status: 401, headers: corsHeaders() }
+      );
+    }
+
     const body = await request.json();
     const {
       storyboard_images_filepath,
@@ -49,7 +59,11 @@ export async function POST(request: NextRequest) {
       video_width,
       video_height,
       voice,
-      storyboard_image_prompts
+      storyboard_image_prompts,
+      course_id,
+      course_title,
+      title,
+      organization_id
     } = body;
 
     console.log('[generate-video] 收到生成视频请求:', {
@@ -93,10 +107,40 @@ export async function POST(request: NextRequest) {
     console.log('[generate-video] N8N 响应:', result);
 
     const resultData = result as { executionId?: string; id?: string; status?: string; message?: string };
+    const executionId = resultData.executionId || resultData.id;
+    let backgroundTask = null;
+
+    try {
+      backgroundTask = await createGenerationTask({
+        userId: authResult.user?.id,
+        organizationId: organization_id || authResult.user?.organizationId || null,
+        courseId: course_id || null,
+        type: 'video',
+        title: title || '视频生成',
+        count: 1,
+        related: course_title || '',
+        provider: 'n8n',
+        externalTaskId: executionId || null,
+        statusUrl: executionId ? `/api/ai/video-status?executionId=${encodeURIComponent(executionId)}` : null,
+        input: {
+          storyboard_images_filepath: cleanStoryboardImages,
+          storyboard_prompts,
+          video_width: video_width || 856,
+          video_height: video_height || 480,
+          voice,
+          storyboard_image_prompts,
+        },
+      });
+    } catch (taskError) {
+      console.error('[generate-video] 创建后台任务失败:', taskError);
+    }
+
     return NextResponse.json({
       success: true,
       data: {
-        executionId: resultData.executionId || resultData.id,
+        executionId,
+        backgroundTaskId: backgroundTask?.id || null,
+        backgroundTask,
         status: resultData.status || 'submitted',
         message: resultData.message || '视频生成任务已提交'
       }

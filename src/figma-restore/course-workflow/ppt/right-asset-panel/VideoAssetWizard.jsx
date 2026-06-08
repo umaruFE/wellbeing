@@ -6,6 +6,7 @@ import edi from '../../../../assets/ip/edi.png';
 import rolly from '../../../../assets/ip/rolly.png';
 import milo from '../../../../assets/ip/milo.png';
 import ace from '../../../../assets/ip/ace.png';
+import apiService from '../../../../utils/apiService';
 
 const steps = ['场景 · 角色', '词汇与句型', '确认并生成'];
 const storySteps = ['角色', '叙事', '脚本', '分镜', '合成'];
@@ -31,6 +32,38 @@ const storyProgressRows = [
   { text: '挑战：Jump high', status: '等待', state: 'waiting' },
   { text: '通关庆祝', status: '等待', state: 'waiting' },
 ];
+
+function buildVideoPrompt(asset, values) {
+  if (asset.code === 'VM') {
+    return `生成情境叙事视频。模板：${values.template || '拯救型'}。角色：${(values.characters || []).join(', ') || 'Poppy'}。词汇/动作：${(values.words || []).join(', ')}。句型：${(values.sentences || []).join('; ')}。旁白语言：${values.narrationLanguage || 'english'}。画面风格适合儿童英语PPT课件。`;
+  }
+  return `生成体能闯关视频。场景：${values.scene || '森林'}。角色：${values.character || 'Poppy'}。词汇：${(values.words || []).join(', ')}。句型：${(values.sentences || []).join('; ')}。气泡样式：${values.bubble || '胶囊'}。画面风格适合儿童英语PPT课件。`;
+}
+
+async function submitVideoAsset(asset, values) {
+  const response = await apiService.post('/api/ai/generate-ppt-asset', {
+    assetType: 'video',
+    assetCode: asset.code,
+    assetName: asset.title,
+    prompt: buildVideoPrompt(asset, values),
+    options: {
+      direction: values.direction,
+      scene: values.scene,
+      character: values.character,
+      characters: values.characters,
+      words: values.words,
+      sentences: values.sentences,
+      bubble: values.bubble,
+      bgm: values.bgm,
+      voice: values.voice,
+      sfx: values.sfx,
+      template: values.template,
+      narrationLanguage: values.narrationLanguage,
+      duration: asset.code === 'VM' ? 12 : 8,
+    },
+  });
+  return response.asset || response.assets?.[0];
+}
 
 function VideoStepper({ step }) {
   return (
@@ -310,14 +343,15 @@ function ConfirmStep({ values, generating }) {
 
 export function VideoAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
   if (asset.code === 'VM') {
-    return <StoryVideoFlow asset={asset} onBack={onBack} onTitleChange={onTitleChange} />;
+    return <StoryVideoFlow asset={asset} onBack={onBack} onInsert={onInsert} onTitleChange={onTitleChange} />;
   }
-  return <FitnessVideoFlow asset={asset} onBack={onBack} onTitleChange={onTitleChange} />;
+  return <FitnessVideoFlow asset={asset} onBack={onBack} onInsert={onInsert} onTitleChange={onTitleChange} />;
 }
 
-function FitnessVideoFlow({ asset, onBack, onTitleChange }) {
+function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
   const [generating, setGenerating] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     scene: '森林',
     character: 'Poppy',
@@ -335,6 +369,18 @@ function FitnessVideoFlow({ asset, onBack, onTitleChange }) {
     onTitleChange?.(asset.title);
   }, [asset.title, onTitleChange]);
 
+  const generateVideo = async () => {
+    setGenerating(true);
+    setErrorMessage('');
+    try {
+      const generated = await submitVideoAsset(asset, values);
+      onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
+    } catch (error) {
+      setErrorMessage(error.message || '视频生成任务提交失败');
+      setGenerating(false);
+    }
+  };
+
   return (
     <div className="ppt-video-flow">
       <div className="ppt-video-flow-body">
@@ -342,6 +388,7 @@ function FitnessVideoFlow({ asset, onBack, onTitleChange }) {
         {step === 0 ? <SceneRoleStep values={values} setValue={setValue} /> : null}
         {step === 1 ? <VocabSentenceStep values={values} setValue={setValue} /> : null}
         {step === 2 ? <ConfirmStep values={values} generating={generating} /> : null}
+        {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
         {generating ? (
@@ -356,7 +403,7 @@ function FitnessVideoFlow({ asset, onBack, onTitleChange }) {
               className="ppt-v1-primary"
               onClick={() => {
                 if (step < 2) setStep((current) => current + 1);
-                else setGenerating(true);
+                else generateVideo();
               }}
             >
               {step === 2 ? '生成视频' : '下一步'}
@@ -751,9 +798,10 @@ function StoryGenerateStep({ values, generating }) {
   );
 }
 
-function StoryVideoFlow({ asset, onBack, onTitleChange }) {
+function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
   const [generating, setGenerating] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     characters: ['Poppy', 'Edi'],
     direction: '16:9',
@@ -770,6 +818,18 @@ function StoryVideoFlow({ asset, onBack, onTitleChange }) {
     onTitleChange?.(step === 0 ? '编辑视频素材' : asset.title);
   }, [asset.title, onTitleChange, step]);
 
+  const generateVideo = async () => {
+    setGenerating(true);
+    setErrorMessage('');
+    try {
+      const generated = await submitVideoAsset(asset, values);
+      onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
+    } catch (error) {
+      setErrorMessage(error.message || '视频生成任务提交失败');
+      setGenerating(false);
+    }
+  };
+
   return (
     <div className="ppt-video-flow">
       <div className="ppt-video-flow-body">
@@ -779,6 +839,7 @@ function StoryVideoFlow({ asset, onBack, onTitleChange }) {
         {step === 2 ? <StoryScriptStep /> : null}
         {step === 3 ? <StoryStoryboardStep values={values} setValue={setValue} /> : null}
         {step === 4 ? <StoryGenerateStep values={values} generating={generating} /> : null}
+        {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
         {generating ? (
@@ -793,7 +854,7 @@ function StoryVideoFlow({ asset, onBack, onTitleChange }) {
               className="ppt-v1-primary"
               onClick={() => {
                 if (step < 4) setStep((current) => current + 1);
-                else setGenerating(true);
+                else generateVideo();
               }}
             >
               {step === 4 ? '生成视频' : '下一步'}

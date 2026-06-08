@@ -6,8 +6,9 @@ import { PptCanvas } from './PptCanvas';
 import { PptRightPanel } from './right-panel/PptRightPanel';
 import './css/PptCoursewareView.css';
 
-export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset, onConsumeTaskAsset }) {
+export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset, onConsumeTaskAsset, onCourseChange }) {
   const [course, setCourse] = React.useState(() => buildInitialPptCourse(initialCourseData));
+  const hasReportedInitialRef = React.useRef(false);
   const firstPhase = course[0];
   const firstStep = firstPhase?.steps[0];
   const firstSlide = firstStep?.slides[1] || firstStep?.slides[0];
@@ -26,13 +27,20 @@ export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset,
   const slideIndex = Math.max(0, step?.slides.findIndex((item) => item.id === slide?.id) ?? 0);
   const selectedLayer = slide?.layers.find((layer) => layer.id === selectedLayerId) || null;
 
+  React.useEffect(() => {
+    if (hasReportedInitialRef.current) return;
+    hasReportedInitialRef.current = true;
+    onCourseChange?.(course, { source: 'initial' });
+  }, [course, onCourseChange]);
+
   const updateCourse = React.useCallback((recipe) => {
     setCourse((current) => {
       const next = cloneData(current);
       recipe(next);
+      onCourseChange?.(next, { source: 'edit' });
       return next;
     });
-  }, []);
+  }, [onCourseChange]);
 
   const selectStep = (phaseKey, stepId, slideId) => {
     setActivePhaseKey(phaseKey);

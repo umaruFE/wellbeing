@@ -165,3 +165,21 @@
   height: 12px;
   color: #818997;
 }
+
+.profile-settings-form {
+  padding-top: 8px;
+}
+
+.profile-settings-form .ant-form-item-label > label {
+  color: #333e4e;
+  font-weight: 700;
+}
+
+.profile-settings-form .ant-input,
+.profile-settings-form .ant-input-disabled,
+.profile-settings-form .ant-input-affix-wrapper {
+  border: 2px solid #d8d3cb;
+  border-radius: 10px;
+  min-height: 38px;
+  color: #333e4e;
+}

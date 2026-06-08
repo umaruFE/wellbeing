@@ -151,12 +151,24 @@ export function getAssetGroups(type) {
 export function buildGeneratedPatch(kind, asset) {
   const title = asset?.title || (kind === 'video' ? '视频素材' : kind === 'audio' ? '音频素材' : '图片素材');
   if (kind === 'video') {
-    return { title, w: 300, h: 170, sceneClass: 'wb-scene-lantern', dur: '02:16' };
+    return { title, width: 300, height: 170, url: asset?.url, taskId: asset?.taskId, statusUrl: asset?.statusUrl, generationStatus: asset?.status, sceneClass: 'wb-scene-lantern', dur: asset?.duration || '02:16', duration: asset?.duration || '' };
   }
   if (kind === 'audio') {
-    return { title, w: 230, h: 74, dur: '01:00' };
+    return { title, width: 230, height: 74, url: asset?.url, taskId: asset?.taskId, statusUrl: asset?.statusUrl, generationStatus: asset?.status, dur: asset?.duration || '01:00', duration: asset?.duration || '' };
   }
-  return { title, w: 280, h: 158 };
+  return {
+    title,
+    width: asset?.width || 280,
+    height: asset?.height || 158,
+    url: asset?.url,
+    taskId: asset?.taskId,
+    statusUrl: asset?.statusUrl,
+    generationStatus: asset?.status,
+    prompt: asset?.prompt,
+    assetCode: asset?.assetCode || asset?.code,
+    imageSubtype: asset?.imageSubtype,
+    raw: asset?.raw,
+  };
 }
 
 export function getAssetIconFallback(kind) {
