@@ -17,6 +17,7 @@
   Smile,
   Sparkles,
   Speech,
+  UsersRound,
   Volume2,
   Wind,
 } from 'lucide-react';
@@ -33,6 +34,7 @@ export const imageAssetTypes = [
   { code: 'B9', title: '绘本故事配图', desc: '多页故事角色一致', tone: 'teal', icon: BookOpen },
   { code: 'B10', title: '四格漫画', desc: '漫画情节和对话', tone: 'lime', icon: Grid2X2 },
   { code: 'B11', title: '动作示意图', desc: 'TPR，IP角色', tone: 'purple', icon: Dumbbell },
+  { code: 'B13', title: 'IP角色场景图', desc: '多角色场景合成', tone: 'orange', icon: UsersRound },
 ];
 
 export const audioAssetTypes = [
@@ -75,6 +77,7 @@ export const imageSpecificFields = {
   B9: { prompt: '绘本故事梗概', placeholder: '例：Poppy和朋友一起寻找春天的声音', note: '进入逐帧编辑后固定生成 4 帧。' },
   B10: { prompt: '目标短语/句型', placeholder: '例：Can I have...? / I want to...', note: '固定四格漫画布局，自动编排起承转合。' },
   B11: { prompt: '动作名称', placeholder: '例：jump, crawl, stretch', note: '每个动作生成 1 张动作示意图。' },
+  B13: { prompt: '描述场景', placeholder: '例：太空教室，认识星球单词', note: '多选 IP 角色，默认生成独立透明角色图层后合成场景图。' },
 };
 
 export const activityThemes = ['艺术', '瑜伽', '体能', '音乐', '游戏', '展示', '庆祝'];

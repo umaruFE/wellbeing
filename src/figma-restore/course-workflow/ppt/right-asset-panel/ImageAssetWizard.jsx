@@ -91,6 +91,7 @@ const imageRatioSets = {
   B5: ['16:9', '4:3', '1:1', '9:16'],
   B7: ['16:9', '4:3', '1:1', '9:16'],
   B11: ['16:9', '4:3', '1:1', '9:16'],
+  B13: ['16:9', '4:3', '1:1', '9:16'],
 };
 
 const focusedImageTitles = {
@@ -105,6 +106,7 @@ const focusedImageTitles = {
   B9: '绘本故事配图',
   B10: '四格漫画',
   B11: '动作示意图',
+  B13: 'IP角色场景图',
 };
 
 const activityThemeCards = [
@@ -150,6 +152,56 @@ const actionChips = [
   'Crab pose',
 ];
 
+const b13CharMeta = {
+  Poppy: { tag: '活泼', short: 'P', base: '#ff705d', colors: ['#ff705d', '#ff8a7a', '#f97360'], prompt: 'Poppy，活泼友好的IP角色，透明背景，适合儿童英语课堂场景。' },
+  Edi: { tag: '冷静', short: 'E', base: '#4f8cff', colors: ['#4f8cff', '#60a5fa', '#2563eb'], prompt: 'Edi，冷静聪明的IP角色，透明背景，正在引导学生观察和思考。' },
+  Rolly: { tag: '温暖', short: 'R', base: '#22c55e', colors: ['#22c55e', '#34d399', '#16a34a'], prompt: 'Rolly，温暖可靠的IP角色，透明背景，动作亲切自然。' },
+  Milo: { tag: '自信', short: 'M', base: '#f59e0b', colors: ['#f59e0b', '#fbbf24', '#d97706'], prompt: 'Milo，自信开朗的IP角色，透明背景，站姿积极有表现力。' },
+  Ace: { tag: '机智', short: 'A', base: '#8b5cf6', colors: ['#8b5cf6', '#a78bfa', '#7c3aed'], prompt: 'Ace，机智敏捷的IP角色，透明背景，动作轻快，适合趣味课堂。' },
+};
+
+const b13BgVariants = [
+  { name: '太空教室', symbol: '✦', css: 'radial-gradient(circle at 18% 20%,#fff7ad 0 .7rem,transparent .75rem),radial-gradient(circle at 76% 34%,#bfdbfe 0 1rem,transparent 1.05rem),linear-gradient(135deg,#dbeafe 0%,#eef2ff 45%,#fff7ed 100%)' },
+  { name: '森林课堂', symbol: '葉', css: 'radial-gradient(circle at 18% 28%,#bbf7d0 0 2.6rem,transparent 2.7rem),radial-gradient(circle at 76% 24%,#fde68a 0 2rem,transparent 2.1rem),linear-gradient(135deg,#dcfce7 0%,#ecfccb 48%,#fef3c7 100%)' },
+  { name: '海底实验室', symbol: '水', css: 'radial-gradient(circle at 22% 28%,rgba(255,255,255,.72) 0 .65rem,transparent .7rem),radial-gradient(circle at 72% 64%,rgba(255,255,255,.55) 0 .9rem,transparent .95rem),linear-gradient(135deg,#bae6fd 0%,#a7f3d0 50%,#e0f2fe 100%)' },
+  { name: '农场舞台', symbol: 'IP', css: 'radial-gradient(circle at 20% 78%,#fcd34d 0 2rem,transparent 2.1rem),radial-gradient(circle at 78% 30%,#fecaca 0 2.2rem,transparent 2.3rem),linear-gradient(135deg,#fef3c7 0%,#dcfce7 52%,#fee2e2 100%)' },
+];
+
+const b13Examples = [
+  { label: '森林探险', value: '森林教室，寻找动物单词' },
+  { label: '海底实验室', value: '海底实验室，观察颜色词汇' },
+  { label: '农场运动会', value: '农场运动会，学习动物动作' },
+];
+
+function b13Color(name, variant = 0) {
+  const meta = b13CharMeta[name] || b13CharMeta.Poppy;
+  return meta.colors[variant % meta.colors.length] || meta.base;
+}
+
+function b13VirtualSize(ratio) {
+  const map = { '16:9': [16, 9], '4:3': [4, 3], '1:1': [1, 1], '9:16': [9, 16] };
+  const [w, h] = map[ratio] || map['16:9'];
+  return { w: 760, h: Math.round((760 * h) / w) };
+}
+
+function b13InitialLayer(name, index, total, ratio) {
+  const meta = b13CharMeta[name] || b13CharMeta.Poppy;
+  const size = b13VirtualSize(ratio);
+  return {
+    key: `char-${name}`,
+    name,
+    prompt: meta.prompt,
+    variant: 0,
+    x: Math.round((size.w / (total + 1)) * (index + 1) - 39),
+    y: Math.round(size.h * 0.57 - (index % 2) * 22),
+    size: 100,
+    rot: 0,
+    flipX: false,
+    flipY: false,
+    z: index + 1,
+  };
+}
+
 function RatioPicker({ code, value, onChange }) {
   return (
     <div className="ppt-img-section">
@@ -162,6 +214,301 @@ function RatioPicker({ code, value, onChange }) {
           </button>
         ))}
       </div>
+    </div>
+  );
+}
+
+function IpSceneStepper({ step }) {
+  return (
+    <div className="ppt-storybook-stepper" aria-label="IP角色场景图步骤">
+      {['设定', '编排', '合成'].map((label, index) => (
+        <React.Fragment key={label}>
+          <div className={`ppt-storybook-step ${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}>
+            <span>{step > index ? '✓' : index + 1}</span>
+            <strong>{label}</strong>
+          </div>
+          {index < 2 ? <i /> : null}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function IpSceneCharacterPicker({ value, onChange }) {
+  const toggle = (name) => {
+    const next = value.includes(name) ? value.filter((item) => item !== name) : [...value, name];
+    if (next.length) onChange(next);
+  };
+
+  return (
+    <div className="ppt-img-section">
+      <div className="ppt-img-label">选择IP角色 <span>可多选，默认生成独立透明角色图层。</span></div>
+      <div className="ppt-img-character-grid">
+        {ipCharacters.map((character) => {
+          const active = value.includes(character.name);
+          return (
+            <button type="button" key={character.name} className={active ? 'is-active' : ''} onClick={() => toggle(character.name)}>
+              <i><img src={character.image} alt="" /></i>
+              <span>{character.name}</span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function B13MiniPreview({ values, final = false, onClick }) {
+  const virtual = b13VirtualSize(values.ratio);
+  const bg = b13BgVariants[values.ipBgIndex % b13BgVariants.length] || b13BgVariants[0];
+  return (
+    <div className={final ? 'b13-final-preview' : 'b13-preview-card b13-step2-preview-card'} onClick={onClick} role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined}>
+      <div className={final ? 'b13-preview-art b13-final-art' : 'b13-preview-art b13-step2-preview-art'} style={{ aspectRatio: values.ratio.replace(':', ' / '), background: bg.css }}>
+        {final ? <span className="b13-preview-badge done">合成完成</span> : null}
+        <div className="b13-preview-bg-symbol">{final ? 'IP' : bg.symbol}</div>
+        <div className="b13-preview-chars">
+          {(values.ipLayers || []).slice().sort((a, b) => a.z - b.z).map((layer) => {
+            const meta = b13CharMeta[layer.name] || b13CharMeta.Poppy;
+            const left = Math.max(3, Math.min(88, (layer.x / virtual.w) * 100));
+            const top = Math.max(6, Math.min(78, (layer.y / virtual.h) * 100));
+            const miniW = Math.max(26, 36 * ((layer.size || 100) / 100));
+            const miniH = Math.max(34, 46 * ((layer.size || 100) / 100));
+            const transform = `rotate(${layer.rot || 0}deg) scaleX(${layer.flipX ? -1 : 1}) scaleY(${layer.flipY ? -1 : 1})`;
+          return (
+            <div
+                key={layer.key}
+                className="b13-mini-char"
+                style={{ left: `${left}%`, top: `${top}%`, width: miniW, height: miniH, background: b13Color(layer.name, layer.variant), transform, zIndex: layer.z }}
+              >
+                {meta.short}
+              </div>
+          );
+        })}
+      </div>
+    </div>
+    </div>
+  );
+}
+
+function IpSceneWizard({ values, setValue, onGenerate }) {
+  const [step, setStep] = React.useState(0);
+  const [modalOpen, setModalOpen] = React.useState(false);
+  const [selectedKey, setSelectedKey] = React.useState(null);
+  const dragRef = React.useRef(null);
+
+  const syncLayers = (chars = values.ipCharacters) => {
+    const old = new Map((values.ipLayers || []).map((layer) => [layer.name, layer]));
+    setValue('ipLayers', chars.map((name, index) => ({ ...(old.get(name) || b13InitialLayer(name, index, chars.length, values.ratio)), z: index + 1 })));
+  };
+
+  const generatePreview = () => {
+    if (!values.ipScene?.trim()) return;
+    syncLayers();
+    setValue('ipBgPrompt', `${values.ipScene} 背景画面，明亮清晰，适合PPT课件，无文字。`);
+    setValue('ipComposed', false);
+    setStep(1);
+  };
+
+  const updateLayer = (key, patch) => {
+    setValue('ipLayers', (values.ipLayers || []).map((layer) => (layer.key === key ? { ...layer, ...patch } : layer)));
+  };
+
+  const moveLayerOrder = (delta) => {
+    if (!selectedKey) return;
+    const ordered = (values.ipLayers || []).slice().sort((a, b) => a.z - b.z);
+    const index = ordered.findIndex((layer) => layer.key === selectedKey);
+    const target = ordered[index + delta];
+    const current = ordered[index];
+    if (!current || !target) return;
+    setValue('ipLayers', (values.ipLayers || []).map((layer) => {
+      if (layer.key === current.key) return { ...layer, z: target.z };
+      if (layer.key === target.key) return { ...layer, z: current.z };
+      return layer;
+    }));
+  };
+
+  const startLayerDrag = (event, layer) => {
+    if (event.button !== undefined && event.button !== 0) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setSelectedKey(layer.key);
+    dragRef.current = {
+      key: layer.key,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: layer.x,
+      originY: layer.y,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+  };
+
+  const dragLayer = (event) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    const nextX = Math.round(drag.originX + event.clientX - drag.startX);
+    const nextY = Math.round(drag.originY + event.clientY - drag.startY);
+    updateLayer(drag.key, { x: nextX, y: nextY });
+  };
+
+  const endLayerDrag = () => {
+    dragRef.current = null;
+  };
+
+  React.useEffect(() => {
+    syncLayers(values.ipCharacters);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.ipCharacters.join('|')]);
+
+  const selectedLayer = (values.ipLayers || []).find((layer) => layer.key === selectedKey) || null;
+  const bg = b13BgVariants[values.ipBgIndex % b13BgVariants.length] || b13BgVariants[0];
+
+  return (
+    <div className="ppt-img-flow ppt-b13-flow">
+      <div className="ppt-img-flow-body">
+        <IpSceneStepper step={step} />
+        {step === 0 ? (
+          <div className="ppt-img-focused-form">
+            <RatioPicker code="B13" value={values.ratio} onChange={(value) => setValue('ratio', value)} />
+            <IpSceneCharacterPicker value={values.ipCharacters} onChange={(value) => setValue('ipCharacters', value)} />
+            <ScenePromptBox value={values.ipScene || ''} onChange={(value) => setValue('ipScene', value)} />
+            <div className="b13-chip-row">
+              {b13Examples.map((item) => (
+                <button type="button" key={item.label} onClick={() => setValue('ipScene', item.value)}>{item.label}</button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {step === 1 ? (
+          <div className="b13-drawer-body">
+            <div className="b13-layer-ready-card">
+              <div className="b13-layer-ready-icon" aria-hidden="true">▣</div>
+              <div className="b13-layer-ready-copy">
+                <strong>图层已分离准备完毕</strong>
+                <span>您可以直接生成，或进入全屏微调角色位置。</span>
+              </div>
+            </div>
+            <B13MiniPreview values={values} onClick={() => setModalOpen(true)} />
+            <div className="b13-ready-summary-card">
+              <div><span className="b13-ready-check">✓</span><b>背景就绪</b></div>
+              <i />
+              <div><span className="b13-ready-check">✓</span><b>{values.ipLayers.length} 个角色已就绪</b></div>
+            </div>
+          </div>
+        ) : null}
+        {step === 2 ? (
+          <div className="b13-drawer-body">
+            <B13MiniPreview values={values} final />
+            <div className="b13-status-list final">
+              <div><span>画面比例</span><b>{values.ratio}</b></div>
+              <div><span>IP角色</span><b>{values.ipLayers.length}个角色</b></div>
+              <div><span>输出格式</span><b>PNG · 透明图层已合成</b></div>
+            </div>
+          </div>
+        ) : null}
+      </div>
+      <div className="ppt-inline-footer ppt-img-footer">
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={generatePreview}><Sparkles size={14} />生成图片</button> : null}
+        {step === 1 ? (
+          <>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => { setValue('ipComposed', true); setStep(2); }}>下一步 →</button>
+          </>
+        ) : null}
+        {step === 2 ? (
+          <>
+            <button type="button" className="ppt-ghost-btn">保存到素材库</button>
+            <button type="button" className="ppt-primary-btn" onClick={onGenerate}>插入画布 →</button>
+          </>
+        ) : null}
+      </div>
+      {modalOpen ? (
+        <div className="b13-compose-modal-wrap">
+          <div className="b13-modal">
+            <div className="b13-modal-hd">
+              <div><div className="b13-modal-title">IP角色场景图 · 编排</div></div>
+              <div className="b13-modal-actions"><button type="button" className="b13-modal-x" onClick={() => setModalOpen(false)}>×</button></div>
+            </div>
+            <div className="b13-modal-body">
+              <div className="b13-canvas-pane">
+                <div className="b13-canvas-wrap">
+                  <div className="b13-canvas" style={{ aspectRatio: values.ratio.replace(':', ' / ') }} onClick={() => setSelectedKey(null)}>
+                    <div className="b13-bg-layer" style={{ background: bg.css, transform: `scale(${(values.ipBgScale || 100) / 100})` }}>{bg.symbol}</div>
+                    <div className="b13-char-layer-wrap">
+                      {(values.ipLayers || []).slice().sort((a, b) => a.z - b.z).map((layer) => {
+                        const meta = b13CharMeta[layer.name] || b13CharMeta.Poppy;
+                        return (
+                          <div
+                            key={layer.key}
+                            className={`b13-char-node ${selectedKey === layer.key ? 'is-active' : ''}`}
+                            style={{
+                              left: layer.x,
+                              top: layer.y,
+                              width: 78 * ((layer.size || 100) / 100),
+                              height: 98 * ((layer.size || 100) / 100),
+                              zIndex: 10 + layer.z,
+                              transform: `rotate(${layer.rot || 0}deg) scaleX(${layer.flipX ? -1 : 1}) scaleY(${layer.flipY ? -1 : 1})`,
+                            }}
+                            onClick={(event) => { event.stopPropagation(); setSelectedKey(layer.key); }}
+                            onPointerDown={(event) => startLayerDrag(event, layer)}
+                            onPointerMove={dragLayer}
+                            onPointerUp={endLayerDrag}
+                            onPointerCancel={endLayerDrag}
+                          >
+                            <div className="b13-char-body" style={{ background: b13Color(layer.name, layer.variant) }}>{meta.short}</div>
+                            <div className="b13-char-name">{layer.name}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <aside className="b13-prop-pane">
+                {!selectedLayer ? (
+                  <div className="b13-prop-section">
+                    <div className="b13-prop-title">背景设置</div>
+                    <label className="b13-prop-label">背景提示词</label>
+                    <Input.TextArea className="ppt-img-textarea-input b13-prop-textarea" value={values.ipBgPrompt || ''} onChange={(event) => setValue('ipBgPrompt', event.target.value)} />
+                    <div className="b13-action-grid"><button type="button" className="btn b13-regen-btn" onClick={() => setValue('ipBgIndex', (values.ipBgIndex + 1) % b13BgVariants.length)}>重新生成背景</button></div>
+                    <label className="b13-prop-label">背景缩放 <span>{values.ipBgScale || 100}%</span></label>
+                    <input type="range" min="100" max="150" value={values.ipBgScale || 100} onChange={(event) => setValue('ipBgScale', Number(event.target.value))} />
+                    <div className="b13-prop-note">背景不支持旋转和翻转，仅支持重新生成与缩放。</div>
+                  </div>
+                ) : (
+                  <div className="b13-prop-section">
+                    <div className="b13-prop-title">{selectedLayer.name}角色设置</div>
+                    <label className="b13-prop-label">角色提示词</label>
+                    <Input.TextArea className="ppt-img-textarea-input b13-prop-textarea" value={selectedLayer.prompt || ''} onChange={(event) => updateLayer(selectedLayer.key, { prompt: event.target.value })} />
+                    <div className="b13-action-grid"><button type="button" className="btn b13-regen-btn" onClick={() => updateLayer(selectedLayer.key, { variant: (selectedLayer.variant || 0) + 1 })}>重新生成角色</button></div>
+                    <div className="b13-num-grid">
+                      <label>X<Input type="number" value={Math.round(selectedLayer.x)} onChange={(event) => updateLayer(selectedLayer.key, { x: Number(event.target.value) })} /></label>
+                      <label>Y<Input type="number" value={Math.round(selectedLayer.y)} onChange={(event) => updateLayer(selectedLayer.key, { y: Number(event.target.value) })} /></label>
+                    </div>
+                    <label className="b13-prop-label">大小 <span>{Math.round(selectedLayer.size)}%</span></label>
+                    <input type="range" min="55" max="150" value={selectedLayer.size} onChange={(event) => updateLayer(selectedLayer.key, { size: Number(event.target.value) })} />
+                    <label className="b13-prop-label">旋转角度 <span>{Math.round(selectedLayer.rot || 0)}°</span></label>
+                    <input type="range" min="-45" max="45" value={selectedLayer.rot || 0} onChange={(event) => updateLayer(selectedLayer.key, { rot: Number(event.target.value) })} />
+                    <div className="b13-flip-row">
+                      <button type="button" className={selectedLayer.flipX ? 'is-active' : ''} onClick={() => updateLayer(selectedLayer.key, { flipX: !selectedLayer.flipX })}>水平翻转</button>
+                      <button type="button" className={selectedLayer.flipY ? 'is-active' : ''} onClick={() => updateLayer(selectedLayer.key, { flipY: !selectedLayer.flipY })}>垂直翻转</button>
+                    </div>
+                    <div className="b13-z-row">
+                      <button type="button" onClick={() => moveLayerOrder(-1)}>下移一层</button>
+                      <button type="button" onClick={() => moveLayerOrder(1)}>上移一层</button>
+                    </div>
+                  </div>
+                )}
+              </aside>
+            </div>
+            <div className="b13-modal-ft">
+              <button type="button" className="b13-footer-btn b13-footer-ghost" onClick={() => setModalOpen(false)}>取消</button>
+              <button type="button" className="b13-footer-btn b13-footer-ghost" onClick={() => setModalOpen(false)}>保存编排</button>
+              <button type="button" className="b13-footer-btn b13-footer-primary" onClick={() => { setModalOpen(false); setValue('ipComposed', true); setStep(2); }}>保存并合成</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1031,6 +1378,13 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     storybookContent: '',
     storybookStyle: '水彩绘本',
     storybookGrade: '小二（7-8岁）',
+    ipCharacters: ['Poppy', 'Edi'],
+    ipScene: '太空教室，认识星球单词',
+    ipBgPrompt: '太空教室背景，明亮、适合PPT封面，无文字。',
+    ipBgScale: 100,
+    ipBgIndex: 0,
+    ipComposed: false,
+    ipLayers: [],
   });
   const field = imageSpecificFields[asset.code] || imageSpecificFields.B1;
   const isFixedRatio = ['B3', 'B8', 'B10', 'B11'].includes(asset.code);
@@ -1056,7 +1410,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     return (
       <GenerationProgress
         title="AI 正在生成图片"
-        subtitle={`${values.style} · ${values.ratio}`}
+        subtitle={asset.code === 'B13' ? `${values.ipCharacters.join('、')} · ${values.ratio}` : `${values.style} · ${values.ratio}`}
         batch={asset.code === 'B3' || asset.code === 'B11' ? { done: 2, total: 6, unit: '张' } : null}
       />
     );
@@ -1073,6 +1427,10 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
         onInsert={() => onInsert('image', asset)}
       />
     );
+  }
+
+  if (asset.code === 'B13') {
+    return <IpSceneWizard values={values} setValue={setValue} onGenerate={() => onInsert('image', asset)} />;
   }
 
   if (['B1', 'B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B10', 'B11'].includes(asset.code)) {
