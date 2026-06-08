@@ -181,6 +181,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('organizationId');
   }, []);
 
   // 检查是否有指定角色
