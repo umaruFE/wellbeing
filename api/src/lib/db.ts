@@ -52,6 +52,13 @@ function createQueryBuilder(table: string) {
 
   // 创建一个 Promise-like 对象，可以被 await
   const buildPromise = () => executeSelect(state);
+  const buildSinglePromise = async () => {
+    const result = await executeSelect(state);
+    if (result.error) {
+      return { data: null, error: result.error };
+    }
+    return { data: result.data?.[0] || null, error: null };
+  };
 
   const builder: any = {
     select(columns: string = '*', options?: { count?: 'exact' }) {
@@ -97,6 +104,10 @@ function createQueryBuilder(table: string) {
       state.rangeTo = limit - 1;
       return builder;
     },
+
+    single() {
+      return buildSinglePromise();
+    },
   };
 
   // 添加 Promise 方法，使其可以被 await
@@ -118,9 +129,9 @@ async function executeSelect(state: QueryState): Promise<{ data: any[] | null; e
   let selectClause = state.selectColumns;
 
   if (hasJoins) {
-    // 简化处理：提取主表字段和关联
+    // 提取主表字段和 Supabase 风格关联: alias:table(*)
     const parts = state.selectColumns.split(',').map((p) => p.trim());
-    const mainParts: string[] = [];
+    const selectParts: string[] = [];
     const joins: { alias: string; table: string; fkColumn: string }[] = [];
 
     for (const part of parts) {
@@ -136,14 +147,17 @@ async function executeSelect(state: QueryState): Promise<{ data: any[] | null; e
         };
         const fkColumn = fkMap[refTable] || `${refTable.replace(/s$/, '')}_id`;
         joins.push({ alias, table: refTable, fkColumn });
+        selectParts.push(`row_to_json(${alias}.*) as ${alias}`);
       } else if (part === '*') {
-        mainParts.push(`${mainTable}.*`);
+        selectParts.push(`${state.table}.*`);
+      } else if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(part)) {
+        selectParts.push(`${state.table}.${part}`);
       }
     }
 
     if (joins.length > 0) {
       const joinClauses = joins.map((j) => `LEFT JOIN ${j.table} AS ${j.alias} ON ${mainTable}.${j.fkColumn} = ${j.alias}.id`);
-      selectClause = `${mainTable}.*, ${joins.map((j) => `${j.alias}.*`).join(', ')}`;
+      selectClause = selectParts.length > 0 ? selectParts.join(', ') : `${state.table}.*`;
       mainTable = `${mainTable} ${joinClauses.join(' ')}`;
     }
   } else {
