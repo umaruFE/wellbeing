@@ -38,6 +38,8 @@ export const createCanvasAssetPayload = (task) => {
   const common = {
     title: task.title,
     prompt: task.prompt,
+    url: task.result?.url,
+    src: task.result?.url,
   };
 
   if (type === 'video') {

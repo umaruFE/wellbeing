@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Input, Dropdown, Drawer, Form, Modal, message } from 'antd';
 import { Search, BellOff, ChevronDown } from 'lucide-react';
@@ -10,6 +10,7 @@ export const Header = ({ title = '工作看板' }) => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [taskCount, setTaskCount] = useState(0);
   const [settingsForm] = Form.useForm();
   const location = useLocation();
   const navigate = useNavigate();
@@ -26,6 +27,29 @@ export const Header = ({ title = '工作看板' }) => {
   }[location.pathname] || title;
 
   const displayName = user?.name || user?.username || 'Admin';
+
+  const loadTaskCount = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/background-tasks?scope=active', {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setTaskCount(result.data?.tasks?.length || 0);
+      }
+    } catch {
+      setTaskCount(0);
+    }
+  };
+
+  useEffect(() => {
+    loadTaskCount();
+    const timer = window.setInterval(loadTaskCount, 10000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const openSettings = () => {
     settingsForm.resetFields();
@@ -83,6 +107,7 @@ export const Header = ({ title = '工作看板' }) => {
   };
   
   const handleTaskButtonClick = () => {
+    loadTaskCount();
     setDrawerVisible(true);
   };
 
@@ -108,7 +133,7 @@ export const Header = ({ title = '工作看板' }) => {
         <div className="header-actions">
           <button className="task-button" onClick={handleTaskButtonClick}>
             <div className="task-dot" />
-            <span className="task-text">后台任务 2</span>
+            <span className="task-text">后台任务 {taskCount}</span>
           </button>
           <div className="bell-wrapper">
             <BellOff className="bell-icon" size={18} />
@@ -127,13 +152,21 @@ export const Header = ({ title = '工作看板' }) => {
       
       <Drawer
         placement="right"
-        onClose={() => setDrawerVisible(false)}
+        onClose={() => {
+          setDrawerVisible(false);
+          loadTaskCount();
+        }}
         open={drawerVisible}
         width={420}
         bodyStyle={{ padding: 0 }}
         headerStyle={{ display: 'none' }}
       >
-        <TaskCenter onClose={() => setDrawerVisible(false)} />
+        <TaskCenter
+          onClose={() => {
+            setDrawerVisible(false);
+            loadTaskCount();
+          }}
+        />
       </Drawer>
 
       <Modal

@@ -116,12 +116,13 @@ export async function PUT(request: NextRequest) {
       .from('users')
       .update({ password_hash: passwordHash })
       .eq('id', authResult.user!.id)
-      .select('id')
+      .select()
       .single();
 
     if (error || !data) {
+      const updateError = error as { message?: string } | null;
       return NextResponse.json(
-        { error: error?.message || '用户不存在' },
+        { error: updateError?.message || '用户不存在' },
         { status: error ? 500 : 404, headers: corsHeaders() }
       );
     }

@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { Tag, Button, Progress } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Tag, Button, Progress, message } from 'antd';
 import {
   CheckCircle,
   CirclePlus,
@@ -21,6 +21,13 @@ const getIcon = (type) => {
     default: return ImageIcon;
   }
 };
+
+function getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+}
 
 const mockHistoryTasks = [
   {
@@ -308,6 +315,31 @@ const getIconBgColor = (type) => {
 const getDetailForTask = (task) => taskDetailData[task.detailKey] || taskDetailData.imageRunning;
 
 const statusConfigMap = {
+  queued: {
+    label: '等待中',
+    className: 'waiting',
+    icon: <Clock size={12} />,
+  },
+  running: {
+    label: '进行中',
+    className: 'processing',
+    icon: <Loader2 size={12} className="animate-spin" />,
+  },
+  succeeded: {
+    label: '已完成',
+    className: 'done',
+    icon: <CheckCircle size={12} />,
+  },
+  failed: {
+    label: '失败',
+    className: 'failed',
+    icon: <Clock size={12} />,
+  },
+  cancelled: {
+    label: '已取消',
+    className: 'cancelled',
+    icon: <Clock size={12} />,
+  },
   processing: {
     label: '进行中',
     className: 'processing',
@@ -323,6 +355,84 @@ const statusConfigMap = {
     className: 'done',
     icon: <CheckCircle size={12} />,
   },
+};
+
+const taskStatusToUi = (status) => {
+  if (status === 'queued') return 'waiting';
+  if (status === 'running') return 'processing';
+  if (status === 'succeeded') return 'done';
+  if (status === 'failed') return 'failed';
+  if (status === 'cancelled') return 'cancelled';
+  return status || 'waiting';
+};
+
+const formatTaskTime = (value) => {
+  if (!value) return '--';
+  try {
+    return new Date(value).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return '--';
+  }
+};
+
+const getTaskStatusText = (task) => {
+  if (task.status === 'queued') return '排队中 · 等待 GPU 分配';
+  if (task.status === 'running') return task.progress >= 80 ? '正在整理生成结果' : 'AI 引擎正在生成中...';
+  if (task.status === 'succeeded') return '已完成 · 可插入画布';
+  if (task.status === 'failed') return task.error_message || '生成失败';
+  if (task.status === 'cancelled') return '已取消';
+  return task.status_text || '';
+};
+
+const normalizeTask = (task) => {
+  const count = task.count || task.input?.count || 1;
+  return {
+    id: task.id,
+    raw: task,
+    type: task.type || 'image',
+    title: task.title || 'AI 生成任务',
+    count: String(count),
+    related: task.related || task.input?.course_title || '未关联课程',
+    status: taskStatusToUi(task.status),
+    rawStatus: task.status,
+    progress: task.status === 'queued' ? undefined : Number(task.progress || 0),
+    progressText: getTaskStatusText(task),
+    statusText: getTaskStatusText(task),
+    time: formatTaskTime(task.finished_at || task.created_at),
+    showInsert: task.status === 'succeeded',
+    detailKey: task.type === 'video' ? 'videoWaiting' : task.type === 'audio' ? 'audioBgm' : 'imageRunning',
+  };
+};
+
+const createDetailFromTask = (task) => {
+  const raw = task.raw || task;
+  const input = raw.input || {};
+  return {
+    type: raw.type || task.type || 'image',
+    title: raw.title || task.title || 'AI 生成任务',
+    count: `x ${raw.count || task.count || 1} ${raw.type === 'video' ? '个' : raw.type === 'audio' ? '首' : '张'}`,
+    course: raw.related || task.related || '未关联课程',
+    status: taskStatusToUi(raw.status),
+    statusText: statusConfigMap[raw.status]?.label || task.statusText || '等待中',
+    submit: formatTaskTime(raw.created_at),
+    engine: raw.type === 'video' ? '视频生成 · 后台任务' : raw.type === 'audio' ? '音频生成 · 后台任务' : '图片生成 · 后台任务',
+    progress: Number(raw.progress || task.progress || 0),
+    prompt: input.prompt || input.storyboard_prompts?.join('\n') || '无提示词',
+    spec: raw.type === 'video'
+      ? `${input.video_width || 856}x${input.video_height || 480}`
+      : `${input.width || 1024}x${input.height || 1024}`,
+    scenes: ['rocket', 'kitchen', 'beach', 'stage'],
+    hero: 'classroom',
+    shots: input.storyboard_prompts || [],
+    tracks: [],
+    result: raw.result || null,
+  };
 };
 
 const TaskStatusTag = ({ status }) => {
@@ -342,7 +452,7 @@ const handleAccessibleCardKey = (event, onOpen) => {
   }
 };
 
-const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset }) => {
+const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask }) => {
   const iconColors = getIconBgColor(task.type);
   const IconComponent = getIcon(task.type);
 
@@ -383,22 +493,35 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset }) => {
           <Clock size={14} />
           <span className="history-task-time-text">{task.time}</span>
         </div>
-        <Button
-          className="history-insert-btn"
-          onClick={(event) => {
-            event.stopPropagation();
-            onInsertTaskAsset?.(createCanvasAssetPayload(getDetailForTask(task)));
-          }}
-        >
-          <CirclePlus size={14} />
-          <span>插入画布</span>
-        </Button>
+        {task.showInsert && (
+          <Button
+            className="history-insert-btn"
+            onClick={(event) => {
+              event.stopPropagation();
+              onInsertTaskAsset?.(createCanvasAssetPayload(task.raw ? createDetailFromTask(task) : getDetailForTask(task)));
+            }}
+          >
+            <CirclePlus size={14} />
+            <span>插入画布</span>
+          </Button>
+        )}
+        {['failed', 'cancelled'].includes(task.rawStatus) && (
+          <Button
+            className="history-insert-btn"
+            onClick={(event) => {
+              event.stopPropagation();
+              onRetryTask?.(task);
+            }}
+          >
+            重新生成
+          </Button>
+        )}
       </div>
     </div>
   );
 };
 
-const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset }) => {
+const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) => {
   const IconComponent = getIcon(task.type);
 
   return (
@@ -456,11 +579,22 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset }) => {
             className="task-insert-btn"
             onClick={(event) => {
               event.stopPropagation();
-              onInsertTaskAsset?.(createCanvasAssetPayload(getDetailForTask(task)));
+              onInsertTaskAsset?.(createCanvasAssetPayload(task.raw ? createDetailFromTask(task) : getDetailForTask(task)));
             }}
           >
             <CirclePlus size={14} />
             <span>插入画布</span>
+          </Button>
+        )}
+        {['waiting', 'processing'].includes(task.status) && (
+          <Button
+            className="task-cancel-btn"
+            onClick={(event) => {
+              event.stopPropagation();
+              onCancelTask?.(task);
+            }}
+          >
+            取消
           </Button>
         )}
       </div>
@@ -472,19 +606,94 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
   const [activeTab, setActiveTab] = useState('queue');
   const [selectedTask, setSelectedTask] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [queueTasks, setQueueTasks] = useState([]);
+  const [historyTasks, setHistoryTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const loadTasks = async (scope = activeTab) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/background-tasks?scope=${scope === 'history' ? 'history' : 'active'}`, {
+        headers: getAuthHeaders(),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '后台任务获取失败');
+      }
+
+      const tasks = (result.data?.tasks || []).map(normalizeTask);
+      if (scope === 'history') {
+        setHistoryTasks(tasks);
+      } else {
+        setQueueTasks(tasks);
+      }
+    } catch (error) {
+      message.error(error?.message || '后台任务获取失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTasks(activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    if (activeTab !== 'queue') return undefined;
+    const timer = window.setInterval(() => loadTasks('queue'), 5000);
+    return () => window.clearInterval(timer);
+  }, [activeTab]);
 
   const currentTasks = useMemo(
-    () => (activeTab === 'queue' ? mockQueueTasks : mockHistoryTasks),
-    [activeTab],
+    () => (activeTab === 'queue' ? queueTasks : historyTasks),
+    [activeTab, queueTasks, historyTasks],
   );
 
   const openTaskDetail = (task) => {
-    setSelectedTask(getDetailForTask(task));
+    setSelectedTask(task.raw ? createDetailFromTask(task) : getDetailForTask(task));
     setDetailOpen(true);
   };
 
   const closeTaskDetail = () => {
     setDetailOpen(false);
+  };
+
+  const cancelTask = async (task) => {
+    try {
+      const response = await fetch(`/api/background-tasks/${task.id}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '取消失败');
+      }
+      message.success('任务已取消');
+      loadTasks('queue');
+    } catch (error) {
+      message.error(error?.message || '取消失败');
+    }
+  };
+
+  const retryTask = async (task) => {
+    try {
+      const response = await fetch(`/api/background-tasks/${task.id}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ action: 'retry' }),
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || '重试失败');
+      }
+      message.success('任务已重新提交');
+      setActiveTab('queue');
+      loadTasks('queue');
+    } catch (error) {
+      message.error(error?.message || '重试失败');
+    }
   };
 
   return (
@@ -507,21 +716,27 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
           className={`task-center-tab ${activeTab === 'queue' ? 'active' : ''}`}
           onClick={() => setActiveTab('queue')}
         >
-          当前队列 (2)
+          当前队列 ({queueTasks.length})
         </span>
         <span
           className={`task-center-tab ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
-          历史记录 (200+)
+          历史记录 ({historyTasks.length})
         </span>
       </div>
       <div className="task-center-content">
-        {currentTasks.map(task => (
-          activeTab === 'queue'
-            ? <QueueTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} />
-            : <HistoryTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} />
-        ))}
+        {loading && currentTasks.length === 0 ? (
+          <div className="task-center-empty">正在加载后台任务...</div>
+        ) : currentTasks.length === 0 ? (
+          <div className="task-center-empty">暂无后台任务</div>
+        ) : (
+          currentTasks.map(task => (
+            activeTab === 'queue'
+              ? <QueueTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onCancelTask={cancelTask} />
+              : <HistoryTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onRetryTask={retryTask} />
+          ))
+        )}
       </div>
 
       <TaskDetailModal task={selectedTask} open={detailOpen} onClose={closeTaskDetail} onInsertTaskAsset={onInsertTaskAsset} />

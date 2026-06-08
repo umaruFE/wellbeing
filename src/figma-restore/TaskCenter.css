@@ -322,6 +322,35 @@
   box-shadow: 2px 2px 0px 0px #333e4e !important;
 }
 
+.task-cancel-btn {
+  height: 32px !important;
+  border: 2px solid #d8d3cb !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #818997 !important;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+}
+
+.task-cancel-btn:hover {
+  border-color: #f4785e !important;
+  color: #f4785e !important;
+}
+
+.task-center-empty {
+  width: 100%;
+  min-height: 160px;
+  border: 2px dashed #d8d3cb;
+  border-radius: 14px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #818997;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .history-task-item {
   display: flex;
   flex-direction: column;
@@ -477,6 +506,18 @@
   color: #509f69 !important;
 }
 
+.task-status-pill.failed {
+  border: 1px solid #ef4444 !important;
+  background: #fff1f1 !important;
+  color: #ef4444 !important;
+}
+
+.task-status-pill.cancelled {
+  border: 1px solid #94a3b8 !important;
+  background: #f8fafc !important;
+  color: #64748b !important;
+}
+
 .task-detail-backdrop {
   position: fixed;
   inset: 0;
@@ -607,6 +648,18 @@
   border: 1px solid #509f69;
   background: #ebf7ee;
   color: #509f69;
+}
+
+.tdm-status.failed {
+  border: 1px solid #ef4444;
+  background: #fff1f1;
+  color: #ef4444;
+}
+
+.tdm-status.cancelled {
+  border: 1px solid #94a3b8;
+  background: #f8fafc;
+  color: #64748b;
 }
 
 .tdm-sub {
