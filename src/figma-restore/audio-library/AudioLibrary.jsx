@@ -1,16 +1,12 @@
 import React from 'react';
 import { Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Upload as UploadIcon } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
+import apiService from '../../services/api';
 import './AudioLibrary.css';
 import { AudioPreviewModal } from './AudioPreviewModal';
 import { TaskDetailModal } from '../TaskDetailModal';
 
-export const AUDIO_ASSETS = [
-  { id: 'aud-calm', name: '安静氛围BGM_01.mp3', source: 'AI生成', type: 'BGM', format: 'MP3', fileSize: '2.4 MB', duration: '1:00', created: '2026/04/13 10:06:30', tone: 'lavender', info: { audioType: '情绪氛围 BGM', theme: 'Quiet classroom', style: '安静 / 温暖', lyric: '无歌词' } },
-  { id: 'aud-jump', name: 'Jump! Run! 体能旁白', source: 'AI生成', type: '旁白', format: 'WAV', fileSize: '5.8 MB', duration: '0:45', created: '2026/04/13 10:09:14', tone: 'mint', info: { audioType: '跟读旁白', theme: 'TPR warm-up', style: '活泼 / 清晰', lyric: 'Jump! Run! Go!' } },
-  { id: 'aud-fruit', name: '水果歌 Fruit Song.mp3', source: 'AI生成', type: '歌曲', format: 'MP3', fileSize: '3.9 MB', duration: '1:30', created: '2026/04/13 10:18:42', tone: 'peach', info: { audioType: '教学歌曲', theme: 'Fruit vocabulary', style: '轻快', lyric: '水果词汇与简单句型' } },
-  { id: 'aud-kitchen', name: '动物厨房口令音效', source: '手动上传', type: '旁白', format: 'AAC', fileSize: '1.8 MB', duration: '0:32', created: '2026/04/12 16:24:05', tone: 'blue', info: { audioType: '课堂口令', theme: 'Kitchen task', style: '干净 / 短促', lyric: '无歌词' } },
-];
+export const AUDIO_ASSETS = [];
 
 const sourceOptions = [
   { label: '全部来源', value: '' },
@@ -26,6 +22,83 @@ const typeOptions = [
   { label: '音效', value: '音效' },
 ];
 
+const tonePalette = ['lavender', 'mint', 'peach', 'blue'];
+
+function formatDateTime(value) {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/');
+}
+
+function formatFileSize(value) {
+  if (!value) return '--';
+  if (typeof value === 'string') return value;
+  return `${Math.max(Number(value) / 1024 / 1024, 0.1).toFixed(1)} MB`;
+}
+
+function normalizeDuration(value) {
+  if (!value) return '--';
+  if (typeof value === 'string') return value;
+  const totalSeconds = Math.max(0, Math.round(Number(value)));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function normalizeSource(value) {
+  const raw = String(value || '').toLowerCase();
+  if (raw.includes('ai') || raw.includes('generate')) return 'AI生成';
+  if (raw.includes('upload') || raw.includes('manual')) return '手动上传';
+  if (raw.includes('course')) return '课程同步';
+  return value || '素材库';
+}
+
+function normalizeAudioType(item = {}) {
+  const raw = String(item.type || item.audio_type || item.voice_type || '').toLowerCase();
+  if (raw.includes('bgm') || raw.includes('music')) return 'BGM';
+  if (raw.includes('song')) return '歌曲';
+  if (raw.includes('effect')) return '音效';
+  return item.type || item.audio_type || '旁白';
+}
+
+export function normalizeAudioAsset(item = {}, index = 0) {
+  const url = item.audio_url || item.audioUrl || item.url || item.file_url || item.object_url;
+  const format = (item.format || item.file_format || item.name?.split('.').pop() || item.voice_type || 'AUDIO').toString().toUpperCase();
+  const type = normalizeAudioType(item);
+  return {
+    id: item.id || url || `audio-${Math.random().toString(36).slice(2, 10)}`,
+    name: item.name || item.title || item.voice_name || '未命名音频素材',
+    source: normalizeSource(item.source || item.source_type || item.origin),
+    type,
+    format,
+    fileSize: formatFileSize(item.file_size || item.size),
+    duration: normalizeDuration(item.duration),
+    created: formatDateTime(item.created_at || item.createdAt || item.created),
+    tone: item.tone || tonePalette[index % tonePalette.length],
+    objectUrl: url,
+    info: {
+      audioType: item.audio_type || item.voice_type || type,
+      theme: item.theme || item.description || item.prompt || '课堂素材',
+      style: item.style || item.emotion || item.mood || '未标注',
+      lyric: item.lyric || item.lyrics || item.text || '无歌词',
+    },
+    raw: item,
+  };
+}
+
+function mergeOptions(baseOptions, assets, field) {
+  const existing = new Set(baseOptions.map((item) => item.value));
+  const extra = assets
+    .map((asset) => asset[field])
+    .filter(Boolean)
+    .filter((value) => !existing.has(value));
+  return [
+    ...baseOptions,
+    ...Array.from(new Set(extra)).map((value) => ({ label: value, value })),
+  ];
+}
+
 export const createAudioTaskDetail = (asset) => ({
   type: 'audio',
   title: asset.name,
@@ -39,6 +112,9 @@ export const createAudioTaskDetail = (asset) => ({
   prompt: asset.source === 'AI生成'
     ? `${asset.info.audioType}，主题 ${asset.info.theme}，风格 ${asset.info.style}。`
     : `手动上传音频素材：${asset.name}`,
+  result: {
+    url: asset.objectUrl,
+  },
   spec: `${asset.duration} · ${asset.format} · ${asset.fileSize}`,
   tracks: [asset.name],
   config: [
@@ -77,6 +153,28 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
   const [playingId, setPlayingId] = React.useState(null);
   const [playProgress, setPlayProgress] = React.useState({ assetId: null, current: 0, duration: 0 });
   const audioRef = React.useRef(null);
+
+  React.useEffect(() => {
+    let alive = true;
+    apiService.getVoiceConfigs()
+      .then((result) => {
+        if (!alive) return;
+        setAssets((result.data || []).map(normalizeAudioAsset));
+      })
+      .catch((error) => {
+        console.error('获取音频库失败:', error);
+        if (alive) {
+          setAssets([]);
+          message.error('获取音频库失败');
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
+  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
 
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -132,7 +230,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
     stopAudio();
 
     if (!asset.objectUrl) {
-      message.info('示例素材暂无真实音频文件，请上传本地音频后播放');
+      message.info('当前音频素材暂无可播放文件');
       return;
     }
 
@@ -214,8 +312,8 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
               allowClear
             />
             <div className="fr-aud-filter-group">
-              <Select value={source} onChange={setSource} options={sourceOptions} />
-              <Select value={type} onChange={setType} options={typeOptions} />
+              <Select value={source} onChange={setSource} options={sourceFilterOptions} />
+              <Select value={type} onChange={setType} options={typeFilterOptions} />
             </div>
           </div>
 

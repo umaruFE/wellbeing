@@ -1,12 +1,13 @@
 import React from 'react';
 import { CirclePlus, Music, Play, Search, X } from 'lucide-react';
-import { Button, Input, Modal, Pagination, Select, Tag } from 'antd';
+import { Button, Input, Modal, Pagination, Select, Tag, message } from 'antd';
+import apiService from '../../../../services/api';
 import { AssetPreviewModal } from '../../../image-library/AssetPreviewModal';
-import { IMAGE_ASSETS, createImageTaskDetail } from '../../../image-library/ImageLibrary';
+import { IMAGE_ASSETS, createImageTaskDetail, normalizeImageAsset } from '../../../image-library/ImageLibrary';
 import { AudioPreviewModal } from '../../../audio-library/AudioPreviewModal';
-import { AUDIO_ASSETS, createAudioTaskDetail } from '../../../audio-library/AudioLibrary';
+import { AUDIO_ASSETS, createAudioTaskDetail, normalizeAudioAsset } from '../../../audio-library/AudioLibrary';
 import { VideoPreviewModal } from '../../../video-library/VideoPreviewModal';
-import { VIDEO_ASSETS, createVideoTaskDetail } from '../../../video-library/VideoLibrary';
+import { VIDEO_ASSETS, createVideoTaskDetail, normalizeVideoAsset } from '../../../video-library/VideoLibrary';
 import { TaskDetailModal, createCanvasAssetPayload } from '../../../TaskDetailModal';
 
 const modalTitleByType = {
@@ -142,7 +143,8 @@ function DetailModal({ type, asset, onClose, onViewTask }) {
 }
 
 export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
-  const assets = assetSource[type] || assetSource.image;
+  const [loadedAssets, setLoadedAssets] = React.useState(assetSource[type] || assetSource.image);
+  const assets = loadedAssets;
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [assetType, setAssetType] = React.useState('');
@@ -150,6 +152,33 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
   const [detailAsset, setDetailAsset] = React.useState(null);
   const [taskDetail, setTaskDetail] = React.useState(null);
   const [page, setPage] = React.useState(1);
+
+  React.useEffect(() => {
+    if (!open) return;
+
+    let alive = true;
+    const request = type === 'video'
+      ? apiService.getVideos({ limit: 200 }).then((result) => (result.data || []).map(normalizeVideoAsset))
+      : type === 'audio'
+        ? apiService.getVoiceConfigs().then((result) => (result.data || []).map(normalizeAudioAsset))
+        : apiService.getPptImages({ limit: 200 }).then((result) => (result.data || []).map(normalizeImageAsset));
+
+    request
+      .then((items) => {
+        if (alive) setLoadedAssets(items);
+      })
+      .catch((error) => {
+        console.error('获取素材库失败:', error);
+        if (alive) {
+          setLoadedAssets([]);
+          message.error('获取素材库失败');
+        }
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [open, type]);
 
   React.useEffect(() => {
     if (!open) return;

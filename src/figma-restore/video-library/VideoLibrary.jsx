@@ -1,16 +1,12 @@
 import React from 'react';
 import { Eye, FileVideo, MoreVertical, Pause, Play, Search, Trash2, Upload as UploadIcon, Video } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
+import apiService from '../../services/api';
 import './VideoLibrary.css';
 import { VideoPreviewModal } from './VideoPreviewModal';
 import { TaskDetailModal } from '../TaskDetailModal';
 
-export const VIDEO_ASSETS = [
-  { id: 'vid-space', name: '太空探索动画', source: 'AI生成', type: '动画片段', format: 'MP4', fileSize: '18.6 MB', duration: '0:45', ratio: '16:9', created: '2026/04/13 10:22:06', tone: 'blue', info: { videoType: '情境叙事视频', scene: '太空探索', language: 'planet / rocket / stars', spec: '16:9 · 课堂导入短片' } },
-  { id: 'vid-friends', name: '动物朋友情景剧', source: 'AI生成', type: '情景剧', format: 'MP4', fileSize: '31.4 MB', duration: '1:20', ratio: '16:9', created: '2026/04/13 10:31:18', tone: 'mint', info: { videoType: '情景对话视频', scene: '动物朋友合作', language: 'Hello / Help me', spec: '16:9 · 小组讨论' } },
-  { id: 'vid-fruit', name: '水果主题知识讲解', source: '课程同步', type: '知识讲解', format: 'MP4', fileSize: '42.8 MB', duration: '2:15', ratio: '16:9', created: '2026/04/12 15:42:30', tone: 'peach', info: { videoType: '知识讲解视频', scene: '水果词汇', language: 'apple / banana / orange', spec: '16:9 · 讲解素材' } },
-  { id: 'vid-tpr', name: '体能闯关示范视频', source: '手动上传', type: '体能闯关', format: 'MOV', fileSize: '26.1 MB', duration: '0:58', ratio: '16:9', created: '2026/04/12 16:24:05', tone: 'cyan', info: { videoType: '动作示范视频', scene: 'TPR 体能关卡', language: 'jump / run / stop', spec: '16:9 · 示范素材' } },
-];
+export const VIDEO_ASSETS = [];
 
 const sourceOptions = [
   { label: '全部来源', value: '' },
@@ -27,6 +23,87 @@ const typeOptions = [
   { label: '体能闯关', value: '体能闯关' },
 ];
 
+const tonePalette = ['blue', 'mint', 'peach', 'cyan'];
+
+function formatDateTime(value) {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/');
+}
+
+function formatFileSize(value) {
+  if (!value) return '--';
+  if (typeof value === 'string') return value;
+  return `${Math.max(Number(value) / 1024 / 1024, 0.1).toFixed(1)} MB`;
+}
+
+function normalizeDuration(value) {
+  if (!value) return '--';
+  if (typeof value === 'string') return value;
+  const totalSeconds = Math.max(0, Math.round(Number(value)));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+function normalizeSource(value) {
+  const raw = String(value || '').toLowerCase();
+  if (raw.includes('ai') || raw.includes('generate')) return 'AI生成';
+  if (raw.includes('upload') || raw.includes('manual')) return '手动上传';
+  if (raw.includes('course')) return '课程同步';
+  return value || '素材库';
+}
+
+function normalizeVideoType(item = {}) {
+  const raw = String(item.type || item.video_type || '').toLowerCase();
+  if (raw.includes('animation') || raw.includes('动画')) return '动画片段';
+  if (raw.includes('dialogue') || raw.includes('story') || raw.includes('情景')) return '情景剧';
+  if (raw.includes('knowledge') || raw.includes('讲解')) return '知识讲解';
+  if (raw.includes('fitness') || raw.includes('tpr') || raw.includes('体能')) return '体能闯关';
+  return item.type || item.video_type || '视频素材';
+}
+
+export function normalizeVideoAsset(item = {}, index = 0) {
+  const url = item.video_url || item.videoUrl || item.url || item.file_url || item.object_url;
+  const format = (item.format || item.file_format || item.name?.split('.').pop() || 'MP4').toString().toUpperCase();
+  const type = normalizeVideoType(item);
+  const ratio = item.ratio || item.aspect_ratio || item.video_ratio || '16:9';
+  return {
+    id: item.id || url || `video-${Math.random().toString(36).slice(2, 10)}`,
+    name: item.name || item.title || '未命名视频素材',
+    source: normalizeSource(item.source || item.source_type || item.origin),
+    type,
+    format,
+    fileSize: formatFileSize(item.file_size || item.size),
+    duration: normalizeDuration(item.duration),
+    ratio,
+    created: formatDateTime(item.created_at || item.createdAt || item.created),
+    tone: item.tone || tonePalette[index % tonePalette.length],
+    objectUrl: url,
+    thumbnailUrl: item.thumbnail_url || item.thumbnailUrl,
+    info: {
+      videoType: item.video_type || type,
+      scene: item.scene || item.description || item.prompt || '课堂素材',
+      language: item.language || item.words || item.tags || '未标注',
+      spec: item.spec || `${ratio} · ${format}`,
+    },
+    raw: item,
+  };
+}
+
+function mergeOptions(baseOptions, assets, field) {
+  const existing = new Set(baseOptions.map((item) => item.value));
+  const extra = assets
+    .map((asset) => asset[field])
+    .filter(Boolean)
+    .filter((value) => !existing.has(value));
+  return [
+    ...baseOptions,
+    ...Array.from(new Set(extra)).map((value) => ({ label: value, value })),
+  ];
+}
+
 export const createVideoTaskDetail = (asset) => ({
   type: 'video',
   title: asset.name,
@@ -40,6 +117,9 @@ export const createVideoTaskDetail = (asset) => ({
   prompt: asset.source === 'AI生成' || asset.source === '课程同步'
     ? `${asset.info.videoType}，场景 ${asset.info.scene}，核心语言 ${asset.info.language}。`
     : `手动上传视频素材：${asset.name}`,
+  result: {
+    url: asset.objectUrl,
+  },
   spec: `${asset.duration} · ${asset.ratio} · ${asset.format}`,
   hero: asset.tone === 'blue' ? 'classroom' : asset.tone === 'mint' ? 'camp' : asset.tone === 'peach' ? 'kitchen' : 'stage',
   shots: [
@@ -87,6 +167,28 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
   const [taskDetail, setTaskDetail] = React.useState(null);
   const [playingId, setPlayingId] = React.useState(null);
 
+  React.useEffect(() => {
+    let alive = true;
+    apiService.getVideos({ limit: 200 })
+      .then((result) => {
+        if (!alive) return;
+        setAssets((result.data || []).map(normalizeVideoAsset));
+      })
+      .catch((error) => {
+        console.error('获取视频库失败:', error);
+        if (alive) {
+          setAssets([]);
+          message.error('获取视频库失败');
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
+  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
+
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
     return assets.filter(asset => {
@@ -133,7 +235,7 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
 
   const handlePlay = (asset) => {
     if (!asset.objectUrl) {
-      message.info('示例素材暂无真实视频文件，请上传本地视频后播放');
+      message.info('当前视频素材暂无可播放文件');
       return;
     }
     setPlayingId(current => (current === asset.id ? null : asset.id));
@@ -171,8 +273,8 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
           <div className="fr-vid-toolbar">
             <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="搜索视频" prefix={<Search size={16} />} allowClear />
             <div className="fr-vid-filter-group">
-              <Select value={source} onChange={setSource} options={sourceOptions} />
-              <Select value={type} onChange={setType} options={typeOptions} />
+              <Select value={source} onChange={setSource} options={sourceFilterOptions} />
+              <Select value={type} onChange={setType} options={typeFilterOptions} />
             </div>
           </div>
 

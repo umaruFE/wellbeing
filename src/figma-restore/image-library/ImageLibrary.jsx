@@ -1,20 +1,12 @@
 import React from 'react';
 import { BookOpen, Eye, FileText, Image, Monitor, MoreVertical, Plus, Search, Trash2, Upload as UploadIcon, X } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
+import apiService from '../../services/api';
 import './ImageLibrary.css';
 import { AssetPreviewModal } from './AssetPreviewModal';
 import { TaskDetailModal } from '../TaskDetailModal';
 
-export const IMAGE_ASSETS = [
-  { id: 'img-air', name: '星际信号接收站主题图', source: 'AI生成', type: '主题意境图', size: '1024 × 1024', created: '2026/04/13 10:06:30', scene: 'air' },
-  { id: 'img-kitchen', name: '动物厨房任务背景', source: 'AI生成', type: 'PPT素材', size: '1920 × 1080', created: '2026/04/13 10:08:12', scene: 'kitchen' },
-  { id: 'img-beach', name: '海滩动物合作场景', source: 'AI生成', type: '故事配图', size: '1024 × 1024', created: '2026/04/13 10:12:08', scene: 'beach' },
-  { id: 'img-stage', name: '星光音乐会舞台', source: 'AI生成', type: '主题意境图', size: '1024 × 1024', created: '2026/04/13 10:15:44', scene: 'stage' },
-  { id: 'img-rain', name: '救援地图插图', source: '手动上传', type: 'PPT素材', size: '1600 × 900', created: '2026/04/12 16:24:05', scene: 'rain' },
-  { id: 'img-camp', name: '动物露营复盘图', source: 'AI生成', type: '故事配图', size: '1024 × 1024', created: '2026/04/12 15:48:33', scene: 'camp' },
-  { id: 'img-card', name: 'apple 单词闪卡', source: 'AI生成', type: '闪卡', size: '1024 × 1024', created: '2026/04/11 09:20:18', scene: 'lantern' },
-  { id: 'img-balloon', name: '情绪天气广播剧封面', source: '手动上传', type: '主题意境图', size: '1024 × 1024', created: '2026/04/10 18:30:42', scene: 'balloon' },
-];
+export const IMAGE_ASSETS = [];
 
 const sourceOptions = [
   { label: '全部来源', value: '' },
@@ -30,6 +22,50 @@ const typeOptions = [
   { label: '故事配图', value: '故事配图' },
 ];
 
+function formatDateTime(value) {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/');
+}
+
+function normalizeSource(value) {
+  const raw = String(value || '').toLowerCase();
+  if (raw.includes('ai') || raw.includes('generate')) return 'AI生成';
+  if (raw.includes('upload') || raw.includes('manual')) return '手动上传';
+  if (raw.includes('course')) return '课程同步';
+  return value || '素材库';
+}
+
+export function normalizeImageAsset(item = {}) {
+  const categoryName = item.category?.name || item.category_name || item.type || item.image_type;
+  const width = item.width || item.image_width;
+  const height = item.height || item.image_height;
+  return {
+    id: item.id || item.image_url || `image-${Math.random().toString(36).slice(2, 10)}`,
+    name: item.name || item.title || item.filename || '未命名图片素材',
+    source: normalizeSource(item.source || item.source_type || item.origin),
+    type: categoryName || 'PPT素材',
+    size: width && height ? `${width} × ${height}` : item.size || item.resolution || '--',
+    created: formatDateTime(item.created_at || item.createdAt || item.created),
+    scene: item.scene || 'manual',
+    previewUrl: item.image_url || item.imageUrl || item.url || item.preview_url || item.thumbnail_url,
+    raw: item,
+  };
+}
+
+function mergeOptions(baseOptions, assets, field) {
+  const existing = new Set(baseOptions.map((item) => item.value));
+  const extra = assets
+    .map((asset) => asset[field])
+    .filter(Boolean)
+    .filter((value) => !existing.has(value));
+  return [
+    ...baseOptions,
+    ...Array.from(new Set(extra)).map((value) => ({ label: value, value })),
+  ];
+}
+
 export const createImageTaskDetail = (asset) => ({
   type: 'image',
   title: asset.name,
@@ -43,6 +79,9 @@ export const createImageTaskDetail = (asset) => ({
   prompt: asset.source === 'AI生成'
     ? `生成${asset.name}，风格适合课堂演示与课件画布。`
     : `手动上传图片素材：${asset.name}`,
+  result: {
+    url: asset.previewUrl,
+  },
   spec: `${asset.size} · PNG`,
   scenes: [asset.scene, asset.scene, asset.scene, asset.scene],
   config: [
@@ -243,6 +282,28 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
   const [deleteAsset, setDeleteAsset] = React.useState(null);
   const [taskDetail, setTaskDetail] = React.useState(null);
 
+  React.useEffect(() => {
+    let alive = true;
+    apiService.getPptImages({ limit: 200 })
+      .then((result) => {
+        if (!alive) return;
+        setAssets((result.data || []).map(normalizeImageAsset));
+      })
+      .catch((error) => {
+        console.error('获取图片库失败:', error);
+        if (alive) {
+          setAssets([]);
+          message.error('获取图片库失败');
+        }
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
+  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
+
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
     return assets.filter(asset => {
@@ -342,8 +403,8 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
               allowClear
             />
             <div className="fr-img-filter-group">
-              <Select value={source} onChange={setSource} options={sourceOptions} />
-              <Select value={type} onChange={setType} options={typeOptions} />
+              <Select value={source} onChange={setSource} options={sourceFilterOptions} />
+              <Select value={type} onChange={setType} options={typeFilterOptions} />
             </div>
           </div>
 
