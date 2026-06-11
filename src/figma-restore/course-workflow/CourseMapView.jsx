@@ -90,15 +90,21 @@ function buildFallbackJourney(course, map, taskName) {
   };
 }
 
+function hasCompleteJourney(journey) {
+  return Boolean(journey?.engage && journey?.empower && journey?.execute && journey?.elevate);
+}
+
 export function CourseMapView({ course, onCourseChange, onNext }) {
   const [editForm] = Form.useForm();
   const [regenForm] = Form.useForm();
   const [editOpen, setEditOpen] = React.useState(false);
   const [regenOpen, setRegenOpen] = React.useState(false);
   const [regenerating, setRegenerating] = React.useState(false);
+  const [generatingJourney, setGeneratingJourney] = React.useState(false);
   const [regenImage, setRegenImage] = React.useState(false);
   const [regenTips, setRegenTips] = React.useState(fallbackRegenTips);
   const [loadingRegenTips, setLoadingRegenTips] = React.useState(false);
+  const journeyRequestRef = React.useRef('');
   const map = buildCourseMap(course);
 
   const taskName = course.taskName || course.theme || '情境任务';
@@ -110,6 +116,88 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     execute: savedJourney.execute || fallbackJourney.execute,
     elevate: savedJourney.elevate || fallbackJourney.elevate,
   };
+
+  const buildJourneyPayload = React.useCallback((sourceCourse = course, sourceMap = map, overrideOverview = null) => {
+    const user = getUser();
+    return {
+      courseTitle: sourceCourse.courseTitle || sourceCourse.title || sourceMap.title,
+      age: sourceCourse.age || sourceMap.age,
+      duration: sourceCourse.duration || sourceMap.duration,
+      classSize: sourceCourse.classSize || sourceMap.classSize,
+      vocabulary: toArray(sourceCourse.vocabularies),
+      grammar: toArray(sourceCourse.grammars),
+      skills: toArray(sourceCourse.languageSkills),
+      experiencePath: sourceCourse.experiencePath || sourceMap.path,
+      taskName: sourceCourse.taskName || sourceCourse.theme || taskName,
+      theme: sourceCourse.theme || sourceCourse.taskName || '',
+      storyContext: sourceCourse.storyContext || sourceMap.storyline,
+      keyOutcome: sourceCourse.keyOutcome || sourceMap.keyOutcome,
+      growth: sourceMap.growth,
+      atmosphere: sourceCourse.atmosphere || '',
+      specialRequirements: sourceCourse.specialRequirements || '',
+      existingOverview: overrideOverview || sourceCourse.courseOverview || sourceCourse.courseData?.courseOverview || null,
+      userId: user?.id || sourceCourse.userId || null,
+      organizationId: user?.organizationId || user?.organization_id || sourceCourse.organizationId || null,
+    };
+  }, [course, map, taskName]);
+
+  const generateJourneyWithAi = React.useCallback(async (sourceCourse = course, sourceMap = map, overrideOverview = null, { silent = false } = {}) => {
+    setGeneratingJourney(true);
+    try {
+      const response = await fetch('/api/ai/generate-course-journey', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(buildJourneyPayload(sourceCourse, sourceMap, overrideOverview)),
+      });
+      const result = await response.json();
+      const aiJourney = result.data?.journey;
+
+      if (!response.ok || !result.success || !hasCompleteJourney(aiJourney)) {
+        throw new Error(result.error || '课堂旅程生成失败');
+      }
+
+      const nextCourse = {
+        ...sourceCourse,
+        journey: aiJourney,
+        courseData: {
+          ...(sourceCourse.courseData || {}),
+          courseOverview: overrideOverview || sourceCourse.courseData?.courseOverview,
+          journey: aiJourney,
+        },
+      };
+
+      onCourseChange?.(nextCourse);
+
+      if (sourceCourse.id && !String(sourceCourse.id).startsWith('created-')) {
+        await apiService.updateCourse(sourceCourse.id, {
+          courseData: nextCourse.courseData,
+        });
+      }
+
+      if (!silent) message.success('课堂旅程已由 AI 生成');
+      return aiJourney;
+    } catch (err) {
+      console.warn('AI 生成课堂旅程失败:', err);
+      if (!silent) message.error(err?.message || '课堂旅程生成失败');
+      return null;
+    } finally {
+      setGeneratingJourney(false);
+    }
+  }, [buildJourneyPayload, course, map, onCourseChange]);
+
+  React.useEffect(() => {
+    if (hasCompleteJourney(savedJourney) || generatingJourney) return;
+    const signature = JSON.stringify({
+      id: course.id,
+      title: course.courseTitle || course.title || map.title,
+      taskName,
+      story: map.storyline,
+      outcome: map.keyOutcome,
+    });
+    if (journeyRequestRef.current === signature) return;
+    journeyRequestRef.current = signature;
+    generateJourneyWithAi(course, map, null, { silent: true });
+  }, [course, map, taskName, savedJourney, generatingJourney, generateJourneyWithAi]);
 
   const openEdit = () => {
     editForm.setFieldsValue({
@@ -201,19 +289,18 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       attachments: attachments.length ? attachments : course.attachments,
     };
     const nextMap = buildCourseMap(nextCourseBase);
-    const nextJourney = {
-      ...buildFallbackJourney(nextCourseBase, nextMap, nextCourseBase.taskName || nextCourseBase.theme || '情境任务'),
-      ...(overview?.journey || {}),
-    };
+    const nextJourney = hasCompleteJourney(overview?.journey)
+      ? overview.journey
+      : await generateJourneyWithAi(nextCourseBase, nextMap, overview, { silent: true });
 
     onCourseChange?.({
       ...nextCourseBase,
-      journey: nextJourney,
+      ...(nextJourney ? { journey: nextJourney } : {}),
       courseData: {
         ...(course.courseData || {}),
         courseOverview: overview || course.courseData?.courseOverview,
         themeImageUrl: themeImageUrl || course.themeImageUrl,
-        journey: nextJourney,
+        ...(nextJourney ? { journey: nextJourney } : {}),
       },
     });
 
@@ -360,16 +447,15 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         themeImageUrl,
       };
       const nextMap = buildCourseMap(nextCourseBase);
-      const nextJourney = {
-        ...buildFallbackJourney(nextCourseBase, nextMap, nextCourseBase.taskName || nextCourseBase.theme || '情境任务'),
-        ...(overview?.journey || {}),
-      };
+      const nextJourney = hasCompleteJourney(overview?.journey)
+        ? overview.journey
+        : await generateJourneyWithAi(nextCourseBase, nextMap, overview, { silent: true });
       const nextCourse = {
         ...nextCourseBase,
-        journey: nextJourney,
+        ...(nextJourney ? { journey: nextJourney } : {}),
         courseData: {
           ...(nextCourseBase.courseData || {}),
-          journey: nextJourney,
+          ...(nextJourney ? { journey: nextJourney } : {}),
         },
       };
 
