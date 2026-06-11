@@ -117,9 +117,6 @@ export const createVideoTaskDetail = (asset) => ({
   prompt: asset.source === 'AI生成' || asset.source === '课程同步'
     ? `${asset.info.videoType}，场景 ${asset.info.scene}，核心语言 ${asset.info.language}。`
     : `手动上传视频素材：${asset.name}`,
-  result: {
-    url: asset.objectUrl,
-  },
   spec: `${asset.duration} · ${asset.ratio} · ${asset.format}`,
   hero: asset.tone === 'blue' ? 'classroom' : asset.tone === 'mint' ? 'camp' : asset.tone === 'peach' ? 'kitchen' : 'stage',
   shots: [

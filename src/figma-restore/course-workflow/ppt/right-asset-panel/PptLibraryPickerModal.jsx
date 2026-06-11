@@ -1,13 +1,12 @@
 import React from 'react';
 import { CirclePlus, Music, Play, Search, X } from 'lucide-react';
 import { Button, Input, Modal, Pagination, Select, Tag, message } from 'antd';
-import apiService from '../../../../services/api';
 import { AssetPreviewModal } from '../../../image-library/AssetPreviewModal';
-import { IMAGE_ASSETS, createImageTaskDetail, normalizeImageAsset } from '../../../image-library/ImageLibrary';
+import { IMAGE_ASSETS, createImageTaskDetail } from '../../../image-library/ImageLibrary';
 import { AudioPreviewModal } from '../../../audio-library/AudioPreviewModal';
-import { AUDIO_ASSETS, createAudioTaskDetail, normalizeAudioAsset } from '../../../audio-library/AudioLibrary';
+import { AUDIO_ASSETS, createAudioTaskDetail } from '../../../audio-library/AudioLibrary';
 import { VideoPreviewModal } from '../../../video-library/VideoPreviewModal';
-import { VIDEO_ASSETS, createVideoTaskDetail, normalizeVideoAsset } from '../../../video-library/VideoLibrary';
+import { VIDEO_ASSETS, createVideoTaskDetail } from '../../../video-library/VideoLibrary';
 import { TaskDetailModal, createCanvasAssetPayload } from '../../../TaskDetailModal';
 import apiService from '../../../../utils/apiService';
 
@@ -242,7 +241,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
       const endpoint = type === 'video'
         ? '/api/videos?limit=100'
         : type === 'audio'
-          ? '/api/audio-assets?limit=100'
+          ? '/api/voices?limit=100'
           : '/api/ppt-images?limit=100';
       const result = await apiService.get(endpoint);
       const rows = Array.isArray(result.data) ? result.data : [];

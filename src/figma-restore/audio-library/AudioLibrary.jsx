@@ -112,9 +112,6 @@ export const createAudioTaskDetail = (asset) => ({
   prompt: asset.source === 'AI生成'
     ? `${asset.info.audioType}，主题 ${asset.info.theme}，风格 ${asset.info.style}。`
     : `手动上传音频素材：${asset.name}`,
-  result: {
-    url: asset.objectUrl,
-  },
   spec: `${asset.duration} · ${asset.format} · ${asset.fileSize}`,
   tracks: [asset.name],
   result: {

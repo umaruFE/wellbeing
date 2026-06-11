@@ -79,9 +79,6 @@ export const createImageTaskDetail = (asset) => ({
   prompt: asset.source === 'AI生成'
     ? `生成${asset.name}，风格适合课堂演示与课件画布。`
     : `手动上传图片素材：${asset.name}`,
-  result: {
-    url: asset.previewUrl,
-  },
   spec: `${asset.size} · PNG`,
   scenes: [asset.scene, asset.scene, asset.scene, asset.scene],
   result: {
