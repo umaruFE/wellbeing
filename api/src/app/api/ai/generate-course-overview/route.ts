@@ -124,6 +124,21 @@ export async function POST(request: NextRequest) {
       keyOutcome: keyOutcome || '',
       atmosphere: atmosphere || '',
       attachments: attachments || [],
+      expectedFields: {
+        courseOverview: [
+          'courseTitle',
+          'overallContext',
+          'languageGoals',
+          'selGoals',
+          'permaGoals',
+          'finalTask',
+          'themeImagePrompt',
+          'journey.engage',
+          'journey.empower',
+          'journey.execute',
+          'journey.elevate',
+        ],
+      },
       userId,
       organizationId,
       timestamp: Date.now()

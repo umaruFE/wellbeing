@@ -36,7 +36,7 @@ const journeyItems = [
   { title: 'Engage 情境启动', color: '#ff705f', key: 'engage' },
   { title: 'Empower 语言赋能', color: '#3b82f6', key: 'empower' },
   { title: 'Execute 创作运用', color: '#4f9f69', key: 'execute' },
-  { title: 'Execute 创作运用', color: '#9b62d1', key: 'elevate' },
+  { title: 'Elevate 升华迁移', color: '#9b62d1', key: 'elevate' },
 ];
 
 function getAuthHeaders() {
@@ -59,6 +59,37 @@ function toArray(value) {
   return Array.isArray(value) ? value : [value];
 }
 
+function compactText(value, max = 34) {
+  const text = String(value || '').replace(/\s+/g, '').replace(/[。；;]+$/g, '');
+  if (!text) return '';
+  return text.length > max ? `${text.slice(0, max)}...` : text;
+}
+
+function pickListText(value, fallback = '核心表达') {
+  const list = toArray(value).map((item) => String(item || '').trim()).filter(Boolean);
+  if (!list.length) return fallback;
+  return list.slice(0, 3).join('、');
+}
+
+function buildFallbackJourney(course, map, taskName) {
+  const story = compactText(course.storyContext || map.storyline || taskName, 32);
+  const outcome = compactText(course.keyOutcome || map.keyOutcome || `围绕“${taskName}”完成创意作品`, 32);
+  const growth = compactText(map.growth || course.specialRequirements || '表达、协作与创造性解决问题', 30);
+  const toolkit = compactText(map.toolkit, 36);
+  const vocab = pickListText(course.vocabularies, toolkit || '关键词和任务句型');
+  const grammar = pickListText(course.grammars, '核心句型');
+  const skills = pickListText(course.languageSkills, '听说表达');
+  const path = course.experiencePath || map.path || '艺术表达';
+  const atmosphere = course.atmosphere && course.atmosphere !== 'AI 自动匹配' ? course.atmosphere : '';
+
+  return {
+    engage: `${atmosphere ? `以${atmosphere}开启，` : ''}学生进入“${taskName}”情境，观察${story || '任务线索'}，提出本节课要破解的真实问题。`,
+    empower: `围绕“${vocab}”和“${grammar}”搭建语言工具箱，通过${skills}示范与短练，让学生马上能为任务开口表达。`,
+    execute: `小组沿着“${path}”路径完成${outcome}，在创作、排练或展示准备中反复使用目标语言并互相调整。`,
+    elevate: `展示${outcome}，用同伴反馈回看${growth}，把本节课的表达方法迁移到新的生活或学习场景。`,
+  };
+}
+
 export function CourseMapView({ course, onCourseChange, onNext }) {
   const [editForm] = Form.useForm();
   const [regenForm] = Form.useForm();
@@ -71,11 +102,13 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const map = buildCourseMap(course);
 
   const taskName = course.taskName || course.theme || '情境任务';
+  const fallbackJourney = buildFallbackJourney(course, map, taskName);
+  const savedJourney = course.journey || course.courseData?.journey || {};
   const journey = {
-    engage: course.journey?.engage || `接到与“${taskName}”相关的任务线索，全班进入角色并明确今天要解决的问题。`,
-    empower: course.journey?.empower || '学习完成任务所需的关键词、句型和表达策略，在示范与同伴练习中建立语言工具箱。',
-    execute: course.journey?.execute || '小组合作完成创意产出，把语言工具用于真实表达，并根据同伴反馈优化作品。',
-    elevate: course.journey?.elevate || '展示最终作品，回顾本节课的语言收获、合作表现和可迁移到生活中的成长经验。',
+    engage: savedJourney.engage || fallbackJourney.engage,
+    empower: savedJourney.empower || fallbackJourney.empower,
+    execute: savedJourney.execute || fallbackJourney.execute,
+    elevate: savedJourney.elevate || fallbackJourney.elevate,
   };
 
   const openEdit = () => {
@@ -147,7 +180,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     const courseTitle = overview?.courseTitle || values.courseTitle || '未命名课程';
     const theme = overview?.theme || values.taskName || '';
 
-    onCourseChange?.({
+    const nextCourseBase = {
       ...course,
       title: courseTitle,
       theme,
@@ -166,6 +199,22 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       specialRequirements: values.specialRequirements,
       atmosphere: values.atmosphere,
       attachments: attachments.length ? attachments : course.attachments,
+    };
+    const nextMap = buildCourseMap(nextCourseBase);
+    const nextJourney = {
+      ...buildFallbackJourney(nextCourseBase, nextMap, nextCourseBase.taskName || nextCourseBase.theme || '情境任务'),
+      ...(overview?.journey || {}),
+    };
+
+    onCourseChange?.({
+      ...nextCourseBase,
+      journey: nextJourney,
+      courseData: {
+        ...(course.courseData || {}),
+        courseOverview: overview || course.courseData?.courseOverview,
+        themeImageUrl: themeImageUrl || course.themeImageUrl,
+        journey: nextJourney,
+      },
     });
 
     setEditOpen(false);
@@ -297,7 +346,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
       const overview = result.data.courseOverview;
       const themeImageUrl = result.data.themeImageUrl || course.themeImageUrl || null;
-      const nextCourse = {
+      const nextCourseBase = {
         ...course,
         title: overview.courseTitle || course.title,
         courseTitle: overview.courseTitle || course.courseTitle,
@@ -309,6 +358,19 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           themeImageUrl,
         },
         themeImageUrl,
+      };
+      const nextMap = buildCourseMap(nextCourseBase);
+      const nextJourney = {
+        ...buildFallbackJourney(nextCourseBase, nextMap, nextCourseBase.taskName || nextCourseBase.theme || '情境任务'),
+        ...(overview?.journey || {}),
+      };
+      const nextCourse = {
+        ...nextCourseBase,
+        journey: nextJourney,
+        courseData: {
+          ...(nextCourseBase.courseData || {}),
+          journey: nextJourney,
+        },
       };
 
       onCourseChange?.(nextCourse);

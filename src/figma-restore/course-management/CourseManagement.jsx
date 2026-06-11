@@ -103,6 +103,7 @@ export function CourseManagement({
           taskName: courseData?.taskName || '',
           storyContext: courseData?.storyContext || '',
           keyOutcome: courseData?.keyOutcome || '',
+          journey: courseData?.journey || null,
           atmosphere: courseData?.atmosphere || '',
           specialRequirements: courseData?.specialRequirements || '',
         };
