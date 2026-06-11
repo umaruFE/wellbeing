@@ -65,6 +65,67 @@ const defaultDraft = {
   scenario: '',
 };
 
+const PHASE_DURATION_LIMIT = 15;
+
+const parseMinutes = (value) => {
+  const match = String(value || '').match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+};
+
+const phaseDetailData = {
+  Engage: {
+    key: 'eng',
+    title: 'E-Engage · 引入',
+    goal: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+    lang: "核心词汇：animal, where, in, on, under; 核心句型：Where is the...? It's...",
+    sel: '社会情感学习：好奇心、探索欲、团队协作意识',
+    perma: 'Positive Emotion（积极情绪）：通过情境创设激发兴奋和期待感',
+    narrative: '学生们化身为宇飞船控制台员，接收到来自动物星球的求救信号，需要前往救援。在旅途中，他们将学习如何用英语描述动物的位置。',
+    color: 'var(--eng)',
+  },
+  Empower: {
+    key: 'emp',
+    title: 'E-Empower · 赋能',
+    goal: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
+    lang: '强化目标词汇发音和理解，通过TPR全身反应法巩固记忆',
+    sel: '专注力、听觉辨识能力、动作协调与表达',
+    perma: 'Engagement（投入）：全身心参与互动，建立学习心流体验',
+    narrative: '控制台收到动物星球的地图解码任务，学生们需要学会用英语理解指令才能解锁前进路线。',
+    color: 'var(--emp)',
+  },
+  Execute: {
+    key: 'exc',
+    title: 'E-Execute · 实践',
+    goal: '在真实任务驱动下综合运用方位介词与句型进行表达',
+    lang: '在实际情境中运用目标语言进行交际，完成任务',
+    sel: '合作学习、问题解决、创造性思维、团队协作',
+    perma: 'Accomplishment（成就感）：完成任务获得成就感，建立自信',
+    narrative: '终于到达动物星球！学生们分组建造动物家园，需要用英语描述每个动物的位置，帮助它们安家。',
+    color: 'var(--exc)',
+  },
+  Elevate: {
+    key: 'elv',
+    title: 'E-Elevate · 升华',
+    goal: '分享学习成果，反思收获，培养跨文化意识',
+    lang: '展示学习成果，自信表达，完成学习闭环',
+    sel: '自我反思、自信表达、感恩之心、分享精神',
+    perma: 'Relationships（人际关系）：与同伴分享快乐，建立友谊',
+    narrative: '任务完成！学生们展示自己的动物家园，向星际联盟汇报救援成果，带着满满的收获返回地球。',
+    color: 'var(--elv)',
+  },
+};
+
+const phaseDetailKeyMap = {
+  eng: 'Engage',
+  engage: 'Engage',
+  emp: 'Empower',
+  empower: 'Empower',
+  exc: 'Execute',
+  execute: 'Execute',
+  elv: 'Elevate',
+  elevate: 'Elevate',
+};
+
 const emptyPhases = [
   { key: 'eng', phase: 'Engage', title: 'E-Engage', name: '引入', duration: '15 分钟', steps: [] },
   { key: 'emp', phase: 'Empower', title: 'E-Empower', name: '赋能', duration: '15 分钟', steps: [] },
@@ -140,6 +201,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [addOpen, setAddOpen] = React.useState(false);
   const [addPhase, setAddPhase] = React.useState(null);
   const [regenTarget, setRegenTarget] = React.useState(null);
+  const [insertTarget, setInsertTarget] = React.useState(null);
+  const [phaseDetail, setPhaseDetail] = React.useState(null);
   const [genMode, setGenMode] = React.useState('ai');
   const [selectedClassic, setSelectedClassic] = React.useState(null);
   const [ideaText, setIdeaText] = React.useState('');
@@ -310,11 +373,12 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setMenuKey(null);
   };
 
-  const openAddStep = (phase, step) => {
+  const openAddStep = (phase, step, options = {}) => {
     setAddPhase(phase);
     setGenMode('ai');
     setSelectedClassic(null);
     setIdeaText('');
+    setInsertTarget(options.insertIndex != null ? { phaseKey: phase.key, insertIndex: options.insertIndex } : null);
     if (step) {
       const timeMatch = String(step.duration || '').match(/(\d+)/);
       setRegenTarget({ phaseKey: phase.key, step });
@@ -331,6 +395,17 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       addForm.setFieldsValue(defaultDraft);
     }
     setAddOpen(true);
+  };
+
+  const openInsertStepBefore = (phase, stepIndex) => {
+    setMenuKey(null);
+    openAddStep(phase, null, { insertIndex: stepIndex });
+  };
+
+  const openPhaseDetail = (phase) => {
+    setMenuKey(null);
+    const detailKey = phaseDetailKeyMap[String(phase.phase || phase.key || '').toLowerCase()] || phase.phase;
+    setPhaseDetail(phaseDetailData[detailKey] || null);
   };
 
   const fillIdea = (text) => {
@@ -438,6 +513,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     try {
       const targetPhase = data.find((p) => p.key === phase.key);
       const currentSteps = targetPhase?.steps || [];
+      const insertIndex = insertTarget?.phaseKey === phase.key ? insertTarget.insertIndex : currentSteps.length;
 
       const otherPhases = {};
       data.forEach((p) => {
@@ -465,6 +541,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           currentStep: null,
           siblingSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration })),
           otherPhases,
+          insertIndex,
+          prevStep: insertIndex > 0 ? currentSteps[insertIndex - 1] : null,
+          nextStep: insertIndex < currentSteps.length ? currentSteps[insertIndex] : null,
         }),
       });
       const result = await response.json();
@@ -525,13 +604,18 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         };
       }));
     } else {
-      updateData(data.map((phase) => (
-        phase.key === target.key ? { ...phase, steps: [...phase.steps, nextStep] } : phase
-      )));
-      setOpenCards((prev) => new Set(prev).add(`${target.key}-${target.steps.length}`));
+      const insertIndex = insertTarget?.phaseKey === target.key ? insertTarget.insertIndex : target.steps.length;
+      updateData(data.map((phase) => {
+        if (phase.key !== target.key) return phase;
+        const nextSteps = [...phase.steps];
+        nextSteps.splice(insertIndex, 0, nextStep);
+        return { ...phase, steps: nextSteps };
+      }));
+      setOpenCards((prev) => new Set(prev).add(`${target.key}-${insertIndex}`));
     }
     setAddOpen(false);
     setRegenTarget(null);
+    setInsertTarget(null);
   };
 
   const saveEdit = (values) => {
@@ -843,19 +927,22 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       </div>
 
       <div className="tbl-kanban">
-        {data.map((phase) => (
+        {data.map((phase) => {
+          const phaseMinutes = parseMinutes(phase.duration);
+          const overflowMinutes = Math.max(0, phaseMinutes - PHASE_DURATION_LIMIT);
+
+          return (
           <section className={`tbl-phase-card ${phase.key}`} data-fixed="true" data-duration="15" key={phase.key}>
             <div className="tbl-phase-hd">
               <div className="tbl-phase-hd-left">
                 <span className="tbl-phase-title">{phase.title}</span>
                 <span className="tbl-phase-cn">{phase.name}</span>
-                <button className="tbl-phase-edit-btn" title="阶段操作" aria-label="阶段操作"
-                  onClick={() => {
-                    if (regenPhase === phase.key) return;
-                    const next = menuKey === `phase-${phase.key}` ? null : `phase-${phase.key}`;
-                    setMenuKey(next);
+                <button className="tbl-phase-edit-btn" title="查看阶段详情" aria-label="查看阶段详情"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    openPhaseDetail(phase);
                   }}>
-                  {regenPhase === phase.key ? <RefreshCw size={14} className="animate-spin" /> : <MoreVertical size={14} />}
+                  <ClipboardList size={14} />
                 </button>
                 {menuKey === `phase-${phase.key}` && (
                   <div className="step-menu-dropdown open phase-menu">
@@ -868,8 +955,20 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             </div>
             <div className="tbl-phase-meta">
               <span className="tbl-phase-sub">{phase.steps.length} 个环节</span>
-              <span className="tbl-phase-meta-dur"><Clock />{phase.duration}</span>
+              <span className={`tbl-phase-meta-dur${phaseMinutes > PHASE_DURATION_LIMIT ? ' is-over-limit' : ''}`}>
+                <Clock />{phase.duration}
+              </span>
             </div>
+            {overflowMinutes > 0 && (
+              <div className="tbl-phase-duration-warning">
+                <span className="tbl-phase-duration-warning-icon">!</span>
+                <span>
+                  建议调整阶段内活动时长（当前 {phaseMinutes} 分钟，
+                  <br />
+                  超出阶段上限 {overflowMinutes} 分钟）
+                </span>
+              </div>
+            )}
 
             <div className="tbl-steps-list">
               <div className="tbl-add-step-top">
@@ -915,6 +1014,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                               setMenuKey(null);
                               openAddStep(phase, step);
                             }}
+                            onInsertBefore={() => openInsertStepBefore(phase, index)}
                             onAdjust={() => openAdjust(phase.key, index, step)}
                             onSave={() => handleSaveStep(phase.key, index)}
                             onUnsave={() => handleUnsaveStep(phase.key, index)}
@@ -982,6 +1082,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                               setMenuKey(null);
                               openAddStep(phase, step);
                             }}
+                            onInsertBefore={() => openInsertStepBefore(phase, index)}
                             onAdjust={() => openAdjust(phase.key, index, step)}
                             onSave={() => handleSaveStep(phase.key, index)}
                             onUnsave={() => handleUnsaveStep(phase.key, index)}
@@ -997,7 +1098,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               })}
             </div>
           </section>
-        ))}
+        );
+        })}
       </div>
 
       {regenPhaseConfirm && (
@@ -1023,19 +1125,62 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         </div>
       )}
 
+      {phaseDetail && (
+        <div className="mo on" id="mo-edit-phase" onMouseDown={(event) => event.target === event.currentTarget && setPhaseDetail(null)}>
+          <div className="modal phase-detail-modal">
+            <div className="modal-hd">
+              <div className="modal-t pem-title-wrap">
+                {phaseDetail.title}
+                <span className="pem-readonly-badge">只读说明</span>
+              </div>
+              <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label="关闭"><X size={20} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="pem-wrap" style={{ '--pem-accent': phaseDetail.color }}>
+                <div className="pem-summary">
+                  <div className="pem-summary-label">阶段定位</div>
+                  <div className="pem-summary-text">{phaseDetail.goal}</div>
+                </div>
+                <div className="pem-grid">
+                  <div className="pem-section">
+                    <div className="pem-label">语言目标</div>
+                    <div className="pem-content">{phaseDetail.lang}</div>
+                  </div>
+                  <div className="pem-section">
+                    <div className="pem-label">SEL 培养焦点</div>
+                    <div className="pem-content">{phaseDetail.sel}</div>
+                  </div>
+                  <div className="pem-section">
+                    <div className="pem-label">PERMA 幸福体验</div>
+                    <div className="pem-content">{phaseDetail.perma}</div>
+                  </div>
+                  <div className="pem-section pem-section-narrative">
+                    <div className="pem-label">阶段情境叙事</div>
+                    <div className="pem-content pem-narrative">{phaseDetail.narrative}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-cancel" onClick={() => setPhaseDetail(null)}>关闭</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {addOpen && (
-        <div className="mo on" id="mo-add-step" onMouseDown={(event) => event.target === event.currentTarget && (setAddOpen(false), setRegenTarget(null))}>
+        <div className="mo on" id="mo-add-step" onMouseDown={(event) => event.target === event.currentTarget && (setAddOpen(false), setRegenTarget(null), setInsertTarget(null))}>
           <div className="modal modal-add-step">
             <div className="modal-hd">
               <div>
                 <div className="modal-t" id="addStepTitle">
-                  {regenTarget ? '重新生成' : '添加'} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
+                  {regenTarget ? '重新生成' : insertTarget ? '在此环节前添加' : '添加'} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
                 </div>
                 <div id="asPhaseTag">
                   {course?.courseTitle || course?.title || 'Unit 3: Animals（神奇的动物）'} · {course?.ageGroup || course?.age || '8-9岁'} / {course?.grade || '三年级 G3'}
                 </div>
               </div>
-              <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); }} aria-label="关闭"><X size={22} /></button>
+              <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }} aria-label="关闭"><X size={22} /></button>
             </div>
 
             <div className="modal-body as-modal-body">
@@ -1264,11 +1409,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             </div>
 
             <div className="modal-ft">
-              <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); }}>取消</button>
+              <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }}>取消</button>
               <div className="as-ft-spacer" />
               <button type="button" className="as-ft-confirm" id="asConfirmBtn" onClick={addDraftStep}>
                 <span className="add-plus" aria-hidden="true">+</span>
-                {regenTarget ? '确认重新生成' : '添加到大纲'}
+                {regenTarget ? '确认重新生成' : insertTarget ? '添加到此环节前' : '添加到大纲'}
               </button>
             </div>
           </div>
@@ -1308,11 +1453,12 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   );
 }
 
-function StepMenu({ open, onRegen, onAdjust, onSave, onUnsave, isSaved, onPin, onDelete, placement }) {
+function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, isSaved, onPin, onDelete, placement }) {
   return (
     <div className={`step-menu-dropdown ${placement === 'footer' ? 'footer-menu' : ''} ${open ? 'open' : ''}`}>
       <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />重新生成</button>
       <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />调整环节</button>
+      <button type="button" className="step-menu-item" onClick={onInsertBefore}><Plus size={12} />在此环节前添加新环节</button>
       <button type="button" className="step-menu-item" onClick={isSaved ? onUnsave : onSave}>
         <Heart size={12} fill={isSaved ? '#ff705f' : 'none'} />
         {isSaved ? '取消收藏' : '收藏此环节'}

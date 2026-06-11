@@ -58,6 +58,51 @@ const PHASE_CONFIG = {
 };
 
 const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
+const PHASE_DURATION_LIMIT = 15;
+
+const PHASE_DETAIL_DATA = {
+  engage: {
+    title: 'E-Engage · 引入',
+    goal: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+    lang: "核心词汇：animal, where, in, on, under; 核心句型：Where is the...? It's...",
+    sel: '社会情感学习：好奇心、探索欲、团队协作意识',
+    perma: 'Positive Emotion（积极情绪）：通过情境创设激发兴奋和期待感',
+    narrative: '学生们化身为宇飞船控制台员，接收到来自动物星球的求救信号，需要前往救援。在旅途中，他们将学习如何用英语描述动物的位置。',
+    color: 'var(--eng)',
+  },
+  empower: {
+    title: 'E-Empower · 赋能',
+    goal: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
+    lang: '强化目标词汇发音和理解，通过TPR全身反应法巩固记忆',
+    sel: '专注力、听觉辨识能力、动作协调与表达',
+    perma: 'Engagement（投入）：全身心参与互动，建立学习心流体验',
+    narrative: '控制台收到动物星球的地图解码任务，学生们需要学会用英语理解指令才能解锁前进路线。',
+    color: 'var(--emp)',
+  },
+  execute: {
+    title: 'E-Execute · 实践',
+    goal: '在真实任务驱动下综合运用方位介词与句型进行表达',
+    lang: '在实际情境中运用目标语言进行交际，完成任务',
+    sel: '合作学习、问题解决、创造性思维、团队协作',
+    perma: 'Accomplishment（成就感）：完成任务获得成就感，建立自信',
+    narrative: '终于到达动物星球！学生们分组建造动物家园，需要用英语描述每个动物的位置，帮助它们安家。',
+    color: 'var(--exc)',
+  },
+  elevate: {
+    title: 'E-Elevate · 升华',
+    goal: '分享学习成果，反思收获，培养跨文化意识',
+    lang: '展示学习成果，自信表达，完成学习闭环',
+    sel: '自我反思、自信表达、感恩之心、分享精神',
+    perma: 'Relationships（人际关系）：与同伴分享快乐，建立友谊',
+    narrative: '任务完成！学生们展示自己的动物家园，向星际联盟汇报救援成果，带着满满的收获返回地球。',
+    color: 'var(--elv)',
+  },
+};
+
+const parseMinutes = (value) => {
+  const match = String(value || '').match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 0;
+};
 
 const normalizeStep = (step) => ({
   ...step,
@@ -78,6 +123,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
   const [editTarget, setEditTarget] = useState(null);
   const [detailTarget, setDetailTarget] = useState(null);
+  const [phaseDetail, setPhaseDetail] = useState(null);
   const [adjustTarget, setAdjustTarget] = useState(null);
   const [adjustText, setAdjustText] = useState('');
   const [adjustChips, setAdjustChips] = useState([]);
@@ -108,6 +154,8 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
       const phase = coursePhases[phaseKey];
       const config = PHASE_CONFIG[phaseKey];
       const steps = Array.isArray(phase?.steps) ? phase.steps.map(normalizeStep) : [];
+      const totalMinutes = steps.reduce((acc, s) => acc + parseMinutes(s.duration), 0);
+      const overflowMinutes = Math.max(0, totalMinutes - PHASE_DURATION_LIMIT);
 
       return {
         id: phaseKey,
@@ -116,12 +164,9 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
         lightBg: config.lightBg,
         goalSummary: steps.map((s) => s.goal).filter(Boolean).join('；') || '',
         count: steps.length,
-        time: steps.length > 0
-          ? steps.reduce((acc, s) => {
-              const m = s.duration?.match(/(\d+)/);
-              return acc + (m ? parseInt(m[1]) : 0);
-            }, 0) + '分钟'
-          : '',
+        minutes: totalMinutes,
+        overflowMinutes,
+        time: steps.length > 0 ? totalMinutes + '分钟' : '',
         items: steps.map((step) => ({
           id: step.id,
           title: step.title,
@@ -383,6 +428,11 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
     setOpenMenuStep(null);
   };
 
+  const openPhaseDetail = (phaseKey) => {
+    setOpenMenuPhase(null);
+    setPhaseDetail(PHASE_DETAIL_DATA[phaseKey] || null);
+  };
+
   if (boardColumns.length === 0) {
     return (
       <div className="flex items-center justify-center h-[400px] text-gray-400">
@@ -404,7 +454,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             </div>
             <div className="flex items-center gap-2 relative">
               {col.time && (
-                <div className="flex items-center gap-1 text-[11px] opacity-90">
+                <div className={`flex items-center gap-1 text-[11px] ${col.minutes > PHASE_DURATION_LIMIT ? 'text-red-500 opacity-100' : 'opacity-90'}`}>
                   <Clock size={13} /> {col.time}
                 </div>
               )}
@@ -414,10 +464,12 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                 </div>
               ) : (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setOpenMenuPhase(openMenuPhase === col.id ? null : col.id); }}
+                  title="查看阶段详情"
+                  aria-label="查看阶段详情"
+                  onClick={(e) => { e.stopPropagation(); openPhaseDetail(col.id); }}
                   className="p-1 rounded hover:bg-white/20 transition-colors"
                 >
-                  <MoreVertical size={16} className="opacity-80" />
+                  <BookOpen size={16} className="opacity-90" />
                 </button>
               )}
               {openMenuPhase === col.id && (
@@ -433,6 +485,17 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
               )}
             </div>
           </div>
+
+          {col.overflowMinutes > 0 && (
+            <div className="mx-4 mt-3 px-3 py-2 rounded-lg border-2 border-[#f6bd60] bg-[#fff9e8] text-[#a95518] text-[12px] font-normal leading-[18px] flex items-center gap-2 shrink-0 whitespace-normal">
+              <span className="w-4 h-4 rounded-full border-2 border-current inline-flex items-center justify-center text-[11px] leading-none shrink-0">!</span>
+              <span className="min-w-0">
+                建议调整阶段内活动时长（当前 {col.minutes} 分钟，
+                <br />
+                超出阶段上限 {col.overflowMinutes} 分钟）
+              </span>
+            </div>
+          )}
 
           {col.goalSummary && (
             <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-100 shrink-0 h-24 overflow-y-auto">
@@ -491,16 +554,22 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                               <MoreVertical size={14} className="text-gray-300" />
                             </button>
                             {openMenuStep === item.id && (
-                              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 min-w-[140px]">
+                              <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50 min-w-[220px]">
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleRegenerateStep(col.id, item.id); }}
-                                  className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                                  className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors whitespace-nowrap"
                                 >
                                   <RefreshCw size={13} className="text-gray-400" /> 重新生成
                                 </button>
                                 <button
+                                  onClick={(e) => { e.stopPropagation(); setOpenMenuStep(null); handleAddStep(col.id, index); }}
+                                  className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors whitespace-nowrap"
+                                >
+                                  <Plus size={13} className="text-gray-400" /> 在此环节前添加新环节
+                                </button>
+                                <button
                                   onClick={(e) => { e.stopPropagation(); handleDeleteStep(col.id, item.id); }}
-                                  className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
+                                  className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors whitespace-nowrap"
                                 >
                                   <Trash2 size={13} /> 删除
                                 </button>
@@ -613,6 +682,49 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
         </div>
       ))}
     </div>
+
+    {phaseDetail && (
+      <div className="mo on" id="mo-edit-phase" onMouseDown={(event) => event.target === event.currentTarget && setPhaseDetail(null)}>
+        <div className="modal phase-detail-modal">
+          <div className="modal-hd">
+            <div className="modal-t pem-title-wrap">
+              {phaseDetail.title}
+              <span className="pem-readonly-badge">只读说明</span>
+            </div>
+            <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label="关闭">×</button>
+          </div>
+          <div className="modal-body">
+            <div className="pem-wrap" style={{ '--pem-accent': phaseDetail.color }}>
+              <div className="pem-summary">
+                <div className="pem-summary-label">阶段定位</div>
+                <div className="pem-summary-text">{phaseDetail.goal}</div>
+              </div>
+              <div className="pem-grid">
+                <div className="pem-section">
+                  <div className="pem-label">语言目标</div>
+                  <div className="pem-content">{phaseDetail.lang}</div>
+                </div>
+                <div className="pem-section">
+                  <div className="pem-label">SEL 培养焦点</div>
+                  <div className="pem-content">{phaseDetail.sel}</div>
+                </div>
+                <div className="pem-section">
+                  <div className="pem-label">PERMA 幸福体验</div>
+                  <div className="pem-content">{phaseDetail.perma}</div>
+                </div>
+                <div className="pem-section pem-section-narrative">
+                  <div className="pem-label">阶段情境叙事</div>
+                  <div className="pem-content pem-narrative">{phaseDetail.narrative}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="modal-ft">
+            <button type="button" className="mo-btn-cancel" onClick={() => setPhaseDetail(null)}>关闭</button>
+          </div>
+        </div>
+      </div>
+    )}
 
     <EditStepModal
       open={!!editTarget}
