@@ -1,5 +1,6 @@
 import React from 'react';
-import { Image, Users, Clock, Award, CircleDot, CheckCircle2 } from 'lucide-react';
+import { Users, Clock, Award, CircleDot, CheckCircle2 } from 'lucide-react';
+import { CourseCoverFallback } from '../CourseCoverFallback';
 
 export function CourseCard({
   course,
@@ -13,13 +14,11 @@ export function CourseCard({
       onClick={() => onOpen(course)}
     >
       <div className={`fr-cm-cover tone-${course.coverTone}`}>
-        <div className="fr-cm-cover-scene" aria-hidden="true">
-          <span className="fr-cm-cover-orbit" />
-          <span className="fr-cm-cover-block block-a" />
-          <span className="fr-cm-cover-block block-b" />
-          <Image size={30} />
-          <span>暂无封面</span>
-        </div>
+        {course.themeImageUrl || course.thumbnail ? (
+          <img className="fr-cm-cover-image" src={course.themeImageUrl || course.thumbnail} alt={course.title || '课程封面'} />
+        ) : (
+          <CourseCoverFallback />
+        )}
       </div>
 
       <div className="fr-cm-card-body">

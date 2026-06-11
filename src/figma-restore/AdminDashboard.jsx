@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import apiService from '../services/api';
 import { CreateCourseModal } from './create-course';
+import { CourseCoverFallback } from './CourseCoverFallback';
+import { getCourseCoverUrl } from './courseImages';
 import './AdminDashboard.css';
 
 const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
@@ -44,9 +46,27 @@ const StatusTag = ({ status }) => {
   );
 };
 
+const CourseCoverImage = ({ course }) => {
+  const [errored, setErrored] = useState(false);
+  const src = course.thumbnail;
+
+  if (!src || errored) {
+    return <CourseCoverFallback className="course-image" />;
+  }
+
+  return (
+    <img
+      src={src}
+      alt={course.title}
+      className="course-image"
+      onError={() => setErrored(true)}
+    />
+  );
+};
+
 const CourseCard = ({ course, onClick }) => (
   <div className="course-card" onClick={onClick} style={{ cursor: 'pointer' }}>
-    <PlaceholderImg src={course.thumbnail} alt={course.title} className="course-image" icon={BookOpen} />
+    <CourseCoverImage course={course} />
     <div className="course-footer">
       <div className="course-footer-row">
         <span className="course-title">{course.title}</span>
@@ -448,7 +468,7 @@ export const AdminDashboard = () => {
             }).replace(/\//g, '/')
           : '--',
         status: course.status === 'published' ? 'published' : 'draft',
-        thumbnail: course.thumbnail || '',
+        thumbnail: getCourseCoverUrl(course),
       })));
     } catch (error) {
       console.error('获取最近课程失败:', error);
@@ -465,8 +485,8 @@ export const AdminDashboard = () => {
       const list = result?.data || [];
       setImages(list.map(img => ({
         id: img.id,
-        url: img.image_url || img.url || '',
-        title: img.title || img.prompt?.substring(0, 20) || '未命名图片',
+        url: img.image_url || img.imageUrl || img.url || img.preview_url || img.thumbnail_url || '',
+        title: img.name || img.title || img.prompt?.substring(0, 20) || '未命名图片',
         dimensions: img.width && img.height ? `${img.width} × ${img.height}` : '--',
         time: img.created_at
           ? new Date(img.created_at).toLocaleString('zh-CN', {
@@ -491,8 +511,8 @@ export const AdminDashboard = () => {
       const list = result?.data || [];
       setVideos(list.map(video => ({
         id: video.id,
-        thumbnail: video.thumbnail_url || video.thumbnail || '',
-        title: video.title || '未命名视频',
+        thumbnail: video.thumbnail_url || video.thumbnailUrl || video.thumbnail || video.cover_url || video.coverUrl || '',
+        title: video.name || video.title || '未命名视频',
         duration: video.duration || '--:--',
         status: video.status || 'draft',
         time: video.created_at

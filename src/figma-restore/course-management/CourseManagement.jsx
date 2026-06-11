@@ -7,6 +7,7 @@ import { CourseCard } from './CourseCard';
 import { CourseToolbar } from './CourseToolbar';
 import { demoCourses } from './courseData';
 import apiService from '../../services/api';
+import { getCourseCoverUrl, getCourseData } from '../courseImages';
 import './CourseManagement.css';
 
 export function CourseManagement({
@@ -70,37 +71,42 @@ export function CourseManagement({
       const result = await apiService.getCourses({ page: String(pageNum), limit: '12' });
       const list = result?.data || [];
       const pagination = result?.pagination || {};
-      const mapped = list.map((course, i) => ({
-        id: course.id,
-        title: course.title || course.unit || '未命名课程',
-        unit: course.unit || course.title || '未命名课程',
-        status: course.status === 'published' ? 'published' : 'draft',
-        age: course.age_group || course.course_data?.age || '--',
-        grade: course.age_group ? `G${course.age_group.split('-')[0]}` : '--',
-        duration: course.duration || course.course_data?.duration || '--',
-        theme: course.theme || '情境任务',
-        updatedAt: course.created_at
-          ? new Date(course.created_at).toLocaleDateString('zh-CN', {
-              year: 'numeric', month: '2-digit', day: '2-digit',
-            }).replace(/\//g, '/')
-          : '--',
-        accent: ['#ff705d', '#4482e5', '#9966d0', '#509f69', '#edb100', '#f4785e'][i % 6],
-        coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
-        active: i === 0,
-        courseData: course.course_data || null,
-        courseOverview: course.course_data?.courseOverview || null,
-        themeImageUrl: course.course_data?.themeImageUrl || course.theme_image_url || null,
-        classSize: course.course_data?.classSize || course.unit || '',
-        vocabularies: course.course_data?.vocabularies || [],
-        grammars: course.course_data?.grammars || [],
-        languageSkills: course.course_data?.languageSkills || [],
-        experiencePath: course.course_data?.experiencePath || '',
-        taskName: course.course_data?.taskName || '',
-        storyContext: course.course_data?.storyContext || '',
-        keyOutcome: course.course_data?.keyOutcome || '',
-        atmosphere: course.course_data?.atmosphere || '',
-        specialRequirements: course.course_data?.specialRequirements || '',
-      }));
+      const mapped = list.map((course, i) => {
+        const courseData = getCourseData(course);
+        const coverUrl = getCourseCoverUrl(course);
+        return {
+          id: course.id,
+          title: course.title || course.unit || '未命名课程',
+          unit: course.unit || course.title || '未命名课程',
+          status: course.status === 'published' ? 'published' : 'draft',
+          age: course.age_group || courseData?.age || '--',
+          grade: course.age_group ? `G${course.age_group.split('-')[0]}` : '--',
+          duration: course.duration || courseData?.duration || '--',
+          theme: course.theme || '情境任务',
+          updatedAt: course.created_at
+            ? new Date(course.created_at).toLocaleDateString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+              }).replace(/\//g, '/')
+            : '--',
+          accent: ['#ff705d', '#4482e5', '#9966d0', '#509f69', '#edb100', '#f4785e'][i % 6],
+          coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
+          active: i === 0,
+          courseData,
+          courseOverview: courseData?.courseOverview || null,
+          themeImageUrl: coverUrl,
+          thumbnail: coverUrl,
+          classSize: courseData?.classSize || course.unit || '',
+          vocabularies: courseData?.vocabularies || [],
+          grammars: courseData?.grammars || [],
+          languageSkills: courseData?.languageSkills || [],
+          experiencePath: courseData?.experiencePath || '',
+          taskName: courseData?.taskName || '',
+          storyContext: courseData?.storyContext || '',
+          keyOutcome: courseData?.keyOutcome || '',
+          atmosphere: courseData?.atmosphere || '',
+          specialRequirements: courseData?.specialRequirements || '',
+        };
+      });
 
       if (append) {
         setCourses(prev => [...prev, ...mapped]);
