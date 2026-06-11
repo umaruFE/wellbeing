@@ -61,7 +61,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     if (ideaLoading) return;
     setIdeaLoading(true);
     try {
-      const values = form.getFieldsValue();
+      const values = form.getFieldsValue(true);
       const payload = {
         courseTitle: values.courseTitle,
         age: values.age,
