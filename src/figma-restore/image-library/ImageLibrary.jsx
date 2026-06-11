@@ -84,6 +84,9 @@ export const createImageTaskDetail = (asset) => ({
   },
   spec: `${asset.size} · PNG`,
   scenes: [asset.scene, asset.scene, asset.scene, asset.scene],
+  result: {
+    url: asset.previewUrl || asset.imageUrl || asset.image_url || asset.url,
+  },
   config: [
     ['素材类型', asset.type],
     ['来源', asset.source],

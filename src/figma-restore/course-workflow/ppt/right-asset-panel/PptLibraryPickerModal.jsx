@@ -9,6 +9,7 @@ import { AUDIO_ASSETS, createAudioTaskDetail, normalizeAudioAsset } from '../../
 import { VideoPreviewModal } from '../../../video-library/VideoPreviewModal';
 import { VIDEO_ASSETS, createVideoTaskDetail, normalizeVideoAsset } from '../../../video-library/VideoLibrary';
 import { TaskDetailModal, createCanvasAssetPayload } from '../../../TaskDetailModal';
+import apiService from '../../../../utils/apiService';
 
 const modalTitleByType = {
   image: '选择图文素材',
@@ -143,8 +144,9 @@ function DetailModal({ type, asset, onClose, onViewTask }) {
 }
 
 export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
-  const [loadedAssets, setLoadedAssets] = React.useState(assetSource[type] || assetSource.image);
-  const assets = loadedAssets;
+  const fallbackAssets = assetSource[type] || assetSource.image;
+  const [libraryAssets, setLibraryAssets] = React.useState([]);
+  const assets = libraryAssets;
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [assetType, setAssetType] = React.useState('');
@@ -152,44 +154,123 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
   const [detailAsset, setDetailAsset] = React.useState(null);
   const [taskDetail, setTaskDetail] = React.useState(null);
   const [page, setPage] = React.useState(1);
+  const [loading, setLoading] = React.useState(false);
 
-  React.useEffect(() => {
-    if (!open) return;
-
-    let alive = true;
-    const request = type === 'video'
-      ? apiService.getVideos({ limit: 200 }).then((result) => (result.data || []).map(normalizeVideoAsset))
-      : type === 'audio'
-        ? apiService.getVoiceConfigs().then((result) => (result.data || []).map(normalizeAudioAsset))
-        : apiService.getPptImages({ limit: 200 }).then((result) => (result.data || []).map(normalizeImageAsset));
-
-    request
-      .then((items) => {
-        if (alive) setLoadedAssets(items);
-      })
-      .catch((error) => {
-        console.error('获取素材库失败:', error);
-        if (alive) {
-          setLoadedAssets([]);
-          message.error('获取素材库失败');
-        }
-      });
-
-    return () => {
-      alive = false;
+  const normalizePptImage = React.useCallback((item) => {
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    const imageUrl = item.image_url || item.imageUrl || item.url || '';
+    const typeTag = tags.find((tag) => tag && tag !== 'AI生成' && !/^B\d+/i.test(tag));
+    const sourceTag = tags.includes('AI生成') ? 'AI生成' : '素材库';
+    return {
+      id: item.id,
+      name: item.name || '图片素材',
+      source: sourceTag,
+      type: item.category?.name || typeTag || 'PPT素材',
+      size: item.size || '图片素材',
+      created: item.created_at
+        ? new Date(item.created_at).toLocaleString('zh-CN', { hour12: false })
+        : '',
+      scene: 'manual',
+      previewUrl: imageUrl,
+      imageUrl,
+      tags,
+      raw: item,
     };
-  }, [open, type]);
+  }, []);
+
+  const normalizeAudioAsset = React.useCallback((item) => {
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    const audioUrl = item.audio_url || item.audioUrl || item.url || '';
+    const typeTag = tags.find((tag) => tag && tag !== 'AI生成');
+    return {
+      id: item.id,
+      name: item.name || '音频素材',
+      source: tags.includes('AI生成') ? 'AI生成' : '素材库',
+      type: typeTag || '音频',
+      format: item.format || audioUrl.split('?')[0].split('.').pop()?.toUpperCase() || 'AUDIO',
+      fileSize: item.fileSize || item.file_size || '--',
+      duration: item.duration || '--',
+      created: item.created_at
+        ? new Date(item.created_at).toLocaleString('zh-CN', { hour12: false })
+        : '',
+      tone: 'lavender',
+      audioUrl,
+      objectUrl: audioUrl,
+      info: {
+        audioType: typeTag || '音频素材',
+        theme: item.description || item.name || '素材库音频',
+        style: tags.join(' / ') || '未标注',
+        lyric: '无歌词',
+      },
+      raw: item,
+    };
+  }, []);
+
+  const normalizeVideoAsset = React.useCallback((item) => {
+    const tags = Array.isArray(item.tags) ? item.tags : [];
+    const videoUrl = item.video_url || item.videoUrl || item.url || '';
+    const typeTag = tags.find((tag) => tag && tag !== 'AI生成' && tag !== '课程同步');
+    return {
+      id: item.id,
+      name: item.name || '视频素材',
+      source: tags.includes('AI生成') ? 'AI生成' : tags.includes('课程同步') ? '课程同步' : '素材库',
+      type: typeTag || '视频',
+      format: item.format || videoUrl.split('?')[0].split('.').pop()?.toUpperCase() || 'VIDEO',
+      fileSize: item.fileSize || item.file_size || '--',
+      duration: item.duration || '--',
+      ratio: item.ratio || '16:9',
+      created: item.created_at
+        ? new Date(item.created_at).toLocaleString('zh-CN', { hour12: false })
+        : '',
+      tone: 'blue',
+      videoUrl,
+      objectUrl: videoUrl,
+      thumbnailUrl: item.thumbnail_url || item.thumbnailUrl,
+      info: {
+        videoType: typeTag || '视频素材',
+        scene: item.description || item.name || '素材库视频',
+        language: tags.join(' / ') || '未标注',
+        spec: item.description || '素材库视频',
+      },
+      raw: item,
+    };
+  }, []);
+
+  const loadLibraryAssets = React.useCallback(async () => {
+    setLoading(true);
+    try {
+      const endpoint = type === 'video'
+        ? '/api/videos?limit=100'
+        : type === 'audio'
+          ? '/api/audio-assets?limit=100'
+          : '/api/ppt-images?limit=100';
+      const result = await apiService.get(endpoint);
+      const rows = Array.isArray(result.data) ? result.data : [];
+      const normalize = type === 'video'
+        ? normalizeVideoAsset
+        : type === 'audio'
+          ? normalizeAudioAsset
+          : normalizePptImage;
+      setLibraryAssets(rows.map(normalize).filter((asset) => asset.previewUrl || asset.audioUrl || asset.videoUrl || asset.objectUrl));
+    } catch (error) {
+      console.error('[PptLibraryPickerModal] 素材库加载失败:', error);
+      setLibraryAssets([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [normalizeAudioAsset, normalizePptImage, normalizeVideoAsset, type]);
 
   React.useEffect(() => {
     if (!open) return;
+    loadLibraryAssets();
     setSearch('');
     setSource('');
     setAssetType('');
-    setSelectedId(assets[0]?.id || null);
+    setSelectedId(null);
     setDetailAsset(null);
     setTaskDetail(null);
     setPage(1);
-  }, [assets, open, type]);
+  }, [fallbackAssets, loadLibraryAssets, open, type]);
 
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -303,7 +384,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
           </div>
 
           {filteredAssets.length === 0 ? (
-            <div className="ppt-library-empty">没有找到匹配素材</div>
+            <div className="ppt-library-empty">{loading ? '正在加载素材库...' : '没有找到匹配素材'}</div>
           ) : null}
 
           <Pagination

@@ -161,6 +161,7 @@ export function buildGeneratedPatch(kind, asset) {
     width: asset?.width || 280,
     height: asset?.height || 158,
     url: asset?.url,
+    items: asset?.items,
     taskId: asset?.taskId,
     statusUrl: asset?.statusUrl,
     generationStatus: asset?.status,

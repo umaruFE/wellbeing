@@ -81,7 +81,8 @@ class N8NClient {
       if (!response.ok) {
         const errorText = await response.text();
         console.log(`[n8n.call] 错误响应: ${errorText}`);
-        throw new Error(`N8N调用失败: ${response.status}`);
+        const errorPreview = errorText.trim().slice(0, 1200);
+        throw new Error(`N8N call failed: ${response.status}${errorPreview ? ` - ${errorPreview}` : ''}`);
       }
 
       const resultText = await response.text();

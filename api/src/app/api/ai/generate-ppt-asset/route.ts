@@ -78,20 +78,59 @@ function getVideoWorkflow(assetCode?: string) {
     || workflowByType.video;
 }
 
+function cleanText(value?: unknown) {
+  return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+}
+
+function defaultImageNegativePrompt(assetCode?: string) {
+  const code = typeof assetCode === 'string' ? assetCode.toUpperCase() : '';
+  if (code === 'B2') {
+    return 'blurry, low quality, watermark, logo, extra letters, misspelled text, broken typography, cropped title, unreadable words';
+  }
+  return 'blurry, low quality, watermark, logo, deformed, ugly, bad composition, extra limbs, cropped';
+}
+
 function buildImagePayload(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
   const code = typeof assetCode === 'string' ? assetCode.toUpperCase() : '';
   const subtype = imageSubtypeByCode[code] || 'ppt_image';
   const role = code === 'B11' && options.character ? String(options.character).toLowerCase() : 'bg';
+  const rawValues = options.rawValues || {};
+  const scene = cleanText(rawValues.scene || options.scene);
+  const overlayText = cleanText(rawValues.overlayText || options.overlayText);
+  const whitespace = cleanText(options.whitespace || rawValues.whitespace);
+  const textLayout = cleanText(options.textLayout || rawValues.textLayout);
+  const imageStyle = cleanText(options.imageStyle || rawValues.style || basePayload.style);
+  const posterPrompt = code === 'B2'
+    ? [
+        'Create a PPT poster-style atmospheric image with clear readable typography.',
+        scene ? `Main scene: ${scene}.` : '',
+        overlayText ? `Render exactly this overlay text in the image: "${overlayText}".` : '',
+        textLayout ? `Text layout: ${textLayout}.` : '',
+        whitespace ? `Whitespace area: ${whitespace}.` : '',
+        imageStyle ? `Visual style: ${imageStyle}.` : '',
+        'Clean composition for a classroom PPT cover. Do not add watermark, logo, or unrelated extra text.',
+      ].filter(Boolean).join(' ')
+    : basePayload.prompt;
 
   return {
     ...basePayload,
-    themeImagePrompt: basePayload.prompt,
-    description: basePayload.prompt,
+    prompt: posterPrompt,
+    optimized_prompt: posterPrompt,
+    negative_prompt: options.negativePrompt || defaultImageNegativePrompt(code),
+    themeImagePrompt: posterPrompt,
+    description: posterPrompt,
     imageSubtype: subtype,
     workflow_type: code === 'B11' ? 'ip-character' : 'background',
     role,
     character_name: role,
     name: role,
+    scene,
+    overlayText,
+    text: overlayText,
+    titleText: overlayText,
+    whitespace,
+    textLayout,
+    imageStyle,
     count: Array.isArray(options.batchItems) ? options.batchItems.length : 1,
     batchItems: options.batchItems,
     pptImageType: {
@@ -100,6 +139,45 @@ function buildImagePayload(basePayload: Record<string, any>, assetCode?: string,
       title: basePayload.assetName,
     },
   };
+}
+
+function buildBatchImagePayloads(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
+  const code = typeof assetCode === 'string' ? assetCode.toUpperCase() : '';
+  const batchItems = Array.isArray(options.batchItems) ? options.batchItems.filter(Boolean) : [];
+
+  if (code !== 'B3') {
+    return [buildImagePayload(basePayload, assetCode, options)];
+  }
+
+  const normalizedItems = batchItems.length ? batchItems : [options.rawValues?.words || basePayload.prompt];
+
+  return normalizedItems.map((item, index) => {
+    const word = typeof item === 'string' ? item : item?.word || item?.text || `word ${index + 1}`;
+    const prompt = [
+      `Create one very simple vocabulary flashcard for the word "${word}".`,
+      'Minimal white rounded card on a plain light background.',
+      'Top area: one simple child-friendly illustration only.',
+      'Middle: large bold lowercase English word.',
+      options.includeChinese !== false ? 'Bottom: small Chinese meaning.' : 'No Chinese text.',
+      options.includePhonetic ? 'Include phonetic transcription.' : '',
+      'Use lots of blank space, clean alignment, soft shadow, no decorative frame.',
+      'Do not create a grid, worksheet, collage, icons list, labels, extra words, or complex layout.',
+    ].filter(Boolean).join(' ');
+
+    return buildImagePayload(
+      {
+        ...basePayload,
+        prompt,
+        assetName: `${basePayload.assetName || 'Vocabulary flashcard'} - ${word}`,
+      },
+      assetCode,
+      {
+        ...options,
+        batchItems: [item],
+        currentBatchItem: item,
+      },
+    );
+  });
 }
 
 function buildAudioPayload(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
@@ -303,17 +381,30 @@ export async function POST(request: NextRequest) {
       : type === 'audio'
         ? buildAudioPayload(basePayload, assetCode, options)
         : buildVideoPayload(basePayload, assetCode, options);
+    const imagePayloads = type === 'image'
+      ? buildBatchImagePayloads(basePayload, assetCode, options)
+      : [];
 
     console.log('[generate-ppt-asset] 调用 N8N:', {
       workflow,
       assetType: type,
       assetName,
       promptLength: prompt.length,
+      batchCount: imagePayloads.length || 1,
     });
 
-    const result = await n8nClient.call(workflow, n8nPayload, { timeout: 300000 });
+    const singlePayload = type === 'image' ? (imagePayloads[0] || n8nPayload) : n8nPayload;
+    const result = type === 'image' && imagePayloads.length > 1
+      ? await Promise.all(imagePayloads.map((payload) => n8nClient.call(workflow, payload, { timeout: 300000 })))
+      : await n8nClient.call(workflow, singlePayload, { timeout: 300000 });
     const returnedAssets = pickAssets(result);
-    const assets = returnedAssets?.length
+    const assets = Array.isArray(result) && type === 'image' && imagePayloads.length > 1
+      ? result.map((item: any, index: number) => ({
+          ...normalizeAsset(type, imagePayloads[index]?.pptImageType?.title || `${assetName || '图片素材'} ${index + 1}`, imagePayloads[index]?.prompt || prompt, item),
+          width: imageSize.width,
+          height: imageSize.height,
+        }))
+      : returnedAssets?.length
       ? returnedAssets.map((item: any, index: number) => ({
           ...normalizeAsset(type, item?.title || `${assetName || '图片素材'} ${index + 1}`, item?.prompt || prompt, item),
           ...(type === 'image' ? { width: imageSize.width, height: imageSize.height } : {}),

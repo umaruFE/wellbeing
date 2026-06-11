@@ -127,6 +127,9 @@ export const createVideoTaskDetail = (asset) => ({
     asset.info.language || '课堂语言输入',
     asset.info.spec || '输出课堂视频素材',
   ],
+  result: {
+    url: asset.videoUrl || asset.video_url || asset.objectUrl || asset.url,
+  },
   config: [
     ['视频类型', asset.info.videoType],
     ['场景', asset.info.scene],

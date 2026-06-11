@@ -117,6 +117,9 @@ export const createAudioTaskDetail = (asset) => ({
   },
   spec: `${asset.duration} · ${asset.format} · ${asset.fileSize}`,
   tracks: [asset.name],
+  result: {
+    url: asset.audioUrl || asset.audio_url || asset.objectUrl || asset.url,
+  },
   config: [
     ['音频类型', asset.info.audioType],
     ['主题', asset.info.theme],

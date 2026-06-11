@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input } from 'antd';
+import { Input, message } from 'antd';
 import {
   BookOpen,
   CircleDot,
@@ -158,7 +158,10 @@ function splitLines(text) {
 }
 
 function buildBatchItems(asset, values) {
-  if (asset.code === 'B3') return values.flashWords?.length ? values.flashWords : splitLines(values.words);
+  if (asset.code === 'B3') {
+    const words = splitLines(values.words);
+    return words.length ? words : values.flashWords;
+  }
   if (asset.code === 'B11') return values.actions?.length ? values.actions : [values.action].filter(Boolean);
   if (asset.code === 'B9') return splitLines(values.storybookContent).map((text, index) => ({ page: index + 1, text }));
   return undefined;
@@ -1497,12 +1500,36 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     }
   }, [asset, values]);
 
+  const handleSaveOnly = React.useCallback(async () => {
+    const selectedResult = results[selectedIndex] || results[0];
+    if (!selectedResult?.url) {
+      message.warning('图片还未生成完成，暂时不能存入图片库');
+      return;
+    }
+
+    try {
+      await apiService.post('/api/ppt-images', {
+        name: selectedResult.title || asset.title,
+        imageUrl: selectedResult.url,
+        tags: [
+          asset.code,
+          selectedResult.imageSubtype || selectedResult.assetCode || asset.code,
+          'AI生成',
+        ].filter(Boolean),
+      });
+      message.success('已保存到图片库');
+    } catch (error) {
+      message.error(error.message || '保存到图片库失败');
+    }
+  }, [asset, results, selectedIndex]);
+
   if (stage === 'generating') {
+    const batchItems = buildBatchItems(asset, values) || [];
     return (
       <GenerationProgress
         title="AI 正在生成图片"
         subtitle={asset.code === 'B13' ? `${values.ipCharacters.join('、')} · ${values.ratio}` : `${values.style} · ${values.ratio}`}
-        batch={asset.code === 'B3' || asset.code === 'B11' ? { done: 2, total: 6, unit: '张' } : null}
+        batch={asset.code === 'B3' || asset.code === 'B11' ? { done: 0, total: batchItems.length || 1, unit: '张' } : null}
       />
     );
   }
@@ -1516,7 +1543,20 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
         selectedIndex={selectedIndex}
         onSelect={setSelectedIndex}
         onRegenerate={handleGenerate}
-        onInsert={() => onInsert('image', { ...asset, ...selectedResult, title: selectedResult?.title || asset.title })}
+        onSaveOnly={handleSaveOnly}
+        onInsert={() => {
+          if (asset.code === 'B3') {
+            const completedItems = results.filter((item) => item?.url);
+            onInsert('image', {
+              ...asset,
+              ...selectedResult,
+              title: asset.title,
+              items: completedItems.length ? completedItems : results,
+            });
+            return;
+          }
+          onInsert('image', { ...asset, ...selectedResult, title: selectedResult?.title || asset.title });
+        }}
       />
     );
   }

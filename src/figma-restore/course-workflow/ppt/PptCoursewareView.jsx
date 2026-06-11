@@ -90,10 +90,55 @@ export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset,
 
   const insertGeneratedAsset = React.useCallback((type, patch = {}) => {
     const count = slide?.layers.length || 0;
+    const items = type === 'image' && Array.isArray(patch.items)
+      ? patch.items.filter((item) => item?.url)
+      : [];
+
+    if (items.length > 1) {
+      const cardWidth = 190;
+      const cardHeight = 142;
+      const gap = 18;
+      const startX = 88;
+      const startY = 96 + count * 8;
+      const nextLayers = items.map((item, index) => createMediaLayer(type, {
+        ...patch,
+        items: undefined,
+        title: item.title || `${patch.title || '词汇闪卡'} ${index + 1}`,
+        url: item.url,
+        taskId: item.taskId,
+        statusUrl: item.statusUrl,
+        generationStatus: item.status,
+        prompt: item.prompt || patch.prompt,
+        raw: item.raw,
+        width: cardWidth,
+        height: cardHeight,
+        x: startX + (index % 2) * (cardWidth + gap),
+        y: startY + Math.floor(index / 2) * (cardHeight + gap),
+      }));
+
+      updateCourse((draft) => {
+        const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+        active.slide?.layers.push(...nextLayers);
+      });
+      setAssetPanelType(null);
+      setSelectedLayerId(nextLayers[0]?.id || null);
+      return;
+    }
+
     const nextLayer = createMediaLayer(type, {
       x: 88 + count * 18,
       y: 130 + count * 18,
-      ...patch,
+      ...(items[0] ? {
+        ...patch,
+        items: undefined,
+        title: items[0].title || patch.title,
+        url: items[0].url,
+        taskId: items[0].taskId,
+        statusUrl: items[0].statusUrl,
+        generationStatus: items[0].status,
+        prompt: items[0].prompt || patch.prompt,
+        raw: items[0].raw,
+      } : patch),
     });
 
     updateCourse((draft) => {
