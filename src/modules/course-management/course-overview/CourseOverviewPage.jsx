@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   RefreshCw,
   Edit3,
@@ -53,6 +54,7 @@ const colors = {
 };
 
 const CourseOverviewPage = () => {
+  const { t } = useTranslation();
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -118,11 +120,11 @@ const CourseOverviewPage = () => {
         setShowRegenerateModal(false);
         setRegenerateAdjustments('');
       } else {
-        alert(result.error || '重新生成失败，请重试');
+        alert(result.error || t('courseOverview.regenerateFailed'));
       }
     } catch (err) {
-      console.error('重新生成失败:', err);
-      alert('重新生成失败，请重试');
+      console.error('regenerate failed:', err);
+      alert(t('courseOverview.regenerateFailed'));
     } finally {
       setIsRegenerating(false);
     }
@@ -169,11 +171,11 @@ const CourseOverviewPage = () => {
         });
         navigate(`/courses/${courseId}/lesson-plan`);
       } else {
-        alert(result.error || '教案生成失败，请重试');
+        alert(result.error || t('courseOverview.generateLessonFailed'));
       }
     } catch (err) {
-      console.error('生成教案失败:', err);
-      alert('生成教案失败，请重试');
+      console.error('generate lesson failed:', err);
+      alert(t('courseOverview.generateLessonFailed'));
     } finally {
       setIsGeneratingCourse(false);
     }
@@ -183,11 +185,11 @@ const CourseOverviewPage = () => {
     if (!contentRef.current) return;
     setIsExporting(true);
     try {
-      const filename = `课程概览_${courseData?.title || 'untitled'}_${Date.now()}.pdf`;
+      const filename = `${t('courseOverview.title')}_${courseData?.title || 'untitled'}_${Date.now()}.pdf`;
       await exportToPDF(contentRef.current, filename);
     } catch (err) {
-      console.error('导出失败:', err);
-      alert('导出失败，请重试');
+      console.error('export failed:', err);
+      alert(t('courseOverview.exportFailed'));
     } finally {
       setIsExporting(false);
     }
@@ -203,7 +205,7 @@ const CourseOverviewPage = () => {
         const result = await apiService.getCourse(courseId);
         setCourseData(result.data || result);
       } catch (err) {
-        console.error('获取课程失败:', err);
+        console.error('fetch course failed:', err);
       } finally {
         setLoading(false);
       }
@@ -239,8 +241,8 @@ const CourseOverviewPage = () => {
           organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
         });
       } catch (err) {
-        console.error('保存失败:', err);
-        alert('保存失败，请重试');
+        console.error('save failed:', err);
+        alert(t('course.saveFailed'));
       } finally {
         setIsSaving(false);
       }
@@ -256,10 +258,10 @@ const CourseOverviewPage = () => {
           userId: user?.id || courseData?.user_id || null,
           organizationId: user?.organizationId || user?.organization_id || courseData?.organization_id || null,
         });
-        alert('发布成功！');
+        alert(t('course.publishSuccess'));
       } catch (err) {
-        console.error('发布失败:', err);
-        alert('发布失败，请重试');
+        console.error('publish failed:', err);
+        alert(t('course.publishFailed'));
       } finally {
         setIsPublishing(false);
       }
@@ -268,28 +270,28 @@ const CourseOverviewPage = () => {
     setActions(
       <>
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> {t('common.saving')}</> : <><RefreshCw size={12} /> {t('courseOverview.allSaved')}</>}
         </span>
         <button
           onClick={handleSave}
           disabled={isSaving}
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
           style={{ backgroundColor: '#4C5866' }}>
-          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
+          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />{t('common.saving')}</> : t('common.save')}
         </button>
         {/* <button
           onClick={handleExportCourse}
           disabled={isExporting}
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
           style={{ backgroundColor: '#4C5866' }}>
-          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />导出中</> : '导出'}
+          {isExporting ? <><Loader2 size={14} className="inline animate-spin mr-1" />{t('courseOverview.exporting')}</> : t('common.export')}
         </button> */}
         <button
           onClick={handlePublish}
           disabled={isPublishing}
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ backgroundColor: colors.brand.DEFAULT }}>
-          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
+          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />{t('common.publishing')}</> : t('common.publish')}
         </button>
       </>
     );
@@ -347,23 +349,23 @@ const CourseOverviewPage = () => {
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.neutral.bg.layout }}>
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-brand-coral border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p style={{ color: colors.neutral.text[2] }}>加载中...</p>
+          <p style={{ color: colors.neutral.text[2] }}>{t('common.loading')}</p>
         </div>
       </div>
     );
   }
 
   const displayData = parsedCourseData?.parsedCourseData?.courseOverview || {
-    courseTitle: courseData?.title || '未命名课程',
-    corePhilosophy: 'PERMA + SEL + 体验驱动',
-    overallContext: courseData?.concept || '暂无课程概述',
+    courseTitle: courseData?.title || t('dashboard.unnamedCourse'),
+    corePhilosophy: 'PERMA + SEL + ' + t('courseOverview.experienceDriven'),
+    overallContext: courseData?.concept || t('courseOverview.noContext'),
     languageGoals: {
-      vocabulary: courseData?.vocabulary || '暂无词汇目标',
-      grammar: courseData?.grammar || '暂无语法目标'
+      vocabulary: courseData?.vocabulary || t('courseOverview.noVocab'),
+      grammar: courseData?.grammar || t('courseOverview.noGrammar')
     },
-    selGoals: courseData?.selGoals || '暂无SEL目标',
-    permaGoals: courseData?.permaGoals || '暂无PERMA目标',
-    finalTask: courseData?.finalTask || '暂无产出任务',
+    selGoals: courseData?.selGoals || t('courseOverview.noSel'),
+    permaGoals: courseData?.permaGoals || t('courseOverview.noPerma'),
+    finalTask: courseData?.finalTask || t('courseOverview.noTask'),
   };
 
   return (
@@ -393,7 +395,7 @@ const CourseOverviewPage = () => {
             style={{ backgroundColor: colors.neutral.fill.gray1, borderColor: `${colors.brand.DEFAULT}30` }}>
             <div className="flex items-center gap-2 mb-4" style={{ color: colors.brand.DEFAULT }}>
               <Star size={20} fill="currentColor" />
-              <span className="text-base font-bold">核心理念</span>
+              <span className="text-base font-bold">{t('courseOverview.corePhilosophy')}</span>
             </div>
             <p className="text-sm leading-relaxed relative z-10 font-medium" style={{ color: colors.neutral.text[2] }}>
               {displayData.corePhilosophy}
@@ -411,12 +413,12 @@ const CourseOverviewPage = () => {
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center" style={{ color: colors.neutral.text.disabled }}>
-                暂无封面图
+                {t('courseOverview.noCover')}
               </div>
             )}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
               <button className="px-6 py-2.5 rounded-xl font-bold flex items-center gap-2" style={primaryNeoButtonStyle}>
-                <RefreshCw size={18} /> 重新生成封面
+                <RefreshCw size={18} /> {t('courseOverview.regenerateCover')}
               </button>
             </div>
             <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur px-3 py-1.5 rounded-lg text-[10px] font-bold text-gray-500 border border-white">
@@ -428,14 +430,14 @@ const CourseOverviewPage = () => {
         {/* Right: Course Objectives */}
         <div className="lg:col-span-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold" style={{ color: colors.neutral.text[1] }}>课程目标解构</h3>
+            <h3 className="text-2xl font-bold" style={{ color: colors.neutral.text[1] }}>{t('courseOverview.goalBreakdown')}</h3>
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowRegenerateModal(true)}
                 className="px-4 py-1.5 rounded-lg text-[12px] font-bold flex items-center gap-1.5 transition-colors hover:bg-gray-100"
                 style={{ color: colors.neutral.text[2], border: `1px solid ${colors.neutral.border.DEFAULT}` }}
               >
-                <RefreshCw size={13} /> 重新生成
+                <RefreshCw size={13} /> {t('common.regenerate')}
               </button>
             </div>
           </div>
@@ -443,34 +445,34 @@ const CourseOverviewPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <ObjectiveCard
               icon={<Compass />}
-              title="整体情境"
+              title={t('courseOverview.overallContext')}
               color={colors.brand.DEFAULT}
               content={displayData.overallContext}
             />
             <ObjectiveCard
               icon={<MessageSquare />}
-              title="语言培养目标"
+              title={t('courseOverview.languageGoals')}
               color={colors.info.DEFAULT}
-              content={`词汇: ${displayData.languageGoals?.vocabulary || '暂无'}\n句型: ${displayData.languageGoals?.grammar || '暂无'}`}
+              content={`${t('courseOverview.vocabulary')}: ${displayData.languageGoals?.vocabulary || t('common.none')}\n${t('courseOverview.grammar')}: ${displayData.languageGoals?.grammar || t('common.none')}`}
             />
             <ObjectiveCard
               icon={<Users />}
-              title="SEL核心目标"
+              title={t('courseOverview.selGoals')}
               color={colors.success.DEFAULT}
               content={displayData.selGoals}
             />
             <ObjectiveCard
               icon={<Smile />}
-              title="PERMA幸福体验目标"
+              title={t('courseOverview.permaGoals')}
               color={colors.purple.DEFAULT}
               content={displayData.permaGoals}
             />
             <div className="md:col-span-2">
               <ObjectiveCard
                 icon={<FileCheck />}
-                title="终极产出任务"
+                title={t('courseOverview.finalTask')}
                 color={colors.brand.DEFAULT}
-                content={displayData.finalTask || displayData.finalOutput || displayData.outputTask || '暂无产出任务'}
+                content={displayData.finalTask || displayData.finalOutput || displayData.outputTask || t('courseOverview.noTask')}
               />
             </div>
           </div>
@@ -485,9 +487,9 @@ const CourseOverviewPage = () => {
           style={{ backgroundColor: colors.brand.DEFAULT, border: `2px solid ${colors.neutral.text[1]}`, boxShadow: `4px 4px 0px 0px ${colors.neutral.text[1]}` }}
         >
           {isGeneratingCourse ? (
-            <><Loader2 size={22} className="animate-spin" /> 正在生成教案设计...</>
+            <><Loader2 size={22} className="animate-spin" /> {t('courseOverview.generatingLessonPlan')}</>
           ) : (
-            <><Wand2 size={22} /> 生成教案设计</>
+            <><Wand2 size={22} /> {t('courseOverview.generateLessonPlan')}</>
           )}
         </button>
       </div>
@@ -496,7 +498,7 @@ const CourseOverviewPage = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
           <div className="bg-white rounded-[24px] p-8 w-full max-w-[520px] shadow-2xl border" style={{ borderColor: colors.neutral.border.secondary }}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold" style={{ color: colors.neutral.text[1] }}>重新生成概览</h3>
+              <h3 className="text-lg font-bold" style={{ color: colors.neutral.text[1] }}>{t('courseOverview.regenerate')}</h3>
               <button
                 onClick={() => { setShowRegenerateModal(false); setRegenerateAdjustments(''); }}
                 className="p-1 rounded-lg hover:bg-gray-100 transition-colors"
@@ -506,16 +508,16 @@ const CourseOverviewPage = () => {
             </div>
 
             <div className="mb-6">
-              <label className="text-[13px] font-bold block mb-2" style={{ color: colors.neutral.text[1] }}>调整要求</label>
+              <label className="text-[13px] font-bold block mb-2" style={{ color: colors.neutral.text[1] }}>{t('courseOverview.adjustments')}</label>
               <textarea
                 value={regenerateAdjustments}
                 onChange={e => setRegenerateAdjustments(e.target.value)}
-                placeholder="描述你希望调整的内容，例如：&#10;- 情境主题改为海底探险&#10;- 增加更多SEL目标&#10;- 降低语言难度"
+                placeholder={t('courseOverview.adjustmentsPlaceholder')}
                 rows={4}
                 className="w-full px-4 py-3 rounded-[16px] border text-[13px] resize-none focus:outline-none focus:ring-2 transition-all"
                 style={{ borderColor: colors.neutral.border.DEFAULT, focusRingColor: colors.brand.DEFAULT }}
               />
-              <p className="text-[11px] mt-1.5" style={{ color: colors.neutral.text[3] }}>留空则完全重新生成</p>
+              <p className="text-[11px] mt-1.5" style={{ color: colors.neutral.text[3] }}>{t('courseOverview.leaveBlank')}</p>
             </div>
 
             <div className="flex gap-3">
@@ -524,7 +526,7 @@ const CourseOverviewPage = () => {
                 className="flex-1 py-3 rounded-xl text-[13px] font-bold transition-colors hover:bg-gray-50"
                 style={{ border: `1.5px solid ${colors.neutral.border.DEFAULT}`, color: colors.neutral.text[2] }}
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleRegenerateOverview}
@@ -533,9 +535,9 @@ const CourseOverviewPage = () => {
                 style={{ backgroundColor: colors.brand.DEFAULT }}
               >
                 {isRegenerating ? (
-                  <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin" /> 生成中...</span>
+                  <span className="flex items-center justify-center gap-2"><Loader2 size={16} className="animate-spin" /> {t('common.generating')}</span>
                 ) : (
-                  <span className="flex items-center justify-center gap-2"><RefreshCw size={16} /> 重新生成</span>
+                  <span className="flex items-center justify-center gap-2"><RefreshCw size={16} /> {t('common.regenerate')}</span>
                 )}
               </button>
             </div>

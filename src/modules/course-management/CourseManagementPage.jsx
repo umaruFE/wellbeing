@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BookOpen, Plus, Edit3, Trash2, Upload, Search, Filter, Clock, Users, Sparkles, LayoutTemplate, ChevronDown, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
@@ -7,6 +8,7 @@ import apiService from '../../services/api';
 const PAGE_SIZE = 9;
 
 export const CourseManagementPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -61,16 +63,16 @@ export const CourseManagementPage = () => {
       setHasMore(pageNum * PAGE_SIZE < total);
       setError(null);
     } catch (err) {
-      console.error('获取课程列表失败:', err);
+      console.error('fetch courses failed:', err);
       if (!append) {
-        setError('加载课程失败');
+        setError(t('course.fetchFailed'));
         setCourses([]);
       }
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [user?.id]);
+  }, [user?.id, t]);
 
   useEffect(() => {
     setPage(1);
@@ -105,19 +107,18 @@ export const CourseManagementPage = () => {
     navigate('/create');
   };
 
-  // 编辑课程：跳转到创建页并携带 courseId，让编辑器直接进入表格模式
   const handleEditCourse = (courseId) => {
     navigate(`/courses/${courseId}/overview`);
   };
 
   const handleDeleteCourse = async (courseId) => {
-    if (window.confirm('确定要删除这个课程吗？')) {
+    if (window.confirm(t('course.confirmDeleteCourse'))) {
       try {
         await apiService.deleteCourse(courseId);
         setCourses(courses.filter(c => c.id !== courseId));
       } catch (err) {
-        console.error('删除课程失败:', err);
-        alert('删除失败');
+        console.error('delete course failed:', err);
+        alert(t('common.operationFailed'));
       }
     }
   };
@@ -129,20 +130,20 @@ export const CourseManagementPage = () => {
         c.id === courseId ? { ...c, status: 'published' } : c
       ));
     } catch (err) {
-      console.error('发布课程失败:', err);
-      alert('发布失败');
+      console.error('publish course failed:', err);
+      alert(t('course.publishFailed'));
     }
   };
 
   const getStatusLabel = (status) => {
-    const labels = { published: '已发布', draft: '草稿', archived: '已归档' };
+    const labels = { published: t('course.published'), draft: t('course.draft'), archived: t('course.archived') };
     return labels[status] || status;
   };
 
   const formatDuration = (dur) => {
-    if (typeof dur === 'number') return `${dur}分钟`;
-    if (typeof dur === 'string' && dur.includes('分钟')) return dur;
-    return dur ? `${dur}分钟` : '未设置';
+    if (typeof dur === 'number') return `${dur}${t('course.minutes')}`;
+    if (typeof dur === 'string' && dur.includes(t('course.minutes'))) return dur;
+    return dur ? `${dur}${t('course.minutes')}` : t('course.notSet');
   };
 
   return (
@@ -155,8 +156,8 @@ export const CourseManagementPage = () => {
               <BookOpen className="w-6 text-white h-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-dark">课程管理</h1>
-              <p className="text-sm text-primary-muted mt-0.5">创建和管理您的课程</p>
+              <h1 className="text-2xl font-bold text-dark">{t('course.title')}</h1>
+              <p className="text-sm text-primary-muted mt-0.5">{t('course.subtitle')}</p>
             </div>
           </div>
           <button
@@ -164,7 +165,7 @@ export const CourseManagementPage = () => {
             className="px-5 py-2.5 text-white bg-brand rounded-full font-bold flex items-center gap-2 transition-colors border-2 border-primary shadow-neo hover:shadow-neo-hover hover:translate-[-1px,-1px]"
           >
             <Plus className="w-4 h-4" />
-            创建课程
+            {t('course.createCourse')}
           </button>
         </div>
       </div>
@@ -178,7 +179,7 @@ export const CourseManagementPage = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜索课程名称或关键字..."
+              placeholder={t('course.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-stroke-light bg-white focus:border-primary focus:ring-0 outline-none text-dark placeholder:text-primary-placeholder"
             />
           </div>
@@ -188,7 +189,7 @@ export const CourseManagementPage = () => {
               className="px-4 py-2.5 rounded-2xl border-2 border-stroke-light bg-white flex items-center gap-2 text-dark font-medium hover:border-primary transition-colors"
             >
               <Filter className="w-4 h-4 text-primary-muted" />
-              {filterStatus === 'all' ? '全部状态' : getStatusLabel(filterStatus)}
+              {filterStatus === 'all' ? t('course.allStatus') : getStatusLabel(filterStatus)}
               <ChevronDown className={`w-4 h-4 transition-transform ${filterOpen ? 'rotate-180' : ''}`} />
             </button>
             {filterOpen && (
@@ -199,7 +200,7 @@ export const CourseManagementPage = () => {
                     onClick={() => { setFilterStatus(s); setFilterOpen(false); }}
                     className="w-full px-4 py-2 text-left text-sm hover:bg-surface-alt text-dark"
                   >
-                    {s === 'all' ? '全部状态' : getStatusLabel(s)}
+                    {s === 'all' ? t('course.allStatus') : getStatusLabel(s)}
                   </button>
                 ))}
               </div>
@@ -220,7 +221,7 @@ export const CourseManagementPage = () => {
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <div className="w-8 h-8 border-4 border-green-soft border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-primary-muted">加载中...</p>
+              <p className="text-primary-muted">{t('common.loading')}</p>
             </div>
           </div>
         ) : (
@@ -246,7 +247,7 @@ export const CourseManagementPage = () => {
                   ) : (
                     <>
                       <LayoutTemplate className="w-8 h-8 mb-1" />
-                      <span className="text-[10px]">暂无封面</span>
+                      <span className="text-[10px]">{t('course.noCover')}</span>
                     </>
                   )}
                 </div>
@@ -261,15 +262,15 @@ export const CourseManagementPage = () => {
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2 text-xs text-dark">
                       <Users className="w-3.5 h-3.5 text-green-muted" />
-                      <span className="truncate">{course.age_group || '未设置'}</span>
+                      <span className="truncate">{course.age_group || t('course.notSet')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-dark">
                       <BookOpen className="w-3.5 h-3.5 text-brand-amber" />
-                      <span className="truncate">{course.unit || '未设置'}</span>
+                      <span className="truncate">{course.unit || t('course.notSet')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-dark">
                       <Sparkles className="w-3.5 h-3.5 text-pink-soft" />
-                      <span className="truncate">{course.theme || '未设置'}</span>
+                      <span className="truncate">{course.theme || t('course.notSet')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-dark">
                       <Clock className="w-3.5 h-3.5 text-brand-coral" />
@@ -287,13 +288,13 @@ export const CourseManagementPage = () => {
                     className="flex-1 px-3 py-2 bg-warning-light text-dark rounded-xl font-bold flex items-center justify-center gap-1.5 text-xs transition-all duration-200 hover:bg-warning-light hover:border-brand-amber"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
-                    编辑
+                    {t('common.edit')}
                   </button>
                   {course.status === 'draft' && (
                     <button
                       onClick={(e) => { e.stopPropagation(); handlePublishCourse(course.id); }}
                       className="p-2 rounded-full bg-success-light text-success hover:bg-success-light transition-colors"
-                      title="发布"
+                      title={t('common.publish')}
                     >
                       <Upload className="w-3.5 h-3.5" />
                     </button>
@@ -301,16 +302,16 @@ export const CourseManagementPage = () => {
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }}
                     className="p-2 rounded-full bg-error-light text-error hover:bg-error-light transition-colors"
-                    title="删除"
+                    title={t('common.delete')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
                 <div className="text-center mt-2 text-[10px] text-primary-muted">
                   {course.updatedAt
-                    ? `更新于 ${new Date(course.updatedAt).toLocaleString('zh-CN', { hour12: false })}`
+                    ? `${t('course.updatedAt')} ${new Date(course.updatedAt).toLocaleString(undefined, { hour12: false })}`
                     : course.createdAt
-                      ? `创建于 ${new Date(course.createdAt).toLocaleString('zh-CN', { hour12: false })}`
+                      ? `${t('course.createdAt')} ${new Date(course.createdAt).toLocaleString(undefined, { hour12: false })}`
                       : ''}
                 </div>
               </div>
@@ -323,19 +324,19 @@ export const CourseManagementPage = () => {
         {!loading && filteredCourses.length === 0 && (
           <div className="text-center py-12">
             <BookOpen className="w-16 h-16 text-stroke-light mx-auto mb-4" />
-            <p className="text-primary-muted">暂无课程</p>
+            <p className="text-primary-muted">{t('course.noCourses')}</p>
           </div>
         )}
 
         {loadingMore && (
           <div className="flex items-center justify-center py-6">
             <Loader2 className="w-5 h-5 text-primary-muted animate-spin" />
-            <span className="ml-2 text-sm text-primary-muted">加载更多...</span>
+            <span className="ml-2 text-sm text-primary-muted">{t('course.loadingMore')}</span>
           </div>
         )}
 
         {!hasMore && courses.length > 0 && (
-          <div className="text-center py-4 text-xs text-primary-muted">已加载全部课程</div>
+          <div className="text-center py-4 text-xs text-primary-muted">{t('course.allLoaded')}</div>
         )}
 
         <div ref={sentinelRef} className="h-1" />

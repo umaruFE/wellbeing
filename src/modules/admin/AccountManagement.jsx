@@ -1,31 +1,31 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Users, Plus, Trash2, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export const AccountManagement = () => {
+  const { t } = useTranslation();
   const { ROLE_NAMES } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
-  // 模拟账号数据
   const [accounts, setAccounts] = useState([
-    { id: 1, username: 'org1_admin', name: '机构1管理员', organizationId: 1, organizationName: '测试机构1', role: 'org_admin', createdAt: '2024-01-01' },
-    { id: 2, username: 'org1_leader', name: '教研组长1', organizationId: 1, organizationName: '测试机构1', role: 'research_leader', createdAt: '2024-01-02' },
-    { id: 3, username: 'org2_admin', name: '机构2管理员', organizationId: 2, organizationName: '测试机构2', role: 'org_admin', createdAt: '2024-01-05' },
+    { id: 1, username: 'org1_admin', name: 'Org 1 Admin', organizationId: 1, organizationName: 'Org 1', role: 'org_admin', createdAt: '2024-01-01' },
+    { id: 2, username: 'org1_leader', name: 'Leader 1', organizationId: 1, organizationName: 'Org 1', role: 'research_leader', createdAt: '2024-01-02' },
+    { id: 3, username: 'org2_admin', name: 'Org 2 Admin', organizationId: 2, organizationName: 'Org 2', role: 'org_admin', createdAt: '2024-01-05' },
   ]);
 
-  // 模拟机构数据（用于创建账号时选择）
   const organizations = [
-    { id: 1, name: '测试机构1' },
-    { id: 2, name: '测试机构2' },
-    { id: 3, name: '测试机构3' },
+    { id: 1, name: 'Org 1' },
+    { id: 2, name: 'Org 2' },
+    { id: 3, name: 'Org 3' },
   ];
 
   const handleCreateAccount = () => {
-    const orgId = prompt('请输入机构ID（1-3）：');
-    const username = prompt('请输入用户名：');
-    const name = prompt('请输入姓名：');
-    const role = prompt('请输入角色（org_admin/research_leader/creator/viewer）：');
-    
+    const orgId = prompt(t('account.promptOrgId'));
+    const username = prompt(t('account.promptUsername'));
+    const name = prompt(t('account.promptName'));
+    const role = prompt(t('account.promptRole'));
+
     if (orgId && username && name && role) {
       const org = organizations.find(o => o.id === parseInt(orgId));
       const newAccount = {
@@ -33,7 +33,7 @@ export const AccountManagement = () => {
         username,
         name,
         organizationId: parseInt(orgId),
-        organizationName: org?.name || '未知机构',
+        organizationName: org?.name || t('account.unknownOrg'),
         role,
         createdAt: new Date().toISOString().split('T')[0]
       };
@@ -42,7 +42,7 @@ export const AccountManagement = () => {
   };
 
   const handleDeleteAccount = (accountId) => {
-    if (window.confirm('确定要删除这个账号吗？')) {
+    if (window.confirm(t('account.confirmDelete'))) {
       setAccounts(accounts.filter(a => a.id !== accountId));
     }
   };
@@ -63,20 +63,20 @@ export const AccountManagement = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="搜索账号..."
+            placeholder={t('account.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none"
           />
         </div>
       </div>
 
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-primary">账号列表</h2>
+        <h2 className="text-lg font-semibold text-primary">{t('account.listTitle')}</h2>
         <button
           onClick={handleCreateAccount}
           className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info-active flex items-center gap-2 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          创建账号
+          {t('account.createAccount')}
         </button>
       </div>
 
@@ -84,12 +84,12 @@ export const AccountManagement = () => {
         <table className="w-full">
           <thead className="bg-surface border-b-2 border-stroke-light">
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">用户名</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">姓名</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">所属机构</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">角色</th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">创建时间</th>
-              <th className="px-4 py-3 text-right text-sm font-semibold text-primary-secondary">操作</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">{t('account.username')}</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">{t('account.name')}</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">{t('account.organization')}</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">{t('admin.role')}</th>
+              <th className="px-4 py-3 text-left text-sm font-semibold text-primary-secondary">{t('course.createdAt')}</th>
+              <th className="px-4 py-3 text-right text-sm font-semibold text-primary-secondary">{t('common.action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -119,11 +119,10 @@ export const AccountManagement = () => {
         {filteredAccounts.length === 0 && (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
-            <p className="text-primary-muted">暂无账号</p>
+            <p className="text-primary-muted">{t('account.noAccounts')}</p>
           </div>
         )}
       </div>
     </div>
   );
 };
-

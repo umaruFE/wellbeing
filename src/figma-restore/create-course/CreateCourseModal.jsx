@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Button, Form, Modal, message } from 'antd';
 import { Loader2 } from 'lucide-react';
 import apiService from '../../services/api';
@@ -32,6 +33,7 @@ function getUser() {
 }
 
 export function CreateCourseModal({ open, onCancel, onSubmit }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [ideaIndex, setIdeaIndex] = useState(-1);
@@ -89,13 +91,13 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
           storyContext: textData.storyContext || data.storyContext || '',
           keyOutcome: textData.keyOutcome || data.keyOutcome || '',
         });
-        message.success('已生成 AI 创意灵感');
+        message.success(t('createCourse.ideaGenerated'));
       } else {
-        message.error(result.error || '创意生成失败');
+        message.error(result.error || t('createCourse.ideaFailed'));
       }
     } catch (err) {
-      console.error('获取AI创意灵感失败:', err);
-      message.error('创意生成失败，请稍后重试');
+      console.error('fetch idea failed:', err);
+      message.error(t('createCourse.ideaFailedRetry'));
     } finally {
       setIdeaLoading(false);
     }
@@ -126,13 +128,13 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
           storyContext: textData.storyContext || data.storyContext || payload.storyContext,
           keyOutcome: textData.keyOutcome || data.keyOutcome || payload.keyOutcome,
         });
-        message.success('已润色当前内容');
+        message.success(t('createCourse.polished'));
       } else {
-        message.error(result.error || '内容润色失败');
+        message.error(result.error || t('createCourse.polishFailed'));
       }
     } catch (err) {
-      console.error('AI润色失败:', err);
-      message.error('内容润色失败，请稍后重试');
+      console.error('polish failed:', err);
+      message.error(t('createCourse.polishFailedRetry'));
     } finally {
       setPolishLoading(false);
     }
@@ -196,7 +198,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         console.warn('概览生成请求失败，使用表单原始值:', err);
       }
 
-      const courseTitle = overview?.courseTitle || values.courseTitle || '未命名课程';
+      const courseTitle = overview?.courseTitle || values.courseTitle || t('dashboard.unnamedCourse');
       const theme = overview?.theme || values.taskName || '';
 
       const keywordsList = [values.vocabularies, values.grammars]
@@ -242,7 +244,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         console.error('保存课程失败:', err);
       }
 
-      message.success('课程已创建');
+      message.success(t('createCourse.courseCreated'));
       resetFlow();
       setSubmitting(false);
 
@@ -268,7 +270,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       });
     } catch {
       setSubmitting(false);
-      message.warning('请先补全当前步骤的必填内容');
+      message.warning(t('createCourse.completeRequired'));
     }
   };
 
@@ -281,7 +283,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
   const modalTitle = (
     <div className="fr-create-modal-title">
-      <span>创建课程</span>
+      <span>{t('createCourse.title')}</span>
       <i className="fr-create-title-mark" />
       <i className="fr-create-title-dot large" />
       <i className="fr-create-title-dot small" />
@@ -295,14 +297,14 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         className={`fr-create-btn-cancel fr-create-prev ${current === 0 ? 'hidden' : ''}`}
         disabled={submitting}
       >
-        上一步
+        {t('createCourse.prevStep')}
       </Button>
       <div className="fr-create-footer-actions">
-        <Button onClick={handleCancel} className="fr-create-btn-cancel" disabled={submitting}>取消</Button>
+        <Button onClick={handleCancel} className="fr-create-btn-cancel" disabled={submitting}>{t('common.cancel')}</Button>
         <Button onClick={handleNext} className="fr-create-btn-next" disabled={submitting}>
           {submitting
-            ? <>生成中...</>
-            : current === createCourseSteps.length - 1 ? '完成' : '下一步'
+            ? <>{t('common.generating')}</>
+            : current === createCourseSteps.length - 1 ? t('createCourse.finish') : t('createCourse.nextStep')
           }
         </Button>
       </div>
@@ -328,11 +330,11 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       <div className="fr-create-steps">
         {createCourseSteps.map((step, index) => (
           <div
-            key={step.title}
+            key={step.titleKey}
             className={`fr-create-step-item ${index === current ? 'active' : ''} ${index < current ? 'process' : ''}`}
           >
             <span className="fr-create-step-number">{index < current ? '✓' : index + 1}</span>
-            <span className="fr-create-step-label">{step.title}</span>
+            <span className="fr-create-step-label">{t(step.titleKey)}</span>
             {index < createCourseSteps.length - 1 && <div className="fr-create-step-tail" />}
           </div>
         ))}

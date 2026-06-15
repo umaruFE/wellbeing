@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   RefreshCw,
   Clock,
@@ -51,10 +52,10 @@ const safeRender = (data) => {
 };
 
 const PHASE_CONFIG = {
-  engage: { label: 'E-ENGAGE 引入', color: colors.purple.DEFAULT, lightBg: '#F5F0FF' },
-  empower: { label: 'E-EMPOWER 赋能', color: colors.info.DEFAULT, lightBg: '#F0F8FF' },
-  execute: { label: 'E-EXECUTE 实践', color: colors.success.DEFAULT, lightBg: '#EBF7EE' },
-  elevate: { label: 'E-ELEVATE 升华', color: colors.brand.DEFAULT, lightBg: '#FDECE8' },
+  engage: { labelKey: 'lesson.phaseEngage', color: colors.purple.DEFAULT, lightBg: '#F5F0FF' },
+  empower: { labelKey: 'lesson.phaseEmpower', color: colors.info.DEFAULT, lightBg: '#F0F8FF' },
+  execute: { labelKey: 'lesson.phaseExecute', color: colors.success.DEFAULT, lightBg: '#EBF7EE' },
+  elevate: { labelKey: 'lesson.phaseElevate', color: colors.brand.DEFAULT, lightBg: '#FDECE8' },
 };
 
 const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
@@ -113,6 +114,7 @@ const normalizeStep = (step) => ({
 });
 
 const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [expandedItems, setExpandedItems] = useState({});
   const [openMenuPhase, setOpenMenuPhase] = useState(null);
@@ -159,14 +161,14 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
       return {
         id: phaseKey,
-        title: phase?.title || config.label,
+        title: phase?.title || t(config.labelKey),
         color: config.color,
         lightBg: config.lightBg,
         goalSummary: steps.map((s) => s.goal).filter(Boolean).join('；') || '',
         count: steps.length,
         minutes: totalMinutes,
         overflowMinutes,
-        time: steps.length > 0 ? totalMinutes + '分钟' : '',
+        time: steps.length > 0 ? totalMinutes + t('course.minutes') : '',
         items: steps.map((step) => ({
           id: step.id,
           title: step.title,
@@ -436,7 +438,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   if (boardColumns.length === 0) {
     return (
       <div className="flex items-center justify-center h-[400px] text-gray-400">
-        暂无教案数据
+        {t('lesson.noData')}
       </div>
     );
   }
@@ -450,7 +452,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
           <div className="p-4 flex items-start justify-between text-white shrink-0" style={{ backgroundColor: col.color }}>
             <div className="flex-1 min-w-0">
               <h3 className="font-bold text-[15px] uppercase tracking-wide">{safeRender(col.title)}</h3>
-              <p className="text-[11px] opacity-80 mt-1">{col.count}个环节</p>
+              <p className="text-[11px] opacity-80 mt-1">{t('lesson.stepsCount', { count: col.count })}</p>
             </div>
             <div className="flex items-center gap-2 relative">
               {col.time && (
@@ -460,12 +462,12 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
               )}
               {regeneratingPhase === col.id ? (
                 <div className="flex items-center gap-1 text-[11px] opacity-90">
-                  <RefreshCw size={14} className="animate-spin" /> 生成中...
+                  <RefreshCw size={14} className="animate-spin" /> {t('common.generating')}
                 </div>
               ) : (
                 <button
-                  title="查看阶段详情"
-                  aria-label="查看阶段详情"
+                  title={t('lesson.viewPhaseDetail')}
+                  aria-label={t('lesson.viewPhaseDetail')}
                   onClick={(e) => { e.stopPropagation(); openPhaseDetail(col.id); }}
                   className="p-1 rounded hover:bg-white/20 transition-colors"
                 >
@@ -479,7 +481,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                     className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
                   >
                     <RefreshCw size={13} className="text-gray-400" />
-                    重新生成
+                    {t('common.regenerate')}
                   </button>
                 </div>
               )}
@@ -490,9 +492,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             <div className="mx-4 mt-3 px-3 py-2 rounded-lg border-2 border-[#f6bd60] bg-[#fff9e8] text-[#a95518] text-[12px] font-normal leading-[18px] flex items-center gap-2 shrink-0 whitespace-normal">
               <span className="w-4 h-4 rounded-full border-2 border-current inline-flex items-center justify-center text-[11px] leading-none shrink-0">!</span>
               <span className="min-w-0">
-                建议调整阶段内活动时长（当前 {col.minutes} 分钟，
-                <br />
-                超出阶段上限 {col.overflowMinutes} 分钟）
+                {t('lesson.overflowWarn', { current: col.minutes, limit: PHASE_DURATION_LIMIT, overflow: col.overflowMinutes })}
               </span>
             </div>
           )}
@@ -516,7 +516,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                     <div className="flex items-center gap-2 opacity-0 group-hover/insert:opacity-100 transition-opacity">
                       <div className="flex-1 h-px bg-gray-200" />
                       <Plus size={12} />
-                      <span className="text-[10px] font-medium">插入</span>
+                      <span className="text-[10px] font-medium">{t('lesson.insertStep')}</span>
                       <div className="flex-1 h-px bg-gray-200" />
                     </div>
                   </button>
@@ -559,19 +559,19 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                                   onClick={(e) => { e.stopPropagation(); handleRegenerateStep(col.id, item.id); }}
                                   className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors whitespace-nowrap"
                                 >
-                                  <RefreshCw size={13} className="text-gray-400" /> 重新生成
+                                  <RefreshCw size={13} className="text-gray-400" /> {t('common.regenerate')}
                                 </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); setOpenMenuStep(null); handleAddStep(col.id, index); }}
                                   className="w-full px-3 py-2 text-left text-[12px] text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors whitespace-nowrap"
                                 >
-                                  <Plus size={13} className="text-gray-400" /> 在此环节前添加新环节
+                                  <Plus size={13} className="text-gray-400" /> {t('lesson.insertBefore')}
                                 </button>
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleDeleteStep(col.id, item.id); }}
                                   className="w-full px-3 py-2 text-left text-[12px] text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors whitespace-nowrap"
                                 >
-                                  <Trash2 size={13} /> 删除
+                                  <Trash2 size={13} /> {t('common.delete')}
                                 </button>
                               </div>
                             )}
@@ -588,7 +588,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                           <div className="mb-4">
                             <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
                               <Target size={14} />
-                              <span className="text-xs font-bold">教学目标</span>
+                              <span className="text-xs font-bold">{t('lesson.stepGoal')}</span>
                             </div>
                             <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.goal)}</p>
                           </div>
@@ -598,18 +598,18 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                           <div className="mb-4">
                             <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
                               <FileText size={14} />
-                              <span className="text-xs font-bold">活动概述</span>
+                              <span className="text-xs font-bold">{t('lesson.activitySummary')}</span>
                             </div>
                             <p className="text-[12px] text-gray-600 pl-5 mb-2">{safeRender(item.activity)}</p>
                             <div className="pl-5 grid grid-cols-2 gap-4">
                               <div>
-                                <span className="text-[11px] font-bold text-gray-500 block mb-1">活动流程</span>
+                                <span className="text-[11px] font-bold text-gray-500 block mb-1">{t('lesson.activityFlow')}</span>
                                 <span className="text-[12px] text-gray-600">{safeRender(item.flow || item.activity)}</span>
                               </div>
                               <div>
-                                <span className="text-[11px] font-bold text-gray-500 block mb-1">教学资源</span>
+                                <span className="text-[11px] font-bold text-gray-500 block mb-1">{t('lesson.teachingResource')}</span>
                                 <span className="text-[12px] text-gray-600">
-                                  {item.resources || '暂无'}
+                                  {item.resources || t('common.none')}
                                 </span>
                               </div>
                             </div>
@@ -620,7 +620,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                           <div className="mb-4">
                             <div className="flex items-center gap-1.5 text-gray-500 mb-1.5">
                               <Compass size={14} />
-                              <span className="text-xs font-bold">情境创设</span>
+                              <span className="text-xs font-bold">{t('lesson.scenario')}</span>
                             </div>
                             <p className="text-[12px] text-gray-600 pl-5">{safeRender(item.scenario || item.teacherScript)}</p>
                           </div>
@@ -631,7 +631,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                             <span className="absolute right-2 bottom-[-10px] text-[70px] font-serif leading-none" style={{ color: `${col.color}15` }}>"</span>
                             <div className="flex items-center gap-1.5 mb-2" style={{ color: col.color }}>
                               <MessageSquare size={14} />
-                              <span className="text-xs font-bold">教师语言与引导</span>
+                              <span className="text-xs font-bold">{t('lesson.teacherScript')}</span>
                             </div>
                             <p className="text-[13px] relative z-10 font-bold" style={{ color: col.color }}>
                               {safeRender(item.teacherScript)}
@@ -644,19 +644,19 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                             onClick={() => openDetail(col.id, index, item)}
                             className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
                           >
-                            <BookOpen size={13} /> 详情
+                            <BookOpen size={13} /> {t('lesson.detail')}
                           </button>
                           <button
                             onClick={() => openEdit(col.id, index, item)}
                             className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
                           >
-                            <Edit3 size={13} /> 编辑
+                            <Edit3 size={13} /> {t('common.edit')}
                           </button>
                           <button
                             onClick={() => openAdjust(col.id, index, item)}
                             className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
                           >
-                            调整参数
+                            {t('lesson.adjustParams')}
                           </button>
                         </div>
                       </div>
@@ -669,9 +669,9 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                       className="w-full py-2.5 mt-1 border-[1.5px] border-dashed border-gray-200 text-gray-400 rounded-xl text-[12px] font-medium flex items-center justify-center gap-1 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {addingStepPhase === col.id ? (
-                        <><RefreshCw size={14} className="animate-spin" /> AI 生成中...</>
+                        <><RefreshCw size={14} className="animate-spin" /> {t('lesson.generating')}</>
                       ) : (
-                        <><Plus size={14} /> 添加环节</>
+                        <><Plus size={14} /> {t('lesson.addStep')}</>
                       )}
                     </button>
                   )}
@@ -689,38 +689,38 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
           <div className="modal-hd">
             <div className="modal-t pem-title-wrap">
               {phaseDetail.title}
-              <span className="pem-readonly-badge">只读说明</span>
+              <span className="pem-readonly-badge">{t('lesson.readonlyNote')}</span>
             </div>
-            <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label="关闭">×</button>
+            <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label={t('common.close')}>×</button>
           </div>
           <div className="modal-body">
             <div className="pem-wrap" style={{ '--pem-accent': phaseDetail.color }}>
               <div className="pem-summary">
-                <div className="pem-summary-label">阶段定位</div>
+                <div className="pem-summary-label">{t('lesson.phasePosition')}</div>
                 <div className="pem-summary-text">{phaseDetail.goal}</div>
               </div>
               <div className="pem-grid">
                 <div className="pem-section">
-                  <div className="pem-label">语言目标</div>
+                  <div className="pem-label">{t('lesson.languageGoal')}</div>
                   <div className="pem-content">{phaseDetail.lang}</div>
                 </div>
                 <div className="pem-section">
-                  <div className="pem-label">SEL 培养焦点</div>
+                  <div className="pem-label">{t('lesson.selFocus')}</div>
                   <div className="pem-content">{phaseDetail.sel}</div>
                 </div>
                 <div className="pem-section">
-                  <div className="pem-label">PERMA 幸福体验</div>
+                  <div className="pem-label">{t('lesson.permaFocus')}</div>
                   <div className="pem-content">{phaseDetail.perma}</div>
                 </div>
                 <div className="pem-section pem-section-narrative">
-                  <div className="pem-label">阶段情境叙事</div>
+                  <div className="pem-label">{t('lesson.phaseNarrative')}</div>
                   <div className="pem-content pem-narrative">{phaseDetail.narrative}</div>
                 </div>
               </div>
             </div>
           </div>
           <div className="modal-ft">
-            <button type="button" className="mo-btn-cancel" onClick={() => setPhaseDetail(null)}>关闭</button>
+            <button type="button" className="mo-btn-cancel" onClick={() => setPhaseDetail(null)}>{t('common.close')}</button>
           </div>
         </div>
       </div>
@@ -760,6 +760,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 };
 
 const LessonPlanPage = () => {
+  const { t } = useTranslation();
   const { courseId } = useParams();
   const { user } = useAuth();
   const { setTitle, setActions } = useCourseLayout();
@@ -823,7 +824,7 @@ const LessonPlanPage = () => {
     setActions(
       <>
         <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 已保存</>}
+          {isSaving ? <><Loader2 size={12} className="animate-spin" /> {t('common.saving')}</> : <><RefreshCw size={12} /> {t('common.saved')}</>}
         </span>
         <button
           onClick={handleSave}
@@ -831,7 +832,7 @@ const LessonPlanPage = () => {
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold border transition-colors text-white disabled:opacity-50"
           style={{ backgroundColor: '#4C5866' }}
         >
-          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />保存中</> : '保存'}
+          {isSaving ? <><Loader2 size={14} className="inline animate-spin mr-1" />{t('common.saving')}</> : t('common.save')}
         </button>
         <button
           onClick={handlePublish}
@@ -839,7 +840,7 @@ const LessonPlanPage = () => {
           className="px-5 py-1.5 rounded-lg text-[13px] font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           style={{ backgroundColor: colors.brand.DEFAULT }}
         >
-          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />发布中</> : '发布'}
+          {isPublishing ? <><Loader2 size={14} className="inline animate-spin mr-1" />{t('common.publishing')}</> : t('common.publish')}
         </button>
       </>
     );
@@ -851,7 +852,7 @@ const LessonPlanPage = () => {
       <div className="flex items-center justify-center h-full" style={{ backgroundColor: colors.neutral.bg.layout }}>
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-t-transparent rounded-full animate-spin mx-auto mb-4" style={{ borderColor: `${colors.brand.DEFAULT} transparent ${colors.brand.DEFAULT} ${colors.brand.DEFAULT}` }} />
-          <p style={{ color: colors.neutral.text[2] }}>加载中...</p>
+          <p style={{ color: colors.neutral.text[2] }}>{t('common.loading')}</p>
         </div>
       </div>
     );

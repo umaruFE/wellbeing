@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Row, Col, Button, Segmented, Tag, Progress } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
   Sparkles, Plus, Package, RefreshCw, Zap, ListTodo, Clock, Award, Users,
@@ -25,6 +26,7 @@ const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
 };
 
 const StatusTag = ({ status }) => {
+  const { t } = useTranslation();
   const isPublished = status === 'published';
   return (
     <Tag
@@ -41,7 +43,7 @@ const StatusTag = ({ status }) => {
       }}
     >
       {isPublished ? <CheckCircle size={12} /> : <FileText size={12} />}
-      <span>{isPublished ? '已发布' : '草稿'}</span>
+      <span>{isPublished ? t('course.published') : t('course.draft')}</span>
     </Tag>
   );
 };
@@ -100,7 +102,9 @@ const ImageCard = ({ image, onClick }) => (
   </div>
 );
 
-const VideoCard = ({ video }) => (
+const VideoCard = ({ video }) => {
+  const { t } = useTranslation();
+  return (
   <div className="video-card">
     <div className="video-card-body">
       <PlaceholderImg src={video.thumbnail} alt={video.title} className="video-card-thumbnail" icon={Video} />
@@ -134,7 +138,7 @@ const VideoCard = ({ video }) => (
             }}
           >
             <FileText size={12} />
-            <span>草稿</span>
+            <span>{t('course.draft')}</span>
           </Tag>
         )}
       </div>
@@ -144,7 +148,8 @@ const VideoCard = ({ video }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const audioColors = ['#bdddc2', '#ffd294', '#9ecaff', '#ff9a85', '#c29edf'];
 
@@ -182,13 +187,15 @@ const EmptyState = ({ icon: Icon, text }) => (
   </div>
 );
 
-const CreateSection = ({ onCreateCourse, navigate }) => (
+const CreateSection = ({ onCreateCourse, navigate }) => {
+  const { t } = useTranslation();
+  return (
   <div className="create-section">
     <div className="section-header">
       <div className="section-title-wrapper">
         <Sparkles size={18} />
         <div className="section-title title-4">
-          <span className="title-text">开始创作</span>
+          <span className="title-text">{t('dashboard.quickActions')}</span>
           <div className="title-decoration" />
           <div className="title-dots">
             <span className="dot-large" />
@@ -200,13 +207,13 @@ const CreateSection = ({ onCreateCourse, navigate }) => (
     <div className="create-section-content">
       <Button className="create-course-btn" onClick={onCreateCourse}>
         <Plus size={16} />
-        <span>创建新课程</span>
+        <span>{t('dashboard.createCourse')}</span>
       </Button>
       <div className="create-section-buttons">
         {[
-          { icon: Image, label: '创建图片', route: '/test/ip-scene' },
-          { icon: Video, label: '创建视频', route: '/test/video-generator' },
-          { icon: Music, label: '创建音频', route: '/test/audio-generator' },
+          { icon: Image, label: t('asset.generateImage'), route: '/test/ip-scene' },
+          { icon: Video, label: t('asset.generateVideo'), route: '/test/video-generator' },
+          { icon: Music, label: t('asset.generateAudio'), route: '/test/audio-generator' },
         ].map(({ icon: Icon, label, route }) => (
           <Button key={label} className="create-btn" onClick={() => navigate(route)}>
             <Icon size={16} />
@@ -216,9 +223,11 @@ const CreateSection = ({ onCreateCourse, navigate }) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const AssetSection = ({ stats, statsLoading }) => {
+  const { t } = useTranslation();
   const totalMediaCount = (stats.media?.images || 0) + (stats.media?.videos || 0) + (stats.media?.audios || 0);
   const computeUsage = stats.compute || { used: 0, total: 40000, remaining: 40000 };
   const remaining = computeUsage.total - computeUsage.used;
@@ -230,7 +239,7 @@ const AssetSection = ({ stats, statsLoading }) => {
         <div className="section-title-wrapper">
           <Package size={18} />
           <div className="section-title title-5">
-            <span className="title-text">素材与资产</span>
+            <span className="title-text">{t('dashboard.totalAssets')}</span>
             <div className="title-decoration" />
             <div className="title-dots">
               <span className="dot-large" />
@@ -240,19 +249,19 @@ const AssetSection = ({ stats, statsLoading }) => {
         </div>
         <Tag className="sync-tag">
           <RefreshCw size={12} className="animate-spin" />
-          <span>实时同步中</span>
+          <span>{t('dashboard.syncing')}</span>
         </Tag>
       </div>
       <div className="asset-content">
         <div className="asset-stats-row">
-          <span className="info-text">累计生成素材</span>
+          <span className="info-text">{t('dashboard.totalGenerated')}</span>
           <div className="stat-number-wrapper">
             {statsLoading ? (
               <Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} />
             ) : (
               <>
                 <span className="stat-number">{totalMediaCount}</span>
-                <span className="stat-label">个</span>
+                <span className="stat-label">{t('dashboard.unit')}</span>
               </>
             )}
           </div>
@@ -260,7 +269,7 @@ const AssetSection = ({ stats, statsLoading }) => {
         <div className="power-row">
           <div className="power-info">
             <Zap size={14} />
-            <span className="power-label">剩余算力</span>
+            <span className="power-label">{t('dashboard.remainingPower')}</span>
           </div>
           <div className="power-content">
             <span className="power-value">
@@ -281,13 +290,15 @@ const AssetSection = ({ stats, statsLoading }) => {
   );
 };
 
-const TaskSection = ({ stats, statsLoading }) => (
+const TaskSection = ({ stats, statsLoading }) => {
+  const { t } = useTranslation();
+  return (
   <div className="task-section">
     <div className="section-header">
       <div className="section-title-wrapper">
         <ListTodo size={18} />
         <div className="section-title title-6">
-          <span className="title-text">今日任务概览</span>
+          <span className="title-text">{t('dashboard.taskOverview')}</span>
           <div className="title-decoration" />
           <div className="title-dots">
             <span className="dot-large" />
@@ -298,44 +309,46 @@ const TaskSection = ({ stats, statsLoading }) => (
     </div>
     <div className="task-content">
       <div className="task-stats-row">
-        <span className="info-text">今日累计完成</span>
+        <span className="info-text">{t('dashboard.todayCompleted')}</span>
         <div className="stat-number-wrapper">
           {statsLoading ? (
             <Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} />
           ) : (
             <>
               <span className="stat-number">{stats.tasks?.completed || 0}</span>
-              <span className="stat-label">个</span>
+              <span className="stat-label">{t('dashboard.unit')}</span>
             </>
           )}
         </div>
       </div>
       <div className="task-cards-row">
         <div className="task-card task-card-running">
-          <span className="task-label">运行中</span>
+          <span className="task-label">{t('taskCenter.activeTasks')}</span>
           <span className="task-value">{statsLoading ? '-' : (stats.tasks?.running || 0)}</span>
         </div>
         <div className="task-card task-card-done">
-          <span className="task-label">已完成</span>
+          <span className="task-label">{t('taskCenter.completedTasks')}</span>
           <span className="task-value">{statsLoading ? '-' : (stats.tasks?.completed || 0)}</span>
         </div>
         <div className="task-card task-card-queue">
-          <span className="task-label">排队中</span>
+          <span className="task-label">{t('dashboard.queued')}</span>
           <span className="task-value">{statsLoading ? '-' : (stats.tasks?.queued || 0)}</span>
         </div>
       </div>
     </div>
   </div>
-);
+  );
+};
 
 const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesLoading, videos, videosLoading, audios, audiosLoading }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('courses');
 
   const tabs = [
-    { id: 'courses', icon: BookOpen, label: '课程' },
-    { id: 'images', icon: Image, label: '图片' },
-    { id: 'videos', icon: Video, label: '视频' },
-    { id: 'audio', icon: Music, label: '音频' },
+    { id: 'courses', icon: BookOpen, label: t('sidebar.courseGroup') },
+    { id: 'images', icon: Image, label: t('sidebar.imageLibrary') },
+    { id: 'videos', icon: Video, label: t('sidebar.videoLibrary') },
+    { id: 'audio', icon: Music, label: t('sidebar.audioLibrary') },
   ];
 
   const renderRow = (items, renderFn, rowSize) => {
@@ -349,20 +362,20 @@ const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesL
   const renderContent = () => {
     switch (activeTab) {
       case 'courses':
-        if (coursesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
-        if (!courses || courses.length === 0) return <EmptyState icon={FileText} text="暂无课程，点击上方按钮创建" />;
+        if (coursesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (!courses || courses.length === 0) return <EmptyState icon={FileText} text={t('dashboard.noCourses')} />;
         return renderRow(courses, course => <CourseCard key={course.id} course={course} onClick={() => onCourseClick(course.id)} />, 4);
       case 'images':
-        if (imagesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
-        if (!images || images.length === 0) return <EmptyState icon={Image} text="暂无图片素材" />;
+        if (imagesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (!images || images.length === 0) return <EmptyState icon={Image} text={t('dashboard.noImages')} />;
         return renderRow(images, image => <ImageCard key={image.id} image={image} onClick={() => {}} />, 4);
       case 'videos':
-        if (videosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
-        if (!videos || videos.length === 0) return <EmptyState icon={Video} text="暂无视频素材" />;
+        if (videosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (!videos || videos.length === 0) return <EmptyState icon={Video} text={t('dashboard.noVideos')} />;
         return renderRow(videos, video => <VideoCard key={video.id} video={video} />, 4);
       case 'audio':
-        if (audiosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">加载中...</span></div>;
-        if (!audios || audios.length === 0) return <EmptyState icon={Music} text="暂无音频素材" />;
+        if (audiosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (!audios || audios.length === 0) return <EmptyState icon={Music} text={t('dashboard.noAudios')} />;
         return renderRow(audios, (audio, idx) => <AudioCard key={audio.id} audio={audio} index={idx} />, 5);
       default:
         return null;
@@ -374,7 +387,7 @@ const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesL
       <div className="recent-header">
         <div className="recent-title-row">
           <div className="recent-title-wrapper title-4">
-            <span className="title">最近创建</span>
+            <span className="title">{t('dashboard.recentCourses')}</span>
             <div className="title-decoration" />
             <div className="title-dots">
               <span className="dot-large" />
@@ -404,7 +417,7 @@ const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesL
           />
         </div>
         <div className="recent-sort-btn">
-          <span>按更新时间</span>
+          <span>{t('dashboard.sortByUpdated')}</span>
           <ChevronsUpDown size={14} />
         </div>
       </div>
@@ -417,6 +430,7 @@ const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesL
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
@@ -457,7 +471,7 @@ export const AdminDashboard = () => {
       const list = result?.data || [];
       setCourses(list.map(course => ({
         id: course.id,
-        title: course.title || course.unit || '未命名课程',
+        title: course.title || course.unit || t('dashboard.unnamedCourse'),
         grade: course.age_group || '--',
         duration: course.duration ? `${course.duration}分钟` : '--',
         students: '--',
@@ -486,7 +500,7 @@ export const AdminDashboard = () => {
       setImages(list.map(img => ({
         id: img.id,
         url: img.image_url || img.imageUrl || img.url || img.preview_url || img.thumbnail_url || '',
-        title: img.name || img.title || img.prompt?.substring(0, 20) || '未命名图片',
+        title: img.name || img.title || img.prompt?.substring(0, 20) || t('dashboard.unnamedImage'),
         dimensions: img.width && img.height ? `${img.width} × ${img.height}` : '--',
         time: img.created_at
           ? new Date(img.created_at).toLocaleString('zh-CN', {
@@ -512,7 +526,7 @@ export const AdminDashboard = () => {
       setVideos(list.map(video => ({
         id: video.id,
         thumbnail: video.thumbnail_url || video.thumbnailUrl || video.thumbnail || video.cover_url || video.coverUrl || '',
-        title: video.name || video.title || '未命名视频',
+        title: video.name || video.title || t('dashboard.unnamedVideo'),
         duration: video.duration || '--:--',
         status: video.status || 'draft',
         time: video.created_at
@@ -537,7 +551,7 @@ export const AdminDashboard = () => {
       const list = (result?.data || result || []).slice(0, 10);
       setAudios(list.map(audio => ({
         id: audio.id,
-        title: audio.name || audio.title || '未命名音频',
+        title: audio.name || audio.title || t('dashboard.unnamedAudio'),
         duration: audio.duration || '--:--',
         time: audio.created_at
           ? new Date(audio.created_at).toLocaleString('zh-CN', {

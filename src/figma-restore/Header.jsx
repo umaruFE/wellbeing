@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Input, Dropdown, Drawer, Form, Modal, message } from 'antd';
 import { Search, BellOff, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TaskCenter } from './TaskCenter';
+import { LanguageSwitcher } from '../components/LanguageSwitcher';
 import './Header.css';
 
-export const Header = ({ title = '工作看板' }) => {
+export const Header = ({ title }) => {
+  const { t } = useTranslation();
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
@@ -16,15 +19,15 @@ export const Header = ({ title = '工作看板' }) => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const pageTitle = {
-    '/': '工作看板',
-    '/figma-courses': '课程管理',
-    '/ppt-images': '图片库',
-    '/voices': '音频库',
-    '/video-materials': '视频库',
-    '/knowledge-base': '教材资源',
-    '/accounts': '用户管理',
-    '/super-admin': '系统设置',
-  }[location.pathname] || title;
+    '/': t('header.dashboard'),
+    '/figma-courses': t('header.courseManage'),
+    '/ppt-images': t('header.imageLibrary'),
+    '/voices': t('header.audioLibrary'),
+    '/video-materials': t('header.videoLibrary'),
+    '/knowledge-base': t('header.materialResource'),
+    '/accounts': t('header.userManage'),
+    '/super-admin': t('header.systemSettings'),
+  }[location.pathname] || title || t('header.dashboard');
 
   const displayName = user?.name || user?.username || 'Admin';
 
@@ -91,14 +94,14 @@ export const Header = ({ title = '工作看板' }) => {
 
   const handleLogout = () => {
     logout();
-    message.success('已退出登录');
+    message.success(t('header.logout'));
     navigate('/login', { replace: true });
   };
   
   const menu = {
     items: [
-      { key: 'settings', label: '个人设置' },
-      { key: 'logout', label: '退出登录' },
+      { key: 'settings', label: t('header.profile') },
+      { key: 'logout', label: t('header.logout') },
     ],
     onClick: ({ key }) => {
       if (key === 'settings') openSettings();
@@ -116,7 +119,7 @@ export const Header = ({ title = '工作看板' }) => {
       <span className="breadcrumb-link">{pageTitle}</span>
       <div className="header-right">
         <Input
-          placeholder="搜索"
+          placeholder={t('common.search')}
           prefix={<Search size={14} />}
           style={{
             border: '2px solid #333e4e',
@@ -133,11 +136,12 @@ export const Header = ({ title = '工作看板' }) => {
         <div className="header-actions">
           <button className="task-button" onClick={handleTaskButtonClick}>
             <div className="task-dot" />
-            <span className="task-text">后台任务 {taskCount}</span>
+            <span className="task-text">{t('header.taskCenter')} {taskCount}</span>
           </button>
           <div className="bell-wrapper">
             <BellOff className="bell-icon" size={18} />
           </div>
+          <LanguageSwitcher />
           <Dropdown menu={menu} trigger={['click']}>
             <div className="user-wrapper">
               <div className="user-avatar" />
@@ -170,12 +174,12 @@ export const Header = ({ title = '工作看板' }) => {
       </Drawer>
 
       <Modal
-        title="修改密码"
+        title={t('header.profile')}
         open={settingsOpen}
         onCancel={() => setSettingsOpen(false)}
         onOk={handleSaveSettings}
-        okText="保存"
-        cancelText="取消"
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
         confirmLoading={savingSettings}
         width={460}
       >

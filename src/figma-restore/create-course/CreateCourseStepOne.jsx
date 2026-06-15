@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Checkbox, Form, Input, Radio, Select } from 'antd';
 import {
   ageOptions,
@@ -8,76 +9,77 @@ import {
 } from './createCourseOptions';
 
 export function CreateCourseStepOne() {
+  const { t } = useTranslation();
   return (
     <>
       <div className="fr-create-step-head">
         <div>
-          <div className="fr-create-step-title">设定课程起点 <span className="en">| Set the Course</span></div>
-          <div className="fr-create-step-subtitle">明确本节课的语言“工具箱”与学员画像。</div>
+          <div className="fr-create-step-title">{t('createCourse.step1Title')} <span className="en">| Set the Course</span></div>
+          <div className="fr-create-step-subtitle">{t('createCourse.step1Subtitle')}</div>
         </div>
       </div>
 
       <Form.Item
-        label={<span><span className="required">*</span>课程名称</span>}
+        label={<span><span className="required">*</span>{t('createCourse.courseNameLabel')}</span>}
         name="courseTitle"
-        rules={[{ required: true, message: '请输入课程名称' }]}
+        rules={[{ required: true, message: t('createCourse.courseNameRequired') }]}
         className="fr-create-form-item"
       >
-        <Input 
-          placeholder="请输入课程名称，如：动物主题英语课" 
+        <Input
+          placeholder={t('createCourse.courseNamePlaceholder')}
         />
       </Form.Item>
 
       <div className="fr-create-three">
-        <Form.Item 
-          label={<span><span className="required">*</span>学生年龄</span>} 
-          name="age" 
+        <Form.Item
+          label={<span><span className="required">*</span>{t('createCourse.ageLabel')}</span>}
+          name="age"
           rules={[{ required: true }]}
           className="fr-create-form-item"
         >
-          <Radio.Group 
-            optionType="button" 
+          <Radio.Group
+            optionType="button"
             buttonStyle="solid"
             className="fr-create-radio-group"
           >
-            {ageOptions.map(option => <Radio.Button key={option} value={option}>{option}</Radio.Button>)}
+            {ageOptions.map(option => <Radio.Button key={option.value} value={option.value}>{t(option.labelKey)}</Radio.Button>)}
           </Radio.Group>
         </Form.Item>
 
-        <Form.Item 
-          label={<span><span className="required">*</span>课程时长</span>} 
-          name="duration" 
+        <Form.Item
+          label={<span><span className="required">*</span>{t('createCourse.durationLabel')}</span>}
+          name="duration"
           rules={[{ required: true }]}
           className="fr-create-form-item"
         >
-          <Radio.Group 
-            optionType="button" 
+          <Radio.Group
+            optionType="button"
             buttonStyle="solid"
             className="fr-create-radio-group"
           >
-            {durationOptions.map(option => <Radio.Button key={option} value={option}>{option}</Radio.Button>)}
+            {durationOptions.map(option => <Radio.Button key={option.value} value={option.value}>{t(option.labelKey)}</Radio.Button>)}
           </Radio.Group>
         </Form.Item>
 
-        <Form.Item 
-          label={<span><span className="required">*</span>班级规模</span>} 
-          name="classSize" 
+        <Form.Item
+          label={<span><span className="required">*</span>{t('createCourse.classSizeLabel')}</span>}
+          name="classSize"
           rules={[{ required: true }]}
           className="fr-create-form-item"
         >
-          <Radio.Group 
-            optionType="button" 
+          <Radio.Group
+            optionType="button"
             buttonStyle="solid"
             className="fr-create-radio-group"
           >
-            {classSizeOptions.map(option => <Radio.Button key={option} value={option}>{option}</Radio.Button>)}
+            {classSizeOptions.map(option => <Radio.Button key={option.value} value={option.value}>{t(option.labelKey)}</Radio.Button>)}
           </Radio.Group>
         </Form.Item>
       </div>
 
       <div className="fr-create-two">
         <Form.Item
-          label={<span><span className="required">*</span>核心词汇</span>}
+          label={<span><span className="required">*</span>{t('createCourse.vocabLabel')}</span>}
           name="vocabularies"
           className="fr-create-form-item"
         >
@@ -86,13 +88,13 @@ export function CreateCourseStepOne() {
             tokenSeparators={[',', '，', '、']}
             open={false}
             suffixIcon={null}
-            placeholder="例如：happy, sad, angry, calm"
+            placeholder={t('createCourse.vocabPlaceholder')}
             className="fr-create-tag-select"
           />
         </Form.Item>
 
         <Form.Item
-          label={<span><span className="required">*</span>语法/句型</span>}
+          label={<span><span className="required">*</span>{t('createCourse.grammarLabel')}</span>}
           name="grammars"
           className="fr-create-form-item"
         >
@@ -101,19 +103,19 @@ export function CreateCourseStepOne() {
             tokenSeparators={[',', '，', '、']}
             open={false}
             suffixIcon={null}
-            placeholder="例如：I feel... because... / Can you...?"
+            placeholder={t('createCourse.grammarPlaceholder')}
             className="fr-create-tag-select"
           />
         </Form.Item>
       </div>
 
-      <Form.Item 
-        label={<span>语言能力培养侧重<span className="hint">(可多选)</span></span>} 
+      <Form.Item
+        label={<span>{t('createCourse.skillLabel')}<span className="hint">({t('createCourse.multiSelect')})</span></span>}
         name="languageSkills"
         className="fr-create-form-item"
       >
-        <Checkbox.Group 
-          options={languageSkillOptions}
+        <Checkbox.Group
+          options={languageSkillOptions.map(opt => ({ label: t(opt.labelKey), value: opt.value }))}
           className="fr-create-checkbox-group"
         />
       </Form.Item>

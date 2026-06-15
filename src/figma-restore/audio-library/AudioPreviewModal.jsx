@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Download, Pause, Play, X } from 'lucide-react';
 import { Button, Modal, Tag, message } from 'antd';
 
@@ -10,7 +11,7 @@ function formatMediaTime(value) {
   return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 }
 
-function WaveArt({ asset, playing, onToggle }) {
+function WaveArt({ asset, playing, onToggle, t }) {
   return (
     <div className={`fr-aud-wave tone-${asset.tone}`}>
       <Tag className="fr-aud-source-tag">{asset.source}</Tag>
@@ -19,7 +20,7 @@ function WaveArt({ asset, playing, onToggle }) {
           <span key={index} style={{ height: `${30 + ((index * 17) % 54)}px` }} />
         ))}
       </div>
-      <button className="fr-aud-play" type="button" onClick={onToggle} aria-label={playing ? '暂停' : '播放'}>
+      <button className="fr-aud-play" type="button" onClick={onToggle} aria-label={playing ? t('audioLib.pause') : t('audioLib.play')}>
         {playing ? <Pause size={30} fill="currentColor" /> : <Play size={34} fill="currentColor" />}
       </button>
       <span className="fr-aud-duration">{asset.duration}</span>
@@ -40,36 +41,37 @@ function InfoRows({ rows }) {
   );
 }
 
-function getAudioGenerationRows(asset) {
-  if (asset.type === 'BGM') {
+function getAudioGenerationRows(asset, t) {
+  if (asset.type === t('audioLib.typeBgm') || asset.type === 'BGM') {
     return [
-      ['音频类型', '情绪氛围BGM'],
-      ['情绪氛围', asset.info.style || '安静 / 温暖'],
-      ['音乐用途', asset.info.theme || '故事开场与任务过渡'],
-      ['输出规格', `${asset.duration} · ${asset.format}`],
+      [t('audioLib.audioTypeLabel'), t('audioLib.moodBgm')],
+      [t('audioLib.moodLabel'), asset.info.style || t('audioLib.moodDefault')],
+      [t('audioLib.musicUse'), asset.info.theme || t('audioLib.musicUseDefault')],
+      [t('audioLib.outputSpec'), `${asset.duration} · ${asset.format}`],
     ];
   }
 
-  if (asset.type === '歌曲') {
+  if (asset.type === t('audioLib.typeSong') || asset.type === '歌曲') {
     return [
-      ['音频类型', '教学歌曲'],
-      ['音色', '女声'],
-      ['语速', '正常'],
-      ['文本', asset.info.lyric || asset.info.theme || '课堂歌曲文本'],
+      [t('audioLib.audioTypeLabel'), t('audioLib.teachingSong')],
+      [t('audioLib.voice'), t('audioLib.femaleVoice')],
+      [t('audioLib.speed'), t('audioLib.normal')],
+      [t('audioLib.textContent'), asset.info.lyric || asset.info.theme || t('audioLib.songTextDefault')],
     ];
   }
 
   return [
-    ['音频类型', '跟读朗读'],
-    ['音色', '女声'],
-    ['语速', '正常'],
-    ['文本', asset.name.includes('Jump') ? '体能闯关口令与动作提示' : (asset.info.lyric || asset.info.theme || '课堂朗读文本')],
+    [t('audioLib.audioTypeLabel'), t('audioLib.readAloud')],
+    [t('audioLib.voice'), t('audioLib.femaleVoice')],
+    [t('audioLib.speed'), t('audioLib.normal')],
+    [t('audioLib.textContent'), asset.name.includes('Jump') ? t('audioLib.physicalCueText') : (asset.info.lyric || asset.info.theme || t('audioLib.readTextDefault'))],
   ];
 }
 
 export function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay, progress, onViewTask }) {
+  const { t } = useTranslation();
   if (!asset) return null;
-  const isAi = asset.source === 'AI生成';
+  const isAi = asset.source === t('audioLib.sourceAi') || asset.source === 'AI生成';
   const isCurrentAsset = progress.assetId === asset.id;
   const activeDuration = isCurrentAsset ? progress.duration : 0;
   const progressPercent = activeDuration > 0 ? Math.min((progress.current / activeDuration) * 100, 100) : 0;
@@ -98,7 +100,7 @@ export function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay,
     >
       <div className="fr-aud-preview-body">
         <div className="fr-aud-preview-player">
-          <WaveArt asset={asset} playing={playing} onToggle={onTogglePlay} />
+          <WaveArt asset={asset} playing={playing} onToggle={onTogglePlay} t={t} />
           <div className="fr-aud-progress">
             <div className="fr-aud-time-row"><span>{currentLabel}</span><span>{durationLabel}</span></div>
             <div className="fr-aud-track"><span style={{ width: `${progressPercent}%` }} /></div>
@@ -106,32 +108,32 @@ export function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay,
         </div>
         <aside className="fr-aud-preview-panel">
           <section>
-            <h3>基础信息</h3>
+            <h3>{t('imageLib.basicInfo')}</h3>
             <InfoRows rows={[
-              ['来源', asset.source],
-              ['格式', asset.format],
-              ['文件大小', asset.fileSize],
-              ['创建时间', asset.created],
-              ['时长', asset.duration],
+              [t('imageLib.source'), asset.source],
+              [t('imageLib.format'), asset.format],
+              [t('imageLib.fileSize'), asset.fileSize],
+              [t('course.createdAt'), asset.created],
+              [t('audioLib.duration'), asset.duration],
             ]} />
           </section>
           <section>
-            <h3>{isAi ? '生成信息' : '上传信息'}</h3>
-            <InfoRows rows={isAi ? getAudioGenerationRows(asset) : [
-              ['上传者', 'Admin'],
-              ['原文件名', `${asset.name}`],
-              ['文件大小', asset.fileSize],
+            <h3>{isAi ? t('imageLib.generationInfo') : t('imageLib.uploadInfo')}</h3>
+            <InfoRows rows={isAi ? getAudioGenerationRows(asset, t) : [
+              [t('imageLib.uploader'), 'Admin'],
+              [t('imageLib.originalFilename'), `${asset.name}`],
+              [t('imageLib.fileSize'), asset.fileSize],
             ]} />
           </section>
         </aside>
       </div>
       <div className="fr-aud-modal-footer">
         {onViewTask && (
-          <Button onClick={() => onViewTask(asset)}>查看生成任务</Button>
+          <Button onClick={() => onViewTask(asset)}>{t('imageLib.viewTask')}</Button>
         )}
-        <Button onClick={onClose}>关闭</Button>
-        <Button icon={<Download size={14} />} onClick={() => message.success('已开始下载音频')}>
-          下载
+        <Button onClick={onClose}>{t('common.close')}</Button>
+        <Button icon={<Download size={14} />} onClick={() => message.success(t('audioLib.downloadStarted'))}>
+          {t('common.download')}
         </Button>
       </div>
     </Modal>

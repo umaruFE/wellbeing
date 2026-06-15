@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Layout,
   BookOpen,
@@ -32,14 +33,14 @@ const colors = {
 };
 
 export const steps = [
-  { id: 1, label: '课程概览', icon: Layout },
-  { id: 2, label: '教案设计', icon: BookOpen },
-  { id: 3, label: 'PPT课件', icon: FileCheck },
-  // { id: 4, label: '阅读材料', icon: MessageSquare },
+  { id: 1, labelKey: 'course.overview', icon: Layout },
+  { id: 2, labelKey: 'course.lessonPlan', icon: BookOpen },
+  { id: 3, labelKey: 'course.courseware', icon: FileCheck },
+  // { id: 4, labelKey: 'course.readingMaterial', icon: MessageSquare },
 ];
 
 // 步骤导航项组件
-const StepItem = ({ step, isActive, isCompleted, onClick }) => {
+const StepItem = ({ step, isActive, isCompleted, onClick, label }) => {
   const Icon = step.icon;
   return (
     <button onClick={() => onClick(step.id)} className="flex items-center gap-2 cursor-pointer">
@@ -57,7 +58,7 @@ const StepItem = ({ step, isActive, isCompleted, onClick }) => {
         className="text-[13px] font-bold tracking-wide"
         style={{ color: isActive || isCompleted ? colors.neutral.text[1] : colors.neutral.text.disabled }}
       >
-        {step.label}
+        {label}
       </span>
     </button>
   );
@@ -79,6 +80,7 @@ export const CourseStepNavigation = ({
   actions
 }) => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleStepClick = (stepId) => {
     if (!courseId || stepId === currentStep) return;
@@ -117,6 +119,7 @@ export const CourseStepNavigation = ({
               isActive={currentStep === step.id}
               isCompleted={step.id < currentStep}
               onClick={handleStepClick}
+              label={t(step.labelKey)}
             />
             {index < steps.length - 1 && (
               <div className="w-10 h-px mx-3" style={{ backgroundColor: colors.neutral.border.secondary }}></div>

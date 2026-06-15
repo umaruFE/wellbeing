@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
   ChevronRight,
@@ -13,43 +14,6 @@ import {
   Video,
 } from 'lucide-react';
 import './Sidebar.css';
-
-const menuItems = [
-  {
-    type: 'item',
-    id: 'dashboard',
-    label: '工作看板',
-    icon: LayoutDashboard,
-    path: '/',
-    end: true,
-  },
-  {
-    type: 'group',
-    title: '课程',
-    items: [
-      { id: 'course-manage', label: '课程管理', icon: BookOpen, path: '/figma-courses' },
-      { id: 'course-plaza', label: '课程广场', icon: Compass, path: '/course-square' },
-    ],
-  },
-  {
-    type: 'group',
-    title: '素材库',
-    items: [
-      { id: 'image-library', label: '图片库', icon: Image, path: '/ppt-images' },
-      { id: 'audio-library', label: '音频库', icon: Music, path: '/voices' },
-      { id: 'video-library', label: '视频库', icon: Video, path: '/video-materials' },
-      { id: 'material', label: '教材资源', icon: FileText, path: '/knowledge-base' },
-    ],
-  },
-  {
-    type: 'group',
-    title: '系统管理',
-    items: [
-      { id: 'user-manage', label: '用户管理', icon: Users, path: '/accounts' },
-      { id: 'settings', label: '系统设置', icon: Settings, path: '/super-admin' },
-    ],
-  },
-];
 
 const MenuLink = ({ item, className, iconClassName, textClassName }) => {
   const IconComponent = item.icon;
@@ -67,6 +31,45 @@ const MenuLink = ({ item, className, iconClassName, textClassName }) => {
 };
 
 export const Sidebar = () => {
+  const { t } = useTranslation();
+
+  const menuItems = [
+    {
+      type: 'item',
+      id: 'dashboard',
+      label: t('sidebar.dashboard'),
+      icon: LayoutDashboard,
+      path: '/',
+      end: true,
+    },
+    {
+      type: 'group',
+      title: t('sidebar.courseGroup'),
+      items: [
+        { id: 'course-manage', label: t('sidebar.courseManage'), icon: BookOpen, path: '/figma-courses' },
+        { id: 'course-plaza', label: t('sidebar.courseSquare'), icon: Compass, path: '/course-square' },
+      ],
+    },
+    {
+      type: 'group',
+      title: t('sidebar.assetGroup'),
+      items: [
+        { id: 'image-library', label: t('sidebar.imageLibrary'), icon: Image, path: '/ppt-images' },
+        { id: 'audio-library', label: t('sidebar.audioLibrary'), icon: Music, path: '/voices' },
+        { id: 'video-library', label: t('sidebar.videoLibrary'), icon: Video, path: '/video-materials' },
+        { id: 'material', label: t('sidebar.materialResource'), icon: FileText, path: '/knowledge-base' },
+      ],
+    },
+    {
+      type: 'group',
+      title: t('sidebar.systemGroup'),
+      items: [
+        { id: 'user-manage', label: t('sidebar.userManage'), icon: Users, path: '/accounts' },
+        { id: 'settings', label: t('sidebar.systemSettings'), icon: Settings, path: '/super-admin' },
+      ],
+    },
+  ];
+
   return (
     <div className="sidebar">
       <div className="sidebar-header">
@@ -74,7 +77,7 @@ export const Sidebar = () => {
           <div className="logo-icon">
             <ChevronRight size={16} />
           </div>
-          <span className="logo-text">CourseGen AI</span>
+          <span className="logo-text">{t('common.appName')}</span>
         </div>
         <div className="sidebar-menu">
           {menuItems.map((item) => {

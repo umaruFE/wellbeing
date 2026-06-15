@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Edit,
@@ -12,6 +13,7 @@ import apiService from '../../../services/api';
 import uploadService from '../../../services/uploadService';
 
 export const PptImageManagement = () => {
+  const { t } = useTranslation();
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState({});
   const [pptImages, setPptImages] = useState([]);
@@ -19,7 +21,6 @@ export const PptImageManagement = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // 从 API 获取数据
   useEffect(() => {
     const fetchImages = async () => {
       try {
@@ -27,7 +28,7 @@ export const PptImageManagement = () => {
         const result = await apiService.getPptImages();
         setPptImages(result.data || []);
       } catch (err) {
-        console.error('获取PPT图片失败:', err);
+        console.error('fetch ppt images failed:', err);
         setPptImages([]);
       } finally {
         setLoading(false);
@@ -36,13 +37,11 @@ export const PptImageManagement = () => {
     fetchImages();
   }, []);
 
-  // 打开模态框
   const openModal = (type, data = {}) => {
     setModalType(type);
     setModalData(data);
   };
 
-  // 关闭模态框
   const closeModal = () => {
     if (modalData.previewUrl) {
       URL.revokeObjectURL(modalData.previewUrl);
@@ -54,26 +53,22 @@ export const PptImageManagement = () => {
     }
   };
 
-  // 处理文件选择
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 验证文件
       const validation = uploadService.validateFile(file);
       if (!validation.valid) {
         alert(validation.error);
         return;
       }
-      // 生成本地预览 URL 用于回显
       const previewUrl = URL.createObjectURL(file);
       setModalData({ ...modalData, file, previewUrl });
     }
   };
 
-  // 新增图片
   const handleAdd = async () => {
     if (!modalData.file && !modalData.imageUrl) {
-      alert('请选择要上传的图片');
+      alert(t('pptImage.selectImage'));
       return;
     }
 
@@ -82,22 +77,20 @@ export const PptImageManagement = () => {
 
       let imageUrl = modalData.imageUrl;
 
-      // 如果有文件，先上传到 OSS
       if (modalData.file) {
         const uploadResult = await uploadService.uploadFile(modalData.file, 'ppt-images');
         if (!uploadResult.success) {
-          alert(uploadResult.error || '上传失败');
+          alert(uploadResult.error || t('common.uploadFailed'));
           setUploading(false);
           return;
         }
         imageUrl = uploadResult.url;
       }
 
-      // 调用 API 保存
       const result = await apiService.createPptImage({
-        name: modalData.name || modalData.file?.name || '新图片',
+        name: modalData.name || modalData.file?.name || t('pptImage.newImage'),
         imageUrl,
-        tags: modalData.tags?.split(',').map(t => t.trim()) || []
+        tags: modalData.tags?.split(',').map(s => s.trim()) || []
       });
 
       if (result.data) {
@@ -106,23 +99,19 @@ export const PptImageManagement = () => {
 
       closeModal();
     } catch (err) {
-      console.error('新增图片失败:', err);
-      alert('保存失败');
+      console.error('add image failed:', err);
+      alert(t('common.saveFailed'));
     } finally {
       setUploading(false);
     }
   };
 
-  // 编辑图片
   const handleEdit = async () => {
-    // TODO: 实现编辑功能
     console.log('Edit:', modalData);
     closeModal();
   };
 
-  // 删除图片
   const handleDelete = async () => {
-    // TODO: 实现删除功能
     console.log('Delete:', modalData);
     closeModal();
   };
@@ -132,7 +121,7 @@ export const PptImageManagement = () => {
       <div className="h-full flex items-center justify-center bg-surface">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-primary-muted">加载中...</p>
+          <p className="text-primary-muted">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -144,15 +133,15 @@ export const PptImageManagement = () => {
       <div className="bg-surface border-b-2 border-stroke-light px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-primary">PPT风格图片</h2>
-            <p className="text-sm text-primary-muted mt-1">管理课件背景、边框、插画等视觉素材</p>
+            <h2 className="text-xl font-bold text-primary">{t('pptImage.title')}</h2>
+            <p className="text-sm text-primary-muted mt-1">{t('pptImage.subtitle')}</p>
           </div>
           <button
             onClick={() => openModal('add')}
             className="px-4 py-2 border-2 border-primary rounded-xl hover:bg-warning-light hover:text-dark flex items-center gap-2 transition-all duration-200 font-medium shadow-neo"
           >
             <Upload className="w-4 h-4" />
-            上传图片
+            {t('pptImage.uploadImage')}
           </button>
         </div>
       </div>
@@ -212,7 +201,7 @@ export const PptImageManagement = () => {
         {pptImages.length === 0 && (
           <div className="text-center py-12">
             <Image className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
-            <p className="text-primary-muted">暂无图片</p>
+            <p className="text-primary-muted">{t('pptImage.noImages')}</p>
           </div>
         )}
       </div>
@@ -224,9 +213,9 @@ export const PptImageManagement = () => {
             {/* 头部 */}
             <div className="flex items-center justify-between px-6 py-4 border-b-2 border-stroke-light">
               <h3 className="text-lg font-semibold text-primary">
-                {modalType === 'add' && '上传图片'}
-                {modalType === 'edit' && '编辑图片'}
-                {modalType === 'delete' && '确认删除'}
+                {modalType === 'add' && t('pptImage.uploadImage')}
+                {modalType === 'edit' && t('pptImage.editImage')}
+                {modalType === 'delete' && t('common.confirmDelete')}
               </h3>
               <button onClick={closeModal} className="p-1 hover:bg-surface-alt rounded-lg">
                 <X className="w-5 h-5 text-primary-placeholder" />
@@ -240,7 +229,7 @@ export const PptImageManagement = () => {
                   <div className="w-12 h-12 bg-error-light rounded-full flex items-center justify-center mx-auto mb-4">
                     <Trash2 className="w-6 h-6 text-error" />
                   </div>
-                  <p className="text-primary-secondary mb-2">确定要删除以下图片吗？</p>
+                  <p className="text-primary-secondary mb-2">{t('pptImage.confirmDeleteMsg')}</p>
                   <p className="font-medium text-primary">{modalData.name}</p>
                 </div>
               ) : (
@@ -254,7 +243,7 @@ export const PptImageManagement = () => {
                       <div className="w-full aspect-video flex items-center justify-center bg-surface-alt rounded-lg overflow-hidden">
                         <img
                           src={modalData.previewUrl}
-                          alt="预览"
+                          alt={t('common.preview')}
                           className="max-w-full max-h-full object-contain"
                         />
                       </div>
@@ -265,8 +254,8 @@ export const PptImageManagement = () => {
                         <div className="w-16 h-16 bg-surface-alt rounded-full flex items-center justify-center mx-auto mb-3">
                           <Upload className="w-8 h-8 text-primary-placeholder" />
                         </div>
-                        <p className="text-sm text-primary-secondary mb-1">点击或拖拽上传图片</p>
-                        <p className="text-xs text-primary-placeholder">支持 PNG、JPG 格式，最大 10MB</p>
+                        <p className="text-sm text-primary-secondary mb-1">{t('pptImage.clickOrDrag')}</p>
+                        <p className="text-xs text-primary-placeholder">{t('pptImage.fileHint')}</p>
                       </>
                     )}
                     <input
@@ -279,24 +268,24 @@ export const PptImageManagement = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-primary-secondary mb-1">图片名称</label>
+                    <label className="block text-sm font-medium text-primary-secondary mb-1">{t('pptImage.imageName')}</label>
                     <input
                       type="text"
                       value={modalData.name || modalData.file?.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                      placeholder="请输入图片名称"
+                      placeholder={t('pptImage.namePlaceholder')}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-primary-secondary mb-1">标签（逗号分隔）</label>
+                    <label className="block text-sm font-medium text-primary-secondary mb-1">{t('pptImage.tagsLabel')}</label>
                     <input
                       type="text"
                       value={modalData.tags || (Array.isArray(modalData.tags) ? modalData.tags.join(',') : '')}
                       onChange={(e) => setModalData({ ...modalData, tags: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                      placeholder="如：动物, 可爱, 彩色"
+                      placeholder={t('pptImage.tagsPlaceholder')}
                     />
                   </div>
                 </div>
@@ -310,7 +299,7 @@ export const PptImageManagement = () => {
                 className="px-4 py-2 text-dark border-2 border-stroke-light rounded-xl hover:bg-warning-light hover:border-primary transition-all duration-200 font-medium"
                 disabled={uploading}
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -328,12 +317,12 @@ export const PptImageManagement = () => {
                 {uploading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    上传中...
+                    {t('common.uploading')}
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    {modalType === 'delete' ? '确认删除' : '保存'}
+                    {modalType === 'delete' ? t('common.confirmDelete') : t('common.save')}
                   </>
                 )}
               </button>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Edit,
@@ -12,6 +13,7 @@ import apiService from '../../services/api';
 import uploadService from '../../services/uploadService';
 
 export const IpCharacterManagement = () => {
+  const { t } = useTranslation();
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState({});
   const [ipCharacters, setIpCharacters] = useState([]);
@@ -19,10 +21,18 @@ export const IpCharacterManagement = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const genderOptions = ['男', '女', '动物'];
-  const styleOptions = ['教师', '学生', '吉祥物', '其他'];
+  const genderOptions = [
+    { value: 'male', label: t('ipCharacter.male'), emoji: '👨' },
+    { value: 'female', label: t('ipCharacter.female'), emoji: '👩' },
+    { value: 'animal', label: t('ipCharacter.animal'), emoji: '🐾' },
+  ];
+  const styleOptions = [
+    { value: 'teacher', label: t('ipCharacter.teacher') },
+    { value: 'student', label: t('ipCharacter.student') },
+    { value: 'mascot', label: t('ipCharacter.mascot') },
+    { value: 'other', label: t('ipCharacter.otherStyle') },
+  ];
 
-  // 从 API 获取数据
   useEffect(() => {
     const fetchCharacters = async () => {
       try {
@@ -30,7 +40,7 @@ export const IpCharacterManagement = () => {
         const result = await apiService.getIpCharacters();
         setIpCharacters(result.data || []);
       } catch (err) {
-        console.error('获取IP人物失败:', err);
+        console.error('fetch ip characters failed:', err);
         setIpCharacters([]);
       } finally {
         setLoading(false);
@@ -39,13 +49,11 @@ export const IpCharacterManagement = () => {
     fetchCharacters();
   }, []);
 
-  // 打开模态框
   const openModal = (type, data = {}) => {
     setModalType(type);
     setModalData(data);
   };
 
-  // 关闭模态框
   const closeModal = () => {
     setModalType(null);
     setModalData({});
@@ -54,7 +62,6 @@ export const IpCharacterManagement = () => {
     }
   };
 
-  // 处理文件选择
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -67,10 +74,9 @@ export const IpCharacterManagement = () => {
     }
   };
 
-  // 新增人物
   const handleAdd = async () => {
     if (!modalData.file && !modalData.imageUrl) {
-      alert('请选择要上传的头像图片');
+      alert(t('ipCharacter.selectAvatar'));
       return;
     }
 
@@ -79,22 +85,20 @@ export const IpCharacterManagement = () => {
 
       let imageUrl = modalData.imageUrl;
 
-      // 如果有文件，先上传到 OSS
       if (modalData.file) {
         const uploadResult = await uploadService.uploadFile(modalData.file, 'ip-characters');
         if (!uploadResult.success) {
-          alert(uploadResult.error || '上传失败');
+          alert(uploadResult.error || t('common.uploadFailed'));
           setUploading(false);
           return;
         }
         imageUrl = uploadResult.url;
       }
 
-      // 调用 API 保存
       const result = await apiService.createIpCharacter({
-        name: modalData.name || '新人物',
-        gender: modalData.gender || '女',
-        style: modalData.style || '教师',
+        name: modalData.name || t('ipCharacter.newCharacter'),
+        gender: modalData.gender || 'female',
+        style: modalData.style || 'teacher',
         description: modalData.description || '',
         imageUrl
       });
@@ -105,25 +109,33 @@ export const IpCharacterManagement = () => {
 
       closeModal();
     } catch (err) {
-      console.error('新增人物失败:', err);
-      alert('保存失败');
+      console.error('add character failed:', err);
+      alert(t('common.saveFailed'));
     } finally {
       setUploading(false);
     }
   };
 
-  // 编辑人物
   const handleEdit = async () => {
-    // TODO: 实现编辑功能
     console.log('Edit:', modalData);
     closeModal();
   };
 
-  // 删除人物
   const handleDelete = async () => {
-    // TODO: 实现删除功能
     console.log('Delete:', modalData);
     closeModal();
+  };
+
+  const getGenderEmoji = (gender) => {
+    if (gender === 'female' || gender === '女') return '👩';
+    if (gender === 'male' || gender === '男') return '👨';
+    return '🐾';
+  };
+
+  const getGenderLabel = (gender) => {
+    if (gender === 'female' || gender === '女') return t('ipCharacter.female');
+    if (gender === 'male' || gender === '男') return t('ipCharacter.male');
+    return t('ipCharacter.animal');
   };
 
   if (loading) {
@@ -131,7 +143,7 @@ export const IpCharacterManagement = () => {
       <div className="h-full flex items-center justify-center bg-surface">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-primary-muted">加载中...</p>
+          <p className="text-primary-muted">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -143,15 +155,15 @@ export const IpCharacterManagement = () => {
       <div className="bg-surface border-b-2 border-stroke-light px-6 py-4 shrink-0">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-primary">IP人物</h2>
-            <p className="text-sm text-primary-muted mt-1">管理课程中使用的虚拟人物形象</p>
+            <h2 className="text-xl font-bold text-primary">{t('ipCharacter.title')}</h2>
+            <p className="text-sm text-primary-muted mt-1">{t('ipCharacter.subtitle')}</p>
           </div>
           <button
             onClick={() => openModal('add')}
             className="px-4 py-2 bg-dark text-white border-2 border-primary rounded-xl hover:bg-warning-light hover:text-dark flex items-center gap-2 transition-all duration-200 font-medium shadow-neo"
           >
             <Plus className="w-4 h-4" />
-            新增人物
+            {t('ipCharacter.addCharacter')}
           </button>
         </div>
       </div>
@@ -203,7 +215,7 @@ export const IpCharacterManagement = () => {
                 {/* 性别标签 */}
                 <div className="flex items-center gap-2 text-xs text-primary-placeholder">
                   <span className="px-2 py-0.5 bg-surface border border-stroke-light rounded">
-                    {char.gender === '女' ? '👩' : char.gender === '男' ? '👨' : '🐾'} {char.gender}
+                    {getGenderEmoji(char.gender)} {getGenderLabel(char.gender)}
                   </span>
                 </div>
               </div>
@@ -214,7 +226,7 @@ export const IpCharacterManagement = () => {
         {ipCharacters.length === 0 && (
           <div className="text-center py-12">
             <User className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
-            <p className="text-primary-muted">暂无人物</p>
+            <p className="text-primary-muted">{t('ipCharacter.noCharacters')}</p>
           </div>
         )}
       </div>
@@ -226,9 +238,9 @@ export const IpCharacterManagement = () => {
             {/* 头部 */}
             <div className="flex items-center justify-between px-6 py-4 border-b-2 border-stroke-light">
               <h3 className="text-lg font-semibold text-primary">
-                {modalType === 'add' && '新增人物'}
-                {modalType === 'edit' && '编辑人物'}
-                {modalType === 'delete' && '确认删除'}
+                {modalType === 'add' && t('ipCharacter.addCharacter')}
+                {modalType === 'edit' && t('ipCharacter.editCharacter')}
+                {modalType === 'delete' && t('common.confirmDelete')}
               </h3>
               <button onClick={closeModal} className="p-1 hover:bg-surface-alt rounded-lg">
                 <X className="w-5 h-5 text-primary-placeholder" />
@@ -242,7 +254,7 @@ export const IpCharacterManagement = () => {
                   <div className="w-16 h-16 bg-error-light rounded-full flex items-center justify-center mx-auto mb-4">
                     <User className="w-8 h-8 text-error" />
                   </div>
-                  <p className="text-primary-secondary mb-2">确定要删除以下人物吗？</p>
+                  <p className="text-primary-secondary mb-2">{t('ipCharacter.confirmDeleteMsg')}</p>
                   <p className="font-medium text-primary text-lg">{modalData.name}</p>
                 </div>
               ) : (
@@ -264,7 +276,7 @@ export const IpCharacterManagement = () => {
                         <User className="w-10 h-10 text-info-icon" />
                       </div>
                     )}
-                    <p className="text-xs text-primary-muted">点击上传头像图片</p>
+                    <p className="text-xs text-primary-muted">{t('ipCharacter.clickToUpload')}</p>
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -275,53 +287,53 @@ export const IpCharacterManagement = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-primary-secondary mb-1">人物名称</label>
+                    <label className="block text-sm font-medium text-primary-secondary mb-1">{t('ipCharacter.characterName')}</label>
                     <input
                       type="text"
                       value={modalData.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                      placeholder="请输入人物名称"
+                      placeholder={t('ipCharacter.namePlaceholder')}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-primary-secondary mb-1">性别</label>
+                      <label className="block text-sm font-medium text-primary-secondary mb-1">{t('ipCharacter.gender')}</label>
                       <select
-                        value={modalData.gender || '女'}
+                        value={modalData.gender || 'female'}
                         onChange={(e) => setModalData({ ...modalData, gender: e.target.value })}
                         className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
                       >
                         {genderOptions.map(opt => (
-                          <option key={opt} value={opt}>
-                            {opt === '女' ? '👩' : opt === '男' ? '👨' : '🐾'} {opt}
+                          <option key={opt.value} value={opt.value}>
+                            {opt.emoji} {opt.label}
                           </option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-primary-secondary mb-1">类型</label>
+                      <label className="block text-sm font-medium text-primary-secondary mb-1">{t('ipCharacter.type')}</label>
                       <select
-                        value={modalData.style || '教师'}
+                        value={modalData.style || 'teacher'}
                         onChange={(e) => setModalData({ ...modalData, style: e.target.value })}
                         className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
                       >
                         {styleOptions.map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
                         ))}
                       </select>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-primary-secondary mb-1">描述</label>
+                    <label className="block text-sm font-medium text-primary-secondary mb-1">{t('common.description')}</label>
                     <textarea
                       value={modalData.description || ''}
                       onChange={(e) => setModalData({ ...modalData, description: e.target.value })}
                       className="w-full px-3 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none"
                       rows={3}
-                      placeholder="请输入人物描述"
+                      placeholder={t('ipCharacter.descPlaceholder')}
                     />
                   </div>
                 </div>
@@ -335,7 +347,7 @@ export const IpCharacterManagement = () => {
                 className="px-4 py-2 text-dark border-2 border-stroke-light rounded-xl hover:bg-warning-light hover:border-primary transition-all duration-200 font-medium"
                 disabled={uploading}
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -353,12 +365,12 @@ export const IpCharacterManagement = () => {
                 {uploading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    上传中...
+                    {t('common.uploading')}
                   </>
                 ) : (
                   <>
                     <Check className="w-4 h-4" />
-                    {modalType === 'delete' ? '确认删除' : '保存'}
+                    {modalType === 'delete' ? t('common.confirmDelete') : t('common.save')}
                   </>
                 )}
               </button>

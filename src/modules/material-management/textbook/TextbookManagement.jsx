@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
   Search,
@@ -17,6 +18,7 @@ import {
 import apiService from '../../../services/api';
 
 export const TextbookManagement = () => {
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedItems, setExpandedItems] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -37,8 +39,7 @@ export const TextbookManagement = () => {
         setError(null);
       } catch (err) {
         console.error('获取教材列表失败:', err);
-        setError('加载教材失败');
-        // 如果 API 失败，使用空数组
+        setError(t('textbook.loadFailed'));
         setTextbooks([]);
       } finally {
         setLoading(false);
@@ -77,7 +78,7 @@ export const TextbookManagement = () => {
   const handleAdd = async () => {
     try {
       const result = await apiService.createTextbookType({
-        name: modalData.name || '新教材',
+        name: modalData.name || t('textbook.newTextbook'),
         description: modalData.type || ''
       });
       if (result.data) {
@@ -89,7 +90,7 @@ export const TextbookManagement = () => {
       closeModal();
     } catch (err) {
       console.error('新增教材失败:', err);
-      alert('新增失败');
+      alert(t('textbook.addFailed'));
     }
   };
 
@@ -99,8 +100,8 @@ export const TextbookManagement = () => {
       const result = await apiService.createTextbookUnit({
         action: 'grade',
         textbookTypeId: selectedItem.id,
-        name: modalData.name || modalData.grade || '新年级',
-        grade: modalData.grade || modalData.name || '新年级'
+        name: modalData.name || modalData.grade || t('textbook.newGrade'),
+        grade: modalData.grade || modalData.name || t('textbook.newGrade')
       });
       // 重新获取数据
       const allResult = await apiService.getTextbooks();
@@ -108,7 +109,7 @@ export const TextbookManagement = () => {
       closeModal();
     } catch (err) {
       console.error('新增年级失败:', err);
-      alert('新增失败');
+      alert(t('textbook.addFailed'));
     }
   };
 
@@ -119,7 +120,7 @@ export const TextbookManagement = () => {
         action: 'unit',
         textbookTypeId: selectedItem.textbook_type_id || selectedItem.id,
         gradeId: selectedItem.id,
-        name: modalData.name || '新单元',
+        name: modalData.name || t('textbook.newUnit'),
         unitCode: modalData.unit || '',
         keywords: modalData.keywords?.split(',').map(k => k.trim()) || []
       });
@@ -129,7 +130,7 @@ export const TextbookManagement = () => {
       closeModal();
     } catch (err) {
       console.error('新增单元失败:', err);
-      alert('新增失败');
+      alert(t('textbook.addFailed'));
     }
   };
 
@@ -232,7 +233,7 @@ export const TextbookManagement = () => {
       <div className="h-full flex items-center justify-center bg-surface">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-primary-muted">加载中...</p>
+          <p className="text-primary-muted">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -250,7 +251,7 @@ export const TextbookManagement = () => {
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="搜索教材、年级、单元..."
+              placeholder={t('textbook.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none text-sm transition-all duration-200"
             />
           </div>
@@ -268,7 +269,7 @@ export const TextbookManagement = () => {
             className="w-full px-4 py-2 border-2 border-primary rounded-xl hover:bg-warning-light hover:text-dark flex items-center justify-center gap-2 transition-all duration-200 font-medium shadow-neo"
           >
             <Plus className="w-4 h-4" />
-            新增教材
+            {t('textbook.addTextbook')}
           </button>
         </div>
       </div>
@@ -282,7 +283,7 @@ export const TextbookManagement = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2 text-sm text-primary-muted mb-1">
-                    <span>{selectedItem.type || selectedItem.grade || '教材'}</span>
+                    <span>{selectedItem.type || selectedItem.grade || t('textbook.textbookLabel')}</span>
                     {selectedItem.grade && (
                       <>
                         <ChevronRight className="w-4 h-4" />
@@ -304,7 +305,7 @@ export const TextbookManagement = () => {
                     className="px-3 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                   >
                     <Edit className="w-4 h-4" />
-                    编辑
+                    {t('common.edit')}
                   </button>
                   {selectedLevel === 0 && (
                     <button
@@ -312,7 +313,7 @@ export const TextbookManagement = () => {
                       className="px-3 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                     >
                       <Plus className="w-4 h-4" />
-                      新增年级
+                      {t('textbook.addGrade')}
                     </button>
                   )}
                   {selectedLevel === 1 && (
@@ -321,7 +322,7 @@ export const TextbookManagement = () => {
                       className="px-3 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                     >
                       <Plus className="w-4 h-4" />
-                      新增单元
+                      {t('textbook.addUnit')}
                     </button>
                   )}
                   <button
@@ -329,7 +330,7 @@ export const TextbookManagement = () => {
                     className="px-3 py-2 border-2 border-error-border text-error rounded-xl hover:bg-error-light hover:border-error flex items-center gap-2 text-sm transition-all duration-200 font-medium"
                   >
                     <Trash2 className="w-4 h-4" />
-                    删除
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -342,34 +343,34 @@ export const TextbookManagement = () => {
                 <div className="bg-surface rounded-[24px] border-2 border-stroke-light p-5 transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1">
                   <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
                     <Book className="w-5 h-5 text-info" />
-                    基础信息
+                    {t('textbook.basicInfo')}
                   </h3>
                   <div className="space-y-3">
                     <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                      <span className="text-primary-muted">名称</span>
+                      <span className="text-primary-muted">{t('textbook.name')}</span>
                       <span className="text-primary font-medium">{selectedItem.name}</span>
                     </div>
                     {selectedItem.type && (
                       <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                        <span className="text-primary-muted">教材类型</span>
+                        <span className="text-primary-muted">{t('textbook.type')}</span>
                         <span className="text-primary font-medium">{selectedItem.type}</span>
                       </div>
                     )}
                     {selectedItem.grade && (
                       <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                        <span className="text-primary-muted">适用年级</span>
+                        <span className="text-primary-muted">{t('textbook.grade')}</span>
                         <span className="text-primary font-medium">{selectedItem.grade}</span>
                       </div>
                     )}
                     {selectedItem.unit_code && (
                       <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                        <span className="text-primary-muted">单元编号</span>
+                        <span className="text-primary-muted">{t('textbook.unitCode')}</span>
                         <span className="text-primary font-medium">{selectedItem.unit_code}</span>
                       </div>
                     )}
                     {selectedItem.keywords && (
                       <div className="flex justify-between py-2">
-                        <span className="text-primary-muted">关键词</span>
+                        <span className="text-primary-muted">{t('common.tags')}</span>
                         <div className="flex flex-wrap gap-1 justify-end">
                           {(Array.isArray(selectedItem.keywords) ? selectedItem.keywords : []).map((kw, idx) => (
                             <span key={idx} className="px-2 py-0.5 bg-info-light text-info rounded text-xs">
@@ -388,8 +389,8 @@ export const TextbookManagement = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <Layers className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
-              <p className="text-primary-muted">请从左侧选择教材单元</p>
-              <p className="text-sm text-primary-placeholder mt-1">支持三级分类：教材 {'>'} 年级 {'>'} 单元</p>
+              <p className="text-primary-muted">{t('textbook.selectFromLeft')}</p>
+              <p className="text-sm text-primary-placeholder mt-1">{t('textbook.threeLevelHint')}</p>
             </div>
           </div>
         )}
@@ -402,11 +403,11 @@ export const TextbookManagement = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b-2 border-stroke-light">
               <h3 className="text-lg font-semibold text-primary">
-                {modalType === 'add' && '新增教材'}
-                {modalType === 'addGrade' && '新增年级'}
-                {modalType === 'addUnit' && '新增单元'}
-                {modalType === 'edit' && '编辑'}
-                {modalType === 'delete' && '确认删除'}
+                {modalType === 'add' && t('textbook.addTextbook')}
+                {modalType === 'addGrade' && t('textbook.addGrade')}
+                {modalType === 'addUnit' && t('textbook.addUnit')}
+                {modalType === 'edit' && t('common.edit')}
+                {modalType === 'delete' && t('common.confirmDelete')}
               </h3>
               <button onClick={closeModal} className="p-1 hover:bg-surface-alt rounded-lg">
                 <X className="w-5 h-5 text-primary-placeholder" />
@@ -420,44 +421,44 @@ export const TextbookManagement = () => {
                   <div className="w-12 h-12 bg-error-light rounded-full flex items-center justify-center mx-auto mb-4">
                     <Trash2 className="w-6 h-6 text-error" />
                   </div>
-                  <p className="text-primary-secondary mb-2">确定要删除以下内容吗？</p>
+                  <p className="text-primary-secondary mb-2">{t('textbook.confirmDeleteMsg')}</p>
                   <p className="font-medium text-primary">{modalData.name}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-primary-secondary mb-1">名称</label>
+                    <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.name')}</label>
                     <input
                       type="text"
                       value={modalData.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
                       className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                      placeholder="请输入名称"
+                      placeholder={t('textbook.namePlaceholder')}
                     />
                   </div>
 
                   {(modalType === 'add' || modalType === 'edit') && modalData.level === 0 && (
                     <div>
-                      <label className="block text-sm font-medium text-primary-secondary mb-1">教材类型</label>
+                      <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.type')}</label>
                       <input
                         type="text"
                         value={modalData.type || modalData.name || ''}
                         onChange={(e) => setModalData({ ...modalData, type: e.target.value, name: e.target.value })}
                         className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                        placeholder="如：人教版、外研版"
+                        placeholder={t('textbook.typePlaceholder')}
                       />
                     </div>
                   )}
 
                   {(modalType === 'addGrade' || modalType === 'edit') && modalData.level === 1 && (
                     <div>
-                      <label className="block text-sm font-medium text-primary-secondary mb-1">年级</label>
+                      <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.grade')}</label>
                       <input
                         type="text"
                         value={modalData.grade || modalData.name || ''}
                         onChange={(e) => setModalData({ ...modalData, grade: e.target.value, name: e.target.value })}
                         className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                        placeholder="如：三年级、四年级"
+                        placeholder={t('textbook.gradePlaceholder')}
                       />
                     </div>
                   )}
@@ -465,33 +466,33 @@ export const TextbookManagement = () => {
                   {modalType === 'addUnit' && (
                     <>
                       <div>
-                        <label className="block text-sm font-medium text-primary-secondary mb-1">单元名称</label>
+                        <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.unitName')}</label>
                         <input
                           type="text"
                           value={modalData.name || ''}
                           onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
                           className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                          placeholder="如：Unit 1: Hello"
+                          placeholder={t('textbook.unitNamePlaceholder')}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-primary-secondary mb-1">单元编号</label>
+                        <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.unitCode')}</label>
                         <input
                           type="text"
                           value={modalData.unit || ''}
                           onChange={(e) => setModalData({ ...modalData, unit: e.target.value })}
                           className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                          placeholder="如：Unit 1"
+                          placeholder={t('textbook.unitCodePlaceholder')}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-primary-secondary mb-1">关键词（逗号分隔）</label>
+                        <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.keywordsLabel')}</label>
                         <input
                           type="text"
                           value={modalData.keywords || ''}
                           onChange={(e) => setModalData({ ...modalData, keywords: e.target.value })}
                           className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
-                          placeholder="如：Hello, Hi, I"
+                          placeholder={t('textbook.keywordsPlaceholder')}
                         />
                       </div>
                     </>
@@ -506,7 +507,7 @@ export const TextbookManagement = () => {
                 onClick={closeModal}
                 className="px-4 py-2 text-dark border-2 border-stroke-light rounded-xl hover:bg-warning-light hover:border-primary transition-all duration-200 font-medium"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={() => {
@@ -523,7 +524,7 @@ export const TextbookManagement = () => {
                 }`}
               >
                 <Check className="w-4 h-4" />
-                {modalType === 'delete' ? '确认删除' : '保存'}
+                {modalType === 'delete' ? t('common.confirmDelete') : t('common.save')}
               </button>
             </div>
           </div>

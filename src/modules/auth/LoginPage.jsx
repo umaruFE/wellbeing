@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { Sparkles, LogIn, AlertCircle } from 'lucide-react';
+import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 
 export const LoginPage = () => {
+  const { t } = useTranslation();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -20,7 +23,7 @@ export const LoginPage = () => {
       await login(username, password);
       navigate('/');
     } catch (err) {
-      setError(err.message || '登录失败，请重试');
+      setError(err.message || t('login.loginFailed'));
     } finally {
       setLoading(false);
     }
@@ -28,6 +31,9 @@ export const LoginPage = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
       <div className="w-full max-w-md">
         <div className="bg-white rounded-[24px] shadow-[4px_4px_0px_0px_var(--color-dark)] p-8 border-2 border-stroke-light">
           {/* Logo */}
@@ -35,8 +41,8 @@ export const LoginPage = () => {
             <div className="bg-blue-600 p-3 rounded-xl mb-4 shadow-lg">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-slate-800 mb-2">CourseGen AI</h1>
-            <p className="text-sm text-slate-500">欢迎回来，请登录您的账户</p>
+            <h1 className="text-2xl font-bold text-slate-800 mb-2">{t('common.appName')}</h1>
+            <p className="text-sm text-slate-500">{t('login.welcome')}</p>
           </div>
 
           {/* Login Form */}
@@ -50,28 +56,28 @@ export const LoginPage = () => {
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                用户名
+                {t('login.username')}
               </label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-2.5 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all"
-                placeholder="请输入用户名"
+                placeholder={t('login.usernamePlaceholder')}
                 required
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
-                密码
+                {t('login.password')}
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-4 py-2.5 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all"
-                placeholder="请输入密码"
+                placeholder={t('login.passwordPlaceholder')}
                 required
               />
             </div>
@@ -85,46 +91,18 @@ export const LoginPage = () => {
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  登录中...
+                  {t('login.loggingIn')}
                 </>
               ) : (
                 <>
                   <LogIn className="w-4 h-4" />
-                  登录
+                  {t('login.loginButton')}
                 </>
               )}
             </button>
           </form>
-
-          {/* Demo Accounts */}
-          {/* <div className="mt-6 pt-6 border-t-2 border-stroke-light">
-            <p className="text-xs text-slate-500 mb-3 text-center"></p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="bg-surface p-2 rounded-xl border-2 border-stroke-light">
-                <div className="font-medium text-slate-700">超级管理员</div>
-                <div className="text-slate-500">admin</div>
-              </div>
-              <div className="bg-surface p-2 rounded-xl border-2 border-stroke-light">
-                <div className="font-medium text-slate-700">机构管理员</div>
-                <div className="text-slate-500">org_admin</div>
-              </div>
-              <div className="bg-surface p-2 rounded-xl border-2 border-stroke-light">
-                <div className="font-medium text-slate-700">教研组长</div>
-                <div className="text-slate-500">research_leader</div>
-              </div>
-              <div className="bg-surface p-2 rounded-xl border-2 border-stroke-light">
-                <div className="font-medium text-slate-700">课件制作人</div>
-                <div className="text-slate-500">creator</div>
-              </div>
-              <div className="bg-surface p-2 rounded-xl border-2 border-stroke-light">
-                <div className="font-medium text-slate-700">普通老师</div>
-                <div className="text-slate-500">viewer</div>
-              </div>
-            </div>
-          </div> */}
         </div>
       </div>
     </div>
   );
 };
-

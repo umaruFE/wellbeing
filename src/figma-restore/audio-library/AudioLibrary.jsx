@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Upload as UploadIcon } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import apiService from '../../services/api';
@@ -7,20 +8,6 @@ import { AudioPreviewModal } from './AudioPreviewModal';
 import { TaskDetailModal } from '../TaskDetailModal';
 
 export const AUDIO_ASSETS = [];
-
-const sourceOptions = [
-  { label: '全部来源', value: '' },
-  { label: 'AI生成', value: 'AI生成' },
-  { label: '手动上传', value: '手动上传' },
-];
-
-const typeOptions = [
-  { label: '全部类型', value: '' },
-  { label: 'BGM', value: 'BGM' },
-  { label: '旁白', value: '旁白' },
-  { label: '歌曲', value: '歌曲' },
-  { label: '音效', value: '音效' },
-];
 
 const tonePalette = ['lavender', 'mint', 'peach', 'blue'];
 
@@ -46,30 +33,30 @@ function normalizeDuration(value) {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
-function normalizeSource(value) {
+function normalizeSource(value, t) {
   const raw = String(value || '').toLowerCase();
-  if (raw.includes('ai') || raw.includes('generate')) return 'AI生成';
-  if (raw.includes('upload') || raw.includes('manual')) return '手动上传';
-  if (raw.includes('course')) return '课程同步';
-  return value || '素材库';
+  if (raw.includes('ai') || raw.includes('generate')) return t('audioLib.sourceAi');
+  if (raw.includes('upload') || raw.includes('manual')) return t('audioLib.sourceManual');
+  if (raw.includes('course')) return t('audioLib.sourceCourse');
+  return value || t('audioLib.sourceLibrary');
 }
 
-function normalizeAudioType(item = {}) {
+function normalizeAudioType(item = {}, t) {
   const raw = String(item.type || item.audio_type || item.voice_type || '').toLowerCase();
-  if (raw.includes('bgm') || raw.includes('music')) return 'BGM';
-  if (raw.includes('song')) return '歌曲';
-  if (raw.includes('effect')) return '音效';
-  return item.type || item.audio_type || '旁白';
+  if (raw.includes('bgm') || raw.includes('music')) return t('audioLib.typeBgm');
+  if (raw.includes('song')) return t('audioLib.typeSong');
+  if (raw.includes('effect')) return t('audioLib.typeEffect');
+  return item.type || item.audio_type || t('audioLib.typeNarration');
 }
 
-export function normalizeAudioAsset(item = {}, index = 0) {
+export function normalizeAudioAsset(item = {}, index = 0, t) {
   const url = item.audio_url || item.audioUrl || item.url || item.file_url || item.object_url;
   const format = (item.format || item.file_format || item.name?.split('.').pop() || item.voice_type || 'AUDIO').toString().toUpperCase();
-  const type = normalizeAudioType(item);
+  const type = normalizeAudioType(item, t);
   return {
     id: item.id || url || `audio-${Math.random().toString(36).slice(2, 10)}`,
-    name: item.name || item.title || item.voice_name || '未命名音频素材',
-    source: normalizeSource(item.source || item.source_type || item.origin),
+    name: item.name || item.title || item.voice_name || t('audioLib.unnamed'),
+    source: normalizeSource(item.source || item.source_type || item.origin, t),
     type,
     format,
     fileSize: formatFileSize(item.file_size || item.size),
@@ -79,9 +66,9 @@ export function normalizeAudioAsset(item = {}, index = 0) {
     objectUrl: url,
     info: {
       audioType: item.audio_type || item.voice_type || type,
-      theme: item.theme || item.description || item.prompt || '课堂素材',
-      style: item.style || item.emotion || item.mood || '未标注',
-      lyric: item.lyric || item.lyrics || item.text || '无歌词',
+      theme: item.theme || item.description || item.prompt || t('audioLib.classroomAsset'),
+      style: item.style || item.emotion || item.mood || t('audioLib.unmarked'),
+      lyric: item.lyric || item.lyrics || item.text || t('audioLib.noLyrics'),
     },
     raw: item,
   };
@@ -99,33 +86,33 @@ function mergeOptions(baseOptions, assets, field) {
   ];
 }
 
-export const createAudioTaskDetail = (asset) => ({
+export const createAudioTaskDetail = (asset, t) => ({
   type: 'audio',
   title: asset.name,
-  count: 'x 1 首',
-  course: '音频库素材',
+  count: `x 1 ${t('audioLib.audioUnit')}`,
+  course: t('audioLib.libraryAsset'),
   status: 'done',
-  statusText: '已完成',
+  statusText: t('audioLib.statusDone'),
   submit: asset.created,
-  engine: `音频素材 · ${asset.format}`,
+  engine: `${t('audioLib.audioAsset')} · ${asset.format}`,
   progress: 100,
-  prompt: asset.source === 'AI生成'
-    ? `${asset.info.audioType}，主题 ${asset.info.theme}，风格 ${asset.info.style}。`
-    : `手动上传音频素材：${asset.name}`,
+  prompt: (asset.source === t('audioLib.sourceAi') || asset.source === 'AI生成')
+    ? `${asset.info.audioType}，${t('audioLib.themeLabel')} ${asset.info.theme}，${t('audioLib.styleLabel')} ${asset.info.style}。`
+    : t('audioLib.taskPromptManual', { name: asset.name }),
   spec: `${asset.duration} · ${asset.format} · ${asset.fileSize}`,
   tracks: [asset.name],
   result: {
     url: asset.audioUrl || asset.audio_url || asset.objectUrl || asset.url,
   },
   config: [
-    ['音频类型', asset.info.audioType],
-    ['主题', asset.info.theme],
-    ['风格', asset.info.style],
-    ['格式', asset.format],
+    [t('audioLib.audioTypeLabel'), asset.info.audioType],
+    [t('audioLib.themeLabel'), asset.info.theme],
+    [t('audioLib.styleLabel'), asset.info.style],
+    [t('imageLib.format'), asset.format],
   ],
 });
 
-function WaveArt({ asset, playing, onToggle }) {
+function WaveArt({ asset, playing, onToggle, t }) {
   return (
     <div className={`fr-aud-wave tone-${asset.tone}`}>
       <Tag className="fr-aud-source-tag">{asset.source}</Tag>
@@ -134,7 +121,7 @@ function WaveArt({ asset, playing, onToggle }) {
           <span key={index} style={{ height: `${30 + ((index * 17) % 54)}px` }} />
         ))}
       </div>
-      <button className="fr-aud-play" type="button" onClick={onToggle} aria-label={playing ? '暂停' : '播放'}>
+      <button className="fr-aud-play" type="button" onClick={onToggle} aria-label={playing ? t('audioLib.pause') : t('audioLib.play')}>
         {playing ? <Pause size={30} fill="currentColor" /> : <Play size={34} fill="currentColor" />}
       </button>
       <span className="fr-aud-duration">{asset.duration}</span>
@@ -143,6 +130,7 @@ function WaveArt({ asset, playing, onToggle }) {
 }
 
 export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
+  const { t } = useTranslation();
   const [assets, setAssets] = React.useState(AUDIO_ASSETS);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
@@ -154,24 +142,38 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
   const [playProgress, setPlayProgress] = React.useState({ assetId: null, current: 0, duration: 0 });
   const audioRef = React.useRef(null);
 
+  const sourceOptions = React.useMemo(() => [
+    { label: t('imageLib.sourceAll'), value: '' },
+    { label: t('audioLib.sourceAi'), value: t('audioLib.sourceAi') },
+    { label: t('audioLib.sourceManual'), value: t('audioLib.sourceManual') },
+  ], [t]);
+
+  const typeOptions = React.useMemo(() => [
+    { label: t('imageLib.typeAll'), value: '' },
+    { label: t('audioLib.typeBgm'), value: t('audioLib.typeBgm') },
+    { label: t('audioLib.typeNarration'), value: t('audioLib.typeNarration') },
+    { label: t('audioLib.typeSong'), value: t('audioLib.typeSong') },
+    { label: t('audioLib.typeEffect'), value: t('audioLib.typeEffect') },
+  ], [t]);
+
   React.useEffect(() => {
     let alive = true;
     apiService.getVoiceConfigs()
       .then((result) => {
         if (!alive) return;
-        setAssets((result.data || []).map(normalizeAudioAsset));
+        setAssets((result.data || []).map((item, idx) => normalizeAudioAsset(item, idx, t)));
       })
       .catch((error) => {
-        console.error('获取音频库失败:', error);
+        console.error('fetch audio library failed:', error);
         if (alive) {
           setAssets([]);
-          message.error('获取音频库失败');
+          message.error(t('audioLib.fetchFailed'));
         }
       });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [t]);
 
   const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
   const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
@@ -188,26 +190,26 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
 
   const handleUpload = async (file) => {
     if (!file?.type?.startsWith('audio/')) {
-      message.warning('请选择音频文件');
+      message.warning(t('audioLib.selectAudioFile'));
       return Upload.LIST_IGNORE;
     }
 
     const format = file.name?.split('.').pop()?.toUpperCase() || 'AUDIO';
     const nextAsset = {
       id: `manual-audio-${Date.now()}`,
-      name: file.name || '新上传音频',
-      source: '手动上传',
-      type: '旁白',
+      name: file.name || t('audioLib.newUploadName'),
+      source: t('audioLib.sourceManual'),
+      type: t('audioLib.typeNarration'),
       format,
       fileSize: `${Math.max(file.size / 1024 / 1024, 0.1).toFixed(1)} MB`,
       duration: '0:30',
       created: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/'),
       tone: 'blue',
-      info: { audioType: '本地上传音频', theme: '课堂素材', style: '未标注', lyric: '无歌词' },
+      info: { audioType: t('audioLib.localAudio'), theme: t('audioLib.classroomAsset'), style: t('audioLib.unmarked'), lyric: t('audioLib.noLyrics') },
       objectUrl: URL.createObjectURL(file),
     };
     setAssets(current => [nextAsset, ...current]);
-    message.success('音频已上传到音频库');
+    message.success(t('audioLib.uploadSuccess'));
     return false;
   };
 
@@ -230,7 +232,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
     stopAudio();
 
     if (!asset.objectUrl) {
-      message.info('当前音频素材暂无可播放文件');
+      message.info(t('audioLib.noPlayableFile'));
       return;
     }
 
@@ -259,9 +261,9 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
         audioRef.current = null;
         setPlayingId(null);
         setPlayProgress({ assetId: null, current: 0, duration: 0 });
-        message.warning('音频播放失败，请检查文件格式');
+        message.warning(t('audioLib.playFailed'));
       });
-  }, [playingId, stopAudio]);
+  }, [playingId, stopAudio, t]);
 
   React.useEffect(() => stopAudio, [stopAudio]);
 
@@ -271,7 +273,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
     setDeleteAsset(null);
     if (playingId === asset.id) stopAudio();
     if (asset.objectUrl) URL.revokeObjectURL(asset.objectUrl);
-    message.success(`已删除「${asset.name}」`);
+    message.success(t('audioLib.deleteSuccess', { name: asset.name }));
   };
 
   const handleMenuClick = ({ key, domEvent }, asset) => {
@@ -290,14 +292,14 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
           <div className="fr-aud-hero-left">
             <div className="fr-aud-hero-icon"><Music size={30} /></div>
             <div>
-              <h1>音频库</h1>
-              <p>管理 AI 生成、课程同步和手动上传的 BGM、旁白、歌曲素材</p>
+              <h1>{t('audioLib.title')}</h1>
+              <p>{t('audioLib.subtitle')}</p>
             </div>
           </div>
           <Upload accept="audio/*" beforeUpload={handleUpload} showUploadList={false}>
             <button className="fr-aud-upload-btn" type="button">
               <UploadIcon size={16} />
-              上传音频
+              {t('audioLib.uploadAudio')}
             </button>
           </Upload>
         </header>
@@ -307,7 +309,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="搜索音频"
+              placeholder={t('audioLib.searchPlaceholder')}
               prefix={<Search size={16} />}
               allowClear
             />
@@ -321,7 +323,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
             <div className="fr-aud-grid">
               {filteredAssets.map(asset => (
                 <article className="fr-aud-card" key={asset.id} onClick={() => setPreviewAsset(asset)}>
-                  <WaveArt asset={asset} playing={playingId === asset.id} onToggle={(event) => {
+                  <WaveArt asset={asset} playing={playingId === asset.id} t={t} onToggle={(event) => {
                     event.stopPropagation();
                     handlePlayAudio(asset);
                   }} />
@@ -337,8 +339,8 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
                         trigger={['click']}
                         menu={{
                           items: [
-                            { key: 'detail', icon: <Eye size={14} />, label: '查看详情' },
-                            { key: 'delete', icon: <Trash2 size={14} />, label: '删除', danger: true },
+                            { key: 'detail', icon: <Eye size={14} />, label: t('imageLib.viewDetail') },
+                            { key: 'delete', icon: <Trash2 size={14} />, label: t('common.delete'), danger: true },
                           ],
                           onClick: (info) => handleMenuClick(info, asset),
                         }}
@@ -355,8 +357,8 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
           ) : (
             <div className="fr-aud-empty">
               <FileAudio size={30} />
-              <strong>没有找到匹配的音频素材</strong>
-              <span>调整关键词、来源或类型后再试试。</span>
+              <strong>{t('audioLib.noResults')}</strong>
+              <span>{t('audioLib.noResultsHint')}</span>
             </div>
           )}
         </section>
@@ -371,7 +373,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
         progress={playProgress}
         onViewTask={(asset) => {
           stopAudio();
-          setTaskDetail(createAudioTaskDetail(asset));
+          setTaskDetail(createAudioTaskDetail(asset, t));
           setPreviewAsset(null);
         }}
       />
@@ -385,16 +387,16 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
 
       <Modal
         open={Boolean(deleteAsset)}
-        title="删除音频素材"
+        title={t('audioLib.deleteTitle')}
         className="fr-aud-confirm-modal"
-        okText="确认删除"
-        cancelText="取消"
+        okText={t('imageLib.confirmDeleteBtn')}
+        cancelText={t('common.cancel')}
         okButtonProps={{ danger: true }}
         onOk={() => deleteAsset && handleDeleteAsset(deleteAsset)}
         onCancel={() => setDeleteAsset(null)}
         centered
       >
-        <p>确认删除「{deleteAsset?.name}」吗？删除后将从当前音频库列表移除。</p>
+        <p>{t('audioLib.confirmDeleteMsg', { name: deleteAsset?.name })}</p>
       </Modal>
     </section>
   );

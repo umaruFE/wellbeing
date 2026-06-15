@@ -4,6 +4,7 @@ import { ConfigProvider } from 'antd'
 import './index.css'
 import App from './App.jsx'
 import { appAntdTheme } from './theme/buildAntdTheme'
+import './i18n';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

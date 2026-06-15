@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { BookOpen, Eye, FileText, Image, Monitor, MoreVertical, Plus, Search, Trash2, Upload as UploadIcon, X } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import apiService from '../../services/api';
@@ -8,20 +9,6 @@ import { TaskDetailModal } from '../TaskDetailModal';
 
 export const IMAGE_ASSETS = [];
 
-const sourceOptions = [
-  { label: '全部来源', value: '' },
-  { label: 'AI生成', value: 'AI生成' },
-  { label: '手动上传', value: '手动上传' },
-];
-
-const typeOptions = [
-  { label: '全部类型', value: '' },
-  { label: '主题意境图', value: '主题意境图' },
-  { label: 'PPT素材', value: 'PPT素材' },
-  { label: '闪卡', value: '闪卡' },
-  { label: '故事配图', value: '故事配图' },
-];
-
 function formatDateTime(value) {
   if (!value) return '--';
   const date = new Date(value);
@@ -29,23 +16,23 @@ function formatDateTime(value) {
   return date.toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/');
 }
 
-function normalizeSource(value) {
+function normalizeSource(value, t) {
   const raw = String(value || '').toLowerCase();
-  if (raw.includes('ai') || raw.includes('generate')) return 'AI生成';
-  if (raw.includes('upload') || raw.includes('manual')) return '手动上传';
-  if (raw.includes('course')) return '课程同步';
-  return value || '素材库';
+  if (raw.includes('ai') || raw.includes('generate')) return t('imageLib.sourceAi');
+  if (raw.includes('upload') || raw.includes('manual')) return t('imageLib.sourceManual');
+  if (raw.includes('course')) return t('imageLib.sourceCourse');
+  return value || t('imageLib.sourceLibrary');
 }
 
-export function normalizeImageAsset(item = {}) {
+export function normalizeImageAsset(item = {}, t) {
   const categoryName = item.category?.name || item.category_name || item.type || item.image_type;
   const width = item.width || item.image_width;
   const height = item.height || item.image_height;
   return {
     id: item.id || item.image_url || `image-${Math.random().toString(36).slice(2, 10)}`,
-    name: item.name || item.title || item.filename || '未命名图片素材',
-    source: normalizeSource(item.source || item.source_type || item.origin),
-    type: categoryName || 'PPT素材',
+    name: item.name || item.title || item.filename || t('imageLib.unnamed'),
+    source: normalizeSource(item.source || item.source_type || item.origin, t),
+    type: categoryName || t('imageLib.typePpt'),
     size: width && height ? `${width} × ${height}` : item.size || item.resolution || '--',
     created: formatDateTime(item.created_at || item.createdAt || item.created),
     scene: item.scene || 'manual',
@@ -66,55 +53,57 @@ function mergeOptions(baseOptions, assets, field) {
   ];
 }
 
-export const createImageTaskDetail = (asset) => ({
+export const createImageTaskDetail = (asset, t) => ({
   type: 'image',
   title: asset.name,
-  count: 'x 1 张',
-  course: '图片库素材',
+  count: `x 1 ${t('imageLib.imageUnit')}`,
+  course: t('imageLib.libraryAsset'),
   status: 'done',
-  statusText: '已完成',
+  statusText: t('imageLib.statusDone'),
   submit: asset.created,
   engine: `${asset.type} · ${asset.source}`,
   progress: 100,
-  prompt: asset.source === 'AI生成'
-    ? `生成${asset.name}，风格适合课堂演示与课件画布。`
-    : `手动上传图片素材：${asset.name}`,
+  prompt: asset.source === t('imageLib.sourceAi') || asset.source === 'AI生成'
+    ? t('imageLib.taskPromptAi', { name: asset.name })
+    : t('imageLib.taskPromptManual', { name: asset.name }),
   spec: `${asset.size} · PNG`,
   scenes: [asset.scene, asset.scene, asset.scene, asset.scene],
   result: {
     url: asset.previewUrl || asset.imageUrl || asset.image_url || asset.url,
   },
   config: [
-    ['素材类型', asset.type],
-    ['来源', asset.source],
-    ['图片尺寸', asset.size],
-    ['格式', 'PNG'],
+    [t('imageLib.assetType'), asset.type],
+    [t('imageLib.source'), asset.source],
+    [t('imageLib.imageSize'), asset.size],
+    [t('imageLib.format'), 'PNG'],
   ],
 });
 
-const insertConfigs = {
-  cover: {
-    name: '课程地图封面',
-    foot: '已选择：课程地图封面',
-    helper: '图片将替换课程地图封面，便于作为课程详情页的第一视觉。',
-    icon: Image,
-    desc: '替换或加入课程地图封面候选',
-  },
-  ppt: {
-    name: 'PPT 课件',
-    foot: '已选择：PPT 课件',
-    helper: '图片会插入为当前 PPT 画布中的图片图层，可继续拖拽、缩放和调整层级。',
-    icon: Monitor,
-    desc: '继续选择环节和具体 PPT 页',
-  },
-  reading: {
-    name: '阅读材料',
-    foot: '已选择：阅读材料',
-    helper: '图片会插入到阅读材料页面中，可作为插图、背景或视觉提示使用。',
-    icon: BookOpen,
-    desc: '选择阅读材料页面插入图片',
-  },
-};
+function getInsertConfigs(t) {
+  return {
+    cover: {
+      name: t('imageLib.insertCover'),
+      foot: t('imageLib.footCover'),
+      helper: t('imageLib.helperCover'),
+      icon: Image,
+      desc: t('imageLib.descCover'),
+    },
+    ppt: {
+      name: t('imageLib.insertPpt'),
+      foot: t('imageLib.footPpt'),
+      helper: t('imageLib.helperPpt'),
+      icon: Monitor,
+      desc: t('imageLib.descPpt'),
+    },
+    reading: {
+      name: t('imageLib.insertReading'),
+      foot: t('imageLib.footReading'),
+      helper: t('imageLib.helperReading'),
+      icon: BookOpen,
+      desc: t('imageLib.descReading'),
+    },
+  };
+}
 
 function SceneArt({ scene, src, alt }) {
   if (src) {
@@ -132,7 +121,9 @@ function SceneArt({ scene, src, alt }) {
 }
 
 function InsertModal({ asset, open, onClose, onConfirm }) {
+  const { t } = useTranslation();
   const [target, setTarget] = React.useState('cover');
+  const insertConfigs = React.useMemo(() => getInsertConfigs(t), [t]);
 
   React.useEffect(() => {
     if (open) setTarget('cover');
@@ -152,8 +143,8 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
       closeIcon={<X size={20} />}
       title={(
         <div>
-          <div className="fr-img-modal-title">选择插入位置</div>
-          <div className="fr-img-modal-sub">先选择目标课程，再选择课程模块与模块内的具体位置。</div>
+          <div className="fr-img-modal-title">{t('imageLib.selectInsertLocation')}</div>
+          <div className="fr-img-modal-sub">{t('imageLib.insertSubtitle')}</div>
         </div>
       )}
     >
@@ -169,21 +160,20 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
           </div>
         </aside>
         <section className="fr-img-insert-panel">
-          <div className="fr-img-insert-section">目标课程</div>
+          <div className="fr-img-insert-section">{t('imageLib.targetCourse')}</div>
           <label className="fr-img-field full">
-            <span>选择课程</span>
+            <span>{t('imageLib.selectCourse')}</span>
             <Select
               style={{ width: '100%' }}
-              defaultValue="Unit 3: Animals（神奇的动物）"
+              defaultValue="Unit 3: Animals"
               options={[
-                { value: 'Unit 3: Animals（神奇的动物）', label: 'Unit 3: Animals（神奇的动物）' },
+                { value: 'Unit 3: Animals', label: 'Unit 3: Animals' },
                 { value: 'Unit 2: Greetings', label: 'Unit 2: Greetings' },
-                { value: '森林星光音乐会', label: '森林星光音乐会' },
               ]}
             />
           </label>
 
-          <div className="fr-img-insert-section">课程模块</div>
+          <div className="fr-img-insert-section">{t('imageLib.courseModule')}</div>
           <div className="fr-img-choice-grid">
             {Object.entries(insertConfigs).map(([key, item]) => {
               const Icon = item.icon;
@@ -199,17 +189,17 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
             })}
           </div>
 
-          <div className="fr-img-insert-section">模块内位置</div>
+          <div className="fr-img-insert-section">{t('imageLib.modulePosition')}</div>
           <div className="fr-img-form-grid">
             {target === 'cover' && (
               <label className="fr-img-field full">
-                <span>封面位置</span>
+                <span>{t('imageLib.coverPosition')}</span>
                 <Select
                   style={{ width: '100%' }}
-                  defaultValue="替换当前课程地图封面"
+                  defaultValue={t('imageLib.replaceCover')}
                   options={[
-                    { value: '替换当前课程地图封面', label: '替换当前课程地图封面' },
-                    { value: '添加为封面备选图', label: '添加为封面备选图' },
+                    { value: t('imageLib.replaceCover'), label: t('imageLib.replaceCover') },
+                    { value: t('imageLib.addCoverAlt'), label: t('imageLib.addCoverAlt') },
                   ]}
                 />
               </label>
@@ -217,28 +207,24 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
             {target === 'ppt' && (
               <>
                 <label className="fr-img-field">
-                  <span>目标环节</span>
+                  <span>{t('imageLib.targetPhase')}</span>
                   <Select
                     style={{ width: '100%' }}
-                    defaultValue="星际信号接收站"
+                    defaultValue={t('imageLib.phase1')}
                     options={[
-                      { value: '星际信号接收站', label: '星际信号接收站' },
-                      { value: '动物能量球在哪里？', label: '动物能量球在哪里？' },
-                      { value: '救援地图解码器', label: '救援地图解码器' },
-                      { value: '建造动物家园发射台', label: '建造动物家园发射台' },
+                      { value: t('imageLib.phase1'), label: t('imageLib.phase1') },
+                      { value: t('imageLib.phase2'), label: t('imageLib.phase2') },
                     ]}
                   />
                 </label>
                 <label className="fr-img-field">
-                  <span>目标 PPT 页</span>
+                  <span>{t('imageLib.targetPptPage')}</span>
                   <Select
                     style={{ width: '100%' }}
-                    defaultValue="幻灯片 1 · 情境导入"
+                    defaultValue={t('imageLib.slide1')}
                     options={[
-                      { value: '幻灯片 1 · 情境导入', label: '幻灯片 1 · 情境导入' },
-                      { value: '幻灯片 2 · 任务背景', label: '幻灯片 2 · 任务背景' },
-                      { value: '幻灯片 3 · 语言练习', label: '幻灯片 3 · 语言练习' },
-                      { value: '新建一页空白幻灯片', label: '新建一页空白幻灯片' },
+                      { value: t('imageLib.slide1'), label: t('imageLib.slide1') },
+                      { value: t('imageLib.newSlide'), label: t('imageLib.newSlide') },
                     ]}
                   />
                 </label>
@@ -246,15 +232,13 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
             )}
             {target === 'reading' && (
               <label className="fr-img-field full">
-                <span>阅读材料页面</span>
+                <span>{t('imageLib.readingPage')}</span>
                 <Select
                   style={{ width: '100%' }}
-                  defaultValue="动物救援任务单 · 第 1 页"
+                  defaultValue={t('imageLib.readingPage1')}
                   options={[
-                    { value: '动物救援任务单 · 第 1 页', label: '动物救援任务单 · 第 1 页' },
-                    { value: '情绪词汇观察页 · 第 2 页', label: '情绪词汇观察页 · 第 2 页' },
-                    { value: '小组合作记录单 · 第 3 页', label: '小组合作记录单 · 第 3 页' },
-                    { value: '新建一页阅读材料', label: '新建一页阅读材料' },
+                    { value: t('imageLib.readingPage1'), label: t('imageLib.readingPage1') },
+                    { value: t('imageLib.newReadingPage'), label: t('imageLib.newReadingPage') },
                   ]}
                 />
               </label>
@@ -265,14 +249,15 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
       </div>
       <div className="fr-img-modal-footer split">
         <div className="fr-img-foot-note">{cfg.foot}</div>
-        <Button onClick={onClose}>取消</Button>
-        <Button className="fr-img-action-primary" type="primary" onClick={() => onConfirm(asset, target)}>确认插入</Button>
+        <Button onClick={onClose}>{t('common.cancel')}</Button>
+        <Button className="fr-img-action-primary" type="primary" onClick={() => onConfirm(asset, target)}>{t('imageLib.confirmInsert')}</Button>
       </div>
     </Modal>
   );
 }
 
 export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
+  const { t } = useTranslation();
   const [assets, setAssets] = React.useState(IMAGE_ASSETS);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
@@ -282,24 +267,38 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
   const [deleteAsset, setDeleteAsset] = React.useState(null);
   const [taskDetail, setTaskDetail] = React.useState(null);
 
+  const sourceOptions = React.useMemo(() => [
+    { label: t('imageLib.sourceAll'), value: '' },
+    { label: t('imageLib.sourceAi'), value: t('imageLib.sourceAi') },
+    { label: t('imageLib.sourceManual'), value: t('imageLib.sourceManual') },
+  ], [t]);
+
+  const typeOptions = React.useMemo(() => [
+    { label: t('imageLib.typeAll'), value: '' },
+    { label: t('imageLib.typeTheme'), value: t('imageLib.typeTheme') },
+    { label: t('imageLib.typePpt'), value: t('imageLib.typePpt') },
+    { label: t('imageLib.typeFlashcard'), value: t('imageLib.typeFlashcard') },
+    { label: t('imageLib.typeStory'), value: t('imageLib.typeStory') },
+  ], [t]);
+
   React.useEffect(() => {
     let alive = true;
     apiService.getPptImages({ limit: 200 })
       .then((result) => {
         if (!alive) return;
-        setAssets((result.data || []).map(normalizeImageAsset));
+        setAssets((result.data || []).map(item => normalizeImageAsset(item, t)));
       })
       .catch((error) => {
-        console.error('获取图片库失败:', error);
+        console.error('fetch image library failed:', error);
         if (alive) {
           setAssets([]);
-          message.error('获取图片库失败');
+          message.error(t('imageLib.fetchFailed'));
         }
       });
     return () => {
       alive = false;
     };
-  }, []);
+  }, [t]);
 
   const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
   const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
@@ -323,7 +322,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
 
   const handleUpload = async (file) => {
     if (!file?.type?.startsWith('image/')) {
-      message.warning('请选择图片文件');
+      message.warning(t('imageLib.selectImageFile'));
       return Upload.LIST_IGNORE;
     }
 
@@ -331,23 +330,23 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
     const imageSize = await readImageSize(previewUrl);
     const nextAsset = {
       id: `manual-${Date.now()}`,
-      name: file.name?.replace(/\.[^/.]+$/, '') || '新上传课堂插图',
-      source: '手动上传',
-      type: 'PPT素材',
+      name: file.name?.replace(/\.[^/.]+$/, '') || t('imageLib.newUploadName'),
+      source: t('imageLib.sourceManual'),
+      type: t('imageLib.typePpt'),
       size: imageSize,
       created: new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '/'),
       scene: 'manual',
       previewUrl,
     };
     setAssets(current => [nextAsset, ...current]);
-    message.success('图片已上传到图片库');
+    message.success(t('imageLib.uploadSuccess'));
     return false;
   };
 
   const handleConfirmInsert = (asset, target) => {
-    const cfg = insertConfigs[target] || insertConfigs.cover;
+    const cfg = getInsertConfigs(t)[target] || getInsertConfigs(t).cover;
     setInsertAsset(null);
-    message.success(`已将「${asset.name}」插入到「${cfg.name}」`);
+    message.success(t('imageLib.insertSuccess', { name: asset.name, target: cfg.name }));
   };
 
   const handleDeleteAsset = (asset) => {
@@ -356,7 +355,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
     setInsertAsset(current => (current?.id === asset.id ? null : current));
     setDeleteAsset(null);
     if (asset.previewUrl) URL.revokeObjectURL(asset.previewUrl);
-    message.success(`已删除「${asset.name}」`);
+    message.success(t('imageLib.deleteSuccess', { name: asset.name }));
   };
 
   const handleAssetMenuClick = ({ key, domEvent }, asset) => {
@@ -377,8 +376,8 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
           <div className="fr-img-hero-left">
             <div className="fr-img-hero-icon"><Image size={30} /></div>
             <div>
-              <h1>图片库</h1>
-              <p>管理 AI 生成、课程同步和手动上传的图片素材</p>
+              <h1>{t('imageLib.title')}</h1>
+              <p>{t('imageLib.subtitle')}</p>
             </div>
           </div>
           <Upload
@@ -388,7 +387,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
           >
             <button className="fr-img-upload-btn" type="button">
               <UploadIcon size={16} />
-              上传图片
+              {t('imageLib.uploadImage')}
             </button>
           </Upload>
         </header>
@@ -398,7 +397,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="搜索图片"
+              placeholder={t('imageLib.searchPlaceholder')}
               prefix={<Search size={16} />}
               allowClear
             />
@@ -428,8 +427,8 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
                         trigger={['click']}
                         menu={{
                           items: [
-                            { key: 'detail', icon: <Eye size={14} />, label: '查看详情' },
-                            { key: 'delete', icon: <Trash2 size={14} />, label: '删除', danger: true },
+                            { key: 'detail', icon: <Eye size={14} />, label: t('imageLib.viewDetail') },
+                            { key: 'delete', icon: <Trash2 size={14} />, label: t('common.delete'), danger: true },
                           ],
                           onClick: (info) => handleAssetMenuClick(info, asset),
                         }}
@@ -451,8 +450,8 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
           ) : (
             <div className="fr-img-empty">
               <FileText size={30} />
-              <strong>没有找到匹配的图片素材</strong>
-              <span>调整关键词、来源或类型后再试试。</span>
+              <strong>{t('imageLib.noResults')}</strong>
+              <span>{t('imageLib.noResultsHint')}</span>
             </div>
           )}
         </section>
@@ -463,7 +462,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
         open={Boolean(previewAsset)}
         onClose={() => setPreviewAsset(null)}
         onViewTask={(asset) => {
-          setTaskDetail(createImageTaskDetail(asset));
+          setTaskDetail(createImageTaskDetail(asset, t));
           setPreviewAsset(null);
         }}
       />
@@ -483,16 +482,16 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
       />
       <Modal
         open={Boolean(deleteAsset)}
-        title="删除图片素材"
+        title={t('imageLib.deleteTitle')}
         className="fr-img-confirm-modal"
-        okText="确认删除"
-        cancelText="取消"
+        okText={t('imageLib.confirmDeleteBtn')}
+        cancelText={t('common.cancel')}
         okButtonProps={{ danger: true }}
         onOk={() => deleteAsset && handleDeleteAsset(deleteAsset)}
         onCancel={() => setDeleteAsset(null)}
         centered
       >
-        <p>确认删除「{deleteAsset?.name}」吗？删除后将从当前图片库列表移除。</p>
+        <p>{t('imageLib.confirmDeleteMsg', { name: deleteAsset?.name })}</p>
       </Modal>
     </section>
   );

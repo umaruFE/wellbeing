@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Edit,
@@ -14,6 +15,7 @@ import apiService from '../../../services/api';
 import uploadService from '../../../services/uploadService';
 
 export const VideoMaterialManagement = () => {
+  const { t } = useTranslation();
   const [modalType, setModalType] = useState(null);
   const [modalData, setModalData] = useState({});
   const [videos, setVideos] = useState([]);
@@ -23,7 +25,6 @@ export const VideoMaterialManagement = () => {
   const fileInputRef = useRef(null);
   const videoInputRef = useRef(null);
 
-  // 从 API 获取数据
   useEffect(() => {
     const fetchVideos = async () => {
       try {
@@ -31,7 +32,7 @@ export const VideoMaterialManagement = () => {
         const result = await apiService.getVideos();
         setVideos(result.data || []);
       } catch (err) {
-        console.error('获取视频素材失败:', err);
+        console.error('fetch videos failed:', err);
         setVideos([]);
       } finally {
         setLoading(false);
@@ -40,19 +41,16 @@ export const VideoMaterialManagement = () => {
     fetchVideos();
   }, []);
 
-  // 过滤搜索
   const filteredVideos = videos.filter(video =>
     video.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     video.description?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // 打开模态框
   const openModal = (type, data = {}) => {
     setModalType(type);
     setModalData(data);
   };
 
-  // 关闭模态框
   const closeModal = () => {
     setModalType(null);
     setModalData({});
@@ -64,20 +62,18 @@ export const VideoMaterialManagement = () => {
     }
   };
 
-  // 处理视频上传
   const handleVideoSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // 验证视频文件
     const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/mkv', 'video/quicktime'];
     if (!allowedTypes.includes(file.type)) {
-      alert('请选择 MP4、WebM、OGG 或 QuickTime 格式的视频文件');
+      alert(t('videoMat.invalidFormat'));
       return;
     }
 
-    if (file.size > 100 * 1024 * 1024) { // 100MB
-      alert('视频文件大小不能超过 100MB');
+    if (file.size > 100 * 1024 * 1024) {
+      alert(t('videoMat.tooLarge'));
       return;
     }
 
@@ -88,11 +84,11 @@ export const VideoMaterialManagement = () => {
       if (result.success) {
         openModal('add', { videoUrl: result.url });
       } else {
-        alert(result.error || '上传失败');
+        alert(result.error || t('common.uploadFailed'));
       }
     } catch (err) {
-      console.error('上传视频失败:', err);
-      alert('上传失败，请重试');
+      console.error('upload video failed:', err);
+      alert(t('videoMat.uploadRetry'));
     } finally {
       setUploading(false);
       if (videoInputRef.current) {
@@ -101,7 +97,6 @@ export const VideoMaterialManagement = () => {
     }
   };
 
-  // 确认添加视频
   const handleConfirmAdd = async () => {
     try {
       const result = await apiService.createVideo(modalData);
@@ -110,12 +105,11 @@ export const VideoMaterialManagement = () => {
       }
       closeModal();
     } catch (err) {
-      console.error('保存视频失败:', err);
-      alert('保存失败，请重试');
+      console.error('save video failed:', err);
+      alert(t('videoMat.saveRetry'));
     }
   };
 
-  // 确认编辑视频
   const handleConfirmEdit = async () => {
     try {
       const result = await apiService.updateVideo(modalData.id, modalData);
@@ -124,30 +118,27 @@ export const VideoMaterialManagement = () => {
       }
       closeModal();
     } catch (err) {
-      console.error('更新视频失败:', err);
-      alert('更新失败，请重试');
+      console.error('update video failed:', err);
+      alert(t('videoMat.updateRetry'));
     }
   };
 
-  // 删除视频
   const handleDelete = async (id) => {
-    if (!window.confirm('确定要删除这个视频素材吗？')) return;
+    if (!window.confirm(t('videoMat.confirmDelete'))) return;
 
     try {
       await apiService.deleteVideo(id);
       setVideos(videos.filter(v => v.id !== id));
     } catch (err) {
-      console.error('删除视频失败:', err);
-      alert('删除失败，请重试');
+      console.error('delete video failed:', err);
+      alert(t('videoMat.deleteRetry'));
     }
   };
 
-  // 处理表单变更
   const handleInputChange = (field, value) => {
     setModalData({ ...modalData, [field]: value });
   };
 
-  // 触发文件选择
   const triggerVideoSelect = () => {
     if (videoInputRef.current) {
       videoInputRef.current.click();
@@ -164,14 +155,14 @@ export const VideoMaterialManagement = () => {
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-primary-placeholder" />
               <input
                 type="text"
-                placeholder="搜索视频素材..."
+                placeholder={t('videoMat.searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 pr-4 py-2 border-2 border-stroke-light rounded-xl text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none w-64 transition-all duration-200"
               />
             </div>
             <span className="text-sm text-primary-muted">
-              共 {filteredVideos.length} 个视频
+              {t('videoMat.totalCount', { count: filteredVideos.length })}
             </span>
           </div>
 
@@ -191,12 +182,12 @@ export const VideoMaterialManagement = () => {
               {uploading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  上传中...
+                  {t('common.uploading')}
                 </>
               ) : (
                 <>
                   <Upload className="w-4 h-4" />
-                  上传视频
+                  {t('videoMat.uploadVideo')}
                 </>
               )}
             </button>
@@ -213,8 +204,8 @@ export const VideoMaterialManagement = () => {
         ) : filteredVideos.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-primary-placeholder">
             <Video className="w-12 h-12 mb-3 opacity-50" />
-            <p>暂无视频素材</p>
-            <p className="text-sm mt-1">点击上传按钮添加视频</p>
+            <p>{t('videoMat.noVideos')}</p>
+            <p className="text-sm mt-1">{t('videoMat.clickUploadHint')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -266,14 +257,14 @@ export const VideoMaterialManagement = () => {
                       className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-dark hover:bg-warning-light border border-transparent hover:border-primary rounded-xl transition-all duration-200 font-medium"
                     >
                       <Edit className="w-3.5 h-3.5" />
-                      编辑
+                      {t('common.edit')}
                     </button>
                     <button
                       onClick={() => handleDelete(video.id)}
                       className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-error hover:bg-error-light border border-transparent hover:border-error rounded-xl transition-all duration-200 font-medium"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      删除
+                      {t('common.delete')}
                     </button>
                   </div>
                 </div>
@@ -289,7 +280,7 @@ export const VideoMaterialManagement = () => {
           <div className="bg-white rounded-[24px] border-2 border-stroke-light shadow-[4px_4px_0px_0px_var(--color-dark)] w-full max-w-md">
             <div className="flex items-center justify-between p-6 border-b-2 border-stroke-light">
               <h3 className="text-lg font-semibold text-primary">
-                {modalType === 'add' ? '添加视频素材' : '编辑视频素材'}
+                {modalType === 'add' ? t('videoMat.addTitle') : t('videoMat.editTitle')}
               </h3>
               <button
                 onClick={closeModal}
@@ -314,13 +305,13 @@ export const VideoMaterialManagement = () => {
               {/* 视频名称 */}
               <div>
                 <label className="block text-sm font-medium text-primary-secondary mb-1">
-                  视频名称 <span className="text-error">*</span>
+                  {t('videoMat.nameLabel')} <span className="text-error">*</span>
                 </label>
                 <input
                   type="text"
                   value={modalData.name || ''}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  placeholder="请输入视频名称"
+                  placeholder={t('videoMat.namePlaceholder')}
                   className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
                 />
               </div>
@@ -328,12 +319,12 @@ export const VideoMaterialManagement = () => {
               {/* 视频描述 */}
               <div>
                 <label className="block text-sm font-medium text-primary-secondary mb-1">
-                  视频描述
+                  {t('videoMat.descLabel')}
                 </label>
                 <textarea
                   value={modalData.description || ''}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="请输入视频描述（可选）"
+                  placeholder={t('videoMat.descPlaceholder')}
                   rows={3}
                   className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none transition-all duration-200"
                 />
@@ -342,13 +333,13 @@ export const VideoMaterialManagement = () => {
               {/* 标签 */}
               <div>
                 <label className="block text-sm font-medium text-primary-secondary mb-1">
-                  标签
+                  {t('common.tags')}
                 </label>
                 <input
                   type="text"
                   value={modalData.tags?.join(', ') || ''}
-                  onChange={(e) => handleInputChange('tags', e.target.value.split(',').map(t => t.trim()))}
-                  placeholder="标签1, 标签2, 标签3（可选）"
+                  onChange={(e) => handleInputChange('tags', e.target.value.split(',').map(s => s.trim()))}
+                  placeholder={t('videoMat.tagsPlaceholder')}
                   className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
                 />
               </div>
@@ -356,13 +347,13 @@ export const VideoMaterialManagement = () => {
               {/* 运镜 */}
               <div>
                 <label className="block text-sm font-medium text-primary-secondary mb-1">
-                  运镜
+                  {t('videoMat.cameraMovement')}
                 </label>
                 <input
                   type="text"
                   value={modalData.camera_movement || ''}
                   onChange={(e) => handleInputChange('camera_movement', e.target.value)}
-                  placeholder="请输入运镜方式（可选）"
+                  placeholder={t('videoMat.cameraPlaceholder')}
                   className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
                 />
               </div>
@@ -370,12 +361,12 @@ export const VideoMaterialManagement = () => {
               {/* 画面内容 */}
               <div>
                 <label className="block text-sm font-medium text-primary-secondary mb-1">
-                  画面内容
+                  {t('videoMat.sceneContent')}
                 </label>
                 <textarea
                   value={modalData.scene_content || ''}
                   onChange={(e) => handleInputChange('scene_content', e.target.value)}
-                  placeholder="请输入画面内容描述（可选）"
+                  placeholder={t('videoMat.scenePlaceholder')}
                   rows={3}
                   className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none transition-all duration-200"
                 />
@@ -387,7 +378,7 @@ export const VideoMaterialManagement = () => {
                 onClick={closeModal}
                 className="px-4 py-2 text-dark border-2 border-stroke-light rounded-xl hover:bg-warning-light hover:border-primary transition-all duration-200 font-medium"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={modalType === 'add' ? handleConfirmAdd : handleConfirmEdit}
@@ -395,7 +386,7 @@ export const VideoMaterialManagement = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-dark text-white border-2 border-primary rounded-xl hover:bg-warning-light hover:text-dark disabled:opacity-50 disabled:cursor-not-allowed shadow-neo transition-all duration-200 font-bold"
               >
                 <Check className="w-4 h-4" />
-                {modalType === 'add' ? '添加' : '保存'}
+                {modalType === 'add' ? t('common.add') : t('common.save')}
               </button>
             </div>
           </div>
@@ -406,4 +397,3 @@ export const VideoMaterialManagement = () => {
 };
 
 export default VideoMaterialManagement;
-
