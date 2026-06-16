@@ -8,8 +8,35 @@ import {
   languageSkillOptions,
 } from './createCourseOptions';
 
+function splitPastedTagLines(text) {
+  return String(text || '')
+    .split(/\r?\n/)
+    .map((item) => item.replace(/[\u200B-\u200D\uFEFF]/g, '').trim())
+    .filter(Boolean);
+}
+
+function toTagArray(value) {
+  if (!value) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
 export function CreateCourseStepOne() {
   const { t } = useTranslation();
+  const form = Form.useFormInstance();
+
+  const handleTagPaste = React.useCallback((event, field) => {
+    const lines = splitPastedTagLines(event.clipboardData?.getData('text'));
+    if (lines.length < 2) return;
+
+    event.preventDefault();
+    const current = toTagArray(form.getFieldValue(field)).map((item) => String(item || '').trim()).filter(Boolean);
+    const next = [...current];
+    lines.forEach((line) => {
+      if (!next.includes(line)) next.push(line);
+    });
+    form.setFieldsValue({ [field]: next });
+  }, [form]);
+
   return (
     <>
       <div className="fr-create-step-head">
@@ -85,11 +112,11 @@ export function CreateCourseStepOne() {
         >
           <Select
             mode="tags"
-            tokenSeparators={[',', '，', '、']}
             open={false}
             suffixIcon={null}
             placeholder={t('createCourse.vocabPlaceholder')}
             className="fr-create-tag-select"
+            onPasteCapture={(event) => handleTagPaste(event, 'vocabularies')}
           />
         </Form.Item>
 
@@ -100,11 +127,11 @@ export function CreateCourseStepOne() {
         >
           <Select
             mode="tags"
-            tokenSeparators={[',', '，', '、']}
             open={false}
             suffixIcon={null}
             placeholder={t('createCourse.grammarPlaceholder')}
             className="fr-create-tag-select"
+            onPasteCapture={(event) => handleTagPaste(event, 'grammars')}
           />
         </Form.Item>
       </div>

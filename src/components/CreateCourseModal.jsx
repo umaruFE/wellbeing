@@ -73,7 +73,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
 
         const keywordsList = [data.vocabulary, data.grammar]
           .filter(Boolean)
-          .flatMap(v => Array.isArray(v) ? v : v.split(',').map(k => k.trim()))
+          .flatMap(v => Array.isArray(v) ? v : v.split(/\r?\n/).map(k => k.trim()))
           .filter(Boolean);
 
         const saveData = {
@@ -245,7 +245,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">词汇</span>
                     <textarea
                       className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
-                      placeholder="请输入核心词汇，用逗号或换行分隔"
+                      placeholder="请输入核心词汇，每行一个"
                       value={Array.isArray(formData.vocabulary) ? formData.vocabulary.join(', ') : (formData.vocabulary || '')}
                       onChange={e => updateField('vocabulary', e.target.value)}
                     />
@@ -254,7 +254,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                     <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">语法/句型</span>
                     <textarea
                       className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
-                      placeholder="请输入核心句型，用逗号或换行分隔"
+                      placeholder="请输入核心句型，每行一个"
                       value={Array.isArray(formData.grammar) ? formData.grammar.join(', ') : (formData.grammar || '')}
                       onChange={e => updateField('grammar', e.target.value)}
                     />

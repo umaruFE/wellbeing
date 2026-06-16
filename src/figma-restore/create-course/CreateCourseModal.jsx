@@ -203,7 +203,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
       const keywordsList = [values.vocabularies, values.grammars]
         .filter(Boolean)
-        .flatMap(v => Array.isArray(v) ? v : v.split(',').map(k => k.trim()))
+        .flatMap(v => Array.isArray(v) ? v : v.split(/\r?\n/).map(k => k.trim()))
         .filter(Boolean);
 
       const saveData = {

@@ -59,6 +59,26 @@ function toArray(value) {
   return Array.isArray(value) ? value : [value];
 }
 
+function splitPastedTagLines(text) {
+  return String(text || '')
+    .split(/\r?\n/)
+    .map((item) => item.replace(/[\u200B-\u200D\uFEFF]/g, '').trim())
+    .filter(Boolean);
+}
+
+function handleTagPaste(event, form, field) {
+  const lines = splitPastedTagLines(event.clipboardData?.getData('text'));
+  if (lines.length < 2) return;
+
+  event.preventDefault();
+  const current = toArray(form.getFieldValue(field)).map((item) => String(item || '').trim()).filter(Boolean);
+  const next = [...current];
+  lines.forEach((line) => {
+    if (!next.includes(line)) next.push(line);
+  });
+  form.setFieldsValue({ [field]: next });
+}
+
 function compactText(value, max = 34) {
   const text = String(value || '').replace(/\s+/g, '').replace(/[。；;]+$/g, '');
   if (!text) return '';
@@ -689,10 +709,20 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   </div>
                   <div className="overview-adjust-two">
                     <Form.Item label="核心词汇" name="vocabularies">
-                      <Select mode="tags" tokenSeparators={['、', ',', '，']} placeholder="例如：happy、sad、angry、calm" />
+                      <Select
+                        mode="tags"
+                        className="overview-tag-select"
+                        placeholder="例如：happy，输入后按 Enter 添加"
+                        onPasteCapture={(event) => handleTagPaste(event, editForm, 'vocabularies')}
+                      />
                     </Form.Item>
                     <Form.Item label="核心语法/句型" name="grammars">
-                      <Select mode="tags" tokenSeparators={['、', ',', '，']} placeholder="例如：I feel... because... / Can you...?" />
+                      <Select
+                        mode="tags"
+                        className="overview-tag-select"
+                        placeholder="例如：I feel... because...，输入后按 Enter 添加"
+                        onPasteCapture={(event) => handleTagPaste(event, editForm, 'grammars')}
+                      />
                     </Form.Item>
                   </div>
                   <Form.Item label="语言能力培养侧重（可多选）" name="languageSkills">
