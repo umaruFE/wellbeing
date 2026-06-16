@@ -72,6 +72,7 @@ export const defaultCreateCourseValues = {
   storyContext: '',
   keyOutcome: '',
   experiencePath: '',
+  experiencePaths: [],
   specialRequirements: '',
   attachments: [],
   atmosphere: '',

@@ -17,9 +17,17 @@ import './CreateCourseModal.css';
 const stepFields = [
   ['courseTitle', 'age', 'duration', 'classSize'],
   ['taskName', 'storyContext', 'keyOutcome'],
-  ['experiencePath'],
+  ['experiencePaths'],
   [],
 ];
+
+function normalizeExperiencePaths(values) {
+  return Array.isArray(values) ? values.filter(Boolean) : (values ? [values] : []);
+}
+
+function primaryExperiencePath(paths) {
+  return normalizeExperiencePaths(paths)[0] || '';
+}
 
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
@@ -72,7 +80,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         vocabulary: values.vocabularies || [],
         grammar: values.grammars || [],
         skills: values.languageSkills || [],
-        paths: values.experiencePath ? [values.experiencePath] : [],
+        paths: normalizeExperiencePaths(values.experiencePaths || values.experiencePath),
         taskName: values.taskName || '',
         storyContext: values.storyContext || '',
         keyOutcome: values.keyOutcome || '',
@@ -165,7 +173,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         vocabulary: values.vocabularies || [],
         grammar: values.grammars || [],
         skills: values.languageSkills || [],
-        paths: values.experiencePath ? [values.experiencePath] : [],
+        paths: normalizeExperiencePaths(values.experiencePaths || values.experiencePath),
         theme: values.taskName || '',
         taskName: values.taskName || '',
         storyContext: values.storyContext || '',
@@ -223,7 +231,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
           vocabularies: values.vocabularies || [],
           grammars: values.grammars || [],
           languageSkills: values.languageSkills || [],
-          experiencePath: values.experiencePath || '',
+          experiencePaths: normalizeExperiencePaths(values.experiencePaths || values.experiencePath),
+          experiencePath: primaryExperiencePath(values.experiencePaths || values.experiencePath),
           taskName: values.taskName || '',
           storyContext: values.storyContext || '',
           keyOutcome: values.keyOutcome || '',
@@ -261,7 +270,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         vocabularies: values.vocabularies || [],
         grammars: values.grammars || [],
         languageSkills: values.languageSkills || [],
-        experiencePath: values.experiencePath || '',
+        experiencePaths: normalizeExperiencePaths(values.experiencePaths || values.experiencePath),
+        experiencePath: primaryExperiencePath(values.experiencePaths || values.experiencePath),
         taskName: values.taskName || '',
         storyContext: values.storyContext || '',
         keyOutcome: values.keyOutcome || '',

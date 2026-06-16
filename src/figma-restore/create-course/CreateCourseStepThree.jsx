@@ -23,7 +23,14 @@ export function CreateCourseStepThree() {
         </div>
       </div>
 
-      <Form.Item name="experiencePath" rules={[{ required: true, message: t('createCourse.pathRequired') }]}>
+      <Form.Item
+        name="experiencePaths"
+        rules={[{
+          validator: (_, value) => Array.isArray(value) && value.length > 0
+            ? Promise.resolve()
+            : Promise.reject(new Error(t('createCourse.pathRequired'))),
+        }]}
+      >
         <PathSelector t={t} />
       </Form.Item>
     </>
@@ -31,14 +38,23 @@ export function CreateCourseStepThree() {
 }
 
 function PathSelector({ value, onChange, t }) {
+  const selected = Array.isArray(value) ? value : (value ? [value] : []);
+  const togglePath = (pathValue) => {
+    onChange(
+      selected.includes(pathValue)
+        ? selected.filter((item) => item !== pathValue)
+        : [...selected, pathValue]
+    );
+  };
+
   return (
     <div className="fr-path-grid">
       {experiencePaths.map(path => (
         <button
           key={path.value}
           type="button"
-          className={`fr-path-card tone-${path.tone} ${value === path.value ? 'active' : ''}`}
-          onClick={() => onChange(path.value)}
+          className={`fr-path-card tone-${path.tone} ${selected.includes(path.value) ? 'active' : ''}`}
+          onClick={() => togglePath(path.value)}
         >
           <div className="fr-path-visual">
             <img className={`fr-path-img path-${path.tone}`} src={pathImages[path.value]} alt={t(path.titleKey)} />

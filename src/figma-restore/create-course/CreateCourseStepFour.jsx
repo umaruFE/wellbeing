@@ -1,9 +1,30 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Form, Input, Radio } from 'antd';
+import { Form, Input } from 'antd';
 import { atmosphereOptions } from './createCourseOptions';
 
 const { TextArea } = Input;
+
+function ClearableButtonGroup({ value, onChange, options, getLabel, className }) {
+  return (
+    <div className={className}>
+      {options.map((option) => {
+        const selected = value === option.value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            className={`ant-radio-button-wrapper ${selected ? 'ant-radio-button-wrapper-checked' : ''}`}
+            onClick={() => onChange?.(selected ? '' : option.value)}
+          >
+            <span className="ant-radio-button" />
+            {getLabel(option)}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export function CreateCourseStepFour() {
   const { t } = useTranslation();
@@ -24,9 +45,11 @@ export function CreateCourseStepFour() {
       </Form.Item>
 
       <Form.Item label={t('createCourse.atmosphereLabel')} name="atmosphere" className="fr-magic-atmosphere">
-        <Radio.Group optionType="button" buttonStyle="solid" className="fr-create-radio-group">
-          {atmosphereOptions.map(option => <Radio.Button key={option.value} value={option.value}>{t(option.labelKey)}</Radio.Button>)}
-        </Radio.Group>
+        <ClearableButtonGroup
+          className="fr-create-radio-group"
+          options={atmosphereOptions}
+          getLabel={(option) => t(option.labelKey)}
+        />
       </Form.Item>
     </>
   );

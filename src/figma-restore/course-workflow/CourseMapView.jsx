@@ -59,6 +59,35 @@ function toArray(value) {
   return Array.isArray(value) ? value : [value];
 }
 
+function normalizeExperiencePaths(course = {}, fallback = '') {
+  const values = [
+    ...toArray(course.experiencePaths),
+    ...toArray(course.courseData?.experiencePaths),
+    ...toArray(course.paths),
+    ...toArray(course.courseData?.paths),
+    course.experiencePath,
+    course.courseData?.experiencePath,
+  ];
+  const list = [...new Set(values.map((item) => String(item || '').trim()).filter(Boolean))];
+  return list.length ? list : toArray(fallback).map((item) => String(item || '').trim()).filter(Boolean);
+}
+
+function primaryExperiencePath(paths) {
+  return toArray(paths).find(Boolean) || '';
+}
+
+function formatExperiencePaths(paths, fallback = '') {
+  const list = normalizeExperiencePaths({ experiencePaths: paths }, fallback);
+  return list.join('、');
+}
+
+function updateExperiencePaths(values) {
+  const next = toArray(values).filter(Boolean);
+  const last = next[next.length - 1];
+  if (last === 'AI 自动匹配') return ['AI 自动匹配'];
+  return next.filter((item) => item !== 'AI 自动匹配');
+}
+
 function splitPastedTagLines(text) {
   return String(text || '')
     .split(/\r?\n/)
@@ -77,6 +106,27 @@ function handleTagPaste(event, form, field) {
     if (!next.includes(line)) next.push(line);
   });
   form.setFieldsValue({ [field]: next });
+}
+
+function ClearableButtonGroup({ value, onChange, options, className = '' }) {
+  return (
+    <div className={className}>
+      {options.map((option) => {
+        const selected = value === option;
+        return (
+          <button
+            key={option}
+            type="button"
+            className={`ant-radio-button-wrapper ${selected ? 'ant-radio-button-wrapper-checked' : ''}`}
+            onClick={() => onChange?.(selected ? '' : option)}
+          >
+            <span className="ant-radio-button" />
+            {option}
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function compactText(value, max = 34) {
@@ -99,7 +149,7 @@ function buildFallbackJourney(course, map, taskName) {
   const vocab = pickListText(course.vocabularies, toolkit || '关键词和任务句型');
   const grammar = pickListText(course.grammars, '核心句型');
   const skills = pickListText(course.languageSkills, '听说表达');
-  const path = course.experiencePath || map.path || '艺术表达';
+  const path = formatExperiencePaths(normalizeExperiencePaths(course, map.path), '艺术表达');
   const atmosphere = course.atmosphere && course.atmosphere !== 'AI 自动匹配' ? course.atmosphere : '';
 
   return {
@@ -147,7 +197,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       vocabulary: toArray(sourceCourse.vocabularies),
       grammar: toArray(sourceCourse.grammars),
       skills: toArray(sourceCourse.languageSkills),
-      experiencePath: sourceCourse.experiencePath || sourceMap.path,
+      experiencePaths: normalizeExperiencePaths(sourceCourse, sourceMap.path),
+      experiencePath: primaryExperiencePath(normalizeExperiencePaths(sourceCourse, sourceMap.path)),
+      paths: normalizeExperiencePaths(sourceCourse, sourceMap.path),
       taskName: sourceCourse.taskName || sourceCourse.theme || taskName,
       theme: sourceCourse.theme || sourceCourse.taskName || '',
       storyContext: sourceCourse.storyContext || sourceMap.storyline,
@@ -231,9 +283,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       taskName,
       storyContext: course.storyContext || map.storyline,
       keyOutcome: course.keyOutcome || map.keyOutcome,
-      experiencePath: course.experiencePath || map.path,
+      experiencePaths: normalizeExperiencePaths(course, map.path),
       specialRequirements: course.specialRequirements || '',
-      atmosphere: course.atmosphere || 'AI 自动匹配',
+      atmosphere: course.atmosphere || '',
       attachments: [],
     });
     setEditOpen(true);
@@ -252,7 +304,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       vocabulary: values.vocabularies || [],
       grammar: values.grammars || [],
       skills: values.languageSkills || [],
-      paths: values.experiencePath ? [values.experiencePath] : [],
+      paths: normalizeExperiencePaths({ experiencePaths: values.experiencePaths }),
       theme: values.taskName || '',
       taskName: values.taskName || '',
       storyContext: values.storyContext || '',
@@ -303,7 +355,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       taskName: values.taskName,
       storyContext: values.storyContext,
       keyOutcome: values.keyOutcome,
-      experiencePath: values.experiencePath,
+      experiencePaths: normalizeExperiencePaths({ experiencePaths: values.experiencePaths }),
+      experiencePath: primaryExperiencePath(values.experiencePaths),
       specialRequirements: values.specialRequirements,
       atmosphere: values.atmosphere,
       attachments: attachments.length ? attachments : course.attachments,
@@ -320,6 +373,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         ...(course.courseData || {}),
         courseOverview: overview || course.courseData?.courseOverview,
         themeImageUrl: themeImageUrl || course.themeImageUrl,
+        experiencePaths: nextCourseBase.experiencePaths,
+        experiencePath: nextCourseBase.experiencePath,
         ...(nextJourney ? { journey: nextJourney } : {}),
       },
     });
@@ -380,7 +435,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           vocabulary: toArray(course.vocabularies),
           grammar: toArray(course.grammars),
           skills: toArray(course.languageSkills),
-          paths: course.experiencePath ? [course.experiencePath] : [],
+          paths: normalizeExperiencePaths(course),
           theme: course.theme || course.taskName || map.path,
           storyContext: course.storyContext || map.storyline,
           keyOutcome: course.keyOutcome || map.keyOutcome,
@@ -430,7 +485,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           vocabulary: toArray(course.vocabularies),
           grammar: toArray(course.grammars),
           skills: toArray(course.languageSkills),
-          paths: course.experiencePath ? [course.experiencePath] : [],
+          paths: normalizeExperiencePaths(course),
           theme: course.theme || course.taskName || map.path,
           taskName: course.taskName || course.theme || '',
           storyContext: course.storyContext || map.storyline,
@@ -742,9 +797,12 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   </Form.Item>
                 </ModalSection>
 
-                <ModalSection title="选择体验路径" en="Choose the Path" desc="选择一种最能让孩子们沉浸其中的探索方式。">
-                  <Form.Item name="experiencePath">
-                    <Radio.Group optionType="button" buttonStyle="solid" options={pathOptions} />
+                <ModalSection title="选择体验路径" en="Choose the Path" desc="可选择一种或多种能让孩子们沉浸其中的探索方式。">
+                  <Form.Item name="experiencePaths">
+                    <Checkbox.Group
+                      options={pathOptions}
+                      onChange={(values) => editForm.setFieldsValue({ experiencePaths: updateExperiencePaths(values) })}
+                    />
                   </Form.Item>
                 </ModalSection>
 
@@ -765,7 +823,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                     </Upload>
                   </Form.Item>
                   <Form.Item label="氛围偏好（可选，不选则由 AI 自动匹配）" name="atmosphere">
-                    <Radio.Group optionType="button" buttonStyle="solid" options={atmosphereOptions} />
+                    <ClearableButtonGroup options={atmosphereOptions} className="overview-clearable-radio-group" />
                   </Form.Item>
                 </ModalSection>
               </Form>
