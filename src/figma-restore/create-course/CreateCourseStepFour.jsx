@@ -17,7 +17,6 @@ function ClearableButtonGroup({ value, onChange, options, getLabel, className })
             className={`ant-radio-button-wrapper ${selected ? 'ant-radio-button-wrapper-checked' : ''}`}
             onClick={() => onChange?.(selected ? '' : option.value)}
           >
-            <span className="ant-radio-button" />
             {getLabel(option)}
           </button>
         );

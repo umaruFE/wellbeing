@@ -215,7 +215,10 @@ body.fr-workflow-route-active .header{display:none}
 .overview-ant-form .ant-radio-group{display:flex;flex-wrap:wrap;gap:8px}
 .overview-clearable-radio-group{display:flex;flex-wrap:wrap;gap:8px}
 .overview-ant-form .ant-radio-button-wrapper{border:2px solid #d8d3cb!important;border-radius:16px!important;background:#fff!important;color:#374151!important;font-size:13px!important;height:32px;line-height:28px;font-weight:700;box-shadow:none!important}
+.overview-clearable-radio-group button.ant-radio-button-wrapper{appearance:none;font-family:inherit;cursor:pointer;margin:0;padding:0 15px;display:inline-flex;align-items:center;justify-content:center}
 .overview-ant-form .ant-radio-button-wrapper:before{display:none!important}
+.overview-clearable-radio-group button.ant-radio-button-wrapper:before{display:none!important}
+.overview-clearable-radio-group button.ant-radio-button-wrapper .ant-radio-button{display:none}
 .overview-ant-form .ant-radio-button-wrapper-checked{background:#ff705f!important;border-color:#ff705f!important;color:#fff!important;box-shadow:0 3px 3px rgba(255,112,95,.3)!important}
 .overview-ant-form .ant-checkbox-group{display:flex;flex-wrap:wrap;gap:8px}
 .overview-ant-form .ant-checkbox-wrapper{margin:0;border:2px solid #d8d3cb;border-radius:16px;padding:5px 12px;background:#fff;font-size:13px;font-weight:700;color:#374151}

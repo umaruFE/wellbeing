@@ -306,6 +306,7 @@
 }
 
 .fr-create-radio-group .ant-radio-button-wrapper {
+  appearance: none;
   height: 32px;
   padding: 0 15px;
   border: 2px solid #333e4e;
@@ -320,6 +321,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: inherit;
+  cursor: pointer;
+  margin: 0;
+}
+
+.fr-create-radio-group button.ant-radio-button-wrapper::before {
+  display: none !important;
+}
+
+.fr-create-radio-group button.ant-radio-button-wrapper .ant-radio-button {
+  display: none;
 }
 
 .fr-create-radio-group .ant-radio-button-wrapper:not(:first-child) {
