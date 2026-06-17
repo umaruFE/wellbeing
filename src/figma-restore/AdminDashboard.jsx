@@ -278,7 +278,7 @@ const AssetSection = ({ stats, statsLoading }) => {
             </span>
             <Progress
               percent={percent}
-              strokeColor="#f5a233"
+              strokeColor="#333E4E"
               strokeWidth={6}
               showInfo={false}
               className="power-progress"
