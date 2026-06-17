@@ -71,32 +71,35 @@
 .task-button {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   column-gap: 6px;
-  border: 2px solid #f4785e;
+  min-width: 105px;
+  height: 32px;
+  border: 2px solid #333e4e;
   border-radius: 100px;
-  box-shadow: 3px 3px 0px 0px #f4785e;
-  background: #fdece8;
-  padding: 7px 11px;
+  box-shadow: none;
+  background: #ffffff;
+  padding: 0 12px;
   cursor: pointer;
   outline: none;
   transition: all 0.2s ease;
 }
 
 .task-button:hover {
-  background: #fbd8cf;
+  background: #f6e6cc;
 }
 
 .task-dot {
   width: 6px;
   height: 6px;
   border-radius: 9999px;
-  background: #f4785e;
+  background: #333e4e;
 }
 
 .task-text {
   font-size: 14px;
-  font-weight: 500;
-  color: #f4785e;
+  font-weight: 700;
+  color: #333e4e;
   line-height: 22px;
   letter-spacing: 0;
   font-family: "HarmonyOS Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;

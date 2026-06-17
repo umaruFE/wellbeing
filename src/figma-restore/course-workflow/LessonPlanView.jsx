@@ -28,6 +28,7 @@ import { EditStepModal } from './lesson-design/EditStepModal';
 import { StepCardActions } from './lesson-design/StepCardActions';
 import { StepDetailModal } from './lesson-design/StepDetailModal';
 import { buildStepFlowItems } from './lesson-design/lessonDesignUtils';
+import planeIcon from '../../assets/create-course/plane.png';
 
 const { TextArea } = Input;
 
@@ -913,6 +914,16 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   return (
     <div id="ed-tbl">
       {toast && <div className="tbl-toast">{toast}</div>}
+      <div className="lesson-design-page-header">
+        <div className="lesson-design-title-row">
+          <h2 className="lesson-design-page-title">教案设计|Course Map</h2>
+          <div className="lesson-design-view-switch" role="group" aria-label="教案视图模式">
+            <button type="button" className="active">地图模式</button>
+            <button type="button">总览模式</button>
+          </div>
+          <img src={planeIcon} alt="" className="lesson-design-plane" />
+        </div>
+      </div>
       <div className="tbl-inner-toolbar">
         <div className="tbl-ib-left">
           <button type="button" className="tbl-ib-btn" disabled title="撤回 (Ctrl+Z)"><RotateCcw size={14} /></button>
@@ -942,7 +953,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                     event.stopPropagation();
                     openPhaseDetail(phase);
                   }}>
-                  <ClipboardList size={14} />
+                  <MoreVertical size={16} />
                 </button>
                 {menuKey === `phase-${phase.key}` && (
                   <div className="step-menu-dropdown open phase-menu">

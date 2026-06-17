@@ -10,6 +10,7 @@ import {
   LayoutDashboard,
   Music,
   Settings,
+  Sparkles,
   Users,
   Video,
 } from 'lucide-react';
@@ -75,7 +76,7 @@ export const Sidebar = () => {
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <div className="logo-icon">
-            <ChevronRight size={16} />
+            <Sparkles size={16} />
           </div>
           <span className="logo-text">{t('common.appName')}</span>
         </div>

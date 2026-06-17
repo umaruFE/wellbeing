@@ -3,7 +3,6 @@ import { Button, Checkbox, Form, Input, message, Radio, Select, Upload } from 'a
 import {
   Clock,
   Heart,
-  ListChecks,
   MessageSquare,
   Paperclip,
   PencilLine,
@@ -16,6 +15,11 @@ import {
 } from 'lucide-react';
 import { buildCourseMap } from './workflowData';
 import apiService from '../../services/api';
+import compassIcon from '../../assets/create-course/compass.svg';
+import lightIcon from '../../assets/create-course/light.svg';
+import planeIcon from '../../assets/create-course/plane.png';
+import starIcon from '../../assets/create-course/star.svg';
+import toolkitIcon from '../../assets/create-course/toolkit.svg';
 
 const { TextArea } = Input;
 
@@ -568,7 +572,10 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   return (
     <div className="fr-workflow-map-step view-overview-active">
       <div className="overview-panel-header">
-        <h2 className="overview-panel-title">课程地图|Course Map</h2>
+        <h2 className="overview-panel-title">
+          课程地图|Course Map
+          <img src={planeIcon} alt="" className="overview-panel-title-icon" />
+        </h2>
         <div className="overview-panel-actions">
           <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={openRegen}>
             重新生成
@@ -640,34 +647,24 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           </section>
 
           <section className="course-map-v2-panel">
-            <div className="course-map-v2-panel-head">
-              <div>
-                <h3 className="course-map-v2-panel-title">课程目标解构</h3>
-                <div className="course-map-v2-panel-kicker">
-                  把故事、语言工具、成长目标和课堂旅程拆成可执行的设计依据。
-                </div>
-              </div>
-              <div className="course-map-v2-panel-badge">Course Map</div>
-            </div>
-
             <div className="course-map-v2-grid">
-              <CourseGoal icon={MessageSquare} title="语言工具箱" en="Language Toolkit" color="#3b82f6">
+              <CourseGoal icon={MessageSquare} image={toolkitIcon} title="语言工具箱" en="Language Toolkit" tone="toolkit" color="#d8ca8d">
                 {map.toolkit}
               </CourseGoal>
-              <CourseGoal icon={Target} title="最终产出" en="Key Outcome" color="#ff705f">
+              <CourseGoal icon={Target} image={starIcon} title="终极产出" en="Key Outcome" tone="outcome" color="#f6e6cc">
                 {map.keyOutcome}
               </CourseGoal>
-              <CourseGoal icon={Heart} title="成长罗盘" en="Growth Compass" color="#9b62d1">
+              <CourseGoal icon={Heart} image={compassIcon} title="成长罗盘" en="Growth Compass" tone="growth" color="#d9dde9">
                 {map.growth}
               </CourseGoal>
-              <CourseGoal icon={Users} title="核心体验" en="How We Learn" color="#4f9f69">
+              <CourseGoal icon={Users} image={lightIcon} title="核心体验" en="How We Learn" tone="learn" color="#dfe2bb">
                 {map.experience}
               </CourseGoal>
 
               <article className="course-map-v2-goal wide">
                 <div className="course-map-v2-goal-title">
                   <span className="course-map-v2-icon" style={{ '--goal-color': '#ff705f' }}>
-                    <ListChecks size={18} />
+                    <img src={planeIcon} alt="" />
                   </span>
                   课堂旅程
                   <span className="course-map-v2-title-en">Class Journey</span>
@@ -853,12 +850,12 @@ function ModalSection({ title, en, desc, children }) {
   );
 }
 
-function CourseGoal({ icon: Icon, title, en, color, children }) {
+function CourseGoal({ icon: Icon, image, title, en, color, tone, children }) {
   return (
-    <article className="course-map-v2-goal">
+    <article className={`course-map-v2-goal ${tone ? `is-${tone}` : ''}`}>
       <div className="course-map-v2-goal-title">
         <span className="course-map-v2-icon" style={{ '--goal-color': color }}>
-          {React.createElement(Icon, { size: 18 })}
+          {image ? <img src={image} alt="" /> : React.createElement(Icon, { size: 18 })}
         </span>
         {title}
         <span className="course-map-v2-title-en">{en}</span>
