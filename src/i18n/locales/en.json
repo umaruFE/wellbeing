@@ -110,7 +110,7 @@
     "recentCourses": "Recent",
     "viewAll": "View All",
     "quickActions": "Start Creating",
-    "createCourse": "Create New Course",
+    "createCourse": "New Course",
     "generateAsset": "Generate Asset",
     "noRecentCourses": "No recent courses",
     "statsOverview": "Stats Overview",
@@ -278,9 +278,9 @@
     "deleteAsset": "Delete Asset",
     "searchPlaceholder": "Search assets...",
     "noAssets": "No assets",
-    "generateImage": "Generate Image",
-    "generateAudio": "Generate Audio",
-    "generateVideo": "Generate Video",
+    "generateImage": "Image",
+    "generateAudio": "Audio",
+    "generateVideo": "Video",
     "selectFromLibrary": "Select from Library",
     "uploadedAt": "Uploaded At"
   },
@@ -560,7 +560,7 @@
     "characterSetting": "Character Setting",
     "duration": "Duration",
     "generateScript": "Generate Script",
-    "generateImages": "Generate Images",
+    "generateImages": "Images",
     "composeVideo": "Compose Video",
     "generating": "Generating...",
     "completed": "Completed"
@@ -667,7 +667,7 @@
     "noTasks": "No tasks"
   },
   "createCourse": {
-    "title": "Create New Course",
+    "title": "New Course",
     "step1": "Basic Information",
     "step2": "Learning Goals",
     "step3": "Story & Task",
@@ -723,7 +723,7 @@
     "completeRequired": "Please complete the required fields in the current step",
     "step1Title": "Set the Course",
     "step1Subtitle": "Define the language toolkit and student profile for this lesson.",
-    "step2Title": "Design the Adventure",
+    "step2Title": "Design Adventure",
     "step2Subtitle": "Create a fun story and challenge that uses this toolkit.",
     "step3Title": "Choose the Path",
     "step3Subtitle": "Choose one or more exploration styles that best immerse students.",
