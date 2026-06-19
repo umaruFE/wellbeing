@@ -1,7 +1,7 @@
 import React from 'react';
 import { Input, Select } from 'antd';
 import { Search } from 'lucide-react';
-import { statusOptions } from './courseData';
+import { useTranslation } from 'react-i18next';
 
 export function CourseToolbar({
   search,
@@ -10,12 +10,19 @@ export function CourseToolbar({
   onSearchChange,
   onStatusChange,
 }) {
+  const { t } = useTranslation();
+  const statusOptions = [
+    { value: 'all', label: t('course.allStatus') },
+    { value: 'draft', label: t('course.draft') },
+    { value: 'published', label: t('course.published') },
+  ];
+
   return (
     <div className="fr-cm-toolbar">
       <Input
         value={search}
         onChange={(event) => onSearchChange(event.target.value)}
-        placeholder="搜索课程"
+        placeholder={t('course.searchPlaceholder')}
         prefix={<Search size={14} />}
       />
 

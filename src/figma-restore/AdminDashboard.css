@@ -553,6 +553,15 @@
   row-gap: 20px;
 }
 
+.recent-load-more-sentinel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 56px;
+  gap: 8px;
+}
+
 .recent-row {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

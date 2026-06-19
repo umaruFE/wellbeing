@@ -161,7 +161,17 @@
     "notSet": "Not set",
     "noCover": "No cover",
     "loadingMore": "Loading more...",
-    "allLoaded": "All courses loaded"
+    "allLoaded": "All courses loaded",
+    "loadMore": "Load More",
+    "newCourse": "New Course",
+    "scenarioTask": "Scenario Task",
+    "defaultClassSize": "9-15 students",
+    "durationMinutes": "{{minutes}} min",
+    "classSizeRange": "{{min}}-{{max}} students",
+    "classSizeAtMost": "≤{{count}} students",
+    "classSizeAtLeast": "≥{{count}} students",
+    "noMatchingCourses": "No matching courses",
+    "adjustFilters": "Try adjusting the search term or filters."
   },
   "lesson": {
     "title": "Lesson Plan",

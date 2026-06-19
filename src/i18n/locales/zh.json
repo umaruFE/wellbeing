@@ -161,7 +161,17 @@
     "notSet": "未设置",
     "noCover": "暂无封面",
     "loadingMore": "加载更多...",
-    "allLoaded": "已加载全部课程"
+    "allLoaded": "已加载全部课程",
+    "loadMore": "加载更多",
+    "newCourse": "新课程",
+    "scenarioTask": "情境任务",
+    "defaultClassSize": "9-15人",
+    "durationMinutes": "{{minutes}}分钟",
+    "classSizeRange": "{{min}}-{{max}}人",
+    "classSizeAtMost": "≤{{count}}人",
+    "classSizeAtLeast": "≥{{count}}人",
+    "noMatchingCourses": "暂无符合条件的课程",
+    "adjustFilters": "调整关键词或筛选条件后再试试。"
   },
   "lesson": {
     "title": "教案设计",

@@ -11,6 +11,43 @@ function pickFirstString(...values) {
   return values.find((value) => typeof value === 'string' && value.trim()) || '';
 }
 
+const coverUrlKeys = new Set([
+  'thumbnail',
+  'thumbnail_url',
+  'thumbnailUrl',
+  'cover',
+  'cover_url',
+  'coverUrl',
+  'cover_image',
+  'cover_image_url',
+  'coverImage',
+  'coverImageUrl',
+  'theme_image',
+  'theme_image_url',
+  'themeImage',
+  'themeImageUrl',
+  'image_url',
+  'imageUrl',
+]);
+
+function findNestedCoverUrl(value, seen = new Set()) {
+  const parsed = parseMaybeJson(value);
+  if (!parsed || typeof parsed !== 'object' || seen.has(parsed)) return '';
+  seen.add(parsed);
+
+  for (const key of coverUrlKeys) {
+    const direct = parsed[key];
+    if (typeof direct === 'string' && direct.trim()) return direct;
+  }
+
+  for (const nested of Object.values(parsed)) {
+    const found = findNestedCoverUrl(nested, seen);
+    if (found) return found;
+  }
+
+  return '';
+}
+
 export function getCourseData(course = {}) {
   return parseMaybeJson(course.course_data || course.courseData || course.data) || {};
 }
@@ -52,6 +89,7 @@ export function getCourseCoverUrl(course = {}) {
     nestedData.thumbnailUrl,
     nestedData.coverUrl,
     nestedData.themeImageUrl,
+    findNestedCoverUrl(course),
   );
 }
 

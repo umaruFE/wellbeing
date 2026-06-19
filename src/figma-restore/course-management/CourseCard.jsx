@@ -1,11 +1,13 @@
 import React from 'react';
 import { Users, Clock, Award, CircleDot, CheckCircle2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { CourseCoverFallback } from '../CourseCoverFallback';
 
 export function CourseCard({
   course,
   onOpen,
 }) {
+  const { t } = useTranslation();
   const isPublished = course.status === 'published';
 
   return (
@@ -15,7 +17,7 @@ export function CourseCard({
     >
       <div className={`fr-cm-cover tone-${course.coverTone}`}>
         {course.themeImageUrl || course.thumbnail ? (
-          <img className="fr-cm-cover-image" src={course.themeImageUrl || course.thumbnail} alt={course.title || '课程封面'} />
+          <img className="fr-cm-cover-image" src={course.themeImageUrl || course.thumbnail} alt={course.title || t('course.noCover')} />
         ) : (
           <CourseCoverFallback />
         )}
@@ -26,7 +28,7 @@ export function CourseCard({
           <h3>{course.title}</h3>
           <span className={`fr-cm-tag ${isPublished ? 'published' : 'draft'}`}>
             {isPublished ? <CheckCircle2 /> : <CircleDot />}
-            {isPublished ? '已发布' : '草稿'}
+            {isPublished ? t('course.published') : t('course.draft')}
           </span>
         </div>
 
@@ -38,7 +40,7 @@ export function CourseCard({
           <span className="meta-text">{course.duration}</span>
           <span className="meta-divider">·</span>
           <Users size={12} />
-          <span className="meta-text">{course.classSize || '9-15人'}</span>
+          <span className="meta-text">{course.classSize || t('course.defaultClassSize')}</span>
         </div>
 
         <div className="fr-cm-footer">

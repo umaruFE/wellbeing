@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Row, Col, Button, Segmented, Tag, Progress } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,7 @@ import {
 import apiService from '../services/api';
 import { CreateCourseModal } from './create-course';
 import { CourseCoverFallback } from './CourseCoverFallback';
-import { getCourseCoverUrl } from './courseImages';
+import { getCourseCoverUrl, getCourseData } from './courseImages';
 import './AdminDashboard.css';
 
 const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
@@ -152,6 +152,11 @@ const VideoCard = ({ video }) => {
 };
 
 const audioColors = ['#bdddc2', '#ffd294', '#9ecaff', '#ff9a85', '#c29edf'];
+const audioWaveformHeights = [
+  18, 28, 14, 34, 22, 38, 16, 30, 24, 40,
+  20, 32, 12, 36, 26, 18, 34, 22, 30, 16,
+  38, 24, 28, 14, 36, 20, 32, 18, 40, 22,
+];
 
 const AudioCard = ({ audio, index }) => {
   const color = audioColors[index % audioColors.length];
@@ -159,11 +164,11 @@ const AudioCard = ({ audio, index }) => {
     <div className="audio-card">
       <div className="audio-card-body" style={{ backgroundColor: color }}>
         <div className="audio-waveform">
-          {Array.from({ length: 30 }).map((_, i) => (
+          {audioWaveformHeights.map((height, i) => (
             <div
               key={i}
               className="audio-bar"
-              style={{ height: `${Math.random() * 30 + 10}px` }}
+              style={{ height: `${height}px` }}
             />
           ))}
         </div>
@@ -182,7 +187,7 @@ const AudioCard = ({ audio, index }) => {
 
 const EmptyState = ({ icon: Icon, text }) => (
   <div className="empty-container">
-    <Icon size={40} className="empty-icon" />
+    {React.createElement(Icon, { size: 40, className: 'empty-icon' })}
     <span className="empty-text">{text}</span>
   </div>
 );
@@ -214,9 +219,9 @@ const CreateSection = ({ onCreateCourse, navigate }) => {
           { icon: Image, label: t('asset.generateImage'), route: '/test/ip-scene' },
           { icon: Video, label: t('asset.generateVideo'), route: '/test/video-generator' },
           { icon: Music, label: t('asset.generateAudio'), route: '/test/audio-generator' },
-        ].map(({ icon: Icon, label, route }) => (
+        ].map(({ icon, label, route }) => (
           <Button key={label} className="create-btn" onClick={() => navigate(route)}>
-            <Icon size={16} />
+            {React.createElement(icon, { size: 16 })}
             <span>{label}</span>
           </Button>
         ))}
@@ -340,9 +345,42 @@ const TaskSection = ({ stats, statsLoading }) => {
   );
 };
 
-const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesLoading, videos, videosLoading, audios, audiosLoading }) => {
+const RecentSection = ({
+  courses,
+  coursesLoading,
+  coursesLoadingMore,
+  coursesHasMore,
+  onCourseClick,
+  onLoadMoreCourses,
+  images,
+  imagesLoading,
+  videos,
+  videosLoading,
+  audios,
+  audiosLoading,
+}) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('courses');
+  const coursesSentinelRef = useRef(null);
+
+  useEffect(() => {
+    if (activeTab !== 'courses' || !coursesHasMore || coursesLoading || coursesLoadingMore) return undefined;
+
+    const sentinel = coursesSentinelRef.current;
+    if (!sentinel) return undefined;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          onLoadMoreCourses();
+        }
+      },
+      { root: null, rootMargin: '240px 0px', threshold: 0.01 }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [activeTab, coursesHasMore, coursesLoading, coursesLoadingMore, onLoadMoreCourses]);
 
   const tabs = [
     { id: 'courses', icon: BookOpen, label: t('sidebar.courseGroup') },
@@ -364,7 +402,21 @@ const RecentSection = ({ courses, coursesLoading, onCourseClick, images, imagesL
       case 'courses':
         if (coursesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
         if (!courses || courses.length === 0) return <EmptyState icon={FileText} text={t('dashboard.noCourses')} />;
-        return renderRow(courses, course => <CourseCard key={course.id} course={course} onClick={() => onCourseClick(course.id)} />, 4);
+        return (
+          <>
+            {renderRow(courses, course => <CourseCard key={course.id} course={course} onClick={() => onCourseClick(course)} />, 4)}
+            {(coursesHasMore || coursesLoadingMore) && (
+              <div className="recent-load-more-sentinel" ref={coursesSentinelRef}>
+                {coursesLoadingMore && (
+                  <>
+                    <Loader2 size={20} className="animate-spin" style={{ color: '#9ca3af' }} />
+                    <span className="loading-text">{t('common.loading')}</span>
+                  </>
+                )}
+              </div>
+            )}
+          </>
+        );
       case 'images':
         if (imagesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
         if (!images || images.length === 0) return <EmptyState icon={Image} text={t('dashboard.noImages')} />;
@@ -434,6 +486,9 @@ export const AdminDashboard = () => {
 
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [coursesLoadingMore, setCoursesLoadingMore] = useState(false);
+  const [coursesPage, setCoursesPage] = useState(1);
+  const [coursesHasMore, setCoursesHasMore] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [images, setImages] = useState([]);
   const [imagesLoading, setImagesLoading] = useState(true);
@@ -464,33 +519,81 @@ export const AdminDashboard = () => {
     }
   }, []);
 
-  const fetchRecentCourses = useCallback(async () => {
+  const fetchRecentCourses = useCallback(async (pageNum = 1, append = false) => {
     try {
-      setCoursesLoading(true);
-      const result = await apiService.getCourses({ limit: '8', page: '1' });
+      if (pageNum === 1) {
+        setCoursesLoading(true);
+      } else {
+        setCoursesLoadingMore(true);
+      }
+
+      const result = await apiService.getCourses({ limit: '8', page: String(pageNum) });
       const list = result?.data || [];
-      setCourses(list.map(course => ({
-        id: course.id,
-        title: course.title || course.unit || t('dashboard.unnamedCourse'),
-        grade: course.age_group || '--',
-        duration: course.duration ? `${course.duration}分钟` : '--',
-        students: '--',
-        time: course.created_at
-          ? new Date(course.created_at).toLocaleString('zh-CN', {
-              year: 'numeric', month: '2-digit', day: '2-digit',
-              hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
-            }).replace(/\//g, '/')
-          : '--',
-        status: course.status === 'published' ? 'published' : 'draft',
-        thumbnail: getCourseCoverUrl(course),
-      })));
+      const pagination = result?.pagination || {};
+      const mapped = list.map(course => {
+        const courseData = getCourseData(course);
+        const coverUrl = getCourseCoverUrl(course);
+        return {
+          id: course.id,
+          title: course.title || course.unit || t('dashboard.unnamedCourse'),
+          unit: course.unit || course.title || t('dashboard.unnamedCourse'),
+          grade: course.age_group || '--',
+          age: course.age_group || courseData?.age || '--',
+          duration: course.duration ? `${course.duration}分钟` : (courseData?.duration || '--'),
+          students: '--',
+          classSize: courseData?.classSize || course.unit || '',
+          time: course.created_at
+            ? new Date(course.created_at).toLocaleString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+              }).replace(/\//g, '/')
+            : '--',
+          updatedAt: course.created_at
+            ? new Date(course.created_at).toLocaleDateString('zh-CN', {
+                year: 'numeric', month: '2-digit', day: '2-digit',
+              }).replace(/\//g, '/')
+            : '--',
+          status: course.status === 'published' ? 'published' : 'draft',
+          thumbnail: coverUrl,
+          themeImageUrl: coverUrl,
+          courseData,
+          courseOverview: courseData?.courseOverview || null,
+          theme: course.theme || courseData?.taskName || '情境任务',
+          vocabularies: courseData?.vocabularies || [],
+          grammars: courseData?.grammars || [],
+          languageSkills: courseData?.languageSkills || [],
+          experiencePath: courseData?.experiencePath || '',
+          taskName: courseData?.taskName || '',
+          storyContext: courseData?.storyContext || '',
+          keyOutcome: courseData?.keyOutcome || '',
+          journey: courseData?.journey || null,
+          atmosphere: courseData?.atmosphere || '',
+          specialRequirements: courseData?.specialRequirements || '',
+          canvasData: course.canvas_data || course.canvasData || null,
+          readingMaterialsData: course.reading_materials_data || course.readingMaterialsData || null,
+        };
+      });
+
+      setCourses(prev => append ? [...prev, ...mapped] : mapped);
+      setCoursesPage(pageNum);
+
+      const totalPages = pagination.totalPages || Math.ceil((pagination.total || 0) / 8);
+      setCoursesHasMore(totalPages ? pageNum < totalPages : list.length === 8);
     } catch (error) {
       console.error('获取最近课程失败:', error);
-      setCourses([]);
+      if (!append) {
+        setCourses([]);
+      }
     } finally {
       setCoursesLoading(false);
+      setCoursesLoadingMore(false);
     }
-  }, []);
+  }, [t]);
+
+  const loadMoreCourses = useCallback(() => {
+    if (coursesLoading || coursesLoadingMore || !coursesHasMore) return;
+    fetchRecentCourses(coursesPage + 1, true);
+  }, [coursesHasMore, coursesLoading, coursesLoadingMore, coursesPage, fetchRecentCourses]);
 
   const fetchRecentImages = useCallback(async () => {
     try {
@@ -516,7 +619,7 @@ export const AdminDashboard = () => {
     } finally {
       setImagesLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const fetchRecentVideos = useCallback(async () => {
     try {
@@ -542,7 +645,7 @@ export const AdminDashboard = () => {
     } finally {
       setVideosLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const fetchRecentAudios = useCallback(async () => {
     try {
@@ -566,7 +669,7 @@ export const AdminDashboard = () => {
     } finally {
       setAudiosLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadData();
@@ -585,8 +688,8 @@ export const AdminDashboard = () => {
     navigate('/figma-courses', { state: { newCourse: values } });
   };
 
-  const handleCourseClick = () => {
-    navigate('/figma-courses');
+  const handleCourseClick = (course) => {
+    navigate('/figma-courses', { state: { openCourse: course } });
   };
 
   return (
@@ -605,7 +708,10 @@ export const AdminDashboard = () => {
       <RecentSection
         courses={courses}
         coursesLoading={coursesLoading}
+        coursesLoadingMore={coursesLoadingMore}
+        coursesHasMore={coursesHasMore}
         onCourseClick={handleCourseClick}
+        onLoadMoreCourses={loadMoreCourses}
         images={images}
         imagesLoading={imagesLoading}
         videos={videos}

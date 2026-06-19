@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { BookOpen, Plus } from 'lucide-react';
 import { CreateCourseModal } from '../create-course';
 import { CourseWorkflow } from '../course-workflow';
@@ -10,12 +11,41 @@ import apiService from '../../services/api';
 import { getCourseCoverUrl, getCourseData } from '../courseImages';
 import './CourseManagement.css';
 
+function formatDuration(value, t) {
+  if (!value) return '--';
+  const text = String(value);
+  const minutes = text.match(/\d+/)?.[0];
+  if (!minutes) return text;
+  return t('course.durationMinutes', { count: Number(minutes), minutes });
+}
+
+function formatClassSize(value, t) {
+  const text = value ? String(value).trim() : '';
+  if (!text) return '';
+
+  const rangeMatch = text.match(/(\d+)\s*[-~]\s*(\d+)/);
+  if (rangeMatch) {
+    return t('course.classSizeRange', { min: rangeMatch[1], max: rangeMatch[2] });
+  }
+
+  const atMostMatch = text.match(/[≤<=]\s*(\d+)/);
+  if (atMostMatch) {
+    return t('course.classSizeAtMost', { count: atMostMatch[1] });
+  }
+
+  const atLeastMatch = text.match(/[≥>=]\s*(\d+)/);
+  if (atLeastMatch) {
+    return t('course.classSizeAtLeast', { count: atLeastMatch[1] });
+  }
+
+  return text;
+}
+
 export function CourseManagement({
-  initialCourses = demoCourses,
   onCreateCourse,
   onOpenCourse,
-  onEditCourse,
 }) {
+  const { t } = useTranslation();
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -28,17 +58,23 @@ export function CourseManagement({
   const location = useLocation();
 
   useEffect(() => {
+    if (location.state?.openCourse && !workflowCourse) {
+      setWorkflowCourse(location.state.openCourse);
+      window.history.replaceState({}, '');
+      return;
+    }
+
     if (location.state?.newCourse && !workflowCourse) {
       const values = location.state.newCourse;
       const course = {
         id: values.id,
-        title: values.courseTitle || '新课程',
-        unit: values.courseTitle || '新课程',
+        title: values.courseTitle || t('course.newCourse'),
+        unit: values.courseTitle || t('course.newCourse'),
         status: 'draft',
         age: values.age,
         grade: 'Draft',
         duration: values.duration,
-        theme: values.taskName || values.experiencePath || '情境任务',
+        theme: values.taskName || values.experiencePath || t('course.scenarioTask'),
         updatedAt: new Date().toLocaleDateString('zh-CN'),
         accent: '#ff705d',
         coverTone: 'coral',
@@ -58,7 +94,7 @@ export function CourseManagement({
       setWorkflowCourse(course);
       window.history.replaceState({}, '');
     }
-  }, [location.state, workflowCourse]);
+  }, [location.state, workflowCourse, t]);
 
   const fetchCourses = useCallback(async (pageNum = 1, append = false) => {
     try {
@@ -76,13 +112,13 @@ export function CourseManagement({
         const coverUrl = getCourseCoverUrl(course);
         return {
           id: course.id,
-          title: course.title || course.unit || '未命名课程',
-          unit: course.unit || course.title || '未命名课程',
+          title: course.title || course.unit || t('dashboard.unnamedCourse'),
+          unit: course.unit || course.title || t('dashboard.unnamedCourse'),
           status: course.status === 'published' ? 'published' : 'draft',
           age: course.age_group || courseData?.age || '--',
           grade: course.age_group ? `G${course.age_group.split('-')[0]}` : '--',
-          duration: course.duration || courseData?.duration || '--',
-          theme: course.theme || '情境任务',
+          duration: formatDuration(course.duration || courseData?.duration, t),
+          theme: course.theme || t('course.scenarioTask'),
           updatedAt: course.created_at
             ? new Date(course.created_at).toLocaleDateString('zh-CN', {
                 year: 'numeric', month: '2-digit', day: '2-digit',
@@ -95,7 +131,7 @@ export function CourseManagement({
           courseOverview: courseData?.courseOverview || null,
           themeImageUrl: coverUrl,
           thumbnail: coverUrl,
-          classSize: courseData?.classSize || course.unit || '',
+          classSize: formatClassSize(courseData?.classSize || course.unit, t),
           vocabularies: courseData?.vocabularies || [],
           grammars: courseData?.grammars || [],
           languageSkills: courseData?.languageSkills || [],
@@ -119,12 +155,16 @@ export function CourseManagement({
       setPage(pageNum);
     } catch (error) {
       console.error('获取课程列表失败:', error);
-      if (!append) setCourses(demoCourses);
+      if (!append) setCourses(demoCourses.map(course => ({
+        ...course,
+        duration: formatDuration(course.duration, t),
+        classSize: formatClassSize(course.classSize, t),
+      })));
     } finally {
       setCoursesLoading(false);
       setLoadingMore(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchCourses();
@@ -153,7 +193,6 @@ export function CourseManagement({
 
   const handleStatusChange = (nextStatus) => {
     setStatus(nextStatus);
-    setFilterOpen(false);
   };
 
   const handleCreateClick = () => {
@@ -168,13 +207,13 @@ export function CourseManagement({
   const handleCreateSubmit = (values) => {
     const newCourse = {
       id: values.id,
-      title: values.courseTitle || '新课程',
-      unit: values.courseTitle || '新课程',
+      title: values.courseTitle || t('course.newCourse'),
+      unit: values.courseTitle || t('course.newCourse'),
       status: 'draft',
       age: values.age,
       grade: 'Draft',
       duration: values.duration,
-      theme: values.taskName || values.experiencePath || '情境任务',
+      theme: values.taskName || values.experiencePath || t('course.scenarioTask'),
       updatedAt: new Date().toLocaleDateString('zh-CN'),
       accent: '#ff705d',
       coverTone: 'coral',
@@ -216,8 +255,8 @@ export function CourseManagement({
               <BookOpen size={30} />
             </div>
             <div>
-              <h1>课程管理</h1>
-              <p>创建和管理您的课程</p>
+              <h1>{t('course.title')}</h1>
+              <p>{t('course.subtitle')}</p>
             </div>
           </div>
 
@@ -230,7 +269,7 @@ export function CourseManagement({
             }}
           >
             <Plus size={16} />
-            创建新课程
+            {t('dashboard.createCourse')}
           </button>
         </header>
 
@@ -245,7 +284,7 @@ export function CourseManagement({
 
           {coursesLoading ? (
             <div className="fr-cm-loading">
-              <span className="loading-text">加载中...</span>
+              <span className="loading-text">{t('common.loading')}</span>
             </div>
           ) : filteredCourses.length > 0 ? (
             <>
@@ -272,7 +311,7 @@ export function CourseManagement({
                     onClick={loadMoreCourses}
                     disabled={loadingMore}
                   >
-                    {loadingMore ? '加载中...' : '加载更多'}
+                    {loadingMore ? t('common.loading') : t('course.loadMore')}
                   </button>
                 </div>
               )}
@@ -280,8 +319,8 @@ export function CourseManagement({
           ) : (
             <div className="fr-cm-empty">
               <BookOpen size={30} />
-              <strong>暂无符合条件的课程</strong>
-              <span>调整关键词或筛选条件后再试试。</span>
+              <strong>{t('course.noMatchingCourses')}</strong>
+              <span>{t('course.adjustFilters')}</span>
             </div>
           )}
         </div>

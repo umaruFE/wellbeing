@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Drawer } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Download, Redo2, Save, Undo2 } from 'lucide-react';
 import apiService from '../../services/api';
 import { TaskCenter } from '../TaskCenter';
@@ -12,6 +13,7 @@ import '../Header.css';
 import './CourseWorkflow.css';
 
 export function CourseWorkflow({ initialCourse, onBack }) {
+  const { t } = useTranslation();
   const [current, setCurrent] = React.useState(0);
   const [course, setCourse] = React.useState(initialCourse || {});
   const [phases, setPhases] = React.useState(phaseTemplates);
@@ -155,8 +157,8 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   return (
     <section className={`fr-workflow view-${workflowSteps[current].key}-active`}>
       <header className="fr-editor-tb">
-        <Button icon={<ArrowLeft size={16} />} onClick={onBack}>返回课程列表</Button>
-        <span className="fr-tb-course">{course.courseTitle || course.title || '新课程'}</span>
+        <Button icon={<ArrowLeft size={16} />} onClick={onBack}>{t('createCourse.backToList')}</Button>
+        <span className="fr-tb-course">{course.courseTitle || course.title || t('course.newCourse')}</span>
         <span className="fr-tb-divider">|</span>
         <div className="fr-wf-bridge">
           {workflowSteps.map((step, index) => (
