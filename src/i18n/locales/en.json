@@ -227,6 +227,87 @@
     "phaseExecute": "E-EXECUTE",
     "phaseElevate": "E-ELEVATE"
   },
+  "workflow": {
+    "steps": {
+      "map": "Course Map",
+      "lesson": "Lesson Plan",
+      "ppt": "PPT Courseware"
+    },
+    "stepState": {
+      "done": "Done",
+      "active": "View/Edit",
+      "pending": "Pending"
+    },
+    "toolbar": {
+      "dirty": "Waiting to auto-save",
+      "saving": "Saving...",
+      "error": "Save failed",
+      "saved": "All changes saved",
+      "taskCenter": "Task Center {{count}}",
+      "save": "Save",
+      "export": "Export",
+      "publish": "Publish"
+    },
+    "map": {
+      "title": "Course Map",
+      "regenerate": "Regenerate",
+      "edit": "Edit",
+      "generating": "Generating...",
+      "regenerating": "Regenerating course map...",
+      "storyline": "Storyline",
+      "languageToolkit": "Language Toolkit",
+      "keyOutcome": "Key Outcome",
+      "growthCompass": "Growth Compass",
+      "howWeLearn": "How We Learn",
+      "classJourney": "Class Journey",
+      "regenModalTitle": "Regenerate Course Map",
+      "regenQuestion": "Tell us what you want to adjust.",
+      "regenPlaceholder": "Example:\nAdd a team competition game in the Execute phase to make the outcome more challenging.\n\nMake the scenario more sci-fi, such as completing the mission on an alien planet.",
+      "regenTips": "AI adjustment ideas:",
+      "editModalTitle": "Edit Course Map Inputs",
+      "editModalSubtitle": "Uses the same information structure as course creation. Saving will regenerate the storyline, language toolkit, class journey, and growth experience.",
+      "saveAndRefresh": "Save and Refresh Map"
+    },
+    "lesson": {
+      "title": "Lesson Plan",
+      "mapMode": "Map",
+      "overviewMode": "Overview",
+      "saved": "Saved",
+      "generating": "Generating lesson plan...",
+      "regenerate": "Regenerate",
+      "addStep": "Add Step",
+      "generatingShort": "Generating...",
+      "stepCount": "{{count}} steps"
+    }
+  },
+  "ppt": {
+    "courseOutline": "Course Outline",
+    "currentStep": "Current Step: ",
+    "notSelected": "Not selected",
+    "slide": "Slide",
+    "text": "Text",
+    "image": "Image",
+    "video": "Video",
+    "audio": "Audio",
+    "insertText": "Insert text",
+    "insertImage": "Insert image",
+    "insertVideo": "Insert video",
+    "insertAudio": "Insert audio",
+    "doubleClickText": "Double-click to edit text",
+    "imageAsset": "PPT image asset",
+    "rotate": "Rotate",
+    "moveUp": "Move up",
+    "moveDown": "Move down",
+    "zoomOut": "Zoom out",
+    "zoomIn": "Zoom in",
+    "fitWindow": "Fit window",
+    "canvasAndLayers": "Canvas & Layers",
+    "pageBackground": "Page Background",
+    "backgroundColor": "Background Color",
+    "layerList": "Layer List",
+    "showLayer": "Show layer",
+    "hideLayer": "Hide layer"
+  },
   "courseOverview": {
     "title": "Course Overview",
     "regenerate": "Regenerate Overview",

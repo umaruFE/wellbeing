@@ -1,12 +1,13 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, FileText, Plus } from 'lucide-react';
 import './css/PptOutline.css';
 
-const phaseLabels = {
-  engage: 'E-ENGAGE 引入',
-  empower: 'E-EMPOWER 赋能',
-  execute: 'E-EXECUTE 实践',
-  elevate: 'E-ELEVATE 升华',
+const phaseLabelKeys = {
+  engage: 'lesson.phaseEngage',
+  empower: 'lesson.phaseEmpower',
+  execute: 'lesson.phaseExecute',
+  elevate: 'lesson.phaseElevate',
 };
 
 const phaseColors = {
@@ -24,6 +25,7 @@ export function PptOutline({
   onSelectStep,
   onAddSlide,
 }) {
+  const { t } = useTranslation();
   const [expandedStepIds, setExpandedStepIds] = React.useState(() => (
     activeStepId ? new Set([activeStepId]) : new Set()
   ));
@@ -85,7 +87,7 @@ export function PptOutline({
 
   return (
     <aside className="ppt-left">
-      <div className="ppt-left-head">课程大纲</div>
+      <div className="ppt-left-head">{t('ppt.courseOutline')}</div>
 
       <div className="ppt-left-scroll">
         {course.map((phase) => {
@@ -94,7 +96,7 @@ export function PptOutline({
             <section className="ppt-phase" key={phase.key}>
               <div className="ppt-phase-header">
                 <span className="ppt-phase-dot" style={{ backgroundColor: colors.color }} />
-                <span className="ppt-phase-title">{phaseLabels[phase.key] || phase.title}</span>
+                <span className="ppt-phase-title">{t(phaseLabelKeys[phase.key], phase.title)}</span>
               </div>
 
               <div className="ppt-step-list">

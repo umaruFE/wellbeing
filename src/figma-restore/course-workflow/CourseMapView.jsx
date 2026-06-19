@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Checkbox, Form, Input, message, Radio, Select, Upload } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   Clock,
   Heart,
@@ -37,10 +38,10 @@ const fallbackRegenTips = [
 ];
 
 const journeyItems = [
-  { title: 'Engage 情境启动', color: '#ff705f', key: 'engage' },
-  { title: 'Empower 语言赋能', color: '#3b82f6', key: 'empower' },
-  { title: 'Execute 创作运用', color: '#4f9f69', key: 'execute' },
-  { title: 'Elevate 升华迁移', color: '#9b62d1', key: 'elevate' },
+  { title: 'Engage', titleKey: 'lesson.phaseEngage', color: '#ff705f', key: 'engage' },
+  { title: 'Empower', titleKey: 'lesson.phaseEmpower', color: '#3b82f6', key: 'empower' },
+  { title: 'Execute', titleKey: 'lesson.phaseExecute', color: '#4f9f69', key: 'execute' },
+  { title: 'Elevate', titleKey: 'lesson.phaseElevate', color: '#9b62d1', key: 'elevate' },
 ];
 
 function getAuthHeaders() {
@@ -168,6 +169,8 @@ function hasCompleteJourney(journey) {
 }
 
 export function CourseMapView({ course, onCourseChange, onNext }) {
+  const { t, i18n } = useTranslation();
+  const isChinese = !i18n.language?.startsWith('en');
   const [editForm] = Form.useForm();
   const [regenForm] = Form.useForm();
   const [editOpen, setEditOpen] = React.useState(false);
@@ -573,21 +576,21 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     <div className="fr-workflow-map-step view-overview-active">
       <div className="overview-panel-header">
         <h2 className="overview-panel-title">
-          课程地图|Course Map
+          {isChinese ? `${t('workflow.map.title')}|Course Map` : t('workflow.map.title')}
           <img src={planeIcon} alt="" className="overview-panel-title-icon" />
         </h2>
         <div className="overview-panel-actions">
           <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={openRegen}>
-            重新生成
+            {t('workflow.map.regenerate')}
           </Button>
-          <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>编辑</Button>
+          <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>{t('workflow.map.edit')}</Button>
         </div>
       </div>
 
       {regenerating ? (
         <div className="overview-regen-loading">
           <div className="spinner" />
-          <span>正在重新生成课程地图...</span>
+          <span>{t('workflow.map.regenerating')}</span>
         </div>
       ) : (
         <div className="course-map-v2">
@@ -603,8 +606,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
             <div className="course-map-v2-core">
               <div className="course-map-v2-core-title">
                 <Star size={18} />
-                核心情境
-                <span>Storyline</span>
+                {t('workflow.map.storyline')}
+                {isChinese && <span>Storyline</span>}
               </div>
               <div className="course-map-v2-core-text">{map.storyline}</div>
             </div>
@@ -639,7 +642,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                     disabled={regenImage || !map.themeImagePrompt}
                     onClick={handleRegenImage}
                   >
-                    {regenImage ? '生成中...' : '重新生成'}
+                    {regenImage ? t('workflow.map.generating') : t('workflow.map.regenerate')}
                   </Button>
                 </div>
               </div>
@@ -648,16 +651,16 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
           <section className="course-map-v2-panel">
             <div className="course-map-v2-grid">
-              <CourseGoal icon={MessageSquare} image={toolkitIcon} title="语言工具箱" en="Language Toolkit" tone="toolkit" color="#d8ca8d">
+              <CourseGoal icon={MessageSquare} image={toolkitIcon} title={t('workflow.map.languageToolkit')} en="Language Toolkit" showEn={isChinese} tone="toolkit" color="#d8ca8d">
                 {map.toolkit}
               </CourseGoal>
-              <CourseGoal icon={Target} image={starIcon} title="终极产出" en="Key Outcome" tone="outcome" color="#f6e6cc">
+              <CourseGoal icon={Target} image={starIcon} title={t('workflow.map.keyOutcome')} en="Key Outcome" showEn={isChinese} tone="outcome" color="#f6e6cc">
                 {map.keyOutcome}
               </CourseGoal>
-              <CourseGoal icon={Heart} image={compassIcon} title="成长罗盘" en="Growth Compass" tone="growth" color="#d9dde9">
+              <CourseGoal icon={Heart} image={compassIcon} title={t('workflow.map.growthCompass')} en="Growth Compass" showEn={isChinese} tone="growth" color="#d9dde9">
                 {map.growth}
               </CourseGoal>
-              <CourseGoal icon={Users} image={lightIcon} title="核心体验" en="How We Learn" tone="learn" color="#dfe2bb">
+              <CourseGoal icon={Users} image={lightIcon} title={t('workflow.map.howWeLearn')} en="How We Learn" showEn={isChinese} tone="learn" color="#dfe2bb">
                 {map.experience}
               </CourseGoal>
 
@@ -666,8 +669,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   <span className="course-map-v2-icon" style={{ '--goal-color': '#ff705f' }}>
                     <img src={planeIcon} alt="" />
                   </span>
-                  课堂旅程
-                  <span className="course-map-v2-title-en">Class Journey</span>
+                  {t('workflow.map.classJourney')}
+                  {isChinese && <span className="course-map-v2-title-en">Class Journey</span>}
                 </div>
                 <div className="course-map-v2-journey">
                   {journeyItems.map((item, index) => (
@@ -675,7 +678,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                       <div className="course-map-v2-journey-body">
                         <strong>
                           <span className="course-map-v2-journey-node">{index + 1}</span>
-                          {item.title}
+                          {t(item.titleKey, item.title)}
                         </strong>
                         <div>{journey[item.key]}</div>
                       </div>
@@ -692,23 +695,23 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setRegenOpen(false)}>
           <div className="modal overview-regen-modal">
             <div className="modal-hd">
-              <div className="modal-t">重新生成课程地图</div>
+              <div className="modal-t">{t('workflow.map.regenModalTitle')}</div>
               <button type="button" className="modal-x" onClick={() => setRegenOpen(false)}><X size={22} /></button>
             </div>
             <div className="modal-body">
               <Form form={regenForm} layout="vertical" className="overview-ant-form">
-                <Form.Item label="请告诉我们，您希望如何调整？" name="request">
+                <Form.Item label={t('workflow.map.regenQuestion')} name="request">
                   <TextArea
                     className="fi textarea"
                     rows={5}
-                    placeholder={'例如：\n希望在Execute创作运用阶段能有一个小组竞赛游戏，让产出更有挑战性。\n\n情境可以更科幻一些，比如在外星球完成这个任务。'}
+                    placeholder={t('workflow.map.regenPlaceholder')}
                   />
                 </Form.Item>
               </Form>
               <div className="regen-tips">
-                <span className="regen-tip-label">AI生成调整需求参考：</span>
+                <span className="regen-tip-label">{t('workflow.map.regenTips')}</span>
                 {loadingRegenTips ? (
-                  <span className="regen-tip-chip">AI 生成中...</span>
+                  <span className="regen-tip-chip">{t('lesson.generating')}</span>
                 ) : (
                   regenTips.map((tip) => (
                     <button type="button" className="regen-tip-chip" key={tip} onClick={() => fillRegenTip(tip)}>
@@ -719,10 +722,10 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
               </div>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setRegenOpen(false)}>取消</button>
+              <button type="button" className="mo-btn-cancel" onClick={() => setRegenOpen(false)}>{t('common.cancel')}</button>
               <button type="button" className="mo-btn-primary" onClick={submitRegen}>
                 <RefreshCw size={14} />
-                重新生成
+                {t('workflow.map.regenerate')}
               </button>
             </div>
           </div>
@@ -734,9 +737,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           <div className="modal overview-adjust-modal">
             <div className="modal-hd">
               <div>
-                <div className="modal-t">编辑课程地图生成输入</div>
+                <div className="modal-t">{t('workflow.map.editModalTitle')}</div>
                 <div className="modal-sub">
-                  与新建课程保持同一套信息结构；保存后会重新生成课程地图中的故事线、语言工具箱、课堂旅程与成长体验。
+                  {t('workflow.map.editModalSubtitle')}
                 </div>
               </div>
               <button type="button" className="modal-x" onClick={() => setEditOpen(false)}><X size={22} /></button>
@@ -825,9 +828,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
               </Form>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setEditOpen(false)}>取消</button>
+              <button type="button" className="mo-btn-cancel" onClick={() => setEditOpen(false)}>{t('common.cancel')}</button>
               <button type="button" className="mo-btn-primary" onClick={saveEdit} disabled={regenImage}>
-                {regenImage ? '生成中...' : '保存并刷新地图'}
+                {regenImage ? t('workflow.map.generating') : t('workflow.map.saveAndRefresh')}
               </button>
             </div>
           </div>
@@ -850,7 +853,7 @@ function ModalSection({ title, en, desc, children }) {
   );
 }
 
-function CourseGoal({ icon: Icon, image, title, en, color, tone, children }) {
+function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, children }) {
   return (
     <article className={`course-map-v2-goal ${tone ? `is-${tone}` : ''}`}>
       <div className="course-map-v2-goal-title">
@@ -858,7 +861,7 @@ function CourseGoal({ icon: Icon, image, title, en, color, tone, children }) {
           {image ? <img src={image} alt="" /> : React.createElement(Icon, { size: 18 })}
         </span>
         {title}
-        <span className="course-map-v2-title-en">{en}</span>
+        {showEn && <span className="course-map-v2-title-en">{en}</span>}
       </div>
       <div className="course-map-v2-text">{children}</div>
     </article>

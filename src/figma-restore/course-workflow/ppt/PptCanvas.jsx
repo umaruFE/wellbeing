@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { ArrowDown, ArrowUp, Copy, Image, Maximize2, Minus, Music, Plus, RotateCw, Trash2, Type, Video } from 'lucide-react';
 import { PptDemoScene } from './PptDemoScene';
 import './css/PptCanvas.css';
@@ -11,7 +12,7 @@ function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-function LayerContent({ layer }) {
+function LayerContent({ layer, t }) {
   if (layer.type === 'text') {
     return (
       <div
@@ -27,7 +28,7 @@ function LayerContent({ layer }) {
           WebkitTextStroke: layer.strokeWidth ? `${layer.strokeWidth}px ${layer.strokeColor}` : undefined,
         }}
       >
-        {layer.content || '双击编辑文本'}
+        {layer.content || t('ppt.doubleClickText')}
       </div>
     );
   }
@@ -65,7 +66,7 @@ function LayerContent({ layer }) {
   }
 
   if (layer.url) {
-    return <img className="ppt-image-layer" src={layer.url} alt={layer.title || 'PPT 图片素材'} />;
+    return <img className="ppt-image-layer" src={layer.url} alt={layer.title || t('ppt.imageAsset')} />;
   }
 
   return (
@@ -90,6 +91,7 @@ export function PptCanvas({
   onDuplicateLayer,
   onDeleteLayer,
 }) {
+  const { t } = useTranslation();
   const slideRef = React.useRef(null);
   const dragRef = React.useRef(null);
   const [zoom, setZoom] = React.useState(68);
@@ -208,22 +210,22 @@ export function PptCanvas({
     <main className="ppt-canvas">
       <div className="ppt-canvas-bar">
         <div className="ppt-canvas-info">
-          当前环节：<strong>{step?.title || '未选择'}</strong>
+          {t('ppt.currentStep')}<strong>{step?.title || t('ppt.notSelected')}</strong>
           <span />
-          幻灯片 <b>{slideIndex + 1}</b>/{slideCount}
+          {t('ppt.slide')} <b>{slideIndex + 1}</b>/{slideCount}
         </div>
 
         <div className="ppt-tool-group">
-          <button type="button" onClick={() => onAddLayer('text')} title="文本" aria-label="插入文本">
+          <button type="button" onClick={() => onAddLayer('text')} title={t('ppt.text')} aria-label={t('ppt.insertText')}>
             <Type size={15} />
           </button>
-          <button type="button" className={activeAssetPanelType === 'image' ? 'on' : ''} onClick={() => onOpenAssetPanel('image')} title="图片" aria-label="插入图片">
+          <button type="button" className={activeAssetPanelType === 'image' ? 'on' : ''} onClick={() => onOpenAssetPanel('image')} title={t('ppt.image')} aria-label={t('ppt.insertImage')}>
             <Image size={15} />
           </button>
-          <button type="button" className={activeAssetPanelType === 'video' ? 'on' : ''} onClick={() => onOpenAssetPanel('video')} title="视频" aria-label="插入视频">
+          <button type="button" className={activeAssetPanelType === 'video' ? 'on' : ''} onClick={() => onOpenAssetPanel('video')} title={t('ppt.video')} aria-label={t('ppt.insertVideo')}>
             <Video size={15} />
           </button>
-          <button type="button" className={activeAssetPanelType === 'audio' ? 'on' : ''} onClick={() => onOpenAssetPanel('audio')} title="音频" aria-label="插入音频">
+          <button type="button" className={activeAssetPanelType === 'audio' ? 'on' : ''} onClick={() => onOpenAssetPanel('audio')} title={t('ppt.audio')} aria-label={t('ppt.insertAudio')}>
             <Music size={15} />
           </button>
         </div>
@@ -265,7 +267,7 @@ export function PptCanvas({
                 }}
               >
                 <div className="ppt-layer-frame" />
-                <LayerContent layer={layer} />
+                <LayerContent layer={layer} t={t} />
 
                 {selected && (
                   <>
@@ -276,20 +278,20 @@ export function PptCanvas({
                         onPointerDown={(event) => beginResize(event, layer, handle)}
                       />
                     ))}
-                    <button type="button" className="ppt-rotate-handle" onPointerDown={(event) => beginRotate(event, layer)} aria-label="旋转">
+                    <button type="button" className="ppt-rotate-handle" onPointerDown={(event) => beginRotate(event, layer)} aria-label={t('ppt.rotate')}>
                       <RotateCw size={12} />
                     </button>
                     <div className="ppt-layer-actions">
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title="上移">
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title={t('ppt.moveUp')}>
                         <ArrowUp size={13} />
                       </button>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title="下移">
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title={t('ppt.moveDown')}>
                         <ArrowDown size={13} />
                       </button>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDuplicateLayer} title="复制">
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDuplicateLayer} title={t('common.copy')}>
                         <Copy size={13} />
                       </button>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDeleteLayer} title="删除">
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDeleteLayer} title={t('common.delete')}>
                         <Trash2 size={13} />
                       </button>
                     </div>
@@ -301,14 +303,14 @@ export function PptCanvas({
         </div>
 
         <div className="ppt-zoom-bar">
-          <button type="button" aria-label="缩小" onClick={() => setZoomClamped(zoom - 8)}>
+          <button type="button" aria-label={t('ppt.zoomOut')} onClick={() => setZoomClamped(zoom - 8)}>
             <Minus size={14} />
           </button>
           <span>{zoom}%</span>
-          <button type="button" aria-label="放大" onClick={() => setZoomClamped(zoom + 8)}>
+          <button type="button" aria-label={t('ppt.zoomIn')} onClick={() => setZoomClamped(zoom + 8)}>
             <Plus size={14} />
           </button>
-          <button type="button" aria-label="适应窗口" onClick={() => setZoom(68)}>
+          <button type="button" aria-label={t('ppt.fitWindow')} onClick={() => setZoom(68)}>
             <Maximize2 size={13} />
           </button>
         </div>

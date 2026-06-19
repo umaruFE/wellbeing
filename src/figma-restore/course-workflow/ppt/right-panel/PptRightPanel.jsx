@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { Eye, EyeOff, Image, Music, Type, Video } from 'lucide-react';
 import { PptAssetPanel } from '../right-asset-panel';
 import { PptAudioConfigPanel } from './PptAudioConfigPanel';
@@ -22,16 +23,17 @@ function CanvasLayerPanel({
   onUpdateSlide,
   onToggleLayerHidden,
 }) {
+  const { t } = useTranslation();
   const layers = slide?.layers || [];
 
   return (
     <aside className="ppt-right ppt-right-canvas-panel">
-      <div className="ppt-right-head">画布与图层</div>
+      <div className="ppt-right-head">{t('ppt.canvasAndLayers')}</div>
       <div className="ppt-right-body">
         <section className="ppt-bg-section">
-          <div className="ppt-panel-label">页面背景</div>
+          <div className="ppt-panel-label">{t('ppt.pageBackground')}</div>
           <div className="ppt-bg-card">
-            <span className="ppt-bg-title">背景色</span>
+            <span className="ppt-bg-title">{t('ppt.backgroundColor')}</span>
             <div className="ppt-bg-row">
               {swatches.map((color, index) => (
                 <button
@@ -40,7 +42,7 @@ function CanvasLayerPanel({
                   className={`${(slide?.background || '#ffffff') === color ? 'on' : ''} swatch-${index}`}
                   style={{ background: color }}
                   onClick={() => onUpdateSlide({ background: color })}
-                  aria-label={`背景色 ${color}`}
+                  aria-label={`${t('ppt.backgroundColor')} ${color}`}
                 />
               ))}
             </div>
@@ -48,7 +50,7 @@ function CanvasLayerPanel({
         </section>
 
         <section className="ppt-layer-section">
-          <div className="ppt-panel-label">元素列表</div>
+          <div className="ppt-panel-label">{t('ppt.layerList')}</div>
           <div className="ppt-layer-list">
             {layers.map((layer) => {
               const active = selectedLayerId === layer.id;
@@ -72,8 +74,8 @@ function CanvasLayerPanel({
                       event.stopPropagation();
                       onToggleLayerHidden(layer.id);
                     }}
-                    aria-label={layer.hidden ? '显示图层' : '隐藏图层'}
-                    title={layer.hidden ? '显示图层' : '隐藏图层'}
+                    aria-label={layer.hidden ? t('ppt.showLayer') : t('ppt.hideLayer')}
+                    title={layer.hidden ? t('ppt.showLayer') : t('ppt.hideLayer')}
                   >
                     {layer.hidden ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>

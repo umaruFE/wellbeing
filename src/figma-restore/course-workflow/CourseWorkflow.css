@@ -1,14 +1,14 @@
 .fr-workflow{min-height:100%;background:#f5f3ee;color:#253142;font-family:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",Arial,sans-serif}
 body.fr-workflow-route-active .header{display:none}
-.fr-editor-tb{height:62px;background:#fff;border-bottom:1px solid #e8e3dd;display:flex;align-items:center;gap:0;padding:0 20px 0 31px;overflow-x:hidden;white-space:nowrap;box-sizing:border-box}
+.fr-editor-tb{height:62px;background:#fff;border-bottom:1px solid #e8e3dd;display:flex;align-items:center;gap:0;padding:0 20px 0 31px;overflow:visible;white-space:nowrap;box-sizing:border-box}
 .fr-editor-tb>.ant-btn:first-child{width:18px;height:18px;min-width:18px;padding:0;border:0!important;background:transparent!important;box-shadow:none!important;color:#333e4e!important;margin-right:16px}
 .fr-editor-tb>.ant-btn:first-child .ant-btn-icon{margin:0}
 .fr-editor-tb>.ant-btn:first-child span:not(.ant-btn-icon){display:none}
 .fr-tb-course{font-size:16px;font-weight:800;color:#333e4e;line-height:24px;max-width:300px;overflow:hidden;text-overflow:ellipsis}.fr-tb-divider{display:none}.fr-tb-spacer{flex:1;min-width:20px}
-.fr-wf-bridge{position:absolute;left:50%;top:14px;transform:translateX(-50%);display:flex;align-items:center;background:transparent;border:0;border-radius:0;padding:0;height:36px;box-shadow:none;box-sizing:border-box;gap:13px}
+.fr-wf-bridge{position:absolute;left:49%;top:14px;transform:translateX(-50%);display:flex;align-items:center;background:transparent;border:0;border-radius:0;padding:0;height:36px;box-shadow:none;box-sizing:border-box;gap:10px;max-width:58vw;overflow:hidden}
 .fr-wf-step{height:36px;display:flex;align-items:center;gap:8px;padding:0 17px 0 7px;border:2px solid #333e4e;border-radius:999px;background:#fff;cursor:pointer;color:#333e4e;font-family:inherit;font-size:14px;font-weight:800;box-shadow:none}.fr-wf-step:hover{background:#f8f7f3}
 .fr-wf-n{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0;background:#fff;color:#333e4e;border:2px solid #333e4e;box-sizing:border-box}
-.fr-wf-step b{display:block;font-size:15px;line-height:20px;font-weight:800}.fr-wf-step small{display:none}.fr-wf-step.done{color:#333e4e}.fr-wf-step.done .fr-wf-n{background:#fff;color:#333e4e;border-color:#333e4e}.fr-wf-step.active{color:#333e4e;background:#f6e6cc;box-shadow:none}.fr-wf-step.active .fr-wf-n{background:#f6e6cc;color:#333e4e;border-color:#333e4e}.fr-wf-arrow{width:74px;height:15px;padding:0;color:transparent;font-size:0;line-height:1;background:url("../../assets/create-course/arrow.svg") center/contain no-repeat}
+.fr-wf-step b{display:block;font-size:15px;line-height:20px;font-weight:800}.fr-wf-step small{display:none}.fr-wf-step.done{color:#333e4e}.fr-wf-step.done .fr-wf-n{background:#fff;color:#333e4e;border-color:#333e4e}.fr-wf-step.active{color:#333e4e;background:#f6e6cc;box-shadow:none}.fr-wf-step.active .fr-wf-n{background:#f6e6cc;color:#333e4e;border-color:#333e4e}.fr-wf-arrow{width:58px;height:15px;padding:0;color:transparent;font-size:0;line-height:1;background:url("../../assets/create-course/arrow.svg") center/contain no-repeat;flex:0 1 58px}
 .fr-history-actions{height:24px;display:flex;align-items:center;gap:14px;padding:0 16px 0 0;margin-right:14px;border-right:1px solid #e8e3dd;color:#333e4e}
 .fr-history-actions button{width:16px;height:16px;border:0;background:transparent;color:#333e4e;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .fr-autosave{display:flex;align-items:center;gap:8px;color:#333e4e;font-size:14px;font-weight:500;margin-right:18px}
@@ -23,6 +23,12 @@ body.fr-workflow-route-active .header{display:none}
 .fr-editor-tb .fr-task-button{height:32px;min-width:105px;margin-right:13px;flex:0 0 auto;border:2px solid #333e4e;border-radius:999px;background:#fff;box-shadow:none;color:#333e4e;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .fr-editor-tb .fr-task-button .task-dot{width:6px;height:6px;border-radius:999px;background:#333e4e}
 .fr-editor-tb .fr-task-button .task-text{color:#333e4e;font-size:14px;font-weight:700;line-height:22px}
+.fr-workflow-language{flex:0 0 auto;margin-right:12px;z-index:20}
+.fr-workflow-language>button{height:36px;min-width:92px;border-radius:12px;background:#f3f2f0;color:#333e4e;font-size:15px;font-weight:700;padding:0 14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.fr-workflow-language>button:hover{background:#eceae6}
+.fr-workflow-language-menu{z-index:1000;right:0!important;top:calc(100% + 8px)!important;margin-top:0!important;min-width:132px!important;border:1px solid #e8e4dc!important;border-radius:12px!important;box-shadow:0 12px 28px rgba(37,49,66,.14)!important;padding:8px 0!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;white-space:normal!important}
+.fr-workflow-language-menu button{width:100%!important;display:block!important;text-align:left!important;font-size:15px!important;line-height:22px!important;padding:10px 16px!important;color:#333e4e!important;white-space:nowrap!important}
+.fr-workflow-language-menu button.text-blue-600{color:#2563eb!important;font-weight:800!important}
 .fr-save-btn.ant-btn{display:none!important}
 .fr-export-btn.ant-btn,.fr-publish-btn.ant-btn{height:36px!important;min-width:60px!important;border:2px solid #333e4e!important;border-radius:8px!important;box-shadow:none!important;color:#333e4e!important;font-size:14px!important;font-weight:800!important;padding:0 16px!important}
 .fr-export-btn.ant-btn{background:#dfe2bb!important;margin-right:12px}
@@ -292,10 +298,10 @@ body.fr-workflow-route-active .header{display:none}
 
 /* Course map design restore */
 .view-map-active.fr-workflow{background:#f3f2ed}
-.view-map-active .fr-editor-tb{height:62px;padding:0 20px 0 31px;background:#fff;border-bottom:1px solid #e8e3dd;overflow:hidden}
+.view-map-active .fr-editor-tb{height:62px;padding:0 20px 0 31px;background:#fff;border-bottom:1px solid #e8e3dd;overflow:visible}
 .view-map-active .fr-editor-tb>.ant-btn:first-child{width:18px;height:18px;min-width:18px;margin-right:16px;color:#333e4e!important}
 .view-map-active .fr-tb-course{font-size:16px;font-weight:800;color:#333e4e;max-width:300px;line-height:24px}
-.view-map-active .fr-wf-bridge{position:absolute;left:50%;top:14px;transform:translateX(-50%);height:36px;border:none;border-radius:0;box-shadow:none;background:transparent;padding:0;gap:13px}
+.view-map-active .fr-wf-bridge{position:absolute;left:49%;top:14px;transform:translateX(-50%);height:36px;border:none;border-radius:0;box-shadow:none;background:transparent;padding:0;gap:10px;max-width:58vw;overflow:hidden}
 .view-map-active .fr-wf-step{height:36px;border:2px solid #333e4e;border-radius:999px;background:#fff;color:#333e4e;padding:0 17px 0 7px;gap:9px;box-shadow:none}
 .view-map-active .fr-wf-step.active{background:#f6e6cc;color:#333e4e}
 .view-map-active .fr-wf-n{width:26px;height:26px;border:2px solid #333e4e;background:#fff;color:#333e4e;font-size:15px}

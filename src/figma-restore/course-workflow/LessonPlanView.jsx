@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { buildCourseMap } from './workflowData';
 import apiService from '../../services/api';
 import {
@@ -188,6 +189,8 @@ function getAuthHeaders() {
 }
 
 export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext }) {
+  const { t, i18n } = useTranslation();
+  const isChinese = !i18n.language?.startsWith('en');
   const [addForm] = Form.useForm();
   const [data, setData] = React.useState(emptyPhases);
   const [loading, setLoading] = React.useState(true);
@@ -905,7 +908,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       <div id="ed-tbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
         <div style={{ textAlign: 'center' }}>
           <div className="tbl-loading-spinner" />
-          <p style={{ color: '#818997', marginTop: 12 }}>正在生成教案...</p>
+          <p style={{ color: '#818997', marginTop: 12 }}>{t('workflow.lesson.generating')}</p>
         </div>
       </div>
     );
@@ -916,10 +919,10 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
       {toast && <div className="tbl-toast">{toast}</div>}
       <div className="lesson-design-page-header">
         <div className="lesson-design-title-row">
-          <h2 className="lesson-design-page-title">教案设计|Course Map</h2>
-          <div className="lesson-design-view-switch" role="group" aria-label="教案视图模式">
-            <button type="button" className="active">地图模式</button>
-            <button type="button">总览模式</button>
+          <h2 className="lesson-design-page-title">{isChinese ? `${t('workflow.lesson.title')}|Lesson Plan` : t('workflow.lesson.title')}</h2>
+          <div className="lesson-design-view-switch" role="group" aria-label={t('workflow.lesson.title')}>
+            <button type="button" className="active">{t('workflow.lesson.mapMode')}</button>
+            <button type="button">{t('workflow.lesson.overviewMode')}</button>
           </div>
           <img src={planeIcon} alt="" className="lesson-design-plane" />
         </div>
@@ -929,11 +932,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           <button type="button" className="tbl-ib-btn" disabled title="撤回 (Ctrl+Z)"><RotateCcw size={14} /></button>
           <button type="button" className="tbl-ib-btn" disabled title="恢复 (Ctrl+Y)"><RotateCw size={14} /></button>
           <span className="tbl-ib-sep" />
-          <span className="tbl-ib-label">教案设计</span>
+          <span className="tbl-ib-label">{t('workflow.lesson.title')}</span>
         </div>
         <div className="tbl-ib-right">
           <div className="asi-dot-sm" />
-          <span className="asi-label-sm">已保存</span>
+          <span className="asi-label-sm">{t('workflow.lesson.saved')}</span>
         </div>
       </div>
 
@@ -958,14 +961,14 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 {menuKey === `phase-${phase.key}` && (
                   <div className="step-menu-dropdown open phase-menu">
                     <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); setRegenPhaseConfirm(phase.key); }}>
-                      <RefreshCw size={12} />重新生成
+                      <RefreshCw size={12} />{t('workflow.lesson.regenerate')}
                     </button>
                   </div>
                 )}
               </div>
             </div>
             <div className="tbl-phase-meta">
-              <span className="tbl-phase-sub">{phase.steps.length} 个环节</span>
+              <span className="tbl-phase-sub">{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
               <span className={`tbl-phase-meta-dur${phaseMinutes > PHASE_DURATION_LIMIT ? ' is-over-limit' : ''}`}>
                 <Clock />{phase.duration}
               </span>
@@ -985,7 +988,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               <div className="tbl-add-step-top">
                 <button type="button" className="tbl-add-step-btn" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
                   {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
-                  {addingStep === phase.key ? '生成中...' : '添加环节'}
+                  {addingStep === phase.key ? t('workflow.lesson.generatingShort') : t('workflow.lesson.addStep')}
                 </button>
               </div>
 
@@ -1117,19 +1120,19 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         <div className="mo on" onMouseDown={(event) => event.target === event.currentTarget && setRegenPhaseConfirm(null)}>
           <div className="modal" style={{ width: 'min(420px, 90vw)', background: '#fff', borderRadius: 16, border: '2px solid #253142', boxShadow: '6px 6px 0 rgba(37,49,66,.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div className="modal-hd">
-              <div className="modal-t">重新生成阶段</div>
+              <div className="modal-t">{t('lesson.regeneratePhase')}</div>
               <button type="button" className="modal-x" onClick={() => setRegenPhaseConfirm(null)}>×</button>
             </div>
             <div className="modal-body" style={{ padding: '18px 24px' }}>
               <p style={{ fontSize: 14, color: '#575F6E', lineHeight: 1.6 }}>
-                确定要重新生成此阶段的所有环节吗？当前阶段的内容将被 AI 重新生成并替换。
+                {t('lesson.confirmRegeneratePhase')}
               </p>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setRegenPhaseConfirm(null)}>取消</button>
+              <button type="button" className="mo-btn-cancel" onClick={() => setRegenPhaseConfirm(null)}>{t('common.cancel')}</button>
               <button type="button" className="mo-btn-primary" onClick={() => { const pk = regenPhaseConfirm; setRegenPhaseConfirm(null); handleRegeneratePhase(pk); }}>
                 <RefreshCw size={13} />
-                确认重新生成
+                {t('lesson.confirmRegenerate')}
               </button>
             </div>
           </div>
@@ -1142,38 +1145,38 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             <div className="modal-hd">
               <div className="modal-t pem-title-wrap">
                 {phaseDetail.title}
-                <span className="pem-readonly-badge">只读说明</span>
+                <span className="pem-readonly-badge">{t('lesson.readonlyNote')}</span>
               </div>
-              <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label="关闭"><X size={20} /></button>
+              <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label={t('common.close')}><X size={20} /></button>
             </div>
             <div className="modal-body">
               <div className="pem-wrap" style={{ '--pem-accent': phaseDetail.color }}>
                 <div className="pem-summary">
-                  <div className="pem-summary-label">阶段定位</div>
+                  <div className="pem-summary-label">{t('lesson.phasePosition')}</div>
                   <div className="pem-summary-text">{phaseDetail.goal}</div>
                 </div>
                 <div className="pem-grid">
                   <div className="pem-section">
-                    <div className="pem-label">语言目标</div>
+                    <div className="pem-label">{t('lesson.languageGoal')}</div>
                     <div className="pem-content">{phaseDetail.lang}</div>
                   </div>
                   <div className="pem-section">
-                    <div className="pem-label">SEL 培养焦点</div>
+                    <div className="pem-label">{t('lesson.selFocus')}</div>
                     <div className="pem-content">{phaseDetail.sel}</div>
                   </div>
                   <div className="pem-section">
-                    <div className="pem-label">PERMA 幸福体验</div>
+                    <div className="pem-label">{t('lesson.permaFocus')}</div>
                     <div className="pem-content">{phaseDetail.perma}</div>
                   </div>
                   <div className="pem-section pem-section-narrative">
-                    <div className="pem-label">阶段情境叙事</div>
+                    <div className="pem-label">{t('lesson.phaseNarrative')}</div>
                     <div className="pem-content pem-narrative">{phaseDetail.narrative}</div>
                   </div>
                 </div>
               </div>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setPhaseDetail(null)}>关闭</button>
+              <button type="button" className="mo-btn-cancel" onClick={() => setPhaseDetail(null)}>{t('common.close')}</button>
             </div>
           </div>
         </div>
@@ -1185,26 +1188,26 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             <div className="modal-hd">
               <div>
                 <div className="modal-t" id="addStepTitle">
-                  {regenTarget ? '重新生成' : insertTarget ? '在此环节前添加' : '添加'} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>（{addPhase?.name || '引入'}）环节
+                  {regenTarget ? t('lesson.regenerateStep') : insertTarget ? t('lesson.insertStep') : t('lesson.addStep')} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>
                 </div>
                 <div id="asPhaseTag">
                   {course?.courseTitle || course?.title || 'Unit 3: Animals（神奇的动物）'} · {course?.ageGroup || course?.age || '8-9岁'} / {course?.grade || '三年级 G3'}
                 </div>
               </div>
-              <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }} aria-label="关闭"><X size={22} /></button>
+              <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }} aria-label={t('common.close')}><X size={22} /></button>
             </div>
 
             <div className="modal-body as-modal-body">
               <div className="as-left-panel">
                 <div className="as-gen-tabs">
                   <button className={`as-gen-tab ${genMode === 'ai' ? 'active' : ''}`} type="button" onClick={() => setGenMode('ai')}>
-                    <Sparkles size={13} /> AI 生成
+                    <Sparkles size={13} /> {t('lesson.aiGenerate')}
                   </button>
                   <button className={`as-gen-tab ${genMode === 'classic' ? 'active' : ''}`} type="button" onClick={() => setGenMode('classic')}>
-                    <Star size={13} /> 经典活动
+                    <Star size={13} /> {t('lesson.classicActivities')}
                   </button>
                   <button className={`as-gen-tab ${genMode === 'mine' ? 'active' : ''}`} type="button" onClick={() => setGenMode('mine')}>
-                    <Heart size={13} /> 我的收藏
+                    <Heart size={13} /> {t('lesson.myFavorites')}
                   </button>
                 </div>
 
@@ -1219,7 +1222,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                       ))}
                     </div>
                   </div>
-                  <div className="as-panel-label">输入活动核心思路</div>
+                  <div className="as-panel-label">{t('lesson.activityIdea')}</div>
                   <TextArea
                     className="as-gen-textarea"
                     value={ideaText}
@@ -1228,7 +1231,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                   />
                   <button type="button" className="as-gen-btn" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <Sparkles size={14} />
-                    {generateDraftLoading ? '生成中...' : 'AI 生成草案'}
+                    {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('lesson.generateDraft')}
                   </button>
                 </div>
 
@@ -1254,7 +1257,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                   {selectedClassic && (
                     <button type="button" className="as-gen-btn classic-gen" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
                       <Sparkles size={14} />
-                      {generateDraftLoading ? '生成中...' : 'AI 生成草案'}
+                      {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('lesson.generateDraft')}
                     </button>
                   )}
                 </div>
@@ -1295,33 +1298,33 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 <div className="as-right-hd">
                   <span className="as-right-title">活动草案</span>
                   <span className={`as-right-tag ${generateDraftLoading ? 'ai' : genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
-                    {generateDraftLoading ? 'AI 生成中...' : genMode === 'ai' ? '等待生成...' : genMode === 'classic' ? '等待选择...' : '选择收藏环节'}
+                    {generateDraftLoading ? t('lesson.generating') : genMode === 'ai' ? t('workflow.stepState.pending') : genMode === 'classic' ? t('workflow.stepState.pending') : t('lesson.myFavorites')}
                   </span>
                 </div>
 
                 <Form form={addForm} className="as-draft-form" layout="vertical">
                   <div className="as-draft-row">
-                    <Form.Item className="as-draft-field as-draft-name" label="环节名称" name="title">
+	                    <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title">
                       <Input className="as-draft-input" placeholder="起一个吸引人的名字" />
                     </Form.Item>
-                    <Form.Item className="as-draft-field as-draft-time" label="预估时长" name="time">
+	                    <Form.Item className="as-draft-field as-draft-time" label={t('lesson.stepDuration')} name="time">
                       <InputNumber className="as-draft-input" min={1} max={40} controls={false} />
                     </Form.Item>
                   </div>
-                  <Form.Item className="as-draft-field" label="语言目标" name="goal">
+	                  <Form.Item className="as-draft-field" label={t('lesson.languageGoal')} name="goal">
                     <TextArea className="as-draft-textarea" placeholder="例如：听力输入：核心情绪词（sad, happy, lonely, bored），核心句型 Let’s help…" />
                   </Form.Item>
-                  <Form.Item className="as-draft-field" label="活动概述" name="activity">
+	                  <Form.Item className="as-draft-field" label={t('lesson.activitySummary')} name="activity">
                     <TextArea className="as-draft-textarea" placeholder="简要描述活动内容..." />
                   </Form.Item>
                   <div className="as-draft-field">
-                    <label className="as-draft-lbl">活动流程</label>
+	                    <label className="as-draft-lbl">{t('lesson.activityFlow')}</label>
                     <Form.List name="flowSteps">
                       {(fields, { add, remove }) => (
                         <div className="flow-step-editor" id="drFlowSteps">
                           <div className="flow-step-editor-head">
                             <div>
-                              <div className="flow-step-editor-title">课堂执行流程</div>
+	                              <div className="flow-step-editor-title">{t('lesson.executionFlow')}</div>
                               <div className="flow-step-editor-tip">
                                 按真实上课顺序填写：先设计活动内容，再补充教师语言与引导动作。
                               </div>
@@ -1394,17 +1397,17 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                               cue: '',
                             })}
                           >
-                            + 添加步骤
+	                            + {t('common.add')}
                           </button>
                         </div>
                       )}
                     </Form.List>
                   </div>
                   <div className="as-draft-row">
-                    <Form.Item className="as-draft-field" label="教学资源" name="resources">
+	                    <Form.Item className="as-draft-field" label={t('lesson.teachingResources')} name="resources">
                       <TextArea className="as-draft-textarea" placeholder="用顿号、逗号或换行分隔，例如：装饰信封、求救信、动物轮廓表情图" />
                     </Form.Item>
-                    <Form.Item className="as-draft-field" label="情境创设" name="scenario">
+	                    <Form.Item className="as-draft-field" label={t('lesson.sceneSetup')} name="scenario">
                       <TextArea className="as-draft-textarea" placeholder="创设的情境背景..." />
                     </Form.Item>
                   </div>
@@ -1413,18 +1416,18 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 <div className="as-right-ft">
                   <button className="as-regen-btn" type="button" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <RefreshCw size={11} />
-                    {generateDraftLoading ? '生成中...' : '重新生成'}
+	                    {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('workflow.lesson.regenerate')}
                   </button>
                 </div>
               </div>
             </div>
 
             <div className="modal-ft">
-              <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }}>取消</button>
+	              <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }}>{t('common.cancel')}</button>
               <div className="as-ft-spacer" />
               <button type="button" className="as-ft-confirm" id="asConfirmBtn" onClick={addDraftStep}>
                 <span className="add-plus" aria-hidden="true">+</span>
-                {regenTarget ? '确认重新生成' : insertTarget ? '添加到此环节前' : '添加到大纲'}
+	                {regenTarget ? t('lesson.confirmRegenerate') : insertTarget ? t('lesson.insertBefore') : t('lesson.addToOutline')}
               </button>
             </div>
           </div>
@@ -1465,14 +1468,15 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 }
 
 function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, isSaved, onPin, onDelete, placement }) {
+  const { t } = useTranslation();
   return (
     <div className={`step-menu-dropdown ${placement === 'footer' ? 'footer-menu' : ''} ${open ? 'open' : ''}`}>
-      <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />重新生成</button>
-      <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />调整环节</button>
-      <button type="button" className="step-menu-item" onClick={onInsertBefore}><Plus size={12} />在此环节前添加新环节</button>
+      <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />{t('workflow.lesson.regenerate')}</button>
+      <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />{t('lesson.adjustTitle')}</button>
+      <button type="button" className="step-menu-item" onClick={onInsertBefore}><Plus size={12} />{t('lesson.insertBefore')}</button>
       <button type="button" className="step-menu-item" onClick={isSaved ? onUnsave : onSave}>
         <Heart size={12} fill={isSaved ? '#ff705f' : 'none'} />
-        {isSaved ? '取消收藏' : '收藏此环节'}
+        {isSaved ? t('common.cancel') : t('lesson.myFavorites')}
       </button>
       <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />置顶</button>
       <div className="step-menu-sep" />

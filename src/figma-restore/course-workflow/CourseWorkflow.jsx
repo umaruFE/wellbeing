@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Download, Redo2, Save, Undo2 } from 'lucide-react';
 import apiService from '../../services/api';
 import { TaskCenter } from '../TaskCenter';
+import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { CourseMapView } from './CourseMapView';
 import { LessonPlanView } from './LessonPlanView';
 import { PptCoursewareView } from './PptCoursewareView';
@@ -125,11 +126,11 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   }, [pptCanvasData, pptSaveStatus, savePptCanvas]);
 
   const pptSaveText = {
-    dirty: '等待自动保存',
-    saving: '正在保存...',
-    error: pptSaveError || '保存失败',
-    saved: '所有更改已保存',
-  }[pptSaveStatus] || '所有更改已保存';
+    dirty: t('workflow.toolbar.dirty'),
+    saving: t('workflow.toolbar.saving'),
+    error: pptSaveError || t('workflow.toolbar.error'),
+    saved: t('workflow.toolbar.saved'),
+  }[pptSaveStatus] || t('workflow.toolbar.saved');
 
   const insertTaskAssetToPpt = React.useCallback((asset) => {
     setPendingPptAsset({
@@ -170,8 +171,14 @@ export function CourseWorkflow({ initialCourse, onBack }) {
               >
                 <span className="fr-wf-n">{index + 1}</span>
                 <span>
-                  <b>{step.title}</b>
-                  <small>{index < current ? '已完成' : index === current ? '查看/编辑' : '待制作'}</small>
+                  <b>{t(`workflow.steps.${step.key}`)}</b>
+                  <small>
+                    {index < current
+                      ? t('workflow.stepState.done')
+                      : index === current
+                        ? t('workflow.stepState.active')
+                        : t('workflow.stepState.pending')}
+                  </small>
                 </span>
               </button>
               {index < workflowSteps.length - 1 && <span className="fr-wf-arrow">→</span>}
@@ -196,18 +203,19 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           }}
         >
           <div className="task-dot" />
-          <span className="task-text">后台任务 {taskCount}</span>
+          <span className="task-text">{t('workflow.toolbar.taskCenter', { count: taskCount })}</span>
         </button>
+        <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
         <Button
           className="fr-save-btn"
           icon={<Save size={15} />}
           disabled={pptSaveStatus === 'saving'}
           onClick={() => savePptCanvas()}
         >
-          保存
+          {t('workflow.toolbar.save')}
         </Button>
-        <Button className="fr-export-btn" icon={<Download size={15} />}>导出</Button>
-        <Button className="fr-publish-btn">发布</Button>
+        <Button className="fr-export-btn" icon={<Download size={15} />}>{t('workflow.toolbar.export')}</Button>
+        <Button className="fr-publish-btn">{t('workflow.toolbar.publish')}</Button>
       </header>
 
       {content[current]}
