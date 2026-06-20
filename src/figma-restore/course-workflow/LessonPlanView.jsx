@@ -136,18 +136,35 @@ const emptyPhases = [
 ];
 
 function resolvePhasesFromCourse(course) {
-  let courseData = course?.courseData || course?.course_data;
+  let courseData = course?.courseData || course?.course_data || course;
   if (typeof courseData === 'string') {
     try { courseData = JSON.parse(courseData); } catch { courseData = null; }
   }
   if (!courseData) return null;
 
   let phases = null;
-  if (courseData?.text?.courseData) {
+  if (Array.isArray(courseData)) {
+    phases = courseData.reduce((acc, phase) => {
+      const key = phase.key || phase.id || String(phase.phase || '').toLowerCase();
+      if (key) acc[key] = phase;
+      return acc;
+    }, {});
+  } else if (typeof courseData?.text === 'string') {
+    try {
+      const parsed = JSON.parse(courseData.text);
+      phases = parsed.courseData || parsed;
+    } catch {
+      phases = null;
+    }
+  } else if (courseData?.text?.courseData) {
     try { phases = typeof courseData.text.courseData === 'string' ? JSON.parse(courseData.text.courseData) : courseData.text.courseData; } catch { phases = null; }
   } else if (courseData?.courseData) {
     phases = courseData.courseData;
+  } else if (courseData?.parsedCourseData) {
+    phases = courseData.parsedCourseData;
   } else if (courseData?.engage || courseData?.empower || courseData?.execute || courseData?.elevate) {
+    phases = courseData;
+  } else if (courseData?.eng || courseData?.emp || courseData?.exc || courseData?.elv) {
     phases = courseData;
   }
   if (!phases) return null;
@@ -156,7 +173,7 @@ function resolvePhasesFromCourse(course) {
   const nameMapping = { engage: '引入', empower: '赋能', execute: '实践', elevate: '升华' };
 
   return Object.entries(phaseMapping).map(([longKey, shortKey]) => {
-    const phase = phases[longKey];
+    const phase = phases[longKey] || phases[shortKey];
     const steps = Array.isArray(phase?.steps) ? phase.steps : [];
     return {
       key: shortKey,
@@ -179,6 +196,34 @@ function resolvePhasesFromCourse(course) {
       })),
     };
   });
+}
+
+function buildLessonN8nPayload(course = {}) {
+  const map = buildCourseMap(course);
+
+  let parsedOverview = course.courseOverview || null;
+  if (parsedOverview?.text && typeof parsedOverview.text === 'string') {
+    try { parsedOverview = JSON.parse(parsedOverview.text); } catch {}
+  }
+  if (parsedOverview?.courseOverview) parsedOverview = parsedOverview.courseOverview;
+
+  return {
+    courseTitle: course.courseTitle || course.title || map.title || '',
+    age: (course.ageGroup || course.age || '').replace(/--/g, '') || '7-9岁',
+    duration: (course.duration || '').replace(/--/g, '').replace('分钟', '') || '60',
+    scale: (course.classSize || course.unit || '').replace(/--/g, '') || '',
+    vocabulary: course.vocabularies || course.keywords || [],
+    grammar: course.grammars || [],
+    skills: course.languageSkills || [],
+    paths: course.experiencePath ? [course.experiencePath] : [],
+    theme: course.theme || map.path || '',
+    taskName: course.taskName || '',
+    storyContext: course.storyContext || map.storyline || '',
+    keyOutcome: course.keyOutcome || map.keyOutcome || '',
+    atmosphere: course.atmosphere || '',
+    specialRequirements: course.specialRequirements || '',
+    courseOverview: parsedOverview,
+  };
 }
 
 function getAuthHeaders() {
@@ -212,7 +257,6 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [ideaText, setIdeaText] = React.useState('');
   const [regenPhase, setRegenPhase] = React.useState(null);
   const [regenPhaseConfirm, setRegenPhaseConfirm] = React.useState(null);
-  const [regenAllConfirm, setRegenAllConfirm] = React.useState(false);
   const [regenAllLoading, setRegenAllLoading] = React.useState(false);
   const [regenStep, setRegenStep] = React.useState(null);
   const [addingStep, setAddingStep] = React.useState(null);
@@ -240,36 +284,10 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
     const generateLesson = async () => {
       try {
-        const map = buildCourseMap(course);
-
-        let parsedOverview = course.courseOverview || null;
-        if (parsedOverview?.text && typeof parsedOverview.text === 'string') {
-          try { parsedOverview = JSON.parse(parsedOverview.text); } catch {}
-        }
-        if (parsedOverview?.courseOverview) parsedOverview = parsedOverview.courseOverview;
-
-        const payload = {
-          courseTitle: course.courseTitle || course.title || map.title || '',
-          age: (course.ageGroup || course.age || '').replace(/--/g, '') || '7-9岁',
-          duration: (course.duration || '').replace(/--/g, '').replace('分钟', '') || '60',
-          scale: (course.classSize || course.unit || '').replace(/--/g, '') || '',
-          vocabulary: course.vocabularies || course.keywords || [],
-          grammar: course.grammars || [],
-          skills: course.languageSkills || [],
-          paths: course.experiencePath ? [course.experiencePath] : [],
-          theme: course.theme || map.path || '',
-          taskName: course.taskName || '',
-          storyContext: course.storyContext || map.storyline || '',
-          keyOutcome: course.keyOutcome || map.keyOutcome || '',
-          atmosphere: course.atmosphere || '',
-          specialRequirements: course.specialRequirements || '',
-          courseOverview: parsedOverview,
-        };
-
         const response = await fetch('/api/ai/generate-course', {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify(payload),
+          body: JSON.stringify(buildLessonN8nPayload(course)),
         });
         const result = await response.json();
 
@@ -692,18 +710,36 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
   const handleRegenerateAll = async () => {
     setRegenAllLoading(true);
-    let nextData = data;
     try {
-      for (const phase of data) {
-        setRegenPhase(phase.key);
-        nextData = await handleRegeneratePhase(phase.key, nextData, { silent: true, deferUpdate: true });
+      const response = await fetch('/api/ai/generate-course', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          ...buildLessonN8nPayload(course),
+          regenerate: true,
+          currentCourseData: dataToCoursePhases(data),
+        }),
+      });
+      const result = await response.json();
+
+      if (!response.ok || !result.success || !result.data) {
+        throw new Error(result?.error || '教案重新生成失败');
       }
-      await updateData(nextData);
+
+      const courseDataRaw = result.data.courseData || result.data;
+      const resolved = resolvePhasesFromCourse({ courseData: courseDataRaw });
+      if (!resolved) {
+        throw new Error('N8N 未返回有效教案数据');
+      }
+
+      await updateData(resolved);
       toastMessage(t('workflow.lesson.regenerateDone'));
+    } catch (err) {
+      console.error('重新生成完整教案失败:', err);
+      toastMessage(err?.message || '教案重新生成失败，请重试');
     } finally {
       setRegenPhase(null);
       setRegenAllLoading(false);
-      setRegenAllConfirm(false);
     }
   };
 
@@ -950,8 +986,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           <img src={planeIcon} alt="" className="lesson-design-plane" />
         </div>
         <div className="lesson-design-actions">
-          <Button className="btn-ghost" icon={<RefreshCw size={16} />} loading={regenAllLoading} onClick={() => setRegenAllConfirm(true)}>
-            {t('workflow.lesson.regenerate')}
+          <Button className="btn-ghost" icon={<RefreshCw size={16} />} loading={regenAllLoading} onClick={handleRegenerateAll}>
+            {regenAllLoading ? t('workflow.lesson.generatingShort') : t('workflow.lesson.regenerate')}
           </Button>
           <Button className="btn-next-step" onClick={onNext}>
             {t('workflow.nextStep')}
@@ -1164,29 +1200,6 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               <button type="button" className="mo-btn-primary" onClick={() => { const pk = regenPhaseConfirm; setRegenPhaseConfirm(null); handleRegeneratePhase(pk); }}>
                 <RefreshCw size={13} />
                 {t('lesson.confirmRegenerate')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {regenAllConfirm && (
-        <div className="mo on" onMouseDown={(event) => event.target === event.currentTarget && !regenAllLoading && setRegenAllConfirm(false)}>
-          <div className="modal" style={{ width: 'min(420px, 90vw)', background: '#fff', borderRadius: 16, border: '2px solid #253142', boxShadow: '6px 6px 0 rgba(37,49,66,.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <div className="modal-hd">
-              <div className="modal-t">{t('workflow.lesson.regenerate')}</div>
-              <button type="button" className="modal-x" onClick={() => setRegenAllConfirm(false)} disabled={regenAllLoading}>×</button>
-            </div>
-            <div className="modal-body" style={{ padding: '18px 24px' }}>
-              <p style={{ fontSize: 14, color: '#575F6E', lineHeight: 1.6 }}>
-                {t('workflow.lesson.confirmRegenerateAll')}
-              </p>
-            </div>
-            <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setRegenAllConfirm(false)} disabled={regenAllLoading}>{t('common.cancel')}</button>
-              <button type="button" className="mo-btn-primary" onClick={handleRegenerateAll} disabled={regenAllLoading}>
-                <RefreshCw size={13} />
-                {regenAllLoading ? t('workflow.lesson.generatingShort') : t('lesson.confirmRegenerate')}
               </button>
             </div>
           </div>
