@@ -69,6 +69,97 @@
   box-shadow: 3px 3px 0 rgba(37, 49, 66, 0.28);
 }
 
+.ppt-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.ppt-history-actions {
+  height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-right: 12px;
+  border-right: 1px solid #e2ded7;
+}
+
+.ppt-history-actions button,
+.ppt-export-action,
+.ppt-style-action {
+  border: 0;
+  background: transparent;
+  color: var(--ppt-ink);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ppt-history-actions button {
+  width: 22px;
+  height: 22px;
+  padding: 0;
+}
+
+.ppt-autosave {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ppt-muted);
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.ppt-autosave span {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ppt-green);
+}
+
+.ppt-autosave.is-saving span {
+  background: var(--ppt-coral);
+}
+
+.ppt-autosave.is-error {
+  color: var(--ppt-coral);
+}
+
+.ppt-autosave.is-error span {
+  background: var(--ppt-coral);
+}
+
+.ppt-export-action,
+.ppt-style-action {
+  min-width: 54px;
+  height: 32px;
+  gap: 5px;
+  padding: 0 10px;
+  border: 2px solid var(--ppt-ink);
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.ppt-export-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.ppt-export-action {
+  background: #dfe2bb;
+}
+
+.ppt-style-action {
+  background: #fff1ed;
+  white-space: nowrap;
+}
+
 .ppt-canvas-scroll {
   flex: 1;
   position: relative;
@@ -253,10 +344,9 @@
 .ppt-layer-text {
   width: 100%;
   height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   white-space: pre-wrap;
+  word-break: break-word;
   overflow: hidden;
   line-height: 1.16;
 }
@@ -660,9 +750,49 @@
 }
 
 #ed-ppt .ppt-tool-group {
-  margin-left: auto;
+  margin-left: 0;
   flex: 0 0 auto;
   gap: 9px;
+}
+
+#ed-ppt .ppt-editor-actions {
+  flex: 0 0 auto;
+  gap: 9px;
+}
+
+#ed-ppt .ppt-history-actions {
+  height: 24px;
+  gap: 10px;
+  padding-right: 12px;
+  border-right-color: #e2ded7;
+}
+
+#ed-ppt .ppt-history-actions button {
+  width: 18px;
+  height: 18px;
+  color: #253142;
+}
+
+#ed-ppt .ppt-autosave {
+  height: 28px;
+  color: #8a94a4;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-export-action {
+  height: 32px;
+  min-width: 52px;
+  padding: 0 10px;
+  border: 2px solid #253142;
+  border-radius: 8px;
+  color: #253142;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-export-action {
+  background: #dfe2bb;
 }
 
 #ed-ppt .ppt-tool-group button {

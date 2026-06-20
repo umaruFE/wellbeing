@@ -39,6 +39,12 @@ export function PptOutline({
     });
   }, []);
 
+  const coverPhase = course.find((phase) => phase.key === 'cover');
+  const contentPhases = course.filter((phase) => phase.key !== 'cover');
+  const coverStep = coverPhase?.steps?.[0];
+  const coverSlide = coverStep?.slides?.[0];
+  const isCoverActive = activePhaseKey === 'cover';
+
   const renderSlidePreview = (phase, step) => {
     if (!expandedStepIds.has(step.id) || !step.slides?.length) return null;
 
@@ -60,7 +66,7 @@ export function PptOutline({
                   className={`ppt-slide-thumb ${isSlideActive ? 'active' : ''}`}
                   onClick={() => onSelectStep(phase.key, step.id, slide.id)}
                 >
-                  <PptOutlineThumb slideIndex={slideIndex} />
+                  <PptOutlineThumb slide={slide} slideIndex={slideIndex} />
                 </button>
               </div>
             </div>
@@ -90,7 +96,24 @@ export function PptOutline({
       <div className="ppt-left-head">{t('ppt.courseOutline')}</div>
 
       <div className="ppt-left-scroll">
-        {course.map((phase) => {
+        {coverSlide && (
+          <button
+            type="button"
+            className={`ppt-cover-entry ${isCoverActive ? 'active' : ''}`}
+            onClick={() => onSelectStep('cover', coverStep.id, coverSlide.id)}
+          >
+            <span className="ppt-cover-entry-icon">
+              <FileText size={13} />
+            </span>
+            <span className="ppt-cover-entry-main">
+              <b>{t('ppt.cover')}</b>
+              <small>{coverSlide.title || coverStep.title}</small>
+            </span>
+            <span className="ppt-cover-entry-count">1</span>
+          </button>
+        )}
+
+        {contentPhases.map((phase) => {
           const colors = phaseColors[phase.key] || phaseColors.engage;
           return (
             <section className="ppt-phase" key={phase.key}>
@@ -171,6 +194,55 @@ export function PptOutline({
   );
 }
 
-function PptOutlineThumb({ slideIndex }) {
+function PptOutlineThumb({ slide, slideIndex }) {
+  if (slide?.layers?.length || slide?.backgroundImage) {
+    return (
+      <div
+        className="ppt-design-thumb live"
+        style={{
+          backgroundColor: slide?.background || '#ffffff',
+          backgroundImage: slide?.backgroundImage ? `url("${slide.backgroundImage}")` : undefined,
+        }}
+        aria-hidden="true"
+      >
+        {slide.layers?.filter((layer) => !layer.hidden).slice(0, 8).map((layer) => {
+          if (layer.type !== 'text') {
+            return (
+              <span
+                key={layer.id}
+                className={`ppt-thumb-layer media type-${layer.type}`}
+                style={{
+                  left: `${(layer.x || 0) / 940 * 100}%`,
+                  top: `${(layer.y || 0) / 529 * 100}%`,
+                  width: `${(layer.width || 80) / 940 * 100}%`,
+                  height: `${(layer.height || 50) / 529 * 100}%`,
+                }}
+              />
+            );
+          }
+
+          return (
+            <span
+              key={layer.id}
+              className="ppt-thumb-layer text"
+              style={{
+                left: `${(layer.x || 0) / 940 * 100}%`,
+                top: `${(layer.y || 0) / 529 * 100}%`,
+                width: `${(layer.width || 120) / 940 * 100}%`,
+                height: `${(layer.height || 36) / 529 * 100}%`,
+                color: layer.color,
+                fontWeight: layer.fontWeight,
+                textAlign: layer.textAlign,
+                fontSize: `${Math.max(3, (layer.fontSize || 18) / 5.2)}px`,
+              }}
+            >
+              {layer.content}
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+
   return <div className={`ppt-design-thumb thumb-${Math.min(slideIndex, 1)}`} aria-hidden="true" />;
 }

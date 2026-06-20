@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ArrowDown, ArrowUp, Copy, Image, Maximize2, Minus, Music, Plus, RotateCw, Trash2, Type, Video } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Image, Maximize2, Minus, Music, Palette, Plus, Redo2, RotateCw, Trash2, Type, Undo2, Video } from 'lucide-react';
 import { PptDemoScene } from './PptDemoScene';
 import './css/PptCanvas.css';
 
@@ -90,6 +90,9 @@ export function PptCanvas({
   onUpdateLayer,
   onDuplicateLayer,
   onDeleteLayer,
+  saveStatus = 'saved',
+  saveText = '',
+  onChangeStyle,
 }) {
   const { t } = useTranslation();
   const slideRef = React.useRef(null);
@@ -215,6 +218,25 @@ export function PptCanvas({
           {t('ppt.slide')} <b>{slideIndex + 1}</b>/{slideCount}
         </div>
 
+        <div className="ppt-editor-actions">
+          <div className="ppt-history-actions">
+            <button type="button" aria-label={t('common.undo')} title={t('common.undo')}>
+              <Undo2 size={15} />
+            </button>
+            <button type="button" aria-label={t('common.redo')} title={t('common.redo')}>
+              <Redo2 size={15} />
+            </button>
+          </div>
+          <div className={`ppt-autosave ${saveStatus === 'saving' ? 'is-saving' : ''} ${saveStatus === 'error' ? 'is-error' : ''}`}>
+            <span />
+            {saveText || t('workflow.toolbar.saved')}
+          </div>
+          <button type="button" className="ppt-style-action" onClick={onChangeStyle}>
+            <Palette size={15} />
+            重新生成风格
+          </button>
+        </div>
+
         <div className="ppt-tool-group">
           <button type="button" onClick={() => onAddLayer('text')} title={t('ppt.text')} aria-label={t('ppt.insertText')}>
             <Type size={15} />
@@ -235,7 +257,13 @@ export function PptCanvas({
         <div
           ref={slideRef}
           className="ppt-slide"
-          style={{ background: slide?.background || '#ffffff', transform: `scale(${zoom / 100})` }}
+          style={{
+            backgroundColor: slide?.background || '#ffffff',
+            backgroundImage: slide?.backgroundImage ? `url("${slide.backgroundImage}")` : undefined,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            transform: `scale(${zoom / 100})`,
+          }}
           onPointerDown={onClearSelection}
         >
           {(!slide?.layers || slide.layers.length === 0) && (

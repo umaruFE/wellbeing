@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Redo2, Save, Undo2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import apiService from '../../services/api';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { CourseMapView } from './CourseMapView';
@@ -111,8 +111,11 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     <PptCoursewareView
       key="ppt"
       onNext={() => setCurrent(3)}
+      courseMeta={course}
       initialCourseData={pptCanvasData || phases}
       onCourseChange={handlePptCanvasChange}
+      saveStatus={pptSaveStatus}
+      saveText={pptSaveText}
     />,
     <ReadingMaterialView key="reading" course={course} materials={materials} onMaterialsChange={setMaterials} />,
   ];
@@ -148,23 +151,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           ))}
         </div>
         <div className="fr-tb-spacer" />
-        <div className="fr-history-actions">
-          <button type="button" aria-label="撤销"><Undo2 size={16} /></button>
-          <button type="button" aria-label="重做"><Redo2 size={16} /></button>
-        </div>
-        <div className={`fr-autosave ${pptSaveStatus === 'saving' ? 'is-saving' : ''} ${pptSaveStatus === 'error' ? 'is-error' : ''}`}>
-          <span />
-          {pptSaveText}
-        </div>
         <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
-        <Button
-          className="fr-save-btn"
-          icon={<Save size={15} />}
-          disabled={pptSaveStatus === 'saving'}
-          onClick={() => savePptCanvas()}
-        >
-          {t('workflow.toolbar.save')}
-        </Button>
         <Button className="fr-publish-btn">{t('workflow.toolbar.publish')}</Button>
       </header>
 

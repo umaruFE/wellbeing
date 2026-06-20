@@ -1,26 +1,61 @@
 import React from 'react';
-import { buildInitialPptCourse, createMediaLayer, createTextLayer } from './pptData';
+import { useTranslation } from 'react-i18next';
+import { Check, Sparkles } from 'lucide-react';
+import {
+  PPT_TEMPLATES,
+  buildInitialPptCourse,
+  createGeneratedPptCourse,
+  createMediaLayer,
+  createTextLayer,
+  ensurePptCoverAndInnerPages,
+  hasGeneratedPptContent,
+} from './pptData';
 import { cloneData, findActiveSlide } from './pptUtils';
 import { PptOutline } from './PptOutline';
 import { PptCanvas } from './PptCanvas';
 import { PptRightPanel } from './right-panel/PptRightPanel';
 import './css/PptCoursewareView.css';
 
-export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset, onConsumeTaskAsset, onCourseChange }) {
-  const [course, setCourse] = React.useState(() => buildInitialPptCourse(initialCourseData));
-  const hasReportedInitialRef = React.useRef(false);
+function getFirstSelection(course) {
   const firstPhase = course[0];
   const firstStep = firstPhase?.steps[0];
-  const firstSlide = firstStep?.slides[1] || firstStep?.slides[0];
+  const firstSlide = firstStep?.slides[0] || firstStep?.slides[1];
 
-  const [activePhaseKey, setActivePhaseKey] = React.useState(firstPhase?.key || 'engage');
-  const [activeStepId, setActiveStepId] = React.useState(firstStep?.id || null);
-  const [activeSlideId, setActiveSlideId] = React.useState(firstSlide?.id || null);
-  const [selectedLayerId, setSelectedLayerId] = React.useState(
-    firstSlide?.layers?.find((layer) => layer.type === 'text')?.id
+  return {
+    phaseKey: firstPhase?.key || 'engage',
+    stepId: firstStep?.id || null,
+    slideId: firstSlide?.id || null,
+    layerId: firstSlide?.layers?.find((layer) => layer.type === 'text')?.id
       || firstSlide?.layers?.find((layer) => layer.type === 'video')?.id
-      || null
-  );
+      || null,
+  };
+}
+
+export function PptCoursewareView({
+  onNext,
+  courseMeta,
+  initialCourseData,
+  pendingTaskAsset,
+  onConsumeTaskAsset,
+  onCourseChange,
+  saveStatus = 'saved',
+  saveText = '',
+}) {
+  const { t } = useTranslation();
+  const hasInitialPptContent = React.useMemo(() => hasGeneratedPptContent(initialCourseData), [initialCourseData]);
+  const [mode, setMode] = React.useState(() => (hasInitialPptContent ? 'editor' : 'template'));
+  const [canCancelTemplatePicker, setCanCancelTemplatePicker] = React.useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = React.useState(PPT_TEMPLATES[0].id);
+  const [course, setCourse] = React.useState(() => (
+    ensurePptCoverAndInnerPages(buildInitialPptCourse(initialCourseData), courseMeta)
+  ));
+  const hasReportedInitialRef = React.useRef(false);
+  const firstSelection = React.useMemo(() => getFirstSelection(course), [course]);
+
+  const [activePhaseKey, setActivePhaseKey] = React.useState(firstSelection.phaseKey);
+  const [activeStepId, setActiveStepId] = React.useState(firstSelection.stepId);
+  const [activeSlideId, setActiveSlideId] = React.useState(firstSelection.slideId);
+  const [selectedLayerId, setSelectedLayerId] = React.useState(firstSelection.layerId);
   const [assetPanelType, setAssetPanelType] = React.useState(null);
 
   const { step, slide } = findActiveSlide(course, activePhaseKey, activeStepId, activeSlideId);
@@ -28,10 +63,43 @@ export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset,
   const selectedLayer = slide?.layers.find((layer) => layer.id === selectedLayerId) || null;
 
   React.useEffect(() => {
+    if (mode !== 'editor') return;
     if (hasReportedInitialRef.current) return;
     hasReportedInitialRef.current = true;
     onCourseChange?.(course, { source: 'initial' });
-  }, [course, onCourseChange]);
+  }, [course, mode, onCourseChange]);
+
+  const applySelection = React.useCallback((nextCourse) => {
+    const selection = getFirstSelection(nextCourse);
+    setActivePhaseKey(selection.phaseKey);
+    setActiveStepId(selection.stepId);
+    setActiveSlideId(selection.slideId);
+    setSelectedLayerId(selection.layerId);
+    setAssetPanelType(null);
+  }, []);
+
+  const generateCourseware = () => {
+    const nextCourse = createGeneratedPptCourse(initialCourseData, selectedTemplateId, courseMeta);
+    hasReportedInitialRef.current = true;
+    setCourse(nextCourse);
+    applySelection(nextCourse);
+    setCanCancelTemplatePicker(false);
+    setMode('editor');
+    onCourseChange?.(nextCourse, { source: 'edit', templateId: selectedTemplateId });
+  };
+
+  const returnToTemplatePicker = () => {
+    setSelectedLayerId(null);
+    setAssetPanelType(null);
+    setCanCancelTemplatePicker(true);
+    setMode('template');
+  };
+
+  const cancelTemplatePicker = () => {
+    applySelection(course);
+    setCanCancelTemplatePicker(false);
+    setMode('editor');
+  };
 
   const updateCourse = React.useCallback((recipe) => {
     setCourse((current) => {
@@ -212,6 +280,75 @@ export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset,
     setSelectedLayerId(null);
   };
 
+  if (mode === 'template') {
+    const stepCount = course.reduce((sum, phase) => sum + (phase.steps?.length || 0), 0);
+    const slideCount = stepCount * 2;
+
+    return (
+      <div className="ppt-courseware ppt-template-mode" id="ed-ppt">
+        <section className="ppt-template-setup">
+          <div className="ppt-template-head">
+            <div>
+              <span className="ppt-template-kicker">{t('ppt.templateKicker')}</span>
+              <h2>{t('ppt.templateTitle')}</h2>
+              <p>{t('ppt.templateDescription')}</p>
+            </div>
+            <div className="ppt-template-stats">
+              <span>{stepCount}</span>
+              <b>{t('ppt.lessonSteps')}</b>
+              <span>{slideCount}</span>
+              <b>{t('ppt.estimatedSlides')}</b>
+            </div>
+          </div>
+
+          <div className="ppt-template-grid">
+            {PPT_TEMPLATES.map((template) => {
+              const active = selectedTemplateId === template.id;
+              return (
+                <button
+                  type="button"
+                  key={template.id}
+                  className={`ppt-template-card ${active ? 'active' : ''}`}
+                  onClick={() => setSelectedTemplateId(template.id)}
+                  style={{
+                    '--template-bg': template.background,
+                    '--template-panel': template.panel,
+                    '--template-accent': template.accent,
+                    '--template-soft': template.accentSoft,
+                    '--template-preview': `url("${template.coverImage}")`,
+                  }}
+                >
+                  <span className="ppt-template-check">{active && <Check size={16} />}</span>
+                  <span className="ppt-template-preview">
+                    <i />
+                    <strong />
+                    <em />
+                    <small />
+                  </span>
+                  <span className="ppt-template-name">{template.name}</span>
+                  <span className="ppt-template-badge">{template.badge}</span>
+                  <span className="ppt-template-desc">{template.description}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="ppt-template-actions">
+            {canCancelTemplatePicker && (
+              <button type="button" className="ppt-template-cancel-btn" onClick={cancelTemplatePicker}>
+                {t('common.cancel')}
+              </button>
+            )}
+            <button type="button" className="ppt-generate-btn" onClick={generateCourseware}>
+              <Sparkles size={18} />
+              {t('ppt.generateCourseware')}
+            </button>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   return (
     <div className="ppt-courseware" id="ed-ppt">
       <PptOutline
@@ -241,6 +378,9 @@ export function PptCoursewareView({ onNext, initialCourseData, pendingTaskAsset,
         onUpdateLayer={updateLayerById}
         onDuplicateLayer={duplicateLayer}
         onDeleteLayer={deleteLayer}
+        saveStatus={saveStatus}
+        saveText={saveText}
+        onChangeStyle={returnToTemplatePicker}
       />
 
       <PptRightPanel

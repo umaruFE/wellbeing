@@ -35,6 +35,80 @@
   display: none;
 }
 
+#ed-ppt .ppt-cover-entry {
+  width: 232px;
+  min-height: 54px;
+  margin: 0 0 20px;
+  padding: 9px 10px;
+  border: 2px solid #253142;
+  border-radius: 9px;
+  background: #f4f2ec;
+  color: #253142;
+  box-shadow: 3px 3px 0 rgba(37, 49, 66, 0.16);
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+#ed-ppt .ppt-cover-entry.active {
+  background: #fff1df;
+  box-shadow: 4px 4px 0 rgba(255, 112, 93, 0.3);
+}
+
+#ed-ppt .ppt-cover-entry-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: #253142;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 28px;
+}
+
+#ed-ppt .ppt-cover-entry-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+#ed-ppt .ppt-cover-entry-main b {
+  color: #253142;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 18px;
+}
+
+#ed-ppt .ppt-cover-entry-main small {
+  overflow: hidden;
+  color: #667085;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#ed-ppt .ppt-cover-entry-count {
+  min-width: 22px;
+  height: 22px;
+  border: 1.5px solid #253142;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #253142;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 #ed-ppt .ppt-phase {
   margin: 0 0 24px;
 }
@@ -287,6 +361,37 @@
 
 #ed-ppt .ppt-design-thumb.thumb-1 {
   background-position: -55px -276px;
+}
+
+#ed-ppt .ppt-design-thumb.custom-bg {
+  background-size: cover;
+  background-position: center;
+}
+
+#ed-ppt .ppt-design-thumb.live {
+  position: relative;
+  background-size: cover;
+  background-position: center;
+}
+
+#ed-ppt .ppt-thumb-layer {
+  position: absolute;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+#ed-ppt .ppt-thumb-layer.text {
+  display: flex;
+  align-items: center;
+  line-height: 1.08;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+#ed-ppt .ppt-thumb-layer.media {
+  border: 1px solid rgba(37, 49, 66, 0.25);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.72);
 }
 
 #ed-ppt .ppt-add-slide-btn {
