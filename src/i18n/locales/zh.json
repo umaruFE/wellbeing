@@ -228,6 +228,7 @@
     "phaseElevate": "E-ELEVATE 升华"
   },
   "workflow": {
+    "nextStep": "下一步",
     "steps": {
       "map": "课程地图",
       "lesson": "教案设计",
@@ -275,6 +276,8 @@
       "saved": "已保存",
       "generating": "正在生成教案...",
       "regenerate": "重新生成",
+      "confirmRegenerateAll": "确定要重新生成完整教案设计吗？当前四个阶段的环节内容将被 AI 重新生成并替换。",
+      "regenerateDone": "教案设计已重新生成",
       "addStep": "添加环节",
       "generatingShort": "生成中...",
       "stepCount": "{{count}} 个环节"

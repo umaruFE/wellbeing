@@ -584,6 +584,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
             {t('workflow.map.regenerate')}
           </Button>
           <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>{t('workflow.map.edit')}</Button>
+          <Button className="btn-next-step" onClick={onNext}>
+            {t('workflow.nextStep')}
+          </Button>
         </div>
       </div>
 

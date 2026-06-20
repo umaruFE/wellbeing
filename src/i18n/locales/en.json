@@ -228,6 +228,7 @@
     "phaseElevate": "E-ELEVATE"
   },
   "workflow": {
+    "nextStep": "Next",
     "steps": {
       "map": "Course Map",
       "lesson": "Lesson Plan",
@@ -275,6 +276,8 @@
       "saved": "Saved",
       "generating": "Generating lesson plan...",
       "regenerate": "Regenerate",
+      "confirmRegenerateAll": "Regenerate the full lesson plan? All phase steps will be replaced by AI-generated content.",
+      "regenerateDone": "Lesson plan regenerated",
       "addStep": "Add Step",
       "generatingShort": "Generating...",
       "stepCount": "{{count}} steps"

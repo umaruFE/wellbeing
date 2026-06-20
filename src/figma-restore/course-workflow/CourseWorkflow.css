@@ -2616,3 +2616,238 @@ body.fr-workflow-route-active .header{display:none}
     grid-template-columns:1fr!important;
   }
 }
+
+/* Workflow action fixes */
+.fr-editor-tb,
+.view-map-active .fr-editor-tb{
+  min-height:62px!important;
+  height:auto!important;
+}
+.fr-tb-course,
+.view-map-active .fr-tb-course{
+  flex:0 1 220px!important;
+  min-width:92px!important;
+  max-width:220px!important;
+}
+.fr-tb-spacer{
+  display:none!important;
+}
+.fr-wf-bridge,
+.view-map-active .fr-wf-bridge{
+  position:static!important;
+  left:auto!important;
+  top:auto!important;
+  transform:none!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  justify-content:center!important;
+  margin:0 14px!important;
+}
+.fr-wf-step{
+  flex:0 1 auto!important;
+}
+.fr-history-actions,
+.fr-autosave,
+.fr-editor-tb .fr-task-button,
+.fr-workflow-language,
+.fr-export-btn.ant-btn,
+.fr-publish-btn.ant-btn{
+  flex:0 0 auto!important;
+}
+.lesson-design-page-header{
+  min-height:38px!important;
+  height:auto!important;
+  gap:16px!important;
+}
+.lesson-design-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex:0 0 auto;
+}
+.lesson-design-actions .btn-ghost{
+  height:36px!important;
+  min-height:36px!important;
+  padding:0 15px!important;
+  border:2px solid #333e4e!important;
+  border-radius:8px!important;
+  background:#fff!important;
+  color:#333e4e!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  box-shadow:none!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:7px!important;
+}
+.overview-panel-actions .btn-next-step,
+.lesson-design-actions .btn-next-step{
+  height:36px!important;
+  min-height:36px!important;
+  padding:0 18px!important;
+  border:2px solid #333e4e!important;
+  border-radius:8px!important;
+  background:#f6e6cc!important;
+  color:#333e4e!important;
+  font-size:14px!important;
+  font-weight:900!important;
+  box-shadow:none!important;
+  display:inline-flex!important;
+  align-items:center!important;
+}
+@media(max-width:1480px){
+  .fr-tb-course,
+  .view-map-active .fr-tb-course{
+    max-width:180px!important;
+  }
+  .fr-wf-bridge,
+  .view-map-active .fr-wf-bridge{
+    gap:8px!important;
+    margin:0 10px!important;
+  }
+  .fr-wf-step,
+  .view-map-active .fr-wf-step{
+    padding-right:12px!important;
+  }
+  .fr-wf-arrow,
+  .view-map-active .fr-wf-arrow{
+    width:38px!important;
+    flex-basis:38px!important;
+  }
+  .fr-history-actions{
+    display:none!important;
+  }
+}
+@media(max-width:1240px){
+  .fr-editor-tb,
+  .view-map-active .fr-editor-tb{
+    padding-right:14px!important;
+  }
+  .fr-autosave{
+    display:none!important;
+  }
+  .fr-workflow-language>button{
+    min-width:74px!important;
+    padding:0 10px!important;
+  }
+  .fr-export-btn.ant-btn,
+  .fr-publish-btn.ant-btn{
+    padding:0 12px!important;
+  }
+}
+@media(max-width:1060px){
+  .fr-wf-step span:not(.fr-wf-n){
+    display:none!important;
+  }
+  .fr-wf-step,
+  .view-map-active .fr-wf-step{
+    width:36px!important;
+    padding:0 3px!important;
+    justify-content:center!important;
+    gap:0!important;
+  }
+  .fr-wf-arrow,
+  .view-map-active .fr-wf-arrow{
+    width:28px!important;
+    flex-basis:28px!important;
+  }
+  .fr-editor-tb .fr-task-button{
+    min-width:40px!important;
+    padding:0 10px!important;
+  }
+  .fr-editor-tb .fr-task-button .task-text{
+    display:none!important;
+  }
+}
+@media(max-width:760px){
+  .lesson-design-page-header{
+    align-items:flex-start!important;
+    flex-direction:column!important;
+  }
+  .lesson-design-actions,
+  .overview-panel-actions{
+    width:100%;
+    justify-content:flex-start;
+    flex-wrap:wrap;
+  }
+}
+
+/* Keep workflow pages inside the app shell instead of clipping under the right edge. */
+.fr-workflow{
+  width:100%!important;
+  min-width:0!important;
+  overflow:hidden!important;
+}
+.fr-workflow-map-step,
+#ed-tbl{
+  width:100%!important;
+  min-width:0!important;
+}
+.view-map-active .overview-panel-header{
+  min-width:0!important;
+  gap:14px!important;
+}
+.view-map-active .overview-panel-title{
+  min-width:0!important;
+  flex:1 1 auto!important;
+}
+.view-map-active .overview-panel-actions{
+  flex:0 1 auto!important;
+  min-width:0!important;
+  justify-content:flex-end!important;
+  flex-wrap:wrap!important;
+}
+.view-map-active .overview-panel-actions .btn-ghost,
+.view-map-active .overview-panel-actions .btn-next-step{
+  flex:0 0 auto!important;
+}
+.view-map-active .course-map-v2{
+  width:100%!important;
+  min-width:0!important;
+  grid-template-columns:minmax(320px,400px) minmax(0,1fr)!important;
+}
+.view-map-active .course-map-v2-card,
+.view-map-active .course-map-v2-panel{
+  min-width:0!important;
+}
+.view-map-active .course-map-v2-grid{
+  grid-template-columns:repeat(2,minmax(260px,1fr))!important;
+}
+.view-map-active .course-map-v2-goal-title{
+  min-width:min(288px,calc(100% - 24px))!important;
+  max-width:calc(100% - 24px)!important;
+}
+.view-map-active .course-map-v2-journey{
+  overflow-x:auto!important;
+  grid-template-columns:repeat(4,minmax(180px,1fr))!important;
+  padding-bottom:4px!important;
+}
+@media(max-width:1320px){
+  .view-map-active .course-map-v2{
+    grid-template-columns:minmax(300px,360px) minmax(0,1fr)!important;
+    gap:18px!important;
+  }
+  .view-map-active .course-map-v2-panel{
+    padding-left:20px!important;
+    padding-right:20px!important;
+  }
+  .view-map-active .course-map-v2-grid{
+    gap:42px 18px!important;
+  }
+  .view-map-active .course-map-v2-journey{
+    grid-template-columns:repeat(4,190px)!important;
+  }
+}
+@media(max-width:1120px){
+  .view-map-active .course-map-v2{
+    grid-template-columns:1fr!important;
+  }
+  .view-map-active .course-map-v2-card{
+    height:auto!important;
+    min-height:0!important;
+  }
+  .view-map-active .course-map-v2-cover{
+    min-height:320px!important;
+  }
+}

@@ -1,9 +1,8 @@
 import React from 'react';
-import { Button, Drawer } from 'antd';
+import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Download, Redo2, Save, Undo2 } from 'lucide-react';
+import { ArrowLeft, Redo2, Save, Undo2 } from 'lucide-react';
 import apiService from '../../services/api';
-import { TaskCenter } from '../TaskCenter';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { CourseMapView } from './CourseMapView';
 import { LessonPlanView } from './LessonPlanView';
@@ -19,9 +18,6 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   const [course, setCourse] = React.useState(initialCourse || {});
   const [phases, setPhases] = React.useState(phaseTemplates);
   const [materials, setMaterials] = React.useState(readingTemplates);
-  const [taskDrawerVisible, setTaskDrawerVisible] = React.useState(false);
-  const [taskCount, setTaskCount] = React.useState(0);
-  const [pendingPptAsset, setPendingPptAsset] = React.useState(null);
   const initialPptData = React.useMemo(
     () => course?.canvasData || course?.canvas_data || null,
     [course?.canvasData, course?.canvas_data]
@@ -39,29 +35,6 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       document.body.classList.remove('fr-workflow-route-active');
     };
   }, []);
-
-  const loadTaskCount = React.useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('/api/background-tasks?scope=active', {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      const result = await response.json();
-      if (response.ok && result.success) {
-        setTaskCount(result.data?.tasks?.length || 0);
-      }
-    } catch {
-      setTaskCount(0);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    loadTaskCount();
-    const timer = window.setInterval(loadTaskCount, 10000);
-    return () => window.clearInterval(timer);
-  }, [loadTaskCount]);
 
   React.useEffect(() => {
     latestPptCanvasRef.current = initialPptData;
@@ -132,15 +105,6 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     saved: t('workflow.toolbar.saved'),
   }[pptSaveStatus] || t('workflow.toolbar.saved');
 
-  const insertTaskAssetToPpt = React.useCallback((asset) => {
-    setPendingPptAsset({
-      ...asset,
-      requestId: `task-asset-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    });
-    setCurrent(2);
-    setTaskDrawerVisible(false);
-  }, []);
-
   const content = [
     <CourseMapView key="map" course={course} onCourseChange={setCourse} onNext={() => setCurrent(1)} />,
     <LessonPlanView key="lesson" course={course} phases={phases} onPhasesChange={setPhases} onNext={() => setCurrent(2)} />,
@@ -148,8 +112,6 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       key="ppt"
       onNext={() => setCurrent(3)}
       initialCourseData={pptCanvasData || phases}
-      pendingTaskAsset={pendingPptAsset}
-      onConsumeTaskAsset={() => setPendingPptAsset(null)}
       onCourseChange={handlePptCanvasChange}
     />,
     <ReadingMaterialView key="reading" course={course} materials={materials} onMaterialsChange={setMaterials} />,
@@ -194,17 +156,6 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           <span />
           {pptSaveText}
         </div>
-        <button
-          className="task-button fr-task-button"
-          type="button"
-          onClick={() => {
-            loadTaskCount();
-            setTaskDrawerVisible(true);
-          }}
-        >
-          <div className="task-dot" />
-          <span className="task-text">{t('workflow.toolbar.taskCenter', { count: taskCount })}</span>
-        </button>
         <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
         <Button
           className="fr-save-btn"
@@ -214,31 +165,10 @@ export function CourseWorkflow({ initialCourse, onBack }) {
         >
           {t('workflow.toolbar.save')}
         </Button>
-        <Button className="fr-export-btn" icon={<Download size={15} />}>{t('workflow.toolbar.export')}</Button>
         <Button className="fr-publish-btn">{t('workflow.toolbar.publish')}</Button>
       </header>
 
       {content[current]}
-
-      <Drawer
-        placement="right"
-        onClose={() => {
-          setTaskDrawerVisible(false);
-          loadTaskCount();
-        }}
-        open={taskDrawerVisible}
-        width={420}
-        bodyStyle={{ padding: 0 }}
-        headerStyle={{ display: 'none' }}
-      >
-        <TaskCenter
-          onClose={() => {
-            setTaskDrawerVisible(false);
-            loadTaskCount();
-          }}
-          onInsertTaskAsset={insertTaskAssetToPpt}
-        />
-      </Drawer>
     </section>
   );
 }

@@ -212,6 +212,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [ideaText, setIdeaText] = React.useState('');
   const [regenPhase, setRegenPhase] = React.useState(null);
   const [regenPhaseConfirm, setRegenPhaseConfirm] = React.useState(null);
+  const [regenAllConfirm, setRegenAllConfirm] = React.useState(false);
+  const [regenAllLoading, setRegenAllLoading] = React.useState(false);
   const [regenStep, setRegenStep] = React.useState(null);
   const [addingStep, setAddingStep] = React.useState(null);
   const [generateDraftLoading, setGenerateDraftLoading] = React.useState(false);
@@ -650,8 +652,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     return map[shortKey] || shortKey;
   };
 
-  const handleRegeneratePhase = async (phaseKey) => {
-    setRegenPhase(phaseKey);
+  const handleRegeneratePhase = async (phaseKey, sourceData = data, options = {}) => {
+    if (!options.silent) setRegenPhase(phaseKey);
     try {
       const response = await fetch('/api/ai/regenerate-phase', {
         method: 'POST',
@@ -667,20 +669,41 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           theme: course?.theme || '',
           userId: user?.id || null,
           organizationId: user?.organizationId || null,
-          currentCourseData: dataToCoursePhases(),
+          currentCourseData: dataToCoursePhases(sourceData),
         }),
       });
       const result = await response.json();
       if (result.success && result.data?.steps) {
         const newSteps = result.data.steps.map(normalizeStep);
-        updateData(data.map((phase) =>
+        const nextData = sourceData.map((phase) =>
           phase.key === phaseKey ? { ...phase, steps: newSteps } : phase
-        ));
+        );
+        if (!options.deferUpdate) await updateData(nextData);
+        return nextData;
       }
+      return sourceData;
     } catch (err) {
       console.error('重新生成阶段失败:', err);
+      return sourceData;
+    } finally {
+      if (!options.silent) setRegenPhase(null);
+    }
+  };
+
+  const handleRegenerateAll = async () => {
+    setRegenAllLoading(true);
+    let nextData = data;
+    try {
+      for (const phase of data) {
+        setRegenPhase(phase.key);
+        nextData = await handleRegeneratePhase(phase.key, nextData, { silent: true, deferUpdate: true });
+      }
+      await updateData(nextData);
+      toastMessage(t('workflow.lesson.regenerateDone'));
     } finally {
       setRegenPhase(null);
+      setRegenAllLoading(false);
+      setRegenAllConfirm(false);
     }
   };
 
@@ -871,9 +894,9 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
   };
 
-  const dataToCoursePhases = () => {
+  const dataToCoursePhases = (sourceData = data) => {
     const result = {};
-    data.forEach((phase) => {
+    sourceData.forEach((phase) => {
       result[longPhaseKey(phase.key)] = {
         title: phase.title,
         steps: phase.steps.map((s) => ({
@@ -925,6 +948,14 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             <button type="button">{t('workflow.lesson.overviewMode')}</button>
           </div>
           <img src={planeIcon} alt="" className="lesson-design-plane" />
+        </div>
+        <div className="lesson-design-actions">
+          <Button className="btn-ghost" icon={<RefreshCw size={16} />} loading={regenAllLoading} onClick={() => setRegenAllConfirm(true)}>
+            {t('workflow.lesson.regenerate')}
+          </Button>
+          <Button className="btn-next-step" onClick={onNext}>
+            {t('workflow.nextStep')}
+          </Button>
         </div>
       </div>
       <div className="tbl-inner-toolbar">
@@ -1133,6 +1164,29 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               <button type="button" className="mo-btn-primary" onClick={() => { const pk = regenPhaseConfirm; setRegenPhaseConfirm(null); handleRegeneratePhase(pk); }}>
                 <RefreshCw size={13} />
                 {t('lesson.confirmRegenerate')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {regenAllConfirm && (
+        <div className="mo on" onMouseDown={(event) => event.target === event.currentTarget && !regenAllLoading && setRegenAllConfirm(false)}>
+          <div className="modal" style={{ width: 'min(420px, 90vw)', background: '#fff', borderRadius: 16, border: '2px solid #253142', boxShadow: '6px 6px 0 rgba(37,49,66,.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <div className="modal-hd">
+              <div className="modal-t">{t('workflow.lesson.regenerate')}</div>
+              <button type="button" className="modal-x" onClick={() => setRegenAllConfirm(false)} disabled={regenAllLoading}>×</button>
+            </div>
+            <div className="modal-body" style={{ padding: '18px 24px' }}>
+              <p style={{ fontSize: 14, color: '#575F6E', lineHeight: 1.6 }}>
+                {t('workflow.lesson.confirmRegenerateAll')}
+              </p>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-cancel" onClick={() => setRegenAllConfirm(false)} disabled={regenAllLoading}>{t('common.cancel')}</button>
+              <button type="button" className="mo-btn-primary" onClick={handleRegenerateAll} disabled={regenAllLoading}>
+                <RefreshCw size={13} />
+                {regenAllLoading ? t('workflow.lesson.generatingShort') : t('lesson.confirmRegenerate')}
               </button>
             </div>
           </div>

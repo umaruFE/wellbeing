@@ -11,6 +11,7 @@ const layoutStyles = {
 
 const contentStyles = {
   flex: 1,
+  minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
   background: '#f3f2ed',
@@ -19,8 +20,9 @@ const contentStyles = {
 
 const mainStyles = {
   flex: 1,
+  minWidth: 0,
   overflowY: 'auto',
-  overflowX: 'hidden',
+  overflowX: 'auto',
 };
 
 export const Layout = () => {
