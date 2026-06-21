@@ -114,8 +114,10 @@
   box-shadow: none;
 }
 
-#ed-ppt .ppt-text-config-panel .text-color-value {
+#ed-ppt .ppt-text-config-panel .text-color-value,
+#ed-ppt .ppt-text-config-panel .text-color-value-input {
   min-width: 0;
+  flex: 1;
   overflow: hidden;
   color: #647084;
   font-size: 13px;
@@ -123,6 +125,20 @@
   line-height: 18px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-value-input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: #253142;
+}
+
+#ed-ppt .ppt-text-config-panel .text-color-value-input::placeholder {
+  color: #647084;
 }
 
 #ed-ppt .ppt-text-config-panel .text-color-field.is-compact {

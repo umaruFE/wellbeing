@@ -1,3 +1,4 @@
+import React from 'react';
 import { Button, ColorPicker, Form, Input, InputNumber, Radio, Select } from 'antd';
 import {
   AlignCenter,
@@ -24,15 +25,39 @@ function TextNumberField({ value, unit, onChange }) {
   );
 }
 
+function normalizeHexColor(value) {
+  const text = String(value || '').trim();
+  const match = text.match(/^#?([0-9a-fA-F]{6})$/);
+  if (!match) return null;
+  return `#${match[1].toUpperCase()}`;
+}
+
 function TextColorField({ value, onChange, compact = false }) {
-  const nextValue = value || '#F4785E';
+  const nextValue = normalizeHexColor(value) || '#F4785E';
+  const [draft, setDraft] = React.useState(nextValue);
+
+  React.useEffect(() => {
+    setDraft(nextValue);
+  }, [nextValue]);
+
+  const applyColor = (inputValue) => {
+    const normalized = normalizeHexColor(inputValue);
+    if (normalized) onChange(normalized);
+  };
+
   return (
     <div className={`text-color-field ${compact ? 'is-compact' : ''}`}>
       <ColorPicker
         className="text-color-picker"
         value={nextValue}
         disabledAlpha
-        onChange={(color) => onChange(color.toHexString())}
+        onChange={(color) => {
+          const normalized = normalizeHexColor(color.toHexString());
+          if (normalized) {
+            setDraft(normalized);
+            onChange(normalized);
+          }
+        }}
         presets={[
           {
             label: '常用',
@@ -40,7 +65,26 @@ function TextColorField({ value, onChange, compact = false }) {
           },
         ]}
       />
-      <span className="text-color-value">{compact ? 'Hex' : nextValue}</span>
+      <input
+        className="text-color-value-input"
+        value={draft}
+        placeholder={compact ? 'Hex' : '#253142'}
+        spellCheck={false}
+        onChange={(event) => {
+          const inputValue = event.target.value;
+          setDraft(inputValue);
+          applyColor(inputValue);
+        }}
+        onBlur={() => {
+          const normalized = normalizeHexColor(draft);
+          if (normalized) {
+            setDraft(normalized);
+            onChange(normalized);
+          } else {
+            setDraft(nextValue);
+          }
+        }}
+      />
     </div>
   );
 }
@@ -135,8 +179,14 @@ export function PptTextConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer
 
         <Form.Item label="文本描边">
           <div className="text-stroke-grid">
-            <TextColorField value={selectedLayer.strokeColor || '#F4785E'} onChange={(strokeColor) => onUpdateLayer({ strokeColor })} />
-            <TextNumberField value={selectedLayer.strokeWidth || 2} unit="px" onChange={(strokeWidth) => onUpdateLayer({ strokeWidth })} />
+            <TextColorField
+              value={selectedLayer.strokeColor || '#F4785E'}
+              onChange={(strokeColor) => onUpdateLayer({
+                strokeColor,
+                strokeWidth: Number(selectedLayer.strokeWidth) > 0 ? selectedLayer.strokeWidth : 2,
+              })}
+            />
+            <TextNumberField value={selectedLayer.strokeWidth ?? 0} unit="px" onChange={(strokeWidth) => onUpdateLayer({ strokeWidth })} />
           </div>
         </Form.Item>
 

@@ -543,7 +543,6 @@
   font-weight: 900;
   line-height: 46px;
   letter-spacing: 0;
-  -webkit-text-stroke: 0;
 }
 
 #ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-layer-frame {
@@ -824,20 +823,23 @@
   justify-content: center;
   padding: clamp(64px, 6.1vw, 120px) 32px 96px;
   background: #f2f1ed;
-  overflow: hidden;
+  overflow: auto;
 }
 
 #ed-ppt .ppt-slide {
-  width: min(1236px, calc((100% - 64px) / 0.68));
-  min-width: 0;
-  height: auto;
-  max-width: none;
-  aspect-ratio: 1236 / 685;
+  width: 940px;
+  min-width: 940px;
+  max-width: 940px;
+  height: 529px;
+  min-height: 529px;
+  max-height: 529px;
+  aspect-ratio: auto;
   border: 0;
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 18px 38px rgba(37, 49, 66, 0.12);
   overflow: hidden;
+  flex: 0 0 auto;
   transform-origin: top center;
 }
 
@@ -861,7 +863,7 @@
 
 #ed-ppt .ppt-zoom-bar {
   left: 50%;
-  bottom: 120px;
+  bottom: 80px;
   min-height: 42px;
   height: 42px;
   min-width: 170px;

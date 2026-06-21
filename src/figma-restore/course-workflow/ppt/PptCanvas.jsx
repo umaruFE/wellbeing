@@ -25,7 +25,7 @@ function LayerContent({ layer, t }) {
           textDecoration: layer.textDecoration,
           color: layer.color,
           textAlign: layer.textAlign,
-          WebkitTextStroke: layer.strokeWidth ? `${layer.strokeWidth}px ${layer.strokeColor}` : undefined,
+          WebkitTextStroke: `${Number(layer.strokeWidth) || 0}px ${layer.strokeColor || 'transparent'}`,
         }}
       >
         {layer.content || t('ppt.doubleClickText')}
