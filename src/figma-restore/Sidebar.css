@@ -14,6 +14,12 @@
   width: 238px;
   min-height: 100vh;
   flex-shrink: 0;
+  transition: width 0.24s ease;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 72px;
 }
 
 .sidebar-header {
@@ -30,6 +36,12 @@
   column-gap: 10px;
   height: 64px;
   padding: 0 24px;
+  transition: padding 0.24s ease;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  justify-content: center;
+  padding: 0;
 }
 
 .logo-icon {
@@ -58,6 +70,14 @@
   line-height: 20px;
   letter-spacing: 0;
   font-family: Inter, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  white-space: nowrap;
+  transition: opacity 0.16s ease;
+}
+
+.sidebar.collapsed .logo-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 
 .sidebar-menu {
@@ -66,6 +86,12 @@
   width: 100%;
   padding: 25px 15px 4px;
   row-gap: 25px;
+  transition: padding 0.24s ease, row-gap 0.24s ease;
+}
+
+.sidebar.collapsed .sidebar-menu {
+  padding: 25px 12px 4px;
+  row-gap: 12px;
 }
 
 .menu-group {
@@ -88,6 +114,15 @@
   color: #818997;
   line-height: 22px;
   font-family: "HarmonyOS Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  white-space: nowrap;
+  transition: opacity 0.16s ease, height 0.2s ease, padding 0.2s ease;
+}
+
+.sidebar.collapsed .menu-group-title {
+  height: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
 }
 
 .menu-item {
@@ -102,6 +137,14 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-decoration: none;
+}
+
+.sidebar.collapsed .menu-item {
+  width: 44px;
+  align-self: center;
+  justify-content: center;
+  column-gap: 0;
+  padding: 0;
 }
 
 .menu-item:hover {
@@ -129,6 +172,14 @@
   color: #333e4e;
   line-height: 22px;
   font-family: "HarmonyOS Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  white-space: nowrap;
+  transition: opacity 0.16s ease;
+}
+
+.sidebar.collapsed .menu-item-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 
 .submenu-item {
@@ -143,6 +194,14 @@
   transition: all 0.2s ease;
   border-radius: 999px;
   text-decoration: none;
+}
+
+.sidebar.collapsed .submenu-item {
+  width: 44px;
+  align-self: center;
+  justify-content: center;
+  column-gap: 0;
+  padding: 0;
 }
 
 .submenu-item:hover {
@@ -163,13 +222,20 @@
   flex-shrink: 0;
   stroke-width: 2;
 }
-
 .submenu-item-text {
   font-size: 14px;
   font-weight: 700;
   color: #333e4e;
   line-height: 22px;
   font-family: "HarmonyOS Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", SimHei, Arial, Helvetica, sans-serif;
+  white-space: nowrap;
+  transition: opacity 0.16s ease;
+}
+
+.sidebar.collapsed .submenu-item-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
 }
 
 .sidebar-footer {
@@ -182,10 +248,45 @@
   border-style: solid;
   border-color: #e8e3dd;
   padding: 11px 16px 12px;
+  transition: justify-content 0.24s ease, padding 0.24s ease;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  justify-content: center;
+  padding: 11px 0 12px;
+}
+
+.sidebar-collapse-btn {
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #818997;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-collapse-btn:hover {
+  background: #f3f2ed;
+  color: #333e4e;
 }
 
 .sidebar-footer-icon {
   width: 14px;
   height: 14px;
   color: #818997;
+  transition: transform 0.24s ease, color 0.2s ease;
+}
+
+.sidebar-collapse-btn:hover .sidebar-footer-icon {
+  color: #333e4e;
+}
+
+.sidebar:not(.collapsed) .sidebar-footer-icon {
+  transform: rotate(180deg);
 }

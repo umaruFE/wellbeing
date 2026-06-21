@@ -16,13 +16,14 @@ import {
 } from 'lucide-react';
 import './Sidebar.css';
 
-const MenuLink = ({ item, className, iconClassName, textClassName }) => {
+const MenuLink = ({ item, className, iconClassName, textClassName, collapsed }) => {
   const IconComponent = item.icon;
 
   return (
     <NavLink
       to={item.path}
       end={item.end}
+      title={collapsed ? item.label : undefined}
       className={({ isActive }) => `${className} ${isActive ? 'active' : ''}`}
     >
       <IconComponent className={iconClassName} size={14} />
@@ -33,6 +34,7 @@ const MenuLink = ({ item, className, iconClassName, textClassName }) => {
 
 export const Sidebar = () => {
   const { t } = useTranslation();
+  const [collapsed, setCollapsed] = React.useState(false);
 
   const menuItems = [
     {
@@ -72,7 +74,7 @@ export const Sidebar = () => {
   ];
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <div className="logo-icon">
@@ -90,6 +92,7 @@ export const Sidebar = () => {
                   className="menu-item"
                   iconClassName="menu-item-icon"
                   textClassName="menu-item-text"
+                  collapsed={collapsed}
                 />
               );
             }
@@ -104,6 +107,7 @@ export const Sidebar = () => {
                     className="submenu-item"
                     iconClassName="submenu-item-icon"
                     textClassName="submenu-item-text"
+                    collapsed={collapsed}
                   />
                 ))}
               </div>
@@ -112,7 +116,15 @@ export const Sidebar = () => {
         </div>
       </div>
       <div className="sidebar-footer">
-        <ChevronRight className="sidebar-footer-icon" size={14} />
+        <button
+          type="button"
+          className="sidebar-collapse-btn"
+          onClick={() => setCollapsed((value) => !value)}
+          aria-label={collapsed ? '展开导航栏' : '收起导航栏'}
+          title={collapsed ? '展开导航栏' : '收起导航栏'}
+        >
+          <ChevronRight className="sidebar-footer-icon" size={14} />
+        </button>
       </div>
     </div>
   );
