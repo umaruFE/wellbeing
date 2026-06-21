@@ -24,12 +24,13 @@ import toolkitIcon from '../../assets/create-course/toolkit.svg';
 
 const { TextArea } = Input;
 
-const ageOptions = ['3-6岁', '7-9岁', '9-12岁'];
-const durationOptions = ['40分钟', '60分钟', '120分钟'];
-const classSizeOptions = ['≤ 8人', '9-15人', '≥ 16人'];
-const languageSkillOptions = ['听力理解', '口语表达', '阅读理解', '书面表达', '综合能力'];
-const pathOptions = ['艺术表达', '体感探索', '音乐律动', 'AI 自动匹配'];
-const atmosphereOptions = ['神秘探险感', '戏剧表演感', '温馨治愈感', '团队协作感', 'AI 自动匹配'];
+const ageOptionValues = ['3-6岁', '7-9岁', '9-12岁'];
+const durationOptionValues = ['40分钟', '60分钟', '120分钟'];
+const classSizeOptionValues = ['≤ 8人', '9-15人', '≥ 16人'];
+const languageSkillOptionValues = ['听力理解', '口语表达', '阅读理解', '书面表达', '综合能力'];
+const pathOptionValues = ['艺术表达', '体感探索', '音乐律动', 'AI 自动匹配'];
+const atmosphereOptionValues = ['神秘探险感', '戏剧表演感', '温馨治愈感', '团队协作感', 'AI 自动匹配'];
+const AUTO_MATCH_VALUES = new Set(['AI 自动匹配', 'AI Auto Match']);
 const fallbackRegenTips = [
   '希望在Execute创作运用阶段能有一个小组竞赛游戏，让产出更有挑战性。',
   '情境可以更科幻一些，比如在外星球完成这个任务。',
@@ -89,8 +90,8 @@ function formatExperiencePaths(paths, fallback = '') {
 function updateExperiencePaths(values) {
   const next = toArray(values).filter(Boolean);
   const last = next[next.length - 1];
-  if (last === 'AI 自动匹配') return ['AI 自动匹配'];
-  return next.filter((item) => item !== 'AI 自动匹配');
+  if (AUTO_MATCH_VALUES.has(last)) return [last];
+  return next.filter((item) => !AUTO_MATCH_VALUES.has(item));
 }
 
 function splitPastedTagLines(text) {
@@ -117,15 +118,17 @@ function ClearableButtonGroup({ value, onChange, options, className = '' }) {
   return (
     <div className={className}>
       {options.map((option) => {
-        const selected = value === option;
+        const optionValue = typeof option === 'string' ? option : option.value;
+        const optionLabel = typeof option === 'string' ? option : option.label;
+        const selected = value === optionValue;
         return (
           <button
-            key={option}
+            key={optionValue}
             type="button"
             className={`ant-radio-button-wrapper ${selected ? 'ant-radio-button-wrapper-checked' : ''}`}
-            onClick={() => onChange?.(selected ? '' : option)}
+            onClick={() => onChange?.(selected ? '' : optionValue)}
           >
-            {option}
+            {optionLabel}
           </button>
         );
       })}
@@ -182,6 +185,52 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const [regenTips, setRegenTips] = React.useState(fallbackRegenTips);
   const [loadingRegenTips, setLoadingRegenTips] = React.useState(false);
   const map = buildCourseMap(course);
+  const editOptions = React.useMemo(() => ({
+    age: [
+      { value: '3-6岁', label: t('createCourse.age36') },
+      { value: '7-9岁', label: t('createCourse.age79') },
+      { value: '9-12岁', label: t('createCourse.age912') },
+    ],
+    duration: [
+      { value: '40分钟', label: t('createCourse.dur40') },
+      { value: '60分钟', label: t('createCourse.dur60') },
+      { value: '120分钟', label: t('createCourse.dur120') },
+    ],
+    classSize: [
+      { value: '≤ 8人', label: t('createCourse.size8') },
+      { value: '9-15人', label: t('createCourse.size915') },
+      { value: '≥ 16人', label: t('createCourse.size16') },
+    ],
+    languageSkills: languageSkillOptionValues.map((value, index) => ({
+      value,
+      label: [
+        t('createCourse.skillListening'),
+        t('createCourse.skillSpeaking'),
+        t('createCourse.skillReading'),
+        t('createCourse.skillWriting'),
+        t('createCourse.skillIntegrated'),
+      ][index],
+    })),
+    paths: pathOptionValues.map((value, index) => ({
+      value,
+      label: [
+        t('createCourse.pathArt'),
+        t('createCourse.pathBody'),
+        t('createCourse.pathMusic'),
+        t('createCourse.autoMatch'),
+      ][index],
+    })),
+    atmosphere: atmosphereOptionValues.map((value, index) => ({
+      value,
+      label: [
+        t('createCourse.atmoMystery'),
+        t('createCourse.atmoDrama'),
+        t('createCourse.atmoWarmth'),
+        t('createCourse.atmoTeamwork'),
+        t('createCourse.autoMatch'),
+      ][index],
+    })),
+  }), [t]);
 
   const taskName = course.taskName || course.theme || '情境任务';
   const fallbackJourney = buildFallbackJourney(course, map, taskName);
@@ -667,83 +716,83 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
             </div>
             <div className="modal-body overview-adjust-body">
               <Form form={editForm} layout="vertical" className="overview-ant-form">
-                <ModalSection title="设定课程起点" en="Set the Course" desc="明确本节课的语言“工具箱”与学员画像。">
-                  <Form.Item label="课程名称" name="courseTitle" rules={[{ required: true, message: '请输入课程名称' }]}>
-                    <Input className="fi" placeholder="例如：Unit 3: Animals（神奇的动物）" autoComplete="off" />
+                <ModalSection title={t('createCourse.step1Title')} desc={t('createCourse.step1Subtitle')}>
+                  <Form.Item label={t('createCourse.courseName')} name="courseTitle" rules={[{ required: true, message: t('createCourse.courseNameRequired') }]}>
+                    <Input className="fi" placeholder={t('workflow.map.editCourseNamePlaceholder')} autoComplete="off" />
                   </Form.Item>
                   <div className="overview-adjust-three">
-                    <Form.Item label="学生年龄" name="age">
-                      <Radio.Group optionType="button" buttonStyle="solid" options={ageOptions} />
+                    <Form.Item label={t('createCourse.ageLabel')} name="age">
+                      <Radio.Group optionType="button" buttonStyle="solid" options={editOptions.age} />
                     </Form.Item>
-                    <Form.Item label="课程时长" name="duration">
-                      <Radio.Group optionType="button" buttonStyle="solid" options={durationOptions} />
+                    <Form.Item label={t('createCourse.durationLabel')} name="duration">
+                      <Radio.Group optionType="button" buttonStyle="solid" options={editOptions.duration} />
                     </Form.Item>
-                    <Form.Item label="班级规模" name="classSize">
-                      <Radio.Group optionType="button" buttonStyle="solid" options={classSizeOptions} />
+                    <Form.Item label={t('createCourse.classSizeLabel')} name="classSize">
+                      <Radio.Group optionType="button" buttonStyle="solid" options={editOptions.classSize} />
                     </Form.Item>
                   </div>
                   <div className="overview-adjust-two">
-                    <Form.Item label="核心词汇" name="vocabularies">
+                    <Form.Item label={t('createCourse.vocabLabel')} name="vocabularies">
                       <Select
                         mode="tags"
                         className="overview-tag-select"
-                        placeholder="例如：happy，输入后按 Enter 添加"
+                        placeholder={t('createCourse.vocabPlaceholder')}
                         onPasteCapture={(event) => handleTagPaste(event, editForm, 'vocabularies')}
                       />
                     </Form.Item>
-                    <Form.Item label="核心语法/句型" name="grammars">
+                    <Form.Item label={t('createCourse.grammarLabel')} name="grammars">
                       <Select
                         mode="tags"
                         className="overview-tag-select"
-                        placeholder="例如：I feel... because...，输入后按 Enter 添加"
+                        placeholder={t('createCourse.grammarPlaceholder')}
                         onPasteCapture={(event) => handleTagPaste(event, editForm, 'grammars')}
                       />
                     </Form.Item>
                   </div>
-                  <Form.Item label="语言能力培养侧重（可多选）" name="languageSkills">
-                    <Checkbox.Group options={languageSkillOptions} />
+                  <Form.Item label={`${t('createCourse.skillLabel')} (${t('createCourse.multiSelect')})`} name="languageSkills">
+                    <Checkbox.Group options={editOptions.languageSkills} />
                   </Form.Item>
                 </ModalSection>
 
-                <ModalSection title="构思情境任务" en="Design the Adventure" desc="设计一个需要用到这个“工具箱”的有趣故事和挑战。">
-                  <Form.Item label="任务名称" name="taskName" rules={[{ required: true, message: '请输入任务名称' }]}>
-                    <Input className="fi" placeholder="例如：森林星光音乐会策划案、情绪怪兽安抚行动" autoComplete="off" />
+                <ModalSection title={t('createCourse.step2Title')} desc={t('createCourse.step2Subtitle')}>
+                  <Form.Item label={t('createCourse.taskNameLabel')} name="taskName" rules={[{ required: true, message: t('createCourse.taskNameRequired') }]}>
+                    <Input className="fi" placeholder={t('createCourse.taskNamePlaceholder')} autoComplete="off" />
                   </Form.Item>
-                  <Form.Item label="故事情境" name="storyContext">
-                    <TextArea className="fi textarea" rows={4} placeholder="用一两句话设定角色、场景、问题/需求与要做的关键事。" />
+                  <Form.Item label={t('createCourse.storyLabel')} name="storyContext">
+                    <TextArea className="fi textarea" rows={4} placeholder={t('createCourse.storyPlaceholder')} />
                   </Form.Item>
-                  <Form.Item label="终极产出/作品" name="keyOutcome">
-                    <TextArea className="fi textarea" rows={3} placeholder="例如：每个小组将创作并表演一段30秒的“情绪天气广播剧”。" />
+                  <Form.Item label={t('createCourse.outcomeLabel')} name="keyOutcome">
+                    <TextArea className="fi textarea" rows={3} placeholder={t('createCourse.outcomePlaceholder')} />
                   </Form.Item>
                 </ModalSection>
 
-                <ModalSection title="选择体验路径" en="Choose the Path" desc="可选择一种或多种能让孩子们沉浸其中的探索方式。">
+                <ModalSection title={t('createCourse.step3Title')} desc={t('createCourse.step3Subtitle')}>
                   <Form.Item name="experiencePaths">
                     <Checkbox.Group
-                      options={pathOptions}
+                      options={editOptions.paths}
                       onChange={(values) => editForm.setFieldsValue({ experiencePaths: updateExperiencePaths(values) })}
                     />
                   </Form.Item>
                 </ModalSection>
 
-                <ModalSection title="添加个性魔法" en="Add Your Magic" desc="（可选）融入你的独特巧思与具体要求。">
-                  <Form.Item label="特定要求/资源链接" name="specialRequirements">
+                <ModalSection title={t('createCourse.step4Title')} desc={t('createCourse.step4Subtitle')}>
+                  <Form.Item label={t('createCourse.requirementsLabel')} name="specialRequirements">
                     <TextArea
                       className="fi textarea"
                       rows={4}
-                      placeholder="例如：必须使用附件中的绘本故事；请避免使用某类教具；希望融入关于分享的小故事。"
+                      placeholder={t('createCourse.requirementsPlaceholder')}
                     />
                   </Form.Item>
                   <Form.Item name="attachments" valuePropName="fileList" getValueFromEvent={(event) => event?.fileList || []}>
                     <Upload beforeUpload={() => false} multiple>
                       <button type="button" className="attachment-btn">
                         <Paperclip size={13} />
-                        添加附件
+                        {t('createCourse.attachment')}
                       </button>
                     </Upload>
                   </Form.Item>
-                  <Form.Item label="氛围偏好（可选，不选则由 AI 自动匹配）" name="atmosphere">
-                    <ClearableButtonGroup options={atmosphereOptions} className="overview-clearable-radio-group" />
+                  <Form.Item label={t('createCourse.atmosphereLabel')} name="atmosphere">
+                    <ClearableButtonGroup options={editOptions.atmosphere} className="overview-clearable-radio-group" />
                   </Form.Item>
                 </ModalSection>
               </Form>
@@ -761,12 +810,11 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   );
 }
 
-function ModalSection({ title, en, desc, children }) {
+function ModalSection({ title, desc, children }) {
   return (
     <section className="overview-adjust-section">
       <div className="overview-adjust-section-title">
         {title}
-        <span>| {en}</span>
       </div>
       <div className="overview-adjust-section-desc">{desc}</div>
       {children}

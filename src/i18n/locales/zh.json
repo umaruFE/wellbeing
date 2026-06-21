@@ -289,6 +289,7 @@
       "regenTips": "AI 生成调整需求参考：",
       "editModalTitle": "编辑课程地图生成输入",
       "editModalSubtitle": "与新建课程保持同一套信息结构；保存后会重新生成课程地图中的故事线、语言工具箱、课堂旅程与成长体验。",
+      "editCourseNamePlaceholder": "例如：时光森林的魔法音乐会",
       "saveAndRefresh": "保存并刷新地图"
     },
     "lesson": {
@@ -870,6 +871,7 @@
     "skillSpeaking": "口语表达",
     "skillReading": "阅读理解",
     "skillWriting": "书面表达",
+    "skillIntegrated": "综合能力",
     "aiHelperDesc": "需要从零开始时获取 AI 创意灵感；已经有想法时，可让 AI 基于当前内容润色表达。",
     "getIdea": "获取AI创意灵感",
     "polishContent": "AI润色当前内容",
