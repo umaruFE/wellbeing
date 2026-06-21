@@ -15,7 +15,7 @@ import {
 import './CreateCourseModal.css';
 
 const stepFields = [
-  ['courseTitle', 'age', 'duration', 'classSize'],
+  ['age', 'duration', 'classSize'],
   ['taskName', 'storyContext', 'keyOutcome'],
   ['experiencePaths'],
   [],
@@ -39,6 +39,8 @@ function getAuthHeaders() {
 function getUser() {
   try { return JSON.parse(localStorage.getItem('user') || '{}'); } catch { return {}; }
 }
+
+const AI_GENERATED_COURSE_TITLE = '';
 
 export function CreateCourseModal({ open, onCancel, onSubmit }) {
   const { t, i18n } = useTranslation();
@@ -78,7 +80,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       const payload = {
         language: aiLanguage,
         outputLanguage,
-        courseTitle: values.courseTitle,
+        courseTitle: AI_GENERATED_COURSE_TITLE,
         age: values.age,
         duration: values.duration,
         scale: values.classSize,
@@ -120,11 +122,11 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     if (polishLoading) return;
     setPolishLoading(true);
     try {
-      const values = form.getFieldsValue(['taskName', 'storyContext', 'keyOutcome', 'courseTitle']);
+      const values = form.getFieldsValue(['taskName', 'storyContext', 'keyOutcome']);
       const payload = {
         language: aiLanguage,
         outputLanguage,
-        courseTitle: values.courseTitle || '',
+        courseTitle: AI_GENERATED_COURSE_TITLE,
         taskName: values.taskName?.trim() || '',
         storyContext: values.storyContext?.trim() || '',
         keyOutcome: values.keyOutcome?.trim() || '',
@@ -175,7 +177,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       const n8nPayload = {
         language: aiLanguage,
         outputLanguage,
-        courseTitle: values.courseTitle,
+        courseTitle: AI_GENERATED_COURSE_TITLE,
         age: values.age,
         duration: values.duration,
         scale: values.classSize,
@@ -215,7 +217,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         console.warn('概览生成请求失败，使用表单原始值:', err);
       }
 
-      const courseTitle = overview?.courseTitle || values.courseTitle || t('dashboard.unnamedCourse');
+      const courseTitle = overview?.courseTitle || t('dashboard.unnamedCourse');
       const theme = overview?.theme || values.taskName || '';
 
       const keywordsList = [values.vocabularies, values.grammars]

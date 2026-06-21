@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Checkbox, Form, Input, Radio, Select } from 'antd';
+import { Checkbox, Form, Radio, Select } from 'antd';
 import {
   ageOptions,
   classSizeOptions,
@@ -45,17 +45,6 @@ export function CreateCourseStepOne() {
           <div className="fr-create-step-subtitle">{t('createCourse.step1Subtitle')}</div>
         </div>
       </div>
-
-      <Form.Item
-        label={<span><span className="required">*</span>{t('createCourse.courseNameLabel')}</span>}
-        name="courseTitle"
-        rules={[{ required: true, message: t('createCourse.courseNameRequired') }]}
-        className="fr-create-form-item"
-      >
-        <Input
-          placeholder={t('createCourse.courseNamePlaceholder')}
-        />
-      </Form.Item>
 
       <div className="fr-create-three">
         <Form.Item

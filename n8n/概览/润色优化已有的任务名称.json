@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.item.json.body;\n\nreturn {\n  courseTitle: input.courseTitle || '',\n  taskName: input.taskName || '',\n  storyContext: input.storyContext || '',\n  keyOutcome: input.keyOutcome || ''\n};"
+        "jsCode": "const input = $input.item.json.body;\nconst language = input.language || 'zh';\nconst outputLanguage = input.outputLanguage || (language === 'en' ? 'English' : 'Chinese');\n\nreturn {\n  language,\n  outputLanguage,\n  courseTitle: input.courseTitle || '',\n  taskName: input.taskName || '',\n  storyContext: input.storyContext || '',\n  keyOutcome: input.keyOutcome || ''\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -34,7 +34,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师和文案编辑。\n\n# Task\n对现有的课程情境任务内容进行润色优化，让表达更吸引人、更流畅、更有画面感。\n\n# Input\n- 课程名称：{{ $json.courseTitle }}\n- 当前任务名称：{{ $json.taskName }}\n- 当前故事情境：{{ $json.storyContext }}\n- 当前终极产出：{{ $json.keyOutcome }}\n\n# Requirements\n- 保持原有的创意方向和核心内容不变\n- 润色语言表达，使其更生动、更有沉浸感和画面感\n- 任务名称：保持原有长度范围，让表达更有吸引力\n- 故事情境：优化叙事节奏和语言张力，按【角色】-【场景】-【问题/需求】-【要做的关键事】结构调整\n- 终极产出：让描述更具体、更可操作\n- 如果某个字段为空，请不要生成新内容，保持为空\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字\n\n### 输出格式：\n{\n  \"taskName\": \"润色后的任务名称\",\n  \"storyContext\": \"润色后的故事情境\",\n  \"keyOutcome\": \"润色后的终极产出\"\n}",
+        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师和文案编辑。\n\n# Output Language\n- The required output language is: {{ $json.outputLanguage }}.\n- Generate all user-facing text values in {{ $json.outputLanguage }}.\n- Keep all JSON keys, object names, and schema structure exactly as specified.\n- If outputLanguage is English, do not include Chinese translations, Chinese parentheses, or bilingual labels.\n- Keep technical framework terms such as Engage, Empower, Execute, Elevate, SEL, and PERMA in English.\n\n\n# Task\n对现有的课程情境任务内容进行润色优化，让表达更吸引人、更流畅、更有画面感。\n\n# Input\n- 课程名称：{{ $json.courseTitle }}\n- 当前任务名称：{{ $json.taskName }}\n- 当前故事情境：{{ $json.storyContext }}\n- 当前终极产出：{{ $json.keyOutcome }}\n\n# Requirements\n- 保持原有的创意方向和核心内容不变\n- 润色语言表达，使其更生动、更有沉浸感和画面感\n- 任务名称：保持原有长度范围，让表达更有吸引力；英文模式下使用自然英文标题\n- 故事情境：优化叙事节奏和语言张力，按【角色】-【场景】-【问题/需求】-【要做的关键事】结构调整\n- 终极产出：让描述更具体、更可操作\n- 如果某个字段为空，请不要生成新内容，保持为空\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字\n\n### 输出格式（JSON keys must stay unchanged）：\n{\n  \"taskName\": \"润色后的任务名称\",\n  \"storyContext\": \"润色后的故事情境\",\n  \"keyOutcome\": \"润色后的终极产出\"\n}",
         "batching": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
