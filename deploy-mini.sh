@@ -11,21 +11,24 @@ echo "========================================"
 echo "🚀 开始部署 Wellbeing 系统..."
 echo "========================================"
 
-echo "📦 [1/5] 正在检查并安装前端依赖..."
+echo "📦 [1/6] 正在检查并安装前端依赖..."
 cd "$FRONTEND_DIR"
 npm install
 
-echo "🏗️  [2/5] 正在构建前端 (Vite Build)..."
+echo "🧹 [2/6] 正在清理旧的构建产物..."
+rm -rf "$FRONTEND_DIR/dist"
+
+echo "🏗️  [3/6] 正在构建前端 (Vite Build)..."
 npm run build
 
-echo "📦 [3/5] 正在检查并安装后端依赖..."
+echo "📦 [4/6] 正在检查并安装后端依赖..."
 cd "$API_DIR"
 npm install
 
-echo "🏗️  [4/5] 正在构建后端 (Next.js Build)..."
+echo "🏗️  [5/6] 正在构建后端 (Next.js Build)..."
 npm run build
 
-echo "� [5/5] 正在移动前端文件到 Nginx 目录..."
+echo "📂 [6/6] 正在移动前端文件到 Nginx 目录..."
 sudo mkdir -p "$NGINX_WWW_DIR"
 sudo cp -r "$FRONTEND_DIR/dist/"* "$NGINX_WWW_DIR/"
 sudo chown -R guixu:staff "$NGINX_WWW_DIR"
