@@ -17,6 +17,7 @@ import {
   Loader2,
   BookOpen,
   Edit3,
+  X,
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -25,6 +26,15 @@ import { AdjustStepModal } from '../../../figma-restore/course-workflow/lesson-d
 import { EditStepModal } from '../../../figma-restore/course-workflow/lesson-design/EditStepModal';
 import { StepDetailModal } from '../../../figma-restore/course-workflow/lesson-design/StepDetailModal';
 import '../../../figma-restore/course-workflow/CourseWorkflow.css';
+import bgCourseMap from '../../../assets/course-map/bg-map.png';
+import stepOneImage from '../../../assets/course-map/step-1.png';
+import stepTwoImage from '../../../assets/course-map/step-2.png';
+import stepThreeImage from '../../../assets/course-map/step-3.png';
+import stepFourImage from '../../../assets/course-map/step-4.png';
+import iconStepOne from '../../../assets/course-map/icon-step-1.png';
+import iconStepTwo from '../../../assets/course-map/icon-step-2.png';
+import iconStepThree from '../../../assets/course-map/icon-step-3.png';
+import iconStepFour from '../../../assets/course-map/icon-step-4.png';
 
 const colors = {
   neutral: {
@@ -60,6 +70,53 @@ const PHASE_CONFIG = {
 
 const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
 const PHASE_DURATION_LIMIT = 15;
+
+const MAP_PHASE_META = {
+  engage: {
+    number: '1',
+    className: 'engage',
+    stepImage: stepOneImage,
+    iconImage: iconStepOne,
+    icon: 'sparkle',
+    tone: '#e8d2df',
+    shortTitle: 'E-ENGAGE 引入',
+    summary: '通过沉浸式情境激发学习兴趣，建立学习动机',
+    position: { left: '20.59%', top: '25.63%' },
+  },
+  empower: {
+    number: '2',
+    className: 'empower',
+    stepImage: stepTwoImage,
+    iconImage: iconStepTwo,
+    icon: 'book',
+    tone: '#d8ca8d',
+    shortTitle: 'E-EMPOWER 赋能',
+    summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
+    position: { left: '49.07%', top: '34.65%' },
+  },
+  execute: {
+    number: '3',
+    className: 'execute',
+    stepImage: stepThreeImage,
+    iconImage: iconStepThree,
+    icon: 'checklist',
+    tone: '#d9dde9',
+    shortTitle: 'E-EXECUTE 实践',
+    summary: '在真实任务驱动下综合运用方位介词与句型进行表达',
+    position: { left: '34.97%', top: '63.15%' },
+  },
+  elevate: {
+    number: '4',
+    className: 'elevate',
+    stepImage: stepFourImage,
+    iconImage: iconStepFour,
+    icon: 'trophy',
+    tone: '#cbb8a8',
+    shortTitle: 'E-ELEVATE 升华',
+    summary: '分享学习成果，反思收获，培养跨文化意识',
+    position: { left: '66.00%', top: '68.00%' },
+  },
+};
 
 const PHASE_DETAIL_DATA = {
   engage: {
@@ -116,6 +173,8 @@ const normalizeStep = (step) => ({
 const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const [viewMode, setViewMode] = useState('map');
+  const [activeMapPhase, setActiveMapPhase] = useState(null);
   const [expandedItems, setExpandedItems] = useState({});
   const [openMenuPhase, setOpenMenuPhase] = useState(null);
   const [regeneratingPhase, setRegeneratingPhase] = useState(null);
@@ -435,16 +494,43 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
     setPhaseDetail(PHASE_DETAIL_DATA[phaseKey] || null);
   };
 
-  if (boardColumns.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-[400px] text-gray-400">
-        {t('lesson.noData')}
-      </div>
-    );
-  }
+  const getPhaseDisplay = (col) => {
+    const meta = MAP_PHASE_META[col.id] || {};
+    const title = safeRender(col.title || meta.shortTitle);
+    const match = String(title).match(/^(E-[A-Z]+)\s*(.*)$/);
+    return {
+      code: match?.[1] || title,
+      name: match?.[2] || '',
+      title: title || meta.shortTitle,
+      summary: safeRender(col.goalSummary || meta.summary),
+    };
+  };
 
-  return (
-    <>
+  const renderMapIcon = (icon) => {
+    if (icon === 'book') return <BookOpen size={28} />;
+    if (icon === 'checklist') return <FileText size={28} />;
+    if (icon === 'trophy') return <span className="lesson-map-card-emoji" aria-hidden="true">☆</span>;
+    return <span className="lesson-map-card-emoji" aria-hidden="true">✦</span>;
+  };
+
+  const renderHeader = () => (
+    <div className="lesson-design-page-header lesson-plan-mode-header">
+      <div className="lesson-design-title-row">
+        <h2 className="lesson-design-page-title">{t('lesson.title')}|Course Map</h2>
+        <div className="lesson-design-view-switch" role="group" aria-label={t('lesson.title')}>
+          <button type="button" className={viewMode === 'map' ? 'active' : ''} onClick={() => setViewMode('map')}>
+            {t('workflow.lesson.mapMode')}
+          </button>
+          <button type="button" className={viewMode === 'overview' ? 'active' : ''} onClick={() => setViewMode('overview')}>
+            {t('workflow.lesson.overviewMode')}
+          </button>
+        </div>
+        <span className="lesson-design-plane" aria-hidden="true">✈</span>
+      </div>
+    </div>
+  );
+
+  const renderOverviewBoard = () => (
     <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-140px)] min-h-[600px]">
       {boardColumns.map((col) => (
         <div key={col.id} className="flex flex-col bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden">
@@ -682,7 +768,147 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
         </div>
       ))}
     </div>
+  );
 
+  const renderMapMode = () => {
+    const selected = activeMapPhase || boardColumns[0];
+    const selectedMeta = MAP_PHASE_META[selected?.id] || MAP_PHASE_META.engage;
+    const selectedDisplay = selected ? getPhaseDisplay(selected) : getPhaseDisplay(boardColumns[0]);
+
+    return (
+      <div className={`lesson-map-shell ${activeMapPhase ? 'drawer-open' : ''}`}>
+        <div className="lesson-map-canvas" style={{ backgroundImage: `url(${bgCourseMap})` }}>
+          <div className="lesson-map-art">
+            {boardColumns.map((col) => {
+              const meta = MAP_PHASE_META[col.id] || {};
+              const display = getPhaseDisplay(col);
+              return (
+                <article
+                  key={col.id}
+                  className={`lesson-map-card ${meta.className || col.id}`}
+                  style={{ left: meta.position?.left, top: meta.position?.top, '--map-card-bg': meta.tone }}
+                >
+                  {meta.stepImage && <img className="lesson-map-step-num" src={meta.stepImage} alt="" />}
+                  <div className="lesson-map-card-main">
+                    <div className="lesson-map-card-head">
+                      <h3>{display.title}</h3>
+                      <span className="lesson-map-card-icon">
+                        {meta.iconImage ? <img src={meta.iconImage} alt="" /> : renderMapIcon(meta.icon)}
+                      </span>
+                    </div>
+                    <p>{display.summary}</p>
+                    <div className="lesson-map-card-meta">
+                      <strong>{t('lesson.stepsCount', { count: col.count })}</strong>
+                      {col.time && <span>{col.time}</span>}
+                    </div>
+                    <button type="button" className="lesson-map-detail-btn" onClick={() => setActiveMapPhase(col)}>
+                      {t('imageLib.viewDetail')} <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+
+        {activeMapPhase && (
+          <aside className={`lesson-map-drawer ${selectedMeta.className || selected.id}`} style={{ '--map-card-bg': selectedMeta.tone }}>
+            <div className="lesson-map-drawer-head">
+              <div className="lesson-map-drawer-num">{selectedMeta.number}</div>
+              <div>
+                <h3>{selectedDisplay.title}</h3>
+                <p>{t('lesson.stepsCount', { count: selected.count })}</p>
+              </div>
+              {selected.time && <span className="lesson-map-time-badge">{selected.time}</span>}
+              <button type="button" className="lesson-map-drawer-close" onClick={() => setActiveMapPhase(null)} aria-label={t('common.close')}>
+                <X size={22} />
+              </button>
+            </div>
+            <div className="lesson-map-drawer-add">
+              <button type="button" onClick={() => handleAddStep(selected.id)} disabled={addingStepPhase === selected.id}>
+                {addingStepPhase === selected.id ? <RefreshCw size={14} className="animate-spin" /> : <Plus size={14} />}
+                {addingStepPhase === selected.id ? t('lesson.generating') : t('lesson.addStep')}
+              </button>
+            </div>
+            <div className="lesson-map-drawer-list">
+              {selected.items.map((item, index) => {
+                const isOpen = expandedItems[`drawer-${item.id}`] ?? index === 0;
+                return (
+                  <article className={`lesson-map-step-panel ${isOpen ? 'open' : ''}`} key={item.id}>
+                    <button
+                      type="button"
+                      className="lesson-map-step-summary"
+                      onClick={() => setExpandedItems((prev) => ({ ...prev, [`drawer-${item.id}`]: !isOpen }))}
+                    >
+                      {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                      <span className="lesson-map-thumb"><Layout size={15} /></span>
+                      <strong>{safeRender(item.title)}</strong>
+                      {item.duration && <span className="lesson-map-time-badge">{safeRender(item.duration)}</span>}
+                    </button>
+                    {isOpen && (
+                      <div className="lesson-map-step-body">
+                        {item.goal && (
+                          <section>
+                            <h4><Target size={14} />{t('lesson.stepGoal')}</h4>
+                            <p>{safeRender(item.goal)}</p>
+                          </section>
+                        )}
+                        {item.activity && (
+                          <section>
+                            <h4><FileText size={14} />{t('lesson.activitySummary')}</h4>
+                            <p>{safeRender(item.activity)}</p>
+                          </section>
+                        )}
+                        {(item.flow || item.activity) && (
+                          <section>
+                            <h4><Layout size={14} />{t('lesson.activityFlow')}</h4>
+                            <div className="lesson-map-flow-card">
+                              {String(safeRender(item.flow || item.activity)).split(/\n|[;；]/).filter(Boolean).slice(0, 4).map((flowItem, flowIndex) => (
+                                <div className="lesson-map-flow-item" key={`${item.id}-flow-${flowIndex}`}>
+                                  <span />
+                                  <p>{flowItem.trim()}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </section>
+                        )}
+                        <div className="lesson-map-step-actions">
+                          <button type="button" onClick={() => openDetail(selected.id, index, item)}><BookOpen size={14} />{t('lesson.detail')}</button>
+                          <button type="button" onClick={() => openEdit(selected.id, index, item)}><Edit3 size={14} />{t('common.edit')}</button>
+                          <button type="button" onClick={() => openAdjust(selected.id, index, item)}>{t('lesson.adjustParams')}</button>
+                          <button type="button" className="icon" onClick={() => handleDeleteStep(selected.id, item.id)} aria-label={t('common.delete')}><Trash2 size={14} /></button>
+                        </div>
+                      </div>
+                    )}
+                  </article>
+                );
+              })}
+            </div>
+            <div className="lesson-map-drawer-foot">
+              <button type="button" onClick={() => openPhaseDetail(selected.id)}><BookOpen size={14} />{t('lesson.viewPhaseDetail')}</button>
+              <button type="button" onClick={() => handleRegeneratePhase(selected.id)} disabled={regeneratingPhase === selected.id}>
+                {regeneratingPhase === selected.id ? <RefreshCw size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                {t('common.regenerate')}
+              </button>
+            </div>
+          </aside>
+        )}
+      </div>
+    );
+  };
+
+  if (boardColumns.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-[400px] text-gray-400">
+        {t('lesson.noData')}
+      </div>
+    );
+  }
+
+  return (
+    <>
+    {renderHeader()}
+    {viewMode === 'map' ? renderMapMode() : renderOverviewBoard()}
     {phaseDetail && (
       <div className="mo on" id="mo-edit-phase" onMouseDown={(event) => event.target === event.currentTarget && setPhaseDetail(null)}>
         <div className="modal phase-detail-modal">

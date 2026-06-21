@@ -1,11 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { buildCourseMap } from './workflowData';
 import apiService from '../../services/api';
 import {
   ChevronRight,
-  Clock,
   ClipboardList,
   Copy,
   Heart,
@@ -30,6 +29,15 @@ import { StepCardActions } from './lesson-design/StepCardActions';
 import { StepDetailModal } from './lesson-design/StepDetailModal';
 import { buildStepFlowItems } from './lesson-design/lessonDesignUtils';
 import planeIcon from '../../assets/create-course/plane.png';
+import bgCourseMap from '../../assets/course-map/bg-map.png';
+import stepOneImage from '../../assets/course-map/step-1.png';
+import stepTwoImage from '../../assets/course-map/step-2.png';
+import stepThreeImage from '../../assets/course-map/step-3.png';
+import stepFourImage from '../../assets/course-map/step-4.png';
+import iconStepOne from '../../assets/course-map/icon-step-1.png';
+import iconStepTwo from '../../assets/course-map/icon-step-2.png';
+import iconStepThree from '../../assets/course-map/icon-step-3.png';
+import iconStepFour from '../../assets/course-map/icon-step-4.png';
 
 const { TextArea } = Input;
 
@@ -68,6 +76,49 @@ const defaultDraft = {
 };
 
 const PHASE_DURATION_LIMIT = 15;
+
+const lessonMapMeta = {
+  eng: {
+    number: '1',
+    className: 'engage',
+    stepImage: stepOneImage,
+    iconImage: iconStepOne,
+    icon: 'sparkle',
+    tone: '#e8d2df',
+    summary: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+    position: { left: '20.59%', top: '25.63%' },
+  },
+  emp: {
+    number: '2',
+    className: 'empower',
+    stepImage: stepTwoImage,
+    iconImage: iconStepTwo,
+    icon: 'book',
+    tone: '#d8ca8d',
+    summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
+    position: { left: '49.07%', top: '34.65%' },
+  },
+  exc: {
+    number: '3',
+    className: 'execute',
+    stepImage: stepThreeImage,
+    iconImage: iconStepThree,
+    icon: 'checklist',
+    tone: '#d9dde9',
+    summary: '在真实任务驱动下综合运用方位介词与句型进行表达',
+    position: { left: '34.97%', top: '63.15%' },
+  },
+  elv: {
+    number: '4',
+    className: 'elevate',
+    stepImage: stepFourImage,
+    iconImage: iconStepFour,
+    icon: 'trophy',
+    tone: '#cbb8a8',
+    summary: '分享学习成果，反思收获，培养跨文化意识',
+    position: { left: '66.00%', top: '68.00%' },
+  },
+};
 
 const parseMinutes = (value) => {
   const match = String(value || '').match(/(\d+)/);
@@ -239,6 +290,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const [addForm] = Form.useForm();
   const [data, setData] = React.useState(emptyPhases);
   const [loading, setLoading] = React.useState(true);
+  const [viewMode, setViewMode] = React.useState('map');
+  const [activeMapPhase, setActiveMapPhase] = React.useState(null);
   const [openCards, setOpenCards] = React.useState(() => new Set());
   const [menuKey, setMenuKey] = React.useState(null);
   const [editing, setEditing] = React.useState(null);
@@ -962,6 +1015,248 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     teacherScript: step.script || step.teacherScript || '',
   });
 
+  const renderMapIcon = (icon) => {
+    if (icon === 'book') return <ClipboardList size={28} />;
+    if (icon === 'checklist') return <ListChecks size={28} />;
+    if (icon === 'trophy') return <Star size={30} />;
+    return <Sparkles size={28} />;
+  };
+
+  const renderOverviewStepCard = (phase, step, index, keyPrefix = '') => {
+    const cardKey = `${keyPrefix}${phase.key}-${index}`;
+    const isOpen = openCards.has(cardKey);
+
+    return (
+      <article
+        className={`step-card ${isOpen ? 'open' : ''}`}
+        key={cardKey}
+        onClick={() => toggleCard(cardKey)}
+      >
+        <div className="step-summary">
+          <div className="step-chevron"><ChevronRight size={12} /></div>
+          <button type="button" className="step-thumb-placeholder" title="点击生成图片" onClick={(event) => event.stopPropagation()}>
+            <ImageIcon size={20} />
+          </button>
+          <div className="step-main">
+            <div className="step-name">
+              <span className="step-title-text">{step.title}</span>
+              <span className="step-dur-badge">{step.duration}</span>
+            </div>
+            <div className="step-lo-preview">{step.goal}</div>
+          </div>
+          <div className="step-right-ctrl" onClick={(event) => event.stopPropagation()}>
+            <button
+              className={`step-menu-btn ${menuKey === cardKey ? 'active' : ''}`}
+              title="操作"
+              onClick={() => setMenuKey(menuKey === cardKey ? null : cardKey)}
+            >
+              <MoreVertical size={14} />
+            </button>
+            {!isOpen && (
+              <StepMenu
+                open={menuKey === cardKey}
+                onRegen={() => {
+                  setMenuKey(null);
+                  openAddStep(phase, step);
+                }}
+                onInsertBefore={() => openInsertStepBefore(phase, index)}
+                onAdjust={() => openAdjust(phase.key, index, step)}
+                onSave={() => handleSaveStep(phase.key, index)}
+                onUnsave={() => handleUnsaveStep(phase.key, index)}
+                isSaved={isStepSaved(phase.key, index)}
+                onPin={() => handlePinStep(phase.key, index)}
+                onDelete={() => handleDeleteStep(phase.key, index)}
+              />
+            )}
+          </div>
+        </div>
+
+        <div className="step-detail" data-brief-enhanced="1" onClick={(event) => event.stopPropagation()}>
+          <div className="step-brief-list">
+            <div className="step-brief-item">
+              <div className="step-detail-label"><Target size={13} />语言目标</div>
+              <div className="step-detail-body tbl-lo">
+                {step.goal}
+              </div>
+            </div>
+            <div className="step-brief-item">
+              <div className="step-detail-label"><ClipboardList size={13} />活动概述</div>
+              <div className="step-detail-body">
+                {step.activity}
+              </div>
+            </div>
+            <div className="step-brief-item">
+              <div className="step-detail-label"><ListChecks size={13} />活动流程</div>
+              <div className="step-flow-card">
+                <div className="step-flow-list">
+                  {buildStepFlowItems(step).map((item) => (
+                    <div className="step-flow-item" key={`${cardKey}-${item.title}`}>
+                      <span className="step-flow-dot" />
+                      <div>
+                        <div className="step-flow-title">{item.title}</div>
+                        <div className="step-flow-desc">{item.desc}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="step-hidden-fields">
+              <div className="step-detail-label">活动流程原文</div>
+              <div className="step-detail-body">{step.flow}</div>
+              <div className="step-detail-label">教学资源</div>
+              <div className="step-detail-body">{step.resources}</div>
+              <div className="step-detail-label">情境创设</div>
+              <div className="step-detail-body">{step.scenario}</div>
+              <div className="step-detail-label">教师语言与引导</div>
+              <div className="step-script tbl-script">
+                <span className="tbl-q">“</span>{step.teacherScript}
+              </div>
+            </div>
+          </div>
+          <StepCardActions
+            onDetail={() => openDetail(phase.key, index, step)}
+            onEdit={() => openEdit(phase.key, index, step)}
+            onAdjust={() => openAdjust(phase.key, index, step)}
+            onMore={() => setMenuKey(menuKey === cardKey ? null : cardKey)}
+            menu={(
+              <StepMenu
+                open={isOpen && menuKey === cardKey}
+                placement="footer"
+                onRegen={() => {
+                  setMenuKey(null);
+                  openAddStep(phase, step);
+                }}
+                onInsertBefore={() => openInsertStepBefore(phase, index)}
+                onAdjust={() => openAdjust(phase.key, index, step)}
+                onSave={() => handleSaveStep(phase.key, index)}
+                onUnsave={() => handleUnsaveStep(phase.key, index)}
+                isSaved={isStepSaved(phase.key, index)}
+                onPin={() => handlePinStep(phase.key, index)}
+                onDelete={() => handleDeleteStep(phase.key, index)}
+              />
+            )}
+          />
+        </div>
+      </article>
+    );
+  };
+
+  const renderOverviewPhaseCard = (phase, keyPrefix = '') => {
+    const phaseMinutes = parseMinutes(phase.duration);
+    const overflowMinutes = Math.max(0, phaseMinutes - PHASE_DURATION_LIMIT);
+    const phaseMapMeta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
+
+    return (
+      <section className={`tbl-phase-card ${phase.key}`} data-fixed="true" data-duration="15" key={`${keyPrefix}${phase.key}`}>
+        <div className="tbl-phase-hd">
+          <img className="tbl-phase-number-img" src={phaseMapMeta.stepImage} alt="" />
+          <div className="tbl-phase-hd-left">
+            <div className="tbl-phase-title-row">
+              <span className="tbl-phase-title">{phase.title}</span>
+              <span className="tbl-phase-cn">{phase.name}</span>
+            </div>
+            <div className="tbl-phase-second-row">
+              <span className="tbl-phase-sub">{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
+              <span className={`tbl-phase-meta-dur${phaseMinutes > PHASE_DURATION_LIMIT ? ' is-over-limit' : ''}`}>
+                {phase.duration}
+              </span>
+            </div>
+          </div>
+          <div className="tbl-phase-menu-wrap">
+            <button
+              className="tbl-phase-edit-btn"
+              title="查看阶段详情"
+              aria-label="查看阶段详情"
+              onClick={(event) => {
+                event.stopPropagation();
+                openPhaseDetail(phase);
+              }}
+            >
+              <MoreVertical size={16} />
+            </button>
+            {menuKey === `${keyPrefix}phase-${phase.key}` && (
+              <div className="step-menu-dropdown open phase-menu">
+                <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); setRegenPhaseConfirm(phase.key); }}>
+                  <RefreshCw size={12} />{t('workflow.lesson.regenerate')}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        {overflowMinutes > 0 && (
+          <div className="tbl-phase-duration-warning">
+            <span className="tbl-phase-duration-warning-icon">!</span>
+            <span>建议调整阶段内活动时长在15分钟以内</span>
+          </div>
+        )}
+
+        <div className="tbl-steps-list">
+          <div className="tbl-add-step-top">
+            <button type="button" className="tbl-add-step-btn" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
+              {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
+              {addingStep === phase.key ? t('workflow.lesson.generatingShort') : t('workflow.lesson.addStep')}
+            </button>
+          </div>
+
+          {phase.steps.map((step, index) => renderOverviewStepCard(phase, step, index, keyPrefix))}
+        </div>
+      </section>
+    );
+  };
+
+  const renderLessonMap = () => {
+    const selected = activeMapPhase;
+    const selectedMeta = selected ? lessonMapMeta[selected.key] : null;
+
+    return (
+      <div className={`lesson-map-shell ${selected ? 'drawer-open' : ''}`}>
+        <div className="lesson-map-canvas" style={{ backgroundImage: `url(${bgCourseMap})` }}>
+          <div className="lesson-map-art">
+            {data.map((phase) => {
+              const meta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
+              const phaseMinutes = parseMinutes(phase.duration);
+              return (
+                <article
+                  key={phase.key}
+                  className={`lesson-map-card ${meta.className}`}
+                  style={{ left: meta.position.left, top: meta.position.top, '--map-card-bg': meta.tone }}
+                >
+                  <img className="lesson-map-step-num" src={meta.stepImage} alt="" />
+                  <div className="lesson-map-card-main">
+                    <div className="lesson-map-card-head">
+                      <h3>{phase.title} {phase.name}</h3>
+                      <span className="lesson-map-card-icon">
+                        {meta.iconImage ? <img src={meta.iconImage} alt="" /> : renderMapIcon(meta.icon)}
+                      </span>
+                    </div>
+                    <p>{phase.steps.map((step) => step.goal).filter(Boolean).join('；') || meta.summary}</p>
+                    <div className="lesson-map-card-meta">
+                      <strong>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</strong>
+                      <span>{phaseMinutes > 0 ? phase.duration : '15 分钟'}</span>
+                    </div>
+                    <button type="button" className="lesson-map-detail-btn" onClick={() => setActiveMapPhase(phase)}>
+                      查看详情 <span aria-hidden="true">→</span>
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+
+        {selected && selectedMeta && (
+          <aside className={`lesson-map-drawer ${selectedMeta.className}`} style={{ '--map-card-bg': selectedMeta.tone }}>
+            <button type="button" className="lesson-map-drawer-close floating" onClick={() => setActiveMapPhase(null)} aria-label={t('common.close')}>
+              <X size={22} />
+            </button>
+            {renderOverviewPhaseCard(selected, 'map-')}
+          </aside>
+        )}
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div id="ed-tbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
@@ -974,14 +1269,14 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   }
 
   return (
-    <div id="ed-tbl">
+    <div id="ed-tbl" className={viewMode === 'map' ? 'lesson-map-mode' : ''}>
       {toast && <div className="tbl-toast">{toast}</div>}
       <div className="lesson-design-page-header">
         <div className="lesson-design-title-row">
           <h2 className="lesson-design-page-title">{isChinese ? `${t('workflow.lesson.title')}|Lesson Plan` : t('workflow.lesson.title')}</h2>
           <div className="lesson-design-view-switch" role="group" aria-label={t('workflow.lesson.title')}>
-            <button type="button" className="active">{t('workflow.lesson.mapMode')}</button>
-            <button type="button">{t('workflow.lesson.overviewMode')}</button>
+            <button type="button" className={viewMode === 'map' ? 'active' : ''} onClick={() => setViewMode('map')}>{t('workflow.lesson.mapMode')}</button>
+            <button type="button" className={viewMode === 'overview' ? 'active' : ''} onClick={() => setViewMode('overview')}>{t('workflow.lesson.overviewMode')}</button>
           </div>
           <img src={planeIcon} alt="" className="lesson-design-plane" />
         </div>
@@ -1007,182 +1302,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         </div>
       </div>
 
-      <div className="tbl-kanban">
-        {data.map((phase) => {
-          const phaseMinutes = parseMinutes(phase.duration);
-          const overflowMinutes = Math.max(0, phaseMinutes - PHASE_DURATION_LIMIT);
-
-          return (
-          <section className={`tbl-phase-card ${phase.key}`} data-fixed="true" data-duration="15" key={phase.key}>
-            <div className="tbl-phase-hd">
-              <div className="tbl-phase-hd-left">
-                <span className="tbl-phase-title">{phase.title}</span>
-                <span className="tbl-phase-cn">{phase.name}</span>
-                <button className="tbl-phase-edit-btn" title="查看阶段详情" aria-label="查看阶段详情"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    openPhaseDetail(phase);
-                  }}>
-                  <MoreVertical size={16} />
-                </button>
-                {menuKey === `phase-${phase.key}` && (
-                  <div className="step-menu-dropdown open phase-menu">
-                    <button type="button" className="step-menu-item" onClick={() => { setMenuKey(null); setRegenPhaseConfirm(phase.key); }}>
-                      <RefreshCw size={12} />{t('workflow.lesson.regenerate')}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="tbl-phase-meta">
-              <span className="tbl-phase-sub">{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
-              <span className={`tbl-phase-meta-dur${phaseMinutes > PHASE_DURATION_LIMIT ? ' is-over-limit' : ''}`}>
-                <Clock />{phase.duration}
-              </span>
-            </div>
-            {overflowMinutes > 0 && (
-              <div className="tbl-phase-duration-warning">
-                <span className="tbl-phase-duration-warning-icon">!</span>
-                <span>
-                  建议调整阶段内活动时长（当前 {phaseMinutes} 分钟，
-                  <br />
-                  超出阶段上限 {overflowMinutes} 分钟）
-                </span>
-              </div>
-            )}
-
-            <div className="tbl-steps-list">
-              <div className="tbl-add-step-top">
-                <button type="button" className="tbl-add-step-btn" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
-                  {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
-                  {addingStep === phase.key ? t('workflow.lesson.generatingShort') : t('workflow.lesson.addStep')}
-                </button>
-              </div>
-
-              {phase.steps.map((step, index) => {
-                const cardKey = `${phase.key}-${index}`;
-                const isOpen = openCards.has(cardKey);
-                return (
-                  <article
-                    className={`step-card ${isOpen ? 'open' : ''}`}
-                    key={cardKey}
-                    onClick={() => toggleCard(cardKey)}
-                  >
-                    <div className="step-summary">
-                      <div className="step-chevron"><ChevronRight size={12} /></div>
-                      <button type="button" className="step-thumb-placeholder" title="点击生成图片" onClick={(event) => event.stopPropagation()}>
-                        <ImageIcon size={20} />
-                      </button>
-                      <div className="step-main">
-                        <div className="step-name">
-                          <span className="step-title-text">{step.title}</span>
-                          <span className="step-dur-badge">{step.duration}</span>
-                        </div>
-                        <div className="step-lo-preview">{step.goal}</div>
-                      </div>
-                      <div className="step-right-ctrl" onClick={(event) => event.stopPropagation()}>
-                        <button
-                          className={`step-menu-btn ${menuKey === cardKey ? 'active' : ''}`}
-                          title="操作"
-                          onClick={() => setMenuKey(menuKey === cardKey ? null : cardKey)}
-                        >
-                          <MoreVertical size={14} />
-                        </button>
-                        {!isOpen && (
-                          <StepMenu
-                            open={menuKey === cardKey}
-                            onRegen={() => {
-                              setMenuKey(null);
-                              openAddStep(phase, step);
-                            }}
-                            onInsertBefore={() => openInsertStepBefore(phase, index)}
-                            onAdjust={() => openAdjust(phase.key, index, step)}
-                            onSave={() => handleSaveStep(phase.key, index)}
-                            onUnsave={() => handleUnsaveStep(phase.key, index)}
-                            isSaved={isStepSaved(phase.key, index)}
-                            onPin={() => handlePinStep(phase.key, index)}
-                            onDelete={() => handleDeleteStep(phase.key, index)}
-                          />
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="step-detail" data-brief-enhanced="1" onClick={(event) => event.stopPropagation()}>
-                      <div className="step-brief-list">
-                        <div className="step-brief-item">
-                          <div className="step-detail-label"><Target size={13} />语言目标</div>
-                          <div className="step-detail-body tbl-lo">
-                            {step.goal}
-                          </div>
-                        </div>
-                        <div className="step-brief-item">
-                          <div className="step-detail-label"><ClipboardList size={13} />活动概述</div>
-                          <div className="step-detail-body">
-                            {step.activity}
-                          </div>
-                        </div>
-                        <div className="step-brief-item">
-                          <div className="step-detail-label"><ListChecks size={13} />活动流程</div>
-                          <div className="step-flow-card">
-                            <div className="step-flow-list">
-                              {buildStepFlowItems(step).map((item) => (
-                                <div className="step-flow-item" key={`${cardKey}-${item.title}`}>
-                                  <span className="step-flow-dot" />
-                                  <div>
-                                    <div className="step-flow-title">{item.title}</div>
-                                    <div className="step-flow-desc">{item.desc}</div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="step-hidden-fields">
-                          <div className="step-detail-label">活动流程原文</div>
-                          <div className="step-detail-body">{step.flow}</div>
-                          <div className="step-detail-label">教学资源</div>
-                          <div className="step-detail-body">{step.resources}</div>
-                          <div className="step-detail-label">情境创设</div>
-                          <div className="step-detail-body">{step.scenario}</div>
-                          <div className="step-detail-label">教师语言与引导</div>
-                          <div className="step-script tbl-script">
-                            <span className="tbl-q">“</span>{step.teacherScript}
-                          </div>
-                        </div>
-                      </div>
-                      <StepCardActions
-                        onDetail={() => openDetail(phase.key, index, step)}
-                        onEdit={() => openEdit(phase.key, index, step)}
-                        onAdjust={() => openAdjust(phase.key, index, step)}
-                        onMore={() => setMenuKey(menuKey === cardKey ? null : cardKey)}
-                        menu={(
-                          <StepMenu
-                            open={isOpen && menuKey === cardKey}
-                            placement="footer"
-                            onRegen={() => {
-                              setMenuKey(null);
-                              openAddStep(phase, step);
-                            }}
-                            onInsertBefore={() => openInsertStepBefore(phase, index)}
-                            onAdjust={() => openAdjust(phase.key, index, step)}
-                            onSave={() => handleSaveStep(phase.key, index)}
-                            onUnsave={() => handleUnsaveStep(phase.key, index)}
-                            isSaved={isStepSaved(phase.key, index)}
-                            onPin={() => handlePinStep(phase.key, index)}
-                            onDelete={() => handleDeleteStep(phase.key, index)}
-                          />
-                        )}
-                      />
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        );
-        })}
-      </div>
-
+      {viewMode === 'map' ? renderLessonMap() : (
+        <div className="tbl-kanban">
+          {data.map((phase) => renderOverviewPhaseCard(phase))}
+        </div>
+      )}
       {regenPhaseConfirm && (
         <div className="mo on" onMouseDown={(event) => event.target === event.currentTarget && setRegenPhaseConfirm(null)}>
           <div className="modal" style={{ width: 'min(420px, 90vw)', background: '#fff', borderRadius: 16, border: '2px solid #253142', boxShadow: '6px 6px 0 rgba(37,49,66,.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
@@ -1551,3 +1675,5 @@ function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, i
     </div>
   );
 }
+
+
