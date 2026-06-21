@@ -87,10 +87,10 @@ export const ReadingMaterialEditor = ({
   // 按阶段组织页面 - 使用与CanvasView相同的结构
   const organizePagesByPhase = () => {
     const phaseConfig = {
-      engage: { title: 'Engage (引入)', color: 'bg-purple-100 text-purple-700 border-purple-200' },
-      empower: { title: 'Empower (赋能)', color: 'bg-info-light text-info-active border-info-border' },
-      execute: { title: 'Execute (实践)', color: 'bg-success-light text-success-active border-success-border' },
-      elevate: { title: 'Elevate (升华)', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
+      engage: { title: 'Engage', color: 'bg-purple-100 text-purple-700 border-purple-200' },
+      empower: { title: 'Empower', color: 'bg-info-light text-info-active border-info-border' },
+      execute: { title: 'Execute', color: 'bg-success-light text-success-active border-success-border' },
+      elevate: { title: 'Elevate', color: 'bg-yellow-100 text-yellow-700 border-yellow-200' }
     };
 
     return Object.entries(phaseConfig).map(([key, config]) => {

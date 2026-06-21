@@ -2685,7 +2685,17 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
   margin:0 14px!important;
 }
 .fr-wf-step{
-  flex:0 1 auto!important;
+  flex:1 1 0!important;
+  min-width:0!important;
+  max-width:238px!important;
+}
+.fr-wf-step span:not(.fr-wf-n){min-width:0!important}
+.fr-wf-step b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fr-wf-arrow,
+.view-map-active .fr-wf-arrow{
+  width:54px!important;
+  min-width:54px!important;
+  flex:0 0 54px!important;
 }
 .fr-history-actions,
 .fr-autosave,
@@ -2752,8 +2762,9 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
   }
   .fr-wf-arrow,
   .view-map-active .fr-wf-arrow{
-    width:38px!important;
-    flex-basis:38px!important;
+    width:46px!important;
+    min-width:46px!important;
+    flex:0 0 46px!important;
   }
   .fr-history-actions{
     display:none!important;
@@ -2891,4 +2902,3 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
     min-height:320px!important;
   }
 }
-

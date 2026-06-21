@@ -41,7 +41,8 @@ export function PptCoursewareView({
   saveStatus = 'saved',
   saveText = '',
 }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isChinese = !i18n.language?.startsWith('en');
   const hasInitialPptContent = React.useMemo(() => hasGeneratedPptContent(initialCourseData), [initialCourseData]);
   const [mode, setMode] = React.useState(() => (hasInitialPptContent ? 'editor' : 'template'));
   const [canCancelTemplatePicker, setCanCancelTemplatePicker] = React.useState(false);
@@ -79,7 +80,12 @@ export function PptCoursewareView({
   }, []);
 
   const generateCourseware = () => {
-    const nextCourse = createGeneratedPptCourse(initialCourseData, selectedTemplateId, courseMeta);
+    const nextCourse = createGeneratedPptCourse(
+      initialCourseData,
+      selectedTemplateId,
+      courseMeta,
+      { language: isChinese ? 'zh' : 'en' }
+    );
     hasReportedInitialRef.current = true;
     setCourse(nextCourse);
     applySelection(nextCourse);
@@ -304,6 +310,9 @@ export function PptCoursewareView({
           <div className="ppt-template-grid">
             {PPT_TEMPLATES.map((template) => {
               const active = selectedTemplateId === template.id;
+              const templateName = isChinese ? template.name : template.nameEn;
+              const templateBadge = isChinese ? template.badge : template.badgeEn;
+              const templateDescription = isChinese ? template.description : template.descriptionEn;
               return (
                 <button
                   type="button"
@@ -325,9 +334,9 @@ export function PptCoursewareView({
                     <em />
                     <small />
                   </span>
-                  <span className="ppt-template-name">{template.name}</span>
-                  <span className="ppt-template-badge">{template.badge}</span>
-                  <span className="ppt-template-desc">{template.description}</span>
+                  <span className="ppt-template-name">{templateName}</span>
+                  <span className="ppt-template-badge">{templateBadge}</span>
+                  <span className="ppt-template-desc">{templateDescription}</span>
                 </button>
               );
             })}

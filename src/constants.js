@@ -18,10 +18,10 @@ export const convertWordDocToCourseData = () => {
   };
 
   const titleMap = {
-    'engage': 'Engage (引入)',
-    'empower': 'Empower (赋能)',
-    'execute': 'Execute (实践)',
-    'elevate': 'Elevate (升华)'
+    'engage': 'Engage',
+    'empower': 'Empower',
+    'execute': 'Execute',
+    'elevate': 'Elevate'
   };
 
   const result = {

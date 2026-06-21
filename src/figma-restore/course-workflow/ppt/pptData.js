@@ -11,8 +11,11 @@ export const PPT_TEMPLATES = [
   {
     id: 'blue-business',
     name: '蓝色商务风',
+    nameEn: 'Blue Business Style',
     badge: '客户模板',
+    badgeEn: 'Client Template',
     description: '来自“蓝色商务风年度工作报告PPT模板”，适合清晰、专业的课程说明。',
+    descriptionEn: 'Based on a blue business annual report template, suitable for clear and professional course presentations.',
     pptxUrl: '/ppt/蓝色商务风年度工作报告PPT模板.pptx',
     coverImage: '/ppt/backgrounds/blue-business.jpeg',
     backgroundImage: '',
@@ -26,8 +29,11 @@ export const PPT_TEMPLATES = [
   {
     id: 'red-business',
     name: '红色商务风',
+    nameEn: 'Red Business Style',
     badge: '客户模板',
+    badgeEn: 'Client Template',
     description: '来自“红色商务风个人部门工作总结汇报”，适合重点突出、节奏鲜明的课件。',
+    descriptionEn: 'Based on a red business summary template, suitable for focused courseware with a strong rhythm.',
     pptxUrl: '/ppt/红色商务风个人部门工作总结汇报.pptx',
     coverImage: '/ppt/backgrounds/red-business.png',
     backgroundImage: '',
@@ -41,8 +47,11 @@ export const PPT_TEMPLATES = [
   {
     id: 'nature-business',
     name: '自然叠底商务风',
+    nameEn: 'Natural Overlay Business Style',
     badge: '客户模板',
+    badgeEn: 'Client Template',
     description: '来自“透明叠底大气自然商务风总结汇报”，适合更有空间感的展示。',
+    descriptionEn: 'Based on a natural overlay business template, suitable for spacious and atmospheric presentations.',
     pptxUrl: '/ppt/透明叠底大气自然商务风总结汇报.pptx',
     coverImage: '/ppt/backgrounds/nature-business.jpeg',
     backgroundImage: '',
@@ -289,7 +298,8 @@ export function hasGeneratedPptContent(initialCourseData) {
   });
 }
 
-function createCoverPhase(initialCourseData, template, courseMeta = {}) {
+function createCoverPhase(initialCourseData, template, courseMeta = {}, options = {}) {
+  const isEnglish = options.language === 'en';
   const source = typeof courseMeta === 'object' && courseMeta
     ? courseMeta
     : typeof initialCourseData === 'object' && !Array.isArray(initialCourseData)
@@ -343,7 +353,7 @@ function createCoverPhase(initialCourseData, template, courseMeta = {}) {
       }),
       createTextLayer({
         title: '模板名称',
-        content: template.name,
+        content: isEnglish ? (template.nameEn || template.name) : template.name,
         x: 116,
         y: 374,
         width: 260,
@@ -549,7 +559,7 @@ function createActivitySlide(phase, step, stepIndex, template) {
   };
 }
 
-export function createGeneratedPptCourse(initialCourseData, templateId, courseMeta = {}) {
+export function createGeneratedPptCourse(initialCourseData, templateId, courseMeta = {}, options = {}) {
   const template = getTemplate(templateId);
   const normalized = buildInitialPptCourse(initialCourseData);
 
@@ -564,7 +574,7 @@ export function createGeneratedPptCourse(initialCourseData, templateId, courseMe
     })),
   }));
 
-  return [createCoverPhase(initialCourseData, template, courseMeta), ...contentPhases];
+  return [createCoverPhase(initialCourseData, template, courseMeta, options), ...contentPhases];
 }
 
 export function ensurePptCoverAndInnerPages(course, courseMeta = {}) {

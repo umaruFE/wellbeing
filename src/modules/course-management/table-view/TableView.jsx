@@ -160,10 +160,10 @@ export const TableView = React.forwardRef(({ initialConfig, onReset, onNavigateT
         // 如果 courseData 是对象格式（欢迎页生成的格式）
         const phaseOrder = ['engage', 'empower', 'execute', 'elevate'];
         const phaseLabels = {
-          engage: 'Engage (引入)',
-          empower: 'Empower (赋能)',
-          execute: 'Execute (实践/产出)',
-          elevate: 'Elevate (升华)'
+          engage: 'Engage',
+          empower: 'Empower',
+          execute: 'Execute',
+          elevate: 'Elevate'  
         };
         const phaseColors = {
           engage: 'bg-purple-50 border-purple-200 text-purple-800',

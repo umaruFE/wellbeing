@@ -30,6 +30,7 @@ import { StepDetailModal } from './lesson-design/StepDetailModal';
 import { buildStepFlowItems } from './lesson-design/lessonDesignUtils';
 import planeIcon from '../../assets/create-course/plane.png';
 import bgCourseMap from '../../assets/course-map/bg-map.png';
+import bgCourseMapEn from '../../assets/course-map/bg-map-en.png';
 import stepOneImage from '../../assets/course-map/step-1.png';
 import stepTwoImage from '../../assets/course-map/step-2.png';
 import stepThreeImage from '../../assets/course-map/step-3.png';
@@ -42,20 +43,20 @@ import iconStepFour from '../../assets/course-map/icon-step-4.png';
 const { TextArea } = Input;
 
 const quickIdeas = [
-  { label: '角色扮演', text: '设计一个让学生通过角色扮演来练习目标句型的活动' },
-  { label: '小组合作', text: '设计一个通过小组合作完成任务的活动' },
-  { label: '游戏化', text: '设计一个利用游戏机制激发学生参与的活动' },
-  { label: '真实情境', text: '设计一个结合真实情境让学生运用目标语言的活动' },
-  { label: '动手操作', text: '设计一个需要学生动手操作的活动' },
+  { label: '角色扮演', labelEn: 'Role Play', text: '设计一个让学生通过角色扮演来练习目标句型的活动', textEn: 'Design an activity where students practice the target sentence pattern through role play.' },
+  { label: '小组合作', labelEn: 'Teamwork', text: '设计一个通过小组合作完成任务的活动', textEn: 'Design an activity where students complete a task through group collaboration.' },
+  { label: '游戏化', labelEn: 'Gamified', text: '设计一个利用游戏机制激发学生参与的活动', textEn: 'Design a gamified activity that increases student participation.' },
+  { label: '真实情境', labelEn: 'Real Context', text: '设计一个结合真实情境让学生运用目标语言的活动', textEn: 'Design an authentic-context activity for students to use the target language.' },
+  { label: '动手操作', labelEn: 'Hands-on', text: '设计一个需要学生动手操作的活动', textEn: 'Design a hands-on activity that lets students manipulate materials while using English.' },
 ];
 
 const classicActivities = [
-  { icon: '🎱', name: 'Bingo 游戏', meta: '词汇复习' },
-  { icon: '🤔', name: '猜单词', meta: '听说练习' },
-  { icon: '🎭', name: '情景对话', meta: '口语输出' },
-  { icon: '🃏', name: '闪卡翻转', meta: '词汇记忆' },
-  { icon: '🧩', name: '拼图阅读', meta: '阅读理解' },
-  { icon: '🎨', name: '我画你猜', meta: '词汇运用' },
+  { icon: '🎱', name: 'Bingo 游戏', nameEn: 'Bingo Game', meta: '词汇复习', metaEn: 'Vocabulary Review' },
+  { icon: '🤔', name: '猜单词', nameEn: 'Guess the Word', meta: '听说练习', metaEn: 'Listening & Speaking' },
+  { icon: '🎭', name: '情景对话', nameEn: 'Role Dialogue', meta: '口语输出', metaEn: 'Oral Output' },
+  { icon: '🃏', name: '闪卡翻转', nameEn: 'Flashcard Flip', meta: '词汇记忆', metaEn: 'Vocabulary Memory' },
+  { icon: '🧩', name: '拼图阅读', nameEn: 'Puzzle Reading', meta: '阅读理解', metaEn: 'Reading Comprehension' },
+  { icon: '🎨', name: '我画你猜', nameEn: 'Draw and Guess', meta: '词汇运用', metaEn: 'Vocabulary Use' },
 ];
 
 const defaultFlowSteps = [
@@ -86,6 +87,7 @@ const lessonMapMeta = {
     icon: 'sparkle',
     tone: '#e8d2df',
     summary: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+    summaryEn: 'Spark curiosity through an immersive scenario and build learning motivation.',
     position: { left: '20.59%', top: '25.63%' },
   },
   emp: {
@@ -96,6 +98,7 @@ const lessonMapMeta = {
     icon: 'book',
     tone: '#d8ca8d',
     summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
+    summaryEn: 'Build target language through frequent listening, visual, and movement input.',
     position: { left: '49.07%', top: '34.65%' },
   },
   exc: {
@@ -106,6 +109,7 @@ const lessonMapMeta = {
     icon: 'checklist',
     tone: '#d9dde9',
     summary: '在真实任务驱动下综合运用方位介词与句型进行表达',
+    summaryEn: 'Use the target language in an authentic task and express ideas clearly.',
     position: { left: '34.97%', top: '63.15%' },
   },
   elv: {
@@ -116,6 +120,7 @@ const lessonMapMeta = {
     icon: 'trophy',
     tone: '#cbb8a8',
     summary: '分享学习成果，反思收获，培养跨文化意识',
+    summaryEn: 'Share outcomes, reflect on learning, and extend cultural awareness.',
     position: { left: '66.00%', top: '68.00%' },
   },
 };
@@ -124,6 +129,53 @@ const parseMinutes = (value) => {
   const match = String(value || '').match(/(\d+)/);
   return match ? parseInt(match[1], 10) : 0;
 };
+
+const phaseTranslationKeys = {
+  eng: 'lesson.phaseEngage',
+  emp: 'lesson.phaseEmpower',
+  exc: 'lesson.phaseExecute',
+  elv: 'lesson.phaseElevate',
+};
+
+const lessonDisplayReplacements = [
+  ['语言目标：', 'Language Goal: '],
+  ['语言目标:', 'Language Goal: '],
+  ['核心词汇：', 'Core Vocabulary: '],
+  ['核心句型：', 'Core Sentence Pattern: '],
+  ['社会情感学习：', 'SEL: '],
+  ['教学资源', 'Teaching Resources'],
+  ['情境创设', 'Scenario Setup'],
+  ['活动流程原文', 'Original Activity Flow'],
+  ['教师语言与引导', 'Teacher Language & Guidance'],
+  ['活动概述', 'Activity Overview'],
+  ['活动流程', 'Activity Flow'],
+  ['查看详情', 'View Details'],
+  ['查看活动', 'View Activity'],
+  ['步骤', 'Step'],
+  ['个环节', ' steps'],
+  ['环节', 'steps'],
+  ['分钟', 'min'],
+  ['引入', 'Engage'],
+  ['赋能', 'Empower'],
+  ['实践', 'Execute'],
+  ['升华', 'Elevate'],
+];
+
+const formatLessonText = (value, isChinese) => {
+  if (value == null) return '';
+  let text = String(value);
+  if (isChinese) return text;
+  lessonDisplayReplacements.forEach(([from, to]) => {
+    text = text.split(from).join(to);
+  });
+  return text;
+};
+
+const stripChinesePhaseParentheses = (value) => (
+  String(value || '')
+    .replace(/\s*[（(]\s*(引入|赋能|实践|升华)\s*[）)]/g, '')
+    .trim()
+);
 
 const phaseDetailData = {
   Engage: {
@@ -323,6 +375,30 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   const { user } = useAuth();
 
   const generateCalledRef = React.useRef(false);
+
+  const formatDuration = React.useCallback((value, fallback = 15) => {
+    const minutes = parseMinutes(value) || fallback;
+    return isChinese ? `${minutes} 分钟` : `${minutes} min`;
+  }, [isChinese]);
+
+  const getPhaseTitle = React.useCallback((phase) => (
+    isChinese
+      ? stripChinesePhaseParentheses(phase.title)
+      : t(phaseTranslationKeys[phase.key] || 'lesson.phaseEngage')
+  ), [isChinese, t]);
+
+  const getPhaseName = React.useCallback((phase) => (
+    isChinese ? phase.name : ''
+  ), [isChinese]);
+
+  const getDisplayText = React.useCallback((value) => (
+    formatLessonText(value, isChinese)
+  ), [isChinese]);
+
+  const getClassicDisplayName = React.useCallback((name) => {
+    const activity = classicActivities.find((item) => item.name === name);
+    return isChinese ? name : (activity?.nameEn || name);
+  }, [isChinese]);
 
   React.useEffect(() => {
     const existing = resolvePhasesFromCourse(course);
@@ -932,7 +1008,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setSavedSteps(updated);
     localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
     setMenuKey(null);
-    toastMessage(`已收藏「${record.title}」`);
+    toastMessage(isChinese ? `已收藏「${record.title}」` : `Saved "${getDisplayText(record.title)}"`);
   };
 
   const handleUnsaveStep = (phaseKey, stepIndex) => {
@@ -943,7 +1019,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     setSavedSteps(updated);
     localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
     setMenuKey(null);
-    toastMessage(`已取消收藏「${step.title}」`);
+    toastMessage(isChinese ? `已取消收藏「${step.title}」` : `Removed "${getDisplayText(step.title)}" from favorites`);
   };
 
   const isStepSaved = (phaseKey, stepIndex) => {
@@ -961,7 +1037,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
     steps.unshift(pinned);
     updateData(data.map((p) => (p.key === phaseKey ? { ...p, steps } : p)));
     setMenuKey(null);
-    toastMessage('已置顶到该阶段首位');
+    toastMessage(isChinese ? '已置顶到该阶段首位' : 'Pinned to the top of this phase');
   };
 
   const handleSelectSavedStep = (record) => {
@@ -1039,15 +1115,15 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           </button>
           <div className="step-main">
             <div className="step-name">
-              <span className="step-title-text">{step.title}</span>
-              <span className="step-dur-badge">{step.duration}</span>
+              <span className="step-title-text">{getDisplayText(step.title)}</span>
+              <span className="step-dur-badge">{formatDuration(step.duration, 8)}</span>
             </div>
-            <div className="step-lo-preview">{step.goal}</div>
+            <div className="step-lo-preview">{getDisplayText(step.goal)}</div>
           </div>
           <div className="step-right-ctrl" onClick={(event) => event.stopPropagation()}>
             <button
               className={`step-menu-btn ${menuKey === cardKey ? 'active' : ''}`}
-              title="操作"
+              title={t('common.actions', { defaultValue: isChinese ? '操作' : 'Actions' })}
               onClick={() => setMenuKey(menuKey === cardKey ? null : cardKey)}
             >
               <MoreVertical size={14} />
@@ -1074,27 +1150,27 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         <div className="step-detail" data-brief-enhanced="1" onClick={(event) => event.stopPropagation()}>
           <div className="step-brief-list">
             <div className="step-brief-item">
-              <div className="step-detail-label"><Target size={13} />语言目标</div>
+              <div className="step-detail-label"><Target size={13} />{t('lesson.languageGoal')}</div>
               <div className="step-detail-body tbl-lo">
-                {step.goal}
+                {getDisplayText(step.goal)}
               </div>
             </div>
             <div className="step-brief-item">
-              <div className="step-detail-label"><ClipboardList size={13} />活动概述</div>
+              <div className="step-detail-label"><ClipboardList size={13} />{t('lesson.activitySummary')}</div>
               <div className="step-detail-body">
-                {step.activity}
+                {getDisplayText(step.activity)}
               </div>
             </div>
             <div className="step-brief-item">
-              <div className="step-detail-label"><ListChecks size={13} />活动流程</div>
+              <div className="step-detail-label"><ListChecks size={13} />{t('lesson.activityFlow')}</div>
               <div className="step-flow-card">
                 <div className="step-flow-list">
                   {buildStepFlowItems(step).map((item) => (
                     <div className="step-flow-item" key={`${cardKey}-${item.title}`}>
                       <span className="step-flow-dot" />
                       <div>
-                        <div className="step-flow-title">{item.title}</div>
-                        <div className="step-flow-desc">{item.desc}</div>
+                        <div className="step-flow-title">{getDisplayText(item.title)}</div>
+                        <div className="step-flow-desc">{getDisplayText(item.desc)}</div>
                       </div>
                     </div>
                   ))}
@@ -1102,15 +1178,15 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               </div>
             </div>
             <div className="step-hidden-fields">
-              <div className="step-detail-label">活动流程原文</div>
-              <div className="step-detail-body">{step.flow}</div>
-              <div className="step-detail-label">教学资源</div>
-              <div className="step-detail-body">{step.resources}</div>
-              <div className="step-detail-label">情境创设</div>
-              <div className="step-detail-body">{step.scenario}</div>
-              <div className="step-detail-label">教师语言与引导</div>
+              <div className="step-detail-label">{t('lesson.executionFlow')}</div>
+              <div className="step-detail-body">{getDisplayText(step.flow)}</div>
+              <div className="step-detail-label">{t('lesson.teachingResources')}</div>
+              <div className="step-detail-body">{getDisplayText(step.resources)}</div>
+              <div className="step-detail-label">{t('lesson.sceneSetup')}</div>
+              <div className="step-detail-body">{getDisplayText(step.scenario)}</div>
+              <div className="step-detail-label">{t('lesson.teacherScript')}</div>
               <div className="step-script tbl-script">
-                <span className="tbl-q">“</span>{step.teacherScript}
+                <span className="tbl-q">“</span>{getDisplayText(step.teacherScript)}
               </div>
             </div>
           </div>
@@ -1153,21 +1229,21 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           <img className="tbl-phase-number-img" src={phaseMapMeta.stepImage} alt="" />
           <div className="tbl-phase-hd-left">
             <div className="tbl-phase-title-row">
-              <span className="tbl-phase-title">{phase.title}</span>
-              <span className="tbl-phase-cn">{phase.name}</span>
+              <span className="tbl-phase-title">{getPhaseTitle(phase)}</span>
+              {getPhaseName(phase) && <span className="tbl-phase-cn">{getPhaseName(phase)}</span>}
             </div>
             <div className="tbl-phase-second-row">
               <span className="tbl-phase-sub">{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
               <span className={`tbl-phase-meta-dur${phaseMinutes > PHASE_DURATION_LIMIT ? ' is-over-limit' : ''}`}>
-                {phase.duration}
+                {formatDuration(phase.duration)}
               </span>
             </div>
           </div>
           <div className="tbl-phase-menu-wrap">
             <button
               className="tbl-phase-edit-btn"
-              title="查看阶段详情"
-              aria-label="查看阶段详情"
+              title={t('lesson.viewPhaseDetail')}
+              aria-label={t('lesson.viewPhaseDetail')}
               onClick={(event) => {
                 event.stopPropagation();
                 openPhaseDetail(phase);
@@ -1187,7 +1263,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         {overflowMinutes > 0 && (
           <div className="tbl-phase-duration-warning">
             <span className="tbl-phase-duration-warning-icon">!</span>
-            <span>建议调整阶段内活动时长在15分钟以内</span>
+            <span>{t('lesson.phaseDurationSuggestion', { defaultValue: isChinese ? '建议调整阶段内活动时长在15分钟以内' : 'Keep activities in this phase within 15 minutes' })}</span>
           </div>
         )}
 
@@ -1211,11 +1287,14 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
     return (
       <div className={`lesson-map-shell ${selected ? 'drawer-open' : ''}`}>
-        <div className="lesson-map-canvas" style={{ backgroundImage: `url(${bgCourseMap})` }}>
+        <div className="lesson-map-canvas" style={{ backgroundImage: `url(${isChinese ? bgCourseMap : bgCourseMapEn})` }}>
           <div className="lesson-map-art">
             {data.map((phase) => {
               const meta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
               const phaseMinutes = parseMinutes(phase.duration);
+              const summary = isChinese
+                ? (phase.steps.map((step) => step.goal).filter(Boolean).join('；') || meta.summary)
+                : meta.summaryEn;
               return (
                 <article
                   key={phase.key}
@@ -1225,18 +1304,18 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                   <img className="lesson-map-step-num" src={meta.stepImage} alt="" />
                   <div className="lesson-map-card-main">
                     <div className="lesson-map-card-head">
-                      <h3>{phase.title} {phase.name}</h3>
+                      <h3>{getPhaseTitle(phase)} {getPhaseName(phase)}</h3>
                       <span className="lesson-map-card-icon">
                         {meta.iconImage ? <img src={meta.iconImage} alt="" /> : renderMapIcon(meta.icon)}
                       </span>
                     </div>
-                    <p>{phase.steps.map((step) => step.goal).filter(Boolean).join('；') || meta.summary}</p>
+                    <p>{getDisplayText(summary)}</p>
                     <div className="lesson-map-card-meta">
                       <strong>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</strong>
-                      <span>{phaseMinutes > 0 ? phase.duration : '15 分钟'}</span>
+                      <span>{formatDuration(phaseMinutes > 0 ? phase.duration : '', 15)}</span>
                     </div>
                     <button type="button" className="lesson-map-detail-btn" onClick={() => setActiveMapPhase(phase)}>
-                      查看详情 <span aria-hidden="true">→</span>
+                      {t('lesson.detail')} <span aria-hidden="true">→</span>
                     </button>
                   </div>
                 </article>
@@ -1269,7 +1348,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   }
 
   return (
-    <div id="ed-tbl" className={viewMode === 'map' ? 'lesson-map-mode' : ''}>
+    <div id="ed-tbl" className={`${viewMode === 'map' ? 'lesson-map-mode' : ''} ${isChinese ? 'lesson-lang-zh' : 'lesson-lang-en'}`}>
       {toast && <div className="tbl-toast">{toast}</div>}
       <div className="lesson-design-page-header">
         <div className="lesson-design-title-row">
@@ -1335,7 +1414,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           <div className="modal phase-detail-modal">
             <div className="modal-hd">
               <div className="modal-t pem-title-wrap">
-                {phaseDetail.title}
+                {isChinese ? stripChinesePhaseParentheses(phaseDetail.title) : t(phaseTranslationKeys[phaseDetail.key] || 'lesson.phaseEngage')}
                 <span className="pem-readonly-badge">{t('lesson.readonlyNote')}</span>
               </div>
               <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label={t('common.close')}><X size={20} /></button>
@@ -1344,24 +1423,24 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               <div className="pem-wrap" style={{ '--pem-accent': phaseDetail.color }}>
                 <div className="pem-summary">
                   <div className="pem-summary-label">{t('lesson.phasePosition')}</div>
-                  <div className="pem-summary-text">{phaseDetail.goal}</div>
+                  <div className="pem-summary-text">{getDisplayText(phaseDetail.goal)}</div>
                 </div>
                 <div className="pem-grid">
                   <div className="pem-section">
                     <div className="pem-label">{t('lesson.languageGoal')}</div>
-                    <div className="pem-content">{phaseDetail.lang}</div>
+                    <div className="pem-content">{getDisplayText(phaseDetail.lang)}</div>
                   </div>
                   <div className="pem-section">
                     <div className="pem-label">{t('lesson.selFocus')}</div>
-                    <div className="pem-content">{phaseDetail.sel}</div>
+                    <div className="pem-content">{getDisplayText(phaseDetail.sel)}</div>
                   </div>
                   <div className="pem-section">
                     <div className="pem-label">{t('lesson.permaFocus')}</div>
-                    <div className="pem-content">{phaseDetail.perma}</div>
+                    <div className="pem-content">{getDisplayText(phaseDetail.perma)}</div>
                   </div>
                   <div className="pem-section pem-section-narrative">
                     <div className="pem-label">{t('lesson.phaseNarrative')}</div>
-                    <div className="pem-content pem-narrative">{phaseDetail.narrative}</div>
+                    <div className="pem-content pem-narrative">{getDisplayText(phaseDetail.narrative)}</div>
                   </div>
                 </div>
               </div>
@@ -1404,11 +1483,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
                 <div className={`as-gen-panel ${genMode === 'ai' ? 'active' : ''}`} id="asPanel-ai">
                   <div className="as-quick-hint">
-                    <div className="as-qh-label">💡 提示词（点击直接填入）</div>
+                    <div className="as-qh-label">{t('lesson.promptHint', { defaultValue: isChinese ? '💡 提示词（点击直接填入）' : 'Prompt ideas (click to fill)' })}</div>
                     <div className="as-qh-chips">
                       {quickIdeas.map((item) => (
-                        <button className="as-qh-chip" type="button" key={item.label} onClick={() => fillIdea(item.text)}>
-                          {item.label}
+                        <button className="as-qh-chip" type="button" key={item.label} onClick={() => fillIdea(isChinese ? item.text : item.textEn)}>
+                          {isChinese ? item.label : item.labelEn}
                         </button>
                       ))}
                     </div>
@@ -1418,7 +1497,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                     className="as-gen-textarea"
                     value={ideaText}
                     onChange={(event) => setIdeaText(event.target.value)}
-                    placeholder={'描述你想要设计的活动核心思路，AI 将生成完整活动方案\n例如：设计一个让学生通过角色扮演来练习目标句型的活动'}
+                    placeholder={t('lesson.activityIdeaPlaceholder')}
                   />
                   <button type="button" className="as-gen-btn" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <Sparkles size={14} />
@@ -1427,7 +1506,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 </div>
 
                 <div className={`as-gen-panel ${genMode === 'classic' ? 'active' : ''}`} id="asPanel-classic">
-                  <div className="as-panel-label classic-label">选择一种经典活动</div>
+                  <div className="as-panel-label classic-label">{t('lesson.chooseClassicActivity', { defaultValue: isChinese ? '选择一种经典活动' : 'Choose a classic activity' })}</div>
                   <div className="as-classic-grid" id="asClassicGrid">
                     {classicActivities.map((activity) => (
                       <button
@@ -1439,12 +1518,12 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                         }}
                       >
                         <div className="as-classic-icon">{activity.icon}</div>
-                        <div className="as-classic-name">{activity.name}</div>
-                        <div className="as-classic-meta">{activity.meta}</div>
+                        <div className="as-classic-name">{isChinese ? activity.name : activity.nameEn}</div>
+                        <div className="as-classic-meta">{isChinese ? activity.meta : activity.metaEn}</div>
                       </button>
                     ))}
                   </div>
-                  {selectedClassic && <div className="as-selected-hint">已选择：<strong>{selectedClassic}</strong></div>}
+                  {selectedClassic && <div className="as-selected-hint">{t('lesson.selected')}<strong>{getClassicDisplayName(selectedClassic)}</strong></div>}
                   {selectedClassic && (
                     <button type="button" className="as-gen-btn classic-gen" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
                       <Sparkles size={14} />
@@ -1456,8 +1535,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 <div className={`as-gen-panel ${genMode === 'mine' ? 'active' : ''}`} id="asPanel-mine">
                   {savedSteps.length === 0 ? (
                     <div id="asSavedList" className="as-saved-empty">
-                      暂无收藏环节或保存的活动<br />
-                      <span>在环节卡片右上角菜单中点击「收藏此环节」存入此处</span>
+                      {t('lesson.noFavorites', { defaultValue: isChinese ? '暂无收藏环节或保存的活动' : 'No saved steps or favorite activities yet' })}<br />
+                      <span>{t('lesson.favoriteTip', { defaultValue: isChinese ? '在环节卡片右上角菜单中点击「收藏此环节」存入此处' : 'Use the step card menu to save favorites here.' })}</span>
                     </div>
                   ) : (
                     <div id="asSavedList" className="as-saved-list">
@@ -1487,7 +1566,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
               <div className="as-right-panel">
                 <div className="as-right-hd">
-                  <span className="as-right-title">活动草案</span>
+                  <span className="as-right-title">{t('lesson.activityDraft', { defaultValue: isChinese ? '活动草案' : 'Activity Draft' })}</span>
                   <span className={`as-right-tag ${generateDraftLoading ? 'ai' : genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
                     {generateDraftLoading ? t('lesson.generating') : genMode === 'ai' ? t('workflow.stepState.pending') : genMode === 'classic' ? t('workflow.stepState.pending') : t('lesson.myFavorites')}
                   </span>
@@ -1496,17 +1575,17 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                 <Form form={addForm} className="as-draft-form" layout="vertical">
                   <div className="as-draft-row">
 	                    <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title">
-                      <Input className="as-draft-input" placeholder="起一个吸引人的名字" />
+                      <Input className="as-draft-input" placeholder={t('lesson.stepNamePlaceholder', { defaultValue: isChinese ? '起一个吸引人的名字' : 'Give it an engaging name' })} />
                     </Form.Item>
 	                    <Form.Item className="as-draft-field as-draft-time" label={t('lesson.stepDuration')} name="time">
                       <InputNumber className="as-draft-input" min={1} max={40} controls={false} />
                     </Form.Item>
                   </div>
 	                  <Form.Item className="as-draft-field" label={t('lesson.languageGoal')} name="goal">
-                    <TextArea className="as-draft-textarea" placeholder="例如：听力输入：核心情绪词（sad, happy, lonely, bored），核心句型 Let’s help…" />
+                    <TextArea className="as-draft-textarea" placeholder={t('lesson.languageGoalPlaceholder', { defaultValue: isChinese ? '例如：听力输入：核心情绪词（sad, happy, lonely, bored），核心句型 Let’s help…' : 'Example: Listening input for key emotion words and the sentence pattern “Let’s help...”' })} />
                   </Form.Item>
 	                  <Form.Item className="as-draft-field" label={t('lesson.activitySummary')} name="activity">
-                    <TextArea className="as-draft-textarea" placeholder="简要描述活动内容..." />
+                    <TextArea className="as-draft-textarea" placeholder={t('lesson.activitySummaryPlaceholder', { defaultValue: isChinese ? '简要描述活动内容...' : 'Briefly describe the activity...' })} />
                   </Form.Item>
                   <div className="as-draft-field">
 	                    <label className="as-draft-lbl">{t('lesson.activityFlow')}</label>
@@ -1517,10 +1596,10 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                             <div>
 	                              <div className="flow-step-editor-title">{t('lesson.executionFlow')}</div>
                               <div className="flow-step-editor-tip">
-                                按真实上课顺序填写：先设计活动内容，再补充教师语言与引导动作。
+                                {t('lesson.flowEditorTip', { defaultValue: isChinese ? '按真实上课顺序填写：先设计活动内容，再补充教师语言与引导动作。' : 'Write in real classroom order: design the activity first, then add teacher language and cues.' })}
                               </div>
                             </div>
-                            <div className="flow-step-editor-badge">{fields.length} 个步骤</div>
+                            <div className="flow-step-editor-badge">{t('lesson.flowStepCount', { count: fields.length, defaultValue: isChinese ? `${fields.length} 个步骤` : `${fields.length} steps` })}</div>
                           </div>
 
                           {fields.map((field, index) => (
@@ -1531,23 +1610,23 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                               </div>
                               <div className="flow-step-fields">
                                 <div className="flow-step-card-head">
-                                  <div className="flow-step-mini-label">步骤名称</div>
+                                  <div className="flow-step-mini-label">{t('lesson.flowStepName', { defaultValue: isChinese ? '步骤名称' : 'Step Name' })}</div>
                                   <Form.Item name={[field.name, 'title']} noStyle>
-                                    <Input className="flow-step-input flow-step-title" placeholder="例如：创设悬念" />
+                                    <Input className="flow-step-input flow-step-title" placeholder={t('lesson.flowStepNamePlaceholder', { defaultValue: isChinese ? '例如：创设悬念' : 'Example: Create suspense' })} />
                                   </Form.Item>
                                 </div>
                                 <div className="flow-step-body-grid">
                                   <div className="flow-step-section">
-                                    <div className="flow-step-section-title">活动内容</div>
+                                    <div className="flow-step-section-title">{t('lesson.activityContent', { defaultValue: isChinese ? '活动内容' : 'Activity Content' })}</div>
                                     <Form.Item name={[field.name, 'desc']} noStyle>
                                       <TextArea
                                         className="flow-step-input flow-step-desc"
-                                        placeholder="这一步学生会看到什么、做什么、完成什么？"
+                                        placeholder={t('lesson.activityContentPlaceholder', { defaultValue: isChinese ? '这一步学生会看到什么、做什么、完成什么？' : 'What will students see, do, and complete in this step?' })}
                                       />
                                     </Form.Item>
                                   </div>
                                   <div className="flow-step-section guidance teacher-script">
-                                    <div className="flow-step-section-title">教师引导 / 教师语言</div>
+                                    <div className="flow-step-section-title">{t('lesson.teacherGuidance', { defaultValue: isChinese ? '教师引导 / 教师语言' : 'Teacher Guidance / Language' })}</div>
                                     <Form.Item name={[field.name, 'teacher']} noStyle>
                                       <TextArea
                                         className="flow-step-input flow-step-script"
@@ -1556,11 +1635,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                                     </Form.Item>
                                   </div>
                                   <div className="flow-step-section guidance action-cue">
-                                    <div className="flow-step-section-title">动作 / 引导提示</div>
+                                    <div className="flow-step-section-title">{t('lesson.actionCue', { defaultValue: isChinese ? '动作 / 引导提示' : 'Action / Cue' })}</div>
                                     <Form.Item name={[field.name, 'cue']} noStyle>
                                       <TextArea
                                         className="flow-step-input flow-step-cue"
-                                        placeholder="例如：神秘地举起信封；停顿等待学生自然回应"
+                                        placeholder={t('lesson.actionCuePlaceholder', { defaultValue: isChinese ? '例如：神秘地举起信封；停顿等待学生自然回应' : 'Example: Hold up the envelope mysteriously; pause for responses' })}
                                       />
                                     </Form.Item>
                                   </div>
@@ -1569,7 +1648,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                               <button
                                 type="button"
                                 className="flow-step-del"
-                                aria-label="删除步骤"
+                                aria-label={t('lesson.deleteStep')}
                                 disabled={fields.length <= 1}
                                 onClick={() => fields.length > 1 && remove(field.name)}
                               >
@@ -1582,7 +1661,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                             type="button"
                             className="flow-step-add"
                             onClick={() => add({
-                              title: '新步骤',
+                              title: isChinese ? '新步骤' : 'New Step',
                               desc: '',
                               teacher: '',
                               cue: '',
@@ -1596,10 +1675,10 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                   </div>
                   <div className="as-draft-row">
 	                    <Form.Item className="as-draft-field" label={t('lesson.teachingResources')} name="resources">
-                      <TextArea className="as-draft-textarea" placeholder="用顿号、逗号或换行分隔，例如：装饰信封、求救信、动物轮廓表情图" />
+                      <TextArea className="as-draft-textarea" placeholder={t('lesson.resourcesPlaceholder', { defaultValue: isChinese ? '用顿号、逗号或换行分隔，例如：装饰信封、求救信、动物轮廓表情图' : 'Separate with commas or line breaks, e.g., mission cards, image cards, timer' })} />
                     </Form.Item>
 	                    <Form.Item className="as-draft-field" label={t('lesson.sceneSetup')} name="scenario">
-                      <TextArea className="as-draft-textarea" placeholder="创设的情境背景..." />
+                      <TextArea className="as-draft-textarea" placeholder={t('lesson.scenarioPlaceholder', { defaultValue: isChinese ? '创设的情境背景...' : 'Describe the classroom scenario...' })} />
                     </Form.Item>
                   </div>
                 </Form>
@@ -1669,11 +1748,9 @@ function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, i
         <Heart size={12} fill={isSaved ? '#ff705f' : 'none'} />
         {isSaved ? t('common.cancel') : t('lesson.myFavorites')}
       </button>
-      <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />置顶</button>
+      <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />{t('lesson.pinToTop', { defaultValue: 'Pin to Top' })}</button>
       <div className="step-menu-sep" />
-      <button type="button" className="step-menu-item danger" onClick={onDelete}><Trash2 size={12} />删除</button>
+      <button type="button" className="step-menu-item danger" onClick={onDelete}><Trash2 size={12} />{t('lesson.deleteStep')}</button>
     </div>
   );
 }
-
-
