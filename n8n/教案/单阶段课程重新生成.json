@@ -3,16 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"steps\": [\n    {\n      \"id\": \"string\",\n      \"time\": \"string\",\n      \"title\": \"string\",\n      \"objective\": \"string\",\n      \"activity\": \"string\",\n      \"script\": \"string\",\n      \"assets\": [\n        {\n          \"id\": \"string\",\n          \"type\": \"string\",\n          \"title\": \"string\",\n          \"prompt\": \"string\"\n        }\n      ]\n    }\n  ]\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [224, 336],
-      "id": "b579f425-6c14-44e8-916d-73979eecc901",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
         "model": {
           "__rl": true,
           "mode": "list",
@@ -25,8 +15,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [-32, 336],
-      "id": "c679ddb4-2390-4d29-a7b4-c4db00223824",
+      "position": [
+        352,
+        208
+      ],
+      "id": "0d44423b-e5e1-44c1-b552-9af2d25fd9b7",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -40,11 +33,14 @@
         "respondWith": "allIncomingItems",
         "options": {}
       },
-      "id": "e0fdb4b6-4ba5-4fc6-867e-2de41abd3d65",
+      "id": "ffe4f048-4cf1-4967-896e-4a3eef890ee5",
       "name": "返回阶段JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [528, 128]
+      "position": [
+        912,
+        0
+      ]
     },
     {
       "parameters": {
@@ -53,11 +49,14 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "f4ce9941-42be-432d-9966-2b766a833610",
+      "id": "f4d801da-7376-4ab3-aa06-376b044262e5",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [-384, 128],
+      "position": [
+        0,
+        0
+      ],
       "webhookId": "course-phase-regen-01"
     },
     {
@@ -66,8 +65,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-176, 128],
-      "id": "a384a546-42fa-4b2b-8177-4274b90694fb",
+      "position": [
+        208,
+        0
+      ],
+      "id": "0581bd6e-9388-4915-8b9e-1523ac1b8a6e",
       "name": "参数组装"
     },
     {
@@ -78,8 +80,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
-      "position": [32, 128],
-      "id": "b91e69c6-a80d-45cc-af0b-2e049a68dbf0",
+      "position": [
+        416,
+        0
+      ],
+      "id": "e42aeca9-a3d4-4044-ab6f-561c0712c89a",
       "name": "Basic LLM Chain"
     }
   ],
@@ -100,8 +105,13 @@
             "age": "7-9岁",
             "duration": "60分钟",
             "scale": "9-15人",
-            "vocabulary": ["apple", "orange"],
-            "grammar": ["Can I have your apple/orange, please?"],
+            "vocabulary": [
+              "apple",
+              "orange"
+            ],
+            "grammar": [
+              "Can I have your apple/orange, please?"
+            ],
             "theme": "森林探险",
             "requirements": "",
             "currentCourseData": {}
@@ -116,11 +126,6 @@
     ]
   },
   "connections": {
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        []
-      ]
-    },
     "OpenAI Chat Model": {
       "ai_languageModel": [
         [
@@ -171,10 +176,10 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "a1b2c3d4-be01-4b28-b964-f8e94bcf93ce",
+  "versionId": "64aa0b53-c537-469f-b2f0-5bc2fe5c6c5e",
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
   },
+  "id": "VN4S7wtGBgCcTPFR",
   "tags": []
 }

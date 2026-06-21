@@ -54,7 +54,10 @@ const colors = {
 };
 
 const CourseOverviewPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isChinese = !i18n.language?.startsWith('en');
+  const aiLanguage = isChinese ? 'zh' : 'en';
+  const outputLanguage = isChinese ? 'Chinese' : 'English';
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -75,6 +78,8 @@ const CourseOverviewPage = () => {
     setIsRegenerating(true);
     try {
       const payload = {
+        language: aiLanguage,
+        outputLanguage,
         age: courseData.age_group || '7-9岁',
         duration: courseData.duration || '60分钟',
         scale: courseData.capacity || courseData.unit || '9-15人',
@@ -135,6 +140,8 @@ const CourseOverviewPage = () => {
     setIsGeneratingCourse(true);
     try {
       const payload = {
+        language: aiLanguage,
+        outputLanguage,
         age: courseData.age_group || '7-9岁',
         duration: courseData.duration || '60分钟',
         scale: courseData.capacity || courseData.unit || '9-15人',

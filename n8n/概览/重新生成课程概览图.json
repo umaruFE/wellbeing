@@ -1,0 +1,179 @@
+{
+  "name": "重新生成课程概览图",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-theme-image-generator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "05edb5a8-fdc5-46f1-9204-606b59726e06",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -192
+      ],
+      "webhookId": "course-theme-image-gen-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取 Webhook 传来的参数\nconst input = $input.item.json.body || {};\n// 如果 Webhook 传了 themeImagePrompt 就用传来的，否则用默认的测试提示词\nconst imagePrompt = input.themeImagePrompt || \"cj_vector_style, 扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，角色的符号化表情，干净亲和的美学，沉浸式叙事扁平背景\";\n\n// 2. 生成随机种子\nconst seed = Math.floor(Math.random() * 1000000000000);\n\n// 3. 构建你的 aa.json 工作流\nconst workflow = {\n  \"1\": {\n    \"inputs\": {\n      \"unet_name\": \"z_image_turbo_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\"\n  },\n  \"2\": {\n    \"inputs\": {\n      \"vae_name\": \"ae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\"\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_3_4b.safetensors\",\n      \"type\": \"lumina2\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\"\n  },\n  \"4\": {\n    \"inputs\": {\n      \"shift\": 3,\n      \"model\": [ \"1\", 0 ]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\"\n  },\n  \"5\": {\n    \"inputs\": {\n      \"width\": 1968,\n      \"height\": 1152,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptySD3LatentImage\"\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": \"blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients\",\n      \"clip\": [ \"3\", 0 ]\n    },\n    \"class_type\": \"CLIPTextEncode\"\n  },\n  \"101\": {\n    \"inputs\": {\n      \"lora_name\": \"poppy.safetensors\",\n      \"strength_model\": 0.8,\n      \"strength_clip\": 1,\n      \"model\": [ \"4\", 0 ],\n      \"clip\": [ \"3\", 0 ]\n    },\n    \"class_type\": \"LoraLoader\"\n  },\n  \"102\": {\n    \"inputs\": {\n      \"text\": imagePrompt, // <--- 动态替换为 Webhook 参数\n      \"clip\": [ \"101\", 1 ]\n    },\n    \"class_type\": \"CLIPTextEncode\"\n  },\n  \"103\": {\n    \"inputs\": {\n      \"seed\": seed, // <--- 动态替换为随机种子\n      \"steps\": 20,\n      \"cfg\": 1.5,\n      \"sampler_name\": \"euler\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [ \"101\", 0 ],\n      \"positive\": [ \"102\", 0 ],\n      \"negative\": [ \"7\", 0 ],\n      \"latent_image\": [ \"5\", 0 ]\n    },\n    \"class_type\": \"KSampler\"\n  },\n  \"104\": {\n    \"inputs\": {\n      \"samples\": [ \"103\", 0 ],\n      \"vae\": [ \"2\", 0 ]\n    },\n    \"class_type\": \"VAEDecode\"\n  },\n  \"105\": {\n    \"inputs\": {\n      \"filename_prefix\": \"Asset_Poppy\",\n      \"images\": [ \"104\", 0 ]\n    },\n    \"class_type\": \"SaveImage\"\n  }\n};\n\n// 4. 【关键修复】不要使用 JSON.stringify！并将 workflow 包裹在 prompt 字段中\nreturn { \n  comfyuiPayload: {\n    \"prompt\": workflow\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -192
+      ],
+      "id": "04dc9f93-f736-484a-9eb4-74546bb35ba4",
+      "name": "构建图片工作流"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/prompt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.comfyuiPayload}}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1104,
+        -192
+      ],
+      "id": "7ba40123-a3b3-4554-bdcd-d05f2eb07ece",
+      "name": "提交ComfyUI任务"
+    },
+    {
+      "parameters": {
+        "jsCode": "const promptId = $input.item.json.prompt_id;\nconst comfyUrl = \"https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com\";\nconst maxAttempts = 600;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  await new Promise(r => setTimeout(r, 3000));\n  try {\n    const res = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${comfyUrl}/history/${promptId}`,\n      json: true\n    });\n    \n    const taskData = Object.values(res)[0];\n    \n    if (taskData && taskData.outputs) {\n      let images = [];\n      // 动态遍历所有 output 节点，寻找里面包含 images 数组的节点\n      for (const nodeId in taskData.outputs) {\n        if (taskData.outputs[nodeId].images && taskData.outputs[nodeId].images.length > 0) {\n          images = taskData.outputs[nodeId].images;\n          break; // 找到图片就立刻停止遍历\n        }\n      }\n\n      // 如果找到了图片，就拼接 URL 并返回\n      if (images.length > 0) {\n        const img = images[0];\n        const imageUrl = `${comfyUrl}/view?filename=${img.filename}&subfolder=${img.subfolder || ''}&type=${img.type || 'output'}`;\n        return { themeImageUrl: imageUrl };\n      }\n    }\n    \n    if (taskData?.status?.status_str === 'error') {\n      return { themeImageUrl: null, error: '图片生成失败(ComfyUI内部报错)' };\n    }\n  } catch (e) {\n    console.log(\"轮询报错，继续重试:\", e.message);\n  }\n}\n\nreturn { themeImageUrl: null, error: '图片生成超时' };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1328,
+        -192
+      ],
+      "id": "872ae9e9-d9cb-4288-accf-0d7a0cadca24",
+      "name": "等待图片完成"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+        "options": {}
+      },
+      "id": "95efb3a6-e21e-46ee-a9c2-e37d4cb75870",
+      "name": "返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1536,
+        -192
+      ]
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "617"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "themeImagePrompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，画面无人物无文字，魔法森林场景：五颗不同颜色的发光宝石（红/蓝/黄/紫/绿）散落在风格化的树木、花朵、溪流和石阵之间，远处有一道淡淡的彩虹轮廓，柔和的光线从树冠洒下，整体色调温暖治愈。"
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/course-theme-image-generator",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "构建图片工作流",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "构建图片工作流": {
+      "main": [
+        [
+          {
+            "node": "提交ComfyUI任务",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提交ComfyUI任务": {
+      "main": [
+        [
+          {
+            "node": "等待图片完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待图片完成": {
+      "main": [
+        [
+          {
+            "node": "返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6199b564-4cdf-4177-93f7-bfd6bbf6ca2f",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "LvH22pvHG5oZdSDs",
+  "tags": []
+}

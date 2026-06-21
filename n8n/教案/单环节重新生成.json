@@ -3,19 +3,6 @@
   "nodes": [
     {
       "parameters": {
-        "jsonSchemaExample": "{\n  \"step\": {\n    \"id\": \"string\",\n    \"time\": \"string\",\n    \"title\": \"string\",\n    \"objective\": \"string\",\n    \"activity\": \"string\",\n    \"activitySteps\": \"string\",\n    \"script\": \"string\",\n    \"resources\": \"string\",\n    \"scenario\": \"string\",\n    \"assets\": [\n      {\n        \"id\": \"string\",\n        \"type\": \"string\",\n        \"title\": \"string\",\n        \"prompt\": \"string\"\n      }\n    ]\n  }\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        608,
-        208
-      ],
-      "id": "20bf254b-8672-44e4-98e1-79e775b705ae",
-      "name": "Structured Output Parser"
-    },
-    {
-      "parameters": {
         "model": {
           "__rl": true,
           "mode": "list",
@@ -29,10 +16,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        352,
-        208
+        1424,
+        272
       ],
-      "id": "9e985fe6-3304-41f3-bb76-45f11b409304",
+      "id": "d4392581-fb0b-4a6d-a141-f79716a4a546",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -46,13 +33,13 @@
         "respondWith": "allIncomingItems",
         "options": {}
       },
-      "id": "30b4200f-52bf-41a7-aa20-6bd37290a6fe",
+      "id": "2d1e7903-06ac-4048-b9d3-ca0663347052",
       "name": "返回步骤JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1120,
-        0
+        2192,
+        64
       ]
     },
     {
@@ -62,13 +49,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "43be07e5-633f-4e38-8f82-608e4a583ce2",
+      "id": "e1243544-c2db-46be-a43d-a0eae84c8f80",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        0,
-        0
+        1072,
+        64
       ],
       "webhookId": "course-step-regen-01"
     },
@@ -79,10 +66,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        208,
-        0
+        1280,
+        64
       ],
-      "id": "ad5758eb-0db1-46fa-846b-7f0ac21f76dc",
+      "id": "83b41ebc-c68b-4b08-a8c3-c0a010ce77d2",
       "name": "参数组装"
     },
     {
@@ -94,10 +81,10 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        416,
-        0
+        1488,
+        64
       ],
-      "id": "189651c6-31ba-4e8b-89a4-6d95a3aa3da3",
+      "id": "382939ac-f062-42a4-affd-73ff8d36db55",
       "name": "Basic LLM Chain"
     },
     {
@@ -107,10 +94,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        912,
-        0
+        1984,
+        64
       ],
-      "id": "e8c7b0a9-5d3f-4a2e-8c61-1f9d0e8a4b2c",
+      "id": "52c9c133-0e8c-4c58-b265-e7c055c96d41",
       "name": "补充缺失字段"
     }
   ],
@@ -174,17 +161,6 @@
         ]
       ]
     },
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "ai_outputParser",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Webhook": {
       "main": [
         [
@@ -235,7 +211,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "14236d91-4b08-4a44-a067-1a9be7a9555f",
+  "versionId": "520415e4-cb35-4a87-adae-2730e17325da",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"

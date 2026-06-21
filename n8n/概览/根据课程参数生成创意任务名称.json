@@ -1,0 +1,150 @@
+{
+  "name": "根据课程参数生成创意任务名称",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "course-idea-generator",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "17605927-44dd-491c-a48c-10c7c92dfb7b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "course-idea-gen-01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json.body;\n\nreturn {\n  courseTitle: input.courseTitle || '未命名课程',\n  age: input.age || '7-9岁',\n  duration: input.duration || '60分钟',\n  scale: input.scale || '9-15人',\n  vocabulary: (input.vocabulary && input.vocabulary.length > 0)\n    ? (Array.isArray(input.vocabulary) ? input.vocabulary.join(', ') : input.vocabulary)\n    : '请根据主题推荐词汇',\n  grammar: (input.grammar && input.grammar.length > 0)\n    ? (Array.isArray(input.grammar) ? input.grammar.join(', ') : input.grammar)\n    : '请根据主题推荐句型',\n  skills: (input.skills && input.skills.length > 0)\n    ? (Array.isArray(input.skills) ? input.skills.join(', ') : input.skills)\n    : '',\n  paths: (input.paths && input.paths.length > 0)\n    ? (Array.isArray(input.paths) ? input.paths.join(', ') : input.paths)\n    : '',\n  theme: input.theme || '',\n  taskName: input.taskName || '',\n  storyContext: input.storyContext || '',\n  keyOutcome: input.keyOutcome || ''\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "aa551141-5b25-4b87-ae39-c203693b89f6",
+      "name": "参数组装"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=# Role\n你是一位拥有15年经验的资深儿童英语课程设计师，擅长将 SEL 和 PERMA 融入儿童英语教学，尤其擅长把词汇、句型和语言能力目标转化为有故事感、有任务驱动的课堂情境。\n\n# Task\n根据输入的课程参数，生成一个严格基于学生年龄、课程时长、班级规模、核心词汇、核心句型和语言能力侧重的创意情境任务，包括任务名称、故事情境和终极产出。\n\n生成内容必须服务于语言学习目标，而不是只生成一个泛泛的冒险故事。\n\n# Input\n- 课程名称：{{ $json.courseTitle }}\n- 学生年龄：{{ $json.age }}\n- 课程时长：{{ $json.duration }}\n- 班级规模：{{ $json.scale }}\n- 核心词汇：{{ $json.vocabulary }}\n- 核心句型：{{ $json.grammar }}\n- 侧重能力：{{ $json.skills }}\n- 体验路径：{{ $json.paths }}\n- 已有任务名称：{{ $json.taskName }}\n- 已有故事情境：{{ $json.storyContext }}\n- 已有终极产出：{{ $json.keyOutcome }}\n\n# Design Priority\n请严格按照以下优先级生成内容：\n\n1. 核心词汇\n必须优先围绕核心词汇设计角色、场景、问题、线索或任务物品。\n如果核心词汇不为空，故事情境和终极产出必须自然体现这些词汇的使用场景。\n\n2. 核心句型\n必须设计一个“学生需要使用核心句型才能完成任务”的真实交流需求。\n如果核心句型不为空，终极产出必须明确要求学生使用这些句型进行表达、展示、问答、采访、汇报或表演。\n\n3. 语言能力侧重\n如果侧重能力包含“听力理解”，任务中应包含听取线索、辨认信息或听后行动。\n如果侧重能力包含“口语表达”，任务中应包含角色扮演、展示、问答或小组汇报。\n如果侧重能力包含“阅读理解”，任务中应包含阅读线索卡、任务单、地图、提示语或短文本。\n如果侧重能力包含“书面表达”，任务中应包含写句子、制作卡片、填写报告、海报文案或短篇创作。\n如果侧重能力包含“综合能力”，任务中应融合听、说、读、写中的至少两种。\n\n4. 学生年龄\n任务难度、故事复杂度和产出形式必须适合学生年龄。\n3-6岁：更具体、更游戏化，产出可偏表演、贴纸、图卡、动作回应。\n7-9岁：可加入小组合作、简单调查、海报、任务地图、角色台词。\n9-12岁：可加入推理、采访、设计方案、短报告、项目展示。\n\n5. 课程时长和班级规模\n课程时长较短时，任务应更聚焦，终极产出不能过重。\n班级规模较小时，可设计更多个人表达或角色轮换。\n班级规模较大时，应适合小组分工、快速展示或站点式任务。\n\n# Requirements\n- 如果已有任务名称、故事情境或终极产出不为空，请基于已有内容进行创意扩展和优化，而非完全替换。\n- 如果已有内容为空，请自主生成一个全新且富有想象力的创意。\n- 任务名称：简短有吸引力，中英文结合，3-15字，能激发孩子好奇心，并尽量呼应核心词汇或核心句型的使用场景。\n- 故事情境：按【角色】-【场景】-【问题/需求】-【要做的关键事】思路展开，100-200字。\n- 故事情境必须自然嵌入核心词汇对应的物品、动作、情绪、角色、地点或问题。\n- 故事情境必须说明为什么学生需要使用核心句型来完成交流或解决问题。\n- 终极产出：具体可操作，与任务名称和情境紧密关联。\n- 终极产出必须明确说明学生将如何使用核心词汇和核心句型完成作品、展示、表演、调查、海报、地图、卡片、广播、采访或报告。\n- 如果核心词汇为空，才允许 AI 自主推荐适合主题和年龄的词汇。\n- 如果核心句型为空，才允许 AI 自主推荐适合主题和年龄的句型。\n- 禁止生成与核心词汇、核心句型、语言能力侧重无关的泛泛故事。\n- 禁止只写“完成创意作品”“进行展示”这种空泛产出，必须写清楚作品是什么、学生说什么或做什么。\n\n# SEL / PERMA Integration\n请自然融入一个 SEL 或 PERMA 成长点，但不要喧宾夺主。\n例如：合作、情绪识别、同理心、自信表达、积极关系、投入感、成就感、意义感。\n成长点必须服务于任务，不要写成独立口号。\n\n# Output Constraint\n- 必须且仅输出有效的 JSON 格式数据。\n- 严禁包含任何 Markdown 代码块标签或首尾解释性文字。\n- 严禁在 JSON 外输出解释。\n- JSON 字符串必须使用英文双引号。\n- 不要输出数组，不要嵌套到其他字段中。\n\n### 输出格式：\n{\n  \"taskName\": \"创意任务名称，需呼应核心词汇或核心句型\",\n  \"storyContext\": \"故事情境描述，必须基于学生年龄、核心词汇、核心句型和语言能力侧重生成，并包含真实交流需求\",\n  \"keyOutcome\": \"终极产出/作品描述，必须说明学生如何使用核心词汇和核心句型完成作品或展示\"\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        0
+      ],
+      "id": "7998e723-0ee2-4f12-9a69-77ab88c17f2f",
+      "name": "创意生成"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "maxTokens": 2048
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        208
+      ],
+      "id": "60a113c3-fc92-4e59-8217-f9695dc5d967",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
+        "options": {}
+      },
+      "id": "53064150-fd8a-4c53-9205-809cbb8d8313",
+      "name": "返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        784,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "参数组装",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "参数组装": {
+      "main": [
+        [
+          {
+            "node": "创意生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "创意生成",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "创意生成": {
+      "main": [
+        [
+          {
+            "node": "返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f458882d-294b-4481-aea8-f3d14bfbe958",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "HO54KmIa6vCO0Zdy",
+  "tags": []
+}

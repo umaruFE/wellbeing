@@ -7,8 +7,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
       "typeVersion": 1.3,
-      "position": [224, 336],
-      "id": "c179f425-6c14-44e8-916d-73979eecc702",
+      "position": [
+        608,
+        224
+      ],
+      "id": "85bb83f1-4320-4c9d-8dab-0eb05c46911d",
       "name": "Structured Output Parser"
     },
     {
@@ -25,12 +28,15 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [-32, 336],
-      "id": "d289ddb4-2390-4d29-a7b4-c4db00223935",
+      "position": [
+        352,
+        224
+      ],
+      "id": "43f5f237-5857-4a6d-a740-c520f33ac410",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "EPHUtiZYNuQoGVK2",
+          "id": "EPHUtiZYNuqoGVK2",
           "name": "deepseek"
         }
       }
@@ -40,11 +46,14 @@
         "respondWith": "allIncomingItems",
         "options": {}
       },
-      "id": "e3fdb4b6-4ba5-4fc6-867e-2de41abd3e76",
+      "id": "9779c06c-d6fb-4070-af38-11703d51ee9c",
       "name": "返回步骤JSON",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [528, 128]
+      "position": [
+        912,
+        16
+      ]
     },
     {
       "parameters": {
@@ -53,11 +62,14 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "a5ce9941-42be-432d-9966-2b766a833721",
+      "id": "1df8807e-54aa-4b1a-b41b-fda593080463",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [-384, 128],
+      "position": [
+        0,
+        16
+      ],
       "webhookId": "course-step-gen-01"
     },
     {
@@ -66,8 +78,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-176, 128],
-      "id": "b494a546-42fa-4b2b-8177-4274b906950c",
+      "position": [
+        208,
+        16
+      ],
+      "id": "80c61ddf-88a8-4a27-a2e1-a23837dbd3f1",
       "name": "参数组装"
     },
     {
@@ -78,8 +93,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
-      "position": [32, 128],
-      "id": "c02e69c6-a80d-45cc-af0b-2e049a68dcf1",
+      "position": [
+        416,
+        16
+      ],
+      "id": "c5f040a7-f901-446a-9fae-11c5b8140879",
       "name": "Basic LLM Chain"
     }
   ],
@@ -100,11 +118,21 @@
             "age": "7-9岁",
             "duration": "60分钟",
             "scale": "9-15人",
-            "vocabulary": ["apple", "orange"],
-            "grammar": ["Can I have your apple/orange, please?"],
+            "vocabulary": [
+              "apple",
+              "orange"
+            ],
+            "grammar": [
+              "Can I have your apple/orange, please?"
+            ],
             "theme": "森林探险",
             "existingStepCount": 1,
-            "currentSteps": [{"title": "神秘派对邀请", "time": "5-10分钟"}],
+            "currentSteps": [
+              {
+                "title": "神秘派对邀请",
+                "time": "5-10分钟"
+              }
+            ],
             "otherPhases": {}
           },
           "webhookUrl": "http://117.50.218.161:5678/webhook/course-step-generator",
@@ -117,11 +145,6 @@
     ]
   },
   "connections": {
-    "Structured Output Parser": {
-      "ai_outputParser": [
-        []
-      ]
-    },
     "OpenAI Chat Model": {
       "ai_languageModel": [
         [
@@ -172,10 +195,11 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "b2c3d4e5-be01-4b28-b964-f8e94bcf94df",
+  "versionId": "3641b982-41c2-4f23-acb5-fd065b7493a3",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
   },
+  "id": "C5GEvHQETY3tYmSL",
   "tags": []
 }

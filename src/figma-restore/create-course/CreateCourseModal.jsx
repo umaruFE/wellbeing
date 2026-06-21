@@ -41,7 +41,10 @@ function getUser() {
 }
 
 export function CreateCourseModal({ open, onCancel, onSubmit }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isChinese = !i18n.language?.startsWith('en');
+  const aiLanguage = isChinese ? 'zh' : 'en';
+  const outputLanguage = isChinese ? 'Chinese' : 'English';
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
   const [ideaIndex, setIdeaIndex] = useState(-1);
@@ -73,6 +76,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     try {
       const values = form.getFieldsValue(true);
       const payload = {
+        language: aiLanguage,
+        outputLanguage,
         courseTitle: values.courseTitle,
         age: values.age,
         duration: values.duration,
@@ -117,6 +122,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     try {
       const values = form.getFieldsValue(['taskName', 'storyContext', 'keyOutcome', 'courseTitle']);
       const payload = {
+        language: aiLanguage,
+        outputLanguage,
         courseTitle: values.courseTitle || '',
         taskName: values.taskName?.trim() || '',
         storyContext: values.storyContext?.trim() || '',
@@ -166,6 +173,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       const attachments = (values.attachments || []).map(file => file.name).filter(Boolean);
 
       const n8nPayload = {
+        language: aiLanguage,
+        outputLanguage,
         courseTitle: values.courseTitle,
         age: values.age,
         duration: values.duration,

@@ -1,5 +1,5 @@
 {
-  "name": "course-content-polisher",
+  "name": "润色优化已有的任务名称",
   "nodes": [
     {
       "parameters": {
@@ -8,11 +8,14 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "c1d2e3f4-0001-4000-8000-000000000001",
+      "id": "361ac57a-b4bc-41b8-b724-ddbf13272e7b",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
-      "position": [200, 200],
+      "position": [
+        80,
+        0
+      ],
       "webhookId": "course-polish-01"
     },
     {
@@ -21,8 +24,11 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [420, 200],
-      "id": "c1d2e3f4-0002-4000-8000-000000000002",
+      "position": [
+        304,
+        0
+      ],
+      "id": "5bc857b2-093a-4424-95a0-f572c8f78f3b",
       "name": "参数组装"
     },
     {
@@ -33,8 +39,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
-      "position": [640, 200],
-      "id": "c1d2e3f4-0003-4000-8000-000000000003",
+      "position": [
+        528,
+        0
+      ],
+      "id": "240a3c94-2300-40ad-8571-e14a55b0124c",
       "name": "内容润色"
     },
     {
@@ -51,8 +60,11 @@
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
-      "position": [640, 400],
-      "id": "c1d2e3f4-0004-4000-8000-000000000004",
+      "position": [
+        528,
+        208
+      ],
+      "id": "b0539163-8083-4c1b-883a-bbf7a6501775",
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
@@ -67,30 +79,72 @@
         "responseBody": "={{ JSON.stringify({ success: true, data: $json }) }}",
         "options": {}
       },
-      "id": "c1d2e3f4-0005-4000-8000-000000000005",
+      "id": "bd24d5b9-2ff1-4368-a3f6-96f37f360c58",
       "name": "返回结果",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
-      "position": [860, 200]
+      "position": [
+        848,
+        0
+      ]
     }
   ],
+  "pinData": {},
   "connections": {
     "Webhook": {
-      "main": [[{ "node": "参数组装", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "参数组装",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "参数组装": {
-      "main": [[{ "node": "内容润色", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "内容润色",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "OpenAI Chat Model": {
-      "ai_languageModel": [[{ "node": "内容润色", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "内容润色",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "内容润色": {
-      "main": [[{ "node": "返回结果", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
-  }
+  },
+  "versionId": "0868742e-11cc-4ef4-ba7d-47daf14a8c9f",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "3TAcqd58sbSDQUF9",
+  "tags": []
 }

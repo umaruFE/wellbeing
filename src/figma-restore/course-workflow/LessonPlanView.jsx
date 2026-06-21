@@ -339,6 +339,8 @@ function getAuthHeaders() {
 export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext }) {
   const { t, i18n } = useTranslation();
   const isChinese = !i18n.language?.startsWith('en');
+  const aiLanguage = isChinese ? 'zh' : 'en';
+  const outputLanguage = isChinese ? 'Chinese' : 'English';
   const [addForm] = Form.useForm();
   const [data, setData] = React.useState(emptyPhases);
   const [loading, setLoading] = React.useState(true);
@@ -416,7 +418,11 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         const response = await fetch('/api/ai/generate-course', {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify(buildLessonN8nPayload(course)),
+          body: JSON.stringify({
+            ...buildLessonN8nPayload(course),
+            language: aiLanguage,
+            outputLanguage,
+          }),
         });
         const result = await response.json();
 
@@ -680,6 +686,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         headers: getAuthHeaders(),
         body: JSON.stringify({
           phaseKey: longPhaseKey(phase.key),
+          language: aiLanguage,
+          outputLanguage,
           stepId: `${longPhaseKey(phase.key)}-draft`,
           title: course?.courseTitle || course?.title || '',
           age: course?.ageGroup || course?.age || '7-9岁',
@@ -807,6 +815,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         headers: getAuthHeaders(),
         body: JSON.stringify({
           phaseKey: longPhaseKey(phaseKey),
+          language: aiLanguage,
+          outputLanguage,
           title: course?.courseTitle || course?.title || '',
           age: course?.ageGroup || course?.age || '7-9岁',
           duration: course?.duration || '60分钟',
@@ -845,6 +855,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         headers: getAuthHeaders(),
         body: JSON.stringify({
           ...buildLessonN8nPayload(course),
+          language: aiLanguage,
+          outputLanguage,
           regenerate: true,
           currentCourseData: dataToCoursePhases(data),
         }),
@@ -891,6 +903,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         headers: getAuthHeaders(),
         body: JSON.stringify({
           phaseKey: longPhaseKey(phaseKey),
+          language: aiLanguage,
+          outputLanguage,
           title: course?.courseTitle || course?.title || '',
           age: course?.ageGroup || course?.age || '7-9岁',
           duration: course?.duration || '60分钟',
@@ -945,6 +959,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
         headers: getAuthHeaders(),
         body: JSON.stringify({
           phaseKey: longPhaseKey(phaseKey),
+          language: aiLanguage,
+          outputLanguage,
           stepId: currentStep?.id,
           title: course?.courseTitle || course?.title || '',
           age: course?.ageGroup || course?.age || '7-9岁',

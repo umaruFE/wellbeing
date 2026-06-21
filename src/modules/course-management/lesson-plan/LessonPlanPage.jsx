@@ -171,7 +171,8 @@ const normalizeStep = (step) => ({
 });
 
 const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isChinese = !i18n.language?.startsWith('en');
   const { user } = useAuth();
   const [viewMode, setViewMode] = useState('map');
   const [activeMapPhase, setActiveMapPhase] = useState(null);
@@ -284,6 +285,8 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   };
 
   const buildBasePayload = () => ({
+    language: isChinese ? 'zh' : 'en',
+    outputLanguage: isChinese ? 'Chinese' : 'English',
     title: courseData?.title || '',
     age: courseData?.age_group || '7-9岁',
     duration: courseData?.duration || '60分钟',

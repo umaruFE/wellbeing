@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, Check, Loader2 } from 'lucide-react';
 import { colors, typography, shadows } from '../theme/theme';
 
 const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
+  const { i18n } = useTranslation();
+  const isChinese = !i18n.language?.startsWith('en');
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     age: '7-9岁',
@@ -57,7 +60,13 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
     if (submitting) return;
     setSubmitting(true);
     const user = getUser();
-    const payload = { ...data, userId: user?.id || null, organizationId: user?.organization_id || null };
+    const payload = {
+      ...data,
+      language: isChinese ? 'zh' : 'en',
+      outputLanguage: isChinese ? 'Chinese' : 'English',
+      userId: user?.id || null,
+      organizationId: user?.organization_id || null
+    };
 
     try {
       const response = await fetch('/api/ai/generate-course-overview', {

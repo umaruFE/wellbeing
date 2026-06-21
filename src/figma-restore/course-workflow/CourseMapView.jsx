@@ -171,6 +171,8 @@ function hasCompleteJourney(journey) {
 export function CourseMapView({ course, onCourseChange, onNext }) {
   const { t, i18n } = useTranslation();
   const isChinese = !i18n.language?.startsWith('en');
+  const aiLanguage = isChinese ? 'zh' : 'en';
+  const outputLanguage = isChinese ? 'Chinese' : 'English';
   const [editForm] = Form.useForm();
   const [regenForm] = Form.useForm();
   const [editOpen, setEditOpen] = React.useState(false);
@@ -217,6 +219,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     const user = getUser();
 
     const n8nPayload = {
+      language: aiLanguage,
+      outputLanguage,
       courseTitle: values.courseTitle,
       age: values.age,
       duration: values.duration,
@@ -316,6 +320,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         body: JSON.stringify({
           courseId: course.id,
           themeImagePrompt,
+          language: aiLanguage,
+          outputLanguage,
         }),
       });
       const result = await response.json();
@@ -345,6 +351,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         headers: getAuthHeaders(),
         body: JSON.stringify({
           courseOverview: course.courseOverview || null,
+          language: aiLanguage,
+          outputLanguage,
           courseTitle: course.courseTitle || course.title || map.title,
           age: course.age || map.age,
           duration: course.duration || map.duration,
@@ -411,6 +419,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           requirements: course.specialRequirements || '',
           attachments: toArray(course.attachments),
           adjustments: request || '',
+          language: aiLanguage,
+          outputLanguage,
           existingOverview: course.courseOverview || null,
           userId: user?.id || course.userId || null,
           organizationId: user?.organizationId || user?.organization_id || course.organizationId || null,
