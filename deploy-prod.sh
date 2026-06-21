@@ -11,18 +11,21 @@ echo "========================================"
 echo "🚀 开始部署 Wellbeing 系统..."
 echo "========================================"
 
-echo "📦 [1/4] 正在检查并安装前端依赖..."
+echo "📦 [1/5] 正在检查并安装前端依赖..."
 cd "$FRONTEND_DIR"
 npm install
 
-echo "🏗️  [2/4] 正在构建前端 (Vite Build)..."
+echo "🧹 [2/5] 正在清理旧的构建产物..."
+rm -rf "$FRONTEND_DIR/dist"
+
+echo "🏗️  [3/5] 正在构建前端 (Vite Build)..."
 npm run build
 
-echo "📦 [3/4] 正在检查并安装后端依赖..."
+echo "📦 [4/5] 正在检查并安装后端依赖..."
 cd "$API_DIR"
 npm install
 
-echo "🏗️  [4/4] 正在构建后端 (Next.js Build)..."
+echo "🏗️  [5/5] 正在构建后端 (Next.js Build)..."
 npm run build
 
 echo "🔄 正在重启后台服务..."
@@ -33,5 +36,5 @@ echo "========================================"
 echo "✅ 部署完成！"
 echo "🌐 前端静态文件: $NGINX_WWW_DIR/"
 echo "🔧 后端 API:     pm2 wellbeing-api (端口 4000)"
-echo "🌍 访问地址:     http://localhost:5174"
+echo "🌍 访问地址:     http://localhost:80"
 echo "========================================"
