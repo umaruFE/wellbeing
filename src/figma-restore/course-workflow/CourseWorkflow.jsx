@@ -235,9 +235,21 @@ export function CourseWorkflow({ initialCourse, onBack }) {
         saveCourseMap(latestCourseRef.current),
         latestPptCanvasRef.current ? savePptCanvas(latestPptCanvasRef.current) : Promise.resolve(),
       ]);
-      await apiService.updateCourse(courseId, { status: 'published' });
-      setCourse((currentCourse) => ({ ...currentCourse, status: 'published' }));
-      message.success(t('course.publishSuccess'));
+      await apiService.updateCourse(courseId, { status: 'published', isPublic: true });
+      setCourse((currentCourse) => ({
+        ...currentCourse,
+        status: 'published',
+        isPublic: true,
+        is_public: true,
+      }));
+      window.setTimeout(() => {
+        message.open({
+          key: 'course-publish-success',
+          type: 'success',
+          content: t('course.publishSuccess') || '发布成功！',
+          duration: 2.5,
+        });
+      }, 0);
     } catch (error) {
       console.error('发布课程失败:', error);
       message.error(error?.message || t('course.publishFailed'));
