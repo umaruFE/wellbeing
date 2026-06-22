@@ -242,6 +242,26 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     elevate: savedJourney.elevate || fallbackJourney.elevate,
   };
 
+  const themeImagePrompt = React.useMemo(() => {
+    const directPrompt = [
+      map.themeImagePrompt,
+      course.themeImagePrompt,
+      course.courseData?.themeImagePrompt,
+      course.course_data?.themeImagePrompt,
+      course.courseData?.courseOverview?.themeImagePrompt,
+      course.course_data?.courseOverview?.themeImagePrompt,
+    ].find((item) => String(item || '').trim());
+
+    if (directPrompt) return directPrompt;
+
+    return [
+      `Create a clear course cover illustration for "${map.title || course.title || course.courseTitle || 'Course'}".`,
+      `Scene: ${map.storyline || course.storyContext || course.theme || 'an engaging classroom mission'}.`,
+      `Learning output: ${map.keyOutcome || course.keyOutcome || 'students complete a creative learning task'}.`,
+      'Style: child-friendly, bright, suitable for a PPT course map cover, no text in the image.',
+    ].join('\n');
+  }, [course, map.keyOutcome, map.storyline, map.themeImagePrompt, map.title]);
+
   const openEdit = () => {
     editForm.setFieldsValue({
       courseTitle: map.title,
@@ -353,10 +373,6 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   };
 
   const handleRegenImage = async () => {
-    const themeImagePrompt = map.themeImagePrompt;
-    if (!themeImagePrompt) {
-      return;
-    }
     setRegenImage(true);
     try {
       const token = localStorage.getItem('token');
@@ -609,7 +625,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   <Button
                     icon={<RefreshCw size={16} />}
                     loading={regenImage}
-                    disabled={regenImage || !map.themeImagePrompt}
+                    disabled={regenImage}
                     onClick={handleRegenImage}
                   >
                     {regenImage ? t('workflow.map.generating') : t('workflow.map.regenerate')}

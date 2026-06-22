@@ -353,7 +353,6 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
 .view-map-active .fr-editor-tb .fr-task-button{height:32px;min-width:105px;margin-right:13px;border:2px solid #333e4e;border-radius:999px;background:#fff;box-shadow:none;color:#333e4e;padding:0 12px}
 .view-map-active .fr-editor-tb .fr-task-button .task-dot{background:#333e4e}
 .view-map-active .fr-editor-tb .fr-task-button .task-text{color:#333e4e;font-weight:700}
-.view-map-active .fr-save-btn.ant-btn{display:none}
 .view-map-active .fr-export-btn.ant-btn,.view-map-active .fr-publish-btn.ant-btn{height:36px!important;min-width:60px!important;border:2px solid #333e4e!important;border-radius:8px!important;box-shadow:none!important;color:#333e4e!important;font-size:14px!important;font-weight:800!important;padding:0 16px!important}
 .view-map-active .fr-export-btn.ant-btn{background:#dfe2bb!important;margin-right:12px}
 .view-map-active .fr-publish-btn.ant-btn{background:#f6e6cc!important}

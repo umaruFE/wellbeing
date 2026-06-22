@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Plus } from 'lucide-react';
 import { CreateCourseModal } from '../create-course';
@@ -56,11 +56,28 @@ export function CourseManagement({
   const [createOpen, setCreateOpen] = useState(false);
   const [workflowCourse, setWorkflowCourse] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
+  const suppressRouteStateRef = React.useRef(false);
+
+  const clearRouteState = useCallback(() => {
+    if (!location.state) return;
+    navigate(`${location.pathname}${location.search}`, { replace: true, state: null });
+  }, [location.pathname, location.search, location.state, navigate]);
 
   useEffect(() => {
+    if (!location.state) {
+      suppressRouteStateRef.current = false;
+      return;
+    }
+
+    if (suppressRouteStateRef.current) {
+      clearRouteState();
+      return;
+    }
+
     if (location.state?.openCourse && !workflowCourse) {
       setWorkflowCourse(location.state.openCourse);
-      window.history.replaceState({}, '');
+      clearRouteState();
       return;
     }
 
@@ -92,9 +109,15 @@ export function CourseManagement({
         themeImageUrl: values.themeImageUrl,
       };
       setWorkflowCourse(course);
-      window.history.replaceState({}, '');
+      clearRouteState();
     }
-  }, [location.state, workflowCourse, t]);
+  }, [clearRouteState, location.state, workflowCourse, t]);
+
+  const handleWorkflowBack = useCallback(() => {
+    suppressRouteStateRef.current = true;
+    setWorkflowCourse(null);
+    clearRouteState();
+  }, [clearRouteState]);
 
   const fetchCourses = useCallback(async (pageNum = 1, append = false) => {
     try {
@@ -241,7 +264,7 @@ export function CourseManagement({
     return (
       <CourseWorkflow
         initialCourse={workflowCourse}
-        onBack={() => setWorkflowCourse(null)}
+        onBack={handleWorkflowBack}
       />
     );
   }

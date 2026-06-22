@@ -206,7 +206,12 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   }, [current, saveCourseMap, savePptCanvas]);
 
   const content = [
-    <CourseMapView key="map" course={course} onCourseChange={handleCourseChange} onNext={() => setCurrent(1)} />,
+    <CourseMapView
+      key="map"
+      course={course}
+      onCourseChange={handleCourseChange}
+      onNext={() => setCurrent(1)}
+    />,
     <LessonPlanView key="lesson" course={course} phases={phases} onPhasesChange={setPhases} onNext={() => setCurrent(2)} />,
     <PptCoursewareView
       key="ppt"
