@@ -14,6 +14,33 @@ import { phaseTemplates, readingTemplates, workflowSteps } from './workflowData'
 import '../Header.css';
 import './CourseWorkflow.css';
 
+function phasesToCourseDataObject(nextPhases = []) {
+  const phaseKeyMap = { eng: 'engage', emp: 'empower', exc: 'execute', elv: 'elevate' };
+  return nextPhases.reduce((acc, phase) => {
+    const longKey = phaseKeyMap[phase.key] || phase.key;
+    if (!longKey) return acc;
+    acc[longKey] = {
+      title: phase.title,
+      steps: (phase.steps || []).map((step) => ({
+        id: step.id,
+        title: step.title,
+        time: step.duration,
+        duration: step.duration,
+        objective: step.goal,
+        goal: step.goal,
+        activity: step.activity,
+        activitySteps: step.flow,
+        flow: step.flow,
+        resources: step.resources,
+        scenario: step.scenario,
+        script: step.teacherScript,
+        teacherScript: step.teacherScript,
+      })),
+    };
+    return acc;
+  }, {});
+}
+
 export function CourseWorkflow({ initialCourse, onBack }) {
   const { t } = useTranslation();
   const [current, setCurrent] = React.useState(0);
@@ -158,14 +185,23 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   }, []);
 
   const mergePhasesIntoCourse = React.useCallback((nextPhases) => {
+    const phaseObject = phasesToCourseDataObject(nextPhases);
     setPhases(nextPhases);
-    setCourse((currentCourse) => ({
-      ...currentCourse,
-      courseData: {
-        ...(currentCourse.courseData || currentCourse.course_data || {}),
-        courseData: nextPhases,
-      },
-    }));
+    setCourse((currentCourse) => {
+      const nextCourse = {
+        ...currentCourse,
+        courseData: {
+          ...(currentCourse.courseData || currentCourse.course_data || {}),
+          courseData: nextPhases,
+          ...phaseObject,
+        },
+      };
+      latestCourseRef.current = nextCourse;
+      return nextCourse;
+    });
+    courseDirtyVersionRef.current += 1;
+    setCourseSaveStatus('dirty');
+    setCourseSaveError('');
   }, []);
 
   const handlePptCanvasChange = React.useCallback((nextData, meta = {}) => {
