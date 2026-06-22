@@ -8,7 +8,7 @@ import { CourseCard } from './CourseCard';
 import { CourseToolbar } from './CourseToolbar';
 import { demoCourses } from './courseData';
 import apiService from '../../services/api';
-import { getCourseCoverUrl, getCourseData } from '../courseImages';
+import { getCourseCoverUrl, getCourseData, getCourseOverview, getDisplayCourseTitle } from '../courseImages';
 import './CourseManagement.css';
 
 function formatDuration(value, t) {
@@ -39,6 +39,13 @@ function formatClassSize(value, t) {
   }
 
   return text;
+}
+
+function pickFirst(...values) {
+  return values.find((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return value !== undefined && value !== null && String(value).trim() !== '';
+  });
 }
 
 export function CourseManagement({
@@ -132,15 +139,28 @@ export function CourseManagement({
       const pagination = result?.pagination || {};
       const mapped = list.map((course, i) => {
         const courseData = getCourseData(course);
+        const overview = getCourseOverview(course);
         const coverUrl = getCourseCoverUrl(course);
+        const title = getDisplayCourseTitle(course, t('dashboard.unnamedCourse'));
+        const rawAge = pickFirst(course.age_group, courseData?.age, courseData?.ageGroup);
+        const rawDuration = pickFirst(course.duration, courseData?.duration);
+        const rawClassSize = pickFirst(courseData?.classSize, course.unit, courseData?.scale);
+        const languageGoals = overview?.languageGoals || {};
+        const vocabularies = pickFirst(courseData?.vocabularies, courseData?.vocabulary, languageGoals.vocabulary, course.keywords, []);
+        const grammars = pickFirst(courseData?.grammars, courseData?.grammar, languageGoals.grammar, []);
+        const languageSkills = pickFirst(courseData?.languageSkills, courseData?.skills, []);
+        const experiencePaths = pickFirst(courseData?.experiencePaths, courseData?.paths, courseData?.experiencePath, []);
         return {
           id: course.id,
-          title: course.title || course.unit || t('dashboard.unnamedCourse'),
-          unit: course.unit || course.title || t('dashboard.unnamedCourse'),
+          title,
+          courseTitle: title,
+          unit: course.unit || title,
           status: course.status === 'published' ? 'published' : 'draft',
-          age: course.age_group || courseData?.age || '--',
-          grade: course.age_group ? `G${course.age_group.split('-')[0]}` : '--',
-          duration: formatDuration(course.duration || courseData?.duration, t),
+          age: rawAge || '--',
+          rawAge,
+          grade: rawAge ? `G${String(rawAge).split('-')[0]}` : '--',
+          duration: formatDuration(rawDuration, t),
+          rawDuration,
           theme: course.theme || t('course.scenarioTask'),
           updatedAt: course.created_at
             ? new Date(course.created_at).toLocaleDateString('zh-CN', {
@@ -151,17 +171,19 @@ export function CourseManagement({
           coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
           active: i === 0,
           courseData,
-          courseOverview: courseData?.courseOverview || null,
+          courseOverview: overview || courseData?.courseOverview || null,
           themeImageUrl: coverUrl,
           thumbnail: coverUrl,
-          classSize: formatClassSize(courseData?.classSize || course.unit, t),
-          vocabularies: courseData?.vocabularies || [],
-          grammars: courseData?.grammars || [],
-          languageSkills: courseData?.languageSkills || [],
-          experiencePath: courseData?.experiencePath || '',
+          classSize: formatClassSize(rawClassSize, t),
+          rawClassSize,
+          vocabularies,
+          grammars,
+          languageSkills,
+          experiencePaths,
+          experiencePath: courseData?.experiencePath || (Array.isArray(experiencePaths) ? experiencePaths[0] : experiencePaths) || '',
           taskName: courseData?.taskName || '',
-          storyContext: courseData?.storyContext || '',
-          keyOutcome: courseData?.keyOutcome || '',
+          storyContext: courseData?.storyContext || overview?.overallContext || '',
+          keyOutcome: courseData?.keyOutcome || overview?.finalTask || '',
           journey: courseData?.journey || null,
           atmosphere: courseData?.atmosphere || '',
           specialRequirements: courseData?.specialRequirements || '',

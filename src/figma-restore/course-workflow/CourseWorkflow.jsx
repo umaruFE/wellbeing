@@ -1,8 +1,10 @@
 import React from 'react';
-import { Button } from 'antd';
+import { Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
+import pptxgen from 'pptxgenjs';
 import apiService from '../../services/api';
+import { getDisplayCourseTitle } from '../courseImages';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { CourseMapView } from './CourseMapView';
 import { LessonPlanView } from './LessonPlanView';
@@ -33,6 +35,9 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   const courseDirtyVersionRef = React.useRef(0);
   const pptSaveSequenceRef = React.useRef(0);
   const pptDirtyVersionRef = React.useRef(0);
+  const [publishing, setPublishing] = React.useState(false);
+  const [exporting, setExporting] = React.useState(false);
+  const displayCourseTitle = getDisplayCourseTitle(course, t('course.newCourse'));
 
   React.useEffect(() => {
     document.body.classList.add('fr-workflow-route-active');
@@ -152,6 +157,17 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     setCourseSaveError('');
   }, []);
 
+  const mergePhasesIntoCourse = React.useCallback((nextPhases) => {
+    setPhases(nextPhases);
+    setCourse((currentCourse) => ({
+      ...currentCourse,
+      courseData: {
+        ...(currentCourse.courseData || currentCourse.course_data || {}),
+        courseData: nextPhases,
+      },
+    }));
+  }, []);
+
   const handlePptCanvasChange = React.useCallback((nextData, meta = {}) => {
     latestPptCanvasRef.current = nextData;
     setPptCanvasData(nextData);
@@ -205,6 +221,107 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     saveCourseMap();
   }, [current, saveCourseMap, savePptCanvas]);
 
+  const handlePublish = React.useCallback(async () => {
+    if (publishing) return;
+    const courseId = latestCourseRef.current?.id;
+    if (!courseId || String(courseId).startsWith('created-')) {
+      message.warning('请先保存课程后再发布');
+      return;
+    }
+
+    setPublishing(true);
+    try {
+      await Promise.all([
+        saveCourseMap(latestCourseRef.current),
+        latestPptCanvasRef.current ? savePptCanvas(latestPptCanvasRef.current) : Promise.resolve(),
+      ]);
+      await apiService.updateCourse(courseId, { status: 'published' });
+      setCourse((currentCourse) => ({ ...currentCourse, status: 'published' }));
+      message.success(t('course.publishSuccess'));
+    } catch (error) {
+      console.error('发布课程失败:', error);
+      message.error(error?.message || t('course.publishFailed'));
+    } finally {
+      setPublishing(false);
+    }
+  }, [publishing, saveCourseMap, savePptCanvas, t]);
+
+  const exportPpt = React.useCallback(async () => {
+    const pptData = latestPptCanvasRef.current;
+    if (!Array.isArray(pptData) || pptData.length === 0) {
+      message.warning('暂无可导出的 PPT 内容');
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const pres = new pptxgen();
+      pres.layout = 'LAYOUT_WIDE';
+      pres.author = 'CourseGen AI';
+      pres.subject = latestCourseRef.current?.title || latestCourseRef.current?.courseTitle || 'Courseware';
+      pres.title = latestCourseRef.current?.title || latestCourseRef.current?.courseTitle || 'Courseware';
+      pres.defineLayout({ name: 'COURSEGEN_WIDE', width: 13.333, height: 7.5 });
+      pres.layout = 'COURSEGEN_WIDE';
+
+      const scaleX = 13.333 / 940;
+      const scaleY = 7.5 / 529;
+      const asHex = (value, fallback = 'FFFFFF') => String(value || fallback).replace('#', '').slice(0, 6);
+
+      pptData.forEach((phase) => {
+        (phase.steps || []).forEach((step) => {
+          (step.slides || []).forEach((slideData) => {
+            const slide = pres.addSlide();
+            slide.background = { color: asHex(slideData.background, 'FFFFFF') };
+            if (slideData.backgroundImage) {
+              slide.addImage({ path: slideData.backgroundImage, x: 0, y: 0, w: 13.333, h: 7.5 });
+            }
+
+            (slideData.layers || []).filter((layer) => !layer.hidden).forEach((layer) => {
+              const x = (Number(layer.x) || 0) * scaleX;
+              const y = (Number(layer.y) || 0) * scaleY;
+              const w = (Number(layer.width) || 120) * scaleX;
+              const h = (Number(layer.height) || 40) * scaleY;
+
+              if (layer.type === 'image' && layer.url) {
+                slide.addImage({ path: layer.url, x, y, w, h, rotate: Number(layer.rotation) || 0 });
+                return;
+              }
+
+              const text = layer.type === 'text'
+                ? (layer.content || '')
+                : `[${layer.type || 'media'}] ${layer.title || ''}`;
+              slide.addText(text, {
+                x,
+                y,
+                w,
+                h,
+                rotate: Number(layer.rotation) || 0,
+                color: asHex(layer.color || '#253142', '253142'),
+                fontSize: Math.max(8, Math.round((Number(layer.fontSize) || 18) * 0.75)),
+                bold: layer.fontWeight === 'bold' || Number(layer.fontWeight) >= 600,
+                italic: layer.fontStyle === 'italic',
+                align: layer.textAlign || 'left',
+                valign: 'mid',
+                margin: 0.04,
+                fit: 'shrink',
+              });
+            });
+          });
+        });
+      });
+
+      const title = (latestCourseRef.current?.courseTitle || latestCourseRef.current?.title || 'Lesson Slides')
+        .replace(/[\\/:*?"<>|]/g, '_');
+      await pres.writeFile({ fileName: `${title}.pptx` });
+      message.success('PPT 已开始导出');
+    } catch (error) {
+      console.error('PPT 导出失败:', error);
+      message.error(error?.message || 'PPT 导出失败，请稍后重试');
+    } finally {
+      setExporting(false);
+    }
+  }, []);
+
   const content = [
     <CourseMapView
       key="map"
@@ -212,7 +329,14 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       onCourseChange={handleCourseChange}
       onNext={() => setCurrent(1)}
     />,
-    <LessonPlanView key="lesson" course={course} phases={phases} onPhasesChange={setPhases} onNext={() => setCurrent(2)} />,
+    <LessonPlanView
+      key="lesson"
+      course={course}
+      phases={phases}
+      onCourseChange={handleCourseChange}
+      onPhasesChange={mergePhasesIntoCourse}
+      onNext={() => setCurrent(2)}
+    />,
     <PptCoursewareView
       key="ppt"
       onNext={() => setCurrent(3)}
@@ -229,7 +353,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     <section className={`fr-workflow view-${workflowSteps[current].key}-active`}>
       <header className="fr-editor-tb">
         <Button icon={<ArrowLeft size={16} />} onClick={onBack}>{t('createCourse.backToList')}</Button>
-        <span className="fr-tb-course">{course.courseTitle || course.title || t('course.newCourse')}</span>
+        <span className="fr-tb-course">{displayCourseTitle}</span>
         <span className="fr-tb-divider">|</span>
         <div className="fr-wf-bridge">
           {workflowSteps.map((step, index) => (
@@ -267,8 +391,18 @@ export function CourseWorkflow({ initialCourse, onBack }) {
         >
           {t('workflow.toolbar.save')}
         </Button>
+        {workflowSteps[current].key === 'ppt' && (
+          <Button
+            className="fr-export-btn"
+            icon={<Download size={15} />}
+            loading={exporting}
+            onClick={exportPpt}
+          >
+            {t('workflow.toolbar.export')}
+          </Button>
+        )}
         <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
-        <Button className="fr-publish-btn">{t('workflow.toolbar.publish')}</Button>
+        <Button className="fr-publish-btn" loading={publishing} onClick={handlePublish}>{t('workflow.toolbar.publish')}</Button>
       </header>
 
       {content[current]}

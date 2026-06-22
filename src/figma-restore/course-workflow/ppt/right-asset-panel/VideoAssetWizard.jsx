@@ -1,6 +1,7 @@
 import React from 'react';
 import { Input } from 'antd';
 import { Check, Sparkles, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import poppy from '../../../../assets/ip/poppy.png';
 import edi from '../../../../assets/ip/edi.png';
 import rolly from '../../../../assets/ip/rolly.png';
@@ -97,6 +98,20 @@ function StoryStepper({ step }) {
   );
 }
 
+function CountHint({ count, minimum = 6 }) {
+  const { t } = useTranslation();
+
+  return (
+    <p className="ppt-v1-count">
+      {t('ppt.videoAssetCountPrefix')}
+      <strong>{count}</strong>
+      {t('ppt.videoAssetCountMiddle')}
+      <strong>{minimum}</strong>
+      {t('ppt.videoAssetCountSuffix')}
+    </p>
+  );
+}
+
 function SceneRoleStep({ values, setValue }) {
   return (
     <div className="ppt-v1-body">
@@ -166,7 +181,6 @@ function WordSentenceFields({
   wordHint = '词汇将在视频中逐一出现供学生击打',
   sentenceTitle = '第二关 · 平衡桥',
   sentenceHint = '每个句型对应一座平衡桥关卡',
-  wordCountSuffix = '，建议至少',
 }) {
   const [wordDraft, setWordDraft] = React.useState('');
   const [addingSentence, setAddingSentence] = React.useState(false);
@@ -216,7 +230,7 @@ function WordSentenceFields({
           }}
         />
       </div>
-      <p className="ppt-v1-count">已添加<strong>{values.words.length}</strong>个{wordCountSuffix}<strong>6</strong>个</p>
+      <CountHint count={values.words.length} />
 
       <div className="ppt-v1-required-line"><b>{sentenceTitle.includes('第二关') ? '* ' : ''}{sentenceTitle}</b><span>{sentenceHint ? `（${sentenceHint}）` : ''}</span></div>
       <div className="ppt-v1-sentence-list">
@@ -224,7 +238,7 @@ function WordSentenceFields({
           <div key={sentence}><span>⠿</span><strong>{sentence}</strong><button type="button" onClick={() => removeSentence(sentence)} aria-label={`删除 ${sentence}`}><X size={14} /></button></div>
         ))}
       </div>
-      <p className="ppt-v1-count">已添加<strong>{values.sentences.length}</strong>个，建议至少<strong>6</strong>个</p>
+      <CountHint count={values.sentences.length} />
       {addingSentence ? (
         <div className="ppt-v1-sentence-add-row">
           <span>⠿</span>
@@ -482,7 +496,6 @@ function StoryNarrativeStep({ values, setValue }) {
         wordHint=""
         sentenceTitle="目标句型（可选）"
         sentenceHint=""
-        wordCountSuffix=""
       />
     </div>
   );

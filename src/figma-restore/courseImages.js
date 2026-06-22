@@ -11,6 +11,12 @@ function pickFirstString(...values) {
   return values.find((value) => typeof value === 'string' && value.trim()) || '';
 }
 
+function unwrapOverview(value) {
+  let overview = parseMaybeJson(value) || {};
+  if (overview?.text) overview = parseMaybeJson(overview.text) || overview;
+  return overview?.courseOverview || overview;
+}
+
 const coverUrlKeys = new Set([
   'thumbnail',
   'thumbnail_url',
@@ -52,9 +58,27 @@ export function getCourseData(course = {}) {
   return parseMaybeJson(course.course_data || course.courseData || course.data) || {};
 }
 
+export function getCourseOverview(course = {}) {
+  const data = getCourseData(course);
+  return unwrapOverview(data.courseOverview || data.overview || course.courseOverview || {});
+}
+
+export function getDisplayCourseTitle(course = {}, fallback = '') {
+  const overview = getCourseOverview(course);
+  const rawTitle = pickFirstString(course.title, course.courseTitle, course.unit, fallback);
+  const defaultTitles = new Set(['新课程', 'New Course', 'Untitled Course']);
+  return pickFirstString(
+    overview.courseTitle,
+    defaultTitles.has(rawTitle) ? '' : rawTitle,
+    course.courseTitle,
+    course.unit,
+    fallback,
+  );
+}
+
 export function getCourseCoverUrl(course = {}) {
   const data = getCourseData(course);
-  const overview = parseMaybeJson(data.courseOverview || data.overview) || {};
+  const overview = getCourseOverview(course);
   const nestedData = parseMaybeJson(data.courseData || data.data) || {};
 
   return pickFirstString(

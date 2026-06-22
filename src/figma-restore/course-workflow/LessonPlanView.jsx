@@ -147,8 +147,8 @@ const lessonDisplayReplacements = [
   ['情境创设', 'Scenario Setup'],
   ['活动流程原文', 'Original Activity Flow'],
   ['教师语言与引导', 'Teacher Language & Guidance'],
-  ['活动概述', 'Activity Overview'],
-  ['活动流程', 'Activity Flow'],
+  ['活动概述', 'Overview'],
+  ['活动流程', 'Procedure'],
   ['查看详情', 'View Details'],
   ['查看活动', 'View Activity'],
   ['步骤', 'Step'],
@@ -169,6 +169,12 @@ const formatLessonText = (value, isChinese) => {
     text = text.split(from).join(to);
   });
   return text;
+};
+
+const compactOverviewText = (value, max = 96) => {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  return text.length > max ? `${text.slice(0, max)}...` : text;
 };
 
 const stripChinesePhaseParentheses = (value) => (
@@ -472,10 +478,17 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
     setData(updated);
     onPhasesChange?.(updated);
+    onCourseChange?.({
+      ...course,
+      courseData: {
+        ...(course?.courseData || course?.course_data || {}),
+        courseData: updated,
+      },
+    }, { source: 'lesson' });
 
     if (course?.id && !String(course.id).startsWith('created-')) {
       try {
-        const courseData = {};
+        const courseData = { ...(course?.courseData || course?.course_data || {}) };
         updated.forEach((phase) => {
           courseData[phaseKeyMap[phase.key]] = {
             title: phase.title,
@@ -1134,7 +1147,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
               <span className="step-title-text">{getDisplayText(step.title)}</span>
               <span className="step-dur-badge">{formatDuration(step.duration, 8)}</span>
             </div>
-            <div className="step-lo-preview">{getDisplayText(step.goal)}</div>
+            <div className="step-lo-preview">{compactOverviewText(getDisplayText(step.goal), 76)}</div>
           </div>
           <div className="step-right-ctrl" onClick={(event) => event.stopPropagation()}>
             <button
@@ -1168,13 +1181,13 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             <div className="step-brief-item">
               <div className="step-detail-label"><Target size={13} />{t('lesson.languageGoal')}</div>
               <div className="step-detail-body tbl-lo">
-                {getDisplayText(step.goal)}
+                {compactOverviewText(getDisplayText(step.goal))}
               </div>
             </div>
             <div className="step-brief-item">
               <div className="step-detail-label"><ClipboardList size={13} />{t('lesson.activitySummary')}</div>
               <div className="step-detail-body">
-                {getDisplayText(step.activity)}
+                {compactOverviewText(getDisplayText(step.activity), 132)}
               </div>
             </div>
             <div className="step-brief-item">
@@ -1186,7 +1199,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
                       <span className="step-flow-dot" />
                       <div>
                         <div className="step-flow-title">{getDisplayText(item.title)}</div>
-                        <div className="step-flow-desc">{getDisplayText(item.desc)}</div>
+                        <div className="step-flow-desc">{compactOverviewText(getDisplayText(item.desc), 72)}</div>
                       </div>
                     </div>
                   ))}
@@ -1298,7 +1311,7 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   };
 
   const renderLessonMap = () => {
-    const selected = activeMapPhase;
+    const selected = activeMapPhase ? data.find((phase) => phase.key === activeMapPhase.key) : null;
     const selectedMeta = selected ? lessonMapMeta[selected.key] : null;
 
     return (

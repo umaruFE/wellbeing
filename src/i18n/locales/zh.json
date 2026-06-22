@@ -932,7 +932,10 @@
     "templateDescription": "当前还没有生成过课件内容。选择一个模板后，系统会把教案步骤整理成可继续编辑的 PPT 页面。",
     "lessonSteps": "教案环节",
     "estimatedSlides": "预计页数",
-    "generateCourseware": "生成 PPT 课件"
+    "generateCourseware": "生成 PPT 课件",
+    "videoAssetCountPrefix": "已添加",
+    "videoAssetCountMiddle": "个，建议至少",
+    "videoAssetCountSuffix": "个"
   },
   "square": {
     "title": "课程广场",

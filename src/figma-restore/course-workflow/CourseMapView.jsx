@@ -62,8 +62,73 @@ function getUser() {
 
 function toArray(value) {
   if (!value) return [];
-  return Array.isArray(value) ? value : [value];
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    return value
+      .split(/[、,，;；\n]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [value];
 }
+
+function firstValue(...values) {
+  return values.find((value) => {
+    if (Array.isArray(value)) return value.length > 0;
+    return value !== undefined && value !== null && String(value).trim() !== '';
+  });
+}
+
+function normalizeChoice(value, fallback, choices) {
+  const text = String(value || '').trim();
+  if (!text) return fallback;
+  const match = choices.find((choice) => text.includes(choice));
+  return match || fallback;
+}
+
+function normalizeClassSize(value, fallback = '9-15') {
+  const text = String(value || '').trim();
+  if (!text) return fallback;
+  if (/9\s*[-~]\s*15/.test(text)) return '9-15';
+  if (/16/.test(text)) return '>=16';
+  if (/8/.test(text)) return '<=8';
+  return fallback;
+}
+
+function normalizeListValues(value, dictionary) {
+  return toArray(value)
+    .map((item) => {
+      const text = String(item || '').trim();
+      const lower = text.toLowerCase();
+      const found = dictionary.find((entry) => (
+        entry.value === text
+        || entry.aliases.some((alias) => lower.includes(alias.toLowerCase()))
+      ));
+      return found?.value || text;
+    })
+    .filter(Boolean);
+}
+
+function pickOptionValue(value, options, matchers, fallbackIndex = 0) {
+  const text = String(value || '').toLowerCase();
+  const matchedIndex = matchers.findIndex((matcher) => matcher.some((item) => text.includes(item.toLowerCase())));
+  return options[matchedIndex >= 0 ? matchedIndex : fallbackIndex]?.value;
+}
+
+const skillDictionary = [
+  { value: 'listening', aliases: ['听力', 'listening'] },
+  { value: 'speaking', aliases: ['口语', 'speaking'] },
+  { value: 'reading', aliases: ['阅读', 'reading'] },
+  { value: 'writing', aliases: ['书面', '写作', 'writing'] },
+  { value: 'integrated', aliases: ['综合', 'integrated'] },
+];
+
+const pathDictionary = [
+  { value: 'art', aliases: ['艺术', 'art'] },
+  { value: 'body', aliases: ['体感', 'physical', 'embodied', 'body'] },
+  { value: 'music', aliases: ['音乐', 'rhythm', 'music'] },
+  { value: 'AI Auto Match', aliases: ['auto', '自动'] },
+];
 
 function normalizeExperiencePaths(course = {}, fallback = '') {
   const values = [
@@ -75,7 +140,7 @@ function normalizeExperiencePaths(course = {}, fallback = '') {
     course.courseData?.experiencePath,
   ];
   const list = [...new Set(values.map((item) => String(item || '').trim()).filter(Boolean))];
-  return list.length ? list : toArray(fallback).map((item) => String(item || '').trim()).filter(Boolean);
+  return normalizeListValues(list.length ? list : fallback, pathDictionary);
 }
 
 function primaryExperiencePath(paths) {
@@ -282,6 +347,39 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     setEditOpen(true);
   };
 
+  React.useEffect(() => {
+    if (!editOpen) return;
+
+    const courseData = course.courseData || course.course_data || {};
+    const overview = course.courseOverview || courseData.courseOverview || {};
+    const languageGoals = overview?.languageGoals || {};
+    const ageValue = firstValue(course.rawAge, course.age, course.ageGroup, courseData.age, courseData.ageGroup, map.age);
+    const durationValue = firstValue(course.rawDuration, course.duration, courseData.duration, map.duration);
+    const classSizeValue = firstValue(course.rawClassSize, course.classSize, course.unit, courseData.classSize, courseData.scale, map.classSize);
+    const vocabularyValue = firstValue(course.vocabularies, courseData.vocabularies, courseData.vocabulary, languageGoals.vocabulary, []);
+    const grammarValue = firstValue(course.grammars, courseData.grammars, courseData.grammar, languageGoals.grammar, []);
+    const skillsValue = firstValue(course.languageSkills, courseData.languageSkills, courseData.skills, []);
+    const pathsValue = firstValue(course.experiencePaths, courseData.experiencePaths, course.experiencePath, courseData.experiencePath, map.path);
+
+    editForm.setFieldsValue({
+      courseTitle: map.title,
+      age: pickOptionValue(ageValue, editOptions.age, [['3-6'], ['7-9'], ['9-12']], 1),
+      duration: pickOptionValue(durationValue, editOptions.duration, [['40'], ['60'], ['120']], 1),
+      classSize: pickOptionValue(normalizeClassSize(classSizeValue), editOptions.classSize, [['<=8'], ['9-15'], ['>=16']], 1),
+      vocabularies: toArray(vocabularyValue),
+      grammars: toArray(grammarValue),
+      languageSkills: normalizeListValues(skillsValue, skillDictionary)
+        .map((item) => pickOptionValue(item, editOptions.languageSkills, [['listening'], ['speaking'], ['reading'], ['writing'], ['integrated']], 0)),
+      taskName,
+      storyContext: course.storyContext || courseData.storyContext || map.storyline,
+      keyOutcome: course.keyOutcome || courseData.keyOutcome || map.keyOutcome,
+      experiencePaths: normalizeListValues(pathsValue, pathDictionary)
+        .map((item) => pickOptionValue(item, editOptions.paths, [['art'], ['body'], ['music'], ['auto']], 0)),
+      specialRequirements: course.specialRequirements || courseData.specialRequirements || '',
+      atmosphere: course.atmosphere || courseData.atmosphere || '',
+    });
+  }, [course, editForm, editOpen, editOptions, map, taskName]);
+
   const saveEdit = async () => {
     const values = await editForm.validateFields();
     const attachments = (values.attachments || []).map((file) => file.name).filter(Boolean);
@@ -336,6 +434,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     const nextCourseBase = {
       ...course,
       title: courseTitle,
+      courseTitle,
       theme,
       courseOverview: overview ? { text: JSON.stringify(overview) } : course.courseOverview,
       themeImageUrl: themeImageUrl || course.themeImageUrl,
@@ -563,9 +662,6 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           <img src={planeIcon} alt="" className="overview-panel-title-icon" />
         </h2>
         <div className="overview-panel-actions">
-          <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={openRegen}>
-            {t('workflow.map.regenerate')}
-          </Button>
           <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>{t('workflow.map.edit')}</Button>
           <Button className="btn-next-step" onClick={onNext}>
             {t('workflow.nextStep')}
@@ -676,6 +772,10 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           </section>
         </div>
       )}
+
+      <Button className="course-map-regen-floating" icon={<RefreshCw size={14} />} onClick={openRegen}>
+        {t('workflow.map.regenerate')}
+      </Button>
 
       {regenOpen && (
         <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setRegenOpen(false)}>
