@@ -2,6 +2,10 @@
 
 set -e
 
+# 加载 nvm，避免 sudo 环境下 PATH 丢失导致 npm/node 找不到
+export NVM_DIR="/home/newstar/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
 PROJECT_DIR="/home/newstar/wellbeing"
 API_DIR="$PROJECT_DIR/api"
 FRONTEND_DIR="$PROJECT_DIR"
