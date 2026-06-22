@@ -28,7 +28,7 @@
     "publish": "Publish",
     "publishing": "Publishing...",
     "regenerate": "Recreate",
-    "generating": "Generating...",
+    "generating": "Recreating...",
     "add": "Add",
     "remove": "Remove",
     "upload": "Upload",

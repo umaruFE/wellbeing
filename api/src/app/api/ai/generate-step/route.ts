@@ -109,7 +109,19 @@ export async function POST(request: NextRequest) {
 
     const result = await n8nClient.call(workflowName, n8nPayload, { timeout: 300000 });
 
-    console.log('[generate-step] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
+    console.log('[generate-step] N8N 响应:', result === null ? '(空响应)' : JSON.stringify(result, null, 2).substring(0, 500));
+
+    // N8N 返回空响应：通常是工作流内部出错（responseNode 模式下未到达 Respond 节点）
+    if (result === null || result === undefined) {
+      console.error('[generate-step] N8N 返回空响应，工作流可能执行失败');
+      return NextResponse.json({
+        success: false,
+        error: 'N8N 工作流未返回数据（可能执行失败或超时），请到 N8N 后台查看 Executions 排查',
+        workflow: workflowName,
+        phaseKey,
+        stepId: isRegenerate ? stepId : undefined
+      }, { status: 502, headers: corsHeaders() });
+    }
 
     let step = null;
 
@@ -139,7 +151,14 @@ export async function POST(request: NextRequest) {
         }
       } else if (firstItem?.step) {
         step = firstItem.step;
+      } else if (firstItem?.json?.step) {
+        step = firstItem.json.step;
       }
+    } else if (result?.step) {
+      // 某些情况下 N8N 直接返回对象而非数组
+      step = result.step;
+    } else if (result?.data?.step) {
+      step = result.data.step;
     }
 
     if (step) {
@@ -154,10 +173,13 @@ export async function POST(request: NextRequest) {
       }, { headers: corsHeaders() });
     }
 
+    console.error('[generate-step] 无法从 N8N 响应中提取 step:', JSON.stringify(result).substring(0, 300));
     return NextResponse.json({
       success: false,
-      error: '未能生成环节数据'
-    }, { status: 500, headers: corsHeaders() });
+      error: 'N8N 返回了数据但格式无法识别',
+      workflow: workflowName,
+      responsePreview: JSON.stringify(result).substring(0, 500)
+    }, { status: 502, headers: corsHeaders() });
 
   } catch (error) {
     console.error('[generate-step] 失败:', error);
