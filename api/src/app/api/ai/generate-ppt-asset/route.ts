@@ -87,6 +87,9 @@ function defaultImageNegativePrompt(assetCode?: string) {
   if (code === 'B2') {
     return 'blurry, low quality, watermark, logo, extra letters, misspelled text, broken typography, cropped title, unreadable words';
   }
+  if (code === 'B1') {
+    return 'blurry, low quality, watermark, logo, deformed, ugly, bad composition, extra limbs, cropped, text, typography, letters, words, font, signature, chinese text, japanese text, korean text, any text, text overlay';
+  }
   return 'blurry, low quality, watermark, logo, deformed, ugly, bad composition, extra limbs, cropped';
 }
 

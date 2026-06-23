@@ -159,7 +159,7 @@ const ipCharacters = [
 ];
 
 const imagePromptBuilders = {
-  B1: (values) => `生成PPT主题意境背景图，无文字。场景：${values.scene || '儿童英语课堂主题场景'}。风格：${values.style}。`,
+  B1: (values) => `Create a beautiful PPT theme mood background image, textless, no text, no letters, no typography, no watermark, pure illustration. Scene: ${values.scene || 'children English classroom theme'}. Style: ${values.style || 'cute cartoon'}.`,
   B2: (values) => `生成PPT意境海报图，包含图文排版。场景：${values.scene || '课堂主题场景'}。叠加文字：${values.overlayText || '课程主题标题'}。风格：${values.style}。`,
   B3: (values) => `批量生成统一版式的词汇闪卡。词汇：${(values.flashWords || []).join(', ') || values.words || 'apple, banana'}。${values.includeChinese !== false ? '包含中文释义。' : '不包含中文释义。'}${values.includePhonetic ? '包含音标。' : ''}`,
   B4: (values) => `生成故事配图，预留${values.whitespace || '底部'}文字区域。故事场景：${values.storyScene || '儿童绘本故事场景'}。角色描述：${values.storyCharacter || '无指定角色'}。风格：${values.style}。`,
@@ -839,8 +839,28 @@ function FixedRatioBar({ ratio }) {
   );
 }
 
-function ScenePromptBox({ value, onChange }) {
+function ScenePromptBox({ value, onChange, assetCode }) {
   const { t } = useTranslation();
+  const [helping, setHelping] = React.useState(false);
+  const helpWrite = async () => {
+    if (helping) return;
+    setHelping(true);
+    try {
+      const seed = value || t('assetPanel.iwScenePlaceholder');
+      const res = await apiService.post('/api/ai/optimize-prompt', {
+        originalPrompt: seed,
+        elementType: 'general',
+      });
+      const data = res?.data || {};
+      const next = data.optimizedPrompt || seed;
+      onChange(String(next).slice(0, 40));
+      message.success(t('assetPanel.iwHelpWriteDone'));
+    } catch (err) {
+      message.error(t('assetPanel.iwHelpWriteFail'));
+    } finally {
+      setHelping(false);
+    }
+  };
   return (
     <div className="ppt-img-section">
       <div className="ppt-img-label">{t('assetPanel.iwDescribeScene')} <span>{t('assetPanel.iwAnyLanguage')}</span></div>
@@ -853,7 +873,9 @@ function ScenePromptBox({ value, onChange }) {
         />
         <div>
           <span>{value.length} / 40</span>
-          <button type="button">{t('assetPanel.iwHelpWrite')}</button>
+          <button type="button" disabled={helping} onClick={helpWrite}>
+            {helping ? t('assetPanel.iwHelpWriting') : t('assetPanel.iwHelpWrite')}
+          </button>
         </div>
       </div>
     </div>
