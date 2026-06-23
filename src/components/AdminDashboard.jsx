@@ -71,6 +71,12 @@ const App = () => {
 
   const currentUser = getUser();
 
+  const formatDuration = (value) => {
+    if (!value) return '--';
+    const minutes = String(value).match(/\d+/)?.[0];
+    return minutes ? `${minutes} min` : String(value);
+  };
+
   // 获取用户角色对应的显示名称
   const getRoleDisplayName = (role) => {
     const roleNames = {
@@ -159,7 +165,7 @@ const App = () => {
         title: course.title || course.unit || '未命名课程',
         status: course.status === 'published' ? '已发布' : '草稿',
         age: course.age_group || '--',
-        duration: course.duration ? `${course.duration}分钟` : '--',
+        duration: formatDuration(course.duration),
         capacity: '--',
         date: course.created_at
           ? new Date(course.created_at).toLocaleString('zh-CN', {
@@ -256,17 +262,20 @@ const App = () => {
       return;
     }
 
-    // 否则直接跳转（旧的快速流程或异步流程）
+    // 兼容旧数据：先生成课程概览，成功后再保存；失败不创建空草稿。
     const n8nPayload = {
+      language: 'zh',
+      outputLanguage: 'Chinese',
       age: data.age,
       duration: data.duration,
       scale: data.scale,
-      title: data.theme || '未命名课程',
+      courseTitle: '',
       vocabulary: data.vocabulary,
       grammar: data.grammar,
       skills: data.skills,
       paths: data.paths,
       theme: data.theme,
+      taskName: data.theme,
       requirements: data.requirements,
       userId: user?.id || null,
       organizationId: user?.organization_id || null,
@@ -275,7 +284,49 @@ const App = () => {
 
     console.log('n8n Payload:', JSON.stringify(n8nPayload, null, 2));
 
-    navigate('/create', { state: { courseConfig: n8nPayload } });
+    try {
+      const response = await fetch('/api/ai/generate-course-overview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token') || ''}`
+        },
+        body: JSON.stringify(n8nPayload),
+      });
+      const result = await response.json();
+      if (!result.success || !result.data?.courseOverview) {
+        throw new Error(result.error || '课程概览生成失败');
+      }
+
+      const overview = result.data.courseOverview;
+      const keywordsList = [data.vocabulary, data.grammar]
+        .filter(Boolean)
+        .flatMap(v => Array.isArray(v) ? v : String(v).split(/[,\n]/).map(k => k.trim()))
+        .filter(Boolean);
+      const saveData = {
+        title: overview.courseTitle || data.theme || '未命名课程',
+        description: overview.overallContext || '',
+        ageGroup: data.age,
+        unit: data.scale,
+        duration: data.duration,
+        theme: overview.theme || data.theme,
+        keywords: keywordsList,
+        courseData: { courseOverview: overview, themeImageUrl: result.data.themeImageUrl || null },
+        themeImageUrl: result.data.themeImageUrl || null,
+        status: 'draft',
+        userId: user?.id || null,
+        organizationId: user?.organizationId || user?.organization_id || null
+      };
+      const saveResult = await apiService.createCourse(saveData);
+      if (saveResult.data?.id) {
+        navigate(`/courses/${saveResult.data.id}/overview`);
+      } else {
+        throw new Error('保存课程失败，没有返回 id');
+      }
+    } catch (err) {
+      console.error('生成并保存课程失败:', err);
+      alert(err?.message || '课程概览生成失败，请重试');
+    }
   };
 
   const handleCourseClick = (courseId) => {

@@ -42,7 +42,7 @@ export const MainLayout = () => {
   const [expandedMenus, setExpandedMenus] = useState(['knowledge']); // 默认展开素材管理
 
   // 课程编辑状态
-  const [appState, setAppState] = useState('app');
+  const [appState, setAppState] = useState('welcome');
   const [currentView, setCurrentView] = useState('table');
   const [canvasMode, setCanvasMode] = useState('ppt');
   const [appConfig, setAppConfig] = useState(null);
@@ -218,6 +218,12 @@ export const MainLayout = () => {
     if (appState !== 'app') {
       return;
     }
+
+    // 自动保存/手动保存只能更新已落库课程，不能因为临时编辑器状态创建空课程。
+    if (!currentCourseId) {
+      setAutoSaveStatus('idle');
+      return;
+    }
     
     try {
       setIsSaving(true);
@@ -291,9 +297,8 @@ export const MainLayout = () => {
         ...(readingMaterialsData && Object.keys(readingMaterialsData).length > 0 ? { readingMaterialsData } : {}),
       };
       
-      const isUpdate = !!currentCourseId;
-      const url = isUpdate ? `/api/courses/${currentCourseId}` : '/api/courses';
-      const method = isUpdate ? 'PUT' : 'POST';
+      const url = `/api/courses/${currentCourseId}`;
+      const method = 'PUT';
 
       const response = await fetch(url, {
         method,
@@ -462,7 +467,7 @@ export const MainLayout = () => {
     const searchParams = new URLSearchParams(location.search || '');
     const editingCourseId = searchParams.get('courseId');
 
-    // 没有传 courseId：认为是"新建课程"，重置到欢迎页（仅在刚进入 /create 时生效）
+    // 没有传 courseId：保持空态，不进入编辑器，避免自动保存创建 Untitled 草稿。
     const stateData = location.state;
     if (stateData?.courseData) {
       const config = stateData.courseConfig || {};
@@ -485,9 +490,10 @@ export const MainLayout = () => {
     }
 
     if (!editingCourseId) {
-      // 新建课程，直接进入编辑器模式
-      setAppState('app');
+      setAppState('welcome');
       setAppConfig(null);
+      setPptCanvasConfig(null);
+      setReadingMaterialCanvasConfig(null);
       setCurrentCourseId(null);
       setCurrentView('table');
       setCanvasNavigation(null);
@@ -889,6 +895,25 @@ export const MainLayout = () => {
                     />
                     </>
                   )}
+                </div>
+              )}
+
+              {!isLoadingCourse && !isInCourseEditor && (
+                <div className="h-full flex items-center justify-center bg-surface">
+                  <div className="text-center max-w-md px-6">
+                    <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-warning-light border-2 border-primary flex items-center justify-center">
+                      <BookOpen className="w-8 h-8 text-primary" />
+                    </div>
+                    <h2 className="text-xl font-bold text-primary mb-2">请先创建课程</h2>
+                    <p className="text-primary-muted mb-6">课程生成完成并保存后，才会进入课件编辑器。</p>
+                    <button
+                      type="button"
+                      onClick={() => navigate('/')}
+                      className="px-5 py-2.5 rounded-xl bg-dark text-white border-2 border-primary font-bold hover:bg-warning hover:text-primary transition-colors"
+                    >
+                      返回工作台
+                    </button>
+                  </div>
                 </div>
               )}
             </>
