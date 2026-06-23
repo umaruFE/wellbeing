@@ -673,9 +673,6 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         </h2>
         <div className="overview-panel-actions">
           <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>{t('workflow.map.edit')}</Button>
-          <Button className="btn-ghost primary" icon={<RefreshCw size={16} />} loading={regenImage} disabled={regenImage} onClick={handleRegenImage}>
-            {regenImage ? t('workflow.map.generating') : t('workflow.map.regenerate')}
-          </Button>
           <Button className="btn-next-step" onClick={onNext}>
             {t('workflow.nextStep')}
           </Button>
@@ -730,6 +727,16 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                     <div className="cm-floor" />
                   </div>
                 )}
+                <div className="course-map-v2-cover-actions">
+                  <Button
+                    icon={<RefreshCw size={16} />}
+                    loading={regenImage}
+                    disabled={regenImage}
+                    onClick={handleRegenImage}
+                  >
+                    {regenImage ? t('workflow.map.generating') : t('workflow.map.regenerate')}
+                  </Button>
+                </div>
               </div>
             </div>
           </section>
