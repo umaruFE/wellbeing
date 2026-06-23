@@ -1,0 +1,132 @@
+{
+  "name": "🐳图生视频单人主工作流-查询分镜图片结果",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "get-images",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        288
+      ],
+      "id": "284040b5-92bb-4af1-a62d-00d54db60bf3",
+      "name": "Webhook",
+      "webhookId": "e7d5e62f-6d40-4312-a8e7-bcc0aea3dd40"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "J3YaofTO0eHhgjAp",
+          "mode": "list",
+          "cachedResultName": "tworkflow",
+          "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "execution_id",
+              "keyValue": "={{ $json.query.execution_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        288
+      ],
+      "id": "5ec366a6-1b37-4a26-a9dd-1f28ff231c38",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"data\": {{ $json.response }}\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        288
+      ],
+      "id": "93f4f84a-b90d-408e-8a2e-83c9adfedb20",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-length": "147",
+            "accept": "*/*",
+            "connection": "keep-alive",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryiRec9lCSczbVNhkK",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {
+            "execution_id": "578"
+          },
+          "body": {
+            "execution_id": "5789"
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/get-images",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "77d7cbad-37df-4f3f-af2e-66833f7da478",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "mhCgSwHjz2XbqcFE",
+  "tags": []
+}

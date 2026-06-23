@@ -1,0 +1,128 @@
+{
+  "name": "🐳单人主工作流-查询素材结果",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "get-resource",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        288
+      ],
+      "id": "37e8f1da-655a-4265-b2f1-75b1aed5f8af",
+      "name": "Webhook",
+      "webhookId": "5450d24b-82f8-4656-af4d-5e8b5b4d0cf8"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "J3YaofTO0eHhgjAp",
+          "mode": "list",
+          "cachedResultName": "tworkflow",
+          "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "execution_id",
+              "keyValue": "={{ $json.query.execution_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        288
+      ],
+      "id": "960044d4-d430-4320-a7f8-8894dc733b89",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"data\": \"{{ $json.response }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        288
+      ],
+      "id": "ef12f8d3-3d67-437d-99cb-3d563b290005",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "accept": "*/*",
+            "connection": "keep-alive",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {
+            "execution_id": "983"
+          },
+          "body": {},
+          "webhookUrl": "http://117.50.218.161:5678/webhook/get-video",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "166af72b-768f-4bda-a277-c5bbb0a64c94",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "xLOoAm8uzS1gIdle",
+  "tags": []
+}

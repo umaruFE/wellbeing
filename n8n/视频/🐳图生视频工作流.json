@@ -1,0 +1,1316 @@
+{
+  "name": "🐳图生视频工作流",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个专业的视频分镜分析专家，你的任务是将\"视频分镜描述\"转换为\"首帧图片描述\"。这些图片将用作图生视频的起始帧，因此必须准确反映视频即将开始时的场景状态。\n\n## 核心转换原则\n\n### 1. 动作状态分析与转换\n\n你需要通过**语义分析**推断视频的起始状态：\n\n**位移类动词**（表示从A到B的移动）：\n- \"走到\"、\"跑向\"、\"移动到\"、\"转身走向\" → 说明起始时**不在**目标位置\n- 转换规则：改为\"准备+动作\"，删除目标位置的\"到达状态\"\n- 示例：\n  - \"走到窗边\" → \"准备走向窗边\"\n  - \"跑向门口\" → \"准备跑向门口\"\n  - \"转身离开\" → \"准备转身\"\n\n**状态类动词**（表示已经处于某个位置/状态）：\n- \"站在\"、\"坐在\"、\"躺在\"、\"靠在\" → 说明起始时**已经在**该状态\n- 转换规则：保留状态描述，删除后续动作\n- 示例：\n  - \"站在窗边，推开窗户\" → \"站在窗边\"\n  - \"坐在桌前，拿起笔\" → \"坐在桌前\"\n\n**多个连续动作的处理**：\n- 只保留**第一个动作的起始状态**，删除所有后续动作\n- 示例：\n  - \"走到衣架边，脱下外衣，挂在衣架上\" → \"准备走向衣架\"\n  - \"站在衣架边，脱下外衣，挂在衣架上\" → \"站在衣架边\"\n\n### 2. 修饰词处理规则\n\n**必须删除的修饰词**（描述运动过程的词汇）：\n- 速度修饰：慢慢、快速、迅速、缓缓、轻快地\n- 过程修饰：逐渐、一边...一边...、持续、反复\n- 节奏修饰：有节奏地、流畅地\n\n**必须保留的修饰词**（描述静态状态的词汇）：\n- 表情状态：微笑、专注、温柔、严肃\n- 姿态描述：抬头、低头、侧身、挺直\n- 情绪氛围：愉悦、放松、紧张\n\n**示例**：\n- \"慢慢转身\" → \"准备转身\"\n- \"一边走一边抬头欣赏夜景\" → \"准备行走，保持抬头欣赏夜景的姿态\"\n- \"熟练而有节奏地切菜\" → \"准备切菜\"\n\n### 3. 运镜与镜头参数处理\n\n**删除纯运镜描述**（描述摄像机运动的词汇）：\n- \"手持跟随镜头\"\n- \"缓慢环绕拍摄\"\n- \"镜头跟随\"\n- \"摇镜头\"\n- \"推拉镜头的运动过程\"\n\n**转换涉及构图的运镜**（将运动转换为静态构图）：\n- \"镜头从远处推进\" → \"远景\"\n- \"镜头从上方俯冲\" → \"俯拍角度\"\n- \"镜头逐渐拉近\" → 删除（或根据语境选择\"近景/中景/远景\"）\n\n**完全保留固定镜头参数**：\n- 焦距：50mm标准镜头、85mm镜头\n- 角度：平视角度、俯拍角度、仰拍角度\n- 景别：中景、近景、特写、全景\n- 其他：景深效果、构图方式\n\n### 4. 完全保留的元素\n\n以下元素必须**原样保留**，以确保图片与视频的一致性：\n\n- **场景描述**：环境、建筑、物品、天气、时间\n- **光影描述**：光源、光线质感、阴影、色温\n- **氛围营造**：情绪、质感、细节刻画\n- **美学控制**：色调、饱和度、对比度、曝光\n- **风格化**：艺术风格、绘画技法、渲染方式\n- **人物静态特征**：服装、表情、姿态（非动作过程）\n\n### 5. 特殊情况处理\n\n**静态场景**：\n- 如果视频分镜本身没有明显动作（如\"角色站立凝视远方\"）\n- 图片描述基本保持不变，只需删除可能存在的运镜描述\n\n**伴随状态 + 主要动作**：\n- 主要动作：按照规则转换为准备状态\n- 伴随状态：保留姿态描述\n- 示例：\"走在街道上，双手插在口袋里，抬头欣赏夜景\"\n  → \"准备行走，双手插在口袋里，保持抬头欣赏夜景的姿态\"\n\n## 转换示例\n\n### 示例 1：位移动作\n\n**输入视频分镜**：\n\"角色面带轻松愉悦的微笑，眼神温柔，透露出下班后的放松感。夜晚繁华的城市街道，街道两旁是林立的高楼，巨大的广告牌和霓虹灯投下绚烂的光影，地面因刚下过小雨而湿润，倒映着五彩斑斓的灯光。行人与车辆穿梭不息。她双手插在开衫口袋里，身体随着轻快的步伐微微摇晃，一边走一边抬头欣赏着城市的夜景。混合着霓虹灯和街灯的人工光源，形成丰富的光斑和镜头光晕，中景，平视角度，50mm标准镜头，手持跟随镜头，暖色调，高饱和度。新海诚细腻笔触风格，强调光影的透明感和都市的璀璨细节。\"\n\n**输出**：\n```json\n{\n  \"storyboard_image_prompts\": [\n    {\n      \"prompt\": \"角色面带轻松愉悦的微笑，眼神温柔，透露出下班后的放松感。夜晚繁华的城市街道，街道两旁是林立的高楼，巨大的广告牌和霓虹灯投下绚烂的光影，地面因刚下过小雨而湿润，倒映着五彩斑斓的灯光。行人与车辆穿梭不息。她双手插在开衫口袋里，保持抬头欣赏夜景的姿态。混合着霓虹灯和街灯的人工光源，形成丰富的光斑和镜头光晕，中景，平视角度，50mm标准镜头，暖色调，高饱和度。新海诚细腻笔触风格，强调光影的透明感和都市的璀璨细节。\",\n      \"thought_process\": \"1. 识别动作：'一边走一边抬头欣赏夜景'包含主要动作'走'和伴随姿态'抬头欣赏'。2. 转换逻辑：删除'身体随着轻快的步伐微微摇晃'和'一边走一边'这些运动过程描述，保留'抬头欣赏夜景'的静态姿态。3. 删除运镜：去除'手持跟随镜头'。4. 保留元素：完整保留人物表情、场景描述、光影效果、镜头参数（中景、平视、50mm）、色调和风格。\"\n    }\n  ]\n}\n```\n\n### 示例 2：状态 + 动作\n\n**输入视频分镜**：\n\"角色表情专注而满足，嘴角微微上扬，眼神中充满了对生活的热爱。温暖明亮的家庭厨房，浅木色的橱柜和料理台干净整洁。墙壁上挂着可爱的厨具，一盏暖黄色的吊灯从上方照亮料理区域。窗外是深蓝色的夜空，窗户玻璃上凝结着薄薄的水汽。她左手稳稳地按住食材，右手握着厨刀，熟练而有节奏地切着菜，手指动作轻巧灵活。顶光照明来自吊灯，光线柔和，中近景，略微俯拍的角度，85mm镜头营造浅景深效果，静止镜头，整体为温馨的暖黄色调。新海诚细腻笔触风格，对食物的质感和温暖的居家氛围进行精致刻画。\"\n\n**输出**：\n```json\n{\n  \"storyboard_image_prompts\": [\n    {\n      \"prompt\": \"角色表情专注而满足，嘴角微微上扬，眼神中充满了对生活的热爱。温暖明亮的家庭厨房，浅木色的橱柜和料理台干净整洁。墙壁上挂着可爱的厨具，一盏暖黄色的吊灯从上方照亮料理区域。窗外是深蓝色的夜空，窗户玻璃上凝结着薄薄的水汽。她左手稳稳地按住食材，右手握着厨刀，准备切菜。顶光照明来自吊灯，光线柔和，中近景，略微俯拍的角度，85mm镜头营造浅景深效果，整体为温馨的暖黄色调。新海诚细腻笔触风格，对食物的质感和温暖的居家氛围进行精致刻画。\",\n      \"thought_process\": \"1. 识别状态：角色已经处于厨房料理台前的状态（左手按住食材，右手握刀）。2. 识别动作：'熟练而有节奏地切着菜'是正在进行的动作。3. 转换逻辑：将'切着菜'转换为'准备切菜'，删除过程性修饰词'熟练而有节奏地'和'手指动作轻巧灵活'。4. 保留元素：完整保留人物表情、手部姿态（按住食材、握刀）、场景描述、光影、镜头参数、色调和风格。5. 运镜处理：原描述中'静止镜头'已是静态，保留其他镜头参数即可。\"\n    }\n  ]\n}\n```\n\n## 开始任务\n\n现在请按照以上规则，将我提供的视频分镜描述转换为首帧图片描述。记住：\n1. 仔细分析每个动词的语义，判断起始状态\n2. 保留所有场景、光影、美学、风格元素\n3. 删除所有运动过程描述\n4. 在 thought_process 中详细说明你的分析过程\n5. 输出标准 JSON 格式\n\n请输出标准的 JSON 格式：\n\n```json\n{\n  \"storyboard_image_prompts\": [\n    {\n      \"prompt\": \"转换后的首帧图片描述\",\n      \"thought_process\": \"详细说明你的分析思路：识别了哪些动作类型、做了哪些转换、保留了哪些元素、删除了哪些元素\"\n    }\n  ]\n}\n```\n\n以下是我的视频分镜描述：\n{{ $json.data }}\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1376,
+        320
+      ],
+      "id": "d55df269-63e6-4ded-981b-68760a078ca4",
+      "name": "生成每个分镜的图片prompt",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一位经验丰富的电影导演和分镜师,精通视觉叙事、镜头语言和情感表达。你的任务是根据我给出的'故事分镜脚本'和'角色设定',为视频生成配音方案。\n\n以下是分镜图片的描述：\n{{ $('图片描叙').item.json.character_prompt }}\n\n以下是视频分镜脚本：\n{{ JSON.stringify($json.data) }}\n\n【任务指令】\n请严格按照以下步骤和要求,将所有输出整合到一个JSON对象中。\n\n1. **音色方案设计 (characters_timbre)**:\n   * **灵活选择原则**: 根据故事风格和叙事需求，自主决定使用何种音色组合：\n     - 纯旁白叙事：适合文学性强、史诗感的故事（只设计旁白音色）\n     - 纯角色对话：适合第一人称、沉浸式体验的故事（只设计角色音色）\n     - 旁白+角色：适合需要客观叙述和主观表达结合的故事（设计两种音色）\n   \n   * **音色设计要求**:\n     - 为你选择的音色类型设计符合年龄、性别、性格的音色描述\n     - 每个音色设定一个唯一的timbre_id（从0开始递增）\n     - 输出到字段characters_timbre数组中\n\n2. **配音脚本生成 (voice_scripts)** - 【核心约束，必须严格遵守】:\n\n   **一、强制性一对一映射规则**:\n   * 有多少个分镜脚本，就生成多少段配音，**严格一一对应**\n   * 示例：4个分镜 → 4段配音；10个分镜 → 10段配音\n   * **每个分镜内只能有一段配音**，绝对禁止在单个分镜内生成多段配音\n   * 配音顺序必须与分镜顺序一致\n\n   **二、时间窗口严格约束**:\n   * 每个分镜有对应的duration（秒），这是该分镜的播放时长\n   * **时间窗口计算**（以毫秒为单位）:\n     - 分镜1的时间窗口：0 到 duration1×1000 毫秒\n     - 分镜2的时间窗口：duration1×1000 到 (duration1+duration2)×1000 毫秒\n     - 以此类推...\n   \n   * **强制要求**：\n     - 每段配音的start_time和end_time必须完全落在其对应分镜的时间窗口内\n     - 不得跨越分镜边界\n     - 不得与其他配音时间重叠\n     - 配音结束时间与下一段配音开始时间之间建议留出300-800ms的自然停顿\n\n   **三、字数限制铁律**:\n   * **语速上限**: 每秒最多3个字（这是物理极限）\n   * **计算步骤**（按顺序执行）:\n     1. 确定该分镜的时间窗口（起始毫秒到结束毫秒）\n     2. 在该窗口内规划配音的start_time和end_time（预留停顿空间）\n     3. 计算配音持续时长（秒）= (end_time - start_time) ÷ 1000\n     4. 计算字数上限 = 持续时长 × 3\n     5. **实际文本字数必须 ≤ 字数上限**，建议控制在上限的70-85%以保证自然语速\n   \n   * **实例演示**:\n     - 分镜1: duration=5秒，窗口0-5000ms\n       - 规划配音：100ms到4500ms（持续4.4秒）\n       - 字数上限：4.4×3=13.2字\n       - 建议实际：9-11字\n     \n     - 分镜2: duration=3秒，窗口5000-8000ms\n       - 规划配音：5300ms到7800ms（持续2.5秒）\n       - 字数上限：2.5×3=7.5字\n       - 建议实际：5-6字\n\n   **四、内容创作原则**:\n   * 在字数限制内，提炼每个分镜的**核心情感点**或**关键信息**\n   * 优先选择：\n     - 情感化的短句（\"心跳加速\"）\n     - 意象化的旁白（\"夜色如墨\"）\n     - 简短有力的对白（\"我在这里\"）\n   * 追求\"精准传达\"而非\"面面俱到\"\n   * 根据你在步骤1中选择的音色方案，使用相应的timbre_id\n\n【输出格式】\n请将你的所有工作成果严格按照下面的JSON结构返回，不要有任何JSON之外的文字：\n\n{\n  \"characters_timbre\": [\n    {\n      \"timbre_name\": \"旁白/主角（根据实际选择）\",\n      \"timbre_des\": \"音色描述\",\n      \"timbre_id\": 0\n    }\n    // 根据需要可以只有1个或2个音色\n  ],\n  \"voice_scripts\": [\n    {\n      \"text\": \"第一个分镜的配音文本（字数符合计算规则）\",\n      \"timbre_id\": 0,\n      \"start_time\": 100,\n      \"end_time\": 4500\n    },\n    {\n      \"text\": \"第二个分镜的配音文本（字数符合计算规则）\",\n      \"timbre_id\": 0,\n      \"start_time\": 5300,\n      \"end_time\": 7800\n    }\n    // 配音数量 = 分镜数量\n  ]\n}\n\n【最终检查清单】\n生成结果前，请务必验证：\n✓ voice_scripts数组长度 = 分镜脚本数量\n✓ 每段配音的时间范围都在其对应分镜的duration窗口内\n✓ 每段配音的文本字数 ≤ (持续时长×3)，且建议在70-85%范围\n✓ 所有配音时间无重叠，有合理停顿间隙\n✓ 音色选择符合故事风格，并正确关联timbre_id",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1856,
+        320
+      ],
+      "id": "7afaeebc-874b-43c1-a9d8-7c1c1e61b204",
+      "name": "生成语音脚本",
+      "retryOnFail": true,
+      "waitBetweenTries": 1000,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  data: $('生成视频分镜脚本').first().json.output.storyboard_prompts.map(item => {\n    return {\n      ...item,\n    }\n  })\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        320
+      ],
+      "id": "4aa53ef5-eb37-4969-b4e7-9a21f36b081a",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  data: $input.first().json.output.storyboard_prompts.map((item, index) => `分镜${index+1}: ${item.prompt}。`)\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        320
+      ],
+      "id": "5a043fd7-02c6-45d5-9c94-8dd511e63c6f",
+      "name": "Code in JavaScript9",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d500131c-0239-4fed-8a61-b10d771c4e81",
+              "name": "videos_filepath",
+              "value": "=[\"{{ $json.video_filepath }}\"]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        704
+      ],
+      "id": "d93311d3-3ee8-4b42-9914-3ce9c7f197d3",
+      "name": "生成分镜视频后字段整理"
+    },
+    {
+      "parameters": {
+        "jsCode": "const storyboard = $('生成视频分镜脚本').first().json.output.storyboard_prompts[0].prompt\n\nconst voice_list = $input.first().json.data.map(item => {\n  return {\n    \"text\": item.text,\n    \"audio_length\": item.audio_length,\n    \"start_time\": item.start_time,\n    \"end_time\": item.end_time\n  }\n})\n\nreturn {\n  \"data\": {\n    storyboard,\n    voice_list\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        704
+      ],
+      "id": "a0374a5e-7d6b-4318-91be-449bc2cea22b",
+      "name": "ai生成带时间的视频脚本前数据整理"
+    },
+    {
+      "parameters": {
+        "jsCode": "const audio_path_list = $('生成音频后字段整理').first().json.data\nconst video_path_list = $('生成分镜视频后字段整理').first().json.videos_filepath\nreturn {\n  \"data\": {\n    \"video_path_list\": video_path_list,\n    \"audio_path_list\": audio_path_list,\n    \"subtitle_filename\": $input.first().json.fileName\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        1040
+      ],
+      "id": "ddc1d614-3a09-4a6f-ab3a-c22429ada39b",
+      "name": "音视频合并前数据整理"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个字幕编排专家，你的任务是根据我给出的'音频播放信息数组'，根据每个元素的start_time（音频开始播放时间点，单位为毫秒）和text（音频文本），生成srt格式的字幕文本，后续我会将这个字幕文本作为字幕文件，你要保证这个字幕文本的可用性，以json格式返回。\n一段字幕文本过长时(超过40个字符)，要注意换行处理\n\n'音频播放信息数组'如下：\n{{ JSON.stringify($json.data.voice_list.map(item => {\n  return {\n    text: item.text,\n    start_time: item.start_time\n  }\n})) }}\n\n返回格式示例：\n{\n\"subtitle_text\": \"\"\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        704
+      ],
+      "id": "c79d8665-ee30-42cd-bff2-0af3ed157c7b",
+      "name": "生成字幕文件",
+      "retryOnFail": true,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get SRT subtitle text from previous node\nconst subtitle_text = $input.first().json.output.subtitle_text\n\n// Generate dynamic filename with timestamp and random number\nconst now = new Date();\nconst timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}-${String(now.getMilliseconds()).padStart(3, '0')}`;\nconst random = Math.floor(Math.random() * 1000);\nconst fileName = `subtitle_${timestamp}_${random}.srt`;\n\n// Create binary data from UTF-8 text\nconst buffer = Buffer.from(subtitle_text, 'utf-8');\n\nreturn {\n  json: {\n    fileName: fileName\n  },\n  binary: {\n    data: {\n      data: buffer.toString('base64'),\n      mimeType: 'application/x-subrip',\n      fileName: fileName\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1872,
+        704
+      ],
+      "id": "04f532b3-915a-407d-b681-59ddce515a7f",
+      "name": "生成字幕文件名"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $binary.data.fileName }}{{ $json.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        704
+      ],
+      "id": "233bcb3a-8477-45ad-b47c-28b8f8e3fc91",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "videoFilePath": "={{ $json.data }}",
+        "outputPath": "=/home/node/files/video_only_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}.mp4"
+      },
+      "type": "n8n-nodes-media-composition.videoMerge",
+      "typeVersion": 1,
+      "position": [
+        688,
+        1040
+      ],
+      "id": "6343858c-f38b-47cf-a55f-5dec5240c288",
+      "name": "Video Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.data.video_path_list.map(item => {\n  return {\n    \"data\": item\n  }\n})"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        1040
+      ],
+      "id": "455cc1e6-d972-4b32-a8e8-5381e11e22e1",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "videoPath": "={{ $('Video Merge').item.json.outputPath }}",
+        "audioFilesArray": "={{ $json.data }}",
+        "pathFieldName": "filename",
+        "timeFieldName": "start_time",
+        "audioVolume": 5,
+        "subtitlePath": "={{ $('音视频合并前数据整理').item.json.data.subtitle_filename }}",
+        "outputPath": "=/home/node/files/video_dub_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}.mp4"
+      },
+      "type": "n8n-nodes-media-composition.videoComposer",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        1040
+      ],
+      "id": "fb756c52-4266-4fbc-97f1-11278d9fa15c",
+      "name": "Video Composer"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  \"data\": $('音视频合并前数据整理').first().json.data.audio_path_list.map(item => {\n    return {\n      ...item,\n      filename: `/home/node/files/${item.filename}`,\n      start_time: parseInt(item.start_time) / 1000\n    }\n  })\n};\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        1040
+      ],
+      "id": "dadb3329-4fc9-4a3f-ae75-bbcf9818b346",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一位专业的视频分镜脚本编剧，精通影视语言和视觉叙事，尤其擅长**{{ $('On form submission').item.json.style }}**风格的创作。\n\n你的任务是根据我提供的故事核心要素，为我创作一份专业、详细且富有电影感的分镜脚本。\n\n---\n\n## 📋 创作基础信息\n\n- **分镜头图片描述**：{{ $json.character_prompt }}\n- **故事核心**：{{ $('On form submission').item.json.prompt }}\n- **整体风格**：{{ $('On form submission').item.json.style }}\n- **分镜上限**：1个\n\n---\n\n## 🎯 分镜脚本结构标准\n\n每个分镜的**prompt字段**必须遵循以下**三大核心模块**完整构建：\n\n```\nprompt =  场景描述 + 美学控制 + 风格化\n```\n\n---\n\n## 📐 核心模块详解\n\n### **模块1：场景描述（Scene）**\n\n详细刻画主体所处的环境\n\n**包含**：\n- 空间特征、环境细节、氛围营造、天气/光线\n- 为叙事服务，与情节发展相呼应\n\n**示例**：\n- \"昏暗的地下室，墙壁上布满裂痕，角落堆积着杂物\"\n- \"樱花飘落的日式庭院，古朴的木质回廊，远处是雾气笼罩的青山\"\n- \"废弃的工业厂房内，锈迹斑斑的钢铁梁柱，地面积水反射着微弱光线\"\n\n---\n\n\n### **模块2：美学控制（Aesthetic Control）**⭐\n\n精确控制画面视觉呈现，从以下维度选择**3-6项**进行组合：\n\n#### **a) 光源与照明**\n- 光源类型：阳光/人工光/月光/火光/荧光灯等\n- 照明方式：柔光/硬光/顶光/侧光/边缘光/剪影等\n- 示例：\"单一侧光，在脸部形成强烈明暗对比\"\n\n#### **b) 时间段**\n- 精确时间：日出/黄昏/夜晚/黎明/正午等\n- 可细化到\"凌晨4点的蓝调时刻\"\"午后3点的金色阳光\"\n\n#### **c) 景别（Shot Size）**\n- 选择：大特写/特写/中近景/中景/中远景/远景/全景\n- 根据叙事重点选择合适景别\n\n#### **d) 构图方式**\n- 类型：中心构图/对称构图/三分法/对角线/黄金分割等\n- 示例：\"人物位于画面右侧三分之一处，左侧留白\"\n\n#### **e) 镜头焦距**\n- 选择：广角/标准/中焦/长焦/鱼眼等\n- 可具体化：\"85mm镜头,浅景深背景虚化\"\n\n#### **f) 机位角度**\n- 角度：平视/俯拍/仰拍/荷兰角/过肩/鸟瞰等\n- 示例：\"低角度仰拍,突出人物的孤立感\"\n\n#### **g) 镜头运动**\n- 基础运动：推/拉/摇/移/升降\n- 高级运动：手持跟随/环绕/轨道/弧形运动\n- 示例：\"缓慢推进至人物面部特写\"\n\n#### **h) 色调**\n- 色彩倾向：暖色调/冷色调/高饱和/去饱和/单色\n- 具体化：\"青蓝冷色调,低饱和度营造压抑感\"\n\n**注意**：术语仅供参考,可创造性使用更精准的描述\n\n---\n\n### **模块3：风格化（Stylization）**\n\n必须体现\"{{ $('On form submission').item.json.style }}\"风格特征\n\n**包含**：\n- 画面质感、艺术流派、时代特征\n- 示例：\"赛博朋克风格,霓虹光晕,高对比度\"\n\n---\n\n## 📐 创作要求细则\n\n### **1. 叙事连贯性**\n- 每个分镜必须推进故事发展\n- 分镜之间有清晰的因果逻辑\n- 通过视觉变化展现情节转折\n\n### **2. 场景差异性**\n- **每个分镜的场景必须有明显差异**\n- 可通过改变：地点、时间、光线、景别、角度等\n- 避免连续分镜过于相似\n\n### **3. 时长控制**\n- 每个分镜时长2-5秒,专注于一个核心叙事点\n- 根据重要性分配时长：\n  - 过渡镜头：2-3秒\n  - 关键情节：4-5秒\n  - 情绪高潮：5秒\n\n### **4. 视觉冲击力**\n- 善用对比：大景别vs特写、明vs暗、动vs静\n- 在关键节点增加视觉张力\n- 运用镜头运动强化情绪\n\n### **5. 风格一致性**\n- 所有分镜必须统一体现\"{{ $('On form submission').item.json.style }}\"风格\n- 在美学控制和风格化模块中持续强化\n\n---\n\n## ⚠️ 关键注意事项\n\n### **整体要求**：\n1. ✅ **每个prompt必须包含完整的三大模块**\n2. ✅ **场景必须有变化**,避免重复\n3. ✅ **动作和表情描述要具体可执行**,避免抽象\n4. ✅ **美学控制要精准**,至少包含3-6个维度\n5. ✅ **风格化要体现主题风格**\n6. ✅ **总分镜数≤1**\n7. ✅ **只输出JSON**,不要额外解释\n8. ✅ **不要输出人物IP的描述**\n\n---\n\n## 🎬 开始创作\n\n现在请严格按照以上要求,为我创作分镜脚本。\n\n**直接输出JSON,不要任何其他内容。**\n📤 输出格式（JSON）\n\n```json\n{\n  \"storyboard_prompts\": [\n    {\n      \"prompt\": \"[场景描述]。[美学控制：光源、照明、景别、构图、镜头焦距、机位角度、镜头运动、色调等]。[风格化]\",\n      \"duration\": 3,\n      \"description\": \"建立场景,展现主角初始状态\"\n    },\n    {\n      \"prompt\": \"[完整的三模块描述...]\",\n      \"duration\": 4,\n      \"description\": \"情节转折\"\n    }\n  ]\n}\n```\n\n### **字段说明**\n- **prompt**：包含完整三大模块的详细分镜描述（150-300字）\n- **duration**：该分镜持续时间（2-5秒）\n- **description**：简述该镜头的叙事功能（15-30字）\n",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        320
+      ],
+      "id": "5c14856a-422a-4b54-9d6a-0565755da8ad",
+      "name": "生成视频分镜脚本",
+      "retryOnFail": true,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "jsCode": "const video_ratio = $('On form submission').first().json.video_ratio\nlet width = 0;\nlet height = 0;\nif (video_ratio === '1:1') {\n  width = 1024;\n  height = 1024;\n} else if (video_ratio === '4:3') {\n  width = 1472;\n  height = 1136;\n} else if (video_ratio === '3:4') {\n  width = 1136;\n  height = 1472;\n} else if (video_ratio === '3:2') {\n  width = 1584;\n  height = 1056;\n} else if (video_ratio === '2:3') {\n  width = 1056;\n  height = 1584;\n} else if (video_ratio === '16:9') {\n  width = 1656;\n  height = 928;\n} else if (video_ratio === '9:16') {\n  width = 928;\n  height = 1656;\n}\n\nreturn {\n  \"image_width\": width,\n  \"image_height\": height,\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        384,
+        320
+      ],
+      "id": "f01538d8-4d80-4f3a-bf6d-dfae9963e27e",
+      "name": "图片比例计算"
+    },
+    {
+      "parameters": {
+        "jsCode": "const video_ratio = $('On form submission').first().json.video_ratio\nlet width = 0;\nlet height = 0;\nif (video_ratio === '1:1') {\n  width = 480;\n  height = 480;\n} else if (video_ratio === '4:3') {\n  width = 640;\n  height = 480;\n} else if (video_ratio === '3:4') {\n  width = 480;\n  height = 640;\n} else if (video_ratio === '3:2') {\n  width = 720;\n  height = 480;\n} else if (video_ratio === '2:3') {\n  width = 480;\n  height = 720;\n} else if (video_ratio === '16:9') {\n  width = 856;   \n  height = 480;\n} else if (video_ratio === '9:16') {\n  width = 480;   \n  height = 856;\n}\n\nreturn {\n  \"video_width\": width,\n  \"video_height\": height,\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        320
+      ],
+      "id": "0338f556-b282-4268-a75c-6bf9545324ad",
+      "name": "视频比例计算"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "65bc3b5d-145c-46d8-b35f-d3c06958d605",
+              "name": "data",
+              "value": "={{ $json.data.map(item => {\n  return {\n    ...item,\n    filePath: item.voice_filepath\n  }\n}) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        704
+      ],
+      "id": "da1ac970-5d0c-4f6d-940e-1b0eaf549f9f",
+      "name": "生成音频后字段整理"
+    },
+    {
+      "parameters": {
+        "jsCode": "const music_filepath = $('视频生成-生成背景音乐').first().json.music_filepath\nconst video_sound_dub = $('Video Composer').first().json.outputPath\n\nreturn {\n  \"data\": {\n    \"video_path_list\": [video_sound_dub],\n    \"audio_path_list\": [{\n      \"filePath\": music_filepath,\n      \"start_time\": 0,\n      \"audio_length\": $input.first().json.duration_ms\n    }]\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        1040
+      ],
+      "id": "d0212320-f335-440a-a026-c418acb6086e",
+      "name": "音视频合并前数据整理2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 binary 数据（兼容 n8n 各种 binary mode）\nconst item = $input.first();\nlet buffer;\n\ntry {\n    // 推荐方式：使用 n8n helper（支持 filesystem 和 base64 模式）\n    buffer = await this.helpers.getBinaryDataBuffer(0, 'data');  // 'data' 是 binary property name\n} catch (e) {\n    // 兼容旧版或直接 base64 的 fallback\n    const binaryData = item.binary?.data;\n    if (binaryData && typeof binaryData === 'string') {\n        buffer = Buffer.from(binaryData, 'base64');\n    } else if (Buffer.isBuffer(binaryData)) {\n        buffer = binaryData;\n    } else {\n        return [{ json: { error: '无法获取 binary 数据，请检查上游节点 binary property name 是否为 \"data\"' } }];\n    }\n}\n\n// FLAC duration 解析函数\nfunction getFlacDurationFromBinary(buffer) {\n    try {\n        if (buffer.length < 4 || buffer.toString('utf8', 0, 4) !== 'fLaC') {\n            return { error: '不是有效的 FLAC 文件（缺少 fLaC 头）' };\n        }\n\n        let offset = 4;  // 跳过 fLaC 标记\n\n        while (offset < buffer.length) {\n            // 读取 4 字节 metadata block header (Big Endian)\n            const blockHeader = buffer.readUInt32BE(offset);\n            offset += 4;\n\n            const isLast = (blockHeader & 0x80000000) !== 0;\n            const blockType = (blockHeader >> 24) & 0x7F;  // 类型\n            const blockSize = blockHeader & 0x00FFFFFF;    // 大小\n\n            // STREAMINFO block (type 0) 必须是第一个，通常紧跟 fLaC\n            if (blockType === 0) {\n                // STREAMINFO 数据从这里开始（34 字节固定结构）\n                const streamInfoOffset = offset;\n\n                // Sample rate: 20 bits，从 STREAMINFO 第 10 字节开始\n                // 字节 10-11 (high 16 bits) + 字节12 高4位\n                const sampleRate = ((buffer.readUInt16BE(streamInfoOffset + 10) << 4) |\n                                   (buffer.readUInt8(streamInfoOffset + 12) >> 4)) & 0xFFFFF;\n\n                // Total samples: 36 bits，从 STREAMINFO 第 13 字节开始 (Big-endian)\n                // 使用 readBigUInt64BE 简化 + 掩码取低36位\n                const totalSamplesHigh = buffer.readUInt8(streamInfoOffset + 13) & 0x0F; // 只取低4位\n                const totalSamples = (BigInt(totalSamplesHigh) << 32n) |\n                                     BigInt(buffer.readUInt32BE(streamInfoOffset + 14));\n\n                if (sampleRate > 0 && totalSamples > 0n) {\n                    const durationSeconds = Number(totalSamples) / sampleRate;\n                    const minutes = Math.floor(durationSeconds / 60);\n                    const seconds = Math.floor(durationSeconds % 60);\n\n                    return {\n                        duration_seconds: durationSeconds,\n                        duration_formatted: `${minutes}:${seconds.toString().padStart(2, '0')}`,\n                        sample_rate: sampleRate,\n                        total_samples: Number(totalSamples)\n                    };\n                } else {\n                    return { error: 'STREAMINFO 中 total_samples 或 sample_rate 为 0（未知时长）' };\n                }\n            }\n\n            offset += blockSize;\n            if (isLast) break;\n        }\n\n        return { error: '未找到 STREAMINFO metadata block' };\n    } catch (error) {\n        return { error: `解析错误: ${error.message}` };\n    }\n}\n\nconst result = getFlacDurationFromBinary(buffer);\n\nif (result.error) {\n    return [{ json: { error: result.error } }];\n}\n\n// 返回 duration_ms\nreturn [{\n    json: {\n        duration_ms: Math.floor(result.duration_seconds * 1000),\n        duration_seconds: result.duration_seconds,\n        duration_formatted: result.duration_formatted,\n        sample_rate: result.sample_rate,\n        total_samples: result.total_samples\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1584,
+        1040
+      ],
+      "id": "ced11bbc-acde-41d5-8201-03a5f5c248ef",
+      "name": "获取音频时长"
+    },
+    {
+      "parameters": {
+        "videoPath": "={{ $json.data.video_path_list[0] }}",
+        "audioFilesArray": "={{ $json.data.audio_path_list }}",
+        "pathFieldName": "filePath",
+        "audioVolume": -15,
+        "subtitlePath": "=",
+        "outputPath": "=/home/node/files/finnal_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}.mp4"
+      },
+      "type": "n8n-nodes-media-composition.videoComposer",
+      "typeVersion": 1,
+      "position": [
+        2032,
+        1040
+      ],
+      "id": "8f5fc6f3-fd50-4950-8377-fdca471f824b",
+      "name": "Video Composer3"
+    },
+    {
+      "parameters": {
+        "content": "配置区",
+        "height": 368,
+        "width": 2048,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "76844bb6-f55d-4c88-85a1-c5d6f822b529",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "生成音视频",
+        "height": 336,
+        "width": 2048
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "7b8c5713-95f5-4299-993b-ea5d765ddf00",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "生成字幕并合成视频",
+        "height": 288,
+        "width": 912,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        240,
+        976
+      ],
+      "typeVersion": 1,
+      "id": "c7584316-e8b3-40e1-ae80-aa080021764a",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "生成背景音乐并再次合并视频",
+        "height": 288,
+        "width": 1136,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1152,
+        976
+      ],
+      "typeVersion": 1,
+      "id": "1a1fc647-f707-4302-85bc-21cf295dbd78",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3.5",
+          "mode": "list",
+          "cachedResultName": "Qwen3.5"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1440,
+        864
+      ],
+      "id": "97b069e8-b3ea-4b81-b604-327a71c1ed33",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "gM924akHUPCvr5sE",
+          "name": "supper center"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3.5",
+          "mode": "list",
+          "cachedResultName": "Qwen3.5"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        512
+      ],
+      "id": "458d8341-7d2f-4468-b691-54d1bd010e54",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "gM924akHUPCvr5sE",
+          "name": "supper center"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3.5-35B-A3B-GPTQ-Int4-256k-B",
+          "mode": "list",
+          "cachedResultName": "Qwen3.5-35B-A3B-GPTQ-Int4-256k-B"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1376,
+        496
+      ],
+      "id": "c50f0397-9af5-46a7-b4ad-2429eb3bdb1f",
+      "name": "OpenAI Chat Model3",
+      "credentials": {
+        "openAiApi": {
+          "id": "gM924akHUPCvr5sE",
+          "name": "supper center"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3.5",
+          "mode": "list",
+          "cachedResultName": "Qwen3.5"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1856,
+        512
+      ],
+      "id": "7205c3d7-ff89-4735-80e0-4cb6ec68a81a",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "gM924akHUPCvr5sE",
+          "name": "supper center"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "htV9YwPHhjaIGOcn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/htV9YwPHhjaIGOcn",
+          "cachedResultName": "🦅单人视频-生成配音"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "voice_script": "={{ $('生成语音脚本').item.json.output }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "voice_script",
+              "displayName": "voice_script",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "output_folder_path",
+              "displayName": "output_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "voice_example_folder_path",
+              "displayName": "voice_example_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        720,
+        704
+      ],
+      "id": "91baa832-1c76-4f16-9d41-72acfbf3b6e7",
+      "name": "🦅单人视频-生成配音"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YaPEJOrK4FpAa1LY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/YaPEJOrK4FpAa1LY",
+          "cachedResultName": "🪿单人视频-生成背景音乐"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "storyboard_prompts": "={{ $('生成视频分镜脚本').first().json.output.storyboard_prompts }}",
+            "character": "={{ $('图片描叙').item.json.character_prompt }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "storyboard_prompts",
+              "displayName": "storyboard_prompts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array"
+            },
+            {
+              "id": "character",
+              "displayName": "character",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "output_folder_path",
+              "displayName": "output_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1216,
+        1040
+      ],
+      "id": "ce707eac-19fc-4e44-92b1-f290a721986c",
+      "name": "视频生成-生成背景音乐"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TlQWcAQoa4n72j4P",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TlQWcAQoa4n72j4P",
+          "cachedResultName": "🦆单人视频-生成视频片段"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "duration": "={{ $('生成视频分镜脚本').item.json.output.storyboard_prompts[0].duration }}",
+            "width": "={{ $('视频比例计算').item.json.video_width }}",
+            "height": "={{ $('视频比例计算').item.json.video_height }}",
+            "prompt": "={{ $('生成视频分镜脚本').item.json.output.storyboard_prompts[0].prompt }}",
+            "image_filepath": "={{ $('保存分镜头图像').item.json.fileName }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "image_filepath",
+              "displayName": "image_filepath",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "prompt",
+              "displayName": "prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "duration",
+              "displayName": "duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "width",
+              "displayName": "width",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "height",
+              "displayName": "height",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "output_folder_path",
+              "displayName": "output_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        704
+      ],
+      "id": "07d9308e-d491-4a36-bc33-a7e8c6469ab6",
+      "name": "🦆单人视频-生成视频片段"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.music_filepath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        1040
+      ],
+      "id": "ab72cc4a-1bd5-4b68-a208-18dbc1115ee4",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "formTitle": "图生视频",
+        "formDescription": "图生视频，视频比例，以及提示词",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "video_ratio",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "3:4"
+                  },
+                  {
+                    "option": "9:16"
+                  },
+                  {
+                    "option": "16:9"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "prompt"
+            },
+            {
+              "fieldLabel": "style",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "动画简笔风格"
+                  },
+                  {
+                    "option": "3D皮克斯风格"
+                  }
+                ]
+              }
+            },
+            {
+              "fieldLabel": "file",
+              "fieldType": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        48,
+        320
+      ],
+      "id": "9e10507d-efe9-4fd0-828a-2e4a4f3e5d9f",
+      "name": "On form submission",
+      "webhookId": "2b77d004-b0f3-4663-bdce-30e8dcdee488"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"subtitle_text\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1584,
+        864
+      ],
+      "id": "4e752b7f-78f3-40fd-bb14-4a682498a1c9",
+      "name": "Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"storyboard_prompts\": [\n    {\n      \"prompt\": \"角色[服饰变化（如需要）]，[表情/情绪描述]。[场景描述]。[动作描述]。[美学控制：光源、照明、景别、构图、镜头焦距、机位角度、镜头运动、色调等]。[风格化]\",\n      \"duration\": 3,\n      \"description\": \"建立场景,展现主角初始状态\"\n    },\n    {\n      \"prompt\": \"[完整的五模块描述...]\",\n      \"duration\": 4,\n      \"description\": \"情节转折,主角情绪变化\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        976,
+        512
+      ],
+      "id": "8ed3a78c-01d8-491c-a70b-aafc50237d1e",
+      "name": "parser1"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"storyboard_image_prompts\": [\n    {\n      \"prompt\": \"转换后的首帧图片描述\",\n      \"thought_process\": \"详细说明你的分析思路：识别了哪些动作类型、做了哪些转换、保留了哪些元素、删除了哪些元素\"\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1520,
+        496
+      ],
+      "id": "12cbea4b-51ca-44f0-86c0-ce31f1b37f34",
+      "name": "parser2"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"characters_timbre\": [\n      {\n        \"timbre_name\": \"旁白\",\n        \"timbre_des\": \"\",\n        \"timbre_id\": 0\n      }\n    ],\n\t\"voice_scripts\": [\n      {\n        \"text\": \"第一段旁白或角色说的话\",\n        \"timbre_id\": 0,\n        \"start_time\": 100,\n        \"end_time\": 4000\n      },\n      {\n        \"text\": \"第二段旁白或角色说的话\",\n        \"timbre_id\": 1,\n        \"start_time\": 5500,\n        \"end_time\": 9500\n      }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2000,
+        512
+      ],
+      "id": "8e5f0065-6bac-43cb-9c24-8881bb0d7b56",
+      "name": "parser3"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $json.file[0].filename }}",
+        "dataPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        320
+      ],
+      "id": "d0ee8203-8170-4a23-a251-7c112fa93652",
+      "name": "保存分镜头图像"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "440d7e41-16a7-434d-bab2-e2c4e01d97de",
+              "name": "character_prompt",
+              "value": "=扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，清晨的幼儿园门口，柔和的金色晨光斜洒在浅灰色地砖上，天空呈淡青与柔粉交融的渐变色，园门是圆润拱形的浅蓝色铁艺门，门完全敞开着，两侧立着矮矮的白色栅栏和两株盛放的粉色木槿花，门楣悬挂着卡通云朵造型的木质挂牌，地面干净平整，右侧立有圆形指示牌写着‘小星星班’，左侧摆放一排矮小的绿植盆栽，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，干净亲和的美学，沉浸式叙事扁平背景，整体氛围温暖、活泼而充满童趣，画面无人物无文字",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        320
+      ],
+      "id": "a8de56fc-8a9e-40e1-85d0-63d6c5399e01",
+      "name": "图片描叙"
+    }
+  ],
+  "pinData": {
+    "On form submission": [
+      {
+        "json": {
+          "video_ratio": "16:9",
+          "prompt": "三个小孩去上学",
+          "style": "动画简笔风格",
+          "file": [
+            {
+              "filename": "tree.png",
+              "mimetype": "image/png",
+              "size": 2849223
+            }
+          ],
+          "submittedAt": "2026-04-08T11:03:31.909+08:00",
+          "formMode": "test"
+        },
+        "binary": {
+          "file": {
+            "mimeType": "image/png",
+            "fileType": "image",
+            "fileExtension": "png",
+            "data": "filesystem-v2",
+            "fileName": "tree.png",
+            "id": "filesystem-v2:workflows/a8jh1Yc7N7dEb30E/executions/temp/binary_data/f5c1a474-ad59-4f64-b752-0576e84fa702",
+            "fileSize": "2.85 MB",
+            "bytes": 2849223
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "生成每个分镜的图片prompt": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成语音脚本": {
+      "main": [
+        [
+          {
+            "node": "🦆单人视频-生成视频片段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "生成语音脚本",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript9": {
+      "main": [
+        [
+          {
+            "node": "生成每个分镜的图片prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ai生成带时间的视频脚本前数据整理": {
+      "main": [
+        [
+          {
+            "node": "生成字幕文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "音视频合并前数据整理": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成字幕文件": {
+      "main": [
+        [
+          {
+            "node": "生成字幕文件名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成字幕文件名": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "音视频合并前数据整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Video Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Video Composer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成分镜视频后字段整理": {
+      "main": [
+        [
+          {
+            "node": "🦅单人视频-生成配音",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成视频分镜脚本": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片比例计算": {
+      "main": [
+        [
+          {
+            "node": "视频比例计算",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频比例计算": {
+      "main": [
+        [
+          {
+            "node": "图片描叙",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成音频后字段整理": {
+      "main": [
+        [
+          {
+            "node": "ai生成带时间的视频脚本前数据整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Composer": {
+      "main": [
+        [
+          {
+            "node": "视频生成-生成背景音乐",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取音频时长": {
+      "main": [
+        [
+          {
+            "node": "音视频合并前数据整理2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "音视频合并前数据整理2": {
+      "main": [
+        [
+          {
+            "node": "Video Composer3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "生成字幕文件",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "生成视频分镜脚本",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "生成每个分镜的图片prompt",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "生成语音脚本",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🦅单人视频-生成配音": {
+      "main": [
+        [
+          {
+            "node": "生成音频后字段整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频生成-生成背景音乐": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🦆单人视频-生成视频片段": {
+      "main": [
+        [
+          {
+            "node": "生成分镜视频后字段整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "获取音频时长",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "保存分镜头图像",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "生成字幕文件",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "生成视频分镜脚本",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "生成每个分镜的图片prompt",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parser3": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "生成语音脚本",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "保存分镜头图像": {
+      "main": [
+        [
+          {
+            "node": "图片比例计算",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "图片描叙": {
+      "main": [
+        [
+          {
+            "node": "生成视频分镜脚本",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b729dbc9-bd4c-4975-9d5f-abca60609298",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "a8jh1Yc7N7dEb30E",
+  "tags": []
+}

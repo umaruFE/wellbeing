@@ -54,7 +54,7 @@ function ImageSpecificOptions({ asset, values, setValue }) {
   }
   if (asset.code === 'B5') {
     return (
-      <FieldBlock label="活动主题">
+      <FieldBlock label={t('assetPanel.iwActivityTheme')}>
         <OptionGrid options={activityThemeOpts} value={values.theme} onChange={(value) => setValue('theme', value)} columns={4} />
       </FieldBlock>
     );
@@ -62,10 +62,10 @@ function ImageSpecificOptions({ asset, values, setValue }) {
   if (asset.code === 'B8') {
     return (
       <>
-        <FieldBlock label="图表类型">
+        <FieldBlock label={t('assetPanel.iwChartType')}>
           <OptionGrid options={chartOpts} value={values.chart} onChange={(value) => setValue('chart', value)} columns={4} />
         </FieldBlock>
-        <FieldBlock label="输出方向">
+        <FieldBlock label={t('assetPanel.iwOutputDirection')}>
           <OptionGrid options={ratioOpts.slice(0, 2)} value={values.ratio} onChange={(value) => setValue('ratio', value)} columns={2} />
         </FieldBlock>
       </>
@@ -73,7 +73,7 @@ function ImageSpecificOptions({ asset, values, setValue }) {
   }
   if (asset.code === 'B10') {
     return (
-      <FieldBlock label="漫画风格">
+      <FieldBlock label={t('assetPanel.iwComicStyle')}>
         <OptionGrid options={comicStyleOpts} value={values.comicStyle} onChange={(value) => setValue('comicStyle', value)} columns={3} />
       </FieldBlock>
     );
@@ -81,10 +81,10 @@ function ImageSpecificOptions({ asset, values, setValue }) {
   if (asset.code === 'B11') {
     return (
       <>
-        <FieldBlock label="IP 角色">
+        <FieldBlock label={t('assetPanel.iwIpCharacter')}>
           <OptionGrid options={characterOptions} value={values.character} onChange={(value) => setValue('character', value)} columns={5} />
         </FieldBlock>
-        <FieldBlock label="已选动作">
+        <FieldBlock label={t('assetPanel.iwSelectedActions')}>
           <OptionGrid options={actionOpts} value={values.action} onChange={(value) => setValue('action', value)} columns={2} />
         </FieldBlock>
       </>
@@ -104,41 +104,51 @@ const imageRatioSets = {
   B13: ['16:9', '4:3', '1:1', '9:16'],
 };
 
-const focusedImageTitles = {
-  B1: '生成主题意境图',
-  B2: '生成意境图（有文字）',
-  B3: 'flashcard 词汇闪卡',
-  B4: '故事配图',
-  B5: '活动氛围图',
-  B6: '主题词图谱',
-  B7: '文本配图',
-  B8: '知识总结图',
-  B9: '绘本故事配图',
-  B10: '四格漫画',
-  B11: '动作示意图',
-  B13: 'IP角色场景图',
-};
+function getFocusedImageTitles(t) {
+  return {
+    B1: t('assetPanel.iwGenThemeScene'),
+    B2: t('assetPanel.iwGenSceneWithText'),
+    B3: t('assetPanel.iwFlashcard'),
+    B4: t('assetPanel.iwStoryIllustration'),
+    B5: t('assetPanel.iwActivityAtmosphere'),
+    B6: t('assetPanel.iwThemeWordMap'),
+    B7: t('assetPanel.iwTextIllustration'),
+    B8: t('assetPanel.iwKnowledgeSummary'),
+    B9: t('assetPanel.iwPictureBook'),
+    B10: t('assetPanel.iwFourPanelComic'),
+    B11: t('assetPanel.iwActionIllustration'),
+    B13: t('assetPanel.iwIpScene'),
+  };
+}
 
-const activityThemeCards = [
-  { value: '艺术', icon: Palette },
-  { value: '瑜伽', icon: BookOpen },
-  { value: '体能', icon: Dumbbell },
-  { value: '音乐', icon: Music },
-  { value: '游戏', icon: Gamepad2 },
-  { value: '展示', icon: CircleDot },
-  { value: '庆祝', icon: Gift },
-];
+function getActivityThemeCards(t) {
+  return [
+    { value: t('assetPanel.themeArt'), icon: Palette },
+    { value: t('assetPanel.themeYoga'), icon: BookOpen },
+    { value: t('assetPanel.themeFitness'), icon: Dumbbell },
+    { value: t('assetPanel.themeMusic'), icon: Music },
+    { value: t('assetPanel.themeGame'), icon: Gamepad2 },
+    { value: t('assetPanel.themeShow'), icon: CircleDot },
+    { value: t('assetPanel.themeCelebrate'), icon: Gift },
+  ];
+}
 
-const textLayoutCards = ['对话气泡', '卷轴', '卡片框'];
+function getTextLayoutCards(t) {
+  return [t('assetPanel.iwDialogueBubble'), t('assetPanel.iwScroll'), t('assetPanel.iwCardFrame')];
+}
 
-const knowledgeChartCards = [
-  { value: '思维导图', icon: MessageSquareText },
-  { value: '知识表格', icon: Table2 },
-  { value: '鱼骨图', icon: FishSymbol },
-  { value: '树状图', icon: Sprout },
-];
+function getKnowledgeChartCards(t) {
+  return [
+    { value: t('assetPanel.chartMindMap'), icon: MessageSquareText },
+    { value: t('assetPanel.chartTable'), icon: Table2 },
+    { value: t('assetPanel.chartFishbone'), icon: FishSymbol },
+    { value: t('assetPanel.chartTree'), icon: Sprout },
+  ];
+}
 
-const comicStyleCards = ['Q版萌系', '日漫风', '美漫风'];
+function getComicStyleCards(t) {
+  return [t('assetPanel.comicCute'), t('assetPanel.comicAnime'), t('assetPanel.comicWestern')];
+}
 
 const ipCharacters = [
   { name: 'Poppy', image: poppy },
@@ -223,7 +233,7 @@ async function pollGeneratedImage(asset) {
       };
     }
     if (status.status === 'error') {
-      throw new Error(status.error || '图片生成失败');
+      throw new Error(status.error || t('assetPanel.iwGenFailed'));
     }
   }
 
@@ -244,26 +254,32 @@ const actionChips = [
   'Crab pose',
 ];
 
-const b13CharMeta = {
-  Poppy: { tag: '活泼', short: 'P', base: '#ff705d', colors: ['#ff705d', '#ff8a7a', '#f97360'], prompt: 'Poppy，活泼友好的IP角色，透明背景，适合儿童英语课堂场景。' },
-  Edi: { tag: '冷静', short: 'E', base: '#4f8cff', colors: ['#4f8cff', '#60a5fa', '#2563eb'], prompt: 'Edi，冷静聪明的IP角色，透明背景，正在引导学生观察和思考。' },
-  Rolly: { tag: '温暖', short: 'R', base: '#22c55e', colors: ['#22c55e', '#34d399', '#16a34a'], prompt: 'Rolly，温暖可靠的IP角色，透明背景，动作亲切自然。' },
-  Milo: { tag: '自信', short: 'M', base: '#f59e0b', colors: ['#f59e0b', '#fbbf24', '#d97706'], prompt: 'Milo，自信开朗的IP角色，透明背景，站姿积极有表现力。' },
-  Ace: { tag: '机智', short: 'A', base: '#8b5cf6', colors: ['#8b5cf6', '#a78bfa', '#7c3aed'], prompt: 'Ace，机智敏捷的IP角色，透明背景，动作轻快，适合趣味课堂。' },
-};
+function getB13CharMeta(t) {
+  return {
+    Poppy: { tag: t('assetPanel.iwLively'), short: 'P', base: '#ff705d', colors: ['#ff705d', '#ff8a7a', '#f97360'], prompt: 'Poppy，活泼友好的IP角色，透明背景，适合儿童英语课堂场景。' },
+    Edi: { tag: t('assetPanel.iwCalm'), short: 'E', base: '#4f8cff', colors: ['#4f8cff', '#60a5fa', '#2563eb'], prompt: 'Edi，冷静聪明的IP角色，透明背景，正在引导学生观察和思考。' },
+    Rolly: { tag: t('assetPanel.iwWarm'), short: 'R', base: '#22c55e', colors: ['#22c55e', '#34d399', '#16a34a'], prompt: 'Rolly，温暖可靠的IP角色，透明背景，动作亲切自然。' },
+    Milo: { tag: t('assetPanel.iwConfident'), short: 'M', base: '#f59e0b', colors: ['#f59e0b', '#fbbf24', '#d97706'], prompt: 'Milo，自信开朗的IP角色，透明背景，站姿积极有表现力。' },
+    Ace: { tag: t('assetPanel.iwClever'), short: 'A', base: '#8b5cf6', colors: ['#8b5cf6', '#a78bfa', '#7c3aed'], prompt: 'Ace，机智敏捷的IP角色，透明背景，动作轻快，适合趣味课堂。' },
+  };
+}
 
-const b13BgVariants = [
-  { name: '太空教室', symbol: '✦', css: 'radial-gradient(circle at 18% 20%,#fff7ad 0 .7rem,transparent .75rem),radial-gradient(circle at 76% 34%,#bfdbfe 0 1rem,transparent 1.05rem),linear-gradient(135deg,#dbeafe 0%,#eef2ff 45%,#fff7ed 100%)' },
-  { name: '森林课堂', symbol: '葉', css: 'radial-gradient(circle at 18% 28%,#bbf7d0 0 2.6rem,transparent 2.7rem),radial-gradient(circle at 76% 24%,#fde68a 0 2rem,transparent 2.1rem),linear-gradient(135deg,#dcfce7 0%,#ecfccb 48%,#fef3c7 100%)' },
-  { name: '海底实验室', symbol: '水', css: 'radial-gradient(circle at 22% 28%,rgba(255,255,255,.72) 0 .65rem,transparent .7rem),radial-gradient(circle at 72% 64%,rgba(255,255,255,.55) 0 .9rem,transparent .95rem),linear-gradient(135deg,#bae6fd 0%,#a7f3d0 50%,#e0f2fe 100%)' },
-  { name: '农场舞台', symbol: 'IP', css: 'radial-gradient(circle at 20% 78%,#fcd34d 0 2rem,transparent 2.1rem),radial-gradient(circle at 78% 30%,#fecaca 0 2.2rem,transparent 2.3rem),linear-gradient(135deg,#fef3c7 0%,#dcfce7 52%,#fee2e2 100%)' },
-];
+function getB13BgVariants(t) {
+  return [
+    { name: t('assetPanel.iwSpaceClassroom'), symbol: '✦', css: 'radial-gradient(circle at 18% 20%,#fff7ad 0 .7rem,transparent .75rem),radial-gradient(circle at 76% 34%,#bfdbfe 0 1rem,transparent 1.05rem),linear-gradient(135deg,#dbeafe 0%,#eef2ff 45%,#fff7ed 100%)' },
+    { name: t('assetPanel.iwForestClassroom'), symbol: '葉', css: 'radial-gradient(circle at 18% 28%,#bbf7d0 0 2.6rem,transparent 2.7rem),radial-gradient(circle at 76% 24%,#fde68a 0 2rem,transparent 2.1rem),linear-gradient(135deg,#dcfce7 0%,#ecfccb 48%,#fef3c7 100%)' },
+    { name: t('assetPanel.iwOceanLab'), symbol: '水', css: 'radial-gradient(circle at 22% 28%,rgba(255,255,255,.72) 0 .65rem,transparent .7rem),radial-gradient(circle at 72% 64%,rgba(255,255,255,.55) 0 .9rem,transparent .95rem),linear-gradient(135deg,#bae6fd 0%,#a7f3d0 50%,#e0f2fe 100%)' },
+    { name: t('assetPanel.iwFarmStage'), symbol: 'IP', css: 'radial-gradient(circle at 20% 78%,#fcd34d 0 2rem,transparent 2.1rem),radial-gradient(circle at 78% 30%,#fecaca 0 2.2rem,transparent 2.3rem),linear-gradient(135deg,#fef3c7 0%,#dcfce7 52%,#fee2e2 100%)' },
+  ];
+}
 
-const b13Examples = [
-  { label: '森林探险', value: '森林教室，寻找动物单词' },
-  { label: '海底实验室', value: '海底实验室，观察颜色词汇' },
-  { label: '农场运动会', value: '农场运动会，学习动物动作' },
-];
+function getB13Examples(t) {
+  return [
+    { label: t('assetPanel.iwForestExplore'), value: '森林教室，寻找动物单词' },
+    { label: t('assetPanel.iwOceanLabExp'), value: '海底实验室，观察颜色词汇' },
+    { label: t('assetPanel.iwFarmSports'), value: '农场运动会，学习动物动作' },
+  ];
+}
 
 function b13Color(name, variant = 0) {
   const meta = b13CharMeta[name] || b13CharMeta.Poppy;
@@ -295,9 +311,10 @@ function b13InitialLayer(name, index, total, ratio) {
 }
 
 function RatioPicker({ code, value, onChange }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">比例</div>
+      <div className="ppt-img-label">{t('assetPanel.iwRatio')}</div>
       <div className="ppt-img-ratio-grid">
         {imageRatioSets[code].map((ratio) => (
           <button type="button" key={ratio} className={value === ratio ? 'is-active' : ''} onClick={() => onChange(ratio)}>
@@ -311,9 +328,11 @@ function RatioPicker({ code, value, onChange }) {
 }
 
 function IpSceneStepper({ step }) {
+  const { t } = useTranslation();
+  const labels = [t('assetPanel.iwStepperSetup'), t('assetPanel.iwStepperLayout'), t('assetPanel.iwStepperComposite')];
   return (
-    <div className="ppt-storybook-stepper" aria-label="IP角色场景图步骤">
-      {['设定', '编排', '合成'].map((label, index) => (
+    <div className="ppt-storybook-stepper" aria-label={t('assetPanel.iwIpScene')}>
+      {labels.map((label, index) => (
         <React.Fragment key={label}>
           <div className={`ppt-storybook-step ${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}>
             <span>{step > index ? '✓' : index + 1}</span>
@@ -327,6 +346,7 @@ function IpSceneStepper({ step }) {
 }
 
 function IpSceneCharacterPicker({ value, onChange }) {
+  const { t } = useTranslation();
   const toggle = (name) => {
     const next = value.includes(name) ? value.filter((item) => item !== name) : [...value, name];
     if (next.length) onChange(next);
@@ -334,7 +354,7 @@ function IpSceneCharacterPicker({ value, onChange }) {
 
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">选择IP角色 <span>可多选，默认生成独立透明角色图层。</span></div>
+      <div className="ppt-img-label">{t('assetPanel.iwSelectIpChars')} <span>{t('assetPanel.iwMultiSelectHint')}</span></div>
       <div className="ppt-img-character-grid">
         {ipCharacters.map((character) => {
           const active = value.includes(character.name);
@@ -351,12 +371,13 @@ function IpSceneCharacterPicker({ value, onChange }) {
 }
 
 function B13MiniPreview({ values, final = false, onClick }) {
+  const { t } = useTranslation();
   const virtual = b13VirtualSize(values.ratio);
   const bg = b13BgVariants[values.ipBgIndex % b13BgVariants.length] || b13BgVariants[0];
   return (
     <div className={final ? 'b13-final-preview' : 'b13-preview-card b13-step2-preview-card'} onClick={onClick} role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined}>
       <div className={final ? 'b13-preview-art b13-final-art' : 'b13-preview-art b13-step2-preview-art'} style={{ aspectRatio: values.ratio.replace(':', ' / '), background: bg.css }}>
-        {final ? <span className="b13-preview-badge done">合成完成</span> : null}
+        {final ? <span className="b13-preview-badge done">{t('assetPanel.iwCompositeDone')}</span> : null}
         <div className="b13-preview-bg-symbol">{final ? 'IP' : bg.symbol}</div>
         <div className="b13-preview-chars">
           {(values.ipLayers || []).slice().sort((a, b) => a.z - b.z).map((layer) => {
@@ -383,6 +404,8 @@ function B13MiniPreview({ values, final = false, onClick }) {
 }
 
 function IpSceneWizard({ values, setValue, onGenerate }) {
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language?.startsWith('en');
   const [step, setStep] = React.useState(0);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [selectedKey, setSelectedKey] = React.useState(null);
@@ -396,7 +419,7 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
   const generatePreview = () => {
     if (!values.ipScene?.trim()) return;
     syncLayers();
-    setValue('ipBgPrompt', `${values.ipScene} 背景画面，明亮清晰，适合PPT课件，无文字。`);
+    setValue('ipBgPrompt', isEn ? `${values.ipScene} background, bright and clear, suitable for PPT slides, no text.` : `${values.ipScene} 背景画面，明亮清晰，适合PPT课件，无文字。`);
     setValue('ipComposed', false);
     setStep(1);
   };
@@ -476,15 +499,15 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
             <div className="b13-layer-ready-card">
               <div className="b13-layer-ready-icon" aria-hidden="true">▣</div>
               <div className="b13-layer-ready-copy">
-                <strong>图层已分离准备完毕</strong>
-                <span>您可以直接生成，或进入全屏微调角色位置。</span>
+                <strong>{t('assetPanel.iwLayerReady')}</strong>
+                <span>{t('assetPanel.iwDirectGenHint')}</span>
               </div>
             </div>
             <B13MiniPreview values={values} onClick={() => setModalOpen(true)} />
             <div className="b13-ready-summary-card">
-              <div><span className="b13-ready-check">✓</span><b>背景就绪</b></div>
+              <div><span className="b13-ready-check">✓</span><b>{t('assetPanel.iwBgReady')}</b></div>
               <i />
-              <div><span className="b13-ready-check">✓</span><b>{values.ipLayers.length} 个角色已就绪</b></div>
+              <div><span className="b13-ready-check">✓</span><b>{values.ipLayers.length} {t('assetPanel.iwCharsReady')}</b></div>
             </div>
           </div>
         ) : null}
@@ -492,25 +515,25 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
           <div className="b13-drawer-body">
             <B13MiniPreview values={values} final />
             <div className="b13-status-list final">
-              <div><span>画面比例</span><b>{values.ratio}</b></div>
-              <div><span>IP角色</span><b>{values.ipLayers.length}个角色</b></div>
-              <div><span>输出格式</span><b>PNG · 透明图层已合成</b></div>
+              <div><span>{t('assetPanel.iwImageRatio')}</span><b>{values.ratio}</b></div>
+              <div><span>{t('assetPanel.iwIpChars')}</span><b>{values.ipLayers.length} {t('assetPanel.iwCharsReady')}</b></div>
+              <div><span>{t('assetPanel.iwOutputFormat')}</span><b>{t('assetPanel.iwPngTransparent')}</b></div>
             </div>
           </div>
         ) : null}
       </div>
       <div className="ppt-inline-footer ppt-img-footer">
-        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={generatePreview}><Sparkles size={14} />生成图片</button> : null}
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={generatePreview}><Sparkles size={14} />{t('assetPanel.iwGenerateImage')}</button> : null}
         {step === 1 ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => { setValue('ipComposed', true); setStep(2); }}>下一步 →</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>{t('assetPanel.iwPrevStep')}</button>
+            <button type="button" className="ppt-primary-btn" onClick={() => { setValue('ipComposed', true); setStep(2); }}>{t('assetPanel.iwNextStep')}</button>
           </>
         ) : null}
         {step === 2 ? (
           <>
-            <button type="button" className="ppt-ghost-btn">保存到素材库</button>
-            <button type="button" className="ppt-primary-btn" onClick={onGenerate}>插入画布 →</button>
+            <button type="button" className="ppt-ghost-btn">{t('assetPanel.iwSaveToLibrary')}</button>
+            <button type="button" className="ppt-primary-btn" onClick={onGenerate}>{t('assetPanel.iwInsertCanvas')}</button>
           </>
         ) : null}
       </div>
@@ -518,7 +541,7 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
         <div className="b13-compose-modal-wrap">
           <div className="b13-modal">
             <div className="b13-modal-hd">
-              <div><div className="b13-modal-title">IP角色场景图 · 编排</div></div>
+              <div><div className="b13-modal-title">{t('assetPanel.iwIpSceneLayout')}</div></div>
               <div className="b13-modal-actions"><button type="button" className="b13-modal-x" onClick={() => setModalOpen(false)}>×</button></div>
             </div>
             <div className="b13-modal-body">
@@ -559,44 +582,44 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
               <aside className="b13-prop-pane">
                 {!selectedLayer ? (
                   <div className="b13-prop-section">
-                    <div className="b13-prop-title">背景设置</div>
-                    <label className="b13-prop-label">背景提示词</label>
+                    <div className="b13-prop-title">{t('assetPanel.iwBgSettings')}</div>
+                    <label className="b13-prop-label">{t('assetPanel.iwBgPrompt')}</label>
                     <Input.TextArea className="ppt-img-textarea-input b13-prop-textarea" value={values.ipBgPrompt || ''} onChange={(event) => setValue('ipBgPrompt', event.target.value)} />
-                    <div className="b13-action-grid"><button type="button" className="btn b13-regen-btn" onClick={() => setValue('ipBgIndex', (values.ipBgIndex + 1) % b13BgVariants.length)}>重新生成背景</button></div>
-                    <label className="b13-prop-label">背景缩放 <span>{values.ipBgScale || 100}%</span></label>
+                    <div className="b13-action-grid"><button type="button" className="btn b13-regen-btn" onClick={() => setValue('ipBgIndex', (values.ipBgIndex + 1) % b13BgVariants.length)}>{t('assetPanel.iwRegenBg')}</button></div>
+                    <label className="b13-prop-label">{t('assetPanel.iwBgScale')} <span>{values.ipBgScale || 100}%</span></label>
                     <input type="range" min="100" max="150" value={values.ipBgScale || 100} onChange={(event) => setValue('ipBgScale', Number(event.target.value))} />
-                    <div className="b13-prop-note">背景不支持旋转和翻转，仅支持重新生成与缩放。</div>
+                    <div className="b13-prop-note">{t('assetPanel.iwBgNoRotate')}</div>
                   </div>
                 ) : (
                   <div className="b13-prop-section">
-                    <div className="b13-prop-title">{selectedLayer.name}角色设置</div>
-                    <label className="b13-prop-label">角色提示词</label>
+                    <div className="b13-prop-title">{selectedLayer.name}{t('assetPanel.iwCharSettings')}</div>
+                    <label className="b13-prop-label">{t('assetPanel.iwCharPrompt')}</label>
                     <Input.TextArea className="ppt-img-textarea-input b13-prop-textarea" value={selectedLayer.prompt || ''} onChange={(event) => updateLayer(selectedLayer.key, { prompt: event.target.value })} />
-                    <div className="b13-action-grid"><button type="button" className="btn b13-regen-btn" onClick={() => updateLayer(selectedLayer.key, { variant: (selectedLayer.variant || 0) + 1 })}>重新生成角色</button></div>
+                    <div className="b13-action-grid"><button type="button" className="btn b13-regen-btn" onClick={() => updateLayer(selectedLayer.key, { variant: (selectedLayer.variant || 0) + 1 })}>{t('assetPanel.iwRegenChar')}</button></div>
                     <div className="b13-num-grid">
                       <label>X<Input type="number" value={Math.round(selectedLayer.x)} onChange={(event) => updateLayer(selectedLayer.key, { x: Number(event.target.value) })} /></label>
                       <label>Y<Input type="number" value={Math.round(selectedLayer.y)} onChange={(event) => updateLayer(selectedLayer.key, { y: Number(event.target.value) })} /></label>
                     </div>
-                    <label className="b13-prop-label">大小 <span>{Math.round(selectedLayer.size)}%</span></label>
+                    <label className="b13-prop-label">{t('assetPanel.iwSize')} <span>{Math.round(selectedLayer.size)}%</span></label>
                     <input type="range" min="55" max="150" value={selectedLayer.size} onChange={(event) => updateLayer(selectedLayer.key, { size: Number(event.target.value) })} />
-                    <label className="b13-prop-label">旋转角度 <span>{Math.round(selectedLayer.rot || 0)}°</span></label>
+                    <label className="b13-prop-label">{t('assetPanel.iwRotationAngle')} <span>{Math.round(selectedLayer.rot || 0)}°</span></label>
                     <input type="range" min="-45" max="45" value={selectedLayer.rot || 0} onChange={(event) => updateLayer(selectedLayer.key, { rot: Number(event.target.value) })} />
                     <div className="b13-flip-row">
-                      <button type="button" className={selectedLayer.flipX ? 'is-active' : ''} onClick={() => updateLayer(selectedLayer.key, { flipX: !selectedLayer.flipX })}>水平翻转</button>
-                      <button type="button" className={selectedLayer.flipY ? 'is-active' : ''} onClick={() => updateLayer(selectedLayer.key, { flipY: !selectedLayer.flipY })}>垂直翻转</button>
+                      <button type="button" className={selectedLayer.flipX ? 'is-active' : ''} onClick={() => updateLayer(selectedLayer.key, { flipX: !selectedLayer.flipX })}>{t('assetPanel.iwFlipH')}</button>
+                      <button type="button" className={selectedLayer.flipY ? 'is-active' : ''} onClick={() => updateLayer(selectedLayer.key, { flipY: !selectedLayer.flipY })}>{t('assetPanel.iwFlipV')}</button>
                     </div>
                     <div className="b13-z-row">
-                      <button type="button" onClick={() => moveLayerOrder(-1)}>下移一层</button>
-                      <button type="button" onClick={() => moveLayerOrder(1)}>上移一层</button>
+                      <button type="button" onClick={() => moveLayerOrder(-1)}>{t('assetPanel.iwMoveDownLayer')}</button>
+                      <button type="button" onClick={() => moveLayerOrder(1)}>{t('assetPanel.iwMoveUpLayer')}</button>
                     </div>
                   </div>
                 )}
               </aside>
             </div>
             <div className="b13-modal-ft">
-              <button type="button" className="b13-footer-btn b13-footer-ghost" onClick={() => setModalOpen(false)}>取消</button>
-              <button type="button" className="b13-footer-btn b13-footer-ghost" onClick={() => setModalOpen(false)}>保存编排</button>
-              <button type="button" className="b13-footer-btn b13-footer-primary" onClick={() => { setModalOpen(false); setValue('ipComposed', true); setStep(2); }}>保存并合成</button>
+              <button type="button" className="b13-footer-btn b13-footer-ghost" onClick={() => setModalOpen(false)}>{t('assetPanel.iwCancel')}</button>
+              <button type="button" className="b13-footer-btn b13-footer-ghost" onClick={() => setModalOpen(false)}>{t('assetPanel.iwSaveLayout')}</button>
+              <button type="button" className="b13-footer-btn b13-footer-primary" onClick={() => { setModalOpen(false); setValue('ipComposed', true); setStep(2); }}>{t('assetPanel.iwSaveAndComposite')}</button>
             </div>
           </div>
         </div>
@@ -606,11 +629,12 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
 }
 
 function StylePicker({ value, onChange }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">风格</div>
+      <div className="ppt-img-label">{t('assetPanel.iwStyle')}</div>
       <div className="ppt-img-style-row">
-        {['卡通插画', '写实摄影'].map((style) => (
+        {[t('assetPanel.styleCartoon'), t('assetPanel.styleRealistic')].map((style) => (
           <button type="button" key={style} className={value === style ? 'is-active' : ''} onClick={() => onChange(style)}>
             {style}
           </button>
@@ -621,11 +645,13 @@ function StylePicker({ value, onChange }) {
 }
 
 function WhitespacePicker({ value, onChange }) {
+  const { t } = useTranslation();
+  const opts = [t('assetPanel.wsTop'), t('assetPanel.wsBottom'), t('assetPanel.wsLeft'), t('assetPanel.wsRight')];
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label is-muted">文字留白区域</div>
+      <div className="ppt-img-label is-muted">{t('assetPanel.iwTextWhitespace')}</div>
       <div className="ppt-img-whitespace-row">
-        {['顶部', '底部', '左侧', '右侧'].map((item) => (
+        {opts.map((item) => (
           <button type="button" key={item} className={value === item ? 'is-active' : ''} onClick={() => onChange(item)}>
             {item}
           </button>
@@ -636,11 +662,13 @@ function WhitespacePicker({ value, onChange }) {
 }
 
 function ActivityThemePicker({ value, onChange }) {
+  const { t } = useTranslation();
+  const cards = getActivityThemeCards(t);
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">活动主题</div>
+      <div className="ppt-img-label">{t('assetPanel.iwActivityTheme')}</div>
       <div className="ppt-img-activity-grid">
-        {activityThemeCards.map(({ value: theme, icon: Icon }) => (
+        {cards.map(({ value: theme, icon: Icon }) => (
           <button type="button" key={theme} className={value === theme ? 'is-active' : ''} onClick={() => onChange(theme)}>
             <Icon size={26} />
             <span>{theme}</span>
@@ -652,11 +680,13 @@ function ActivityThemePicker({ value, onChange }) {
 }
 
 function TextLayoutPicker({ value, onChange }) {
+  const { t } = useTranslation();
+  const cards = getTextLayoutCards(t);
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">文字框样式</div>
+      <div className="ppt-img-label">{t('assetPanel.iwTextFrameStyle')}</div>
       <div className="ppt-img-text-layout-row">
-        {textLayoutCards.map((item) => (
+        {cards.map((item) => (
           <button type="button" key={item} className={value === item ? 'is-active' : ''} onClick={() => onChange(item)}>
             {item}
           </button>
@@ -667,11 +697,13 @@ function TextLayoutPicker({ value, onChange }) {
 }
 
 function KnowledgeChartPicker({ value, onChange }) {
+  const { t } = useTranslation();
+  const cards = getKnowledgeChartCards(t);
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">图表类型</div>
+      <div className="ppt-img-label">{t('assetPanel.iwChartType')}</div>
       <div className="ppt-img-knowledge-grid">
-        {knowledgeChartCards.map(({ value: item, icon: Icon }) => (
+        {cards.map(({ value: item, icon: Icon }) => (
           <button type="button" key={item} className={value === item ? 'is-active' : ''} onClick={() => onChange(item)}>
             <Icon size={28} />
             <span>{item}</span>
@@ -683,13 +715,14 @@ function KnowledgeChartPicker({ value, onChange }) {
 }
 
 function OutputDirectionPicker({ value, onChange }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">输出方向</div>
+      <div className="ppt-img-label">{t('assetPanel.iwOutputDirection')}</div>
       <div className="ppt-img-output-row">
         {[
-          ['16:9', '16:9横版（PPT）'],
-          ['9:16', '9:16竖版（海报）'],
+          ['16:9', t('assetPanel.iwLandscape169')],
+          ['9:16', t('assetPanel.iwPortrait916')],
         ].map(([ratio, label]) => (
           <button type="button" key={ratio} className={value === ratio ? 'is-active' : ''} onClick={() => onChange(ratio)}>
             {label}
@@ -701,11 +734,13 @@ function OutputDirectionPicker({ value, onChange }) {
 }
 
 function ComicStylePicker({ value, onChange }) {
+  const { t } = useTranslation();
+  const cards = getComicStyleCards(t);
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">漫画风格</div>
+      <div className="ppt-img-label">{t('assetPanel.iwComicStyle')}</div>
       <div className="ppt-img-text-layout-row">
-        {comicStyleCards.map((item) => (
+        {cards.map((item) => (
           <button type="button" key={item} className={value === item ? 'is-active' : ''} onClick={() => onChange(item)}>
             {item}
           </button>
@@ -716,9 +751,10 @@ function ComicStylePicker({ value, onChange }) {
 }
 
 function CharacterPicker({ value, onChange }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">IP 角色</div>
+      <div className="ppt-img-label">{t('assetPanel.iwIpCharacter')}</div>
       <div className="ppt-img-character-grid">
         {ipCharacters.map((character) => (
           <button type="button" key={character.name} className={value === character.name ? 'is-active' : ''} onClick={() => onChange(character.name)}>
@@ -732,6 +768,7 @@ function CharacterPicker({ value, onChange }) {
 }
 
 function ActionSelector({ values, setValue }) {
+  const { t } = useTranslation();
   const selected = values.actions || ['Cobra', 'Dolphin pose', 'Mouse pose'];
   const [draft, setDraft] = React.useState('');
   const addAction = (action) => {
@@ -746,11 +783,11 @@ function ActionSelector({ values, setValue }) {
   return (
     <>
       <div className="ppt-img-section">
-        <div className="ppt-img-label">动作类型</div>
+        <div className="ppt-img-label">{t('assetPanel.iwActionType')}</div>
         <div className="ppt-img-output-row">
           {[
-            ['瑜伽 / 姿势', '▱'],
-            ['TPR 体能', '◉'],
+            [t('assetPanel.iwYogaPose'), '▱'],
+            [t('assetPanel.iwTprFitness'), '◉'],
           ].map(([item, icon]) => (
             <button type="button" key={item} className={values.actionType === item ? 'is-active' : ''} onClick={() => setValue('actionType', item)}>
               <span className="ppt-img-action-type-icon">{icon}</span>{item}
@@ -759,18 +796,18 @@ function ActionSelector({ values, setValue }) {
         </div>
       </div>
       <div className="ppt-img-section">
-        <div className="ppt-img-label">已选动作 <span>每个动作生成1张</span></div>
+        <div className="ppt-img-label">{t('assetPanel.iwSelectedActions')} <span>{t('assetPanel.iwEachActionOne')}</span></div>
         <div className="ppt-img-selected-action">
           {selected.length ? selected.map((action) => (
             <button type="button" key={action} onClick={() => removeAction(action)}>
               {action} ×
             </button>
-          )) : <span>从下方选择或搜索添加动作...</span>}
+          )) : <span>{t('assetPanel.iwSelectFromBelow')}</span>}
         </div>
         <Input
           className="ppt-img-text-input"
           value={draft}
-          placeholder="搜索动作，或输入后按 Enter 新增"
+          placeholder={t('assetPanel.iwSearchPlaceholder')}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
@@ -792,29 +829,31 @@ function ActionSelector({ values, setValue }) {
 }
 
 function FixedRatioBar({ ratio }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-img-fixed-ratio-bar">
-      <span>比例</span>
+      <span>{t('assetPanel.iwRatio')}</span>
       <strong>{ratio}</strong>
-      <em>固定，不可更改</em>
+      <em>{t('assetPanel.iwFixedCannotChange')}</em>
     </div>
   );
 }
 
 function ScenePromptBox({ value, onChange }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">描述场景 <span>（中英文均可）</span></div>
+      <div className="ppt-img-label">{t('assetPanel.iwDescribeScene')} <span>{t('assetPanel.iwAnyLanguage')}</span></div>
       <div className="ppt-img-prompt-box">
         <Input.TextArea
           value={value}
-          placeholder="例：太空场景，宇宙飞船驾驶舱"
+          placeholder={t('assetPanel.iwScenePlaceholder')}
           maxLength={40}
           onChange={(event) => onChange(event.target.value)}
         />
         <div>
           <span>{value.length} / 40</span>
-          <button type="button">帮我写</button>
+          <button type="button">{t('assetPanel.iwHelpWrite')}</button>
         </div>
       </div>
     </div>
@@ -822,12 +861,13 @@ function ScenePromptBox({ value, onChange }) {
 }
 
 function FlashcardPreview({ word, includeChinese, includePhonetic }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">效果预览</div>
+      <div className="ppt-img-label">{t('assetPanel.iwEffectPreview')}</div>
       <div className="ppt-b3-preview-stage">
         <div className="ppt-b3-preview-card">
-          <div><span>AI 插图区域</span></div>
+          <div><span>{t('assetPanel.iwAiIllustration')}</span></div>
           <strong>{word || 'apple'}</strong>
           <i />
           {includeChinese ? <span>苹果</span> : null}
@@ -839,6 +879,7 @@ function FlashcardPreview({ word, includeChinese, includePhonetic }) {
 }
 
 function FlashcardWordEditor({ values, setValue }) {
+  const { t } = useTranslation();
   const words = values.flashWords || ['apple', 'banana'];
   const [draft, setDraft] = React.useState('');
   const addWord = () => {
@@ -851,7 +892,7 @@ function FlashcardWordEditor({ values, setValue }) {
 
   return (
     <div className="ppt-img-section">
-      <div className="ppt-img-label">词汇列表 <span>（输入后按回车添加）</span></div>
+      <div className="ppt-img-label">{t('assetPanel.iwVocabList')} <span>（{t('assetPanel.iwInputVocabHint')}）</span></div>
       <div className="ppt-b3-word-box">
         <div className="ppt-b3-chip-row">
           {words.map((word) => (
@@ -862,7 +903,7 @@ function FlashcardWordEditor({ values, setValue }) {
         </div>
         <Input
           value={draft}
-          placeholder="输入词汇后按 Enter 添加..."
+          placeholder={t('assetPanel.iwInputVocabHint')}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
@@ -874,13 +915,13 @@ function FlashcardWordEditor({ values, setValue }) {
         <div className="ppt-b3-option-row">
           <label>
             <input type="checkbox" checked={values.includeChinese !== false} onChange={(event) => setValue('includeChinese', event.target.checked)} />
-            含中文释义
+            {t('assetPanel.iwIncludeChinese')}
           </label>
           <label>
             <input type="checkbox" checked={!!values.includePhonetic} onChange={(event) => setValue('includePhonetic', event.target.checked)} />
-            含音标
+            {t('assetPanel.iwIncludePhonetic')}
           </label>
-          <span>{words.length} 个词</span>
+          <span>{words.length} {t('assetPanel.iwWordCount')}</span>
         </div>
       </div>
     </div>
@@ -888,6 +929,7 @@ function FlashcardWordEditor({ values, setValue }) {
 }
 
 function FocusedImageForm({ asset, values, setValue, onGenerate }) {
+  const { t } = useTranslation();
   const isFlashcard = asset.code === 'B3';
   const isStoryImage = asset.code === 'B4';
   const isActivityImage = asset.code === 'B5';
@@ -918,20 +960,20 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <WhitespacePicker value={values.whitespace} onChange={(value) => setValue('whitespace', value)} />
             <div className="ppt-asset-divider" />
             <div className="ppt-img-section">
-              <div className="ppt-img-label">故事场景描述</div>
+              <div className="ppt-img-label">{t('assetPanel.iwStorySceneDesc')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.storyScene || ''}
-                placeholder="例：森林里的小木屋，秋天傍晚"
+                placeholder={t('assetPanel.fB4Placeholder')}
                 onChange={(event) => setValue('storyScene', event.target.value)}
               />
             </div>
             <div className="ppt-img-section">
-              <div className="ppt-img-label">角色描述（可选）</div>
+              <div className="ppt-img-label">{t('assetPanel.iwCharacterDesc')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.storyCharacter || ''}
-                placeholder="例：戴眼镜的小女孩，橙色外套"
+                placeholder={t('assetPanel.iwScenePlaceholder')}
                 onChange={(event) => setValue('storyCharacter', event.target.value)}
               />
             </div>
@@ -942,16 +984,16 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <div className="ppt-asset-divider" />
             <ActivityThemePicker value={values.theme} onChange={(value) => setValue('theme', value)} />
             <div className="ppt-img-section">
-              <div className="ppt-img-label">活动标题</div>
+              <div className="ppt-img-label">{t('assetPanel.iwActivityTitle')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.activityTitle || ''}
-                placeholder="例：Animal Sports Day / 星际音乐会"
+                placeholder={t('assetPanel.fB5Placeholder')}
                 onChange={(event) => setValue('activityTitle', event.target.value)}
               />
             </div>
             <div className="ppt-img-ai-tip">
-              AI 根据主题类型和活动标题自动生成画面，无需描述提示词
+              {t('assetPanel.iwAiAutoFill')}
             </div>
           </>
         ) : null}
@@ -959,24 +1001,24 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
           <>
             <div className="ppt-asset-divider" />
             <div className="ppt-img-section">
-              <div className="ppt-img-label">场景名称</div>
+              <div className="ppt-img-label">{t('assetPanel.iwSceneName')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.topicScene || ''}
-                placeholder="例：厨房 Kitchen"
+                placeholder={t('assetPanel.fB6Placeholder')}
                 onChange={(event) => setValue('topicScene', event.target.value)}
               />
             </div>
             <div className="ppt-img-section">
-              <div className="ppt-img-label">标注词汇（每行一个，至少5个）</div>
+              <div className="ppt-img-label">{t('assetPanel.iwAnnotationWords')}</div>
               <Input.TextArea
                 className="ppt-img-textarea-input"
                 value={values.topicWords || ''}
-                placeholder={'冰箱 refrigerator\n炉灶 stove\n水龙头 faucet'}
+                placeholder={t('assetPanel.fB6Placeholder')}
                 onChange={(event) => setValue('topicWords', event.target.value)}
               />
             </div>
-            <div className="ppt-img-ai-tip">AI生成场景图并自动标注词汇位置</div>
+            <div className="ppt-img-ai-tip">{t('assetPanel.iwAiGenScene')}</div>
           </>
         ) : null}
         {isTextImage ? (
@@ -984,20 +1026,20 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <div className="ppt-asset-divider" />
             <TextLayoutPicker value={values.textLayout} onChange={(value) => setValue('textLayout', value)} />
             <div className="ppt-img-section">
-              <div className="ppt-img-label">文字内容（谜题、对话等）</div>
+              <div className="ppt-img-label">{t('assetPanel.iwTextContent')}</div>
               <Input.TextArea
                 className="ppt-img-textarea-input is-text-card"
                 value={values.textContent || ''}
-                placeholder={'例：What can fly but has no wings?\n——A dream!'}
+                placeholder={t('assetPanel.iwTextContentPlaceholder')}
                 onChange={(event) => setValue('textContent', event.target.value)}
               />
             </div>
             <div className="ppt-img-section">
-              <div className="ppt-img-label">背景场景描述</div>
+              <div className="ppt-img-label">{t('assetPanel.iwBgSceneDesc')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.textBackground || ''}
-                placeholder="例：神秘森林，夜晚，星光"
+                placeholder={t('assetPanel.fB7Placeholder')}
                 onChange={(event) => setValue('textBackground', event.target.value)}
               />
             </div>
@@ -1006,24 +1048,24 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
         {isKnowledgeImage ? (
           <>
             <div className="ppt-img-section">
-              <div className="ppt-img-label">中心主题词</div>
+              <div className="ppt-img-label">{t('assetPanel.iwCenterTopic')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.knowledgeTopic || ''}
-                placeholder="例：Present Tense 现在时"
+                placeholder={t('assetPanel.fB8Placeholder')}
                 onChange={(event) => setValue('knowledgeTopic', event.target.value)}
               />
             </div>
             <div className="ppt-img-section">
-              <div className="ppt-img-label">知识点/分支内容（每行一条）</div>
+              <div className="ppt-img-label">{t('assetPanel.iwKnowledgeBranches')}</div>
               <Input.TextArea
                 className="ppt-img-textarea-input"
                 value={values.knowledgeItems || ''}
-                placeholder={'Simple Present: 主语+动词原形\nPresent Continuous: 主语+am/is/are+V-ing\n用法：表示习惯性动作'}
+                placeholder={t('assetPanel.iwKnowledgePlaceholder')}
                 onChange={(event) => setValue('knowledgeItems', event.target.value)}
               />
             </div>
-            <div className="ppt-img-ai-tip">AI根据图表类型自动排布知识结构</div>
+            <div className="ppt-img-ai-tip">{t('assetPanel.iwAiAutoLayout')}</div>
           </>
         ) : null}
         {isComicImage ? (
@@ -1031,37 +1073,37 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <ComicStylePicker value={values.comicStyle} onChange={(value) => setValue('comicStyle', value)} />
             <label className="ppt-img-check-row">
               <input type="checkbox" checked={values.comicDialogue !== false} onChange={(event) => setValue('comicDialogue', event.target.checked)} />
-              含对话气泡文字
+              {t('assetPanel.iwIncludeBubbleText')}
             </label>
             <div className="ppt-asset-divider" />
             <div className="ppt-img-section">
-              <div className="ppt-img-label">目标短语/句型</div>
+              <div className="ppt-img-label">{t('assetPanel.iwTargetPhrase')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.phrase || ''}
-                placeholder="例：Can I have...? / I want to..."
+                placeholder={t('assetPanel.iwPhrasePlaceholder')}
                 onChange={(event) => setValue('phrase', event.target.value)}
               />
             </div>
             <div className="ppt-img-section">
-              <div className="ppt-img-label">故事主角</div>
+              <div className="ppt-img-label">{t('assetPanel.iwStoryChar')}</div>
               <Input
                 className="ppt-img-text-input"
                 value={values.comicCharacter || ''}
-                placeholder="例：一只爱吃糖的北极熊"
+                placeholder={t('assetPanel.fB10Placeholder')}
                 onChange={(event) => setValue('comicCharacter', event.target.value)}
               />
             </div>
             <div className="ppt-img-section">
-              <div className="ppt-img-label">故事情节（可选，留空则AI自由发挥）</div>
+              <div className="ppt-img-label">{t('assetPanel.iwStoryPlot')}</div>
               <Input.TextArea
                 className="ppt-img-textarea-input"
                 value={values.plot || ''}
-                placeholder="例：第1格：主角发现冰淇淋店..."
+                placeholder={t('assetPanel.iwPlotPlaceholder')}
                 onChange={(event) => setValue('plot', event.target.value)}
               />
             </div>
-            <div className="ppt-img-ai-tip">固定4格漫画布局，AI自动编排起承转合</div>
+            <div className="ppt-img-ai-tip">{t('assetPanel.iwAutoComicLayout')}</div>
           </>
         ) : null}
         {isActionImage ? (
@@ -1085,11 +1127,11 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
             <ScenePromptBox value={values.scene || ''} onChange={(value) => setValue('scene', value)} />
             {asset.code === 'B2' ? (
               <div className="ppt-img-section">
-                <div className="ppt-img-label">叠加文字内容</div>
+                <div className="ppt-img-label">{t('assetPanel.iwOverlayText')}</div>
                 <Input
                   className="ppt-img-text-input"
                   value={values.overlayText || ''}
-                  placeholder="例:Reach for the Stars!"
+                  placeholder={t('assetPanel.fB2Placeholder')}
                   onChange={(event) => setValue('overlayText', event.target.value)}
                 />
               </div>
@@ -1100,7 +1142,7 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
       </div>
       <div className="ppt-inline-footer ppt-img-footer">
         <button type="button" className="ppt-primary-btn" onClick={onGenerate}>
-          <Sparkles size={14} />生成图片
+          <Sparkles size={14} />{t('assetPanel.iwGenerateImage')}
         </button>
       </div>
     </div>
@@ -1116,7 +1158,8 @@ const storybookFrames = [
 ];
 
 function StorybookStepper({ step, generating }) {
-  const labels = ['粘贴故事', '确认预览', '生成图片'];
+  const { t } = useTranslation();
+  const labels = [t('assetPanel.iwPasteStory'), t('assetPanel.iwConfirmPreview'), t('assetPanel.iwGenerateImage')];
   return (
     <div className="ppt-storybook-stepper">
       {labels.map((label, index) => (
@@ -1133,29 +1176,30 @@ function StorybookStepper({ step, generating }) {
 }
 
 function StorybookPasteStep({ values, setValue }) {
+  const { t } = useTranslation();
   const examples = ['三只小猪', '曹冲称象', '坐井观天'];
   return (
     <div className="ppt-storybook-body">
       <div className="ppt-img-section">
-        <div className="ppt-img-label">故事名称</div>
+        <div className="ppt-img-label">{t('assetPanel.iwStoryName')}</div>
         <Input
           className="ppt-img-text-input"
           value={values.storybookTitle || ''}
-          placeholder="给你的绘本起个名字吧..."
+          placeholder={t('assetPanel.iwStoryPlaceholder')}
           onChange={(event) => setValue('storybookTitle', event.target.value)}
         />
       </div>
       <div className="ppt-img-section">
-        <div className="ppt-img-label-row"><span>故事内容</span><em>{(values.storybookContent || '').length} 字</em></div>
+        <div className="ppt-img-label-row"><span>{t('assetPanel.iwStoryContent')}</span><em>{(values.storybookContent || '').length} {t('assetPanel.iwChars')}</em></div>
         <Input.TextArea
           className="ppt-storybook-textarea"
           value={values.storybookContent || ''}
-          placeholder="请粘贴您的故事内容，AI 将自动为您拆分成多页绘本分镜..."
+          placeholder={t('assetPanel.iwStoryContentPlaceholder')}
           onChange={(event) => setValue('storybookContent', event.target.value)}
         />
       </div>
       <div className="ppt-storybook-examples">
-        <span>示例：</span>
+        <span>{t('assetPanel.iwExample')}</span>
         {examples.map((item) => (
           <button
             type="button"
@@ -1171,9 +1215,9 @@ function StorybookPasteStep({ values, setValue }) {
       </div>
       <div className="ppt-asset-divider" />
       <div className="ppt-img-section">
-        <div className="ppt-img-label">画面风格</div>
+        <div className="ppt-img-label">{t('assetPanel.iwPictureBookStyle')}</div>
         <div className="ppt-img-text-layout-row">
-          {['水彩绘本', '3D卡通', '剪纸拼贴'].map((item) => (
+          {[t('assetPanel.iwWatercolor'), t('assetPanel.iwCartoon3d'), t('assetPanel.iwPaperCut')].map((item) => (
             <button type="button" key={item} className={values.storybookStyle === item ? 'is-active' : ''} onClick={() => setValue('storybookStyle', item)}>
               {item}
             </button>
@@ -1181,9 +1225,9 @@ function StorybookPasteStep({ values, setValue }) {
         </div>
       </div>
       <div className="ppt-img-section">
-        <div className="ppt-img-label">阅读目标年级</div>
+        <div className="ppt-img-label">{t('assetPanel.iwTargetGrade')}</div>
         <div className="ppt-storybook-grade-grid">
-          {['小一（6-7岁）', '小二（7-8岁）', '小三（8-9岁）', '小四（9-10岁）'].map((item) => (
+          {[t('assetPanel.iwGrade1'), t('assetPanel.iwGrade2'), t('assetPanel.iwGrade3'), t('assetPanel.iwGrade4')].map((item) => (
             <button type="button" key={item} className={values.storybookGrade === item ? 'is-active' : ''} onClick={() => setValue('storybookGrade', item)}>
               {item}
             </button>
@@ -1195,38 +1239,40 @@ function StorybookPasteStep({ values, setValue }) {
 }
 
 function StorybookPreviewStep() {
+  const { t } = useTranslation();
   return (
     <div className="ppt-storybook-body">
       <div className="ppt-storybook-summary">
         <strong>三只小猪</strong>
-        <span>水彩绘本</span>
-        <em>共 5 页</em>
+        <span>{t('assetPanel.iwWatercolor')}</span>
+        <em>{t('assetPanel.iwPages')} 5</em>
       </div>
       <div className="ppt-storybook-frame-grid">
         {storybookFrames.map((frame, index) => (
           <article key={frame}>
             <div>
               <b>{index + 1}</b>
-              <strong>分镜脚本</strong>
-              <span>待配图</span>
+              <strong>{t('assetPanel.iwStoryboard')}</strong>
+              <span>{t('assetPanel.iwPendingIllustration')}</span>
             </div>
             <p>{frame}</p>
           </article>
         ))}
       </div>
-      <p className="ppt-storybook-note">生成后支持单页重新绘制</p>
+      <p className="ppt-storybook-note">{t('assetPanel.iwRegenAfter')}</p>
     </div>
   );
 }
 
 function StorybookGenerateStep() {
+  const { t } = useTranslation();
   return (
     <div className="ppt-storybook-generate">
       <div className="ppt-storybook-spinner"><span /></div>
-      <strong>AI 正在施展魔法...</strong>
-      <em>已完成 1 / 5 页</em>
+      <strong>{t('assetPanel.iwAiMagic')}</strong>
+      <em>1 / 5 {t('assetPanel.iwPages')}</em>
       <div className="ppt-storybook-progress"><i /></div>
-      <div className="ppt-storybook-running-tip">正在生成第 2 页：“第一只小猪用稻草盖了一所房子...”</div>
+      <div className="ppt-storybook-running-tip">{t('assetPanel.iwGeneratingPage')} 2...</div>
       <div className="ppt-storybook-result-grid">
         {storybookFrames.slice(0, 4).map((frame, index) => (
           <article key={frame} className={index === 0 ? 'is-done' : index === 1 ? 'is-running' : ''}>
@@ -1236,12 +1282,13 @@ function StorybookGenerateStep() {
           </article>
         ))}
       </div>
-      <p className="ppt-storybook-note">请勿关闭面板，生成完成后自动跳转</p>
+      <p className="ppt-storybook-note">{t('assetPanel.iwDoNotClose')}</p>
     </div>
   );
 }
 
 function StorybookImageWizard({ values, setValue, onGenerate }) {
+  const { t } = useTranslation();
   const [step, setStep] = React.useState(0);
 
   return (
@@ -1252,7 +1299,7 @@ function StorybookImageWizard({ values, setValue, onGenerate }) {
         {step === 1 ? <StorybookPreviewStep values={values} /> : null}
       </div>
       <div className="ppt-inline-footer ppt-img-footer">
-        {step === 1 ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button> : null}
+        {step === 1 ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>{t('assetPanel.iwPrevStep')}</button> : null}
         <button
           type="button"
           className="ppt-primary-btn"
@@ -1262,7 +1309,7 @@ function StorybookImageWizard({ values, setValue, onGenerate }) {
           }}
         >
           <Sparkles size={14} />
-          {step === 0 ? '下一步：确认分镜内容' : '开始生成图片'}
+          {step === 0 ? t('assetPanel.iwNextConfirm') : t('assetPanel.iwStartGen')}
         </button>
       </div>
     </div>
@@ -1270,20 +1317,21 @@ function StorybookImageWizard({ values, setValue, onGenerate }) {
 }
 
 function ImageTypeContent({ asset, values, setValue }) {
+  const { t } = useTranslation();
   const updateText = (key) => (event) => setValue(key, event.target.value);
 
   if (asset.code === 'B2') {
     return (
       <>
         <PromptField
-          label="描述场景（中英文均可）"
+          label={t('assetPanel.iwDescribeScene') + ' ' + t('assetPanel.iwAnyLanguage')}
           value={values.scene || ''}
-          placeholder="例：太空场景，宇宙飞船驾驶舱"
+          placeholder={t('assetPanel.iwScenePlaceholder')}
           onChange={(value) => setValue('scene', value)}
           maxLength={40}
         />
-        <FieldBlock label="叠加文字内容">
-          <Input value={values.overlayText || ''} placeholder="例:Reach for the Stars!" onChange={updateText('overlayText')} />
+        <FieldBlock label={t('assetPanel.iwOverlayText')}>
+          <Input value={values.overlayText || ''} placeholder={t('assetPanel.fB2Placeholder')} onChange={updateText('overlayText')} />
         </FieldBlock>
       </>
     );
@@ -1292,7 +1340,7 @@ function ImageTypeContent({ asset, values, setValue }) {
   if (asset.code === 'B3') {
     return (
       <>
-        <FieldBlock label="词汇列表（输入后按回车添加）">
+        <FieldBlock label={t('assetPanel.iwVocabList')}>
           <div className="ppt-b3-word-box">
             <div className="ppt-b3-chip-row">
               <span>apple x</span>
@@ -1301,12 +1349,12 @@ function ImageTypeContent({ asset, values, setValue }) {
             <Input.TextArea
               value={values.words || 'apple\nbanana'}
               onChange={updateText('words')}
-              placeholder="输入词汇后按回车添加"
+              placeholder={t('assetPanel.iwInputVocabHint')}
             />
             <div className="ppt-b3-option-row">
-              <label><input type="checkbox" defaultChecked /> 含中文释义</label>
-              <label><input type="checkbox" /> 含音标</label>
-              <span>2 个词</span>
+              <label><input type="checkbox" defaultChecked /> {t('assetPanel.iwIncludeChinese')}</label>
+              <label><input type="checkbox" /> {t('assetPanel.iwIncludePhonetic')}</label>
+              <span>2 {t('assetPanel.iwWordCount')}</span>
             </div>
           </div>
         </FieldBlock>
@@ -1318,11 +1366,11 @@ function ImageTypeContent({ asset, values, setValue }) {
   if (asset.code === 'B4') {
     return (
       <>
-        <FieldBlock label="故事场景描述">
-          <Input value={values.storyScene || ''} placeholder="例：森林里的小木屋，秋天傍晚" onChange={updateText('storyScene')} />
+        <FieldBlock label={t('assetPanel.iwStorySceneDesc')}>
+          <Input value={values.storyScene || ''} placeholder={t('assetPanel.fB4Placeholder')} onChange={updateText('storyScene')} />
         </FieldBlock>
-        <FieldBlock label="角色描述（可选）">
-          <Input value={values.storyCharacter || ''} placeholder="例：戴眼镜的小女孩，橙色外套" onChange={updateText('storyCharacter')} />
+        <FieldBlock label={t('assetPanel.iwCharacterDesc')}>
+          <Input value={values.storyCharacter || ''} placeholder={t('assetPanel.iwScenePlaceholder')} onChange={updateText('storyCharacter')} />
         </FieldBlock>
       </>
     );
@@ -1331,10 +1379,10 @@ function ImageTypeContent({ asset, values, setValue }) {
   if (asset.code === 'B5') {
     return (
       <>
-        <FieldBlock label="活动标题">
-          <Input value={values.activityTitle || ''} placeholder="例：Animal Sports Day / 星际音乐会" onChange={updateText('activityTitle')} />
+        <FieldBlock label={t('assetPanel.iwActivityTitle')}>
+          <Input value={values.activityTitle || ''} placeholder={t('assetPanel.fB5Placeholder')} onChange={updateText('activityTitle')} />
         </FieldBlock>
-        <Tip>AI 根据主题类型和活动标题自动生成画面，无需描述提示词</Tip>
+        <Tip>{t('assetPanel.iwAiAutoFill')}</Tip>
       </>
     );
   }
@@ -1342,17 +1390,17 @@ function ImageTypeContent({ asset, values, setValue }) {
   if (asset.code === 'B6') {
     return (
       <>
-        <FieldBlock label="场景名称">
-          <Input value={values.mapScene || ''} placeholder="例：厨房 Kitchen" onChange={updateText('mapScene')} />
+        <FieldBlock label={t('assetPanel.iwSceneName')}>
+          <Input value={values.mapScene || ''} placeholder={t('assetPanel.fB6Placeholder')} onChange={updateText('mapScene')} />
         </FieldBlock>
-        <FieldBlock label="标注词汇（每行一个，至少5个）">
+        <FieldBlock label={t('assetPanel.iwAnnotationWords')}>
           <Input.TextArea
             value={values.mapWords || ''}
             onChange={updateText('mapWords')}
-            placeholder={'冰箱 refrigerator\n炉灶 stove\n水龙头 faucet\n砧板 cutting board\n微波炉 microwave'}
+            placeholder={t('assetPanel.fB6Placeholder')}
           />
         </FieldBlock>
-        <Tip>AI生成场景图并自动标注词汇位置</Tip>
+        <Tip>{t('assetPanel.iwAiGenScene')}</Tip>
       </>
     );
   }
@@ -1360,18 +1408,18 @@ function ImageTypeContent({ asset, values, setValue }) {
   if (asset.code === 'B7') {
     return (
       <>
-        <FieldBlock label="文字框样式">
-          <OptionGrid options={['对话气泡', '卷轴', '卡片框']} value={values.bubble || '对话气泡'} onChange={(value) => setValue('bubble', value)} columns={3} />
+        <FieldBlock label={t('assetPanel.iwTextFrameStyle')}>
+          <OptionGrid options={[t('assetPanel.iwDialogueBubble'), t('assetPanel.iwScroll'), t('assetPanel.iwCardFrame')]} value={values.bubble || t('assetPanel.iwDialogueBubble')} onChange={(value) => setValue('bubble', value)} columns={3} />
         </FieldBlock>
-        <FieldBlock label="文字内容（谜题、对话等）">
+        <FieldBlock label={t('assetPanel.iwTextContent')}>
           <Input.TextArea
             value={values.textContent || ''}
             onChange={updateText('textContent')}
-            placeholder={'例：What can fly but has no wings?\n--A dream!'}
+            placeholder={t('assetPanel.iwTextContentPlaceholder')}
           />
         </FieldBlock>
-        <FieldBlock label="背景场景描述">
-          <Input value={values.textBg || ''} placeholder="例：神秘森林，夜晚，星光" onChange={updateText('textBg')} />
+        <FieldBlock label={t('assetPanel.iwBgSceneDesc')}>
+          <Input value={values.textBg || ''} placeholder={t('assetPanel.fB7Placeholder')} onChange={updateText('textBg')} />
         </FieldBlock>
       </>
     );
@@ -1380,17 +1428,17 @@ function ImageTypeContent({ asset, values, setValue }) {
   if (asset.code === 'B8') {
     return (
       <>
-        <FieldBlock label="中心主题词">
-          <Input value={values.center || ''} placeholder="例：Present Tense 现在时" onChange={updateText('center')} />
+        <FieldBlock label={t('assetPanel.iwCenterTopic')}>
+          <Input value={values.center || ''} placeholder={t('assetPanel.fB8Placeholder')} onChange={updateText('center')} />
         </FieldBlock>
-        <FieldBlock label="知识点/分支内容（每行一条）">
+        <FieldBlock label={t('assetPanel.iwKnowledgeBranches')}>
           <Input.TextArea
             value={values.knowledge || ''}
             onChange={updateText('knowledge')}
-            placeholder={'Simple Present: 主语+动词原形\nPresent Continuous: 主语+am/is/are+V-ing\n用法：表示习惯性动作\n例句：She reads every day.'}
+            placeholder={t('assetPanel.iwKnowledgePlaceholder')}
           />
         </FieldBlock>
-        <Tip>AI根据图表类型自动排布知识结构</Tip>
+        <Tip>{t('assetPanel.iwAiAutoLayout')}</Tip>
       </>
     );
   }
@@ -1398,17 +1446,17 @@ function ImageTypeContent({ asset, values, setValue }) {
   if (asset.code === 'B10') {
     return (
       <>
-        <label className="ppt-check-row"><input type="checkbox" defaultChecked /> 含对话气泡文字</label>
-        <FieldBlock label="目标短语/句型">
-          <Input value={values.phrase || ''} placeholder="例：Can I have...? / I want to..." onChange={updateText('phrase')} />
+        <label className="ppt-check-row"><input type="checkbox" defaultChecked /> {t('assetPanel.iwIncludeBubbleText')}</label>
+        <FieldBlock label={t('assetPanel.iwTargetPhrase')}>
+          <Input value={values.phrase || ''} placeholder={t('assetPanel.iwPhrasePlaceholder')} onChange={updateText('phrase')} />
         </FieldBlock>
-        <FieldBlock label="故事主角">
-          <Input value={values.comicCharacter || ''} placeholder="例：一只爱吃糖的北极熊" onChange={updateText('comicCharacter')} />
+        <FieldBlock label={t('assetPanel.iwStoryChar')}>
+          <Input value={values.comicCharacter || ''} placeholder={t('assetPanel.fB10Placeholder')} onChange={updateText('comicCharacter')} />
         </FieldBlock>
-        <FieldBlock label="故事情节（可选，留空则AI自由发挥）">
-          <Input.TextArea value={values.plot || ''} placeholder="例：第1格：主角发现冰淇淋店..." onChange={updateText('plot')} />
+        <FieldBlock label={t('assetPanel.iwStoryPlot')}>
+          <Input.TextArea value={values.plot || ''} placeholder={t('assetPanel.fB10Placeholder')} onChange={updateText('plot')} />
         </FieldBlock>
-        <Tip>固定4格漫画布局，AI自动编排起承转合</Tip>
+        <Tip>{t('assetPanel.iwAutoComicLayout')}</Tip>
       </>
     );
   }
@@ -1417,10 +1465,10 @@ function ImageTypeContent({ asset, values, setValue }) {
     return (
       <>
         <div className="ppt-b11-selected">
-          <span>从下方选择或搜索添加动作...</span>
+          <span>{t('assetPanel.iwSelectFromBelow')}</span>
         </div>
-        <FieldBlock label="搜索动作">
-          <Input value={values.actionSearch || ''} placeholder="搜索动作，或输入后按 Enter 新增" onChange={updateText('actionSearch')} />
+        <FieldBlock label={t('assetPanel.iwSearchActions')}>
+          <Input value={values.actionSearch || ''} placeholder={t('assetPanel.iwSearchPlaceholder')} onChange={updateText('actionSearch')} />
         </FieldBlock>
       </>
     );
@@ -1428,9 +1476,9 @@ function ImageTypeContent({ asset, values, setValue }) {
 
   return (
     <PromptField
-      label="描述场景（中英文均可）"
+      label={t('assetPanel.iwDescribeScene') + ' ' + t('assetPanel.iwAnyLanguage')}
       value={values.prompt}
-      placeholder="例：太空场景，宇宙飞船驾驶舱"
+      placeholder={t('assetPanel.iwScenePlaceholder')}
       onChange={(value) => setValue('prompt', value)}
       maxLength={40}
     />
@@ -1438,38 +1486,39 @@ function ImageTypeContent({ asset, values, setValue }) {
 }
 
 export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language?.startsWith('en');
   const [stage, setStage] = React.useState('form');
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [results, setResults] = React.useState([]);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     ratio: asset.code === 'B3' ? '3:4' : asset.code === 'B4' ? '9:16' : '16:9',
-    style: asset.code === 'B4' ? '写实摄影' : '卡通插画',
+    style: asset.code === 'B4' ? (isEn ? 'Realistic Photography' : '写实摄影') : (isEn ? 'Cartoon Illustration' : '卡通插画'),
     prompt: '',
-    whitespace: '底部',
-    theme: '体能',
+    whitespace: isEn ? 'Bottom' : '底部',
+    theme: isEn ? 'Fitness' : '体能',
     topicWords: '',
-    chart: '思维导图',
-    comicStyle: 'Q版萌系',
+    chart: isEn ? 'Mind Map' : '思维导图',
+    comicStyle: isEn ? 'Q-version cute' : 'Q版萌系',
     character: 'Poppy',
-    action: '站立伸展',
+    action: isEn ? 'Standing Stretch' : '站立伸展',
     actions: ['Cobra', 'Dolphin pose', 'Mouse pose'],
-    actionType: '瑜伽 / 姿势',
+    actionType: isEn ? 'Yoga / Pose' : '瑜伽 / 姿势',
     words: 'apple\nbanana',
     flashWords: ['apple', 'banana'],
     includeChinese: true,
     includePhonetic: false,
     comicDialogue: true,
-    textLayout: '对话气泡',
+    textLayout: isEn ? 'Dialogue Bubble' : '对话气泡',
     knowledgeItems: '',
     storybookTitle: '',
     storybookContent: '',
-    storybookStyle: '水彩绘本',
-    storybookGrade: '小二（7-8岁）',
+    storybookStyle: isEn ? 'Watercolor Picture Book' : '水彩绘本',
+    storybookGrade: isEn ? 'Grade 2 (7-8 years)' : '小二（7-8岁）',
     ipCharacters: ['Poppy', 'Edi'],
-    ipScene: '太空教室，认识星球单词',
-    ipBgPrompt: '太空教室背景，明亮、适合PPT封面，无文字。',
+    ipScene: isEn ? 'Space classroom, learning planet words' : '太空教室，认识星球单词',
+    ipBgPrompt: isEn ? 'Space classroom background, bright, suitable for PPT cover, no text.' : '太空教室背景，明亮、适合PPT封面，无文字。',
     ipBgScale: 100,
     ipBgIndex: 0,
     ipComposed: false,
@@ -1482,9 +1531,9 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
   const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
 
   React.useEffect(() => {
-    if (stage === 'generating') onTitleChange?.('正在生成...');
-    else if (stage === 'result') onTitleChange?.('选择图片');
-    else onTitleChange?.(focusedImageTitles[asset.code] || asset.title);
+    if (stage === 'generating') onTitleChange?.(t('assetPanel.iwGenerating'));
+    else if (stage === 'result') onTitleChange?.(t('assetPanel.iwSelectImage'));
+    else onTitleChange?.(getFocusedImageTitles(t)[asset.code] || asset.title);
   }, [asset.code, asset.title, onTitleChange, stage]);
 
   const handleGenerate = React.useCallback(async () => {
@@ -1506,7 +1555,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
       setSelectedIndex(0);
       setStage('result');
     } catch (error) {
-      setErrorMessage(error.message || '图片生成失败，请稍后重试');
+      setErrorMessage(error.message || t('assetPanel.iwGenFailed'));
       setStage('form');
     }
   }, [asset, values]);
@@ -1514,7 +1563,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
   const handleSaveOnly = React.useCallback(async () => {
     const selectedResult = results[selectedIndex] || results[0];
     if (!selectedResult?.url) {
-      message.warning('图片还未生成完成，暂时不能存入图片库');
+      message.warning(t('assetPanel.iwNotReady'));
       return;
     }
 
@@ -1525,12 +1574,12 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
         tags: [
           asset.code,
           selectedResult.imageSubtype || selectedResult.assetCode || asset.code,
-          'AI生成',
+          t('assetPanel.iwAiIllustration'),
         ].filter(Boolean),
       });
-      message.success('已保存到图片库');
+      message.success(t('assetPanel.iwSavedToLibrary'));
     } catch (error) {
-      message.error(error.message || '保存到图片库失败');
+      message.error(error.message || t('assetPanel.iwSaveFailed'));
     }
   }, [asset, results, selectedIndex]);
 
@@ -1538,9 +1587,9 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     const batchItems = buildBatchItems(asset, values) || [];
     return (
       <GenerationProgress
-        title="AI 正在生成图片"
+        title={t('assetPanel.iwAiGeneratingTitle')}
         subtitle={asset.code === 'B13' ? `${values.ipCharacters.join('、')} · ${values.ratio}` : `${values.style} · ${values.ratio}`}
-        batch={asset.code === 'B3' || asset.code === 'B11' ? { done: 0, total: batchItems.length || 1, unit: '张' } : null}
+        batch={asset.code === 'B3' || asset.code === 'B11' ? { done: 0, total: batchItems.length || 1, unit: t('assetPanel.iwPages') } : null}
       />
     );
   }
@@ -1603,15 +1652,15 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     <>
       <div className="ppt-asset-form">
         {isFixedRatio ? (
-          <div className="ppt-fixed-ratio"><span>比例</span><strong>{asset.code === 'B3' ? '1:1' : values.ratio}</strong><em>固定，不可更改</em></div>
+          <div className="ppt-fixed-ratio"><span>{t('assetPanel.iwRatio')}</span><strong>{asset.code === 'B3' ? '1:1' : values.ratio}</strong><em>{t('assetPanel.iwFixedCannotChange')}</em></div>
         ) : (
-          <FieldBlock label="比例">
+          <FieldBlock label={t('assetPanel.iwRatio')}>
             <OptionGrid options={getRatioOptions(t)} value={values.ratio} onChange={(value) => setValue('ratio', value)} columns={5} />
           </FieldBlock>
         )}
 
         {!['B8', 'B10', 'B11'].includes(asset.code) ? (
-          <FieldBlock label="风格">
+          <FieldBlock label={t('assetPanel.iwStyle')}>
             <OptionGrid options={getStyleOptions(t)} value={values.style} onChange={(value) => setValue('style', value)} columns={3} />
           </FieldBlock>
         ) : null}
@@ -1626,7 +1675,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
       <div className="ppt-inline-footer">
         {errorMessage ? <Tip>{errorMessage}</Tip> : null}
         <button type="button" className="ppt-primary-btn" onClick={handleGenerate}>
-          <Sparkles size={14} />生成图片
+          <Sparkles size={14} />{t('assetPanel.iwGenerateImage')}
         </button>
       </div>
     </>

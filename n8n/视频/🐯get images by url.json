@@ -1,0 +1,114 @@
+{
+  "name": "🐯get images by url",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "files",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -336,
+        -16
+      ],
+      "id": "cf6973ae-a705-4876-a7d7-743e6e02b164",
+      "name": "Webhook",
+      "webhookId": "4e02e6a8-28f3-4831-a38b-082c6fc071d6"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/home/node/files/{{ $json.query.file }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        -112,
+        -16
+      ],
+      "id": "1411016f-89b8-44e9-b919-93caf96d22f1",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        128,
+        -16
+      ],
+      "id": "ccfdc920-6b99-474a-a4be-a190e14f1d7c",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, deflate",
+            "accept-language": "en,zh-CN;q=0.9,zh;q=0.8,en-US;q=0.7",
+            "cookie": "token=AB0zH0yj281Rk/72JtHAx2IG/G49uPEisdwNXMcHsBnGD7KQg3wyNXHW+0JAcJ3SBa4CGHB1VwPnFyucRI1R4/Fy06FQYiwTS6oGJjZ643tyiIWNbF+0+EkAr6uENdG1091kEJ+4pTwV3W+VxSuy2o0+ZwNwatVPGTqmrmHswIgAnzCOG9XCN/D7isodTBJRWSqoXAFOKS8oowccTibdbEsrj8zGoDBi/priTv0T/wElSHeuni+8Ah8cRwmZTplkvDijuBAz0933AdxXcRRCwYqGAsvxPEq9QKd5OBTIspOeMveaMU+1OnbXGdHcZzl1F5yn2+k/ADNWr9INvgwMqWRov+LjFRHulfgwVwuqn76nWQ+LqbGhe/yUSz2Ur/QCNWcREQ8pjeQE5/85i317IJmff9EYJdy8yUliWGYLHPklz/pEhdd+Uxed/I+G+I/TntbbhcPKxdtqE2P2HZxe5yHE5XaXXgeXsCaIRmDWbTf4ERc+fYEDkC4fuMBfDxNWmhzAcsYZFQrbGbvxgwpb4BCD2CGKHziSJ7lj2OfznKE9CBbDfiInKKjmiA==",
+            "upgrade-insecure-requests": "1"
+          },
+          "params": {},
+          "query": {
+            "file": "ComfyUI_00047_.png"
+          },
+          "body": {},
+          "webhookUrl": "http://117.50.218.161:5678/webhook/files",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9f222643-678a-47d1-b2fa-57150c2b9cc4",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "2KZzwMVgVvYMFUaZ",
+  "tags": []
+}

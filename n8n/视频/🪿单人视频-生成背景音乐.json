@@ -1,0 +1,574 @@
+{
+  "name": "🪿单人视频-生成背景音乐",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cf873743-1c07-494d-99c9-678cade473bf",
+              "name": "character",
+              "value": "={{ $json.character }}",
+              "type": "string"
+            },
+            {
+              "id": "565c1e1b-70c2-403d-a35f-4f43cfd2c0ae",
+              "name": "storyboard_prompts",
+              "value": "={{ $json.storyboard_prompts }}",
+              "type": "array"
+            },
+            {
+              "id": "b8e90af4-4af6-4a2a-9b2d-d75606073b29",
+              "name": "output_folder_path",
+              "value": "={{ $json.output_folder_path }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        224
+      ],
+      "id": "127a33dc-6652-40ad-b077-7caf62e9d371",
+      "name": "配置字段"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "storyboard_prompts",
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        224
+      ],
+      "id": "3880923f-3ab4-42ee-a94c-931c2b2c574a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "31bddccc-2b60-4677-b209-0c98f4e16162",
+              "name": "output_folder_path",
+              "value": "/root/n8n/custom_output",
+              "type": "string"
+            },
+            {
+              "id": "ed0d8cc5-6680-4b2d-a5b1-32bfe32fe4db",
+              "name": "character",
+              "value": "皮克斯风格风格，全身形象。一位6岁左右的可爱小女孩，棕色卷发扎成两个蓬松的马尾辫，发丝间夹杂着几片小树叶。圆润的脸庞，明亮的大眼睛，小巧的鼻子。娇小匀称的身材，身穿亮黄色波点连衣裙，材质为柔软的棉布，裙摆沾着些许泥土和草屑，膝盖处有轻微的磨损痕迹。脚穿红色小雨靴，左脚鞋带松散。颈间佩戴简单的木质小瓢虫项链。整体散发出天真活泼的探索气息，习惯性微微踮起脚尖，身体充满好奇的张力。",
+              "type": "string"
+            },
+            {
+              "id": "de858876-b71d-4290-8aa1-5ac20bbd84a2",
+              "name": "storyboard_prompts",
+              "value": "=[\n  {\n    \"prompt\": \"角色面带灿烂笑容，眼神充满好奇和兴奋，身体微微前倾，习惯性踮起脚尖（主体动态）。阳光明媚的春日花园，绿草如茵，色彩鲜艳的花朵在微风中轻轻摇曳，远处有蝴蝶飞舞（场景）。轻快地跑进花园，双手张开仿佛要拥抱整个花园，好奇地环顾四周（动作）。自然阳光照明，柔和的顶光营造温暖氛围，中远景，中心构图，标准镜头，缓慢平移镜头跟随主角移动，高饱和暖色调（美学控制）。3D皮克斯风格，圆润可爱的角色造型，明亮鲜艳的色彩，充满童趣的质感（风格化）\",\n    \"duration\": 3,\n    \"description\": \"展现小女孩初入花园的兴奋和好奇\"\n  },\n  {\n    \"prompt\": \"角色惊喜地睁大眼睛，嘴角上扬露出甜美笑容，身体蹲下，双手轻轻合拢（主体动态）。花园角落的玫瑰花丛下，发现一只漂亮的蝴蝶停在花瓣上，周围有露珠闪闪发光（场景）。小心翼翼地蹲下身子，屏住呼吸，慢慢伸出双手想要靠近蝴蝶（动作）。柔和的侧逆光勾勒出轮廓，特写镜头，低角度拍摄，85mm镜头浅景深突出蝴蝶和主角表情，静止镜头，明亮的暖色调（美学控制）。3D皮克斯风格，细腻的光影效果，生动可爱的表情动画（风格化）\",\n    \"duration\": 4,\n    \"description\": \"发现蝴蝶的惊喜时刻，展现童真和探索欲\"\n  }\n]",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        -16
+      ],
+      "id": "74eca6f5-c959-4d48-b9cf-4bd412200887",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -16
+      ],
+      "id": "14adaef5-4d1c-449e-a0d4-2b898e0155e3",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const story = $input.first().json.storyboard_prompts.map(item => item.prompt)\n\nconst duration = $input.first().json.storyboard_prompts.reduce((sum, item) => sum + item.duration, 0);\n\nreturn {\n  \"story\": story,\n  \"duration\": duration,\n  \"character\": $input.first().json.character\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        224
+      ],
+      "id": "c1c85ed9-0ff3-4f96-8d44-58dc4aeefad9",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个专业的动画音乐配乐师，专门为动画视频创作简洁、高质量的背景音乐提示词。\n\n你的任务是根据输入的角色描述、故事脚本和视频时长，生成一段**纯音乐（instrumental）**的背景音乐提示词。\n\n【输入内容】\n视频分镜脚本：{{ $json.story }}\n视频时长：{{ $json.duration }}秒\n\n【严格分析流程】（必须按顺序执行）\n第一步 - 角色分析（最高优先级）：\n- 准确判断角色年龄段（儿童/少年/青年/成年/老年）\n- 分析角色性格气质（活泼/文静/勇敢/温柔/神秘/好奇等）\n- 确定角色整体感觉（童真/梦幻/成熟/严肃等）\n\n第二步 - 故事分析（辅助参考）：\n- 整体情绪基调（欢快/温馨/冒险/神秘/紧张等）\n- 视觉风格与场景氛围\n\n第三步 - 综合判断（核心原则）：\n- **必须以角色年龄和气质为主导**决定音乐基调\n- 故事情节仅作为辅助调整细节\n- 如果角色与故事氛围冲突，**坚决优先匹配角色特征**\n  示例：儿童角色 + 略带悲伤/神秘故事 → 仍需保持温柔童趣感，不能过于沉重\n\n第四步 - 确定音乐方向：\n- 仅选择**1种主导乐器**（严格限制为1种）\n- 选择合适的BPM（参考下方范围）\n- 提炼2-3个核心氛围形容词\n\n【输出要求 - 强制执行】\n- 音乐必须是**纯音乐（instrumental）**，无歌词、无人声\n- 作为背景音乐，必须**subtle、understated、不喧宾夺主**\n- 风格极简：只用1种乐器，保持简单、清澈、统一\n- 避免复杂编曲、激烈鼓点、强烈情感爆发\n- 生成的prompt必须是**英文**，各元素用英文逗号分隔\n- **无论任何情况，都必须输出有效的prompt，不允许返回空字符串、空JSON或null**\n\n【角色-乐器匹配参考】（必须参考）\n- 儿童活泼：Xylophone, Marimba, Glockenspiel\n- 儿童文静：Music Box, Kalimba, Celesta\n- 少年：Acoustic Guitar, Ukulele, Piano\n- 成年温柔：Harp, Flute, Acoustic Guitar\n- 成年严肃：Cello, Piano\n- 老年：Classical Guitar, Piano\n- 神秘梦幻：Music Box, Celesta, Harp\n\n【BPM参考范围】\n- 儿童活泼：100-115 BPM\n- 儿童安静：85-95 BPM\n- 少年/青年：75-110 BPM（动态偏高，静态偏低）\n- 成年/老年：70-95 BPM\n\n【输出格式】\n严格且只能输出以下JSON格式，不要添加任何解释、思考过程或其他文字：\n\n{\n  \"prompt\": \"这里填写生成的英文prompt\"\n}\n\n【重要强制规则】\n- 如果你不确定或分析有困难，也**必须**生成一个合理且符合角色特征的prompt\n- 绝不允许prompt为空或JSON结构错误\n- prompt结构建议示例（可灵活调整顺序，但必须包含主要元素）：\n  \"playful xylophone, 108 bpm, cheerful, bright, whimsical, lighthearted melody, minimal arrangement, instrumental background music\"\n\n现在开始分析输入内容并生成prompt。",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        592,
+        224
+      ],
+      "id": "8985a690-9469-4d9c-bae2-5183b4cde801",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"prompt\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        464
+      ],
+      "id": "ff3d2c38-cb2b-4bbf-b91e-669e7b7ae4b2",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        224
+      ],
+      "id": "54a91c50-71c1-46c3-8b7c-e1c091856d21",
+      "name": "Wait",
+      "webhookId": "0a4675d5-4a1b-48af-82f0-49903aa5c606"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95b5670e-5019-45a7-b701-08a608311038",
+              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        224
+      ],
+      "id": "3994e5e5-ee96-4c21-878b-2e5021fdb898",
+      "name": "If",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/music_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}_{{ Math.floor(Math.random() * 10000) }}.flac",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        208
+      ],
+      "id": "7e4b3996-747b-4a5f-b2b4-ab642c04e12d",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b56d373b-ce89-4280-bb76-745968f4d482",
+              "name": "music_filepath",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2368,
+        208
+      ],
+      "id": "203328c6-71ca-4b57-abc6-2913928458e4",
+      "name": "执行结束返回字段1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3.5",
+          "mode": "list"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        464
+      ],
+      "id": "96201db5-4311-4348-ab5f-8a95594f65a6",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "OAGoah9WZYmJctU1",
+          "name": "Qwen_aliyun"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/prompt",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {\n  \"1\": {\n    \"inputs\": {\n      \"ckpt_name\": \"ace_step_v1_3.5b.safetensors\"\n    },\n    \"class_type\": \"CheckpointLoaderSimple\",\n    \"_meta\": {\n      \"title\": \"Checkpoint加载器（简易）\"\n    }\n  },\n  \"2\": {\n    \"inputs\": {\n      \"shift\": 4.000000000000001,\n      \"model\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingSD3\",\n    \"_meta\": {\n      \"title\": \"采样算法（SD3）\"\n    }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"tags\": \"{{ $json.output.prompt }}\",\n      \"lyrics\": \"[inst]\",\n      \"lyrics_strength\": 1.0000000000000002,\n      \"clip\": [\n        \"1\",\n        1\n      ]\n    },\n    \"class_type\": \"TextEncodeAceStepAudio\",\n    \"_meta\": {\n      \"title\": \"TextEncodeAceStepAudio\"\n    }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"conditioning\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"ConditioningZeroOut\",\n    \"_meta\": {\n      \"title\": \"条件零化\"\n    }\n  },\n  \"5\": {\n    \"inputs\": {\n      \"seconds\": 30,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyAceStepLatentAudio\",\n    \"_meta\": {\n      \"title\": \"EmptyAceStepLatentAudio\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"seed\": 43761847717480,\n      \"steps\": 50,\n      \"cfg\": 4,\n      \"sampler_name\": \"res_multistep\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [\n        \"2\",\n        0\n      ],\n      \"positive\": [\n        \"3\",\n        0\n      ],\n      \"negative\": [\n        \"4\",\n        0\n      ],\n      \"latent_image\": [\n        \"5\",\n        0\n      ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": {\n      \"title\": \"K采样器\"\n    }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"samples\": [\n        \"6\",\n        0\n      ],\n      \"vae\": [\n        \"1\",\n        2\n      ]\n    },\n    \"class_type\": \"VAEDecodeAudio\",\n    \"_meta\": {\n      \"title\": \"VAE解码（音频）\"\n    }\n  },\n  \"13\": {\n    \"inputs\": {\n      \"filename_prefix\": \"audio/ComfyUI\",\n      \"audioUI\": \"\",\n      \"audio\": [\n        \"7\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveAudio\",\n    \"_meta\": {\n      \"title\": \"保存音频\"\n    }\n  }\n}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        912,
+        224
+      ],
+      "id": "df0243f8-b15b-4e61-aaa5-b1b264cb76cc",
+      "name": "请求生成背景音乐",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "1a5d41b8-959f-4efa-93c6-51c04970544f",
+      "name": "检查是否完成",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/view",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filename",
+              "value": "={{ $json.filename }}"
+            },
+            {
+              "name": "type",
+              "value": "output"
+            },
+            {
+              "name": "subfolder",
+              "value": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1968,
+        208
+      ],
+      "id": "79ca1b09-ab30-436b-bb19-6c3d13cbf537",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fec0ca06-9b99-4509-953b-09af835dcf98",
+              "name": "filename",
+              "value": "={{Object.values($json).map(item => item.outputs[13].audio[0].filename)[0]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1776,
+        208
+      ],
+      "id": "6069573e-5045-4c39-8c94-f08631feadbb",
+      "name": "获取素材"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "storyboard_prompts": [
+            {
+              "prompt": "清晨的街心湖笼罩在淡金色薄雾中，芦苇丛边缘水珠轻颤。木桥延伸至湖心的旧码头，远处山峦轮廓在晨霭中若隐若现。edi赤脚踩上摇摇晃晃的木船，单膝跪地调整船桨角度，船身随波纹轻晃，水面倒影里晨鸟掠过。",
+              "duration": 3,
+              "description": "建立清晨湖畔的静谧场景"
+            },
+            {
+              "prompt": "正午阳光刺破云层，湖面碎金般闪烁。edi弓身猛划双桨，水花劈开镜面般的波纹，船体在涟漪中高速推进。岸边垂柳枝条随桨叶节奏剧烈摆动，远处湖面突然腾起水花惊飞鹭群。",
+              "duration": 4,
+              "description": "展现划船过程的动态张力"
+            },
+            {
+              "prompt": "黄昏时分湖面泛起紫罗兰色涟漪。edi单桨停驻船尾，身体后仰凝视远山，船身随暗流缓缓打转。岸边路灯次第亮起，倒映水中摇晃的光斑与逐渐浮起的薄雾形成明暗对比。",
+              "duration": 5,
+              "description": "呈现情绪沉淀的视觉转折"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "配置字段": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "请求生成背景音乐",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "检查是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "获取素材",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "执行结束返回字段1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "请求生成背景音乐": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否完成": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取素材": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "a31258b0-9a8b-4c97-8c1d-344fcdea9ce6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "YaPEJOrK4FpAa1LY",
+  "tags": []
+}

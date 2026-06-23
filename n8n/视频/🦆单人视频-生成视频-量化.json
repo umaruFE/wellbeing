@@ -1,0 +1,559 @@
+{
+  "name": "🦆单人视频-生成视频-量化",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "565c1e1b-70c2-403d-a35f-4f43cfd2c0ae",
+              "name": "prompt",
+              "value": "={{ $json.prompt.replace(/\"/g, '\\\\\"') }}",
+              "type": "string"
+            },
+            {
+              "id": "bce999ce-9040-4f70-a70a-6df392427116",
+              "name": "image_filepath",
+              "value": "={{ '/home/node/files/' + $json.image_filepath.split('file=').pop().split('?')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "d36957ef-16da-4724-b3d9-199b7fa3a34b",
+              "name": "duration",
+              "value": "={{ $json.duration }}",
+              "type": "number"
+            },
+            {
+              "id": "77b39440-3503-46b9-9faa-58750f5b1106",
+              "name": "width",
+              "value": "={{ $json.width||854 }}",
+              "type": "number"
+            },
+            {
+              "id": "7b40152f-de25-43b8-b339-b9a30c39d404",
+              "name": "height",
+              "value": "={{ $json.height||480 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        240
+      ],
+      "id": "5b8bcbaf-55b5-4663-be7c-9f9bbfc3af71",
+      "name": "配置字段"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "image_filepath"
+            },
+            {
+              "name": "prompt"
+            },
+            {
+              "name": "duration",
+              "type": "number"
+            },
+            {
+              "name": "width",
+              "type": "number"
+            },
+            {
+              "name": "height",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        240
+      ],
+      "id": "156684ba-c9dd-491f-969e-e094cb26d78a",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6491514e-d576-4ea9-bcfb-9d8aa5ab69fc",
+              "name": "image_filepath",
+              "value": "/root/n8n/custom_output/2025-11-24_08-23-30/character_2025-11-24_07-25-33_8035.png",
+              "type": "string"
+            },
+            {
+              "id": "de858876-b71d-4290-8aa1-5ac20bbd84a2",
+              "name": "prompt",
+              "value": "人物向前方走来",
+              "type": "string"
+            },
+            {
+              "id": "9678b06a-6c7c-4328-a296-b23062c460b0",
+              "name": "duration",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "ab8e0bfe-d2e1-418a-8ddb-4d5b0b176a73",
+              "name": "width",
+              "value": 360,
+              "type": "number"
+            },
+            {
+              "id": "a238f8ae-4a01-4fa0-af3f-67997bd3e3b9",
+              "name": "height",
+              "value": 480,
+              "type": "number"
+            },
+            {
+              "id": "b2a26b61-96de-4459-9748-7c9ade8aab37",
+              "name": "output_folder_path",
+              "value": "/root/n8n/custom_output/",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "d3f5bc8a-4054-4db6-95fe-f7a27befb516",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a5250174-2b79-4819-bc93-092ee5c8272b",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.image_filepath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        464,
+        240
+      ],
+      "id": "661158b8-7933-4110-8776-4ba0c9fb38f5",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        240
+      ],
+      "id": "0aaf17dd-ce33-4583-9b75-540db8e2fdfc",
+      "name": "Wait",
+      "webhookId": "cd445e18-c67e-4ca0-8e04-014a61e9e8b8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95b5670e-5019-45a7-b701-08a608311038",
+              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        240
+      ],
+      "id": "27a8531a-a7c1-443f-989f-a53c0b59c5ed",
+      "name": "If",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b56d373b-ce89-4280-bb76-745968f4d482",
+              "name": "video_filepath",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2528,
+        224
+      ],
+      "id": "6fb5eea2-cfd4-4131-a498-98e12d2fb511",
+      "name": "执行结束返回字段1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $json.filename }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        224
+      ],
+      "id": "5ceba688-dc26-4940-816b-31fcf8452e0d",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://117.50.81.239:8188/upload/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        240
+      ],
+      "id": "8fd5a35d-1147-4601-9c3a-3dba143312e6",
+      "name": "上传图片",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://117.50.81.239:8188/prompt",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {\n  \"3\": {\n    \"inputs\": {\n      \"seed\": 290435520988032,\n      \"steps\": 20,\n      \"cfg\": 5,\n      \"sampler_name\": \"uni_pc\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [\n        \"48\",\n        0\n      ],\n      \"positive\": [\n        \"6\",\n        0\n      ],\n      \"negative\": [\n        \"7\",\n        0\n      ],\n      \"latent_image\": [\n        \"55\",\n        0\n      ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": {\n      \"title\": \"KSampler\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"text\": \"Medium shot. An animated character rows a boat on a river. The character performs a clear,连贯 rowing motion: leaning forward, arms pulling the oar with effort, dipping the oar into the water and pulling it backward, propelling the small boat forward steadily. The water surface shows gentle ripples and clear reflections.\",\n      \"clip\": [\n        \"38\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Positive Prompt)\"\n    }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": \"色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走，人像\",\n      \"clip\": [\n        \"38\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Negative Prompt)\"\n    }\n  },\n  \"8\": {\n    \"inputs\": {\n      \"samples\": [\n        \"3\",\n        0\n      ],\n      \"vae\": [\n        \"39\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE Decode\"\n    }\n  },\n  \"37\": {\n    \"inputs\": {\n      \"unet_name\": \"Wan_2.2_ComfyUI_Repackaged/wan2.2_ti2v_5B_fp16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"Load Diffusion Model\"\n    }\n  },\n  \"38\": {\n    \"inputs\": {\n      \"clip_name\": \"umt5_xxl_fp8_e4m3fn_scaled.safetensors\",\n      \"type\": \"wan\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": {\n      \"title\": \"Load CLIP\"\n    }\n  },\n  \"39\": {\n    \"inputs\": {\n      \"vae_name\": \"wan2.2_vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"Load VAE\"\n    }\n  },\n  \"48\": {\n    \"inputs\": {\n      \"shift\": 8,\n      \"model\": [\n        \"37\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingSD3\",\n    \"_meta\": {\n      \"title\": \"ModelSamplingSD3\"\n    }\n  },\n  \"55\": {\n    \"inputs\": {\n      \"width\": 448,\n      \"height\": 832,\n      \"length\": 77,\n      \"batch_size\": 1,\n      \"vae\": [\n        \"39\",\n        0\n      ],\n      \"start_image\": [\n        \"56\",\n        0\n      ]\n    },\n    \"class_type\": \"Wan22ImageToVideoLatent\",\n    \"_meta\": {\n      \"title\": \"Wan22ImageToVideoLatent\"\n    }\n  },\n  \"56\": {\n    \"inputs\": {\n      \"image\": \"Asset_Poppy_00052_.png\"\n    },\n    \"class_type\": \"LoadImage\",\n    \"_meta\": {\n      \"title\": \"Load Image\"\n    }\n  },\n  \"57\": {\n    \"inputs\": {\n      \"fps\": 24,\n      \"images\": [\n        \"8\",\n        0\n      ]\n    },\n    \"class_type\": \"CreateVideo\",\n    \"_meta\": {\n      \"title\": \"Create Video\"\n    }\n  },\n  \"58\": {\n    \"inputs\": {\n      \"filename_prefix\": \"video/ComfyUI\",\n      \"format\": \"auto\",\n      \"codec\": \"auto\",\n      \"video\": [\n        \"57\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveVideo\",\n    \"_meta\": {\n      \"title\": \"Save Video\"\n    }\n  }\n}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        240
+      ],
+      "id": "29852969-2d43-46b0-85d5-078998d373ca",
+      "name": "请求视频生成",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://117.50.81.239:8188/history/{{ $('请求视频生成').item.json.prompt_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        240
+      ],
+      "id": "5eca0b54-58a7-470a-a797-7b883004ae87",
+      "name": "检查是否生成完",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67045518-9eff-44dc-987d-351275cc42c4",
+              "name": "filename",
+              "value": "={{Object.values($json).map(item => item.outputs[21].gifs[0].filename)[0]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1872,
+        224
+      ],
+      "id": "9bcf6a60-c8d4-4658-bbe1-9f4644ec0fec",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "url": "http://117.50.81.239:8188/view",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filename",
+              "value": "={{ $json.filename }}"
+            },
+            {
+              "name": "type",
+              "value": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2096,
+        224
+      ],
+      "id": "8cbf6ccf-7bb5-4f84-bb9e-c7d96621859a",
+      "name": "获取视频",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "image_filepath": "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00044_.png",
+          "prompt": "晨光穿透薄雾，河面如镜面般平静，两岸芦苇在微风中沙沙作响，远处山峦轮廓朦胧。米洛坐于船尾，双手稳握船桨，轻柔划动，桨叶划破水面，涟漪逐层扩散，小船缓缓前行，水流声与桨声交织。",
+          "duration": 3
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "配置字段": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "上传图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "检查是否生成完",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "执行结束返回字段1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传图片": {
+      "main": [
+        [
+          {
+            "node": "请求视频生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "请求视频生成": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否生成完": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "获取视频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取视频": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "38eb91e0-318a-4161-9e12-87be616a087f",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "9xFQ2QOzi2rPI4a5",
+  "tags": []
+}

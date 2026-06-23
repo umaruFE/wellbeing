@@ -1,0 +1,1112 @@
+{
+  "name": "🐳图生视频单人主工作流-继续生成视频请求",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldToSplitOut": "storyboard_images_filepath",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        768
+      ],
+      "id": "7c5b79bc-1321-4c78-a063-f50f579fed44",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1568,
+        768
+      ],
+      "id": "1665454b-50f2-4391-bb88-4fda56d67630",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const index = $('webhook').first().json.body.storyboard_images_filepath.indexOf($input.first().json.storyboard_images_filepath)\n// console.log('===', index)\n\nconst element = $('webhook').first().json.body.storyboard_prompts[index]\n\nreturn {\n  data: {\n    \"prompt\": element.prompt,\n    \"duration\": element.duration\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        784
+      ],
+      "id": "c9fa31ab-c736-4965-8cd3-34f2e1734a4f",
+      "name": "获取图片对应分镜脚本"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d500131c-0239-4fed-8a61-b10d771c4e81",
+              "name": "videos_filepath",
+              "value": "={{ $json.video_filepath }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        368,
+        1024
+      ],
+      "id": "01d6535c-aa85-4a47-8baf-94d4e24987a1",
+      "name": "生成分镜视频后字段整理"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "video_filepath"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2256,
+        752
+      ],
+      "id": "a00efc4a-351e-48d9-850f-a0a547c7bd99",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const storyboard = $('webhook').first().json.storyboard_prompts\n\nconst voice_list = $input.first().json.data.map(item => {\n  return {\n    \"text\": item.text,\n    \"audio_length\": item.audio_length,\n    \"start_time\": item.start_time,\n    \"end_time\": item.end_time\n  }\n})\n\nreturn {\n  \"data\": {\n    storyboard,\n    voice_list\n  }\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        1024
+      ],
+      "id": "fe4e6a89-b820-41a0-ab40-d4d91deb0d67",
+      "name": "ai生成带时间的视频脚本前数据整理"
+    },
+    {
+      "parameters": {
+        "jsCode": "const audio_path_list = $('生成音频后字段整理').first().json.data\nconst video_path_list = $('生成分镜视频后字段整理').first().json.videos_filepath\nreturn {\n  \"data\": {\n    \"video_path_list\": video_path_list,\n    \"audio_path_list\": audio_path_list,\n    \"subtitle_filename\": $input.first().json.fileName\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1712,
+        1024
+      ],
+      "id": "6dbfbbb8-118e-4e9d-bfde-3c9a58cee628",
+      "name": "音视频合并前数据整理"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一个字幕编排专家，你的任务是根据我给出的'音频播放信息数组'，根据每个元素的start_time（音频开始播放时间点，单位为毫秒）和text（音频文本），生成srt格式的字幕文本，后续我会将这个字幕文本作为字幕文件，你要保证这个字幕文本的可用性，以json格式返回。\n一段字幕文本过长时(超过40个字符)，要注意换行处理\n\n'音频播放信息数组'如下：\n{{ JSON.stringify($json.data.voice_list.map(item => {\n  return {\n    text: item.text,\n    start_time: item.start_time\n  }\n})) }}\n\n返回格式示例：\n{\n\"subtitle_text\": \"\"\n}",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        1024
+      ],
+      "id": "62551ec3-2623-41fa-8cb7-4b9ca6cf99a7",
+      "name": "生成字幕文件",
+      "retryOnFail": true,
+      "maxTries": 5
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get SRT subtitle text from previous node\nconst subtitle_text = $input.first().json.output.subtitle_text\n\n// Generate dynamic filename with timestamp and random number\nconst now = new Date();\nconst timestamp = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}-${String(now.getMinutes()).padStart(2, '0')}-${String(now.getSeconds()).padStart(2, '0')}-${String(now.getMilliseconds()).padStart(3, '0')}`;\nconst random = Math.floor(Math.random() * 1000);\nconst fileName = `subtitle_${timestamp}_${random}.srt`;\n\n// Create binary data from UTF-8 text\nconst buffer = Buffer.from(subtitle_text, 'utf-8');\n\nreturn {\n  json: {\n    fileName: fileName\n  },\n  binary: {\n    data: {\n      data: buffer.toString('base64'),\n      mimeType: 'application/x-subrip',\n      fileName: fileName\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1392,
+        1024
+      ],
+      "id": "959a5550-9c76-4505-80c9-4a31a95be26b",
+      "name": "生成字幕文件名"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $binary.data.fileName }}{{ $json.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        1024
+      ],
+      "id": "85e69d71-9367-4a8c-bbbd-73319c5152a9",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "videoFilePath": "={{ $json.data }}",
+        "outputPath": "=/home/node/files/video_only_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}.mp4"
+      },
+      "type": "n8n-nodes-media-composition.videoMerge",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        1024
+      ],
+      "id": "3ab39305-bc69-401e-8914-43496d80a721",
+      "name": "Video Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json.data.video_path_list.map(item => {\n  return {\n    \"data\": item\n  }\n})"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        1024
+      ],
+      "id": "ffae36cf-331d-498f-86fd-fa7d4faeaa0b",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "videoPath": "={{ $('Video Merge').item.json.outputPath }}",
+        "audioFilesArray": "={{ $json.data }}",
+        "pathFieldName": "filename",
+        "timeFieldName": "start_time",
+        "audioVolume": 5,
+        "subtitlePath": "={{ $('音视频合并前数据整理').item.json.data.subtitle_filename }}",
+        "outputPath": "=/home/node/files/video_dub_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}.mp4"
+      },
+      "type": "n8n-nodes-media-composition.videoComposer",
+      "typeVersion": 1,
+      "position": [
+        2320,
+        1024
+      ],
+      "id": "f19fb306-2b7b-4708-aeb0-ee992b423dbd",
+      "name": "Video Composer"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  \"data\": $('音视频合并前数据整理').first().json.data.audio_path_list.map(item => {\n    return {\n      ...item,\n      filename: `/home/node/files/${item.filename}`,\n      start_time: parseInt(item.start_time) / 1000\n    }\n  })\n};\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        1024
+      ],
+      "id": "f3d28383-54ef-421d-80ef-ed316dbda9d6",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "65bc3b5d-145c-46d8-b35f-d3c06958d605",
+              "name": "data",
+              "value": "={{ $json.data.map(item => {\n  return {\n    ...item,\n    filePath: item.voice_filepath\n  }\n}) }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        800,
+        1024
+      ],
+      "id": "cfa8d50b-40d1-4113-96f7-cdabf70123a0",
+      "name": "生成音频后字段整理"
+    },
+    {
+      "parameters": {
+        "jsCode": "const music_filepath = $('视频生成-生成背景音乐').first().json.music_filepath\nconst video_sound_dub = $('Video Composer').first().json.outputPath\n\nreturn {\n  \"data\": {\n    \"video_path_list\": [video_sound_dub],\n    \"audio_path_list\": [{\n      \"filePath\": music_filepath,\n      \"start_time\": 0,\n      \"audio_length\": $input.first().json.duration_ms\n    }]\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        1360
+      ],
+      "id": "70f4ac2e-0dcf-4d5b-af1e-a421b05e33a2",
+      "name": "音视频合并前数据整理2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 binary 数据（兼容 n8n 各种 binary mode）\nconst item = $input.first();\nlet buffer;\n\ntry {\n    // 推荐方式：使用 n8n helper（支持 filesystem 和 base64 模式）\n    buffer = await this.helpers.getBinaryDataBuffer(0, 'data');  // 'data' 是 binary property name\n} catch (e) {\n    // 兼容旧版或直接 base64 的 fallback\n    const binaryData = item.binary?.data;\n    if (binaryData && typeof binaryData === 'string') {\n        buffer = Buffer.from(binaryData, 'base64');\n    } else if (Buffer.isBuffer(binaryData)) {\n        buffer = binaryData;\n    } else {\n        return [{ json: { error: '无法获取 binary 数据，请检查上游节点 binary property name 是否为 \"data\"' } }];\n    }\n}\n\n// FLAC duration 解析函数\nfunction getFlacDurationFromBinary(buffer) {\n    try {\n        if (buffer.length < 4 || buffer.toString('utf8', 0, 4) !== 'fLaC') {\n            return { error: '不是有效的 FLAC 文件（缺少 fLaC 头）' };\n        }\n\n        let offset = 4;  // 跳过 fLaC 标记\n\n        while (offset < buffer.length) {\n            // 读取 4 字节 metadata block header (Big Endian)\n            const blockHeader = buffer.readUInt32BE(offset);\n            offset += 4;\n\n            const isLast = (blockHeader & 0x80000000) !== 0;\n            const blockType = (blockHeader >> 24) & 0x7F;  // 类型\n            const blockSize = blockHeader & 0x00FFFFFF;    // 大小\n\n            // STREAMINFO block (type 0) 必须是第一个，通常紧跟 fLaC\n            if (blockType === 0) {\n                // STREAMINFO 数据从这里开始（34 字节固定结构）\n                const streamInfoOffset = offset;\n\n                // Sample rate: 20 bits，从 STREAMINFO 第 10 字节开始\n                // 字节 10-11 (high 16 bits) + 字节12 高4位\n                const sampleRate = ((buffer.readUInt16BE(streamInfoOffset + 10) << 4) |\n                                   (buffer.readUInt8(streamInfoOffset + 12) >> 4)) & 0xFFFFF;\n\n                // Total samples: 36 bits，从 STREAMINFO 第 13 字节开始 (Big-endian)\n                // 使用 readBigUInt64BE 简化 + 掩码取低36位\n                const totalSamplesHigh = buffer.readUInt8(streamInfoOffset + 13) & 0x0F; // 只取低4位\n                const totalSamples = (BigInt(totalSamplesHigh) << 32n) |\n                                     BigInt(buffer.readUInt32BE(streamInfoOffset + 14));\n\n                if (sampleRate > 0 && totalSamples > 0n) {\n                    const durationSeconds = Number(totalSamples) / sampleRate;\n                    const minutes = Math.floor(durationSeconds / 60);\n                    const seconds = Math.floor(durationSeconds % 60);\n\n                    return {\n                        duration_seconds: durationSeconds,\n                        duration_formatted: `${minutes}:${seconds.toString().padStart(2, '0')}`,\n                        sample_rate: sampleRate,\n                        total_samples: Number(totalSamples)\n                    };\n                } else {\n                    return { error: 'STREAMINFO 中 total_samples 或 sample_rate 为 0（未知时长）' };\n                }\n            }\n\n            offset += blockSize;\n            if (isLast) break;\n        }\n\n        return { error: '未找到 STREAMINFO metadata block' };\n    } catch (error) {\n        return { error: `解析错误: ${error.message}` };\n    }\n}\n\nconst result = getFlacDurationFromBinary(buffer);\n\nif (result.error) {\n    return [{ json: { error: result.error } }];\n}\n\n// 返回 duration_ms\nreturn [{\n    json: {\n        duration_ms: Math.floor(result.duration_seconds * 1000),\n        duration_seconds: result.duration_seconds,\n        duration_formatted: result.duration_formatted,\n        sample_rate: result.sample_rate,\n        total_samples: result.total_samples\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        1360
+      ],
+      "id": "d3ee4bd5-71cd-48cc-a2e1-b7c837d80cb0",
+      "name": "获取音频时长"
+    },
+    {
+      "parameters": {
+        "videoPath": "={{ $json.data.video_path_list[0] }}",
+        "audioFilesArray": "={{ $json.data.audio_path_list }}",
+        "pathFieldName": "filePath",
+        "audioVolume": -15,
+        "subtitlePath": "=",
+        "outputPath": "=/home/node/files/finnal_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}.mp4"
+      },
+      "type": "n8n-nodes-media-composition.videoComposer",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        1360
+      ],
+      "id": "8364b9d2-b225-458c-b024-881770236967",
+      "name": "Video Composer3"
+    },
+    {
+      "parameters": {
+        "content": "生成视频片段",
+        "height": 288,
+        "width": 2212,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        672
+      ],
+      "typeVersion": 1,
+      "id": "fb5a6c26-0647-47df-acf7-2bc92a5395db",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "生成音频",
+        "height": 336,
+        "width": 688
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        960
+      ],
+      "typeVersion": 1,
+      "id": "e9cea1d1-aa5c-4593-adc6-b4a659beb8fc",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "生成字幕并合成视频",
+        "height": 336,
+        "width": 1520,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        960,
+        960
+      ],
+      "typeVersion": 1,
+      "id": "48df7dbe-a720-466d-872f-95c3742cdffe",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "生成背景音乐并再次合并视频",
+        "height": 240,
+        "width": 2208,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        1296
+      ],
+      "typeVersion": 1,
+      "id": "a0b8b32f-6644-4825-8432-b00ded573029",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "Qwen3.5",
+          "mode": "list",
+          "cachedResultName": "Qwen3.5"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1120,
+        1184
+      ],
+      "id": "778a2895-fb44-4da7-bcff-be2629d11848",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "gM924akHUPCvr5sE",
+          "name": "supper center"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "htV9YwPHhjaIGOcn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/htV9YwPHhjaIGOcn",
+          "cachedResultName": "🦅单人视频-生成配音"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "voice_script": "={{ $('webhook').item.json.body.voice }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "voice_script",
+              "displayName": "voice_script",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "output_folder_path",
+              "displayName": "output_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "voice_example_folder_path",
+              "displayName": "voice_example_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        656,
+        1024
+      ],
+      "id": "dff14849-c33c-43c0-8fba-2abfc4548106",
+      "name": "🦅单人视频-生成配音"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YaPEJOrK4FpAa1LY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/YaPEJOrK4FpAa1LY",
+          "cachedResultName": "🪿单人视频-生成背景音乐"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "storyboard_prompts": "={{ $('webhook').item.json.body.storyboard_prompts }}"
+          },
+          "matchingColumns": [
+            "storyboard_prompts"
+          ],
+          "schema": [
+            {
+              "id": "storyboard_prompts",
+              "displayName": "storyboard_prompts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        384,
+        1360
+      ],
+      "id": "89147530-530a-4627-a965-bee34d3241fb",
+      "name": "视频生成-生成背景音乐"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "TlQWcAQoa4n72j4P",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/TlQWcAQoa4n72j4P",
+          "cachedResultName": "🦆单人视频-生成视频片段"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "duration": "={{ $json.data.duration }}",
+            "width": "={{ $('webhook').item.json.body.video_width }}",
+            "height": "={{ $('webhook').item.json.body.video_height }}",
+            "prompt": "={{ $json.data.prompt }}",
+            "image_filepath": "={{ $('Loop Over Items').item.json.storyboard_images_filepath }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "image_filepath",
+              "displayName": "image_filepath",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "prompt",
+              "displayName": "prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "duration",
+              "displayName": "duration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "width",
+              "displayName": "width",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            },
+            {
+              "id": "height",
+              "displayName": "height",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        784
+      ],
+      "id": "05daf2e9-9c50-4c6a-a255-ce2371b45112",
+      "name": "🦆单人视频-生成视频片段"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.music_filepath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        704,
+        1360
+      ],
+      "id": "79e3421f-8cad-47e4-ae67-1ab4fb195362",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"subtitle_text\": \"\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        1184
+      ],
+      "id": "2131d4b5-77ea-478b-99f8-e2709da7be98",
+      "name": "Parser"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"executionId\": \"{{ $execution.id }}\",\n  \"status\": \"success\",\n  \"message\": \"Workflow executed successfully\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        592,
+        688
+      ],
+      "id": "f7614d3a-4894-4313-86e2-7070812d3961",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gene-video",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        768
+      ],
+      "id": "804025bf-44bd-483f-8f70-c3aa37eb1a9b",
+      "name": "webhook",
+      "webhookId": "301e4973-2925-4854-97ef-340bb1503e91"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ JSON.stringify($json.body) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        848,
+        768
+      ],
+      "id": "90012fc2-1ff8-4d8b-8429-ba999c240030",
+      "name": "生成分镜图片后整理字段"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "J3YaofTO0eHhgjAp",
+          "mode": "list",
+          "cachedResultName": "tworkflow",
+          "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "response": "=http://117.50.218.161:5678/webhook/files?file={{ $json.videoPath.split('files/')[1] }}",
+            "execution_id": "={{ $execution.id }}",
+            "status": "success"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "response",
+              "displayName": "response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1744,
+        1360
+      ],
+      "id": "5785b987-452a-44e4-9068-88acee471f2d",
+      "name": "Insert row"
+    }
+  ],
+  "pinData": {
+    "webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "5081"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "storyboard_images_filepath": [
+              "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00182_.png",
+              "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00183_.png",
+              "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00184_.png"
+            ],
+            "storyboard_prompts": [
+              {
+                "prompt": "清晨薄雾笼罩的私人花园，石板车道蜿蜒穿过修剪整齐的绿篱。红色甲壳虫车停在橡树阴影下，引擎盖泛着金属光泽。edi双手紧握方向盘，右脚轻踩油门踏板，引擎发出低沉轰鸣。排气管喷出淡蓝色蒸汽，叶片上的露珠被震动的水珠震落。镜头从俯拍切换至驾驶座侧面特写，晨光透过挡风玻璃在仪表盘投下光影。",
+                "duration": 4,
+                "description": "展示车辆启动与环境氛围"
+              },
+              {
+                "prompt": "正午阳光强烈的花园小径，红色甲壳虫急转弯驶过喷泉池。车轮碾过碎石发出声响，车身悬挂系统明显震动。edi身体随离心力向左倾斜，双手快速调整方向盘角度。花瓣从灌木丛中被气流卷起，在车前形成红色旋转轨迹。镜头采用动态跟拍，低角度捕捉车轮溅起的尘土颗粒。",
+                "duration": 3,
+                "description": "表现行驶中的动态张力"
+              },
+              {
+                "prompt": "黄昏逆光中的花园尽头，红色甲壳虫缓缓停泊在蔷薇花丛旁。引擎熄火瞬间，排气管余温让地面形成热浪扭曲。edi解开安全带，手掌轻触方向盘纹路。镜头从车内视角拉远，车身剪影与渐变的紫红色天空形成对比，花瓣飘落在车顶静止。",
+                "duration": 5,
+                "description": "收尾场景展现完整故事线"
+              }
+            ],
+            "video_width": 720,
+            "video_height": 1280,
+            "voice": {
+              "characters_timbre": [
+                {
+                  "timbre_name": "旁白",
+                  "timbre_des": "低沉沉稳的男声，富有叙事感，适合营造电影氛围",
+                  "timbre_id": 0
+                }
+              ],
+              "voice_scripts": [
+                {
+                  "text": "薄雾轻绕花园，引擎低鸣启动",
+                  "timbre_id": 0,
+                  "start_time": 100,
+                  "end_time": 3500
+                },
+                {
+                  "text": "急转碾碎石，花瓣旋舞",
+                  "timbre_id": 0,
+                  "start_time": 4300,
+                  "end_time": 6800
+                },
+                {
+                  "text": "引擎熄灭，蔷薇暮色中停泊",
+                  "timbre_id": 0,
+                  "start_time": 7300,
+                  "end_time": 11500
+                }
+              ]
+            },
+            "storyboard_image_prompts": [
+              {
+                "prompt": "清晨薄雾笼罩的私人花园，石板车道蜿蜒穿过修剪整齐的绿篱。红色甲壳虫车停在橡树阴影下，引擎盖泛着金属光泽。edi双手紧握方向盘，右脚准备轻踩油门踏板。晨光透过挡风玻璃在仪表盘投下光影，驾驶座侧面特写，暖色调晨光。",
+                "thought_process": "分镜1分析：1.识别动作类型：'轻踩油门踏板'是位移/准备类动作，需转换为'准备轻踩'。2.删除过程描述：'引擎发出低沉轰鸣'、'喷出淡蓝色蒸汽'、'露珠被震动的水珠震落'都是运动过程的动态描述，需要删除或简化。3.运镜处理：'镜头从俯拍切换至驾驶座侧面特写'是动态运镜，删除切换过程，只保留'驾驶座侧面特写'这一静态景别。4.保留元素：完整保留场景描述（清晨薄雾、私人花园、绿篱、橡树阴影）、车辆特征（红色甲壳虫、引擎盖金属光泽）、人物姿态（双手紧握方向盘）、光影效果（晨光透过挡风玻璃的仪表盘光影）。"
+              },
+              {
+                "prompt": "正午阳光强烈的花园小径，红色甲壳虫停在喷泉池旁准备急转弯。edi身体随离心力向左倾斜，双手准备调整方向盘角度。低角度拍摄。保留花瓣静止在空中的瞬间姿态。",
+                "thought_process": "分镜2分析：1.识别动作类型：'急转弯驶过'是位移动作，转换为'准备急转弯'。'快速调整方向盘角度'是运动过程，改为'准备调整方向盘'。2.状态保留：'身体随离心力向左倾斜'是姿态状态，完整保留。3.删除过程描述：'车轮碾过碎石'、'车身悬挂系统明显震动'、'花瓣从灌木丛中被气流卷起'都是动态过程，改为静态描述'花瓣静止在空中的瞬间姿态'。4.运镜处理：'动态跟拍'、'低角度捕捉车轮溅起的尘土颗粒'中的动态跟拍删除，保留'低角度'作为静态拍摄角度。5.保留元素：场景（正午阳光、花园小径、喷泉池）、车辆状态、人物姿态、拍摄角度。"
+              },
+              {
+                "prompt": "黄昏逆光中的花园尽头，红色甲壳虫停在蔷薇花丛旁。edi准备解开安全带，手掌准备轻触方向盘纹路。花瓣静止在车顶。车身剪影与渐变的紫红色天空形成对比，驾驶座视角。",
+                "thought_process": "分镜3分析：1.识别动作类型：'解开安全带'是状态转换动作，转换为'准备解开'。'轻触方向盘纹路'是接触动作，改为'准备轻触'。2.删除过程描述：'引擎熄火瞬间'、'排气管余温让地面形成热浪扭曲'是动态过程描述，删除。保留'停在'的静态状态。3.运镜处理：'镜头从车内视角拉远'是动态运镜，改为静态的'驾驶座视角'。4.完全保留：'花瓣飘落在车顶静止'本身就是静态描述，完整保留。5.保留元素：场景（黄昏逆光、花园尽头、蔷薇花丛）、光影（紫红色渐变天空、车身剪影对比）、人物姿态准备状态。"
+              }
+            ]
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-video",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取图片对应分镜脚本",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取图片对应分镜脚本": {
+      "main": [
+        [
+          {
+            "node": "🦆单人视频-生成视频片段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "生成分镜视频后字段整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ai生成带时间的视频脚本前数据整理": {
+      "main": [
+        [
+          {
+            "node": "生成字幕文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "音视频合并前数据整理": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成字幕文件": {
+      "main": [
+        [
+          {
+            "node": "生成字幕文件名",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成字幕文件名": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "音视频合并前数据整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Video Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Video Composer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成分镜视频后字段整理": {
+      "main": [
+        [
+          {
+            "node": "🦅单人视频-生成配音",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成音频后字段整理": {
+      "main": [
+        [
+          {
+            "node": "ai生成带时间的视频脚本前数据整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Composer": {
+      "main": [
+        [
+          {
+            "node": "视频生成-生成背景音乐",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取音频时长": {
+      "main": [
+        [
+          {
+            "node": "音视频合并前数据整理2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "音视频合并前数据整理2": {
+      "main": [
+        [
+          {
+            "node": "Video Composer3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "生成字幕文件",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🦅单人视频-生成配音": {
+      "main": [
+        [
+          {
+            "node": "生成音频后字段整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频生成-生成背景音乐": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🦆单人视频-生成视频片段": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "获取音频时长",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "生成字幕文件",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "生成分镜图片后整理字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成分镜图片后整理字段": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Video Composer3": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "de13771c-436a-4fb4-bd3a-a82e41c7d72a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "aXjvMzbOugVM8uFm",
+  "tags": []
+}

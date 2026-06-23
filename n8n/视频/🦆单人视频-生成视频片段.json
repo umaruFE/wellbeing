@@ -1,0 +1,558 @@
+{
+  "name": "🦆单人视频-生成视频片段",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "565c1e1b-70c2-403d-a35f-4f43cfd2c0ae",
+              "name": "prompt",
+              "value": "={{ $json.prompt.replace(/\"/g, '\\\\\"') }}",
+              "type": "string"
+            },
+            {
+              "id": "bce999ce-9040-4f70-a70a-6df392427116",
+              "name": "image_filepath",
+              "value": "={{ '/home/node/files/' + $json.image_filepath.split('file=').pop().split('?')[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "d36957ef-16da-4724-b3d9-199b7fa3a34b",
+              "name": "duration",
+              "value": "={{ $json.duration }}",
+              "type": "number"
+            },
+            {
+              "id": "77b39440-3503-46b9-9faa-58750f5b1106",
+              "name": "width",
+              "value": "={{ $json.width||854 }}",
+              "type": "number"
+            },
+            {
+              "id": "7b40152f-de25-43b8-b339-b9a30c39d404",
+              "name": "height",
+              "value": "={{ $json.height||480 }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        240
+      ],
+      "id": "d3d833f3-21e0-4eb2-a70b-5fcdad03863e",
+      "name": "配置字段"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "image_filepath"
+            },
+            {
+              "name": "prompt"
+            },
+            {
+              "name": "duration",
+              "type": "number"
+            },
+            {
+              "name": "width",
+              "type": "number"
+            },
+            {
+              "name": "height",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -16,
+        240
+      ],
+      "id": "f3278258-dee3-4d24-aa37-2fce5e1d955c",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6491514e-d576-4ea9-bcfb-9d8aa5ab69fc",
+              "name": "image_filepath",
+              "value": "/root/n8n/custom_output/2025-11-24_08-23-30/character_2025-11-24_07-25-33_8035.png",
+              "type": "string"
+            },
+            {
+              "id": "de858876-b71d-4290-8aa1-5ac20bbd84a2",
+              "name": "prompt",
+              "value": "人物向前方走来",
+              "type": "string"
+            },
+            {
+              "id": "9678b06a-6c7c-4328-a296-b23062c460b0",
+              "name": "duration",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "ab8e0bfe-d2e1-418a-8ddb-4d5b0b176a73",
+              "name": "width",
+              "value": 360,
+              "type": "number"
+            },
+            {
+              "id": "a238f8ae-4a01-4fa0-af3f-67997bd3e3b9",
+              "name": "height",
+              "value": 480,
+              "type": "number"
+            },
+            {
+              "id": "b2a26b61-96de-4459-9748-7c9ade8aab37",
+              "name": "output_folder_path",
+              "value": "/root/n8n/custom_output/",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "11f777dd-ca64-44ec-b665-696915ac8f34",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "75419532-a583-4aa3-a745-b809374518de",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.image_filepath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        464,
+        240
+      ],
+      "id": "d10bd7af-c13c-479b-87f5-514a72bbd095",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1232,
+        240
+      ],
+      "id": "f9f7f7b2-ff20-40ba-869c-adbfa4e88a5b",
+      "name": "Wait",
+      "webhookId": "0a4675d5-4a1b-48af-82f0-49903aa5c606"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95b5670e-5019-45a7-b701-08a608311038",
+              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1664,
+        240
+      ],
+      "id": "fc747850-2405-4528-849e-d481ae98e32d",
+      "name": "If",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b56d373b-ce89-4280-bb76-745968f4d482",
+              "name": "video_filepath",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2528,
+        224
+      ],
+      "id": "04832518-6ffa-4742-99d6-b043b106ac7b",
+      "name": "执行结束返回字段1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $json.filename }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        224
+      ],
+      "id": "6a7f420d-eaa7-4583-a779-d1cbb8258d8d",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/upload/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        240
+      ],
+      "id": "1dd642b7-6e3e-430a-892a-ddba3d16ef6a",
+      "name": "上传图片",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/prompt",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {\n  \"1\": {\n    \"inputs\": {\n      \"add_noise\": \"disable\",\n      \"noise_seed\": 0,\n      \"steps\": 6,\n      \"cfg\": 1,\n      \"sampler_name\": \"euler_ancestral\",\n      \"scheduler\": \"simple\",\n      \"start_at_step\": 3,\n      \"end_at_step\": 10000,\n      \"return_with_leftover_noise\": \"disable\",\n      \"model\": [\n        \"6\",\n        0\n      ],\n      \"positive\": [\n        \"25\",\n        0\n      ],\n      \"negative\": [\n        \"25\",\n        1\n      ],\n      \"latent_image\": [\n        \"30\",\n        0\n      ]\n    },\n    \"class_type\": \"KSamplerAdvanced\",\n    \"_meta\": {\n      \"title\": \"KSampler (Advanced)\"\n    }\n  },\n  \"5\": {\n    \"inputs\": {\n      \"sage_attention\": \"auto\",\n      \"allow_compile\": false,\n      \"model\": [\n        \"10\",\n        0\n      ]\n    },\n    \"class_type\": \"PathchSageAttentionKJ\",\n    \"_meta\": {\n      \"title\": \"Patch Sage Attention KJ\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"enable_fp16_accumulation\": true,\n      \"model\": [\n        \"5\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelPatchTorchSettings\",\n    \"_meta\": {\n      \"title\": \"Model Patch Torch Settings\"\n    }\n  },\n  \"8\": {\n    \"inputs\": {\n      \"sage_attention\": \"auto\",\n      \"allow_compile\": false,\n      \"model\": [\n        \"12\",\n        0\n      ]\n    },\n    \"class_type\": \"PathchSageAttentionKJ\",\n    \"_meta\": {\n      \"title\": \"Patch Sage Attention KJ\"\n    }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"unet_name\": \"smoothMixWan22I2VT2V_i2vLow.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"Load Diffusion Model\"\n    }\n  },\n  \"10\": {\n    \"inputs\": {\n      \"shift\": 8,\n      \"model\": [\n        \"9\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingSD3\",\n    \"_meta\": {\n      \"title\": \"ModelSamplingSD3\"\n    }\n  },\n  \"11\": {\n    \"inputs\": {\n      \"unet_name\": \"smoothMixWan22I2VT2V_i2vHigh.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"Load Diffusion Model\"\n    }\n  },\n  \"12\": {\n    \"inputs\": {\n      \"shift\": 8,\n      \"model\": [\n        \"11\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingSD3\",\n    \"_meta\": {\n      \"title\": \"ModelSamplingSD3\"\n    }\n  },\n  \"13\": {\n    \"inputs\": {\n      \"clip_name\": \"umt5_xxl_fp8_e4m3fn_scaled.safetensors\",\n      \"type\": \"wan\",\n      \"device\": \"cpu\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": {\n      \"title\": \"Load CLIP\"\n    }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"vae_name\": \"wan_2.1_vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"Load VAE\"\n    }\n  },\n  \"15\": {\n    \"inputs\": {\n      \"enable_fp16_accumulation\": true,\n      \"model\": [\n        \"8\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelPatchTorchSettings\",\n    \"_meta\": {\n      \"title\": \"Model Patch Torch Settings\"\n    }\n  },\n  \"16\": {\n    \"inputs\": {\n      \"value\": {{ $('配置字段').item.json.height }}\n    },\n    \"class_type\": \"ImpactInt\",\n    \"_meta\": {\n      \"title\": \"整数\"\n    }\n  },\n  \"17\": {\n    \"inputs\": {\n      \"value\": {{ $('配置字段').item.json.duration }}\n    },\n    \"class_type\": \"ImpactInt\",\n    \"_meta\": {\n      \"title\": \"整数\"\n    }\n  },\n  \"18\": {\n    \"inputs\": {\n      \"value\": {{ $('配置字段').item.json.width }}\n    },\n    \"class_type\": \"ImpactInt\",\n    \"_meta\": {\n      \"title\": \"整数\"\n    }\n  },\n  \"19\": {\n    \"inputs\": {\n      \"seed\": -1\n    },\n    \"class_type\": \"Seed (rgthree)\",\n    \"_meta\": {\n      \"title\": \"随机种子\"\n    }\n  },\n  \"21\": {\n    \"inputs\": {\n      \"frame_rate\": 32,\n      \"loop_count\": 0,\n      \"filename_prefix\": \"comfyui\",\n      \"format\": \"video/h264-mp4\",\n      \"pix_fmt\": \"yuv420p\",\n      \"crf\": 19,\n      \"save_metadata\": false,\n      \"trim_to_audio\": false,\n      \"pingpong\": false,\n      \"save_output\": true,\n      \"images\": [\n        \"23\",\n        0\n      ]\n    },\n    \"class_type\": \"VHS_VideoCombine\",\n    \"_meta\": {\n      \"title\": \"Video Combine 🎥🅥🅗🅢\"\n    }\n  },\n  \"22\": {\n    \"inputs\": {\n      \"samples\": [\n        \"26\",\n        0\n      ],\n      \"vae\": [\n        \"14\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE Decode\"\n    }\n  },\n  \"23\": {\n    \"inputs\": {\n      \"ckpt_name\": \"rife49.pth\",\n      \"clear_cache_after_n_frames\": 10,\n      \"multiplier\": 2,\n      \"fast_mode\": false,\n      \"ensemble\": true,\n      \"scale_factor\": 1,\n      \"dtype\": \"float32\",\n      \"torch_compile\": false,\n      \"batch_size\": 1,\n      \"frames\": [\n        \"29\",\n        0\n      ]\n    },\n    \"class_type\": \"RIFE VFI\",\n    \"_meta\": {\n      \"title\": \"RIFE VFI (recommend rife4.25+)\"\n    }\n  },\n  \"24\": {\n    \"inputs\": {\n      \"value\": \"a*16+1\",\n      \"a\": [\n        \"17\",\n        0\n      ]\n    },\n    \"class_type\": \"SimpleMath+\",\n    \"_meta\": {\n      \"title\": \"🔧 Simple Math\"\n    }\n  },\n  \"25\": {\n    \"inputs\": {\n      \"width\": [\n        \"39\",\n        1\n      ],\n      \"height\": [\n        \"39\",\n        2\n      ],\n      \"length\": [\n        \"24\",\n        0\n      ],\n      \"batch_size\": 1,\n      \"positive\": [\n        \"28\",\n        0\n      ],\n      \"negative\": [\n        \"33\",\n        0\n      ],\n      \"vae\": [\n        \"14\",\n        0\n      ],\n      \"clip_vision_output\": [\n        \"40\",\n        0\n      ],\n      \"start_image\": [\n        \"39\",\n        0\n      ]\n    },\n    \"class_type\": \"WanImageToVideo\",\n    \"_meta\": {\n      \"title\": \"WanImageToVideo\"\n    }\n  },\n  \"26\": {\n    \"inputs\": {\n      \"anything\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"easy cleanGpuUsed\",\n    \"_meta\": {\n      \"title\": \"Clean VRAM Used\"\n    }\n  },\n  \"27\": {\n    \"inputs\": {\n      \"upscale_method\": \"lanczos\",\n      \"scale_by\": 2,\n      \"image\": [\n        \"22\",\n        0\n      ]\n    },\n    \"class_type\": \"ImageScaleBy\",\n    \"_meta\": {\n      \"title\": \"Upscale Image By\"\n    }\n  },\n  \"28\": {\n    \"inputs\": {\n      \"text\": [\n        \"36\",\n        0\n      ],\n      \"clip\": [\n        \"13\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Prompt)\"\n    }\n  },\n  \"29\": {\n    \"inputs\": {\n      \"anything\": [\n        \"27\",\n        0\n      ]\n    },\n    \"class_type\": \"easy cleanGpuUsed\",\n    \"_meta\": {\n      \"title\": \"Clean VRAM Used\"\n    }\n  },\n  \"30\": {\n    \"inputs\": {\n      \"add_noise\": \"enable\",\n      \"noise_seed\": [\n        \"19\",\n        0\n      ],\n      \"steps\": 6,\n      \"cfg\": 1,\n      \"sampler_name\": \"euler_ancestral\",\n      \"scheduler\": \"simple\",\n      \"start_at_step\": 0,\n      \"end_at_step\": 3,\n      \"return_with_leftover_noise\": \"enable\",\n      \"model\": [\n        \"15\",\n        0\n      ],\n      \"positive\": [\n        \"25\",\n        0\n      ],\n      \"negative\": [\n        \"25\",\n        1\n      ],\n      \"latent_image\": [\n        \"25\",\n        2\n      ]\n    },\n    \"class_type\": \"KSamplerAdvanced\",\n    \"_meta\": {\n      \"title\": \"KSampler (Advanced)\"\n    }\n  },\n  \"33\": {\n    \"inputs\": {\n      \"text\": \"色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走, censored, mosaic censoring, bar censor, pixelated, glowing, bloom, blurry, out of focus, low detail, bad anatomy, ugly, overexposed, underexposed, distorted face, extra limbs, cartoonish, 3d render artifacts, duplicate people, unnatural lighting, bad composition, missing shadows, low resolution, poorly textured, glitch, noise, grain, static, motionless, still frame, overall grayish, worst quality, low quality, JPEG compression artifacts, subtitles, stylized, artwork, painting, illustration, cluttered background, many people in background, three legs, walking backward, zoom out, zoom in, mouth speaking, moving mouth, talking, speaking, mute speaking, unnatural skin tone, discolored eyelid, red eyelids, red upper eyelids, no red eyeshadow, closed eyes, no wide-open innocent eyes, poorly drawn hands, extra fingers, fused fingers, poorly drawn face, deformed, disfigured, malformed limbs, thighs, fog, mist, voluminous eyelashes, blush,\",\n      \"clip\": [\n        \"13\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Prompt)\"\n    }\n  },\n  \"36\": {\n    \"inputs\": {\n      \"value\": \"{{ $('配置字段').item.json.prompt }}\"\n    },\n    \"class_type\": \"PrimitiveStringMultiline\",\n    \"_meta\": {\n      \"title\": \"Positive\"\n    }\n  },\n  \"37\": {\n    \"inputs\": {\n      \"image\": \"{{ $json.name }}\"\n    },\n    \"class_type\": \"LoadImage\",\n    \"_meta\": {\n      \"title\": \"Load Image\"\n    }\n  },\n  \"39\": {\n    \"inputs\": {\n      \"width\": [\n        \"18\",\n        0\n      ],\n      \"height\": [\n        \"16\",\n        0\n      ],\n      \"upscale_method\": \"nearest-exact\",\n      \"keep_proportion\": \"crop\",\n      \"pad_color\": \"0, 0, 0\",\n      \"crop_position\": \"center\",\n      \"divisible_by\": 2,\n      \"device\": \"cpu\",\n      \"image\": [\n        \"37\",\n        0\n      ]\n    },\n    \"class_type\": \"ImageResizeKJv2\",\n    \"_meta\": {\n      \"title\": \"Resize Image v2\"\n    }\n  },\n  \"40\": {\n    \"inputs\": {\n      \"crop\": \"none\",\n      \"clip_vision\": [\n        \"41\",\n        0\n      ],\n      \"image\": [\n        \"39\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPVisionEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Vision Encode\"\n    }\n  },\n  \"41\": {\n    \"inputs\": {\n      \"clip_name\": \"clip_vision_h.safetensors\"\n    },\n    \"class_type\": \"CLIPVisionLoader\",\n    \"_meta\": {\n      \"title\": \"Load CLIP Vision\"\n    }\n  }\n}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        240
+      ],
+      "id": "1378d335-30ba-45cc-93a3-e80ce5b61d68",
+      "name": "请求视频生成",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/history/{{ $('请求视频生成').item.json.prompt_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        240
+      ],
+      "id": "cda85ad2-ebeb-45a3-913d-d293ca85e6bb",
+      "name": "检查是否生成完",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "67045518-9eff-44dc-987d-351275cc42c4",
+              "name": "filename",
+              "value": "={{Object.values($json).map(item => item.outputs[21].gifs[0].filename)[0]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1872,
+        224
+      ],
+      "id": "f3e27abe-3eec-4739-b8e0-366d2defa8f5",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/view",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filename",
+              "value": "={{ $json.filename }}"
+            },
+            {
+              "name": "type",
+              "value": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2096,
+        224
+      ],
+      "id": "1589eed4-68a8-4a27-b839-949339be46e1",
+      "name": "获取视频",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "image_filepath": "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00051_.png",
+          "prompt": "清晨的街心湖笼罩在淡金色薄雾中，芦苇丛边缘水珠轻颤。木桥延伸至湖心的旧码头，远处山峦轮廓在晨霭中若隐若现。edi赤脚踩上摇摇晃晃的木船，单膝跪地调整船桨角度，船身随波纹轻晃，水面倒影里晨鸟掠过。",
+          "duration": 3
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "配置字段": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "上传图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "检查是否生成完",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "执行结束返回字段1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传图片": {
+      "main": [
+        [
+          {
+            "node": "请求视频生成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "请求视频生成": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否生成完": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "获取视频",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取视频": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0f3a442e-8a1d-44e5-9e82-c34b50a1cc60",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "TlQWcAQoa4n72j4P",
+  "tags": []
+}

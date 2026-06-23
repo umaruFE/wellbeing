@@ -1,0 +1,558 @@
+{
+  "name": "🦅单人视频-生成配音-Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "565c1e1b-70c2-403d-a35f-4f43cfd2c0ae",
+              "name": "voice_id",
+              "value": "={{ $json.body.voice_id }}.flac",
+              "type": "string"
+            },
+            {
+              "id": "a1e30b9c-f47c-49f4-9461-d1366a5424e7",
+              "name": "text",
+              "value": "={{ $json.body.text }}",
+              "type": "string"
+            },
+            {
+              "id": "5d96ed60-f8fa-448a-96de-4dde852fcef1",
+              "name": "emotion_prompt",
+              "value": "={{ $json.body.emotion_prompt }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        112
+      ],
+      "id": "ea66e9d7-ff86-4f24-a983-ce9d67b27415",
+      "name": "配置字段"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        112
+      ],
+      "id": "561a0583-c558-4b07-b4c9-bad6dae16ddc",
+      "name": "Wait2",
+      "webhookId": "fd9655fe-6880-4827-90fc-67319f25b5a0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95b5670e-5019-45a7-b701-08a608311038",
+              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        768,
+        112
+      ],
+      "id": "0caa0725-d92d-4fd5-ae71-cc4739cb1a60",
+      "name": "If4",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/prompt",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"prompt\": {\n      \"1\": {\n        \"inputs\": {\n          \"top_k\": 30,\n          \"top_p\": 0.8,\n          \"temperature\": 0.8,\n          \"num_beams\": 3,\n          \"max_mel_tokens\": 1500,\n          \"max_text_tokens_per_sentence\": 120,\n          \"custom_cuda_kernel\": false,\n          \"deepspeed\": true,\n          \"unload_model\": true,\n          \"emo_alpha\": 1,\n          \"emo_vector\": \"\",\n          \"use_emo_text\": $json.emotion_prompt ? true : false,\n          \"emo_text\": $json.emotion_prompt || \"\",\n          \"use_random\": false,\n          \"emo_alpha_s2\": 1.0000000000000002,\n          \"emo_vector_s2\": \"\",\n          \"use_emo_text_s2\": false,\n          \"emo_text_s2\": \"\",\n          \"use_random_s2\": false,\n          \"audio\": [\n            \"9\",\n            0\n          ],\n          \"text\": [\n            \"6\",\n            0\n          ]\n        },\n        \"class_type\": \"IndexTTS2Run\",\n        \"_meta\": {\n          \"title\": \"IndexTTS2 Run\"\n        }\n      },\n      \"6\": {\n        \"inputs\": {\n          \"text\": $json.text\n        },\n        \"class_type\": \"Text Multiline\",\n        \"_meta\": {\n          \"title\": \"多行文本\"\n        }\n      },\n      \"9\": {\n        \"inputs\": {\n          \"audio\": \"voice/\" + $json.voice_id,\n          \"audioUI\": \"/api/view?filename=%E6%90%9E%E7%AC%91%E5%A4%A7%E7%88%B7.flac&type=input&subfolder=&rand=0.6831432869771068\"\n        },\n        \"class_type\": \"LoadAudio\",\n        \"_meta\": {\n          \"title\": \"Load Audio\"\n        }\n      },\n      \"14\": {\n        \"inputs\": {\n          \"filename_prefix\": \"audio/ComfyUI\",\n          \"audioUI\": \"/api/view?filename=ComfyUI_00003_.flac&type=output&subfolder=audio&rand=0.\" + Math.random().toString().slice(2, 18),\n          \"audio\": [\n            \"1\",\n            0\n          ]\n        },\n        \"class_type\": \"SaveAudio\",\n        \"_meta\": {\n          \"title\": \"Save Audio (FLAC)\"\n        }\n      }\n    }\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        112
+      ],
+      "id": "518ca53d-220c-42e7-97f0-8c4819966a34",
+      "name": "请求生成配音",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        112
+      ],
+      "id": "5ef3e78b-420a-4520-8e26-f9dc904462f8",
+      "name": "检查是否完成",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/view",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filename",
+              "value": "={{ $json.filename }}"
+            },
+            {
+              "name": "type",
+              "value": "output"
+            },
+            {
+              "name": "subfolder",
+              "value": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1152,
+        96
+      ],
+      "id": "c6345b03-7101-4db7-882d-bacd61caede0",
+      "name": "获取音频资源",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "45148eb8-79ba-4e63-8c34-c9b9fa99feba",
+              "name": "filename",
+              "value": "={{Object.values($json).map(item => item.outputs[14].audio[0].filename)[0]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        976,
+        96
+      ],
+      "id": "78609708-21f4-41b7-ab10-c4f84c76cc2e",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取 binary 数据（兼容 n8n 各种 binary mode）\nconst item = $input.first();\nlet buffer;\n\ntry {\n    // 推荐方式：使用 n8n helper（支持 filesystem 和 base64 模式）\n    buffer = await this.helpers.getBinaryDataBuffer(0, 'data');  // 'data' 是 binary property name\n} catch (e) {\n    // 兼容旧版或直接 base64 的 fallback\n    const binaryData = item.binary?.data;\n    if (binaryData && typeof binaryData === 'string') {\n        buffer = Buffer.from(binaryData, 'base64');\n    } else if (Buffer.isBuffer(binaryData)) {\n        buffer = binaryData;\n    } else {\n        return [{ json: { error: '无法获取 binary 数据，请检查上游节点 binary property name 是否为 \"data\"' } }];\n    }\n}\n\n// FLAC duration 解析函数\nfunction getFlacDurationFromBinary(buffer) {\n    try {\n        if (buffer.length < 4 || buffer.toString('utf8', 0, 4) !== 'fLaC') {\n            return { error: '不是有效的 FLAC 文件（缺少 fLaC 头）' };\n        }\n\n        let offset = 4;  // 跳过 fLaC 标记\n\n        while (offset < buffer.length) {\n            // 读取 4 字节 metadata block header (Big Endian)\n            const blockHeader = buffer.readUInt32BE(offset);\n            offset += 4;\n\n            const isLast = (blockHeader & 0x80000000) !== 0;\n            const blockType = (blockHeader >> 24) & 0x7F;  // 类型\n            const blockSize = blockHeader & 0x00FFFFFF;    // 大小\n\n            // STREAMINFO block (type 0) 必须是第一个，通常紧跟 fLaC\n            if (blockType === 0) {\n                // STREAMINFO 数据从这里开始（34 字节固定结构）\n                const streamInfoOffset = offset;\n\n                // Sample rate: 20 bits，从 STREAMINFO 第 10 字节开始\n                // 字节 10-11 (high 16 bits) + 字节12 高4位\n                const sampleRate = ((buffer.readUInt16BE(streamInfoOffset + 10) << 4) |\n                                   (buffer.readUInt8(streamInfoOffset + 12) >> 4)) & 0xFFFFF;\n\n                // Total samples: 36 bits，从 STREAMINFO 第 13 字节开始 (Big-endian)\n                // 使用 readBigUInt64BE 简化 + 掩码取低36位\n                const totalSamplesHigh = buffer.readUInt8(streamInfoOffset + 13) & 0x0F; // 只取低4位\n                const totalSamples = (BigInt(totalSamplesHigh) << 32n) |\n                                     BigInt(buffer.readUInt32BE(streamInfoOffset + 14));\n\n                if (sampleRate > 0 && totalSamples > 0n) {\n                    const durationSeconds = Number(totalSamples) / sampleRate;\n                    const minutes = Math.floor(durationSeconds / 60);\n                    const seconds = Math.floor(durationSeconds % 60);\n\n                    return {\n                        duration_seconds: durationSeconds,\n                        duration_formatted: `${minutes}:${seconds.toString().padStart(2, '0')}`,\n                        sample_rate: sampleRate,\n                        total_samples: Number(totalSamples)\n                    };\n                } else {\n                    return { error: 'STREAMINFO 中 total_samples 或 sample_rate 为 0（未知时长）' };\n                }\n            }\n\n            offset += blockSize;\n            if (isLast) break;\n        }\n\n        return { error: '未找到 STREAMINFO metadata block' };\n    } catch (error) {\n        return { error: `解析错误: ${error.message}` };\n    }\n}\n\nconst result = getFlacDurationFromBinary(buffer);\n\nif (result.error) {\n    return [{ json: { error: result.error } }];\n}\n\n// 返回 duration_ms\nreturn [{\n    json: {\n        duration_ms: Math.floor(result.duration_seconds * 1000),\n        duration_seconds: result.duration_seconds,\n        duration_formatted: result.duration_formatted,\n        sample_rate: result.sample_rate,\n        total_samples: result.total_samples\n    }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1552,
+        96
+      ],
+      "id": "8a290f7f-317a-4a17-97f7-33e11f4688c7",
+      "name": "获取音频时长"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $binary.data.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1360,
+        96
+      ],
+      "id": "897014ba-57c6-4757-b6aa-0d817a5c4958",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        112
+      ],
+      "id": "32757fb0-cb92-4ea2-967c-f9a1141250bd",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "78ab09a8-8445-4e9c-b453-a7ce41097d65",
+              "name": "filename",
+              "value": "=http://117.50.218.161:5678/webhook/files?file={{ $('Read/Write Files from Disk').item.json.filename }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1760,
+        96
+      ],
+      "id": "a2abe70f-82b0-4c4f-8ebd-bacf8aa1e019",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "J3YaofTO0eHhgjAp",
+          "mode": "list",
+          "cachedResultName": "tworkflow",
+          "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "response": "={{ $json.filename }}",
+            "execution_id": "={{ $execution.id }}",
+            "status": "success"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "response",
+              "displayName": "response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1968,
+        96
+      ],
+      "id": "32101270-af9f-45aa-a379-683b9f3feefa",
+      "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gene-audio",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -368,
+        -112
+      ],
+      "id": "729f13a8-d4cc-40a3-8da9-65a098486a6a",
+      "name": "Webhook",
+      "webhookId": "ede43632-2211-468e-8082-38ec654c4841"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"executionId\": \"{{ $execution.id }}\",\n  \"status\": \"success\",\n  \"message\": \"Workflow executed successfully\"\n}  ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -144,
+        -256
+      ],
+      "id": "07d94cd9-d602-4789-a42c-d07cf7dd3a3b",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "216"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "text": "happy birthday",
+            "voice_id": "可爱儿童女声",
+            "speed": 1,
+            "pitch": 1,
+            "emotion_prompt": "开心快乐的语气",
+            "user_id": "a60de280-e685-4e11-b69b-72ec1b723a22",
+            "organization_id": null,
+            "timestamp": 1777357917033
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-audio",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "配置字段": {
+      "main": [
+        [
+          {
+            "node": "请求生成配音",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "检查是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "请求生成配音": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否完成": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取音频资源": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "获取音频资源",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取音频时长": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "获取音频时长",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "73113a44-54fd-459a-aff8-5a55e72eda31",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "FYRzERdowSuGbhMy",
+  "tags": []
+}

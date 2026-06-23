@@ -1,0 +1,580 @@
+{
+  "name": "🐓单人视频-生成分镜图片",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "565c1e1b-70c2-403d-a35f-4f43cfd2c0ae",
+              "name": "prompt",
+              "value": "={{ JSON.stringify($json.prompt) }}",
+              "type": "string"
+            },
+            {
+              "id": "bce999ce-9040-4f70-a70a-6df392427116",
+              "name": "character_filepath",
+              "value": "={{ $json.character_filepath }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        240
+      ],
+      "id": "d7f5a237-9912-4517-8ee8-dd5ee0d728e1",
+      "name": "配置字段"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "character_filepath"
+            },
+            {
+              "name": "prompt"
+            },
+            {
+              "name": "width",
+              "type": "number"
+            },
+            {
+              "name": "height",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        240
+      ],
+      "id": "21b8afc0-491c-457a-8743-e18b41576dc6",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.character_filepath }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        432,
+        240
+      ],
+      "id": "56f093b3-13c8-420d-9c20-403a7c314c84",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b56d373b-ce89-4280-bb76-745968f4d482",
+              "name": "images_filepath",
+              "value": "={{ \n  $json.images_filepath.map(filePath => \n    \"http://117.50.218.161:5678/webhook/files?file=\" + \n    filePath.split('/').pop()\n  )\n}}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3424,
+        208
+      ],
+      "id": "ed2f6e53-94bf-4516-8a89-906312c8d5a4",
+      "name": "执行结束返回字段"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1184,
+        240
+      ],
+      "id": "ce675cd2-70e0-4d57-a377-b1d367bc5873",
+      "name": "Wait",
+      "webhookId": "0a4675d5-4a1b-48af-82f0-49903aa5c606"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95b5670e-5019-45a7-b701-08a608311038",
+              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        240
+      ],
+      "id": "459c4fe0-ea1a-415b-86bf-6e1d962aefc3",
+      "name": "If",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "images",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        2064,
+        224
+      ],
+      "id": "3bf5ff92-4f3d-48c9-8873-6d222451208b",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "02866e68-1a03-4696-8c44-bdc9af560966",
+              "name": "images",
+              "value": "={{ $json.values()[0].outputs['105'].images }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1840,
+        224
+      ],
+      "id": "ed7c8d4a-d2c0-4153-b30d-4959091d5f44",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2288,
+        224
+      ],
+      "id": "b1828fb1-7d48-4e69-9565-1af3c25f6ff8",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "fileName",
+              "renameField": true,
+              "outputFieldName": "images_filepath"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3232,
+        208
+      ],
+      "id": "49493cef-defb-4481-908b-b67c6df74903",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e58dd683-28f3-406b-84b6-3447331c8bb3",
+              "name": "fileName",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3008,
+        240
+      ],
+      "id": "cbf9272c-13ed-49c2-9acf-9c6e2a6283be",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://117.50.81.239:8188/upload/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        240
+      ],
+      "id": "2b311f6b-64fb-4d5e-a4fa-d26c94414102",
+      "name": "上传人物角色图片",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://117.50.81.239:8188/prompt",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\":{\n  \"56\": {\n    \"inputs\": {\n      \"seed\": {{ (Math.floor(Math.random()*9e14)+1e14).toString() }},\n      \"steps\": 4,\n      \"cfg\": 1,\n      \"sampler_name\": \"sa_solver\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [\n        \"109\",\n        0\n      ],\n      \"positive\": [\n        \"68\",\n        0\n      ],\n      \"negative\": [\n        \"61\",\n        0\n      ],\n      \"latent_image\": [\n        \"60\",\n        0\n      ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": {\n      \"title\": \"KSampler\"\n    }\n  },\n  \"60\": {\n    \"inputs\": {\n      \"pixels\": [\n        \"91\",\n        0\n      ],\n      \"vae\": [\n        \"110\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEEncode\",\n    \"_meta\": {\n      \"title\": \"VAE Encode\"\n    }\n  },\n  \"61\": {\n    \"inputs\": {\n      \"prompt\": \"\",\n      \"clip\": [\n        \"107\",\n        0\n      ],\n      \"vae\": [\n        \"110\",\n        0\n      ],\n      \"image1\": [\n        \"91\",\n        0\n      ]\n    },\n    \"class_type\": \"TextEncodeQwenImageEditPlus\",\n    \"_meta\": {\n      \"title\": \"TextEncodeQwenImageEditPlus\"\n    }\n  },\n  \"68\": {\n    \"inputs\": {\n      \"prompt\": [\n        \"138\",\n        0\n      ],\n      \"clip\": [\n        \"107\",\n        0\n      ],\n      \"vae\": [\n        \"110\",\n        0\n      ],\n      \"image1\": [\n        \"91\",\n        0\n      ]\n    },\n    \"class_type\": \"TextEncodeQwenImageEditPlus\",\n    \"_meta\": {\n      \"title\": \"TextEncodeQwenImageEditPlus\"\n    }\n  },\n  \"69\": {\n    \"inputs\": {\n      \"samples\": [\n        \"56\",\n        0\n      ],\n      \"vae\": [\n        \"110\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE Decode\"\n    }\n  },\n  \"74\": {\n    \"inputs\": {\n      \"image\": \"{{ $json.name }}\"\n    },\n    \"class_type\": \"LoadImage\",\n    \"_meta\": {\n      \"title\": \"Load Image\"\n    }\n  },\n  \"91\": {\n    \"inputs\": {\n      \"aspect_ratio\": \"original\",\n      \"proportional_width\": 1,\n      \"proportional_height\": 1,\n      \"fit\": \"letterbox\",\n      \"method\": \"lanczos\",\n      \"round_to_multiple\": \"8\",\n      \"scale_to_side\": \"shortest\",\n      \"scale_to_length\": [\n        \"104\",\n        0\n      ],\n      \"background_color\": \"#000000\",\n      \"image\": [\n        \"74\",\n        0\n      ]\n    },\n    \"class_type\": \"LayerUtility: ImageScaleByAspectRatio V2\",\n    \"_meta\": {\n      \"title\": \"LayerUtility: ImageScaleByAspectRatio V2\"\n    }\n  },\n  \"99\": {\n    \"inputs\": {\n      \"text\": \"角色面带灿烂笑容，眼神充满好奇与期待，整个人洋溢着兴奋的活力。阳光明媚的春日花园，绿草如茵，各色鲜花盛开，蝴蝶在花丛间飞舞，远处有白色的栅栏和秋千。蹦蹦跳跳地跑进花园，双手张开像要拥抱整个花园，脚步轻快雀跃。柔和阳光从侧面照射，形成温暖光晕，中景，中心构图，标准镜头，手持跟随镜头，高饱和暖色调。3D皮克斯风格，画面明亮鲜艳，充满童趣和活力感\",\n      \"anything\": [\n        \"138\",\n        0\n      ]\n    },\n    \"class_type\": \"easy showAnything\",\n    \"_meta\": {\n      \"title\": \"Show Any\"\n    }\n  },\n  \"104\": {\n    \"inputs\": {\n      \"Number\": 1024\n    },\n    \"class_type\": \"Int\",\n    \"_meta\": {\n      \"title\": \"整数\"\n    }\n  },\n  \"105\": {\n    \"inputs\": {\n      \"filename_prefix\": \"ComfyUI\",\n      \"images\": [\n        \"69\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": {\n      \"title\": \"Save Image\"\n    }\n  },\n  \"106\": {\n    \"inputs\": {\n      \"unet_name\": \"Qwen-Image-Edit_ComfyUI/qwen_image_edit_2511_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"Load Diffusion Model\"\n    }\n  },\n  \"107\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_2.5_vl_7b_fp8_scaled.safetensors\",\n      \"type\": \"qwen_image\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": {\n      \"title\": \"Load CLIP\"\n    }\n  },\n  \"109\": {\n    \"inputs\": {\n      \"lora_name\": \"Qwen-Image-Lightning/Qwen-Image-Edit-Lightning-4steps-V1.0.safetensors\",\n      \"strength_model\": 1.0000000000000002,\n      \"model\": [\n        \"133\",\n        0\n      ]\n    },\n    \"class_type\": \"LoraLoaderModelOnly\",\n    \"_meta\": {\n      \"title\": \"Load LoRA\"\n    }\n  },\n  \"110\": {\n    \"inputs\": {\n      \"vae_name\": \"qwen_image_vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"Load VAE\"\n    }\n  },\n  \"133\": {\n    \"inputs\": {\n      \"lora_name\": \"next-scene_lora-v2-3000.safetensors\",\n      \"strength_model\": 0.8000000000000002,\n      \"model\": [\n        \"106\",\n        0\n      ]\n    },\n    \"class_type\": \"LoraLoaderModelOnly\",\n    \"_meta\": {\n      \"title\": \"Load LoRA\"\n    }\n  },\n  \"138\": {\n    \"inputs\": {\n      \"prompt\": {{ $('配置字段').item.json.prompt }},\n      \"start_index\": 0,\n      \"max_rows\": 1000,\n      \"remove_empty_lines\": \"\"\n    },\n    \"class_type\": \"easy promptLine\",\n    \"_meta\": {\n      \"title\": \"PromptLine\"\n    }\n  }\n }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        928,
+        240
+      ],
+      "id": "2270dbdb-5eb6-406b-910b-a78a93c071ad",
+      "name": "产生分镜图片请求",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://117.50.81.239:8188/history/{{ $('产生分镜图片请求').item.json.prompt_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1408,
+        240
+      ],
+      "id": "381b2440-3510-4b5f-9538-ccd6bccbbea4",
+      "name": "检查是否完成",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "http://117.50.81.239:8188/view",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filename",
+              "value": "={{ $json.filename }}"
+            },
+            {
+              "name": "type",
+              "value": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2528,
+        240
+      ],
+      "id": "a228b489-266e-4ec1-bf0f-636d722876bf",
+      "name": "获取素材",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $binary.data.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2784,
+        240
+      ],
+      "id": "67cb7da1-53c1-43cd-a27f-f448ddcf8857",
+      "name": "写入本地"
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "character_filepath": "/home/node/files/poppy.png",
+          "prompt": "分镜1：角色面带灿烂笑容，眼神明亮，充满好奇情绪。阳光明媚的花园场景，色彩斑斓的花朵随风摇曳，翠绿的藤蔓缠绕在木栅栏上。角色准备跳跃跑动，双手张开仿佛在拥抱阳光。自然光从侧上方照射，午后时分，中景，三分法构图，标准镜头，暖色调高饱和度。动画简笔风风格，线条流动柔和，色彩明快如水彩。\n分镜2：角色准备蹲下身，表情专注，眼神凝视地面。花园角落的石子小径，夕阳余晖洒落，影子被拉长。角色伸出手准备触摸泥土中的小昆虫。侧逆光形成剪影效果，黄昏时段，特写景别，对角线构图，长焦镜头，冷色调低饱和度对比。动画简笔风风格，线条简化但动态细节突出。",
+          "output_folder_path": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "配置字段": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "上传人物角色图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "检查是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "获取素材",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "执行结束返回字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传人物角色图片": {
+      "main": [
+        [
+          {
+            "node": "产生分镜图片请求",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "产生分镜图片请求": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否完成": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取素材": {
+      "main": [
+        [
+          {
+            "node": "写入本地",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "写入本地": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "dc256d34-3bc9-4268-be2e-54f6ab0903ed",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "nk3rGzPaap4DV1Qh",
+  "tags": []
+}

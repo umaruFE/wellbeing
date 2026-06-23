@@ -1,0 +1,218 @@
+{
+  "name": "ai-prompt-optimize",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-prompt-optimize",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook 接收",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        5584,
+        2640
+      ],
+      "id": "25df0d24-d309-41e8-b82e-abc4163016b6",
+      "webhookId": "ai-prompt-optimize"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 获取提示词优化模板\nconst item = $input.first()?.json || {};\nconst taskType = item.body?.task_type || item.task_type || 'extract-keywords';\nconst originalPrompt = item.body?.prompt || item.prompt || '';\nconst selectedRoles = item.body?.selectedRoles || [];\n\nconst promptTemplates = {\n  'video': `你是一个专业的视频提示词优化专家。请将用户的简单描述扩展为详细的视频生成提示词。\n\n要求：\n1. 详细描述场景、环境、光线、色彩、氛围\n2. 描述角色的动作、表情、位置\n3. 包含镜头运动建议（如推、拉、摇、移等）\n4. 风格关键词：扁平矢量插画、2D动画风格、低饱和度平涂色彩\n\n直接输出优化后的提示词，不要其他解释。`,\n\n  'storyboard': `你是一个专业的分镜提示词优化专家。请将用户的简单描述扩展为适合分镜制作的详细提示词。\n\n要求：\n1. 分解为多个分镜场景\n2. 每个分镜包含：场景描述、角色动作、镜头角度\n3. 保持风格一致性\n4. 风格关键词：扁平矢量插画、2D动画风格、低饱和度平涂色彩\n\n输出格式：\n[\n  {\"scene\": 1, \"description\": \"场景1描述\", \"characters\": \"角色动作\"},\n  {\"scene\": 2, \"description\": \"场景2描述\", \"characters\": \"角色动作\"}\n]`,\n\n  'regene': `你是一个专业的图像优化专家。请将用户的简单描述扩展为详细的图像生成提示词。\n\n要求：\n1. 详细描述角色外观、表情、动作、位置\n2. 详细描述背景环境\n3. 添加风格关键词：扁平矢量插画、2D扁平设计、低饱和度平涂色彩、单线风格\n4. 添加质量增强词：高清、细腻、精致\n\n直接输出优化后的提示词。`,\n\n'extract-keywords': `你是一个专业的 AI 绘画提示词扩写与场景拆解专家。你的任务是从用户的简单描述中提取信息，并**大幅度扩写细节**，生成画面感极强的提示词。\n\n【核心输出语言】：所有扩写的画面细节描述**必须使用中文**，但指定的英文触发词和控制词必须原样保留。\n\n必须以JSON格式返回，不要输出任何其他文字：\n{\n  \"background\": \"cj_vector_style, 扁平矢量插画, 2D扁平设计, 低饱和度平涂色彩, 单线风格, 背景环境的详细扩写（包含具体的景物组合和氛围。例如：茂密的魔法森林，阳光穿透薄雾洒在巨大的古树上，充满童话氛围）\",\n  \"roles\": {\n    \"poppy\": \"poppy_character, 弯着腰，双手正小心翼翼地捧着一颗巨大的红色斑点蘑菇，动作生动活泼, master piece, best quality, solid white background\",\n    \"edi\": \"edi_character, 高高跳起，单手伸向空中，试图抓住一只发光的蓝色蜻蜓，身体舒展充满动感, master piece, best quality, solid white background\",\n    \"rolly\": \"rolly_character, 具体的肢体姿态，手部正在怎么互动，拿着什么具体特征的道具，生动活泼的动作细节, master piece, best quality, solid white background\",\n    \"milo\": \"milo_character, 具体的肢体姿态，手部正在怎么互动，拿着什么具体特征的道具，生动活泼的动作细节, master piece, best quality, solid white background\",\n    \"ace\": \"ace_character, 紫色星形身体, 具体的肢体姿态，手部正在怎么互动，拿着什么具体特征的道具，生动活泼的动作细节, master piece, best quality, solid white background\"\n  }\n}\n\n重要规则：\n\n【背景风格与细节扩写守则 - 核心任务】\n1. **背景固定风格**：背景描述的开头必须强制包含 \"cj_vector_style, 扁平矢量插画, 2D扁平设计, 低饱和度平涂色彩, 单线风格, \"。\n2. **背景画面感**：在固定风格词之后，必须详细补充景物、环境元素和整体氛围。\n3. **拒绝干瘪动词**：提取角色动作时，绝对不能只输出“采蘑菇”、“抓蜻蜓”这种简单的词汇！\n4. **动作画面感**：角色动作必须写出“具体的肢体姿态”+“手部动作”+“道具细节”。\n\n【IP动作适度扩写守则 - 防人类化污染（核心！）】\n1. **禁止复杂解剖词汇**：由于IP角色是极简的管状四肢结构，**绝对禁止**使用“大腿内侧”、“脚心”、“膝盖”、“手肘”、“手掌合十”等具有真实人类骨骼肌肉暗示的词汇！这会导致AI生成写实人类。\n2. **动作意象化**：动作描述必须**宏观、整体**。例如：不要写“双臂向上伸直在头顶合十”，只需写“保持树式瑜伽姿势”；不要写“手指紧紧抓握”，只需写“拿着”或“举着”。\n3. **转移扩写重心**：既然不能细化肢体关节，请将扩写的重心放在**角色神态（如：专注、开心、呆萌）**以及**互动的道具细节（如：发光的蓝色蜻蜓、红色斑点蘑菇）**上，以此来丰富画面。\n\n【纯白底孤立资产 - 抠图强制规则】\n- **环境隔离**：在角色的动作描述中，**严禁出现任何环境词汇**（如森林、草地、天空、地面、树木等）。提取动作时必须把背景彻底剔除！\n- **后缀强制**：角色描述末尾必须包含 \",纯白色背景\"。\n\n【IP角色核心特质 - 触发逻辑】\n- **poppy/edi/milo/rolly**: 触发词分别是 poppy_character, edi_character, milo_character, rolly_character。\n  **【严格禁令】禁止描述这些角色的任何身体特征、外观细节、颜色或形状。**\n- **ace**: 触发词 ace_character。特征：紫色，星形身体（多角星）。由于该角色仍需辅助识别，请在描述动作时保留其视觉特征描述。\n\n【IP角色固有属性守则 - 严格遵守】\n- **眼睛**: 极简纯黑实心圆点，绝对禁止瞳孔、白眼球、眼皮或睫毛，保持原始的高级放空质感。\n- **嘴巴**: 简单的黑色线条。\n- **肢体**: 极简细长管状四肢，末端圆润，无手指/脚趾区分。\n- **禁忌**: 扩写动作时，绝对禁止给角色添加任何衣物、鞋帽、头发或写实肌肉纹理。\n\n直接输出JSON，不要输出任何其他文字！`,\n\n  'extract-character': `你是一个专业的角色描述提取助手。请从用户的场景描述中提取每个IP角色的具体描述。\n\n请以JSON格式返回：\n{\n  \"characters\": {\n    \"poppy\": \"角色poppy的详细描述\",\n    \"edi\": \"角色edi的详细描述\"\n  }\n}\n\n【IP角色固有属性守则】\n- 极简黑圆点眼，单线嘴。\n- 细长管状四肢，无指趾。\n- 不穿衣物，无头发。\n\n直接输出JSON。`,\n\n  'optimize': `优化提示词。要求：扩展场景、明确动作、添加“扁平矢量插画、2D动画风格、低饱和度平涂色彩”。直接输出。`,\n\n  'general': `优化提示词。要求：扩展场景、明确动作、添加风格词“扁平矢量插画、2D动画风格、低饱和度平涂色彩”。直接输出。`\n};\n\nconst systemPrompt = promptTemplates[taskType] || promptTemplates['general'];\n\nreturn [{\n  json: {\n    task_type: taskType,\n    original_prompt: originalPrompt,\n    chatInput: originalPrompt,\n    system_prompt: systemPrompt,\n    selectedRoles: selectedRoles\n  }\n}];"
+      },
+      "name": "获取优化模板",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5840,
+        2640
+      ],
+      "id": "25a3dcb9-08ac-4d44-85c6-93c85ca9c6b2"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "deepseek-v4-pro",
+          "mode": "list",
+          "cachedResultName": "deepseek-v4-pro"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "name": "Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        6032,
+        2848
+      ],
+      "id": "6bae4f20-9b36-4459-8476-bb61c2f3d2be",
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析 AI Agent 响应\nconst response = $input.first()?.json || {};\n\n// 提取内容\nlet content = '';\nif (response?.output) {\n  content = typeof response.output === 'string' ? response.output : JSON.stringify(response.output);\n} else if (response?.text) {\n  content = response.text;\n}\n\n// 尝试解析 JSON\nlet result = {\n  status: 'success',\n  background: '',\n  roles: {},\n  raw: content\n};\n\n// 清理可能有的 markdown 代码块\ncontent = content.replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/\\s*```$/, '').trim();\n\ntry {\n  const json = JSON.parse(content);\n  \n  if (json.background && json.roles) {\n    result.background = json.background;\n    result.roles = json.roles;\n  } else if (json.state || json.cities || json.background || json.roles) {\n    result.background = json.background || json.state || json.scene || '';\n    \n    if (json.cities && Array.isArray(json.cities)) {\n      const roleMap = {};\n      json.cities.forEach(item => {\n        const match = String(item).match(/^([a-zA-Z]+)(.+)$/);\n        if (match) {\n          roleMap[match[1].toLowerCase()] = match[2].trim();\n        }\n      });\n      result.roles = roleMap;\n    } else if (json.roles) {\n      result.roles = json.roles;\n    }\n  }\n} catch (e) {\n  result.raw = content;\n}\n\nreturn [{ json: result }];"
+      },
+      "name": "解析输出",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6704,
+        2640
+      ],
+      "id": "86290500-4f22-490a-8868-620776d2d0a0"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        6960,
+        2640
+      ],
+      "id": "9c9dce39-255b-499a-9ff5-caf02cc107e1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.original_prompt }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "={{ $json.system_prompt }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        6048,
+        2640
+      ],
+      "id": "b31d85bd-6743-48e0-864e-4dec59804e58",
+      "name": "Basic LLM Chain"
+    }
+  ],
+  "pinData": {
+    "Webhook 接收": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "198"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "task_type": "extract-keywords",
+            "prompt": "森林中，poppy在采蘑菇，edi在抓蜻蜓，rolly在捡树枝，milo在摘花，ace在玩泥巴",
+            "selectedRoles": [
+              "poppy",
+              "edi",
+              "rolly",
+              "milo",
+              "ace"
+            ]
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/ai-prompt-optimize",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook 接收": {
+      "main": [
+        [
+          {
+            "node": "获取优化模板",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取优化模板": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "解析输出": {
+      "main": [
+        [
+          {
+            "node": "返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "解析输出",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5bebe0fe-5aae-4e9a-b326-7464a7c34557",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "rJBGrJFQgJDXTaGe",
+  "tags": []
+}

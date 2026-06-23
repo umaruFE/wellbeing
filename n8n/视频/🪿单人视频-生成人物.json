@@ -1,0 +1,466 @@
+{
+  "name": "🪿单人视频-生成人物",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "565c1e1b-70c2-403d-a35f-4f43cfd2c0ae",
+              "name": "prompt",
+              "value": "={{ $json.prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "9a6fc81d-bcce-4652-a2ee-aeef432586c3",
+              "name": "output_folder_path",
+              "value": "={{ $json.output_folder_path }}",
+              "type": "string"
+            },
+            {
+              "id": "335ce323-fe4c-4f68-b8d9-db1cb63f2d39",
+              "name": "width",
+              "value": "={{ $json.width }}",
+              "type": "string"
+            },
+            {
+              "id": "2e42c1d8-4fc3-41c9-91e1-4f5c6f4a2754",
+              "name": "height",
+              "value": "={{ $json.height }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        240
+      ],
+      "id": "110a1f2b-fa4f-4d29-b1b4-72cfb039878e",
+      "name": "配置字段"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "prompt"
+            },
+            {
+              "name": "width",
+              "type": "number"
+            },
+            {
+              "name": "height",
+              "type": "number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        240
+      ],
+      "id": "910a7770-ac82-435e-852c-9a28f710dae4",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "de858876-b71d-4290-8aa1-5ac20bbd84a2",
+              "name": "prompt",
+              "value": "=新海诚动漫风格，全身形象。一位年轻职场女性，约25岁，身高165cm左右，身材匀称。她有着柔顺的及肩棕色短发，发梢微微内扣，几缕发丝自然地垂在脸颊两侧。穿着米白色的宽松针织开衫，内搭浅蓝色的衬衫，下身是深灰色的修身长裤，脚踩舒适的浅棕色平底皮鞋。整体气质温婉知性，眼神清澈明亮，嘴角带着淡淡的微笑，透露出一种安静而坚韧的温柔力量。",
+              "type": "string"
+            },
+            {
+              "id": "bb0e18ce-d908-4d04-a570-58ce7aae28e3",
+              "name": "output_folder_path",
+              "value": "=/root/n8n/custom_output/test/",
+              "type": "string"
+            },
+            {
+              "id": "ba148f83-d4f6-4943-ad6f-49d1dbebcdd9",
+              "name": "width",
+              "value": 1136,
+              "type": "string"
+            },
+            {
+              "id": "26c1389a-d430-4507-96b2-6292e7af58cf",
+              "name": "height",
+              "value": 1472,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "5ac73857-4a9b-4089-94cf-365ff52b036d",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "6d40e741-a964-4aaf-aeeb-a39096a4e37f",
+      "name": "When clicking ‘Execute workflow’",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b56d373b-ce89-4280-bb76-745968f4d482",
+              "name": "character_filepath",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2000,
+        224
+      ],
+      "id": "c3b53306-e3d3-4a11-b559-d4e671a9911b",
+      "name": "执行结束返回字段"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        688,
+        240
+      ],
+      "id": "42e5b9a2-602c-4221-a688-3768caf89fbd",
+      "name": "Wait",
+      "webhookId": "0a4675d5-4a1b-48af-82f0-49903aa5c606"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95b5670e-5019-45a7-b701-08a608311038",
+              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        240
+      ],
+      "id": "49c09c67-9fab-49aa-865f-78356eb5ea0a",
+      "name": "If",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/{{ $binary.data.fileName }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1808,
+        224
+      ],
+      "id": "e65ef5d2-7842-41da-bb0c-d906a03ab433",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "url": "http://117.50.81.239:8188/view",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filename",
+              "value": "={{ $json.filename }}"
+            },
+            {
+              "name": "type",
+              "value": "output"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        224
+      ],
+      "id": "753cacd0-9d01-4115-ad37-8fa6d1027488",
+      "name": "获取资源",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://117.50.81.239:8188/prompt",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {\n  \"2\": {\n    \"inputs\": {\n      \"unet_name\": \"Qwen-Image_ComfyUI/qwen_image_2512_bf16.safetensors\",\n      \"weight_dtype\": \"fp8_e4m3fn\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"Load Diffusion Model\"\n    }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_2.5_vl_7b_fp8_scaled.safetensors\",\n      \"type\": \"qwen_image\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": {\n      \"title\": \"Load CLIP\"\n    }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"vae_name\": \"qwen_image_vae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"Load VAE\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"shift\": 3.1000000000000005,\n      \"model\": [\n        \"12\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\",\n    \"_meta\": {\n      \"title\": \"ModelSamplingAuraFlow\"\n    }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": \"3D皮克斯风格风格，全身形象。一位6岁左右的活泼小男孩，几缕碎发随意散落。圆润的苹果脸，小巧的鼻子，明亮的大眼睛。娇小可爱的身材，身穿粉蓝色碎花连衣裙，棉质面料柔软舒适，领口系着白色蕾丝蝴蝶结，裙摆点缀着小雏菊图案。脚踩黄色小雨靴，左手腕戴着彩虹色橡皮筋手环。整体散发出天真烂漫的童真气息，充满好奇与活力。\",\n      \"clip\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Prompt)\"\n    }\n  },\n  \"8\": {\n    \"inputs\": {\n      \"text\": \"\",\n      \"clip\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"CLIP Text Encode (Prompt)\"\n    }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"width\": 1104,\n      \"height\": 1472,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyLatentImage\",\n    \"_meta\": {\n      \"title\": \"Empty Latent Image\"\n    }\n  },\n  \"10\": {\n    \"inputs\": {\n      \"seed\": {{ (Math.floor(Math.random()*9e14)+1e14).toString() }},\n      \"steps\": 8,\n      \"cfg\": 1,\n      \"sampler_name\": \"res_multistep\",\n      \"scheduler\": \"sgm_uniform\",\n      \"denoise\": 1,\n      \"model\": [\n        \"6\",\n        0\n      ],\n      \"positive\": [\n        \"7\",\n        0\n      ],\n      \"negative\": [\n        \"8\",\n        0\n      ],\n      \"latent_image\": [\n        \"9\",\n        0\n      ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": {\n      \"title\": \"KSampler\"\n    }\n  },\n  \"12\": {\n    \"inputs\": {\n      \"lora_name\": \"Qwen-Image-Lightning/Qwen-Image-Edit-2509/Qwen-Image-Edit-2509-Lightning-8steps-V1.0-bf16.safetensors\",\n      \"strength_model\": 1,\n      \"model\": [\n        \"2\",\n        0\n      ]\n    },\n    \"class_type\": \"LoraLoaderModelOnly\",\n    \"_meta\": {\n      \"title\": \"Load LoRA\"\n    }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"ComfyUI\",\n      \"images\": [\n        \"15\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": {\n      \"title\": \"Save Image\"\n    }\n  },\n  \"15\": {\n    \"inputs\": {\n      \"samples\": [\n        \"10\",\n        0\n      ],\n      \"vae\": [\n        \"4\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE Decode\"\n    }\n  }\n}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        240
+      ],
+      "id": "7fb4689f-9a2d-4698-8f64-3235bd5c8505",
+      "name": "请求生成图片",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "Tdgrjx6QNqYAEGKP",
+          "name": "vincentzou auth"
+        },
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "91fc6e04-2e55-4b57-9cc3-24bde7e89c81",
+              "name": "filename",
+              "value": "={{Object.values($json).map(item => item.outputs[14].images[0].filename)[0]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "feb71c92-dba2-4f7c-b93c-c2cfc52967db",
+      "name": "获取图片名"
+    },
+    {
+      "parameters": {
+        "url": "=http://117.50.81.239:8188/history/{{ $('请求生成图片').item.json.prompt_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        912,
+        240
+      ],
+      "id": "e6f1fb64-51ec-4b0c-85ba-310adf23ca3d",
+      "name": "检查是否完成",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "prompt": null,
+          "output_folder_path": null,
+          "width": null,
+          "height": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "配置字段": {
+      "main": [
+        [
+          {
+            "node": "请求生成图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "检查是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "获取图片名",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "执行结束返回字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取资源": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "请求生成图片": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取图片名": {
+      "main": [
+        [
+          {
+            "node": "获取资源",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否完成": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "90781519-c668-4a1e-9fb7-470cdf78630d",
+  "meta": {
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "XdbAwSvOVdTaoJPA",
+  "tags": []
+}

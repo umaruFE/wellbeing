@@ -1,0 +1,200 @@
+{
+  "name": "ai-prompt-processing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-prompt-processing",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "📥 Webhook 接收",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "ai-prompt-processing",
+      "id": "a3665771-662e-4086-9d78-25ff5b7bdee9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 提取关键词、人物、风格\nconst item = $input.first()?.json || {};\nconst text = $input.first().json.body.prompt;\nconst type = item.body.type || 'keywords';\n\n// 调用 DashScope 提取\nreturn [{\n  json: {\n    original_text: text,\n    type: type,\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "🔍 解析与提取",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "ab4e5bad-0b2a-42ba-ac10-1606dffa2024"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 解析提取结果\nconst response = $input.first()?.json || {};\nconst content = response?.output || '{}';\n\ntry {\n  const extracted = JSON.parse(content);\n  // 只返回解析后的数据，不需要 raw\n  return [{ json: extracted }];\n} catch (e) {\n  return [{ json: { background: '', roles: {} } }];\n}"
+      },
+      "name": "✅ 解析提取结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        0
+      ],
+      "id": "d1169936-51ea-4a3e-90bf-f227dc03476e"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "📤 返回结果",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        800,
+        0
+      ],
+      "id": "d45962cf-fd3c-4de6-a647-2a6d66f1ccf8"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "你是一个专业的场景关键词提取专家。\n\n## 任务\n根据用户提供的场景描述，提取背景关键词和角色动作描述。\n\n## 输入格式\n- prompt: 用户提供的场景描述文本\n- selectedRoles: 需要提取的角色列表（如 [\"poppy\", \"edi\"]）\n\n## 输出格式（必须严格返回JSON）\n{\n  \"background\": \"背景描述（简短）\",\n  \"roles\": {\n    \"角色名1\": \"该角色的具体动作描述\",\n    \"角色名2\": \"该角色的具体动作描述\"\n  }\n}\n\n## 要求\n1. 只输出JSON，不要添加任何解释或额外文字\n2. background 提取场景的核心背景\n3. roles 中每个角色的描述要具体",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        320,
+        0
+      ],
+      "id": "4cc3e3b6-f9a7-4940-a3bc-a16af72462dc",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "qwen3.6-plus",
+          "mode": "list",
+          "cachedResultName": "qwen3.6-plus"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        208
+      ],
+      "id": "681109f1-a9b6-4fa3-aaca-8c3ba93464e7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "tVVGkax0U2ja9otd",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"jsonSchema\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"background\": {\n        \"type\": \"string\",\n        \"description\": \"场景背景描述\"\n      },\n      \"roles\": {\n        \"type\": \"object\",\n        \"description\": \"角色动作描述\",\n        \"properties\": {\n          \"poppy\": {\n            \"type\": \"string\",\n            \"description\": \"poppy 的动作描述\"\n          },\n          \"edi\": {\n            \"type\": \"string\", \n            \"description\": \"edi 的动作描述\"\n          }\n        },\n        \"additionalProperties\": true\n      }\n    },\n    \"required\": [\"background\", \"roles\"]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        496,
+        208
+      ],
+      "id": "42f85e09-b7f4-4332-a887-2eced2cf53be",
+      "name": "Structured Output Parser"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "📥 Webhook 接收": {
+      "main": [
+        [
+          {
+            "node": "🔍 解析与提取",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ 解析提取结果": {
+      "main": [
+        [
+          {
+            "node": "📤 返回结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 解析与提取": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "✅ 解析提取结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "52336948-f3be-41d6-b245-e11c0c572ccc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "JxPZ03OEo886StN1",
+  "tags": []
+}

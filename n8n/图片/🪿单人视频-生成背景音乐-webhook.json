@@ -1,0 +1,496 @@
+{
+  "name": "🪿单人视频-生成背景音乐-webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "565c1e1b-70c2-403d-a35f-4f43cfd2c0ae",
+              "name": "prompts",
+              "value": "={{ $json.body.prompt }}",
+              "type": "string"
+            },
+            {
+              "id": "54779212-a097-4226-8de1-8e2edd2a2ef8",
+              "name": "duration",
+              "value": "={{ $json.body.duration }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        224
+      ],
+      "id": "e29bb113-fe86-472d-8222-510dda0b9685",
+      "name": "配置字段"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1136,
+        224
+      ],
+      "id": "9a0d89a2-7526-496b-9cb4-d5a0e63ab540",
+      "name": "Wait",
+      "webhookId": "23758b63-bfb5-41ba-9281-070fe7b81801"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "95b5670e-5019-45a7-b701-08a608311038",
+              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        224
+      ],
+      "id": "43a13145-24c3-4f7a-a867-d7372bf0cd80",
+      "name": "If",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/home/node/files/music_{{ $now.format('yyyy-MM-dd_hh-mm-ss') }}_{{ Math.floor(Math.random() * 10000) }}.flac",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        2192,
+        208
+      ],
+      "id": "c58ba65a-b305-4309-a2f6-9992aa6134e3",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b56d373b-ce89-4280-bb76-745968f4d482",
+              "name": "music_filepath",
+              "value": "=http://117.50.218.161:5678/webhook/files?file={{ $json.fileName.split(\"files\")[1] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2368,
+        208
+      ],
+      "id": "7f46bb5f-c046-4b5a-ab97-b9b69ca9e2ce",
+      "name": "执行结束返回字段1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/prompt",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": {\n  \"1\": {\n    \"inputs\": {\n      \"ckpt_name\": \"ace_step_v1_3.5b.safetensors\"\n    },\n    \"class_type\": \"CheckpointLoaderSimple\",\n    \"_meta\": {\n      \"title\": \"Checkpoint加载器（简易）\"\n    }\n  },\n  \"2\": {\n    \"inputs\": {\n      \"shift\": 4.000000000000001,\n      \"model\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingSD3\",\n    \"_meta\": {\n      \"title\": \"采样算法（SD3）\"\n    }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"tags\": \"{{ $json.prompts }}\",\n      \"lyrics\": \"[inst]\",\n      \"lyrics_strength\": 1.0000000000000002,\n      \"clip\": [\n        \"1\",\n        1\n      ]\n    },\n    \"class_type\": \"TextEncodeAceStepAudio\",\n    \"_meta\": {\n      \"title\": \"TextEncodeAceStepAudio\"\n    }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"conditioning\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"ConditioningZeroOut\",\n    \"_meta\": {\n      \"title\": \"条件零化\"\n    }\n  },\n  \"5\": {\n    \"inputs\": {\n      \"seconds\": {{ $json.duration }},\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptyAceStepLatentAudio\",\n    \"_meta\": {\n      \"title\": \"EmptyAceStepLatentAudio\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"seed\": {{ (Math.floor(Math.random()*9e14)+1e14).toString() }},\n      \"steps\": 50,\n      \"cfg\": 4,\n      \"sampler_name\": \"res_multistep\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [\n        \"2\",\n        0\n      ],\n      \"positive\": [\n        \"3\",\n        0\n      ],\n      \"negative\": [\n        \"4\",\n        0\n      ],\n      \"latent_image\": [\n        \"5\",\n        0\n      ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": {\n      \"title\": \"K采样器\"\n    }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"samples\": [\n        \"6\",\n        0\n      ],\n      \"vae\": [\n        \"1\",\n        2\n      ]\n    },\n    \"class_type\": \"VAEDecodeAudio\",\n    \"_meta\": {\n      \"title\": \"VAE解码（音频）\"\n    }\n  },\n  \"13\": {\n    \"inputs\": {\n      \"filename_prefix\": \"audio/ComfyUI\",\n      \"audioUI\": \"\",\n      \"audio\": [\n        \"7\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveAudio\",\n    \"_meta\": {\n      \"title\": \"保存音频\"\n    }\n  }\n}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        224
+      ],
+      "id": "c6335e45-af55-4942-a92a-26dd44d6c5c8",
+      "name": "请求生成背景音乐",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1360,
+        224
+      ],
+      "id": "2e4f68fd-98ef-46cb-ad39-efd860302f3b",
+      "name": "检查是否完成",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/view",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "filename",
+              "value": "={{ $json.filename }}"
+            },
+            {
+              "name": "type",
+              "value": "output"
+            },
+            {
+              "name": "subfolder",
+              "value": "audio"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1968,
+        208
+      ],
+      "id": "6a1eee45-e100-4f19-ae89-1548adda1c86",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fec0ca06-9b99-4509-953b-09af835dcf98",
+              "name": "filename",
+              "value": "={{Object.values($json).map(item => item.outputs[13].audio[0].filename)[0]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1776,
+        208
+      ],
+      "id": "ab24dc25-02b1-4603-a5fe-a3985156508f",
+      "name": "获取素材"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gene-music",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -64,
+        224
+      ],
+      "id": "d7f294dc-59e9-4d53-a5da-d29b51d408d6",
+      "name": "Webhook",
+      "webhookId": "0d884eb3-c5f6-4ea1-8acc-981b6159b2be"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={\n  \"executionId\": \"{{ $execution.id }}\",\n  \"status\": \"success\",\n  \"message\": \"Workflow executed successfully\"\n}  ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        176,
+        -16
+      ],
+      "id": "f4820c93-a9a4-45d2-a5bf-86c5e9ae88d8",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "J3YaofTO0eHhgjAp",
+          "mode": "list",
+          "cachedResultName": "tworkflow",
+          "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $execution.id }}",
+            "response": "={{ $json.music_filepath }}",
+            "status": "success"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "response",
+              "displayName": "response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        2576,
+        208
+      ],
+      "id": "cf077065-2873-489f-a01f-8c418c911384",
+      "name": "Insert row"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "184"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "prompt": "舒缓的音乐",
+            "count": 4,
+            "o3ics": "happy, cheerful, upbeat",
+            "duration": 30,
+            "user_id": "a60de280-e685-4e11-b69b-72ec1b723a22",
+            "organization_id": null,
+            "timestamp": 1777389759948
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-music",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "配置字段": {
+      "main": [
+        [
+          {
+            "node": "请求生成背景音乐",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "检查是否完成",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "获取素材",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "执行结束返回字段1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "请求生成背景音乐": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查是否完成": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取素材": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "配置字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "执行结束返回字段1": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c9e18c48-3fa5-4468-8558-6e7e9d813869",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  },
+  "id": "t2Qr0LzBfsAaeDAp",
+  "tags": []
+}
