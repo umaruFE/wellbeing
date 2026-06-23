@@ -101,6 +101,44 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
+function normalizeOutputLanguage(language?: string, outputLanguage?: string) {
+  const value = `${outputLanguage || language || ''}`.toLowerCase();
+  const isEnglish = value.includes('english') || value === 'en' || value.startsWith('en-');
+  return {
+    language: isEnglish ? 'en' : 'zh',
+    outputLanguage: isEnglish ? 'English' : 'Chinese',
+    isEnglish,
+  };
+}
+
+function buildOverviewText(overview: any, isEnglish: boolean) {
+  if (!overview) return '';
+
+  if (isEnglish) {
+    return [
+      'Existing course overview is provided below. Generate the lesson plan strictly based on this overview, keeping the story context, learning goals, and output task fully consistent.',
+      `Title: ${overview.courseTitle || ''}`,
+      `Context: ${overview.overallContext || ''}`,
+      `Language goals: vocabulary=${overview.languageGoals?.vocabulary || ''}, sentence patterns=${overview.languageGoals?.grammar || ''}`,
+      `SEL goals: ${overview.selGoals || ''}`,
+      `PERMA goals: ${overview.permaGoals || ''}`,
+      `Output task: ${overview.finalTask || ''}`,
+      `Image prompt: ${overview.themeImagePrompt || ''}`,
+    ].join('\n');
+  }
+
+  return [
+    '已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：',
+    `标题：${overview.courseTitle || ''}`,
+    `情境：${overview.overallContext || ''}`,
+    `语言目标：词汇=${overview.languageGoals?.vocabulary || ''}，句型=${overview.languageGoals?.grammar || ''}`,
+    `SEL目标：${overview.selGoals || ''}`,
+    `PERMA目标：${overview.permaGoals || ''}`,
+    `产出任务：${overview.finalTask || ''}`,
+    `生图提示词：${overview.themeImagePrompt || ''}`,
+  ].join('\n');
+}
+
 /**
  * POST /api/ai/generate-course
  *
@@ -144,6 +182,8 @@ export async function POST(request: NextRequest) {
       keyOutcome,
       atmosphere,
       specialRequirements,
+      language,
+      outputLanguage,
       userId,
       organizationId
     } = body;
@@ -164,7 +204,11 @@ export async function POST(request: NextRequest) {
       overview = overview.courseOverview;
     }
 
+    const languageConfig = normalizeOutputLanguage(language, outputLanguage);
+
     const n8nPayload = {
+      language: languageConfig.language,
+      outputLanguage: languageConfig.outputLanguage,
       age,
       duration,
       scale,
@@ -182,9 +226,10 @@ export async function POST(request: NextRequest) {
       atmosphere: atmosphere || '',
       specialRequirements: specialRequirements || '',
       course_overview: overview ? JSON.stringify(overview) : '',
-      course_overview_text: overview
-        ? `已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：\n标题：${overview.courseTitle || ''}\n情境：${overview.overallContext || ''}\n语言目标：词汇=${overview.languageGoals?.vocabulary || ''}，句型=${overview.languageGoals?.grammar || ''}\nSEL目标：${overview.selGoals || ''}\nPERMA目标：${overview.permaGoals || ''}\n产出任务：${overview.finalTask || ''}\n生图提示词：${overview.themeImagePrompt || ''}`
-        : '',
+      course_overview_text: buildOverviewText(overview, languageConfig.isEnglish),
+      outputInstruction: languageConfig.isEnglish
+        ? 'Generate all user-facing lesson plan content in English. Return structured JSON only. Do not include Chinese text unless it is explicitly provided as target language content by the user.'
+        : '请用中文生成所有面向用户展示的教案内容，并返回结构化 JSON。',
       userId,
       organizationId,
       timestamp: Date.now()

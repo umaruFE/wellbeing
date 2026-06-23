@@ -72,6 +72,37 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
+function normalizeOutputLanguage(language?: string, outputLanguage?: string) {
+  const value = `${outputLanguage || language || ''}`.toLowerCase();
+  const isEnglish = value.includes('english') || value === 'en' || value.startsWith('en-');
+  return {
+    language: isEnglish ? 'en' : 'zh',
+    outputLanguage: isEnglish ? 'English' : 'Chinese',
+    isEnglish,
+  };
+}
+
+function buildOutputInstruction(isEnglish: boolean) {
+  if (isEnglish) {
+    return [
+      'Return structured JSON only. Do not include Markdown, explanations, or Chinese text.',
+      'All user-facing fields in courseOverview must be written in English, including courseTitle, overallContext, languageGoals, selGoals, permaGoals, finalTask, themeImagePrompt, and every journey field.',
+      'courseOverview must include a journey field.',
+      'journey must include engage, empower, execute, and elevate.',
+      'The class journey must be based on this course theme, story context, language goals, final outcome, and growth goals. Do not use generic template sentences.',
+      'Each journey field should be 20-45 English words and include concrete classroom actions.',
+    ].join('\n');
+  }
+
+  return [
+    '请返回结构化 JSON。',
+    'courseOverview 中必须包含 journey 字段。',
+    'journey 必须包含 engage、empower、execute、elevate 四个字段。',
+    '课堂旅程必须基于本课程的主题、故事情境、语言目标、最终成果和成长目标生成，不能使用通用模板句。',
+    '每个 journey 字段 35-70 个中文字符，并体现具体课堂动作。',
+  ].join('\n');
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -96,13 +127,19 @@ export async function POST(request: NextRequest) {
       atmosphere,
       attachments,
       specialRequirements,
+      language,
+      outputLanguage,
       userId,
       organizationId
     } = body;
 
-    console.log('[generate-course-overview] 收到请求:', { theme, duration });
+    const languageConfig = normalizeOutputLanguage(language, outputLanguage);
+
+    console.log('[generate-course-overview] 收到请求:', { theme, duration, language: languageConfig.language });
 
     const n8nPayload = {
+      language: languageConfig.language,
+      outputLanguage: languageConfig.outputLanguage,
       age: age || '7-9岁',
       duration: duration || '60分钟',
       scale: scale || '9-15人',
@@ -124,13 +161,7 @@ export async function POST(request: NextRequest) {
       keyOutcome: keyOutcome || '',
       atmosphere: atmosphere || '',
       attachments: attachments || [],
-      outputInstruction: [
-        '请返回结构化 JSON。',
-        'courseOverview 中必须包含 journey 字段。',
-        'journey 必须包含 engage、empower、execute、elevate 四个字段。',
-        '课堂旅程必须基于本课程的主题、故事情境、语言目标、最终成果和成长目标生成，不能使用通用模板句。',
-        '每个 journey 字段 35-70 个中文字符，并体现具体课堂动作。',
-      ].join('\n'),
+      outputInstruction: buildOutputInstruction(languageConfig.isEnglish),
       expectedFields: {
         courseOverview: [
           'courseTitle',

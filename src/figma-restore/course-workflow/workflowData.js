@@ -188,33 +188,44 @@ export function buildCourseMap(course = {}) {
       };
     }
   }
-  const title = overview.courseTitle || course.courseTitle || course.title || '\u65B0\u8BFE\u7A0B';
-  const taskName = course.taskName || course.theme || '\u60C5\u5883\u4EFB\u52A1';
-  const path = course.experiencePath || overview.theme || '\u827A\u672F\u8868\u8FBE';
+  const isEn = (course.language === 'en' || course.outputLanguage === 'English');
+  const title = overview.courseTitle || course.courseTitle || course.title || (isEn ? 'New Course' : '新课程');
+  const taskName = course.taskName || course.theme || (isEn ? 'Scenario Task' : '情境任务');
+  const path = course.experiencePath || overview.theme || (isEn ? 'Artistic Expression' : '艺术表达');
   const vocabularies = course.vocabularies || [];
   const grammars = course.grammars || [];
-  const languageSkills = course.languageSkills || ['\u542C\u529B\u7406\u89E3', '\u53E3\u8BED\u8868\u8FBE'];
+  const languageSkills = course.languageSkills || (isEn ? ['Listening', 'Speaking'] : ['听力理解', '口语表达']);
 
   return {
     title,
     path,
-    age: course.age || '7-9\u5C81',
-    duration: course.duration || '60\u5206\u949F',
-    classSize: course.classSize || '9-15\u4EBA',
-    storyline: overview.overallContext || course.storyContext || `\u5B69\u5B50\u4EEC\u8FDB\u5165\u201C${taskName}\u201D\u7684\u4EFB\u52A1\u60C5\u5883\uFF0C\u901A\u8FC7\u89C2\u5BDF\u3001\u4EA4\u6D41\u4E0E\u5408\u4F5C\u521B\u4F5C\u5B8C\u6210\u6311\u6218\u3002`,
+    age: course.age || (isEn ? '7-9' : '7-9岁'),
+    duration: course.duration || (isEn ? '60 min' : '60分钟'),
+    classSize: course.classSize || (isEn ? '9-15' : '9-15人'),
+    storyline: overview.overallContext || course.storyContext || (isEn
+      ? `Kids enter the "${taskName}" scenario, completing challenges through observation, communication and collaboration.`
+      : `孩子们进入"${taskName}"的任务情境，通过观察、交流与合作创作完成挑战。`),
     toolkit: overview.languageGoals
       ? [
           overview.languageGoals.vocabulary || '',
           overview.languageGoals.grammar || '',
         ].filter(Boolean).join('\n')
       : [
-          vocabularies.length ? `\u6838\u5FC3\u8BCD\u6C47\uFF1A${vocabularies.join('\u3001')}` : '',
-          grammars.length ? `\u6838\u5FC3\u53E5\u578B\uFF1A${grammars.join('\u3001')}` : '',
-          languageSkills.length ? `\u80FD\u529B\u4FA7\u91CD\uFF1A${languageSkills.join('\u3001')}` : '',
-        ].filter(Boolean).join(' | ') || '\u56F4\u7ED5\u76EE\u6807\u8BCD\u6C47\u3001\u6838\u5FC3\u53E5\u578B\u4E0E\u771F\u5B9E\u8868\u8FBE\u4EFB\u52A1\u8FDB\u884C\u7EFC\u5408\u8FD0\u7528\u3002',
-    keyOutcome: overview.finalTask || course.keyOutcome || `\u6BCF\u4E2A\u5C0F\u7EC4\u5B8C\u6210\u4E00\u4EFD\u56F4\u7ED5\u201C${taskName}\u201D\u7684\u521B\u610F\u4F5C\u54C1\uFF0C\u5E76\u7528\u76EE\u6807\u8BED\u8A00\u5C55\u793A\u3002`,
-    growth: [overview.selGoals, overview.permaGoals].filter(Boolean).join('\n') || `\u5728\u201C${taskName}\u201D\u4E2D\u53D1\u5C55\u8868\u8FBE\u3001\u534F\u4F5C\u548C\u521B\u9020\u6027\u89E3\u51B3\u95EE\u9898\u80FD\u529B\u3002`,
-    experience: `\u901A\u8FC7${path}\u5B8C\u6210\u63A2\u7D22\u3001\u8868\u8FBE\u4E0E\u4F5C\u54C1\u4EA7\u51FA\u3002`,
+          vocabularies.length ? (isEn ? `Core Vocabulary: ${vocabularies.join(', ')}` : `核心词汇：${vocabularies.join('、')}`) : '',
+          grammars.length ? (isEn ? `Core Sentence: ${grammars.join(', ')}` : `核心句型：${grammars.join('、')}`) : '',
+          languageSkills.length ? (isEn ? `Skill Focus: ${languageSkills.join(', ')}` : `能力侧重：${languageSkills.join('、')}`) : '',
+        ].filter(Boolean).join(' | ') || (isEn
+          ? 'Integrate target vocabulary, core sentence patterns and authentic expression tasks.'
+          : '围绕目标词汇、核心句型与真实表达任务进行综合运用。'),
+    keyOutcome: overview.finalTask || course.keyOutcome || (isEn
+      ? `Each group completes a creative piece around "${taskName}" and presents it using target language.`
+      : `每个小组完成一份围绕"${taskName}"的创意作品，并用目标语言展示。`),
+    growth: [overview.selGoals, overview.permaGoals].filter(Boolean).join('\n') || (isEn
+      ? `Develop expression, collaboration and creative problem-solving in "${taskName}".`
+      : `在"${taskName}"中发展表达、协作和创造性解决问题能力。`),
+    experience: overview.experiencePath || overview.experience || (isEn
+      ? `Explore, express and create outputs through ${path}.`
+      : `通过${path}完成探索、表达与作品产出。`),
     themeImageUrl: course.themeImageUrl || null,
     themeImagePrompt: overview.themeImagePrompt || null,
   };
