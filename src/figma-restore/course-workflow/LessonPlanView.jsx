@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { buildCourseMap } from './workflowData';
+import { buildCourseMap, phaseTemplates } from './workflowData';
 import apiService from '../../services/api';
 import {
   ChevronRight,
@@ -244,6 +244,21 @@ const emptyPhases = [
   { key: 'elv', phase: 'Elevate', title: 'E-Elevate', name: '升华', duration: '15 分钟', steps: [] },
 ];
 
+function normalizePhaseCollection(rawPhases) {
+  if (!rawPhases) return null;
+  if (typeof rawPhases === 'string') {
+    try { return normalizePhaseCollection(JSON.parse(rawPhases)); } catch { return null; }
+  }
+  if (!Array.isArray(rawPhases)) return rawPhases;
+
+  return rawPhases.reduce((acc, phase) => {
+    const rawKey = phase?.key || phase?.id || phase?.phase || '';
+    const key = String(rawKey).toLowerCase();
+    if (key) acc[key] = phase;
+    return acc;
+  }, {});
+}
+
 function resolvePhasesFromCourse(course) {
   let courseData = course?.courseData || course?.course_data || course;
   if (typeof courseData === 'string') {
@@ -253,24 +268,20 @@ function resolvePhasesFromCourse(course) {
 
   let phases = null;
   if (Array.isArray(courseData)) {
-    phases = courseData.reduce((acc, phase) => {
-      const key = phase.key || phase.id || String(phase.phase || '').toLowerCase();
-      if (key) acc[key] = phase;
-      return acc;
-    }, {});
+    phases = normalizePhaseCollection(courseData);
   } else if (typeof courseData?.text === 'string') {
     try {
       const parsed = JSON.parse(courseData.text);
-      phases = parsed.courseData || parsed;
+      phases = normalizePhaseCollection(parsed.courseData || parsed.parsedCourseData || parsed);
     } catch {
       phases = null;
     }
   } else if (courseData?.text?.courseData) {
-    try { phases = typeof courseData.text.courseData === 'string' ? JSON.parse(courseData.text.courseData) : courseData.text.courseData; } catch { phases = null; }
+    try { phases = normalizePhaseCollection(courseData.text.courseData); } catch { phases = null; }
   } else if (courseData?.courseData) {
-    phases = courseData.courseData;
+    phases = normalizePhaseCollection(courseData.courseData);
   } else if (courseData?.parsedCourseData) {
-    phases = courseData.parsedCourseData;
+    phases = normalizePhaseCollection(courseData.parsedCourseData);
   } else if (courseData?.engage || courseData?.empower || courseData?.execute || courseData?.elevate) {
     phases = courseData;
   } else if (courseData?.eng || courseData?.emp || courseData?.exc || courseData?.elv) {
@@ -307,6 +318,41 @@ function resolvePhasesFromCourse(course) {
   });
 }
 
+function hasLessonSteps(resolvedPhases) {
+  return Array.isArray(resolvedPhases) && resolvedPhases.some((phase) => phase.steps?.length > 0);
+}
+
+function buildLessonCourseData(updated, baseCourseData = {}) {
+  const phaseKeyMap = { eng: 'engage', emp: 'empower', exc: 'execute', elv: 'elevate' };
+  const courseData = {
+    ...baseCourseData,
+    courseData: updated,
+  };
+
+  updated.forEach((phase) => {
+    courseData[phaseKeyMap[phase.key]] = {
+      title: phase.title,
+      steps: phase.steps.map((s) => ({
+        id: s.id,
+        title: s.title,
+        time: s.duration,
+        duration: s.duration,
+        objective: s.goal,
+        goal: s.goal,
+        activity: s.activity,
+        activitySteps: s.flow,
+        flow: s.flow,
+        resources: s.resources,
+        scenario: s.scenario,
+        script: s.teacherScript,
+        teacherScript: s.teacherScript,
+      })),
+    };
+  });
+
+  return courseData;
+}
+
 function buildLessonN8nPayload(course = {}) {
   const map = buildCourseMap(course);
 
@@ -321,10 +367,10 @@ function buildLessonN8nPayload(course = {}) {
     age: (course.ageGroup || course.age || '').replace(/--/g, '') || '7-9岁',
     duration: (course.duration || '').replace(/--/g, '').replace('分钟', '') || '60',
     scale: (course.classSize || course.unit || '').replace(/--/g, '') || '',
-    vocabulary: course.vocabularies || course.keywords || [],
-    grammar: course.grammars || [],
-    skills: course.languageSkills || [],
-    paths: course.experiencePath ? [course.experiencePath] : [],
+    vocabulary: ensureArray(course.vocabularies || course.keywords),
+    grammar: ensureArray(course.grammars),
+    skills: ensureArray(course.languageSkills),
+    paths: ensureArray(course.experiencePaths || course.experiencePath),
     theme: course.theme || map.path || '',
     taskName: course.taskName || '',
     storyContext: course.storyContext || map.storyline || '',
@@ -335,6 +381,16 @@ function buildLessonN8nPayload(course = {}) {
   };
 }
 
+function ensureArray(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map((item) => String(item || '').trim()).filter(Boolean);
+  if (typeof value === 'object') return Object.values(value).map((item) => String(item || '').trim()).filter(Boolean);
+  return String(value)
+    .split(/[,，、;；/|]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json' };
@@ -342,7 +398,7 @@ function getAuthHeaders() {
   return headers;
 }
 
-export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext }) {
+export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange, onNext }) {
   const { t, i18n } = useTranslation();
   const isChinese = !i18n.language?.startsWith('en');
   const aiLanguage = isChinese ? 'zh' : 'en';
@@ -409,8 +465,15 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   }, [isChinese]);
 
   React.useEffect(() => {
-    const existing = resolvePhasesFromCourse(course);
-    if (existing && existing.some((p) => p.steps.length > 0)) {
+    const fromCourse = resolvePhasesFromCourse(course);
+    const fromRuntimePhases = phases === phaseTemplates ? null : resolvePhasesFromCourse(phases);
+    const existing = hasLessonSteps(fromCourse)
+      ? fromCourse
+      : hasLessonSteps(fromRuntimePhases)
+        ? fromRuntimePhases
+        : null;
+
+    if (existing) {
       setData(existing);
       setLoading(false);
       return;
@@ -439,18 +502,6 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
             setData(resolved);
             onPhasesChange?.(resolved);
           }
-
-          if (course?.id && !String(course.id).startsWith('created-')) {
-            try {
-              const existingCourseData = course.courseData || {};
-              const lessonData = courseDataRaw?.courseData || courseDataRaw;
-              await apiService.updateCourse(course.id, {
-                courseData: { ...existingCourseData, ...lessonData },
-              });
-            } catch (saveErr) {
-              console.warn('保存教案到数据库失败:', saveErr);
-            }
-          }
         }
       } catch (err) {
         console.error('生成教案失败:', err);
@@ -463,8 +514,6 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
   }, []);
 
   const updateData = async (next) => {
-    const phaseKeyMap = { eng: 'engage', emp: 'empower', exc: 'execute', elv: 'elevate' };
-
     const updated = next.map((phase) => {
       const totalMin = phase.steps.reduce((acc, s) => {
         const m = (s.duration || '').match(/(\d+)/);
@@ -478,33 +527,15 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
 
     setData(updated);
     onPhasesChange?.(updated);
+    const nextCourseData = buildLessonCourseData(updated, course?.courseData || course?.course_data || {});
     onCourseChange?.({
       ...course,
-      courseData: {
-        ...(course?.courseData || course?.course_data || {}),
-        courseData: updated,
-      },
+      courseData: nextCourseData,
     }, { source: 'lesson' });
 
     if (course?.id && !String(course.id).startsWith('created-')) {
       try {
-        const courseData = { ...(course?.courseData || course?.course_data || {}) };
-        updated.forEach((phase) => {
-          courseData[phaseKeyMap[phase.key]] = {
-            title: phase.title,
-            steps: phase.steps.map((s) => ({
-              id: s.id,
-              title: s.title,
-              time: s.duration,
-              objective: s.goal,
-              activity: s.activity,
-              activitySteps: s.flow,
-              scenario: s.scenario,
-              script: s.teacherScript,
-            })),
-          };
-        });
-        await apiService.updateCourse(course.id, { courseData });
+        await apiService.updateCourse(course.id, { courseData: nextCourseData });
       } catch (err) {
         console.warn('自动保存教案失败:', err);
       }
@@ -706,8 +737,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           age: course?.ageGroup || course?.age || '7-9岁',
           duration: course?.duration || '60分钟',
           scale: course?.classSize || '',
-          vocabulary: course?.vocabularies || course?.keywords || [],
-          grammar: course?.grammars || [],
+          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
+          grammar: ensureArray(course?.grammars),
           theme: course?.theme || '',
           userId: user?.id || null,
           organizationId: user?.organizationId || null,
@@ -834,8 +865,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           age: course?.ageGroup || course?.age || '7-9岁',
           duration: course?.duration || '60分钟',
           scale: course?.classSize || '',
-          vocabulary: course?.vocabularies || course?.keywords || [],
-          grammar: course?.grammars || [],
+          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
+          grammar: ensureArray(course?.grammars),
           theme: course?.theme || '',
           userId: user?.id || null,
           organizationId: user?.organizationId || null,
@@ -922,8 +953,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           age: course?.ageGroup || course?.age || '7-9岁',
           duration: course?.duration || '60分钟',
           scale: course?.classSize || '',
-          vocabulary: course?.vocabularies || course?.keywords || [],
-          grammar: course?.grammars || [],
+          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
+          grammar: ensureArray(course?.grammars),
           theme: course?.theme || '',
           userId: user?.id || null,
           organizationId: user?.organizationId || null,
@@ -979,8 +1010,8 @@ export function LessonPlanView({ course, onCourseChange, onPhasesChange, onNext 
           age: course?.ageGroup || course?.age || '7-9岁',
           duration: course?.duration || '60分钟',
           scale: course?.classSize || '',
-          vocabulary: course?.vocabularies || course?.keywords || [],
-          grammar: course?.grammars || [],
+          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
+          grammar: ensureArray(course?.grammars),
           theme: course?.theme || '',
           requirements,
           userId: user?.id || null,

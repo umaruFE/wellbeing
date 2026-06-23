@@ -71,7 +71,7 @@
     "loginFailed": "Sign in failed, please retry"
   },
   "sidebar": {
-    "dashboard": "Dashboard",
+    "dashboard": "My Workspace",
     "courseGroup": "Courses",
     "courseManage": "My Courses",
     "courseSquare": "Discover",
@@ -85,7 +85,7 @@
     "systemSettings": "Settings"
   },
   "header": {
-    "dashboard": "Dashboard",
+    "dashboard": "My Workspace",
     "courseManage": "My Courses",
     "imageLibrary": "Image Library",
     "audioLibrary": "Audio Library",
@@ -101,12 +101,12 @@
     "activeTasks": "In Progress"
   },
   "dashboard": {
-    "title": "Dashboard",
+    "title": "My Workspace",
     "subtitle": "Welcome back, here's your work overview",
     "totalCourses": "Total Courses",
     "publishedCourses": "Published",
     "draftCourses": "Drafts",
-    "totalAssets": "Assets",
+    "totalAssets": "My Works",
     "recentCourses": "Recent",
     "viewAll": "View All",
     "quickActions": "Create New",
