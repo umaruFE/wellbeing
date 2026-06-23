@@ -163,6 +163,79 @@ function extractFieldFromText(text, fieldName) {
   }
 }
 
+function translatePath(pathValue, isEn) {
+  const pathMap = {
+    'art': isEn ? 'Artistic Expression' : '艺术表达',
+    'body': isEn ? 'Physical Exploration' : '体感探索',
+    'music': isEn ? 'Musical Rhythm' : '音乐律动',
+    'AI Auto Match': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+    '艺术表达': isEn ? 'Artistic Expression' : '艺术表达',
+    '体感探索': isEn ? 'Physical Exploration' : '体感探索',
+    '音乐律动': isEn ? 'Musical Rhythm' : '音乐律动',
+    'AI 自动匹配': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+  };
+  return pathMap[pathValue] || (isEn ? 'Artistic Expression' : '艺术表达');
+}
+
+function translateLanguageSkill(skill, isEn) {
+  const skillMap = {
+    'listening': isEn ? 'Listening' : '听力理解',
+    'speaking': isEn ? 'Speaking' : '口语表达',
+    'reading': isEn ? 'Reading' : '阅读理解',
+    'writing': isEn ? 'Writing' : '书面表达',
+    'integrated': isEn ? 'Integrated Skills' : '综合能力',
+    '听力理解': isEn ? 'Listening' : '听力理解',
+    '口语表达': isEn ? 'Speaking' : '口语表达',
+    '阅读理解': isEn ? 'Reading' : '阅读理解',
+    '书面表达': isEn ? 'Writing' : '书面表达',
+    '综合能力': isEn ? 'Integrated Skills' : '综合能力',
+  };
+  return skillMap[skill] || skill;
+}
+
+function translateLanguageSkills(skills, isEn) {
+  if (!skills || !Array.isArray(skills)) {
+    return isEn ? ['Listening', 'Speaking'] : ['听力理解', '口语表达'];
+  }
+  return skills.map(skill => translateLanguageSkill(skill, isEn));
+}
+
+function translateAge(ageValue, isEn) {
+  const ageMap = {
+    '3-6': isEn ? '3-6' : '3-6岁',
+    '3-6岁': isEn ? '3-6' : '3-6岁',
+    '7-9': isEn ? '7-9' : '7-9岁',
+    '7-9岁': isEn ? '7-9' : '7-9岁',
+    '9-12': isEn ? '9-12' : '9-12岁',
+    '9-12岁': isEn ? '9-12' : '9-12岁',
+  };
+  return ageMap[ageValue] || (isEn ? '7-9' : '7-9岁');
+}
+
+function translateDuration(durationValue, isEn) {
+  const durationMap = {
+    '40': isEn ? '40 min' : '40分钟',
+    '40分钟': isEn ? '40 min' : '40分钟',
+    '60': isEn ? '60 min' : '60分钟',
+    '60分钟': isEn ? '60 min' : '60分钟',
+    '120': isEn ? '120 min' : '120分钟',
+    '120分钟': isEn ? '120 min' : '120分钟',
+  };
+  return durationMap[durationValue] || (isEn ? '60 min' : '60分钟');
+}
+
+function translateClassSize(classSizeValue, isEn) {
+  const sizeMap = {
+    '<=8': isEn ? '<=8' : '≤ 8人',
+    '≤ 8人': isEn ? '<=8' : '≤ 8人',
+    '9-15': isEn ? '9-15' : '9-15人',
+    '9-15人': isEn ? '9-15' : '9-15人',
+    '>=16': isEn ? '>=16' : '≥ 16人',
+    '≥ 16人': isEn ? '>=16' : '≥ 16人',
+  };
+  return sizeMap[classSizeValue] || (isEn ? '9-15' : '9-15人');
+}
+
 export function buildCourseMap(course = {}) {
   let overview = course.courseOverview || {};
   const rawText = overview.text && typeof overview.text === 'string' ? overview.text : null;
@@ -191,17 +264,18 @@ export function buildCourseMap(course = {}) {
   const isEn = (course.language === 'en' || course.outputLanguage === 'English');
   const title = overview.courseTitle || course.courseTitle || course.title || (isEn ? 'New Course' : '新课程');
   const taskName = course.taskName || course.theme || (isEn ? 'Scenario Task' : '情境任务');
-  const path = course.experiencePath || overview.theme || (isEn ? 'Artistic Expression' : '艺术表达');
+  const rawPath = course.experiencePath || overview.theme;
+  const path = translatePath(rawPath, isEn);
   const vocabularies = course.vocabularies || [];
   const grammars = course.grammars || [];
-  const languageSkills = course.languageSkills || (isEn ? ['Listening', 'Speaking'] : ['听力理解', '口语表达']);
+  const languageSkills = translateLanguageSkills(course.languageSkills, isEn);
 
   return {
     title,
     path,
-    age: course.age || (isEn ? '7-9' : '7-9岁'),
-    duration: course.duration || (isEn ? '60 min' : '60分钟'),
-    classSize: course.classSize || (isEn ? '9-15' : '9-15人'),
+    age: translateAge(course.age, isEn),
+    duration: translateDuration(course.duration, isEn),
+    classSize: translateClassSize(course.classSize, isEn),
     storyline: overview.overallContext || course.storyContext || (isEn
       ? `Kids enter the "${taskName}" scenario, completing challenges through observation, communication and collaboration.`
       : `孩子们进入"${taskName}"的任务情境，通过观察、交流与合作创作完成挑战。`),
