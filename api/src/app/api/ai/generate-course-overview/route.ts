@@ -5,6 +5,7 @@ import { uploadToOss } from '@/lib/oss';
 const HAS_OSS_KEYS = !!(process.env.ALIYUN_OSS_ACCESS_KEY_ID && process.env.ALIYUN_OSS_ACCESS_KEY_SECRET);
 const UPLOAD_PROVIDER = (process.env.UPLOAD_PROVIDER || 'local').toLowerCase();
 const USE_OSS = UPLOAD_PROVIDER === 'oss' && HAS_OSS_KEYS;
+const ROUTE_VERSION = 'generate-course-overview-2026-06-24-language-forwarding-v2';
 const TEXTLESS_THEME_IMAGE_REQUIREMENT = [
   'Theme image requirement:',
   'The cover image must be a pure illustration with no readable or decorative text.',
@@ -71,6 +72,7 @@ function corsHeaders() {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'X-Route-Version': ROUTE_VERSION,
   };
 }
 
@@ -159,7 +161,15 @@ export async function POST(request: NextRequest) {
 
     const languageConfig = normalizeOutputLanguage(language, outputLanguage);
 
-    console.log('[generate-course-overview] 收到请求:', { theme, duration, language: languageConfig.language });
+    console.log('[generate-course-overview] 收到请求:', {
+      version: ROUTE_VERSION,
+      theme,
+      duration,
+      rawLanguage: language,
+      rawOutputLanguage: outputLanguage,
+      language: languageConfig.language,
+      outputLanguage: languageConfig.outputLanguage,
+    });
 
     const n8nPayload = {
       language: languageConfig.language,
@@ -187,6 +197,7 @@ export async function POST(request: NextRequest) {
       attachments: attachments || [],
       outputInstruction: buildOutputInstruction(languageConfig.isEnglish),
       themeImageInstruction: enforceTextlessCoverPrompt(''),
+      routeVersion: ROUTE_VERSION,
       expectedFields: {
         courseOverview: [
           'courseTitle',
