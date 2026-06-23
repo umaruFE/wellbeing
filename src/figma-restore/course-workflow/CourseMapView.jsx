@@ -213,19 +213,28 @@ function pickListText(value, fallback = '核心表达') {
   return list.slice(0, 3).join('、');
 }
 
-function buildFallbackJourney(course, map, taskName) {
+function buildFallbackJourney(course, map, taskName, isEn) {
   const story = compactText(course.storyContext || map.storyline || taskName, 32);
-  const outcome = compactText(course.keyOutcome || map.keyOutcome || `围绕“${taskName}”完成创意作品`, 32);
-  const growth = compactText(map.growth || course.specialRequirements || '表达、协作与创造性解决问题', 30);
+  const outcome = compactText(course.keyOutcome || map.keyOutcome || (isEn ? `Complete a creative piece around "${taskName}"` : `围绕"${taskName}"完成创意作品`), 32);
+  const growth = compactText(map.growth || course.specialRequirements || (isEn ? 'Expression, collaboration and creative problem-solving' : '表达、协作与创造性解决问题'), 30);
   const toolkit = compactText(map.toolkit, 36);
-  const vocab = pickListText(course.vocabularies, toolkit || '关键词和任务句型');
-  const grammar = pickListText(course.grammars, '核心句型');
-  const skills = pickListText(course.languageSkills, '听说表达');
-  const path = formatExperiencePaths(normalizeExperiencePaths(course, map.path), '艺术表达');
+  const vocab = pickListText(course.vocabularies, toolkit || (isEn ? 'Key vocabulary and sentence patterns' : '关键词和任务句型'));
+  const grammar = pickListText(course.grammars, isEn ? 'Core sentences' : '核心句型');
+  const skills = pickListText(course.languageSkills, isEn ? 'Listening and speaking' : '听说表达');
+  const path = formatExperiencePaths(normalizeExperiencePaths(course, map.path), isEn ? 'Artistic Expression' : '艺术表达');
   const atmosphere = course.atmosphere && course.atmosphere !== 'AI 自动匹配' ? course.atmosphere : '';
 
+  if (isEn) {
+    return {
+      engage: `${atmosphere ? `Start with ${atmosphere}, ` : ''}students enter the "${taskName}" scenario, observe ${story || 'task clues'}, and raise the real question to solve.`,
+      empower: `Build a language toolkit around "${vocab}" and "${grammar}", through ${skills} demonstration and quick practice so students can speak for the task right away.`,
+      execute: `Teams follow the "${path}" path to ${outcome}, using target language repeatedly during creation, rehearsal, and peer feedback.`,
+      elevate: `Present ${outcome}, reflect on ${growth} through peer feedback, and transfer today's expressions to new life or learning contexts.`,
+    };
+  }
+
   return {
-    engage: `${atmosphere ? `以${atmosphere}开启，` : ''}学生进入“${taskName}”情境，观察${story || '任务线索'}，提出本节课要破解的真实问题。`,
+    engage: `${atmosphere ? `以${atmosphere}开启，` : ''}学生进入"${taskName}"情境，观察${story || '任务线索'}，提出本节课要破解的真实问题。`,
     empower: `围绕“${vocab}”和“${grammar}”搭建语言工具箱，通过${skills}示范与短练，让学生马上能为任务开口表达。`,
     execute: `小组沿着“${path}”路径完成${outcome}，在创作、排练或展示准备中反复使用目标语言并互相调整。`,
     elevate: `展示${outcome}，用同伴反馈回看${growth}，把本节课的表达方法迁移到新的生活或学习场景。`,
@@ -297,9 +306,10 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     })),
   }), [t]);
 
-  const taskName = course.taskName || course.theme || '情境任务';
-  const fallbackJourney = buildFallbackJourney(course, map, taskName);
-  const savedJourney = course.journey || course.courseData?.journey || {};
+  const isEn = i18n.language?.startsWith('en');
+  const taskName = course.taskName || course.theme || (isEn ? 'Scenario Task' : '情境任务');
+  const fallbackJourney = buildFallbackJourney(course, map, taskName, isEn);
+  const savedJourney = course.journey || course.courseData?.journey || course.courseOverview?.journey || {};
   const journey = {
     engage: savedJourney.engage || fallbackJourney.engage,
     empower: savedJourney.empower || fallbackJourney.empower,
@@ -663,6 +673,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         </h2>
         <div className="overview-panel-actions">
           <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>{t('workflow.map.edit')}</Button>
+          <Button className="btn-ghost primary" icon={<RefreshCw size={16} />} loading={regenImage} disabled={regenImage} onClick={handleRegenImage}>
+            {regenImage ? t('workflow.map.generating') : t('workflow.map.regenerate')}
+          </Button>
           <Button className="btn-next-step" onClick={onNext}>
             {t('workflow.nextStep')}
           </Button>
@@ -717,16 +730,6 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                     <div className="cm-floor" />
                   </div>
                 )}
-                <div className="img-overlay">
-                  <Button
-                    icon={<RefreshCw size={16} />}
-                    loading={regenImage}
-                    disabled={regenImage}
-                    onClick={handleRegenImage}
-                  >
-                    {regenImage ? t('workflow.map.generating') : t('workflow.map.regenerate')}
-                  </Button>
-                </div>
               </div>
             </div>
           </section>
@@ -773,10 +776,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         </div>
       )}
 
-      <Button className="course-map-regen-floating" icon={<RefreshCw size={14} />} onClick={openRegen}>
-        {t('workflow.map.regenerate')}
-      </Button>
-
+     
       {regenOpen && (
         <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setRegenOpen(false)}>
           <div className="modal overview-regen-modal">

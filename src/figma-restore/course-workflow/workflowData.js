@@ -223,7 +223,7 @@ export function buildCourseMap(course = {}) {
     growth: [overview.selGoals, overview.permaGoals].filter(Boolean).join('\n') || (isEn
       ? `Develop expression, collaboration and creative problem-solving in "${taskName}".`
       : `在"${taskName}"中发展表达、协作和创造性解决问题能力。`),
-    experience: overview.experiencePath || overview.experience || (isEn
+    experience: overview.experience || overview.experiencePath || (isEn
       ? `Explore, express and create outputs through ${path}.`
       : `通过${path}完成探索、表达与作品产出。`),
     themeImageUrl: course.themeImageUrl || null,

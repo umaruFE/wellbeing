@@ -49,6 +49,8 @@ export async function POST(request: NextRequest) {
     } = body;
 
     const payload = {
+      language: body.language || 'zh',
+      outputLanguage: body.outputLanguage || 'Chinese',
       courseOverview: courseOverview || null,
       courseTitle: courseTitle || courseOverview?.courseTitle || '',
       theme: theme || courseOverview?.theme || '',

@@ -146,6 +146,8 @@ export function CourseWorkflow({ initialCourse, onBack }) {
         themeImageUrl: data.themeImageUrl || data.courseData?.themeImageUrl || data.course_data?.themeImageUrl || null,
         experiencePaths: data.experiencePaths || data.courseData?.experiencePaths || data.course_data?.experiencePaths || [],
         experiencePath: data.experiencePath || data.courseData?.experiencePath || data.course_data?.experiencePath || '',
+        ...(data.language ? { language: data.language } : {}),
+        ...(data.outputLanguage ? { outputLanguage: data.outputLanguage } : {}),
         ...(data.journey ? { journey: data.journey } : {}),
       };
 

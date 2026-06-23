@@ -97,6 +97,8 @@ export function CourseManagement({
         title: values.courseTitle || t('course.newCourse'),
         unit: values.courseTitle || t('course.newCourse'),
         status: 'draft',
+        language: values.language || 'zh',
+        outputLanguage: values.outputLanguage || 'Chinese',
         age: values.age,
         grade: 'Draft',
         duration: values.duration,
@@ -189,6 +191,8 @@ export function CourseManagement({
           journey: courseData?.journey || null,
           atmosphere: courseData?.atmosphere || '',
           specialRequirements: courseData?.specialRequirements || '',
+          language: courseData?.language || 'zh',
+          outputLanguage: courseData?.outputLanguage || 'Chinese',
         };
       });
 
@@ -257,6 +261,8 @@ export function CourseManagement({
       title: values.courseTitle || t('course.newCourse'),
       unit: values.courseTitle || t('course.newCourse'),
       status: 'draft',
+      language: values.language || 'zh',
+      outputLanguage: values.outputLanguage || 'Chinese',
       age: values.age,
       grade: 'Draft',
       duration: values.duration,

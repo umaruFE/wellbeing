@@ -277,6 +277,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         themeImageUrl,
         title: courseTitle,
         theme,
+        language: aiLanguage,
+        outputLanguage,
         age: values.age,
         duration: values.duration,
         classSize: values.classSize,
