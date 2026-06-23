@@ -175,6 +175,7 @@ export function CourseManagement({
           coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
           active: i === 0,
           courseData,
+          canvasData: course.canvas_data || course.canvasData || null,
           courseOverview: overview || courseData?.courseOverview || null,
           themeImageUrl: coverUrl,
           thumbnail: coverUrl,
