@@ -1,11 +1,12 @@
 import React from 'react';
-import { Users, Clock, Award, CircleDot, CheckCircle2 } from 'lucide-react';
+import { Users, Clock, Award, CircleDot, CheckCircle2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { CourseCoverFallback } from '../CourseCoverFallback';
 
 export function CourseCard({
   course,
   onOpen,
+  onDelete,
 }) {
   const { t } = useTranslation();
   const isPublished = course.status === 'published';
@@ -21,6 +22,18 @@ export function CourseCard({
         ) : (
           <CourseCoverFallback />
         )}
+        <button
+          type="button"
+          className="fr-cm-delete-btn"
+          aria-label={t('course.deleteCourse')}
+          title={t('course.deleteCourse')}
+          onClick={(event) => {
+            event.stopPropagation();
+            onDelete?.(course);
+          }}
+        >
+          <Trash2 size={15} />
+        </button>
       </div>
 
       <div className="fr-cm-card-body">

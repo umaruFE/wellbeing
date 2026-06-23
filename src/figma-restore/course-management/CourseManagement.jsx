@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Plus } from 'lucide-react';
+import { AlertTriangle, BookOpen, Plus, X } from 'lucide-react';
 import { CreateCourseModal } from '../create-course';
 import { CourseWorkflow } from '../course-workflow';
 import { CourseCard } from './CourseCard';
@@ -62,6 +62,8 @@ export function CourseManagement({
   const [status, setStatus] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [workflowCourse, setWorkflowCourse] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deletingCourse, setDeletingCourse] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const suppressRouteStateRef = React.useRef(false);
@@ -282,6 +284,32 @@ export function CourseManagement({
     fetchCourses(1);
   };
 
+  const handleDeleteCourse = (course) => {
+    if (!course?.id) return;
+    setDeleteTarget(course);
+  };
+
+  const closeDeleteConfirm = () => {
+    if (deletingCourse) return;
+    setDeleteTarget(null);
+  };
+
+  const confirmDeleteCourse = async () => {
+    if (!deleteTarget?.id) return;
+    setDeletingCourse(true);
+    try {
+      await apiService.deleteCourse(deleteTarget.id);
+      setCourses(currentCourses => currentCourses.filter(item => item.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      fetchCourses(1);
+    } catch (error) {
+      console.error('删除课程失败:', error);
+      window.alert(t('course.deleteFailed'));
+    } finally {
+      setDeletingCourse(false);
+    }
+  };
+
   if (workflowCourse) {
     return (
       <CourseWorkflow
@@ -345,6 +373,7 @@ export function CourseManagement({
                       }
                       setWorkflowCourse(item);
                     }}
+                    onDelete={handleDeleteCourse}
                   />
                 ))}
               </div>
@@ -376,6 +405,44 @@ export function CourseManagement({
         onCancel={() => setCreateOpen(false)}
         onSubmit={handleCreateSubmit}
       />
+
+      {deleteTarget && (
+        <div
+          className="fr-cm-confirm-mask"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) closeDeleteConfirm();
+          }}
+        >
+          <div className="fr-cm-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="fr-cm-delete-title">
+            <button
+              type="button"
+              className="fr-cm-confirm-close"
+              onClick={closeDeleteConfirm}
+              aria-label={t('common.close')}
+              disabled={deletingCourse}
+            >
+              <X size={18} />
+            </button>
+            <div className="fr-cm-confirm-icon">
+              <AlertTriangle size={24} />
+            </div>
+            <div className="fr-cm-confirm-copy">
+              <h2 id="fr-cm-delete-title">{t('course.deleteCourse')}</h2>
+              <p>{t('course.confirmDeleteCourse')}</p>
+              <strong>{deleteTarget.title}</strong>
+            </div>
+            <div className="fr-cm-confirm-actions">
+              <button type="button" className="fr-cm-confirm-cancel" onClick={closeDeleteConfirm} disabled={deletingCourse}>
+                {t('common.cancel')}
+              </button>
+              <button type="button" className="fr-cm-confirm-danger" onClick={confirmDeleteCourse} disabled={deletingCourse}>
+                {deletingCourse ? t('common.loading') : t('course.deleteCourse')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

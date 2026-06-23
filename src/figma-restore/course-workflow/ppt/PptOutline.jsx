@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronRight, FileText, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react';
 import './css/PptOutline.css';
 
 const phaseLabelKeys = {
@@ -24,6 +24,7 @@ export function PptOutline({
   activeSlideId,
   onSelectStep,
   onAddSlide,
+  onDeleteSlide,
 }) {
   const { t } = useTranslation();
   const [expandedStepIds, setExpandedStepIds] = React.useState(() => (
@@ -46,12 +47,12 @@ export function PptOutline({
   const isCoverActive = activePhaseKey === 'cover';
 
   const renderSlidePreview = (phase, step) => {
-    if (!expandedStepIds.has(step.id) || !step.slides?.length) return null;
+    if (!expandedStepIds.has(step.id)) return null;
 
     return (
       <div className="ppt-slide-preview-wrapper">
         <div className="ppt-slide-connector-line" />
-        {step.slides.map((slide, slideIndex) => {
+        {(step.slides || []).map((slide, slideIndex) => {
           const isSlideActive = activeSlideId === slide.id;
           return (
             <div key={slide.id} className="ppt-slide-row">
@@ -67,6 +68,18 @@ export function PptOutline({
                   onClick={() => onSelectStep(phase.key, step.id, slide.id)}
                 >
                   <PptOutlineThumb slide={slide} slideIndex={slideIndex} />
+                </button>
+                <button
+                  type="button"
+                  className="ppt-slide-delete-btn"
+                  title={t('ppt.deleteSlide')}
+                  aria-label={t('ppt.deleteSlide')}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDeleteSlide?.(phase.key, step.id, slide.id);
+                  }}
+                >
+                  <Trash2 size={13} />
                 </button>
               </div>
             </div>

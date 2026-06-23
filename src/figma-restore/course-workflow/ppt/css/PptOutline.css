@@ -340,6 +340,37 @@
   cursor: pointer;
 }
 
+#ed-ppt .ppt-slide-delete-btn {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  z-index: 2;
+  width: 26px;
+  height: 26px;
+  border: 1.5px solid #253142;
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #ef5f50;
+  box-shadow: 2px 2px 0 rgba(37, 49, 66, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.16s ease, transform 0.16s ease, background 0.16s ease;
+}
+
+#ed-ppt .ppt-slide-thumb-wrapper:hover .ppt-slide-delete-btn,
+#ed-ppt .ppt-slide-delete-btn:focus-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+#ed-ppt .ppt-slide-delete-btn:hover {
+  background: #fff0eb;
+}
+
 #ed-ppt .ppt-slide-thumb.active {
   border-color: #253142;
   background: #ffffff;

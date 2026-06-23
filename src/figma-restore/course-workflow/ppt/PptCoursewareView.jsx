@@ -31,6 +31,19 @@ function getFirstSelection(course) {
   };
 }
 
+function findSelectionAfterSlideDelete(course, phaseKey, stepId, deletedIndex) {
+  const phase = course.find((item) => item.key === phaseKey);
+  const step = phase?.steps.find((item) => item.id === stepId);
+  const nearbySlide = step?.slides?.[Math.min(deletedIndex, Math.max(0, (step.slides?.length || 1) - 1))]
+    || step?.slides?.[deletedIndex - 1];
+
+  if (nearbySlide) {
+    return { phaseKey, stepId, slideId: nearbySlide.id };
+  }
+
+  return getFirstSelection(course);
+}
+
 export function PptCoursewareView({
   onNext,
   courseMeta,
@@ -142,6 +155,28 @@ export function PptCoursewareView({
     setActiveStepId(stepId);
     setActiveSlideId(newSlideId);
     setSelectedLayerId(null);
+  };
+
+  const deleteSlide = (phaseKey, stepId, slideId) => {
+    if (!slideId) return;
+    if (!window.confirm(t('ppt.confirmDeleteSlide'))) return;
+
+    let nextSelection = null;
+    updateCourse((draft) => {
+      const targetPhase = draft.find((phase) => phase.key === phaseKey);
+      const targetStep = targetPhase?.steps.find((item) => item.id === stepId);
+      if (!targetStep?.slides?.length) return;
+      const targetIndex = targetStep.slides.findIndex((item) => item.id === slideId);
+      if (targetIndex < 0) return;
+      targetStep.slides.splice(targetIndex, 1);
+      nextSelection = findSelectionAfterSlideDelete(draft, phaseKey, stepId, targetIndex);
+    });
+
+    setActivePhaseKey(nextSelection?.phaseKey || phaseKey);
+    setActiveStepId(nextSelection?.stepId || stepId);
+    setActiveSlideId(nextSelection?.slideId || null);
+    setSelectedLayerId(null);
+    setAssetPanelType(null);
   };
 
   const addLayer = (type) => {
@@ -371,6 +406,7 @@ export function PptCoursewareView({
           setSelectedLayerId(null);
         }}
         onAddSlide={addSlide}
+        onDeleteSlide={deleteSlide}
       />
 
       <PptCanvas

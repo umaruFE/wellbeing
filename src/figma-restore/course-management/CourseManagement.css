@@ -151,7 +151,7 @@
 
 .fr-cm-search-wrap input:focus,
 .fr-cm-filter:focus-visible,
-.fr-cm-menu-btn:focus-visible,
+.fr-cm-delete-btn:focus-visible,
 .fr-cm-card-menu button:focus-visible,
 .fr-cm-create:focus-visible {
   outline: 3px solid rgba(244, 120, 94, 0.24);
@@ -506,7 +506,7 @@
 .tone-sky { background: linear-gradient(135deg, #d4f0ff 0%, #dbe7ec 100%); }
 .tone-mint { background: linear-gradient(135deg, #d8f6ef 0%, #dbe7ec 100%); }
 
-.fr-cm-menu-btn {
+.fr-cm-delete-btn {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -521,51 +521,20 @@
   justify-content: center;
   cursor: pointer;
   z-index: 5;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.16s ease, transform 0.16s ease, background 0.16s ease;
 }
 
-.fr-cm-card-menu {
-  position: absolute;
-  top: 50px;
-  right: 12px;
-  min-width: 142px;
-  padding: 6px;
-  background: #fff;
-  border: 2px solid var(--fr-border);
-  border-radius: 10px;
-  box-shadow: 3px 3px 0 rgba(37, 49, 66, 0.16);
-  z-index: 10;
+.fr-cm-card:hover .fr-cm-delete-btn,
+.fr-cm-delete-btn:focus-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.fr-cm-card-menu button {
-  width: 100%;
-  min-height: 34px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  padding: 0 9px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--fr-ink);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-  text-align: left;
-}
-
-.fr-cm-card-menu button:hover {
-  background: #f5f3ee;
-}
-
-.fr-cm-card-menu button.danger {
+.fr-cm-delete-btn:hover {
+  background: #fff1ed;
   color: #d64646;
-}
-
-.fr-cm-card-menu span {
-  display: block;
-  height: 1px;
-  background: #ebe7df;
-  margin: 5px 3px;
 }
 
 .fr-cm-card-body {
@@ -710,6 +679,146 @@
 .fr-cm-empty strong {
   color: #333e4e;
   font-size: 16px;
+}
+
+.fr-cm-confirm-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(37, 49, 66, 0.42);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.fr-cm-confirm-dialog {
+  position: relative;
+  width: min(430px, 100%);
+  border: 2px solid #253142;
+  border-radius: 16px;
+  background: #fffdf8;
+  box-shadow: 6px 6px 0 rgba(37, 49, 66, 0.24);
+  padding: 30px 28px 24px;
+  animation: frCmConfirmIn 0.18s ease;
+}
+
+@keyframes frCmConfirmIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fr-cm-confirm-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b7280;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.fr-cm-confirm-close:hover {
+  background: #f5f3ee;
+  color: #253142;
+}
+
+.fr-cm-confirm-close:disabled,
+.fr-cm-confirm-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+.fr-cm-confirm-icon {
+  width: 54px;
+  height: 54px;
+  margin-bottom: 16px;
+  border: 2px solid #253142;
+  border-radius: 15px;
+  background: #fff1ed;
+  color: #ef5f50;
+  box-shadow: 3px 3px 0 rgba(37, 49, 66, 0.16);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fr-cm-confirm-copy h2 {
+  margin: 0 36px 8px 0;
+  color: #253142;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.28;
+}
+
+.fr-cm-confirm-copy p {
+  margin: 0;
+  color: #626b7c;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+.fr-cm-confirm-copy strong {
+  display: block;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 2px dashed #f2b8ab;
+  border-radius: 10px;
+  background: #fff7f4;
+  color: #253142;
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.fr-cm-confirm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.fr-cm-confirm-actions button {
+  min-width: 96px;
+  height: 40px;
+  border: 2px solid #253142;
+  border-radius: 10px;
+  box-shadow: 3px 3px 0 #253142;
+  padding: 0 16px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.fr-cm-confirm-actions button:not(:disabled):hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #253142;
+}
+
+.fr-cm-confirm-cancel {
+  background: #ffffff;
+  color: #253142;
+}
+
+.fr-cm-confirm-danger {
+  background: #f4785e;
+  color: #ffffff;
 }
 
 @media (max-width: 1100px) {

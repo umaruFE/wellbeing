@@ -142,6 +142,7 @@
     "noCourses": "暂无课程",
     "deleteCourse": "删除课程",
     "confirmDeleteCourse": "确认删除此课程？",
+    "deleteFailed": "删除课程失败，请重试",
     "courseName": "课程名称",
     "courseDescription": "课程描述",
     "ageGroup": "年龄段",
@@ -244,10 +245,10 @@
     "selFocus": "SEL 培养焦点",
     "permaFocus": "PERMA 幸福体验",
     "phaseNarrative": "阶段情境叙事",
-    "phaseEngage": "E-ENGAGE 引入",
-    "phaseEmpower": "E-EMPOWER 赋能",
-    "phaseExecute": "E-EXECUTE 实践",
-    "phaseElevate": "E-ELEVATE 升华"
+    "phaseEngage": "ENGAGE 引入",
+    "phaseEmpower": "EMPOWER 赋能",
+    "phaseExecute": "EXECUTE 实践",
+    "phaseElevate": "ELEVATE 升华"
   },
   "workflow": {
     "nextStep": "下一步",
@@ -933,6 +934,8 @@
     "lessonSteps": "教案环节",
     "estimatedSlides": "预计页数",
     "generateCourseware": "生成 PPT 课件",
+    "deleteSlide": "删除页面",
+    "confirmDeleteSlide": "确定要删除这页课件吗？此操作不可撤销。",
     "videoAssetCountPrefix": "已添加",
     "videoAssetCountMiddle": "个，建议至少",
     "videoAssetCountSuffix": "个"

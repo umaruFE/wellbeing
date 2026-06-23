@@ -142,6 +142,7 @@
     "noCourses": "No courses",
     "deleteCourse": "Delete Course",
     "confirmDeleteCourse": "Are you sure to delete this course?",
+    "deleteFailed": "Failed to delete course, please retry",
     "courseName": "Course Name",
     "courseDescription": "Description",
     "ageGroup": "Age Group",
@@ -244,10 +245,10 @@
     "selFocus": "SEL Focus",
     "permaFocus": "PERMA Experience",
     "phaseNarrative": "Phase Narrative",
-    "phaseEngage": "E-ENGAGE",
-    "phaseEmpower": "E-EMPOWER",
-    "phaseExecute": "E-EXECUTE",
-    "phaseElevate": "E-ELEVATE"
+    "phaseEngage": "ENGAGE",
+    "phaseEmpower": "EMPOWER",
+    "phaseExecute": "EXECUTE",
+    "phaseElevate": "ELEVATE"
   },
   "workflow": {
     "nextStep": "Next",
@@ -933,6 +934,8 @@
     "lessonSteps": "Lesson Steps",
     "estimatedSlides": "Estimated Slides",
     "generateCourseware": "Generate Lesson Slides",
+    "deleteSlide": "Delete Slide",
+    "confirmDeleteSlide": "Delete this slide? This cannot be undone.",
     "videoAssetCountPrefix": "Added ",
     "videoAssetCountMiddle": " item(s), recommended at least ",
     "videoAssetCountSuffix": " item(s)"
