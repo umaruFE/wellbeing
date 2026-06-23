@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Check, Loader2 } from 'lucide-react';
 import { colors, typography, shadows } from '../theme/theme';
@@ -22,6 +22,33 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
   const [submitting, setSubmitting] = useState(false);
   const [autoTheme, setAutoTheme] = useState(false);
   const [errors, setErrors] = useState({});
+  const createFlowAbortRef = useRef(null);
+  const mountedRef = useRef(false);
+
+  const cancelCreateFlow = () => {
+    if (createFlowAbortRef.current) {
+      createFlowAbortRef.current.abort();
+      createFlowAbortRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      cancelCreateFlow();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) cancelCreateFlow();
+  }, [isOpen]);
+
+  const handleClose = () => {
+    cancelCreateFlow();
+    setSubmitting(false);
+    onClose?.();
+  };
 
   if (!isOpen) return null;
 
@@ -69,10 +96,15 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
     };
 
     try {
+      const abortController = new AbortController();
+      cancelCreateFlow();
+      createFlowAbortRef.current = abortController;
+
       const response = await fetch('/api/ai/generate-course-overview', {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: abortController.signal
       });
       const result = await response.json();
 
@@ -100,7 +132,11 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
         };
 
         try {
-          const saveResult = await (await import('../services/api')).default.createCourse(saveData);
+          const saveResult = await (await import('../services/api')).default.createCourse(saveData, { signal: abortController.signal });
+          if (abortController.signal.aborted || !mountedRef.current) return;
+          if (createFlowAbortRef.current === abortController) {
+            createFlowAbortRef.current = null;
+          }
           if (saveResult.data?.id) {
             setSubmitting(false);
             onFinish?.({ ...data, courseId: saveResult.data.id, courseOverview: overview, title: overview.courseTitle });
@@ -110,16 +146,32 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             alert('保存课程失败，请重试');
           }
         } catch (err) {
+          if (createFlowAbortRef.current === abortController) {
+            createFlowAbortRef.current = null;
+          }
+          if (err?.name === 'AbortError') {
+            if (mountedRef.current) setSubmitting(false);
+            return;
+          }
           console.error('保存课程失败:', err);
           setSubmitting(false);
           alert('保存课程失败，请重试');
         }
       } else {
         console.error('[CreateCourseModal] 概览生成失败:', result.error || '未知错误');
+        if (createFlowAbortRef.current === abortController) {
+          createFlowAbortRef.current = null;
+        }
         setSubmitting(false);
         alert(result.error || '课程概览生成失败，请重试');
       }
     } catch (error) {
+      if (error?.name === 'AbortError') {
+        createFlowAbortRef.current = null;
+        if (mountedRef.current) setSubmitting(false);
+        return;
+      }
+      createFlowAbortRef.current = null;
       console.error('网络错误，请重试');
       setSubmitting(false);
       alert('网络错误，请检查网络连接后重试');
@@ -193,7 +245,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
         {/* 标题栏 */}
         <div className="px-10 pt-8 flex justify-between items-center">
           <h2 className="text-xl font-bold text-[#333E4E]">创建课程</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={24} /></button>
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={24} /></button>
         </div>
 
         {/* 2. 步骤指示器 (完全还原 image_7b321c.png) */}

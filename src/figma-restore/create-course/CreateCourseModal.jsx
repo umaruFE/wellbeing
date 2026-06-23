@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Form, Modal, message } from 'antd';
 import { Loader2 } from 'lucide-react';
@@ -76,6 +76,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
   const [submitting, setSubmitting] = useState(false);
   const [ideaLoading, setIdeaLoading] = useState(false);
   const [polishLoading, setPolishLoading] = useState(false);
+  const createFlowAbortRef = useRef(null);
+  const mountedRef = useRef(false);
   const watchedValues = Form.useWatch([], form);
 
   const canPolish = useMemo(() => {
@@ -89,8 +91,28 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     form.setFieldsValue(defaultCreateCourseValues);
   };
 
+  const cancelCreateFlow = () => {
+    if (createFlowAbortRef.current) {
+      createFlowAbortRef.current.abort();
+      createFlowAbortRef.current = null;
+    }
+  };
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      cancelCreateFlow();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!open) cancelCreateFlow();
+  }, [open]);
+
   const handleCancel = () => {
-    if (submitting) return;
+    cancelCreateFlow();
+    setSubmitting(false);
     resetFlow();
     onCancel?.();
   };
@@ -223,12 +245,17 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
       let overview = null;
       let themeImageUrl = null;
+      const abortController = new AbortController();
+
+      cancelCreateFlow();
+      createFlowAbortRef.current = abortController;
 
       try {
         const response = await fetch('/api/ai/generate-course-overview', {
           method: 'POST',
           headers: getAuthHeaders(),
-          body: JSON.stringify(n8nPayload)
+          body: JSON.stringify(n8nPayload),
+          signal: abortController.signal,
         });
         const result = await response.json();
 
@@ -236,11 +263,28 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
           overview = result.data.courseOverview || result.data;
           themeImageUrl = result.data.themeImageUrl || null;
         } else {
-          console.warn('概览生成未返回有效数据，使用表单原始值');
+          throw new Error(result.error || 'Course overview generation failed');
         }
       } catch (err) {
-        console.warn('概览生成请求失败，使用表单原始值:', err);
+        if (createFlowAbortRef.current === abortController) {
+          createFlowAbortRef.current = null;
+        }
+        if (err?.name === 'AbortError') {
+          if (mountedRef.current) {
+            setSubmitting(false);
+            message.info(isChinese ? '已取消课程生成' : 'Course generation canceled');
+          }
+          return;
+        }
+        console.warn('概览生成请求失败，停止保存课程:', err);
+        if (mountedRef.current) {
+          setSubmitting(false);
+          message.error(err?.message || (isChinese ? '课程概览生成失败，请重试' : 'Course overview generation failed, please try again'));
+        }
+        return;
       }
+
+      if (abortController.signal.aborted || !mountedRef.current) return;
 
       const courseTitle = overview?.courseTitle || t('dashboard.unnamedCourse');
       const theme = overview?.theme || values.taskName || '';
@@ -282,10 +326,33 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
       let savedCourseId = null;
       try {
-        const saveResult = await apiService.createCourse(saveData);
+        const saveResult = await apiService.createCourse(saveData, { signal: abortController.signal });
+        if (abortController.signal.aborted || !mountedRef.current) return;
         savedCourseId = saveResult?.data?.id || saveResult?.id || null;
+        if (!savedCourseId) {
+          throw new Error(isChinese ? '课程保存失败，没有返回课程 ID' : 'Course save failed without a course ID');
+        }
       } catch (err) {
+        if (createFlowAbortRef.current === abortController) {
+          createFlowAbortRef.current = null;
+        }
+        if (err?.name === 'AbortError') {
+          if (mountedRef.current) {
+            setSubmitting(false);
+            message.info(isChinese ? '已取消课程生成' : 'Course generation canceled');
+          }
+          return;
+        }
         console.error('保存课程失败:', err);
+        if (mountedRef.current) {
+          setSubmitting(false);
+          message.error(isChinese ? '课程保存失败，请重试' : 'Course save failed, please try again');
+        }
+        return;
+      }
+
+      if (createFlowAbortRef.current === abortController) {
+        createFlowAbortRef.current = null;
       }
 
       message.success(t('createCourse.courseCreated'));
@@ -294,7 +361,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
       onSubmit?.({
         ...values,
-        id: savedCourseId || `created-${Date.now()}`,
+        id: savedCourseId,
         courseOverview: overview,
         themeImageUrl,
         title: courseTitle,
@@ -316,7 +383,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         specialRequirements: values.specialRequirements || '',
       });
     } catch {
-      setSubmitting(false);
+      if (mountedRef.current) setSubmitting(false);
       message.warning(t('createCourse.completeRequired'));
     }
   };
@@ -347,7 +414,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         {t('createCourse.prevStep')}
       </Button>
       <div className="fr-create-footer-actions">
-        <Button onClick={handleCancel} className="fr-create-btn-cancel" disabled={submitting}>{t('common.cancel')}</Button>
+        <Button onClick={handleCancel} className="fr-create-btn-cancel">{t('common.cancel')}</Button>
         <Button onClick={handleNext} className="fr-create-btn-next" disabled={submitting}>
           {submitting
             ? <>{t('common.generating')}</>
@@ -368,7 +435,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       centered
       destroyOnHidden
       footer={modalFooter}
-      closable={!submitting}
+      closable
       maskClosable={!submitting}
       afterOpenChange={(visible) => {
         if (visible) resetFlow();

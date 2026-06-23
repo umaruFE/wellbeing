@@ -62,8 +62,9 @@ class ApiService {
     return this.request(`/api/courses/${id}`);
   }
 
-  async createCourse(courseData) {
+  async createCourse(courseData, options = {}) {
     return this.request('/api/courses', {
+      ...options,
       method: 'POST',
       body: JSON.stringify(courseData),
     });
