@@ -8,11 +8,19 @@ import {
   languageSkillOptions,
 } from './createCourseOptions';
 
-function splitPastedTagLines(text) {
+function splitPastedTags(text, separators = /\r?\n/) {
   return String(text || '')
-    .split(/\r?\n/)
+    .split(separators)
     .map((item) => item.replace(/[\u200B-\u200D\uFEFF]/g, '').trim())
     .filter(Boolean);
+}
+
+function splitGrammarTags(value) {
+  return splitPastedTags(value, /\r?\n/)
+    .flatMap((line) => line
+      .split(/(?<=\?)\s+|(?<=\.\.\.)\s+(?=[A-Z])/)
+      .map((item) => item.trim())
+      .filter(Boolean));
 }
 
 function toTagArray(value) {
@@ -25,7 +33,10 @@ export function CreateCourseStepOne() {
   const form = Form.useFormInstance();
 
   const handleTagPaste = React.useCallback((event, field) => {
-    const lines = splitPastedTagLines(event.clipboardData?.getData('text'));
+    const text = event.clipboardData?.getData('text');
+    const lines = field === 'vocabularies'
+      ? splitPastedTags(text, /[,\uFF0C\r\n]+/)
+      : splitGrammarTags(text);
     if (lines.length < 2) return;
 
     event.preventDefault();
@@ -34,6 +45,13 @@ export function CreateCourseStepOne() {
     lines.forEach((line) => {
       if (!next.includes(line)) next.push(line);
     });
+    form.setFieldsValue({ [field]: next });
+  }, [form]);
+
+  const normalizeTags = React.useCallback((value, field) => {
+    const next = toTagArray(value)
+      .flatMap((item) => field === 'vocabularies' ? splitPastedTags(item, /[,\uFF0C\r\n]+/) : splitGrammarTags(item))
+      .filter((item, index, array) => array.indexOf(item) === index);
     form.setFieldsValue({ [field]: next });
   }, [form]);
 
@@ -105,6 +123,8 @@ export function CreateCourseStepOne() {
             suffixIcon={null}
             placeholder={t('createCourse.vocabPlaceholder')}
             className="fr-create-tag-select"
+            tokenSeparators={[',', '，']}
+            onChange={(value) => normalizeTags(value, 'vocabularies')}
             onPasteCapture={(event) => handleTagPaste(event, 'vocabularies')}
           />
         </Form.Item>
@@ -120,6 +140,7 @@ export function CreateCourseStepOne() {
             suffixIcon={null}
             placeholder={t('createCourse.grammarPlaceholder')}
             className="fr-create-tag-select"
+            onChange={(value) => normalizeTags(value, 'grammars')}
             onPasteCapture={(event) => handleTagPaste(event, 'grammars')}
           />
         </Form.Item>

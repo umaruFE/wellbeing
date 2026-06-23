@@ -202,38 +202,43 @@ function translateLanguageSkills(skills, isEn) {
 
 function translateAge(ageValue, isEn) {
   const ageMap = {
-    '3-6': isEn ? '3-6' : '3-6岁',
-    '3-6岁': isEn ? '3-6' : '3-6岁',
-    '7-9': isEn ? '7-9' : '7-9岁',
-    '7-9岁': isEn ? '7-9' : '7-9岁',
-    '9-12': isEn ? '9-12' : '9-12岁',
-    '9-12岁': isEn ? '9-12' : '9-12岁',
+    '3-6': '3-6',
+    '3-6岁': '3-6',
+    '7-9': '7-9',
+    '7-9岁': '7-9',
+    '9-12': '9-12',
+    '9-12岁': '9-12',
   };
-  return ageMap[ageValue] || (isEn ? '7-9' : '7-9岁');
+  return ageMap[ageValue] || '7-9';
 }
 
 function translateDuration(durationValue, isEn) {
   const durationMap = {
-    '40': isEn ? '40 min' : '40分钟',
-    '40分钟': isEn ? '40 min' : '40分钟',
-    '60': isEn ? '60 min' : '60分钟',
-    '60分钟': isEn ? '60 min' : '60分钟',
-    '120': isEn ? '120 min' : '120分钟',
-    '120分钟': isEn ? '120 min' : '120分钟',
+    '40': '40 min',
+    '40分钟': '40 min',
+    '40 min': '40 min',
+    '60': '60 min',
+    '60分钟': '60 min',
+    '60 min': '60 min',
+    '120': '120 min',
+    '120分钟': '120 min',
+    '120 min': '120 min',
   };
-  return durationMap[durationValue] || (isEn ? '60 min' : '60分钟');
+  return durationMap[durationValue] || '60 min';
 }
 
 function translateClassSize(classSizeValue, isEn) {
   const sizeMap = {
-    '<=8': isEn ? '<=8' : '≤ 8人',
-    '≤ 8人': isEn ? '<=8' : '≤ 8人',
-    '9-15': isEn ? '9-15' : '9-15人',
-    '9-15人': isEn ? '9-15' : '9-15人',
-    '>=16': isEn ? '>=16' : '≥ 16人',
-    '≥ 16人': isEn ? '>=16' : '≥ 16人',
+    '<=8': '<=8',
+    '≤8': '<=8',
+    '≤ 8人': '<=8',
+    '9-15': '9-15',
+    '9-15人': '9-15',
+    '>=16': '>=16',
+    '≥16': '>=16',
+    '≥ 16人': '>=16',
   };
-  return sizeMap[classSizeValue] || (isEn ? '9-15' : '9-15人');
+  return sizeMap[classSizeValue] || '9-15';
 }
 
 export function buildCourseMap(course = {}) {
@@ -262,8 +267,8 @@ export function buildCourseMap(course = {}) {
     }
   }
   const isEn = (course.language === 'en' || course.outputLanguage === 'English');
-  const title = overview.courseTitle || course.courseTitle || course.title || (isEn ? 'New Course' : '新课程');
-  const taskName = course.taskName || course.theme || (isEn ? 'Scenario Task' : '情境任务');
+  const title = overview.courseTitle || course.courseTitle || course.title || (isEn ? 'New Course' : 'New Course');
+  const taskName = course.taskName || course.theme || 'Scenario Task';
   const rawPath = course.experiencePath || overview.theme;
   const path = translatePath(rawPath, isEn);
   const vocabularies = course.vocabularies || [];
@@ -285,21 +290,17 @@ export function buildCourseMap(course = {}) {
           overview.languageGoals.grammar || '',
         ].filter(Boolean).join('\n')
       : [
-          vocabularies.length ? (isEn ? `Core Vocabulary: ${vocabularies.join(', ')}` : `核心词汇：${vocabularies.join('、')}`) : '',
-          grammars.length ? (isEn ? `Core Sentence: ${grammars.join(', ')}` : `核心句型：${grammars.join('、')}`) : '',
+          vocabularies.length ? `Core Vocabulary: ${vocabularies.join(', ')}` : '',
+          grammars.length ? `Core Sentence:\n${grammars.join('\n')}` : '',
           languageSkills.length ? (isEn ? `Skill Focus: ${languageSkills.join(', ')}` : `能力侧重：${languageSkills.join('、')}`) : '',
-        ].filter(Boolean).join(' | ') || (isEn
-          ? 'Integrate target vocabulary, core sentence patterns and authentic expression tasks.'
-          : '围绕目标词汇、核心句型与真实表达任务进行综合运用。'),
+        ].filter(Boolean).join('\n') || 'Integrate target vocabulary, core sentence patterns and authentic expression tasks.',
     keyOutcome: overview.finalTask || course.keyOutcome || (isEn
       ? `Each group completes a creative piece around "${taskName}" and presents it using target language.`
       : `每个小组完成一份围绕"${taskName}"的创意作品，并用目标语言展示。`),
     growth: [overview.selGoals, overview.permaGoals].filter(Boolean).join('\n') || (isEn
       ? `Develop expression, collaboration and creative problem-solving in "${taskName}".`
       : `在"${taskName}"中发展表达、协作和创造性解决问题能力。`),
-    experience: overview.experience || overview.experiencePath || (isEn
-      ? `Explore, express and create outputs through ${path}.`
-      : `通过${path}完成探索、表达与作品产出。`),
+    experience: overview.experience || overview.experiencePath || `Explore, express and create outputs through ${path}.`,
     themeImageUrl: course.themeImageUrl || null,
     themeImagePrompt: overview.themeImagePrompt || null,
   };

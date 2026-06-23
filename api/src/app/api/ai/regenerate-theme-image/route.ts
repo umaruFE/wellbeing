@@ -19,6 +19,14 @@ export async function OPTIONS() {
   return NextResponse.json({}, { headers: corsHeaders() });
 }
 
+function enforceTextlessCoverPrompt(prompt: string) {
+  return [
+    String(prompt || '').trim() || 'Child-friendly classroom course cover illustration.',
+    'Create a pure visual illustration only.',
+    'Absolutely no visible text of any language: no Chinese characters, no letters, no numbers, no title, no caption, no labels, no signs, no logo, no watermark, no written whiteboard, no poster text, no speech bubbles.',
+  ].join('\n');
+}
+
 async function transferThemeImage(imageUrl: string): Promise<string | null> {
   try {
     let downloadUrl = imageUrl;
@@ -80,7 +88,7 @@ export async function POST(request: NextRequest) {
 
     const result = await n8nClient.call(
       'course-theme-image-generator',
-      { themeImagePrompt },
+      { themeImagePrompt: enforceTextlessCoverPrompt(themeImagePrompt) },
       { timeout: 300000 }
     );
 

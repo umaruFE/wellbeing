@@ -11,34 +11,42 @@ import apiService from '../../services/api';
 import { getCourseCoverUrl, getCourseData, getCourseOverview, getDisplayCourseTitle } from '../courseImages';
 import './CourseManagement.css';
 
-function formatDuration(value, t) {
+function formatAge(value) {
+  if (!value) return '--';
+  const text = String(value).trim();
+  const range = text.match(/(\d+)\s*[-~]\s*(\d+)/);
+  if (range) return `${range[1]}-${range[2]}`;
+  return text.replace(/岁/g, '').trim();
+}
+
+function formatDuration(value) {
   if (!value) return '--';
   const text = String(value);
   const minutes = text.match(/\d+/)?.[0];
   if (!minutes) return text;
-  return t('course.durationMinutes', { count: Number(minutes), minutes });
+  return `${minutes} min`;
 }
 
-function formatClassSize(value, t) {
+function formatClassSize(value) {
   const text = value ? String(value).trim() : '';
   if (!text) return '';
 
   const rangeMatch = text.match(/(\d+)\s*[-~]\s*(\d+)/);
   if (rangeMatch) {
-    return t('course.classSizeRange', { min: rangeMatch[1], max: rangeMatch[2] });
+    return `${rangeMatch[1]}-${rangeMatch[2]}`;
   }
 
   const atMostMatch = text.match(/[≤<=]\s*(\d+)/);
   if (atMostMatch) {
-    return t('course.classSizeAtMost', { count: atMostMatch[1] });
+    return `≤${atMostMatch[1]}`;
   }
 
   const atLeastMatch = text.match(/[≥>=]\s*(\d+)/);
   if (atLeastMatch) {
-    return t('course.classSizeAtLeast', { count: atLeastMatch[1] });
+    return `≥${atLeastMatch[1]}`;
   }
 
-  return text;
+  return text.replace(/人/g, '').trim();
 }
 
 function pickFirst(...values) {
@@ -160,10 +168,10 @@ export function CourseManagement({
           courseTitle: title,
           unit: course.unit || title,
           status: course.status === 'published' ? 'published' : 'draft',
-          age: rawAge || '--',
+          age: formatAge(rawAge),
           rawAge,
           grade: rawAge ? `G${String(rawAge).split('-')[0]}` : '--',
-          duration: formatDuration(rawDuration, t),
+          duration: formatDuration(rawDuration),
           rawDuration,
           theme: course.theme || t('course.scenarioTask'),
           updatedAt: course.created_at
@@ -179,7 +187,7 @@ export function CourseManagement({
           courseOverview: overview || courseData?.courseOverview || null,
           themeImageUrl: coverUrl,
           thumbnail: coverUrl,
-          classSize: formatClassSize(rawClassSize, t),
+          classSize: formatClassSize(rawClassSize),
           rawClassSize,
           vocabularies,
           grammars,
@@ -209,8 +217,9 @@ export function CourseManagement({
       console.error('获取课程列表失败:', error);
       if (!append) setCourses(demoCourses.map(course => ({
         ...course,
-        duration: formatDuration(course.duration, t),
-        classSize: formatClassSize(course.classSize, t),
+        age: formatAge(course.age),
+        duration: formatDuration(course.duration),
+        classSize: formatClassSize(course.classSize),
       })));
     } finally {
       setCoursesLoading(false);

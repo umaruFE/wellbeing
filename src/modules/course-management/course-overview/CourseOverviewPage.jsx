@@ -53,6 +53,15 @@ const colors = {
   purple: { DEFAULT: '#9966D0' }
 };
 
+function formatCourseMeta(value, fallback, suffix = '') {
+  const text = String(value || fallback || '').trim();
+  const range = text.match(/(\d+)\s*[-~]\s*(\d+)/);
+  if (range) return `${range[1]}-${range[2]}${suffix}`;
+  const count = text.match(/\d+/)?.[0];
+  if (suffix && count) return `${count}${suffix}`;
+  return text.replace(/[岁人]/g, '').replace(/分钟/g, ' min').trim();
+}
+
 const CourseOverviewPage = () => {
   const { t, i18n } = useTranslation();
   const isChinese = !i18n.language?.startsWith('en');
@@ -80,9 +89,9 @@ const CourseOverviewPage = () => {
       const payload = {
         language: aiLanguage,
         outputLanguage,
-        age: courseData.age_group || '7-9岁',
-        duration: courseData.duration || '60分钟',
-        scale: courseData.capacity || courseData.unit || '9-15人',
+        age: courseData.age_group || '7-9',
+        duration: courseData.duration || '60',
+        scale: courseData.capacity || courseData.unit || '9-15',
         vocabulary: courseData.keywords || [],
         grammar: [],
         skills: courseData.skills || [],
@@ -142,9 +151,9 @@ const CourseOverviewPage = () => {
       const payload = {
         language: aiLanguage,
         outputLanguage,
-        age: courseData.age_group || '7-9岁',
-        duration: courseData.duration || '60分钟',
-        scale: courseData.capacity || courseData.unit || '9-15人',
+        age: courseData.age_group || '7-9',
+        duration: courseData.duration || '60',
+        scale: courseData.capacity || courseData.unit || '9-15',
         vocabulary: courseData.keywords || [],
         grammar: [],
         skills: [],
@@ -390,11 +399,11 @@ const CourseOverviewPage = () => {
           </span>
 
           <div className="flex items-center gap-5 mb-10 text-sm font-medium" style={{ color: colors.neutral.text[2] }}>
-            <span className="flex items-center gap-1"><Users size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.age_group || '7-9岁'}</span>
+            <span className="flex items-center gap-1"><Users size={18} style={{ color: colors.brand.DEFAULT }} /> {formatCourseMeta(courseData?.age_group, '7-9')}</span>
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.neutral.border.DEFAULT }}></span>
-            <span className="flex items-center gap-1"><Clock size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.duration || '40分钟'}</span>
+            <span className="flex items-center gap-1"><Clock size={18} style={{ color: colors.brand.DEFAULT }} /> {formatCourseMeta(courseData?.duration, '40', ' min')}</span>
             <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: colors.neutral.border.DEFAULT }}></span>
-            <span className="flex items-center gap-1"><Target size={18} style={{ color: colors.brand.DEFAULT }} /> {courseData?.capacity || '9-15人'}</span>
+            <span className="flex items-center gap-1"><Target size={18} style={{ color: colors.brand.DEFAULT }} /> {formatCourseMeta(courseData?.capacity, '9-15')}</span>
           </div>
 
           {/* Core Philosophy */}

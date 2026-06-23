@@ -5,6 +5,12 @@ import { uploadToOss } from '@/lib/oss';
 const HAS_OSS_KEYS = !!(process.env.ALIYUN_OSS_ACCESS_KEY_ID && process.env.ALIYUN_OSS_ACCESS_KEY_SECRET);
 const UPLOAD_PROVIDER = (process.env.UPLOAD_PROVIDER || 'local').toLowerCase();
 const USE_OSS = UPLOAD_PROVIDER === 'oss' && HAS_OSS_KEYS;
+const TEXTLESS_THEME_IMAGE_REQUIREMENT = [
+  'Theme image requirement:',
+  'The cover image must be a pure illustration with no readable or decorative text.',
+  'Do not depict any written card, whiteboard, poster, sign, label, title, letters, numbers, logo, watermark, or speech bubble.',
+  'If the course outcome mentions a card, promise, message, writing, or a title such as "We Are All Special", show only blank decorative shapes or non-text symbols.',
+].join(' ');
 
 async function transferThemeImage(imageUrl: string): Promise<string | null> {
   try {
@@ -87,6 +93,7 @@ function buildOutputInstruction(isEnglish: boolean) {
     return [
       'Return structured JSON only. Do not include Markdown, explanations, or Chinese text.',
       'All user-facing fields in courseOverview must be written in English, including courseTitle, overallContext, languageGoals, selGoals, permaGoals, finalTask, themeImagePrompt, and every journey field.',
+      'themeImagePrompt must describe a textless cover illustration only. It must explicitly forbid any visible text, Chinese characters, letters, numbers, captions, labels, signs, logos, watermarks, whiteboards with writing, posters with writing, or speech bubbles.',
       'courseOverview must include a journey field.',
       'journey must include engage, empower, execute, and elevate.',
       'The class journey must be based on this course theme, story context, language goals, final outcome, and growth goals. Do not use generic template sentences.',
@@ -100,7 +107,23 @@ function buildOutputInstruction(isEnglish: boolean) {
     'journey 必须包含 engage、empower、execute、elevate 四个字段。',
     '课堂旅程必须基于本课程的主题、故事情境、语言目标、最终成果和成长目标生成，不能使用通用模板句。',
     '每个 journey 字段 35-70 个中文字符，并体现具体课堂动作。',
+    'themeImagePrompt 必须只描述无文字封面插画，并明确禁止任何可见文字、中文、字母、数字、标题、标签、标识、水印、带字白板、带字海报和对话气泡。',
   ].join('\n');
+}
+
+function enforceTextlessCoverPrompt(prompt?: string) {
+  const base = String(prompt || '').trim();
+  return [
+    base || 'Child-friendly classroom course cover illustration.',
+    'Create a pure visual illustration only.',
+    'Absolutely no visible text of any language: no Chinese characters, no letters, no numbers, no title, no caption, no labels, no signs, no logo, no watermark, no written whiteboard, no poster text, no speech bubbles.',
+  ].join('\n');
+}
+
+function appendTextlessImageRequirement(value?: string) {
+  const text = String(value || '').trim();
+  if (!text) return TEXTLESS_THEME_IMAGE_REQUIREMENT;
+  return `${text}\n\n${TEXTLESS_THEME_IMAGE_REQUIREMENT}`;
 }
 
 export async function POST(request: NextRequest) {
@@ -140,15 +163,15 @@ export async function POST(request: NextRequest) {
     const n8nPayload = {
       language: languageConfig.language,
       outputLanguage: languageConfig.outputLanguage,
-      age: age || '7-9岁',
-      duration: duration || '60分钟',
-      scale: scale || '9-15人',
+      age: age || '7-9',
+      duration: duration || '60',
+      scale: scale || '9-15',
       vocabulary: vocabulary || [],
       grammar: grammar || [],
       skills: skills || [],
       paths: paths || [],
       theme: theme || '',
-      requirements: requirements || specialRequirements || '',
+      requirements: appendTextlessImageRequirement(requirements || specialRequirements || ''),
       adjustments: adjustments || '',
       existing_overview: existingOverview || existing_overview || inputCourseOverview
         ? (typeof (existingOverview || existing_overview || inputCourseOverview) === 'string'
@@ -162,6 +185,7 @@ export async function POST(request: NextRequest) {
       atmosphere: atmosphere || '',
       attachments: attachments || [],
       outputInstruction: buildOutputInstruction(languageConfig.isEnglish),
+      themeImageInstruction: enforceTextlessCoverPrompt(''),
       expectedFields: {
         courseOverview: [
           'courseTitle',
@@ -190,6 +214,9 @@ export async function POST(request: NextRequest) {
 
     const firstItem = Array.isArray(result) ? result[0] : result;
     const courseOverview = firstItem?.data?.courseOverview || firstItem?.courseOverview || null;
+    if (courseOverview?.themeImagePrompt) {
+      courseOverview.themeImagePrompt = enforceTextlessCoverPrompt(courseOverview.themeImagePrompt);
+    }
     const rawThemeImageUrl = firstItem?.data?.themeImageUrl || firstItem?.themeImageUrl || null;
 
     let themeImageUrl = rawThemeImageUrl;

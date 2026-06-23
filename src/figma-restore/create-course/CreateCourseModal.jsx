@@ -29,6 +29,29 @@ function primaryExperiencePath(paths) {
   return normalizeExperiencePaths(paths)[0] || '';
 }
 
+function splitListValue(value, separators) {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => splitListValue(item, separators));
+  }
+  return String(value)
+    .split(separators)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function splitGrammarValue(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.flatMap(splitGrammarValue);
+  }
+  return splitListValue(value, /\r?\n/)
+    .flatMap((line) => line
+      .split(/(?<=\?)\s+|(?<=\.\.\.)\s+(?=[A-Z])/)
+      .map((item) => item.trim())
+      .filter(Boolean));
+}
+
 function getAuthHeaders() {
   const token = localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json' };
@@ -173,6 +196,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       Object.assign(values, stepValues);
       const user = getUser();
       const attachments = (values.attachments || []).map(file => file.name).filter(Boolean);
+      const vocabularies = splitListValue(values.vocabularies, /[,\uFF0C]+/);
+      const grammars = splitGrammarValue(values.grammars);
 
       const n8nPayload = {
         language: aiLanguage,
@@ -181,8 +206,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         age: values.age,
         duration: values.duration,
         scale: values.classSize,
-        vocabulary: values.vocabularies || [],
-        grammar: values.grammars || [],
+        vocabulary: vocabularies,
+        grammar: grammars,
         skills: values.languageSkills || [],
         paths: normalizeExperiencePaths(values.experiencePaths || values.experiencePath),
         theme: values.taskName || '',
@@ -220,10 +245,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
       const courseTitle = overview?.courseTitle || t('dashboard.unnamedCourse');
       const theme = overview?.theme || values.taskName || '';
 
-      const keywordsList = [values.vocabularies, values.grammars]
-        .filter(Boolean)
-        .flatMap(v => Array.isArray(v) ? v : v.split(/\r?\n/).map(k => k.trim()))
-        .filter(Boolean);
+      const keywordsList = [...vocabularies, ...grammars];
 
       const saveData = {
         title: courseTitle,
@@ -241,8 +263,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
           age: values.age,
           duration: values.duration,
           classSize: values.classSize,
-          vocabularies: values.vocabularies || [],
-          grammars: values.grammars || [],
+          vocabularies,
+          grammars,
           languageSkills: values.languageSkills || [],
           experiencePaths: normalizeExperiencePaths(values.experiencePaths || values.experiencePath),
           experiencePath: primaryExperiencePath(values.experiencePaths || values.experiencePath),
@@ -282,8 +304,8 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         age: values.age,
         duration: values.duration,
         classSize: values.classSize,
-        vocabularies: values.vocabularies || [],
-        grammars: values.grammars || [],
+        vocabularies,
+        grammars,
         languageSkills: values.languageSkills || [],
         experiencePaths: normalizeExperiencePaths(values.experiencePaths || values.experiencePath),
         experiencePath: primaryExperiencePath(values.experiencePaths || values.experiencePath),

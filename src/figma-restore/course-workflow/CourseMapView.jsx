@@ -24,9 +24,9 @@ import toolkitIcon from '../../assets/create-course/toolkit.svg';
 
 const { TextArea } = Input;
 
-const ageOptionValues = ['3-6岁', '7-9岁', '9-12岁'];
-const durationOptionValues = ['40分钟', '60分钟', '120分钟'];
-const classSizeOptionValues = ['≤ 8人', '9-15人', '≥ 16人'];
+const ageOptionValues = ['3-6', '7-9', '9-12'];
+const durationOptionValues = ['40', '60', '120'];
+const classSizeOptionValues = ['<=8', '9-15', '>=16'];
 const languageSkillOptionValues = ['听力理解', '口语表达', '阅读理解', '书面表达', '综合能力'];
 const pathOptionValues = ['艺术表达', '体感探索', '音乐律动', 'AI 自动匹配'];
 const atmosphereOptionValues = ['神秘探险感', '戏剧表演感', '温馨治愈感', '团队协作感', 'AI 自动匹配'];
@@ -159,15 +159,34 @@ function updateExperiencePaths(values) {
   return next.filter((item) => !AUTO_MATCH_VALUES.has(item));
 }
 
-function splitPastedTagLines(text) {
+function enforceTextlessCoverPrompt(prompt) {
+  return [
+    String(prompt || '').trim() || 'Child-friendly classroom course cover illustration.',
+    'Create a pure visual illustration only.',
+    'Absolutely no visible text of any language: no Chinese characters, no letters, no numbers, no title, no caption, no labels, no signs, no logo, no watermark, no written whiteboard, no poster text, no speech bubbles.',
+  ].join('\n');
+}
+
+function splitPastedTags(text, separators = /\r?\n/) {
   return String(text || '')
-    .split(/\r?\n/)
+    .split(separators)
     .map((item) => item.replace(/[\u200B-\u200D\uFEFF]/g, '').trim())
     .filter(Boolean);
 }
 
+function splitGrammarTags(value) {
+  return splitPastedTags(value, /\r?\n/)
+    .flatMap((line) => line
+      .split(/(?<=\?)\s+|(?<=\.\.\.)\s+(?=[A-Z])/)
+      .map((item) => item.trim())
+      .filter(Boolean));
+}
+
 function handleTagPaste(event, form, field) {
-  const lines = splitPastedTagLines(event.clipboardData?.getData('text'));
+  const text = event.clipboardData?.getData('text');
+  const lines = field === 'vocabularies'
+    ? splitPastedTags(text, /[,\uFF0C\r\n]+/)
+    : splitGrammarTags(text);
   if (lines.length < 2) return;
 
   event.preventDefault();
@@ -176,6 +195,13 @@ function handleTagPaste(event, form, field) {
   lines.forEach((line) => {
     if (!next.includes(line)) next.push(line);
   });
+  form.setFieldsValue({ [field]: next });
+}
+
+function normalizeTagField(value, form, field) {
+  const next = toArray(value)
+    .flatMap((item) => field === 'vocabularies' ? splitPastedTags(item, /[,\uFF0C\r\n]+/) : splitGrammarTags(item))
+    .filter((item, index, array) => array.indexOf(item) === index);
   form.setFieldsValue({ [field]: next });
 }
 
@@ -207,10 +233,10 @@ function compactText(value, max = 34) {
   return text.length > max ? `${text.slice(0, max)}...` : text;
 }
 
-function pickListText(value, fallback = '核心表达') {
+function pickListText(value, fallback = '核心表达', separator = ', ') {
   const list = toArray(value).map((item) => String(item || '').trim()).filter(Boolean);
   if (!list.length) return fallback;
-  return list.slice(0, 3).join('、');
+  return list.slice(0, 3).join(separator);
 }
 
 function buildFallbackJourney(course, map, taskName, isEn) {
@@ -218,9 +244,9 @@ function buildFallbackJourney(course, map, taskName, isEn) {
   const outcome = compactText(course.keyOutcome || map.keyOutcome || (isEn ? `Complete a creative piece around "${taskName}"` : `围绕"${taskName}"完成创意作品`), 32);
   const growth = compactText(map.growth || course.specialRequirements || (isEn ? 'Expression, collaboration and creative problem-solving' : '表达、协作与创造性解决问题'), 30);
   const toolkit = compactText(map.toolkit, 36);
-  const vocab = pickListText(course.vocabularies, toolkit || (isEn ? 'Key vocabulary and sentence patterns' : '关键词和任务句型'));
-  const grammar = pickListText(course.grammars, isEn ? 'Core sentences' : '核心句型');
-  const skills = pickListText(course.languageSkills, isEn ? 'Listening and speaking' : '听说表达');
+  const vocab = pickListText(course.vocabularies, toolkit || 'Key vocabulary and sentence patterns', ', ');
+  const grammar = pickListText(course.grammars, 'Core sentences', '\n');
+  const skills = pickListText(course.languageSkills, isEn ? 'Listening and speaking' : '听说表达', isEn ? ', ' : '、');
   const path = formatExperiencePaths(normalizeExperiencePaths(course, map.path), isEn ? 'Artistic Expression' : '艺术表达');
   const atmosphere = course.atmosphere && course.atmosphere !== 'AI 自动匹配' ? course.atmosphere : '';
 
@@ -261,19 +287,19 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const map = buildCourseMap(course);
   const editOptions = React.useMemo(() => ({
     age: [
-      { value: '3-6岁', label: t('createCourse.age36') },
-      { value: '7-9岁', label: t('createCourse.age79') },
-      { value: '9-12岁', label: t('createCourse.age912') },
+      { value: '3-6', label: t('createCourse.age36') },
+      { value: '7-9', label: t('createCourse.age79') },
+      { value: '9-12', label: t('createCourse.age912') },
     ],
     duration: [
-      { value: '40分钟', label: t('createCourse.dur40') },
-      { value: '60分钟', label: t('createCourse.dur60') },
-      { value: '120分钟', label: t('createCourse.dur120') },
+      { value: '40', label: t('createCourse.dur40') },
+      { value: '60', label: t('createCourse.dur60') },
+      { value: '120', label: t('createCourse.dur120') },
     ],
     classSize: [
-      { value: '≤ 8人', label: t('createCourse.size8') },
-      { value: '9-15人', label: t('createCourse.size915') },
-      { value: '≥ 16人', label: t('createCourse.size16') },
+      { value: '<=8', label: t('createCourse.size8') },
+      { value: '9-15', label: t('createCourse.size915') },
+      { value: '>=16', label: t('createCourse.size16') },
     ],
     languageSkills: languageSkillOptionValues.map((value, index) => ({
       value,
@@ -327,14 +353,14 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       course.course_data?.courseOverview?.themeImagePrompt,
     ].find((item) => String(item || '').trim());
 
-    if (directPrompt) return directPrompt;
+    if (directPrompt) return enforceTextlessCoverPrompt(directPrompt);
 
-    return [
+    return enforceTextlessCoverPrompt([
       `Create a clear course cover illustration for "${map.title || course.title || course.courseTitle || 'Course'}".`,
       `Scene: ${map.storyline || course.storyContext || course.theme || 'an engaging classroom mission'}.`,
       `Learning output: ${map.keyOutcome || course.keyOutcome || 'students complete a creative learning task'}.`,
-      'Style: child-friendly, bright, suitable for a PPT course map cover, no text in the image.',
-    ].join('\n');
+      'Style: child-friendly, bright, suitable for a PPT course map cover.',
+    ].join('\n'));
   }, [course, map.keyOutcome, map.storyline, map.themeImagePrompt, map.title]);
 
   const openEdit = () => {
@@ -394,6 +420,12 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     const values = await editForm.validateFields();
     const attachments = (values.attachments || []).map((file) => file.name).filter(Boolean);
     const user = getUser();
+    const vocabularies = toArray(values.vocabularies)
+      .flatMap((item) => splitPastedTags(item, /[,\uFF0C\r\n]+/))
+      .filter((item, index, array) => array.indexOf(item) === index);
+    const grammars = toArray(values.grammars)
+      .flatMap(splitGrammarTags)
+      .filter((item, index, array) => array.indexOf(item) === index);
 
     const n8nPayload = {
       language: aiLanguage,
@@ -402,8 +434,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       age: values.age,
       duration: values.duration,
       scale: values.classSize,
-      vocabulary: values.vocabularies || [],
-      grammar: values.grammars || [],
+      vocabulary: vocabularies,
+      grammar: grammars,
       skills: values.languageSkills || [],
       paths: normalizeExperiencePaths({ experiencePaths: values.experiencePaths }),
       theme: values.taskName || '',
@@ -451,8 +483,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       age: values.age,
       duration: values.duration,
       classSize: values.classSize,
-      vocabularies: values.vocabularies || [],
-      grammars: values.grammars || [],
+      vocabularies,
+      grammars,
       languageSkills: values.languageSkills || ['听力理解', '口语表达'],
       taskName: values.taskName,
       storyContext: values.storyContext,
@@ -860,6 +892,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                         mode="tags"
                         className="overview-tag-select"
                         placeholder={t('createCourse.vocabPlaceholder')}
+                        tokenSeparators={[',', '，']}
+                        onChange={(value) => normalizeTagField(value, editForm, 'vocabularies')}
                         onPasteCapture={(event) => handleTagPaste(event, editForm, 'vocabularies')}
                       />
                     </Form.Item>
@@ -868,6 +902,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                         mode="tags"
                         className="overview-tag-select"
                         placeholder={t('createCourse.grammarPlaceholder')}
+                        onChange={(value) => normalizeTagField(value, editForm, 'grammars')}
                         onPasteCapture={(event) => handleTagPaste(event, editForm, 'grammars')}
                       />
                     </Form.Item>
