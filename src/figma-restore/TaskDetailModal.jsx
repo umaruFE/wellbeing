@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Button } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   CirclePlus,
   Image as ImageIcon,
@@ -20,17 +21,17 @@ const getIcon = (type) => {
   }
 };
 
-const sceneLabels = {
-  rocket: '太空场景',
-  kitchen: '厨房任务',
-  beach: '海边救援',
-  stage: '舞台展示',
-  camp: '营地探索',
-  classroom: '教室互动',
-  teacher: '老师立绘',
-  teacherAlt: '引导动作',
-  teacherPose: '讲解姿势',
-  teacherSmile: '微笑表情',
+const sceneLabelKeys = {
+  rocket: 'taskDetail.sceneRocket',
+  kitchen: 'taskDetail.sceneKitchen',
+  beach: 'taskDetail.sceneBeach',
+  stage: 'taskDetail.sceneStage',
+  camp: 'taskDetail.sceneCamp',
+  classroom: 'taskDetail.sceneClassroom',
+  teacher: 'taskDetail.sceneTeacher',
+  teacherAlt: 'taskDetail.sceneTeacherAlt',
+  teacherPose: 'taskDetail.sceneTeacherPose',
+  teacherSmile: 'taskDetail.sceneTeacherSmile',
 };
 
 export const createCanvasAssetPayload = (task) => {
@@ -49,13 +50,13 @@ export const createCanvasAssetPayload = (task) => {
         ...common,
         width: 360,
         height: 216,
-        duration: task.title.includes('体能') ? '02:55' : '00:35',
+        duration: task.title.includes('体能') || task.title.includes('Fitness') ? '02:55' : '00:35',
         videoMeta: {
-          videoType: task.title.includes('口语对话') ? '情境叙事视频' : '体能闯关视频',
-          scene: task.title.includes('口语对话') ? '校门口 / 英语问候' : '森林 / 动物园任务',
-          chars: task.title.includes('口语对话') ? '学生角色 x2' : 'Poppy',
-          vocab: task.title.includes('口语对话') ? 2 : 3,
-          sents: task.title.includes('口语对话') ? 3 : 2,
+          videoType: task.title.includes('口语对话') || task.title.includes('Dialogue') ? '情境叙事视频' : '体能闯关视频',
+          scene: task.title.includes('口语对话') || task.title.includes('Dialogue') ? '校门口 / 英语问候' : '森林 / 动物园任务',
+          chars: task.title.includes('口语对话') || task.title.includes('Dialogue') ? '学生角色 x2' : 'Poppy',
+          vocab: task.title.includes('口语对话') || task.title.includes('Dialogue') ? 2 : 3,
+          sents: task.title.includes('口语对话') || task.title.includes('Dialogue') ? 3 : 2,
           autoplay: true,
           loop: false,
           muted: false,
@@ -71,7 +72,7 @@ export const createCanvasAssetPayload = (task) => {
         ...common,
         width: 300,
         height: 56,
-        duration: task.title.includes('跟读') ? '00:08' : '00:30',
+        duration: task.title.includes('跟读') || task.title.includes('Read') ? '00:08' : '00:30',
       },
     };
   }
@@ -80,90 +81,90 @@ export const createCanvasAssetPayload = (task) => {
     type,
     patch: {
       ...common,
-      width: task.title.includes('角色立绘') ? 220 : task.title.includes('场景插图') ? 320 : 360,
-      height: task.title.includes('角色立绘') ? 220 : task.title.includes('场景插图') ? 240 : 203,
+      width: task.title.includes('角色立绘') || task.title.includes('Character') ? 220 : task.title.includes('场景插图') || task.title.includes('Scene') ? 320 : 360,
+      height: task.title.includes('角色立绘') || task.title.includes('Character') ? 220 : task.title.includes('场景插图') || task.title.includes('Scene') ? 240 : 203,
     },
   };
 };
 
-const withoutCountPrefix = (count) => count.replace('x ', '');
+const withoutCountPrefix = (count) => String(count || '').replace('x ', '');
 
-const getTaskMaterialConfig = (task) => {
+const getTaskMaterialConfig = (task, t) => {
   const base = {
-    group: '图文素材',
-    subtype: '主题意境图',
+    group: t('taskDetail.groupImage'),
+    subtype: t('taskDetail.subThemeScene'),
     sections: [
       {
-        title: '基础设置',
+        title: t('taskDetail.secBasic'),
         items: [
-          ['生成用途', 'PPT 背景 / 课程封面'],
-          ['画面比例', task.title.includes('场景') ? '4:3' : '16:9 landscape'],
-          ['视觉风格', '卡通插画'],
-          ['文字叠加', '无文字'],
+          [t('taskDetail.usage'), t('taskDetail.usagePpt')],
+          [t('taskDetail.ratio'), task.title.includes('场景') || task.title.includes('Scene') ? '4:3' : '16:9 landscape'],
+          [t('taskDetail.visStyle'), t('taskDetail.cartoon')],
+          [t('taskDetail.textOverlay'), t('taskDetail.noText')],
         ],
       },
       {
-        title: '内容输入',
+        title: t('taskDetail.secContent'),
         items: [
-          ['场景描述', task.prompt],
-          ['参考图片', '未上传'],
-          ['输出数量', withoutCountPrefix(task.count)],
-          ['结果形式', task.status === 'done' ? '可插入画布' : '生成完成后可插入'],
+          [t('taskDetail.sceneDesc'), task.prompt],
+          [t('taskDetail.refImage'), t('taskDetail.notUploaded')],
+          [t('taskDetail.outputCount'), withoutCountPrefix(task.count)],
+          [t('taskDetail.resultForm'), task.status === 'done' ? t('taskDetail.insertable') : t('taskDetail.afterGen')],
         ],
       },
     ],
   };
 
   if (task.type === 'video') {
-    const isDialogue = task.title.includes('口语对话');
+    const isDialogue = task.title.includes('口语对话') || task.title.includes('Dialogue');
     return {
-      group: '视频素材',
-      subtype: isDialogue ? '情境叙事视频' : '体能闯关视频',
+      group: t('taskDetail.groupVideo'),
+      subtype: isDialogue ? t('taskDetail.subDialogue') : t('taskDetail.subFitness'),
       sections: isDialogue ? [
         {
-          title: '叙事设置',
+          title: t('taskDetail.secNarrative'),
           items: [
-            ['视频模板', '对话练习 · 校园场景'],
-            ['世界观/场景', '校门口 / 英语问候'],
-            ['角色设置', '学生角色 x2'],
-            ['视频方向', '横版 16:9'],
+            [t('taskDetail.vidTemplate'), t('taskDetail.dialoguePractice')],
+            [t('taskDetail.worldScene'), t('taskDetail.campusGreeting')],
+            [t('taskDetail.charSetup'), t('taskDetail.studentChars')],
+            [t('taskDetail.vidDirection'), t('taskDetail.landscape169')],
           ],
         },
         {
-          title: '语言与输出',
+          title: t('taskDetail.secLanguage'),
           items: [
-            ['核心句型', 'Hello / How are you?'],
-            ['字幕', '开启英文字幕'],
-            ['旁白', '儿童友好语速'],
-            ['预计时长', '35 秒'],
+            [t('taskDetail.coreSentence'), 'Hello / How are you?'],
+            [t('taskDetail.subtitle'), t('taskDetail.enSubtitle')],
+            [t('taskDetail.narration'), t('taskDetail.childSpeed')],
+            [t('taskDetail.estDuration'), t('taskDetail.duration35')],
           ],
         },
       ] : [
         {
-          title: '闯关设置',
+          title: t('taskDetail.secChallenge'),
           items: [
-            ['视频类型', '体能闯关'],
-            ['场景', '森林 / 动物园任务'],
-            ['IP 角色', 'Poppy'],
-            ['视频方向', '横版 16:9'],
+            [t('taskDetail.vidType'), t('taskDetail.fitnessChallenge')],
+            [t('taskDetail.sceneDesc'), t('taskDetail.sceneForest')],
+            [t('taskDetail.ipChar'), 'Poppy'],
+            [t('taskDetail.vidDirection'), t('taskDetail.landscape169')],
           ],
         },
         {
-          title: '语言与动效',
+          title: t('taskDetail.secLangFx'),
           items: [
-            ['词汇数量', '3 个'],
-            ['句型数量', '2 个'],
-            ['单词气泡样式', '胶囊'],
-            ['预计时长', '约 2 分 30 秒'],
+            [t('taskDetail.vocabCount'), '3'],
+            [t('taskDetail.sentenceCount'), '2'],
+            [t('taskDetail.bubbleStyle'), t('taskDetail.capsule')],
+            [t('taskDetail.estDuration'), t('taskDetail.duration230')],
           ],
         },
         {
-          title: '播放设置',
+          title: t('taskDetail.secPlayback'),
           items: [
-            ['背景音乐', '开启'],
-            ['英文旁白', '开启'],
-            ['单词发音音效', '开启'],
-            ['循环播放', '关闭'],
+            [t('taskDetail.bgm'), t('taskDetail.on')],
+            [t('taskDetail.enNarration'), t('taskDetail.on')],
+            [t('taskDetail.wordSound'), t('taskDetail.on')],
+            [t('taskDetail.loopPlay'), t('taskDetail.off')],
           ],
         },
       ],
@@ -171,78 +172,78 @@ const getTaskMaterialConfig = (task) => {
   }
 
   if (task.type === 'audio') {
-    const isReading = task.title.includes('跟读');
+    const isReading = task.title.includes('跟读') || task.title.includes('Read');
     return {
-      group: '音频素材',
-      subtype: isReading ? '跟读朗读' : '情绪氛围BGM',
+      group: t('taskDetail.groupAudio'),
+      subtype: isReading ? t('taskDetail.subReadAlong') : t('taskDetail.subBgm'),
       sections: isReading ? [
         {
-          title: '朗读设置',
+          title: t('taskDetail.secRead'),
           items: [
-            ['音频类型', '跟读朗读'],
-            ['朗读文本', 'sad / happy / lonely / bored'],
-            ['声音', '女声'],
-            ['语速', '正常偏慢'],
+            [t('taskDetail.audioType'), t('taskDetail.subReadAlong')],
+            [t('taskDetail.readText'), 'sad / happy / lonely / bored'],
+            [t('taskDetail.voice'), t('taskDetail.female')],
+            [t('taskDetail.speed'), t('taskDetail.normalSlow')],
           ],
         },
         {
-          title: '输出设置',
+          title: t('taskDetail.secOutput'),
           items: [
-            ['切分方式', '逐条生成'],
-            ['停顿间隔', '保留跟读停顿'],
-            ['输出数量', withoutCountPrefix(task.count)],
-            ['格式', 'MP3'],
+            [t('taskDetail.splitMethod'), t('taskDetail.perItem')],
+            [t('taskDetail.pause'), t('taskDetail.keepPause')],
+            [t('taskDetail.outputCount'), withoutCountPrefix(task.count)],
+            [t('taskDetail.format'), 'MP3'],
           ],
         },
       ] : [
         {
-          title: '音乐设置',
+          title: t('taskDetail.secMusic'),
           items: [
-            ['音频类型', '情绪氛围BGM'],
-            ['情绪氛围', '神秘 / 温柔'],
-            ['音乐用途', '故事开场与任务过渡'],
-            ['时长', '30 秒循环'],
+            [t('taskDetail.audioType'), t('taskDetail.subBgm')],
+            [t('taskDetail.mood'), t('taskDetail.mysteriousGentle')],
+            [t('taskDetail.musicPurpose'), t('taskDetail.storyTransition')],
+            [t('taskDetail.estDuration'), '30s'],
           ],
         },
         {
-          title: '输出设置',
+          title: t('taskDetail.secOutput'),
           items: [
-            ['人声', '无'],
-            ['版本', '纯器乐'],
-            ['输出数量', withoutCountPrefix(task.count)],
-            ['格式', 'MP3'],
+            [t('taskDetail.vocal'), t('taskDetail.none')],
+            [t('taskDetail.format'), t('taskDetail.instrumental')],
+            [t('taskDetail.outputCount'), withoutCountPrefix(task.count)],
+            [t('taskDetail.format'), 'MP3'],
           ],
         },
       ],
     };
   }
 
-  if (task.title.includes('场景插图')) {
-    base.subtype = '故事背景/内容配图';
+  if (task.title.includes('场景插图') || task.title.includes('Scene')) {
+    base.subtype = t('taskDetail.subStoryBg');
     base.sections[0].items = [
-      ['生成用途', '阅读材料 / PPT 场景图'],
-      ['画面比例', '4:3'],
-      ['视觉风格', '卡通插画'],
-      ['文字留白', '保留上方留白'],
+      [t('taskDetail.usage'), t('taskDetail.usageScene')],
+      [t('taskDetail.ratio'), '4:3'],
+      [t('taskDetail.visStyle'), t('taskDetail.cartoon')],
+      [t('taskDetail.whitespace'), t('taskDetail.keepTop')],
     ];
   }
 
-  if (task.title.includes('角色立绘')) {
-    base.subtype = '角色立绘（拓展素材）';
+  if (task.title.includes('角色立绘') || task.title.includes('Character')) {
+    base.subtype = t('taskDetail.subCharSprite');
     base.sections[0].items = [
-      ['生成用途', '角色引导 / 页面装饰'],
-      ['画面比例', '1:1'],
-      ['背景', '透明背景 PNG'],
-      ['角色姿态', '微笑挥手'],
+      [t('taskDetail.usage'), t('taskDetail.usageChar')],
+      [t('taskDetail.ratio'), '1:1'],
+      [t('taskDetail.bg'), t('taskDetail.transparent')],
+      [t('taskDetail.charPose'), t('taskDetail.smileWave')],
     ];
   }
 
   return base;
 };
 
-const getCompactConfigRows = (task) => {
+const getCompactConfigRows = (task, t) => {
   const rows = [];
-  getTaskMaterialConfig(task).sections.forEach((section) => {
+  getTaskMaterialConfig(task, t).sections.forEach((section) => {
     section.items.forEach((item) => {
       if (rows.length < 4) rows.push(item);
     });
@@ -250,23 +251,23 @@ const getCompactConfigRows = (task) => {
   return rows;
 };
 
-const ImagePreview = ({ task }) => (
+const ImagePreview = ({ task, t }) => (
   <div className="tdm-panel">
-    <div className="tdm-panel-title"><span className="tdm-dot" />图片候选</div>
+    <div className="tdm-panel-title"><span className="tdm-dot" />{t('taskDetail.imageCandidates')}</div>
     <div className="tdm-preview-grid">
       {(task.scenes || []).map((scene, index) => (
         <button className="tdm-preview-card" type="button" key={`${scene}-${index}`}>
-          <div className={`tdm-scene tdm-scene-${scene}`} data-label={sceneLabels[scene] || '生成预览'} />
-          <span className="tdm-preview-label">候选 {index + 1}</span>
+          <div className={`tdm-scene tdm-scene-${scene}`} data-label={t(sceneLabelKeys[scene]) || scene} />
+          <span className="tdm-preview-label">{t('taskDetail.candidate', { num: index + 1 })}</span>
         </button>
       ))}
     </div>
   </div>
 );
 
-const VideoPreview = ({ task }) => (
+const VideoPreview = ({ task, t }) => (
   <div className="tdm-panel">
-    <div className="tdm-panel-title"><span className="tdm-dot" />视频预览</div>
+    <div className="tdm-panel-title"><span className="tdm-dot" />{t('taskDetail.videoPreview')}</div>
     <div className={`tdm-video-hero tdm-scene-${task.hero || 'classroom'}`}>
       <div className="tdm-play-big"><Play size={28} fill="currentColor" /></div>
       <div className="tdm-duration-badge">00:35</div>
@@ -282,31 +283,33 @@ const VideoPreview = ({ task }) => (
   </div>
 );
 
-const AudioPreview = ({ task }) => (
+const AudioPreview = ({ task, t }) => (
   <div className="tdm-panel">
-    <div className="tdm-panel-title"><span className="tdm-dot" />音频列表</div>
+    <div className="tdm-panel-title"><span className="tdm-dot" />{t('taskDetail.audioList')}</div>
     <div className="tdm-audio-stack">
       {(task.tracks || []).map((track, index) => (
         <div className="tdm-audio-track" key={track}>
           <div className={`tdm-audio-thumb wave-${index + 1}`}><div className="tdm-waveform" /></div>
           <div className="tdm-audio-copy">
             <div className="tdm-audio-name">{track}</div>
-            <div className="tdm-audio-desc">00:{index === 0 ? '30' : index === 1 ? '24' : '18'} · MP3 · 可循环</div>
+            <div className="tdm-audio-desc">00:{index === 0 ? '30' : index === 1 ? '24' : '18'} · MP3 · {t('taskDetail.loopable')}</div>
           </div>
-          <Button className="tdm-small-btn" onClick={(event) => event.stopPropagation()}>试听</Button>
+          <Button className="tdm-small-btn" onClick={(event) => event.stopPropagation()}>{t('taskDetail.listen')}</Button>
         </div>
       ))}
     </div>
   </div>
 );
 
-const TaskPreview = ({ task }) => {
-  if (task.type === 'video') return <VideoPreview task={task} />;
-  if (task.type === 'audio') return <AudioPreview task={task} />;
-  return <ImagePreview task={task} />;
+const TaskPreview = ({ task, t }) => {
+  if (task.type === 'video') return <VideoPreview task={task} t={t} />;
+  if (task.type === 'audio') return <AudioPreview task={task} t={t} />;
+  return <ImagePreview task={task} t={t} />;
 };
 
 export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (!open) return undefined;
     const handleKeyDown = (event) => {
@@ -319,8 +322,8 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
   if (!task) return null;
 
   const IconComponent = getIcon(task.type);
-  const progressText = task.status === 'done' ? '生成完成' : (task.status === 'waiting' ? '等待 GPU 分配' : 'AI 引擎正在生成中');
-  const compactConfigRows = getCompactConfigRows(task);
+  const progressText = task.status === 'done' ? t('taskDetail.statusDone') : (task.status === 'waiting' ? t('taskDetail.statusWaiting') : t('taskDetail.statusRunning'));
+  const compactConfigRows = getCompactConfigRows(task, t);
 
   return (
     <>
@@ -336,23 +339,23 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
               <span className="tdm-count">{task.count}</span>
               <span className={`tdm-status ${task.status}`}>{task.statusText}</span>
             </div>
-            <div className="tdm-sub">关联：{task.course}</div>
+            <div className="tdm-sub">{t('taskDetail.related', { name: task.course })}</div>
           </div>
-          <button className="tdm-close" type="button" onClick={onClose} aria-label="关闭">
+          <button className="tdm-close" type="button" onClick={onClose} aria-label={t('common.close', 'Close')}>
             <X size={20} />
           </button>
         </div>
 
         <div className="tdm-body">
           <div className="tdm-main-grid">
-            <TaskPreview task={task} />
+            <TaskPreview task={task} t={t} />
 
             <aside className="tdm-compact-panel">
               <section className="tdm-info-section">
-                <div className="tdm-section-title">任务信息</div>
+                <div className="tdm-section-title">{t('taskDetail.taskInfo')}</div>
                 <div className="tdm-info-list">
-                  <div className="tdm-info-row"><label>生成类型</label><span>{task.engine}</span></div>
-                  <div className="tdm-info-row"><label>提交时间</label><span>{task.submit}</span></div>
+                  <div className="tdm-info-row"><label>{t('taskDetail.genType')}</label><span>{task.engine}</span></div>
+                  <div className="tdm-info-row"><label>{t('taskDetail.submitTime')}</label><span>{task.submit}</span></div>
                 </div>
                 <div className="tdm-progress">
                   <div className="tdm-progress-row"><span>{progressText}</span><span>{task.progress}%</span></div>
@@ -361,7 +364,7 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
               </section>
 
               <section className="tdm-info-section">
-                <div className="tdm-section-title">生成配置</div>
+                <div className="tdm-section-title">{t('taskDetail.genConfig')}</div>
                 <div className="tdm-info-list">
                   {compactConfigRows.map(([label, value]) => (
                     <div className="tdm-info-row" key={label}>
@@ -373,7 +376,7 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
               </section>
 
               <section className="tdm-info-section">
-                <div className="tdm-section-title">生成提示词</div>
+                <div className="tdm-section-title">{t('taskDetail.genPrompt')}</div>
                 <div className="tdm-prompt">{task.prompt}</div>
               </section>
 
@@ -387,12 +390,12 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
                     }}
                   >
                     <CirclePlus size={16} />
-                    插入画布
+                    {t('taskDetail.insertCanvas')}
                   </Button>
                 )}
                 <Button className="tdm-action-btn">
                   <RotateCcw size={16} />
-                  重新生成
+                  {t('taskDetail.regenerate')}
                 </Button>
               </div>
             </aside>

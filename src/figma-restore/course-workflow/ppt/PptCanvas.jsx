@@ -233,7 +233,7 @@ export function PptCanvas({
           </div>
           <button type="button" className="ppt-style-action" onClick={onChangeStyle}>
             <Palette size={15} />
-            重新生成风格
+            {t('assetPanel.regenStyle', '重新生成风格')}
           </button>
         </div>
 

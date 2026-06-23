@@ -19,71 +19,64 @@ export async function GET(request: NextRequest) {
     // 并行查询多个统计数据
     const [
       coursesResult,
-      mediaResult,
-      tasksResult,
-      todayTasksResult
+      pptImagesResult,
+      videosResult,
+      voicesResult,
+      todayCoursesResult,
+      todayPptImagesResult,
+      todayVideosResult,
+      todayVoicesResult,
     ] = await Promise.all([
       // 课程总数
-      db.query('SELECT COUNT(*) as count FROM courses'),
-      // 素材总数（从 course_data 中统计图片和视频）
-      db.query(`
-        SELECT 
-          COUNT(*) FILTER (WHERE course_data->'slides' IS NOT NULL) as image_count,
-          COUNT(*) FILTER (WHERE course_data->'videos' IS NOT NULL) as video_count,
-          COUNT(*) FILTER (WHERE course_data->'audios' IS NOT NULL) as audio_count
-        FROM courses
-        WHERE course_data IS NOT NULL
-      `),
-      // 任务总数（查询最近的任务记录）
-      db.query(`
-        SELECT 
-          COUNT(*) FILTER (WHERE success = true) as completed,
-          COUNT(*) FILTER (WHERE success = false) as failed,
-          COUNT(*) as total
-        FROM prompt_history
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-      `),
-      // 今日完成的任务数
-      db.query(`
-        SELECT COUNT(*) as count 
-        FROM prompt_history 
-        WHERE success = true 
-        AND DATE(created_at) = CURRENT_DATE
-      `)
+      db.query('SELECT COUNT(*) as count FROM courses').catch(() => ({ rows: [{ count: '0' }] })),
+      // 图片素材总数
+      db.query('SELECT COUNT(*) as count FROM ppt_images').catch(() => ({ rows: [{ count: '0' }] })),
+      // 视频素材总数
+      db.query('SELECT COUNT(*) as count FROM videos').catch(() => ({ rows: [{ count: '0' }] })),
+      // 音频素材总数
+      db.query('SELECT COUNT(*) as count FROM voice_configs').catch(() => ({ rows: [{ count: '0' }] })),
+      // 今日新增课程
+      db.query("SELECT COUNT(*) as count FROM courses WHERE created_at >= CURRENT_DATE").catch(() => ({ rows: [{ count: '0' }] })),
+      // 今日新增图片
+      db.query("SELECT COUNT(*) as count FROM ppt_images WHERE created_at >= CURRENT_DATE").catch(() => ({ rows: [{ count: '0' }] })),
+      // 今日新增视频
+      db.query("SELECT COUNT(*) as count FROM videos WHERE created_at >= CURRENT_DATE").catch(() => ({ rows: [{ count: '0' }] })),
+      // 今日新增音频
+      db.query("SELECT COUNT(*) as count FROM voice_configs WHERE created_at >= CURRENT_DATE").catch(() => ({ rows: [{ count: '0' }] })),
     ]);
 
-    // db.query 直接返回 pool.query 的结果
-    const coursesData = coursesResult.rows[0] || {};
-    const mediaData = mediaResult.rows[0] || {};
-    const tasksData = tasksResult.rows[0] || {};
-    const todayData = todayTasksResult.rows[0] || {};
+    const totalCourses = parseInt(coursesResult.rows[0]?.count || '0');
+    const totalImages = parseInt(pptImagesResult.rows[0]?.count || '0');
+    const totalVideos = parseInt(videosResult.rows[0]?.count || '0');
+    const totalAudios = parseInt(voicesResult.rows[0]?.count || '0');
 
-    // 获取算力使用情况（从环境变量或默认配置）
-    const computeUsed = 2847; // 可从 Redis 或数据库获取
-    const computeTotal = 40000;
+    const todayCourses = parseInt(todayCoursesResult.rows[0]?.count || '0');
+    const todayImages = parseInt(todayPptImagesResult.rows[0]?.count || '0');
+    const todayVideos = parseInt(todayVideosResult.rows[0]?.count || '0');
+    const todayAudios = parseInt(todayVoicesResult.rows[0]?.count || '0');
+
+    const todayCompleted = todayCourses + todayImages + todayVideos + todayAudios;
 
     const stats = {
       courses: {
-        total: parseInt(coursesData.count || '0')
+        total: totalCourses,
       },
       media: {
-        images: parseInt(mediaData.image_count || '0'),
-        videos: parseInt(mediaData.video_count || '0'),
-        audios: parseInt(mediaData.audio_count || '0')
+        images: totalImages,
+        videos: totalVideos,
+        audios: totalAudios,
       },
       tasks: {
         running: 0,
-        completed: parseInt(tasksData.completed || '0'),
+        completed: todayCompleted,
         queued: 0,
-        failed: parseInt(tasksData.failed || '0'),
-        total: parseInt(tasksData.total || '0')
       },
-      todayCompleted: parseInt(todayData.count || '0'),
+      todayCompleted,
       compute: {
-        used: computeUsed,
-        total: computeTotal,
-        remaining: computeTotal - computeUsed
-      }
+        used: 0,
+        total: 40000,
+        remaining: 40000,
+      },
     };
 
     return NextResponse.json({ data: stats });

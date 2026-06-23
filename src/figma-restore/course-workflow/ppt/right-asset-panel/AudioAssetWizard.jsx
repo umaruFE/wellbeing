@@ -1,9 +1,10 @@
-﻿import React from 'react';
+import React from 'react';
 import { Input } from 'antd';
 import { Activity, BookOpen, Check, Clock, Dumbbell, Flame, Music, Palette, Play, Sparkles, Trophy, UserRound, Zap } from 'lucide-react';
 import audioSoonDialogue from './assets/audio-soon-dialogue.svg';
 import audioSoonMeditation from './assets/audio-soon-meditation.svg';
-import { audioConfig } from './assetPanelData';
+import { useTranslation } from 'react-i18next';
+import { getAudioConfig } from './assetPanelData';
 import { FieldBlock, OptionGrid, Tip } from './AssetControls';
 import { GenerationProgress } from './GenerationProgress';
 import { GeneratedAssetResults } from './GeneratedAssetResults';
@@ -771,6 +772,7 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
 }
 
 export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChange }) {
+  const { t } = useTranslation();
   if (asset.code === 'C1') {
     return <C1AudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
   }
@@ -787,7 +789,7 @@ export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChan
     return <SimpleAudioWizard asset={asset} onInsert={onInsert} onTitleChange={onTitleChange} />;
   }
 
-  const cfg = audioConfig[asset.code] || audioConfig.C1;
+  const cfg = getAudioConfig(t)[asset.code] || getAudioConfig(t).C1;
   const [stage, setStage] = React.useState('form');
   const [step, setStep] = React.useState(0);
   const [selectedIndex, setSelectedIndex] = React.useState(0);

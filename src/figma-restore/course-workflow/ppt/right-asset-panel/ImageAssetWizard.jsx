@@ -1,5 +1,6 @@
 import React from 'react';
 import { Input, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
   CircleDot,
@@ -21,32 +22,40 @@ import milo from '../../../../assets/ip/milo.png';
 import ace from '../../../../assets/ip/ace.png';
 import apiService from '../../../../utils/apiService';
 import {
-  actionOptions,
-  activityThemes,
   characterOptions,
-  chartOptions,
-  comicStyles,
-  imageSpecificFields,
-  ratioOptions,
-  styleOptions,
-  whitespaceOptions,
+  getActionOptions,
+  getActivityThemes,
+  getChartOptions,
+  getComicStyles,
+  getImageSpecificFields,
+  getRatioOptions,
+  getStyleOptions,
+  getWhitespaceOptions,
 } from './assetPanelData';
 import { FieldBlock, OptionGrid, PromptField, Tip } from './AssetControls';
 import { GenerationProgress } from './GenerationProgress';
 import { GeneratedAssetResults } from './GeneratedAssetResults';
 
 function ImageSpecificOptions({ asset, values, setValue }) {
+  const { t } = useTranslation();
+  const whitespaceOpts = getWhitespaceOptions(t);
+  const activityThemeOpts = getActivityThemes(t);
+  const chartOpts = getChartOptions(t);
+  const ratioOpts = getRatioOptions(t);
+  const comicStyleOpts = getComicStyles(t);
+  const actionOpts = getActionOptions(t);
+
   if (asset.code === 'B4') {
     return (
-      <FieldBlock label="文字留白区域">
-        <OptionGrid options={whitespaceOptions} value={values.whitespace} onChange={(value) => setValue('whitespace', value)} columns={4} />
+      <FieldBlock label={t('assetPanel.wsTop')}>
+        <OptionGrid options={whitespaceOpts} value={values.whitespace} onChange={(value) => setValue('whitespace', value)} columns={4} />
       </FieldBlock>
     );
   }
   if (asset.code === 'B5') {
     return (
       <FieldBlock label="活动主题">
-        <OptionGrid options={activityThemes} value={values.theme} onChange={(value) => setValue('theme', value)} columns={4} />
+        <OptionGrid options={activityThemeOpts} value={values.theme} onChange={(value) => setValue('theme', value)} columns={4} />
       </FieldBlock>
     );
   }
@@ -54,10 +63,10 @@ function ImageSpecificOptions({ asset, values, setValue }) {
     return (
       <>
         <FieldBlock label="图表类型">
-          <OptionGrid options={chartOptions} value={values.chart} onChange={(value) => setValue('chart', value)} columns={4} />
+          <OptionGrid options={chartOpts} value={values.chart} onChange={(value) => setValue('chart', value)} columns={4} />
         </FieldBlock>
         <FieldBlock label="输出方向">
-          <OptionGrid options={ratioOptions.slice(0, 2)} value={values.ratio} onChange={(value) => setValue('ratio', value)} columns={2} />
+          <OptionGrid options={ratioOpts.slice(0, 2)} value={values.ratio} onChange={(value) => setValue('ratio', value)} columns={2} />
         </FieldBlock>
       </>
     );
@@ -65,7 +74,7 @@ function ImageSpecificOptions({ asset, values, setValue }) {
   if (asset.code === 'B10') {
     return (
       <FieldBlock label="漫画风格">
-        <OptionGrid options={comicStyles} value={values.comicStyle} onChange={(value) => setValue('comicStyle', value)} columns={3} />
+        <OptionGrid options={comicStyleOpts} value={values.comicStyle} onChange={(value) => setValue('comicStyle', value)} columns={3} />
       </FieldBlock>
     );
   }
@@ -76,7 +85,7 @@ function ImageSpecificOptions({ asset, values, setValue }) {
           <OptionGrid options={characterOptions} value={values.character} onChange={(value) => setValue('character', value)} columns={5} />
         </FieldBlock>
         <FieldBlock label="已选动作">
-          <OptionGrid options={actionOptions} value={values.action} onChange={(value) => setValue('action', value)} columns={2} />
+          <OptionGrid options={actionOpts} value={values.action} onChange={(value) => setValue('action', value)} columns={2} />
         </FieldBlock>
       </>
     );
@@ -1429,6 +1438,7 @@ function ImageTypeContent({ asset, values, setValue }) {
 }
 
 export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
+  const { t } = useTranslation();
   const [stage, setStage] = React.useState('form');
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const [results, setResults] = React.useState([]);
@@ -1465,7 +1475,8 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     ipComposed: false,
     ipLayers: [],
   });
-  const field = imageSpecificFields[asset.code] || imageSpecificFields.B1;
+  const imageFields = getImageSpecificFields(t);
+  const field = imageFields[asset.code] || imageFields.B1;
   const isFixedRatio = ['B3', 'B8', 'B10', 'B11'].includes(asset.code);
 
   const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
@@ -1595,13 +1606,13 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
           <div className="ppt-fixed-ratio"><span>比例</span><strong>{asset.code === 'B3' ? '1:1' : values.ratio}</strong><em>固定，不可更改</em></div>
         ) : (
           <FieldBlock label="比例">
-            <OptionGrid options={ratioOptions} value={values.ratio} onChange={(value) => setValue('ratio', value)} columns={5} />
+            <OptionGrid options={getRatioOptions(t)} value={values.ratio} onChange={(value) => setValue('ratio', value)} columns={5} />
           </FieldBlock>
         )}
 
         {!['B8', 'B10', 'B11'].includes(asset.code) ? (
           <FieldBlock label="风格">
-            <OptionGrid options={styleOptions} value={values.style} onChange={(value) => setValue('style', value)} columns={3} />
+            <OptionGrid options={getStyleOptions(t)} value={values.style} onChange={(value) => setValue('style', value)} columns={3} />
           </FieldBlock>
         ) : null}
 

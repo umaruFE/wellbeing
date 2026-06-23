@@ -1,10 +1,12 @@
 import { Library } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getAssetGroups } from './assetPanelData';
 
 export function AssetTypeSelector({ type, onSelect, onOpenLibrary }) {
+  const { t } = useTranslation();
   return (
     <div className="ppt-asset-selector">
-      {getAssetGroups(type).map((group) => (
+      {getAssetGroups(type, t).map((group) => (
         <section className="ppt-asset-type-section" key={group.title}>
           <div className="ppt-asset-sec-title">{group.title}</div>
           <div className={`ppt-asset-type-grid type-${type || 'all'}`}>
@@ -31,10 +33,10 @@ export function AssetTypeSelector({ type, onSelect, onOpenLibrary }) {
       ))}
 
       <section className="ppt-asset-type-section">
-        <div className="ppt-asset-sec-title">素材库</div>
+        <div className="ppt-asset-sec-title">{t('assetPanel.assetLibrary')}</div>
         <button type="button" className="ppt-asset-library-btn" onClick={onOpenLibrary}>
           {type === 'audio' ? null : <Library size={15} />}
-          从已有素材库选择
+          {t('assetPanel.selectFromLibrary')}
         </button>
       </section>
     </div>

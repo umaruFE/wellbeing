@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import { phaseTemplates } from '../workflowData';
 
 export const PHASES = [
@@ -75,13 +76,13 @@ export function createTextLayer(overrides = {}) {
   return {
     id: `layer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     type: 'text',
-    title: '标题文字',
+    title: i18next.t('assetPanel.titleText', 'Title Text'),
     x: 72,
     y: 70,
     width: 360,
     height: 88,
     rotation: 0,
-    content: '双击编辑文本',
+    content: i18next.t('assetPanel.doubleClickEdit', 'Double-click to edit text'),
     fontSize: 34,
     fontWeight: 'bold',
     fontStyle: 'normal',
@@ -96,9 +97,9 @@ export function createTextLayer(overrides = {}) {
 
 export function createMediaLayer(type, overrides = {}) {
   const config = {
-    image: { title: '主题意境图', width: 300, height: 190, x: 88, y: 150, icon: 'image' },
-    video: { title: '视频素材', width: 350, height: 210, x: 256, y: 130, icon: 'video' },
-    audio: { title: '音频素材', width: 280, height: 52, x: 140, y: 300, icon: 'audio' },
+    image: { title: i18next.t('assetPanel.imageAsset', 'Image Asset'), width: 300, height: 190, x: 88, y: 150, icon: 'image' },
+    video: { title: i18next.t('assetPanel.videoAsset', 'Video Asset'), width: 350, height: 210, x: 256, y: 130, icon: 'video' },
+    audio: { title: i18next.t('assetPanel.audioAsset', 'Audio Asset'), width: 280, height: 52, x: 140, y: 300, icon: 'audio' },
   }[type];
 
   return {
@@ -309,26 +310,26 @@ function createCoverPhase(initialCourseData, template, courseMeta = {}, options 
     ? initialCourseData.find((phase) => phase?.steps?.length)?.steps?.[0]?.title
     : '';
   const title = compactText(
-    source.courseTitle || source.title || source.name || fallbackTitle || '课程课件',
-    '课程课件',
+    source.courseTitle || source.title || source.name || fallbackTitle || (isEnglish ? 'Course Courseware' : '课程课件'),
+    isEnglish ? 'Course Courseware' : '课程课件',
     38
   );
   const subtitle = compactText(
-    source.description || source.subtitle || source.overview || '基于教案自动生成，可继续编辑内容与素材。',
-    '基于教案自动生成，可继续编辑内容与素材。',
+    source.description || source.subtitle || source.overview || (isEnglish ? 'Auto-generated from lesson plan. Continue editing content and assets.' : '基于教案自动生成，可继续编辑内容与素材。'),
+    isEnglish ? 'Auto-generated from lesson plan. Continue editing content and assets.' : '基于教案自动生成，可继续编辑内容与素材。',
     62
   );
 
   const slide = {
     id: `cover-slide-${Date.now()}`,
-    title: '课程封面',
+    title: isEnglish ? 'Course Cover' : '课程封面',
     background: template.background,
     backgroundImage: template.coverImage,
     templateId: template.id,
     isCover: true,
     layers: [
       createTextLayer({
-        title: '封面标题',
+        title: isEnglish ? 'Cover Title' : '封面标题',
         content: title,
         x: 110,
         y: 118,
@@ -340,7 +341,7 @@ function createCoverPhase(initialCourseData, template, courseMeta = {}, options 
         color: template.titleColor,
       }),
       createTextLayer({
-        title: '封面副标题',
+        title: isEnglish ? 'Cover Subtitle' : '封面副标题',
         content: subtitle,
         x: 116,
         y: 238,
@@ -352,7 +353,7 @@ function createCoverPhase(initialCourseData, template, courseMeta = {}, options 
         color: template.bodyColor,
       }),
       createTextLayer({
-        title: '模板名称',
+        title: isEnglish ? 'Template Name' : '模板名称',
         content: isEnglish ? (template.nameEn || template.name) : template.name,
         x: 116,
         y: 374,
@@ -368,13 +369,13 @@ function createCoverPhase(initialCourseData, template, courseMeta = {}, options 
 
   return {
     key: 'cover',
-    title: '封面',
+    title: isEnglish ? 'Cover' : '封面',
     tone: 'cover',
     color: template.accent,
     steps: [
       {
         id: 'cover-step',
-        title: '课程封面',
+        title: isEnglish ? 'Course Cover' : '课程封面',
         slides: [slide],
       },
     ],

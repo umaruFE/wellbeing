@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, ColorPicker, Form, Input, InputNumber, Radio, Select } from 'antd';
+import { useTranslation } from 'react-i18next';
 import {
   AlignCenter,
   AlignLeft,
@@ -32,7 +33,7 @@ function normalizeHexColor(value) {
   return `#${match[1].toUpperCase()}`;
 }
 
-function TextColorField({ value, onChange, compact = false }) {
+function TextColorField({ value, onChange, compact = false, presetLabel }) {
   const nextValue = normalizeHexColor(value) || '#F4785E';
   const [draft, setDraft] = React.useState(nextValue);
 
@@ -60,7 +61,7 @@ function TextColorField({ value, onChange, compact = false }) {
         }}
         presets={[
           {
-            label: '常用',
+            label: presetLabel || 'Presets',
             colors: ['#253142', '#F4785E', '#FF705D', '#A866E8', '#4F8FF7', '#54BD76', '#FFFFFF'],
           },
         ]}
@@ -90,6 +91,7 @@ function TextColorField({ value, onChange, compact = false }) {
 }
 
 export function PptTextConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer }) {
+  const { t } = useTranslation();
   const styleMode = selectedLayer.fontStyle === 'italic'
     ? 'italic'
     : selectedLayer.textDecoration === 'underline'
@@ -101,18 +103,18 @@ export function PptTextConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer
   return (
     <aside className="ppt-right ppt-text-config-panel">
       <div className="text-panel-head">
-        <span>编辑文本</span>
+        <span>{t('assetPanel.editText')}</span>
         <Button
           type="text"
           className="text-panel-close"
           icon={<X size={16} />}
           onClick={() => onSelectLayer(null)}
-          aria-label="关闭"
+          aria-label="Close"
         />
       </div>
 
       <Form className="text-panel-form" layout="vertical">
-        <Form.Item label="图层名称素材">
+        <Form.Item label={t('assetPanel.layerName')}>
           <Input
             value={selectedLayer.title || ''}
             onChange={(event) => onUpdateLayer({ title: event.target.value })}
@@ -120,26 +122,26 @@ export function PptTextConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer
         </Form.Item>
 
         <div className="text-dim-grid">
-          <Form.Item label="宽">
+          <Form.Item label={t('assetPanel.width')}>
             <TextNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({ width })} />
           </Form.Item>
-          <Form.Item label="旋转">
+          <Form.Item label={t('assetPanel.rotation')}>
             <TextNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
           </Form.Item>
         </div>
 
         <div className="text-style-grid">
-          <Form.Item label="文本样式">
+          <Form.Item label={t('assetPanel.textStyle')}>
             <Select
               value={selectedLayer.fontFamily || '思源黑体 (Bold)'}
               options={[
-                { value: '思源黑体 (Bold)', label: '思源黑体 (Bold)' },
+                { value: '思源黑体 (Bold)', label: t('assetPanel.fontSourceHanBold') },
                 { value: 'Arial Bold', label: 'Arial Bold' },
               ]}
               onChange={(fontFamily) => onUpdateLayer({ fontFamily })}
             />
           </Form.Item>
-          <Form.Item label="尺寸">
+          <Form.Item label={t('assetPanel.fontSize')}>
             <TextNumberField value={selectedLayer.fontSize || 32} unit="px" onChange={(fontSize) => onUpdateLayer({ fontSize })} />
           </Form.Item>
         </div>
@@ -174,10 +176,10 @@ export function PptTextConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer
             <Radio.Button value="right"><AlignRight size={14} /></Radio.Button>
           </Radio.Group>
 
-          <TextColorField compact value={selectedLayer.color || '#253142'} onChange={(color) => onUpdateLayer({ color })} />
+          <TextColorField compact value={selectedLayer.color || '#253142'} onChange={(color) => onUpdateLayer({ color })} presetLabel={t('assetPanel.colorPresets')} />
         </div>
 
-        <Form.Item label="文本描边">
+        <Form.Item label={t('assetPanel.textStroke')}>
           <div className="text-stroke-grid">
             <TextColorField
               value={selectedLayer.strokeColor || '#F4785E'}
@@ -185,12 +187,13 @@ export function PptTextConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer
                 strokeColor,
                 strokeWidth: Number(selectedLayer.strokeWidth) > 0 ? selectedLayer.strokeWidth : 2,
               })}
+              presetLabel={t('assetPanel.colorPresets')}
             />
             <TextNumberField value={selectedLayer.strokeWidth ?? 0} unit="px" onChange={(strokeWidth) => onUpdateLayer({ strokeWidth })} />
           </div>
         </Form.Item>
 
-        <Form.Item label="文本内容">
+        <Form.Item label={t('assetPanel.textContent')}>
           <Input.TextArea
             value={selectedLayer.content || ''}
             placeholder="Textarea"
