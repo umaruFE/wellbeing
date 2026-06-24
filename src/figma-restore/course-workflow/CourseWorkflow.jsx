@@ -41,14 +41,115 @@ function phasesToCourseDataObject(nextPhases = []) {
   }, {});
 }
 
+function normalizePhaseCollection(rawPhases) {
+  if (!rawPhases) return null;
+  if (typeof rawPhases === 'string') {
+    try {
+      return normalizePhaseCollection(JSON.parse(rawPhases));
+    } catch {
+      return null;
+    }
+  }
+  if (!Array.isArray(rawPhases)) return rawPhases;
+
+  return rawPhases.reduce((acc, phase) => {
+    const rawKey = phase?.key || phase?.id || phase?.phase || '';
+    const key = String(rawKey).toLowerCase();
+    if (key) acc[key] = phase;
+    return acc;
+  }, {});
+}
+
+function resolvePhasesFromCourse(course) {
+  let courseData = course?.courseData || course?.course_data || course;
+  if (typeof courseData === 'string') {
+    try {
+      courseData = JSON.parse(courseData);
+    } catch {
+      courseData = null;
+    }
+  }
+  if (!courseData) return null;
+
+  let phases = null;
+  if (Array.isArray(courseData)) {
+    phases = normalizePhaseCollection(courseData);
+  } else if (typeof courseData?.text === 'string') {
+    try {
+      const parsed = JSON.parse(courseData.text);
+      phases = normalizePhaseCollection(parsed.courseData || parsed.parsedCourseData || parsed);
+    } catch {
+      phases = null;
+    }
+  } else if (courseData?.text?.courseData) {
+    phases = normalizePhaseCollection(courseData.text.courseData);
+  } else if (courseData?.courseData) {
+    phases = normalizePhaseCollection(courseData.courseData);
+  } else if (courseData?.parsedCourseData) {
+    phases = normalizePhaseCollection(courseData.parsedCourseData);
+  } else if (courseData?.engage || courseData?.empower || courseData?.execute || courseData?.elevate) {
+    phases = courseData;
+  } else if (courseData?.eng || courseData?.emp || courseData?.exc || courseData?.elv) {
+    phases = courseData;
+  }
+  if (!phases) return null;
+
+  const phaseMapping = { engage: 'eng', empower: 'emp', execute: 'exc', elevate: 'elv' };
+  const nameMapping = { engage: '引入', empower: '赋能', execute: '实践', elevate: '升华' };
+
+  const resolved = Object.entries(phaseMapping).map(([longKey, shortKey]) => {
+    const phase = phases[longKey] || phases[shortKey];
+    const steps = Array.isArray(phase?.steps) ? phase.steps : [];
+    return {
+      key: shortKey,
+      phase: longKey.charAt(0).toUpperCase() + longKey.slice(1),
+      title: phase?.title || `E-${longKey.charAt(0).toUpperCase() + longKey.slice(1)}`,
+      name: nameMapping[longKey],
+      duration: steps.length > 0
+        ? `${steps.reduce((acc, step) => {
+            const match = String(step.time || step.duration || '').match(/(\d+)/);
+            return acc + (match ? parseInt(match[1], 10) : 0);
+          }, 0)} 分钟`
+        : '15 分钟',
+      steps: steps.map((step) => ({
+        id: step.id,
+        title: step.title || '',
+        duration: step.time || step.duration || '',
+        goal: step.objective || step.goal || '',
+        activity: step.activity || '',
+        flow: step.activitySteps || step.flow || '',
+        resources: step.resources || '',
+        scenario: step.scenario || '',
+        teacherScript: step.script || step.teacherScript || '',
+      })),
+    };
+  });
+
+  return resolved.some((phase) => phase.steps.length > 0) ? resolved : null;
+}
+
+function hasMeaningfulPptContent(data) {
+  if (!Array.isArray(data)) return false;
+  return data.some((phase) => phase?.key !== 'cover' && (phase.steps || []).some((step) => (
+    Array.isArray(step.slides) && step.slides.some((slide) => Array.isArray(slide.layers) && slide.layers.length > 0)
+  )));
+}
+
 export function CourseWorkflow({ initialCourse, onBack }) {
   const { t } = useTranslation();
   const [current, setCurrent] = React.useState(0);
   const [course, setCourse] = React.useState(initialCourse || {});
-  const [phases, setPhases] = React.useState(phaseTemplates);
+  const initialLessonPhases = React.useMemo(
+    () => resolvePhasesFromCourse(initialCourse) || phaseTemplates,
+    [initialCourse]
+  );
+  const [phases, setPhases] = React.useState(initialLessonPhases);
   const [materials, setMaterials] = React.useState(readingTemplates);
   const initialPptData = React.useMemo(
-    () => course?.canvasData || course?.canvas_data || null,
+    () => {
+      const canvasData = course?.canvasData || course?.canvas_data || null;
+      return hasMeaningfulPptContent(canvasData) ? canvasData : null;
+    },
     [course?.canvasData, course?.canvas_data]
   );
   const [pptCanvasData, setPptCanvasData] = React.useState(initialPptData);
@@ -74,7 +175,6 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   }, []);
 
   React.useEffect(() => {
-    latestCourseRef.current = course;
     latestPptCanvasRef.current = initialPptData;
     setPptCanvasData(initialPptData);
     setCourseSaveStatus('saved');
@@ -83,7 +183,8 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     setPptSaveError('');
     courseDirtyVersionRef.current = 0;
     pptDirtyVersionRef.current = 0;
-  }, [course?.id, initialPptData]);
+    setPhases(initialLessonPhases);
+  }, [course?.id, initialLessonPhases, initialPptData]);
 
   React.useEffect(() => {
     latestCourseRef.current = course;
