@@ -19,7 +19,7 @@ export function EditStepModal({ open, step, onClose, onSave }) {
       activity: step.activity,
       resources: step.resources,
       scenario: step.scenario,
-      flowSteps: createFlowStepsForForm(step),
+      flowSteps: createFlowStepsForForm(step, !isChinese),
     });
   }, [form, open, step]);
 
