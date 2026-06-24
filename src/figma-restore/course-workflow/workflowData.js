@@ -301,7 +301,7 @@ export function buildCourseMap(course = {}) {
       ? `Develop expression, collaboration and creative problem-solving in "${taskName}".`
       : `在"${taskName}"中发展表达、协作和创造性解决问题能力。`),
     experience: overview.experience || overview.experiencePath || `Explore, express and create outputs through ${path}.`,
-    themeImageUrl: course.themeImageUrl || null,
+    themeImageUrl: course.themeImageUrl || course.courseData?.themeImageUrl || course.course_data?.themeImageUrl || null,
     themeImagePrompt: overview.themeImagePrompt || null,
   };
 }

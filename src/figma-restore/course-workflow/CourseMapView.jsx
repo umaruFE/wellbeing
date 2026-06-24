@@ -152,6 +152,21 @@ function formatExperiencePaths(paths, fallback = '') {
   return list.join('、');
 }
 
+function formatExperiencePathLabels(paths, isEn, fallback = '') {
+  const labels = {
+    art: isEn ? 'Artistic Expression' : '艺术表达',
+    body: isEn ? 'Physical Exploration' : '体感探索',
+    music: isEn ? 'Musical Rhythm' : '音乐律动',
+    'AI Auto Match': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+    '艺术表达': isEn ? 'Artistic Expression' : '艺术表达',
+    '体感探索': isEn ? 'Physical Exploration' : '体感探索',
+    '音乐律动': isEn ? 'Musical Rhythm' : '音乐律动',
+    'AI 自动匹配': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+  };
+  const list = normalizeExperiencePaths({ experiencePaths: paths }, fallback);
+  return list.map((item) => labels[item] || item).join(isEn ? ', ' : '、');
+}
+
 function updateExperiencePaths(values) {
   const next = toArray(values).filter(Boolean);
   const last = next[next.length - 1];
@@ -347,6 +362,11 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
   const isEn = i18n.language?.startsWith('en');
   const taskName = course.taskName || course.theme || (isEn ? 'Scenario Task' : '情境任务');
+  const displayPath = formatExperiencePathLabels(
+    course.experiencePaths || course.courseData?.experiencePaths || course.experiencePath || course.courseData?.experiencePath || map.path,
+    isEn,
+    map.path
+  );
   const fallbackJourney = buildFallbackJourney(course, map, taskName, isEn);
   const savedJourney = course.journey || course.courseData?.journey || course.courseOverview?.journey || {};
   const journey = {
@@ -546,10 +566,21 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       const result = await response.json();
 
       if (result.success && result.themeImageUrl) {
-        onCourseChange?.({ ...course, themeImageUrl: result.themeImageUrl });
+        const nextCourse = {
+          ...course,
+          themeImageUrl: result.themeImageUrl,
+          courseData: {
+            ...(course.courseData || course.course_data || {}),
+            courseOverview: course.courseData?.courseOverview || course.course_data?.courseOverview || course.courseOverview || null,
+            themeImageUrl: result.themeImageUrl,
+          },
+        };
+        onCourseChange?.(nextCourse, { saveNow: true });
+        message.success(t('workflow.toolbar.saved'));
       }
     } catch (err) {
       console.error('重新生成图片失败:', err);
+      message.error(err?.message || t('workflow.toolbar.error'));
     } finally {
       setRegenImage(false);
     }
@@ -732,7 +763,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       ) : (
         <div className="course-map-v2">
           <section className="course-map-v2-card">
-            <div className="course-map-v2-tag">{map.path}</div>
+            <div className="course-map-v2-tag">{displayPath || map.path}</div>
             <h2 className="course-map-v2-title">{map.title}</h2>
             <div className="course-map-v2-meta">
               <span><Users />{map.age}</span>

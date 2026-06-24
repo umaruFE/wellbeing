@@ -184,7 +184,10 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     courseDirtyVersionRef.current += 1;
     setCourseSaveStatus('dirty');
     setCourseSaveError('');
-  }, []);
+    if (meta.saveNow) {
+      saveCourseMap(nextCourse);
+    }
+  }, [saveCourseMap]);
 
   const mergePhasesIntoCourse = React.useCallback((nextPhases) => {
     const phaseObject = phasesToCourseDataObject(nextPhases);
