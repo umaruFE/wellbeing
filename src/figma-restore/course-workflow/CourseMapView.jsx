@@ -159,11 +159,24 @@ function updateExperiencePaths(values) {
   return next.filter((item) => !AUTO_MATCH_VALUES.has(item));
 }
 
+function sanitizeThemeImagePrompt(prompt) {
+  return String(prompt || '')
+    .replace(/Do not include[^.\n]*(speech bubbles|dialogue balloons|thought bubbles|comic bubbles|text boxes|blank white panels|whiteboards|posters|visual container)[^.\n]*\.?/gi, '')
+    .replace(/Absolutely no visible text[^.\n]*\.?/gi, '')
+    .replace(/No text,\s*no speech bubbles,\s*no posters,\s*no writing of any kind\.?/gi, 'Textless visual illustration.')
+    .replace(/no written whiteboard,\s*no poster text,\s*no speech bubbles\.?/gi, '')
+    .replace(/speech bubbles|dialogue balloons|thought bubbles|comic bubbles|callout bubbles|text boxes|empty caption boxes|blank white panels|white rounded rectangles|empty rounded rectangles|blank whiteboards|blank posters|blank signs|whiteboards|posters|display boards|presentation boards|UI panels|comic panels|frames reserved for text|visual containers? designed to hold text/gi, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function enforceTextlessCoverPrompt(prompt) {
+  const base = sanitizeThemeImagePrompt(prompt);
   return [
-    String(prompt || '').trim() || 'Child-friendly classroom course cover illustration.',
-    'Create a pure visual illustration only.',
-    'Absolutely no visible text of any language: no Chinese characters, no letters, no numbers, no title, no caption, no labels, no signs, no logo, no watermark, no written whiteboard, no poster text, no speech bubbles.',
+    base || 'Child-friendly classroom course cover illustration.',
+    'Textless full-canvas visual illustration only.',
+    'Use one continuous scene filled with theme-specific scenery, props, icons, paths, colors, and non-text symbols.',
   ].join('\n');
 }
 

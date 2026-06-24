@@ -8,9 +8,9 @@ const USE_OSS = UPLOAD_PROVIDER === 'oss' && HAS_OSS_KEYS;
 const ROUTE_VERSION = 'generate-course-overview-2026-06-24-language-forwarding-v2';
 const TEXTLESS_THEME_IMAGE_REQUIREMENT = [
   'Theme image requirement:',
-  'The cover image must be a pure illustration with no readable or decorative text.',
-  'Do not depict any written card, whiteboard, poster, sign, label, title, letters, numbers, logo, watermark, speech bubble, dialogue balloon, thought bubble, comic bubble, text box, empty caption box, empty white panel, blank whiteboard, blank poster, blank sign, or any visual container that looks designed to hold text.',
-  'If the course outcome mentions a card, promise, message, writing, or a title such as "We Are All Special", represent the idea with scenery, abstract decorative shapes, icons, colors, paths, props, or non-text symbols only.',
+  'The cover image must be a textless full-canvas illustration with theme-specific scenery and props.',
+  'Avoid listing forbidden text-container object names in themeImagePrompt; use positive composition language such as rich background details, continuous scenery, icons, colors, paths, props, and non-text symbols.',
+  'If the course outcome mentions a card, promise, message, writing, or title, represent the idea with scenery, abstract decorative shapes, icons, colors, paths, props, or non-text symbols only.',
 ].join(' ');
 
 async function transferThemeImage(imageUrl: string): Promise<string | null> {
@@ -95,7 +95,7 @@ function buildOutputInstruction(isEnglish: boolean) {
     return [
       'Return structured JSON only. Do not include Markdown, explanations, or Chinese text.',
       'All user-facing fields in courseOverview must be written in English, including courseTitle, overallContext, languageGoals, selGoals, permaGoals, finalTask, themeImagePrompt, and every journey field.',
-      'themeImagePrompt must describe a textless cover illustration only. It must explicitly forbid any visible text, Chinese characters, letters, numbers, captions, labels, signs, logos, watermarks, whiteboards, posters, speech bubbles, dialogue balloons, thought bubbles, comic bubbles, text boxes, empty caption boxes, empty white panels, and any visual container that looks designed to hold text.',
+      'themeImagePrompt must describe a textless full-canvas cover illustration. Use positive visual language only: theme-specific scenery, props, icons, colors, paths, background details, and non-text symbols. Do not mention speech bubbles, text boxes, whiteboards, posters, blank panels, or other text-container object names.',
       'courseOverview must include a journey field.',
       'journey must include engage, empower, execute, and elevate.',
       'The class journey must be based on this course theme, story context, language goals, final outcome, and growth goals. Do not use generic template sentences.',
@@ -109,17 +109,28 @@ function buildOutputInstruction(isEnglish: boolean) {
     'journey 必须包含 engage、empower、execute、elevate 四个字段。',
     '课堂旅程必须基于本课程的主题、故事情境、语言目标、最终成果和成长目标生成，不能使用通用模板句。',
     '每个 journey 字段 35-70 个中文字符，并体现具体课堂动作。',
-    'themeImagePrompt 必须只描述无文字封面插画，并明确禁止任何可见文字、中文、字母、数字、标题、标签、标识、水印、白板、海报、对话气泡、漫画气泡、思考气泡、文本框、空白字幕框、空白白色面板，以及任何看起来用于承载文字的视觉容器。',
+    'themeImagePrompt 必须描述无文字、全画幅、连续场景的封面插画，只使用与主题相关的场景、道具、图标、颜色、路径和非文字符号。不要在 themeImagePrompt 中提及对话气泡、文本框、白板、海报、空白面板等文字容器名称。',
   ].join('\n');
 }
 
+function sanitizeThemeImagePrompt(prompt?: string) {
+  return String(prompt || '')
+    .replace(/Do not include[^.\n]*(speech bubbles|dialogue balloons|thought bubbles|comic bubbles|text boxes|blank white panels|whiteboards|posters|visual container)[^.\n]*\.?/gi, '')
+    .replace(/Absolutely no visible text[^.\n]*\.?/gi, '')
+    .replace(/No text,\s*no speech bubbles,\s*no posters,\s*no writing of any kind\.?/gi, 'Textless visual illustration.')
+    .replace(/no written whiteboard,\s*no poster text,\s*no speech bubbles\.?/gi, '')
+    .replace(/speech bubbles|dialogue balloons|thought bubbles|comic bubbles|callout bubbles|text boxes|empty caption boxes|blank white panels|white rounded rectangles|empty rounded rectangles|blank whiteboards|blank posters|blank signs|whiteboards|posters|display boards|presentation boards|UI panels|comic panels|frames reserved for text|visual containers? designed to hold text/gi, '')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function enforceTextlessCoverPrompt(prompt?: string) {
-  const base = String(prompt || '').trim();
+  const base = sanitizeThemeImagePrompt(prompt);
   return [
     base || 'Child-friendly classroom course cover illustration.',
-    'Create a pure visual illustration only.',
-    'Absolutely no visible text of any language: no Chinese characters, no letters, no numbers, no title, no caption, no labels, no signs, no logo, no watermark.',
-    'Do not include speech bubbles, dialogue balloons, thought bubbles, comic bubbles, text boxes, empty caption boxes, blank white panels, blank whiteboards, blank posters, blank signs, or any visual container that looks designed to hold text.',
+    'Textless full-canvas visual illustration only.',
+    'Use one continuous scene filled with theme-specific scenery, props, icons, paths, colors, and non-text symbols.',
   ].join('\n');
 }
 
