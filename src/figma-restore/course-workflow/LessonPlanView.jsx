@@ -1225,7 +1225,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
               <div className="step-detail-label"><ListChecks size={13} />{t('lesson.activityFlow')}</div>
               <div className="step-flow-card">
                 <div className="step-flow-list">
-                  {buildStepFlowItems(step).map((item) => (
+                  {buildStepFlowItems(step, !isChinese).map((item) => (
                     <div className="step-flow-item" key={`${cardKey}-${item.title}`}>
                       <span className="step-flow-dot" />
                       <div>

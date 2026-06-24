@@ -49,7 +49,7 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
   const isChinese = !i18n.language?.startsWith('en');
   if (!open || !step) return null;
   const resources = splitStepResources(step.resources);
-  const executionItems = buildStepExecutionItems(step);
+  const executionItems = buildStepExecutionItems(step, !isChinese);
 
   return (
     <div className="mo on" id="mo-step-detail" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>

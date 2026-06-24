@@ -6,10 +6,31 @@ export function splitStepResources(text) {
     .slice(0, 8);
 }
 
-export function parseLabeledFlowSteps(flow) {
+const flowTitles = {
+  zh: ['创设悬念', '朗读来信', '情绪感知', '发布任务'],
+  en: ['Build Suspense', 'Read the Letter', 'Emotion Awareness', 'Announce Task'],
+};
+
+const flowTitleMap = {
+  '创设悬念': { zh: '创设悬念', en: 'Build Suspense' },
+  '朗读来信': { zh: '朗读来信', en: 'Read the Letter' },
+  '情绪感知': { zh: '情绪感知', en: 'Emotion Awareness' },
+  '发布任务': { zh: '发布任务', en: 'Announce Task' },
+  'Build Suspense': { zh: '创设悬念', en: 'Build Suspense' },
+  'Read the Letter': { zh: '朗读来信', en: 'Read the Letter' },
+  'Emotion Awareness': { zh: '情绪感知', en: 'Emotion Awareness' },
+  'Announce Task': { zh: '发布任务', en: 'Announce Task' },
+};
+
+function translateFlowTitle(title, isEn) {
+  return flowTitleMap[title]?.[isEn ? 'en' : 'zh'] || title;
+}
+
+export function parseLabeledFlowSteps(flow, isEn = false) {
   const raw = String(flow || '').replace(/\u200b/g, '').replace(/\r/g, '\n').trim();
   if (!raw) return [];
-  const labelPattern = /(创设悬念|朗读来信|情绪感知|发布任务)\s*[：:]\s*/g;
+  const titles = flowTitles[isEn ? 'en' : 'zh'];
+  const labelPattern = new RegExp(`(${titles.join('|')})\\s*[：:]\\s*`, 'g');
   const matches = Array.from(raw.matchAll(labelPattern));
   if (matches.length < 2) return [];
   return matches
@@ -24,10 +45,10 @@ export function parseLabeledFlowSteps(flow) {
     .filter((item) => item.desc);
 }
 
-export function splitStepFlowText(flow) {
+export function splitStepFlowText(flow, isEn = false) {
   const raw = String(flow || '').trim();
   if (!raw) return [];
-  const labeled = parseLabeledFlowSteps(raw);
+  const labeled = parseLabeledFlowSteps(raw, isEn);
   if (labeled.length) return labeled.map((item) => `${item.title}：${item.desc}`);
   return raw
     .split(/\n+|[①②③④⑤⑥⑦⑧⑨]|\d+[.、)]/g)
@@ -35,23 +56,30 @@ export function splitStepFlowText(flow) {
     .filter(Boolean);
 }
 
-export function buildStepFlowItems(step) {
+export function buildStepFlowItems(step, isEn = false) {
   const data = {
     flow: step?.flow,
     script: step?.teacherScript,
     scenario: step?.scenario,
     activity: step?.activity,
   };
-  const labeled = parseLabeledFlowSteps(data.flow);
-  if (labeled.length) return labeled;
-  const parts = splitStepFlowText(data.flow);
-  const defaults = [
-    { title: '创设悬念', desc: data.flow || '教师以神秘信号开场，展示一个印有动物线索的画面。' },
-    { title: '朗读来信', desc: data.script || '用富有感情、语速稍慢的英文朗读求救信息。' },
-    { title: '情绪感知', desc: data.scenario || '展示动物轮廓图，引导学生用表情和简单语言回应。' },
-    { title: '发布任务', desc: data.activity || '明确本环节任务，让学生带着目标进入下一步探索。' },
-  ];
-  const titles = ['创设悬念', '朗读来信', '情绪感知', '发布任务'];
+  const labeled = parseLabeledFlowSteps(data.flow, isEn);
+  if (labeled.length) return labeled.map(item => ({ ...item, title: translateFlowTitle(item.title, isEn) }));
+  const parts = splitStepFlowText(data.flow, isEn);
+  const titles = flowTitles[isEn ? 'en' : 'zh'];
+  const defaults = isEn
+    ? [
+        { title: titles[0], desc: data.flow || 'Teacher starts with a mysterious signal, showing an image with animal clues.' },
+        { title: titles[1], desc: data.script || 'Read the rescue message in English with emotion and slightly slower speed.' },
+        { title: titles[2], desc: data.scenario || 'Show animal silhouette images, guide students to respond with expressions and simple language.' },
+        { title: titles[3], desc: data.activity || 'Clarify the task for this section, let students proceed with objectives.' },
+      ]
+    : [
+        { title: titles[0], desc: data.flow || '教师以神秘信号开场，展示一个印有动物线索的画面。' },
+        { title: titles[1], desc: data.script || '用富有感情、语速稍慢的英文朗读求救信息。' },
+        { title: titles[2], desc: data.scenario || '展示动物轮廓图，引导学生用表情和简单语言回应。' },
+        { title: titles[3], desc: data.activity || '明确本环节任务，让学生带着目标进入下一步探索。' },
+      ];
   if (parts.length >= 2) {
     return titles.map((title, index) => ({ title, desc: parts[index] || defaults[index].desc }));
   }
@@ -103,8 +131,8 @@ function pickScriptSegmentsForStep(segments, index) {
   return segments.slice(index * chunkSize, index * chunkSize + chunkSize).slice(0, 2);
 }
 
-export function buildStepExecutionItems(step) {
-  const flowItems = buildStepFlowItems(step);
+export function buildStepExecutionItems(step, isEn = false) {
+  const flowItems = buildStepFlowItems(step, isEn);
   const scriptSegments = extractScriptSegments(step?.teacherScript);
   const defaultLines = [
     { text: '"Listen carefully. I have something special to show you."', cue: '用神秘、轻声的语气开场，展示关键道具或画面。', response: '' },
@@ -128,8 +156,8 @@ export function buildStepExecutionItems(step) {
   }));
 }
 
-export function createFlowStepsForForm(step) {
-  return buildStepFlowItems(step).map((item, index) => ({
+export function createFlowStepsForForm(step, isEn = false) {
+  return buildStepFlowItems(step, isEn).map((item, index) => ({
     title: item.title,
     desc: item.desc,
     teacher: index === 0 ? step?.teacherScript || '' : '',
