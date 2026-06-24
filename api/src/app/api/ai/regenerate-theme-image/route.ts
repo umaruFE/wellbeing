@@ -23,7 +23,10 @@ function enforceTextlessCoverPrompt(prompt: string) {
   return [
     String(prompt || '').trim() || 'Child-friendly classroom course cover illustration.',
     'Create a pure visual illustration only.',
-    'Absolutely no visible text of any language: no Chinese characters, no letters, no numbers, no title, no caption, no labels, no signs, no logo, no watermark, no written whiteboard, no poster text, no speech bubbles.',
+    'The image must be a full-bleed single continuous environment scene, not a comic page, worksheet, presentation slide, UI layout, or template.',
+    'Fill the canvas with scenery, props, paths, plants, stars, icons, and abstract decorative symbols instead of blank areas.',
+    'Absolutely no visible text of any language: no Chinese characters, no letters, no numbers, no title, no caption, no labels, no signs, no logo, no watermark.',
+    'Do not include speech bubbles, dialogue balloons, thought bubbles, comic bubbles, callout bubbles, text boxes, empty caption boxes, blank white panels, white rounded rectangles, empty rounded rectangles, blank boards, blank signs, blank cards, whiteboards, posters, display boards, presentation boards, UI panels, comic panels, frames reserved for text, or any visual container designed to hold text.',
   ].join('\n');
 }
 
