@@ -20,7 +20,9 @@ import {
   AlignRight,
   Palette,
   Clock,
-  Music
+  Music,
+  Maximize2,
+  Crosshair
 } from 'lucide-react';
 import { getAssetIcon } from '../utils';
 
@@ -39,6 +41,8 @@ export const AssetEditorPanel = ({
   onRegenerateAsset,
   generatingAssetId,
   onReferenceUpload,
+  onFitToCanvas,
+  onCenterAsset,
   isRightOpen,
   onToggleRightOpen
 }) => {
@@ -87,6 +91,31 @@ export const AssetEditorPanel = ({
       )}
 
       <div className="flex-1 overflow-y-auto p-5 space-y-6">
+        {(onFitToCanvas || onCenterAsset) && (
+          <div className="grid grid-cols-2 gap-2">
+            {onFitToCanvas && (
+              <button
+                onClick={() => onFitToCanvas(selectedAsset.id)}
+                className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-stroke-light bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
+                title="按原始比例缩放并放回画布"
+              >
+                <Maximize2 className="w-3.5 h-3.5" />
+                适应画布
+              </button>
+            )}
+            {onCenterAsset && (
+              <button
+                onClick={() => onCenterAsset(selectedAsset.id)}
+                className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-stroke-light bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
+                title="保持当前尺寸并移动到画布中央"
+              >
+                <Crosshair className="w-3.5 h-3.5" />
+                居中
+              </button>
+            )}
+          </div>
+        )}
+
         {/* 尺寸和旋转 */}
         <div className="grid grid-cols-3 gap-2">
           <div>

@@ -11,6 +11,7 @@ export const CanvasAssetRenderer = ({
   isEditable,
   onMouseDown,
   onClick, // 添加点击回调
+  onAssetSelect,
   selectedAssetId,
   onCopyAsset,
   onDeleteAsset,
@@ -91,7 +92,7 @@ export const CanvasAssetRenderer = ({
               top: asset.y, 
               width: asset.width || 300, 
               height: asset.height || 200,
-              zIndex: index,
+              zIndex: selectedAssetId === asset.id && isEditable ? 1000 : index,
               transform: `rotate(${asset.rotation || 0}deg)`,
               position: 'absolute'
             }}
@@ -130,10 +131,10 @@ export const CanvasAssetRenderer = ({
             {isEditable && selectedAssetId === asset.id && !isEditing && (
               <>
                 {/* Resize Handles */}
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-nw-resize z-50"></div>
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-ne-resize z-50"></div>
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-sw-resize z-50"></div>
-                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border border-info rounded-full cursor-se-resize z-50"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'nw')} className="absolute -top-2 -left-2 w-4 h-4 bg-white border-2 border-info rounded-full cursor-nw-resize z-50 shadow-sm"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'ne')} className="absolute -top-2 -right-2 w-4 h-4 bg-white border-2 border-info rounded-full cursor-ne-resize z-50 shadow-sm"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'sw')} className="absolute -bottom-2 -left-2 w-4 h-4 bg-white border-2 border-info rounded-full cursor-sw-resize z-50 shadow-sm"></div>
+                <div onMouseDown={(e) => onMouseDown?.(e, asset.id, 'resizing', 'se')} className="absolute -bottom-2 -right-2 w-4 h-4 bg-white border-2 border-info rounded-full cursor-se-resize z-50 shadow-sm"></div>
                 
                 {/* Rotation Handle */}
                 <div 
@@ -474,4 +475,3 @@ const AudioPlayer = ({ url, title }) => {
     </div>
   );
 };
-

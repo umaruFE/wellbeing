@@ -1,5 +1,5 @@
 import { Button, Form, Input, InputNumber, Switch } from 'antd';
-import { History, RotateCcw, X } from 'lucide-react';
+import { History, Maximize2, RotateCcw, X } from 'lucide-react';
 import '../css/PptVideoConfigPanel.css';
 
 function VideoNumberField({ value, unit, onChange }) {
@@ -16,7 +16,8 @@ function VideoNumberField({ value, unit, onChange }) {
   );
 }
 
-export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer }) {
+export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer, onFitLayer }) {
+  const aspectRatio = (Number(selectedLayer.width) || 1) / (Number(selectedLayer.height) || 1);
   return (
     <aside className="ppt-right ppt-video-config-panel">
       <div className="video-panel-head">
@@ -40,15 +41,25 @@ export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLaye
 
         <div className="video-size-grid">
           <Form.Item label="宽">
-            <VideoNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({ width })} />
+            <VideoNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({
+              width,
+              height: Math.round(width / aspectRatio),
+            })} />
           </Form.Item>
           <Form.Item label="高">
-            <VideoNumberField value={selectedLayer.height} unit="px" onChange={(height) => onUpdateLayer({ height })} />
+            <VideoNumberField value={selectedLayer.height} unit="px" onChange={(height) => onUpdateLayer({
+              width: Math.round(height * aspectRatio),
+              height,
+            })} />
           </Form.Item>
           <Form.Item label="旋转">
             <VideoNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
           </Form.Item>
         </div>
+
+        <Button className="video-fit-canvas" icon={<Maximize2 size={15} />} onClick={onFitLayer} block>
+          适应画布并居中
+        </Button>
 
         <div className="video-info-card">
           <div className="video-meta-row"><span>视频类型</span><strong>{selectedLayer.videoMeta?.videoType || '未设置'}</strong></div>

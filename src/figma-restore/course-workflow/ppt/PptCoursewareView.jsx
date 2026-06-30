@@ -8,7 +8,10 @@ import {
   createMediaLayer,
   createTextLayer,
   ensurePptCoverAndInnerPages,
+  fitLayerToSlide,
   hasGeneratedPptContent,
+  PPT_SLIDE_HEIGHT,
+  PPT_SLIDE_WIDTH,
 } from './pptData';
 import { cloneData, findActiveSlide } from './pptUtils';
 import { PptOutline } from './PptOutline';
@@ -63,6 +66,11 @@ export function PptCoursewareView({
   const [course, setCourse] = React.useState(() => (
     ensurePptCoverAndInnerPages(buildInitialPptCourse(initialCourseData), courseMeta)
   ));
+  const courseRef = React.useRef(course);
+  const undoStackRef = React.useRef([]);
+  const redoStackRef = React.useRef([]);
+  const interactionSnapshotRef = React.useRef(null);
+  const [historyAvailability, setHistoryAvailability] = React.useState({ canUndo: false, canRedo: false });
   const hasReportedInitialRef = React.useRef(false);
   const firstSelection = React.useMemo(() => getFirstSelection(course), [course]);
 
@@ -100,6 +108,10 @@ export function PptCoursewareView({
       { language: isChinese ? 'zh' : 'en' }
     );
     hasReportedInitialRef.current = true;
+    courseRef.current = nextCourse;
+    undoStackRef.current = [];
+    redoStackRef.current = [];
+    setHistoryAvailability({ canUndo: false, canRedo: false });
     setCourse(nextCourse);
     applySelection(nextCourse);
     setCanCancelTemplatePicker(false);
@@ -121,11 +133,56 @@ export function PptCoursewareView({
   };
 
   const updateCourse = React.useCallback((recipe) => {
-    setCourse((current) => {
-      const next = cloneData(current);
-      recipe(next);
-      onCourseChange?.(next, { source: 'edit' });
-      return next;
+    const current = courseRef.current;
+    if (!interactionSnapshotRef.current) {
+      undoStackRef.current = [...undoStackRef.current.slice(-49), cloneData(current)];
+      redoStackRef.current = [];
+      setHistoryAvailability({ canUndo: true, canRedo: false });
+    }
+    const next = cloneData(current);
+    recipe(next);
+    courseRef.current = next;
+    setCourse(next);
+    onCourseChange?.(next, { source: 'edit' });
+  }, [onCourseChange]);
+
+  const beginCanvasInteraction = React.useCallback(() => {
+    if (!interactionSnapshotRef.current) {
+      interactionSnapshotRef.current = cloneData(courseRef.current);
+    }
+  }, []);
+
+  const endCanvasInteraction = React.useCallback(() => {
+    if (!interactionSnapshotRef.current) return;
+    undoStackRef.current = [...undoStackRef.current.slice(-49), interactionSnapshotRef.current];
+    redoStackRef.current = [];
+    interactionSnapshotRef.current = null;
+    setHistoryAvailability({ canUndo: true, canRedo: false });
+  }, []);
+
+  const undoCourse = React.useCallback(() => {
+    const previous = undoStackRef.current.pop();
+    if (!previous) return;
+    redoStackRef.current.push(cloneData(courseRef.current));
+    courseRef.current = previous;
+    setCourse(previous);
+    onCourseChange?.(previous, { source: 'edit' });
+    setHistoryAvailability({
+      canUndo: undoStackRef.current.length > 0,
+      canRedo: true,
+    });
+  }, [onCourseChange]);
+
+  const redoCourse = React.useCallback(() => {
+    const next = redoStackRef.current.pop();
+    if (!next) return;
+    undoStackRef.current.push(cloneData(courseRef.current));
+    courseRef.current = next;
+    setCourse(next);
+    onCourseChange?.(next, { source: 'edit' });
+    setHistoryAvailability({
+      canUndo: true,
+      canRedo: redoStackRef.current.length > 0,
     });
   }, [onCourseChange]);
 
@@ -234,7 +291,7 @@ export function PptCoursewareView({
       return;
     }
 
-    const nextLayer = createMediaLayer(type, {
+    const nextLayer = fitLayerToSlide(createMediaLayer(type, {
       x: 88 + count * 18,
       y: 130 + count * 18,
       ...(items[0] ? {
@@ -248,7 +305,7 @@ export function PptCoursewareView({
         prompt: items[0].prompt || patch.prompt,
         raw: items[0].raw,
       } : patch),
-    });
+    }), { center: type === 'image' || type === 'video' });
 
     updateCourse((draft) => {
       const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
@@ -283,7 +340,30 @@ export function PptCoursewareView({
   }, [activePhaseKey, activeStepId, activeSlideId, updateCourse]);
 
   const updateSelectedLayer = (patch) => {
-    if (selectedLayerId) updateLayerById(selectedLayerId, patch);
+    if (!selectedLayerId) return;
+    if (
+      selectedLayer
+      && ['x', 'y', 'width', 'height'].some((field) => Object.prototype.hasOwnProperty.call(patch, field))
+    ) {
+      updateLayerById(selectedLayerId, fitLayerToSlide({ ...selectedLayer, ...patch }));
+      return;
+    }
+    updateLayerById(selectedLayerId, patch);
+  };
+
+  const fitSelectedLayer = () => {
+    if (!selectedLayerId || !selectedLayer) return;
+    updateLayerById(selectedLayerId, fitLayerToSlide(selectedLayer, { center: true }));
+  };
+
+  const centerSelectedLayer = (axis) => {
+    if (!selectedLayerId || !selectedLayer) return;
+    const width = Number(selectedLayer.width) || 300;
+    const height = Number(selectedLayer.height) || 100;
+    const patch = axis === 'horizontal'
+      ? { x: Math.round((PPT_SLIDE_WIDTH - width) / 2) }
+      : { y: Math.round((PPT_SLIDE_HEIGHT - height) / 2) };
+    updateLayerById(selectedLayerId, patch);
   };
 
   const toggleLayerHidden = (layerId) => {
@@ -300,13 +380,13 @@ export function PptCoursewareView({
       const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
       const layer = active.slide?.layers.find((item) => item.id === selectedLayerId);
       if (!layer) return;
-      const copy = {
+      const copy = fitLayerToSlide({
         ...cloneData(layer),
         id: `layer-${Date.now()}`,
         title: `${layer.title || '元素'} 副本`,
         x: (layer.x || 0) + 18,
         y: (layer.y || 0) + 18,
-      };
+      });
       active.slide.layers.push(copy);
       setSelectedLayerId(copy.id);
     });
@@ -320,6 +400,108 @@ export function PptCoursewareView({
     });
     setSelectedLayerId(null);
   };
+
+  const moveLayer = (direction) => {
+    updateCourse((draft) => {
+      const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+      const layers = active.slide?.layers;
+      if (!layers?.length) return;
+      const index = layers.findIndex((layer) => layer.id === selectedLayerId);
+      const nextIndex = direction === 'up' ? index + 1 : index - 1;
+      if (index < 0 || nextIndex < 0 || nextIndex >= layers.length) return;
+      [layers[index], layers[nextIndex]] = [layers[nextIndex], layers[index]];
+    });
+  };
+
+  React.useEffect(() => {
+    const handleKeyDown = (event) => {
+      const target = event.target;
+      if (
+        target instanceof HTMLInputElement
+        || target instanceof HTMLTextAreaElement
+        || target instanceof HTMLSelectElement
+        || target?.isContentEditable
+      ) return;
+
+      const key = event.key.toLowerCase();
+      if ((event.metaKey || event.ctrlKey) && key === 'z') {
+        event.preventDefault();
+        if (event.shiftKey) redoCourse();
+        else undoCourse();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && key === 'y') {
+        event.preventDefault();
+        redoCourse();
+        return;
+      }
+      if (!selectedLayerId || !selectedLayer) return;
+
+      if ((event.metaKey || event.ctrlKey) && key === 'd') {
+        event.preventDefault();
+        updateCourse((draft) => {
+          const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+          const layer = active.slide?.layers.find((item) => item.id === selectedLayerId);
+          if (!layer) return;
+          const copy = fitLayerToSlide({
+            ...cloneData(layer),
+            id: `layer-${Date.now()}`,
+            title: `${layer.title || '元素'} 副本`,
+            x: (layer.x || 0) + 18,
+            y: (layer.y || 0) + 18,
+          });
+          active.slide.layers.push(copy);
+          setSelectedLayerId(copy.id);
+        });
+        return;
+      }
+
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        event.preventDefault();
+        updateCourse((draft) => {
+          const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+          if (active.slide) {
+            active.slide.layers = active.slide.layers.filter((layer) => layer.id !== selectedLayerId);
+          }
+        });
+        setSelectedLayerId(null);
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        setSelectedLayerId(null);
+        return;
+      }
+
+      const directions = {
+        ArrowLeft: [-1, 0],
+        ArrowRight: [1, 0],
+        ArrowUp: [0, -1],
+        ArrowDown: [0, 1],
+      };
+      const direction = directions[event.key];
+      if (direction) {
+        event.preventDefault();
+        const distance = event.shiftKey ? 10 : 1;
+        const x = Math.min(Math.max((selectedLayer.x || 0) + direction[0] * distance, 0), PPT_SLIDE_WIDTH - selectedLayer.width);
+        const y = Math.min(Math.max((selectedLayer.y || 0) + direction[1] * distance, 0), PPT_SLIDE_HEIGHT - selectedLayer.height);
+        updateLayerById(selectedLayerId, { x: Math.round(x), y: Math.round(y) });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    activePhaseKey,
+    activeSlideId,
+    activeStepId,
+    redoCourse,
+    selectedLayer,
+    selectedLayerId,
+    undoCourse,
+    updateCourse,
+    updateLayerById,
+  ]);
 
   if (mode === 'template') {
     const stepCount = course.reduce((sum, phase) => sum + (phase.steps?.length || 0), 0);
@@ -423,6 +605,13 @@ export function PptCoursewareView({
         onUpdateLayer={updateLayerById}
         onDuplicateLayer={duplicateLayer}
         onDeleteLayer={deleteLayer}
+        onMoveLayer={moveLayer}
+        onUndo={undoCourse}
+        onRedo={redoCourse}
+        canUndo={historyAvailability.canUndo}
+        canRedo={historyAvailability.canRedo}
+        onInteractionStart={beginCanvasInteraction}
+        onInteractionEnd={endCanvasInteraction}
         saveStatus={saveStatus}
         saveText={saveText}
         onChangeStyle={returnToTemplatePicker}
@@ -435,6 +624,8 @@ export function PptCoursewareView({
         onSelectLayer={setSelectedLayerId}
         onUpdateSlide={updateSlide}
         onUpdateLayer={updateSelectedLayer}
+        onFitLayer={fitSelectedLayer}
+        onCenterLayer={centerSelectedLayer}
         onToggleLayerHidden={toggleLayerHidden}
         onDuplicateLayer={duplicateLayer}
         onDeleteLayer={deleteLayer}

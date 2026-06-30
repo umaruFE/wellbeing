@@ -8,6 +8,10 @@
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
+#ed-ppt .ppt-text-config-panel .text-dim-grid.is-three-columns {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 #ed-ppt .ppt-text-config-panel .text-style-grid {
   grid-template-columns: minmax(0, 1fr) 80px;
 }
@@ -49,6 +53,41 @@
 #ed-ppt .ppt-text-config-panel .text-segment .ant-radio-button-wrapper-checked {
   background: #ede9e3;
   color: #253142;
+}
+
+#ed-ppt .ppt-text-config-panel .text-style-toggles button {
+  min-width: 0;
+  border: 0;
+  border-right: 1px solid #e4dfd7;
+  background: #fff;
+  color: #8a94a4;
+  cursor: pointer;
+}
+
+#ed-ppt .ppt-text-config-panel .text-style-toggles button:last-child {
+  border-right: 0;
+}
+
+#ed-ppt .ppt-text-config-panel .text-style-toggles button.is-active {
+  background: #ede9e3;
+  color: #253142;
+}
+
+#ed-ppt .ppt-text-config-panel .text-spacing-grid {
+  display: grid;
+  grid-template-columns: 72px 88px minmax(0, 1fr);
+  gap: 12px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding-bottom: 20px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-quick-actions .text-fit-content-action {
+  grid-column: 1 / -1;
 }
 
 #ed-ppt .ppt-text-config-panel .text-color-field {

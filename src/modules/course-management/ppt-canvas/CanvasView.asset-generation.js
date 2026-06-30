@@ -10,6 +10,16 @@ import { aiAssetService } from '../../../services/aiAssetService';
 import { promptHistoryService, promptOptimizationService } from '../../../services/promptService';
 import { optimizePrompt } from '../../../services/dashscope';
 
+const fitMediaSizeToCanvas = (width, height, maxWidth = 864, maxHeight = 486) => {
+  const safeWidth = Math.max(1, Number(width) || 300);
+  const safeHeight = Math.max(1, Number(height) || 200);
+  const ratio = Math.min(maxWidth / safeWidth, maxHeight / safeHeight, 1);
+  return {
+    width: Math.round(safeWidth * ratio),
+    height: Math.round(safeHeight * ratio)
+  };
+};
+
 /**
  * 处理确认添加资产
  * @param {string} prompt - 提示词
@@ -131,8 +141,12 @@ export const handleConfirmAddAsset = async (
           ? '生成一段适合作为课堂背景音乐的音频'
           : '生成一段教学文本内容');
 
+  let effectivePrompt = basePrompt;
+  let w = 300;
+  let h = 200;
+
   try {
-    let effectivePrompt = basePrompt;
+    effectivePrompt = basePrompt;
 
     // 1) 先做提示词优化（调用大模型与优化服务）
     // 注意：音频类型不使用优化后的提示词，因为HeartMuLa更适合简洁的tags
@@ -188,8 +202,8 @@ export const handleConfirmAddAsset = async (
       currentStep.canvasAssets = [];
     }
 
-    let w = 300;
-    let h = 200;
+    w = 300;
+    h = 200;
     if (typeof imageSize === 'string' && imageSize.includes('x')) {
       const [pw, ph] = imageSize.split('x').map(Number);
       if (pw && ph) { w = pw; h = ph; }
@@ -575,6 +589,9 @@ export const handleConfirmAddAsset = async (
       ? `AI生成：${basePrompt.substring(0, 15)}...`
       : `New ${type}`;
 
+    const canvasSize = type === 'image' || type === 'video'
+      ? fitMediaSizeToCanvas(w, h)
+      : { width: w, height: h };
     const newAsset = {
       id: Date.now().toString(),
       type,
@@ -584,10 +601,10 @@ export const handleConfirmAddAsset = async (
       prompt: effectivePrompt,
       referenceImage: null,
       videoStyle: type === 'video' ? (videoStyle || 'realistic') : null,
-      x: 100,
-      y: 100,
-      width: w,
-      height: h,
+      x: Math.round((960 - canvasSize.width) / 2),
+      y: Math.round((540 - canvasSize.height) / 2),
+      width: canvasSize.width,
+      height: canvasSize.height,
       rotation: 0
     };
 
@@ -726,8 +743,8 @@ export const handleConfirmAddVideoAsset = (videoData, activePhase, activeStepId,
     prompt: videoData.description || '',
     referenceImage: null,
     videoStyle: selectedStyle,
-    x: 100,
-    y: 100,
+    x: Math.round((960 - w) / 2),
+    y: Math.round((540 - h) / 2),
     width: w,
     height: h,
     rotation: 0,
@@ -836,8 +853,8 @@ export const handleCardSelectionConfirm = (selectedImage, pendingAssetConfig, ac
   let finalWidth = w || 300;
   let finalHeight = h || 200;
   
-  // 如果是图片类型，根据最大尺寸进行缩放
-  if (type === 'image' && (finalWidth > maxWidth || finalHeight > maxHeight)) {
+  // 图片和视频都按原始比例限制在画布安全区内
+  if ((type === 'image' || type === 'video') && (finalWidth > maxWidth || finalHeight > maxHeight)) {
     const ratio = Math.min(maxWidth / finalWidth, maxHeight / finalHeight);
     finalWidth = Math.round(finalWidth * ratio);
     finalHeight = Math.round(finalHeight * ratio);

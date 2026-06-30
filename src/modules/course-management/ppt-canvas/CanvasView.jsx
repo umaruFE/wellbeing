@@ -33,7 +33,10 @@ import {
   FileCheck,
   MessageSquare,
   Check,
-  Mic
+  Mic,
+  ZoomIn,
+  ZoomOut,
+  Scan
 } from 'lucide-react';
 import pptxgen from 'pptxgenjs';
 import { SlideRenderer } from '../../../components/SlideRenderer';
@@ -77,6 +80,11 @@ const colors = {
     light: '#FDECE8',
   },
 };
+
+const CANVAS_WIDTH = 960;
+const CANVAS_HEIGHT = 540;
+const MIN_ASSET_SIZE = 50;
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const { user } = useAuth();
@@ -303,6 +311,9 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const [interactionMode, setInteractionMode] = useState('idle');
   const [interactionStart, setInteractionStart] = useState(null); 
   const canvasRef = useRef(null);
+  const canvasViewportRef = useRef(null);
+  const [canvasZoom, setCanvasZoom] = useState(1);
+  const [isAutoFitZoom, setIsAutoFitZoom] = useState(true);
 
   // 撤销/重做功能
   const [history, setHistory] = useState([JSON.parse(JSON.stringify(initialConfig?.courseData || {}))]);
@@ -419,7 +430,10 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   // Derived State
   const currentPhaseData = getPhaseData(activePhase);
   const currentStep = (currentPhaseData?.steps || currentPhaseData?.slides)?.find(s => s.id === activeStepId) || (currentPhaseData?.steps || currentPhaseData?.slides)?.[0];
-  const selectedAsset = selectedAssetId && currentStep ? (currentStep.assets || currentStep.canvasAssets || []).find(a => a.id === selectedAssetId) : null;
+  const currentCanvasAssets = currentStep
+    ? ((currentStep.canvasAssets?.length ? currentStep.canvasAssets : currentStep.assets) || [])
+    : [];
+  const selectedAsset = selectedAssetId ? currentCanvasAssets.find(a => a.id === selectedAssetId) : null;
 
   const allSteps = getPhaseKeys().flatMap(phaseKey => {
     const phase = getPhaseData(phaseKey);
@@ -433,6 +447,26 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
   const selectedTemplateRef = React.useRef(selectedTemplate);
   selectedTemplateRef.current = selectedTemplate;
   const currentGlobalIndex = allSteps.findIndex(s => s.id === activeStepId);
+
+  const fitCanvasToViewport = React.useCallback(() => {
+    const viewport = canvasViewportRef.current;
+    if (!viewport) return;
+    const availableWidth = Math.max(320, viewport.clientWidth - 64);
+    const availableHeight = Math.max(240, viewport.clientHeight - 64);
+    const nextZoom = clamp(Math.min(availableWidth / CANVAS_WIDTH, availableHeight / CANVAS_HEIGHT), 0.45, 1);
+    setCanvasZoom(Number(nextZoom.toFixed(2)));
+  }, []);
+
+  useEffect(() => {
+    const viewport = canvasViewportRef.current;
+    if (!viewport || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      if (isAutoFitZoom) fitCanvasToViewport();
+    });
+    observer.observe(viewport);
+    fitCanvasToViewport();
+    return () => observer.disconnect();
+  }, [fitCanvasToViewport, isAutoFitZoom]);
 
   useEffect(() => {
     const handleSave = async () => {
@@ -838,6 +872,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     if (!step) return;
 
     const assetType = type === 'audio' ? 'audio' : type;
+    const assetWidth = assetType === 'audio' ? 300 : 400;
+    const assetHeight = assetType === 'audio' ? 100 : 300;
     const newAsset = {
       id: Date.now().toString(),
       type: assetType,
@@ -846,9 +882,10 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       content: '',
       prompt: '',
       referenceImage: null,
-      x: 50, y: 50,
-      width: assetType === 'audio' ? 300 : 400,
-      height: assetType === 'audio' ? 100 : 300,
+      x: Math.round((CANVAS_WIDTH - assetWidth) / 2),
+      y: Math.round((CANVAS_HEIGHT - assetHeight) / 2),
+      width: assetWidth,
+      height: assetHeight,
       rotation: 0
     };
     if (!step.assets) step.assets = [];
@@ -878,6 +915,55 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
       if (targetStep.phaseKey) setActivePhase(targetStep.phaseKey);
       setActiveStepId(targetStep.id);
     }
+  };
+
+  const updateAssetLayout = (assetId, layoutUpdater) => {
+    const newCourseData = JSON.parse(JSON.stringify(courseData));
+    const phase = Array.isArray(newCourseData)
+      ? newCourseData.find(p => p.id === activePhase)
+      : newCourseData[activePhase];
+    const step = (phase?.steps || phase?.slides)?.find(s => s.id === activeStepId);
+    if (!step) return;
+
+    let nextLayout = null;
+    ['assets', 'canvasAssets', 'elements'].forEach(key => {
+      if (!Array.isArray(step[key])) return;
+      step[key] = step[key].map(asset => {
+        if (asset.id !== assetId) return asset;
+        if (!nextLayout) nextLayout = layoutUpdater(asset);
+        return { ...asset, ...nextLayout };
+      });
+    });
+    if (!nextLayout) return;
+    setCourseData(newCourseData);
+    saveToHistory(newCourseData, history, historyIndex, setHistory, setHistoryIndex);
+  };
+
+  const handleFitAssetToCanvas = (assetId) => {
+    updateAssetLayout(assetId, asset => {
+      const width = Math.max(MIN_ASSET_SIZE, Number(asset.width) || 300);
+      const height = Math.max(MIN_ASSET_SIZE, Number(asset.height) || 200);
+      const ratio = Math.min((CANVAS_WIDTH * 0.9) / width, (CANVAS_HEIGHT * 0.9) / height, 1);
+      const nextWidth = Math.round(width * ratio);
+      const nextHeight = Math.round(height * ratio);
+      return {
+        width: nextWidth,
+        height: nextHeight,
+        x: Math.round((CANVAS_WIDTH - nextWidth) / 2),
+        y: Math.round((CANVAS_HEIGHT - nextHeight) / 2)
+      };
+    });
+  };
+
+  const handleCenterAsset = (assetId) => {
+    updateAssetLayout(assetId, asset => {
+      const width = Number(asset.width) || 300;
+      const height = Number(asset.height) || 200;
+      return {
+        x: Math.round((CANVAS_WIDTH - width) / 2),
+        y: Math.round((CANVAS_HEIGHT - height) / 2)
+      };
+    });
   };
 
   const handleMouseDown = (e, assetId, mode = 'dragging', handleType = null) => {
@@ -919,25 +1005,54 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
     if (!step) return;
     const activeAsset = step.assets?.find(a => a.id === selectedAssetId) || step.canvasAssets?.find(a => a.id === selectedAssetId) || step.elements?.find(a => a.id === selectedAssetId);
     if (!activeAsset) return;
-    const deltaX = e.clientX - interactionStart.startX;
-    const deltaY = e.clientY - interactionStart.startY;
+    const visualScale = interactionStart.rect.width / CANVAS_WIDTH || 1;
+    const deltaX = (e.clientX - interactionStart.startX) / visualScale;
+    const deltaY = (e.clientY - interactionStart.startY) / visualScale;
+    let nextLayout = {};
 
     if (interactionMode === 'dragging') {
-        activeAsset.x = interactionStart.initialX + deltaX;
-        activeAsset.y = interactionStart.initialY + deltaY;
+        const minX = Math.min(0, CANVAS_WIDTH - interactionStart.initialW);
+        const maxX = Math.max(0, CANVAS_WIDTH - interactionStart.initialW);
+        const minY = Math.min(0, CANVAS_HEIGHT - interactionStart.initialH);
+        const maxY = Math.max(0, CANVAS_HEIGHT - interactionStart.initialH);
+        nextLayout.x = clamp(interactionStart.initialX + deltaX, minX, maxX);
+        nextLayout.y = clamp(interactionStart.initialY + deltaY, minY, maxY);
     } else if (interactionMode === 'resizing') {
         const { handleType, initialW, initialH, initialX, initialY } = interactionStart;
-        if (handleType === 'se') { activeAsset.width = Math.max(50, initialW + deltaX); activeAsset.height = Math.max(50, initialH + deltaY); }
-        else if (handleType === 'sw') { activeAsset.width = Math.max(50, initialW - deltaX); activeAsset.x = initialX + deltaX; activeAsset.height = Math.max(50, initialH + deltaY); }
-        else if (handleType === 'ne') { activeAsset.width = Math.max(50, initialW + deltaX); activeAsset.height = Math.max(50, initialH - deltaY); activeAsset.y = initialY + deltaY; }
-        else if (handleType === 'nw') { activeAsset.width = Math.max(50, initialW - deltaX); activeAsset.x = initialX + deltaX; activeAsset.height = Math.max(50, initialH - deltaY); activeAsset.y = initialY + deltaY; }
+        const isMedia = activeAsset.type === 'image' || activeAsset.type === 'video';
+        const aspectRatio = initialW / initialH;
+        let width = handleType.includes('w') ? initialW - deltaX : initialW + deltaX;
+        let height = handleType.includes('n') ? initialH - deltaY : initialH + deltaY;
+
+        if (isMedia) {
+          if (Math.abs(deltaX) >= Math.abs(deltaY * aspectRatio)) {
+            height = width / aspectRatio;
+          } else {
+            width = height * aspectRatio;
+          }
+        }
+
+        const maxWidth = handleType.includes('w') ? initialX + initialW : CANVAS_WIDTH - initialX;
+        const maxHeight = handleType.includes('n') ? initialY + initialH : CANVAS_HEIGHT - initialY;
+        const sizeScale = Math.min(1, maxWidth / width, maxHeight / height);
+        width = clamp(width * sizeScale, MIN_ASSET_SIZE, maxWidth);
+        height = clamp(height * sizeScale, MIN_ASSET_SIZE, maxHeight);
+        nextLayout.width = width;
+        nextLayout.height = height;
+        nextLayout.x = handleType.includes('w') ? initialX + initialW - width : initialX;
+        nextLayout.y = handleType.includes('n') ? initialY + initialH - height : initialY;
     } else if (interactionMode === 'rotating') {
         const rect = interactionStart.rect;
-        const centerX = rect.left + interactionStart.initialX + interactionStart.initialW / 2;
-        const centerY = rect.top + interactionStart.initialY + interactionStart.initialH / 2;
+        const centerX = rect.left + (interactionStart.initialX + interactionStart.initialW / 2) * visualScale;
+        const centerY = rect.top + (interactionStart.initialY + interactionStart.initialH / 2) * visualScale;
         const angleRad = Math.atan2(e.clientY - centerY, e.clientX - centerX);
-        activeAsset.rotation = (angleRad * 180 / Math.PI) + 90;
+        nextLayout.rotation = (angleRad * 180 / Math.PI) + 90;
     }
+
+    ['assets', 'canvasAssets', 'elements'].forEach(key => {
+      if (!Array.isArray(step[key])) return;
+      step[key] = step[key].map(asset => asset.id === selectedAssetId ? { ...asset, ...nextLayout } : asset);
+    });
     setCourseData(newCourseData);
   };
 
@@ -1168,32 +1283,99 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         />
 
         {/* Canvas */}
-        <div 
-          className="flex-1 overflow-auto relative"
-          onClick={handleCanvasClick}
-        >
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
-          <div style={{ minWidth: 1024, minHeight: 620, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem', boxSizing: 'border-box' }}>
-          <div ref={canvasRef} className="w-[960px] h-[540px] shrink-0 bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group transition-transform duration-200" style={selectedTemplate && currentStep ? getTemplateStyleForStep(selectedTemplate, currentStep, allSteps).backgroundStyle : undefined}>
-            <SlideRenderer
-              assets={currentStep?.assets || currentStep?.canvasAssets || []}
-              isEditable={true}
-              onMouseDown={handleMouseDown}
-              onClick={(assetId) => {
-                setSelectedAssetId(assetId);
-                setIsRightOpen(true);
+        <div className="flex-1 relative overflow-hidden">
+          <div
+            ref={canvasViewportRef}
+            className="absolute inset-0 overflow-auto"
+            onClick={handleCanvasClick}
+          >
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none"></div>
+            <div
+              style={{
+                width: `max(100%, ${CANVAS_WIDTH * canvasZoom + 64}px)`,
+                height: `max(100%, ${CANVAS_HEIGHT * canvasZoom + 64}px)`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxSizing: 'border-box'
               }}
-              selectedAssetId={selectedAssetId}
-              onCopyAsset={(assetId) => handleCopyAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setSelectedAssetId)}
-              onDeleteAsset={(assetId) => handleDeleteAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setSelectedAssetId)}
-              onAssetChange={(assetId, field, value) => handleAssetChange(assetId, field, value, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
-              editingTextAssetId={editingTextAssetId}
-              onEditingTextAssetIdChange={setEditingTextAssetId}
-              editingTextContent={editingTextContent}
-              onEditingTextContentChange={setEditingTextContent}
-              onCanvasClick={handleCanvasClick}
-            />
+            >
+              <div style={{ width: CANVAS_WIDTH * canvasZoom, height: CANVAS_HEIGHT * canvasZoom, flex: 'none' }}>
+                <div
+                  ref={canvasRef}
+                  className="w-[960px] h-[540px] bg-white shadow-2xl rounded-sm relative overflow-hidden ring-1 ring-slate-900/5 group"
+                  style={{
+                    ...(selectedTemplate && currentStep ? getTemplateStyleForStep(selectedTemplate, currentStep, allSteps).backgroundStyle : undefined),
+                    transform: `scale(${canvasZoom})`,
+                    transformOrigin: 'top left'
+                  }}
+                >
+                  <SlideRenderer
+                    assets={(currentStep?.canvasAssets?.length ? currentStep.canvasAssets : currentStep?.assets) || []}
+                    isEditable={true}
+                    onMouseDown={handleMouseDown}
+                    onClick={(assetId) => {
+                      setSelectedAssetId(assetId);
+                      setIsRightOpen(true);
+                    }}
+                    onAssetSelect={setSelectedAssetId}
+                    selectedAssetId={selectedAssetId}
+                    onCopyAsset={(assetId) => handleCopyAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setSelectedAssetId)}
+                    onDeleteAsset={(assetId) => handleDeleteAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setSelectedAssetId)}
+                    onAssetChange={(assetId, field, value) => handleAssetChange(assetId, field, value, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
+                    editingTextAssetId={editingTextAssetId}
+                    onEditingTextAssetIdChange={setEditingTextAssetId}
+                    editingTextContent={editingTextContent}
+                    onEditingTextContentChange={setEditingTextContent}
+                    onCanvasClick={handleCanvasClick}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
+          <div className="absolute right-4 bottom-4 z-30 flex items-center gap-1 rounded-xl border border-stroke-light bg-white/95 p-1 shadow-lg backdrop-blur">
+            <button
+              onClick={() => {
+                setIsAutoFitZoom(false);
+                setCanvasZoom(value => clamp(Number((value - 0.1).toFixed(2)), 0.45, 1.5));
+              }}
+              className="p-2 rounded-lg text-primary-secondary hover:bg-surface-alt disabled:opacity-40"
+              disabled={canvasZoom <= 0.45}
+              title="缩小画布"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setIsAutoFitZoom(true);
+                fitCanvasToViewport();
+              }}
+              className="min-w-14 px-2 py-1.5 rounded-lg text-xs font-bold text-primary-secondary hover:bg-surface-alt"
+              title="适应当前窗口"
+            >
+              {Math.round(canvasZoom * 100)}%
+            </button>
+            <button
+              onClick={() => {
+                setIsAutoFitZoom(false);
+                setCanvasZoom(value => clamp(Number((value + 0.1).toFixed(2)), 0.45, 1.5));
+              }}
+              className="p-2 rounded-lg text-primary-secondary hover:bg-surface-alt disabled:opacity-40"
+              disabled={canvasZoom >= 1.5}
+              title="放大画布"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => {
+                setIsAutoFitZoom(true);
+                fitCanvasToViewport();
+              }}
+              className="p-2 rounded-lg text-primary-secondary hover:bg-surface-alt"
+              title="适应窗口"
+            >
+              <Scan className="w-4 h-4" />
+            </button>
           </div>
           {/* {activeStepId && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30" style={{left: '58%'}}>
@@ -1284,6 +1466,8 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
                  onRegenerateAsset={(assetId) => handleRegenerateAsset(assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex), setGeneratingAssetId, user, saveGenerationHistory)}
                  generatingAssetId={generatingAssetId}
                  onReferenceUpload={(e, assetId) => handleReferenceUpload(e, assetId, activePhase, activeStepId, courseData, setCourseData, () => saveToHistory(courseData, history, historyIndex, setHistory, setHistoryIndex))}
+                 onFitToCanvas={handleFitAssetToCanvas}
+                 onCenterAsset={handleCenterAsset}
                  isRightOpen={isRightOpen}
                  onToggleRightOpen={() => setIsRightOpen(false)}
                />

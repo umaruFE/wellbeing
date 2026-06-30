@@ -1,5 +1,5 @@
 import { Button, Form, Input, InputNumber } from 'antd';
-import { History, RotateCcw, Sparkles, Upload, X } from 'lucide-react';
+import { History, Maximize2, RotateCcw, Sparkles, Upload, X } from 'lucide-react';
 import '../css/PptImageConfigPanel.css';
 
 function ImageNumberField({ value, unit, onChange }) {
@@ -20,8 +20,10 @@ export function PptImageConfigPanel({
   selectedLayer,
   onSelectLayer,
   onUpdateLayer,
+  onFitLayer,
 }) {
   const prompt = selectedLayer.prompt || selectedLayer.imageMeta?.prompt || '';
+  const aspectRatio = (Number(selectedLayer.width) || 1) / (Number(selectedLayer.height) || 1);
 
   return (
     <aside className="ppt-right ppt-image-config-panel">
@@ -47,15 +49,25 @@ export function PptImageConfigPanel({
 
         <div className="image-size-grid">
           <Form.Item label="宽">
-            <ImageNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({ width })} />
+            <ImageNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({
+              width,
+              height: Math.round(width / aspectRatio),
+            })} />
           </Form.Item>
           <Form.Item label="高">
-            <ImageNumberField value={selectedLayer.height} unit="px" onChange={(height) => onUpdateLayer({ height })} />
+            <ImageNumberField value={selectedLayer.height} unit="px" onChange={(height) => onUpdateLayer({
+              width: Math.round(height * aspectRatio),
+              height,
+            })} />
           </Form.Item>
           <Form.Item label="旋转">
             <ImageNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
           </Form.Item>
         </div>
+
+        <Button className="image-fit-canvas" icon={<Maximize2 size={15} />} onClick={onFitLayer} block>
+          适应画布并居中
+        </Button>
 
         <button className="image-replace-drop" type="button">
           <Upload size={15} />

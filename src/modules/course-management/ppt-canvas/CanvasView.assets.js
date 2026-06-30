@@ -17,6 +17,21 @@
  * @param {Function} setCourseData - 更新课程数据的函数
  * @param {Function} saveToHistory - 保存历史记录的函数
  */
+const updateAssetInCollections = (step, assetId, updater) => {
+  let updated = false;
+  ['assets', 'canvasAssets', 'elements'].forEach(key => {
+    if (!Array.isArray(step[key])) return;
+    step[key] = step[key].map(asset => {
+      if (asset.id !== assetId) return asset;
+      updated = true;
+      const nextAsset = { ...asset };
+      updater(nextAsset);
+      return nextAsset;
+    });
+  });
+  return updated;
+};
+
 export const handleAssetChange = (assetId, field, value, activePhase, activeStepId, courseData, setCourseData, saveToHistory) => {
   const newCourseData = JSON.parse(JSON.stringify(courseData));
   
@@ -32,9 +47,9 @@ export const handleAssetChange = (assetId, field, value, activePhase, activeStep
   
   const step = stepsOrSlides.find(s => s.id === activeStepId);
   if (!step) return;
-  const asset = step.assets?.find(a => a.id === assetId) || step.canvasAssets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
-  if (asset) {
+  if (updateAssetInCollections(step, assetId, asset => {
     asset[field] = value;
+  })) {
     setCourseData(newCourseData);
     if (saveToHistory) saveToHistory();
   }
@@ -242,9 +257,9 @@ export const handleReferenceUpload = (e, assetId, activePhase, activeStepId, cou
       
       const step = stepsOrSlides.find(s => s.id === activeStepId);
       if (!step) return;
-      const asset = step.assets?.find(a => a.id === assetId) || step.canvasAssets?.find(a => a.id === assetId) || step.elements?.find(a => a.id === assetId);
-      if (asset) {
+      if (updateAssetInCollections(step, assetId, asset => {
         asset.referenceImage = reader.result;
+      })) {
         setCourseData(newCourseData);
         if (saveToHistory) saveToHistory();
       }

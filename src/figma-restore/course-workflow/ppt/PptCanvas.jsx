@@ -2,18 +2,61 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ArrowDown, ArrowUp, Copy, Image, Maximize2, Minus, Music, Palette, Plus, Redo2, RotateCw, Trash2, Type, Undo2, Video } from 'lucide-react';
 import { PptDemoScene } from './PptDemoScene';
+import { PPT_SLIDE_HEIGHT, PPT_SLIDE_WIDTH } from './pptData';
 import './css/PptCanvas.css';
 
-const SLIDE_WIDTH = 940;
-const SLIDE_HEIGHT = 529;
+const SLIDE_WIDTH = PPT_SLIDE_WIDTH;
+const SLIDE_HEIGHT = PPT_SLIDE_HEIGHT;
 const MIN_LAYER_SIZE = 28;
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
 
-function LayerContent({ layer, t }) {
+function LayerContent({
+  layer,
+  t,
+  isEditing,
+  editingText,
+  onEditingTextChange,
+  onCommitEditing,
+  onCancelEditing,
+}) {
   if (layer.type === 'text') {
+    if (isEditing) {
+      return (
+        <textarea
+          className="ppt-layer-text ppt-layer-text-editor"
+          value={editingText}
+          onChange={(event) => onEditingTextChange(event.target.value)}
+          onBlur={onCommitEditing}
+          onPointerDown={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              onCancelEditing();
+            } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+              event.preventDefault();
+              onCommitEditing();
+            }
+          }}
+          style={{
+            fontSize: layer.fontSize,
+            fontFamily: layer.fontFamily,
+            fontWeight: layer.fontWeight,
+            fontStyle: layer.fontStyle,
+            textDecoration: layer.textDecoration,
+            color: layer.color,
+            textAlign: layer.textAlign,
+            lineHeight: layer.lineHeight || 1.16,
+            letterSpacing: `${Number(layer.letterSpacing) || 0}px`,
+          }}
+          autoFocus
+        />
+      );
+    }
+
     return (
       <div
         className="ppt-layer-text"
@@ -25,6 +68,13 @@ function LayerContent({ layer, t }) {
           textDecoration: layer.textDecoration,
           color: layer.color,
           textAlign: layer.textAlign,
+          lineHeight: layer.lineHeight || 1.16,
+          letterSpacing: `${Number(layer.letterSpacing) || 0}px`,
+          alignItems: layer.verticalAlign === 'top'
+            ? 'flex-start'
+            : layer.verticalAlign === 'bottom'
+              ? 'flex-end'
+              : 'center',
           WebkitTextStroke: `${Number(layer.strokeWidth) || 0}px ${layer.strokeColor || 'transparent'}`,
         }}
       >
@@ -90,14 +140,46 @@ export function PptCanvas({
   onUpdateLayer,
   onDuplicateLayer,
   onDeleteLayer,
+  onMoveLayer,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
+  onInteractionStart,
+  onInteractionEnd,
   saveStatus = 'saved',
   saveText = '',
   onChangeStyle,
 }) {
   const { t } = useTranslation();
   const slideRef = React.useRef(null);
+  const scrollRef = React.useRef(null);
   const dragRef = React.useRef(null);
+  const cancelEditingRef = React.useRef(false);
   const [zoom, setZoom] = React.useState(68);
+  const [autoFitZoom, setAutoFitZoom] = React.useState(true);
+  const [editingLayerId, setEditingLayerId] = React.useState(null);
+  const [editingText, setEditingText] = React.useState('');
+  const [snapGuides, setSnapGuides] = React.useState({ x: null, y: null });
+
+  const fitZoomToWindow = React.useCallback(() => {
+    const viewport = scrollRef.current;
+    if (!viewport) return;
+    const widthZoom = ((viewport.clientWidth - 64) / SLIDE_WIDTH) * 100;
+    const heightZoom = ((viewport.clientHeight - 150) / SLIDE_HEIGHT) * 100;
+    setZoom(Math.round(clamp(Math.min(widthZoom, heightZoom), 35, 100)));
+  }, []);
+
+  React.useEffect(() => {
+    const viewport = scrollRef.current;
+    if (!viewport || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      if (autoFitZoom) fitZoomToWindow();
+    });
+    observer.observe(viewport);
+    fitZoomToWindow();
+    return () => observer.disconnect();
+  }, [autoFitZoom, fitZoomToWindow]);
 
   const getPoint = React.useCallback((event) => {
     const rect = slideRef.current?.getBoundingClientRect();
@@ -109,6 +191,10 @@ export function PptCanvas({
   }, []);
 
   const beginMove = (event, layer) => {
+    if (event.target.closest('video, audio, input, button')) {
+      onSelectLayer(layer.id);
+      return;
+    }
     event.preventDefault();
     event.stopPropagation();
     onSelectLayer(layer.id);
@@ -119,6 +205,7 @@ export function PptCanvas({
       startX: point.x,
       startY: point.y,
       origin: { x: layer.x || 0, y: layer.y || 0 },
+      started: false,
     };
   };
 
@@ -139,6 +226,7 @@ export function PptCanvas({
         width: layer.width || MIN_LAYER_SIZE,
         height: layer.height || MIN_LAYER_SIZE,
       },
+      started: false,
     };
   };
 
@@ -150,13 +238,17 @@ export function PptCanvas({
     if (!rect) return;
     const centerX = rect.left + ((layer.x || 0) + (layer.width || 0) / 2) * (rect.width / SLIDE_WIDTH);
     const centerY = rect.top + ((layer.y || 0) + (layer.height || 0) / 2) * (rect.height / SLIDE_HEIGHT);
-    dragRef.current = { type: 'rotate', layer, centerX, centerY };
+    dragRef.current = { type: 'rotate', layer, centerX, centerY, started: false };
   };
 
   React.useEffect(() => {
     const handlePointerMove = (event) => {
       const drag = dragRef.current;
       if (!drag) return;
+      if (!drag.started) {
+        drag.started = true;
+        onInteractionStart?.();
+      }
 
       if (drag.type === 'rotate') {
         const angle = Math.atan2(event.clientY - drag.centerY, event.clientX - drag.centerX) * (180 / Math.PI) + 90;
@@ -169,9 +261,39 @@ export function PptCanvas({
       const dy = point.y - drag.startY;
 
       if (drag.type === 'move') {
+        const width = drag.layer.width || MIN_LAYER_SIZE;
+        const height = drag.layer.height || MIN_LAYER_SIZE;
+        let x = clamp(drag.origin.x + dx, 0, SLIDE_WIDTH - width);
+        let y = clamp(drag.origin.y + dy, 0, SLIDE_HEIGHT - height);
+        const xAnchors = [0, SLIDE_WIDTH / 2, SLIDE_WIDTH];
+        const yAnchors = [0, SLIDE_HEIGHT / 2, SLIDE_HEIGHT];
+        (slide?.layers || []).forEach((layer) => {
+          if (layer.id === drag.layer.id || layer.hidden) return;
+          xAnchors.push(layer.x || 0, (layer.x || 0) + (layer.width || 0) / 2, (layer.x || 0) + (layer.width || 0));
+          yAnchors.push(layer.y || 0, (layer.y || 0) + (layer.height || 0) / 2, (layer.y || 0) + (layer.height || 0));
+        });
+
+        const snapAxis = (position, size, anchors) => {
+          const points = [position, position + size / 2, position + size];
+          let closest = null;
+          points.forEach((point) => {
+            anchors.forEach((anchor) => {
+              const distance = anchor - point;
+              if (Math.abs(distance) <= 6 && (!closest || Math.abs(distance) < Math.abs(closest.distance))) {
+                closest = { distance, anchor };
+              }
+            });
+          });
+          return closest;
+        };
+        const xSnap = snapAxis(x, width, xAnchors);
+        const ySnap = snapAxis(y, height, yAnchors);
+        if (xSnap) x += xSnap.distance;
+        if (ySnap) y += ySnap.distance;
+        setSnapGuides({ x: xSnap?.anchor ?? null, y: ySnap?.anchor ?? null });
         onUpdateLayer(drag.layer.id, {
-          x: Math.round(clamp(drag.origin.x + dx, 0, SLIDE_WIDTH - (drag.layer.width || MIN_LAYER_SIZE))),
-          y: Math.round(clamp(drag.origin.y + dy, 0, SLIDE_HEIGHT - (drag.layer.height || MIN_LAYER_SIZE))),
+          x: Math.round(x),
+          y: Math.round(y),
         });
         return;
       }
@@ -188,6 +310,21 @@ export function PptCanvas({
         next.height = drag.origin.height - dy;
       }
 
+      const isMediaCorner = (drag.layer.type === 'image' || drag.layer.type === 'video')
+        && drag.handle.length === 2;
+      if (isMediaCorner) {
+        const aspectRatio = drag.origin.width / drag.origin.height;
+        const widthDelta = Math.abs(next.width - drag.origin.width);
+        const heightDelta = Math.abs(next.height - drag.origin.height);
+        if (widthDelta >= heightDelta * aspectRatio) {
+          next.height = next.width / aspectRatio;
+        } else {
+          next.width = next.height * aspectRatio;
+        }
+        if (drag.handle.includes('w')) next.x = drag.origin.x + drag.origin.width - next.width;
+        if (drag.handle.includes('n')) next.y = drag.origin.y + drag.origin.height - next.height;
+      }
+
       next.width = Math.round(clamp(next.width, MIN_LAYER_SIZE, SLIDE_WIDTH - next.x));
       next.height = Math.round(clamp(next.height, MIN_LAYER_SIZE, SLIDE_HEIGHT - next.y));
       next.x = Math.round(clamp(next.x, 0, SLIDE_WIDTH - next.width));
@@ -196,7 +333,9 @@ export function PptCanvas({
     };
 
     const handlePointerUp = () => {
+      if (dragRef.current?.started) onInteractionEnd?.();
       dragRef.current = null;
+      setSnapGuides({ x: null, y: null });
     };
 
     window.addEventListener('pointermove', handlePointerMove);
@@ -205,9 +344,38 @@ export function PptCanvas({
       window.removeEventListener('pointermove', handlePointerMove);
       window.removeEventListener('pointerup', handlePointerUp);
     };
-  }, [getPoint, onUpdateLayer]);
+  }, [getPoint, onInteractionEnd, onInteractionStart, onUpdateLayer, slide?.layers]);
 
-  const setZoomClamped = (value) => setZoom(clamp(value, 35, 120));
+  const startTextEditing = (event, layer) => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragRef.current = null;
+    cancelEditingRef.current = false;
+    onSelectLayer(layer.id);
+    setEditingLayerId(layer.id);
+    setEditingText(layer.content || '');
+  };
+
+  const commitTextEditing = () => {
+    if (cancelEditingRef.current) {
+      cancelEditingRef.current = false;
+      return;
+    }
+    if (!editingLayerId) return;
+    onUpdateLayer(editingLayerId, { content: editingText });
+    setEditingLayerId(null);
+  };
+
+  const cancelTextEditing = () => {
+    cancelEditingRef.current = true;
+    setEditingLayerId(null);
+    setEditingText('');
+  };
+
+  const setZoomClamped = (value) => {
+    setAutoFitZoom(false);
+    setZoom(clamp(value, 35, 120));
+  };
 
   return (
     <main className="ppt-canvas">
@@ -220,10 +388,10 @@ export function PptCanvas({
 
         <div className="ppt-editor-actions">
           <div className="ppt-history-actions">
-            <button type="button" aria-label={t('common.undo')} title={t('common.undo')}>
+            <button type="button" aria-label={t('common.undo')} title={t('common.undo')} onClick={onUndo} disabled={!canUndo}>
               <Undo2 size={15} />
             </button>
-            <button type="button" aria-label={t('common.redo')} title={t('common.redo')}>
+            <button type="button" aria-label={t('common.redo')} title={t('common.redo')} onClick={onRedo} disabled={!canRedo}>
               <Redo2 size={15} />
             </button>
           </div>
@@ -253,7 +421,7 @@ export function PptCanvas({
         </div>
       </div>
 
-      <div className="ppt-canvas-scroll">
+      <div ref={scrollRef} className="ppt-canvas-scroll">
         <div
           ref={slideRef}
           className="ppt-slide"
@@ -266,6 +434,12 @@ export function PptCanvas({
           }}
           onPointerDown={onClearSelection}
         >
+          {snapGuides.x !== null && (
+            <div className="ppt-snap-guide is-vertical" style={{ left: snapGuides.x }} />
+          )}
+          {snapGuides.y !== null && (
+            <div className="ppt-snap-guide is-horizontal" style={{ top: snapGuides.y }} />
+          )}
           {(!slide?.layers || slide.layers.length === 0) && (
             <div className="ppt-empty">
               <div className="ppt-canvas-design-image" aria-hidden="true" />
@@ -287,17 +461,28 @@ export function PptCanvas({
                   width: layer.width,
                   height: layer.height,
                   transform: `rotate(${layer.rotation || 0}deg)`,
-                  zIndex: index + 1,
+                  zIndex: selected ? 1000 : index + 1,
                 }}
                 onPointerDown={(event) => beginMove(event, layer)}
+                onDoubleClick={(event) => {
+                  if (layer.type === 'text') startTextEditing(event, layer);
+                }}
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') onSelectLayer(layer.id);
                 }}
               >
                 <div className="ppt-layer-frame" />
-                <LayerContent layer={layer} t={t} />
+                <LayerContent
+                  layer={layer}
+                  t={t}
+                  isEditing={editingLayerId === layer.id}
+                  editingText={editingText}
+                  onEditingTextChange={setEditingText}
+                  onCommitEditing={commitTextEditing}
+                  onCancelEditing={cancelTextEditing}
+                />
 
-                {selected && (
+                {selected && editingLayerId !== layer.id && (
                   <>
                     {['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map((handle) => (
                       <span
@@ -310,10 +495,10 @@ export function PptCanvas({
                       <RotateCw size={12} />
                     </button>
                     <div className="ppt-layer-actions">
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title={t('ppt.moveUp')}>
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onMoveLayer?.('up')} title={t('ppt.moveUp')}>
                         <ArrowUp size={13} />
                       </button>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} title={t('ppt.moveDown')}>
+                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onMoveLayer?.('down')} title={t('ppt.moveDown')}>
                         <ArrowDown size={13} />
                       </button>
                       <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDuplicateLayer} title={t('common.copy')}>
@@ -338,7 +523,10 @@ export function PptCanvas({
           <button type="button" aria-label={t('ppt.zoomIn')} onClick={() => setZoomClamped(zoom + 8)}>
             <Plus size={14} />
           </button>
-          <button type="button" aria-label={t('ppt.fitWindow')} onClick={() => setZoom(68)}>
+          <button type="button" aria-label={t('ppt.fitWindow')} onClick={() => {
+            setAutoFitZoom(true);
+            fitZoomToWindow();
+          }}>
             <Maximize2 size={13} />
           </button>
         </div>

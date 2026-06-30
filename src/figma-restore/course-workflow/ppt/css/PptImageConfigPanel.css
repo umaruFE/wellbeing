@@ -5,6 +5,10 @@
   margin-bottom: 12px;
 }
 
+#ed-ppt .ppt-image-config-panel .image-fit-canvas {
+  margin: 0 0 12px;
+}
+
 #ed-ppt .ppt-image-config-panel .image-replace-drop {
   width: 100%;
   min-height: 102px;

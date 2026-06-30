@@ -5,6 +5,10 @@
   margin-bottom: 10px;
 }
 
+#ed-ppt .ppt-video-config-panel .video-fit-canvas {
+  margin: 0 0 12px;
+}
+
 #ed-ppt .ppt-video-config-panel .video-info-card {
   border: 1.5px solid #c8c2b9;
   border-radius: 6px;

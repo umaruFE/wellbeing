@@ -97,6 +97,8 @@ export function PptRightPanel({
   onSelectLayer,
   onUpdateSlide,
   onUpdateLayer,
+  onFitLayer,
+  onCenterLayer,
   onToggleLayerHidden,
   onDuplicateLayer,
   onDeleteLayer,
@@ -120,6 +122,7 @@ export function PptRightPanel({
         selectedLayer={selectedLayer}
         onUpdateLayer={onUpdateLayer}
         onSelectLayer={onSelectLayer}
+        onFitLayer={onFitLayer}
       />
     );
   }
@@ -130,6 +133,9 @@ export function PptRightPanel({
         selectedLayer={selectedLayer}
         onUpdateLayer={onUpdateLayer}
         onSelectLayer={onSelectLayer}
+        onCenterLayer={onCenterLayer}
+        onDuplicateLayer={onDuplicateLayer}
+        onDeleteLayer={onDeleteLayer}
       />
     );
   }
@@ -140,6 +146,7 @@ export function PptRightPanel({
         selectedLayer={selectedLayer}
         onSelectLayer={onSelectLayer}
         onUpdateLayer={onUpdateLayer}
+        onFitLayer={onFitLayer}
         onDuplicateLayer={onDuplicateLayer}
         onDeleteLayer={onDeleteLayer}
       />

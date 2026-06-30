@@ -8,6 +8,37 @@ export const PHASES = [
   { key: 'elevate', title: 'E-ELEVATE 升华', tone: 'elevate', color: '#ff705d' },
 ];
 
+export const PPT_SLIDE_WIDTH = 940;
+export const PPT_SLIDE_HEIGHT = 529;
+
+export function fitLayerToSlide(layer, { center = false } = {}) {
+  const next = { ...layer };
+  const isMedia = next.type === 'image' || next.type === 'video';
+  const maxWidth = PPT_SLIDE_WIDTH * 0.9;
+  const maxHeight = PPT_SLIDE_HEIGHT * 0.9;
+  let width = Math.max(28, Number(next.width) || (next.type === 'audio' ? 280 : 300));
+  let height = Math.max(28, Number(next.height) || (next.type === 'audio' ? 52 : 190));
+
+  if (isMedia && (width > maxWidth || height > maxHeight)) {
+    const ratio = Math.min(maxWidth / width, maxHeight / height);
+    width *= ratio;
+    height *= ratio;
+  } else {
+    width = Math.min(width, PPT_SLIDE_WIDTH);
+    height = Math.min(height, PPT_SLIDE_HEIGHT);
+  }
+
+  next.width = Math.round(width);
+  next.height = Math.round(height);
+  next.x = center
+    ? Math.round((PPT_SLIDE_WIDTH - next.width) / 2)
+    : Math.round(Math.min(Math.max(Number(next.x) || 0, 0), PPT_SLIDE_WIDTH - next.width));
+  next.y = center
+    ? Math.round((PPT_SLIDE_HEIGHT - next.height) / 2)
+    : Math.round(Math.min(Math.max(Number(next.y) || 0, 0), PPT_SLIDE_HEIGHT - next.height));
+  return next;
+}
+
 export const PPT_TEMPLATES = [
   {
     id: 'blue-business',
@@ -91,6 +122,9 @@ export function createTextLayer(overrides = {}) {
     strokeColor: '#ffffff',
     strokeWidth: 0,
     textAlign: 'center',
+    verticalAlign: 'middle',
+    lineHeight: 1.16,
+    letterSpacing: 0,
     ...overrides,
   };
 }
@@ -102,7 +136,7 @@ export function createMediaLayer(type, overrides = {}) {
     audio: { title: i18next.t('assetPanel.audioAsset', 'Audio Asset'), width: 280, height: 52, x: 140, y: 300, icon: 'audio' },
   }[type];
 
-  return {
+  return fitLayerToSlide({
     id: `layer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     type,
     rotation: 0,
@@ -113,7 +147,7 @@ export function createMediaLayer(type, overrides = {}) {
       : null,
     ...config,
     ...overrides,
-  };
+  });
 }
 
 function getTemplate(templateId) {
@@ -163,7 +197,8 @@ function createSlide(index, title, layers = []) {
 
 function normalizeStep(rawStep, phaseKey, index) {
   const title = rawStep.title || rawStep.name || `课件页面 ${index + 1}`;
-  const layers = rawStep.layers || rawStep.canvasAssets || rawStep.assets || rawStep.elements || [];
+  const layers = (rawStep.layers || rawStep.canvasAssets || rawStep.assets || rawStep.elements || [])
+    .map((layer) => fitLayerToSlide(layer));
   return {
     id: rawStep.id || `${phaseKey}-step-${index}`,
     title,
@@ -179,7 +214,8 @@ function normalizeStep(rawStep, phaseKey, index) {
           background: slide.background || '#ffffff',
           backgroundImage: slide.backgroundImage || slide.background_image || '',
           templateId: slide.templateId || slide.template_id || '',
-          layers: slide.layers || slide.canvasAssets || slide.assets || [],
+          layers: (slide.layers || slide.canvasAssets || slide.assets || [])
+            .map((layer) => fitLayerToSlide(layer)),
         }))
       : [
           {
@@ -213,7 +249,7 @@ function normalizeCoverPhase(rawPhase) {
             background: rawSlide.background || '#ffffff',
             backgroundImage: rawSlide.backgroundImage || rawSlide.background_image || '',
             templateId: rawSlide.templateId || rawSlide.template_id || '',
-            layers: rawSlide.layers || [],
+            layers: (rawSlide.layers || []).map((layer) => fitLayerToSlide(layer)),
           },
         ],
       },
