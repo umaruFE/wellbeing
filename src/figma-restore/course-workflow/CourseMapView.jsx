@@ -961,10 +961,22 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                     <Input className="fi" placeholder={t('createCourse.taskNamePlaceholder')} autoComplete="off" />
                   </Form.Item>
                   <Form.Item label={t('createCourse.storyLabel')} name="storyContext">
-                    <TextArea className="fi textarea" rows={4} placeholder={t('createCourse.storyPlaceholder')} />
+                    <TextArea
+                      className="fi textarea"
+                      rows={4}
+                      maxLength={180}
+                      showCount
+                      placeholder={t('createCourse.storyPlaceholder')}
+                    />
                   </Form.Item>
                   <Form.Item label={t('createCourse.outcomeLabel')} name="keyOutcome">
-                    <TextArea className="fi textarea" rows={3} placeholder={t('createCourse.outcomePlaceholder')} />
+                    <TextArea
+                      className="fi textarea"
+                      rows={3}
+                      maxLength={120}
+                      showCount
+                      placeholder={t('createCourse.outcomePlaceholder')}
+                    />
                   </Form.Item>
                 </ModalSection>
 

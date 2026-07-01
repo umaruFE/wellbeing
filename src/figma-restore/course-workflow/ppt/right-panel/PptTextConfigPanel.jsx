@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, ColorPicker, Form, Input, InputNumber, Radio, Select } from 'antd';
+import { Button, ColorPicker, Form, Input, InputNumber, Radio, Select, Slider } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   AlignCenter,
@@ -29,6 +29,30 @@ function TextNumberField({ value, unit, onChange, min, max, step }) {
         addonAfter={unit}
         style={{ width: '100%' }}
         onChange={(next) => onChange(Number(next) || 0)}
+      />
+    </div>
+  );
+}
+
+function TextSizeField({ value, onChange }) {
+  const fontSize = Number(value) || 32;
+  return (
+    <div className="text-size-control">
+      <Slider
+        min={8}
+        max={120}
+        step={1}
+        value={fontSize}
+        tooltip={{ formatter: (next) => `${next}px` }}
+        onChange={(next) => onChange(Number(next) || 8)}
+      />
+      <InputNumber
+        controls={false}
+        value={fontSize}
+        min={8}
+        max={200}
+        addonAfter="px"
+        onChange={(next) => onChange(Number(next) || 8)}
       />
     </div>
   );
@@ -180,7 +204,7 @@ export function PptTextConfigPanel({
             />
           </Form.Item>
           <Form.Item label={t('assetPanel.fontSize')}>
-            <TextNumberField value={selectedLayer.fontSize || 32} unit="px" min={8} max={200} onChange={(fontSize) => onUpdateLayer({ fontSize })} />
+            <TextSizeField value={selectedLayer.fontSize || 32} onChange={(fontSize) => onUpdateLayer({ fontSize })} />
           </Form.Item>
         </div>
 

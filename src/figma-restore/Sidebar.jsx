@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
@@ -18,12 +18,18 @@ import './Sidebar.css';
 
 const MenuLink = ({ item, className, iconClassName, textClassName, collapsed }) => {
   const IconComponent = item.icon;
+  const location = useLocation();
 
   return (
     <NavLink
       to={item.path}
       end={item.end}
       title={collapsed ? item.label : undefined}
+      onClick={() => {
+        if (location.pathname === item.path) {
+          window.dispatchEvent(new CustomEvent('wellbeing:nav-same-route', { detail: { path: item.path } }));
+        }
+      }}
       className={({ isActive }) => `${className} ${isActive ? 'active' : ''}`}
     >
       <IconComponent className={iconClassName} size={14} />

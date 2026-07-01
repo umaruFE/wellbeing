@@ -442,6 +442,36 @@
   cursor: pointer;
 }
 
+#ed-ppt .ppt-option-grid .ppt-option-preview {
+  display: block;
+  width: calc(100% - 12px);
+  height: 42px;
+  border-radius: 6px;
+  border: 1px solid rgba(37, 49, 66, .18);
+  margin: 4px auto 6px;
+  background: #f5f5f5;
+}
+
+#ed-ppt .ppt-option-grid .ppt-option-preview.preview-cartoon {
+  background:
+    radial-gradient(circle at 24% 34%, #ffdb6e 0 13%, transparent 14%),
+    radial-gradient(circle at 70% 62%, #7dd3fc 0 16%, transparent 17%),
+    linear-gradient(135deg, #fff7ed, #fce7f3);
+}
+
+#ed-ppt .ppt-option-grid .ppt-option-preview.preview-realistic {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, .2), transparent 48%),
+    linear-gradient(160deg, #dbeafe 0 45%, #94a3b8 46% 100%);
+}
+
+#ed-ppt .ppt-option-grid .ppt-option-preview.preview-watercolor {
+  background:
+    radial-gradient(circle at 28% 38%, rgba(96, 165, 250, .55), transparent 34%),
+    radial-gradient(circle at 72% 52%, rgba(251, 146, 60, .45), transparent 36%),
+    #fffaf0;
+}
+
 #ed-ppt .ppt-option-grid button.is-active {
   border-color: var(--ppt-coral);
   background: #fff1ed;

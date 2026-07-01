@@ -528,7 +528,6 @@ export function PptCoursewareView({
             {PPT_TEMPLATES.map((template) => {
               const active = selectedTemplateId === template.id;
               const templateName = isChinese ? template.name : template.nameEn;
-              const templateBadge = isChinese ? template.badge : template.badgeEn;
               const templateDescription = isChinese ? template.description : template.descriptionEn;
               return (
                 <button
@@ -552,7 +551,6 @@ export function PptCoursewareView({
                     <small />
                   </span>
                   <span className="ppt-template-name">{templateName}</span>
-                  <span className="ppt-template-badge">{templateBadge}</span>
                   <span className="ppt-template-desc">{templateDescription}</span>
                 </button>
               );

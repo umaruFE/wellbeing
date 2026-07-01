@@ -13,7 +13,7 @@ const phaseLabelKeys = {
 const phaseColors = {
   engage: { color: '#a866e8', bg: '#f3e8ff', border: '#a866e8', shadow: '#d8b8f4' },
   empower: { color: '#4f8ff7', bg: '#eff6ff', border: '#4f8ff7', shadow: '#b7d3ff' },
-  execute: { color: '#54bd76', bg: '#ecfdf5', border: '#54bd76', shadow: '#b5e7c4' },
+  execute: { color: '#3f83e8', bg: '#eaf3ff', border: '#3f83e8', shadow: '#bfd9ff' },
   elevate: { color: '#ff7a61', bg: '#fff0eb', border: '#ff7a61', shadow: '#ffc0b2' },
 };
 

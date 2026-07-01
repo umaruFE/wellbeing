@@ -138,6 +138,17 @@ export function CourseManagement({
     clearRouteState();
   }, [clearRouteState]);
 
+  useEffect(() => {
+    const handleSameRouteNav = (event) => {
+      if (event.detail?.path === '/figma-courses') {
+        handleWorkflowBack();
+      }
+    };
+
+    window.addEventListener('wellbeing:nav-same-route', handleSameRouteNav);
+    return () => window.removeEventListener('wellbeing:nav-same-route', handleSameRouteNav);
+  }, [handleWorkflowBack]);
+
   const fetchCourses = useCallback(async (pageNum = 1, append = false) => {
     try {
       if (pageNum === 1) {

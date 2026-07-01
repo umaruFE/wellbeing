@@ -14,6 +14,7 @@ export function OptionGrid({ options, value, onChange, columns = 3, className = 
             className={active ? 'is-active' : ''}
             onClick={() => onChange(item.value || item.label)}
           >
+            {item.preview ? <i className={`ppt-option-preview preview-${item.preview}`} aria-hidden="true" /> : null}
             <strong>{item.label}</strong>
             {item.desc ? <span>{item.desc}</span> : null}
           </button>

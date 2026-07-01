@@ -107,7 +107,7 @@ const lessonMapMeta = {
     stepImage: stepThreeImage,
     iconImage: iconStepThree,
     icon: 'checklist',
-    tone: '#d9dde9',
+    tone: '#d7e5f7',
     summary: '在真实任务驱动下综合运用方位介词与句型进行表达',
     summaryEn: 'Use the target language in an authentic task and express ideas clearly.',
     position: { left: '34.97%', top: '63.15%' },

@@ -3,6 +3,28 @@ import { Users, Clock, Award, CircleDot, CheckCircle2, Trash2 } from 'lucide-rea
 import { useTranslation } from 'react-i18next';
 import { CourseCoverFallback } from '../CourseCoverFallback';
 
+function CourseManagementCover({ course }) {
+  const [errored, setErrored] = React.useState(false);
+  const src = course.themeImageUrl || course.thumbnail;
+
+  React.useEffect(() => {
+    setErrored(false);
+  }, [src]);
+
+  if (!src || errored) {
+    return <CourseCoverFallback />;
+  }
+
+  return (
+    <img
+      className="fr-cm-cover-image"
+      src={src}
+      alt={course.title || ''}
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
 export function CourseCard({
   course,
   onOpen,
@@ -17,11 +39,7 @@ export function CourseCard({
       onClick={() => onOpen(course)}
     >
       <div className={`fr-cm-cover tone-${course.coverTone}`}>
-        {course.themeImageUrl || course.thumbnail ? (
-          <img className="fr-cm-cover-image" src={course.themeImageUrl || course.thumbnail} alt={course.title || t('course.noCover')} />
-        ) : (
-          <CourseCoverFallback />
-        )}
+        <CourseManagementCover course={course} />
         <button
           type="button"
           className="fr-cm-delete-btn"

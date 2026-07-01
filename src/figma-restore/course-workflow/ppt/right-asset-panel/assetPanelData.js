@@ -70,9 +70,9 @@ export function getRatioOptions(t) {
 
 export function getStyleOptions(t) {
   return [
-    { value: 'cartoon', label: t('assetPanel.styleCartoon') },
-    { value: 'realistic', label: t('assetPanel.styleRealistic') },
-    { value: 'watercolor', label: t('assetPanel.styleWatercolor') },
+    { value: 'cartoon', label: t('assetPanel.styleCartoon'), preview: 'cartoon' },
+    { value: 'realistic', label: t('assetPanel.styleRealistic'), preview: 'realistic' },
+    { value: 'watercolor', label: t('assetPanel.styleWatercolor'), preview: 'watercolor' },
   ];
 }
 
@@ -174,9 +174,24 @@ export function getVideoSteps(t) {
 }
 
 export function getAssetGroups(type, t) {
-  if (type === 'image') return [{ title: t('assetPanel.selectImageType'), items: getImageAssetTypes(t) }];
+  if (type === 'image') {
+    const images = getImageAssetTypes(t);
+    const byCode = new Map(images.map((item) => [item.code, item]));
+    return [
+      { title: 'PPT课件类', items: ['B1', 'B2', 'B3', 'B5', 'B6', 'B7', 'B8'].map((code) => byCode.get(code)).filter(Boolean) },
+      { title: '通用场景类', items: ['B4', 'B9', 'B10'].map((code) => byCode.get(code)).filter(Boolean) },
+      { title: 'IP类', items: ['B11', 'B13'].map((code) => byCode.get(code)).filter(Boolean) },
+    ];
+  }
   if (type === 'audio') return [{ title: t('assetPanel.selectAudioType'), items: getAudioAssetTypes(t) }];
-  if (type === 'video') return [{ title: t('assetPanel.selectVideoType'), items: getVideoAssetTypes(t) }];
+  if (type === 'video') {
+    const videos = getVideoAssetTypes(t);
+    const byCode = new Map(videos.map((item) => [item.code, item]));
+    return [
+      { title: 'IP类视频', items: ['V1', 'VM'].map((code) => byCode.get(code)).filter(Boolean) },
+      { title: '通用场景类视频', items: ['V3'].map((code) => byCode.get(code)).filter(Boolean) },
+    ];
+  }
   return [
     { title: t('assetPanel.selectImageType'), items: getImageAssetTypes(t) },
     { title: t('assetPanel.selectAudioType'), items: getAudioAssetTypes(t) },
