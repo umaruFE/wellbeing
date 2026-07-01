@@ -79,7 +79,7 @@ const MAP_PHASE_META = {
     iconImage: iconStepOne,
     icon: 'sparkle',
     tone: '#e8d2df',
-    shortTitle: 'E-ENGAGE 引入',
+    shortTitle: 'ENGAGE 引入',
     summary: '通过沉浸式情境激发学习兴趣，建立学习动机',
     position: { left: '20.59%', top: '25.63%' },
   },
@@ -90,7 +90,7 @@ const MAP_PHASE_META = {
     iconImage: iconStepTwo,
     icon: 'book',
     tone: '#d8ca8d',
-    shortTitle: 'E-EMPOWER 赋能',
+    shortTitle: 'EMPOWER 赋能',
     summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
     position: { left: '49.07%', top: '34.65%' },
   },
@@ -101,7 +101,7 @@ const MAP_PHASE_META = {
     iconImage: iconStepThree,
     icon: 'checklist',
     tone: '#d9dde9',
-    shortTitle: 'E-EXECUTE 实践',
+    shortTitle: 'EXECUTE 实践',
     summary: '在真实任务驱动下综合运用方位介词与句型进行表达',
     position: { left: '34.97%', top: '63.15%' },
   },
@@ -112,7 +112,7 @@ const MAP_PHASE_META = {
     iconImage: iconStepFour,
     icon: 'trophy',
     tone: '#cbb8a8',
-    shortTitle: 'E-ELEVATE 升华',
+    shortTitle: 'ELEVATE 升华',
     summary: '分享学习成果，反思收获，培养跨文化意识',
     position: { left: '66.00%', top: '68.00%' },
   },
@@ -120,7 +120,7 @@ const MAP_PHASE_META = {
 
 const PHASE_DETAIL_DATA = {
   engage: {
-    title: 'E-Engage · 引入',
+    title: 'Engage · 引入',
     goal: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
     lang: "核心词汇：animal, where, in, on, under; 核心句型：Where is the...? It's...",
     sel: '社会情感学习：好奇心、探索欲、团队协作意识',
@@ -129,7 +129,7 @@ const PHASE_DETAIL_DATA = {
     color: 'var(--eng)',
   },
   empower: {
-    title: 'E-Empower · 赋能',
+    title: 'Empower · 赋能',
     goal: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
     lang: '强化目标词汇发音和理解，通过TPR全身反应法巩固记忆',
     sel: '专注力、听觉辨识能力、动作协调与表达',
@@ -138,7 +138,7 @@ const PHASE_DETAIL_DATA = {
     color: 'var(--emp)',
   },
   execute: {
-    title: 'E-Execute · 实践',
+    title: 'Execute · 实践',
     goal: '在真实任务驱动下综合运用方位介词与句型进行表达',
     lang: '在实际情境中运用目标语言进行交际，完成任务',
     sel: '合作学习、问题解决、创造性思维、团队协作',
@@ -147,7 +147,7 @@ const PHASE_DETAIL_DATA = {
     color: 'var(--exc)',
   },
   elevate: {
-    title: 'E-Elevate · 升华',
+    title: 'Elevate · 升华',
     goal: '分享学习成果，反思收获，培养跨文化意识',
     lang: '展示学习成果，自信表达，完成学习闭环',
     sel: '自我反思、自信表达、感恩之心、分享精神',

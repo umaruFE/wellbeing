@@ -2,10 +2,10 @@ import i18next from 'i18next';
 import { phaseTemplates } from '../workflowData';
 
 export const PHASES = [
-  { key: 'engage', title: 'E-ENGAGE 引入', tone: 'engage', color: '#9b63dc' },
-  { key: 'empower', title: 'E-EMPOWER 赋能', tone: 'empower', color: '#3f83e8' },
-  { key: 'execute', title: 'E-EXECUTE 实践', tone: 'execute', color: '#4caf72' },
-  { key: 'elevate', title: 'E-ELEVATE 升华', tone: 'elevate', color: '#ff705d' },
+  { key: 'engage', title: 'ENGAGE 引入', tone: 'engage', color: '#9b63dc' },
+  { key: 'empower', title: 'EMPOWER 赋能', tone: 'empower', color: '#3f83e8' },
+  { key: 'execute', title: 'EXECUTE 实践', tone: 'execute', color: '#4caf72' },
+  { key: 'elevate', title: 'ELEVATE 升华', tone: 'elevate', color: '#ff705d' },
 ];
 
 export const PPT_SLIDE_WIDTH = 940;
