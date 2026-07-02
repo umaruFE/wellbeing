@@ -291,7 +291,7 @@
       "editModalTitle": "Edit Course Map Inputs",
       "editModalSubtitle": "Uses the same information structure as course creation. Saving will regenerate the storyline, language toolkit, class journey, and growth experience.",
       "editCourseNamePlaceholder": "e.g. Time Forest Magic Concert",
-      "saveAndRefresh": "Save and Refresh Map"
+      "saveAndRefresh": "Save and Recreate"
     },
     "lesson": {
       "title": "Lesson Plan",

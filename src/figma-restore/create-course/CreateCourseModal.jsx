@@ -9,6 +9,7 @@ import { CreateCourseStepThree } from './CreateCourseStepThree';
 import { CreateCourseStepTwo } from './CreateCourseStepTwo';
 import {
   adventureIdeas,
+  atmosphereOptions,
   createCourseSteps,
   defaultCreateCourseValues,
 } from './createCourseOptions';
@@ -27,6 +28,13 @@ function normalizeExperiencePaths(values) {
 
 function primaryExperiencePath(paths) {
   return normalizeExperiencePaths(paths)[0] || '';
+}
+
+function getAtmosphereLabel(value, t) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  const option = atmosphereOptions.find((item) => item.value === text || t(item.labelKey) === text);
+  return option ? t(option.labelKey) : text;
 }
 
 function splitListValue(value, separators) {
@@ -167,11 +175,12 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     if (polishLoading) return;
     setPolishLoading(true);
     try {
-      const values = form.getFieldsValue(['taskName', 'storyContext', 'keyOutcome']);
+      const values = form.getFieldsValue(true);
       const payload = {
         language: aiLanguage,
         outputLanguage,
         courseTitle: AI_GENERATED_COURSE_TITLE,
+        age: values.age,
         taskName: values.taskName?.trim() || '',
         storyContext: values.storyContext?.trim() || '',
         keyOutcome: values.keyOutcome?.trim() || '',
@@ -215,6 +224,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
       const stepValues = await form.validateFields();
       const values = form.getFieldsValue(true);
+      const atmosphere = getAtmosphereLabel(values.atmosphere, t);
       Object.assign(values, stepValues);
       const user = getUser();
       const attachments = (values.attachments || []).map(file => file.name).filter(Boolean);
@@ -236,7 +246,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         taskName: values.taskName || '',
         storyContext: values.storyContext || '',
         keyOutcome: values.keyOutcome || '',
-        atmosphere: values.atmosphere || '',
+        atmosphere,
         specialRequirements: values.specialRequirements || '',
         attachments,
         userId: user?.id || null,
@@ -315,7 +325,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
           taskName: values.taskName || '',
           storyContext: values.storyContext || '',
           keyOutcome: values.keyOutcome || '',
-          atmosphere: values.atmosphere || '',
+          atmosphere,
           specialRequirements: values.specialRequirements || '',
         },
         themeImageUrl,
@@ -379,7 +389,7 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
         taskName: values.taskName || '',
         storyContext: values.storyContext || '',
         keyOutcome: values.keyOutcome || '',
-        atmosphere: values.atmosphere || '',
+        atmosphere,
         specialRequirements: values.specialRequirements || '',
       });
     } catch {

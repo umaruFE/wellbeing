@@ -130,6 +130,14 @@ const pathDictionary = [
   { value: 'AI Auto Match', aliases: ['auto', '自动'] },
 ];
 
+const atmosphereDictionary = [
+  { value: '神秘探险感', aliases: ['mystery', 'adventure', '神秘', '探险'] },
+  { value: '戏剧表演感', aliases: ['drama', 'dramatic', 'performance', '戏剧', '表演'] },
+  { value: '温馨治愈感', aliases: ['warmth', 'warm', 'healing', '温馨', '治愈'] },
+  { value: '团队协作感', aliases: ['teamwork', 'team', 'collaboration', '团队', '协作'] },
+  { value: 'AI 自动匹配', aliases: ['auto', '自动'] },
+];
+
 function normalizeExperiencePaths(course = {}, fallback = '') {
   const values = [
     ...toArray(course.experiencePaths),
@@ -172,6 +180,30 @@ function updateExperiencePaths(values) {
   const last = next[next.length - 1];
   if (AUTO_MATCH_VALUES.has(last)) return [last];
   return next.filter((item) => !AUTO_MATCH_VALUES.has(item));
+}
+
+function normalizeAtmosphere(value) {
+  const text = String(value || '').trim();
+  if (!text) return '';
+  const lower = text.toLowerCase();
+  const found = atmosphereDictionary.find((entry) => (
+    entry.value === text
+    || entry.aliases.some((alias) => lower.includes(alias.toLowerCase()))
+  ));
+  return found?.value || text;
+}
+
+function normalizeOverview(overview) {
+  if (!overview) return {};
+  if (overview.text && typeof overview.text === 'string') {
+    try {
+      const parsed = JSON.parse(overview.text);
+      return parsed.courseOverview || parsed;
+    } catch {
+      return {};
+    }
+  }
+  return overview.courseOverview || overview;
 }
 
 function sanitizeThemeImagePrompt(prompt) {
@@ -276,7 +308,8 @@ function buildFallbackJourney(course, map, taskName, isEn) {
   const grammar = pickListText(course.grammars, 'Core sentences', '\n');
   const skills = pickListText(course.languageSkills, isEn ? 'Listening and speaking' : '听说表达', isEn ? ', ' : '、');
   const path = formatExperiencePaths(normalizeExperiencePaths(course, map.path), isEn ? 'Artistic Expression' : '艺术表达');
-  const atmosphere = course.atmosphere && course.atmosphere !== 'AI 自动匹配' ? course.atmosphere : '';
+  const normalizedAtmosphere = normalizeAtmosphere(course.atmosphere);
+  const atmosphere = normalizedAtmosphere && !AUTO_MATCH_VALUES.has(normalizedAtmosphere) ? normalizedAtmosphere : '';
 
   if (isEn) {
     return {
@@ -305,8 +338,10 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const aiLanguage = isChinese ? 'zh' : 'en';
   const outputLanguage = isChinese ? 'Chinese' : 'English';
   const [editForm] = Form.useForm();
+  const [mapEditForm] = Form.useForm();
   const [regenForm] = Form.useForm();
   const [editOpen, setEditOpen] = React.useState(false);
+  const [mapEditOpen, setMapEditOpen] = React.useState(false);
   const [regenOpen, setRegenOpen] = React.useState(false);
   const [regenerating, setRegenerating] = React.useState(false);
   const [regenImage, setRegenImage] = React.useState(false);
@@ -410,10 +445,58 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       keyOutcome: course.keyOutcome || map.keyOutcome,
       experiencePaths: normalizeExperiencePaths(course, map.path),
       specialRequirements: course.specialRequirements || '',
-      atmosphere: course.atmosphere || '',
+      atmosphere: normalizeAtmosphere(course.atmosphere || course.courseData?.atmosphere || course.course_data?.atmosphere || ''),
       attachments: [],
     });
     setEditOpen(true);
+  };
+
+  const openMapEdit = () => {
+    mapEditForm.setFieldsValue({
+      courseTitle: map.title,
+      storyline: map.storyline,
+      toolkit: map.toolkit,
+      keyOutcome: map.keyOutcome,
+      growth: map.growth,
+      experience: map.experience,
+    });
+    setMapEditOpen(true);
+  };
+
+  const saveMapEdit = async () => {
+    const values = await mapEditForm.validateFields();
+    const courseData = course.courseData || course.course_data || {};
+    const overview = {
+      ...normalizeOverview(course.courseOverview || courseData.courseOverview),
+      courseTitle: values.courseTitle || map.title,
+      overallContext: values.storyline || '',
+      languageGoals: {
+        ...(normalizeOverview(course.courseOverview || courseData.courseOverview).languageGoals || {}),
+        vocabulary: values.toolkit || '',
+        grammar: '',
+      },
+      finalTask: values.keyOutcome || '',
+      selGoals: values.growth || '',
+      permaGoals: '',
+      experience: values.experience || '',
+    };
+
+    const nextCourse = {
+      ...course,
+      title: overview.courseTitle,
+      courseTitle: overview.courseTitle,
+      storyContext: overview.overallContext,
+      keyOutcome: overview.finalTask,
+      courseOverview: overview,
+      courseData: {
+        ...courseData,
+        courseOverview: overview,
+      },
+    };
+
+    onCourseChange?.(nextCourse, { saveNow: true });
+    setMapEditOpen(false);
+    message.success(t('workflow.toolbar.saved'));
   };
 
   React.useEffect(() => {
@@ -429,6 +512,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     const grammarValue = firstValue(course.grammars, courseData.grammars, courseData.grammar, languageGoals.grammar, []);
     const skillsValue = firstValue(course.languageSkills, courseData.languageSkills, courseData.skills, []);
     const pathsValue = firstValue(course.experiencePaths, courseData.experiencePaths, course.experiencePath, courseData.experiencePath, map.path);
+    const atmosphereValue = firstValue(course.atmosphere, courseData.atmosphere, '');
 
     editForm.setFieldsValue({
       courseTitle: map.title,
@@ -445,7 +529,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       experiencePaths: normalizeListValues(pathsValue, pathDictionary)
         .map((item) => pickOptionValue(item, editOptions.paths, [['art'], ['body'], ['music'], ['auto']], 0)),
       specialRequirements: course.specialRequirements || courseData.specialRequirements || '',
-      atmosphere: course.atmosphere || courseData.atmosphere || '',
+      atmosphere: normalizeAtmosphere(atmosphereValue),
     });
   }, [course, editForm, editOpen, editOptions, map, taskName]);
 
@@ -748,7 +832,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           <img src={planeIcon} alt="" className="overview-panel-title-icon" />
         </h2>
         <div className="overview-panel-actions">
-          <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openEdit}>{t('workflow.map.edit')}</Button>
+          <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openMapEdit}>{t('workflow.map.edit')}</Button>
+          <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={openEdit}>{t('workflow.map.regenerate')}</Button>
           <Button className="btn-next-step" onClick={onNext}>
             {t('workflow.nextStep')}
           </Button>
@@ -901,12 +986,60 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         </div>
       )}
 
+      {mapEditOpen && (
+        <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setMapEditOpen(false)}>
+          <div className="modal overview-adjust-modal">
+            <div className="modal-hd">
+              <div>
+                <div className="modal-t">{t('workflow.map.edit')}</div>
+                <div className="modal-sub">
+                  {isChinese ? '直接修改课程地图内容，保存后不会调用 AI。' : 'Edit course map content directly without calling AI.'}
+                </div>
+              </div>
+              <button type="button" className="modal-x" onClick={() => setMapEditOpen(false)}><X size={22} /></button>
+            </div>
+            <div className="modal-body overview-adjust-body">
+              <Form form={mapEditForm} layout="vertical" className="overview-ant-form">
+                <ModalSection title={isChinese ? '基础信息' : 'Basic Info'}>
+                  <Form.Item label={t('createCourse.courseName')} name="courseTitle" rules={[{ required: true, message: t('createCourse.courseNameRequired') }]}>
+                    <Input className="fi" autoComplete="off" />
+                  </Form.Item>
+                </ModalSection>
+                <ModalSection title={isChinese ? '地图内容' : 'Map Content'}>
+                  <Form.Item label={t('workflow.map.storyline')} name="storyline">
+                    <TextArea className="fi textarea" rows={4} />
+                  </Form.Item>
+                  <Form.Item label={t('workflow.map.languageToolkit')} name="toolkit">
+                    <TextArea className="fi textarea" rows={4} />
+                  </Form.Item>
+                  <Form.Item label={t('workflow.map.keyOutcome')} name="keyOutcome">
+                    <TextArea className="fi textarea" rows={3} />
+                  </Form.Item>
+                  <Form.Item label={t('workflow.map.growthCompass')} name="growth">
+                    <TextArea className="fi textarea" rows={3} />
+                  </Form.Item>
+                  <Form.Item label={t('workflow.map.howWeLearn')} name="experience">
+                    <TextArea className="fi textarea" rows={3} />
+                  </Form.Item>
+                </ModalSection>
+              </Form>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-cancel" onClick={() => setMapEditOpen(false)}>{t('common.cancel')}</button>
+              <button type="button" className="mo-btn-primary" onClick={saveMapEdit}>
+                {t('workflow.toolbar.save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {editOpen && (
         <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setEditOpen(false)}>
           <div className="modal overview-adjust-modal">
             <div className="modal-hd">
               <div>
-                <div className="modal-t">{t('workflow.map.editModalTitle')}</div>
+                <div className="modal-t">{t('workflow.map.regenModalTitle')}</div>
                 <div className="modal-sub">
                   {t('workflow.map.editModalSubtitle')}
                 </div>
@@ -1030,7 +1163,7 @@ function ModalSection({ title, desc, children }) {
       <div className="overview-adjust-section-title">
         {title}
       </div>
-      <div className="overview-adjust-section-desc">{desc}</div>
+      {desc && <div className="overview-adjust-section-desc">{desc}</div>}
       {children}
     </section>
   );

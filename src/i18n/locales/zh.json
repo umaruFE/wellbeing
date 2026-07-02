@@ -291,7 +291,7 @@
       "editModalTitle": "编辑课程地图生成输入",
       "editModalSubtitle": "与新建课程保持同一套信息结构；保存后会重新生成课程地图中的故事线、语言工具箱、课堂旅程与成长体验。",
       "editCourseNamePlaceholder": "例如：时光森林的魔法音乐会",
-      "saveAndRefresh": "保存并刷新地图"
+      "saveAndRefresh": "保存并重新生成"
     },
     "lesson": {
       "title": "教案设计",

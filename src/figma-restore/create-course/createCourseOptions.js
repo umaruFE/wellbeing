@@ -28,6 +28,7 @@ export const languageSkillOptions = [
   { labelKey: 'createCourse.skillSpeaking', value: 'speaking' },
   { labelKey: 'createCourse.skillReading', value: 'reading' },
   { labelKey: 'createCourse.skillWriting', value: 'writing' },
+  { labelKey: 'createCourse.skillIntegrated', value: 'integrated' },
 ];
 
 export const atmosphereOptions = [

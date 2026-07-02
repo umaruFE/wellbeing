@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   RefreshCw,
@@ -31,6 +32,10 @@ import stepOneImage from '../../../assets/course-map/step-1.png';
 import stepTwoImage from '../../../assets/course-map/step-2.png';
 import stepThreeImage from '../../../assets/course-map/step-3.png';
 import stepFourImage from '../../../assets/course-map/step-4.png';
+import engageImage from '../../../assets/course-map/engage.png';
+import empowerImage from '../../../assets/course-map/empower.png';
+import executeImage from '../../../assets/course-map/execute.png';
+import elevateImage from '../../../assets/course-map/elevate.png';
 import iconStepOne from '../../../assets/course-map/icon-step-1.png';
 import iconStepTwo from '../../../assets/course-map/icon-step-2.png';
 import iconStepThree from '../../../assets/course-map/icon-step-3.png';
@@ -76,6 +81,7 @@ const MAP_PHASE_META = {
     number: '1',
     className: 'engage',
     stepImage: stepOneImage,
+    phaseIcon: engageImage,
     iconImage: iconStepOne,
     icon: 'sparkle',
     tone: '#e8d2df',
@@ -87,6 +93,7 @@ const MAP_PHASE_META = {
     number: '2',
     className: 'empower',
     stepImage: stepTwoImage,
+    phaseIcon: empowerImage,
     iconImage: iconStepTwo,
     icon: 'book',
     tone: '#d8ca8d',
@@ -98,6 +105,7 @@ const MAP_PHASE_META = {
     number: '3',
     className: 'execute',
     stepImage: stepThreeImage,
+    phaseIcon: executeImage,
     iconImage: iconStepThree,
     icon: 'checklist',
     tone: '#d9dde9',
@@ -109,6 +117,7 @@ const MAP_PHASE_META = {
     number: '4',
     className: 'elevate',
     stepImage: stepFourImage,
+    phaseIcon: elevateImage,
     iconImage: iconStepFour,
     icon: 'trophy',
     tone: '#cbb8a8',
@@ -540,7 +549,9 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
           <div className="p-4 flex items-start justify-between text-white shrink-0" style={{ backgroundColor: col.color }}>
             <div className="flex-1 min-w-0">
-              <h3 className="font-bold text-[15px] uppercase tracking-wide">{safeRender(col.title)}</h3>
+              <Tooltip title={safeRender(col.title)} placement="topLeft">
+                <h3 className="font-bold text-[15px] uppercase tracking-wide">{safeRender(col.title)}</h3>
+              </Tooltip>
               <p className="text-[11px] opacity-80 mt-1">{t('lesson.stepsCount', { count: col.count })}</p>
             </div>
             <div className="flex items-center gap-2 relative">
@@ -621,7 +632,9 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                         <div className="w-6 h-6 rounded flex items-center justify-center text-white shrink-0" style={{ backgroundColor: col.color }}>
                           <Layout size={12} strokeWidth={2.5} />
                         </div>
-                        <span className="text-[13px] font-bold text-gray-800 truncate">{safeRender(item.title)}</span>
+                        <Tooltip title={safeRender(item.title)} placement="topLeft">
+                          <span className="text-[13px] font-bold text-gray-800 truncate">{safeRender(item.title)}</span>
+                        </Tooltip>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {item.duration && (
@@ -794,12 +807,16 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                   {meta.stepImage && <img className="lesson-map-step-num" src={meta.stepImage} alt="" />}
                   <div className="lesson-map-card-main">
                     <div className="lesson-map-card-head">
-                      <h3>{display.title}</h3>
+                      <Tooltip title={display.title} placement="topLeft">
+                        <h3>{display.title}</h3>
+                      </Tooltip>
                       <span className="lesson-map-card-icon">
                         {meta.iconImage ? <img src={meta.iconImage} alt="" /> : renderMapIcon(meta.icon)}
                       </span>
                     </div>
-                    <p>{display.summary}</p>
+                    <Tooltip title={display.summary} placement="topLeft">
+                      <p>{display.summary}</p>
+                    </Tooltip>
                     <div className="lesson-map-card-meta">
                       <strong>{t('lesson.stepsCount', { count: col.count })}</strong>
                       {col.time && <span>{col.time}</span>}
@@ -819,7 +836,9 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             <div className="lesson-map-drawer-head">
               <div className="lesson-map-drawer-num">{selectedMeta.number}</div>
               <div>
-                <h3>{selectedDisplay.title}</h3>
+                <Tooltip title={selectedDisplay.title} placement="topLeft">
+                  <h3>{selectedDisplay.title}</h3>
+                </Tooltip>
                 <p>{t('lesson.stepsCount', { count: selected.count })}</p>
               </div>
               {selected.time && <span className="lesson-map-time-badge">{selected.time}</span>}
@@ -844,8 +863,10 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                       onClick={() => setExpandedItems((prev) => ({ ...prev, [`drawer-${item.id}`]: !isOpen }))}
                     >
                       {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                      <span className="lesson-map-thumb"><Layout size={15} /></span>
-                      <strong>{safeRender(item.title)}</strong>
+                      <span className="lesson-map-thumb"><img src={selectedMeta.phaseIcon} alt="" /></span>
+                      <Tooltip title={safeRender(item.title)} placement="topLeft">
+                        <strong>{safeRender(item.title)}</strong>
+                      </Tooltip>
                       {item.duration && <span className="lesson-map-time-badge">{safeRender(item.duration)}</span>}
                     </button>
                     {isOpen && (
