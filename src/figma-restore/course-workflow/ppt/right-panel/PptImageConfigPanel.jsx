@@ -1,6 +1,24 @@
-import { Button, Form, Input, InputNumber } from 'antd';
+import { Button, Form, Input, InputNumber, Select } from 'antd';
 import { History, Maximize2, RotateCcw, Sparkles, Upload, X } from 'lucide-react';
 import '../css/PptImageConfigPanel.css';
+
+const IMAGE_SIZE_PRESETS = [
+  { value: 'cover', label: '铺满画布', width: 960, height: 540 },
+  { value: 'wide', label: '宽幅 16:9', width: 640, height: 360 },
+  { value: 'square', label: '方形 1:1', width: 360, height: 360 },
+  { value: 'portrait', label: '竖图 3:4', width: 360, height: 480 },
+  { value: 'banner', label: '横幅', width: 720, height: 220 },
+  { value: 'icon', label: '图标', width: 120, height: 120 },
+];
+
+const ROTATION_PRESETS = [
+  { value: 0, label: '0°' },
+  { value: 45, label: '45°' },
+  { value: 90, label: '90°' },
+  { value: 180, label: '180°' },
+  { value: -45, label: '-45°' },
+  { value: -90, label: '-90°' },
+];
 
 function ImageNumberField({ value, unit, onChange }) {
   return (
@@ -48,6 +66,17 @@ export function PptImageConfigPanel({
         </Form.Item>
 
         <div className="image-size-grid">
+          <Form.Item label="尺寸预设" className="image-size-preset-field">
+            <Select
+              placeholder="选择尺寸"
+              value={undefined}
+              options={IMAGE_SIZE_PRESETS}
+              onChange={(_, option) => onUpdateLayer({
+                width: option.width,
+                height: option.height,
+              })}
+            />
+          </Form.Item>
           <Form.Item label="宽">
             <ImageNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({
               width,
@@ -61,7 +90,15 @@ export function PptImageConfigPanel({
             })} />
           </Form.Item>
           <Form.Item label="旋转">
-            <ImageNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
+            <div className="image-select-number-stack">
+              <Select
+                value={ROTATION_PRESETS.some((item) => item.value === selectedLayer.rotation) ? selectedLayer.rotation : undefined}
+                placeholder="预设"
+                options={ROTATION_PRESETS}
+                onChange={(rotation) => onUpdateLayer({ rotation })}
+              />
+              <ImageNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
+            </div>
           </Form.Item>
         </div>
 

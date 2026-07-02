@@ -1,6 +1,23 @@
-import { Button, Form, Input, InputNumber, Switch } from 'antd';
+import { Button, Form, Input, InputNumber, Select, Switch } from 'antd';
 import { History, Maximize2, RotateCcw, X } from 'lucide-react';
 import '../css/PptVideoConfigPanel.css';
+
+const VIDEO_SIZE_PRESETS = [
+  { value: 'cover', label: '铺满画布', width: 960, height: 540 },
+  { value: 'wide', label: '宽幅 16:9', width: 640, height: 360 },
+  { value: 'vertical', label: '竖屏 9:16', width: 304, height: 540 },
+  { value: 'square', label: '方形 1:1', width: 420, height: 420 },
+  { value: 'pip', label: '角落小窗', width: 260, height: 146 },
+];
+
+const ROTATION_PRESETS = [
+  { value: 0, label: '0°' },
+  { value: 45, label: '45°' },
+  { value: 90, label: '90°' },
+  { value: 180, label: '180°' },
+  { value: -45, label: '-45°' },
+  { value: -90, label: '-90°' },
+];
 
 function VideoNumberField({ value, unit, onChange }) {
   return (
@@ -40,6 +57,17 @@ export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLaye
         </Form.Item>
 
         <div className="video-size-grid">
+          <Form.Item label="尺寸预设" className="video-size-preset-field">
+            <Select
+              placeholder="选择尺寸"
+              value={undefined}
+              options={VIDEO_SIZE_PRESETS}
+              onChange={(_, option) => onUpdateLayer({
+                width: option.width,
+                height: option.height,
+              })}
+            />
+          </Form.Item>
           <Form.Item label="宽">
             <VideoNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({
               width,
@@ -53,7 +81,15 @@ export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLaye
             })} />
           </Form.Item>
           <Form.Item label="旋转">
-            <VideoNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
+            <div className="video-select-number-stack">
+              <Select
+                value={ROTATION_PRESETS.some((item) => item.value === selectedLayer.rotation) ? selectedLayer.rotation : undefined}
+                placeholder="预设"
+                options={ROTATION_PRESETS}
+                onChange={(rotation) => onUpdateLayer({ rotation })}
+              />
+              <VideoNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
+            </div>
           </Form.Item>
         </div>
 
@@ -74,9 +110,9 @@ export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLaye
         </div>
 
         <div className="video-switch-list">
-          <label><span>自动播放</span><Switch defaultChecked /></label>
-          <label><span>循环播放</span><Switch /></label>
-          <label><span>静音播放</span><Switch /></label>
+          <label><span>自动播放</span><Switch checked={selectedLayer.autoplay !== false} onChange={(autoplay) => onUpdateLayer({ autoplay })} /></label>
+          <label><span>循环播放</span><Switch checked={!!selectedLayer.loop} onChange={(loop) => onUpdateLayer({ loop })} /></label>
+          <label><span>静音播放</span><Switch checked={!!selectedLayer.muted} onChange={(muted) => onUpdateLayer({ muted })} /></label>
         </div>
 
         <div className="video-action-row">

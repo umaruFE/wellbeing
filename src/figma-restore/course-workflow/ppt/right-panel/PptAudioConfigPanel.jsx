@@ -1,6 +1,14 @@
-import { Button, Form, Input } from 'antd';
+import { Button, Form, Input, Select } from 'antd';
 import { History, RotateCcw, X } from 'lucide-react';
 import '../css/PptAudioConfigPanel.css';
+
+const AUDIO_TYPE_OPTIONS = [
+  { value: '背景音乐', label: '背景音乐' },
+  { value: '课堂口播', label: '课堂口播' },
+  { value: '音效', label: '音效' },
+  { value: '词汇朗读', label: '词汇朗读' },
+  { value: '对话音频', label: '对话音频' },
+];
 
 export function PptAudioConfigPanel({
   selectedLayer,
@@ -30,6 +38,19 @@ export function PptAudioConfigPanel({
         </Form.Item>
 
         <div className="audio-info-card">
+          <Form.Item label="音频类型">
+            <Select
+              value={selectedLayer.audioMeta?.audioType}
+              placeholder="选择音频类型"
+              options={AUDIO_TYPE_OPTIONS}
+              onChange={(audioType) => onUpdateLayer({
+                audioMeta: {
+                  ...(selectedLayer.audioMeta || {}),
+                  audioType,
+                },
+              })}
+            />
+          </Form.Item>
           <div className="audio-meta-row">
             <span>音频类型</span>
             <strong>{selectedLayer.audioMeta?.audioType || '未设置'}</strong>

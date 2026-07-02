@@ -17,6 +17,27 @@ import {
 } from 'lucide-react';
 import '../css/PptTextConfigPanel.css';
 
+const FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 46, 52, 60, 72, 88, 104, 120]
+  .map((size) => ({ value: size, label: `${size}px` }));
+
+const LINE_HEIGHT_OPTIONS = [
+  { value: 1, label: '紧凑 1.0×' },
+  { value: 1.1, label: '标准 1.1×' },
+  { value: 1.25, label: '舒展 1.25×' },
+  { value: 1.5, label: '宽松 1.5×' },
+  { value: 1.8, label: '段落 1.8×' },
+  { value: 2, label: '双倍 2.0×' },
+];
+
+const LETTER_SPACING_OPTIONS = [
+  { value: -1, label: '紧凑 -1px' },
+  { value: 0, label: '默认 0px' },
+  { value: 1, label: '微宽 1px' },
+  { value: 2, label: '宽松 2px' },
+  { value: 4, label: '标题 4px' },
+  { value: 8, label: '展示 8px' },
+];
+
 function TextNumberField({ value, unit, onChange, min, max, step }) {
   return (
     <div className="panel-number-field">
@@ -38,6 +59,13 @@ function TextSizeField({ value, onChange }) {
   const fontSize = Number(value) || 32;
   return (
     <div className="text-size-control">
+      <Select
+        className="text-size-preset"
+        value={FONT_SIZE_OPTIONS.some((item) => item.value === fontSize) ? fontSize : undefined}
+        placeholder="选择"
+        options={FONT_SIZE_OPTIONS}
+        onChange={(next) => onChange(Number(next) || 8)}
+      />
       <Slider
         min={8}
         max={120}
@@ -47,6 +75,7 @@ function TextSizeField({ value, onChange }) {
         onChange={(next) => onChange(Number(next) || 8)}
       />
       <InputNumber
+        className="text-size-number"
         controls={false}
         value={fontSize}
         min={8}
@@ -231,10 +260,26 @@ export function PptTextConfigPanel({
 
         <div className="text-spacing-grid">
           <Form.Item label="行高">
-            <TextNumberField value={selectedLayer.lineHeight || 1.16} unit="×" min={0.8} max={3} step={0.05} onChange={(lineHeight) => onUpdateLayer({ lineHeight })} />
+            <div className="text-select-number-stack">
+              <Select
+                value={LINE_HEIGHT_OPTIONS.some((item) => item.value === selectedLayer.lineHeight) ? selectedLayer.lineHeight : undefined}
+                placeholder="预设"
+                options={LINE_HEIGHT_OPTIONS}
+                onChange={(lineHeight) => onUpdateLayer({ lineHeight })}
+              />
+              <TextNumberField value={selectedLayer.lineHeight || 1.16} unit="×" min={0.8} max={3} step={0.05} onChange={(lineHeight) => onUpdateLayer({ lineHeight })} />
+            </div>
           </Form.Item>
           <Form.Item label="字间距">
-            <TextNumberField value={selectedLayer.letterSpacing || 0} unit="px" min={-5} max={30} step={0.5} onChange={(letterSpacing) => onUpdateLayer({ letterSpacing })} />
+            <div className="text-select-number-stack">
+              <Select
+                value={LETTER_SPACING_OPTIONS.some((item) => item.value === selectedLayer.letterSpacing) ? selectedLayer.letterSpacing : undefined}
+                placeholder="预设"
+                options={LETTER_SPACING_OPTIONS}
+                onChange={(letterSpacing) => onUpdateLayer({ letterSpacing })}
+              />
+              <TextNumberField value={selectedLayer.letterSpacing || 0} unit="px" min={-5} max={30} step={0.5} onChange={(letterSpacing) => onUpdateLayer({ letterSpacing })} />
+            </div>
           </Form.Item>
           <Form.Item label="垂直对齐">
             <Select

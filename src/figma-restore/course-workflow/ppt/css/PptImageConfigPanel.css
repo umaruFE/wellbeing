@@ -5,6 +5,16 @@
   margin-bottom: 12px;
 }
 
+#ed-ppt .ppt-image-config-panel .image-size-preset-field {
+  grid-column: 1 / -1;
+}
+
+#ed-ppt .ppt-image-config-panel .image-select-number-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
 #ed-ppt .ppt-image-config-panel .image-fit-canvas {
   margin: 0 0 12px;
 }

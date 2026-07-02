@@ -6,8 +6,12 @@
   border: 1.5px solid #c8c2b9;
   border-radius: 6px;
   background: #fffdf9;
-  padding: 10px 12px;
+  padding: 12px;
   margin-bottom: 24px;
+}
+
+#ed-ppt .ppt-audio-config-panel .audio-info-card .ant-form-item {
+  margin-bottom: 12px;
 }
 
 #ed-ppt .ppt-audio-config-panel .audio-meta-row {

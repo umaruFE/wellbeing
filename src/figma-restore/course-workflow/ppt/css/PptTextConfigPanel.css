@@ -13,14 +13,19 @@
 }
 
 #ed-ppt .ppt-text-config-panel .text-style-grid {
-  grid-template-columns: minmax(0, 1fr) minmax(138px, 0.9fr);
+  grid-template-columns: minmax(0, 1fr);
 }
 
 #ed-ppt .ppt-text-config-panel .text-size-control {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 68px;
+  grid-template-columns: 92px minmax(0, 1fr) 72px;
   align-items: center;
   gap: 8px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-size-preset,
+#ed-ppt .ppt-text-config-panel .text-size-number {
+  min-width: 0;
 }
 
 #ed-ppt .ppt-text-config-panel .text-size-control .ant-slider {
@@ -94,8 +99,14 @@
 
 #ed-ppt .ppt-text-config-panel .text-spacing-grid {
   display: grid;
-  grid-template-columns: 72px 88px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
+}
+
+#ed-ppt .ppt-text-config-panel .text-select-number-stack {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
 }
 
 #ed-ppt .ppt-text-config-panel .text-quick-actions {
