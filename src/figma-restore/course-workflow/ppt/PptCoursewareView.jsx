@@ -511,11 +511,11 @@ export function PptCoursewareView({
       <div className="ppt-courseware ppt-template-mode" id="ed-ppt">
         <section className="ppt-template-setup">
           <div className="ppt-template-head">
-            <div>
+            {/* <div>
               <span className="ppt-template-kicker">{t('ppt.templateKicker')}</span>
               <h2>{t('ppt.templateTitle')}</h2>
               <p>{t('ppt.templateDescription')}</p>
-            </div>
+            </div> */}
             <div className="ppt-template-stats">
               <span>{stepCount}</span>
               <b>{t('ppt.lessonSteps')}</b>
@@ -550,8 +550,8 @@ export function PptCoursewareView({
                     <em />
                     <small />
                   </span>
-                  <span className="ppt-template-name">{templateName}</span>
-                  <span className="ppt-template-desc">{templateDescription}</span>
+                  {/* <span className="ppt-template-name">{templateName}</span> */}
+                  {/* <span className="ppt-template-desc">{templateDescription}</span> */}
                 </button>
               );
             })}
