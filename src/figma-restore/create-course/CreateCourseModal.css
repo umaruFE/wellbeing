@@ -443,6 +443,55 @@
   font-size: 11px;
 }
 
+.fr-create-editable-tag.ant-tag,
+.fr-create-editable-tag.is-editing {
+  max-width: 100%;
+  min-height: 24px;
+  margin: 0;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: #fdece8;
+  color: #ff705f;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 18px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.fr-create-editable-tag.ant-tag {
+  cursor: text;
+}
+
+.fr-create-editable-tag.is-editing {
+  display: inline-flex;
+  flex: 1 1 100%;
+  width: 100%;
+  padding: 1px 5px;
+  box-shadow: 0 0 0 2px rgba(255, 112, 95, 0.24);
+}
+
+.fr-create-tag-edit-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 22px;
+  padding: 0 3px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: #333e4e;
+  font: inherit;
+  line-height: 20px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .fr-create-tag-select .ant-select-selection-search {
   margin: 0 !important;
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Checkbox, Form, Radio, Select } from 'antd';
+import { Checkbox, Form, Radio, Select, Tag } from 'antd';
 import {
   ageOptions,
   classSizeOptions,
@@ -26,6 +26,105 @@ function splitGrammarTags(value) {
 function toTagArray(value) {
   if (!value) return [];
   return Array.isArray(value) ? value : [value];
+}
+
+function EditableTagSelect({ value, onChange, ...selectProps }) {
+  const tags = toTagArray(value);
+  const [editingTag, setEditingTag] = React.useState(null);
+  const [editingValue, setEditingValue] = React.useState('');
+  const inputRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (editingTag !== null) {
+      inputRef.current?.focus();
+      const cursorPosition = inputRef.current?.value.length ?? 0;
+      inputRef.current?.setSelectionRange(cursorPosition, cursorPosition);
+    }
+  }, [editingTag]);
+
+  React.useEffect(() => {
+    if (!inputRef.current || editingTag === null) return;
+    inputRef.current.style.height = '0px';
+    inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+  }, [editingTag, editingValue]);
+
+  const finishEditing = React.useCallback(() => {
+    if (editingTag === null) return;
+
+    const nextValue = editingValue.trim();
+    const nextTags = tags.flatMap((tag) => {
+      if (tag !== editingTag) return [tag];
+      return nextValue ? [nextValue] : [];
+    });
+
+    setEditingTag(null);
+    onChange?.(nextTags);
+  }, [editingTag, editingValue, onChange, tags]);
+
+  const renderTag = React.useCallback(({ label, value: tagValue, closable, onClose }) => {
+    const isEditing = editingTag === tagValue;
+
+    if (isEditing) {
+      return (
+        <span
+          className="fr-create-editable-tag is-editing"
+          onMouseDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
+          onDoubleClick={(event) => event.stopPropagation()}
+        >
+          <textarea
+            ref={inputRef}
+            className="fr-create-tag-edit-input"
+            value={editingValue}
+            rows={1}
+            aria-label={`Edit ${String(label)}`}
+            onChange={(event) => setEditingValue(event.target.value)}
+            onBlur={finishEditing}
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              event.stopPropagation();
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                event.currentTarget.blur();
+              } else if (event.key === 'Escape') {
+                event.preventDefault();
+                setEditingTag(null);
+              }
+            }}
+          />
+        </span>
+      );
+    }
+
+    return (
+      <Tag
+        className="fr-create-editable-tag"
+        closable={closable}
+        onClose={onClose}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
+        onDoubleClick={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          setEditingTag(tagValue);
+          setEditingValue(String(tagValue));
+        }}
+      >
+        {label}
+      </Tag>
+    );
+  }, [editingTag, editingValue, finishEditing]);
+
+  return (
+    <Select
+      {...selectProps}
+      value={tags}
+      onChange={onChange}
+      tagRender={renderTag}
+    />
+  );
 }
 
 export function CreateCourseStepOne() {
@@ -117,7 +216,7 @@ export function CreateCourseStepOne() {
           name="vocabularies"
           className="fr-create-form-item"
         >
-          <Select
+          <EditableTagSelect
             mode="tags"
             open={false}
             suffixIcon={null}
@@ -134,7 +233,7 @@ export function CreateCourseStepOne() {
           name="grammars"
           className="fr-create-form-item"
         >
-          <Select
+          <EditableTagSelect
             mode="tags"
             open={false}
             suffixIcon={null}
