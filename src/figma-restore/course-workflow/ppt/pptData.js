@@ -207,6 +207,7 @@ function normalizeStep(rawStep, phaseKey, index) {
     id: rawStep.id || `${phaseKey}-step-${index}`,
     title,
     duration: rawStep.duration || rawStep.time || rawStep.minutes || '',
+    slideCount: Number(rawStep.slideCount ?? rawStep.slide_count) || 0,
     objective: rawStep.objective || rawStep.goal || rawStep.learningGoal || rawStep.learningObjective || '',
     activity: rawStep.activity || rawStep.task || rawStep.classActivity || rawStep.studentActivity || '',
     flow: rawStep.flow || rawStep.process || rawStep.activitySteps || rawStep.stepsText || rawStep.teacherScript || '',
@@ -516,7 +517,7 @@ function createTitleSlide(phase, step, stepIndex, template, isEnglish = false) {
   };
 }
 
-function createActivitySlide(phase, step, stepIndex, template, isEnglish = false) {
+function createActivitySlide(phase, step, stepIndex, template, isEnglish = false, variant = 0) {
   const points = splitPoints(
     isEnglish
       ? englishOnlyText(step.flow || step.activity, 'Teacher presents the task; students collaborate in groups; teams share and give feedback; teacher summarizes key methods', 220)
@@ -532,8 +533,10 @@ function createActivitySlide(phase, step, stepIndex, template, isEnglish = false
   const phaseTitle = isEnglish ? englishOnlyText(phase.title, 'Lesson Phase', 40) : phase.title;
 
   return {
-    id: `${step.id}-template-activity-${Date.now()}-${stepIndex}`,
-    title: isEnglish ? `${stepTitle} · Activity` : `${step.title} · 活动页`,
+    id: `${step.id}-template-activity-${Date.now()}-${stepIndex}-${variant}`,
+    title: isEnglish
+      ? `${stepTitle} · Activity${variant > 0 ? ` ${variant + 1}` : ''}`
+      : `${step.title} · 活动页${variant > 0 ? ` ${variant + 1}` : ''}`,
     background: template.background,
     backgroundImage: '',
     templateId: template.id,
@@ -614,6 +617,13 @@ function createActivitySlide(phase, step, stepIndex, template, isEnglish = false
   };
 }
 
+function distributeSlideCounts(totalSlides, stepCount) {
+  if (stepCount <= 0) return [];
+  const base = Math.max(1, Math.floor(totalSlides / stepCount));
+  const remainder = Math.max(0, totalSlides - base * stepCount);
+  return Array.from({ length: stepCount }, (_, index) => base + (index < remainder ? 1 : 0));
+}
+
 export function createGeneratedPptCourse(initialCourseData, templateId, courseMeta = {}, options = {}) {
   const template = getTemplate(templateId);
   const normalized = buildInitialPptCourse(initialCourseData);
@@ -621,15 +631,25 @@ export function createGeneratedPptCourse(initialCourseData, templateId, courseMe
     || courseMeta?.language === 'en'
     || courseMeta?.outputLanguage === 'English';
 
-  const contentPhases = normalized.filter((phase) => phase.key !== 'cover').map((phase) => ({
+  const contentPhasesRaw = normalized.filter((phase) => phase.key !== 'cover');
+  const allSteps = contentPhasesRaw.flatMap((phase) => phase.steps || []);
+  const stepCount = allSteps.length;
+  const requestedTotal = Number(options.totalSlides);
+  const totalSlides = requestedTotal && requestedTotal >= stepCount ? requestedTotal : stepCount * 2;
+  const distribution = distributeSlideCounts(totalSlides, stepCount);
+
+  let stepCursor = 0;
+  const contentPhases = contentPhasesRaw.map((phase) => ({
     ...phase,
-    steps: phase.steps.map((step, stepIndex) => ({
-      ...step,
-      slides: [
-        createTitleSlide(phase, step, stepIndex, template, isEnglish),
-        createActivitySlide(phase, step, stepIndex, template, isEnglish),
-      ],
-    })),
+    steps: (phase.steps || []).map((step, stepIndex) => {
+      const count = distribution[stepCursor] ?? 2;
+      stepCursor += 1;
+      const slides = [createTitleSlide(phase, step, stepIndex, template, isEnglish)];
+      for (let index = 1; index < count; index += 1) {
+        slides.push(createActivitySlide(phase, step, stepIndex, template, isEnglish, index));
+      }
+      return { ...step, slides };
+    }),
   }));
 
   return [createCoverPhase(initialCourseData, template, courseMeta, options), ...contentPhases];

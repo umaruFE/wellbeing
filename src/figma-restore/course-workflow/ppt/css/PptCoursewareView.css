@@ -324,6 +324,42 @@
   font-weight: 900;
 }
 
+.ppt-slide-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ppt-slide-stepper span {
+  min-width: 44px;
+  text-align: center;
+}
+
+.ppt-slide-stepper-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #253142;
+  background: #fff;
+  color: #253142;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ppt-slide-stepper-btn:hover:not(:disabled) {
+  background: #253142;
+  color: #fff;
+}
+
+.ppt-slide-stepper-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
 .ppt-template-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Sparkles } from 'lucide-react';
+import { Check, Minus, Plus, Sparkles } from 'lucide-react';
 import {
   PPT_TEMPLATES,
   buildInitialPptCourse,
@@ -80,6 +80,19 @@ export function PptCoursewareView({
   const [selectedLayerId, setSelectedLayerId] = React.useState(firstSelection.layerId);
   const [assetPanelType, setAssetPanelType] = React.useState(null);
 
+  const contentStepCount = React.useMemo(
+    () => course.filter((phase) => phase.key !== 'cover').reduce((sum, phase) => sum + (phase.steps?.length || 0), 0),
+    [course]
+  );
+  const recommendedSlideTotal = React.useMemo(() => {
+    const summed = course
+      .filter((phase) => phase.key !== 'cover')
+      .flatMap((phase) => phase.steps || [])
+      .reduce((sum, step) => sum + (Number(step.slideCount) || 0), 0);
+    return summed > 0 ? summed : contentStepCount * 2;
+  }, [course, contentStepCount]);
+  const [slideTotal, setSlideTotal] = React.useState(recommendedSlideTotal);
+
   const { step, slide } = findActiveSlide(course, activePhaseKey, activeStepId, activeSlideId);
   const slideIndex = Math.max(0, step?.slides.findIndex((item) => item.id === slide?.id) ?? 0);
   const selectedLayer = slide?.layers.find((layer) => layer.id === selectedLayerId) || null;
@@ -105,7 +118,7 @@ export function PptCoursewareView({
       initialCourseData,
       selectedTemplateId,
       courseMeta,
-      { language: isChinese ? 'zh' : 'en' }
+      { language: isChinese ? 'zh' : 'en', totalSlides: slideTotal }
     );
     hasReportedInitialRef.current = true;
     courseRef.current = nextCourse;
@@ -504,8 +517,7 @@ export function PptCoursewareView({
   ]);
 
   if (mode === 'template') {
-    const stepCount = course.reduce((sum, phase) => sum + (phase.steps?.length || 0), 0);
-    const slideCount = stepCount * 2;
+    const stepCount = contentStepCount;
 
     return (
       <div className="ppt-courseware ppt-template-mode" id="ed-ppt">
@@ -519,7 +531,24 @@ export function PptCoursewareView({
             <div className="ppt-template-stats">
               <span>{stepCount}</span>
               <b>{t('ppt.lessonSteps')}</b>
-              <span>{slideCount}</span>
+              <div className="ppt-slide-stepper">
+                <button
+                  type="button"
+                  className="ppt-slide-stepper-btn"
+                  onClick={() => setSlideTotal((value) => Math.max(stepCount, value - 1))}
+                  disabled={slideTotal <= stepCount}
+                >
+                  <Minus size={16} />
+                </button>
+                <span>{slideTotal}</span>
+                <button
+                  type="button"
+                  className="ppt-slide-stepper-btn"
+                  onClick={() => setSlideTotal((value) => value + 1)}
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
               <b>{t('ppt.estimatedSlides')}</b>
             </div>
           </div>
