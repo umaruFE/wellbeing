@@ -214,6 +214,7 @@ export function buildGeneratedPatch(kind, asset) {
     url: asset?.url,
     placement: asset?.placement || 'layer',
     items: asset?.items,
+    insertAsSlides: !!asset?.insertAsSlides,
     taskId: asset?.taskId,
     statusUrl: asset?.statusUrl,
     generationStatus: asset?.status,

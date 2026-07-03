@@ -182,7 +182,13 @@ function buildBatchItems(asset, values) {
     return words.length ? words : values.flashWords;
   }
   if (asset.code === 'B11') return values.actions?.length ? values.actions : [values.action].filter(Boolean);
-  if (asset.code === 'B9') return splitLines(values.storybookContent).map((text, index) => ({ page: index + 1, text }));
+  if (asset.code === 'B9') {
+    return String(values.storybookContent || '')
+      .split(/\r?\n+/)
+      .map((text) => text.replace(/^\s*(?:page\s*)?\d+\s*[.、:：-]?\s*/i, '').trim())
+      .filter(Boolean)
+      .map((text, index) => ({ page: index + 1, text, title: values.storybookTitle }));
+  }
   return undefined;
 }
 
@@ -1231,11 +1237,18 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
 }
 
 const storybookFrames = [
-  '很久很久以前，有三只小猪。',
-  '第一只小猪用稻草盖了一所房子。',
-  '第二只小猪用木头盖了一所房子。',
-  '第三只小猪非常勤奋，用坚固的砖头盖了一所房子。',
-  '有一天，大灰狼来了...',
+  "Let's open a restaurant!",
+  "What's yummy? Draw your favorite!",
+  'Noodles, cake, bread, egg, juice!',
+  'Milk, soup, fruit, rice!',
+  'Draw your menu!',
+  'Draw, color, cut!',
+  'Paste them on!',
+  'Be a waiter! Be a guest!',
+  "I'd like some noodles, please.",
+  'Switch!',
+  'Show your restaurant!',
+  'Food brings us together.',
 ];
 
 function StorybookStepper({ step, generating }) {
@@ -1258,7 +1271,7 @@ function StorybookStepper({ step, generating }) {
 
 function StorybookPasteStep({ values, setValue }) {
   const { t } = useTranslation();
-  const examples = ['三只小猪', '曹冲称象', '坐井观天'];
+  const examples = ['My Dream Restaurant'];
   return (
     <div className="ppt-storybook-body">
       <div className="ppt-img-section">
@@ -1319,24 +1332,25 @@ function StorybookPasteStep({ values, setValue }) {
   );
 }
 
-function StorybookPreviewStep() {
+function StorybookPreviewStep({ values }) {
   const { t } = useTranslation();
+  const frames = buildBatchItems({ code: 'B9' }, values) || [];
   return (
     <div className="ppt-storybook-body">
       <div className="ppt-storybook-summary">
-        <strong>三只小猪</strong>
-        <span>{t('assetPanel.iwWatercolor')}</span>
-        <em>{t('assetPanel.iwPages')} 5</em>
+        <strong>{values.storybookTitle || t('assetPanel.iwPictureBook')}</strong>
+        <span>{values.storybookStyle}</span>
+        <em>{t('assetPanel.iwPages')} {frames.length}</em>
       </div>
       <div className="ppt-storybook-frame-grid">
-        {storybookFrames.map((frame, index) => (
-          <article key={frame}>
+        {frames.map((frame, index) => (
+          <article key={`${index}-${frame.text}`}>
             <div>
               <b>{index + 1}</b>
               <strong>{t('assetPanel.iwStoryboard')}</strong>
               <span>{t('assetPanel.iwPendingIllustration')}</span>
             </div>
-            <p>{frame}</p>
+            <p>{frame.text}</p>
           </article>
         ))}
       </div>
@@ -1371,6 +1385,8 @@ function StorybookGenerateStep() {
 function StorybookImageWizard({ values, setValue, onGenerate }) {
   const { t } = useTranslation();
   const [step, setStep] = React.useState(0);
+  const frames = buildBatchItems({ code: 'B9' }, values) || [];
+  const canContinue = Boolean(values.storybookTitle.trim()) && frames.length >= 2;
 
   return (
     <div className="ppt-img-flow">
@@ -1384,6 +1400,7 @@ function StorybookImageWizard({ values, setValue, onGenerate }) {
         <button
           type="button"
           className="ppt-primary-btn"
+          disabled={step === 0 && !canContinue}
           onClick={() => {
             if (step === 0) setStep(1);
             else onGenerate();
@@ -1566,7 +1583,7 @@ function ImageTypeContent({ asset, values, setValue }) {
   );
 }
 
-export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
+export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange, insertLabel }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language?.startsWith('en');
   const [stage, setStage] = React.useState('form');
@@ -1688,7 +1705,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
       <GenerationProgress
         title={t('assetPanel.iwAiGeneratingTitle')}
         subtitle={asset.code === 'B13' ? `${values.ipCharacters.join('、')} · ${values.ratio}` : `${values.style} · ${values.ratio}`}
-        batch={asset.code === 'B3' || asset.code === 'B11' ? { done: 0, total: batchItems.length || 1, unit: t('assetPanel.iwPages') } : null}
+        batch={['B3', 'B9', 'B11'].includes(asset.code) ? { done: 0, total: batchItems.length || 1, unit: t('assetPanel.iwPages') } : null}
       />
     );
   }
@@ -1703,15 +1720,16 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
         onSelect={setSelectedIndex}
         onRegenerate={handleGenerate}
         onSaveOnly={handleSaveOnly}
-        insertLabel={values.placement === 'background' ? t('assetPanel.iwSetAsBackground') : undefined}
+        insertLabel={insertLabel || (values.placement === 'background' ? t('assetPanel.iwSetAsBackground') : undefined)}
         onInsert={() => {
-          if (asset.code === 'B3') {
+          if (asset.code === 'B3' || asset.code === 'B9') {
             const completedItems = results.filter((item) => item?.url);
             onInsert('image', {
               ...asset,
               ...selectedResult,
               title: asset.title,
               items: completedItems.length ? completedItems : results,
+              insertAsSlides: asset.code === 'B9',
             });
             return;
           }

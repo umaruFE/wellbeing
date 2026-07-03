@@ -327,6 +327,34 @@ export function PptCoursewareView({
       : [];
     const backgroundUrl = items[0]?.url || patch.url;
 
+    if (type === 'image' && patch.insertAsSlides && items.length) {
+      let firstSlideId = null;
+      updateCourse((draft) => {
+        const targetPhase = draft.find((phase) => phase.key === activePhaseKey);
+        const targetStep = targetPhase?.steps.find((item) => item.id === activeStepId);
+        if (!targetStep) return;
+        const activeIndex = Math.max(0, targetStep.slides.findIndex((item) => item.id === activeSlideId));
+        const timestamp = Date.now();
+        const storybookSlides = items.map((item, index) => ({
+          id: `slide-storybook-${timestamp}-${index + 1}`,
+          title: item.title || `${patch.title || 'Picture Book'} ${index + 1}`,
+          background: '#fffdf7',
+          backgroundImage: item.url,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          templateId: '',
+          layers: [],
+        }));
+        firstSlideId = storybookSlides[0]?.id || null;
+        targetStep.slides.splice(activeIndex + 1, 0, ...storybookSlides);
+      });
+      setActiveSlideId(firstSlideId);
+      setSelectedLayerId(null);
+      setAssetPanelType(null);
+      return;
+    }
+
     if (type === 'image' && patch.placement === 'background' && backgroundUrl) {
       updateCourse((draft) => {
         const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);

@@ -3,6 +3,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   BookOpen,
+  BookOpenText,
   ChevronRight,
   Compass,
   FileText,
@@ -56,6 +57,7 @@ export const Sidebar = () => {
       title: t('sidebar.courseGroup'),
       items: [
         { id: 'course-manage', label: t('sidebar.courseManage'), icon: BookOpen, path: '/figma-courses' },
+        { id: 'picture-book', label: t('sidebar.pictureBook'), icon: BookOpenText, path: '/picture-books' },
         { id: 'course-plaza', label: t('sidebar.courseSquare'), icon: Compass, path: '/course-square' },
       ],
     },

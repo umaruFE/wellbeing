@@ -30,6 +30,7 @@ import { VoiceGeneratorPage } from './modules/test/VoiceGeneratorPage';
 import { AdminDashboard } from './figma-restore/AdminDashboard';
 import { CourseManagement } from './figma-restore/course-management';
 import DesignSystemPreview from './modules/design-system/DesignSystemPreview';
+import { PictureBookStudioPage } from './modules/picture-book/PictureBookStudioPage';
 
 function App() {
   return (
@@ -100,6 +101,15 @@ function App() {
             <Route
               path="/course-square"
               element={<CourseSquarePage />}
+            />
+
+            <Route
+              path="/picture-books"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <PictureBookStudioPage />
+                </RequireAuth>
+              }
             />
 
             <Route

@@ -15,6 +15,20 @@ The application calls this webhook through:
 Set `N8N_PPT_CONTENT_WORKFLOW` only if the webhook path is changed. Its default
 value is `ppt-content-generator`.
 
+## Picture book batch generator
+
+Import `绘本批量生成.json` and activate it. The workflow exposes:
+
+`POST /webhook/ppt-storybook-generator`
+
+The B9 “Picture Book” tool sends one page per line. The workflow creates one
+ComfyUI task per page, repeats the same style and Poppy character bible across
+the whole book, and returns an ordered `assets` array for polling.
+
+The API uses this workflow automatically for B9. Override it only when needed:
+
+`N8N_PPT_IMAGE_B9_WORKFLOW=ppt-storybook-generator`
+
 ## Input
 
 ```json

@@ -1,0 +1,244 @@
+.picture-book-studio {
+  --ppt-ink: #253142;
+  --ppt-muted: #6f7a8b;
+  --ppt-line: #e6e0d7;
+  --ppt-coral: #ed7a34;
+  --ppt-purple: #8c5ac7;
+  min-height: 100%;
+  padding: 34px 40px 56px;
+  color: var(--ppt-ink);
+  background:
+    radial-gradient(circle at 88% 8%, rgba(255, 204, 133, .28), transparent 24%),
+    radial-gradient(circle at 8% 88%, rgba(146, 208, 207, .22), transparent 26%),
+    #f7f4ee;
+}
+
+.picture-book-hero {
+  max-width: 1120px;
+  margin: 0 auto 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.picture-book-hero-icon {
+  width: 58px;
+  height: 58px;
+  border: 2px solid #253142;
+  border-radius: 18px;
+  box-shadow: 5px 5px 0 #253142;
+  background: #f6d6d9;
+  display: grid;
+  place-items: center;
+}
+
+.picture-book-hero span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #b96835;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.picture-book-hero h1 {
+  margin: 4px 0 3px;
+  font-size: 28px;
+  line-height: 1.2;
+}
+
+.picture-book-hero p {
+  margin: 0;
+  color: #697487;
+  font-size: 14px;
+}
+
+.picture-book-layout {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(560px, 720px) minmax(260px, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.picture-book-wizard-card {
+  min-height: 680px;
+  overflow: hidden;
+  border: 2px solid #253142;
+  border-radius: 18px;
+  box-shadow: 8px 8px 0 rgba(37, 49, 66, .92);
+  background: #fff;
+}
+
+.picture-book-card-head {
+  min-height: 76px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e6e0d7;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.picture-book-card-head span {
+  color: #8a94a4;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.picture-book-card-head h2 {
+  margin: 3px 0 0;
+  font-size: 18px;
+}
+
+.picture-book-card-head em {
+  border-radius: 999px;
+  padding: 7px 11px;
+  color: #b96835;
+  background: #fff2df;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.picture-book-wizard-body {
+  height: 604px;
+  display: flex;
+  flex-direction: column;
+}
+
+.picture-book-wizard-body > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.picture-book-studio .ppt-img-flow-body {
+  padding: 22px 24px 28px;
+}
+
+.picture-book-studio .ppt-storybook-textarea {
+  min-height: 190px;
+}
+
+.picture-book-studio .ppt-storybook-frame-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.picture-book-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.picture-book-guide-card,
+.picture-book-character-card,
+.picture-book-complete-card {
+  border: 1px solid #ddd6ca;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .88);
+  padding: 20px;
+}
+
+.picture-book-guide-card svg {
+  color: #d26d31;
+}
+
+.picture-book-guide-card h3 {
+  margin: 10px 0 12px;
+  font-size: 16px;
+}
+
+.picture-book-guide-card ol {
+  margin: 0;
+  padding-left: 20px;
+  color: #667184;
+  font-size: 13px;
+  line-height: 2;
+}
+
+.picture-book-character-card {
+  background: #f9e8eb;
+}
+
+.picture-book-character-card > span {
+  display: inline-block;
+  margin-bottom: 9px;
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #9d4f62;
+  background: #fff;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.picture-book-character-card strong,
+.picture-book-character-card p {
+  display: block;
+}
+
+.picture-book-character-card strong {
+  font-size: 14px;
+}
+
+.picture-book-character-card p {
+  margin: 7px 0 0;
+  color: #7f6670;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.picture-book-complete-card {
+  display: flex;
+  gap: 11px;
+  color: #28775e;
+  background: #e9f7ef;
+}
+
+.picture-book-complete-card div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.picture-book-complete-card span {
+  color: #5d796e;
+  font-size: 12px;
+}
+
+@media (max-width: 980px) {
+  .picture-book-studio {
+    padding: 28px 22px 48px;
+  }
+
+  .picture-book-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .picture-book-guide {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 680px) {
+  .picture-book-layout {
+    display: block;
+  }
+
+  .picture-book-guide {
+    margin-top: 22px;
+    display: flex;
+  }
+
+  .picture-book-card-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .picture-book-studio .ppt-storybook-frame-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -60,6 +60,7 @@ function getImageWorkflow(assetCode?: string) {
   const code = typeof assetCode === 'string' ? assetCode.toUpperCase() : '';
   return process.env[`N8N_PPT_IMAGE_${code}_WORKFLOW`]
     || (code === 'B1' ? 'course-theme-image-generator' : undefined)
+    || (code === 'B9' ? 'ppt-storybook-generator' : undefined)
     || (code === 'B11' ? 'ai-single-ip-character' : undefined)
     || process.env.N8N_PPT_IMAGE_WORKFLOW
     || workflowByType.image;
@@ -165,7 +166,7 @@ function buildImagePayload(basePayload: Record<string, any>, assetCode?: string,
     themeImagePrompt: posterPrompt,
     description: posterPrompt,
     imageSubtype: subtype,
-    workflow_type: code === 'B11' ? 'ip-character' : 'background',
+    workflow_type: code === 'B11' ? 'ip-character' : code === 'B9' ? 'storybook' : 'background',
     role,
     character_name: role,
     name: role,
@@ -178,6 +179,9 @@ function buildImagePayload(basePayload: Record<string, any>, assetCode?: string,
     imageStyle,
     count: Array.isArray(options.batchItems) ? options.batchItems.length : 1,
     batchItems: options.batchItems,
+    storybookTitle: code === 'B9' ? cleanText(rawValues.storybookTitle) : undefined,
+    storybookStyle: code === 'B9' ? cleanText(rawValues.storybookStyle) : undefined,
+    storybookGrade: code === 'B9' ? cleanText(rawValues.storybookGrade) : undefined,
     pptImageType: {
       code,
       subtype,
