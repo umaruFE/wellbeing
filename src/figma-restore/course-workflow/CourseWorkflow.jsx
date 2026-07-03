@@ -129,9 +129,20 @@ function resolvePhasesFromCourse(course) {
 }
 
 function hasMeaningfulPptContent(data) {
-  if (!Array.isArray(data)) return false;
-  return data.some((phase) => phase?.key !== 'cover' && (phase.steps || []).some((step) => (
-    Array.isArray(step.slides) && step.slides.some((slide) => Array.isArray(slide.layers) && slide.layers.length > 0)
+  let source = data;
+  if (typeof source === 'string') {
+    try {
+      source = JSON.parse(source);
+    } catch {
+      return false;
+    }
+  }
+  if (!Array.isArray(source)) return false;
+  return source.some((phase) => (phase.steps || []).some((step) => (
+    Array.isArray(step.slides) && step.slides.some((slide) => (
+      (Array.isArray(slide.layers) && slide.layers.length > 0)
+      || Boolean(slide.backgroundImage || slide.background_image)
+    ))
   )));
 }
 

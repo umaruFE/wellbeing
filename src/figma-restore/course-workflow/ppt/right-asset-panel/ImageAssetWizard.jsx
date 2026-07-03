@@ -233,7 +233,7 @@ async function pollGeneratedImage(asset) {
       };
     }
     if (status.status === 'error') {
-      throw new Error(status.error || t('assetPanel.iwGenFailed'));
+      throw new Error(status.error || 'Image generation failed');
     }
   }
 
@@ -281,7 +281,8 @@ function getB13Examples(t) {
   ];
 }
 
-function b13Color(name, variant = 0) {
+function b13Color(name, variant = 0, charMeta) {
+  const b13CharMeta = charMeta || {};
   const meta = b13CharMeta[name] || b13CharMeta.Poppy;
   return meta.colors[variant % meta.colors.length] || meta.base;
 }
@@ -292,7 +293,8 @@ function b13VirtualSize(ratio) {
   return { w: 760, h: Math.round((760 * h) / w) };
 }
 
-function b13InitialLayer(name, index, total, ratio) {
+function b13InitialLayer(name, index, total, ratio, charMeta) {
+  const b13CharMeta = charMeta || {};
   const meta = b13CharMeta[name] || b13CharMeta.Poppy;
   const size = b13VirtualSize(ratio);
   return {
@@ -382,6 +384,8 @@ function IpSceneCharacterPicker({ value, onChange }) {
 
 function B13MiniPreview({ values, final = false, onClick }) {
   const { t } = useTranslation();
+  const b13BgVariants = getB13BgVariants(t);
+  const b13CharMeta = getB13CharMeta(t);
   const virtual = b13VirtualSize(values.ratio);
   const bg = b13BgVariants[values.ipBgIndex % b13BgVariants.length] || b13BgVariants[0];
   return (
@@ -401,7 +405,7 @@ function B13MiniPreview({ values, final = false, onClick }) {
             <div
                 key={layer.key}
                 className="b13-mini-char"
-                style={{ left: `${left}%`, top: `${top}%`, width: miniW, height: miniH, background: b13Color(layer.name, layer.variant), transform, zIndex: layer.z }}
+                style={{ left: `${left}%`, top: `${top}%`, width: miniW, height: miniH, background: b13Color(layer.name, layer.variant, b13CharMeta), transform, zIndex: layer.z }}
               >
                 {meta.short}
               </div>
@@ -416,6 +420,9 @@ function B13MiniPreview({ values, final = false, onClick }) {
 function IpSceneWizard({ values, setValue, onGenerate }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language?.startsWith('en');
+  const b13CharMeta = getB13CharMeta(t);
+  const b13BgVariants = getB13BgVariants(t);
+  const b13Examples = getB13Examples(t);
   const [step, setStep] = React.useState(0);
   const [modalOpen, setModalOpen] = React.useState(false);
   const [selectedKey, setSelectedKey] = React.useState(null);
@@ -423,7 +430,7 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
 
   const syncLayers = (chars = values.ipCharacters) => {
     const old = new Map((values.ipLayers || []).map((layer) => [layer.name, layer]));
-    setValue('ipLayers', chars.map((name, index) => ({ ...(old.get(name) || b13InitialLayer(name, index, chars.length, values.ratio)), z: index + 1 })));
+    setValue('ipLayers', chars.map((name, index) => ({ ...(old.get(name) || b13InitialLayer(name, index, chars.length, values.ratio, b13CharMeta)), z: index + 1 })));
   };
 
   const generatePreview = () => {
@@ -580,7 +587,7 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
                             onPointerUp={endLayerDrag}
                             onPointerCancel={endLayerDrag}
                           >
-                            <div className="b13-char-body" style={{ background: b13Color(layer.name, layer.variant) }}>{meta.short}</div>
+                            <div className="b13-char-body" style={{ background: b13Color(layer.name, layer.variant, b13CharMeta) }}>{meta.short}</div>
                             <div className="b13-char-name">{layer.name}</div>
                           </div>
                         );
@@ -1626,14 +1633,31 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
         height: item.height,
       }));
       const completedResults = await Promise.all(nextResults.map(pollGeneratedImage));
-      setResults(completedResults);
+      const savedResults = await Promise.all(completedResults.map(async (item) => {
+        if (!item?.url) return item;
+        try {
+          const saved = await apiService.post('/api/ppt-images', {
+            name: item.title || asset.title,
+            imageUrl: item.url,
+            tags: ['AI生成', asset.code, response.imageSubtype].filter(Boolean),
+          });
+          return { ...item, libraryId: saved.data?.id, savedToLibrary: true };
+        } catch (saveError) {
+          console.error('[ImageAssetWizard] 自动保存生成图片失败:', saveError);
+          return { ...item, savedToLibrary: false };
+        }
+      }));
+      if (savedResults.some((item) => item?.url && !item.savedToLibrary)) {
+        message.warning(t('assetPanel.iwAutoSaveFailed'));
+      }
+      setResults(savedResults);
       setSelectedIndex(0);
       setStage('result');
     } catch (error) {
       setErrorMessage(error.message || t('assetPanel.iwGenFailed'));
       setStage('form');
     }
-  }, [asset, values]);
+  }, [asset, t, values]);
 
   const handleSaveOnly = React.useCallback(async () => {
     const selectedResult = results[selectedIndex] || results[0];
@@ -1656,7 +1680,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
     } catch (error) {
       message.error(error.message || t('assetPanel.iwSaveFailed'));
     }
-  }, [asset, results, selectedIndex]);
+  }, [asset, results, selectedIndex, t]);
 
   if (stage === 'generating') {
     const batchItems = buildBatchItems(asset, values) || [];

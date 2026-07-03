@@ -1,4 +1,5 @@
 import { Button, Form, Input, InputNumber, Select } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { History, Maximize2, RotateCcw, Sparkles, Upload, X } from 'lucide-react';
 import '../css/PptImageConfigPanel.css';
 
@@ -39,7 +40,9 @@ export function PptImageConfigPanel({
   onSelectLayer,
   onUpdateLayer,
   onFitLayer,
+  onSetAsBackground,
 }) {
+  const { t } = useTranslation();
   const prompt = selectedLayer.prompt || selectedLayer.imageMeta?.prompt || '';
   const aspectRatio = (Number(selectedLayer.width) || 1) / (Number(selectedLayer.height) || 1);
 
@@ -102,9 +105,20 @@ export function PptImageConfigPanel({
           </Form.Item>
         </div>
 
-        <Button className="image-fit-canvas" icon={<Maximize2 size={15} />} onClick={onFitLayer} block>
-          适应画布并居中
-        </Button>
+        <div className="image-canvas-actions">
+          <Button className="image-fit-canvas" icon={<Maximize2 size={15} />} onClick={onFitLayer} block>
+            适应画布并居中
+          </Button>
+          <Button
+            className="image-set-background"
+            icon={<Maximize2 size={15} />}
+            onClick={onSetAsBackground}
+            disabled={!selectedLayer.url}
+            block
+          >
+            {t('ppt.setAsBackground')}
+          </Button>
+        </div>
 
         <button className="image-replace-drop" type="button">
           <Upload size={15} />

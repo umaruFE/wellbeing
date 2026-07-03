@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 type AssetType = 'image' | 'audio' | 'video';
 
@@ -457,7 +458,10 @@ export async function POST(request: NextRequest) {
           ...normalizeAsset(type, assetName || `${type}素材`, prompt, result),
           ...(type === 'image' ? { width: imageSize.width, height: imageSize.height } : {}),
         }];
-    const asset = assets[0];
+    const persistedAssets = type === 'image'
+      ? await persistComfyImagesInValue(assets)
+      : assets;
+    const asset = persistedAssets[0];
 
     return NextResponse.json({
       success: true,
@@ -466,7 +470,7 @@ export async function POST(request: NextRequest) {
       audioSubtype: type === 'audio' ? audioSubtypeByCode[String(assetCode || '').toUpperCase()] || 'ppt_audio' : undefined,
       videoSubtype: type === 'video' ? videoSubtypeByCode[String(assetCode || '').toUpperCase()] || 'ppt_video' : undefined,
       asset,
-      assets,
+      assets: persistedAssets,
     }, { headers: corsHeaders() });
   } catch (error) {
     console.error('[generate-ppt-asset] 失败:', error);

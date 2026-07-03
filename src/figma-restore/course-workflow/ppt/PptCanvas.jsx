@@ -430,6 +430,7 @@ export function PptCanvas({
             backgroundImage: slide?.backgroundImage ? `url("${slide.backgroundImage}")` : undefined,
             backgroundSize: slide?.backgroundSize || 'cover',
             backgroundPosition: slide?.backgroundPosition || 'center',
+            backgroundRepeat: 'no-repeat',
             transform: `scale(${zoom / 100})`,
           }}
           onPointerDown={onClearSelection}
@@ -440,7 +441,7 @@ export function PptCanvas({
           {snapGuides.y !== null && (
             <div className="ppt-snap-guide is-horizontal" style={{ top: snapGuides.y }} />
           )}
-          {(!slide?.layers || slide.layers.length === 0) && (
+          {(!slide?.layers || slide.layers.length === 0) && !slide?.backgroundImage && (
             <div className="ppt-empty">
               <div className="ppt-canvas-design-image" aria-hidden="true" />
             </div>
@@ -494,7 +495,7 @@ export function PptCanvas({
                     <button type="button" className="ppt-rotate-handle" onPointerDown={(event) => beginRotate(event, layer)} aria-label={t('ppt.rotate')}>
                       <RotateCw size={12} />
                     </button>
-                    <div className="ppt-layer-actions">
+                    <div className={`ppt-layer-actions ${(Number(layer.y) || 0) < 44 ? 'is-inside' : ''}`}>
                       <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onMoveLayer?.('up')} title={t('ppt.moveUp')}>
                         <ArrowUp size={13} />
                       </button>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 // Ensure course_data column exists
 async function ensureCourseDataColumn() {
@@ -145,7 +146,8 @@ export async function PUT(
     }
     
     if (typeof canvasData !== 'undefined') {
-      updateData.canvas_data = toJsonbValue(canvasData);
+      const persistedCanvasData = await persistComfyImagesInValue(canvasData);
+      updateData.canvas_data = toJsonbValue(persistedCanvasData);
     }
     
     if (typeof readingMaterialsData !== 'undefined') {

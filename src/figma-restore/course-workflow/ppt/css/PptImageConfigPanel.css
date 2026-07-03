@@ -15,8 +15,29 @@
   gap: 8px;
 }
 
-#ed-ppt .ppt-image-config-panel .image-fit-canvas {
+#ed-ppt .ppt-image-config-panel .image-canvas-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
   margin: 0 0 12px;
+}
+
+#ed-ppt .ppt-image-config-panel .image-fit-canvas {
+  margin: 0;
+}
+
+#ed-ppt .ppt-image-config-panel .image-set-background {
+  margin: 0;
+  border-color: #253142;
+  background: #ff705d;
+  color: #fff;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-image-config-panel .image-set-background:hover:not(:disabled) {
+  border-color: #253142;
+  background: #f45f4d;
+  color: #fff;
 }
 
 #ed-ppt .ppt-image-config-panel .image-replace-drop {

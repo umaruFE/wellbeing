@@ -48,6 +48,19 @@ function findSelectionAfterSlideDelete(course, phaseKey, stepId, deletedIndex) {
   return getFirstSelection(course);
 }
 
+function applySlideBackground(slide, imageUrl, sourceLayerId = null) {
+  if (!slide || !imageUrl) return false;
+  slide.backgroundImage = imageUrl;
+  slide.backgroundSize = 'cover';
+  slide.backgroundPosition = 'center';
+  slide.backgroundRepeat = 'no-repeat';
+  slide.templateId = '';
+  if (sourceLayerId) {
+    slide.layers = (slide.layers || []).filter((item) => item.id !== sourceLayerId);
+  }
+  return true;
+}
+
 export function PptCoursewareView({
   onNext,
   courseMeta,
@@ -317,11 +330,7 @@ export function PptCoursewareView({
     if (type === 'image' && patch.placement === 'background' && backgroundUrl) {
       updateCourse((draft) => {
         const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
-        if (active.slide) {
-          active.slide.backgroundImage = backgroundUrl;
-          active.slide.backgroundSize = 'cover';
-          active.slide.backgroundPosition = 'center';
-        }
+        applySlideBackground(active.slide, backgroundUrl);
       });
       setAssetPanelType(null);
       setSelectedLayerId(null);
@@ -422,6 +431,39 @@ export function PptCoursewareView({
   const fitSelectedLayer = () => {
     if (!selectedLayerId || !selectedLayer) return;
     updateLayerById(selectedLayerId, fitLayerToSlide(selectedLayer, { center: true }));
+  };
+
+  const setSelectedImageAsBackground = () => {
+    if (!selectedLayerId || selectedLayer?.type !== 'image' || !selectedLayer.url) return;
+    updateCourse((draft) => {
+      const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+      if (!active.slide) return;
+      const layer = active.slide.layers.find((item) => item.id === selectedLayerId);
+      if (!layer?.url) return;
+      applySlideBackground(active.slide, layer.url, selectedLayerId);
+    });
+    setSelectedLayerId(null);
+  };
+
+  const unsetBackgroundToImageLayer = () => {
+    if (!slide?.backgroundImage) return;
+    let restoredLayerId = null;
+    updateCourse((draft) => {
+      const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+      if (!active.slide?.backgroundImage) return;
+      const restoredLayer = createMediaLayer('image', {
+        title: t('ppt.restoredBackgroundImage'),
+        url: active.slide.backgroundImage,
+        width: 560,
+        height: 315,
+        x: Math.round((PPT_SLIDE_WIDTH - 560) / 2),
+        y: Math.round((PPT_SLIDE_HEIGHT - 315) / 2),
+      });
+      restoredLayerId = restoredLayer.id;
+      active.slide.layers.push(restoredLayer);
+      active.slide.backgroundImage = '';
+    });
+    setSelectedLayerId(restoredLayerId);
   };
 
   const centerSelectedLayer = (axis) => {
@@ -715,6 +757,8 @@ export function PptCoursewareView({
         onUpdateSlide={updateSlide}
         onUpdateLayer={updateSelectedLayer}
         onFitLayer={fitSelectedLayer}
+        onSetImageAsBackground={setSelectedImageAsBackground}
+        onUnsetBackground={unsetBackgroundToImageLayer}
         onCenterLayer={centerSelectedLayer}
         onToggleLayerHidden={toggleLayerHidden}
         onDuplicateLayer={duplicateLayer}

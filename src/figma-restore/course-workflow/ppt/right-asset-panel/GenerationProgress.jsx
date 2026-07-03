@@ -15,7 +15,7 @@ export function GenerationProgress({ title, subtitle, progress = 58, batch, onVi
       ) : null}
       <div className="ppt-gen-bar"><span style={{ width: `${progress}%` }} /></div>
       <small>准备生成预览结果...</small>
-      <div className="ppt-gen-step-list">
+      {/* <div className="ppt-gen-step-list">
         {steps.map((step, index) => (
           <div className="ppt-gen-step" key={step}>
             <span>{index === 0 ? <Check size={13} /> : index === 1 ? <LoaderCircle size={13} /> : '○'}</span>
@@ -23,7 +23,7 @@ export function GenerationProgress({ title, subtitle, progress = 58, batch, onVi
             <em className={index === 0 ? 'done' : index === 1 ? 'running' : ''}>{index === 0 ? '完成' : index === 1 ? '进行中' : '等待'}</em>
           </div>
         ))}
-      </div>
+      </div> */}
       <button type="button" className="ppt-hang-btn"><Pause size={13} />挂起后台，继续编辑课件</button>
       {onViewResult ? (
         <button type="button" className="ppt-primary-btn" onClick={onViewResult}>查看生成结果</button>

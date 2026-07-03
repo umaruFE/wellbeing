@@ -218,6 +218,9 @@ function normalizeStep(rawStep, phaseKey, index) {
           title: slide.title || `${title} ${slideIndex + 1}`,
           background: slide.background || '#ffffff',
           backgroundImage: slide.backgroundImage || slide.background_image || '',
+          backgroundSize: slide.backgroundSize || slide.background_size || 'cover',
+          backgroundPosition: slide.backgroundPosition || slide.background_position || 'center',
+          backgroundRepeat: slide.backgroundRepeat || slide.background_repeat || 'no-repeat',
           templateId: slide.templateId || slide.template_id || '',
           layers: (slide.layers || slide.canvasAssets || slide.assets || [])
             .map((layer) => fitLayerToSlide(layer)),
@@ -236,7 +239,9 @@ function normalizeStep(rawStep, phaseKey, index) {
 function normalizeCoverPhase(rawPhase) {
   if (!rawPhase) return null;
   const rawSlide = rawPhase.steps?.[0]?.slides?.[0] || rawPhase.slides?.[0] || rawPhase.slide || rawPhase;
-  if (!rawSlide?.layers?.length) return null;
+  const hasLayers = Array.isArray(rawSlide?.layers) && rawSlide.layers.length > 0;
+  const hasBackgroundImage = Boolean(rawSlide?.backgroundImage || rawSlide?.background_image);
+  if (!rawSlide || (!hasLayers && !hasBackgroundImage)) return null;
 
   return {
     key: 'cover',
@@ -253,6 +258,9 @@ function normalizeCoverPhase(rawPhase) {
             title: rawSlide.title || '课程封面',
             background: rawSlide.background || '#ffffff',
             backgroundImage: rawSlide.backgroundImage || rawSlide.background_image || '',
+            backgroundSize: rawSlide.backgroundSize || rawSlide.background_size || 'cover',
+            backgroundPosition: rawSlide.backgroundPosition || rawSlide.background_position || 'center',
+            backgroundRepeat: rawSlide.backgroundRepeat || rawSlide.background_repeat || 'no-repeat',
             templateId: rawSlide.templateId || rawSlide.template_id || '',
             layers: (rawSlide.layers || []).map((layer) => fitLayerToSlide(layer)),
           },
@@ -267,7 +275,7 @@ function normalizePhasesArray(rawPhases = []) {
   const coverPhase = rawPhases.find((phase) => phase?.key === 'cover');
   rawPhases.forEach((phase) => {
     const phaseKey = shortPhaseKeyMap[phase.key] || phase.key?.toLowerCase?.();
-    if (!phaseKey) return;
+    if (!phaseKey || phaseKey === 'cover') return;
     phaseObject[phaseKey] = {
       title: phase.title || phase.phase,
       steps: phase.steps || [],
@@ -335,7 +343,10 @@ export function hasGeneratedPptContent(initialCourseData) {
     const steps = phase?.steps || phase?.slides || [];
     return steps.some((step) => (
       Array.isArray(step?.slides)
-      && step.slides.some((slide) => Array.isArray(slide?.layers) && slide.layers.length > 0)
+      && step.slides.some((slide) => (
+        (Array.isArray(slide?.layers) && slide.layers.length > 0)
+        || Boolean(slide?.backgroundImage || slide?.background_image)
+      ))
     ));
   });
 }
@@ -749,16 +760,13 @@ export function ensurePptCoverAndInnerPages(course, courseMeta = {}) {
     .flatMap((step) => step.slides || [])
     .find((slide) => slide?.templateId || slide?.backgroundImage);
   const template = getTemplate(firstTemplateSlide?.templateId);
-  const customerTemplateIds = new Set(PPT_TEMPLATES.map((item) => item.id));
-
   const cleanedContentPhases = contentPhases.map((phase) => ({
     ...phase,
     steps: (phase.steps || []).map((step) => ({
       ...step,
       slides: (step.slides || []).map((slide) => {
-        const isCustomerTemplateSlide = customerTemplateIds.has(slide.templateId)
-          || PPT_TEMPLATES.some((item) => item.coverImage === slide.backgroundImage);
-        if (!isCustomerTemplateSlide || slide.isCover) return slide;
+        const isTemplateCoverImage = PPT_TEMPLATES.some((item) => item.coverImage === slide.backgroundImage);
+        if (!isTemplateCoverImage || slide.isCover) return slide;
         return {
           ...slide,
           background: slide.background || template.background,

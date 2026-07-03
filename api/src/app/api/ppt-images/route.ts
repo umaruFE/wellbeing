@@ -57,6 +57,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, categoryId, imageUrl, tags } = body;
 
+    if (!name || !imageUrl) {
+      return NextResponse.json({ error: 'Name and imageUrl are required' }, { status: 400 });
+    }
+
+    const { data: existingRows, error: existingError } = await db
+      .from('ppt_images')
+      .select('*')
+      .eq('image_url', imageUrl)
+      .limit(1);
+
+    if (existingError) {
+      return NextResponse.json({ error: (existingError as Error).message }, { status: 500 });
+    }
+    if (existingRows?.[0]) {
+      return NextResponse.json({ data: existingRows[0], existing: true });
+    }
+
     const { data, error } = await db
       .from('ppt_images')
       .insert({

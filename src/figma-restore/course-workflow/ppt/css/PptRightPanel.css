@@ -170,6 +170,28 @@
   cursor: pointer;
 }
 
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-image-card .ppt-bg-unset {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 32px;
+  gap: 6px;
+  border-color: #253142;
+  background: #ffffff;
+  color: #253142;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-image-card .ppt-bg-unset:hover {
+  background: #fff1ed;
+  color: #253142;
+}
+
+#ed-ppt .ppt-right-canvas-panel .ppt-bg-image-card .ppt-bg-delete {
+  grid-column: 3;
+  grid-row: 1;
+}
+
 #ed-ppt .ppt-right-canvas-panel .ppt-layer-list {
   display: grid;
   gap: 8px;

@@ -59,6 +59,22 @@ export async function POST(request: Request) {
       );
     }
 
+    const { data: existingRows, error: existingError } = await db
+      .from('videos')
+      .select('*')
+      .eq('video_url', video_url)
+      .limit(1);
+
+    if (existingError) {
+      return NextResponse.json(
+        { success: false, error: (existingError as Error).message },
+        { status: 500 }
+      );
+    }
+    if (existingRows?.[0]) {
+      return NextResponse.json({ success: true, data: existingRows[0], existing: true });
+    }
+
     const { data, error } = await db
       .from('videos')
       .insert({

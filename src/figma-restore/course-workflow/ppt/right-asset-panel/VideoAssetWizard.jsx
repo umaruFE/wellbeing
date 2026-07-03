@@ -41,6 +41,70 @@ function buildVideoPrompt(asset, values) {
   return `生成体能闯关视频。场景：${values.scene || '森林'}。角色：${values.character || 'Poppy'}。词汇：${(values.words || []).join(', ')}。句型：${(values.sentences || []).join('; ')}。气泡样式：${values.bubble || '胶囊'}。画面风格适合儿童英语PPT课件。`;
 }
 
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function findVideoUrl(value, depth = 0) {
+  if (depth > 6 || value == null) return '';
+  if (typeof value === 'string') {
+    return /^(https?:\/\/|\/api\/|\/uploads\/)/i.test(value) && /\.(mp4|webm|mov)(\?|$)/i.test(value)
+      ? value
+      : '';
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const found = findVideoUrl(item, depth + 1);
+      if (found) return found;
+    }
+    return '';
+  }
+  if (typeof value === 'object') {
+    for (const key of ['video_url', 'videoUrl', 'url', 'assetUrl', 'outputUrl']) {
+      const found = findVideoUrl(value[key], depth + 1);
+      if (found) return found;
+    }
+    for (const item of Object.values(value)) {
+      const found = findVideoUrl(item, depth + 1);
+      if (found) return found;
+    }
+  }
+  return '';
+}
+
+async function completeAndSaveVideo(asset, generated) {
+  let completed = generated;
+  if (!completed?.url && completed?.statusUrl) {
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      await wait(3000);
+      const status = await apiService.get(completed.statusUrl);
+      const state = status?.status || status?.data?.status;
+      const url = findVideoUrl(status);
+      if (url) {
+        completed = { ...completed, url, status: 'completed' };
+        break;
+      }
+      if (state === 'failed' || state === 'error') {
+        throw new Error(status?.error || '视频生成失败');
+      }
+    }
+  }
+
+  if (completed?.url) {
+    const saved = await apiService.post('/api/videos', {
+      name: completed.title || asset.title,
+      description: completed.prompt || '',
+      video_url: completed.url,
+      thumbnail_url: completed.thumbnailUrl || completed.thumbnail_url || '',
+      duration: completed.duration || '',
+      tags: ['AI生成', asset.code].filter(Boolean),
+    });
+    return { ...completed, libraryId: saved.data?.id, savedToLibrary: true };
+  }
+
+  return completed;
+}
+
 async function submitVideoAsset(asset, values) {
   const response = await apiService.post('/api/ai/generate-ppt-asset', {
     assetType: 'video',
@@ -63,7 +127,8 @@ async function submitVideoAsset(asset, values) {
       duration: asset.code === 'VM' ? 12 : 8,
     },
   });
-  return response.asset || response.assets?.[0];
+  const generated = response.asset || response.assets?.[0];
+  return completeAndSaveVideo(asset, generated);
 }
 
 function VideoStepper({ step }) {

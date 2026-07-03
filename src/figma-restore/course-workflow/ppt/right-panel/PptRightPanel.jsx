@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff, Image, Music, Trash2, Type, Video } from 'lucide-react';
+import { Eye, EyeOff, Image, Music, Trash2, Type, Undo2, Video } from 'lucide-react';
 import { PptAssetPanel } from '../right-asset-panel';
 import { PptAudioConfigPanel } from './PptAudioConfigPanel';
 import { PptImageConfigPanel } from './PptImageConfigPanel';
@@ -21,6 +21,7 @@ function CanvasLayerPanel({
   selectedLayerId,
   onSelectLayer,
   onUpdateSlide,
+  onUnsetBackground,
   onToggleLayerHidden,
 }) {
   const { t } = useTranslation();
@@ -52,6 +53,16 @@ function CanvasLayerPanel({
               <img src={slide.backgroundImage} alt="" />
               <span>{t('ppt.backgroundImage')}</span>
               <button
+                className="ppt-bg-unset"
+                type="button"
+                onClick={onUnsetBackground}
+                title={t('ppt.unsetBackground')}
+              >
+                <Undo2 size={14} />
+                {t('ppt.unsetBackground')}
+              </button>
+              <button
+                className="ppt-bg-delete"
                 type="button"
                 onClick={() => onUpdateSlide({ backgroundImage: '' })}
                 title={t('ppt.removeBackgroundImage')}
@@ -112,6 +123,8 @@ export function PptRightPanel({
   onUpdateSlide,
   onUpdateLayer,
   onFitLayer,
+  onSetImageAsBackground,
+  onUnsetBackground,
   onCenterLayer,
   onToggleLayerHidden,
   onDuplicateLayer,
@@ -161,6 +174,7 @@ export function PptRightPanel({
         onSelectLayer={onSelectLayer}
         onUpdateLayer={onUpdateLayer}
         onFitLayer={onFitLayer}
+        onSetAsBackground={onSetImageAsBackground}
         onDuplicateLayer={onDuplicateLayer}
         onDeleteLayer={onDeleteLayer}
       />
@@ -185,6 +199,7 @@ export function PptRightPanel({
       selectedLayerId={selectedLayerId}
       onSelectLayer={onSelectLayer}
       onUpdateSlide={onUpdateSlide}
+      onUnsetBackground={onUnsetBackground}
       onToggleLayerHidden={onToggleLayerHidden}
     />
   );
