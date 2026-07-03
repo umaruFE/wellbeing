@@ -1,10 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Check, Minus, Plus, Sparkles } from 'lucide-react';
+import { Check, Loader2, Minus, Plus, Sparkles } from 'lucide-react';
+import apiService from '../../../services/api';
 import {
   PPT_TEMPLATES,
   buildInitialPptCourse,
-  createGeneratedPptCourse,
+  createPptCourseFromPresentation,
   createMediaLayer,
   createTextLayer,
   ensurePptCoverAndInnerPages,
@@ -79,6 +80,8 @@ export function PptCoursewareView({
   const [activeSlideId, setActiveSlideId] = React.useState(firstSelection.slideId);
   const [selectedLayerId, setSelectedLayerId] = React.useState(firstSelection.layerId);
   const [assetPanelType, setAssetPanelType] = React.useState(null);
+  const [isGeneratingCourseware, setIsGeneratingCourseware] = React.useState(false);
+  const [coursewareError, setCoursewareError] = React.useState('');
 
   const contentStepCount = React.useMemo(
     () => course.filter((phase) => phase.key !== 'cover').reduce((sum, phase) => sum + (phase.steps?.length || 0), 0),
@@ -113,23 +116,60 @@ export function PptCoursewareView({
     setAssetPanelType(null);
   }, []);
 
-  const generateCourseware = () => {
-    const nextCourse = createGeneratedPptCourse(
-      initialCourseData,
-      selectedTemplateId,
-      courseMeta,
-      { language: isChinese ? 'zh' : 'en', totalSlides: slideTotal }
-    );
-    hasReportedInitialRef.current = true;
-    courseRef.current = nextCourse;
-    undoStackRef.current = [];
-    redoStackRef.current = [];
-    setHistoryAvailability({ canUndo: false, canRedo: false });
-    setCourse(nextCourse);
-    applySelection(nextCourse);
-    setCanCancelTemplatePicker(false);
-    setMode('editor');
-    onCourseChange?.(nextCourse, { source: 'edit', templateId: selectedTemplateId });
+  const generateCourseware = async () => {
+    if (isGeneratingCourseware) return;
+    setIsGeneratingCourseware(true);
+    setCoursewareError('');
+
+    try {
+      const lessonPlan = course
+        .filter((phase) => phase.key !== 'cover')
+        .map((phase) => ({
+          key: phase.key,
+          title: phase.title,
+          steps: (phase.steps || []).map((step) => ({
+            id: step.id,
+            title: step.title,
+            duration: step.duration,
+            objective: step.objective,
+            activity: step.activity,
+            flow: step.flow,
+            resources: step.resources,
+          })),
+        }));
+      const response = await apiService.generatePptContent({
+        courseMeta,
+        lessonPlan,
+        templateId: selectedTemplateId,
+        totalSlides: slideTotal,
+        outputLanguage: 'English',
+      });
+      const nextCourse = createPptCourseFromPresentation(
+        response.presentation,
+        course,
+        selectedTemplateId
+      );
+
+      hasReportedInitialRef.current = true;
+      courseRef.current = nextCourse;
+      undoStackRef.current = [];
+      redoStackRef.current = [];
+      setHistoryAvailability({ canUndo: false, canRedo: false });
+      setCourse(nextCourse);
+      applySelection(nextCourse);
+      setCanCancelTemplatePicker(false);
+      setMode('editor');
+      onCourseChange?.(nextCourse, {
+        source: 'edit',
+        templateId: selectedTemplateId,
+        generator: 'n8n',
+      });
+    } catch (error) {
+      console.error('PPT generation failed:', error);
+      setCoursewareError(error?.message || t('ppt.generateCoursewareFailed'));
+    } finally {
+      setIsGeneratingCourseware(false);
+    }
   };
 
   const returnToTemplatePicker = () => {
@@ -272,6 +312,21 @@ export function PptCoursewareView({
     const items = type === 'image' && Array.isArray(patch.items)
       ? patch.items.filter((item) => item?.url)
       : [];
+    const backgroundUrl = items[0]?.url || patch.url;
+
+    if (type === 'image' && patch.placement === 'background' && backgroundUrl) {
+      updateCourse((draft) => {
+        const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
+        if (active.slide) {
+          active.slide.backgroundImage = backgroundUrl;
+          active.slide.backgroundSize = 'cover';
+          active.slide.backgroundPosition = 'center';
+        }
+      });
+      setAssetPanelType(null);
+      setSelectedLayerId(null);
+      return;
+    }
 
     if (items.length > 1) {
       const cardWidth = 190;
@@ -529,35 +584,40 @@ export function PptCoursewareView({
               <p>{t('ppt.templateDescription')}</p>
             </div> */}
             <div className="ppt-template-stats">
-              <span>{stepCount}</span>
-              <b>{t('ppt.lessonSteps')}</b>
-              <div className="ppt-slide-stepper">
-                <button
-                  type="button"
-                  className="ppt-slide-stepper-btn"
-                  onClick={() => setSlideTotal((value) => Math.max(stepCount, value - 1))}
-                  disabled={slideTotal <= stepCount}
-                >
-                  <Minus size={16} />
-                </button>
-                <span>{slideTotal}</span>
-                <button
-                  type="button"
-                  className="ppt-slide-stepper-btn"
-                  onClick={() => setSlideTotal((value) => value + 1)}
-                >
-                  <Plus size={16} />
-                </button>
+              <div className="ppt-template-stat">
+                <span>{stepCount}</span>
+                <b>{t('ppt.lessonSteps')}</b>
               </div>
-              <b>{t('ppt.estimatedSlides')}</b>
+              <i className="ppt-template-stat-divider" />
+              <div className="ppt-template-stat">
+                <div className="ppt-slide-stepper">
+                  <button
+                    type="button"
+                    className="ppt-slide-stepper-btn"
+                    onClick={() => setSlideTotal((value) => Math.max(stepCount, value - 1))}
+                    disabled={slideTotal <= stepCount}
+                    aria-label={isChinese ? '减少页面数' : 'Decrease slide count'}
+                  >
+                    <Minus size={16} />
+                  </button>
+                  <span>{slideTotal}</span>
+                  <button
+                    type="button"
+                    className="ppt-slide-stepper-btn"
+                    onClick={() => setSlideTotal((value) => value + 1)}
+                    aria-label={isChinese ? '增加页面数' : 'Increase slide count'}
+                  >
+                    <Plus size={16} />
+                  </button>
+                </div>
+                <b>{t('ppt.estimatedSlides')}</b>
+              </div>
             </div>
           </div>
 
           <div className="ppt-template-grid">
             {PPT_TEMPLATES.map((template) => {
               const active = selectedTemplateId === template.id;
-              const templateName = isChinese ? template.name : template.nameEn;
-              const templateDescription = isChinese ? template.description : template.descriptionEn;
               return (
                 <button
                   type="button"
@@ -587,14 +647,17 @@ export function PptCoursewareView({
           </div>
 
           <div className="ppt-template-actions">
+            {coursewareError && (
+              <span className="ppt-template-error" role="alert">{coursewareError}</span>
+            )}
             {canCancelTemplatePicker && (
-              <button type="button" className="ppt-template-cancel-btn" onClick={cancelTemplatePicker}>
+              <button type="button" className="ppt-template-cancel-btn" onClick={cancelTemplatePicker} disabled={isGeneratingCourseware}>
                 {t('common.cancel')}
               </button>
             )}
-            <button type="button" className="ppt-generate-btn" onClick={generateCourseware}>
-              <Sparkles size={18} />
-              {t('ppt.generateCourseware')}
+            <button type="button" className="ppt-generate-btn" onClick={generateCourseware} disabled={isGeneratingCourseware}>
+              {isGeneratingCourseware ? <Loader2 className="ppt-spin" size={18} /> : <Sparkles size={18} />}
+              {isGeneratingCourseware ? t('ppt.generatingCourseware') : t('ppt.generateCourseware')}
             </button>
           </div>
         </section>

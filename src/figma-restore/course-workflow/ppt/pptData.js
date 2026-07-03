@@ -47,7 +47,7 @@ export const PPT_TEMPLATES = [
     description: '来自“蓝色商务风年度工作报告PPT模板”，适合清晰、专业的课程说明。',
     descriptionEn: 'Based on a blue business annual report template, suitable for clear and professional course presentations.',
     pptxUrl: '/ppt/蓝色商务风年度工作报告PPT模板.pptx',
-    coverImage: '/ppt/backgrounds/blue-business.jpeg',
+    coverImage: '/ppt/backgrounds/kids-sky-adventure.png',
     backgroundImage: '',
     background: '#f5f8ff',
     panel: 'rgba(255,255,255,0.86)',
@@ -63,7 +63,7 @@ export const PPT_TEMPLATES = [
     description: '来自“红色商务风个人部门工作总结汇报”，适合重点突出、节奏鲜明的课件。',
     descriptionEn: 'Based on a red business summary template, suitable for focused courseware with a strong rhythm.',
     pptxUrl: '/ppt/红色商务风个人部门工作总结汇报.pptx',
-    coverImage: '/ppt/backgrounds/red-business.png',
+    coverImage: '/ppt/backgrounds/kids-storybook-forest.png',
     backgroundImage: '',
     background: '#fff5f2',
     panel: 'rgba(255,255,255,0.88)',
@@ -79,7 +79,7 @@ export const PPT_TEMPLATES = [
     description: '来自“透明叠底大气自然商务风总结汇报”，适合更有空间感的展示。',
     descriptionEn: 'Based on a natural overlay business template, suitable for spacious and atmospheric presentations.',
     pptxUrl: '/ppt/透明叠底大气自然商务风总结汇报.pptx',
-    coverImage: '/ppt/backgrounds/nature-business.jpeg',
+    coverImage: '/ppt/backgrounds/kids-space-adventure.png',
     backgroundImage: '',
     background: '#f2f5ef',
     panel: 'rgba(255,255,255,0.82)',
@@ -653,6 +653,89 @@ export function createGeneratedPptCourse(initialCourseData, templateId, courseMe
   }));
 
   return [createCoverPhase(initialCourseData, template, courseMeta, options), ...contentPhases];
+}
+
+function presentationElementToLayer(element, slideIndex, elementIndex) {
+  return fitLayerToSlide(createTextLayer({
+    id: element.id || `generated-${slideIndex}-${elementIndex}`,
+    title: englishOnlyText(element.role, 'Text', 40),
+    content: englishOnlyText(element.content, '', 600),
+    x: Number(element.x) || 0,
+    y: Number(element.y) || 0,
+    width: Number(element.width) || 320,
+    height: Number(element.height) || 60,
+    fontSize: Math.min(64, Math.max(18, Number(element.fontSize) || 22)),
+    fontWeight: element.fontWeight === 'bold' ? 'bold' : 'normal',
+    color: /^#[0-9a-f]{6}$/i.test(element.color || '') ? element.color : '#253142',
+    textAlign: ['left', 'center', 'right'].includes(element.textAlign) ? element.textAlign : 'left',
+  }));
+}
+
+export function createPptCourseFromPresentation(presentation, initialCourseData, templateId) {
+  if (!presentation?.slides?.length) {
+    throw new Error('The PPT workflow returned no slides.');
+  }
+
+  const template = getTemplate(templateId);
+  const initialCourse = buildInitialPptCourse(initialCourseData).filter((phase) => phase.key !== 'cover');
+  const generatedSlides = presentation.slides.map((slide, slideIndex) => ({
+    id: slide.id || `generated-slide-${slideIndex + 1}`,
+    title: englishOnlyText(slide.title, `Slide ${slideIndex + 1}`, 100),
+    background: slide.layout?.background || template.background,
+    backgroundImage: slideIndex === 0 ? template.coverImage : '',
+    templateId,
+    isCover: slideIndex === 0,
+    phaseKey: slideIndex === 0 ? 'cover' : slide.phaseKey,
+    stepId: slideIndex === 0 ? 'cover-step' : slide.stepId,
+    layoutName: slide.layout?.name || '',
+    speakerNotes: englishOnlyText(slide.speakerNotes, '', 1200),
+    visualPrompt: englishOnlyText(slide.visualPrompt, '', 1200),
+    layers: (slide.layout?.elements || []).map((element, elementIndex) => (
+      presentationElementToLayer(element, slideIndex, elementIndex)
+    )),
+  }));
+
+  const coverSlide = generatedSlides[0];
+  const phaseNames = {
+    engage: 'ENGAGE',
+    empower: 'EMPOWER',
+    execute: 'EXECUTE',
+    elevate: 'ELEVATE',
+  };
+  const contentPhases = initialCourse.map((phase) => ({
+    ...phase,
+    title: phaseNames[phase.key] || englishOnlyText(phase.title, 'LESSON PHASE', 50),
+    steps: (phase.steps || []).map((step, stepIndex) => {
+      const slides = generatedSlides.filter((slide) => (
+        slide.phaseKey === phase.key && slide.stepId === step.id
+      ));
+      if (!slides.length) {
+        throw new Error(`The PPT workflow did not generate slides for lesson step ${step.id}.`);
+      }
+      return {
+        ...step,
+        title: slides[0].title || `Lesson Step ${stepIndex + 1}`,
+        slides,
+      };
+    }),
+  }));
+
+  return [
+    {
+      key: 'cover',
+      title: 'COVER',
+      tone: 'cover',
+      color: template.accent,
+      steps: [
+        {
+          id: 'cover-step',
+          title: coverSlide.title || 'Course Cover',
+          slides: [coverSlide],
+        },
+      ],
+    },
+    ...contentPhases,
+  ];
 }
 
 export function ensurePptCoverAndInnerPages(course, courseMeta = {}) {

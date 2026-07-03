@@ -117,6 +117,13 @@ class ApiService {
     });
   }
 
+  async generatePptContent(data) {
+    return this.request('/api/ai/generate-ppt-content', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
   // ============ IP Characters ============
 
   async getIpCharacters() {

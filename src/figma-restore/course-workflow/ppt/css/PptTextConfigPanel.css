@@ -18,7 +18,7 @@
 
 #ed-ppt .ppt-text-config-panel .text-size-control {
   display: grid;
-  grid-template-columns: 92px minmax(0, 1fr) 72px;
+  grid-template-columns: 92px minmax(0, 1fr) 84px;
   align-items: center;
   gap: 8px;
 }

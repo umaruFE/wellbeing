@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Eye, EyeOff, Image, Music, Type, Video } from 'lucide-react';
+import { Eye, EyeOff, Image, Music, Trash2, Type, Video } from 'lucide-react';
 import { PptAssetPanel } from '../right-asset-panel';
 import { PptAudioConfigPanel } from './PptAudioConfigPanel';
 import { PptImageConfigPanel } from './PptImageConfigPanel';
@@ -47,6 +47,20 @@ function CanvasLayerPanel({
               ))}
             </div>
           </div>
+          {slide?.backgroundImage && (
+            <div className="ppt-bg-image-card">
+              <img src={slide.backgroundImage} alt="" />
+              <span>{t('ppt.backgroundImage')}</span>
+              <button
+                type="button"
+                onClick={() => onUpdateSlide({ backgroundImage: '' })}
+                title={t('ppt.removeBackgroundImage')}
+                aria-label={t('ppt.removeBackgroundImage')}
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          )}
         </section>
 
         <section className="ppt-layer-section">

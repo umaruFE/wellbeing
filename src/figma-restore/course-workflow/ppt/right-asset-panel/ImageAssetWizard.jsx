@@ -310,18 +310,28 @@ function b13InitialLayer(name, index, total, ratio) {
   };
 }
 
-function RatioPicker({ code, value, onChange }) {
+function RatioPicker({ code, value, placement, onChange, onBackground }) {
   const { t } = useTranslation();
   return (
     <div className="ppt-img-section">
       <div className="ppt-img-label">{t('assetPanel.iwRatio')}</div>
-      <div className="ppt-img-ratio-grid">
+      <div className={`ppt-img-ratio-grid ${onBackground ? 'has-background' : ''}`}>
         {imageRatioSets[code].map((ratio) => (
-          <button type="button" key={ratio} className={value === ratio ? 'is-active' : ''} onClick={() => onChange(ratio)}>
+          <button type="button" key={ratio} className={placement !== 'background' && value === ratio ? 'is-active' : ''} onClick={() => onChange(ratio)}>
             <i className={`ratio-${ratio.replace(':', '-')}`} />
             <span>{ratio}</span>
           </button>
         ))}
+        {onBackground && (
+          <button
+            type="button"
+            className={`ppt-ratio-background ${placement === 'background' ? 'is-active' : ''}`}
+            onClick={onBackground}
+          >
+            <i className="ratio-16-9" />
+            <span>{t('assetPanel.iwPptBackground')}</span>
+          </button>
+        )}
       </div>
     </div>
   );
@@ -630,13 +640,43 @@ function IpSceneWizard({ values, setValue, onGenerate }) {
 
 function StylePicker({ value, onChange }) {
   const { t } = useTranslation();
+  const styles = [
+    {
+      value: t('assetPanel.styleCartoon'),
+      image: '/ppt/style-previews/cartoon-illustration.webp',
+    },
+    {
+      value: t('assetPanel.styleRealistic'),
+      image: '/ppt/style-previews/realistic-photography.webp',
+    },
+    {
+      value: t('assetPanel.styleWatercolor'),
+      image: '/ppt/style-previews/watercolor-storybook.webp',
+    },
+    {
+      value: t('assetPanel.styleClay3d'),
+      image: '/ppt/style-previews/clay-3d.webp',
+    },
+    {
+      value: t('assetPanel.styleCrayonCollage'),
+      image: '/ppt/style-previews/crayon-collage.webp',
+    },
+  ];
+
   return (
     <div className="ppt-img-section">
       <div className="ppt-img-label">{t('assetPanel.iwStyle')}</div>
       <div className="ppt-img-style-row">
-        {[t('assetPanel.styleCartoon'), t('assetPanel.styleRealistic')].map((style) => (
-          <button type="button" key={style} className={value === style ? 'is-active' : ''} onClick={() => onChange(style)}>
-            {style}
+        {styles.map((style) => (
+          <button
+            type="button"
+            key={style.value}
+            className={value === style.value ? 'is-active' : ''}
+            aria-pressed={value === style.value}
+            onClick={() => onChange(style.value)}
+          >
+            <img src={style.image} alt="" />
+            <span>{style.value}</span>
           </button>
         ))}
       </div>
@@ -974,7 +1014,19 @@ function FocusedImageForm({ asset, values, setValue, onGenerate }) {
         ) : isTopicMap ? (
           <FixedRatioBar ratio="16:9" />
         ) : (
-          <RatioPicker code={asset.code} value={values.ratio} onChange={(value) => setValue('ratio', value)} />
+          <RatioPicker
+            code={asset.code}
+            value={values.ratio}
+            placement={values.placement}
+            onChange={(value) => {
+              setValue('ratio', value);
+              setValue('placement', 'layer');
+            }}
+            onBackground={['B3', 'B11'].includes(asset.code) ? undefined : () => {
+              setValue('ratio', '16:9');
+              setValue('placement', 'background');
+            }}
+          />
         )}
         {!isKnowledgeImage && !isComicImage && !isActionImage ? <StylePicker value={values.style} onChange={(value) => setValue('style', value)} /> : null}
         {isStoryImage ? (
@@ -1516,6 +1568,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
   const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     ratio: asset.code === 'B3' ? '3:4' : asset.code === 'B4' ? '9:16' : '16:9',
+    placement: 'layer',
     style: asset.code === 'B4' ? (isEn ? 'Realistic Photography' : '写实摄影') : (isEn ? 'Cartoon Illustration' : '卡通插画'),
     prompt: '',
     whitespace: isEn ? 'Bottom' : '底部',
@@ -1626,6 +1679,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
         onSelect={setSelectedIndex}
         onRegenerate={handleGenerate}
         onSaveOnly={handleSaveOnly}
+        insertLabel={values.placement === 'background' ? t('assetPanel.iwSetAsBackground') : undefined}
         onInsert={() => {
           if (asset.code === 'B3') {
             const completedItems = results.filter((item) => item?.url);
@@ -1637,7 +1691,12 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
             });
             return;
           }
-          onInsert('image', { ...asset, ...selectedResult, title: selectedResult?.title || asset.title });
+          onInsert('image', {
+            ...asset,
+            ...selectedResult,
+            placement: values.placement,
+            title: selectedResult?.title || asset.title,
+          });
         }}
       />
     );

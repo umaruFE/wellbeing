@@ -428,8 +428,8 @@ export function PptCanvas({
           style={{
             backgroundColor: slide?.background || '#ffffff',
             backgroundImage: slide?.backgroundImage ? `url("${slide.backgroundImage}")` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
+            backgroundSize: slide?.backgroundSize || 'cover',
+            backgroundPosition: slide?.backgroundPosition || 'center',
             transform: `scale(${zoom / 100})`,
           }}
           onPointerDown={onClearSelection}

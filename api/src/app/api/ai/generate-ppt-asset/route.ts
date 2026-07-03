@@ -82,6 +82,37 @@ function cleanText(value?: unknown) {
   return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
 }
 
+function imageStyleInstruction(value?: string) {
+  const style = cleanText(value).toLowerCase();
+  if (style.includes('卡通') || style.includes('cartoon')) {
+    return 'Flat vector illustration with uniform black contour lines, single-line outline style, clean 2D flat design, no gradients, no shadows, low-saturation solid color fills, harmonious soft tones, a coherent color palette, a simplified but stylized background environment, clear environmental line art, a non-realistic friendly aesthetic, and an immersive narrative flat background.';
+  }
+  if (style.includes('写实') || style.includes('realistic') || style.includes('photo')) {
+    return 'Natural realistic photography with authentic people, materials, lighting, depth, skin texture, and environmental details; polished editorial composition; no illustration or CGI appearance.';
+  }
+  if (style.includes('水彩') || style.includes('watercolor')) {
+    return 'Children’s watercolor picture-book illustration with translucent washes, delicate colored-pencil accents, softly hand-painted edges, gentle paper texture, and warm editorial publishing quality.';
+  }
+  if (style.includes('黏土') || style.includes('粘土') || style.includes('clay')) {
+    return 'Handcrafted 3D clay animation with soft polymer-clay characters and scenery, rounded tactile forms, subtle handmade texture, and a friendly premium stop-motion look.';
+  }
+  if (style.includes('蜡笔') || style.includes('crayon') || style.includes('collage')) {
+    return 'Children’s wax-crayon drawing combined with cut-paper collage, visible crayon strokes, hand-cut paper shapes, playful classroom-art energy, and a polished handmade composition.';
+  }
+  return cleanText(value);
+}
+
+function imageStyleNegativePrompt(value?: string) {
+  const style = cleanText(value).toLowerCase();
+  if (style.includes('卡通') || style.includes('cartoon')) {
+    return 'gradient, shadow, lighting effect, 3d, cgi, photorealistic, painterly texture, variable outline thickness';
+  }
+  if (style.includes('写实') || style.includes('realistic') || style.includes('photo')) {
+    return 'illustration, drawing, cartoon, anime, vector art, 3d render, clay';
+  }
+  return '';
+}
+
 function defaultImageNegativePrompt(assetCode?: string) {
   const code = typeof assetCode === 'string' ? assetCode.toUpperCase() : '';
   if (code === 'B2') {
@@ -103,6 +134,12 @@ function buildImagePayload(basePayload: Record<string, any>, assetCode?: string,
   const whitespace = cleanText(options.whitespace || rawValues.whitespace);
   const textLayout = cleanText(options.textLayout || rawValues.textLayout);
   const imageStyle = cleanText(options.imageStyle || rawValues.style || basePayload.style);
+  const styleInstruction = imageStyleInstruction(imageStyle);
+  const styleNegativePrompt = imageStyleNegativePrompt(imageStyle);
+  const styledBasePrompt = [
+    basePayload.prompt,
+    styleInstruction ? `Visual style requirements: ${styleInstruction}` : '',
+  ].filter(Boolean).join(' ');
   const posterPrompt = code === 'B2'
     ? [
         'Create a PPT poster-style atmospheric image with clear readable typography.',
@@ -110,16 +147,20 @@ function buildImagePayload(basePayload: Record<string, any>, assetCode?: string,
         overlayText ? `Render exactly this overlay text in the image: "${overlayText}".` : '',
         textLayout ? `Text layout: ${textLayout}.` : '',
         whitespace ? `Whitespace area: ${whitespace}.` : '',
-        imageStyle ? `Visual style: ${imageStyle}.` : '',
+        styleInstruction ? `Visual style requirements: ${styleInstruction}` : '',
         'Clean composition for a classroom PPT cover. Do not add watermark, logo, or unrelated extra text.',
       ].filter(Boolean).join(' ')
-    : basePayload.prompt;
+    : styledBasePrompt;
+  const negativePrompt = [
+    options.negativePrompt || defaultImageNegativePrompt(code),
+    styleNegativePrompt,
+  ].filter(Boolean).join(', ');
 
   return {
     ...basePayload,
     prompt: posterPrompt,
     optimized_prompt: posterPrompt,
-    negative_prompt: options.negativePrompt || defaultImageNegativePrompt(code),
+    negative_prompt: negativePrompt,
     themeImagePrompt: posterPrompt,
     description: posterPrompt,
     imageSubtype: subtype,

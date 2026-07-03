@@ -603,8 +603,12 @@
 
 #ed-ppt .ppt-img-ratio-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#ed-ppt .ppt-img-ratio-grid.has-background {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
 #ed-ppt .ppt-img-ratio-grid button {
@@ -620,6 +624,16 @@
   gap: 8px;
   cursor: pointer;
   font-weight: 800;
+  min-width: 0;
+  padding: 4px;
+}
+
+#ed-ppt .ppt-img-ratio-grid button span {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 #ed-ppt .ppt-img-ratio-grid button.is-active {
@@ -661,8 +675,9 @@
 }
 
 #ed-ppt .ppt-img-style-row {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
 #ed-ppt .ppt-img-whitespace-row {
@@ -704,11 +719,47 @@
 }
 
 #ed-ppt .ppt-img-style-row button {
-  height: 36px;
+  min-width: 0;
+  height: auto;
+  padding: 5px 5px 7px;
   border: 2px solid #2f3b4e;
-  border-radius: 7px;
+  border-radius: 9px;
   background: #ffffff;
   color: var(--ppt-ink);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+}
+
+#ed-ppt .ppt-img-style-row button:hover {
+  transform: translateY(-1px);
+  border-color: var(--ppt-coral);
+}
+
+#ed-ppt .ppt-img-style-row button img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 5px;
+  object-fit: cover;
+  background: #f1f3f6;
+}
+
+#ed-ppt .ppt-img-style-row button span {
+  min-width: 0;
+  padding: 0 2px;
+  overflow: hidden;
+  color: inherit;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 18px;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   padding: 0 16px;
   font-size: 13px;
   font-weight: 900;
@@ -826,8 +877,9 @@
 
 #ed-ppt .ppt-img-style-row button.is-active {
   border-color: var(--ppt-coral);
-  background: #ffe9e4;
+  background: #fff3ef;
   color: var(--ppt-coral);
+  box-shadow: 0 0 0 2px rgba(255, 112, 93, 0.12);
 }
 
 #ed-ppt .ppt-img-whitespace-row button.is-active {

@@ -355,11 +355,13 @@
 .ppt-layer-text-editor {
   display: block;
   resize: none;
-  padding: 6px;
-  border: 2px solid var(--ppt-coral);
-  border-radius: 5px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
   outline: none;
-  background: rgba(255, 255, 255, 0.96);
+  background: transparent;
+  caret-color: currentColor;
+  overflow: hidden;
   -webkit-text-stroke: 0 transparent !important;
 }
 
@@ -830,6 +832,24 @@ video.ppt-video-layer {
 
 #ed-ppt .ppt-export-action {
   background: #dfe2bb;
+}
+
+#ed-ppt .ppt-style-action {
+  height: 36px;
+  padding: 0 12px;
+  border: 2px solid #253142;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #253142;
+  box-shadow: 3px 3px 0 #253142;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-style-action:hover {
+  border-color: #253142;
+  background: #ffffff;
+  box-shadow: 3px 3px 0 #253142;
 }
 
 #ed-ppt .ppt-tool-group button {
