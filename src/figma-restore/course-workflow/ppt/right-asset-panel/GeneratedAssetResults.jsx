@@ -1,9 +1,11 @@
 import { Check, Download, RefreshCw } from 'lucide-react';
 import { getAssetIconFallback } from './assetPanelData';
 
-export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, onRegenerate, onInsert, onSaveOnly, insertLabel }) {
+export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, onRegenerate, onInsert, onSaveOnly, onDownloadAll, insertLabel }) {
   const Icon = asset?.icon || getAssetIconFallback(kind);
   const resultItems = asset?.results || [];
+  const downloadableItems = resultItems.filter((item) => item?.url);
+  const canDownloadAll = kind === 'image' && downloadableItems.length > 1 && typeof onDownloadAll === 'function';
   const cards = resultItems.length
     ? resultItems
     : kind === 'audio'
@@ -48,6 +50,9 @@ export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, on
         {kind === 'image' ? (
           <>
             <button type="button" className="ppt-ghost-btn" onClick={onSaveOnly}><Download size={14} />仅存库</button>
+            {canDownloadAll ? (
+              <button type="button" className="ppt-ghost-btn" onClick={onDownloadAll}><Download size={14} />批量下载</button>
+            ) : null}
             <button type="button" className="ppt-primary-btn" onClick={onInsert}>{insertLabel || '插入画布 →'}</button>
           </>
         ) : (

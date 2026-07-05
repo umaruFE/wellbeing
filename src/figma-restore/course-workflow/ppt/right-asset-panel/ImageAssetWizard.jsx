@@ -1,6 +1,7 @@
 import React from 'react';
 import { Input, message } from 'antd';
 import { useTranslation } from 'react-i18next';
+import JSZip from 'jszip';
 import {
   BookOpen,
   CircleDot,
@@ -222,6 +223,61 @@ function buildImageGenerationRequest(asset, values) {
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function sanitizeFilename(value) {
+  return String(value || 'picture-book')
+    .replace(/[\\/:*?"<>|]/g, '-')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    .slice(0, 80) || 'picture-book';
+}
+
+function getImageExtension(contentType, url) {
+  if (contentType?.includes('jpeg')) return 'jpg';
+  if (contentType?.includes('png')) return 'png';
+  if (contentType?.includes('webp')) return 'webp';
+  const cleanUrl = String(url || '').split('?')[0];
+  const match = cleanUrl.match(/\.([a-z0-9]{2,5})$/i);
+  return match ? match[1].toLowerCase() : 'png';
+}
+
+function resolveDownloadUrl(url) {
+  if (String(url || '').startsWith('/')) return url;
+  const absoluteUrl = new URL(url, window.location.origin).href;
+  return `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(absoluteUrl)}`;
+}
+
+async function downloadImagesAsZip(items, filenamePrefix) {
+  const zip = new JSZip();
+  const downloadableItems = items.filter((item) => item?.url);
+
+  if (!downloadableItems.length) {
+    throw new Error('没有可下载的图片');
+  }
+
+  for (let index = 0; index < downloadableItems.length; index += 1) {
+    const item = downloadableItems[index];
+    const response = await fetch(resolveDownloadUrl(item.url));
+    if (!response.ok) {
+      throw new Error(`第 ${index + 1} 张图片下载失败`);
+    }
+    const blob = await response.blob();
+    const extension = getImageExtension(blob.type, item.url);
+    const paddedIndex = String(index + 1).padStart(2, '0');
+    const pageName = sanitizeFilename(item.title || item.filename || `page-${paddedIndex}`);
+    zip.file(`${filenamePrefix}_${paddedIndex}_${pageName}.${extension}`, blob);
+  }
+
+  const content = await zip.generateAsync({ type: 'blob' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(content);
+  link.download = `${filenamePrefix}.zip`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(link.href);
 }
 
 async function pollGeneratedImage(asset) {
@@ -1699,6 +1755,27 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange, inser
     }
   }, [asset, results, selectedIndex, t]);
 
+  const handleDownloadAll = React.useCallback(async () => {
+    const downloadableResults = results.filter((item) => item?.url);
+    if (downloadableResults.length === 0) {
+      message.warning(t('assetPanel.iwNotReady'));
+      return;
+    }
+
+    const filenamePrefix = sanitizeFilename(
+      asset.code === 'B9'
+        ? (values.storybookTitle || asset.title)
+        : asset.title
+    );
+
+    try {
+      await downloadImagesAsZip(downloadableResults, filenamePrefix);
+      message.success('批量下载已开始');
+    } catch (error) {
+      message.error(error.message || '批量下载失败');
+    }
+  }, [asset, results, t, values.storybookTitle]);
+
   if (stage === 'generating') {
     const batchItems = buildBatchItems(asset, values) || [];
     return (
@@ -1720,6 +1797,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange, inser
         onSelect={setSelectedIndex}
         onRegenerate={handleGenerate}
         onSaveOnly={handleSaveOnly}
+        onDownloadAll={['B3', 'B9', 'B11'].includes(asset.code) ? handleDownloadAll : undefined}
         insertLabel={insertLabel || (values.placement === 'background' ? t('assetPanel.iwSetAsBackground') : undefined)}
         onInsert={() => {
           if (asset.code === 'B3' || asset.code === 'B9') {
