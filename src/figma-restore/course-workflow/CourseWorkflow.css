@@ -4075,3 +4075,186 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
   margin-left:0!important;
   margin-top: -10px;
 }
+
+.lesson-loading-page{
+  min-height:calc(100vh - 148px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:
+    radial-gradient(circle at 45% 42%, rgba(255,255,255,.92) 0 0, transparent 34%),
+    linear-gradient(180deg,#f7f5ef 0%,#f2f0ea 100%);
+}
+
+.lesson-loading-card{
+  width:min(360px,78vw);
+  min-height:270px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:22px;
+  color:#2f3a4a;
+}
+
+.lesson-loading-orbit{
+  position:relative;
+  width:172px;
+  height:142px;
+}
+
+.lesson-loading-orbit::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:118px;
+  height:82px;
+  border:3px dashed rgba(47,58,74,.26);
+  border-radius:50%;
+  transform:translate(-50%,-50%) rotate(-12deg);
+  animation:lessonOrbit 2.6s linear infinite;
+}
+
+.lesson-loading-paper{
+  position:absolute;
+  width:64px;
+  height:82px;
+  border:3px solid #2f3a4a;
+  border-radius:14px;
+  background:#fffaf0;
+  box-shadow:8px 10px 0 rgba(47,58,74,.12);
+}
+
+.lesson-loading-paper::before,
+.lesson-loading-paper::after{
+  content:"";
+  position:absolute;
+  left:13px;
+  right:13px;
+  height:4px;
+  border-radius:999px;
+  background:#86a8d8;
+}
+
+.lesson-loading-paper::before{top:25px}
+.lesson-loading-paper::after{top:41px;width:25px}
+
+.lesson-loading-paper.paper-a{
+  left:18px;
+  top:35px;
+  transform:rotate(-10deg);
+  animation:lessonPaperA 1.8s ease-in-out infinite;
+}
+
+.lesson-loading-paper.paper-b{
+  right:16px;
+  top:22px;
+  background:#f3e3ef;
+  transform:rotate(8deg) scale(.92);
+  animation:lessonPaperB 1.8s ease-in-out infinite;
+}
+
+.lesson-loading-pencil{
+  position:absolute;
+  left:62px;
+  top:42px;
+  width:82px;
+  height:16px;
+  border:3px solid #2f3a4a;
+  border-radius:999px;
+  background:linear-gradient(90deg,#ffcf6a 0 65%,#ff796b 65% 82%,#fff 82% 100%);
+  box-shadow:5px 7px 0 rgba(47,58,74,.12);
+  transform-origin:12px 50%;
+  animation:lessonPencil 1.25s ease-in-out infinite;
+}
+
+.lesson-loading-pencil::after{
+  content:"";
+  position:absolute;
+  right:-12px;
+  top:50%;
+  width:0;
+  height:0;
+  border-top:8px solid transparent;
+  border-bottom:8px solid transparent;
+  border-left:13px solid #2f3a4a;
+  transform:translateY(-50%);
+}
+
+.lesson-loading-spark{
+  position:absolute;
+  width:14px;
+  height:14px;
+  border:3px solid #b05cff;
+  border-radius:50%;
+  opacity:.86;
+  animation:lessonSpark 1.4s ease-in-out infinite;
+}
+
+.lesson-loading-spark.spark-a{right:18px;top:6px}
+.lesson-loading-spark.spark-b{left:12px;bottom:6px;animation-delay:.35s;border-color:#ff796b}
+
+.lesson-loading-copy{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:0;
+}
+
+.lesson-loading-copy span{
+  display:inline-flex;
+  align-items:flex-end;
+  gap:4px;
+  height:18px;
+}
+
+.lesson-loading-copy i{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#ff796b;
+  animation:lessonDot 1s ease-in-out infinite;
+}
+
+.lesson-loading-copy i:nth-child(2){
+  animation-delay:.15s;
+  background:#c99a51;
+}
+
+.lesson-loading-copy i:nth-child(3){
+  animation-delay:.3s;
+  background:#5b8dee;
+}
+
+@keyframes lessonOrbit{
+  to{transform:translate(-50%,-50%) rotate(348deg)}
+}
+
+@keyframes lessonPaperA{
+  0%,100%{transform:translateY(0) rotate(-10deg)}
+  50%{transform:translateY(-10px) rotate(-6deg)}
+}
+
+@keyframes lessonPaperB{
+  0%,100%{transform:translateY(0) rotate(8deg) scale(.92)}
+  50%{transform:translateY(9px) rotate(13deg) scale(.92)}
+}
+
+@keyframes lessonPencil{
+  0%,100%{transform:translate(0,0) rotate(-18deg)}
+  50%{transform:translate(10px,16px) rotate(-8deg)}
+}
+
+@keyframes lessonSpark{
+  0%,100%{transform:scale(.65);opacity:.35}
+  50%{transform:scale(1.18);opacity:1}
+}
+
+@keyframes lessonDot{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-7px)}
+}

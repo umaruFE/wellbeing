@@ -1444,10 +1444,23 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
   if (loading) {
     return (
-      <div id="ed-tbl" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 400 }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="tbl-loading-spinner" />
-          <p style={{ color: '#818997', marginTop: 12 }}>{t('workflow.lesson.generating')}</p>
+      <div id="ed-tbl" className="lesson-loading-page">
+        <div className="lesson-loading-card" role="status" aria-live="polite">
+          <div className="lesson-loading-orbit" aria-hidden="true">
+            <span className="lesson-loading-paper paper-a" />
+            <span className="lesson-loading-paper paper-b" />
+            <span className="lesson-loading-pencil" />
+            <span className="lesson-loading-spark spark-a" />
+            <span className="lesson-loading-spark spark-b" />
+          </div>
+          <div className="lesson-loading-copy">
+            <strong>{t('workflow.lesson.generating')}</strong>
+            <span>
+              <i />
+              <i />
+              <i />
+            </span>
+          </div>
         </div>
       </div>
     );
