@@ -3,6 +3,7 @@ import { uploadToOss } from '@/lib/oss';
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const COMFYUI_PUBLIC_URL = process.env.COMFYUI_PUBLIC_URL
   || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+const IMAGE_FILENAME_PATTERN = /^[\w.-]+\.(?:png|jpe?g|webp|gif)(?:\?.*)?$/i;
 
 function isOssUrl(value: string) {
   const endpoint = process.env.ALIYUN_OSS_ENDPOINT || 'wellbeing1.oss-cn-beijing.aliyuncs.com';
@@ -34,6 +35,26 @@ function isComfyImageUrl(value: string) {
   }
 }
 
+function toComfyImageUrl(value: string) {
+  const raw = value.trim();
+  if (!raw || isOssUrl(raw)) return null;
+
+  if (/^https?:\/\//i.test(raw)) {
+    return isComfyImageUrl(raw) ? raw : null;
+  }
+
+  if (raw.startsWith('/view?') || raw.startsWith('view?')) {
+    return `${COMFYUI_PUBLIC_URL.replace(/\/$/, '')}/${raw.replace(/^\/+/, '')}`;
+  }
+
+  if (IMAGE_FILENAME_PATTERN.test(raw) && !raw.includes('/')) {
+    const filename = raw.split('?')[0];
+    return `${COMFYUI_PUBLIC_URL.replace(/\/$/, '')}/view?filename=${encodeURIComponent(filename)}&subfolder=&type=output`;
+  }
+
+  return null;
+}
+
 function imageExtension(url: URL, contentType: string) {
   const filename = url.searchParams.get('filename') || url.pathname;
   const extension = filename.split('.').pop()?.toLowerCase();
@@ -48,12 +69,13 @@ export async function persistComfyImageUrl(
   imageUrl: string,
   folder = 'ppt-generated-images',
 ): Promise<string> {
-  if (!isComfyImageUrl(imageUrl)) return imageUrl;
+  const comfyImageUrl = toComfyImageUrl(imageUrl);
+  if (!comfyImageUrl) return imageUrl;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 45000);
   try {
-    const response = await fetch(imageUrl, {
+    const response = await fetch(comfyImageUrl, {
       signal: controller.signal,
       headers: { 'User-Agent': 'Wellbeing-PPT-Image-Persistence/1.0' },
     });
@@ -71,7 +93,7 @@ export async function persistComfyImageUrl(
       throw new Error(`图片大小无效：${buffer.length} bytes`);
     }
 
-    const extension = imageExtension(new URL(imageUrl), contentType);
+    const extension = imageExtension(new URL(comfyImageUrl), contentType);
     const uploadedUrl = await uploadToOss(buffer, folder, `ppt-${Date.now()}.${extension}`);
     return stableOssUrl(uploadedUrl);
   } finally {
@@ -85,11 +107,12 @@ export async function persistComfyImagesInValue<T>(value: T, folder = 'ppt-gener
   const visit = async (current: unknown): Promise<unknown> => {
     if (typeof current === 'string') {
       if (isOssUrl(current)) return stableOssUrl(current);
-      if (!isComfyImageUrl(current)) return current;
-      if (!cache.has(current)) {
-        cache.set(current, persistComfyImageUrl(current, folder));
+      const comfyImageUrl = toComfyImageUrl(current);
+      if (!comfyImageUrl) return current;
+      if (!cache.has(comfyImageUrl)) {
+        cache.set(comfyImageUrl, persistComfyImageUrl(comfyImageUrl, folder));
       }
-      return cache.get(current);
+      return cache.get(comfyImageUrl);
     }
     if (Array.isArray(current)) {
       return Promise.all(current.map(visit));

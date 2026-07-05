@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Checkbox, Form, Input, message, Radio, Select, Upload } from 'antd';
+import { Button, Checkbox, Form, Input, message, Radio, Select, Tooltip, Upload } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   Clock,
@@ -347,6 +347,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const [regenImage, setRegenImage] = React.useState(false);
   const [regenTips, setRegenTips] = React.useState(fallbackRegenTips);
   const [loadingRegenTips, setLoadingRegenTips] = React.useState(false);
+  const [storylineOpen, setStorylineOpen] = React.useState(false);
+  const [mapContentModal, setMapContentModal] = React.useState(null);
   const map = buildCourseMap(course);
   const editOptions = React.useMemo(() => ({
     age: [
@@ -410,6 +412,10 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
     execute: savedJourney.execute || fallbackJourney.execute,
     elevate: savedJourney.elevate || fallbackJourney.elevate,
   };
+
+  const openMapContent = React.useCallback((title, content) => {
+    setMapContentModal({ title, content: String(content || '') });
+  }, []);
 
   const themeImagePrompt = React.useMemo(() => {
     const directPrompt = [
@@ -862,7 +868,16 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                 {t('workflow.map.storyline')}
                 {isChinese && <span>Storyline</span>}
               </div>
-              <div className="course-map-v2-core-text">{map.storyline}</div>
+              <Tooltip title={map.storyline} placement="topLeft">
+                <button
+                  type="button"
+                  className="course-map-v2-core-text"
+                  title={map.storyline}
+                  onClick={() => setStorylineOpen(true)}
+                >
+                  {map.storyline}
+                </button>
+              </Tooltip>
             </div>
 
             <div className="course-map-v2-cover">
@@ -904,16 +919,16 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
           <section className="course-map-v2-panel">
             <div className="course-map-v2-grid">
-              <CourseGoal icon={MessageSquare} image={toolkitIcon} title={t('workflow.map.languageToolkit')} en="Language Toolkit" showEn={isChinese} tone="toolkit" color="#d8ca8d">
+              <CourseGoal icon={MessageSquare} image={toolkitIcon} title={t('workflow.map.languageToolkit')} en="Language Toolkit" showEn={isChinese} tone="toolkit" color="#d8ca8d" onOpen={openMapContent}>
                 {map.toolkit}
               </CourseGoal>
-              <CourseGoal icon={Target} image={starIcon} title={t('workflow.map.keyOutcome')} en="Key Outcome" showEn={isChinese} tone="outcome" color="#f6e6cc">
+              <CourseGoal icon={Target} image={starIcon} title={t('workflow.map.keyOutcome')} en="Key Outcome" showEn={isChinese} tone="outcome" color="#f6e6cc" onOpen={openMapContent}>
                 {map.keyOutcome}
               </CourseGoal>
-              <CourseGoal icon={Heart} image={compassIcon} title={t('workflow.map.growthCompass')} en="Growth Compass" showEn={isChinese} tone="growth" color="#d9dde9">
+              <CourseGoal icon={Heart} image={compassIcon} title={t('workflow.map.growthCompass')} en="Growth Compass" showEn={isChinese} tone="growth" color="#d9dde9" onOpen={openMapContent}>
                 {map.growth}
               </CourseGoal>
-              <CourseGoal icon={Users} image={lightIcon} title={t('workflow.map.howWeLearn')} en="How We Learn" showEn={isChinese} tone="learn" color="#dfe2bb">
+              <CourseGoal icon={Users} image={lightIcon} title={t('workflow.map.howWeLearn')} en="How We Learn" showEn={isChinese} tone="learn" color="#dfe2bb" onOpen={openMapContent}>
                 {map.experience}
               </CourseGoal>
 
@@ -933,7 +948,19 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                           <span className="course-map-v2-journey-node">{index + 1}</span>
                           {t(item.titleKey, item.title)}
                         </strong>
-                        <div>{journey[item.key]}</div>
+                        <Tooltip title={journey[item.key]} placement="topLeft">
+                          <button
+                            type="button"
+                            className="course-map-v2-journey-text"
+                            title={journey[item.key]}
+                            onClick={() => openMapContent(
+                              `${t(item.titleKey, item.title)}${isChinese ? ' · Class Journey' : ''}`,
+                              journey[item.key],
+                            )}
+                          >
+                            {journey[item.key]}
+                          </button>
+                        </Tooltip>
                       </div>
                     </div>
                   ))}
@@ -944,7 +971,40 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         </div>
       )}
 
-     
+      {storylineOpen && (
+        <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setStorylineOpen(false)}>
+          <div className="modal course-map-storyline-modal">
+            <div className="modal-hd">
+              <div className="modal-t">{isChinese ? '核心情境 Storyline' : t('workflow.map.storyline')}</div>
+              <button type="button" className="modal-x" onClick={() => setStorylineOpen(false)}><X size={22} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="course-map-storyline-full">{map.storyline}</div>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-primary" onClick={() => setStorylineOpen(false)}>{t('common.close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {mapContentModal && (
+        <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setMapContentModal(null)}>
+          <div className="modal course-map-storyline-modal">
+            <div className="modal-hd">
+              <div className="modal-t">{mapContentModal.title}</div>
+              <button type="button" className="modal-x" onClick={() => setMapContentModal(null)}><X size={22} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="course-map-storyline-full">{mapContentModal.content}</div>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-primary" onClick={() => setMapContentModal(null)}>{t('common.close')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {regenOpen && (
         <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setRegenOpen(false)}>
           <div className="modal overview-regen-modal">
@@ -1169,7 +1229,9 @@ function ModalSection({ title, desc, children }) {
   );
 }
 
-function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, children }) {
+function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, children, onOpen }) {
+  const fullTitle = [title, showEn ? en : ''].filter(Boolean).join(' ');
+  const content = String(children || '');
   return (
     <article className={`course-map-v2-goal ${tone ? `is-${tone}` : ''}`}>
       <div className="course-map-v2-goal-title">
@@ -1179,7 +1241,16 @@ function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, childre
         {title}
         {showEn && <span className="course-map-v2-title-en">{en}</span>}
       </div>
-      <div className="course-map-v2-text">{children}</div>
+      <Tooltip title={content} placement="topLeft">
+        <button
+          type="button"
+          className="course-map-v2-text"
+          title={content}
+          onClick={() => onOpen?.(fullTitle, content)}
+        >
+          {children}
+        </button>
+      </Tooltip>
     </article>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react';
+import { resolvePptMediaUrl } from './pptMediaUrl';
 import './css/PptOutline.css';
 
 const phaseLabelKeys = {
@@ -214,7 +215,7 @@ function PptOutlineThumb({ slide, slideIndex }) {
         className="ppt-design-thumb live"
         style={{
           backgroundColor: slide?.background || '#ffffff',
-          backgroundImage: slide?.backgroundImage ? `url("${slide.backgroundImage}")` : undefined,
+          backgroundImage: slide?.backgroundImage ? `url("${resolvePptMediaUrl(slide.backgroundImage)}")` : undefined,
         }}
         aria-hidden="true"
       >

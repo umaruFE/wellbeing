@@ -5,6 +5,7 @@ import { PptAudioConfigPanel } from './PptAudioConfigPanel';
 import { PptImageConfigPanel } from './PptImageConfigPanel';
 import { PptTextConfigPanel } from './PptTextConfigPanel';
 import { PptVideoConfigPanel } from './PptVideoConfigPanel';
+import { resolvePptMediaUrl } from '../pptMediaUrl';
 import '../css/PptRightPanel.css';
 
 const swatches = ['#253142', '#ffffff', '#fff1ed', '#eaf4ff', '#f0e7ff'];
@@ -50,7 +51,7 @@ function CanvasLayerPanel({
           </div>
           {slide?.backgroundImage && (
             <div className="ppt-bg-image-card">
-              <img src={slide.backgroundImage} alt="" />
+              <img src={resolvePptMediaUrl(slide.backgroundImage)} alt="" />
               <span>{t('ppt.backgroundImage')}</span>
               <button
                 className="ppt-bg-unset"

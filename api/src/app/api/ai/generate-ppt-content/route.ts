@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 const CJK_PATTERN = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
 
@@ -92,13 +93,15 @@ export async function POST(request: NextRequest) {
       throw new Error('The PPT workflow returned no slides.');
     }
 
-    const cjkPath = findCjk(presentation);
+    const persistedPresentation = await persistComfyImagesInValue(presentation, 'ppt-generated-images');
+
+    const cjkPath = findCjk(persistedPresentation);
     if (cjkPath) {
       throw new Error(`The PPT workflow returned non-English content at ${cjkPath}.`);
     }
 
     return NextResponse.json(
-      { success: true, workflow, presentation },
+      { success: true, workflow, presentation: persistedPresentation },
       { headers: corsHeaders() }
     );
   } catch (error) {

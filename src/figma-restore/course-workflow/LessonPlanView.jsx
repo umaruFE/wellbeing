@@ -438,6 +438,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   const [regenStep, setRegenStep] = React.useState(null);
   const [addingStep, setAddingStep] = React.useState(null);
   const [generateDraftLoading, setGenerateDraftLoading] = React.useState(false);
+  const [mapSummaryModal, setMapSummaryModal] = React.useState(null);
   const [savedSteps, setSavedSteps] = React.useState(() => {
     try { return JSON.parse(localStorage.getItem('saved-wellbeing-steps') || '[]'); }
     catch { return []; }
@@ -1401,7 +1402,19 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                       </span>
                     </div>
                     <Tooltip title={summaryText} placement="topLeft">
-                      <p>{summaryText}</p>
+                      <button
+                        type="button"
+                        className="lesson-map-card-summary-btn"
+                        title={summaryText}
+                        onClick={() => setMapSummaryModal({
+                          title: phaseTitleText,
+                          content: summaryText,
+                          tone: meta.tone,
+                          className: meta.className,
+                        })}
+                      >
+                        {summaryText}
+                      </button>
                     </Tooltip>
                     <div className="lesson-map-card-meta">
                       <strong>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</strong>
@@ -1477,6 +1490,22 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       {viewMode === 'map' ? renderLessonMap() : (
         <div className="tbl-kanban">
           {data.map((phase) => renderOverviewPhaseCard(phase))}
+        </div>
+      )}
+      {mapSummaryModal && (
+        <div className="mo on" id="lesson-map-summary-modal" onMouseDown={(event) => event.target === event.currentTarget && setMapSummaryModal(null)}>
+          <div className={`modal lesson-map-summary-modal ${mapSummaryModal.className || ''}`} style={{ '--map-card-bg': mapSummaryModal.tone || '#e8d2df' }}>
+            <div className="modal-hd">
+              <div className="modal-t">{mapSummaryModal.title}</div>
+              <button type="button" className="modal-x" onClick={() => setMapSummaryModal(null)} aria-label={t('common.close')}><X size={22} /></button>
+            </div>
+            <div className="modal-body">
+              <div className="lesson-map-summary-full">{mapSummaryModal.content}</div>
+            </div>
+            <div className="modal-ft">
+              <button type="button" className="mo-btn-primary" onClick={() => setMapSummaryModal(null)}>{t('common.close')}</button>
+            </div>
+          </div>
         </div>
       )}
       {regenPhaseConfirm && (

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { ArrowDown, ArrowUp, Copy, Image, Maximize2, Minus, Music, Palette, Plus, Redo2, RotateCw, Trash2, Type, Undo2, Video } from 'lucide-react';
 import { PptDemoScene } from './PptDemoScene';
 import { PPT_SLIDE_HEIGHT, PPT_SLIDE_WIDTH } from './pptData';
+import { resolvePptMediaUrl } from './pptMediaUrl';
 import './css/PptCanvas.css';
 
 const SLIDE_WIDTH = PPT_SLIDE_WIDTH;
@@ -88,7 +89,7 @@ function LayerContent({
       return (
         <video
           className="ppt-video-layer"
-          src={layer.url}
+          src={resolvePptMediaUrl(layer.url)}
           controls
           muted={layer.videoMeta?.muted}
           loop={layer.videoMeta?.loop}
@@ -108,7 +109,7 @@ function LayerContent({
   if (layer.type === 'audio') {
     return (
       <div className="ppt-audio-layer">
-        {layer.url ? <audio src={layer.url} controls /> : <span className="ppt-audio-play">▶</span>}
+        {layer.url ? <audio src={resolvePptMediaUrl(layer.url)} controls /> : <span className="ppt-audio-play">▶</span>}
         <strong>{layer.title}</strong>
         {!layer.url && <span className="ppt-audio-progress" />}
       </div>
@@ -116,7 +117,7 @@ function LayerContent({
   }
 
   if (layer.url) {
-    return <img className="ppt-image-layer" src={layer.url} alt={layer.title || t('ppt.imageAsset')} />;
+    return <img className="ppt-image-layer" src={resolvePptMediaUrl(layer.url)} alt={layer.title || t('ppt.imageAsset')} />;
   }
 
   return (
@@ -427,7 +428,7 @@ export function PptCanvas({
           className="ppt-slide"
           style={{
             backgroundColor: slide?.background || '#ffffff',
-            backgroundImage: slide?.backgroundImage ? `url("${slide.backgroundImage}")` : undefined,
+            backgroundImage: slide?.backgroundImage ? `url("${resolvePptMediaUrl(slide.backgroundImage)}")` : undefined,
             backgroundSize: slide?.backgroundSize || 'cover',
             backgroundPosition: slide?.backgroundPosition || 'center',
             backgroundRepeat: 'no-repeat',
