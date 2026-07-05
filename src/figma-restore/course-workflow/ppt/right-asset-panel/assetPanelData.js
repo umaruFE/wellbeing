@@ -178,9 +178,8 @@ export function getAssetGroups(type, t) {
     const images = getImageAssetTypes(t);
     const byCode = new Map(images.map((item) => [item.code, item]));
     return [
-      { title: 'PPT课件类', items: ['B1', 'B2', 'B3', 'B5', 'B6', 'B7', 'B8'].map((code) => byCode.get(code)).filter(Boolean) },
-      { title: '通用场景类', items: ['B4', 'B9', 'B10'].map((code) => byCode.get(code)).filter(Boolean) },
       { title: 'IP类', items: ['B11', 'B13'].map((code) => byCode.get(code)).filter(Boolean) },
+      { title: '通用场景类', items: ['B1', 'B2', 'B3','B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10'].map((code) => byCode.get(code)).filter(Boolean) },
     ];
   }
   if (type === 'audio') return [{ title: t('assetPanel.selectAudioType'), items: getAudioAssetTypes(t) }];
