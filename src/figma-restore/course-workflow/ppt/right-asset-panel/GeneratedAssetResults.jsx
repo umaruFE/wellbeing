@@ -49,7 +49,7 @@ export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, on
       <div className="ppt-result-actions">
         {kind === 'image' ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={onSaveOnly}><Download size={14} />仅存库</button>
+            {/* <button type="button" className="ppt-ghost-btn" onClick={onSaveOnly}><Download size={14} />仅存库</button> */}
             {canDownloadAll ? (
               <button type="button" className="ppt-ghost-btn" onClick={onDownloadAll}><Download size={14} />批量下载</button>
             ) : null}
