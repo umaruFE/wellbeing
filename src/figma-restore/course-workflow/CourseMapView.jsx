@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Checkbox, Form, Input, message, Radio, Select, Tooltip, Upload } from 'antd';
+import { Button, Checkbox, Form, Input, message, Radio, Select, Upload } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   Clock,
@@ -868,16 +868,14 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                 {t('workflow.map.storyline')}
                 {isChinese && <span>Storyline</span>}
               </div>
-              <Tooltip title={map.storyline} placement="topLeft">
-                <button
-                  type="button"
-                  className="course-map-v2-core-text"
-                  title={map.storyline}
-                  onClick={() => setStorylineOpen(true)}
-                >
-                  {map.storyline}
-                </button>
-              </Tooltip>
+              <button
+                type="button"
+                className="course-map-v2-core-text"
+                title={map.storyline}
+                onClick={() => setStorylineOpen(true)}
+              >
+                {map.storyline}
+              </button>
             </div>
 
             <div className="course-map-v2-cover">
@@ -948,19 +946,17 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                           <span className="course-map-v2-journey-node">{index + 1}</span>
                           {t(item.titleKey, item.title)}
                         </strong>
-                        <Tooltip title={journey[item.key]} placement="topLeft">
-                          <button
-                            type="button"
-                            className="course-map-v2-journey-text"
-                            title={journey[item.key]}
-                            onClick={() => openMapContent(
-                              `${t(item.titleKey, item.title)}${isChinese ? ' · Class Journey' : ''}`,
-                              journey[item.key],
-                            )}
-                          >
-                            {journey[item.key]}
-                          </button>
-                        </Tooltip>
+                        <button
+                          type="button"
+                          className="course-map-v2-journey-text"
+                          title={journey[item.key]}
+                          onClick={() => openMapContent(
+                            `${t(item.titleKey, item.title)}${isChinese ? ' · Class Journey' : ''}`,
+                            journey[item.key],
+                          )}
+                        >
+                          {journey[item.key]}
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -1241,16 +1237,14 @@ function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, childre
         {title}
         {showEn && <span className="course-map-v2-title-en">{en}</span>}
       </div>
-      <Tooltip title={content} placement="topLeft">
-        <button
-          type="button"
-          className="course-map-v2-text"
-          title={content}
-          onClick={() => onOpen?.(fullTitle, content)}
-        >
-          {children}
-        </button>
-      </Tooltip>
+      <button
+        type="button"
+        className="course-map-v2-text"
+        title={content}
+        onClick={() => onOpen?.(fullTitle, content)}
+      >
+        {children}
+      </button>
     </article>
   );
 }

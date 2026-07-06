@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { Tooltip } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   RefreshCw,
@@ -18,6 +17,7 @@ import {
   Loader2,
   BookOpen,
   Edit3,
+  SlidersHorizontal,
   X,
 } from 'lucide-react';
 import { useCourseLayout } from '../../../components/CourseLayout';
@@ -549,9 +549,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
           <div className="p-4 flex items-start justify-between text-white shrink-0" style={{ backgroundColor: col.color }}>
             <div className="flex-1 min-w-0">
-              <Tooltip title={safeRender(col.title)} placement="topLeft">
-                <h3 className="font-bold text-[15px] uppercase tracking-wide">{safeRender(col.title)}</h3>
-              </Tooltip>
+              <h3 className="font-bold text-[15px] uppercase tracking-wide">{safeRender(col.title)}</h3>
               <p className="text-[11px] opacity-80 mt-1">{t('lesson.stepsCount', { count: col.count })}</p>
             </div>
             <div className="flex items-center gap-2 relative">
@@ -632,9 +630,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                         <div className="w-6 h-6 rounded flex items-center justify-center text-white shrink-0" style={{ backgroundColor: col.color }}>
                           <Layout size={12} strokeWidth={2.5} />
                         </div>
-                        <Tooltip title={safeRender(item.title)} placement="topLeft">
-                          <span className="text-[13px] font-bold text-gray-800 truncate">{safeRender(item.title)}</span>
-                        </Tooltip>
+                        <span className="text-[13px] font-bold text-gray-800 truncate">{safeRender(item.title)}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {item.duration && (
@@ -741,23 +737,17 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                           </div>
                         )}
 
-                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-gray-100">
-                          <button
-                            onClick={() => openDetail(col.id, index, item)}
-                            className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
-                          >
-                            <BookOpen size={13} /> {t('lesson.detail')}
+                        <div className="step-card-footer">
+                          <button type="button" className="step-card-action" onClick={() => openDetail(col.id, index, item)}>
+                            <BookOpen size={14} />
+                            {t('lesson.detail')}
                           </button>
-                          <button
-                            onClick={() => openEdit(col.id, index, item)}
-                            className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
-                          >
-                            <Edit3 size={13} /> {t('common.edit')}
+                          <button type="button" className="step-card-action" onClick={() => openEdit(col.id, index, item)}>
+                            <Edit3 size={14} />
+                            {t('common.edit')}
                           </button>
-                          <button
-                            onClick={() => openAdjust(col.id, index, item)}
-                            className="flex-1 py-1.5 border border-gray-200 rounded-lg text-gray-600 text-[12px] font-bold flex items-center justify-center gap-1.5 hover:bg-gray-50"
-                          >
+                          <button type="button" className="step-card-action" onClick={() => openAdjust(col.id, index, item)}>
+                            <SlidersHorizontal size={14} />
                             {t('lesson.adjustParams')}
                           </button>
                         </div>
@@ -807,16 +797,12 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                   {meta.stepImage && <img className="lesson-map-step-num" src={meta.stepImage} alt="" />}
                   <div className="lesson-map-card-main">
                     <div className="lesson-map-card-head">
-                      <Tooltip title={display.title} placement="topLeft">
-                        <h3>{display.title}</h3>
-                      </Tooltip>
+                      <h3>{display.title}</h3>
                       <span className="lesson-map-card-icon">
                         {meta.iconImage ? <img src={meta.iconImage} alt="" /> : renderMapIcon(meta.icon)}
                       </span>
                     </div>
-                    <Tooltip title={display.summary} placement="topLeft">
-                      <p>{display.summary}</p>
-                    </Tooltip>
+                    <p>{display.summary}</p>
                     <div className="lesson-map-card-meta">
                       <strong>{t('lesson.stepsCount', { count: col.count })}</strong>
                       {col.time && <span>{col.time}</span>}
@@ -836,9 +822,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             <div className="lesson-map-drawer-head">
               <div className="lesson-map-drawer-num">{selectedMeta.number}</div>
               <div>
-                <Tooltip title={selectedDisplay.title} placement="topLeft">
-                  <h3>{selectedDisplay.title}</h3>
-                </Tooltip>
+                <h3>{selectedDisplay.title}</h3>
                 <p>{t('lesson.stepsCount', { count: selected.count })}</p>
               </div>
               {selected.time && <span className="lesson-map-time-badge">{selected.time}</span>}
@@ -864,9 +848,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                     >
                       {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                       <span className="lesson-map-thumb"><img src={selectedMeta.phaseIcon} alt="" /></span>
-                      <Tooltip title={safeRender(item.title)} placement="topLeft">
-                        <strong>{safeRender(item.title)}</strong>
-                      </Tooltip>
+                      <strong>{safeRender(item.title)}</strong>
                       {item.duration && <span className="lesson-map-time-badge">{safeRender(item.duration)}</span>}
                     </button>
                     {isOpen && (

@@ -1,5 +1,5 @@
-﻿import React from 'react';
-import { Button, Form, Input, InputNumber, Tooltip } from 'antd';
+import React from 'react';
+import { Button, Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { buildCourseMap, phaseTemplates } from './workflowData';
 import apiService from '../../services/api';
@@ -1188,14 +1188,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
           </button>
           <div className="step-main">
             <div className="step-name">
-              <Tooltip title={stepTitle} placement="topLeft">
-                <span className="step-title-text">{stepTitle}</span>
-              </Tooltip>
+              <span className="step-title-text">{stepTitle}</span>
               <span className="step-dur-badge">{formatDuration(step.duration, 8)}</span>
             </div>
-            <Tooltip title={stepGoal} placement="topLeft">
-              <div className="step-lo-preview">{compactOverviewText(stepGoal, 76)}</div>
-            </Tooltip>
+            <div className="step-lo-preview">{compactOverviewText(stepGoal, 76)}</div>
           </div>
           <div className="step-right-ctrl" onClick={(event) => event.stopPropagation()}>
             <button
@@ -1228,19 +1224,15 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
           <div className="step-brief-list">
             <div className="step-brief-item">
               <div className="step-detail-label"><Target size={13} />{t('lesson.languageGoal')}</div>
-              <Tooltip title={stepGoal} placement="topLeft">
-                <div className="step-detail-body tbl-lo">
-                  {compactOverviewText(stepGoal)}
-                </div>
-              </Tooltip>
+              <div className="step-detail-body tbl-lo">
+                {compactOverviewText(stepGoal)}
+              </div>
             </div>
             <div className="step-brief-item">
               <div className="step-detail-label"><ClipboardList size={13} />{t('lesson.activitySummary')}</div>
-              <Tooltip title={stepActivity} placement="topLeft">
-                <div className="step-detail-body">
-                  {compactOverviewText(stepActivity, 132)}
-                </div>
-              </Tooltip>
+              <div className="step-detail-body">
+                {compactOverviewText(stepActivity, 132)}
+              </div>
             </div>
             <div className="step-brief-item">
               <div className="step-detail-label"><ListChecks size={13} />{t('lesson.activityFlow')}</div>
@@ -1250,12 +1242,8 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                     <div className="step-flow-item" key={`${cardKey}-${item.title}`}>
                       <span className="step-flow-dot" />
                       <div>
-                        <Tooltip title={getDisplayText(item.title)} placement="topLeft">
-                          <div className="step-flow-title">{getDisplayText(item.title)}</div>
-                        </Tooltip>
-                        <Tooltip title={getDisplayText(item.desc)} placement="topLeft">
-                          <div className="step-flow-desc">{compactOverviewText(getDisplayText(item.desc), 72)}</div>
-                        </Tooltip>
+                        <div className="step-flow-title">{getDisplayText(item.title)}</div>
+                        <div className="step-flow-desc">{compactOverviewText(getDisplayText(item.desc), 72)}</div>
                       </div>
                     </div>
                   ))}
@@ -1307,19 +1295,16 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     const phaseMinutes = parseMinutes(phase.duration);
     const overflowMinutes = Math.max(0, phaseMinutes - PHASE_DURATION_LIMIT);
     const phaseMapMeta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
-    const phaseTitleText = [getPhaseTitle(phase), getPhaseName(phase)].filter(Boolean).join(' ');
 
     return (
       <section className={`tbl-phase-card ${phase.key}`} data-fixed="true" data-duration="15" key={`${keyPrefix}${phase.key}`}>
         <div className="tbl-phase-hd">
           <img className="tbl-phase-number-img" src={phaseMapMeta.stepImage} alt="" />
           <div className="tbl-phase-hd-left">
-            <Tooltip title={phaseTitleText} placement="topLeft">
-              <div className="tbl-phase-title-row">
-                <span className="tbl-phase-title">{getPhaseTitle(phase)}</span>
-                {getPhaseName(phase) && <span className="tbl-phase-cn">{getPhaseName(phase)}</span>}
-              </div>
-            </Tooltip>
+            <div className="tbl-phase-title-row">
+              <span className="tbl-phase-title">{getPhaseTitle(phase)}</span>
+              {getPhaseName(phase) && <span className="tbl-phase-cn">{getPhaseName(phase)}</span>}
+            </div>
             <div className="tbl-phase-second-row">
               <span className="tbl-phase-sub">{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
               <span className={`tbl-phase-meta-dur${phaseMinutes > PHASE_DURATION_LIMIT ? ' is-over-limit' : ''}`}>
@@ -1394,28 +1379,24 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                   <img className="lesson-map-step-num" src={meta.stepImage} alt="" />
                   <div className="lesson-map-card-main">
                     <div className="lesson-map-card-head">
-                      <Tooltip title={phaseTitleText} placement="topLeft">
-                        <h3>{phaseTitleText}</h3>
-                      </Tooltip>
+                      <h3>{phaseTitleText}</h3>
                       <span className="lesson-map-card-icon">
                         {meta.iconImage ? <img src={meta.iconImage} alt="" /> : renderMapIcon(meta.icon)}
                       </span>
                     </div>
-                    <Tooltip title={summaryText} placement="topLeft">
-                      <button
-                        type="button"
-                        className="lesson-map-card-summary-btn"
-                        title={summaryText}
-                        onClick={() => setMapSummaryModal({
-                          title: phaseTitleText,
-                          content: summaryText,
-                          tone: meta.tone,
-                          className: meta.className,
-                        })}
-                      >
-                        {summaryText}
-                      </button>
-                    </Tooltip>
+                    <button
+                      type="button"
+                      className="lesson-map-card-summary-btn"
+                      title={summaryText}
+                      onClick={() => setMapSummaryModal({
+                        title: phaseTitleText,
+                        content: summaryText,
+                        tone: meta.tone,
+                        className: meta.className,
+                      })}
+                    >
+                      {summaryText}
+                    </button>
                     <div className="lesson-map-card-meta">
                       <strong>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</strong>
                       <span>{formatDuration(phaseMinutes > 0 ? phase.duration : '', 15)}</span>
