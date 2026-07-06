@@ -446,7 +446,17 @@ export async function POST(request: NextRequest) {
     const result = type === 'image' && imagePayloads.length > 1
       ? await Promise.all(imagePayloads.map((payload) => n8nClient.call(workflow, payload, { timeout: 300000 })))
       : await n8nClient.call(workflow, singlePayload, { timeout: 300000 });
+    if (String(assetCode || '').toUpperCase() === 'B9' && !result) {
+      throw new Error(
+        'The picture-book workflow returned an empty response. Re-import and activate the latest ppt-storybook-generator workflow in n8n.'
+      );
+    }
     const returnedAssets = pickAssets(result);
+    if (String(assetCode || '').toUpperCase() === 'B9' && !returnedAssets?.length) {
+      throw new Error(
+        'The picture-book workflow returned no page tasks. Check that the n8n workflow reaches the “返回分页任务” node and returns its assets array.'
+      );
+    }
     const assets = Array.isArray(result) && type === 'image' && imagePayloads.length > 1
       ? result.map((item: any, index: number) => ({
           ...normalizeAsset(type, imagePayloads[index]?.pptImageType?.title || `${assetName || '图片素材'} ${index + 1}`, imagePayloads[index]?.prompt || prompt, item),

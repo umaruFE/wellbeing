@@ -10,7 +10,7 @@ import {
 import apiService from '../services/api';
 import { CreateCourseModal } from './create-course';
 import { CourseCoverFallback } from './CourseCoverFallback';
-import { getCourseCoverUrl, getCourseData } from './courseImages';
+import { getCourseCoverUrl, getCourseData, getDisplayCourseTitle } from './courseImages';
 import './AdminDashboard.css';
 
 const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
@@ -533,10 +533,11 @@ export const AdminDashboard = () => {
       const mapped = list.map(course => {
         const courseData = getCourseData(course);
         const coverUrl = getCourseCoverUrl(course);
+        const title = getDisplayCourseTitle(course, t('dashboard.unnamedCourse'));
         return {
           id: course.id,
-          title: course.title || course.unit || t('dashboard.unnamedCourse'),
-          unit: course.unit || course.title || t('dashboard.unnamedCourse'),
+          title,
+          unit: course.unit || title,
           grade: course.age_group || '--',
           age: course.age_group || courseData?.age || '--',
           duration: course.duration ? `${course.duration}分钟` : (courseData?.duration || '--'),

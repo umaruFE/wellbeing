@@ -7,6 +7,7 @@ import {
   CircleDot,
   Dumbbell,
   FishSymbol,
+  FileText,
   Gamepad2,
   Gift,
   MessageSquareText,
@@ -15,6 +16,8 @@ import {
   Sparkles,
   Sprout,
   Table2,
+  Upload,
+  X,
 } from 'lucide-react';
 import poppy from '../../../../assets/ip/poppy.png';
 import edi from '../../../../assets/ip/edi.png';
@@ -216,7 +219,11 @@ function buildImageGenerationRequest(asset, values) {
       includePhonetic: !!values.includePhonetic,
       comicDialogue: values.comicDialogue !== false,
       textLayout: values.textLayout,
-      rawValues: values,
+      referenceDocuments: asset.code === 'B9' ? values.referenceDocuments : undefined,
+      referenceNotes: asset.code === 'B9' ? values.referenceNotes : undefined,
+      rawValues: asset.code === 'B9'
+        ? { ...values, referenceDocuments: undefined }
+        : values,
     },
   };
 }
@@ -1307,6 +1314,44 @@ const storybookFrames = [
   'Food brings us together.',
 ];
 
+const MAX_REFERENCE_FILE_CHARS = 20000;
+const MAX_REFERENCE_TOTAL_CHARS = 80000;
+
+function xmlDocumentToText(xml) {
+  const documentNode = new DOMParser().parseFromString(xml, 'application/xml');
+  return [...documentNode.getElementsByTagNameNS('*', 'p')]
+    .map((paragraph) => [...paragraph.getElementsByTagNameNS('*', 't')].map((node) => node.textContent || '').join(''))
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('\n');
+}
+
+async function readStorybookReference(file) {
+  const extension = file.name.split('.').pop()?.toLowerCase();
+  let text = '';
+
+  if (extension === 'docx') {
+    const archive = await JSZip.loadAsync(await file.arrayBuffer());
+    const documentXml = await archive.file('word/document.xml')?.async('string');
+    if (!documentXml) throw new Error('Invalid DOCX document');
+    text = xmlDocumentToText(documentXml);
+  } else if (extension === 'txt' || extension === 'md') {
+    text = await file.text();
+  } else {
+    throw new Error('Only DOCX, TXT, and MD references are supported');
+  }
+
+  const normalized = text.replace(/\u0000/g, '').replace(/\r\n/g, '\n').trim();
+  if (!normalized) throw new Error('No readable text was found in this file');
+  return {
+    name: file.name,
+    type: extension,
+    size: file.size,
+    text: normalized.slice(0, MAX_REFERENCE_FILE_CHARS),
+    truncated: normalized.length > MAX_REFERENCE_FILE_CHARS,
+  };
+}
+
 function StorybookStepper({ step, generating }) {
   const { t } = useTranslation();
   const labels = [t('assetPanel.iwPasteStory'), t('assetPanel.iwConfirmPreview'), t('assetPanel.iwGenerateImage')];
@@ -1326,8 +1371,32 @@ function StorybookStepper({ step, generating }) {
 }
 
 function StorybookPasteStep({ values, setValue }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isEn = i18n.language?.startsWith('en');
   const examples = ['My Dream Restaurant'];
+  const references = values.referenceDocuments || [];
+  const handleReferenceFiles = async (event) => {
+    const files = [...(event.target.files || [])];
+    event.target.value = '';
+    if (!files.length) return;
+
+    try {
+      const parsed = await Promise.all(files.map(readStorybookReference));
+      const existingNames = new Set(references.map((item) => item.name));
+      const next = [...references, ...parsed.filter((item) => !existingNames.has(item.name))];
+      let total = 0;
+      const limited = next.map((item) => {
+        const remaining = Math.max(0, MAX_REFERENCE_TOTAL_CHARS - total);
+        const text = item.text.slice(0, remaining);
+        total += text.length;
+        return { ...item, text, truncated: item.truncated || text.length < item.text.length };
+      }).filter((item) => item.text);
+      setValue('referenceDocuments', limited);
+    } catch (error) {
+      message.error(error.message || (isEn ? 'Failed to read reference document' : '参考文档读取失败'));
+    }
+  };
+
   return (
     <div className="ppt-storybook-body">
       <div className="ppt-img-section">
@@ -1362,6 +1431,49 @@ function StorybookPasteStep({ values, setValue }) {
             {item}
           </button>
         ))}
+      </div>
+      <div className="ppt-asset-divider" />
+      <div className="ppt-img-section">
+        <div className="ppt-img-label-row">
+          <span>{isEn ? 'Reference material' : '参考资料'}</span>
+          <em>{isEn ? `${references.length} files` : `已添加 ${references.length} 份`}</em>
+        </div>
+        <p className="ppt-storybook-reference-hint">
+          {isEn
+            ? 'Add multiple activity cases, character guides, and visual rules. AI will extract one shared story and character bible before creating pages.'
+            : '可添加多份活动案例、角色规范和画风规则；AI 会先提炼统一的故事圣经与角色圣经，再生成分镜。'}
+        </p>
+        <label className="ppt-storybook-reference-upload">
+          <Upload size={16} />
+          <span>{isEn ? 'Add DOCX / TXT / MD' : '添加 DOCX / TXT / MD'}</span>
+          <input type="file" accept=".docx,.txt,.md" multiple onChange={handleReferenceFiles} />
+        </label>
+        {references.length ? (
+          <div className="ppt-storybook-reference-list">
+            {references.map((item) => (
+              <div key={item.name}>
+                <FileText size={15} />
+                <span>
+                  <strong>{item.name}</strong>
+                  <em>{Math.max(1, Math.round(item.text.length / 1000))}k {isEn ? 'chars' : '字'}{item.truncated ? ` · ${isEn ? 'trimmed' : '已截取'}` : ''}</em>
+                </span>
+                <button
+                  type="button"
+                  aria-label={isEn ? `Remove ${item.name}` : `移除 ${item.name}`}
+                  onClick={() => setValue('referenceDocuments', references.filter((reference) => reference.name !== item.name))}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : null}
+        <Input.TextArea
+          className="ppt-storybook-reference-notes"
+          value={values.referenceNotes || ''}
+          placeholder={isEn ? 'Paste client keywords or extra visual requirements here…' : '也可以在这里粘贴客户关键词或补充视觉要求…'}
+          onChange={(event) => setValue('referenceNotes', event.target.value.slice(0, 20000))}
+        />
       </div>
       <div className="ppt-asset-divider" />
       <div className="ppt-img-section">
@@ -1669,6 +1781,8 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange, inser
     knowledgeItems: '',
     storybookTitle: '',
     storybookContent: '',
+    referenceDocuments: [],
+    referenceNotes: '',
     storybookStyle: isEn ? 'Watercolor Picture Book' : '水彩绘本',
     storybookGrade: isEn ? 'Grade 2 (7-8 years)' : '小二（7-8岁）',
     ipCharacters: ['Poppy', 'Edi'],
