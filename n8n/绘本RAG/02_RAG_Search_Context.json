@@ -1,0 +1,146 @@
+{
+  "name": "RAG Search Context",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rag-search-context",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "rag-search-webhook",
+      "name": "Webhook - Search Context",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-760, 0],
+      "webhookId": "rag-search-context"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first()?.json?.body || $input.first()?.json || {};\nconst topic = String(body.topic || body.message || body.query || '').trim();\nif (!topic) throw new Error('Missing search topic/query.');\nconst targetAge = body.targetAge || body.age || '';\nconst query = [\n  `主题: ${topic}`,\n  targetAge ? `目标年龄: ${targetAge}` : '',\n  body.tone ? `语气: ${body.tone}` : '',\n  body.goal ? `教育目标: ${body.goal}` : '',\n  '需要适合儿童绘本创作的事实、心理支持方法、教育目标和表达边界。'\n].filter(Boolean).join('\\n');\nreturn [{ json: {\n  userId: String(body.userId || 'anonymous'),\n  topic,\n  category: String(body.category || ''),\n  targetAge,\n  limit: Math.max(1, Math.min(20, Number(body.limit) || 8)),\n  query\n} }];"
+      },
+      "id": "build-query",
+      "name": "Build RAG Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-540, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$env.EMBEDDING_BASE_URL || 'http://localhost:11434'}}/api/embeddings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.EMBEDDING_MODEL || 'nomic-embed-text', prompt: $json.query } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "embed-query",
+      "name": "Embed Query",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-320, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('Build RAG Query').first().json;\nconst response = $input.first().json || {};\nconst vector = response.embedding || response.data?.[0]?.embedding || response.vector;\nif (!Array.isArray(vector)) throw new Error('Embedding response did not contain a query vector.');\nconst must = [];\nif (query.category) must.push({ key: 'category', match: { value: query.category } });\nconst filter = {\n  should: [\n    { key: 'userId', match: { value: query.userId } },\n    { key: 'visibility', match: { value: 'public' } }\n  ],\n  must\n};\nreturn [{ json: {\n  vector,\n  limit: query.limit,\n  with_payload: true,\n  with_vector: false,\n  filter\n} }];"
+      },
+      "id": "build-search-body",
+      "name": "Build Qdrant Search Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-100, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{($env.QDRANT_URL || 'http://localhost:6333') + '/collections/' + ($env.QDRANT_COLLECTION || 'picturebook_knowledge') + '/points/search'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "api-key",
+              "value": "={{$env.QDRANT_API_KEY || ''}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "qdrant-search",
+      "name": "Qdrant Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [120, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $('Build RAG Query').first().json;\nconst result = $input.first().json || {};\nconst matches = Array.isArray(result.result) ? result.result : Array.isArray(result.points) ? result.points : [];\nconst references = matches.map((match, index) => {\n  const payload = match.payload || {};\n  return {\n    rank: index + 1,\n    score: match.score,\n    title: payload.title || 'Untitled',\n    documentId: payload.documentId || '',\n    category: payload.category || '',\n    ageRange: payload.ageRange || '',\n    text: String(payload.text || '').slice(0, 1200)\n  };\n});\nconst context = references.length\n  ? references.map((ref) => `【资料${ref.rank}】${ref.title}${ref.ageRange ? `（适用年龄:${ref.ageRange}）` : ''}\\n${ref.text}`).join('\\n\\n')\n  : '未检索到可用参考资料。生成时应明确说明参考资料不足，并使用通用儿童绘本创作原则。';\nreturn [{ json: {\n  success: true,\n  topic: query.topic,\n  targetAge: query.targetAge,\n  referenceCount: references.length,\n  references,\n  context\n} }];"
+      },
+      "id": "format-context",
+      "name": "Format Reference Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [340, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "respond-search",
+      "name": "Respond Search",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [560, 0]
+    }
+  ],
+  "connections": {
+    "Webhook - Search Context": {
+      "main": [[{ "node": "Build RAG Query", "type": "main", "index": 0 }]]
+    },
+    "Build RAG Query": {
+      "main": [[{ "node": "Embed Query", "type": "main", "index": 0 }]]
+    },
+    "Embed Query": {
+      "main": [[{ "node": "Build Qdrant Search Body", "type": "main", "index": 0 }]]
+    },
+    "Build Qdrant Search Body": {
+      "main": [[{ "node": "Qdrant Search", "type": "main", "index": 0 }]]
+    },
+    "Qdrant Search": {
+      "main": [[{ "node": "Format Reference Context", "type": "main", "index": 0 }]]
+    },
+    "Format Reference Context": {
+      "main": [[{ "node": "Respond Search", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "active": false,
+  "versionId": "picturebook-rag-search-v1",
+  "tags": []
+}
+

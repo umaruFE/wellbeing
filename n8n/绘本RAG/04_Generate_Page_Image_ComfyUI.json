@@ -1,0 +1,100 @@
+{
+  "name": "Generate Page Image ComfyUI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-page-image-comfyui",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "generate-page-image-webhook",
+      "name": "Webhook - Generate Page Image",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-760, 0],
+      "webhookId": "generate-page-image-comfyui"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first()?.json?.body || $input.first()?.json || {};\nconst pages = Array.isArray(body.pages) && body.pages.length\n  ? body.pages\n  : [{\n      page: body.page,\n      text: body.text || body.pageText,\n      scene: body.scene,\n      imagePrompt: body.imagePrompt || body.prompt,\n      negativePrompt: body.negativePrompt || body.negative_prompt\n    }];\n\nconst title = String(body.title || body.bookTitle || 'Picture Book').trim();\nconst bookId = String(body.bookId || body.documentId || `book_${Date.now()}`);\nconst visualStyle = String(body.visualStyle || body.style || 'gentle watercolor children picture book illustration, warm soft colors, rounded shapes, hand-drawn texture').trim();\nconst defaultNegative = 'text, letters, words, subtitles, watermark, logo, scary, horror, violence, photorealistic, 3d render, distorted hands, extra limbs, bad anatomy, low quality, blurry, cropped';\nconst comfyuiUrl = String(body.comfyuiUrl || $env.COMFYUI_URL || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com').replace(/\\/$/, '');\nconst apiBaseUrl = String(body.apiBaseUrl || $env.API_BASE_URL || 'http://localhost:4000').replace(/\\/$/, '');\nconst width = Math.max(512, Math.min(2048, Number(body.width) || 1280));\nconst height = Math.max(512, Math.min(2048, Number(body.height) || 720));\nconst steps = Math.max(4, Math.min(40, Number(body.steps) || 15));\nconst cfg = Number.isFinite(Number(body.cfg)) ? Number(body.cfg) : 1.5;\nconst sampler = String(body.sampler || 'euler');\nconst scheduler = String(body.scheduler || 'simple');\nconst baseSeed = Number.isFinite(Number(body.seed)) ? Number(body.seed) : Math.floor(Math.random() * 900000000000000);\n\nconst workflowTemplate = {\n  '1': { inputs: { unet_name: String(body.unetName || 'z_image_turbo_bf16.safetensors'), weight_dtype: 'default' }, class_type: 'UNETLoader' },\n  '2': { inputs: { vae_name: String(body.vaeName || 'ae.safetensors') }, class_type: 'VAELoader' },\n  '3': { inputs: { clip_name: String(body.clipName || 'qwen_3_4b.safetensors'), type: String(body.clipType || 'lumina2'), device: 'default' }, class_type: 'CLIPLoader' },\n  '4': { inputs: { shift: Number(body.shift) || 3, model: ['1', 0] }, class_type: 'ModelSamplingAuraFlow' },\n  '5': { inputs: { width, height, batch_size: 1 }, class_type: 'EmptySD3LatentImage' },\n  '6': { inputs: { text: '', clip: ['3', 0] }, class_type: 'CLIPTextEncode' },\n  '7': { inputs: { text: '', clip: ['3', 0] }, class_type: 'CLIPTextEncode' },\n  '8': { inputs: { seed: baseSeed, steps, cfg, sampler_name: sampler, scheduler, denoise: 1, model: ['4', 0], positive: ['6', 0], negative: ['7', 0], latent_image: ['5', 0] }, class_type: 'KSampler' },\n  '9': { inputs: { samples: ['8', 0], vae: ['2', 0] }, class_type: 'VAEDecode' },\n  '10': { inputs: { filename_prefix: 'PictureBook', images: ['9', 0] }, class_type: 'SaveImage' }\n};\n\nreturn pages.map((page, index) => {\n  const pageNo = Number(page.page) || index + 1;\n  const scene = String(page.scene || page.text || '').trim();\n  const imagePrompt = String(page.imagePrompt || page.prompt || scene).trim();\n  if (!imagePrompt) throw new Error(`Missing imagePrompt for page ${pageNo}.`);\n\n  const workflow = JSON.parse(JSON.stringify(workflowTemplate));\n  const positive = [\n    `Children picture book illustration for page ${pageNo}.`,\n    visualStyle,\n    imagePrompt,\n    scene ? `Scene details: ${scene}.` : '',\n    'Full-bleed landscape illustration, clean composition, child-safe, warm emotional tone.',\n    'No text, no captions, no speech bubbles, no visible letters.'\n  ].filter(Boolean).join(' ');\n  const negative = [defaultNegative, page.negativePrompt || page.negative_prompt || body.negativePrompt || body.negative_prompt || ''].filter(Boolean).join(', ');\n  const safeTitle = title.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 36) || 'PictureBook';\n\n  workflow['6'].inputs.text = positive;\n  workflow['7'].inputs.text = negative;\n  workflow['8'].inputs.seed = baseSeed + pageNo;\n  workflow['10'].inputs.filename_prefix = `PictureBook_${safeTitle}_P${String(pageNo).padStart(2, '0')}`;\n\n  return { json: {\n    bookId,\n    title,\n    page: pageNo,\n    pageText: String(page.text || page.pageText || '').trim(),\n    imagePrompt,\n    negativePrompt: negative,\n    width,\n    height,\n    comfyuiUrl,\n    apiBaseUrl,\n    comfyuiPayload: { prompt: workflow }\n  } };\n});"
+      },
+      "id": "prepare-comfyui-payload",
+      "name": "Prepare ComfyUI Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-520, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{$json.comfyuiUrl}}/prompt",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json.comfyuiPayload}}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "submit-comfyui",
+      "name": "Submit ComfyUI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $('Prepare ComfyUI Payload').all();\nconst responses = $input.all();\nconst assets = responses.map((item, index) => {\n  const meta = prepared[index]?.json || {};\n  const response = item.json || {};\n  const executionId = response.prompt_id || response.id;\n  if (!executionId) throw new Error(`ComfyUI did not return prompt_id for page ${meta.page || index + 1}.`);\n  const statusUrl = `${meta.apiBaseUrl}/api/ai/task-status/${executionId}?useComfyUI=true&apiUrl=${encodeURIComponent(meta.comfyuiUrl)}`;\n  return {\n    executionId,\n    promptId: executionId,\n    workflowType: 'image',\n    status: 'submitted',\n    statusUrl,\n    comfyuiUrl: meta.comfyuiUrl,\n    bookId: meta.bookId,\n    title: meta.title,\n    page: meta.page || index + 1,\n    pageText: meta.pageText || '',\n    imagePrompt: meta.imagePrompt || '',\n    width: meta.width,\n    height: meta.height\n  };\n});\nassets.sort((a, b) => a.page - b.page);\nreturn [{ json: {\n  success: true,\n  status: 'submitted',\n  count: assets.length,\n  assets,\n  firstAsset: assets[0] || null\n} }];"
+      },
+      "id": "build-image-task-response",
+      "name": "Build Image Task Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "respond-image-task",
+      "name": "Respond Image Task",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [240, 0]
+    }
+  ],
+  "connections": {
+    "Webhook - Generate Page Image": {
+      "main": [[{ "node": "Prepare ComfyUI Payload", "type": "main", "index": 0 }]]
+    },
+    "Prepare ComfyUI Payload": {
+      "main": [[{ "node": "Submit ComfyUI", "type": "main", "index": 0 }]]
+    },
+    "Submit ComfyUI": {
+      "main": [[{ "node": "Build Image Task Response", "type": "main", "index": 0 }]]
+    },
+    "Build Image Task Response": {
+      "main": [[{ "node": "Respond Image Task", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "active": false,
+  "versionId": "picturebook-generate-page-image-comfyui-v1",
+  "tags": []
+}
+
