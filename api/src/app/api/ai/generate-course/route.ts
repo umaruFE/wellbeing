@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { normalizePhaseDurations } from '@/lib/course-normalize';
 
 /**
  * N8N 课件生成路由
@@ -311,6 +312,7 @@ export async function POST(request: NextRequest) {
     console.log('[generate-course] 最终 courseData:', courseData ? '存在' : '不存在');
 
     if (courseData) {
+      normalizePhaseDurations(courseData, duration);
       return NextResponse.json({
         success: true,
         data: {

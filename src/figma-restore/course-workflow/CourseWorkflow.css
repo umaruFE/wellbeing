@@ -88,7 +88,7 @@ body.fr-workflow-route-active .header{display:none}
   min-height:76px!important;
   padding:20px 24px 18px!important;
   border-bottom:3px solid var(--phase-detail-ink)!important;
-  background:color-mix(in srgb,var(--pem-accent,#e8d2df) 28%,#fff)!important;
+  background:var(--pem-accent,#e8d2df)!important;
 }
 .phase-detail-modal .modal-body{
   padding:24px!important;
@@ -164,7 +164,7 @@ body.fr-workflow-route-active .header{display:none}
   padding:0 10px!important;
   border:2px solid var(--phase-detail-ink)!important;
   border-radius:999px!important;
-  background:color-mix(in srgb,var(--pem-accent,#d8ca8d) 42%,#fff)!important;
+  background:var(--pem-accent,#d8ca8d)!important;
   color:var(--phase-detail-ink)!important;
   font-size:13px!important;
   line-height:18px!important;
@@ -291,7 +291,7 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
 .step-card:has(.step-menu-dropdown.open){z-index:20}
 .tbl-phase-card.eng .step-card.open{border-color:var(--eng)}.tbl-phase-card.emp .step-card.open{border-color:var(--emp)}.tbl-phase-card.exc .step-card.open{border-color:var(--exc)}.tbl-phase-card.elv .step-card.open{border-color:var(--elv)}
 .step-summary{height:53px;display:flex;align-items:center;gap:11px;padding:10px 13px;user-select:none;box-sizing:border-box}.step-card.open .step-summary{border-bottom:0;border-radius:12px 12px 0 0}
-.tbl-phase-card.eng .step-card.open .step-summary{background:var(--eng-l)}.tbl-phase-card.emp .step-card.open .step-summary{background:var(--emp-l)}.tbl-phase-card.exc .step-card.open .step-summary{background:var(--exc-l)}.tbl-phase-card.elv .step-card.open .step-summary{background:var(--elv-l)}
+.tbl-phase-card.eng .step-card.open .step-summary{background:var(--eng-h)}.tbl-phase-card.emp .step-card.open .step-summary{background:var(--emp-h)}.tbl-phase-card.exc .step-card.open .step-summary{background:var(--exc-h)}.tbl-phase-card.elv .step-card.open .step-summary{background:var(--elv-h)}
 .step-chevron{width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:#9aa3b2;transition:transform .2s;flex-shrink:0;margin-right:0}.step-card.open .step-chevron{transform:rotate(90deg);color:currentColor}.tbl-phase-card.eng .step-card.open .step-chevron{color:var(--eng)}.tbl-phase-card.emp .step-card.open .step-chevron{color:var(--emp)}.tbl-phase-card.exc .step-card.open .step-chevron{color:var(--exc)}.tbl-phase-card.elv .step-card.open .step-chevron{color:var(--elv)}
 .step-thumb-placeholder{width:32px;height:32px;border-radius:7px;background:var(--eng-b);border:2px solid var(--kanban-ink);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .2s;box-shadow:none;color:var(--kanban-ink);padding:0}.step-thumb-placeholder svg{width:17px;height:17px}.step-thumb-placeholder img{width:26px;height:26px;object-fit:contain;display:block}.tbl-phase-card.eng .step-thumb-placeholder{background:var(--eng-b)}.tbl-phase-card.emp .step-thumb-placeholder{background:var(--emp-b)}.tbl-phase-card.exc .step-thumb-placeholder{background:var(--exc-b)}.tbl-phase-card.elv .step-thumb-placeholder{background:var(--elv-b)}
 .step-main{flex:1;min-width:0}.step-name{font-size:14px;font-weight:900;color:#253142;line-height:20px;margin-bottom:0;display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:visible}.step-title-text{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.step-lo-preview{display:none}

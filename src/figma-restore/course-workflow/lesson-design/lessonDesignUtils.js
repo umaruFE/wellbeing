@@ -22,6 +22,31 @@ const flowTitleMap = {
   'Announce Task': { zh: '发布任务', en: 'Announce Task' },
 };
 
+
+const fixedFlowTitleSet = new Set([
+  ...flowTitles.zh,
+  ...flowTitles.en,
+  '情境开启',
+  '任务说明',
+  '合作探索',
+  '语言练习',
+  '成果分享',
+  '课堂收束',
+  '打开线索',
+  '小组探索',
+  '任务收束',
+]);
+
+function makeFlowTitleFromContent(text, index, isEn = false) {
+  const cleaned = String(text || '')
+    .replace(/教师说|老师说|学生|小组|全班|Teacher says|Students|Teacher|Group|Class/gi, ' ')
+    .replace(/[“”"'，、。！？；;：:（）()\[\]①②③④⑤⑥]/g, ' ')
+    .trim();
+  const compact = cleaned.split(/\s+/).filter(Boolean).join(isEn ? ' ' : '');
+  if (compact) return isEn ? compact.split(/\s+/).slice(0, 3).join(' ') : compact.slice(0, 8);
+  return isEn ? `Step ${index + 1}` : `流程${index + 1}`;
+}
+
 function translateFlowTitle(title, isEn) {
   return flowTitleMap[title]?.[isEn ? 'en' : 'zh'] || title;
 }
@@ -64,26 +89,36 @@ export function buildStepFlowItems(step, isEn = false) {
     activity: step?.activity,
   };
   const labeled = parseLabeledFlowSteps(data.flow, isEn);
-  if (labeled.length) return labeled.map(item => ({ ...item, title: translateFlowTitle(item.title, isEn) }));
-  const parts = splitStepFlowText(data.flow, isEn);
-  const titles = flowTitles[isEn ? 'en' : 'zh'];
-  const defaults = isEn
-    ? [
-        { title: titles[0], desc: data.flow || 'Teacher starts with a mysterious signal, showing an image with animal clues.' },
-        { title: titles[1], desc: data.script || 'Read the rescue message in English with emotion and slightly slower speed.' },
-        { title: titles[2], desc: data.scenario || 'Show animal silhouette images, guide students to respond with expressions and simple language.' },
-        { title: titles[3], desc: data.activity || 'Clarify the task for this section, let students proceed with objectives.' },
-      ]
-    : [
-        { title: titles[0], desc: data.flow || '教师以神秘信号开场，展示一个印有动物线索的画面。' },
-        { title: titles[1], desc: data.script || '用富有感情、语速稍慢的英文朗读求救信息。' },
-        { title: titles[2], desc: data.scenario || '展示动物轮廓图，引导学生用表情和简单语言回应。' },
-        { title: titles[3], desc: data.activity || '明确本环节任务，让学生带着目标进入下一步探索。' },
-      ];
-  if (parts.length >= 2) {
-    return titles.map((title, index) => ({ title, desc: parts[index] || defaults[index].desc }));
+  if (labeled.length) {
+    return labeled.map((item, index) => ({
+      ...item,
+      title: fixedFlowTitleSet.has(item.title)
+        ? makeFlowTitleFromContent(item.desc, index, isEn)
+        : translateFlowTitle(item.title, isEn),
+    }));
   }
-  return defaults;
+
+  const parts = splitStepFlowText(data.flow, isEn);
+  if (parts.length >= 2) {
+    return parts.slice(0, 6).map((desc, index) => ({
+      title: makeFlowTitleFromContent(desc, index, isEn),
+      desc,
+    }));
+  }
+
+  const fallbackParts = [data.flow, data.script, data.scenario, data.activity]
+    .map((item) => String(item || '').trim())
+    .filter(Boolean)
+    .slice(0, 6);
+  const sourceParts = fallbackParts.length ? fallbackParts : [
+    isEn ? 'Teacher guides students through the activity goal.' : '教师根据活动目标引导学生完成课堂任务。',
+    isEn ? 'Students respond, collaborate, and complete the task.' : '学生根据任务要求互动协作并完成产出。',
+  ];
+
+  return sourceParts.map((desc, index) => ({
+    title: makeFlowTitleFromContent(desc, index, isEn),
+    desc,
+  }));
 }
 
 function extractScriptSegments(script) {

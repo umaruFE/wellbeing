@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { normalizeStepsForPhase } from '@/lib/course-normalize';
 
 function corsHeaders() {
   return {
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (steps && Array.isArray(steps)) {
+      steps = normalizeStepsForPhase(steps, phaseKey, duration);
       return NextResponse.json({
         success: true,
         data: {

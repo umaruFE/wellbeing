@@ -74,7 +74,12 @@ const PHASE_CONFIG = {
 };
 
 const PHASE_ORDER = ['engage', 'empower', 'execute', 'elevate'];
-const PHASE_DURATION_LIMIT = 15;
+const PHASE_DURATION_RATIO = {
+  engage: 0.15,
+  empower: 0.4,
+  execute: 0.3,
+  elevate: 0.15,
+};
 
 const MAP_PHASE_META = {
   engage: {
@@ -135,7 +140,7 @@ const PHASE_DETAIL_DATA = {
     sel: '社会情感学习：好奇心、探索欲、团队协作意识',
     perma: 'Positive Emotion（积极情绪）：通过情境创设激发兴奋和期待感',
     narrative: '学生们化身为宇飞船控制台员，接收到来自动物星球的求救信号，需要前往救援。在旅途中，他们将学习如何用英语描述动物的位置。',
-    color: 'var(--eng)',
+    color: '#e8d2df',
   },
   empower: {
     title: 'Empower · 赋能',
@@ -144,7 +149,7 @@ const PHASE_DETAIL_DATA = {
     sel: '专注力、听觉辨识能力、动作协调与表达',
     perma: 'Engagement（投入）：全身心参与互动，建立学习心流体验',
     narrative: '控制台收到动物星球的地图解码任务，学生们需要学会用英语理解指令才能解锁前进路线。',
-    color: 'var(--emp)',
+    color: '#d8ca8d',
   },
   execute: {
     title: 'Execute · 实践',
@@ -153,7 +158,7 @@ const PHASE_DETAIL_DATA = {
     sel: '合作学习、问题解决、创造性思维、团队协作',
     perma: 'Accomplishment（成就感）：完成任务获得成就感，建立自信',
     narrative: '终于到达动物星球！学生们分组建造动物家园，需要用英语描述每个动物的位置，帮助它们安家。',
-    color: 'var(--exc)',
+    color: '#d7e5f7',
   },
   elevate: {
     title: 'Elevate · 升华',
@@ -162,13 +167,14 @@ const PHASE_DETAIL_DATA = {
     sel: '自我反思、自信表达、感恩之心、分享精神',
     perma: 'Relationships（人际关系）：与同伴分享快乐，建立友谊',
     narrative: '任务完成！学生们展示自己的动物家园，向星际联盟汇报救援成果，带着满满的收获返回地球。',
-    color: 'var(--elv)',
+    color: '#cbb8a8',
   },
 };
 
 const parseMinutes = (value) => {
-  const match = String(value || '').match(/(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+  const matches = String(value || '').match(/\d+(?:\.\d+)?/g);
+  if (!matches?.length) return 0;
+  return Math.round(Number(matches[matches.length - 1]) || 0);
 };
 
 const normalizeStep = (step) => ({
@@ -220,13 +226,15 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
   const boardColumns = useMemo(() => {
     const coursePhases = resolveCoursePhases();
     if (!coursePhases) return [];
+    const courseMinutes = parseMinutes(courseData?.duration || courseData?.course_duration || '60');
 
     return PHASE_ORDER.map((phaseKey) => {
       const phase = coursePhases[phaseKey];
       const config = PHASE_CONFIG[phaseKey];
       const steps = Array.isArray(phase?.steps) ? phase.steps.map(normalizeStep) : [];
       const totalMinutes = steps.reduce((acc, s) => acc + parseMinutes(s.duration), 0);
-      const overflowMinutes = Math.max(0, totalMinutes - PHASE_DURATION_LIMIT);
+      const durationLimit = Math.max(1, Math.round(courseMinutes * (PHASE_DURATION_RATIO[phaseKey] || 0.25)));
+      const overflowMinutes = Math.max(0, totalMinutes - durationLimit);
 
       return {
         id: phaseKey,
@@ -236,6 +244,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
         goalSummary: steps.map((s) => s.goal).filter(Boolean).join('；') || '',
         count: steps.length,
         minutes: totalMinutes,
+        durationLimit,
         overflowMinutes,
         time: steps.length > 0 ? totalMinutes + t('course.minutes') : '',
         items: steps.map((step) => ({
@@ -503,7 +512,8 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
 
   const openPhaseDetail = (phaseKey) => {
     setOpenMenuPhase(null);
-    setPhaseDetail(PHASE_DETAIL_DATA[phaseKey] || null);
+    const detail = PHASE_DETAIL_DATA[phaseKey];
+    setPhaseDetail(detail ? { ...detail, color: MAP_PHASE_META[phaseKey]?.tone || detail.color } : null);
   };
 
   const getPhaseDisplay = (col) => {
@@ -554,7 +564,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             </div>
             <div className="flex items-center gap-2 relative">
               {col.time && (
-                <div className={`flex items-center gap-1 text-[11px] ${col.minutes > PHASE_DURATION_LIMIT ? 'text-red-500 opacity-100' : 'opacity-90'}`}>
+                <div className={`flex items-center gap-1 text-[11px] ${col.minutes > col.durationLimit ? 'text-red-500 opacity-100' : 'opacity-90'}`}>
                   <Clock size={13} /> {col.time}
                 </div>
               )}
@@ -590,7 +600,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
             <div className="mx-4 mt-3 px-3 py-2 rounded-lg border-2 border-[#f6bd60] bg-[#fff9e8] text-[#a95518] text-[12px] font-normal leading-[18px] flex items-center gap-2 shrink-0 whitespace-normal">
               <span className="w-4 h-4 rounded-full border-2 border-current inline-flex items-center justify-center text-[11px] leading-none shrink-0">!</span>
               <span className="min-w-0">
-                {t('lesson.overflowWarn', { current: col.minutes, limit: PHASE_DURATION_LIMIT, overflow: col.overflowMinutes })}
+                {t('lesson.overflowWarn', { current: col.minutes, limit: col.durationLimit, overflow: col.overflowMinutes })}
               </span>
             </div>
           )}
@@ -869,7 +879,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
                           <section>
                             <h4><Layout size={14} />{t('lesson.activityFlow')}</h4>
                             <div className="lesson-map-flow-card">
-                              {String(safeRender(item.flow || item.activity)).split(/\n|[;；]/).filter(Boolean).slice(0, 4).map((flowItem, flowIndex) => (
+                              {String(safeRender(item.flow || item.activity)).split(/\n|[;；]/).filter(Boolean).map((flowItem, flowIndex) => (
                                 <div className="lesson-map-flow-item" key={`${item.id}-flow-${flowIndex}`}>
                                   <span />
                                   <p>{flowItem.trim()}</p>
@@ -917,7 +927,7 @@ const LessonPlanBoard = ({ courseData, courseId, onCourseDataUpdate }) => {
     {viewMode === 'map' ? renderMapMode() : renderOverviewBoard()}
     {phaseDetail && (
       <div className="mo on" id="mo-edit-phase" onMouseDown={(event) => event.target === event.currentTarget && setPhaseDetail(null)}>
-        <div className="modal phase-detail-modal">
+        <div className="modal phase-detail-modal" style={{ '--pem-accent': phaseDetail.color }}>
           <div className="modal-hd">
             <div className="modal-t pem-title-wrap">
               {phaseDetail.title}

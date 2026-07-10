@@ -80,7 +80,12 @@ const defaultDraft = {
   scenario: '',
 };
 
-const PHASE_DURATION_LIMIT = 15;
+const PHASE_DURATION_RATIO = {
+  eng: 0.15,
+  emp: 0.4,
+  exc: 0.3,
+  elv: 0.15,
+};
 
 const lessonMapMeta = {
   eng: {
@@ -134,8 +139,9 @@ const lessonMapMeta = {
 };
 
 const parseMinutes = (value) => {
-  const match = String(value || '').match(/(\d+)/);
-  return match ? parseInt(match[1], 10) : 0;
+  const matches = String(value || '').match(/\d+(?:\.\d+)?/g);
+  if (!matches?.length) return 0;
+  return Math.round(Number(matches[matches.length - 1]) || 0);
 };
 
 const phaseTranslationKeys = {
@@ -246,10 +252,10 @@ const phaseDetailKeyMap = {
 };
 
 const emptyPhases = [
-  { key: 'eng', phase: 'Engage', title: 'Engage', name: '引入', duration: '15 分钟', steps: [] },
-  { key: 'emp', phase: 'Empower', title: 'Empower', name: '赋能', duration: '15 分钟', steps: [] },
-  { key: 'exc', phase: 'Execute', title: 'Execute', name: '实践', duration: '15 分钟', steps: [] },
-  { key: 'elv', phase: 'Elevate', title: 'Elevate', name: '升华', duration: '15 分钟', steps: [] },
+  { key: 'eng', phase: 'Engage', title: 'Engage', name: '引入', duration: '9 分钟', steps: [] },
+  { key: 'emp', phase: 'Empower', title: 'Empower', name: '赋能', duration: '24 分钟', steps: [] },
+  { key: 'exc', phase: 'Execute', title: 'Execute', name: '实践', duration: '18 分钟', steps: [] },
+  { key: 'elv', phase: 'Elevate', title: 'Elevate', name: '升华', duration: '9 分钟', steps: [] },
 ];
 
 function normalizePhaseCollection(rawPhases) {
@@ -1293,7 +1299,9 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
   const renderOverviewPhaseCard = (phase, keyPrefix = '') => {
     const phaseMinutes = parseMinutes(phase.duration);
-    const overflowMinutes = Math.max(0, phaseMinutes - PHASE_DURATION_LIMIT);
+    const courseMinutes = parseMinutes(course?.duration || course?.course_duration || '60');
+    const durationLimit = Math.max(1, Math.round(courseMinutes * (PHASE_DURATION_RATIO[phase.key] || 0.25)));
+    const overflowMinutes = Math.max(0, phaseMinutes - durationLimit);
     const phaseMapMeta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
 
     return (
@@ -1307,7 +1315,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
             </div>
             <div className="tbl-phase-second-row">
               <span className="tbl-phase-sub">{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
-              <span className={`tbl-phase-meta-dur${phaseMinutes > PHASE_DURATION_LIMIT ? ' is-over-limit' : ''}`}>
+              <span className={`tbl-phase-meta-dur${phaseMinutes > durationLimit ? ' is-over-limit' : ''}`}>
                 {formatDuration(phase.duration)}
               </span>
             </div>
@@ -1336,7 +1344,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
         {overflowMinutes > 0 && (
           <div className="tbl-phase-duration-warning">
             <span className="tbl-phase-duration-warning-icon">!</span>
-            <span>{t('lesson.phaseDurationSuggestion', { defaultValue: isChinese ? '建议调整阶段内活动时长在15分钟以内' : 'Keep activities in this phase within 15 minutes' })}</span>
+            <span>{t("lesson.overflowWarn", { current: phaseMinutes, limit: durationLimit, overflow: overflowMinutes, defaultValue: "Consider adjusting activity duration" })}</span>
           </div>
         )}
 

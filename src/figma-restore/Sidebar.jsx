@@ -69,6 +69,7 @@ export const Sidebar = () => {
         { id: 'audio-library', label: t('sidebar.audioLibrary'), icon: Music, path: '/voices' },
         { id: 'video-library', label: t('sidebar.videoLibrary'), icon: Video, path: '/video-materials' },
         { id: 'material', label: t('sidebar.materialResource'), icon: FileText, path: '/knowledge-base' },
+        { id: 'picture-book-knowledge', label: '绘本知识库', icon: BookOpenText, path: '/picture-book-knowledge' },
       ],
     },
     {

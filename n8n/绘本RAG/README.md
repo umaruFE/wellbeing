@@ -52,6 +52,7 @@ LLM_MODEL=gpt-5-mini
 COMFYUI_URL=https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com
 API_BASE_URL=http://localhost:4000
 N8N_PUBLIC_URL=http://localhost:5678
+N8N_RAG_UPLOAD_WEBHOOK=http://localhost:5678/webhook/rag-upload-knowledge
 ```
 
 说明：
@@ -68,6 +69,7 @@ N8N_PUBLIC_URL=http://localhost:5678
 - `COMFYUI_URL`：ComfyUI 服务地址。第 4 个图片生成流程会调用 `${COMFYUI_URL}/prompt`。
 - `API_BASE_URL`：后端 API 地址。第 4 个流程会返回 `${API_BASE_URL}/api/ai/task-status/...` 作为图片任务轮询地址。
 - `N8N_PUBLIC_URL`：n8n 对外可访问地址，主流程会通过它调用 RAG 检索流程。
+- `N8N_RAG_UPLOAD_WEBHOOK`：后端上传代理要转发到的 n8n 知识库上传 webhook。如果不配置，会默认使用 `${N8N_PUBLIC_URL}/webhook/rag-upload-knowledge`。
 
 ## 重要前提：先创建 Qdrant Collection
 
@@ -118,6 +120,30 @@ POST ${N8N_PUBLIC_URL}/webhook/rag-search-context
 
 ## 资料上传接口
 
+### 页面上传
+
+项目里已经提供了一个上传页面：
+
+```text
+/picture-book-knowledge
+```
+
+页面会调用后端：
+
+```text
+POST /api/rag/upload-knowledge
+```
+
+后端再转发到 n8n：
+
+```text
+POST /webhook/rag-upload-knowledge
+```
+
+这样浏览器不用直接访问 n8n，能避免跨域问题。资料上传成功后会写入 Qdrant，后续生成绘本可以重复检索使用，不需要每次重新上传。
+
+### n8n 原始接口
+
 接口：
 
 ```text
@@ -157,8 +183,9 @@ userId: u_001
 title: 5岁儿童害怕黑夜的应对方法
 category: 儿童心理
 ageRange: 3-6
-visibility: private
 ```
+
+`ageRange` 可以不传或留空，表示全年龄段适用。上传页面不暴露可见范围，默认以 `private` 写入当前用户知识库。
 
 上传 docx 时，流程会调用 `DOCX_EXTRACT_URL`（未设置时回退到 `${API_BASE_URL}/api/rag/extract-docx`）。这个接口需要接收 multipart 里的 `file`，并返回：
 

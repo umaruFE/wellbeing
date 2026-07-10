@@ -218,7 +218,7 @@
     "aiRewrite": "AI Rewrite",
     "viewPhaseDetail": "View Phase Detail",
     "overflowWarn": "Consider adjusting activity duration (current {{current}} min, exceeds limit by {{overflow}} min)",
-    "phaseDurationSuggestion": "Keep activities in this phase within 15 minutes",
+    "phaseDurationSuggestion": "Keep activities in this phase within the phase limit",
     "insertBefore": "Insert Above",
     "pinToTop": "Move to Top",
     "readonlyNote": "Read-only",

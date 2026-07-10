@@ -31,6 +31,7 @@ import { AdminDashboard } from './figma-restore/AdminDashboard';
 import { CourseManagement } from './figma-restore/course-management';
 import DesignSystemPreview from './modules/design-system/DesignSystemPreview';
 import { PictureBookStudioPage } from './modules/picture-book/PictureBookStudioPage';
+import { KnowledgeUploadPage } from './modules/picture-book/KnowledgeUploadPage';
 
 function App() {
   return (
@@ -108,6 +109,15 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
                   <PictureBookStudioPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/picture-book-knowledge"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                  <KnowledgeUploadPage />
                 </RequireAuth>
               }
             />
