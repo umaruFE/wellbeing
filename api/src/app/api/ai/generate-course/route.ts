@@ -68,7 +68,8 @@ function repairTruncatedJson(text: string): string | null {
   const trimmed = text.trim();
   if (!trimmed) return null;
 
-  let depth = 0;
+  // 用栈追踪未闭合的 { 和 [，以便正确补全对应的闭合符号
+  const stack: string[] = [];
   let inString = false;
   let escape = false;
 
@@ -78,24 +79,67 @@ function repairTruncatedJson(text: string): string | null {
     if (ch === '\\') { escape = true; continue; }
     if (ch === '"') { inString = !inString; continue; }
     if (inString) continue;
-    if (ch === '{' || ch === '[') depth++;
-    if (ch === '}' || ch === ']') depth--;
+    if (ch === '{' || ch === '[') stack.push(ch);
+    else if (ch === '}' || ch === ']') stack.pop();
   }
 
+  let base = trimmed;
+
+  // 如果在字符串中间截断，需要找到最后一个完整值/键的边界
   if (inString) {
-    const lastQuote = trimmed.lastIndexOf('"');
-    if (lastQuote > 0) {
-      const beforeQuote = trimmed.substring(0, lastQuote).trimEnd();
-      const trailingComma = beforeQuote.endsWith(',') ? beforeQuote.slice(0, -1).trimEnd() : beforeQuote;
-      return trailingComma + '}'.repeat(Math.max(depth, 0));
+    // 找到最后一个未被截断的完整键值对的结尾
+    // 策略：从末尾往前找，去掉不完整的字符串
+    const lastCompleteQuote = (() => {
+      // 倒序找最后一个在字符串外的结构字符
+      let inStr = false;
+      let esc = false;
+      let lastStructEnd = -1;
+      for (let i = 0; i < trimmed.length; i++) {
+        const ch = trimmed[i];
+        if (esc) { esc = false; continue; }
+        if (ch === '\\') { esc = true; continue; }
+        if (ch === '"') { inStr = !inStr; continue; }
+        if (!inStr && (ch === ',' || ch === '{' || ch === '[' || ch === ':')) {
+          lastStructEnd = i;
+        }
+      }
+      return lastStructEnd;
+    })();
+
+    if (lastCompleteQuote >= 0) {
+      // 截断到最后一个完整结构字符之后，去掉不完整的键值
+      base = trimmed.substring(0, lastCompleteQuote + 1);
+      // 重新计算栈
+      stack.length = 0;
+      inString = false;
+      escape = false;
+      for (let i = 0; i < base.length; i++) {
+        const ch = base[i];
+        if (escape) { escape = false; continue; }
+        if (ch === '\\') { escape = true; continue; }
+        if (ch === '"') { inString = !inString; continue; }
+        if (inString) continue;
+        if (ch === '{' || ch === '[') stack.push(ch);
+        else if (ch === '}' || ch === ']') stack.pop();
+      }
     }
   }
 
-  if (depth > 0) {
-    return trimmed + '}'.repeat(depth);
+  // 去掉末尾可能多余的逗号（对所有截断情况生效）
+  base = base.replace(/,\s*$/, '');
+
+  // 如果截断在 "key": 后面（值缺失），补一个 null
+  base = base.replace(/:\s*$/, ': null');
+
+  // 根据栈补全闭合符号
+  const closers: string[] = [];
+  while (stack.length) {
+    const opener = stack.pop();
+    closers.push(opener === '{' ? '}' : ']');
   }
 
-  return null;
+  if (closers.length === 0) return null;
+  return base + closers.join('');
 }
 
 export async function OPTIONS() {

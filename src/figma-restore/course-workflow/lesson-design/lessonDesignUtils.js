@@ -38,13 +38,7 @@ const fixedFlowTitleSet = new Set([
 ]);
 
 function makeFlowTitleFromContent(text, index, isEn = false) {
-  const cleaned = String(text || '')
-    .replace(/教师说|老师说|学生|小组|全班|Teacher says|Students|Teacher|Group|Class/gi, ' ')
-    .replace(/[“”"'，、。！？；;：:（）()\[\]①②③④⑤⑥]/g, ' ')
-    .trim();
-  const compact = cleaned.split(/\s+/).filter(Boolean).join(isEn ? ' ' : '');
-  if (compact) return isEn ? compact.split(/\s+/).slice(0, 3).join(' ') : compact.slice(0, 8);
-  return isEn ? `Step ${index + 1}` : `流程${index + 1}`;
+  return isEn ? `Step ${index + 1}` : `步骤 ${index + 1}`;
 }
 
 function translateFlowTitle(title, isEn) {
@@ -54,20 +48,22 @@ function translateFlowTitle(title, isEn) {
 export function parseLabeledFlowSteps(flow, isEn = false) {
   const raw = String(flow || '').replace(/\u200b/g, '').replace(/\r/g, '\n').trim();
   if (!raw) return [];
-  const titles = flowTitles[isEn ? 'en' : 'zh'];
-  const labelPattern = new RegExp(`(${titles.join('|')})\\s*[：:]\\s*`, 'g');
-  const matches = Array.from(raw.matchAll(labelPattern));
-  if (matches.length < 2) return [];
-  return matches
-    .map((match, index) => {
-      const start = match.index + match[0].length;
-      const end = matches[index + 1]?.index ?? raw.length;
+  const lines = raw
+    .split(/\n+/)
+    .map((line) => line.replace(/^[①②③④⑤⑥⑦⑧⑨]|\d+[.、)]/g, '').trim())
+    .filter(Boolean);
+  const labeled = lines
+    .map((line) => {
+      const match = line.match(/^([^\n：:]{2,12})[：:]\s*(.+)$/s);
+      if (!match) return null;
       return {
-        title: match[1],
-        desc: raw.slice(start, end).replace(/^[\s。；;，,]+|[\s。；;，,]+$/g, '').trim(),
+        title: match[1].trim(),
+        desc: match[2].replace(/^[\s。；;，,]+|[\s。；;，,]+$/g, '').trim(),
       };
     })
-    .filter((item) => item.desc);
+    .filter((item) => item && item.desc);
+  if (labeled.length < 2) return [];
+  return labeled;
 }
 
 export function splitStepFlowText(flow, isEn = false) {
