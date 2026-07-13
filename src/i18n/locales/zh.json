@@ -1238,7 +1238,7 @@
     "iwPasteStory": "粘贴故事",
     "iwConfirmPreview": "确认预览",
     "iwStoryName": "故事名称",
-    "iwStoryContent": "故事内容",
+    "iwStoryContent": "故事内容（每行生成一页）",
     "iwStoryPlaceholder": "给你的绘本起个名字吧...",
     "iwStoryContentPlaceholder": "请粘贴您的故事内容，AI 将自动为您拆分成多页绘本分镜...",
     "iwExample": "示例：",

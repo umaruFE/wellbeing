@@ -1238,7 +1238,7 @@
     "iwPasteStory": "Paste Story",
     "iwConfirmPreview": "Confirm Preview",
     "iwStoryName": "Story Name",
-    "iwStoryContent": "Story Content",
+    "iwStoryContent": "Story Content (one line per page)",
     "iwStoryPlaceholder": "Give your picture book a name...",
     "iwStoryContentPlaceholder": "Paste your story content, AI will auto-split into multi-page storyboard...",
     "iwExample": "Example:",

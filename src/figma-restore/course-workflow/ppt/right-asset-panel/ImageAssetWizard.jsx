@@ -1441,7 +1441,7 @@ function StorybookPasteStep({ values, setValue }) {
         <p className="ppt-storybook-reference-hint">
           {isEn
             ? 'Add multiple activity cases, character guides, and visual rules. AI will extract one shared story and character bible before creating pages.'
-            : '可添加多份活动案例、角色规范和画风规则；AI 会先提炼统一的故事圣经与角色圣经，再生成分镜。'}
+            : '可添加多份活动案例、角色规范和画风规则；AI 会先提炼统一的故事与角色，再生成分镜。'}
         </p>
         <label className="ppt-storybook-reference-upload">
           <Upload size={16} />
@@ -1471,7 +1471,7 @@ function StorybookPasteStep({ values, setValue }) {
         <Input.TextArea
           className="ppt-storybook-reference-notes"
           value={values.referenceNotes || ''}
-          placeholder={isEn ? 'Paste client keywords or extra visual requirements here…' : '也可以在这里粘贴客户关键词或补充视觉要求…'}
+          placeholder={isEn ? 'Paste client keywords or extra visual requirements here…' : '也可以在这里粘贴关键词或补充视觉要求…'}
           onChange={(event) => setValue('referenceNotes', event.target.value.slice(0, 20000))}
         />
       </div>

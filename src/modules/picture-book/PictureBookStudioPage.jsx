@@ -35,7 +35,7 @@ export function PictureBookStudioPage() {
         <div className="picture-book-title-block">
           <span className="picture-book-kicker"><Sparkles size={15} /> AI Picture Book</span>
           <h1>{isEn ? 'Picture Book Studio' : '绘本制作工坊'}</h1>
-          <p>{isEn ? 'Create consistent, classroom-ready storybooks in a full workspace.' : '在 工作台中完成故事拆页、统一画风生成和绘本结果管理。'}</p>
+          <p>{isEn ? 'Create consistent, classroom-ready storybooks.' : '完成故事拆页、统一画风生成和绘本结果管理。'}</p>
         </div>
       </section>
 
@@ -46,7 +46,7 @@ export function PictureBookStudioPage() {
               <span><LayoutDashboard size={15} /> {isEn ? 'Generation Desk' : '生成工作台'}</span>
               <h2>{wizardTitle}</h2>
             </div>
-            <strong>{isEn ? 'One line = one page' : '每行生成一页'}</strong>
+            {/* <strong>{isEn ? 'One line = one page' : '每行生成一页'}</strong> */}
           </div>
           <div className="picture-book-wizard-body">
             <ImageAssetWizard
