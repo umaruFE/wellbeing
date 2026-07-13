@@ -1522,7 +1522,7 @@ function StorybookPreviewStep({ values }) {
           </article>
         ))}
       </div>
-      <p className="ppt-storybook-note">{t('assetPanel.iwRegenAfter')}</p>
+      {/* <p className="ppt-storybook-note">{t('assetPanel.iwRegenAfter')}</p> */}
     </div>
   );
 }

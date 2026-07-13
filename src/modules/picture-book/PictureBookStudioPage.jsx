@@ -15,10 +15,20 @@ export function PictureBookStudioPage() {
   const isEn = i18n.language?.startsWith('en');
   const [wizardTitle, setWizardTitle] = React.useState(isEn ? 'Picture Book Studio' : '绘本制作');
   const [completedBook, setCompletedBook] = React.useState(null);
+  const [resetKey, setResetKey] = React.useState(0);
 
   React.useEffect(() => {
     setWizardTitle(isEn ? 'Picture Book Studio' : '绘本制作');
   }, [isEn]);
+
+  React.useEffect(() => {
+    const handler = () => {
+      setResetKey((k) => k + 1);
+      setCompletedBook(null);
+    };
+    window.addEventListener('wellbeing:nav-same-route', handler);
+    return () => window.removeEventListener('wellbeing:nav-same-route', handler);
+  }, []);
 
   const asset = React.useMemo(() => ({
     code: 'B9',
@@ -50,6 +60,7 @@ export function PictureBookStudioPage() {
           </div>
           <div className="picture-book-wizard-body">
             <ImageAssetWizard
+              key={resetKey}
               asset={asset}
               onBack={() => {}}
               onTitleChange={setWizardTitle}
