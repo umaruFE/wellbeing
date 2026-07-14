@@ -1228,6 +1228,7 @@ function ModalSection({ title, desc, children }) {
 function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, children, onOpen }) {
   const fullTitle = [title, showEn ? en : ''].filter(Boolean).join(' ');
   const content = String(children || '');
+  const contentLines = content.split(/\n+/).map((line) => line.trim()).filter(Boolean);
   return (
     <article className={`course-map-v2-goal ${tone ? `is-${tone}` : ''}`}>
       <div className="course-map-v2-goal-title">
@@ -1243,7 +1244,11 @@ function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, childre
         title={content}
         onClick={() => onOpen?.(fullTitle, content)}
       >
-        {children}
+        {contentLines.length > 1
+          ? contentLines.map((line, index) => (
+            <span className="course-map-v2-text-line" key={`${line}-${index}`}>{line}</span>
+          ))
+          : children}
       </button>
     </article>
   );

@@ -568,7 +568,9 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
 .view-map-active .course-map-v2-icon img{display:block;width:37px;height:35px;object-fit:contain}
 .view-map-active .course-map-v2-icon svg{width:22px;height:22px;color:#333e4e}
 .view-map-active .course-map-v2-title-en{color:#333e4e;font-size:16px;font-weight:900;margin-left:0;line-height:20px}
-.view-map-active .course-map-v2-text{color:#333e4e;font-size:14px;line-height:22px;font-weight:600;min-height:0;flex:1;overflow-y:auto;overflow-x:hidden;white-space:normal;overflow-wrap:anywhere;word-break:break-word;scrollbar-width:thin}
+.view-map-active .course-map-v2-text{color:#333e4e;font-size:14px;line-height:22px;font-weight:600;min-height:0;flex:1;overflow-y:auto;overflow-x:hidden;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;scrollbar-width:thin}
+.view-map-active .course-map-v2-text-line{display:block}
+.view-map-active .course-map-v2-text-line + .course-map-v2-text-line{margin-top:6px}
 .view-map-active .course-map-v2-goal.wide{grid-column:1/-1;height:192px;min-height:192px;padding:38px 18px 18px;background:#fff}
 .view-map-active .course-map-v2-goal.wide .course-map-v2-goal-title{min-width:260px}
 .view-map-active .course-map-v2-journey{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;overflow:visible}
@@ -3733,6 +3735,34 @@ body.fr-workflow-route-active:has(#ed-tbl.lesson-map-mode){overflow:hidden}
   overflow-wrap:anywhere!important;
   word-break:break-word!important;
   scrollbar-width:none!important;
+}
+
+.view-map-active .course-map-v2-goal.is-toolkit .course-map-v2-text{
+  display:block!important;
+  -webkit-line-clamp:unset!important;
+  max-height:82px!important;
+  overflow:hidden!important;
+  overflow-y:hidden!important;
+  white-space:normal!important;
+  text-overflow:ellipsis!important;
+}
+
+.view-map-active .course-map-v2-goal.is-toolkit .course-map-v2-text-line{
+  display:-webkit-box!important;
+  -webkit-box-orient:vertical!important;
+  -webkit-line-clamp:1!important;
+  line-height:22px!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:normal!important;
+}
+
+.view-map-active .course-map-v2-goal.is-toolkit .course-map-v2-text-line:first-child{
+  -webkit-line-clamp:2!important;
+}
+
+.view-map-active .course-map-v2-goal.is-toolkit .course-map-v2-text-line + .course-map-v2-text-line{
+  margin-top:4px!important;
 }
 
 .view-map-active .course-map-v2-journey-text{
