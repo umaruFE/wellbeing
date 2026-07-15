@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.jsx'
 import { appAntdTheme } from './theme/buildAntdTheme'
 import './i18n';
+import { registerSW } from 'virtual:pwa-register'
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -30,3 +31,5 @@ if (!rootElement) {
     `;
   }
 }
+
+registerSW({ immediate: true });
