@@ -1,0 +1,47 @@
+# ============================================================
+# 后端 Dockerfile — Next.js 14 API (端口 4000)
+# ============================================================
+
+# ---- 阶段 1：构建 ----
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# 先复制依赖清单，利用缓存
+COPY api/package.json api/package-lock.json* ./
+
+RUN npm ci
+
+# 复制后端源码并构建
+COPY api/ .
+
+RUN npm run build
+
+# ---- 阶段 2：运行 ----
+FROM node:18-alpine AS runner
+
+WORKDIR /app
+
+ENV NODE_ENV=production
+ENV PORT=4000
+
+# 安装生产依赖（sharp 等原生模块在此阶段安装 musl 预编译包）
+COPY api/package.json api/package-lock.json* ./
+
+RUN npm ci --omit=dev
+
+# 从构建阶段复制产物
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY api/next.config.js ./
+
+# 媒体缓存目录（remove-white-background / 图片转存使用）
+RUN mkdir -p /app/.media-cache
+ENV MEDIA_CACHE_DIR=/app/.media-cache
+
+# 本地上传目录
+RUN mkdir -p /app/uploads
+
+EXPOSE 4000
+
+CMD ["npm", "start"]

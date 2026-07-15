@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>用户操作手册.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="wellbeing-%E7%94%A8%E6%88%B7%E6%93%8D%E4%BD%9C%E6%89%8B%E5%86%8C">Wellbeing 用户操作手册</h1>
+<blockquote>
+<p>版本：v1.0<br>
+适用对象：课程创作者、教研组长、机构管理员<br>
+访问地址：生产环境 <code>http://wellbeing.newstaredu.cn</code></p>
+</blockquote>
+<hr>
+<h2 id="%E7%9B%AE%E5%BD%95">目录</h2>
+<ol>
+<li><a href="#%E4%B8%80%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B">系统简介</a></li>
+<li><a href="#%E4%BA%8C%E7%99%BB%E5%BD%95%E4%B8%8E%E8%B4%A6%E6%88%B7">登录与账户</a></li>
+<li><a href="#%E4%B8%89%E5%B7%A5%E4%BD%9C%E5%8F%B0%E9%A6%96%E9%A1%B5">工作台首页</a></li>
+<li><a href="#%E5%9B%9B%E5%88%9B%E5%BB%BA%E8%AF%BE%E7%A8%8B4-%E6%AD%A5%E5%90%91%E5%AF%BC">创建课程</a></li>
+<li><a href="#%E4%BA%94%E8%AF%BE%E7%A8%8B%E7%AE%A1%E7%90%86">课程管理</a></li>
+<li><a href="#%E5%85%AD%E8%AF%BE%E7%A8%8B%E5%9C%B0%E5%9B%BE">课程地图</a></li>
+<li><a href="#%E4%B8%83%E6%95%99%E6%A1%88%E8%AE%BE%E8%AE%A1">教案设计</a></li>
+<li><a href="#%E5%85%ABppt-%E8%AF%BE%E4%BB%B6%E5%88%B6%E4%BD%9C">PPT 课件制作</a></li>
+<li><a href="#%E4%B9%9D%E7%B4%A0%E6%9D%90%E5%BA%93%E7%AE%A1%E7%90%86">素材库管理</a></li>
+<li><a href="#%E5%8D%81%E7%BB%98%E6%9C%AC%E5%88%B6%E4%BD%9C">绘本制作</a></li>
+<li><a href="#%E5%8D%81%E4%B8%80%E8%AF%BE%E7%A8%8B%E5%B9%BF%E5%9C%BA">课程广场</a></li>
+<li><a href="#%E5%8D%81%E4%BA%8C%E4%BB%BB%E5%8A%A1%E4%B8%AD%E5%BF%83">任务中心</a></li>
+<li><a href="#%E5%8D%81%E4%B8%89%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86">系统管理</a></li>
+<li><a href="#%E5%8D%81%E5%9B%9B%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98">常见问题</a></li>
+</ol>
+<hr>
+<h2 id="%E4%B8%80%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B">一、系统简介</h2>
+<p>Wellbeing 是一个 <strong>AI 驱动的少儿英语课程创作平台</strong>。通过 AI 自动生成课程内容、教案、PPT 课件和教学素材（图片/音频/视频），帮助教师高效完成课程开发。</p>
+<p><strong>核心工作流程</strong>：</p>
+<pre class="hljs"><code><div>创建课程 → 课程地图 → 教案设计 → PPT 课件 → 发布
+</div></code></pre>
+<p><strong>4E 教学法</strong>：所有教案围绕四个阶段组织：</p>
+<ul>
+<li><strong>Engage（引入）</strong>：激发兴趣，导入情境</li>
+<li><strong>Empower（赋能）</strong>：语言输入，知识建构</li>
+<li><strong>Execute（实践）</strong>：活动练习，语言输出</li>
+<li><strong>Elevate（升华）</strong>：反思总结，情感升华</li>
+</ul>
+<hr>
+<h2 id="%E4%BA%8C%E7%99%BB%E5%BD%95%E4%B8%8E%E8%B4%A6%E6%88%B7">二、登录与账户</h2>
+<h3 id="21-%E7%99%BB%E5%BD%95">2.1 登录</h3>
+<ol>
+<li>打开系统访问地址，进入登录页</li>
+<li>输入<strong>用户名</strong>和<strong>密码</strong></li>
+<li>点击「登录」按钮</li>
+<li>登录成功后自动跳转到工作台首页</li>
+</ol>
+<h3 id="22-%E8%A7%92%E8%89%B2%E8%AF%B4%E6%98%8E">2.2 角色说明</h3>
+<table>
+<thead>
+<tr>
+<th>角色</th>
+<th>说明</th>
+<th>可用功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>超级管理员</td>
+<td>系统最高权限</td>
+<td>全部功能 + 系统设置 + 账号管理</td>
+</tr>
+<tr>
+<td>机构管理员</td>
+<td>机构级管理</td>
+<td>全部课程功能 + 机构管理</td>
+</tr>
+<tr>
+<td>教研组长</td>
+<td>教研管理</td>
+<td>全部课程创作功能</td>
+</tr>
+<tr>
+<td>创作者</td>
+<td>课程制作</td>
+<td>课程创作与编辑</td>
+</tr>
+<tr>
+<td>只读用户</td>
+<td>查看浏览</td>
+<td>仅可浏览，不可编辑</td>
+</tr>
+</tbody>
+</table>
+<h3 id="23-%E8%AF%AD%E8%A8%80%E5%88%87%E6%8D%A2">2.3 语言切换</h3>
+<p>页面右上角可切换 <strong>中文 / English</strong>，切换后界面和 AI 生成内容语言同步变化。</p>
+<hr>
+<h2 id="%E4%B8%89%E5%B7%A5%E4%BD%9C%E5%8F%B0%E9%A6%96%E9%A1%B5">三、工作台首页</h2>
+<p>登录后进入工作台首页，包含以下区域：</p>
+<h3 id="31-%E5%BF%AB%E6%8D%B7%E6%93%8D%E4%BD%9C%E5%8C%BA">3.1 快捷操作区</h3>
+<ul>
+<li><strong>创建课程</strong>：点击进入 4 步创建向导</li>
+<li><strong>生成图片 / 生成视频 / 生成音频</strong>：快速进入对应的 AI 素材生成工具</li>
+</ul>
+<h3 id="32-%E8%B5%84%E4%BA%A7%E6%80%BB%E8%A7%88">3.2 资产总览</h3>
+<ul>
+<li>显示已生成素材总数（图片 + 视频 + 音频）</li>
+<li>显示剩余算力额度（已用 / 总量，带进度条）</li>
+</ul>
+<h3 id="33-%E4%BB%BB%E5%8A%A1%E6%A6%82%E8%A7%88">3.3 任务概览</h3>
+<ul>
+<li>今日完成任务数</li>
+<li>进行中 / 已完成 / 排队中任务统计</li>
+</ul>
+<h3 id="34-%E6%9C%80%E8%BF%91%E5%86%85%E5%AE%B9">3.4 最近内容</h3>
+<ul>
+<li>切换 <strong>课程 / 图片 / 视频 / 音频</strong> Tab</li>
+<li>查看最近创建/生成的内容</li>
+<li>点击课程卡片可直接进入编辑</li>
+</ul>
+<hr>
+<h2 id="%E5%9B%9B%E5%88%9B%E5%BB%BA%E8%AF%BE%E7%A8%8B4-%E6%AD%A5%E5%90%91%E5%AF%BC">四、创建课程（4 步向导）</h2>
+<h3 id="%E6%AD%A5%E9%AA%A4%E4%B8%80%E8%AE%BE%E5%AE%9A%E8%AF%BE%E7%A8%8B">步骤一：设定课程</h3>
+<p>填写课程基础信息：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>说明</th>
+<th>是否必填</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>年龄段</td>
+<td>3-6 / 7-9 / 9-12 岁</td>
+<td>✅ 必填</td>
+</tr>
+<tr>
+<td>课程时长</td>
+<td>40 / 60 / 120 分钟</td>
+<td>✅ 必填</td>
+</tr>
+<tr>
+<td>班级人数</td>
+<td>≤8 / 9-15 / ≥16 人</td>
+<td>✅ 必填</td>
+</tr>
+<tr>
+<td>核心词汇</td>
+<td>输入词汇后回车添加为标签，<strong>支持粘贴批量解析</strong>（逗号/换行分隔）</td>
+<td>✅ 必填</td>
+</tr>
+<tr>
+<td>核心句型</td>
+<td>输入句型后回车添加，<strong>支持按句号智能拆分</strong></td>
+<td>✅ 必填</td>
+</tr>
+<tr>
+<td>语言技能</td>
+<td>听力 / 口语 / 阅读 / 写作 / 综合（多选）</td>
+<td>选填</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>技巧</strong>：可以直接粘贴如 <code>sport, bike, friend, run, jump</code> 到词汇框，系统会自动拆分为多个标签。</p>
+</blockquote>
+<h3 id="%E6%AD%A5%E9%AA%A4%E4%BA%8C%E8%AE%BE%E8%AE%A1%E5%86%92%E9%99%A9">步骤二：设计冒险</h3>
+<p>设计课程的情境任务：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>说明</th>
+<th>是否必填</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>任务名称</td>
+<td>本次课程的情境任务名称</td>
+<td>✅ 必填</td>
+</tr>
+<tr>
+<td>情境故事</td>
+<td>课堂的故事背景设定</td>
+<td>✅ 必填</td>
+</tr>
+<tr>
+<td>关键产出</td>
+<td>学生最终完成的成果</td>
+<td>✅ 必填</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 <strong>AI 辅助</strong>：</p>
+<ul>
+<li>点击「<strong>获取灵感</strong>」让 AI 生成创意任务名称</li>
+<li>点击「<strong>润色内容</strong>」让 AI 优化你输入的文本</li>
+</ul>
+</blockquote>
+<h3 id="%E6%AD%A5%E9%AA%A4%E4%B8%89%E9%80%89%E6%8B%A9%E8%B7%AF%E5%BE%84">步骤三：选择路径</h3>
+<p>选择课堂的<strong>体验路径</strong>（可多选）：</p>
+<ul>
+<li>🎨 <strong>艺术表达</strong>：绘画、手工、创作</li>
+<li>🏃 <strong>体感探索</strong>：运动、游戏、肢体活动</li>
+<li>🎵 <strong>音乐律动</strong>：歌曲、节奏、音乐活动</li>
+</ul>
+<h3 id="%E6%AD%A5%E9%AA%A4%E5%9B%9B%E6%B7%BB%E5%8A%A0%E9%AD%94%E6%B3%95">步骤四：添加魔法</h3>
+<p>个性化设置（选填）：</p>
+<ul>
+<li><strong>特殊要求</strong>：对课程的额外要求</li>
+<li><strong>课堂氛围</strong>：神秘探险感 / 戏剧表演感 / 温馨治愈感 / 团队协作感</li>
+</ul>
+<h3 id="%E6%8F%90%E4%BA%A4">提交</h3>
+<p>点击「提交」后，系统自动调用 AI：</p>
+<ol>
+<li>生成<strong>课程概览</strong>（标题、情境、目标、旅程）</li>
+<li>生成<strong>主题封面图</strong></li>
+<li>保存为草稿课程，自动进入课程创作工作流</li>
+</ol>
+<blockquote>
+<p>⏱️ AI 生成约需 15-30 秒，请耐心等待。</p>
+</blockquote>
+<hr>
+<h2 id="%E4%BA%94%E8%AF%BE%E7%A8%8B%E7%AE%A1%E7%90%86">五、课程管理</h2>
+<h3 id="51-%E6%9F%A5%E7%9C%8B%E8%AF%BE%E7%A8%8B%E5%88%97%E8%A1%A8">5.1 查看课程列表</h3>
+<p>进入「课程管理」，以卡片形式展示所有课程。每张卡片包含：</p>
+<ul>
+<li>课程封面图</li>
+<li>课程标题 + 状态标签（草稿/已发布）</li>
+<li>年龄段、时长、班级人数</li>
+<li>更新时间</li>
+</ul>
+<h3 id="52-%E6%90%9C%E7%B4%A2%E4%B8%8E%E7%AD%9B%E9%80%89">5.2 搜索与筛选</h3>
+<ul>
+<li><strong>搜索框</strong>：输入关键词（标题、主题等）实时搜索</li>
+<li><strong>状态筛选</strong>：选择「全部 / 草稿 / 已发布」</li>
+</ul>
+<h3 id="53-%E5%8A%A0%E8%BD%BD%E6%9B%B4%E5%A4%9A">5.3 加载更多</h3>
+<p>列表每页显示 12 条，点击底部「<strong>加载更多</strong>」查看更多课程。</p>
+<h3 id="54-%E6%93%8D%E4%BD%9C%E8%AF%BE%E7%A8%8B">5.4 操作课程</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>进入编辑</td>
+<td>点击课程卡片</td>
+</tr>
+<tr>
+<td>删除课程</td>
+<td>点击卡片上的删除按钮 → 确认删除</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E5%85%AD%E8%AF%BE%E7%A8%8B%E5%9C%B0%E5%9B%BE">六、课程地图</h2>
+<p>进入课程后，第一个页面就是<strong>课程地图</strong>，展示 AI 生成的课程总览。</p>
+<h3 id="61-%E6%9F%A5%E7%9C%8B%E8%AF%BE%E7%A8%8B%E4%BF%A1%E6%81%AF">6.1 查看课程信息</h3>
+<ul>
+<li><strong>封面卡片</strong>：课程标题、年龄、时长、班级人数、体验路径</li>
+<li><strong>核心情境</strong>：点击可展开查看完整故事背景</li>
+<li><strong>主题封面图</strong>：AI 生成的课程封面</li>
+</ul>
+<h3 id="62-%E5%9B%9B%E5%A4%A7%E7%9B%AE%E6%A0%87%E5%8D%A1%E7%89%87">6.2 四大目标卡片</h3>
+<table>
+<thead>
+<tr>
+<th>卡片</th>
+<th>内容</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>语言工具箱</td>
+<td>核心词汇 + 核心句型</td>
+</tr>
+<tr>
+<td>关键产出</td>
+<td>学生最终成果任务</td>
+</tr>
+<tr>
+<td>成长罗盘</td>
+<td>SEL 社会情感目标 + PERMA 幸福目标</td>
+</tr>
+<tr>
+<td>学习方式</td>
+<td>体验路径说明</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>点击任意卡片可展开查看完整内容。</p>
+</blockquote>
+<h3 id="63-%E8%AF%BE%E5%A0%82%E6%97%85%E7%A8%8B">6.3 课堂旅程</h3>
+<p>展示 Engage / Empower / Execute / Elevate 四个阶段的课堂旅程描述。</p>
+<h3 id="64-%E7%BC%96%E8%BE%91%E8%AF%BE%E7%A8%8B%E5%9C%B0%E5%9B%BE">6.4 编辑课程地图</h3>
+<ul>
+<li><strong>直接编辑</strong>：点击「编辑」按钮，直接修改文本字段（不调 AI）</li>
+<li><strong>AI 重新生成</strong>：
+<ol>
+<li>点击「重新生成」</li>
+<li>系统先给出<strong>调整建议</strong>（快捷 chips）</li>
+<li>选择建议或输入自定义调整需求</li>
+<li>确认后 AI 重新生成课程概览</li>
+</ol>
+</li>
+</ul>
+<h3 id="65-%E9%87%8D%E6%96%B0%E7%94%9F%E6%88%90%E5%B0%81%E9%9D%A2%E5%9B%BE">6.5 重新生成封面图</h3>
+<p>点击封面图区域的「重新生成」，AI 会生成新的主题封面图。</p>
+<hr>
+<h2 id="%E4%B8%83%E6%95%99%E6%A1%88%E8%AE%BE%E8%AE%A1">七、教案设计</h2>
+<p>教案设计是系统的核心模块，基于 4E 教学法组织教学环节。</p>
+<h3 id="71-%E9%A6%96%E6%AC%A1%E7%94%9F%E6%88%90">7.1 首次生成</h3>
+<p>首次进入教案设计时，如果没有数据，系统会<strong>自动调用 AI 生成完整教案</strong>（约 30-60 秒）。</p>
+<h3 id="72-%E8%A7%86%E5%9B%BE%E6%A8%A1%E5%BC%8F">7.2 视图模式</h3>
+<p>两种视图可切换：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>地图模式</strong></td>
+<td>游戏地图背景，四阶段以节点展示，点击节点打开侧边抽屉查看详情</td>
+</tr>
+<tr>
+<td><strong>概览模式</strong></td>
+<td>看板式四列布局，每列展示该阶段所有环节卡片</td>
+</tr>
+</tbody>
+</table>
+<h3 id="73-%E7%8E%AF%E8%8A%82%E6%93%8D%E4%BD%9C">7.3 环节操作</h3>
+<p>每个教学环节卡片支持以下操作（点击右上角菜单）：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>重新生成</strong></td>
+<td>AI 重新生成该环节</td>
+</tr>
+<tr>
+<td><strong>调整环节</strong></td>
+<td>输入调整思路，AI 按需求调整（弹窗保持 loading）</td>
+</tr>
+<tr>
+<td><strong>收藏此环节</strong></td>
+<td>保存到「我的收藏」，方便复用</td>
+</tr>
+<tr>
+<td><strong>取消收藏</strong></td>
+<td>取消已收藏的环节</td>
+</tr>
+<tr>
+<td><strong>置顶</strong></td>
+<td>将环节移到阶段首位</td>
+</tr>
+<tr>
+<td><strong>删除</strong></td>
+<td>删除该环节</td>
+</tr>
+</tbody>
+</table>
+<p>底部操作栏：</p>
+<ul>
+<li><strong>查看详情</strong>：只读查看环节全部信息</li>
+<li><strong>编辑</strong>：打开编辑表单，可修改所有字段</li>
+<li><strong>调整</strong>：快捷进入 AI 调整</li>
+</ul>
+<h3 id="74-%E6%B7%BB%E5%8A%A0%E7%8E%AF%E8%8A%82">7.4 添加环节</h3>
+<p>点击阶段卡片中的「添加环节」按钮，弹出三 Tab 选择：</p>
+<h4 id="tab-1ai-%E7%94%9F%E6%88%90">Tab 1：AI 生成</h4>
+<ol>
+<li>选择提示词快捷 chips（角色扮演/小组合作/游戏化/真实情境/动手操作）或自由输入</li>
+<li>点击「AI 生成草案」</li>
+<li>AI 生成后可在右侧表单中预览和微调</li>
+<li>点击「确认添加」</li>
+</ol>
+<h4 id="tab-2%E7%BB%8F%E5%85%B8%E6%B4%BB%E5%8A%A8">Tab 2：经典活动</h4>
+<p>直接选择预设的经典教学活动（Bingo、猜单词、情景对话、闪卡翻转、拼图阅读、我画你猜）。</p>
+<h4 id="tab-3%E6%88%91%E7%9A%84%E6%94%B6%E8%97%8F">Tab 3：我的收藏</h4>
+<p>从已收藏的环节中选择复用。</p>
+<h3 id="75-%E8%B0%83%E6%95%B4%E7%8E%AF%E8%8A%82">7.5 调整环节</h3>
+<ol>
+<li>点击菜单中的「调整环节」</li>
+<li>在弹窗中填写<strong>调整思路</strong>（必填）</li>
+<li>可选择快捷提示词 chips</li>
+<li>可勾选 6 大调整方向：
+<ul>
+<li>基础设计、语言目标、体验互动、学习者匹配、教师操作、叙事连贯性</li>
+</ul>
+</li>
+<li>点击确认，弹窗显示 loading，AI 调整完成后自动更新</li>
+</ol>
+<h3 id="76-%E8%87%AA%E5%8A%A8%E4%BF%9D%E5%AD%98">7.6 自动保存</h3>
+<blockquote>
+<p>💡 所有增删改操作都会<strong>自动保存</strong>到后端，阶段总时长也会<strong>实时更新</strong>。无需手动保存。</p>
+</blockquote>
+<h3 id="77-%E9%87%8D%E6%96%B0%E7%94%9F%E6%88%90%E6%95%B4%E4%B8%AA%E9%98%B6%E6%AE%B5">7.7 重新生成整个阶段</h3>
+<p>在阶段卡片中点击「重新生成」，AI 会重新生成该阶段的所有环节。</p>
+<hr>
+<h2 id="%E5%85%ABppt-%E8%AF%BE%E4%BB%B6%E5%88%B6%E4%BD%9C">八、PPT 课件制作</h2>
+<h3 id="81-%E7%94%9F%E6%88%90-ppt-%E5%86%85%E5%AE%B9">8.1 生成 PPT 内容</h3>
+<ol>
+<li>选择 <strong>PPT 模板</strong></li>
+<li>设置<strong>预估页数</strong>（步进器调整）</li>
+<li>点击「生成课件」</li>
+<li>AI 自动生成英文 PPT 内容与布局（约 30-60 秒）</li>
+</ol>
+<h3 id="82-%E7%BC%96%E8%BE%91%E5%99%A8%E5%B8%83%E5%B1%80">8.2 编辑器布局</h3>
+<p>生成后进入三栏编辑器：</p>
+<pre class="hljs"><code><div>┌─────────┬─────────────────┬──────────┐
+│  大纲    │     画布         │ 属性面板  │
+│ (左栏)   │   (中间区域)      │ (右栏)   │
+├─────────┤                 ├──────────┤
+│ 封面页   │   [幻灯片预览]    │ 文本样式  │
+│ Engage  │                 │ 图片配置  │
+│ Empower │                 │ 视频配置  │
+│ Execute │                 │ 音频配置  │
+│ Elevate │                 │ AI素材    │
+└─────────┴─────────────────┴──────────┘
+</div></code></pre>
+<h3 id="83-%E7%94%BB%E5%B8%83%E6%93%8D%E4%BD%9C">8.3 画布操作</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>移动元素</td>
+<td>鼠标拖拽</td>
+</tr>
+<tr>
+<td>缩放元素</td>
+<td>拖拽 8 方向缩放手柄</td>
+</tr>
+<tr>
+<td>旋转元素</td>
+<td>拖拽旋转手柄</td>
+</tr>
+<tr>
+<td>编辑文本</td>
+<td>双击文本元素</td>
+</tr>
+<tr>
+<td>删除元素</td>
+<td>选中后按 Delete</td>
+</tr>
+<tr>
+<td>复制元素</td>
+<td>选中后按 Ctrl+D</td>
+</tr>
+<tr>
+<td>撤销</td>
+<td>Ctrl+Z</td>
+</tr>
+<tr>
+<td>重做</td>
+<td>Ctrl+Y</td>
+</tr>
+<tr>
+<td>取消选中</td>
+<td>Esc</td>
+</tr>
+<tr>
+<td>微移元素</td>
+<td>方向键（Shift 加速）</td>
+</tr>
+<tr>
+<td>缩放画布</td>
+<td>缩放控件 35%-120%</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 拖拽元素靠近其他元素或画布边缘时，会显示<strong>对齐辅助线</strong>帮助对齐。</p>
+</blockquote>
+<h3 id="84-%E5%B9%BB%E7%81%AF%E7%89%87%E7%AE%A1%E7%90%86%E5%B7%A6%E4%BE%A7%E5%A4%A7%E7%BA%B2">8.4 幻灯片管理（左侧大纲）</h3>
+<ul>
+<li>点击<strong>封面页</strong>或各阶段展开/折叠</li>
+<li>每个环节下展示幻灯片缩略图</li>
+<li><strong>添加幻灯片</strong>：点击 + 按钮</li>
+<li><strong>删除幻灯片</strong>：点击缩略图上的删除按钮</li>
+<li><strong>复制幻灯片</strong></li>
+</ul>
+<h3 id="85-%E5%9B%BE%E5%B1%82%E6%93%8D%E4%BD%9C%E9%A1%B6%E9%83%A8%E5%B7%A5%E5%85%B7%E6%A0%8F">8.5 图层操作（顶部工具栏）</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>插入文本</td>
+<td>工具栏 → 文本</td>
+</tr>
+<tr>
+<td>插入图片</td>
+<td>工具栏 → 图片</td>
+</tr>
+<tr>
+<td>插入视频</td>
+<td>工具栏 → 视频</td>
+</tr>
+<tr>
+<td>插入音频</td>
+<td>工具栏 → 音频</td>
+</tr>
+<tr>
+<td>设为背景</td>
+<td>右键 → 设为背景</td>
+</tr>
+<tr>
+<td>调整层级</td>
+<td>右键 → 上移/下移图层</td>
+</tr>
+<tr>
+<td>居中</td>
+<td>右键 → 居中</td>
+</tr>
+<tr>
+<td>适应画布</td>
+<td>右键 → 适应画布</td>
+</tr>
+</tbody>
+</table>
+<h3 id="86-ai-%E7%B4%A0%E6%9D%90%E7%94%9F%E6%88%90%E5%8F%B3%E4%BE%A7%E9%9D%A2%E6%9D%BF">8.6 AI 素材生成（右侧面板）</h3>
+<p>点击右侧面板的「AI 素材」标签，可生成三种素材：</p>
+<h4 id="%E5%9B%BE%E7%89%87%E7%B4%A0%E6%9D%9012-%E7%A7%8D%E7%B1%BB%E5%9E%8B">图片素材（12+ 种类型）</h4>
+<table>
+<thead>
+<tr>
+<th>代码</th>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>B1</td>
+<td>主题场景图</td>
+<td>课程主题背景图</td>
+</tr>
+<tr>
+<td>B2</td>
+<td>带文字场景图</td>
+<td>含教学文字的图</td>
+</tr>
+<tr>
+<td>B3</td>
+<td>词汇闪卡</td>
+<td>批量生成词汇卡</td>
+</tr>
+<tr>
+<td>B4</td>
+<td>故事插画</td>
+<td>故事情节配图</td>
+</tr>
+<tr>
+<td>B5</td>
+<td>活动氛围图</td>
+<td>课堂活动场景</td>
+</tr>
+<tr>
+<td>B6</td>
+<td>主题词云</td>
+<td>词汇可视化</td>
+</tr>
+<tr>
+<td>B7</td>
+<td>文本配图</td>
+<td>段落配图</td>
+</tr>
+<tr>
+<td>B8</td>
+<td>知识总结图</td>
+<td>思维导图/表格/鱼骨图/树状图</td>
+</tr>
+<tr>
+<td>B9</td>
+<td>绘本配图</td>
+<td>多页一致性插画</td>
+</tr>
+<tr>
+<td>B10</td>
+<td>四格漫画</td>
+<td>漫画风格</td>
+</tr>
+<tr>
+<td>B11</td>
+<td>IP 角色动作图</td>
+<td>Poppy/Edi/Rolly/Milo/Ace 角色动作</td>
+</tr>
+<tr>
+<td>B13</td>
+<td>多人场景</td>
+<td>多角色互动场景</td>
+</tr>
+</tbody>
+</table>
+<p><strong>操作步骤</strong>：</p>
+<ol>
+<li>选择图片类型</li>
+<li>配置选项（画风、比例、留白方向、主题等）</li>
+<li>点击「生成」</li>
+<li>等待生成完成（10-30 秒）</li>
+<li>在结果中<strong>选择</strong>需要的图片</li>
+<li>点击「插入」/「作为背景」/「多页插入」</li>
+</ol>
+<h4 id="%E8%A7%86%E9%A2%91%E7%B4%A0%E6%9D%90">视频素材</h4>
+<ul>
+<li>V1：IP 角色体能视频</li>
+<li>VM：多人叙事视频</li>
+</ul>
+<h4 id="%E9%9F%B3%E9%A2%91%E7%B4%A0%E6%9D%90">音频素材</h4>
+<ul>
+<li>C1：情绪氛围背景乐</li>
+<li>C2：活动背景乐</li>
+<li>C3：跟读朗读音频</li>
+<li>C4：对话配音</li>
+<li>C5：教学歌曲</li>
+<li>C6：冥想引导音频</li>
+</ul>
+<h3 id="87-%E5%AF%BC%E5%87%BA-ppt">8.7 导出 PPT</h3>
+<p>点击顶部「导出 .pptx」按钮，系统将课件导出为 PowerPoint 文件下载到本地。</p>
+<hr>
+<h2 id="%E4%B9%9D%E7%B4%A0%E6%9D%90%E5%BA%93%E7%AE%A1%E7%90%86">九、素材库管理</h2>
+<p>侧边栏「素材库」分组下有四个库：</p>
+<h3 id="91-%E5%9B%BE%E7%89%87%E5%BA%93">9.1 图片库</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查看图片</td>
+<td>进入图片库自动加载列表</td>
+</tr>
+<tr>
+<td>搜索</td>
+<td>输入关键词搜索</td>
+</tr>
+<tr>
+<td>筛选</td>
+<td>按来源（AI/手动/课程）、类型（主题图/PPT/闪卡/故事）筛选</td>
+</tr>
+<tr>
+<td>上传</td>
+<td>点击上传按钮，选择本地图片</td>
+</tr>
+<tr>
+<td>插入课程</td>
+<td>选择图片 → 插入到课程（封面/PPT/阅读材料）</td>
+</tr>
+<tr>
+<td>预览</td>
+<td>点击图片查看大图</td>
+</tr>
+<tr>
+<td>删除</td>
+<td>点击删除按钮 → 确认</td>
+</tr>
+</tbody>
+</table>
+<h3 id="92-%E9%9F%B3%E9%A2%91%E5%BA%93">9.2 音频库</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查看音频</td>
+<td>进入音频库自动加载，显示波形可视化</td>
+</tr>
+<tr>
+<td>播放/暂停</td>
+<td>点击播放按钮，显示进度</td>
+</tr>
+<tr>
+<td>筛选</td>
+<td>按来源、类型（BGM/旁白/歌曲/音效）筛选</td>
+</tr>
+<tr>
+<td>上传</td>
+<td>上传本地音频文件</td>
+</tr>
+<tr>
+<td>删除</td>
+<td>删除不需要的音频</td>
+</tr>
+</tbody>
+</table>
+<h3 id="93-%E8%A7%86%E9%A2%91%E5%BA%93">9.3 视频库</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查看视频</td>
+<td>进入视频库自动加载</td>
+</tr>
+<tr>
+<td>播放预览</td>
+<td>点击视频，弹窗播放</td>
+</tr>
+<tr>
+<td>筛选</td>
+<td>按来源、类型（动画/情景剧/讲解/体能）筛选</td>
+</tr>
+<tr>
+<td>上传</td>
+<td>上传本地视频文件</td>
+</tr>
+<tr>
+<td>删除</td>
+<td>删除不需要的视频</td>
+</tr>
+</tbody>
+</table>
+<h3 id="94-%E6%95%99%E6%9D%90%E8%B5%84%E6%BA%90">9.4 教材资源</h3>
+<p>管理教材知识库，支持三级树形结构（教材 &gt; 年级 &gt; 单元）。</p>
+<hr>
+<h2 id="%E5%8D%81%E7%BB%98%E6%9C%AC%E5%88%B6%E4%BD%9C">十、绘本制作</h2>
+<h3 id="101-%E4%B8%8A%E4%BC%A0%E7%9F%A5%E8%AF%86%E5%BA%93">10.1 上传知识库</h3>
+<ol>
+<li>进入「绘本知识库上传」</li>
+<li>上传教学资料（PDF/Word 等）</li>
+<li>系统自动清洗、切片、生成向量索引</li>
+</ol>
+<h3 id="102-%E7%94%9F%E6%88%90%E7%BB%98%E6%9C%AC">10.2 生成绘本</h3>
+<ol>
+<li>进入「绘本制作」</li>
+<li>输入绘本主题和设定</li>
+<li>点击「生成」</li>
+<li>系统 RAG 检索知识库 → AI 生成多页故事文案 + 逐页配图</li>
+<li>右侧侧边栏展示已生成页数和缩略图</li>
+</ol>
+<blockquote>
+<p>💡 绘本配图会保持<strong>角色和画风一致性</strong>。</p>
+</blockquote>
+<hr>
+<h2 id="%E5%8D%81%E4%B8%80%E8%AF%BE%E7%A8%8B%E5%B9%BF%E5%9C%BA">十一、课程广场</h2>
+<p>课程广场是公开课程的展示和分享平台。</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>浏览课程</td>
+<td>进入课程广场查看已发布课程</td>
+</tr>
+<tr>
+<td>搜索</td>
+<td>输入关键词搜索</td>
+</tr>
+<tr>
+<td>筛选分类</td>
+<td>按分类筛选课程</td>
+</tr>
+<tr>
+<td>切换视图</td>
+<td>网格 / 列表视图切换</td>
+</tr>
+<tr>
+<td>复制课程</td>
+<td>点击「复制」，将课程复制到自己的课程列表</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>💡 课程需要在工作流中「发布」后才会出现在课程广场。</p>
+</blockquote>
+<hr>
+<h2 id="%E5%8D%81%E4%BA%8C%E4%BB%BB%E5%8A%A1%E4%B8%AD%E5%BF%83">十二、任务中心</h2>
+<p>任务中心管理所有 AI 异步生成任务。</p>
+<h3 id="121-%E6%9F%A5%E7%9C%8B%E4%BB%BB%E5%8A%A1">12.1 查看任务</h3>
+<ul>
+<li><strong>当前队列</strong>：进行中、等待中的任务</li>
+<li><strong>历史记录</strong>：已完成、失败的任务</li>
+<li>列表每 5 秒自动刷新</li>
+</ul>
+<h3 id="122-%E4%BB%BB%E5%8A%A1%E7%8A%B6%E6%80%81">12.2 任务状态</h3>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>等待中</td>
+<td>任务排队等待执行</td>
+</tr>
+<tr>
+<td>进行中</td>
+<td>AI 正在生成</td>
+</tr>
+<tr>
+<td>已完成</td>
+<td>生成成功，可查看结果</td>
+</tr>
+<tr>
+<td>失败</td>
+<td>生成失败，可重新提交</td>
+</tr>
+<tr>
+<td>已取消</td>
+<td>手动取消的任务</td>
+</tr>
+</tbody>
+</table>
+<h3 id="123-%E4%BB%BB%E5%8A%A1%E6%93%8D%E4%BD%9C">12.3 任务操作</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查看详情</td>
+<td>点击任务卡片，查看提示词、参数、结果预览</td>
+</tr>
+<tr>
+<td>取消任务</td>
+<td>点击「取消」（仅等待中/进行中）</td>
+</tr>
+<tr>
+<td>重新提交</td>
+<td>失败任务点击「重新提交」</td>
+</tr>
+<tr>
+<td>插入画布</td>
+<td>完成的任务点击「插入画布」直接使用结果</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="%E5%8D%81%E4%B8%89%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86">十三、系统管理</h2>
+<blockquote>
+<p>仅超级管理员（super_admin）可访问。</p>
+</blockquote>
+<h3 id="131-%E7%94%A8%E6%88%B7%E7%AE%A1%E7%90%86">13.1 用户管理</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>创建账号</td>
+<td>填写用户信息、选择角色、创建</td>
+</tr>
+<tr>
+<td>删除账号</td>
+<td>删除不需要的账号</td>
+</tr>
+<tr>
+<td>角色分配</td>
+<td>为用户分配角色权限</td>
+</tr>
+</tbody>
+</table>
+<h3 id="132-%E6%9C%BA%E6%9E%84%E7%AE%A1%E7%90%86">13.2 机构管理</h3>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>方法</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>查看机构</td>
+<td>查看所有机构信息</td>
+</tr>
+<tr>
+<td>机构配额</td>
+<td>管理机构的时长配额、账号数量</td>
+</tr>
+</tbody>
+</table>
+<h3 id="133-%E7%B3%BB%E7%BB%9F%E8%AE%BE%E7%BD%AE">13.3 系统设置</h3>
+<p>配置系统级参数。</p>
+<hr>
+<h2 id="%E5%8D%81%E5%9B%9B%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98">十四、常见问题</h2>
+<h3 id="q1ai-%E7%94%9F%E6%88%90%E4%B8%80%E7%9B%B4%E8%BD%AC%E5%9C%88%E4%B8%8D%E8%BF%94%E5%9B%9E">Q1：AI 生成一直转圈不返回？</h3>
+<p><strong>A</strong>：AI 生成通常需要 15-60 秒。如果超过 2 分钟无响应：</p>
+<ol>
+<li>检查网络连接</li>
+<li>查看「任务中心」是否有失败任务</li>
+<li>刷新页面重试</li>
+<li>联系管理员检查 n8n 服务状态</li>
+</ol>
+<h3 id="q2%E6%95%99%E6%A1%88%E7%8E%AF%E8%8A%82%E7%9A%84%E6%AD%A5%E9%AA%A4%E6%A0%87%E9%A2%98%E6%98%BE%E7%A4%BA%E4%B8%BA%22%E6%AD%A5%E9%AA%A4-1%22">Q2：教案环节的步骤标题显示为&quot;步骤 1&quot;？</h3>
+<p><strong>A</strong>：这是因为 AI 偶尔未按&quot;名称：内容&quot;格式输出。这是正常的兜底显示，不影响内容质量。可以手动编辑环节修改标题。</p>
+<h3 id="q3%E8%AF%BE%E7%A8%8B%E7%94%9F%E6%88%90%E5%A4%B1%E8%B4%A5%E6%8F%90%E7%A4%BA%22%E6%9C%AA%E8%83%BD%E8%8E%B7%E5%8F%96%E8%AF%BE%E4%BB%B6%E6%95%B0%E6%8D%AE%22">Q3：课程生成失败，提示&quot;未能获取课件数据&quot;？</h3>
+<p><strong>A</strong>：通常是 n8n 工作流返回了空响应。请：</p>
+<ol>
+<li>稍后重试</li>
+<li>联系管理员检查 n8n 服务和 DeepSeek API 状态</li>
+</ol>
+<h3 id="q4ppt-%E5%AF%BC%E5%87%BA%E5%90%8E%E6%A0%B7%E5%BC%8F%E6%9C%89%E5%B7%AE%E5%BC%82">Q4：PPT 导出后样式有差异？</h3>
+<p><strong>A</strong>：pptxgenjs 导出为标准 PPT 格式，部分自定义样式（如旋转、复杂描边）可能略有差异。建议导出后在 PowerPoint 中微调。</p>
+<h3 id="q5%E5%A6%82%E4%BD%95%E8%AE%A9%E5%A4%9A%E4%BA%BA%E5%8D%8F%E4%BD%9C%E7%BC%96%E8%BE%91%E5%90%8C%E4%B8%80%E8%AF%BE%E7%A8%8B">Q5：如何让多人协作编辑同一课程？</h3>
+<p><strong>A</strong>：目前系统不支持实时多人协作。建议一人负责编辑，通过「发布」和「课程广场」分享给他人查看或复制。</p>
+<h3 id="q6%E6%94%B6%E8%97%8F%E7%9A%84%E7%8E%AF%E8%8A%82%E5%9C%A8%E5%93%AA%E9%87%8C%E6%9F%A5%E7%9C%8B">Q6：收藏的环节在哪里查看？</h3>
+<p><strong>A</strong>：在教案设计中，点击「添加环节」→ 切换到「我的收藏」Tab，即可查看所有已收藏的环节。</p>
+<h3 id="q7%E7%B4%A0%E6%9D%90%E7%94%9F%E6%88%90%E6%B6%88%E8%80%97%E7%AE%97%E5%8A%9B%E5%90%97">Q7：素材生成消耗算力吗？</h3>
+<p><strong>A</strong>：是的，所有 AI 生成（图片/视频/音频）都会消耗算力额度。可在工作台首页的「资产总览」查看剩余额度。</p>
+<h3 id="q8%E5%A6%82%E4%BD%95%E5%88%87%E6%8D%A2%E7%95%8C%E9%9D%A2%E8%AF%AD%E8%A8%80">Q8：如何切换界面语言？</h3>
+<p><strong>A</strong>：点击页面右上角的语言切换按钮，可在中文/English 之间切换。AI 生成的内容也会根据当前语言输出。</p>
+<h3 id="q9%E8%87%AA%E5%8A%A8%E4%BF%9D%E5%AD%98%E5%A4%B1%E8%B4%A5%E4%BA%86%E6%80%8E%E4%B9%88%E5%8A%9E">Q9：自动保存失败了怎么办？</h3>
+<p><strong>A</strong>：顶部会显示保存状态（saving/saved/error）。如果显示 error：</p>
+<ol>
+<li>检查网络连接</li>
+<li>点击「保存」按钮手动重试</li>
+<li>系统有 localStorage 草稿缓存，数据不会丢失</li>
+</ol>
+<h3 id="q10%E5%A6%82%E4%BD%95%E5%88%A0%E9%99%A4%E4%B8%8D%E9%9C%80%E8%A6%81%E7%9A%84%E8%AF%BE%E7%A8%8B">Q10：如何删除不需要的课程？</h3>
+<p><strong>A</strong>：在「课程管理」页面，点击课程卡片上的删除按钮，确认后即可删除。删除操作不可恢复，请谨慎操作。</p>
+<hr>
+<h2 id="%E9%99%84%E5%BD%95%E9%94%AE%E7%9B%98%E5%BF%AB%E6%8D%B7%E9%94%AE%E9%80%9F%E6%9F%A5%E8%A1%A8ppt-%E7%BC%96%E8%BE%91%E5%99%A8">附录：键盘快捷键速查表（PPT 编辑器）</h2>
+<table>
+<thead>
+<tr>
+<th>快捷键</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ctrl + Z</td>
+<td>撤销</td>
+</tr>
+<tr>
+<td>Ctrl + Y</td>
+<td>重做</td>
+</tr>
+<tr>
+<td>Ctrl + D</td>
+<td>复制选中元素</td>
+</tr>
+<tr>
+<td>Delete</td>
+<td>删除选中元素</td>
+</tr>
+<tr>
+<td>← → ↑ ↓</td>
+<td>微移选中元素</td>
+</tr>
+<tr>
+<td>Shift + 方向键</td>
+<td>快速移动选中元素</td>
+</tr>
+<tr>
+<td>Esc</td>
+<td>取消选中</td>
+</tr>
+</tbody>
+</table>
+
+</body>
+</html>

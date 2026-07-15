@@ -1,0 +1,102 @@
+# ============================================================
+# Wellbeing 系统 — Docker Compose 编排
+# ============================================================
+# 启动：  docker compose up -d --build
+# 停止：  docker compose down
+# 日志：  docker compose logs -f backend
+# 重建：  docker compose up -d --build frontend backend
+# ============================================================
+#
+# 外部 AI 服务（n8n / ComfyUI）不在本编排范围内，
+# 通过环境变量指向已有实例（见 .env.docker）。
+
+services:
+  # ----------------------------------------------------------
+  # PostgreSQL 数据库
+  # ----------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: wellbeing-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-wellbeing}
+      POSTGRES_USER: ${DB_USER:-wellbeing_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-wellbeing_pass_2024}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # 首次启动自动初始化表结构
+      - ./api/db/local-postgres-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    ports:
+      - "5433:5432"   # 宿主机 5433 避免与本地 PG 冲突
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-wellbeing_user} -d ${DB_NAME:-wellbeing}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ----------------------------------------------------------
+  # 后端 API — Next.js (端口 4000)
+  # ----------------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: wellbeing-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      # ---- 数据库 ----
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-wellbeing}
+      DB_USER: ${DB_USER:-wellbeing_user}
+      DB_PASSWORD: ${DB_PASSWORD:-wellbeing_pass_2024}
+      # ---- JWT ----
+      JWT_SECRET: ${JWT_SECRET:-wellbeing-secret-key-2024}
+      # ---- n8n 工作流引擎 ----
+      N8N_API_BASE_URL: ${N8N_API_BASE_URL:-http://117.50.218.161:5678}
+      N8N_API_KEY: ${N8N_API_KEY}
+      # ---- ComfyUI 图片/视频生成 ----
+      COMFYUI_URL: ${COMFYUI_URL:-http://117.50.218.161:8188}
+      COMFYUI_PUBLIC_URL: ${COMFYUI_PUBLIC_URL:-https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com}
+      # ---- 阿里云 OSS（不填则使用本地上传）----
+      ALIYUN_OSS_REGION: ${ALIYUN_OSS_REGION:-oss-cn-beijing}
+      ALIYUN_OSS_BUCKET: ${ALIYUN_OSS_BUCKET:-wellbeing1}
+      ALIYUN_OSS_ACCESS_KEY_ID: ${ALIYUN_OSS_ACCESS_KEY_ID}
+      ALIYUN_OSS_ACCESS_KEY_SECRET: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
+      ALIYUN_OSS_ENDPOINT: ${ALIYUN_OSS_ENDPOINT:-wellbeing1.oss-cn-beijing.aliyuncs.com}
+      UPLOAD_PROVIDER: ${UPLOAD_PROVIDER:-local}
+      # ---- 第三方 AI 服务 ----
+      REMOVEBG_API_KEY: ${REMOVEBG_API_KEY}
+      DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      # ---- 内部 API 回调地址（后台任务用）----
+      INTERNAL_API_BASE_URL: http://backend:4000
+    volumes:
+      # 本地上传文件持久化
+      - backend_uploads:/app/uploads
+      # 媒体缓存持久化
+      - backend_media_cache:/app/.media-cache
+    ports:
+      - "4000:4000"
+
+  # ----------------------------------------------------------
+  # 前端 — Nginx 静态托管 (端口 80 → 宿主机 5174)
+  # ----------------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: wellbeing-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "5174:80"
+
+volumes:
+  postgres_data:
+  backend_uploads:
+  backend_media_cache:
