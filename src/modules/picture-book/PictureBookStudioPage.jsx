@@ -425,7 +425,6 @@ export function PictureBookStudioPage() {
 function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan }) {
   return (
     <div className="pbv2-step-panel">
-      <PanelHeader eyebrow="Step 1" title="基础信息（用户提供）" desc="先确定学生画像、活动条件和语言目标。年龄和英文水平为必选，其余可以留空。" />
       <div className="pbv2-form-grid two">
         <OptionGroup tone="coral" required label="学生年龄" options={ageOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
         <OptionGroup tone="blue" required label="英文水平" options={levelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
@@ -474,7 +473,6 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan }) {
 function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign }) {
   return (
     <div className="pbv2-step-panel">
-      <PanelHeader eyebrow="Step 2" title="活动方案" desc="生成后可以直接编辑故事名称、故事内容、活动目标和物料。" />
       <section className="pbv2-plan-block pbv2-tone-coral">
         <div className="pbv2-form-grid two">
           <Field label="故事名称（英文）" value={activityPlan.storyTitleEn} onChange={(value) => setPlanField('storyTitleEn', value)} />
@@ -507,7 +505,6 @@ function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign })
 function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack, onMake, generatingAll }) {
   return (
     <div className="pbv2-step-panel">
-      <PanelHeader eyebrow="Step 3" title="绘本设计" desc="每一页包含页码、图片描述和页面文字。这里可以增删页面或微调内容。" />
       <div className="pbv2-page-list">
         {pages.map((page, index) => (
           <PageDesignCard key={page.id} page={page} toneIndex={index} updatePage={updatePage} removePage={removePage} />
