@@ -48,7 +48,8 @@ async function extractFileText(file: File): Promise<string> {
     if (!documentXml) throw new Error('Invalid DOCX: word/document.xml not found.');
     return extractDocxText(documentXml);
   } else if (ext === 'pdf') {
-    const { default: pdfParse } = await import('pdf-parse');
+    const mod = await import('pdf-parse');
+    const pdfParse = (mod as any).default || mod;
     const data = await pdfParse(buffer);
     return (data.text || '').trim();
   } else if (ext === 'txt') {
