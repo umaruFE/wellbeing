@@ -3,7 +3,7 @@ import JSZip from 'jszip';
 
 export const runtime = 'nodejs';
 
-const MAX_DOCX_BYTES = 20 * 1024 * 1024;
+const MAX_BYTES = 20 * 1024 * 1024;
 
 function decodeXmlEntities(value: string) {
   return value
@@ -36,6 +36,26 @@ function extractDocumentText(documentXml: string) {
     .join('\n');
 }
 
+async function extractDocx(buffer: Buffer): Promise<string> {
+  const zip = await JSZip.loadAsync(buffer);
+  const documentXml = await zip.file('word/document.xml')?.async('string');
+  if (!documentXml) {
+    throw new Error('Invalid DOCX: word/document.xml was not found.');
+  }
+  return extractDocumentText(documentXml);
+}
+
+async function extractPdf(buffer: Buffer): Promise<string> {
+  const { default: pdfParse } = await import('pdf-parse');
+  const data = await pdfParse(buffer);
+  return (data.text || '').trim();
+}
+
+function getExt(filename: string): string {
+  const dot = filename.lastIndexOf('.');
+  return dot >= 0 ? filename.slice(dot + 1).toLowerCase() : '';
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
@@ -48,35 +68,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const filename = file.name || String(formData.get('filename') || 'uploaded.docx');
-    if (!filename.toLowerCase().endsWith('.docx')) {
+    const filename = file.name || String(formData.get('filename') || 'uploaded');
+    const ext = getExt(filename);
+
+    if (!['docx', 'pdf', 'txt'].includes(ext)) {
       return NextResponse.json(
-        { success: false, error: 'Only .docx files are supported.' },
+        { success: false, error: 'Only .docx, .pdf, and .txt files are supported.' },
         { status: 400 }
       );
     }
 
-    if (file.size > MAX_DOCX_BYTES) {
+    if (file.size > MAX_BYTES) {
       return NextResponse.json(
-        { success: false, error: 'DOCX file is too large. Max size is 20MB.' },
+        { success: false, error: 'File is too large. Max size is 20MB.' },
         { status: 413 }
       );
     }
 
-    const zip = await JSZip.loadAsync(await file.arrayBuffer());
-    const documentXml = await zip.file('word/document.xml')?.async('string');
+    const buffer = Buffer.from(await file.arrayBuffer());
+    let text: string;
 
-    if (!documentXml) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid DOCX: word/document.xml was not found.' },
-        { status: 400 }
-      );
+    if (ext === 'docx') {
+      text = await extractDocx(buffer);
+    } else if (ext === 'pdf') {
+      text = await extractPdf(buffer);
+    } else {
+      // txt
+      text = buffer.toString('utf-8');
     }
 
-    const text = extractDocumentText(documentXml);
+    text = text.trim();
     if (!text) {
       return NextResponse.json(
-        { success: false, error: 'No readable text was found in the DOCX file.' },
+        { success: false, error: 'No readable text was found in the file.' },
         { status: 422 }
       );
     }
@@ -88,9 +112,9 @@ export async function POST(request: NextRequest) {
       charCount: text.length,
     });
   } catch (error) {
-    console.error('[rag/extract-docx] failed:', error);
+    console.error('[rag/extract] failed:', error);
     return NextResponse.json(
-      { success: false, error: error instanceof Error ? error.message : 'Failed to extract DOCX text.' },
+      { success: false, error: error instanceof Error ? error.message : 'Failed to extract text.' },
       { status: 500 }
     );
   }

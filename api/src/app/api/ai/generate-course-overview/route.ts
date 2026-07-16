@@ -43,7 +43,7 @@ async function transferThemeImage(imageUrl: string): Promise<string | null> {
     const savedFilename = `theme-${Date.now()}.${ext}`;
 
     if (USE_OSS) {
-      const url = await uploadToOss(buffer, 'course-themes', savedFilename);
+      const url = await uploadFile(buffer, 'course-themes', savedFilename);
       console.log('[generate-course-overview] 图片已上传到 OSS:', url);
       return url;
     }

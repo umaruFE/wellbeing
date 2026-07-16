@@ -76,12 +76,12 @@
           },
           "conditions": [
             {
-              "id": "is-docx",
+              "id": "is-supported",
               "leftValue": "={{$json.extension}}",
-              "rightValue": "docx",
+              "rightValue": "docx|pdf|txt",
               "operator": {
                 "type": "string",
-                "operation": "equals"
+                "operation": "regex"
               }
             }
           ],
@@ -89,8 +89,8 @@
         },
         "options": {}
       },
-      "id": "is-docx-file",
-      "name": "Is DOCX File?",
+      "id": "is-supported-file",
+      "name": "Is Supported File?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [-300, 20]
@@ -98,7 +98,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.DOCX_EXTRACT_URL || (($env.API_BASE_URL || 'http://localhost:4000') + '/api/rag/extract-docx')}}",
+        "url": "={{$env.FILE_EXTRACT_URL || $env.DOCX_EXTRACT_URL || (($env.API_BASE_URL || 'http://localhost:4000') + '/api/rag/extract-docx')}}",
         "sendBody": true,
         "contentType": "multipart-form-data",
         "bodyParameters": {
@@ -118,25 +118,25 @@
           "timeout": 120000
         }
       },
-      "id": "extract-docx-text",
-      "name": "Extract DOCX Text",
+      "id": "extract-file-text",
+      "name": "Extract File Text",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [-60, -20]
     },
     {
       "parameters": {
-        "jsCode": "const meta = $('Detect Upload Mode').first().json;\nconst body = meta.body || {};\nconst response = $input.first().json || {};\nconst text = String(response.text || response.content || response.extractedText || response.data?.text || '').trim();\nif (!text) throw new Error('DOCX extract service did not return text. Expected response.text.');\nreturn [{ json: {\n  body,\n  extractedText: text,\n  extractedFilename: response.filename || meta.filename || body.title || 'uploaded.docx',\n  extractedSourceType: 'docx'\n} }];"
+        "jsCode": "const meta = $('Detect Upload Mode').first().json;\nconst body = meta.body || {};\nconst response = $input.first().json || {};\nconst text = String(response.text || response.content || response.extractedText || response.data?.text || '').trim();\nif (!text) throw new Error('File extract service did not return text. Expected response.text.');\nreturn [{ json: {\n  body,\n  extractedText: text,\n  extractedFilename: response.filename || meta.filename || body.title || 'uploaded',\n  extractedSourceType: meta.extension || 'file'\n} }];"
       },
-      "id": "normalize-docx-text",
-      "name": "Normalize DOCX Text",
+      "id": "normalize-file-text",
+      "name": "Normalize File Text",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [180, -20]
     },
     {
       "parameters": {
-        "jsCode": "const mode = $('Detect Upload Mode').first().json;\nthrow new Error(`Unsupported upload. Send body.text, or upload a .docx file in multipart field named file. Detected mode=${mode.uploadMode}, extension=${mode.extension || 'none'}.`);"
+        "jsCode": "const mode = $('Detect Upload Mode').first().json;\nthrow new Error(`Unsupported upload. Send body.text, or upload a .docx/.pdf/.txt file in multipart field named file. Detected mode=${mode.uploadMode}, extension=${mode.extension || 'none'}.`);"
       },
       "id": "unsupported-upload",
       "name": "Unsupported Upload",
@@ -232,7 +232,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const prepared = $('Build Qdrant Points').first().json;\nreturn [{ json: {\n  success: true,\n  documentId: prepared.documentId,\n  chunkCount: prepared.chunkCount,\n  collection: prepared.collection\n} }];"
+        "jsCode": "const prepared = $('Build Qdrant Points').first().json;\nconst norm = $('Normalize Knowledge').first().json;\nconst meta = $('Detect Upload Mode').first().json;\nconst body = meta.body || {};\nreturn [{ json: {\n  success: true,\n  documentId: prepared.documentId,\n  chunkCount: prepared.chunkCount,\n  collection: prepared.collection,\n  _meta: {\n    documentId: prepared.documentId,\n    title: norm.title,\n    category: norm.category,\n    ageRange: norm.ageRange,\n    sourceType: norm.sourceType,\n    filename: norm.filename,\n    chunkCount: prepared.chunkCount,\n    uploadedBy: norm.userId,\n    uploaderName: String(body.uploaderName || body.userName || ''),\n    qdrantCollection: prepared.collection\n  }\n} }];"
       },
       "id": "upload-result",
       "name": "Upload Result",
@@ -242,15 +242,41 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "={{$env.API_BASE_URL || 'http://localhost:4000'}}/api/rag/knowledge",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json._meta}}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "save-metadata",
+      "name": "Save Metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1700, -120]
+    },
+    {
+      "parameters": {
         "respondWith": "json",
-        "responseBody": "={{$json}}",
+        "responseBody": "={{ { success: true, documentId: $('Upload Result').first().json.documentId, chunkCount: $('Upload Result').first().json.chunkCount, collection: $('Upload Result').first().json.collection } }}",
         "options": {}
       },
       "id": "respond-upload",
       "name": "Respond Upload",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
-      "position": [1740, -120]
+      "position": [1920, -120]
     }
   ],
   "connections": {
@@ -263,22 +289,22 @@
     "Is Pasted Text?": {
       "main": [
         [{ "node": "Use Pasted Text", "type": "main", "index": 0 }],
-        [{ "node": "Is DOCX File?", "type": "main", "index": 0 }]
+        [{ "node": "Is Supported File?", "type": "main", "index": 0 }]
       ]
     },
     "Use Pasted Text": {
       "main": [[{ "node": "Normalize Knowledge", "type": "main", "index": 0 }]]
     },
-    "Is DOCX File?": {
+    "Is Supported File?": {
       "main": [
-        [{ "node": "Extract DOCX Text", "type": "main", "index": 0 }],
+        [{ "node": "Extract File Text", "type": "main", "index": 0 }],
         [{ "node": "Unsupported Upload", "type": "main", "index": 0 }]
       ]
     },
-    "Extract DOCX Text": {
-      "main": [[{ "node": "Normalize DOCX Text", "type": "main", "index": 0 }]]
+    "Extract File Text": {
+      "main": [[{ "node": "Normalize File Text", "type": "main", "index": 0 }]]
     },
-    "Normalize DOCX Text": {
+    "Normalize File Text": {
       "main": [[{ "node": "Normalize Knowledge", "type": "main", "index": 0 }]]
     },
     "Normalize Knowledge": {
@@ -297,6 +323,9 @@
       "main": [[{ "node": "Upload Result", "type": "main", "index": 0 }]]
     },
     "Upload Result": {
+      "main": [[{ "node": "Save Metadata", "type": "main", "index": 0 }]]
+    },
+    "Save Metadata": {
       "main": [[{ "node": "Respond Upload", "type": "main", "index": 0 }]]
     }
   },

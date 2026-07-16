@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
-import { uploadToOss } from '@/lib/oss';
+import { uploadFile } from '@/lib/fileUpload';
 import { db } from '@/lib/db';
 
 const HAS_OSS_KEYS = !!(process.env.ALIYUN_OSS_ACCESS_KEY_ID && process.env.ALIYUN_OSS_ACCESS_KEY_SECRET);
@@ -65,7 +65,7 @@ async function transferThemeImage(imageUrl: string): Promise<string | null> {
     const savedFilename = `theme-${Date.now()}.${ext}`;
 
     if (USE_OSS) {
-      return await uploadToOss(buffer, 'course-themes', savedFilename);
+      return await uploadFile(buffer, 'course-themes', savedFilename);
     }
 
     const fs = await import('fs/promises');

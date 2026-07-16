@@ -1,4 +1,4 @@
-import { uploadToOss } from '@/lib/oss';
+import { uploadFile as uploadToOss } from '@/lib/fileUpload';
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const COMFYUI_PUBLIC_URL = process.env.COMFYUI_PUBLIC_URL

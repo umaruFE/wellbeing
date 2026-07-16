@@ -1,0 +1,145 @@
+{
+  "name": "Picture Book Design Generate",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "picture-book-design-generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "book-design-webhook",
+      "name": "Webhook - Book Design",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-920, 0],
+      "webhookId": "picture-book-design-generate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first()?.json?.body || $input.first()?.json || {};\nconst plan = body.activityPlan || body.plan || {};\nconst info = body.basicInfo || body.info || {};\nif (!plan.storyContent && !plan.storyTitleEn && !plan.storyTitleZh) throw new Error('Missing activityPlan with story info.');\nconst pageCount = Math.max(4, Math.min(20, Number(body.pages || body.pageCount || 6)));\nreturn [{ json: {\n  userId: String(body.userId || 'anonymous'),\n  activityPlan: {\n    storyTitleEn: String(plan.storyTitleEn || '').trim(),\n    storyTitleZh: String(plan.storyTitleZh || '').trim(),\n    storyContent: String(plan.storyContent || '').trim(),\n    englishGoal: String(plan.englishGoal || '').trim(),\n    wellbeingGoal: String(plan.wellbeingGoal || '').trim(),\n    outputGoal: String(plan.outputGoal || '').trim(),\n    materials: String(plan.materials || '').trim()\n  },\n  basicInfo: {\n    age: String(info.age || '').trim(),\n    level: String(info.level || '').trim(),\n    vocabulary: String(info.vocabulary || '').trim(),\n    grammar: String(info.grammar || '').trim(),\n    themes: Array.isArray(info.themes) ? info.themes : []\n  },\n  pageCount,\n  topic: plan.storyTitleZh || plan.storyTitleEn || info.themes?.[0] || '绘本',\n  category: String(body.category || '')\n} }];"
+      },
+      "id": "normalize-request",
+      "name": "Normalize Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-700, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{($env.N8N_PUBLIC_URL || 'http://localhost:5678') + '/webhook/rag-search-context'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { userId: $json.userId, topic: $json.topic, category: $json.category, limit: 8 } }}",
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "id": "call-rag-search",
+      "name": "Call RAG Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-480, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('Normalize Request').first().json;\nconst rag = $input.first().json || {};\nconst system = '你是专业儿童绘本编辑、儿童英语教育专家和图像分镜导演。只输出严格 JSON，不要 Markdown。';\nconst user = `请根据活动方案和参考资料，设计绘本的每一页内容。\\n\\n活动方案:\\n${JSON.stringify(request.activityPlan, null, 2)}\\n\\n学生画像:\\n${JSON.stringify(request.basicInfo, null, 2)}\\n\\n页数要求: ${request.pageCount} 页（含封面）\\n\\n参考资料:\\n${rag.context || '无'}\\n\\n要求:\\n1. 第 1 页是封面，最后一页是结尾展示。中间页面推进故事和语言学习。\\n2. 每页 text 是简短英文句子（适合目标年龄和水平），封面可以同时放英文标题和中文标题。\\n3. imageDescription 是中文画面描述，详细说明场景、角色表情、构图和色调，适合给画师或 AI 绘图参考。\\n4. imageDescription 中不要要求在图片里写文字。\\n5. 如果 basicInfo 提供了 vocabulary 和 grammar，在中间页面中自然融入这些词汇和句型。\\n6. 参考资料中的儿童心理知识要体现在故事情感设计上。\\n\\n输出 JSON 形状:\\n{\"pages\":[{\"page\":1,\"text\":\"英文文字\",\"imageDescription\":\"中文画面描述\"}]}`;\nreturn [{ json: { request, rag, messages: [ { role: 'system', content: system }, { role: 'user', content: user } ] } }];"
+      },
+      "id": "build-llm-prompt",
+      "name": "Build LLM Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-260, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{($env.LLM_BASE_URL || 'https://api.openai.com/v1') + '/chat/completions'}}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{$env.LLM_API_KEY}}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $env.LLM_MODEL || 'gpt-5-mini', messages: $json.messages, temperature: 0.5, response_format: { type: 'json_object' } } }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "generate-design-json",
+      "name": "Generate Design JSON",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-40, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const request = $('Build LLM Prompt').first().json.request;\nconst rag = $('Build LLM Prompt').first().json.rag;\nconst response = $input.first().json || {};\nlet content = response.choices?.[0]?.message?.content || response.output_text || response.text || '';\nif (typeof content !== 'string') content = JSON.stringify(content);\ncontent = content.replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '').trim();\nlet parsed;\ntry {\n  parsed = JSON.parse(content);\n} catch (error) {\n  const match = content.match(/\\{[\\s\\S]*\\}/);\n  if (!match) throw new Error('The model did not return parseable JSON.');\n  parsed = JSON.parse(match[0]);\n}\nlet rawPages = Array.isArray(parsed.pages) ? parsed.pages : (Array.isArray(parsed) ? parsed : []);\nif (!rawPages.length) throw new Error('Model did not return pages array.');\nconst pages = rawPages.slice(0, request.pageCount).map((page, index) => ({\n  id: `page-${Date.now()}-${index + 1}`,\n  page: Number(page.page) || index + 1,\n  imageDescription: String(page.imageDescription || page.scene || '').trim(),\n  text: String(page.text || '').trim(),\n  imageUrl: '',\n  status: 'placeholder',\n  error: ''\n}));\nif (pages.length !== request.pageCount) {\n  return [{ json: {\n    success: true,\n    pages,\n    warning: `Expected ${request.pageCount} pages but got ${pages.length}.`,\n    rag: {\n      referenceCount: rag.referenceCount || 0,\n      references: rag.references || []\n    }\n  } }];\n}\nreturn [{ json: {\n  success: true,\n  pages,\n  rag: {\n    referenceCount: rag.referenceCount || 0,\n    references: rag.references || []\n  }\n} }];"
+      },
+      "id": "parse-design-json",
+      "name": "Parse Design JSON",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "id": "respond-design",
+      "name": "Respond Book Design",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [420, 0]
+    }
+  ],
+  "connections": {
+    "Webhook - Book Design": {
+      "main": [[{ "node": "Normalize Request", "type": "main", "index": 0 }]]
+    },
+    "Normalize Request": {
+      "main": [[{ "node": "Call RAG Search", "type": "main", "index": 0 }]]
+    },
+    "Call RAG Search": {
+      "main": [[{ "node": "Build LLM Prompt", "type": "main", "index": 0 }]]
+    },
+    "Build LLM Prompt": {
+      "main": [[{ "node": "Generate Design JSON", "type": "main", "index": 0 }]]
+    },
+    "Generate Design JSON": {
+      "main": [[{ "node": "Parse Design JSON", "type": "main", "index": 0 }]]
+    },
+    "Parse Design JSON": {
+      "main": [[{ "node": "Respond Book Design", "type": "main", "index": 0 }]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "active": false,
+  "versionId": "picturebook-design-generate-v1",
+  "tags": []
+}

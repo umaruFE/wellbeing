@@ -1,18 +1,23 @@
 import React from 'react';
 import {
+  ArrowLeft,
   BookOpenText,
   ChevronRight,
+  Clock,
   Image,
+  LayoutTemplate,
   Loader2,
   Pencil,
   Plus,
   RefreshCw,
+  Search,
   Sparkles,
   Trash2,
   Upload,
   Wand2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 import './PictureBookStudioPage.css';
 
@@ -172,7 +177,13 @@ async function resolveGeneratedAsset(asset) {
 
 export function PictureBookStudioPage() {
   const { i18n } = useTranslation();
+  const { user } = useAuth();
   const isEn = i18n.language?.startsWith('en');
+  const [view, setView] = React.useState('list');
+  const [bookList, setBookList] = React.useState([]);
+  const [listLoading, setListLoading] = React.useState(false);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [editingBookId, setEditingBookId] = React.useState(null);
   const [step, setStep] = React.useState(0);
   const [basicInfo, setBasicInfo] = React.useState(initialBasicInfo);
   const [activityPlan, setActivityPlan] = React.useState(initialActivityPlan);
@@ -180,6 +191,98 @@ export function PictureBookStudioPage() {
   const [makeMode, setMakeMode] = React.useState('all');
   const [generatingAll, setGeneratingAll] = React.useState(false);
   const [message, setMessage] = React.useState('');
+
+  const fetchBookList = React.useCallback(async () => {
+    setListLoading(true);
+    try {
+      const params = { limit: 100 };
+      if (user?.id) params.userId = user.id;
+      const result = await apiService.request('/api/picture-books?' + new URLSearchParams(params).toString());
+      setBookList(result.data || []);
+    } catch (err) {
+      console.error('fetch picture books failed:', err);
+      setBookList([]);
+    } finally {
+      setListLoading(false);
+    }
+  }, [user?.id]);
+
+  React.useEffect(() => {
+    if (view === 'list') fetchBookList();
+  }, [view, fetchBookList]);
+
+  React.useEffect(() => {
+    const handler = () => setView('list');
+    window.addEventListener('wellbeing:nav-same-route', handler);
+    return () => window.removeEventListener('wellbeing:nav-same-route', handler);
+  }, []);
+
+  const deleteBook = async (bookId) => {
+    if (!window.confirm('确定删除这个绘本吗？')) return;
+    try {
+      await apiService.request(`/api/picture-books/${bookId}`, { method: 'DELETE' });
+      setBookList(bookList.filter((b) => b.id !== bookId));
+    } catch (err) {
+      alert('删除失败');
+    }
+  };
+
+  const openBook = (book) => {
+    setEditingBookId(book.id);
+    const data = book.book_data || {};
+    if (data.basicInfo) setBasicInfo(data.basicInfo);
+    if (data.activityPlan) setActivityPlan(data.activityPlan);
+    if (data.pages) setPages(data.pages);
+    setStep(0);
+    setView('studio');
+  };
+
+  const createNewBook = () => {
+    setEditingBookId(null);
+    setBasicInfo(initialBasicInfo);
+    setActivityPlan(initialActivityPlan);
+    setPages([]);
+    setStep(0);
+    setMessage('');
+    setView('studio');
+  };
+
+  const saveBook = async (extraData) => {
+    const bookData = {
+      basicInfo,
+      activityPlan,
+      pages: extraData?.pages || pages,
+    };
+    const coverUrl = bookData.pages.find((p) => p.imageUrl)?.imageUrl || '';
+    const payload = {
+      userId: user?.id,
+      title: activityPlan.storyTitleZh || activityPlan.storyTitleEn || '未命名绘本',
+      status: 'draft',
+      coverUrl,
+      bookData,
+    };
+    try {
+      if (editingBookId) {
+        await apiService.request(`/api/picture-books/${editingBookId}`, {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+      } else {
+        const result = await apiService.request('/api/picture-books', {
+          method: 'POST',
+          body: JSON.stringify(payload),
+        });
+        if (result.data?.id) setEditingBookId(result.data.id);
+      }
+    } catch (err) {
+      console.error('save picture book failed:', err);
+    }
+  };
+
+  const backToList = () => {
+    saveBook();
+    setView('list');
+  };
 
   const steps = [
     '基础信息',
@@ -343,17 +446,34 @@ export function PictureBookStudioPage() {
 
   return (
     <main className="picture-book-studio-v2">
-      <header className="pbv2-topbar">
-        <div className="pbv2-topbar-left">
-          <div className="pbv2-topbar-icon">
-            <BookOpenText size={28} />
-          </div>
-          <div>
-            <h1>{isEn ? 'Picture Book Studio' : '绘本制作'}</h1>
-            <p>设计适合课堂使用的英文幸福力绘本</p>
-          </div>
-        </div>
-      </header>
+      {view === 'list' ? (
+        <PictureBookListView
+          books={bookList.filter((b) => (b.title || '').toLowerCase().includes(searchTerm.toLowerCase()))}
+          loading={listLoading}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onCreate={createNewBook}
+          onOpen={openBook}
+          onDelete={deleteBook}
+          isEn={isEn}
+        />
+      ) : (
+        <>
+          <header className="pbv2-topbar">
+            <div className="pbv2-topbar-left">
+              <div className="pbv2-topbar-icon">
+                <BookOpenText size={28} />
+              </div>
+              <div>
+                <h1>{isEn ? 'Picture Book Studio' : '绘本制作'}</h1>
+                <p>设计适合课堂使用的英文幸福力绘本</p>
+              </div>
+            </div>
+            <button type="button" className="pbv2-back-btn" onClick={backToList}>
+              <ArrowLeft size={16} />
+              {isEn ? 'Back to list' : '返回列表'}
+            </button>
+          </header>
 
       <div className="pbv2-shell">
         <aside className="pbv2-steps">
@@ -418,7 +538,90 @@ export function PictureBookStudioPage() {
           )}
         </section>
       </div>
+        </>
+      )}
     </main>
+  );
+}
+
+function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCreate, onOpen, onDelete, isEn }) {
+  return (
+    <div className="pbv2-list-page">
+      <header className="pbv2-topbar">
+        <div className="pbv2-topbar-left">
+          <div className="pbv2-topbar-icon">
+            <BookOpenText size={28} />
+          </div>
+          <div>
+            <h1>{isEn ? 'Picture Books' : '绘本管理'}</h1>
+            <p>{isEn ? 'Create and manage your picture books' : '创建和管理你的绘本作品'}</p>
+          </div>
+        </div>
+        <button type="button" className="pbv2-create-btn" onClick={onCreate}>
+          <Plus size={18} />
+          {isEn ? 'New Picture Book' : '新建绘本'}
+        </button>
+      </header>
+
+      <div className="pbv2-list-toolbar">
+        <div className="pbv2-search-box">
+          <Search size={16} />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={isEn ? 'Search picture books...' : '搜索绘本...'}
+          />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="pbv2-list-loading">
+          <Loader2 className="spin" size={28} />
+        </div>
+      ) : books.length === 0 ? (
+        <div className="pbv2-list-empty">
+          <BookOpenText size={48} />
+          <p>{isEn ? 'No picture books yet' : '还没有绘本，点击右上角创建'}</p>
+        </div>
+      ) : (
+        <div className="pbv2-card-grid">
+          {books.map((book) => (
+            <article key={book.id} className="pbv2-book-card" onClick={() => onOpen(book)}>
+              <div className="pbv2-book-cover">
+                {book.cover_url ? (
+                  <img src={book.cover_url} alt={book.title} />
+                ) : (
+                  <div className="pbv2-book-cover-placeholder">
+                    <LayoutTemplate size={32} />
+                  </div>
+                )}
+                <span className={`pbv2-book-status ${book.status || 'draft'}`}>
+                  {book.status === 'published' ? (isEn ? 'Published' : '已发布') : (isEn ? 'Draft' : '草稿')}
+                </span>
+              </div>
+              <div className="pbv2-book-info">
+                <h3>{book.title || (isEn ? 'Untitled' : '未命名绘本')}</h3>
+                <div className="pbv2-book-meta">
+                  <Clock size={13} />
+                  <span>{book.updated_at ? new Date(book.updated_at).toLocaleDateString() : ''}</span>
+                </div>
+                <div className="pbv2-book-actions">
+                  <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(book); }}>
+                    <Pencil size={14} />
+                    {isEn ? 'Edit' : '编辑'}
+                  </button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(book.id); }}>
+                    <Trash2 size={14} />
+                    {isEn ? 'Delete' : '删除'}
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

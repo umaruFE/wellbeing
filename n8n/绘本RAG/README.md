@@ -1,10 +1,10 @@
 # 绘本 RAG n8n 工作流
 
-这个目录放的是“参考资料 -> RAG 检索 -> 生成绘本文案和图片 Prompt -> 调用 ComfyUI 出图”的完整 MVP 工作流模板。
+这个目录放的是“参考资料 -> RAG 检索 -> 生成活动方案 -> 生成绘本设计 -> 生成完整绘本结构 -> 调用 ComfyUI 出图”的完整 MVP 工作流模板。
 
 
 ```text
-资料上传入库 -> 生成时检索资料 -> 输出绘本结构、分页文案、图片 Prompt -> 提交 ComfyUI 出图任务
+资料上传入库 -> 生成时检索资料 -> 生成活动方案 -> 生成绘本分页设计 -> 生成完整绘本结构（含图片Prompt） -> 提交 ComfyUI 出图任务
 ```
 
 ## 文件说明
@@ -16,21 +16,26 @@
   根据绘本主题检索 Qdrant，按用户私有资料 + 公共资料过滤，返回整理好的参考资料上下文。
 
 - `03_PictureBook_Generate.json`
-  绘本生成主流程。接收用户需求，调用 RAG 检索，然后用大模型生成故事规划、分页文案和每页图片 Prompt。
+  绘本生成主流程（一体化）。接收用户需求，调用 RAG 检索，然后生成故事规划、分页文案和每页图片 Prompt。
 
 - `04_Generate_Page_Image_ComfyUI.json`
   图片生成流程。接收单页或多页 `imagePrompt`，构建 ComfyUI 工作流 payload，调用 ComfyUI `/prompt` 出图，返回可轮询的任务 ID 和状态查询地址。
 
+- `05_Activity_Plan_Generate.json`
+  活动方案生成流程。接收学生画像（年龄、水平、主题、词汇、语法等），调用 RAG 检索参考资料，然后用大模型生成活动方案（故事名称、故事内容、英文目标、幸福力目标、产出物、物料）。
+
+- `06_Picture_Book_Design_Generate.json`
+  绘本分页设计流程。接收活动方案和学生画像，调用 RAG 检索，然后用大模型生成每页的英文文字和中文画面描述（imageDescription）。
+
 ## 能跑通什么
 
-这 4 个流程可以跑通完整的“绘本 MVP”：
+这 6 个流程可以跑通完整的“绘本 MVP”：
 
 - 上传资料（文本 / DOCX）
 - 检索资料
-- 生成绘本标题
-- 生成故事规划（主题、主角、故事弧、视觉风格）
-- 生成每页文案（text、scene、emotion、educationalGoal）
-- 生成每页画面描述（imagePrompt、negativePrompt）
+- 生成活动方案（故事名称、故事内容、英文目标、幸福力目标、产出物、物料）
+- 生成绘本分页设计（每页英文文字 + 中文画面描述）
+- 生成完整绘本结构（故事规划 + 分页文案 + 图片 Prompt）
 - 提交 ComfyUI 图片生成任务并轮询出图结果
 
 注意：ComfyUI 出图是异步任务。第 4 个流程会返回 `statusUrl`，前端或后端需要轮询这个地址，直到返回 `completed` 和图片 `url`。
@@ -107,10 +112,12 @@ Content-Type: application/json
 
 1. 导入 `01_RAG_Upload_Knowledge.json`
 2. 导入 `02_RAG_Search_Context.json`
-3. 导入 `03_PictureBook_Generate.json`
-4. 导入 `04_Generate_Page_Image_ComfyUI.json`
+3. 导入 `05_Activity_Plan_Generate.json`
+4. 导入 `06_Picture_Book_Design_Generate.json`
+5. 导入 `03_PictureBook_Generate.json`（可选，一体化流程）
+6. 导入 `04_Generate_Page_Image_ComfyUI.json`
 
-主流程（03）会调用这个地址：
+流程 05、06、03 都会调用这个地址：
 
 ```text
 POST ${N8N_PUBLIC_URL}/webhook/rag-search-context
@@ -314,6 +321,134 @@ POST /webhook/picturebook-generate
 
 如果实际页数和请求页数不一致，会在 `book.warning` 里提示。
 
+## 活动方案生成接口
+
+接口：
+
+```text
+POST /webhook/activity-plan-generate
+```
+
+请求示例：
+
+```json
+{
+  "userId": "u_001",
+  "age": "7-9岁",
+  "level": "初级（会字母和简单词）",
+  "themes": ["情绪表达"],
+  "themeOther": "",
+  "participants": "小组（2-4人）",
+  "duration": "30分钟",
+  "vocabulary": "happy, sad, calm, brave, friend",
+  "grammar": "My friend is/feels...",
+  "materials": ["画纸", "彩笔/蜡笔"],
+  "materialOther": "",
+  "category": ""
+}
+```
+
+必填字段：`age`、`level`。其余可选。
+
+流程会先调用 RAG 检索（按 `themes[0]` 或 `themeOther` 作为 topic），然后用大模型生成活动方案。
+
+返回示例：
+
+```json
+{
+  "success": true,
+  "activityPlan": {
+    "storyTitleEn": "My Feeling Friend",
+    "storyTitleZh": "我的情绪朋友",
+    "storyContent": "孩子们在故事中遇到...",
+    "englishGoal": "使用核心词汇：happy, sad...；使用核心句型：My friend is/feels...",
+    "wellbeingGoal": "将内在感受外化为可被看见的形象...",
+    "outputGoal": "一本小组绘本和一张主题创作海报",
+    "materials": "画纸、彩笔/蜡笔"
+  },
+  "rag": {
+    "referenceCount": 3,
+    "references": []
+  }
+}
+```
+
+## 绘本分页设计接口
+
+接口：
+
+```text
+POST /webhook/picture-book-design-generate
+```
+
+请求示例：
+
+```json
+{
+  "userId": "u_001",
+  "activityPlan": {
+    "storyTitleEn": "My Feeling Friend",
+    "storyTitleZh": "我的情绪朋友",
+    "storyContent": "孩子们在故事中遇到...",
+    "englishGoal": "使用核心词汇：happy...",
+    "wellbeingGoal": "...",
+    "outputGoal": "...",
+    "materials": "画纸、彩笔"
+  },
+  "basicInfo": {
+    "age": "7-9岁",
+    "level": "初级",
+    "vocabulary": "happy, sad, calm",
+    "grammar": "My friend is/feels...",
+    "themes": ["情绪表达"]
+  },
+  "pages": 6,
+  "category": ""
+}
+```
+
+参数说明：
+
+- `activityPlan`：必填，需要至少包含 `storyContent` 或 `storyTitleEn`/`storyTitleZh`
+- `basicInfo`：学生画像，用于控制语言难度和融入词汇句型
+- `pages`：页数，范围 4-20，默认 6
+
+流程会先调用 RAG 检索（按故事标题作为 topic），然后用大模型生成每页内容。
+
+返回示例：
+
+```json
+{
+  "success": true,
+  "pages": [
+    {
+      "id": "page-xxx-1",
+      "page": 1,
+      "imageDescription": "封面。温暖的儿童绘本场景...",
+      "text": "My Feeling Friend\n我的情绪朋友",
+      "imageUrl": "",
+      "status": "placeholder",
+      "error": ""
+    },
+    {
+      "id": "page-xxx-2",
+      "page": 2,
+      "imageDescription": "故事开始。主角发现一个小小的线索...",
+      "text": "I see a little friend.",
+      "imageUrl": "",
+      "status": "placeholder",
+      "error": ""
+    }
+  ],
+  "rag": {
+    "referenceCount": 3,
+    "references": []
+  }
+}
+```
+
+如果实际页数和请求页数不一致，会在 `warning` 里提示。
+
 ## ComfyUI 图片生成接口
 
 接口：
@@ -433,7 +568,7 @@ POST /api/embeddings
 
 ## 后续建议
 
-跑通这 4 个流程后，下一步建议补：
+跑通这 6 个流程后，下一步建议补：
 
 1. 用户偏好记忆流程：记录用户喜欢的画风、文字长度、年龄段、常用主题。
 2. PDF/HTML 排版流程：把图片和文案组合成可阅读绘本。

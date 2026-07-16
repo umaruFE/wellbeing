@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { uploadToOss, getSignedUrl } from '@/lib/oss';
+import { getSignedUrl } from '@/lib/oss';
+import { uploadFile } from '@/lib/fileUpload';
 import { saveToLocal } from '@/lib/localUpload';
 
 // CORS 响应头辅助函数
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
     let url: string;
 
     if (USE_OSS) {
-      url = await uploadToOss(file, folder, file.name);
+      url = await uploadFile(file, folder, file.name);
     } else {
       if (UPLOAD_PROVIDER === 'oss' && !HAS_OSS_KEYS) {
         console.warn('[upload] UPLOAD_PROVIDER=oss but OSS keys are missing; falling back to local storage.');
