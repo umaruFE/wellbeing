@@ -59,10 +59,36 @@
 }
 
 .pbv2-save-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 2px solid #3f7f65;
+  border-radius: 8px;
   border-color: #3f7f65;
   background: #e8f5ee;
   color: #2e6b51;
   box-shadow: 2px 2px 0 #3f7f65;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+}
+
+.pbv2-save-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  background: #dff1e7;
+  box-shadow: 3px 3px 0 #3f7f65;
+}
+
+.pbv2-save-btn:disabled {
+  opacity: .6;
+  cursor: wait;
 }
 
 .pbv2-topbar-icon {
