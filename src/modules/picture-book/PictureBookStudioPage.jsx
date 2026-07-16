@@ -157,17 +157,23 @@ function getStatusUrl(asset) {
   return asset?.statusUrl || asset?.asset?.statusUrl || '';
 }
 
-async function resolveGeneratedAsset(asset) {
+async function resolveGeneratedAsset(asset, { maxAttempts = 200, onResolved } = {}) {
   const directUrl = pickUrl(asset);
-  if (directUrl) return directUrl;
+  if (directUrl) {
+    onResolved?.(directUrl);
+    return directUrl;
+  }
   const statusUrl = getStatusUrl(asset);
   if (!statusUrl) return '';
 
-  for (let attempt = 0; attempt < 18; attempt += 1) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, attempt < 2 ? 1200 : 3000));
     const status = await apiService.request(statusUrl);
     const url = pickUrl(status);
-    if (url) return url;
+    if (url) {
+      onResolved?.(url);
+      return url;
+    }
     if (['failed', 'error'].includes(String(status?.status || '').toLowerCase())) {
       throw new Error(status?.error || '图片生成失败');
     }
@@ -438,14 +444,28 @@ export function PictureBookStudioPage() {
         body: JSON.stringify(buildStorybookRequest()),
       });
       const assets = Array.isArray(result.assets) ? result.assets : [result.asset].filter(Boolean);
-      const urls = await Promise.all(assets.map(resolveGeneratedAsset));
-      setPages((current) => current.map((page, index) => ({
-        ...page,
-        imageUrl: urls[index] || page.imageUrl,
-        status: urls[index] ? 'done' : 'placeholder',
-        error: urls[index] ? '' : '图片任务已提交，请稍后单页刷新或重新生成。',
-      })));
       setStep(3);
+      const results = await Promise.allSettled(assets.map((asset, index) => {
+        const pageNumber = Number(asset?.raw?.page || asset?.page) || index + 1;
+        return resolveGeneratedAsset(asset, {
+          onResolved: (url) => setPages((current) => current.map((page) => (
+            page.page === pageNumber
+              ? { ...page, imageUrl: url, status: 'done', error: '' }
+              : page
+          ))),
+        });
+      }));
+      setPages((current) => current.map((page, index) => {
+        const resultForPage = results[index];
+        if (page.imageUrl || (resultForPage?.status === 'fulfilled' && resultForPage.value)) return page;
+        return {
+          ...page,
+          status: 'placeholder',
+          error: resultForPage?.status === 'rejected'
+            ? resultForPage.reason?.message || '图片生成失败。'
+            : '图片生成等待超时，请单页刷新或重新生成。',
+        };
+      }));
     } catch (error) {
       setPages((current) => current.map((page) => ({ ...page, status: page.imageUrl ? 'done' : 'placeholder', error: error.message })));
       setMessage(error.message || '批量生成失败。');
