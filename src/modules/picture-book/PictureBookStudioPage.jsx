@@ -10,6 +10,7 @@ import {
   Pencil,
   Plus,
   RefreshCw,
+  Save,
   Search,
   Sparkles,
   Trash2,
@@ -194,10 +195,11 @@ export function PictureBookStudioPage() {
   const [basicInfo, setBasicInfo] = React.useState(initialBasicInfo);
   const [activityPlan, setActivityPlan] = React.useState(initialActivityPlan);
   const [pages, setPages] = React.useState([]);
-  const [makeMode, setMakeMode] = React.useState('all');
   const [generatingAll, setGeneratingAll] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
   const [message, setMessage] = React.useState('');
+  const [saving, setSaving] = React.useState(false);
+  const [saveState, setSaveState] = React.useState('');
 
   const fetchBookList = React.useCallback(async () => {
     setListLoading(true);
@@ -229,7 +231,7 @@ export function PictureBookStudioPage() {
     try {
       await apiService.request(`/api/picture-books/${bookId}`, { method: 'DELETE' });
       setBookList(bookList.filter((b) => b.id !== bookId));
-    } catch (err) {
+    } catch {
       alert('删除失败');
     }
   };
@@ -240,7 +242,7 @@ export function PictureBookStudioPage() {
     if (data.basicInfo) setBasicInfo(data.basicInfo);
     if (data.activityPlan) setActivityPlan(data.activityPlan);
     if (data.pages) setPages(data.pages);
-    setStep(0);
+    setStep(Number.isInteger(data.step) ? data.step : 0);
     setView('studio');
   };
 
@@ -254,20 +256,23 @@ export function PictureBookStudioPage() {
     setView('studio');
   };
 
-  const saveBook = async (extraData) => {
+  const saveBook = async (extraData = {}) => {
     const bookData = {
-      basicInfo,
-      activityPlan,
-      pages: extraData?.pages || pages,
+      basicInfo: extraData.basicInfo || basicInfo,
+      activityPlan: extraData.activityPlan || activityPlan,
+      pages: extraData.pages || pages,
+      step: Number.isInteger(extraData.step) ? extraData.step : step,
     };
     const coverUrl = bookData.pages.find((p) => p.imageUrl)?.imageUrl || '';
     const payload = {
       userId: user?.id,
-      title: activityPlan.storyTitleZh || activityPlan.storyTitleEn || '未命名绘本',
+      title: bookData.activityPlan.storyTitleZh || bookData.activityPlan.storyTitleEn || '未命名绘本',
       status: 'draft',
       coverUrl,
       bookData,
     };
+    setSaving(true);
+    setSaveState('');
     try {
       if (editingBookId) {
         await apiService.request(`/api/picture-books/${editingBookId}`, {
@@ -281,14 +286,25 @@ export function PictureBookStudioPage() {
         });
         if (result.data?.id) setEditingBookId(result.data.id);
       }
+      setSaveState('已保存');
+      return true;
     } catch (err) {
       console.error('save picture book failed:', err);
+      setSaveState('保存失败，请重试');
+      return false;
+    } finally {
+      setSaving(false);
     }
   };
 
-  const backToList = () => {
-    saveBook();
+  const backToList = async () => {
+    await saveBook();
     setView('list');
+  };
+
+  const goToStep = async (nextStep) => {
+    await saveBook({ step: nextStep });
+    setStep(nextStep);
   };
 
   const steps = [
@@ -327,23 +343,29 @@ export function PictureBookStudioPage() {
       });
       const data = await res.json();
       if (data.success && data.activityPlan) {
-        setActivityPlan({ ...initialActivityPlan, ...data.activityPlan });
+        const nextPlan = { ...initialActivityPlan, ...data.activityPlan };
+        setActivityPlan(nextPlan);
         setPages([]);
         setMessage('');
         setStep(1);
+        saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
       } else {
         // Fallback to local template
-        setActivityPlan(buildActivityPlan(basicInfo));
+        const nextPlan = buildActivityPlan(basicInfo);
+        setActivityPlan(nextPlan);
         setPages([]);
         setMessage(data.error || '生成失败，已使用默认方案');
         setStep(1);
+        saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
       }
     } catch (err) {
       // Fallback to local template
-      setActivityPlan(buildActivityPlan(basicInfo));
+      const nextPlan = buildActivityPlan(basicInfo);
+      setActivityPlan(nextPlan);
       setPages([]);
       setMessage('AI生成失败，已使用默认方案：' + err.message);
       setStep(1);
+      saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
     } finally {
       setGenerating(false);
     }
@@ -373,17 +395,22 @@ export function PictureBookStudioPage() {
         setPages(nextPages);
         setMessage('');
         setStep(2);
+        saveBook({ pages: nextPages, step: 2 });
       } else {
         // Fallback to local template
-        setPages(buildPictureBookPages(activityPlan, basicInfo));
+        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo);
+        setPages(fallbackPages);
         setMessage(data.error || '生成失败，已使用默认设计');
         setStep(2);
+        saveBook({ pages: fallbackPages, step: 2 });
       }
     } catch (err) {
       // Fallback to local template
-      setPages(buildPictureBookPages(activityPlan, basicInfo));
+      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo);
+      setPages(fallbackPages);
       setMessage('AI生成失败，已使用默认设计：' + err.message);
       setStep(2);
+      saveBook({ pages: fallbackPages, step: 2 });
     } finally {
       setGenerating(false);
     }
@@ -518,8 +545,8 @@ export function PictureBookStudioPage() {
   };
 
   const enterMaking = (mode) => {
-    setMakeMode(mode);
     setStep(3);
+    saveBook({ step: 3 });
     if (mode === 'all') generateAllImages();
   };
 
@@ -548,10 +575,17 @@ export function PictureBookStudioPage() {
                 <p>设计适合课堂使用的英文幸福力绘本</p>
               </div>
             </div>
-            <button type="button" className="pbv2-back-btn" onClick={backToList}>
-              <ArrowLeft size={16} />
-              {isEn ? 'Back to list' : '返回列表'}
-            </button>
+            <div className="pbv2-topbar-actions">
+              <span className={`pbv2-save-state ${saveState.includes('失败') ? 'is-error' : ''}`}>{saveState}</span>
+              <button type="button" className="pbv2-save-btn" onClick={() => saveBook()} disabled={saving}>
+                {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+                {saving ? '保存中...' : '保存当前进度'}
+              </button>
+              <button type="button" className="pbv2-back-btn" onClick={backToList}>
+                <ArrowLeft size={16} />
+                {isEn ? 'Back to list' : '返回列表'}
+              </button>
+            </div>
           </header>
 
       <div className="pbv2-shell">
@@ -561,7 +595,7 @@ export function PictureBookStudioPage() {
               type="button"
               key={label}
               className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}
-              onClick={() => setStep(index)}
+              onClick={() => goToStep(index)}
             >
               <span>{index + 1}</span>
               <strong>{label}</strong>
@@ -608,8 +642,6 @@ export function PictureBookStudioPage() {
             <PictureBookMakingStep
               pages={pages}
               updatePage={updatePage}
-              makeMode={makeMode}
-              setMakeMode={setMakeMode}
               onBack={() => setStep(2)}
               onGenerateAll={generateAllImages}
               onGenerateOne={generateOneImage}
@@ -813,7 +845,7 @@ function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack,
   );
 }
 
-function PictureBookMakingStep({ pages, updatePage, makeMode, setMakeMode, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll }) {
+function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll }) {
   return (
     <div className="pbv2-step-panel">
       <div className="pbv2-making-toolbar">

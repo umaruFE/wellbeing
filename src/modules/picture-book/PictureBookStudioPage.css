@@ -41,6 +41,30 @@
   gap: 12px;
 }
 
+.pbv2-topbar-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.pbv2-save-state {
+  color: #39805f;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.pbv2-save-state.is-error {
+  color: #cf474b;
+}
+
+.pbv2-save-btn {
+  border-color: #3f7f65;
+  background: #e8f5ee;
+  color: #2e6b51;
+  box-shadow: 2px 2px 0 #3f7f65;
+}
+
 .pbv2-topbar-icon {
   width: 48px;
   height: 48px;
@@ -570,20 +594,21 @@
 
 .pbv2-production-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
   margin-top: 20px;
 }
 
 .pbv2-production-card {
   display: grid;
-  grid-template-columns: minmax(180px, 38%) minmax(0, 1fr);
-  gap: 16px;
+  grid-template-columns: minmax(360px, 48%) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
 }
 
 .pbv2-preview {
   aspect-ratio: 16 / 9;
-  min-height: 150px;
+  min-height: 240px;
   border: 2px dashed #a4abb8;
   border-radius: 8px;
   background: #f7f5f1;
@@ -679,7 +704,7 @@
   }
 
   .pbv2-production-card {
-    grid-template-columns: minmax(180px, 34%) minmax(0, 1fr);
+    grid-template-columns: minmax(300px, 44%) minmax(0, 1fr);
   }
 }
 
@@ -692,6 +717,10 @@
     min-height: 80px;
     margin-bottom: 16px;
     padding: 16px;
+  }
+
+  .pbv2-topbar-actions {
+    flex-wrap: wrap;
   }
 
   .pbv2-topbar p {
