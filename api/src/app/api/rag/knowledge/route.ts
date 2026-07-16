@@ -17,18 +17,20 @@ async function ensureTable() {
       source_type TEXT NOT NULL DEFAULT 'text',
       filename TEXT NOT NULL DEFAULT '',
       oss_url TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
       chunk_count INTEGER NOT NULL DEFAULT 0,
       uploaded_by TEXT NOT NULL DEFAULT 'anonymous',
       uploader_name TEXT NOT NULL DEFAULT '',
-      qdrant_collection TEXT NOT NULL DEFAULT 'picturebook_knowledge',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-  try {
-    await db.query(`ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS oss_url TEXT NOT NULL DEFAULT ''`);
-  } catch {
-    // ignore
+  for (const col of ['content TEXT NOT NULL DEFAULT \'\'', 'oss_url TEXT NOT NULL DEFAULT \'\'']) {
+    try {
+      await db.query(`ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS ${col}`);
+    } catch {
+      // ignore
+    }
   }
 }
 

@@ -26,7 +26,7 @@ export const KnowledgeUploadPage = () => {
 
   // upload modal state
   const [showModal, setShowModal] = React.useState(false);
-  const [file, setFile] = React.useState(null);
+  const [files, setFiles] = React.useState([]);
   const [title, setTitle] = React.useState('');
   const [category, setCategory] = React.useState(categoryOptions[0]);
   const [ageRange, setAgeRange] = React.useState('');
@@ -34,8 +34,8 @@ export const KnowledgeUploadPage = () => {
   const [status, setStatus] = React.useState('idle');
   const [message, setMessage] = React.useState('');
 
-  const selectedName = file?.name || '';
-  const canSubmit = status !== 'uploading' && (file || text.trim()) && title.trim();
+  const selectedNames = files.length > 0 ? files.map(f => f.name).join(', ') : '';
+  const canSubmit = status !== 'uploading' && (files.length > 0 || text.trim());
 
   const fetchList = React.useCallback(async () => {
     setLoading(true);
@@ -78,7 +78,7 @@ export const KnowledgeUploadPage = () => {
   };
 
   const resetForm = () => {
-    setFile(null);
+    setFiles([]);
     setTitle('');
     setText('');
     setCategory(categoryOptions[0]);
@@ -93,10 +93,14 @@ export const KnowledgeUploadPage = () => {
   };
 
   const handleFileChange = (event) => {
-    const nextFile = event.target.files?.[0] || null;
-    setFile(nextFile);
-    if (nextFile) {
-      setTitle(nextFile.name.replace(/\.[^.]+$/, ''));
+    const selected = Array.from(event.target.files || []);
+    if (selected.length === 0) return;
+    setFiles(selected);
+    // Auto-fill title from first file if empty
+    if (selected.length === 1) {
+      setTitle(selected[0].name.replace(/\.[^.]+$/, ''));
+    } else {
+      setTitle('');
     }
   };
 
@@ -105,37 +109,78 @@ export const KnowledgeUploadPage = () => {
     if (!canSubmit) return;
 
     setStatus('uploading');
-    setMessage('正在上传并写入知识库...');
+    const fileCount = files.length;
+    setMessage(fileCount > 1 ? `正在上传 ${fileCount} 个文件...` : '正在上传并写入知识库...');
 
     try {
-      const formData = new FormData();
-      if (file) formData.append('file', file);
-      if (text.trim()) formData.append('text', text.trim());
-      formData.append('userId', String(user?.id || user?.userId || 'anonymous'));
-      formData.append('uploaderName', String(user?.name || user?.username || ''));
-      formData.append('title', title.trim());
-      formData.append('category', category);
-      formData.append('ageRange', ageRange.trim());
-      formData.append('visibility', 'private');
-      formData.append('sourceType', file ? file.name.split('.').pop().toLowerCase() : 'text');
+      let successCount = 0;
+      let totalChunks = 0;
+      const errors = [];
 
-      const response = await fetch('/api/rag/upload-knowledge', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
+      if (files.length > 0) {
+        // Upload files one by one
+        for (const f of files) {
+          const formData = new FormData();
+          formData.append('file', f);
+          formData.append('userId', String(user?.id || user?.userId || 'anonymous'));
+          formData.append('uploaderName', String(user?.name || user?.username || ''));
+          // For multiple files, use filename as title if title is empty
+          formData.append('title', title.trim() || f.name.replace(/\.[^.]+$/, ''));
+          formData.append('category', category);
+          formData.append('ageRange', ageRange.trim());
+          formData.append('visibility', 'private');
 
-      if (!response.ok || data.success === false) {
-        throw new Error(data.error || '上传失败');
+          try {
+            const response = await fetch('/api/rag/upload-knowledge', {
+              method: 'POST',
+              body: formData,
+            });
+            const data = await response.json();
+            if (response.ok && data.success !== false) {
+              successCount++;
+              totalChunks += data.chunkCount || 0;
+            } else {
+              errors.push(`${f.name}: ${data.error || '失败'}`);
+            }
+          } catch (err) {
+            errors.push(`${f.name}: ${err.message}`);
+          }
+        }
+      } else if (text.trim()) {
+        // Pasted text upload
+        const formData = new FormData();
+        formData.append('text', text.trim());
+        formData.append('userId', String(user?.id || user?.userId || 'anonymous'));
+        formData.append('uploaderName', String(user?.name || user?.username || ''));
+        formData.append('title', title.trim());
+        formData.append('category', category);
+        formData.append('ageRange', ageRange.trim());
+        formData.append('visibility', 'private');
+
+        const response = await fetch('/api/rag/upload-knowledge', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
+        if (response.ok && data.success !== false) {
+          successCount++;
+          totalChunks += data.chunkCount || 0;
+        } else {
+          errors.push(data.error || '失败');
+        }
       }
 
-      setStatus('success');
-      setMessage(`上传成功！共 ${data.chunkCount || 0} 个切片已写入知识库。`);
-      // 立即刷新列表，1.5秒后关闭弹窗
-      fetchList();
-      setTimeout(() => {
-        closeModal();
-      }, 1500);
+      if (successCount > 0) {
+        setStatus('success');
+        setMessage(`上传成功！${successCount} 个文档，共 ${totalChunks} 个切片。${errors.length > 0 ? `${errors.length} 个失败。` : ''}`);
+        fetchList();
+        setTimeout(() => {
+          closeModal();
+        }, 1500);
+      } else {
+        setStatus('error');
+        setMessage(errors.join('; ') || '上传失败');
+      }
     } catch (error) {
       setStatus('error');
       setMessage(error.message || '上传失败');
@@ -328,12 +373,12 @@ export const KnowledgeUploadPage = () => {
               </div>
 
               <div className="space-y-2">
-                <span className="text-sm font-bold text-primary">上传文件</span>
+                <span className="text-sm font-bold text-primary">上传文件（支持多选）</span>
                 <label className="min-h-[120px] border-2 border-dashed border-stroke rounded-lg bg-surface flex flex-col items-center justify-center px-4 py-4 cursor-pointer hover:bg-surface-alt transition-colors">
                   <UploadCloud className="w-8 h-8 text-primary-muted mb-2" />
-                  <span className="text-sm font-bold text-primary">{selectedName || '选择 .docx / .pdf / .txt 文件'}</span>
-                  <span className="text-xs text-primary-muted mt-1">上传后会切片、向量化并写入 Qdrant</span>
-                  <input type="file" accept=".docx,.pdf,.txt" className="hidden" onChange={handleFileChange} />
+                  <span className="text-sm font-bold text-primary">{selectedNames || '选择 .docx / .pdf / .txt 文件'}</span>
+                  <span className="text-xs text-primary-muted mt-1">{files.length > 0 ? `已选 ${files.length} 个文件` : '可同时选择多个文件批量上传'}</span>
+                  <input type="file" accept=".docx,.pdf,.txt" multiple className="hidden" onChange={handleFileChange} />
                 </label>
               </div>
 

@@ -190,6 +190,7 @@ export function PictureBookStudioPage() {
   const [pages, setPages] = React.useState([]);
   const [makeMode, setMakeMode] = React.useState('all');
   const [generatingAll, setGeneratingAll] = React.useState(false);
+  const [generating, setGenerating] = React.useState(false);
   const [message, setMessage] = React.useState('');
 
   const fetchBookList = React.useCallback(async () => {
@@ -305,23 +306,81 @@ export function PictureBookStudioPage() {
     setPages((current) => current.map((page) => (page.id === id ? { ...page, ...patch } : page)));
   };
 
-  const buildPlan = () => {
+  const buildPlan = async () => {
     if (!canBuildPlan) {
       setMessage('请先选择学生年龄和英文水平。');
       return;
     }
-    const nextPlan = buildActivityPlan(basicInfo);
-    setActivityPlan(nextPlan);
-    setPages([]);
-    setMessage('');
-    setStep(1);
+    setGenerating(true);
+    setMessage('正在根据知识库生成活动方案...');
+    try {
+      const res = await fetch('/api/rag/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'activity-plan', basicInfo }),
+      });
+      const data = await res.json();
+      if (data.success && data.activityPlan) {
+        setActivityPlan({ ...initialActivityPlan, ...data.activityPlan });
+        setPages([]);
+        setMessage('');
+        setStep(1);
+      } else {
+        // Fallback to local template
+        setActivityPlan(buildActivityPlan(basicInfo));
+        setPages([]);
+        setMessage(data.error || '生成失败，已使用默认方案');
+        setStep(1);
+      }
+    } catch (err) {
+      // Fallback to local template
+      setActivityPlan(buildActivityPlan(basicInfo));
+      setPages([]);
+      setMessage('AI生成失败，已使用默认方案：' + err.message);
+      setStep(1);
+    } finally {
+      setGenerating(false);
+    }
   };
 
-  const buildDesign = () => {
-    const nextPages = buildPictureBookPages(activityPlan, basicInfo);
-    setPages(nextPages);
-    setMessage('');
-    setStep(2);
+  const buildDesign = async () => {
+    setGenerating(true);
+    setMessage('正在根据知识库生成绘本设计...');
+    try {
+      const pageCount = pages.length > 0 ? pages.length : 6;
+      const res = await fetch('/api/rag/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'picture-book-design', basicInfo, activityPlan, pageCount }),
+      });
+      const data = await res.json();
+      if (data.success && data.pages && data.pages.length > 0) {
+        const nextPages = data.pages.map((p, i) => ({
+          id: `page-${Date.now()}-${i}`,
+          page: p.page || i + 1,
+          imageDescription: p.imageDescription || '',
+          text: p.text || '',
+          imageUrl: '',
+          status: 'placeholder',
+          error: '',
+        }));
+        setPages(nextPages);
+        setMessage('');
+        setStep(2);
+      } else {
+        // Fallback to local template
+        setPages(buildPictureBookPages(activityPlan, basicInfo));
+        setMessage(data.error || '生成失败，已使用默认设计');
+        setStep(2);
+      }
+    } catch (err) {
+      // Fallback to local template
+      setPages(buildPictureBookPages(activityPlan, basicInfo));
+      setMessage('AI生成失败，已使用默认设计：' + err.message);
+      setStep(2);
+    } finally {
+      setGenerating(false);
+    }
   };
 
   const addPage = () => {
@@ -499,6 +558,7 @@ export function PictureBookStudioPage() {
               setBasicField={setBasicField}
               buildPlan={buildPlan}
               canBuildPlan={canBuildPlan}
+              generating={generating}
             />
           )}
 
@@ -508,6 +568,7 @@ export function PictureBookStudioPage() {
               setPlanField={setPlanField}
               onBack={() => setStep(0)}
               onBuildDesign={buildDesign}
+              generating={generating}
             />
           )}
 
@@ -625,7 +686,7 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
   );
 }
 
-function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan }) {
+function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, generating }) {
   return (
     <div className="pbv2-step-panel">
       <div className="pbv2-form-grid two">
@@ -664,16 +725,16 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan }) {
       </section>
 
       <FooterActions>
-        <button type="button" className="pbv2-primary" disabled={!canBuildPlan} onClick={buildPlan}>
+        <button type="button" className="pbv2-primary" disabled={!canBuildPlan || generating} onClick={buildPlan}>
           <Wand2 size={16} />
-          生成活动方案
+          {generating ? '生成中...' : '生成活动方案'}
         </button>
       </FooterActions>
     </div>
   );
 }
 
-function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign }) {
+function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign, generating }) {
   return (
     <div className="pbv2-step-panel">
       <section className="pbv2-plan-block pbv2-tone-coral">
@@ -696,9 +757,9 @@ function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign })
       </section>
       <FooterActions>
         <button type="button" className="pbv2-ghost" onClick={onBack}>返回基础信息</button>
-        <button type="button" className="pbv2-primary" onClick={onBuildDesign}>
+        <button type="button" className="pbv2-primary" disabled={generating} onClick={onBuildDesign}>
           <BookOpenText size={16} />
-          生成绘本设计
+          {generating ? '生成中...' : '生成绘本设计'}
         </button>
       </FooterActions>
     </div>

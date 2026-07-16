@@ -9,13 +9,6 @@ export const dynamic = 'force-dynamic';
 const TABLE = 'picturebook_knowledge';
 const MAX_BYTES = 20 * 1024 * 1024;
 
-function getUploadWebhookUrl() {
-  return (
-    process.env.N8N_RAG_UPLOAD_WEBHOOK ||
-    `${(process.env.N8N_API_BASE_URL || process.env.N8N_PUBLIC_URL || 'http://117.50.218.161:5678').replace(/\/$/, '')}/webhook/rag-upload-knowledge`
-  );
-}
-
 function decodeXmlEntities(value: string) {
   return value
     .replace(/&lt;/g, '<')
@@ -75,27 +68,30 @@ async function ensureTable() {
       source_type TEXT NOT NULL DEFAULT 'text',
       filename TEXT NOT NULL DEFAULT '',
       oss_url TEXT NOT NULL DEFAULT '',
+      content TEXT NOT NULL DEFAULT '',
       chunk_count INTEGER NOT NULL DEFAULT 0,
       uploaded_by TEXT NOT NULL DEFAULT 'anonymous',
       uploader_name TEXT NOT NULL DEFAULT '',
-      qdrant_collection TEXT NOT NULL DEFAULT 'picturebook_knowledge',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-  // Add oss_url column if missing (for existing tables)
-  try {
-    await db.query(`ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS oss_url TEXT NOT NULL DEFAULT ''`);
-  } catch {
-    // ignore
+  // Add columns if missing (for existing tables)
+  for (const col of ['content TEXT NOT NULL DEFAULT \'\'', 'oss_url TEXT NOT NULL DEFAULT \'\'']) {
+    try {
+      await db.query(`ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS ${col}`);
+    } catch {
+      // ignore
+    }
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureTable();
+
     const incoming = await request.formData();
 
-    // Extract metadata
     const title = String(incoming.get('title') || '');
     const category = String(incoming.get('category') || 'general');
     const ageRange = String(incoming.get('ageRange') || '');
@@ -116,14 +112,14 @@ export async function POST(request: NextRequest) {
       sourceType = file.name.split('.').pop()?.toLowerCase() || 'file';
       filename = file.name;
 
-      // Upload original file to OSS
+      // Upload original file to OSS/FTP
       try {
         ossUrl = await uploadFile(file, 'picturebook-knowledge', filename);
       } catch (ossErr) {
-        console.error('[rag/upload-knowledge] OSS upload failed (non-fatal):', ossErr);
+        console.error('[rag/upload-knowledge] file upload failed (non-fatal):', ossErr);
       }
 
-      // Extract text for n8n processing
+      // Extract text
       extractedText = await extractFileText(file);
     }
 
@@ -131,62 +127,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'No text content found.' }, { status: 422 });
     }
 
-    // Send extracted text to n8n (no file, no callback needed)
-    const outgoing = new FormData();
-    outgoing.append('text', extractedText);
-    outgoing.append('userId', uploadedBy);
-    outgoing.append('uploaderName', uploaderName);
-    outgoing.append('title', title);
-    outgoing.append('category', category);
-    outgoing.append('ageRange', ageRange);
-    outgoing.append('sourceType', sourceType);
-    outgoing.append('filename', filename);
-    outgoing.append('visibility', 'private');
+    // Save directly to PostgreSQL (no n8n, no Qdrant)
+    const documentId = `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const chunkCount = Math.ceil(extractedText.length / 700);
 
-    const response = await fetch(getUploadWebhookUrl(), {
-      method: 'POST',
-      body: outgoing,
+    await db.query(
+      `INSERT INTO ${TABLE} (document_id, title, category, age_range, source_type, filename, oss_url, content, chunk_count, uploaded_by, uploader_name)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       ON CONFLICT (document_id) DO UPDATE SET
+         title = EXCLUDED.title,
+         category = EXCLUDED.category,
+         age_range = EXCLUDED.age_range,
+         source_type = EXCLUDED.source_type,
+         filename = EXCLUDED.filename,
+         oss_url = EXCLUDED.oss_url,
+         content = EXCLUDED.content,
+         chunk_count = EXCLUDED.chunk_count,
+         uploader_name = EXCLUDED.uploader_name,
+         updated_at = NOW()`,
+      [documentId, title, category, ageRange, sourceType, filename, ossUrl, extractedText, chunkCount, uploadedBy, uploaderName]
+    );
+
+    return NextResponse.json({
+      success: true,
+      documentId,
+      chunkCount,
     });
-
-    const contentType = response.headers.get('content-type') || '';
-    let payload: any;
-    if (contentType.includes('application/json')) {
-      const respText = await response.text();
-      payload = respText ? JSON.parse(respText) : { success: response.ok };
-    } else {
-      const respText = await response.text();
-      payload = { success: response.ok, message: respText || 'No response body' };
-    }
-
-    // Save metadata to PostgreSQL
-    if (payload && payload.success !== false) {
-      try {
-        await ensureTable();
-        const documentId = payload.documentId || `doc_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-        const chunkCount = payload.chunkCount || 0;
-        const collection = payload.collection || 'picturebook_knowledge';
-
-        await db.query(
-          `INSERT INTO ${TABLE} (document_id, title, category, age_range, source_type, filename, oss_url, chunk_count, uploaded_by, uploader_name, qdrant_collection)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-           ON CONFLICT (document_id) DO UPDATE SET
-             title = EXCLUDED.title,
-             category = EXCLUDED.category,
-             age_range = EXCLUDED.age_range,
-             source_type = EXCLUDED.source_type,
-             filename = EXCLUDED.filename,
-             oss_url = EXCLUDED.oss_url,
-             chunk_count = EXCLUDED.chunk_count,
-             uploader_name = EXCLUDED.uploader_name,
-             updated_at = NOW()`,
-          [documentId, title, category, ageRange, sourceType, filename, ossUrl, chunkCount, uploadedBy, uploaderName, collection]
-        );
-      } catch (dbErr) {
-        console.error('[rag/upload-knowledge] save metadata failed (non-fatal):', dbErr);
-      }
-    }
-
-    return NextResponse.json(payload, { status: response.status });
   } catch (error) {
     console.error('[rag/upload-knowledge] failed:', error);
     return NextResponse.json(
