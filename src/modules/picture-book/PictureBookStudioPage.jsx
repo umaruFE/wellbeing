@@ -43,6 +43,7 @@ const initialActivityPlan = {
   wellbeingGoal: '',
   outputGoal: '',
   materials: '',
+  recommendedPageCount: 0,
 };
 
 function toggleList(list, value) {
@@ -58,6 +59,19 @@ function getMaterialsText(info, isEn = false) {
   return items.join(isEn ? ', ' : '、') || (isEn ? 'Drawing paper, colored pencils/crayons' : '画纸、彩笔/蜡笔');
 }
 
+function recommendFallbackPageCount(info) {
+  const vocabularyCount = String(info.vocabulary || '').split(/[,，、\s]+/).filter(Boolean).length;
+  const materialCount = info.materials.length + (info.materialOther ? 1 : 0);
+  const duration = Number.parseInt(String(info.duration || ''), 10) || 15;
+  let count = 6;
+  if (vocabularyCount > 4) count += 1;
+  if (vocabularyCount > 8) count += 1;
+  if (materialCount > 2) count += 1;
+  if (duration >= 30) count += 1;
+  if (duration >= 45) count += 1;
+  return Math.min(12, Math.max(6, count));
+}
+
 function buildActivityPlan(info, isEn = false) {
   const theme = getSelectedTheme(info, isEn);
   const isNatureTheme = theme === '自然探索' || theme === 'Nature Exploration';
@@ -65,35 +79,35 @@ function buildActivityPlan(info, isEn = false) {
   const grammar = info.grammar || (isNatureTheme ? 'I can see... / It is...' : 'My friend is/feels... / My friend has...');
   const materialText = getMaterialsText(info, isEn);
   const titleMap = {
-    情绪表达: ['My Feeling Friend', '我的情绪朋友'],
-    自然探索: ['A Tiny Nature Finder', '小小自然发现家'],
-    自我认知: ['The Me I Can See', '看见我自己'],
-    人际关系: ['A Bridge Between Friends', '朋友之间的小桥'],
-    家庭与归属: ['My Warm Little Home', '温暖的小小家'],
-    成长与变化: ['I Grow a Little More', '我又长大了一点'],
-    感恩与善意: ['A Kindness Spark', '善意小火花'],
-    身体与感知: ['My Body Says Hello', '身体在打招呼'],
-    动物与生命: ['Hello, Little Life', '你好，小生命'],
-    勇气与冒险: ['A Brave Little Step', '勇敢的一小步'],
-    'Emotional Expression': ['My Feeling Friend'],
-    'Nature Exploration': ['A Tiny Nature Finder'],
-    'Self-awareness': ['The Me I Can See'],
-    Relationships: ['A Bridge Between Friends'],
-    'Family and Belonging': ['My Warm Little Home'],
-    'Growth and Change': ['I Grow a Little More'],
-    'Gratitude and Kindness': ['A Kindness Spark'],
-    'Body and Senses': ['My Body Says Hello'],
-    'Animals and Life': ['Hello, Little Life'],
-    'Courage and Adventure': ['A Brave Little Step'],
+    情绪表达: 'My Feeling Friend',
+    自然探索: 'A Tiny Nature Finder',
+    自我认知: 'The Me I Can See',
+    人际关系: 'A Bridge Between Friends',
+    家庭与归属: 'My Warm Little Home',
+    成长与变化: 'I Grow a Little More',
+    感恩与善意: 'A Kindness Spark',
+    身体与感知: 'My Body Says Hello',
+    动物与生命: 'Hello, Little Life',
+    勇气与冒险: 'A Brave Little Step',
+    'Emotional Expression': 'My Feeling Friend',
+    'Nature Exploration': 'A Tiny Nature Finder',
+    'Self-awareness': 'The Me I Can See',
+    Relationships: 'A Bridge Between Friends',
+    'Family and Belonging': 'My Warm Little Home',
+    'Growth and Change': 'I Grow a Little More',
+    'Gratitude and Kindness': 'A Kindness Spark',
+    'Body and Senses': 'My Body Says Hello',
+    'Animals and Life': 'Hello, Little Life',
+    'Courage and Adventure': 'A Brave Little Step',
   };
-  const [storyTitleEn] = titleMap[theme] || ['My Picture Book Adventure', '我的绘本冒险'];
+  const storyTitleEn = titleMap[theme] || 'My Creative Journey';
 
   return {
     storyTitleEn,
     storyTitleZh: '',
     storyContent: isEn
-      ? `In this ${theme} story, the children meet a little character who needs to be understood. Through observation, expression, and creativity, they help turn invisible feelings or ideas into images that can be shared.`
-      : `孩子们在“${theme}”主题故事中遇到一个需要被理解的小角色。大家通过观察、表达和创作，帮助它把看不见的感受或想法变成可以分享的图像，并用简单英文完成介绍。`,
+      ? `An action-led creative journey about ${theme}. Each page invites children to notice, choose, make, and share. Art externalizes inner experience, every choice is accepted, and English appears naturally when children need it to express themselves.`
+      : `围绕“${theme}”展开的行动型创作旅程。每一页引导孩子观察、选择、动手和分享，以艺术外化内在体验，接纳每一种表达，并在真实表达需求中自然使用英文。`,
     englishGoal: isEn
       ? `Use the core vocabulary: ${vocab}; use the sentence patterns/grammar: ${grammar}; understand and answer simple questions about the work.`
       : `使用核心词汇：${vocab}；使用核心句型/语法：${grammar}；能听懂并回应与作品相关的简单提问。`,
@@ -101,47 +115,120 @@ function buildActivityPlan(info, isEn = false) {
       ? 'Turn inner feelings into visible images and experience understanding, acceptance, and connection through expression and collaboration.'
       : '将内在感受外化为可被看见的形象；在表达和协作中体验被理解、被接纳和共同创造的联结感。',
     outputGoal: isEn
-      ? (isNatureTheme ? 'A one-page nature discovery book and a nature observation artwork' : 'A group picture book and a themed creative poster')
-      : (isNatureTheme ? '一页自然发现绘本和一张自然观察作品' : '一本小组绘本和一张主题创作海报'),
+      ? (isNatureTheme ? 'A personal nature discovery artwork and reflection' : 'A personal expressive artwork and a short English sharing moment')
+      : (isNatureTheme ? '一份个人自然发现作品与感受表达' : '一份个人表达作品和一次简短的英文分享'),
     materials: isEn && !info.materials.length && !info.materialOther ? 'Drawing paper, colored pencils/crayons' : materialText,
+    recommendedPageCount: recommendFallbackPageCount(info),
   };
 }
 
-function buildPictureBookPages(plan, info, isEn = false) {
+function buildPictureBookPages(plan, info, requestedPageCount) {
   const title = plan.storyTitleEn || 'My Picture Book';
   const vocab = info.vocabulary || 'happy, sad, calm, brave, friend';
-  const grammar = info.grammar || 'My friend is/feels...';
+  const wordAnchors = vocab.split(/[,，、\s]+/).filter(Boolean).slice(0, 6).join(', ');
+  const theme = getSelectedTheme(info, true);
+  const landingPoints = {
+    情绪表达: 'All feelings belong. Every one of them.',
+    'Emotional Expression': 'All feelings belong. Every one of them.',
+    自然探索: 'You are part of nature, and nature is you.',
+    'Nature Exploration': 'You are part of nature, and nature is you.',
+    自我认知: 'There is no one else like you.',
+    'Self-awareness': 'There is no one else like you.',
+    人际关系: 'Being yourself helps us grow closer.',
+    Relationships: 'Being yourself helps us grow closer.',
+    家庭与归属: 'You belong here, exactly as you are.',
+    'Family and Belonging': 'You belong here, exactly as you are.',
+    成长与变化: 'You can change and still be you.',
+    'Growth and Change': 'You can change and still be you.',
+    感恩与善意: 'Your kindness can make the world feel warmer.',
+    'Gratitude and Kindness': 'Your kindness can make the world feel warmer.',
+    身体与感知: 'Your body speaks. You can listen gently.',
+    'Body and Senses': 'Your body speaks. You can listen gently.',
+    动物与生命: 'Every living thing belongs in our shared world.',
+    'Animals and Life': 'Every living thing belongs in our shared world.',
+    勇气与冒险: 'Brave can be one small step.',
+    'Courage and Adventure': 'Brave can be one small step.',
+  };
+  const landingPoint = landingPoints[theme] || 'Every part of you belongs.';
   const pages = [
     {
-      imageDescription: isEn
-        ? `Cover. A warm children's picture-book scene. The main character stands at a bright creative table surrounded by ${plan.materials || 'drawing paper and colored pencils'}, with space reserved for the title.`
-        : `封面。温暖的儿童绘本场景，主角站在明亮的创作桌前，周围有${plan.materials || '画纸和彩笔'}，画面留有标题空间。`,
+      pageType: 'cover',
+      imageDescription: `Guided picture-book cover, not a narrative scene. Show an inviting art table, simple tools, colorful child-made creations, and a small friendly guide welcoming the child to participate. Render only the English title “${title}”.`,
       text: title,
     },
     {
-      imageDescription: isEn ? 'The story begins. The curious main character discovers a tiny clue or a new friend in a clear, gentle scene rich in child-friendly details.' : '故事开始。主角发现一个小小的线索或朋友，表情好奇，场景清晰、温柔，有适合儿童观察的细节。',
-      text: 'I see a little friend.',
+      pageType: 'question',
+      imageDescription: 'Open question page. Show a gentle color cloud and a large clear response area where the child can point or imagine. No story action and no correct answer.',
+      text: 'What color feels like you today?',
     },
     {
-      imageDescription: isEn ? `Language exploration page. Show objects or feelings related to the core vocabulary: ${vocab}. Do not render the words in the image; show only observable visual details.` : `语言探索页。画面呈现核心词汇对应的物品或感受：${vocab}。不要把词写进图片，只呈现可观察的画面。`,
-      text: `My friend has ${vocab.split(/[,，、\s]+/).filter(Boolean)[0] || 'colors'}.`,
+      pageType: 'choice',
+      imageDescription: `Choice page. Show six clear illustrated option cards with picture-and-word anchors using these English target words: ${wordAnchors}. Leave generous space for pointing and choosing.`,
+      text: 'Point to the word that fits.',
     },
     {
-      imageDescription: isEn ? `Expression practice page. The main character and friends use the pattern “${grammar}” to express observations or feelings. Show interaction without text bubbles.` : `表达练习页。主角和同伴一起使用句型“${grammar}”表达观察或感受，画面有互动但不要出现文字气泡。`,
-      text: info.grammar ? info.grammar.split(/[;；。]/)[0] : 'My friend feels happy.',
+      pageType: 'question',
+      imageDescription: 'Body-awareness question page. Show a simple child-friendly body outline with softly highlighted areas and an open response space. Invite noticing without judgment.',
+      text: 'Where do you feel it?',
     },
     {
-      imageDescription: isEn ? `Creative activity page. The children use ${plan.materials || 'drawing paper and colored pencils'} to make ${plan.outputGoal || 'a themed poster'}. The composition should convey collaboration.` : `活动创作页。孩子们使用${plan.materials || '画纸和彩笔'}制作产出物：${plan.outputGoal || '一张主题海报'}，构图有合作感。`,
-      text: 'We make it together.',
+      pageType: 'instruction',
+      imageDescription: `Preparation instruction page. Clearly show ${plan.materials || 'paper and colored pencils'} as simple tool icons beside a large blank workspace waiting for the child's creation.`,
+      text: 'Take your paper and colors.',
     },
     {
-      imageDescription: isEn ? 'Final presentation page. The children share their work, and the main character feels seen and accepted in a warm classroom filled with achievement and connection.' : '结尾展示页。孩子们展示作品，主角被看见和接纳，画面有成就感、联结感和温暖的课堂氛围。',
-      text: 'We share. We listen. We smile.',
+      pageType: 'choice',
+      imageDescription: 'Inspiration choice page. Show six non-perfect child-made shape cards: round, spiky, wavy, tiny, wide, and twisty. Each shape has its exact English word label.',
+      text: 'Choose a shape that feels right.',
+    },
+    {
+      pageType: 'instruction',
+      imageDescription: 'Drawing instruction page. Show a pencil beginning one expressive shape and a large mostly blank area for the child. Emphasize that big and small are equally welcome.',
+      text: 'Draw it big or small.',
+    },
+    {
+      pageType: 'rule',
+      imageDescription: 'Game rule page. Show a large six-sided die and a visual equation: die dots equal the number of parts to add. Use icons and minimal English labels, not a narrative scene.',
+      text: 'Roll. Count. Add that many parts.',
+    },
+    {
+      pageType: 'instruction',
+      imageDescription: 'Action page with clear illustrated choices for eyes, ears, hands, feet, mouths, and antennae. Each option has a simple English word anchor.',
+      text: 'Add eyes, ears, hands, or feet.',
+    },
+    {
+      pageType: 'instruction',
+      imageDescription: 'Creative invitation page showing optional wings, spots, stars, pockets, and soft spikes as idea cards, plus open space for the child’s own idea. Avoid polished model answers.',
+      text: 'Add one special power.',
+    },
+    {
+      pageType: 'instruction',
+      imageDescription: 'Coloring action page. Show two or three selected color swatches, a child’s hand coloring an expressive shape, and a spacious unfinished area. Every color choice is accepted.',
+      text: 'Pick two colors. Fill your shape.',
+    },
+    {
+      pageType: 'instruction',
+      imageDescription: 'Naming page. Show the finished creation beside one simple blank name tag and a pencil. The small guide waits quietly without suggesting an answer.',
+      text: 'Give your creation a name.',
+    },
+    {
+      pageType: 'question',
+      imageDescription: `Sharing prompt page. Show a child holding their creation with two short English sentence anchors: “I feel...” and “My friend feels...”. Include small picture-and-word anchors from: ${wordAnchors}.`,
+      text: 'Share: “I feel...”',
+    },
+    {
+      pageType: 'back-cover',
+      imageDescription: `Back cover. A calm, spacious composition with the small guide waving goodbye. Render only this exact English landing point and no other content: “${landingPoint}”`,
+      text: landingPoint,
     },
   ];
-  return pages.map((page, index) => ({
+  const pageCount = Math.min(14, Math.max(6, Number(requestedPageCount) || recommendFallbackPageCount(info)));
+  const selectionPriority = [0, 1, 4, 10, 12, 13, 2, 5, 11, 3, 6, 9, 8, 7];
+  const selectedPages = selectionPriority.slice(0, pageCount).sort((a, b) => a - b).map((index) => pages[index]);
+  return selectedPages.map((page, index) => ({
     id: `page-${Date.now()}-${index + 1}`,
     page: index + 1,
+    pageType: page.pageType,
     imageDescription: page.imageDescription,
     text: page.text,
     imageUrl: '',
@@ -390,8 +477,10 @@ export function PictureBookStudioPage() {
   const buildDesign = async () => {
     setGenerating(true);
     setMessage(t('pictureBook.generatingDesign'));
+    const pageCount = pages.length > 0
+      ? pages.length
+      : Number(activityPlan.recommendedPageCount) || undefined;
     try {
-      const pageCount = pages.length > 0 ? pages.length : 6;
       const res = await fetch('/api/rag/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -399,7 +488,7 @@ export function PictureBookStudioPage() {
           type: 'picture-book-design',
           basicInfo,
           activityPlan,
-          pageCount,
+          ...(pageCount ? { pageCount } : {}),
           language: isEn ? 'en' : 'zh',
           outputLanguage: isEn ? 'English' : 'Chinese',
         }),
@@ -409,6 +498,7 @@ export function PictureBookStudioPage() {
         const nextPages = data.pages.map((p, i) => ({
           id: `page-${Date.now()}-${i}`,
           page: p.page || i + 1,
+          pageType: p.pageType || 'instruction',
           imageDescription: p.imageDescription || '',
           text: p.text || '',
           imageUrl: '',
@@ -421,7 +511,7 @@ export function PictureBookStudioPage() {
         saveBook({ pages: nextPages, step: 2 });
       } else {
         // Fallback to local template
-        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, isEn);
+        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount);
         setPages(fallbackPages);
         setMessage(data.error || t('pictureBook.designFallback'));
         setStep(2);
@@ -429,7 +519,7 @@ export function PictureBookStudioPage() {
       }
     } catch (err) {
       // Fallback to local template
-      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, isEn);
+      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount);
       setPages(fallbackPages);
       setMessage(`${t('pictureBook.designFallback')}: ${err.message}`);
       setStep(2);
@@ -445,6 +535,7 @@ export function PictureBookStudioPage() {
       {
         id: `page-${Date.now()}`,
         page: current.length + 1,
+        pageType: 'instruction',
         imageDescription: t('pictureBook.newPageDescription'),
         text: 'New page text.',
         imageUrl: '',
@@ -468,12 +559,19 @@ export function PictureBookStudioPage() {
       imageStyle: 'Watercolor Picture Book',
       batchItems: pages.map((page) => ({
         page: page.page,
+        pageType: page.pageType || 'instruction',
         title: `${activityPlan.storyTitleEn || 'Picture Book'} · Page ${page.page}`,
-        text: `${page.imageDescription}\nPage text: ${page.text}`,
+        text: [
+          `Create a guided picture-book ${page.pageType || 'instruction'} page, never a narrative story scene.`,
+          page.imageDescription,
+          `Render only this exact English core text (maximum 10 words): “${page.text}”`,
+          'Make the child action visually obvious. Use picture-and-word anchors for target vocabulary when requested.',
+          'Do not add Chinese text, extra sentences, praise, moralizing, or unrelated typography.',
+        ].join(' '),
       })),
       rawValues: {
         storybookTitle: activityPlan.storyTitleEn || 'Picture Book',
-        storybookContent: pages.map((page) => page.text).join('\n'),
+        storybookContent: pages.map((page) => `${page.pageType || 'instruction'}: ${page.text}`).join('\n'),
         storybookStyle: 'Watercolor Picture Book',
         storybookGrade: basicInfo.age || (isEn ? 'Ages 7–9' : '7-9岁'),
       },
@@ -533,6 +631,9 @@ export function PictureBookStudioPage() {
         `Story title: ${activityPlan.storyTitleEn || 'Picture Book'}.`,
         `Image description: ${targetPage.imageDescription}.`,
         `Page text context: ${targetPage.text}.`,
+        `Page mode: ${targetPage.pageType || 'instruction'}. This is an action-led guided picture book, not a narrative story scene.`,
+        'Make the requested child action, choices, tools, or response space visually obvious.',
+        `Render only this exact English core text: “${targetPage.text}”. No Chinese text or extra sentences.`,
         'Warm classroom-ready picture-book style, consistent soft watercolor palette, no watermark.',
       ].join(' ');
       const result = await apiService.request('/api/ai/generate-ppt-asset', {
@@ -824,7 +925,10 @@ function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign, g
   return (
     <div className="pbv2-step-panel">
       <section className="pbv2-plan-block pbv2-tone-coral">
-        <Field label={t('pictureBook.englishStoryTitle')} value={activityPlan.storyTitleEn} onChange={(value) => setPlanField('storyTitleEn', value)} />
+        <div className="pbv2-form-grid two">
+          <Field label={t('pictureBook.englishStoryTitle')} value={activityPlan.storyTitleEn} onChange={(value) => setPlanField('storyTitleEn', value)} />
+          <Field label={t('pictureBook.recommendedPageCount')} value={activityPlan.recommendedPageCount} onChange={(value) => setPlanField('recommendedPageCount', value)} placeholder={t('pictureBook.pageCountPlaceholder')} />
+        </div>
         <Field area label={t('pictureBook.storyContent')} value={activityPlan.storyContent} onChange={(value) => setPlanField('storyContent', value)} />
       </section>
       <section className="pbv2-card pbv2-tone-yellow">

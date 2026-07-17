@@ -82,7 +82,38 @@ function isEnglishOutput(language?: string, outputLanguage?: string): boolean {
 
 function ensureEnglishTitle(value: unknown): string {
   const title = typeof value === 'string' ? value.trim() : '';
-  return title && !/[\u3400-\u9fff]/.test(title) ? title : 'My Picture Book';
+  return title && !/[\u3400-\u9fff]/.test(title) ? title.split(/\s+/).slice(0, 8).join(' ') : 'My Picture Book';
+}
+
+function containsChinese(value: unknown): boolean {
+  return /[\u3400-\u9fff]/.test(typeof value === 'string' ? value : '');
+}
+
+function limitEnglishWords(value: unknown, fallback: string): string {
+  const text = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+  if (!text || containsChinese(text)) return fallback;
+  return text.split(' ').length <= 10 ? text : fallback;
+}
+
+function normalizePageType(value: unknown): string {
+  const allowed = new Set(['question', 'instruction', 'choice', 'rule']);
+  const pageType = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return allowed.has(pageType) ? pageType : 'instruction';
+}
+
+function normalizePageCount(value: unknown, fallback = 8): number {
+  const count = Number.parseInt(String(value || ''), 10);
+  return Number.isFinite(count) ? Math.min(14, Math.max(6, count)) : fallback;
+}
+
+function inferPageCount(activityPlan: any, basicInfo: any): number {
+  const contentLength = `${activityPlan?.storyContent || ''} ${activityPlan?.englishGoal || ''} ${activityPlan?.wellbeingGoal || ''}`.length;
+  const vocabularyCount = String(basicInfo?.vocabulary || '').split(/[,，、\s]+/).filter(Boolean).length;
+  const materialCount = Array.isArray(basicInfo?.materials) ? basicInfo.materials.length : 0;
+  let count = contentLength > 500 ? 10 : contentLength > 250 ? 9 : 8;
+  if (vocabularyCount > 6) count += 1;
+  if (materialCount > 3) count += 1;
+  return normalizePageCount(count);
 }
 
 export async function POST(request: NextRequest) {
@@ -97,18 +128,30 @@ export async function POST(request: NextRequest) {
     const knowledgeContext = await fetchKnowledgeContext(themes, ageRange);
 
     if (type === 'activity-plan') {
-      const systemPrompt = `You are a professional designer of children's English picture-book courses. Create an activity plan from the student information and reference material.
+      const systemPrompt = `You are a professional designer of action-led children's English guided picture books.
+
+CORE DEFINITION — UNDERSTAND THIS BEFORE GENERATING:
+A guided picture book is NOT a story picture book. Never create characters with plots, narrative scenes, story arcs, or pages about what happened to someone else. The child must never be a passive reader.
+A guided picture book makes the child an active creator. Every activity page asks the child to do something now: notice, answer an open question, choose, point, move, make, draw, name, or share.
+
+FOUNDATION:
+Art expression, emotional wellbeing, and natural language acquisition happen at the same time. Art is a medium for externalizing inner experience, not a technique lesson. Accept every choice without judgment or correction. English appears naturally because the child needs it for authentic self-expression; never teach grammar, test, or drill.
+
+Create the activity plan from the student information and reference material.
 Return JSON only, using this exact shape:
 {
   "storyTitleEn": "An appealing English title",
   "storyTitleZh": "",
-  "storyContent": "A story synopsis of no more than 100 words",
+  "storyContent": "A concise guided creative experience concept with no plot",
   "englishGoal": "English learning goals",
   "wellbeingGoal": "Wellbeing goals",
   "outputGoal": "Expected output",
-  "materials": "Required materials"
+  "materials": "Required materials",
+  "recommendedPageCount": 8
 }
-The picture-book title must always be in English. Keep storyTitleZh as an empty string.
+The title must always be English, action-oriented, memorable, and at most 8 words. Keep storyTitleZh empty.
+storyContent must describe what children notice, choose, make, and express. It must not contain a plot, protagonist, conflict, story arc, or narrative sequence.
+Choose recommendedPageCount from 6 to 14 according to the actual amount of meaningful content and child actions. Use 6–8 pages for a simple focused activity, 9–10 for a normal activity, and 11–14 only for genuinely complex content. Never add filler pages merely to increase the count.
 ${useEnglish
   ? 'Write every generated field entirely in English. Do not include Chinese translations, bilingual labels, or Chinese text anywhere in the output.'
   : 'Write storyContent, englishGoal, wellbeingGoal, outputGoal, and materials in Simplified Chinese. Keep storyTitleEn entirely in English.'}`;
@@ -123,36 +166,74 @@ ${useEnglish
 - Participants: ${basicInfo?.participants || 'Not specified'}
 ${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
 
-Design a picture-book activity plan suitable for the students' age and English level. Output language: ${useEnglish ? 'English' : 'Simplified Chinese, except for the English title'}.`;
+Design a guided picture-book activity plan suitable for the students' age and English level. Preserve the three simultaneous layers: artistic expression, wellbeing, and natural English use. Output language: ${useEnglish ? 'English' : 'Simplified Chinese, except for the English title'}.`;
 
       const result = await callLLM(systemPrompt, userPrompt);
+      const recommendedPageCount = normalizePageCount(
+        result.recommendedPageCount,
+        inferPageCount(result, basicInfo)
+      );
       return NextResponse.json({
         success: true,
         activityPlan: {
           ...result,
           storyTitleEn: ensureEnglishTitle(result.storyTitleEn || result.title),
           storyTitleZh: '',
+          recommendedPageCount,
         },
       });
 
     } else if (type === 'picture-book-design') {
-      const pageCount = body.pageCount || 6;
-      const systemPrompt = `You are a professional children's English picture-book designer. Design every page from the activity plan and student information.
+      const pageCount = normalizePageCount(
+        body.pageCount || activityPlan?.recommendedPageCount,
+        inferPageCount(activityPlan, basicInfo)
+      );
+      const systemPrompt = `You are a professional designer of action-led children's English guided picture books.
+
+NON-NEGOTIABLE DEFINITION:
+This is a GUIDED PICTURE BOOK, never a story picture book. Do not create a plot, protagonist journey, narrative scene, story arc, exposition, conflict, or sequence such as “then they...” and “Poppy went...”. The child is the active creator, not a passive reader.
+
+Every activity page must make the child do something now. After each page, the answer to “What did the child do?” must be a concrete action. If the answer is “nothing, they only looked/read,” rewrite the page.
+
+THE THREE SIMULTANEOUS LAYERS:
+1. Artistic expression: colors, shapes, drawing, collage, or making externalize inner experience.
+2. Wellbeing: the process accepts and releases feelings; never judge, correct, compare, or demand artistic quality.
+3. Natural English: English is used for authentic choices and expression. Never explain grammar, test, or drill.
+
+ALLOWED PAGE TYPES ONLY:
+- cover: English title plus inviting group/creative tools; sparks curiosity.
+- question: one open question with visual prompts and no correct answer.
+- instruction: one clear action plus visible tools/materials/response space.
+- choice: multiple illustrated option cards with short English labels.
+- rule: a visual game mechanism plus minimal directions.
+- back-cover: one memorable landing-point sentence plus a small guide saying goodbye visually; nothing else.
+
+FORBIDDEN:
+- narrative, plot-progression, passive viewing, preaching, art-technique teaching, praise-only endings, model answers, Chinese text, grammar instruction, tests, or more than one core task per page.
+
+LANDING POINT:
+The final back cover is the soul of the book. It must contain only one memorable, accepting English sentence connected to the child’s experience—not “Well done” or “You finished.” Ask what the child experienced and what they most need to hear; that sentence is the landing point.
+
+TEXT AND VISUAL RULES:
+- All output fields must be entirely English, regardless of UI language. No Chinese anywhere.
+- Core page text is at most 10 English words.
+- Every target vocabulary word used on a page must have a clear picture + English word anchor in imageDescription.
+- imageDescription must describe the child’s action, visible choices/tools, and generous response or waiting space—not a narrative scene.
+- Use exact short sentence anchors naturally when useful, such as “I pick...”, “I feel...”, or the user’s target pattern.
+
+Design every page from the activity plan and student information.
 Return JSON only, using this exact shape:
 {
   "pages": [
     {
       "page": 1,
+      "pageType": "cover | question | instruction | choice | rule | back-cover",
       "imageDescription": "A detailed image-generation description",
       "text": "Short, child-friendly page text"
     }
   ]
 }
-Create exactly ${pageCount} pages. Page 1 is the cover, and its text must be the English title exactly: ${activityPlan?.storyTitleEn || 'My Picture Book'}.
-The picture-book title must always remain in English.
-${useEnglish
-  ? 'Write every generated field entirely in English, including all imageDescription and text fields. Do not include Chinese text or bilingual translations.'
-  : 'Write imageDescription fields in Simplified Chinese. Keep the cover title and child-facing page text in English for this English-learning picture book.'}`;
+Create exactly ${pageCount} pages. Page 1 must be type cover and its text must be the English title exactly: ${activityPlan?.storyTitleEn || 'My Picture Book'}. The final page must be type back-cover and contain only the landing point. Every page between them must use one allowed activity type. Include a purposeful progression from noticing to choosing, making, naming, and sharing; this is a progression of child actions, never a plot.`;
 
       const userPrompt = `Activity plan:
 - English title: ${activityPlan?.storyTitleEn || 'My Picture Book'}
@@ -167,10 +248,25 @@ Student information:
 - Core sentence patterns: ${basicInfo?.grammar || ''}
 ${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
 
-Design ${pageCount} picture-book pages in the required output language.`;
+Design ${pageCount} guided picture-book pages. All generated content must be English.`;
 
       const result = await callLLM(systemPrompt, userPrompt);
-      return NextResponse.json({ success: true, pages: result.pages || [] });
+      const pages = Array.isArray(result.pages) ? result.pages : [];
+      if (pages.length !== pageCount) {
+        throw new Error(`The model returned ${pages.length} pages instead of ${pageCount}.`);
+      }
+      if (pages.some((page: any) => containsChinese(page?.imageDescription) || containsChinese(page?.text))) {
+        throw new Error('The model returned non-English guided picture-book content.');
+      }
+      const normalizedPages = pages.map((page: any, index: number) => ({
+        ...page,
+        page: index + 1,
+        pageType: index === 0 ? 'cover' : index === pages.length - 1 ? 'back-cover' : normalizePageType(page.pageType),
+        text: index === 0
+          ? limitEnglishWords(ensureEnglishTitle(activityPlan?.storyTitleEn), 'My Picture Book')
+          : limitEnglishWords(page.text, index === pages.length - 1 ? 'Every part of you belongs.' : 'Choose, make, and show what feels true.'),
+      }));
+      return NextResponse.json({ success: true, pages: normalizedPages });
     }
 
     return NextResponse.json(
