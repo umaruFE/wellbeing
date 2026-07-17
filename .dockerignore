@@ -1,37 +1,13 @@
-# ---- 依赖与构建产物 ----
+.git
+.gitignore
 node_modules
 **/node_modules
 dist
-api/.next
-ai-generator-web/node_modules
-ai-generator-web/dist
-
-# ---- Git ----
-.git
-.gitignore
-
-# ---- 环境变量（通过 docker-compose / -e 注入，不打入镜像）----
+**/dist
+.next
+**/.next
 .env
 .env.*
-api/.env
-api/.env.*
-
-# ---- 文档与临时文件 ----
-*.md
-a.json
-a.text
-
-# ---- IDE ----
-.vscode
-.idea
-*.swp
-.DS_Store
-
-# ---- Docker 自身 ----
-Dockerfile*
-docker-compose*.yml
-.dockerignore
-
-# ---- 日志 ----
-*.log
-npm-debug.log*
+**/.env
+**/.env.*
+api/public/uploads

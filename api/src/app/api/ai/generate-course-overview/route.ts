@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
-import { uploadToOss } from '@/lib/oss';
-
-const HAS_OSS_KEYS = !!(process.env.ALIYUN_OSS_ACCESS_KEY_ID && process.env.ALIYUN_OSS_ACCESS_KEY_SECRET);
-const UPLOAD_PROVIDER = (process.env.UPLOAD_PROVIDER || 'local').toLowerCase();
-const USE_OSS = UPLOAD_PROVIDER === 'oss' && HAS_OSS_KEYS;
+import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 const ROUTE_VERSION = 'generate-course-overview-2026-06-24-language-forwarding-v2';
 const TEXTLESS_THEME_IMAGE_REQUIREMENT = [
   'Theme image requirement:',
@@ -42,9 +38,9 @@ async function transferThemeImage(imageUrl: string): Promise<string | null> {
     const ext = filenameParam.split('.').pop() || 'png';
     const savedFilename = `theme-${Date.now()}.${ext}`;
 
-    if (USE_OSS) {
+    if (getUploadProvider() !== 'local') {
       const url = await uploadFile(buffer, 'course-themes', savedFilename);
-      console.log('[generate-course-overview] 图片已上传到 OSS:', url);
+      console.log('[generate-course-overview] 图片已上传到远程存储:', url);
       return url;
     }
 

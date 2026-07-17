@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
-import { uploadFile } from '@/lib/fileUpload';
+import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 import { db } from '@/lib/db';
-
-const HAS_OSS_KEYS = !!(process.env.ALIYUN_OSS_ACCESS_KEY_ID && process.env.ALIYUN_OSS_ACCESS_KEY_SECRET);
-const UPLOAD_PROVIDER = (process.env.UPLOAD_PROVIDER || 'local').toLowerCase();
-const USE_OSS = UPLOAD_PROVIDER === 'oss' && HAS_OSS_KEYS;
 
 function corsHeaders() {
   return {
@@ -64,7 +60,7 @@ async function transferThemeImage(imageUrl: string): Promise<string | null> {
     const ext = filenameParam.split('.').pop() || 'png';
     const savedFilename = `theme-${Date.now()}.${ext}`;
 
-    if (USE_OSS) {
+    if (getUploadProvider() !== 'local') {
       return await uploadFile(buffer, 'course-themes', savedFilename);
     }
 

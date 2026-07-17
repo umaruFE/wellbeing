@@ -62,13 +62,13 @@ services:
       # ---- ComfyUI 图片/视频生成 ----
       COMFYUI_URL: ${COMFYUI_URL:-http://117.50.218.161:8188}
       COMFYUI_PUBLIC_URL: ${COMFYUI_PUBLIC_URL:-https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com}
-      # ---- 阿里云 OSS（不填则使用本地上传）----
-      ALIYUN_OSS_REGION: ${ALIYUN_OSS_REGION:-oss-cn-beijing}
-      ALIYUN_OSS_BUCKET: ${ALIYUN_OSS_BUCKET:-wellbeing1}
-      ALIYUN_OSS_ACCESS_KEY_ID: ${ALIYUN_OSS_ACCESS_KEY_ID}
-      ALIYUN_OSS_ACCESS_KEY_SECRET: ${ALIYUN_OSS_ACCESS_KEY_SECRET}
-      ALIYUN_OSS_ENDPOINT: ${ALIYUN_OSS_ENDPOINT:-wellbeing1.oss-cn-beijing.aliyuncs.com}
-      UPLOAD_PROVIDER: ${UPLOAD_PROVIDER:-local}
+      # ---- 生产文件上传（仅 FTP）----
+      UPLOAD_PROVIDER: ftp
+      FTP_HOST: ${FTP_HOST}
+      FTP_USER: ${FTP_USER}
+      FTP_PASSWORD: ${FTP_PASSWORD}
+      FTP_CDN_DOMAIN: ${FTP_CDN_DOMAIN}
+      FTP_BASE_DIR: ${FTP_BASE_DIR:-wellbeing}
       # ---- 第三方 AI 服务 ----
       REMOVEBG_API_KEY: ${REMOVEBG_API_KEY}
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}

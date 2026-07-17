@@ -6,18 +6,23 @@ import { uploadToOss as uploadToOssOriginal, generateFilePath } from './oss';
 
 /**
  * 统一文件上传工具
- * - 生产环境 (NODE_ENV=production): 上传到 FTP 服务器 z.dhr.dhredu.cn/wellbeing/
- * - 开发环境: 上传到阿里云 OSS
+ * 由 UPLOAD_PROVIDER 显式选择 local、oss 或 ftp，避免 NODE_ENV 与部署环境耦合。
  */
 
-const FTP_HOST = process.env.FTP_HOST || '114.55.25.62';
-const FTP_USER = process.env.FTP_USER || 'z.dhr.dhredu.cn';
-const FTP_PASSWORD = process.env.FTP_PASSWORD || '@2026#z.dhr.dhredu.cn_01_13*@';
-const FTP_CDN_DOMAIN = process.env.FTP_CDN_DOMAIN || 'https://z.dhr.dhredu.cn';
-const FTP_BASE_DIR = process.env.FTP_BASE_DIR || 'wellbeing';
+export type UploadProvider = 'local' | 'oss' | 'ftp';
 
-export function isProduction() {
-  return process.env.NODE_ENV === 'production';
+export function getUploadProvider(): UploadProvider {
+  const provider = (process.env.UPLOAD_PROVIDER || 'local').trim().toLowerCase();
+  if (provider === 'local' || provider === 'oss' || provider === 'ftp') {
+    return provider;
+  }
+  throw new Error(`Unsupported UPLOAD_PROVIDER: ${provider}`);
+}
+
+function requiredEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) throw new Error(`${name} is required when UPLOAD_PROVIDER=ftp`);
+  return value;
 }
 
 /**
@@ -35,19 +40,24 @@ async function uploadToFtp(
   folder: string,
   filename: string
 ): Promise<string> {
+  const ftpHost = requiredEnv('FTP_HOST');
+  const ftpUser = requiredEnv('FTP_USER');
+  const ftpPassword = requiredEnv('FTP_PASSWORD');
+  const ftpCdnDomain = requiredEnv('FTP_CDN_DOMAIN').replace(/\/+$/, '');
+  const ftpBaseDir = requiredEnv('FTP_BASE_DIR').replace(/^\/+|\/+$/g, '');
   const client = new ftp.Client();
   client.ftp.encoding = 'utf-8';
 
   try {
     await client.access({
-      host: FTP_HOST,
-      user: FTP_USER,
-      password: FTP_PASSWORD,
+      host: ftpHost,
+      user: ftpUser,
+      password: ftpPassword,
       secure: false,
     });
 
     const relativePath = generatePath(folder, filename);
-    const fullPath = `${FTP_BASE_DIR}/${relativePath}`;
+    const fullPath = `${ftpBaseDir}/${relativePath}`;
     const dirParts = path.dirname(fullPath).split('/');
     const fileName = path.basename(fullPath);
 
@@ -73,22 +83,26 @@ async function uploadToFtp(
     const stream = Readable.from(buffer);
     await client.uploadFrom(stream, fileName);
 
-    return `${FTP_CDN_DOMAIN}/${fullPath}`;
+    return `${ftpCdnDomain}/${fullPath}`;
   } finally {
     client.close();
   }
 }
 
 /**
- * 统一上传接口 - 根据环境自动选择 OSS 或 FTP
+ * 统一远程上传接口 - 根据 UPLOAD_PROVIDER 选择 OSS 或 FTP
  */
 export async function uploadFile(
   file: File | ArrayBuffer | Buffer,
   folder: string,
   filename: string
 ): Promise<string> {
-  if (isProduction()) {
+  const provider = getUploadProvider();
+  if (provider === 'ftp') {
     return uploadToFtp(file, folder, filename);
   }
-  return uploadToOssOriginal(file, folder, filename);
+  if (provider === 'oss') {
+    return uploadToOssOriginal(file, folder, filename);
+  }
+  throw new Error('uploadFile does not handle local storage; use saveToLocal instead');
 }

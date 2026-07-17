@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSignedUrl } from '@/lib/oss';
-import { uploadFile } from '@/lib/fileUpload';
+import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 import { saveToLocal } from '@/lib/localUpload';
 
 // CORS 响应头辅助函数
@@ -50,11 +50,6 @@ function getFileExt(filename: string) {
   const idx = filename.lastIndexOf('.');
   return idx >= 0 ? filename.slice(idx + 1).toLowerCase() : '';
 }
-
-// 本地优先；只有显式指定才使用 OSS
-const HAS_OSS_KEYS = !!(process.env.ALIYUN_OSS_ACCESS_KEY_ID && process.env.ALIYUN_OSS_ACCESS_KEY_SECRET);
-const UPLOAD_PROVIDER = (process.env.UPLOAD_PROVIDER || 'local').toLowerCase(); // 'local' | 'oss'
-const USE_OSS = UPLOAD_PROVIDER === 'oss' && HAS_OSS_KEYS;
 
 export async function POST(request: NextRequest) {
   try {
@@ -122,13 +117,11 @@ export async function POST(request: NextRequest) {
 
     let url: string;
 
-    if (USE_OSS) {
+    const uploadProvider = getUploadProvider();
+    if (uploadProvider === 'ftp' || uploadProvider === 'oss') {
       url = await uploadFile(file, folder, file.name);
     } else {
-      if (UPLOAD_PROVIDER === 'oss' && !HAS_OSS_KEYS) {
-        console.warn('[upload] UPLOAD_PROVIDER=oss but OSS keys are missing; falling back to local storage.');
-      }
-      // 本地存储，后续可迁移到 OSS
+      // 本地存储
       url = await saveToLocal(file, folder);
     }
 

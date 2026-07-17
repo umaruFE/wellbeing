@@ -7,6 +7,9 @@ API_DIR="$PROJECT_DIR/api"
 FRONTEND_DIR="$PROJECT_DIR"
 NGINX_WWW_DIR="/opt/homebrew/var/www/wellbeing"
 
+# Test environment always uses Aliyun OSS.
+export UPLOAD_PROVIDER=oss
+
 echo "========================================"
 echo "🚀 开始部署 Wellbeing 系统..."
 echo "========================================"
@@ -35,7 +38,7 @@ sudo chown -R guixu:staff "$NGINX_WWW_DIR"
 sudo chmod -R 755 "$NGINX_WWW_DIR"
 
 echo "🔄 正在重启后台服务..."
-pm2 restart wellbeing-api || pm2 start npm --name "wellbeing-api" -- start
+pm2 restart wellbeing-api --update-env || pm2 start npm --name "wellbeing-api" -- start
 brew services restart nginx
 
 echo "========================================"
