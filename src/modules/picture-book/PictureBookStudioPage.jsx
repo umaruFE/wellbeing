@@ -20,6 +20,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
+import uploadService from '../../services/uploadService';
 import './PictureBookStudioPage.css';
 
 const initialBasicInfo = {
@@ -316,6 +317,7 @@ export function PictureBookStudioPage() {
   const [message, setMessage] = React.useState('');
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
+  const editingBookIdRef = React.useRef(null);
 
   const fetchBookList = React.useCallback(async () => {
     setListLoading(true);
@@ -353,6 +355,7 @@ export function PictureBookStudioPage() {
   };
 
   const openBook = (book) => {
+    editingBookIdRef.current = book.id;
     setEditingBookId(book.id);
     const data = book.book_data || {};
     if (data.basicInfo) setBasicInfo(data.basicInfo);
@@ -363,6 +366,7 @@ export function PictureBookStudioPage() {
   };
 
   const createNewBook = () => {
+    editingBookIdRef.current = null;
     setEditingBookId(null);
     setBasicInfo(initialBasicInfo);
     setActivityPlan(initialActivityPlan);
@@ -390,8 +394,9 @@ export function PictureBookStudioPage() {
     setSaving(true);
     setSaveState('');
     try {
-      if (editingBookId) {
-        await apiService.request(`/api/picture-books/${editingBookId}`, {
+      const currentBookId = editingBookIdRef.current || editingBookId;
+      if (currentBookId) {
+        await apiService.request(`/api/picture-books/${currentBookId}`, {
           method: 'PUT',
           body: JSON.stringify(payload),
         });
@@ -400,7 +405,10 @@ export function PictureBookStudioPage() {
           method: 'POST',
           body: JSON.stringify(payload),
         });
-        if (result.data?.id) setEditingBookId(result.data.id);
+        if (result.data?.id) {
+          editingBookIdRef.current = result.data.id;
+          setEditingBookId(result.data.id);
+        }
       }
       setSaveState(t('pictureBook.saved'));
       return true;
@@ -469,7 +477,7 @@ export function PictureBookStudioPage() {
         setPages([]);
         setMessage('');
         setStep(1);
-        saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
+        await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
       } else {
         // Fallback to local template
         const nextPlan = buildActivityPlan(basicInfo, isEn);
@@ -477,7 +485,7 @@ export function PictureBookStudioPage() {
         setPages([]);
         setMessage(data.error || t('pictureBook.planFallback'));
         setStep(1);
-        saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
+        await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
       }
     } catch (err) {
       // Fallback to local template
@@ -486,7 +494,7 @@ export function PictureBookStudioPage() {
       setPages([]);
       setMessage(`${t('pictureBook.planFallback')}: ${err.message}`);
       setStep(1);
-      saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
+      await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
     } finally {
       setGenerating(false);
     }
@@ -527,14 +535,14 @@ export function PictureBookStudioPage() {
         setPages(nextPages);
         setMessage('');
         setStep(2);
-        saveBook({ pages: nextPages, step: 2 });
+        await saveBook({ pages: nextPages, step: 2 });
       } else {
         // Fallback to local template
         const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount, isEn);
         setPages(fallbackPages);
         setMessage(data.error || t('pictureBook.designFallback'));
         setStep(2);
-        saveBook({ pages: fallbackPages, step: 2 });
+        await saveBook({ pages: fallbackPages, step: 2 });
       }
     } catch (err) {
       // Fallback to local template
@@ -542,7 +550,7 @@ export function PictureBookStudioPage() {
       setPages(fallbackPages);
       setMessage(`${t('pictureBook.designFallback')}: ${err.message}`);
       setStep(2);
-      saveBook({ pages: fallbackPages, step: 2 });
+      await saveBook({ pages: fallbackPages, step: 2 });
     } finally {
       setGenerating(false);
     }
@@ -622,6 +630,7 @@ export function PictureBookStudioPage() {
     }
     setGeneratingAll(true);
     setMessage('');
+    const sourcePages = pages.map((page) => ({ ...page }));
     setPages((current) => current.map((page) => ({ ...page, status: 'generating', error: '' })));
     try {
       const result = await apiService.request('/api/ai/generate-ppt-asset', {
@@ -630,9 +639,9 @@ export function PictureBookStudioPage() {
       });
       const assets = Array.isArray(result.assets) ? result.assets : [result.asset].filter(Boolean);
       setStep(3);
-      const results = await Promise.allSettled(assets.map((asset, index) => {
+      const results = await Promise.allSettled(assets.map(async (asset, index) => {
         const pageNumber = Number(asset?.raw?.page || asset?.page) || index + 1;
-        return resolveGeneratedAsset(asset, {
+        const url = await resolveGeneratedAsset(asset, {
           fallbackError: t('pictureBook.imageFailed'),
           onResolved: (url) => setPages((current) => current.map((page) => (
             page.page === pageNumber
@@ -640,18 +649,30 @@ export function PictureBookStudioPage() {
               : page
           ))),
         });
+        return { pageNumber, url };
       }));
-      setPages((current) => current.map((page, index) => {
-        const resultForPage = results[index];
-        if (page.imageUrl || (resultForPage?.status === 'fulfilled' && resultForPage.value)) return page;
+      const fulfilledByPage = new Map();
+      const rejectedByPage = new Map();
+      results.forEach((resultForAsset, index) => {
+        const fallbackPage = Number(assets[index]?.raw?.page || assets[index]?.page) || index + 1;
+        if (resultForAsset.status === 'fulfilled' && resultForAsset.value?.url) {
+          fulfilledByPage.set(resultForAsset.value.pageNumber, resultForAsset.value.url);
+        } else if (resultForAsset.status === 'rejected') {
+          rejectedByPage.set(fallbackPage, resultForAsset.reason?.message || t('pictureBook.imageFailed'));
+        }
+      });
+      const finalPages = sourcePages.map((page) => {
+        const url = fulfilledByPage.get(page.page);
+        if (url) return { ...page, imageUrl: url, status: 'done', error: '' };
+        if (page.imageUrl) return { ...page, status: 'done', error: '' };
         return {
           ...page,
           status: 'placeholder',
-          error: resultForPage?.status === 'rejected'
-            ? resultForPage.reason?.message || t('pictureBook.imageFailed')
-            : t('pictureBook.imageTimeout'),
+          error: rejectedByPage.get(page.page) || t('pictureBook.imageTimeout'),
         };
-      }));
+      });
+      setPages(finalPages);
+      await saveBook({ pages: finalPages, step: 3 });
     } catch (error) {
       setPages((current) => current.map((page) => ({ ...page, status: page.imageUrl ? 'done' : 'placeholder', error: error.message })));
       setMessage(error.message || t('pictureBook.batchFailed'));
@@ -695,26 +716,41 @@ export function PictureBookStudioPage() {
       const url = await resolveGeneratedAsset(result.asset || result.assets?.[0] || result, {
         fallbackError: t('pictureBook.imageFailed'),
       });
-      updatePage(targetPage.id, {
+      const finalPages = pages.map((page) => (page.id === targetPage.id ? {
+        ...page,
         imageUrl: url,
         status: url ? 'done' : 'placeholder',
         error: url ? '' : t('pictureBook.imageSubmitted'),
-      });
+      } : page));
+      setPages(finalPages);
+      if (url) await saveBook({ pages: finalPages, step: 3 });
     } catch (error) {
       updatePage(targetPage.id, { status: 'placeholder', error: error.message || t('pictureBook.singleFailed') });
     }
   };
 
-  const uploadPageImage = (page, file) => {
+  const uploadPageImage = async (page, file) => {
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    updatePage(page.id, { imageUrl: url, status: 'done', error: '' });
+    updatePage(page.id, { status: 'generating', error: '' });
+    const result = await uploadService.uploadFile(file, 'picture-books');
+    if (!result.success || !result.url) {
+      updatePage(page.id, { status: 'placeholder', error: result.error || t('common.uploadFailed') });
+      return;
+    }
+    const finalPages = pages.map((item) => (item.id === page.id ? {
+      ...item,
+      imageUrl: result.url,
+      status: 'done',
+      error: '',
+    } : item));
+    setPages(finalPages);
+    await saveBook({ pages: finalPages, step: 3 });
   };
 
-  const enterMaking = (mode) => {
+  const enterMaking = async (mode) => {
     setStep(3);
-    saveBook({ step: 3 });
-    if (mode === 'all') generateAllImages();
+    await saveBook({ step: 3 });
+    if (mode === 'all') await generateAllImages();
   };
 
   return (

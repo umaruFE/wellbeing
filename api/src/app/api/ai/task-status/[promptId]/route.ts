@@ -122,12 +122,10 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, uploadToOS
                 filename: images[0].filename
               };
             } catch (uploadError) {
-              console.error('[task-status] OSS上传失败，使用代理URL');
-              const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(comfyUrl)}`;
+              console.error('[task-status] OSS上传失败，拒绝返回临时图片地址');
               return {
-                status: 'completed',
-                url: proxyUrl,
-                filename: images[0].filename
+                status: 'error',
+                error: uploadError instanceof Error ? uploadError.message : 'Image persistence failed'
               };
             }
           }
