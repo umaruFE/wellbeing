@@ -22,13 +22,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 import './PictureBookStudioPage.css';
 
-const ageOptions = ['4-6岁', '7-9岁', '10-12岁', '13-15岁'];
-const levelOptions = ['零基础', '初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）'];
-const participantOptions = ['单人', '小组（2-4人）', '大组（5-10人）', '班级（10+）'];
-const durationOptions = ['5分钟', '10分钟', '15分钟', '30分钟', '45分钟', '60分钟'];
-const themeOptions = ['情绪表达', '自然探索', '自我认知', '人际关系', '家庭与归属', '成长与变化', '感恩与善意', '身体与感知', '动物与生命', '勇气与冒险'];
-const materialOptions = ['画纸', '彩笔/蜡笔', '水彩', '黏土/橡皮泥', '拼贴材料（杂志/彩纸/胶水）', '自然材料（树叶/石头）', '回收材料（纸盒/瓶盖）', '毛线/布料', '印章/印泥'];
-
 const initialBasicInfo = {
   age: '',
   level: '',
@@ -56,23 +49,21 @@ function toggleList(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-function joinWithOther(list, other) {
-  return [...list, String(other || '').trim()].filter(Boolean).join('、');
+function getSelectedTheme(info, isEn = false) {
+  return info.themes[0] || info.themeOther || (isEn ? 'Emotional Expression' : '情绪表达');
 }
 
-function getSelectedTheme(info) {
-  return info.themes[0] || info.themeOther || '情绪表达';
+function getMaterialsText(info, isEn = false) {
+  const items = [...info.materials, String(info.materialOther || '').trim()].filter(Boolean);
+  return items.join(isEn ? ', ' : '、') || (isEn ? 'Drawing paper, colored pencils/crayons' : '画纸、彩笔/蜡笔');
 }
 
-function getMaterialsText(info) {
-  return joinWithOther(info.materials, info.materialOther) || '画纸、彩笔/蜡笔';
-}
-
-function buildActivityPlan(info) {
-  const theme = getSelectedTheme(info);
-  const vocab = info.vocabulary || (theme === '自然探索' ? 'leaf, stone, tree, bug, river' : 'happy, sad, calm, brave, friend');
-  const grammar = info.grammar || (theme === '自然探索' ? 'I can see... / It is...' : 'My friend is/feels... / My friend has...');
-  const materialText = getMaterialsText(info);
+function buildActivityPlan(info, isEn = false) {
+  const theme = getSelectedTheme(info, isEn);
+  const isNatureTheme = theme === '自然探索' || theme === 'Nature Exploration';
+  const vocab = info.vocabulary || (isNatureTheme ? 'leaf, stone, tree, bug, river' : 'happy, sad, calm, brave, friend');
+  const grammar = info.grammar || (isNatureTheme ? 'I can see... / It is...' : 'My friend is/feels... / My friend has...');
+  const materialText = getMaterialsText(info, isEn);
   const titleMap = {
     情绪表达: ['My Feeling Friend', '我的情绪朋友'],
     自然探索: ['A Tiny Nature Finder', '小小自然发现家'],
@@ -84,47 +75,67 @@ function buildActivityPlan(info) {
     身体与感知: ['My Body Says Hello', '身体在打招呼'],
     动物与生命: ['Hello, Little Life', '你好，小生命'],
     勇气与冒险: ['A Brave Little Step', '勇敢的一小步'],
+    'Emotional Expression': ['My Feeling Friend'],
+    'Nature Exploration': ['A Tiny Nature Finder'],
+    'Self-awareness': ['The Me I Can See'],
+    Relationships: ['A Bridge Between Friends'],
+    'Family and Belonging': ['My Warm Little Home'],
+    'Growth and Change': ['I Grow a Little More'],
+    'Gratitude and Kindness': ['A Kindness Spark'],
+    'Body and Senses': ['My Body Says Hello'],
+    'Animals and Life': ['Hello, Little Life'],
+    'Courage and Adventure': ['A Brave Little Step'],
   };
-  const [storyTitleEn, storyTitleZh] = titleMap[theme] || ['My Picture Book Adventure', '我的绘本冒险'];
+  const [storyTitleEn] = titleMap[theme] || ['My Picture Book Adventure', '我的绘本冒险'];
 
   return {
     storyTitleEn,
-    storyTitleZh,
-    storyContent: `孩子们在“${theme}”主题故事中遇到一个需要被理解的小角色。大家通过观察、表达和创作，帮助它把看不见的感受或想法变成可以分享的图像，并用简单英文完成介绍。`,
-    englishGoal: `使用核心词汇：${vocab}；使用核心句型/语法：${grammar}；能听懂并回应与作品相关的简单提问。`,
-    wellbeingGoal: '将内在感受外化为可被看见的形象；在表达和协作中体验被理解、被接纳和共同创造的联结感。',
-    outputGoal: theme === '自然探索' ? '一页自然发现绘本和一张自然观察作品' : '一本小组绘本和一张主题创作海报',
-    materials: materialText,
+    storyTitleZh: '',
+    storyContent: isEn
+      ? `In this ${theme} story, the children meet a little character who needs to be understood. Through observation, expression, and creativity, they help turn invisible feelings or ideas into images that can be shared.`
+      : `孩子们在“${theme}”主题故事中遇到一个需要被理解的小角色。大家通过观察、表达和创作，帮助它把看不见的感受或想法变成可以分享的图像，并用简单英文完成介绍。`,
+    englishGoal: isEn
+      ? `Use the core vocabulary: ${vocab}; use the sentence patterns/grammar: ${grammar}; understand and answer simple questions about the work.`
+      : `使用核心词汇：${vocab}；使用核心句型/语法：${grammar}；能听懂并回应与作品相关的简单提问。`,
+    wellbeingGoal: isEn
+      ? 'Turn inner feelings into visible images and experience understanding, acceptance, and connection through expression and collaboration.'
+      : '将内在感受外化为可被看见的形象；在表达和协作中体验被理解、被接纳和共同创造的联结感。',
+    outputGoal: isEn
+      ? (isNatureTheme ? 'A one-page nature discovery book and a nature observation artwork' : 'A group picture book and a themed creative poster')
+      : (isNatureTheme ? '一页自然发现绘本和一张自然观察作品' : '一本小组绘本和一张主题创作海报'),
+    materials: isEn && !info.materials.length && !info.materialOther ? 'Drawing paper, colored pencils/crayons' : materialText,
   };
 }
 
-function buildPictureBookPages(plan, info) {
+function buildPictureBookPages(plan, info, isEn = false) {
   const title = plan.storyTitleEn || 'My Picture Book';
   const vocab = info.vocabulary || 'happy, sad, calm, brave, friend';
   const grammar = info.grammar || 'My friend is/feels...';
   const pages = [
     {
-      imageDescription: `封面。温暖的儿童绘本场景，主角站在明亮的创作桌前，周围有${plan.materials || '画纸和彩笔'}，画面留有标题空间。`,
-      text: `${title}\n${plan.storyTitleZh || '我的绘本'}`,
+      imageDescription: isEn
+        ? `Cover. A warm children's picture-book scene. The main character stands at a bright creative table surrounded by ${plan.materials || 'drawing paper and colored pencils'}, with space reserved for the title.`
+        : `封面。温暖的儿童绘本场景，主角站在明亮的创作桌前，周围有${plan.materials || '画纸和彩笔'}，画面留有标题空间。`,
+      text: title,
     },
     {
-      imageDescription: '故事开始。主角发现一个小小的线索或朋友，表情好奇，场景清晰、温柔，有适合儿童观察的细节。',
+      imageDescription: isEn ? 'The story begins. The curious main character discovers a tiny clue or a new friend in a clear, gentle scene rich in child-friendly details.' : '故事开始。主角发现一个小小的线索或朋友，表情好奇，场景清晰、温柔，有适合儿童观察的细节。',
       text: 'I see a little friend.',
     },
     {
-      imageDescription: `语言探索页。画面呈现核心词汇对应的物品或感受：${vocab}。不要把词写进图片，只呈现可观察的画面。`,
+      imageDescription: isEn ? `Language exploration page. Show objects or feelings related to the core vocabulary: ${vocab}. Do not render the words in the image; show only observable visual details.` : `语言探索页。画面呈现核心词汇对应的物品或感受：${vocab}。不要把词写进图片，只呈现可观察的画面。`,
       text: `My friend has ${vocab.split(/[,，、\s]+/).filter(Boolean)[0] || 'colors'}.`,
     },
     {
-      imageDescription: `表达练习页。主角和同伴一起使用句型“${grammar}”表达观察或感受，画面有互动但不要出现文字气泡。`,
+      imageDescription: isEn ? `Expression practice page. The main character and friends use the pattern “${grammar}” to express observations or feelings. Show interaction without text bubbles.` : `表达练习页。主角和同伴一起使用句型“${grammar}”表达观察或感受，画面有互动但不要出现文字气泡。`,
       text: info.grammar ? info.grammar.split(/[;；。]/)[0] : 'My friend feels happy.',
     },
     {
-      imageDescription: `活动创作页。孩子们使用${plan.materials || '画纸和彩笔'}制作产出物：${plan.outputGoal || '一张主题海报'}，构图有合作感。`,
+      imageDescription: isEn ? `Creative activity page. The children use ${plan.materials || 'drawing paper and colored pencils'} to make ${plan.outputGoal || 'a themed poster'}. The composition should convey collaboration.` : `活动创作页。孩子们使用${plan.materials || '画纸和彩笔'}制作产出物：${plan.outputGoal || '一张主题海报'}，构图有合作感。`,
       text: 'We make it together.',
     },
     {
-      imageDescription: '结尾展示页。孩子们展示作品，主角被看见和接纳，画面有成就感、联结感和温暖的课堂氛围。',
+      imageDescription: isEn ? 'Final presentation page. The children share their work, and the main character feels seen and accepted in a warm classroom filled with achievement and connection.' : '结尾展示页。孩子们展示作品，主角被看见和接纳，画面有成就感、联结感和温暖的课堂氛围。',
       text: 'We share. We listen. We smile.',
     },
   ];
@@ -158,7 +169,7 @@ function getStatusUrl(asset) {
   return asset?.statusUrl || asset?.asset?.statusUrl || '';
 }
 
-async function resolveGeneratedAsset(asset, { maxAttempts = 200, onResolved } = {}) {
+async function resolveGeneratedAsset(asset, { maxAttempts = 200, onResolved, fallbackError = 'Image generation failed' } = {}) {
   const directUrl = pickUrl(asset);
   if (directUrl) {
     onResolved?.(directUrl);
@@ -176,14 +187,14 @@ async function resolveGeneratedAsset(asset, { maxAttempts = 200, onResolved } = 
       return url;
     }
     if (['failed', 'error'].includes(String(status?.status || '').toLowerCase())) {
-      throw new Error(status?.error || '图片生成失败');
+      throw new Error(status?.error || fallbackError);
     }
   }
   return '';
 }
 
 export function PictureBookStudioPage() {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isEn = i18n.language?.startsWith('en');
   const [view, setView] = React.useState('list');
@@ -227,12 +238,12 @@ export function PictureBookStudioPage() {
   }, []);
 
   const deleteBook = async (bookId) => {
-    if (!window.confirm('确定删除这个绘本吗？')) return;
+    if (!window.confirm(t('pictureBook.confirmDelete'))) return;
     try {
       await apiService.request(`/api/picture-books/${bookId}`, { method: 'DELETE' });
       setBookList(bookList.filter((b) => b.id !== bookId));
     } catch {
-      alert('删除失败');
+      alert(t('pictureBook.deleteFailed'));
     }
   };
 
@@ -266,7 +277,7 @@ export function PictureBookStudioPage() {
     const coverUrl = bookData.pages.find((p) => p.imageUrl)?.imageUrl || '';
     const payload = {
       userId: user?.id,
-      title: bookData.activityPlan.storyTitleZh || bookData.activityPlan.storyTitleEn || '未命名绘本',
+      title: bookData.activityPlan.storyTitleEn || t('pictureBook.untitled'),
       status: 'draft',
       coverUrl,
       bookData,
@@ -286,11 +297,11 @@ export function PictureBookStudioPage() {
         });
         if (result.data?.id) setEditingBookId(result.data.id);
       }
-      setSaveState('已保存');
+      setSaveState(t('pictureBook.saved'));
       return true;
     } catch (err) {
       console.error('save picture book failed:', err);
-      setSaveState('保存失败，请重试');
+      setSaveState(t('pictureBook.saveFailed'));
       return false;
     } finally {
       setSaving(false);
@@ -308,10 +319,10 @@ export function PictureBookStudioPage() {
   };
 
   const steps = [
-    '基础信息',
-    '活动方案',
-    '绘本设计',
-    '绘本制作',
+    t('pictureBook.stepBasic'),
+    t('pictureBook.stepPlan'),
+    t('pictureBook.stepDesign'),
+    t('pictureBook.stepMaking'),
   ];
 
   const canBuildPlan = Boolean(basicInfo.age && basicInfo.level);
@@ -330,16 +341,21 @@ export function PictureBookStudioPage() {
 
   const buildPlan = async () => {
     if (!canBuildPlan) {
-      setMessage('请先选择学生年龄和英文水平。');
+      setMessage(t('pictureBook.selectRequired'));
       return;
     }
     setGenerating(true);
-    setMessage('正在根据知识库生成活动方案...');
+    setMessage(t('pictureBook.generatingPlan'));
     try {
       const res = await fetch('/api/rag/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'activity-plan', basicInfo }),
+        body: JSON.stringify({
+          type: 'activity-plan',
+          basicInfo,
+          language: isEn ? 'en' : 'zh',
+          outputLanguage: isEn ? 'English' : 'Chinese',
+        }),
       });
       const data = await res.json();
       if (data.success && data.activityPlan) {
@@ -351,19 +367,19 @@ export function PictureBookStudioPage() {
         saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
       } else {
         // Fallback to local template
-        const nextPlan = buildActivityPlan(basicInfo);
+        const nextPlan = buildActivityPlan(basicInfo, isEn);
         setActivityPlan(nextPlan);
         setPages([]);
-        setMessage(data.error || '生成失败，已使用默认方案');
+        setMessage(data.error || t('pictureBook.planFallback'));
         setStep(1);
         saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
       }
     } catch (err) {
       // Fallback to local template
-      const nextPlan = buildActivityPlan(basicInfo);
+      const nextPlan = buildActivityPlan(basicInfo, isEn);
       setActivityPlan(nextPlan);
       setPages([]);
-      setMessage('AI生成失败，已使用默认方案：' + err.message);
+      setMessage(`${t('pictureBook.planFallback')}: ${err.message}`);
       setStep(1);
       saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
     } finally {
@@ -373,13 +389,20 @@ export function PictureBookStudioPage() {
 
   const buildDesign = async () => {
     setGenerating(true);
-    setMessage('正在根据知识库生成绘本设计...');
+    setMessage(t('pictureBook.generatingDesign'));
     try {
       const pageCount = pages.length > 0 ? pages.length : 6;
       const res = await fetch('/api/rag/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'picture-book-design', basicInfo, activityPlan, pageCount }),
+        body: JSON.stringify({
+          type: 'picture-book-design',
+          basicInfo,
+          activityPlan,
+          pageCount,
+          language: isEn ? 'en' : 'zh',
+          outputLanguage: isEn ? 'English' : 'Chinese',
+        }),
       });
       const data = await res.json();
       if (data.success && data.pages && data.pages.length > 0) {
@@ -398,17 +421,17 @@ export function PictureBookStudioPage() {
         saveBook({ pages: nextPages, step: 2 });
       } else {
         // Fallback to local template
-        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo);
+        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, isEn);
         setPages(fallbackPages);
-        setMessage(data.error || '生成失败，已使用默认设计');
+        setMessage(data.error || t('pictureBook.designFallback'));
         setStep(2);
         saveBook({ pages: fallbackPages, step: 2 });
       }
     } catch (err) {
       // Fallback to local template
-      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo);
+      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, isEn);
       setPages(fallbackPages);
-      setMessage('AI生成失败，已使用默认设计：' + err.message);
+      setMessage(`${t('pictureBook.designFallback')}: ${err.message}`);
       setStep(2);
       saveBook({ pages: fallbackPages, step: 2 });
     } finally {
@@ -422,7 +445,7 @@ export function PictureBookStudioPage() {
       {
         id: `page-${Date.now()}`,
         page: current.length + 1,
-        imageDescription: '新增页面图片描述。',
+        imageDescription: t('pictureBook.newPageDescription'),
         text: 'New page text.',
         imageUrl: '',
         status: 'placeholder',
@@ -438,8 +461,8 @@ export function PictureBookStudioPage() {
   const buildStorybookRequest = () => ({
     assetType: 'image',
     assetCode: 'B9',
-    assetName: '绘本批量图片',
-    prompt: `${activityPlan.storyTitleEn} ${activityPlan.storyTitleZh}\n${activityPlan.storyContent}`,
+    assetName: t('pictureBook.batchImages'),
+    prompt: `${activityPlan.storyTitleEn}\n${activityPlan.storyContent}`,
     options: {
       imageRatio: '16:9',
       imageStyle: 'Watercolor Picture Book',
@@ -449,17 +472,17 @@ export function PictureBookStudioPage() {
         text: `${page.imageDescription}\nPage text: ${page.text}`,
       })),
       rawValues: {
-        storybookTitle: activityPlan.storyTitleEn || activityPlan.storyTitleZh || 'Picture Book',
+        storybookTitle: activityPlan.storyTitleEn || 'Picture Book',
         storybookContent: pages.map((page) => page.text).join('\n'),
         storybookStyle: 'Watercolor Picture Book',
-        storybookGrade: basicInfo.age || '7-9岁',
+        storybookGrade: basicInfo.age || (isEn ? 'Ages 7–9' : '7-9岁'),
       },
     },
   });
 
   const generateAllImages = async () => {
     if (pages.length < 2) {
-      setMessage('至少需要 2 页绘本设计才能批量生成图片。');
+      setMessage(t('pictureBook.minimumPages'));
       return;
     }
     setGeneratingAll(true);
@@ -475,6 +498,7 @@ export function PictureBookStudioPage() {
       const results = await Promise.allSettled(assets.map((asset, index) => {
         const pageNumber = Number(asset?.raw?.page || asset?.page) || index + 1;
         return resolveGeneratedAsset(asset, {
+          fallbackError: t('pictureBook.imageFailed'),
           onResolved: (url) => setPages((current) => current.map((page) => (
             page.page === pageNumber
               ? { ...page, imageUrl: url, status: 'done', error: '' }
@@ -489,13 +513,13 @@ export function PictureBookStudioPage() {
           ...page,
           status: 'placeholder',
           error: resultForPage?.status === 'rejected'
-            ? resultForPage.reason?.message || '图片生成失败。'
-            : '图片生成等待超时，请单页刷新或重新生成。',
+            ? resultForPage.reason?.message || t('pictureBook.imageFailed')
+            : t('pictureBook.imageTimeout'),
         };
       }));
     } catch (error) {
       setPages((current) => current.map((page) => ({ ...page, status: page.imageUrl ? 'done' : 'placeholder', error: error.message })));
-      setMessage(error.message || '批量生成失败。');
+      setMessage(error.message || t('pictureBook.batchFailed'));
     } finally {
       setGeneratingAll(false);
     }
@@ -506,7 +530,7 @@ export function PictureBookStudioPage() {
     try {
       const prompt = [
         `Children picture-book illustration for page ${targetPage.page}.`,
-        `Story title: ${activityPlan.storyTitleEn || activityPlan.storyTitleZh || 'Picture Book'}.`,
+        `Story title: ${activityPlan.storyTitleEn || 'Picture Book'}.`,
         `Image description: ${targetPage.imageDescription}.`,
         `Page text context: ${targetPage.text}.`,
         'Warm classroom-ready picture-book style, consistent soft watercolor palette, no watermark.',
@@ -516,7 +540,7 @@ export function PictureBookStudioPage() {
         body: JSON.stringify({
           assetType: 'image',
           assetCode: 'B4',
-          assetName: `绘本第 ${targetPage.page} 页`,
+          assetName: t('pictureBook.pageAssetName', { page: targetPage.page }),
           prompt,
           options: {
             imageRatio: '16:9',
@@ -527,14 +551,16 @@ export function PictureBookStudioPage() {
           },
         }),
       });
-      const url = await resolveGeneratedAsset(result.asset || result.assets?.[0] || result);
+      const url = await resolveGeneratedAsset(result.asset || result.assets?.[0] || result, {
+        fallbackError: t('pictureBook.imageFailed'),
+      });
       updatePage(targetPage.id, {
         imageUrl: url,
         status: url ? 'done' : 'placeholder',
-        error: url ? '' : '图片任务已提交，请稍后重试。',
+        error: url ? '' : t('pictureBook.imageSubmitted'),
       });
     } catch (error) {
-      updatePage(targetPage.id, { status: 'placeholder', error: error.message || '单页生成失败。' });
+      updatePage(targetPage.id, { status: 'placeholder', error: error.message || t('pictureBook.singleFailed') });
     }
   };
 
@@ -561,7 +587,6 @@ export function PictureBookStudioPage() {
           onCreate={createNewBook}
           onOpen={openBook}
           onDelete={deleteBook}
-          isEn={isEn}
         />
       ) : (
         <>
@@ -571,19 +596,19 @@ export function PictureBookStudioPage() {
                 <BookOpenText size={28} />
               </div>
               <div>
-                <h1>{isEn ? 'Picture Book Studio' : '绘本制作'}</h1>
-                <p>设计适合课堂使用的英文幸福力绘本</p>
+                <h1>{t('pictureBook.studioTitle')}</h1>
+                <p>{t('pictureBook.studioSubtitle')}</p>
               </div>
             </div>
             <div className="pbv2-topbar-actions">
-              <span className={`pbv2-save-state ${saveState.includes('失败') ? 'is-error' : ''}`}>{saveState}</span>
+              <span className={`pbv2-save-state ${saveState === t('pictureBook.saveFailed') ? 'is-error' : ''}`}>{saveState}</span>
               <button type="button" className="pbv2-save-btn" onClick={() => saveBook()} disabled={saving}>
                 {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
-                {saving ? '保存中...' : '保存当前进度'}
+                {saving ? t('pictureBook.saving') : t('pictureBook.saveProgress')}
               </button>
               <button type="button" className="pbv2-back-btn" onClick={backToList}>
                 <ArrowLeft size={16} />
-                {isEn ? 'Back to list' : '返回列表'}
+                {t('pictureBook.backToList')}
               </button>
             </div>
           </header>
@@ -657,7 +682,8 @@ export function PictureBookStudioPage() {
   );
 }
 
-function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCreate, onOpen, onDelete, isEn }) {
+function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCreate, onOpen, onDelete }) {
+  const { t } = useTranslation();
   return (
     <div className="pbv2-list-page">
       <header className="pbv2-topbar">
@@ -666,13 +692,13 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
             <BookOpenText size={28} />
           </div>
           <div>
-            <h1>{isEn ? 'Picture Books' : '绘本管理'}</h1>
-            <p>{isEn ? 'Create and manage your picture books' : '创建和管理你的绘本作品'}</p>
+            <h1>{t('pictureBook.listTitle')}</h1>
+            <p>{t('pictureBook.listSubtitle')}</p>
           </div>
         </div>
         <button type="button" className="pbv2-create-btn" onClick={onCreate}>
           <Plus size={18} />
-          {isEn ? 'New Picture Book' : '新建绘本'}
+          {t('pictureBook.newBook')}
         </button>
       </header>
 
@@ -683,7 +709,7 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={isEn ? 'Search picture books...' : '搜索绘本...'}
+            placeholder={t('pictureBook.searchPlaceholder')}
           />
         </div>
       </div>
@@ -695,7 +721,7 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
       ) : books.length === 0 ? (
         <div className="pbv2-list-empty">
           <BookOpenText size={48} />
-          <p>{isEn ? 'No picture books yet' : '还没有绘本，点击右上角创建'}</p>
+          <p>{t('pictureBook.empty')}</p>
         </div>
       ) : (
         <div className="pbv2-card-grid">
@@ -710,11 +736,11 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
                   </div>
                 )}
                 <span className={`pbv2-book-status ${book.status || 'draft'}`}>
-                  {book.status === 'published' ? (isEn ? 'Published' : '已发布') : (isEn ? 'Draft' : '草稿')}
+                  {book.status === 'published' ? t('pictureBook.published') : t('pictureBook.draft')}
                 </span>
               </div>
               <div className="pbv2-book-info">
-                <h3>{book.title || (isEn ? 'Untitled' : '未命名绘本')}</h3>
+                <h3>{book.title || t('pictureBook.untitled')}</h3>
                 <div className="pbv2-book-meta">
                   <Clock size={13} />
                   <span>{book.updated_at ? new Date(book.updated_at).toLocaleDateString() : ''}</span>
@@ -722,11 +748,11 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
                 <div className="pbv2-book-actions">
                   <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(book); }}>
                     <Pencil size={14} />
-                    {isEn ? 'Edit' : '编辑'}
+                    {t('common.edit')}
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(book.id); }}>
                     <Trash2 size={14} />
-                    {isEn ? 'Delete' : '删除'}
+                    {t('common.delete')}
                   </button>
                 </div>
               </div>
@@ -739,19 +765,26 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
 }
 
 function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, generating }) {
+  const { t } = useTranslation();
+  const localizedAgeOptions = t('pictureBook.ageOptions', { returnObjects: true });
+  const localizedLevelOptions = t('pictureBook.levelOptions', { returnObjects: true });
+  const localizedParticipantOptions = t('pictureBook.participantOptions', { returnObjects: true });
+  const localizedDurationOptions = t('pictureBook.durationOptions', { returnObjects: true });
+  const localizedThemeOptions = t('pictureBook.themeOptions', { returnObjects: true });
+  const localizedMaterialOptions = t('pictureBook.materialOptions', { returnObjects: true });
   return (
     <div className="pbv2-step-panel">
       <div className="pbv2-form-grid two">
-        <OptionGroup tone="coral" required label="学生年龄" options={ageOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
-        <OptionGroup tone="blue" required label="英文水平" options={levelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
-        <OptionGroup tone="yellow" label="参与人数" options={participantOptions} value={basicInfo.participants} onChange={(value) => setBasicField('participants', value)} />
-        <OptionGroup tone="green" label="活动时长" options={durationOptions} value={basicInfo.duration} onChange={(value) => setBasicField('duration', value)} />
+        <OptionGroup tone="coral" required label={t('pictureBook.studentAge')} options={localizedAgeOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
+        <OptionGroup tone="blue" required label={t('pictureBook.englishLevel')} options={localizedLevelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
+        <OptionGroup tone="yellow" label={t('pictureBook.participants')} options={localizedParticipantOptions} value={basicInfo.participants} onChange={(value) => setBasicField('participants', value)} />
+        <OptionGroup tone="green" label={t('pictureBook.duration')} options={localizedDurationOptions} value={basicInfo.duration} onChange={(value) => setBasicField('duration', value)} />
       </div>
 
       <CheckboxGroup
         tone="yellow"
-        label="活动主题偏好"
-        options={themeOptions}
+        label={t('pictureBook.themePreference')}
+        options={localizedThemeOptions}
         value={basicInfo.themes}
         otherValue={basicInfo.themeOther}
         onToggle={(value) => setBasicField('themes', toggleList(basicInfo.themes, value))}
@@ -760,8 +793,8 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
 
       <CheckboxGroup
         tone="green"
-        label="可用物料"
-        options={materialOptions}
+        label={t('pictureBook.availableMaterials')}
+        options={localizedMaterialOptions}
         value={basicInfo.materials}
         otherValue={basicInfo.materialOther}
         onToggle={(value) => setBasicField('materials', toggleList(basicInfo.materials, value))}
@@ -769,17 +802,17 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
       />
 
       <section className="pbv2-card pbv2-tone-blue">
-        <div className="pbv2-card-title">语言目标（非必填）</div>
+        <div className="pbv2-card-title">{t('pictureBook.languageGoalsOptional')}</div>
         <div className="pbv2-form-grid two">
-          <Field label="核心词汇" value={basicInfo.vocabulary} onChange={(value) => setBasicField('vocabulary', value)} placeholder="例如：happy, sad, body, friend" />
-          <Field label="核心句型/语法" value={basicInfo.grammar} onChange={(value) => setBasicField('grammar', value)} placeholder="例如：My friend has... / My friend is..." />
+          <Field label={t('pictureBook.coreVocabulary')} value={basicInfo.vocabulary} onChange={(value) => setBasicField('vocabulary', value)} placeholder={t('pictureBook.vocabularyPlaceholder')} />
+          <Field label={t('pictureBook.coreGrammar')} value={basicInfo.grammar} onChange={(value) => setBasicField('grammar', value)} placeholder={t('pictureBook.grammarPlaceholder')} />
         </div>
       </section>
 
       <FooterActions>
         <button type="button" className="pbv2-primary" disabled={!canBuildPlan || generating} onClick={buildPlan}>
           <Wand2 size={16} />
-          {generating ? '生成中...' : '生成活动方案'}
+          {generating ? t('pictureBook.generating') : t('pictureBook.generatePlan')}
         </button>
       </FooterActions>
     </div>
@@ -787,31 +820,29 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
 }
 
 function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign, generating }) {
+  const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
       <section className="pbv2-plan-block pbv2-tone-coral">
-        <div className="pbv2-form-grid two">
-          <Field label="故事名称（英文）" value={activityPlan.storyTitleEn} onChange={(value) => setPlanField('storyTitleEn', value)} />
-          <Field label="故事名称（中文）" value={activityPlan.storyTitleZh} onChange={(value) => setPlanField('storyTitleZh', value)} />
-        </div>
-        <Field area label="故事内容" value={activityPlan.storyContent} onChange={(value) => setPlanField('storyContent', value)} />
+        <Field label={t('pictureBook.englishStoryTitle')} value={activityPlan.storyTitleEn} onChange={(value) => setPlanField('storyTitleEn', value)} />
+        <Field area label={t('pictureBook.storyContent')} value={activityPlan.storyContent} onChange={(value) => setPlanField('storyContent', value)} />
       </section>
       <section className="pbv2-card pbv2-tone-yellow">
-        <div className="pbv2-card-title">活动目标</div>
+        <div className="pbv2-card-title">{t('pictureBook.activityGoals')}</div>
         <div className="pbv2-form-grid three">
-          <Field area label="英文" value={activityPlan.englishGoal} onChange={(value) => setPlanField('englishGoal', value)} />
-          <Field area label="幸福力" value={activityPlan.wellbeingGoal} onChange={(value) => setPlanField('wellbeingGoal', value)} />
-          <Field area label="产出物" value={activityPlan.outputGoal} onChange={(value) => setPlanField('outputGoal', value)} />
+          <Field area label={t('pictureBook.englishGoal')} value={activityPlan.englishGoal} onChange={(value) => setPlanField('englishGoal', value)} />
+          <Field area label={t('pictureBook.wellbeingGoal')} value={activityPlan.wellbeingGoal} onChange={(value) => setPlanField('wellbeingGoal', value)} />
+          <Field area label={t('pictureBook.outputGoal')} value={activityPlan.outputGoal} onChange={(value) => setPlanField('outputGoal', value)} />
         </div>
       </section>
       <section className="pbv2-plan-block pbv2-tone-green">
-        <Field area label="物料" value={activityPlan.materials} onChange={(value) => setPlanField('materials', value)} />
+        <Field area label={t('pictureBook.materials')} value={activityPlan.materials} onChange={(value) => setPlanField('materials', value)} />
       </section>
       <FooterActions>
-        <button type="button" className="pbv2-ghost" onClick={onBack}>返回基础信息</button>
+        <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToBasic')}</button>
         <button type="button" className="pbv2-primary" disabled={generating} onClick={onBuildDesign}>
           <BookOpenText size={16} />
-          {generating ? '生成中...' : '生成绘本设计'}
+          {generating ? t('pictureBook.generating') : t('pictureBook.generateDesign')}
         </button>
       </FooterActions>
     </div>
@@ -819,6 +850,7 @@ function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign, g
 }
 
 function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack, onMake, generatingAll }) {
+  const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
       <div className="pbv2-page-list">
@@ -828,17 +860,17 @@ function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack,
       </div>
       <button type="button" className="pbv2-add-page" onClick={addPage}>
         <Plus size={16} />
-        添加一页
+        {t('pictureBook.addPage')}
       </button>
       <FooterActions>
-        <button type="button" className="pbv2-ghost" onClick={onBack}>返回活动方案</button>
-        <button type="button" className="pbv2-secondary" onClick={() => onMake('placeholder')}>
+        <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToPlan')}</button>
+        {/* <button type="button" className="pbv2-secondary" onClick={() => onMake('placeholder')}>
           <Image size={16} />
           先生成占位符
-        </button>
+        </button> */}
         <button type="button" className="pbv2-primary" disabled={generatingAll} onClick={() => onMake('all')}>
           {generatingAll ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
-          一次性生成所有图片
+          {t('pictureBook.generateBook')}
         </button>
       </FooterActions>
     </div>
@@ -846,14 +878,15 @@ function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack,
 }
 
 function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll }) {
+  const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
       <div className="pbv2-making-toolbar">
         <button type="button" className="pbv2-primary" disabled={generatingAll} onClick={onGenerateAll}>
           {generatingAll ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
-          重新生成全部图片
+          {t('pictureBook.regenerateAll')}
         </button>
-        <button type="button" className="pbv2-ghost" onClick={onBack}>返回绘本设计</button>
+        <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToDesign')}</button>
       </div>
       <div className="pbv2-production-grid">
         {pages.map((page, index) => (
@@ -872,45 +905,47 @@ function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGen
 }
 
 function PageDesignCard({ page, toneIndex, updatePage, removePage }) {
+  const { t } = useTranslation();
   const tones = ['yellow', 'blue', 'green', 'coral'];
   return (
     <article className={`pbv2-page-card pbv2-tone-${tones[toneIndex % tones.length]}`}>
       <div className="pbv2-page-card-head">
-        <strong>第 {page.page} 页</strong>
+        <strong>{t('pictureBook.pageNumber', { page: page.page })}</strong>
         <button type="button" onClick={() => removePage(page.id)}><Trash2 size={15} /></button>
       </div>
-      <Field area label="图片描述" value={page.imageDescription} onChange={(value) => updatePage(page.id, { imageDescription: value })} />
-      <Field area label="文字" value={page.text} onChange={(value) => updatePage(page.id, { text: value })} />
+      <Field area label={t('pictureBook.imageDescription')} value={page.imageDescription} onChange={(value) => updatePage(page.id, { imageDescription: value })} />
+      <Field area label={t('pictureBook.pageText')} value={page.text} onChange={(value) => updatePage(page.id, { text: value })} />
     </article>
   );
 }
 
 function ProductionCard({ page, toneIndex, updatePage, onGenerateOne, onUpload }) {
+  const { t } = useTranslation();
   const tones = ['yellow', 'blue', 'green', 'coral'];
   return (
     <article className={`pbv2-production-card pbv2-tone-${tones[toneIndex % tones.length]}`}>
       <div className="pbv2-preview">
         {page.status === 'generating' ? (
-          <div className="pbv2-generating"><Loader2 className="spin" size={24} />生成中</div>
+          <div className="pbv2-generating"><Loader2 className="spin" size={24} />{t('pictureBook.generating')}</div>
         ) : page.imageUrl ? (
-          <img src={page.imageUrl} alt={`第 ${page.page} 页`} />
+          <img src={page.imageUrl} alt={t('pictureBook.pageNumber', { page: page.page })} />
         ) : (
-          <div className="pbv2-placeholder"><Image size={24} />图片占位符</div>
+          <div className="pbv2-placeholder"><Image size={24} />{t('pictureBook.imagePlaceholder')}</div>
         )}
       </div>
       <div className="pbv2-production-body">
-        <strong>第 {page.page} 页</strong>
+        <strong>{t('pictureBook.pageNumber', { page: page.page })}</strong>
         <textarea value={page.imageDescription} onChange={(event) => updatePage(page.id, { imageDescription: event.target.value })} />
         <input value={page.text} onChange={(event) => updatePage(page.id, { text: event.target.value })} />
         {page.error && <em>{page.error}</em>}
         <div className="pbv2-card-actions">
           <button type="button" onClick={() => onGenerateOne(page)} disabled={page.status === 'generating'}>
             {page.status === 'generating' ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
-            生成/调整图片
+            {t('pictureBook.generateOrAdjust')}
           </button>
           <label>
             <Upload size={14} />
-            手动上传
+            {t('pictureBook.manualUpload')}
             <input type="file" accept="image/*" onChange={(event) => onUpload(page, event.target.files?.[0])} />
           </label>
         </div>
@@ -945,6 +980,7 @@ function OptionGroup({ label, required, options, value, onChange, tone = 'coral'
 }
 
 function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther, tone = 'yellow' }) {
+  const { t } = useTranslation();
   return (
     <section className={`pbv2-card pbv2-tone-${tone}`}>
       <div className="pbv2-card-title">{label}</div>
@@ -955,7 +991,7 @@ function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther, t
           </button>
         ))}
       </div>
-      <input className="pbv2-input" value={otherValue} onChange={(event) => onOther(event.target.value)} placeholder="其他（自由输入）" />
+      <input className="pbv2-input" value={otherValue} onChange={(event) => onOther(event.target.value)} placeholder={t('pictureBook.otherPlaceholder')} />
     </section>
   );
 }

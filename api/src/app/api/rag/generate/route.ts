@@ -75,10 +75,21 @@ async function callLLM(systemPrompt: string, userPrompt: string): Promise<any> {
   return JSON.parse(content);
 }
 
+function isEnglishOutput(language?: string, outputLanguage?: string): boolean {
+  const value = `${outputLanguage || language || ''}`.toLowerCase();
+  return value === 'en' || value.startsWith('en-') || value.includes('english');
+}
+
+function ensureEnglishTitle(value: unknown): string {
+  const title = typeof value === 'string' ? value.trim() : '';
+  return title && !/[\u3400-\u9fff]/.test(title) ? title : 'My Picture Book';
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { type, basicInfo, activityPlan } = body;
+    const { type, basicInfo, activityPlan, language, outputLanguage } = body;
+    const useEnglish = isEnglishOutput(language, outputLanguage);
 
     // Fetch knowledge context
     const themes = basicInfo?.themes || [];
@@ -86,61 +97,77 @@ export async function POST(request: NextRequest) {
     const knowledgeContext = await fetchKnowledgeContext(themes, ageRange);
 
     if (type === 'activity-plan') {
-      const systemPrompt = `你是一位专业的儿童英语绘本课程设计师。根据学生信息和参考资料，设计一个绘本活动方案。
-只返回JSON，格式：{
-  "storyTitleEn": "英文标题",
-  "storyTitleZh": "中文标题",
-  "storyContent": "故事内容简介（中文，100字以内）",
-  "englishGoal": "英文学习目标",
-  "wellbeingGoal": "心理健康目标",
-  "outputGoal": "产出目标",
-  "materials": "所需物料（中文逗号分隔）"
-}`;
+      const systemPrompt = `You are a professional designer of children's English picture-book courses. Create an activity plan from the student information and reference material.
+Return JSON only, using this exact shape:
+{
+  "storyTitleEn": "An appealing English title",
+  "storyTitleZh": "",
+  "storyContent": "A story synopsis of no more than 100 words",
+  "englishGoal": "English learning goals",
+  "wellbeingGoal": "Wellbeing goals",
+  "outputGoal": "Expected output",
+  "materials": "Required materials"
+}
+The picture-book title must always be in English. Keep storyTitleZh as an empty string.
+${useEnglish
+  ? 'Write every generated field entirely in English. Do not include Chinese translations, bilingual labels, or Chinese text anywhere in the output.'
+  : 'Write storyContent, englishGoal, wellbeingGoal, outputGoal, and materials in Simplified Chinese. Keep storyTitleEn entirely in English.'}`;
 
-      const userPrompt = `学生信息：
-- 年龄：${basicInfo?.age || '未指定'}
-- 英文水平：${basicInfo?.level || '未指定'}
-- 主题：${themes.join('、') || '未指定'}
-- 核心词汇：${basicInfo?.vocabulary || '未指定'}
-- 核心句型/语法：${basicInfo?.grammar || '未指定'}
-- 活动时长：${basicInfo?.duration || '未指定'}
-- 参与人数：${basicInfo?.participants || '未指定'}
-${knowledgeContext ? `\n参考资料（来自知识库）：\n${knowledgeContext}` : ''}
+      const userPrompt = `Student information:
+- Age: ${basicInfo?.age || 'Not specified'}
+- English level: ${basicInfo?.level || 'Not specified'}
+- Themes: ${themes.join(', ') || 'Not specified'}
+- Core vocabulary: ${basicInfo?.vocabulary || 'Not specified'}
+- Core sentence patterns/grammar: ${basicInfo?.grammar || 'Not specified'}
+- Activity duration: ${basicInfo?.duration || 'Not specified'}
+- Participants: ${basicInfo?.participants || 'Not specified'}
+${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
 
-请设计一个适合该年龄段和英文水平的绘本活动方案。`;
+Design a picture-book activity plan suitable for the students' age and English level. Output language: ${useEnglish ? 'English' : 'Simplified Chinese, except for the English title'}.`;
 
       const result = await callLLM(systemPrompt, userPrompt);
-      return NextResponse.json({ success: true, activityPlan: result });
+      return NextResponse.json({
+        success: true,
+        activityPlan: {
+          ...result,
+          storyTitleEn: ensureEnglishTitle(result.storyTitleEn || result.title),
+          storyTitleZh: '',
+        },
+      });
 
     } else if (type === 'picture-book-design') {
       const pageCount = body.pageCount || 6;
-      const systemPrompt = `你是一位专业的儿童英语绘本设计师。根据活动方案和学生信息，设计绘本每一页的内容。
-只返回JSON，格式：{
+      const systemPrompt = `You are a professional children's English picture-book designer. Design every page from the activity plan and student information.
+Return JSON only, using this exact shape:
+{
   "pages": [
     {
       "page": 1,
-      "imageDescription": "中文图片描述（用于AI生图）",
-      "text": "英文页面文字（适合儿童阅读的简单句子）"
+      "imageDescription": "A detailed image-generation description",
+      "text": "Short, child-friendly page text"
     }
   ]
 }
-共${pageCount}页，第1页是封面。`;
+Create exactly ${pageCount} pages. Page 1 is the cover, and its text must be the English title exactly: ${activityPlan?.storyTitleEn || 'My Picture Book'}.
+The picture-book title must always remain in English.
+${useEnglish
+  ? 'Write every generated field entirely in English, including all imageDescription and text fields. Do not include Chinese text or bilingual translations.'
+  : 'Write imageDescription fields in Simplified Chinese. Keep the cover title and child-facing page text in English for this English-learning picture book.'}`;
 
-      const userPrompt = `活动方案：
-- 英文标题：${activityPlan?.storyTitleEn || ''}
-- 中文标题：${activityPlan?.storyTitleZh || ''}
-- 故事内容：${activityPlan?.storyContent || ''}
-- 英文目标：${activityPlan?.englishGoal || ''}
-- 物料：${activityPlan?.materials || ''}
+      const userPrompt = `Activity plan:
+- English title: ${activityPlan?.storyTitleEn || 'My Picture Book'}
+- Story content: ${activityPlan?.storyContent || ''}
+- English goals: ${activityPlan?.englishGoal || ''}
+- Materials: ${activityPlan?.materials || ''}
 
-学生信息：
-- 年龄：${basicInfo?.age || '未指定'}
-- 英文水平：${basicInfo?.level || '未指定'}
-- 核心词汇：${basicInfo?.vocabulary || ''}
-- 核心句型：${basicInfo?.grammar || ''}
-${knowledgeContext ? `\n参考资料（来自知识库）：\n${knowledgeContext}` : ''}
+Student information:
+- Age: ${basicInfo?.age || 'Not specified'}
+- English level: ${basicInfo?.level || 'Not specified'}
+- Core vocabulary: ${basicInfo?.vocabulary || ''}
+- Core sentence patterns: ${basicInfo?.grammar || ''}
+${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
 
-请设计${pageCount}页绘本，每页包含图片描述（中文）和页面文字（英文）。`;
+Design ${pageCount} picture-book pages in the required output language.`;
 
       const result = await callLLM(systemPrompt, userPrompt);
       return NextResponse.json({ success: true, pages: result.pages || [] });

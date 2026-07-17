@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       [
         userId || authResult.user?.id || null,
         organizationId || authResult.user?.organizationId || null,
-        title || '未命名绘本',
+        title || 'Untitled Picture Book',
         status || 'draft',
         coverUrl || null,
         JSON.stringify(bookData || {}),
