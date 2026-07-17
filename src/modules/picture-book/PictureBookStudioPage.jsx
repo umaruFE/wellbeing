@@ -49,7 +49,6 @@ const initialActivityPlan = {
 
 const STORYBOOK_VISUAL_STYLE = [
   'Oliver Jeffers-inspired loose watercolor washes with expressive black pen-and-ink sketch lines, warm, restrained, playful, and emotionally gentle.',
-  'Use Poppy on every activity page as the same small pink cloud wellbeing guide: flat-vector IP styling, rounded scalloped cloud body, two tiny solid black dot eyes, a small curved smile, two thin black legs, and oval black feet. Poppy is a subtle visual anchor and never dominates the child’s activity.',
   'Use an extremely low-saturation washed palette of gray-blue, dusty gray-pink, sage gray-green, muted gray-orange, pale gray-yellow, and soft gray-purple.',
   'Keep more than 80 percent calm negative space. Distribute only a few objects sparsely with strong breathing room.',
   'Use a free, non-grid composition: varied object sizes and angles, casually scattered like an artist’s open working journal, never lined up and never rigidly centered.',
