@@ -24,6 +24,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         navigateFallback: '/index.html',
+        // 增大缓存文件上限到 6 MiB（默认 2 MiB 不够用）
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },
       devOptions: {
         enabled: true,

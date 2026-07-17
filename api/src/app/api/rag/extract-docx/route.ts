@@ -46,7 +46,9 @@ async function extractDocx(buffer: Buffer): Promise<string> {
 }
 
 async function extractPdf(buffer: Buffer): Promise<string> {
-  const { default: pdfParse } = await import('pdf-parse');
+  const mod = await import('pdf-parse');
+  // pdf-parse ESM 版本无 default export，CJS 版本有；兼容两种模块格式
+  const pdfParse = (mod as any).default || mod;
   const data = await pdfParse(buffer);
   return (data.text || '').trim();
 }
