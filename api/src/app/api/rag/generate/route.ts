@@ -209,14 +209,15 @@ ALLOWED PAGE TYPES ONLY:
 - back-cover: one memorable landing-point sentence plus a small guide saying goodbye visually; nothing else.
 
 FORBIDDEN:
-- narrative, plot-progression, passive viewing, preaching, art-technique teaching, praise-only endings, model answers, Chinese text, grammar instruction, tests, or more than one core task per page.
+- narrative, plot-progression, passive viewing, preaching, art-technique teaching, praise-only endings, model answers, Chinese in child-facing page text, grammar instruction, tests, or more than one core task per page.
 
 LANDING POINT:
 The final back cover is the soul of the book. It must contain only one memorable, accepting English sentence connected to the child’s experience—not “Well done” or “You finished.” Ask what the child experienced and what they most need to hear; that sentence is the landing point.
 
 TEXT AND VISUAL RULES:
-- All output fields must be entirely English, regardless of UI language. No Chinese anywhere.
-- Core page text is at most 10 English words.
+- Core page text must always be English and at most 10 English words.
+- pageType values must use the English enum shown in the JSON schema.
+- ${useEnglish ? 'Write every imageDescription in English. Do not include Chinese anywhere.' : 'Write every imageDescription in clear Simplified Chinese, while keeping every text field entirely in English.'}
 - Every target vocabulary word used on a page must have a clear picture + English word anchor in imageDescription.
 - imageDescription must describe the child’s action, visible choices/tools, and generous response or waiting space—not a narrative scene.
 - Use exact short sentence anchors naturally when useful, such as “I pick...”, “I feel...”, or the user’s target pattern.
@@ -248,15 +249,19 @@ Student information:
 - Core sentence patterns: ${basicInfo?.grammar || ''}
 ${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
 
-Design ${pageCount} guided picture-book pages. All generated content must be English.`;
+Design ${pageCount} guided picture-book pages. Page text must be English. Image-description language: ${useEnglish ? 'English' : 'Simplified Chinese'}.`;
 
       const result = await callLLM(systemPrompt, userPrompt);
       const pages = Array.isArray(result.pages) ? result.pages : [];
       if (pages.length !== pageCount) {
         throw new Error(`The model returned ${pages.length} pages instead of ${pageCount}.`);
       }
-      if (pages.some((page: any) => containsChinese(page?.imageDescription) || containsChinese(page?.text))) {
-        throw new Error('The model returned non-English guided picture-book content.');
+      const hasInvalidLanguage = pages.some((page: any) => (
+        containsChinese(page?.text)
+        || (useEnglish ? containsChinese(page?.imageDescription) : !containsChinese(page?.imageDescription))
+      ));
+      if (hasInvalidLanguage) {
+        throw new Error('The model returned guided picture-book content in the wrong language.');
       }
       const normalizedPages = pages.map((page: any, index: number) => ({
         ...page,

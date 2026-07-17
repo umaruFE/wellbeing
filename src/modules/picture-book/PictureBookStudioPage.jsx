@@ -122,7 +122,7 @@ function buildActivityPlan(info, isEn = false) {
   };
 }
 
-function buildPictureBookPages(plan, info, requestedPageCount) {
+function buildPictureBookPages(plan, info, requestedPageCount, isEn = false) {
   const title = plan.storyTitleEn || 'My Picture Book';
   const vocab = info.vocabulary || 'happy, sad, calm, brave, friend';
   const wordAnchors = vocab.split(/[,，、\s]+/).filter(Boolean).slice(0, 6).join(', ');
@@ -153,72 +153,74 @@ function buildPictureBookPages(plan, info, requestedPageCount) {
   const pages = [
     {
       pageType: 'cover',
-      imageDescription: `Guided picture-book cover, not a narrative scene. Show an inviting art table, simple tools, colorful child-made creations, and a small friendly guide welcoming the child to participate. Render only the English title “${title}”.`,
+      imageDescription: isEn
+        ? `Guided picture-book cover, not a narrative scene. Show an inviting art table, simple tools, colorful child-made creations, and a small friendly guide welcoming the child to participate. Render only the English title “${title}”.`
+        : `引导绘本封面，不是叙事场景。展示有吸引力的创作桌、简单工具、色彩丰富的儿童作品，以及欢迎孩子参与的小导游。画面只呈现英文标题“${title}”。`,
       text: title,
     },
     {
       pageType: 'question',
-      imageDescription: 'Open question page. Show a gentle color cloud and a large clear response area where the child can point or imagine. No story action and no correct answer.',
+      imageDescription: isEn ? 'Open question page. Show a gentle color cloud and a large clear response area where the child can point or imagine. No story action and no correct answer.' : '开放式提问页。展示柔和的颜色云和一块清晰宽敞的回应区域，让孩子可以指认或想象。不设置故事情节和标准答案。',
       text: 'What color feels like you today?',
     },
     {
       pageType: 'choice',
-      imageDescription: `Choice page. Show six clear illustrated option cards with picture-and-word anchors using these English target words: ${wordAnchors}. Leave generous space for pointing and choosing.`,
+      imageDescription: isEn ? `Choice page. Show six clear illustrated option cards with picture-and-word anchors using these English target words: ${wordAnchors}. Leave generous space for pointing and choosing.` : `选择页。展示六张清晰的图文选项卡，使用这些英文目标词汇作为“图案+单词”锚点：${wordAnchors}。留出充足空间供孩子指认和选择。`,
       text: 'Point to the word that fits.',
     },
     {
       pageType: 'question',
-      imageDescription: 'Body-awareness question page. Show a simple child-friendly body outline with softly highlighted areas and an open response space. Invite noticing without judgment.',
+      imageDescription: isEn ? 'Body-awareness question page. Show a simple child-friendly body outline with softly highlighted areas and an open response space. Invite noticing without judgment.' : '身体觉察提问页。展示适合儿童理解的简洁身体轮廓、柔和高亮的身体区域和开放回应空间，引导孩子不带评判地觉察。',
       text: 'Where do you feel it?',
     },
     {
       pageType: 'instruction',
-      imageDescription: `Preparation instruction page. Clearly show ${plan.materials || 'paper and colored pencils'} as simple tool icons beside a large blank workspace waiting for the child's creation.`,
+      imageDescription: isEn ? `Preparation instruction page. Clearly show ${plan.materials || 'paper and colored pencils'} as simple tool icons beside a large blank workspace waiting for the child's creation.` : `准备指令页。用简洁工具图标清楚展示${plan.materials || '画纸和彩笔'}，旁边保留一块等待孩子创作的大面积空白区域。`,
       text: 'Take your paper and colors.',
     },
     {
       pageType: 'choice',
-      imageDescription: 'Inspiration choice page. Show six non-perfect child-made shape cards: round, spiky, wavy, tiny, wide, and twisty. Each shape has its exact English word label.',
+      imageDescription: isEn ? 'Inspiration choice page. Show six non-perfect child-made shape cards: round, spiky, wavy, tiny, wide, and twisty. Each shape has its exact English word label.' : '灵感选择页。展示六张带有儿童手作感、不追求完美的形状卡片：round、spiky、wavy、tiny、wide、twisty。每种形状配对应的英文单词标签。',
       text: 'Choose a shape that feels right.',
     },
     {
       pageType: 'instruction',
-      imageDescription: 'Drawing instruction page. Show a pencil beginning one expressive shape and a large mostly blank area for the child. Emphasize that big and small are equally welcome.',
+      imageDescription: isEn ? 'Drawing instruction page. Show a pencil beginning one expressive shape and a large mostly blank area for the child. Emphasize that big and small are equally welcome.' : '绘画指令页。展示一支铅笔正在画出富有表现力的形状，并为孩子保留大面积空白创作区。传达画大或画小都可以被接纳。',
       text: 'Draw it big or small.',
     },
     {
       pageType: 'rule',
-      imageDescription: 'Game rule page. Show a large six-sided die and a visual equation: die dots equal the number of parts to add. Use icons and minimal English labels, not a narrative scene.',
+      imageDescription: isEn ? 'Game rule page. Show a large six-sided die and a visual equation: die dots equal the number of parts to add. Use icons and minimal English labels, not a narrative scene.' : '游戏规则页。展示一个醒目的六面骰子和视觉等式：骰子点数等于需要添加的身体部位数量。使用图标和极少量英文标签，不画叙事场景。',
       text: 'Roll. Count. Add that many parts.',
     },
     {
       pageType: 'instruction',
-      imageDescription: 'Action page with clear illustrated choices for eyes, ears, hands, feet, mouths, and antennae. Each option has a simple English word anchor.',
+      imageDescription: isEn ? 'Action page with clear illustrated choices for eyes, ears, hands, feet, mouths, and antennae. Each option has a simple English word anchor.' : '行动指令页。清晰展示眼睛、耳朵、手、脚、嘴巴和触角等图示选项，每个选项配一个简单的英文单词锚点。',
       text: 'Add eyes, ears, hands, or feet.',
     },
     {
       pageType: 'instruction',
-      imageDescription: 'Creative invitation page showing optional wings, spots, stars, pockets, and soft spikes as idea cards, plus open space for the child’s own idea. Avoid polished model answers.',
+      imageDescription: isEn ? 'Creative invitation page showing optional wings, spots, stars, pockets, and soft spikes as idea cards, plus open space for the child’s own idea. Avoid polished model answers.' : '创意邀请页。用灵感卡展示可选的翅膀、斑点、星星、口袋和柔软尖角，并为孩子自己的想法保留开放空间。避免提供精致的标准答案。',
       text: 'Add one special power.',
     },
     {
       pageType: 'instruction',
-      imageDescription: 'Coloring action page. Show two or three selected color swatches, a child’s hand coloring an expressive shape, and a spacious unfinished area. Every color choice is accepted.',
+      imageDescription: isEn ? 'Coloring action page. Show two or three selected color swatches, a child’s hand coloring an expressive shape, and a spacious unfinished area. Every color choice is accepted.' : '上色行动页。展示两到三种已选色块、孩子正在为富有表现力的形状上色的手，以及宽敞的未完成区域。接纳每一种颜色选择。',
       text: 'Pick two colors. Fill your shape.',
     },
     {
       pageType: 'instruction',
-      imageDescription: 'Naming page. Show the finished creation beside one simple blank name tag and a pencil. The small guide waits quietly without suggesting an answer.',
+      imageDescription: isEn ? 'Naming page. Show the finished creation beside one simple blank name tag and a pencil. The small guide waits quietly without suggesting an answer.' : '命名指令页。展示完成的作品、一个简洁的空白姓名牌和一支铅笔。小导游安静等待，不暗示任何答案。',
       text: 'Give your creation a name.',
     },
     {
       pageType: 'question',
-      imageDescription: `Sharing prompt page. Show a child holding their creation with two short English sentence anchors: “I feel...” and “My friend feels...”. Include small picture-and-word anchors from: ${wordAnchors}.`,
+      imageDescription: isEn ? `Sharing prompt page. Show a child holding their creation with two short English sentence anchors: “I feel...” and “My friend feels...”. Include small picture-and-word anchors from: ${wordAnchors}.` : `分享提问页。展示孩子拿着自己的作品，并呈现两个简短英文句式锚点：“I feel...”和“My friend feels...”。加入这些词汇的小型“图案+单词”锚点：${wordAnchors}。`,
       text: 'Share: “I feel...”',
     },
     {
       pageType: 'back-cover',
-      imageDescription: `Back cover. A calm, spacious composition with the small guide waving goodbye. Render only this exact English landing point and no other content: “${landingPoint}”`,
+      imageDescription: isEn ? `Back cover. A calm, spacious composition with the small guide waving goodbye. Render only this exact English landing point and no other content: “${landingPoint}”` : `封底。画面平静、留白充足，小导游挥手告别。只呈现这句准确的英文精神落脚点，不添加其他内容：“${landingPoint}”`,
       text: landingPoint,
     },
   ];
@@ -511,7 +513,7 @@ export function PictureBookStudioPage() {
         saveBook({ pages: nextPages, step: 2 });
       } else {
         // Fallback to local template
-        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount);
+        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount, isEn);
         setPages(fallbackPages);
         setMessage(data.error || t('pictureBook.designFallback'));
         setStep(2);
@@ -519,7 +521,7 @@ export function PictureBookStudioPage() {
       }
     } catch (err) {
       // Fallback to local template
-      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount);
+      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount, isEn);
       setPages(fallbackPages);
       setMessage(`${t('pictureBook.designFallback')}: ${err.message}`);
       setStep(2);
