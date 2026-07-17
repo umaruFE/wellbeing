@@ -232,6 +232,7 @@ function buildPictureBookPages(plan, info, requestedPageCount, isEn = false) {
     page: index + 1,
     pageType: page.pageType,
     imageDescription: page.imageDescription,
+    imagePrompt: `Create a child-friendly guided picture-book ${page.pageType} page. Make the child action visually obvious with clear objects, choices, tools, and generous response space. Do not render labels, captions, annotations, speech bubbles, pseudo-text, symbols that resemble writing, or any typography beyond the separately supplied exact page text.`,
     text: page.text,
     imageUrl: '',
     status: 'placeholder',
@@ -502,6 +503,7 @@ export function PictureBookStudioPage() {
           page: p.page || i + 1,
           pageType: p.pageType || 'instruction',
           imageDescription: p.imageDescription || '',
+          imagePrompt: p.imagePrompt || '',
           text: p.text || '',
           imageUrl: '',
           status: 'placeholder',
@@ -537,8 +539,9 @@ export function PictureBookStudioPage() {
       {
         id: `page-${Date.now()}`,
         page: current.length + 1,
-        pageType: 'instruction',
-        imageDescription: t('pictureBook.newPageDescription'),
+          pageType: 'instruction',
+          imageDescription: t('pictureBook.newPageDescription'),
+          imagePrompt: '',
         text: 'New page text.',
         imageUrl: '',
         status: 'placeholder',
@@ -559,21 +562,37 @@ export function PictureBookStudioPage() {
     options: {
       imageRatio: '16:9',
       imageStyle: 'Watercolor Picture Book',
+      negativePrompt: 'Chinese characters, Chinese text, non-English text, extra words, extra letters, captions, labels, annotations, speech bubbles, callouts, explanatory symbols, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text',
+      referenceNotes: [
+        'These are prompt-only visual directions for an action-led guided picture book. They must guide composition but must never be rendered as visible page text.',
+        'ABSOLUTE TYPOGRAPHY RULE: each image may display only its visibleEnglishText value exactly. Never display imageDescription, imagePrompt, pageType, labels, captions, annotations, speech bubbles, Chinese characters, pseudo-text, or any other words.',
+        JSON.stringify(pages.map((page) => ({
+          page: page.page,
+          pageType: page.pageType || 'instruction',
+          imagePrompt: page.imagePrompt || page.imageDescription,
+          visibleEnglishText: page.text,
+        }))),
+      ].join('\n'),
       batchItems: pages.map((page) => ({
         page: page.page,
         pageType: page.pageType || 'instruction',
         title: `${activityPlan.storyTitleEn || 'Picture Book'} · Page ${page.page}`,
-        text: [
+        // The n8n storybook workflow treats `text` as literal visible typography.
+        // The cover title is supplied separately as storybookTitle, so keep page 1 empty to avoid duplication.
+        text: page.page === 1 ? '' : page.text,
+        imageDescription: page.imageDescription,
+        imagePrompt: page.imagePrompt || page.imageDescription,
+        prompt: [
           `Create a guided picture-book ${page.pageType || 'instruction'} page, never a narrative story scene.`,
-          page.imageDescription,
+          page.imagePrompt || page.imageDescription,
           `Render only this exact English core text (maximum 10 words): “${page.text}”`,
-          'Make the child action visually obvious. Use picture-and-word anchors for target vocabulary when requested.',
-          'Do not add Chinese text, extra sentences, praise, moralizing, or unrelated typography.',
+          'Make the child action visually obvious using pictures only.',
+          'Do not add labels, captions, annotations, speech bubbles, Chinese text, pseudo-text, extra sentences, or unrelated typography.',
         ].join(' '),
       })),
       rawValues: {
         storybookTitle: activityPlan.storyTitleEn || 'Picture Book',
-        storybookContent: pages.map((page) => `${page.pageType || 'instruction'}: ${page.text}`).join('\n'),
+        storybookContent: pages.map((page) => page.text).join('\n'),
         storybookStyle: 'Watercolor Picture Book',
         storybookGrade: basicInfo.age || (isEn ? 'Ages 7–9' : '7-9岁'),
       },
@@ -631,11 +650,12 @@ export function PictureBookStudioPage() {
       const prompt = [
         `Children picture-book illustration for page ${targetPage.page}.`,
         `Story title: ${activityPlan.storyTitleEn || 'Picture Book'}.`,
-        `Image description: ${targetPage.imageDescription}.`,
+        `Visual prompt: ${targetPage.imagePrompt || targetPage.imageDescription}.`,
         `Page text context: ${targetPage.text}.`,
         `Page mode: ${targetPage.pageType || 'instruction'}. This is an action-led guided picture book, not a narrative story scene.`,
         'Make the requested child action, choices, tools, or response space visually obvious.',
-        `Render only this exact English core text: “${targetPage.text}”. No Chinese text or extra sentences.`,
+        `Render only this exact English core text: “${targetPage.text}”.`,
+        'Do not render labels, captions, annotations, speech bubbles, Chinese characters, pseudo-text, or any other words.',
         'Warm classroom-ready picture-book style, consistent soft watercolor palette, no watermark.',
       ].join(' ');
       const result = await apiService.request('/api/ai/generate-ppt-asset', {
@@ -648,6 +668,7 @@ export function PictureBookStudioPage() {
           options: {
             imageRatio: '16:9',
             imageStyle: 'Watercolor Picture Book',
+            negativePrompt: 'Chinese characters, Chinese text, non-English text, extra words, extra letters, captions, labels, annotations, speech bubbles, callouts, gibberish typography, pseudo-text, misspelled text, duplicated text',
             rawValues: {
               scene: targetPage.imageDescription,
             },

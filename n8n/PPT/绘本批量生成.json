@@ -126,6 +126,16 @@
     },
     {
       "parameters": {
+        "jsCode": "return $input.all().map((item) => {\n  const data = item.json || {};\n  const workflow = data.comfyuiPayload?.prompt;\n  const positiveNode = workflow?.['6']?.inputs;\n  const negativeNode = workflow?.['7']?.inputs;\n  if (!positiveNode || !negativeNode) throw new Error(`Invalid typography prompt for page ${data.page || '?'}`);\n\n  let positive = String(positiveNode.text || '');\n  positive = positive.replace(/Put a very small plain page number \\d+ at the bottom center\\. Do not add any other words\\./gi, '');\n  positiveNode.text = [\n    positive,\n    'ABSOLUTE VISIBLE-TEXT LOCK: Render only the exact English page text already specified in this prompt.',\n    'Do not render the image description, prompt instructions, page type, page number, labels, captions, annotations, legends, equations, pronunciation guides, speech bubbles, callouts, Chinese characters, non-English writing, pseudo-text, or any additional letters or words.',\n    'All visual options must be communicated with pictures and layout only.'\n  ].filter(Boolean).join(' ');\n  negativeNode.text = [\n    negativeNode.text,\n    'Chinese characters',\n    'Chinese text',\n    'non-English text',\n    'page number',\n    'labels',\n    'captions',\n    'annotations',\n    'speech bubbles',\n    'callouts',\n    'extra words',\n    'extra letters',\n    'pseudo-text',\n    'gibberish typography',\n    'misspelled text',\n    'duplicated text'\n  ].filter(Boolean).join(', ');\n  return { json: data };\n});"
+      },
+      "id": "lock-visible-page-text",
+      "name": "锁定页面可见文字",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-100, 0]
+    },
+    {
+      "parameters": {
         "method": "POST",
         "url": "={{$json.comfyuiUrl}}/prompt",
         "sendHeaders": true,
@@ -196,6 +206,9 @@
       "main": [[{ "node": "按内容选择角色", "type": "main", "index": 0 }]]
     },
     "按内容选择角色": {
+      "main": [[{ "node": "锁定页面可见文字", "type": "main", "index": 0 }]]
+    },
+    "锁定页面可见文字": {
       "main": [[{ "node": "逐页提交 ComfyUI", "type": "main", "index": 0 }]]
     },
     "逐页提交 ComfyUI": {

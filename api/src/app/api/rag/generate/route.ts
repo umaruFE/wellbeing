@@ -218,8 +218,9 @@ TEXT AND VISUAL RULES:
 - Core page text must always be English and at most 10 English words.
 - pageType values must use the English enum shown in the JSON schema.
 - ${useEnglish ? 'Write every imageDescription in English. Do not include Chinese anywhere.' : 'Write every imageDescription in clear Simplified Chinese, while keeping every text field entirely in English.'}
-- Every target vocabulary word used on a page must have a clear picture + English word anchor in imageDescription.
-- imageDescription must describe the child’s action, visible choices/tools, and generous response or waiting space—not a narrative scene.
+- Represent target vocabulary with clear visual objects, but never add printed word labels unless those words are the exact complete text field.
+- imageDescription must describe the child’s action, visible choices/tools, and generous response or waiting space—not a narrative scene. It must never request labels, captions, annotations, speech bubbles, or any other visible writing.
+- imagePrompt must always be an English-only visual-generation prompt. It may describe composition and objects, but must explicitly forbid all visible typography except the exact text field.
 - Use exact short sentence anchors naturally when useful, such as “I pick...”, “I feel...”, or the user’s target pattern.
 
 Design every page from the activity plan and student information.
@@ -230,6 +231,7 @@ Return JSON only, using this exact shape:
       "page": 1,
       "pageType": "cover | question | instruction | choice | rule | back-cover",
       "imageDescription": "A detailed image-generation description",
+      "imagePrompt": "An English-only visual prompt with no requested labels or extra writing",
       "text": "Short, child-friendly page text"
     }
   ]
@@ -258,6 +260,7 @@ Design ${pageCount} guided picture-book pages. Page text must be English. Image-
       }
       const hasInvalidLanguage = pages.some((page: any) => (
         containsChinese(page?.text)
+        || containsChinese(page?.imagePrompt)
         || (useEnglish ? containsChinese(page?.imageDescription) : !containsChinese(page?.imageDescription))
       ));
       if (hasInvalidLanguage) {
@@ -267,6 +270,9 @@ Design ${pageCount} guided picture-book pages. Page text must be English. Image-
         ...page,
         page: index + 1,
         pageType: index === 0 ? 'cover' : index === pages.length - 1 ? 'back-cover' : normalizePageType(page.pageType),
+        imagePrompt: typeof page.imagePrompt === 'string' && page.imagePrompt.trim() && !containsChinese(page.imagePrompt)
+          ? page.imagePrompt.trim()
+          : 'Create a spacious child-friendly guided activity page with clear visual choices and tools. Do not render labels, captions, annotations, speech bubbles, symbols that resemble writing, or any typography beyond the separately supplied exact page text.',
         text: index === 0
           ? limitEnglishWords(ensureEnglishTitle(activityPlan?.storyTitleEn), 'My Picture Book')
           : limitEnglishWords(page.text, index === pages.length - 1 ? 'Every part of you belongs.' : 'Choose, make, and show what feels true.'),
