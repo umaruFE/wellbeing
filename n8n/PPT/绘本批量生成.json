@@ -126,6 +126,16 @@
     },
     {
       "parameters": {
+        "jsCode": "return $input.all().map((item) => {\n  const data = item.json || {};\n  const workflow = data.comfyuiPayload?.prompt;\n  const positiveNode = workflow?.['6']?.inputs;\n  const negativeNode = workflow?.['7']?.inputs;\n  const samplerNode = workflow?.['8']?.inputs;\n  if (!positiveNode || !negativeNode || !samplerNode) throw new Error(`Invalid style workflow for page ${data.page || '?'}`);\n\n  if (!workflow['11']) {\n    workflow['11'] = { inputs: { lora_name: 'poppy.safetensors', strength_model: 0.7, strength_clip: 0.85, model: ['4', 0], clip: ['3', 0] }, class_type: 'LoraLoader' };\n  }\n  positiveNode.clip = ['11', 1];\n  negativeNode.clip = ['11', 1];\n  samplerNode.model = ['11', 0];\n\n  const unifiedStyle = [\n    'UNIFIED GUIDED-BOOK STYLE — HIGHEST VISUAL PRIORITY:',\n    'Oliver Jeffers-inspired loose translucent watercolor washes with expressive imperfect black pen-and-ink sketch lines, warm, restrained, playful, and emotionally gentle.',\n    'Always include exactly one small Poppy guide as a subtle visual anchor: the same pink cloud with a rounded scalloped body, two tiny solid black dot eyes, a small curved smile, two thin black legs, and oval black feet. Keep Poppy in flat-vector IP styling and never let her dominate the activity.',\n    'Extremely low-saturation washed palette only: gray-blue, dusty gray-pink, sage gray-green, muted gray-orange, pale gray-yellow, and soft gray-purple.',\n    'More than 80 percent calm negative space; only a few objects sparsely distributed with strong breathing room.',\n    'Free non-grid composition with varied sizes and angles, casually scattered like an artist working journal; no rows and no rigid centering.',\n    'Keep faint pencil construction lines, restrained watercolor splashes, and occasional hand-drawn tool icons.',\n    'Flat light warm-beige textured drawing-paper background; no border, no frame, no open-book effect, no photographed book.',\n    'Landscape composition. Use imperfect handwritten English only for the exact supplied page text. Never invent object labels.'\n  ].join(' ');\n  positiveNode.text = `${unifiedStyle} ${positiveNode.text || ''}`;\n  negativeNode.text = [negativeNode.text, 'high saturation', 'neon colors', 'grid layout', 'rigid rows', 'catalog layout', 'heavy composition', 'busy background', 'border', 'frame', 'open book mockup', 'photographed book', 'multiple Poppy characters', 'duplicate mascot'].filter(Boolean).join(', ');\n  data.characterMode = 'poppy-lora-unified';\n  return { json: data };\n});"
+      },
+      "id": "enforce-unified-guided-style",
+      "name": "统一绘本风格与 Poppy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-140, 0]
+    },
+    {
+      "parameters": {
         "jsCode": "return $input.all().map((item) => {\n  const data = item.json || {};\n  const workflow = data.comfyuiPayload?.prompt;\n  const positiveNode = workflow?.['6']?.inputs;\n  const negativeNode = workflow?.['7']?.inputs;\n  if (!positiveNode || !negativeNode) throw new Error(`Invalid typography prompt for page ${data.page || '?'}`);\n\n  let positive = String(positiveNode.text || '');\n  positive = positive.replace(/Put a very small plain page number \\d+ at the bottom center\\. Do not add any other words\\./gi, '');\n  positiveNode.text = [\n    positive,\n    'ABSOLUTE VISIBLE-TEXT LOCK: Render only the exact English page text already specified in this prompt.',\n    'Do not render the image description, prompt instructions, page type, page number, labels, captions, annotations, legends, equations, pronunciation guides, speech bubbles, callouts, Chinese characters, non-English writing, pseudo-text, or any additional letters or words.',\n    'All visual options must be communicated with pictures and layout only.'\n  ].filter(Boolean).join(' ');\n  negativeNode.text = [\n    negativeNode.text,\n    'Chinese characters',\n    'Chinese text',\n    'non-English text',\n    'page number',\n    'labels',\n    'captions',\n    'annotations',\n    'speech bubbles',\n    'callouts',\n    'extra words',\n    'extra letters',\n    'pseudo-text',\n    'gibberish typography',\n    'misspelled text',\n    'duplicated text'\n  ].filter(Boolean).join(', ');\n  return { json: data };\n});"
       },
       "id": "lock-visible-page-text",
@@ -206,6 +216,9 @@
       "main": [[{ "node": "按内容选择角色", "type": "main", "index": 0 }]]
     },
     "按内容选择角色": {
+      "main": [[{ "node": "统一绘本风格与 Poppy", "type": "main", "index": 0 }]]
+    },
+    "统一绘本风格与 Poppy": {
       "main": [[{ "node": "锁定页面可见文字", "type": "main", "index": 0 }]]
     },
     "锁定页面可见文字": {

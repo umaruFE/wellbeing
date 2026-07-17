@@ -46,6 +46,21 @@ const initialActivityPlan = {
   recommendedPageCount: 0,
 };
 
+const STORYBOOK_VISUAL_STYLE = [
+  'Oliver Jeffers-inspired loose watercolor washes with expressive black pen-and-ink sketch lines, warm, restrained, playful, and emotionally gentle.',
+  'Use Poppy on every activity page as the same small pink cloud wellbeing guide: flat-vector IP styling, rounded scalloped cloud body, two tiny solid black dot eyes, a small curved smile, two thin black legs, and oval black feet. Poppy is a subtle visual anchor and never dominates the child’s activity.',
+  'Use an extremely low-saturation washed palette of gray-blue, dusty gray-pink, sage gray-green, muted gray-orange, pale gray-yellow, and soft gray-purple.',
+  'Keep more than 80 percent calm negative space. Distribute only a few objects sparsely with strong breathing room.',
+  'Use a free, non-grid composition: varied object sizes and angles, casually scattered like an artist’s open working journal, never lined up and never rigidly centered.',
+  'Preserve creative-process traces: faint pencil construction lines, restrained watercolor splashes, and hand-drawn tool icons such as pencils or palettes.',
+  'Use imperfect handwritten English typography only for the exact supplied page text.',
+  'Use a flat light warm-beige textured drawing-paper background, no border, no frame, no open-book mockup, and no photographed book.',
+  'Use one consistent landscape page ratio.',
+  'Communicate all options through pictures. Do not invent word labels; a word may appear only when it is part of the exact supplied text field.',
+].join(' ');
+
+const STORYBOOK_TEXT_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English text, extra words, extra letters, captions, labels, annotations, speech bubbles, callouts, explanatory symbols, page numbers, borders, frames, grids, rigid rows, centered catalog layout, open-book mockup, photographed book, saturated colors, neon colors, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text';
+
 function toggleList(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
@@ -558,11 +573,11 @@ export function PictureBookStudioPage() {
     assetType: 'image',
     assetCode: 'B9',
     assetName: t('pictureBook.batchImages'),
-    prompt: `${activityPlan.storyTitleEn}\n${activityPlan.storyContent}`,
+    prompt: `${STORYBOOK_VISUAL_STYLE}\nBook title: ${activityPlan.storyTitleEn}.\nGuided activity concept: ${activityPlan.storyContent}`,
     options: {
       imageRatio: '16:9',
       imageStyle: 'Watercolor Picture Book',
-      negativePrompt: 'Chinese characters, Chinese text, non-English text, extra words, extra letters, captions, labels, annotations, speech bubbles, callouts, explanatory symbols, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text',
+      negativePrompt: STORYBOOK_TEXT_NEGATIVE_PROMPT,
       referenceNotes: [
         'These are prompt-only visual directions for an action-led guided picture book. They must guide composition but must never be rendered as visible page text.',
         'ABSOLUTE TYPOGRAPHY RULE: each image may display only its visibleEnglishText value exactly. Never display imageDescription, imagePrompt, pageType, labels, captions, annotations, speech bubbles, Chinese characters, pseudo-text, or any other words.',
@@ -584,6 +599,7 @@ export function PictureBookStudioPage() {
         imagePrompt: page.imagePrompt || page.imageDescription,
         prompt: [
           `Create a guided picture-book ${page.pageType || 'instruction'} page, never a narrative story scene.`,
+          STORYBOOK_VISUAL_STYLE,
           page.imagePrompt || page.imageDescription,
           `Render only this exact English core text (maximum 10 words): “${page.text}”`,
           'Make the child action visually obvious using pictures only.',
@@ -650,6 +666,7 @@ export function PictureBookStudioPage() {
       const prompt = [
         `Children picture-book illustration for page ${targetPage.page}.`,
         `Story title: ${activityPlan.storyTitleEn || 'Picture Book'}.`,
+        STORYBOOK_VISUAL_STYLE,
         `Visual prompt: ${targetPage.imagePrompt || targetPage.imageDescription}.`,
         `Page text context: ${targetPage.text}.`,
         `Page mode: ${targetPage.pageType || 'instruction'}. This is an action-led guided picture book, not a narrative story scene.`,
@@ -668,7 +685,7 @@ export function PictureBookStudioPage() {
           options: {
             imageRatio: '16:9',
             imageStyle: 'Watercolor Picture Book',
-            negativePrompt: 'Chinese characters, Chinese text, non-English text, extra words, extra letters, captions, labels, annotations, speech bubbles, callouts, gibberish typography, pseudo-text, misspelled text, duplicated text',
+            negativePrompt: STORYBOOK_TEXT_NEGATIVE_PROMPT,
             rawValues: {
               scene: targetPage.imageDescription,
             },
