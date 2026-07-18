@@ -12,18 +12,24 @@
       "name": "接收绘本生成请求",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [-640, 0],
+      "position": [
+        -640,
+        0
+      ],
       "webhookId": "ppt-storybook-generator-v1"
     },
     {
       "parameters": {
-        "jsCode": "const body = $input.first()?.json?.body || $input.first()?.json || {};\nconst options = body.options || {};\nconst raw = options.rawValues || {};\nconst documents = Array.isArray(options.referenceDocuments)\n  ? options.referenceDocuments\n  : Array.isArray(body.referenceDocuments)\n    ? body.referenceDocuments\n    : [];\nconst notes = String(options.referenceNotes || body.referenceNotes || raw.referenceNotes || '').slice(0, 20000);\nlet remaining = 80000;\nconst referenceBlocks = documents.slice(0, 30).map((document, index) => {\n  const name = String(document?.name || `Reference ${index + 1}`).slice(0, 160);\n  const text = String(document?.text || '').trim().slice(0, Math.max(0, remaining));\n  remaining -= text.length;\n  return text ? `### SOURCE ${index + 1}: ${name}\\n${text}` : '';\n}).filter(Boolean);\nif (notes) referenceBlocks.push(`### CLIENT KEYWORDS AND EXTRA RULES\\n${notes}`);\nconst pages = (Array.isArray(body.batchItems) ? body.batchItems : [])\n  .map((item, index) => ({ page: Number(item?.page) || index + 1, text: String(item?.text || '').trim() }))\n  .filter((item) => item.text);\nreturn [{ json: {\n  body,\n  bookTitle: String(body.storybookTitle || raw.storybookTitle || 'My Picture Book'),\n  bookStyle: String(body.storybookStyle || raw.storybookStyle || options.imageStyle || 'Watercolor Picture Book'),\n  grade: String(body.storybookGrade || raw.storybookGrade || 'Grade 2'),\n  pages,\n  referenceContext: referenceBlocks.join('\\n\\n') || 'No external reference material was provided.'\n} }];"
+        "jsCode": "const body = $input.first()?.json?.body || $input.first()?.json || {};\nconst options = body.options || {};\nconst raw = options.rawValues || {};\nconst documents = Array.isArray(options.referenceDocuments)\n  ? options.referenceDocuments\n  : Array.isArray(body.referenceDocuments)\n    ? body.referenceDocuments\n    : [];\nconst notes = String(options.referenceNotes || body.referenceNotes || raw.referenceNotes || '').slice(0, 20000);\nlet remaining = 80000;\nconst referenceBlocks = documents.slice(0, 30).map((document, index) => {\n  const name = String(document?.name || `Reference ${index + 1}`).slice(0, 160);\n  const text = String(document?.text || '').trim().slice(0, Math.max(0, remaining));\n  remaining -= text.length;\n  return text ? `### SOURCE ${index + 1}: ${name}\\n${text}` : '';\n}).filter(Boolean);\nif (notes) referenceBlocks.push(`### CLIENT KEYWORDS AND EXTRA RULES\\n${notes}`);\nconst pages = (Array.isArray(body.batchItems) ? body.batchItems : [])\n  .map((item, index) => ({\n    page: Number(item?.page) || index + 1,\n    pageType: String(item?.pageType || 'instruction'),\n    text: String(item?.text || '').trim(),\n    imageDescription: String(item?.imageDescription || '').trim(),\n    imagePrompt: String(item?.imagePrompt || item?.prompt || item?.imageDescription || '').trim()\n  }))\n  .filter((item) => item.text || item.imagePrompt || item.imageDescription);\nreturn [{ json: {\n  body,\n  bookTitle: String(body.storybookTitle || raw.storybookTitle || 'My Picture Book'),\n  bookStyle: String(body.storybookStyle || raw.storybookStyle || options.imageStyle || 'Watercolor Picture Book'),\n  grade: String(body.storybookGrade || raw.storybookGrade || 'Grade 2'),\n  pages,\n  referenceContext: referenceBlocks.join('\\n\\n') || 'No external reference material was provided.'\n} }];"
       },
       "id": "collect-reference-context",
       "name": "整理参考资料",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-520, -160]
+      "position": [
+        -520,
+        -160
+      ]
     },
     {
       "parameters": {
@@ -35,7 +41,10 @@
       "name": "生成故事与角色圣经",
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.7,
-      "position": [-340, -160]
+      "position": [
+        -340,
+        -160
+      ]
     },
     {
       "parameters": {
@@ -54,7 +63,10 @@
       "name": "故事圣经模型",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
-      "position": [-340, 40],
+      "position": [
+        -340,
+        40
+      ],
       "credentials": {
         "openAiApi": {
           "id": "EPHUtiZYNuqoGVK2",
@@ -64,23 +76,29 @@
     },
     {
       "parameters": {
-        "jsCode": "const source = $('整理参考资料').first()?.json || {};\nconst output = $input.first()?.json || {};\nlet rawText = output.text ?? output.output ?? output.response ?? output.content ?? output;\nif (typeof rawText !== 'string') rawText = JSON.stringify(rawText);\nrawText = rawText.replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '').trim();\nlet storyBible;\ntry {\n  storyBible = JSON.parse(rawText);\n} catch (error) {\n  const match = rawText.match(/\\{[\\s\\S]*\\}/);\n  if (!match) throw new Error('The story-bible model did not return JSON');\n  storyBible = JSON.parse(match[0]);\n}\nconst pages = Array.isArray(source.pages) ? source.pages : [];\nif (!Array.isArray(storyBible.pagePlans)) storyBible.pagePlans = [];\nstoryBible.pagePlans = pages.map((page, index) => {\n  const planned = storyBible.pagePlans.find((item) => Number(item?.page) === page.page) || storyBible.pagePlans[index] || {};\n  return {\n    page: page.page,\n    scene: String(planned.scene || page.text),\n    characters: Array.isArray(planned.characters) ? planned.characters : [],\n    objects: Array.isArray(planned.objects) ? planned.objects : [],\n    composition: String(planned.composition || '')\n  };\n});\nreturn [{ json: { body: source.body || {}, storyBible } }];"
+        "jsCode": "const source = $('整理参考资料').first()?.json || {};\nconst output = $input.first()?.json || {};\nlet rawText = output.text ?? output.output ?? output.response ?? output.content ?? output;\nif (typeof rawText !== 'string') rawText = JSON.stringify(rawText);\nrawText = rawText.replace(/^```(?:json)?\\s*/i, '').replace(/\\s*```$/i, '').trim();\nlet storyBible;\ntry {\n  storyBible = JSON.parse(rawText);\n} catch (error) {\n  const match = rawText.match(/\\{[\\s\\S]*\\}/);\n  if (!match) throw new Error('The story-bible model did not return JSON');\n  storyBible = JSON.parse(match[0]);\n}\nconst pages = Array.isArray(source.pages) ? source.pages : [];\nif (!Array.isArray(storyBible.pagePlans)) storyBible.pagePlans = [];\nstoryBible.pagePlans = pages.map((page, index) => {\n  const planned = storyBible.pagePlans.find((item) => Number(item?.page) === page.page) || storyBible.pagePlans[index] || {};\n  return {\n    page: page.page,\n    scene: String(page.imagePrompt || page.imageDescription || planned.scene || page.text),\n    characters: Array.isArray(planned.characters) ? planned.characters : [],\n    objects: Array.isArray(planned.objects) ? planned.objects : [],\n    composition: String(planned.composition || '')\n  };\n});\nreturn [{ json: { body: source.body || {}, storyBible } }];"
       },
       "id": "parse-story-bible",
       "name": "解析故事与角色圣经",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-160, -160]
+      "position": [
+        -160,
+        -160
+      ]
     },
     {
       "parameters": {
-        "jsCode": "const input = $input.first()?.json?.body || $input.first()?.json || {};\nconst options = input.options || {};\nconst raw = options.rawValues || {};\nconst sourcePages = Array.isArray(input.batchItems) ? input.batchItems : [];\nconst fallbackPages = String(raw.storybookContent || input.storybookContent || '')\n  .split(/\\r?\\n+/)\n  .map((text, index) => ({ page: index + 1, text: text.trim() }))\n  .filter((item) => item.text);\nconst pages = (sourcePages.length ? sourcePages : fallbackPages).slice(0, 20);\nif (pages.length < 2) throw new Error('A picture book needs at least 2 pages. Put one page on each line.');\nconst title = String(input.storybookTitle || raw.storybookTitle || 'My Picture Book').trim();\nconst style = String(input.storybookStyle || raw.storybookStyle || options.imageStyle || 'Watercolor Picture Book').trim();\nconst grade = String(input.storybookGrade || raw.storybookGrade || 'Grade 2 (7-8 years)').trim();\nconst width = Math.max(512, Math.min(2048, Number(input.width) || 1280));\nconst height = Math.max(512, Math.min(2048, Number(input.height) || 720));\nconst baseSeed = Math.floor(Math.random() * 900000000000000);\nconst comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nconst negative = String(input.negative_prompt || 'blurry, low quality, watermark, logo, misspelled text, unreadable text, photorealistic, 3d, inconsistent character, extra limbs, cropped');\nconst workflowTemplate = {\n  '1': { inputs: { unet_name: 'z_image_turbo_bf16.safetensors', weight_dtype: 'default' }, class_type: 'UNETLoader' },\n  '2': { inputs: { vae_name: 'ae.safetensors' }, class_type: 'VAELoader' },\n  '3': { inputs: { clip_name: 'qwen_3_4b.safetensors', type: 'lumina2', device: 'default' }, class_type: 'CLIPLoader' },\n  '4': { inputs: { shift: 3, model: ['1', 0] }, class_type: 'ModelSamplingAuraFlow' },\n  '5': { inputs: { width, height, batch_size: 1 }, class_type: 'EmptySD3LatentImage' },\n  '11': { inputs: { lora_name: 'poppy.safetensors', strength_model: 0.8, strength_clip: 1, model: ['4', 0], clip: ['3', 0] }, class_type: 'LoraLoader' },\n  '6': { inputs: { text: '', clip: ['11', 1] }, class_type: 'CLIPTextEncode' },\n  '7': { inputs: { text: negative, clip: ['11', 1] }, class_type: 'CLIPTextEncode' },\n  '8': { inputs: { seed: baseSeed, steps: 15, cfg: 1.5, sampler_name: 'euler', scheduler: 'simple', denoise: 1, model: ['11', 0], positive: ['6', 0], negative: ['7', 0], latent_image: ['5', 0] }, class_type: 'KSampler' },\n  '9': { inputs: { samples: ['8', 0], vae: ['2', 0] }, class_type: 'VAEDecode' },\n  '10': { inputs: { filename_prefix: 'Storybook', images: ['9', 0] }, class_type: 'SaveImage' }\n};\nconst stylePrompt = style.toLowerCase().includes('watercolor') || style.includes('水彩')\n  ? 'Oliver Jeffers-inspired loose watercolor and black colored-pencil sketch, translucent low-saturation gray-blue, dusty pink, sage, ochre and lavender washes, warm off-white paper, playful imperfect hand-drawn linework'\n  : style.toLowerCase().includes('paper') || style.includes('剪纸')\n    ? 'layered handmade paper-cut collage, tactile paper fibers, soft child-friendly shapes, warm editorial storybook composition'\n    : 'friendly premium children picture-book illustration, simple rounded shapes, warm soft colors and expressive hand-drawn details';\nconst characterBible = 'Poppy is always the same small pink cloud character: rounded scalloped cloud body, two solid black dot eyes without pupils, tiny curved smile, two thin black legs and oval black feet. Keep her proportions, face and colors identical on every page.';\nreturn pages.map((page, index) => {\n  const pageNo = Number(page.page) || index + 1;\n  const text = String(page.text || '').trim();\n  const workflow = JSON.parse(JSON.stringify(workflowTemplate));\n  const exactText = pageNo === 1 ? `${title}\\n${text}` : text;\n  workflow['6'].inputs.text = [\n    `A polished landscape children's picture-book page, page ${pageNo} of ${pages.length}, for ${grade}.`,\n    stylePrompt + '.',\n    characterBible,\n    `Story action and scene: ${text}.`,\n    'Sparse free-floating composition with at least 50 percent calm negative space. Flat full-page artwork, subtle pencil marks and watercolor splashes, no mockup, no book photographed in a scene.',\n    `Render only this exact English page text, clearly and legibly in a playful handwritten black font: \"${exactText}\".`,\n    `Put a very small plain page number ${pageNo} at the bottom center. Do not add any other words.`\n  ].join(' ');\n  workflow['8'].inputs.seed = baseSeed + pageNo;\n  workflow['10'].inputs.filename_prefix = `Storybook_${title.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 32)}_P${String(pageNo).padStart(2, '0')}`;\n  return { json: {\n    page: pageNo,\n    title: `${title} · Page ${pageNo}`,\n    pageText: text,\n    comfyuiUrl: comfyuiUrls[index % comfyuiUrls.length],\n    comfyuiPayload: { prompt: workflow }\n  } };\n});"
+        "jsCode": "const input = $input.first()?.json?.body || $input.first()?.json || {};\nconst options = input.options || {};\nconst raw = options.rawValues || {};\nconst sourcePages = Array.isArray(input.batchItems) ? input.batchItems : [];\nconst fallbackPages = String(raw.storybookContent || input.storybookContent || '')\n  .split(/\\r?\\n+/)\n  .map((text, index) => ({ page: index + 1, text: text.trim() }))\n  .filter((item) => item.text);\nconst pages = (sourcePages.length ? sourcePages : fallbackPages).slice(0, 20);\nif (pages.length < 2) throw new Error('A picture book needs at least 2 pages. Put one page on each line.');\nconst title = String(input.storybookTitle || raw.storybookTitle || 'My Picture Book').trim();\nconst style = String(input.storybookStyle || raw.storybookStyle || options.imageStyle || 'Watercolor Picture Book').trim();\nconst grade = String(input.storybookGrade || raw.storybookGrade || 'Grade 2 (7-8 years)').trim();\nconst width = Math.max(512, Math.min(2048, Number(input.width) || 1280));\nconst height = Math.max(512, Math.min(2048, Number(input.height) || 720));\nconst baseSeed = Math.floor(Math.random() * 900000000000000);\nconst comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nconst negative = String(input.negative_prompt || 'blurry, low quality, watermark, logo, misspelled text, unreadable text, photorealistic, 3d, inconsistent character, extra limbs, cropped');\nconst workflowTemplate = {\n  '1': { inputs: { unet_name: 'z_image_turbo_bf16.safetensors', weight_dtype: 'default' }, class_type: 'UNETLoader' },\n  '2': { inputs: { vae_name: 'ae.safetensors' }, class_type: 'VAELoader' },\n  '3': { inputs: { clip_name: 'qwen_3_4b.safetensors', type: 'lumina2', device: 'default' }, class_type: 'CLIPLoader' },\n  '4': { inputs: { shift: 3, model: ['1', 0] }, class_type: 'ModelSamplingAuraFlow' },\n  '5': { inputs: { width, height, batch_size: 1 }, class_type: 'EmptySD3LatentImage' },\n  '6': { inputs: { text: '', clip: ['3', 0] }, class_type: 'CLIPTextEncode' },\n  '7': { inputs: { text: negative, clip: ['3', 0] }, class_type: 'CLIPTextEncode' },\n  '8': { inputs: { seed: baseSeed, steps: 15, cfg: 1.5, sampler_name: 'euler', scheduler: 'simple', denoise: 1, model: ['4', 0], positive: ['6', 0], negative: ['7', 0], latent_image: ['5', 0] }, class_type: 'KSampler' },\n  '9': { inputs: { samples: ['8', 0], vae: ['2', 0] }, class_type: 'VAEDecode' },\n  '10': { inputs: { filename_prefix: 'Storybook', images: ['9', 0] }, class_type: 'SaveImage' }\n};\nconst stylePrompt = style.toLowerCase().includes('watercolor') || style.includes('水彩')\n  ? 'Oliver Jeffers-inspired loose watercolor and black colored-pencil sketch, translucent low-saturation gray-blue, dusty pink, sage, ochre and lavender washes, warm off-white paper, playful imperfect hand-drawn linework'\n  : style.toLowerCase().includes('paper') || style.includes('剪纸')\n    ? 'layered handmade paper-cut collage, tactile paper fibers, soft child-friendly shapes, warm editorial storybook composition'\n    : 'friendly premium children picture-book illustration, simple rounded shapes, warm soft colors and expressive hand-drawn details';\nreturn pages.map((page, index) => {\n  const pageNo = Number(page.page) || index + 1;\n  const text = String(page.text || '').trim();\n  const visualPrompt = String(page.imagePrompt || page.imageDescription || page.prompt || '').trim();\n  const workflow = JSON.parse(JSON.stringify(workflowTemplate));\n  const exactText = pageNo === 1 ? `${title}\\n${text}` : text;\n  workflow['6'].inputs.text = [\n    `A polished landscape children's picture-book page, page ${pageNo} of ${pages.length}, for ${grade}.`,\n    stylePrompt + '.',\n    `PRIMARY PAGE-SPECIFIC VISUAL DESCRIPTION — follow literally: ${visualPrompt}.`,\n    `Visible page text context only: ${text}.`,\n    'Sparse free-floating composition with at least 50 percent calm negative space. Flat full-page artwork, subtle pencil marks and watercolor splashes, no mockup, no book photographed in a scene.',\n    `Render only this exact English page text, clearly and legibly in a playful handwritten black font: \"${exactText}\".`,\n    `Put a very small plain page number ${pageNo} at the bottom center. Do not add any other words.`\n  ].join(' ');\n  workflow['8'].inputs.seed = baseSeed + pageNo;\n  workflow['10'].inputs.filename_prefix = `Storybook_${title.replace(/[^a-zA-Z0-9_-]+/g, '_').slice(0, 32)}_P${String(pageNo).padStart(2, '0')}`;\n  return { json: {\n    page: pageNo,\n    title: `${title} · Page ${pageNo}`,\n    pageText: text,\n    pageType: String(page.pageType || 'instruction'),\n    imageDescription: String(page.imageDescription || ''),\n    imagePrompt: visualPrompt,\n    comfyuiUrl: comfyuiUrls[index % comfyuiUrls.length],\n    comfyuiPayload: { prompt: workflow }\n  } };\n});"
       },
       "id": "prepare-pages",
       "name": "准备绘本分页任务",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-400, 0]
+      "position": [
+        -400,
+        0
+      ]
     },
     {
       "parameters": {
@@ -91,7 +109,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "disabled": true,
-      "position": [-260, 0]
+      "position": [
+        -260,
+        0
+      ]
     },
     {
       "parameters": {
@@ -102,7 +123,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "disabled": true,
-      "position": [-150, 0]
+      "position": [
+        -150,
+        0
+      ]
     },
     {
       "parameters": {
@@ -112,27 +136,36 @@
       "name": "应用全局故事圣经",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-260, 0]
+      "position": [
+        -260,
+        0
+      ]
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map((item) => {\n  const data = item.json || {};\n  const workflow = data.comfyuiPayload?.prompt;\n  const positiveNode = workflow?.['6']?.inputs;\n  const negativeNode = workflow?.['7']?.inputs;\n  const samplerNode = workflow?.['8']?.inputs;\n  if (!positiveNode || !negativeNode || !samplerNode) {\n    throw new Error(`Invalid ComfyUI prompt graph for page ${data.page || '?'}`);\n  }\n\n  const poppyBible = 'Poppy is always the same small pink cloud character: rounded scalloped cloud body, two solid black dot eyes without pupils, tiny curved smile, two thin black legs and oval black feet. Keep her proportions, face and colors identical on every page.';\n  let positive = String(positiveNode.text || '').replace(poppyBible, '').replace(/\\s+/g, ' ').trim();\n  const characterContext = `${data.title || ''} ${data.pageText || ''}`;\n  const usesPoppy = /\\bpoppy(?:_character)?\\b/i.test(characterContext);\n\n  if (usesPoppy) {\n    const loraNode = workflow?.['11']?.inputs;\n    if (!loraNode) throw new Error(`Poppy LoRA node is missing for page ${data.page || '?'}`);\n    loraNode.strength_model = 0.7;\n    loraNode.strength_clip = 0.85;\n    positiveNode.text = [\n      'poppy_character,',\n      'Use Poppy only where required by this page’s story content; let the story determine her action, placement, and the number of other characters.',\n      'Poppy is a small pink cloud mascot with a rounded scalloped body, two solid black dot eyes, a tiny curved smile, two thin black legs, and oval black feet.',\n      positive\n    ].join(' ');\n    data.characterMode = 'poppy-lora';\n  } else {\n    // No named Poppy in this page or book title: remove the IP LoRA completely.\n    // The base model now follows the page content and may draw no character,\n    // one character, or several characters as the story requires.\n    positiveNode.clip = ['3', 0];\n    negativeNode.clip = ['3', 0];\n    samplerNode.model = ['4', 0];\n    delete workflow['11'];\n    positiveNode.text = [\n      'Follow the story content literally. Do not add Poppy or any branded cloud mascot unless explicitly named.',\n      'Let the page text determine whether the scene has no characters, one character, or multiple characters.',\n      positive\n    ].join(' ');\n    negativeNode.text = [negativeNode.text, 'unrequested mascot', 'unrequested pink cloud character', 'branded character'].filter(Boolean).join(', ');\n    data.characterMode = 'content-only';\n  }\n\n  return { json: data };\n});"
+        "jsCode": "return $input.all().map((item) => {\n  const data = item.json || {};\n  const workflow = data.comfyuiPayload?.prompt;\n  const positiveNode = workflow?.['6']?.inputs;\n  const negativeNode = workflow?.['7']?.inputs;\n  const samplerNode = workflow?.['8']?.inputs;\n  if (!positiveNode || !negativeNode || !samplerNode) {\n    throw new Error(`Invalid ComfyUI prompt graph for page ${data.page || '?'}`);\n  }\n\n  const poppyBible = 'Poppy is always the same small pink cloud character: rounded scalloped cloud body, two solid black dot eyes without pupils, tiny curved smile, two thin black legs and oval black feet. Keep her proportions, face and colors identical on every page.';\n  let positive = String(positiveNode.text || '').replace(poppyBible, '').replace(/\\s+/g, ' ').trim();\n  const characterContext = `${data.title || ''} ${data.pageText || ''}`;\n  const usesPoppy = /\\bpoppy(?:_character)?\\b/i.test(characterContext);\n\n  if (usesPoppy) {\n    if (!workflow['11']) {\n      workflow['11'] = { inputs: { lora_name: 'poppy.safetensors', strength_model: 0.7, strength_clip: 0.85, model: ['4', 0], clip: ['3', 0] }, class_type: 'LoraLoader' };\n    }\n    const loraNode = workflow['11'].inputs;\n    positiveNode.clip = ['11', 1];\n    negativeNode.clip = ['11', 1];\n    samplerNode.model = ['11', 0];\n    loraNode.strength_model = 0.7;\n    loraNode.strength_clip = 0.85;\n    positiveNode.text = [\n      'poppy_character,',\n      'Use Poppy only where required by this page’s story content; let the story determine her action, placement, and the number of other characters.',\n      'Poppy is a small pink cloud mascot with a rounded scalloped body, two solid black dot eyes, a tiny curved smile, two thin black legs, and oval black feet.',\n      positive\n    ].join(' ');\n    data.characterMode = 'poppy-lora';\n  } else {\n    // No named Poppy in this page or book title: remove the IP LoRA completely.\n    // The base model now follows the page content and may draw no character,\n    // one character, or several characters as the story requires.\n    positiveNode.clip = ['3', 0];\n    negativeNode.clip = ['3', 0];\n    samplerNode.model = ['4', 0];\n    delete workflow['11'];\n    positiveNode.text = [\n      'Follow the story content literally. Do not add Poppy or any branded cloud mascot unless explicitly named.',\n      'Let the page text determine whether the scene has no characters, one character, or multiple characters.',\n      positive\n    ].join(' ');\n    negativeNode.text = [negativeNode.text, 'unrequested mascot', 'unrequested pink cloud character', 'branded character'].filter(Boolean).join(', ');\n    data.characterMode = 'content-only';\n  }\n\n  return { json: data };\n});"
       },
       "id": "select-character-from-content",
       "name": "按内容选择角色",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-180, 0]
+      "position": [
+        -180,
+        0
+      ]
     },
     {
       "parameters": {
-        "jsCode": "return $input.all().map((item) => {\n  const data = item.json || {};\n  const workflow = data.comfyuiPayload?.prompt;\n  const positiveNode = workflow?.['6']?.inputs;\n  const negativeNode = workflow?.['7']?.inputs;\n  const samplerNode = workflow?.['8']?.inputs;\n  if (!positiveNode || !negativeNode || !samplerNode) throw new Error(`Invalid style workflow for page ${data.page || '?'}`);\n\n  if (!workflow['11']) {\n    workflow['11'] = { inputs: { lora_name: 'poppy.safetensors', strength_model: 0.7, strength_clip: 0.85, model: ['4', 0], clip: ['3', 0] }, class_type: 'LoraLoader' };\n  }\n  positiveNode.clip = ['11', 1];\n  negativeNode.clip = ['11', 1];\n  samplerNode.model = ['11', 0];\n\n  const unifiedStyle = [\n    'UNIFIED GUIDED-BOOK STYLE — HIGHEST VISUAL PRIORITY:',\n    'Oliver Jeffers-inspired loose translucent watercolor washes with expressive imperfect black pen-and-ink sketch lines, warm, restrained, playful, and emotionally gentle.',\n    'Always include exactly one small Poppy guide as a subtle visual anchor: the same pink cloud with a rounded scalloped body, two tiny solid black dot eyes, a small curved smile, two thin black legs, and oval black feet. Keep Poppy in flat-vector IP styling and never let her dominate the activity.',\n    'Extremely low-saturation washed palette only: gray-blue, dusty gray-pink, sage gray-green, muted gray-orange, pale gray-yellow, and soft gray-purple.',\n    'More than 80 percent calm negative space; only a few objects sparsely distributed with strong breathing room.',\n    'Free non-grid composition with varied sizes and angles, casually scattered like an artist working journal; no rows and no rigid centering.',\n    'Keep faint pencil construction lines, restrained watercolor splashes, and occasional hand-drawn tool icons.',\n    'Flat light warm-beige textured drawing-paper background; no border, no frame, no open-book effect, no photographed book.',\n    'Landscape composition. Use imperfect handwritten English only for the exact supplied page text. Never invent object labels.'\n  ].join(' ');\n  positiveNode.text = `${unifiedStyle} ${positiveNode.text || ''}`;\n  negativeNode.text = [negativeNode.text, 'high saturation', 'neon colors', 'grid layout', 'rigid rows', 'catalog layout', 'heavy composition', 'busy background', 'border', 'frame', 'open book mockup', 'photographed book', 'multiple Poppy characters', 'duplicate mascot'].filter(Boolean).join(', ');\n  data.characterMode = 'poppy-lora-unified';\n  return { json: data };\n});"
+        "jsCode": "return $input.all().map((item) => {\n  const data = item.json || {};\n  const workflow = data.comfyuiPayload?.prompt;\n  const positiveNode = workflow?.['6']?.inputs;\n  const negativeNode = workflow?.['7']?.inputs;\n  if (!positiveNode || !negativeNode) throw new Error(`Invalid style workflow for page ${data.page || '?'}`);\n\n  const unifiedStyle = [\n    'UNIFIED GUIDED-BOOK STYLE — HIGHEST VISUAL PRIORITY:',\n    'Oliver Jeffers-inspired loose translucent watercolor washes with expressive imperfect black pen-and-ink sketch lines, warm, restrained, playful, and emotionally gentle.',\n    'Extremely low-saturation washed palette only: gray-blue, dusty gray-pink, sage gray-green, muted gray-orange, pale gray-yellow, and soft gray-purple.',\n    'More than 80 percent calm negative space; only a few objects sparsely distributed with strong breathing room.',\n    'Free non-grid composition with varied sizes and angles, casually scattered like an artist working journal; no rows and no rigid centering.',\n    'Keep faint pencil construction lines, restrained watercolor splashes, and occasional hand-drawn tool icons.',\n    'Flat light warm-beige textured drawing-paper background; no border, no frame, no open-book effect, no photographed book.',\n    'Landscape composition. Use imperfect handwritten English only for the exact supplied page text. Never invent object labels.'\n  ].join(' ');\n  positiveNode.text = `${unifiedStyle} ${positiveNode.text || ''}`;\n  negativeNode.text = [negativeNode.text, 'unrequested mascot', 'unrequested pink cloud character', 'branded cloud character', 'high saturation', 'neon colors', 'grid layout', 'rigid rows', 'catalog layout', 'heavy composition', 'busy background', 'border', 'frame', 'open book mockup', 'photographed book'].filter(Boolean).join(', ');\n  data.characterMode = data.characterMode || 'content-only';\n  return { json: data };\n});"
       },
       "id": "enforce-unified-guided-style",
-      "name": "统一绘本风格与 Poppy",
+      "name": "统一绘本风格",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-140, 0]
+      "position": [
+        -140,
+        0
+      ]
     },
     {
       "parameters": {
@@ -142,7 +175,10 @@
       "name": "锁定页面可见文字",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [-100, 0]
+      "position": [
+        -100,
+        0
+      ]
     },
     {
       "parameters": {
@@ -168,7 +204,10 @@
       "name": "逐页提交 ComfyUI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [-40, 0]
+      "position": [
+        -40,
+        0
+      ]
     },
     {
       "parameters": {
@@ -178,7 +217,10 @@
       "name": "汇总绘本任务",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [160, 0]
+      "position": [
+        160,
+        0
+      ]
     },
     {
       "parameters": {
@@ -190,45 +232,144 @@
       "name": "返回分页任务",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
-      "position": [400, 0]
+      "position": [
+        400,
+        0
+      ]
     }
   ],
   "connections": {
     "接收绘本生成请求": {
-      "main": [[{ "node": "整理参考资料", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "整理参考资料",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "整理参考资料": {
-      "main": [[{ "node": "生成故事与角色圣经", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "生成故事与角色圣经",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "故事圣经模型": {
-      "ai_languageModel": [[{ "node": "生成故事与角色圣经", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "生成故事与角色圣经",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "生成故事与角色圣经": {
-      "main": [[{ "node": "解析故事与角色圣经", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "解析故事与角色圣经",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "解析故事与角色圣经": {
-      "main": [[{ "node": "准备绘本分页任务", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "准备绘本分页任务",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "准备绘本分页任务": {
-      "main": [[{ "node": "应用全局故事圣经", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "应用全局故事圣经",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "应用全局故事圣经": {
-      "main": [[{ "node": "按内容选择角色", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "按内容选择角色",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "按内容选择角色": {
-      "main": [[{ "node": "统一绘本风格与 Poppy", "type": "main", "index": 0 }]]
-    },
-    "统一绘本风格与 Poppy": {
-      "main": [[{ "node": "锁定页面可见文字", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "统一绘本风格",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "锁定页面可见文字": {
-      "main": [[{ "node": "逐页提交 ComfyUI", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "逐页提交 ComfyUI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "逐页提交 ComfyUI": {
-      "main": [[{ "node": "汇总绘本任务", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "汇总绘本任务",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "汇总绘本任务": {
-      "main": [[{ "node": "返回分页任务", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "返回分页任务",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "统一绘本风格": {
+      "main": [
+        [
+          {
+            "node": "锁定页面可见文字",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "pinData": {},

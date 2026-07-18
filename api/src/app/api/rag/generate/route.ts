@@ -224,6 +224,12 @@ TEXT AND VISUAL RULES:
 - Use exact short sentence anchors naturally when useful, such as “I pick...”, “I feel...”, or the user’s target pattern.
 
 Design every page from the activity plan and student information.
+ACTIVITY-SPECIFIC REQUIREMENTS:
+- Build this book specifically from the current English title, story content, learning goals, wellbeing goals, materials, target vocabulary, and sentence patterns below.
+- Do not reuse a generic sequence of color-feeling, body-awareness, drawing-a-shape, dice, naming, and sharing pages unless those actions are explicitly required by this activity plan.
+- Every middle page must contain at least one concrete activity-specific object, material, vocabulary concept, or action from the current inputs.
+- Pages from a nature activity, food activity, relationship activity, movement activity, and emotion activity must be visibly and structurally different.
+- imageDescription and imagePrompt must describe the exact visible scene for that individual page. They must not be interchangeable boilerplate.
 Return JSON only, using this exact shape:
 {
   "pages": [
@@ -242,6 +248,8 @@ Create exactly ${pageCount} pages. Page 1 must be type cover and its text must b
 - English title: ${activityPlan?.storyTitleEn || 'My Picture Book'}
 - Story content: ${activityPlan?.storyContent || ''}
 - English goals: ${activityPlan?.englishGoal || ''}
+- Wellbeing goals: ${activityPlan?.wellbeingGoal || ''}
+- Expected output: ${activityPlan?.outputGoal || ''}
 - Materials: ${activityPlan?.materials || ''}
 
 Student information:
