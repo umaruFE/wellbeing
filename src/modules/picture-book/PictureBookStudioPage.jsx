@@ -71,6 +71,13 @@ function getPageVisualWords(page) {
   return [];
 }
 
+function getPageVisualPrompt(page) {
+  return [
+    String(page?.imageDescription || '').trim(),
+    String(page?.imagePrompt || '').trim(),
+  ].filter(Boolean).join(' Supplementary visual constraints: ');
+}
+
 function toggleList(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
@@ -605,7 +612,7 @@ export function PictureBookStudioPage() {
         JSON.stringify(pages.map((page) => ({
           page: page.page,
           pageType: page.pageType || 'instruction',
-          imagePrompt: page.imagePrompt || page.imageDescription,
+          imagePrompt: getPageVisualPrompt(page),
           visibleEnglishText: page.text,
           allowedVisibleWords: getPageVisualWords(page),
         }))),
@@ -618,12 +625,13 @@ export function PictureBookStudioPage() {
         // The cover title is supplied separately as storybookTitle, so keep page 1 empty to avoid duplication.
         text: page.page === 1 ? '' : page.text,
         imageDescription: page.imageDescription,
-        imagePrompt: page.imagePrompt || page.imageDescription,
+        imagePrompt: getPageVisualPrompt(page),
         visualWords: getPageVisualWords(page),
         prompt: [
           `Create a guided picture-book ${page.pageType || 'instruction'} page, never a narrative story scene.`,
           STORYBOOK_VISUAL_STYLE,
-          page.imagePrompt || page.imageDescription,
+          `PRIMARY PAGE-SPECIFIC DESCRIPTION — follow literally: ${page.imageDescription}.`,
+          page.imagePrompt ? `Supplementary constraints only: ${page.imagePrompt}.` : '',
           `Render this exact English core text: “${page.text}”.`,
           getPageVisualWords(page).length
             ? `Allowed visible words: ${getPageVisualWords(page).join(', ')}. Show them only where and how the page-specific visual prompt requests.`
@@ -707,7 +715,8 @@ export function PictureBookStudioPage() {
         `Children picture-book illustration for page ${targetPage.page}.`,
         `Story title: ${activityPlan.storyTitleEn || 'Picture Book'}.`,
         STORYBOOK_VISUAL_STYLE,
-        `Visual prompt: ${targetPage.imagePrompt || targetPage.imageDescription}.`,
+        `PRIMARY PAGE-SPECIFIC DESCRIPTION — follow literally: ${targetPage.imageDescription}.`,
+        targetPage.imagePrompt ? `Supplementary constraints only: ${targetPage.imagePrompt}.` : '',
         `Page text context: ${targetPage.text}.`,
         `Page mode: ${targetPage.pageType || 'instruction'}. This is an action-led guided picture book, not a narrative story scene.`,
         'Make the requested child action, choices, tools, or response space visually obvious.',
