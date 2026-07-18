@@ -218,9 +218,10 @@ TEXT AND VISUAL RULES:
 - Core page text must always be English and at most 10 English words.
 - pageType values must use the English enum shown in the JSON schema.
 - ${useEnglish ? 'Write every imageDescription in English. Do not include Chinese anywhere.' : 'Write every imageDescription in clear Simplified Chinese, while keeping every text field entirely in English.'}
-- Represent target vocabulary with clear visual objects, but never add printed word labels unless those words are the exact complete text field.
-- imageDescription must describe the child’s action, visible choices/tools, and generous response or waiting space—not a narrative scene. It must never request labels, captions, annotations, speech bubbles, or any other visible writing.
-- imagePrompt must always be an English-only visual-generation prompt. It may describe composition and objects, but must explicitly forbid all visible typography except the exact text field.
+- Whenever a page-specific visual description requires exact visible English words—on cards, shapes, objects, signs, or another layout—put only those permitted words in visualWords. Otherwise use an empty array.
+- visualWords does not define the layout. The page-specific imageDescription and imagePrompt must define the actual number of elements, their visual type, placement, and composition.
+- imageDescription must describe the child’s action, visible choices/tools, and response space—not a narrative scene. It may request the exact visualWords where needed, but no other writing.
+- imagePrompt must always be an English-only visual-generation prompt. It must allow the exact text field and exact visualWords values while forbidding all other typography.
 - Use exact short sentence anchors naturally when useful, such as “I pick...”, “I feel...”, or the user’s target pattern.
 
 Design every page from the activity plan and student information.
@@ -238,6 +239,7 @@ Return JSON only, using this exact shape:
       "pageType": "cover | question | instruction | choice | rule | back-cover",
       "imageDescription": "A detailed image-generation description",
       "imagePrompt": "An English-only visual prompt with no requested labels or extra writing",
+      "visualWords": ["exact English words that this page explicitly permits, otherwise empty"],
       "text": "Short, child-friendly page text"
     }
   ]
@@ -281,6 +283,12 @@ Design ${pageCount} guided picture-book pages. Page text must be English. Image-
         imagePrompt: typeof page.imagePrompt === 'string' && page.imagePrompt.trim() && !containsChinese(page.imagePrompt)
           ? page.imagePrompt.trim()
           : 'Create a spacious child-friendly guided activity page with clear visual choices and tools. Do not render labels, captions, annotations, speech bubbles, symbols that resemble writing, or any typography beyond the separately supplied exact page text.',
+        visualWords: Array.isArray(page.visualWords)
+          ? page.visualWords
+              .map((word: unknown) => String(word || '').trim())
+              .filter((word: string) => /^[a-z][a-z-]*$/i.test(word))
+              .slice(0, 12)
+          : [],
         text: index === 0
           ? limitEnglishWords(ensureEnglishTitle(activityPlan?.storyTitleEn), 'My Picture Book')
           : limitEnglishWords(page.text, index === pages.length - 1 ? 'Every part of you belongs.' : 'Choose, make, and show what feels true.'),

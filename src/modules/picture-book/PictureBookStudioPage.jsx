@@ -50,16 +50,26 @@ const initialActivityPlan = {
 const STORYBOOK_VISUAL_STYLE = [
   'Oliver Jeffers-inspired loose watercolor washes with expressive black pen-and-ink sketch lines, warm, restrained, playful, and emotionally gentle.',
   'Use an extremely low-saturation washed palette of gray-blue, dusty gray-pink, sage gray-green, muted gray-orange, pale gray-yellow, and soft gray-purple.',
-  'Keep more than 80 percent calm negative space. Distribute only a few objects sparsely with strong breathing room.',
-  'Use a free, non-grid composition: varied object sizes and angles, casually scattered like an artist’s open working journal, never lined up and never rigidly centered.',
+  'Let each page-specific image prompt determine the number of elements, layout, density, and composition.',
   'Preserve creative-process traces: faint pencil construction lines, restrained watercolor splashes, and hand-drawn tool icons such as pencils or palettes.',
-  'Use imperfect handwritten English typography only for the exact supplied page text.',
+  'Use imperfect handwritten English typography only for the explicitly supplied page text and allowed choice-card words.',
   'Use a flat light warm-beige textured drawing-paper background, no border, no frame, no open-book mockup, and no photographed book.',
   'Use one consistent landscape page ratio.',
-  'Communicate all options through pictures. Do not invent word labels; a word may appear only when it is part of the exact supplied text field.',
+  'Do not invent words. Choice pages may show only their explicitly supplied allowed choice-card words.',
 ].join(' ');
 
-const STORYBOOK_TEXT_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English text, extra words, extra letters, captions, labels, annotations, speech bubbles, callouts, explanatory symbols, page numbers, borders, frames, grids, rigid rows, centered catalog layout, open-book mockup, photographed book, saturated colors, neon colors, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text';
+const STORYBOOK_TEXT_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English text, unrequested words, extra letters, captions, annotations, speech bubbles, callouts, explanatory symbols, page numbers, borders, frames, open-book mockup, photographed book, saturated colors, neon colors, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text';
+
+function getPageVisualWords(page) {
+  if (Array.isArray(page?.visualWords) && page.visualWords.length) {
+    return page.visualWords.map((word) => String(word).trim()).filter(Boolean).slice(0, 12);
+  }
+  const description = String(page?.imageDescription || '');
+  if (/标签|标注|单词|label/i.test(description)) {
+    return [...new Set(description.match(/\b[a-z][a-z-]*\b/gi) || [])].slice(0, 12);
+  }
+  return [];
+}
 
 function toggleList(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
@@ -180,6 +190,7 @@ function buildPictureBookPages(plan, info, requestedPageCount, isEn = false) {
     },
     {
       pageType: 'choice',
+      visualWords: vocab.split(/[,，、\s]+/).filter(Boolean).slice(0, 6),
       imageDescription: isEn ? `Choice page. Show six clear illustrated option cards with picture-and-word anchors using these English target words: ${wordAnchors}. Leave generous space for pointing and choosing.` : `选择页。展示六张清晰的图文选项卡，使用这些英文目标词汇作为“图案+单词”锚点：${wordAnchors}。留出充足空间供孩子指认和选择。`,
       text: 'Point to the word that fits.',
     },
@@ -195,6 +206,7 @@ function buildPictureBookPages(plan, info, requestedPageCount, isEn = false) {
     },
     {
       pageType: 'choice',
+      visualWords: ['round', 'spiky', 'wavy', 'tiny', 'wide', 'twisty'],
       imageDescription: isEn ? 'Inspiration choice page. Show six non-perfect child-made shape cards: round, spiky, wavy, tiny, wide, and twisty. Each shape has its exact English word label.' : '灵感选择页。展示六张带有儿童手作感、不追求完美的形状卡片：round、spiky、wavy、tiny、wide、twisty。每种形状配对应的英文单词标签。',
       text: 'Choose a shape that feels right.',
     },
@@ -246,6 +258,7 @@ function buildPictureBookPages(plan, info, requestedPageCount, isEn = false) {
     id: `page-${Date.now()}-${index + 1}`,
     page: index + 1,
     pageType: page.pageType,
+    visualWords: Array.isArray(page.visualWords) ? page.visualWords : [],
     imageDescription: page.imageDescription,
     imagePrompt: `Create a child-friendly guided picture-book ${page.pageType} page. Make the child action visually obvious with clear objects, choices, tools, and generous response space. Do not render labels, captions, annotations, speech bubbles, pseudo-text, symbols that resemble writing, or any typography beyond the separately supplied exact page text.`,
     text: page.text,
@@ -526,6 +539,7 @@ export function PictureBookStudioPage() {
           pageType: p.pageType || 'instruction',
           imageDescription: p.imageDescription || '',
           imagePrompt: p.imagePrompt || '',
+          visualWords: Array.isArray(p.visualWords) ? p.visualWords : [],
           text: p.text || '',
           imageUrl: '',
           status: 'placeholder',
@@ -587,12 +601,13 @@ export function PictureBookStudioPage() {
       negativePrompt: STORYBOOK_TEXT_NEGATIVE_PROMPT,
       referenceNotes: [
         'These are prompt-only visual directions for an action-led guided picture book. They must guide composition but must never be rendered as visible page text.',
-        'ABSOLUTE TYPOGRAPHY RULE: each image may display only its visibleEnglishText value exactly. Never display imageDescription, imagePrompt, pageType, labels, captions, annotations, speech bubbles, Chinese characters, pseudo-text, or any other words.',
+        'ABSOLUTE TYPOGRAPHY RULE: each image may display only its visibleEnglishText and allowedVisibleWords values exactly. Render allowedVisibleWords only when and where the page-specific prompt requests them. Never display imageDescription, imagePrompt, pageType, captions, annotations, speech bubbles, Chinese characters, pseudo-text, or any other words.',
         JSON.stringify(pages.map((page) => ({
           page: page.page,
           pageType: page.pageType || 'instruction',
           imagePrompt: page.imagePrompt || page.imageDescription,
           visibleEnglishText: page.text,
+          allowedVisibleWords: getPageVisualWords(page),
         }))),
       ].join('\n'),
       batchItems: pages.map((page) => ({
@@ -604,13 +619,17 @@ export function PictureBookStudioPage() {
         text: page.page === 1 ? '' : page.text,
         imageDescription: page.imageDescription,
         imagePrompt: page.imagePrompt || page.imageDescription,
+        visualWords: getPageVisualWords(page),
         prompt: [
           `Create a guided picture-book ${page.pageType || 'instruction'} page, never a narrative story scene.`,
           STORYBOOK_VISUAL_STYLE,
           page.imagePrompt || page.imageDescription,
-          `Render only this exact English core text (maximum 10 words): “${page.text}”`,
+          `Render this exact English core text: “${page.text}”.`,
+          getPageVisualWords(page).length
+            ? `Allowed visible words: ${getPageVisualWords(page).join(', ')}. Show them only where and how the page-specific visual prompt requests.`
+            : 'Do not add any word labels beyond the exact core text.',
           'Make the child action visually obvious using pictures only.',
-          'Do not add labels, captions, annotations, speech bubbles, Chinese text, pseudo-text, extra sentences, or unrelated typography.',
+          'Do not add captions, annotations, speech bubbles, Chinese text, pseudo-text, extra sentences, or unrelated typography.',
         ].join(' '),
       })),
       rawValues: {
@@ -683,6 +702,7 @@ export function PictureBookStudioPage() {
   const generateOneImage = async (targetPage) => {
     updatePage(targetPage.id, { status: 'generating', error: '' });
     try {
+      const visualWords = getPageVisualWords(targetPage);
       const prompt = [
         `Children picture-book illustration for page ${targetPage.page}.`,
         `Story title: ${activityPlan.storyTitleEn || 'Picture Book'}.`,
@@ -692,7 +712,10 @@ export function PictureBookStudioPage() {
         `Page mode: ${targetPage.pageType || 'instruction'}. This is an action-led guided picture book, not a narrative story scene.`,
         'Make the requested child action, choices, tools, or response space visually obvious.',
         `Render only this exact English core text: “${targetPage.text}”.`,
-        'Do not render labels, captions, annotations, speech bubbles, Chinese characters, pseudo-text, or any other words.',
+        visualWords.length
+          ? `Allowed visible words: ${visualWords.join(', ')}. Follow the page-specific visual prompt for their quantity, placement, and layout.`
+          : 'Do not render word labels beyond the exact core text.',
+        'Do not render captions, annotations, speech bubbles, Chinese characters, pseudo-text, or unrelated words.',
         'Warm classroom-ready picture-book style, consistent soft watercolor palette, no watermark.',
       ].join(' ');
       const result = await apiService.request('/api/ai/generate-ppt-asset', {
