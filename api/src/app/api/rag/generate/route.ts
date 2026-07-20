@@ -191,7 +191,7 @@ Design a guided picture-book activity plan suitable for the students' age and En
       const systemPrompt = `You are a professional designer of action-led children's English guided picture books.
 
 NON-NEGOTIABLE DEFINITION:
-This is a GUIDED PICTURE BOOK, never a story picture book. Do not create a plot, protagonist journey, narrative scene, story arc, exposition, conflict, or sequence such as “then they...” and “Poppy went...”. The child is the active creator, not a passive reader.
+This is a GUIDED PICTURE BOOK, never a story picture book. Do not create a plot, protagonist journey, narrative scene, story arc, exposition, conflict, or sequence such as “then they...” and “the character went...”. The child is the active creator, not a passive reader.
 
 Every activity page must make the child do something now. After each page, the answer to “What did the child do?” must be a concrete action. If the answer is “nothing, they only looked/read,” rewrite the page.
 
