@@ -89,6 +89,34 @@ function containsChinese(value: unknown): boolean {
   return /[\u3400-\u9fff]/.test(typeof value === 'string' ? value : '');
 }
 
+function normalizeImageDescription(
+  value: unknown,
+  useEnglish: boolean,
+  pageText: unknown,
+  visualWords: unknown
+): string {
+  const description = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+  if (description && (useEnglish ? !containsChinese(description) : containsChinese(description))) {
+    return description;
+  }
+
+  const exactText = typeof pageText === 'string' && !containsChinese(pageText)
+    ? pageText.replace(/\s+/g, ' ').trim()
+    : '';
+  const words = Array.isArray(visualWords)
+    ? visualWords
+        .map((word: unknown) => String(word || '').trim())
+        .filter((word: string) => /^[a-z][a-z-]*$/i.test(word))
+        .slice(0, 12)
+    : [];
+  const permittedText = [exactText, ...words].filter(Boolean).join(' / ');
+
+  if (useEnglish) {
+    return `A spacious guided picture-book activity page with clear choices, visible tools, and a child response area.${permittedText ? ` The only visible English text is: ${permittedText}.` : ' Do not show any text.'}`;
+  }
+  return `一页留白充足的儿童引导绘本活动画面，展示清晰的选择、可见的工具和孩子的操作留白区。${permittedText ? `画面只允许出现这些英文文字：${permittedText}。` : '画面中不出现任何文字。'}`;
+}
+
 function limitEnglishWords(value: unknown, fallback: string): string {
   const text = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
   if (!text || containsChinese(text)) return fallback;
@@ -268,18 +296,16 @@ Design ${pageCount} guided picture-book pages. Page text must be English. Image-
       if (pages.length !== pageCount) {
         throw new Error(`The model returned ${pages.length} pages instead of ${pageCount}.`);
       }
-      const hasInvalidLanguage = pages.some((page: any) => (
-        containsChinese(page?.text)
-        || containsChinese(page?.imagePrompt)
-        || (useEnglish ? containsChinese(page?.imageDescription) : !containsChinese(page?.imageDescription))
-      ));
-      if (hasInvalidLanguage) {
-        throw new Error('The model returned guided picture-book content in the wrong language.');
-      }
       const normalizedPages = pages.map((page: any, index: number) => ({
         ...page,
         page: index + 1,
         pageType: index === 0 ? 'cover' : index === pages.length - 1 ? 'back-cover' : normalizePageType(page.pageType),
+        imageDescription: normalizeImageDescription(
+          page.imageDescription,
+          useEnglish,
+          page.text,
+          page.visualWords
+        ),
         imagePrompt: typeof page.imagePrompt === 'string' && page.imagePrompt.trim() && !containsChinese(page.imagePrompt)
           ? page.imagePrompt.trim()
           : 'Create a spacious child-friendly guided activity page with clear visual choices and tools. Do not render labels, captions, annotations, speech bubbles, symbols that resemble writing, or any typography beyond the separately supplied exact page text.',
