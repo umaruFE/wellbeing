@@ -92,8 +92,7 @@ function containsChinese(value: unknown): boolean {
 function normalizeImageDescription(
   value: unknown,
   useEnglish: boolean,
-  pageText: unknown,
-  visualWords: unknown
+  pageText: unknown
 ): string {
   const description = typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
   if (description && (useEnglish ? !containsChinese(description) : containsChinese(description))) {
@@ -103,13 +102,7 @@ function normalizeImageDescription(
   const exactText = typeof pageText === 'string' && !containsChinese(pageText)
     ? pageText.replace(/\s+/g, ' ').trim()
     : '';
-  const words = Array.isArray(visualWords)
-    ? visualWords
-        .map((word: unknown) => String(word || '').trim())
-        .filter((word: string) => /^[a-z][a-z-]*$/i.test(word))
-        .slice(0, 12)
-    : [];
-  const permittedText = [exactText, ...words].filter(Boolean).join(' / ');
+  const permittedText = exactText;
 
   if (useEnglish) {
     return `A spacious guided picture-book activity page with clear choices, visible tools, and a child response area.${permittedText ? ` The only visible English text is: ${permittedText}.` : ' Do not show any text.'}`;
@@ -246,10 +239,9 @@ TEXT AND VISUAL RULES:
 - Core page text must always be English and at most 10 English words.
 - pageType values must use the English enum shown in the JSON schema.
 - ${useEnglish ? 'Write every imageDescription in English. Do not include Chinese anywhere.' : 'Write every imageDescription in clear Simplified Chinese, while keeping every text field entirely in English.'}
-- Whenever a page-specific visual description requires exact visible English words—on cards, shapes, objects, signs, or another layout—put only those permitted words in visualWords. Otherwise use an empty array.
-- visualWords does not define the layout. The page-specific imageDescription and imagePrompt must define the actual number of elements, their visual type, placement, and composition.
-- imageDescription must describe the child’s action, visible choices/tools, and response space—not a narrative scene. It may request the exact visualWords where needed, but no other writing.
-- imagePrompt must always be an English-only visual-generation prompt. It must allow the exact text field and exact visualWords values while forbidding all other typography.
+- visualWords must always be an empty array. The text field is the single source of visible typography.
+- imageDescription must describe the child’s action, visible choices/tools, and response space—not a narrative scene. It must not request labels, headings, captions, annotations, or any writing beyond the exact text field.
+- imagePrompt must always be an English-only, non-visible scene instruction. Prefer concise visual phrases instead of display-ready headings or sentences. It must allow only the exact text field while forbidding all other typography.
 - Use exact short sentence anchors naturally when useful, such as “I pick...”, “I feel...”, or the user’s target pattern.
 
 Design every page from the activity plan and student information.
@@ -303,18 +295,12 @@ Design ${pageCount} guided picture-book pages. Page text must be English. Image-
         imageDescription: normalizeImageDescription(
           page.imageDescription,
           useEnglish,
-          page.text,
-          page.visualWords
+          page.text
         ),
         imagePrompt: typeof page.imagePrompt === 'string' && page.imagePrompt.trim() && !containsChinese(page.imagePrompt)
           ? page.imagePrompt.trim()
           : 'Create a spacious child-friendly guided activity page with clear visual choices and tools. Do not render labels, captions, annotations, speech bubbles, symbols that resemble writing, or any typography beyond the separately supplied exact page text.',
-        visualWords: Array.isArray(page.visualWords)
-          ? page.visualWords
-              .map((word: unknown) => String(word || '').trim())
-              .filter((word: string) => /^[a-z][a-z-]*$/i.test(word))
-              .slice(0, 12)
-          : [],
+        visualWords: [],
         text: index === 0
           ? limitEnglishWords(ensureEnglishTitle(activityPlan?.storyTitleEn), 'My Picture Book')
           : limitEnglishWords(page.text, index === pages.length - 1 ? 'Every part of you belongs.' : 'Choose, make, and show what feels true.'),
