@@ -254,7 +254,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/prompt",
+        "url": "=http://117.50.214.226:8188/prompt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
@@ -279,7 +279,7 @@
     },
     {
       "parameters": {
-        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
+        "url": "=http://117.50.214.226:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -301,7 +301,7 @@
     },
     {
       "parameters": {
-        "url": "=http://{{ $env[\"COMFYUI_ADDR\"]||'117.50.81.239' }}:8188/view",
+        "url": "=http://117.50.214.226:8188/view",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
