@@ -98,7 +98,7 @@
             {
               "id": "b56d373b-ce89-4280-bb76-745968f4d482",
               "name": "music_filepath",
-              "value": "=http://117.50.218.161:5678/webhook/files?file={{ $json.fileName.split(\"files\")[1] }}",
+              "value": "=http://117.50.214.226:5678/webhook/files?file={{ $json.fileName.split(\"files\")[1] }}",
               "type": "string"
             }
           ]
@@ -325,7 +325,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.218.161:5678",
+            "host": "117.50.214.226:5678",
             "connection": "keep-alive",
             "content-type": "application/json",
             "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
@@ -347,7 +347,7 @@
             "organization_id": null,
             "timestamp": 1777389759948
           },
-          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-music",
+          "webhookUrl": "http://117.50.214.226:5678/webhook/gene-music",
           "executionMode": "production"
         },
         "pairedItem": {

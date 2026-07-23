@@ -35,7 +35,7 @@
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                   N8N 工作流引擎                                  │
-│                   (http://117.50.218.161:5678)                   │
+│                   (http://117.50.214.226:5678)                   │
 │                                                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐ │
 │  │ ai-image     │  │ ai-audio     │  │ ai-prompt             │ │
@@ -374,7 +374,7 @@ api/src/
 ```javascript
 // api/src/lib/n8n/client.js
 
-const N8N_API_BASE = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
+const N8N_API_BASE = process.env.N8N_API_BASE_URL || 'http://117.50.214.226:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY;
 
 class N8NClient {
@@ -975,7 +975,7 @@ negative-prompt-default = [从 prompt-config.json 提取]
 
 ```env
 # N8N 配置
-N8N_API_BASE_URL=http://117.50.218.161:5678
+N8N_API_BASE_URL=http://117.50.214.226:5678
 N8N_API_KEY=your-n8n-api-key
 
 # N8N Webhook URL 前缀（可选，用于构建完整URL）

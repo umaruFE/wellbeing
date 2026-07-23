@@ -648,7 +648,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "response": "=http://117.50.218.161:5678/webhook/files?file={{ $json.videoPath.split('files/')[1] }}",
+            "response": "=http://117.50.214.226:5678/webhook/files?file={{ $json.videoPath.split('files/')[1] }}",
             "execution_id": "={{ $execution.id }}",
             "status": "success"
           },
@@ -705,7 +705,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.218.161:5678",
+            "host": "117.50.214.226:5678",
             "connection": "keep-alive",
             "content-type": "application/json",
             "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
@@ -720,9 +720,9 @@
           "query": {},
           "body": {
             "storyboard_images_filepath": [
-              "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00182_.png",
-              "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00183_.png",
-              "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00184_.png"
+              "http://117.50.214.226:5678/webhook/files?file=Asset_Poppy_00182_.png",
+              "http://117.50.214.226:5678/webhook/files?file=Asset_Poppy_00183_.png",
+              "http://117.50.214.226:5678/webhook/files?file=Asset_Poppy_00184_.png"
             ],
             "storyboard_prompts": [
               {
@@ -787,7 +787,7 @@
               }
             ]
           },
-          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-video",
+          "webhookUrl": "http://117.50.214.226:5678/webhook/gene-video",
           "executionMode": "production"
         },
         "pairedItem": {

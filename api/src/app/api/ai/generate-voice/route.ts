@@ -183,7 +183,7 @@ export async function GET(request: NextRequest) {
 
       try {
         // 通过 get-resource webhook 获取资源
-        const resourceUrl = `${process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678'}/webhook/get-resource?execution_id=${executionId}`;
+        const resourceUrl = `${process.env.N8N_API_BASE_URL || 'http://117.50.214.226:5678'}/webhook/get-resource?execution_id=${executionId}`;
         console.log('[generate-voice] 获取音频资源:', resourceUrl);
 
         const resourceResponse = await fetch(resourceUrl, {

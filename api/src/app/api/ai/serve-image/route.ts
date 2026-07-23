@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const AI_API_BASE_URL = 'http://117.50.218.161:5678';
+const AI_API_BASE_URL = 'http://117.50.214.226:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY || '';
 
 export async function OPTIONS() {

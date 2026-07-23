@@ -393,7 +393,7 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "image_filepath": "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00051_.png",
+          "image_filepath": "http://117.50.214.226:5678/webhook/files?file=Asset_Poppy_00051_.png",
           "prompt": "清晨的街心湖笼罩在淡金色薄雾中，芦苇丛边缘水珠轻颤。木桥延伸至湖心的旧码头，远处山峦轮廓在晨霭中若隐若现。edi赤脚踩上摇摇晃晃的木船，单膝跪地调整船桨角度，船身随波纹轻晃，水面倒影里晨鸟掠过。",
           "duration": 3
         },

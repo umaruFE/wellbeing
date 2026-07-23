@@ -81,7 +81,7 @@
             {
               "id": "b56d373b-ce89-4280-bb76-745968f4d482",
               "name": "images_filepath",
-              "value": "={{ \n  $json.images_filepath.map(filePath => \n    \"http://117.50.218.161:5678/webhook/files?file=\" + \n    filePath.split('/').pop()\n  )\n}}",
+              "value": "={{ \n  $json.images_filepath.map(filePath => \n    \"http://117.50.214.226:5678/webhook/files?file=\" + \n    filePath.split('/').pop()\n  )\n}}",
               "type": "array"
             }
           ]

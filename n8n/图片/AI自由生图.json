@@ -104,7 +104,7 @@
             "width": 1024,
             "height": 1024
           },
-          "webhookUrl": "http://117.50.218.161:5678/webhook/ai-free-image-generation",
+          "webhookUrl": "http://117.50.214.226:5678/webhook/ai-free-image-generation",
           "executionMode": "production"
         },
         "pairedItem": {
