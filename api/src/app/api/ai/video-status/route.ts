@@ -125,13 +125,13 @@ export async function GET(request: NextRequest) {
           }
         });
       } catch (error) {
-        console.error('获取视频数据失败:', error);
+        console.warn('执行已完成，但视频数据尚未就绪，继续等待:', error);
         return NextResponse.json({
-          success: false,
-          error: '获取视频数据失败',
+          success: true,
+          message: '视频数据正在同步，请继续轮询',
           data: {
             executionId: executionId,
-            status: 'failed'
+            status: 'processing'
           }
         }, {
           headers: {
