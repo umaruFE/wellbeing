@@ -86,7 +86,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const storyboard = $('webhook').first().json.storyboard_prompts\n\nconst voice_list = $input.first().json.data.map(item => {\n  return {\n    \"text\": item.text,\n    \"audio_length\": item.audio_length,\n    \"start_time\": item.start_time,\n    \"end_time\": item.end_time\n  }\n})\n\nreturn {\n  \"data\": {\n    storyboard,\n    voice_list\n  }\n}"
+        "jsCode": "const storyboard = $('webhook').first().json.body.storyboard_prompts\n\nconst voice_list = $input.first().json.data.map(item => {\n  return {\n    \"text\": item.text,\n    \"audio_length\": item.audio_length,\n    \"start_time\": item.start_time,\n    \"end_time\": item.end_time\n  }\n})\n\nreturn {\n  \"data\": {\n    storyboard,\n    voice_list\n  }\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -349,9 +349,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "Qwen3.5",
+          "value": "deepseek-v4-flash",
           "mode": "list",
-          "cachedResultName": "Qwen3.5"
+          "cachedResultName": "deepseek-v4-flash"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -366,8 +366,8 @@
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
-          "id": "gM924akHUPCvr5sE",
-          "name": "supper center"
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
         }
       }
     },
@@ -1061,11 +1061,6 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "生成分镜图片后整理字段",
             "type": "main",
             "index": 0
@@ -1074,6 +1069,17 @@
       ]
     },
     "生成分镜图片后整理字段": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
       "main": [
         [
           {

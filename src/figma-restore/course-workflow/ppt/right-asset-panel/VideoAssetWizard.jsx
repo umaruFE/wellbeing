@@ -8,9 +8,10 @@ import rolly from '../../../../assets/ip/rolly.png';
 import milo from '../../../../assets/ip/milo.png';
 import ace from '../../../../assets/ip/ace.png';
 import apiService from '../../../../utils/apiService';
+import videoStoryboardService from '../../../../services/videoStoryboardService';
 
 const steps = ['场景 · 角色', '词汇与句型', '确认并生成'];
-const storySteps = ['角色', '叙事', '脚本', '分镜', '合成'];
+const storySteps = ['角色与方向', '叙事选项', '确认并生成'];
 const scenes = ['森林', '沙滩', '海洋', '农场', '太空', '雪山'];
 const characters = [
   { name: 'Poppy', image: poppy },
@@ -36,9 +37,34 @@ const storyProgressRows = [
 
 function buildVideoPrompt(asset, values) {
   if (asset.code === 'VM') {
-    return `生成情境叙事视频。模板：${values.template || '拯救型'}。角色：${(values.characters || []).join(', ') || 'Poppy'}。词汇/动作：${(values.words || []).join(', ')}。句型：${(values.sentences || []).join('; ')}。旁白语言：${values.narrationLanguage || 'english'}。画面风格适合儿童英语PPT课件。`;
+    const templateLabels = {
+      shield: '拯救型：伙伴被困，完成挑战来拯救',
+      map: '探险型：追踪线索，完成任务抵达宝藏',
+      cup: '竞赛型：友谊挑战赛，比拼通关',
+      gear: '解谜型：魔法失控，用正确动作恢复秩序',
+    };
+    return [
+      '生成适合儿童英语PPT课件的情境叙事视频。',
+      `叙事模板：${templateLabels[values.template] || templateLabels.shield}。`,
+      `目标动作或词汇：${(values.words || []).join('、') || '无'}。`,
+      `目标句型：${(values.sentences || []).join('；') || '无'}。`,
+      `旁白语言：${values.narrationLanguage === 'bilingual' ? '中英双语' : '英文'}。`,
+      `背景音乐：${values.bgm ? '自动匹配' : '关闭'}。`,
+      `音效：${values.sfx ? '开启' : '关闭'}。`,
+      '保持角色形象一致，画面清晰、活泼、连贯。',
+    ].join('');
   }
-  return `生成体能闯关视频。场景：${values.scene || '森林'}。角色：${values.character || 'Poppy'}。词汇：${(values.words || []).join(', ')}。句型：${(values.sentences || []).join('; ')}。气泡样式：${values.bubble || '胶囊'}。画面风格适合儿童英语PPT课件。`;
+  return [
+    '生成适合儿童英语PPT课件的体能闯关视频。',
+    `场景：${values.scene || '森林'}。`,
+    `闯关词汇：${(values.words || []).join('、') || '无'}。`,
+    `引导句型：${(values.sentences || []).join('；') || '无'}。`,
+    `单词气泡样式：${values.bubble || '胶囊'}。`,
+    `背景音乐：${values.bgm ? '开启' : '关闭'}。`,
+    `英文旁白：${values.voice ? '开启' : '关闭'}。`,
+    `单词发音音效：${values.sfx ? '开启' : '关闭'}。`,
+    '保持角色形象一致，动作清晰，节奏活泼。',
+  ].join('');
 }
 
 function wait(ms) {
@@ -106,29 +132,68 @@ async function completeAndSaveVideo(asset, generated) {
 }
 
 async function submitVideoAsset(asset, values) {
-  const response = await apiService.post('/api/ai/generate-ppt-asset', {
-    assetType: 'video',
-    assetCode: asset.code,
-    assetName: asset.title,
-    prompt: buildVideoPrompt(asset, values),
-    options: {
-      direction: values.direction,
-      scene: values.scene,
-      character: values.character,
-      characters: values.characters,
-      words: values.words,
-      sentences: values.sentences,
-      bubble: values.bubble,
-      bgm: values.bgm,
-      voice: values.voice,
-      sfx: values.sfx,
-      template: values.template,
-      narrationLanguage: values.narrationLanguage,
-      duration: asset.code === 'VM' ? 12 : 8,
-    },
+  const prompt = buildVideoPrompt(asset, values);
+  const role = String(values.character || 'Poppy').toLowerCase();
+  const direction = values.direction || '16:9';
+  const isVertical = direction === '9:16';
+  const videoWidth = isVertical ? 720 : 1280;
+  const videoHeight = isVertical ? 1280 : 720;
+
+  // 与 /test/video-generator 使用完全相同的两阶段链路：
+  // 1. 单 IP + 比例 + story 生成分镜；2. 使用分镜数据合成视频。
+  const storyboardResult = await videoStoryboardService.callWebhookGenerateImages(
+    role,
+    direction,
+    prompt,
+    videoWidth,
+    videoHeight,
+  );
+  const storyboardData =
+    storyboardResult?.storyboardData?.data
+    || storyboardResult?.storyboardData
+    || storyboardResult?.data?.storyboardData?.data
+    || storyboardResult?.data?.storyboardData;
+
+  if (!storyboardData) {
+    throw new Error('分镜生成完成，但未返回 storyboardData');
+  }
+
+  const storyboardImages = storyboardData.storyboard_images_filepath;
+  const storyboardPrompts = storyboardData.storyboard_prompts;
+  if (!Array.isArray(storyboardImages) || storyboardImages.length === 0) {
+    throw new Error('分镜生成完成，但未返回分镜图片');
+  }
+  if (!Array.isArray(storyboardPrompts) || storyboardPrompts.length === 0) {
+    throw new Error('分镜生成完成，但未返回视频提示词');
+  }
+
+  const composed = await videoStoryboardService.generateVideoWithPolling({
+    storyboard_images_filepath: storyboardImages,
+    storyboard_prompts: storyboardPrompts,
+    video_width: videoWidth,
+    video_height: videoHeight,
+    voice: storyboardData.voice || {},
+    storyboard_image_prompts: storyboardData.storyboard_image_prompts || [],
+    title: asset.title,
   });
-  const generated = response.asset || response.assets?.[0];
-  return completeAndSaveVideo(asset, generated);
+  const videoUrl = typeof composed?.videoData === 'string'
+    ? composed.videoData
+    : findVideoUrl(composed?.videoData || composed);
+  if (!videoUrl) {
+    throw new Error('视频合成完成，但未返回视频地址');
+  }
+
+  return completeAndSaveVideo(asset, {
+    title: asset.title,
+    prompt,
+    url: videoUrl,
+    status: 'completed',
+    duration: storyboardPrompts.reduce(
+      (total, item) => total + (Number(item?.duration) || 0),
+      0,
+    ),
+    raw: composed,
+  });
 }
 
 function VideoStepper({ step }) {
@@ -380,13 +445,13 @@ function SummaryCard({ values }) {
   return (
     <div className="ppt-v1-summary-card">
       <div><span>视频类型</span><strong>体能闯关</strong></div>
-      <div><span>时长</span><strong>02 : 16</strong></div>
+      <div><span>时长</span><strong>按分镜自动计算</strong></div>
       <div><span>视频方向</span><strong>{values.direction}</strong></div>
-      <div><span>场景 / 模板</span><strong>{values.scene} / 拯救型</strong></div>
-      <div><span>IP 角色</span><strong>Poppy, Edi</strong></div>
+      <div><span>场景</span><strong>{values.scene}</strong></div>
+      <div><span>IP 角色</span><strong>{values.character}</strong></div>
       <section>
-        <article><span>词汇数</span><strong>12</strong></article>
-        <article><span>句型数</span><strong>5</strong></article>
+        <article><span>词汇数</span><strong>{values.words.length}</strong></article>
+        <article><span>句型数</span><strong>{values.sentences.length}</strong></article>
       </section>
     </div>
   );
@@ -495,25 +560,20 @@ function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
 }
 
 function StoryRoleStep({ values, setValue }) {
-  const toggleCharacter = (name) => {
-    const current = values.characters;
-    setValue('characters', current.includes(name) ? current.filter((item) => item !== name) : [...current, name]);
-  };
-
   return (
     <div className="ppt-vm-body">
-      <div className="ppt-vm-section-title">选择参与本场景的IP 角色（可多选）</div>
+      <div className="ppt-vm-section-title">选择一个 IP 角色（单选）</div>
       <div className="ppt-vm-character-grid">
         {characters.map((character) => (
           <button
             type="button"
             key={character.name}
-            className={values.characters.includes(character.name) ? 'is-active' : ''}
-            onClick={() => toggleCharacter(character.name)}
+            className={values.character === character.name ? 'is-active' : ''}
+            onClick={() => setValue('character', character.name)}
           >
             <img src={character.image} alt="" />
             <span>{character.name}</span>
-            {values.characters.includes(character.name) ? <b>✓</b> : null}
+            {values.character === character.name ? <b>✓</b> : null}
           </button>
         ))}
       </div>
@@ -833,16 +893,22 @@ function FrameEditModal({ activeFrame, framePositions, onClose, onFrameChange, o
 }
 
 function StorySummary({ values }) {
+  const templateLabels = {
+    shield: '拯救型',
+    map: '探险型',
+    cup: '竞赛型',
+    gear: '解谜型',
+  };
   return (
     <div className="ppt-v1-summary-card ppt-vm-summary-card">
-      <div><span>叙事模板</span><strong>shield 拯救型</strong></div>
-      <div><span>时长</span><strong>02 : 16</strong></div>
+      <div><span>叙事模板</span><strong>{templateLabels[values.template] || '拯救型'}</strong></div>
+      <div><span>时长</span><strong>按分镜自动计算</strong></div>
       <div><span>视频方向</span><strong>{values.direction}</strong></div>
-      <div><span>IP 角色</span><strong>{values.characters.join(', ')}</strong></div>
-      <div><span>分镜帧数</span><strong>5 帧</strong></div>
+      <div><span>IP 角色</span><strong>{values.character}</strong></div>
+      <div><span>生成方式</span><strong>AI 自动分镜</strong></div>
       <section>
-        <article><span>词汇数</span><strong>12</strong></article>
-        <article><span>句型数</span><strong>5</strong></article>
+        <article><span>词汇数</span><strong>{values.words.length}</strong></article>
+        <article><span>句型数</span><strong>{values.sentences.length}</strong></article>
       </section>
     </div>
   );
@@ -881,7 +947,7 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
   const [generating, setGenerating] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
-    characters: ['Poppy', 'Edi'],
+    character: 'Poppy',
     direction: '16:9',
     template: 'shield',
     words: ['Dennis', 'James', 'Ricky'],
@@ -914,9 +980,7 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
         <StoryStepper step={step} />
         {step === 0 ? <StoryRoleStep values={values} setValue={setValue} /> : null}
         {step === 1 ? <StoryNarrativeStep values={values} setValue={setValue} /> : null}
-        {step === 2 ? <StoryScriptStep /> : null}
-        {step === 3 ? <StoryStoryboardStep values={values} setValue={setValue} /> : null}
-        {step === 4 ? <StoryGenerateStep values={values} generating={generating} /> : null}
+        {step === 2 ? <StoryGenerateStep values={values} generating={generating} /> : null}
         {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
@@ -931,11 +995,11 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
               type="button"
               className="ppt-v1-primary"
               onClick={() => {
-                if (step < 4) setStep((current) => current + 1);
+                if (step < 2) setStep((current) => current + 1);
                 else generateVideo();
               }}
             >
-              {step === 4 ? '生成视频' : '下一步'}
+              {step === 2 ? '生成视频' : '下一步'}
             </button>
           </>
         )}
