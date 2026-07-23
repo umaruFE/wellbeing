@@ -10,8 +10,8 @@ import ace from '../../../../assets/ip/ace.png';
 import apiService from '../../../../utils/apiService';
 import videoStoryboardService from '../../../../services/videoStoryboardService';
 
-const steps = ['场景 · 角色', '词汇与句型', '确认并生成'];
-const storySteps = ['角色与方向', '叙事选项', '确认并生成'];
+const steps = ['场景 · 角色', '词汇与句型', '生成分镜', '生成视频'];
+const storySteps = ['角色与方向', '叙事选项', '生成分镜', '生成视频'];
 const scenes = ['森林', '沙滩', '海洋', '农场', '太空', '雪山'];
 const characters = [
   { name: 'Poppy', image: poppy },
@@ -131,7 +131,21 @@ async function completeAndSaveVideo(asset, generated) {
   return completed;
 }
 
-async function submitVideoAsset(asset, values) {
+function unwrapStoryboardData(result) {
+  return result?.storyboardData?.data
+    || result?.storyboardData
+    || result?.data?.storyboardData?.data
+    || result?.data?.storyboardData;
+}
+
+function storyboardImageUrl(path) {
+  if (typeof path !== 'string') return '';
+  return path.startsWith('/home/node/files/')
+    ? `/api/ai/serve-image?path=${encodeURIComponent(path)}`
+    : path;
+}
+
+async function generateStoryboardAsset(asset, values) {
   const prompt = buildVideoPrompt(asset, values);
   const role = String(values.character || 'Poppy').toLowerCase();
   const direction = values.direction || '16:9';
@@ -139,8 +153,6 @@ async function submitVideoAsset(asset, values) {
   const videoWidth = isVertical ? 720 : 1280;
   const videoHeight = isVertical ? 1280 : 720;
 
-  // 与 /test/video-generator 使用完全相同的两阶段链路：
-  // 1. 单 IP + 比例 + story 生成分镜；2. 使用分镜数据合成视频。
   const storyboardResult = await videoStoryboardService.callWebhookGenerateImages(
     role,
     direction,
@@ -148,11 +160,7 @@ async function submitVideoAsset(asset, values) {
     videoWidth,
     videoHeight,
   );
-  const storyboardData =
-    storyboardResult?.storyboardData?.data
-    || storyboardResult?.storyboardData
-    || storyboardResult?.data?.storyboardData?.data
-    || storyboardResult?.data?.storyboardData;
+  const storyboardData = unwrapStoryboardData(storyboardResult);
 
   if (!storyboardData) {
     throw new Error('分镜生成完成，但未返回 storyboardData');
@@ -167,8 +175,27 @@ async function submitVideoAsset(asset, values) {
     throw new Error('分镜生成完成，但未返回视频提示词');
   }
 
+  return {
+    prompt,
+    videoWidth,
+    videoHeight,
+    storyboardData,
+    images: storyboardImages.map(storyboardImageUrl),
+    prompts: storyboardPrompts,
+  };
+}
+
+async function composeStoryboardVideo(asset, storyboard) {
+  const {
+    prompt,
+    videoWidth,
+    videoHeight,
+    storyboardData,
+    prompts: storyboardPrompts,
+  } = storyboard;
+
   const composed = await videoStoryboardService.generateVideoWithPolling({
-    storyboard_images_filepath: storyboardImages,
+    storyboard_images_filepath: storyboardData.storyboard_images_filepath,
     storyboard_prompts: storyboardPrompts,
     video_width: videoWidth,
     video_height: videoHeight,
@@ -457,6 +484,54 @@ function SummaryCard({ values }) {
   );
 }
 
+function storyboardPromptText(prompt, index) {
+  if (typeof prompt === 'string') return prompt;
+  return prompt?.description || prompt?.prompt || `分镜 ${index + 1}`;
+}
+
+function StoryboardImagesStep({ storyboard, generating, onRegenerate }) {
+  return (
+    <div className="ppt-v1-body">
+      <div className="ppt-v1-section-title">生成分镜图片</div>
+      {generating ? (
+        <div className="ppt-v1-progress-card">
+          <div className="ppt-v1-progress-hero">
+            <span />
+            <strong>正在生成分镜图片</strong>
+            <em>AI 正在根据角色和提示词编排画面，请稍候...</em>
+          </div>
+        </div>
+      ) : storyboard ? (
+        <>
+          <p className="ppt-storyboard-tip">
+            已生成 {storyboard.images.length} 张分镜图片。确认无误后进入下一步生成视频。
+          </p>
+          <div className="ppt-storyboard-grid">
+            {storyboard.images.map((image, index) => (
+              <article key={`${image}-${index}`}>
+                <div>
+                  {image ? <img src={image} alt={`分镜 ${index + 1}`} /> : <span>暂无图片</span>}
+                  <b>分镜 {index + 1}</b>
+                </div>
+                <p>{storyboardPromptText(storyboard.prompts[index], index)}</p>
+                <em>{Number(storyboard.prompts[index]?.duration) || 3} 秒</em>
+              </article>
+            ))}
+          </div>
+          <button type="button" className="ppt-storyboard-regenerate" onClick={onRegenerate}>
+            ↻ 重新生成分镜图片
+          </button>
+        </>
+      ) : (
+        <div className="ppt-storyboard-empty">
+          <strong>先生成分镜图片，再生成视频</strong>
+          <p>系统会使用当前选择的单个 IP 角色、画面比例和全部选项生成分镜。</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ConfirmStep({ values, generating }) {
   return (
     <div className="ppt-v1-body">
@@ -494,7 +569,9 @@ export function VideoAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
 
 function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
+  const [storyboardGenerating, setStoryboardGenerating] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
+  const [storyboard, setStoryboard] = React.useState(null);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     scene: '森林',
@@ -507,17 +584,38 @@ function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
     voice: false,
     sfx: false,
   });
-  const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
+  const setValue = (key, value) => {
+    setValues((current) => ({ ...current, [key]: value }));
+    setStoryboard(null);
+  };
 
   React.useEffect(() => {
     onTitleChange?.(asset.title);
   }, [asset.title, onTitleChange]);
 
+  const generateStoryboard = async () => {
+    setStoryboardGenerating(true);
+    setErrorMessage('');
+    try {
+      const generatedStoryboard = await generateStoryboardAsset(asset, values);
+      setStoryboard(generatedStoryboard);
+    } catch (error) {
+      setErrorMessage(error.message || '分镜图片生成失败');
+    } finally {
+      setStoryboardGenerating(false);
+    }
+  };
+
   const generateVideo = async () => {
+    if (!storyboard) {
+      setErrorMessage('请先生成分镜图片');
+      setStep(2);
+      return;
+    }
     setGenerating(true);
     setErrorMessage('');
     try {
-      const generated = await submitVideoAsset(asset, values);
+      const generated = await composeStoryboardVideo(asset, storyboard);
       onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
     } catch (error) {
       setErrorMessage(error.message || '视频生成任务提交失败');
@@ -531,12 +629,21 @@ function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
         <VideoStepper step={step} />
         {step === 0 ? <SceneRoleStep values={values} setValue={setValue} /> : null}
         {step === 1 ? <VocabSentenceStep values={values} setValue={setValue} /> : null}
-        {step === 2 ? <ConfirmStep values={values} generating={generating} /> : null}
+        {step === 2 ? (
+          <StoryboardImagesStep
+            storyboard={storyboard}
+            generating={storyboardGenerating}
+            onRegenerate={generateStoryboard}
+          />
+        ) : null}
+        {step === 3 ? <ConfirmStep values={values} generating={generating} /> : null}
         {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
-        {generating ? (
-          <button type="button" className="ppt-v1-primary is-disabled">正在生成</button>
+        {generating || storyboardGenerating ? (
+          <button type="button" className="ppt-v1-primary is-disabled">
+            {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
+          </button>
         ) : (
           <>
             <button type="button" className="ppt-v1-secondary" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}>
@@ -547,10 +654,12 @@ function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
               className="ppt-v1-primary"
               onClick={() => {
                 if (step < 2) setStep((current) => current + 1);
+                else if (step === 2 && !storyboard) generateStoryboard();
+                else if (step === 2) setStep(3);
                 else generateVideo();
               }}
             >
-              {step === 2 ? '生成视频' : '下一步'}
+              {step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'}
             </button>
           </>
         )}
@@ -944,7 +1053,9 @@ function StoryGenerateStep({ values, generating }) {
 
 function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
+  const [storyboardGenerating, setStoryboardGenerating] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
+  const [storyboard, setStoryboard] = React.useState(null);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [values, setValues] = React.useState({
     character: 'Poppy',
@@ -956,17 +1067,38 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
     bgm: true,
     sfx: false,
   });
-  const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
+  const setValue = (key, value) => {
+    setValues((current) => ({ ...current, [key]: value }));
+    setStoryboard(null);
+  };
 
   React.useEffect(() => {
     onTitleChange?.(step === 0 ? '编辑视频素材' : asset.title);
   }, [asset.title, onTitleChange, step]);
 
+  const generateStoryboard = async () => {
+    setStoryboardGenerating(true);
+    setErrorMessage('');
+    try {
+      const generatedStoryboard = await generateStoryboardAsset(asset, values);
+      setStoryboard(generatedStoryboard);
+    } catch (error) {
+      setErrorMessage(error.message || '分镜图片生成失败');
+    } finally {
+      setStoryboardGenerating(false);
+    }
+  };
+
   const generateVideo = async () => {
+    if (!storyboard) {
+      setErrorMessage('请先生成分镜图片');
+      setStep(2);
+      return;
+    }
     setGenerating(true);
     setErrorMessage('');
     try {
-      const generated = await submitVideoAsset(asset, values);
+      const generated = await composeStoryboardVideo(asset, storyboard);
       onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
     } catch (error) {
       setErrorMessage(error.message || '视频生成任务提交失败');
@@ -980,12 +1112,21 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
         <StoryStepper step={step} />
         {step === 0 ? <StoryRoleStep values={values} setValue={setValue} /> : null}
         {step === 1 ? <StoryNarrativeStep values={values} setValue={setValue} /> : null}
-        {step === 2 ? <StoryGenerateStep values={values} generating={generating} /> : null}
+        {step === 2 ? (
+          <StoryboardImagesStep
+            storyboard={storyboard}
+            generating={storyboardGenerating}
+            onRegenerate={generateStoryboard}
+          />
+        ) : null}
+        {step === 3 ? <StoryGenerateStep values={values} generating={generating} /> : null}
         {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
-        {generating ? (
-          <button type="button" className="ppt-v1-primary is-disabled">正在生成</button>
+        {generating || storyboardGenerating ? (
+          <button type="button" className="ppt-v1-primary is-disabled">
+            {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
+          </button>
         ) : (
           <>
             <button type="button" className="ppt-v1-secondary" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}>
@@ -996,10 +1137,12 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
               className="ppt-v1-primary"
               onClick={() => {
                 if (step < 2) setStep((current) => current + 1);
+                else if (step === 2 && !storyboard) generateStoryboard();
+                else if (step === 2) setStep(3);
                 else generateVideo();
               }}
             >
-              {step === 2 ? '生成视频' : '下一步'}
+              {step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'}
             </button>
           </>
         )}
