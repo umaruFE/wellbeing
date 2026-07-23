@@ -393,7 +393,7 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "image_filepath": "http://117.50.214.226:5678/webhook/files?file=Asset_Poppy_00044_.png",
+          "image_filepath": "http://117.50.218.161:5678/webhook/files?file=Asset_Poppy_00044_.png",
           "prompt": "晨光穿透薄雾，河面如镜面般平静，两岸芦苇在微风中沙沙作响，远处山峦轮廓朦胧。米洛坐于船尾，双手稳握船桨，轻柔划动，桨叶划破水面，涟漪逐层扩散，小船缓缓前行，水流声与桨声交织。",
           "duration": 3
         },

@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
 
 // ComfyUI 地址配置
-const COMFYUI_URL = process.env.COMFYUI_URL || 'http://117.50.214.226:8188';
+const COMFYUI_URL = process.env.COMFYUI_URL || 'http://117.50.218.161:8188';
 
 /**
  * 从 URL 下载图片并上传到 OSS，带超时和重试

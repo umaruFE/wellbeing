@@ -93,7 +93,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.214.226:5678",
+            "host": "117.50.218.161:5678",
             "connection": "keep-alive",
             "content-type": "application/json"
           },
@@ -116,7 +116,7 @@
             "requirements": "",
             "currentCourseData": {}
           },
-          "webhookUrl": "http://117.50.214.226:5678/webhook/course-phase-regenerator",
+          "webhookUrl": "http://117.50.218.161:5678/webhook/course-phase-regenerator",
           "executionMode": "production"
         },
         "pairedItem": {

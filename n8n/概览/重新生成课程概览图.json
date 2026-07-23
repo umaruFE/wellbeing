@@ -94,7 +94,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.214.226:5678",
+            "host": "117.50.218.161:5678",
             "connection": "keep-alive",
             "content-type": "application/json",
             "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
@@ -110,7 +110,7 @@
           "body": {
             "themeImagePrompt": "扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案。宇宙探索场景：深蓝星空、发光星球、月面小路、漂浮的星星徽章、火箭形状的任务道具和柔和星云，整体充满探索感，画面无人物无文字。"
           },
-          "webhookUrl": "http://117.50.214.226:5678/webhook/course-theme-image-generator",
+          "webhookUrl": "http://117.50.218.161:5678/webhook/course-theme-image-generator",
           "executionMode": "production"
         },
         "pairedItem": {

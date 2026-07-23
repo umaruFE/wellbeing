@@ -54,7 +54,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.214.226:5678",
+            "host": "117.50.218.161:5678",
             "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
             "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
             "accept-encoding": "gzip, deflate",
@@ -67,7 +67,7 @@
             "file": "ComfyUI_00047_.png"
           },
           "body": {},
-          "webhookUrl": "http://117.50.214.226:5678/webhook/files",
+          "webhookUrl": "http://117.50.218.161:5678/webhook/files",
           "executionMode": "production"
         },
         "pairedItem": {

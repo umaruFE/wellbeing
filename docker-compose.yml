@@ -57,10 +57,10 @@ services:
       # ---- JWT ----
       JWT_SECRET: ${JWT_SECRET:-wellbeing-secret-key-2024}
       # ---- n8n 工作流引擎 ----
-      N8N_API_BASE_URL: ${N8N_API_BASE_URL:-http://117.50.214.226:5678}
+      N8N_API_BASE_URL: ${N8N_API_BASE_URL:-http://117.50.218.161:5678}
       N8N_API_KEY: ${N8N_API_KEY}
       # ---- ComfyUI 图片/视频生成 ----
-      COMFYUI_URL: ${COMFYUI_URL:-http://117.50.214.226:8188}
+      COMFYUI_URL: ${COMFYUI_URL:-http://117.50.218.161:8188}
       COMFYUI_PUBLIC_URL: ${COMFYUI_PUBLIC_URL:-https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com}
       # ---- 生产文件上传（仅 FTP）----
       UPLOAD_PROVIDER: ftp

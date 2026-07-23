@@ -157,7 +157,7 @@
             {
               "id": "e58dd683-28f3-406b-84b6-3447331c8bb3",
               "name": "fileName",
-              "value": "=http://117.50.214.226:5678/webhook/files?file={{ $json.images[0].filename }}",
+              "value": "=http://117.50.218.161:5678/webhook/files?file={{ $json.images[0].filename }}",
               "type": "string"
             }
           ]
@@ -489,7 +489,7 @@
             {
               "id": "e58dd683-28f3-406b-84b6-3447331c8bb3",
               "name": "fileName",
-              "value": "=http://117.50.214.226:5678/webhook/files?file={{ $json.images[0].filename }}",
+              "value": "=http://117.50.218.161:5678/webhook/files?file={{ $json.images[0].filename }}",
               "type": "string"
             }
           ]
@@ -663,7 +663,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.214.226:5678",
+            "host": "117.50.218.161:5678",
             "user-agent": "Apifox/1.0.0 (https://apifox.com)",
             "content-length": "672",
             "accept": "*/*",
@@ -679,7 +679,7 @@
             "role": "edi",
             "height": "867"
           },
-          "webhookUrl": "http://117.50.214.226:5678/webhook/regene-image",
+          "webhookUrl": "http://117.50.218.161:5678/webhook/regene-image",
           "executionMode": "production"
         },
         "pairedItem": {

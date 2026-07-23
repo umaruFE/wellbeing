@@ -1156,7 +1156,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.214.226:5678",
+            "host": "117.50.218.161:5678",
             "connection": "keep-alive",
             "content-type": "multipart/form-data; boundary=----formdata-undici-069701655260",
             "accept": "*/*",
@@ -1175,7 +1175,7 @@
             "video_width": "1280",
             "video_height": "720"
           },
-          "webhookUrl": "http://117.50.214.226:5678/webhook/gene-images",
+          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-images",
           "executionMode": "production"
         },
         "binary": {

@@ -106,7 +106,7 @@
       {
         "json": {
           "headers": {
-            "host": "117.50.214.226:5678",
+            "host": "117.50.218.161:5678",
             "connection": "keep-alive",
             "content-type": "application/json",
             "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
@@ -140,7 +140,7 @@
             "organizationId": null,
             "timestamp": 1777532516642
           },
-          "webhookUrl": "http://117.50.214.226:5678/webhook/course-generator",
+          "webhookUrl": "http://117.50.218.161:5678/webhook/course-generator",
           "executionMode": "production"
         },
         "pairedItem": {
