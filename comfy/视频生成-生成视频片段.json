@@ -348,7 +348,7 @@
         }
       },
       "widgets_values": [
-        "auto",
+        "disabled",
         false
       ]
     },
@@ -524,7 +524,7 @@
         }
       },
       "widgets_values": [
-        "auto",
+        "disabled",
         false
       ]
     },
