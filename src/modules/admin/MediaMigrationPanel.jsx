@@ -38,15 +38,22 @@ export const MediaMigrationPanel = () => {
     setLoading(true);
     setMessage('正在迁移，请不要关闭页面……');
     try {
-      const response = await fetch('/api/admin/media-migration', {
-        method: 'POST',
-        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
-        body: '{}',
-      });
-      const body = await response.json();
-      if (!response.ok) throw new Error(body.error || '迁移失败');
-      setSummary(body.data);
-      setMessage(`迁移完成：已转存 ${body.data.migrated} 张图片，GPU 地址残留 0 处。`);
+      let result;
+      do {
+        const response = await fetch('/api/admin/media-migration', {
+          method: 'POST',
+          headers: { ...authHeaders(), 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error || '迁移失败');
+        result = body.data;
+        if (!result.done) {
+          setMessage(`正在迁移：已上传 ${result.migrated}/${result.total} 张，请不要关闭页面……`);
+        }
+      } while (!result.done);
+      setSummary(result);
+      setMessage(`迁移完成：已转存 ${result.migrated} 张图片，GPU 地址残留 0 处。`);
     } catch (error) {
       setMessage(`迁移失败：${error.message}`);
     } finally {

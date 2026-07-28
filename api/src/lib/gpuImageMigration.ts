@@ -96,11 +96,32 @@ export async function migrateGpuImagesToCurrentStorage(userId: string) {
   const sources = await loadSources();
   const uniqueSources = Array.from(new Set(collectGpuSources(sources)));
   if (!uniqueSources.length) {
-    return { ...(await inspectGpuImageMigration()), migrated: 0 };
+    return { ...(await inspectGpuImageMigration()), migrated: 0, done: true, remaining: 0 };
   }
 
-  const replacements = new Map<string, string>();
-  for (const source of uniqueSources) {
+  const pool = createServerClient();
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS media_migration_file_map (
+      migration_type TEXT NOT NULL,
+      source_url TEXT NOT NULL,
+      target_url TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (migration_type, source_url)
+    )
+  `);
+  const mappedResult = await pool.query(
+    `SELECT source_url, target_url
+     FROM media_migration_file_map
+     WHERE migration_type = $1 AND source_url = ANY($2::text[])`,
+    ['gpu-to-ftp', uniqueSources],
+  );
+  const replacements = new Map<string, string>(
+    mappedResult.rows.map((row) => [row.source_url, row.target_url]),
+  );
+  const pendingSources = uniqueSources.filter((source) => !replacements.has(source));
+  const batchSources = pendingSources.slice(0, 3);
+
+  for (const source of batchSources) {
     const persistedUrl = await persistComfyImageUrl(source, 'ai-generated-images/gpu-migration');
     if (
       persistedUrl === source
@@ -110,9 +131,26 @@ export async function migrateGpuImagesToCurrentStorage(userId: string) {
       throw new Error(`图片未成功转存到 FTP：${source}`);
     }
     replacements.set(source, persistedUrl);
+    await pool.query(
+      `INSERT INTO media_migration_file_map (migration_type, source_url, target_url)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (migration_type, source_url)
+       DO UPDATE SET target_url = EXCLUDED.target_url`,
+      ['gpu-to-ftp', source, persistedUrl],
+    );
   }
 
-  const pool = createServerClient();
+  const remainingUploads = uniqueSources.length - replacements.size;
+  if (remainingUploads > 0) {
+    return {
+      provider: getUploadProvider(),
+      done: false,
+      migrated: replacements.size,
+      total: uniqueSources.length,
+      remaining: remainingUploads,
+    };
+  }
+
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -189,7 +227,10 @@ export async function migrateGpuImagesToCurrentStorage(userId: string) {
     }
     return {
       ...remaining,
+      done: true,
       migrated: replacements.size,
+      total: uniqueSources.length,
+      remaining: 0,
       updated: {
         courses: updatedCourses,
         pictureBooks: updatedPictureBooks,

@@ -47,49 +47,44 @@ async function uploadToFtp(
   const ftpBaseDir = requiredEnv('FTP_BASE_DIR').replace(/^\/+|\/+$/g, '');
   const ftpPort = Number(process.env.FTP_PORT || 21);
   const ftpSecure = process.env.FTP_SECURE === 'true';
-  const client = new ftp.Client();
-  client.ftp.encoding = 'utf-8';
-
-  try {
-    await client.access({
-      host: ftpHost,
-      port: ftpPort,
-      user: ftpUser,
-      password: ftpPassword,
-      secure: ftpSecure,
-    });
-
-    const relativePath = generatePath(folder, filename);
-    const fullPath = `${ftpBaseDir}/${relativePath}`;
-    const dirParts = path.dirname(fullPath).split('/');
-    const fileName = path.basename(fullPath);
-
-    // Create nested directories
-    for (const dir of dirParts) {
-      try {
-        await client.ensureDir(dir);
-      } catch {
-        // dir might already exist
-      }
-    }
-
-    // Convert file to Buffer -> stream
-    let buffer: Buffer;
-    if (file && typeof (file as any).arrayBuffer === 'function') {
-      buffer = Buffer.from(await (file as File).arrayBuffer());
-    } else if (file instanceof ArrayBuffer) {
-      buffer = Buffer.from(file);
-    } else {
-      buffer = file as Buffer;
-    }
-
-    const stream = Readable.from(buffer);
-    await client.uploadFrom(stream, fileName);
-
-    return `${ftpCdnDomain}/${fullPath}`;
-  } finally {
-    client.close();
+  let buffer: Buffer;
+  if (file && typeof (file as any).arrayBuffer === 'function') {
+    buffer = Buffer.from(await (file as File).arrayBuffer());
+  } else if (file instanceof ArrayBuffer) {
+    buffer = Buffer.from(file);
+  } else {
+    buffer = file as Buffer;
   }
+
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const client = new ftp.Client(60000);
+    client.ftp.encoding = 'utf-8';
+    try {
+      await client.access({
+        host: ftpHost,
+        port: ftpPort,
+        user: ftpUser,
+        password: ftpPassword,
+        secure: ftpSecure,
+      });
+
+      const relativePath = generatePath(folder, filename);
+      const fullPath = `${ftpBaseDir}/${relativePath}`;
+      await client.ensureDir(`/${path.dirname(fullPath)}`);
+      await client.uploadFrom(Readable.from(buffer), path.basename(fullPath));
+      return `${ftpCdnDomain}/${fullPath}`;
+    } catch (error) {
+      lastError = error;
+      console.error(`[fileUpload] FTP upload attempt ${attempt}/3 failed:`, error);
+      if (attempt < 3) {
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    } finally {
+      client.close();
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error('FTP upload failed');
 }
 
 /**
