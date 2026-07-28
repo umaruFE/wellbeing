@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { uploadFile } from '@/lib/fileUpload';
 
 const AI_VIDEO_API_BASE_URL = process.env.AI_VIDEO_API_BASE_URL;
 
@@ -110,41 +111,7 @@ async function downloadFile(
   return Buffer.from(arrayBuffer);
 }
 
-// 上传到OSS
-async function uploadToOSS(
-  buffer: Buffer,
-  filename: string,
-  folder: string,
-  contentType: string
-): Promise<string> {
-  const isProduction = process.env.NODE_ENV === 'production';
-  const uploadBase = isProduction ? 'http://8.130.93.151:10012' : 'http://localhost:4000';
-  const uploadUrl = new URL('/api/upload', uploadBase);
-  console.log(
-    `上传到OSS: ${uploadUrl.href}, filename: ${filename}, folder: ${folder}`
-  );
-
-  // 使用 FormData 上传文件
-  const formData = new FormData();
-  const file = new File([new Uint8Array(buffer)], filename, { type: contentType });
-  formData.append('file', file);
-  formData.append('folder', folder);
-
-  const response = await fetch(uploadUrl, {
-    method: 'POST',
-    body: formData
-  });
-
-  if (!response.ok) {
-    const data = await response.json();
-    throw new Error(data.error || '上传到OSS失败');
-  }
-
-  const data = await response.json();
-  return data.url;
-}
-
-// GET /api/ai/video-task-status/{promptId} - 查询视频任务状态并上传到OSS
+// GET /api/ai/video-task-status/{promptId} - 查询任务状态并上传到当前持久存储
 export async function GET(
   _request: NextRequest,
   { params }: { params: { promptId: string } }
@@ -210,18 +177,16 @@ export async function GET(
 
     if (taskStatus.status_str === 'success') {
       console.log(
-        `[video-task-status] 任务 ${promptId} 完成，准备上传到OSS`
+        `[video-task-status] 任务 ${promptId} 完成，准备持久化`
       );
 
       // 优先提取视频，其次图片
       let fileInfo = extractVideoInfo(taskData);
       let folder = 'ai-generated-videos';
-      let contentType = 'video/mp4';
 
       if (!fileInfo) {
         fileInfo = extractImageInfo(taskData);
         folder = 'ai-generated-images';
-        contentType = 'image/png';
       }
 
       console.log(`[video-task-status] fileInfo:`, fileInfo);
@@ -236,21 +201,16 @@ export async function GET(
         fileInfo.type
       );
 
-      const ossUrl = await uploadToOSS(
-        buffer,
-        fileInfo.filename,
-        folder,
-        contentType
-      );
+      const persistedUrl = await uploadFile(buffer, folder, fileInfo.filename);
 
       console.log(
-        `[video-task-status] 任务 ${promptId} 上传到OSS成功: ${ossUrl}`
+        `[video-task-status] 任务 ${promptId} 持久化成功: ${persistedUrl}`
       );
 
       return NextResponse.json({
         success: true,
         status: 'completed',
-        url: ossUrl,
+        url: persistedUrl,
         filename: fileInfo.filename
       });
     } else if (taskStatus.status_str === 'error') {
@@ -272,4 +232,3 @@ export async function GET(
     );
   }
 }
-

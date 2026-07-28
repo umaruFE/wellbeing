@@ -2,6 +2,7 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Settings } from 'lucide-react';
 import { OrganizationManagement } from './OrganizationManagement';
+import { MediaMigrationPanel } from './MediaMigrationPanel';
 
 export const SuperAdminPage = () => {
   const { t } = useTranslation();
@@ -16,7 +17,8 @@ export const SuperAdminPage = () => {
       </div>
 
       {/* 主体内容 */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-auto">
+        <MediaMigrationPanel />
         <OrganizationManagement />
       </div>
     </div>

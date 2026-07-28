@@ -11,6 +11,27 @@ function pickFirstString(...values) {
   return values.find((value) => typeof value === 'string' && value.trim()) || '';
 }
 
+export function resolveStoredImageUrl(value) {
+  const url = String(value || '').trim();
+  if (!url) return '';
+  if (url.startsWith('/api/media/')) return url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.hostname.endsWith('.container.x-gpu.com') && parsed.pathname.includes('/view')) {
+      return `/api/media/ppt-image?src=${encodeURIComponent(url)}`;
+    }
+    if (parsed.hostname.endsWith('.aliyuncs.com')) {
+      const objectPath = decodeURIComponent(parsed.pathname.replace(/^\/+/, ''));
+      return objectPath
+        ? `/api/media/oss?path=${encodeURIComponent(objectPath)}`
+        : url;
+    }
+  } catch {
+    // Keep relative/static URLs unchanged.
+  }
+  return url;
+}
+
 function unwrapOverview(value) {
   let overview = parseMaybeJson(value) || {};
   if (overview?.text) overview = parseMaybeJson(overview.text) || overview;
@@ -81,7 +102,7 @@ export function getCourseCoverUrl(course = {}) {
   const overview = getCourseOverview(course);
   const nestedData = parseMaybeJson(data.courseData || data.data) || {};
 
-  return pickFirstString(
+  return resolveStoredImageUrl(pickFirstString(
     course.thumbnail,
     course.thumbnail_url,
     course.thumbnailUrl,
@@ -114,7 +135,7 @@ export function getCourseCoverUrl(course = {}) {
     nestedData.coverUrl,
     nestedData.themeImageUrl,
     findNestedCoverUrl(course),
-  );
+  ));
 }
 
 export function getCourseMapVariant(course = {}) {

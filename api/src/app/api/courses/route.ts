@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
+import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 // GET /api/courses - Get courses list
 export async function GET(request: NextRequest) {
@@ -115,6 +116,10 @@ export async function POST(request: NextRequest) {
       processed_user_id = Number(userId);
     }
 
+    const persistedCourseData = courseData === undefined
+      ? undefined
+      : await persistComfyImagesInValue(courseData, 'course-images');
+
     const courseRecord = {
       user_id: processed_user_id,
       organization_id: organizationId,
@@ -127,7 +132,7 @@ export async function POST(request: NextRequest) {
       keywords,
       is_public: isPublic || false,
       status: 'draft',
-      course_data: courseData ? JSON.stringify(courseData) : null,
+      course_data: persistedCourseData ? JSON.stringify(persistedCourseData) : null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -151,4 +156,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

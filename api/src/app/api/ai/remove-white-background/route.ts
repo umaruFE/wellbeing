@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/lib/auth';
 import sharp from 'sharp';
+import { uploadFile } from '@/lib/fileUpload';
 
 // 并发控制和缓存
 const MAX_CONCURRENT = 10; // 最大并发数，临时提高以避免429
@@ -191,53 +192,19 @@ export async function POST(request: NextRequest) {
     .png()
     .toBuffer();
     
-    // 开发环境用 localhost:4000，生产环境用 127.0.0.1:10002（Nginx 代理）
-    const isProduction = process.env.NODE_ENV === 'production';
-    const uploadBase = isProduction ? 'http://8.130.93.151:10012' : 'http://localhost:4000';
-    const uploadUrl = new URL('/api/upload', uploadBase);
-    const uploadFormData = new FormData();
-    const file = new File([new Uint8Array(outputBuffer)], `character-transparent-${Date.now()}.png`, { type: 'image/png' });
-    uploadFormData.append('file', file);
-    uploadFormData.append('folder', 'ai-generated-images-transparent');
-
-    // 添加上传超时控制
-    const uploadController = new AbortController();
-    const uploadTimeoutId = setTimeout(() => uploadController.abort(), 60000); // 60秒超时
-
-    console.log('[remove-white-background] 开始上传到:', uploadUrl.toString());
-
-    let uploadResponse;
-    try {
-      uploadResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        body: uploadFormData,
-        signal: uploadController.signal
-      });
-    } catch (err: unknown) {
-      clearTimeout(uploadTimeoutId);
-      const errMsg = err instanceof Error ? err.message : String(err);
-      console.error('[remove-white-background] 上传 fetch 失败:', errMsg);
-      currentConcurrent--;
-      throw new Error('上传 fetch 失败: ' + errMsg);
-    }
-
-    clearTimeout(uploadTimeoutId);
-
-    if (!uploadResponse.ok) {
-      currentConcurrent--;
-      const errorData = await uploadResponse.json();
-      throw new Error(errorData.error || '上传透明背景图片失败');
-    }
-
-    const uploadData = await uploadResponse.json();
-    console.log('白色背景去除完成:', uploadData.url);
+    const persistedUrl = await uploadFile(
+      outputBuffer,
+      'ai-generated-images-transparent',
+      `character-transparent-${Date.now()}.png`,
+    );
+    console.log('白色背景去除完成:', persistedUrl);
 
     currentConcurrent--;
     console.log('[remove-white-background] 完成，当前并发数:', currentConcurrent);
 
     return NextResponse.json({
       success: true,
-      url: uploadData.url
+      url: persistedUrl
     }, { headers: corsHeaders() });
 
   } catch (error) {

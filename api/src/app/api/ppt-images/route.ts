@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { persistComfyImageUrl } from '@/lib/persistRemoteImage';
 
 // GET /api/ppt-images - Get PPT images
 export async function GET(request: NextRequest) {
@@ -60,11 +61,12 @@ export async function POST(request: NextRequest) {
     if (!name || !imageUrl) {
       return NextResponse.json({ error: 'Name and imageUrl are required' }, { status: 400 });
     }
+    const persistedImageUrl = await persistComfyImageUrl(imageUrl, 'ppt-images');
 
     const { data: existingRows, error: existingError } = await db
       .from('ppt_images')
       .select('*')
-      .eq('image_url', imageUrl)
+      .eq('image_url', persistedImageUrl)
       .limit(1);
 
     if (existingError) {
@@ -79,7 +81,7 @@ export async function POST(request: NextRequest) {
       .insert({
         name,
         category_id: categoryId,
-        image_url: imageUrl,
+        image_url: persistedImageUrl,
         tags
       })
       .select()
@@ -98,4 +100,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

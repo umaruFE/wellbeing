@@ -45,15 +45,18 @@ async function uploadToFtp(
   const ftpPassword = requiredEnv('FTP_PASSWORD');
   const ftpCdnDomain = requiredEnv('FTP_CDN_DOMAIN').replace(/\/+$/, '');
   const ftpBaseDir = requiredEnv('FTP_BASE_DIR').replace(/^\/+|\/+$/g, '');
+  const ftpPort = Number(process.env.FTP_PORT || 21);
+  const ftpSecure = process.env.FTP_SECURE === 'true';
   const client = new ftp.Client();
   client.ftp.encoding = 'utf-8';
 
   try {
     await client.access({
       host: ftpHost,
+      port: ftpPort,
       user: ftpUser,
       password: ftpPassword,
-      secure: false,
+      secure: ftpSecure,
     });
 
     const relativePath = generatePath(folder, filename);

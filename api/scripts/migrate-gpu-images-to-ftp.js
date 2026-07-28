@@ -14,8 +14,27 @@ const ftp = require('basic-ftp');
 const APPLY = process.argv.includes('--apply');
 const API_BASE_URL = (process.env.MIGRATION_API_BASE_URL || 'http://wellbeing.newstaredu.cn')
   .replace(/\/+$/, '');
+const UPLOAD_BASE_URL = (process.env.MIGRATION_UPLOAD_BASE_URL || API_BASE_URL)
+  .replace(/\/+$/, '');
 const GPU_HOST_SUFFIX = '.container.x-gpu.com';
 const BACKUP_DIR = path.join(__dirname, '..', '.migration-backups');
+const DIRECT_FTP = process.env.MIGRATION_DIRECT_FTP === 'true';
+
+function loadEnvFile(filename) {
+  if (!fs.existsSync(filename)) return;
+  for (const line of fs.readFileSync(filename, 'utf8').split(/\r?\n/)) {
+    const match = line.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
+    if (!match || process.env[match[1]] !== undefined) continue;
+    let value = match[2].trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"'))
+      || (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    process.env[match[1]] = value;
+  }
+}
 
 function requireEnv(name) {
   const value = process.env[name]?.trim();
@@ -24,7 +43,11 @@ function requireEnv(name) {
 }
 
 async function request(endpoint, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+  return requestUrl(`${API_BASE_URL}${endpoint}`, endpoint, options);
+}
+
+async function requestUrl(url, label, options = {}) {
+  const response = await fetch(url, options);
   const text = await response.text();
   let body;
   try {
@@ -34,7 +57,7 @@ async function request(endpoint, options = {}) {
   }
   if (!response.ok) {
     const error = new Error(
-      `${options.method || 'GET'} ${endpoint} failed: HTTP ${response.status} `
+      `${options.method || 'GET'} ${label} failed: HTTP ${response.status} `
       + `${typeof body === 'string' ? body.slice(0, 200) : JSON.stringify(body)}`,
     );
     error.status = response.status;
@@ -126,9 +149,10 @@ async function createFtpClient() {
   const client = new ftp.Client(60000);
   await client.access({
     host: requireEnv('FTP_HOST'),
+    port: Number(process.env.FTP_PORT || 21),
     user: requireEnv('FTP_USER'),
     password: requireEnv('FTP_PASSWORD'),
-    secure: false,
+    secure: process.env.FTP_SECURE === 'true',
   });
   return client;
 }
@@ -173,6 +197,26 @@ async function downloadSource(source) {
 }
 
 async function persistSource(client, source) {
+  if (!client) {
+    const buffer = await downloadSource(source);
+    const filename = safeFilename(source);
+    const form = new FormData();
+    form.append('file', new Blob([buffer], { type: 'image/png' }), filename);
+    form.append('folder', 'ai-generated-images/gpu-migration');
+    const body = await requestUrl(`${UPLOAD_BASE_URL}/api/upload`, '/api/upload', {
+      method: 'POST',
+      body: form,
+    });
+    const publicUrl = body?.url;
+    if (!publicUrl || gpuSource(publicUrl) || publicUrl.includes('aliyuncs.com')) {
+      throw new Error(`Production upload did not return an FTP/CDN URL for ${source}`);
+    }
+    if (!await publicUrlWorks(publicUrl)) {
+      throw new Error(`Uploaded file is not publicly readable: ${publicUrl}`);
+    }
+    return publicUrl;
+  }
+
   const baseDir = requireEnv('FTP_BASE_DIR').replace(/^\/+|\/+$/g, '');
   const cdn = requireEnv('FTP_CDN_DOMAIN').replace(/\/+$/, '');
   const now = new Date();
@@ -212,6 +256,7 @@ function writeBackup(payload) {
 }
 
 async function main() {
+  loadEnvFile(path.join(__dirname, '..', '.env'));
   const token = await login();
   const [courses, pictureBooks, pptImages] = await Promise.all([
     fetchAll('/api/courses', token),
@@ -238,7 +283,7 @@ async function main() {
   const backupFile = writeBackup({ createdAt: new Date().toISOString(), sources });
   console.log(`Backup: ${backupFile}`);
 
-  const client = await createFtpClient();
+  const client = DIRECT_FTP ? await createFtpClient() : null;
   const replacements = new Map();
   try {
     for (let index = 0; index < uniqueSources.length; index += 1) {
@@ -248,7 +293,7 @@ async function main() {
       console.log(`Persisted ${index + 1}/${uniqueSources.length}: ${safeFilename(source)}`);
     }
   } finally {
-    client.close();
+    client?.close();
   }
 
   let updatedCourses = 0;
@@ -273,6 +318,24 @@ async function main() {
       body: JSON.stringify(body),
     });
     updatedCourses += 1;
+  }
+
+  let updatedPictureBooks = 0;
+  for (const book of pictureBooks) {
+    const relevant = { cover_url: book.cover_url, book_data: book.book_data };
+    if (!collectGpuSources(relevant).length) continue;
+    await request(`/api/picture-books/${encodeURIComponent(book.id)}`, {
+      method: 'PUT',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        coverUrl: replaceGpuSources(book.cover_url, replacements),
+        bookData: replaceGpuSources(book.book_data, replacements),
+      }),
+    });
+    updatedPictureBooks += 1;
   }
 
   const pendingPptRows = [];
@@ -300,6 +363,20 @@ async function main() {
     }
   }
 
+  const [verifiedCourses, verifiedPictureBooks, verifiedPptImages] = await Promise.all([
+    fetchAll('/api/courses', token),
+    fetchAll('/api/picture-books', token),
+    fetchAll('/api/ppt-images', token),
+  ]);
+  const remaining = {
+    courses: collectGpuSources(verifiedCourses).length,
+    pictureBooks: collectGpuSources(verifiedPictureBooks).length,
+    pptImages: collectGpuSources(verifiedPptImages).length,
+  };
+  if (Object.values(remaining).some((count) => count > 0)) {
+    throw new Error(`Verification failed; GPU URLs remain: ${JSON.stringify(remaining)}`);
+  }
+
   const mappingFile = writeBackup({
     createdAt: new Date().toISOString(),
     replacements: Object.fromEntries(replacements),
@@ -308,8 +385,10 @@ async function main() {
   console.log(JSON.stringify({
     persisted: replacements.size,
     updatedCourses,
+    updatedPictureBooks,
     updatedPptImages,
     pendingPptRows: pendingPptRows.length,
+    remaining,
     mappingFile,
   }, null, 2));
 }

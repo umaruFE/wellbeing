@@ -1,4 +1,4 @@
-import { uploadFile as uploadToOss } from '@/lib/fileUpload';
+import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const COMFYUI_PUBLIC_URL = process.env.COMFYUI_PUBLIC_URL
@@ -69,23 +69,24 @@ export async function persistComfyImageUrl(
   imageUrl: string,
   folder = 'ppt-generated-images',
 ): Promise<string> {
-  const comfyImageUrl = toComfyImageUrl(imageUrl);
-  if (!comfyImageUrl) return imageUrl;
+  const sourceUrl = toComfyImageUrl(imageUrl)
+    || (isOssUrl(imageUrl) && getUploadProvider() === 'ftp' ? imageUrl : null);
+  if (!sourceUrl) return stableOssUrl(imageUrl);
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 45000);
   try {
-    const response = await fetch(comfyImageUrl, {
+    const response = await fetch(sourceUrl, {
       signal: controller.signal,
       headers: { 'User-Agent': 'Wellbeing-PPT-Image-Persistence/1.0' },
     });
     if (!response.ok) {
-      throw new Error(`下载 ComfyUI 图片失败：HTTP ${response.status}`);
+      throw new Error(`下载远程图片失败：HTTP ${response.status}`);
     }
 
     const contentType = response.headers.get('content-type') || 'image/png';
     if (!contentType.startsWith('image/')) {
-      throw new Error(`ComfyUI 返回的不是图片：${contentType}`);
+      throw new Error(`远程地址返回的不是图片：${contentType}`);
     }
 
     const buffer = Buffer.from(await response.arrayBuffer());
@@ -93,8 +94,8 @@ export async function persistComfyImageUrl(
       throw new Error(`图片大小无效：${buffer.length} bytes`);
     }
 
-    const extension = imageExtension(new URL(comfyImageUrl), contentType);
-    const uploadedUrl = await uploadToOss(buffer, folder, `ppt-${Date.now()}.${extension}`);
+    const extension = imageExtension(new URL(sourceUrl), contentType);
+    const uploadedUrl = await uploadFile(buffer, folder, `image-${Date.now()}.${extension}`);
     return stableOssUrl(uploadedUrl);
   } finally {
     clearTimeout(timeoutId);
@@ -106,7 +107,13 @@ export async function persistComfyImagesInValue<T>(value: T, folder = 'ppt-gener
 
   const visit = async (current: unknown): Promise<unknown> => {
     if (typeof current === 'string') {
-      if (isOssUrl(current)) return stableOssUrl(current);
+      if (isOssUrl(current)) {
+        if (getUploadProvider() !== 'ftp') return stableOssUrl(current);
+        if (!cache.has(current)) {
+          cache.set(current, persistComfyImageUrl(current, folder));
+        }
+        return cache.get(current);
+      }
       const comfyImageUrl = toComfyImageUrl(current);
       if (!comfyImageUrl) return current;
       if (!cache.has(comfyImageUrl)) {

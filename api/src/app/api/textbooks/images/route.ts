@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { persistComfyImageUrl } from '@/lib/persistRemoteImage';
 
 // GET /api/textbooks/images - Get textbook images for a unit
 export async function GET(request: NextRequest) {
@@ -39,12 +40,19 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { unitId, imageUrl, pageNumber, description } = body;
+    if (!unitId || !imageUrl) {
+      return NextResponse.json(
+        { error: 'unitId and imageUrl are required' },
+        { status: 400 },
+      );
+    }
+    const persistedImageUrl = await persistComfyImageUrl(imageUrl, 'textbook-images');
 
     const { data, error } = await db
       .from('textbook_images')
       .insert({
         unit_id: unitId,
-        image_url: imageUrl,
+        image_url: persistedImageUrl,
         page_number: pageNumber,
         description
       })
@@ -64,4 +72,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -6,7 +6,9 @@
     "dev": "next dev -p 4000",
     "build": "next build",
     "start": "next start -p 4000",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate:gpu-to-ftp": "node scripts/migrate-gpu-images-to-ftp.js",
+    "migrate:oss-to-ftp": "node scripts/migrate-oss-to-ftp.js"
   },
   "dependencies": {
     "ali-oss": "^6.23.0",

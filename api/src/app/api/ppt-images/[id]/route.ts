@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/lib/auth';
 import { db } from '@/lib/db';
+import { persistComfyImageUrl } from '@/lib/persistRemoteImage';
 
 // PUT /api/ppt-images/[id] - Update a PPT image record
 export async function PUT(
@@ -29,7 +30,9 @@ export async function PUT(
       updates.push(`category_id = $${values.length}`);
     }
     if (body.imageUrl !== undefined) {
-      values.push(body.imageUrl);
+      values.push(body.imageUrl
+        ? await persistComfyImageUrl(body.imageUrl, 'ppt-images')
+        : body.imageUrl);
       updates.push(`image_url = $${values.length}`);
     }
     if (body.tags !== undefined) {

@@ -142,16 +142,21 @@ export async function PUT(
     if (typeof isPublic !== 'undefined') updateData.is_public = isPublic;
     if (typeof status !== 'undefined') updateData.status = status;
     if (typeof courseData !== 'undefined') {
-      updateData.course_data = toJsonbValue(courseData);
+      const persistedCourseData = await persistComfyImagesInValue(courseData, 'course-images');
+      updateData.course_data = toJsonbValue(persistedCourseData);
     }
     
     if (typeof canvasData !== 'undefined') {
-      const persistedCanvasData = await persistComfyImagesInValue(canvasData);
+      const persistedCanvasData = await persistComfyImagesInValue(canvasData, 'course-images');
       updateData.canvas_data = toJsonbValue(persistedCanvasData);
     }
     
     if (typeof readingMaterialsData !== 'undefined') {
-      updateData.reading_materials_data = toJsonbValue(readingMaterialsData);
+      const persistedReadingMaterials = await persistComfyImagesInValue(
+        readingMaterialsData,
+        'course-material-images',
+      );
+      updateData.reading_materials_data = toJsonbValue(persistedReadingMaterials);
     }
 
     const columns = Object.keys(updateData);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { uploadFile } from '@/lib/fileUpload';
+import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 /**
  * N8N 任务状态查询路由
@@ -63,9 +64,9 @@ async function downloadAndPersistImage(imageUrl: string, folder: string, maxRetr
 }
 
 /**
- * 直接查询 ComfyUI 历史记录，并将图片上传到 OSS
+ * 直接查询 ComfyUI 历史记录，并将图片上传到当前环境的持久存储
  */
-async function queryComfyUIHistory(promptId: string, apiUrl?: string, uploadToOSS: boolean = true) {
+async function queryComfyUIHistory(promptId: string, apiUrl?: string, shouldPersist: boolean = true) {
   const baseUrl = apiUrl ? apiUrl.replace(/\/history\/.*$/, '') : COMFYUI_URL;
   const historyUrl = `${baseUrl}/history/${promptId}`;
 
@@ -94,8 +95,7 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, uploadToOS
           const images = nodeOutput.images;
           const comfyUrl = `${baseUrl}/view?filename=${images[0].filename}&subfolder=${images[0].subfolder || ''}&type=${images[0].type || 'output'}`;
           
-          // 如果需要上传到 OSS
-          if (uploadToOSS) {
+          if (shouldPersist) {
             try {
               const persistedUrl = await downloadAndPersistImage(comfyUrl, 'ai-generated-images');
               return {
@@ -114,11 +114,7 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, uploadToOS
           
           const proxyUrl = `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(comfyUrl)}`;
           
-          return {
-            status: 'completed',
-            url: uploadToOSS ? proxyUrl : proxyUrl,
-            filename: images[0].filename
-          };
+          return { status: 'completed', url: proxyUrl, filename: images[0].filename };
         }
       }
       return { status: 'completed' };
@@ -187,10 +183,13 @@ export async function GET(
 
     // 根据状态返回结果
     if (resultData.status === 'completed') {
+      const persistedResult = workflowType === 'image'
+        ? await persistComfyImagesInValue(resultData, 'ai-generated-images')
+        : resultData;
       return NextResponse.json({
         status: 'completed',
-        url: resultData.url,
-        filename: resultData.filename
+        url: persistedResult.url,
+        filename: persistedResult.filename
       });
     } else if (resultData.status === 'error') {
       return NextResponse.json({

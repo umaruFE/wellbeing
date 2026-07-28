@@ -3,7 +3,7 @@ import { cacheRemoteMedia } from '@/lib/mediaCache';
 
 // POST /api/media/cache
 // Body: { url: string, type?: 'image' | 'audio' | 'video' | string }
-// 说明：当前实现为下载到本地 public/media-cache 下，后续可替换为上传到 OSS
+// 根据 UPLOAD_PROVIDER 保存到本地、OSS 或 FTP。
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -42,4 +42,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
+import { persistComfyImageUrl, persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 async function ensureTable() {
   await db.query(`
@@ -78,6 +79,10 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { userId, organizationId, title, status, coverUrl, bookData } = body;
+    const [persistedCoverUrl, persistedBookData] = await Promise.all([
+      coverUrl ? persistComfyImageUrl(coverUrl, 'picture-book-images') : null,
+      persistComfyImagesInValue(bookData || {}, 'picture-book-images'),
+    ]);
 
     const result = await db.query(
       `INSERT INTO picture_books (user_id, organization_id, title, status, cover_url, book_data, created_at, updated_at)
@@ -87,8 +92,8 @@ export async function POST(request: NextRequest) {
         organizationId || authResult.user?.organizationId || null,
         title || 'Untitled Picture Book',
         status || 'draft',
-        coverUrl || null,
-        JSON.stringify(bookData || {}),
+        persistedCoverUrl,
+        JSON.stringify(persistedBookData),
       ]
     );
 

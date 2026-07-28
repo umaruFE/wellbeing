@@ -223,9 +223,10 @@ async function createFtpClient() {
   client.ftp.encoding = 'utf-8';
   await client.access({
     host: requireEnv('FTP_HOST'),
+    port: Number(process.env.FTP_PORT || 21),
     user: requireEnv('FTP_USER'),
     password: requireEnv('FTP_PASSWORD'),
-    secure: false,
+    secure: process.env.FTP_SECURE === 'true',
   });
   return client;
 }

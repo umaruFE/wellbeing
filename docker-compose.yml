@@ -65,8 +65,10 @@ services:
       # ---- 生产文件上传（仅 FTP）----
       UPLOAD_PROVIDER: ftp
       FTP_HOST: ${FTP_HOST}
+      FTP_PORT: ${FTP_PORT:-21}
       FTP_USER: ${FTP_USER}
       FTP_PASSWORD: ${FTP_PASSWORD}
+      FTP_SECURE: ${FTP_SECURE:-false}
       FTP_CDN_DOMAIN: ${FTP_CDN_DOMAIN}
       FTP_BASE_DIR: ${FTP_BASE_DIR:-wellbeing}
       # ---- 第三方 AI 服务 ----

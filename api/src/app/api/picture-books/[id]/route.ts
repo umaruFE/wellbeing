@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
+import { persistComfyImageUrl, persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 // GET /api/picture-books/[id]
 export async function GET(
@@ -56,11 +57,17 @@ export async function PUT(
     }
     if (coverUrl !== undefined) {
       updates.push(`cover_url = $${paramIndex++}`);
-      values.push(coverUrl);
+      values.push(coverUrl
+        ? await persistComfyImageUrl(coverUrl, 'picture-book-images')
+        : coverUrl);
     }
     if (bookData !== undefined) {
       updates.push(`book_data = $${paramIndex++}`);
-      values.push(JSON.stringify(bookData));
+      const persistedBookData = await persistComfyImagesInValue(
+        bookData,
+        'picture-book-images',
+      );
+      values.push(JSON.stringify(persistedBookData));
     }
 
     values.push(id);

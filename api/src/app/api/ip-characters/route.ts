@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { persistComfyImageUrl } from '@/lib/persistRemoteImage';
 
 // GET /api/ip-characters - Get IP characters
 export async function GET(request: NextRequest) {
@@ -28,6 +29,13 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { name, gender, style, description, imageUrl } = body;
+    if (!name || !imageUrl) {
+      return NextResponse.json(
+        { error: 'name and imageUrl are required' },
+        { status: 400 },
+      );
+    }
+    const persistedImageUrl = await persistComfyImageUrl(imageUrl, 'ip-character-images');
 
     const { data, error } = await db
       .from('ip_characters')
@@ -36,7 +44,7 @@ export async function POST(request: NextRequest) {
         gender,
         style,
         description,
-        image_url: imageUrl
+        image_url: persistedImageUrl
       })
       .select()
       .single();
@@ -54,4 +62,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

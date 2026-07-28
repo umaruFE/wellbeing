@@ -1,16 +1,17 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { randomUUID } from 'crypto';
+import { getUploadProvider, uploadFile } from './fileUpload';
 
 export type MediaCacheResult = {
   /** 服务器上的绝对文件路径 */
-  filePath: string;
+  filePath: string | null;
   /** 前端可访问的相对 URL，例如 /media-cache/images/xxx.jpg */
   publicUrl: string;
 };
 
 /**
- * 将远程图片/音频/视频下载到本地缓存目录（后续可替换为 OSS）
+ * 将远程图片/音频/视频下载后保存到当前环境的持久存储。
  * @param url 远程资源地址
  * @param subFolder 子目录，如 'images' | 'audio' | 'videos'
  */
@@ -61,6 +62,14 @@ export async function cacheRemoteMedia(
   await fs.mkdir(baseDir, { recursive: true });
 
   const filename = `${Date.now()}-${randomUUID()}.${ext}`;
+  const provider = getUploadProvider();
+  if (provider === 'oss' || provider === 'ftp') {
+    return {
+      filePath: null,
+      publicUrl: await uploadFile(buffer, `media-cache/${subFolder}`, filename),
+    };
+  }
+
   const filePath = path.join(baseDir, filename);
 
   await fs.writeFile(filePath, buffer);
@@ -70,4 +79,3 @@ export async function cacheRemoteMedia(
 
   return { filePath, publicUrl };
 }
-

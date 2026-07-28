@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/lib/auth';
+import { uploadFile } from '@/lib/fileUpload';
 
 function corsHeaders() {
   return {
@@ -67,29 +68,16 @@ export async function POST(request: NextRequest) {
 
     const resultBuffer = await removeBgResponse.arrayBuffer();
 
-    const isProduction = process.env.NODE_ENV === 'production';
-    const uploadBase = isProduction ? 'http://8.130.93.151:10012' : 'http://localhost:4000';
-    const uploadUrl = new URL('/api/upload', uploadBase);
-    const uploadFormData = new FormData();
-    const file = new File([resultBuffer], `character-${Date.now()}.png`, { type: 'image/png' });
-    uploadFormData.append('file', file);
-    uploadFormData.append('folder', 'ai-generated-images-transparent');
-
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'POST',
-      body: uploadFormData
-    });
-
-    if (!uploadResponse.ok) {
-      throw new Error('上传去背景图片失败');
-    }
-
-    const uploadData = await uploadResponse.json();
-    console.log('去背景完成:', uploadData.url);
+    const persistedUrl = await uploadFile(
+      resultBuffer,
+      'ai-generated-images-transparent',
+      `character-${Date.now()}.png`,
+    );
+    console.log('去背景完成:', persistedUrl);
 
     return NextResponse.json({
       success: true,
-      url: uploadData.url
+      url: persistedUrl
     }, { headers: corsHeaders() });
 
   } catch (error) {
