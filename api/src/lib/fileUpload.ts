@@ -58,7 +58,9 @@ async function uploadToFtp(
 
   let lastError: unknown;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
-    const client = new ftp.Client(60000);
+    const client = new ftp.Client(60000, {
+      allowSeparateTransferHost: process.env.FTP_ALLOW_SEPARATE_TRANSFER_HOST === 'true',
+    });
     client.ftp.encoding = 'utf-8';
     try {
       await client.access({

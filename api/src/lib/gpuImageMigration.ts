@@ -88,6 +88,113 @@ export async function inspectGpuImageMigration() {
   };
 }
 
+export async function finalizeGpuImageMigration(
+  replacementEntries: Array<[string, string]>,
+  userId: string,
+) {
+  const replacements = new Map<string, string>();
+  for (const [source, target] of replacementEntries) {
+    if (
+      !gpuSource(source)
+      || !/^https?:\/\//i.test(target)
+      || target.includes(GPU_HOST_SUFFIX)
+      || target.includes('aliyuncs.com')
+    ) {
+      throw new Error('迁移映射包含无效地址');
+    }
+    replacements.set(source, target);
+  }
+  if (!replacements.size) throw new Error('缺少迁移映射');
+
+  const sources = await loadSources();
+  const requiredSources = Array.from(new Set(collectGpuSources(sources)));
+  const missing = requiredSources.filter((source) => !replacements.has(source));
+  if (missing.length) throw new Error(`迁移映射缺少 ${missing.length} 张图片`);
+
+  const pool = createServerClient();
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS media_migration_backups (
+        id BIGSERIAL PRIMARY KEY,
+        migration_type TEXT NOT NULL,
+        operator_id TEXT,
+        snapshot JSONB NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(
+      `INSERT INTO media_migration_backups (migration_type, operator_id, snapshot)
+       VALUES ($1, $2, $3::jsonb)`,
+      ['gpu-to-ftp-finalize', userId, JSON.stringify(sources)],
+    );
+
+    let updatedCourses = 0;
+    for (const course of sources.courses) {
+      if (!collectGpuSources(course).length) continue;
+      await client.query(
+        `UPDATE courses SET course_data=$1::jsonb, canvas_data=$2::jsonb,
+         reading_materials_data=$3::jsonb, updated_at=NOW() WHERE id=$4`,
+        [
+          JSON.stringify(replaceGpuSources(course.course_data, replacements)),
+          JSON.stringify(replaceGpuSources(course.canvas_data, replacements)),
+          JSON.stringify(replaceGpuSources(course.reading_materials_data, replacements)),
+          course.id,
+        ],
+      );
+      updatedCourses += 1;
+    }
+
+    let updatedPictureBooks = 0;
+    for (const book of sources.pictureBooks) {
+      if (!collectGpuSources(book).length) continue;
+      await client.query(
+        'UPDATE picture_books SET cover_url=$1, book_data=$2::jsonb, updated_at=NOW() WHERE id=$3',
+        [
+          replaceGpuSources(book.cover_url, replacements),
+          JSON.stringify(replaceGpuSources(book.book_data, replacements)),
+          book.id,
+        ],
+      );
+      updatedPictureBooks += 1;
+    }
+
+    let updatedPptImages = 0;
+    for (const image of sources.pptImages) {
+      if (!gpuSource(image.image_url)) continue;
+      await client.query(
+        'UPDATE ppt_images SET image_url=$1, updated_at=NOW() WHERE id=$2',
+        [replaceGpuSources(image.image_url, replacements), image.id],
+      );
+      updatedPptImages += 1;
+    }
+    await client.query('COMMIT');
+
+    const remaining = await inspectGpuImageMigration();
+    if (remaining.occurrences) {
+      throw new Error(`迁移后仍有 ${remaining.occurrences} 处 GPU 图片地址`);
+    }
+    return {
+      ...remaining,
+      done: true,
+      migrated: replacements.size,
+      total: replacements.size,
+      remaining: 0,
+      updated: {
+        courses: updatedCourses,
+        pictureBooks: updatedPictureBooks,
+        pptImages: updatedPptImages,
+      },
+    };
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+
 export async function migrateGpuImagesToCurrentStorage(userId: string) {
   if (getUploadProvider() !== 'ftp') {
     throw new Error('旧 GPU 图片迁移只能在 UPLOAD_PROVIDER=ftp 的生产环境执行');

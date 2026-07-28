@@ -69,6 +69,7 @@ services:
       FTP_USER: ${FTP_USER}
       FTP_PASSWORD: ${FTP_PASSWORD}
       FTP_SECURE: ${FTP_SECURE:-false}
+      FTP_ALLOW_SEPARATE_TRANSFER_HOST: ${FTP_ALLOW_SEPARATE_TRANSFER_HOST:-false}
       FTP_CDN_DOMAIN: ${FTP_CDN_DOMAIN}
       FTP_BASE_DIR: ${FTP_BASE_DIR:-wellbeing}
       # ---- 第三方 AI 服务 ----

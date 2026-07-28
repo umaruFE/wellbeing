@@ -219,7 +219,9 @@ async function preflightObjects(oss, legacyUrls) {
 }
 
 async function createFtpClient() {
-  const client = new ftp.Client(60000);
+  const client = new ftp.Client(60000, {
+    allowSeparateTransferHost: process.env.FTP_ALLOW_SEPARATE_TRANSFER_HOST === 'true',
+  });
   client.ftp.encoding = 'utf-8';
   await client.access({
     host: requireEnv('FTP_HOST'),

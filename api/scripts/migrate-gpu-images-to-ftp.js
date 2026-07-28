@@ -97,9 +97,15 @@ function gpuSource(value) {
     const inner = parsed.searchParams.get('url');
     if (inner) {
       const innerUrl = new URL(inner);
-      if (innerUrl.host.endsWith(GPU_HOST_SUFFIX)) return innerUrl.href;
+      if (
+        innerUrl.host.endsWith(GPU_HOST_SUFFIX)
+        && innerUrl.pathname.includes('/view')
+      ) return innerUrl.href;
     }
-    if (parsed.host.endsWith(GPU_HOST_SUFFIX)) return parsed.href;
+    if (
+      parsed.host.endsWith(GPU_HOST_SUFFIX)
+      && parsed.pathname.includes('/view')
+    ) return parsed.href;
   } catch {
     return null;
   }
@@ -146,7 +152,9 @@ function safeFilename(source) {
 }
 
 async function createFtpClient() {
-  const client = new ftp.Client(60000);
+  const client = new ftp.Client(60000, {
+    allowSeparateTransferHost: process.env.FTP_ALLOW_SEPARATE_TRANSFER_HOST === 'true',
+  });
   await client.access({
     host: requireEnv('FTP_HOST'),
     port: Number(process.env.FTP_PORT || 21),
@@ -294,6 +302,22 @@ async function main() {
     }
   } finally {
     client?.close();
+  }
+
+  if (process.env.MIGRATION_USE_ADMIN_FINALIZE === 'true') {
+    const result = await request('/api/admin/media-migration', {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${token}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'finalize',
+        replacements: Object.fromEntries(replacements),
+      }),
+    });
+    console.log(JSON.stringify(result, null, 2));
+    return;
   }
 
   let updatedCourses = 0;
