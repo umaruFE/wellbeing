@@ -12,15 +12,12 @@ body.fr-workflow-route-active .header{display:none}
 .fr-wf-step b{display:block;font-size:15px;line-height:20px;font-weight:800}.fr-wf-step small{display:none}.fr-wf-step.done{color:#333e4e}.fr-wf-step.done .fr-wf-n{background:#fff;color:#333e4e;border-color:#333e4e}.fr-wf-step.active{color:#333e4e;background:#f6e6cc;box-shadow:none}.fr-wf-step.active .fr-wf-n{background:#f6e6cc;color:#333e4e;border-color:#333e4e}.fr-wf-arrow{width:58px;height:15px;padding:0;color:transparent;font-size:0;line-height:1;background:url("../../assets/create-course/arrow.svg") center/contain no-repeat;flex:0 1 58px}
 .fr-history-actions{height:24px;display:flex;align-items:center;gap:14px;padding:0 16px 0 0;margin-right:14px;border-right:1px solid #e8e3dd;color:#333e4e}
 .fr-history-actions button{width:16px;height:16px;border:0;background:transparent;color:#333e4e;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.fr-autosave{display:flex;align-items:center;gap:8px;color:#333e4e;font-size:14px;font-weight:500;margin-right:18px}
-.fr-autosave span{width:12px;height:8px;border:1.5px solid #333e4e;border-radius:999px;background:#fff;box-sizing:border-box;position:relative}
-.fr-autosave span:after{content:"";position:absolute;right:1px;top:50%;width:3px;height:3px;border-radius:999px;background:#333e4e;transform:translateY(-50%)}
+.fr-autosave{width:28px;height:28px;flex:0 0 28px;display:flex;align-items:center;justify-content:center;color:#333e4e;margin-right:18px;border-radius:50%;background:#f3f2f0;box-sizing:border-box}
+.fr-autosave svg{display:block}
+.fr-autosave-spinner{animation:fr-autosave-spin .8s linear infinite}
+@keyframes fr-autosave-spin{to{transform:rotate(360deg)}}
 .fr-autosave.is-saving{color:#3f83e8}
-.fr-autosave.is-saving span{border-color:#3f83e8}
-.fr-autosave.is-saving span:after{background:#3f83e8}
 .fr-autosave.is-error{color:#d95643}
-.fr-autosave.is-error span{border-color:#d95643}
-.fr-autosave.is-error span:after{background:#d95643}
 .fr-editor-tb .fr-task-button{height:32px;min-width:105px;margin-right:13px;flex:0 0 auto;border:2px solid #333e4e;border-radius:999px;background:#fff;box-shadow:none;color:#333e4e;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .fr-editor-tb .fr-task-button .task-dot{width:6px;height:6px;border-radius:999px;background:#333e4e}
 .fr-editor-tb .fr-task-button .task-text{color:#333e4e;font-size:14px;font-weight:700;line-height:22px}

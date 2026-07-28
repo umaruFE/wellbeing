@@ -15,6 +15,7 @@ import {
   Underline,
   X,
 } from 'lucide-react';
+import { PptRotationControl } from './PptRotationControl';
 import '../css/PptTextConfigPanel.css';
 
 const FONT_SIZE_OPTIONS = [12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 46, 52, 60, 72, 88, 104, 120]
@@ -37,6 +38,11 @@ const LETTER_SPACING_OPTIONS = [
   { value: 4, label: '标题 4px' },
   { value: 8, label: '展示 8px' },
 ];
+
+function getTextContent(value) {
+  const content = String(value || '');
+  return ['双击编辑文本', 'Double-click to edit text'].includes(content.trim()) ? '' : content;
+}
 
 function TextNumberField({ value, unit, onChange, min, max, step }) {
   return (
@@ -211,7 +217,10 @@ export function PptTextConfigPanel({
             <TextNumberField value={selectedLayer.height} unit="px" min={28} max={529} onChange={(height) => onUpdateLayer({ height })} />
           </Form.Item>
           <Form.Item label={t('assetPanel.rotation')}>
-            <TextNumberField value={selectedLayer.rotation || 0} unit="°" min={-360} max={360} onChange={(rotation) => onUpdateLayer({ rotation })} />
+            <PptRotationControl
+              value={selectedLayer.rotation}
+              onChange={(rotation) => onUpdateLayer({ rotation })}
+            />
           </Form.Item>
         </div>
 
@@ -310,7 +319,7 @@ export function PptTextConfigPanel({
 
         <Form.Item label={t('assetPanel.textContent')}>
           <Input.TextArea
-            value={selectedLayer.content || ''}
+            value={getTextContent(selectedLayer.content)}
             placeholder="Textarea"
             onChange={(event) => onUpdateLayer({ content: event.target.value })}
           />

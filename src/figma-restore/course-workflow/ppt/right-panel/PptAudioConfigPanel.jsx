@@ -1,5 +1,6 @@
 import { Button, Form, Input, Select } from 'antd';
 import { History, RotateCcw, X } from 'lucide-react';
+import { PptRotationControl } from './PptRotationControl';
 import '../css/PptAudioConfigPanel.css';
 
 const AUDIO_TYPE_OPTIONS = [
@@ -34,6 +35,13 @@ export function PptAudioConfigPanel({
             value={selectedLayer.title || ''}
             placeholder="图层名称"
             onChange={(event) => onUpdateLayer({ title: event.target.value })}
+          />
+        </Form.Item>
+
+        <Form.Item label="旋转">
+          <PptRotationControl
+            value={selectedLayer.rotation}
+            onChange={(rotation) => onUpdateLayer({ rotation })}
           />
         </Form.Item>
 

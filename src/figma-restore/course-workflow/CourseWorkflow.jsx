@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft, Check, CircleAlert, Download, Loader2 } from 'lucide-react';
 import pptxgen from 'pptxgenjs';
 import apiService from '../../services/api';
 import { getDisplayCourseTitle } from '../courseImages';
@@ -545,9 +545,14 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           ))}
         </div>
         <div className="fr-tb-spacer" />
-        <div className={`fr-autosave is-${activeSaveStatus}`} title={activeSaveText}>
-          <span aria-hidden="true" />
-          <b>{activeSaveText}</b>
+        <div
+          className={`fr-autosave is-${activeSaveStatus}`}
+          title={activeSaveText}
+          aria-label={activeSaveText}
+        >
+          {activeSaveStatus === 'saving' && <Loader2 className="fr-autosave-spinner" size={16} />}
+          {activeSaveStatus === 'error' && <CircleAlert size={16} />}
+          {activeSaveStatus !== 'saving' && activeSaveStatus !== 'error' && <Check size={16} />}
         </div>
         <Button
           className="fr-save-btn"

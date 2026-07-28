@@ -207,14 +207,17 @@ export const CanvasAssetRenderer = ({
                   }}
                   onDoubleClick={(e) => {
                     e.stopPropagation();
-                    handleStartEditing(asset.id, asset.content || '');
+                    const content = String(asset.content || '');
+                    const editingContent = ['双击编辑文本', 'Double-click to edit text'].includes(content.trim())
+                      ? ''
+                      : content;
+                    handleStartEditing(asset.id, editingContent);
                   }}
                   onClick={(e) => {
                     e.stopPropagation();
                   }}
-                  title="双击编辑文本"
                 >
-                  {asset.content || "双击编辑文本"}
+                  {asset.content || ''}
                 </div>
               )
             ) : asset.url ? (

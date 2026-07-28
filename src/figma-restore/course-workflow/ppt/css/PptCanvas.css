@@ -312,6 +312,14 @@
   background: var(--ppt-coral);
 }
 
+.ppt-rotate-handle.is-inside {
+  top: 8px;
+}
+
+.ppt-rotate-handle.is-inside::after {
+  display: none;
+}
+
 .ppt-layer-actions {
   position: absolute;
   right: -2px;
@@ -359,7 +367,13 @@
 
 .ppt-layer-text-editor {
   display: block;
+  width: 100%;
+  height: auto;
+  min-height: 1lh;
+  max-height: 100%;
+  field-sizing: content;
   resize: none;
+  margin: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -368,6 +382,10 @@
   caret-color: currentColor;
   overflow: hidden;
   -webkit-text-stroke: 0 transparent !important;
+}
+
+.ppt-layer-text-editor-shell {
+  justify-content: center;
 }
 
 .ppt-snap-guide {
@@ -409,6 +427,31 @@ img.ppt-image-layer {
 video.ppt-video-layer {
   object-fit: contain;
   background: #111827;
+}
+
+.ppt-selection-overlay {
+  position: absolute;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+.ppt-selection-overlay .ppt-resize-handle,
+.ppt-selection-overlay .ppt-rotate-handle,
+.ppt-selection-overlay .ppt-layer-actions,
+.ppt-selection-overlay .ppt-layer-actions button {
+  pointer-events: auto;
+}
+
+.ppt-selection-drag-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  cursor: move;
+  pointer-events: auto;
+}
+
+.ppt-selection-drag-surface.is-video {
+  bottom: 40px;
 }
 
 .ppt-video-layer .ppt-demo-scene,
@@ -625,10 +668,6 @@ video.ppt-video-layer {
 
 #ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-resize-handle.w { left: -7px; }
 
-#ed-ppt .ppt-layer[data-layer-type="text"].sel .ppt-rotate-handle {
-  display: none;
-}
-
 #ed-ppt.ppt-courseware .ppt-canvas {
   flex: 1 1 0;
   width: auto;
@@ -725,7 +764,7 @@ video.ppt-video-layer {
 #ed-ppt .ppt-layer.sel .ppt-resize-handle.w { left: -6px; }
 
 #ed-ppt .ppt-layer.sel .ppt-rotate-handle {
-  display: none;
+  display: inline-flex;
 }
 
 #ed-ppt .ppt-layer-actions {

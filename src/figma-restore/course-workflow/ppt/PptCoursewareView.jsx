@@ -280,6 +280,34 @@ export function PptCoursewareView({
     setSelectedLayerId(null);
   };
 
+  const duplicateSlide = (phaseKey, stepId, slideId) => {
+    let duplicateSlideId = null;
+    updateCourse((draft) => {
+      const targetPhase = draft.find((phase) => phase.key === phaseKey);
+      const targetStep = targetPhase?.steps.find((item) => item.id === stepId);
+      const sourceIndex = targetStep?.slides?.findIndex((item) => item.id === slideId) ?? -1;
+      if (!targetStep || sourceIndex < 0) return;
+
+      const timestamp = Date.now();
+      const duplicate = cloneData(targetStep.slides[sourceIndex]);
+      duplicate.id = `slide-${timestamp}-${Math.random().toString(36).slice(2, 8)}`;
+      duplicate.title = `${duplicate.title || targetStep.title}${t('ppt.slideCopySuffix')}`;
+      duplicate.layers = (duplicate.layers || []).map((layer, layerIndex) => ({
+        ...layer,
+        id: `layer-${timestamp}-${layerIndex}-${Math.random().toString(36).slice(2, 8)}`,
+      }));
+      targetStep.slides.splice(sourceIndex + 1, 0, duplicate);
+      duplicateSlideId = duplicate.id;
+    });
+
+    if (!duplicateSlideId) return;
+    setActivePhaseKey(phaseKey);
+    setActiveStepId(stepId);
+    setActiveSlideId(duplicateSlideId);
+    setSelectedLayerId(null);
+    setAssetPanelType(null);
+  };
+
   const deleteSlide = (phaseKey, stepId, slideId) => {
     if (!slideId) return;
     if (!window.confirm(t('ppt.confirmDeleteSlide'))) return;
@@ -748,6 +776,7 @@ export function PptCoursewareView({
           setSelectedLayerId(null);
         }}
         onAddSlide={addSlide}
+        onDuplicateSlide={duplicateSlide}
         onDeleteSlide={deleteSlide}
       />
 

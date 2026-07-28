@@ -113,10 +113,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let themeImageUrl = await transferThemeImage(rawThemeImageUrl);
-
+    const themeImageUrl = await transferThemeImage(rawThemeImageUrl);
     if (!themeImageUrl) {
-      themeImageUrl = rawThemeImageUrl;
+      return NextResponse.json(
+        { success: false, error: '主题图片生成成功，但持久化到文件存储失败' },
+        { status: 502, headers: corsHeaders() },
+      );
     }
 
     console.log('[regenerate-theme-image] 图片已保存:', themeImageUrl);

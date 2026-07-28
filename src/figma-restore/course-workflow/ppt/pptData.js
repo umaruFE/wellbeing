@@ -14,8 +14,8 @@ export const PPT_SLIDE_HEIGHT = 529;
 export function fitLayerToSlide(layer, { center = false } = {}) {
   const next = { ...layer };
   const isMedia = next.type === 'image' || next.type === 'video';
-  const maxWidth = PPT_SLIDE_WIDTH * 0.9;
-  const maxHeight = PPT_SLIDE_HEIGHT * 0.9;
+  const maxWidth = PPT_SLIDE_WIDTH;
+  const maxHeight = PPT_SLIDE_HEIGHT;
   let width = Math.max(28, Number(next.width) || (next.type === 'audio' ? 280 : 300));
   let height = Math.max(28, Number(next.height) || (next.type === 'audio' ? 52 : 190));
 

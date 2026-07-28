@@ -343,6 +343,8 @@
     "title": "Courseware Design",
     "addSlide": "Add Slide",
     "deleteSlide": "Delete Slide",
+    "duplicateSlide": "Duplicate Slide",
+    "slideCopySuffix": " (Copy)",
     "slideLayout": "Slide Layout",
     "textInput": "Text Input",
     "audioAsset": "Audio Asset",

@@ -9,9 +9,18 @@ import './css/PptCanvas.css';
 const SLIDE_WIDTH = PPT_SLIDE_WIDTH;
 const SLIDE_HEIGHT = PPT_SLIDE_HEIGHT;
 const MIN_LAYER_SIZE = 28;
+const EMPTY_TEXT_PLACEHOLDERS = new Set([
+  '双击编辑文本',
+  'Double-click to edit text',
+]);
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
+}
+
+function getTextContent(value) {
+  const content = String(value || '');
+  return EMPTY_TEXT_PLACEHOLDERS.has(content.trim()) ? '' : content;
 }
 
 function LayerContent({
@@ -26,35 +35,47 @@ function LayerContent({
   if (layer.type === 'text') {
     if (isEditing) {
       return (
-        <textarea
-          className="ppt-layer-text ppt-layer-text-editor"
-          value={editingText}
-          onChange={(event) => onEditingTextChange(event.target.value)}
-          onBlur={onCommitEditing}
-          onPointerDown={(event) => event.stopPropagation()}
-          onDoubleClick={(event) => event.stopPropagation()}
-          onKeyDown={(event) => {
-            if (event.key === 'Escape') {
-              event.preventDefault();
-              onCancelEditing();
-            } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
-              event.preventDefault();
-              onCommitEditing();
-            }
-          }}
+        <div
+          className="ppt-layer-text ppt-layer-text-editor-shell"
           style={{
-            fontSize: layer.fontSize,
-            fontFamily: layer.fontFamily,
-            fontWeight: layer.fontWeight,
-            fontStyle: layer.fontStyle,
-            textDecoration: layer.textDecoration,
-            color: layer.color,
-            textAlign: layer.textAlign,
-            lineHeight: layer.lineHeight || 1.16,
-            letterSpacing: `${Number(layer.letterSpacing) || 0}px`,
+            alignItems: layer.verticalAlign === 'top'
+              ? 'flex-start'
+              : layer.verticalAlign === 'bottom'
+                ? 'flex-end'
+                : 'center',
           }}
-          autoFocus
-        />
+        >
+          <textarea
+            className={`ppt-layer-text-editor is-${layer.verticalAlign || 'middle'}`}
+            value={editingText}
+            rows={1}
+            onChange={(event) => onEditingTextChange(event.target.value)}
+            onBlur={onCommitEditing}
+            onPointerDown={(event) => event.stopPropagation()}
+            onDoubleClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                onCancelEditing();
+              } else if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+                event.preventDefault();
+                onCommitEditing();
+              }
+            }}
+            style={{
+              fontSize: layer.fontSize,
+              fontFamily: layer.fontFamily,
+              fontWeight: layer.fontWeight,
+              fontStyle: layer.fontStyle,
+              textDecoration: layer.textDecoration,
+              color: layer.color,
+              textAlign: layer.textAlign,
+              lineHeight: layer.lineHeight || 1.16,
+              letterSpacing: `${Number(layer.letterSpacing) || 0}px`,
+            }}
+            autoFocus
+          />
+        </div>
       );
     }
 
@@ -79,7 +100,7 @@ function LayerContent({
           WebkitTextStroke: `${Number(layer.strokeWidth) || 0}px ${layer.strokeColor || 'transparent'}`,
         }}
       >
-        {layer.content || t('ppt.doubleClickText')}
+        {layer.content || ''}
       </div>
     );
   }
@@ -91,8 +112,9 @@ function LayerContent({
           className="ppt-video-layer"
           src={resolvePptMediaUrl(layer.url)}
           controls
-          muted={layer.videoMeta?.muted}
-          loop={layer.videoMeta?.loop}
+          autoPlay={!!layer.autoplay}
+          muted={!!layer.muted}
+          loop={!!layer.loop}
         />
       );
     }
@@ -148,8 +170,6 @@ export function PptCanvas({
   canRedo,
   onInteractionStart,
   onInteractionEnd,
-  saveStatus = 'saved',
-  saveText = '',
   onChangeStyle,
 }) {
   const { t } = useTranslation();
@@ -191,12 +211,12 @@ export function PptCanvas({
     };
   }, []);
 
-  const beginMove = (event, layer) => {
+  const beginMove = (event, layer, preserveClick = false) => {
     if (event.target.closest('video, audio, input, button')) {
       onSelectLayer(layer.id);
       return;
     }
-    event.preventDefault();
+    if (!preserveClick) event.preventDefault();
     event.stopPropagation();
     onSelectLayer(layer.id);
     const point = getPoint(event);
@@ -322,8 +342,15 @@ export function PptCanvas({
         } else {
           next.width = next.height * aspectRatio;
         }
-        if (drag.handle.includes('w')) next.x = drag.origin.x + drag.origin.width - next.width;
-        if (drag.handle.includes('n')) next.y = drag.origin.y + drag.origin.height - next.height;
+        const fixedRight = drag.origin.x + drag.origin.width;
+        const fixedBottom = drag.origin.y + drag.origin.height;
+        const maxWidth = drag.handle.includes('w') ? fixedRight : SLIDE_WIDTH - drag.origin.x;
+        const maxHeight = drag.handle.includes('n') ? fixedBottom : SLIDE_HEIGHT - drag.origin.y;
+        const minWidth = Math.max(MIN_LAYER_SIZE, MIN_LAYER_SIZE * aspectRatio);
+        next.width = clamp(next.width, minWidth, Math.min(maxWidth, maxHeight * aspectRatio));
+        next.height = next.width / aspectRatio;
+        next.x = drag.handle.includes('w') ? fixedRight - next.width : drag.origin.x;
+        next.y = drag.handle.includes('n') ? fixedBottom - next.height : drag.origin.y;
       }
 
       next.width = Math.round(clamp(next.width, MIN_LAYER_SIZE, SLIDE_WIDTH - next.x));
@@ -348,13 +375,13 @@ export function PptCanvas({
   }, [getPoint, onInteractionEnd, onInteractionStart, onUpdateLayer, slide?.layers]);
 
   const startTextEditing = (event, layer) => {
-    event.preventDefault();
-    event.stopPropagation();
+    event?.preventDefault();
+    event?.stopPropagation();
     dragRef.current = null;
     cancelEditingRef.current = false;
     onSelectLayer(layer.id);
     setEditingLayerId(layer.id);
-    setEditingText(layer.content || '');
+    setEditingText(getTextContent(layer.content));
   };
 
   const commitTextEditing = () => {
@@ -378,6 +405,10 @@ export function PptCanvas({
     setZoom(clamp(value, 35, 120));
   };
 
+  const selectedLayer = slide?.layers?.find((layer) => (
+    layer.id === selectedLayerId && !layer.hidden
+  ));
+
   return (
     <main className="ppt-canvas">
       <div className="ppt-canvas-bar">
@@ -396,10 +427,10 @@ export function PptCanvas({
               <Redo2 size={15} />
             </button>
           </div>
-          <div className={`ppt-autosave ${saveStatus === 'saving' ? 'is-saving' : ''} ${saveStatus === 'error' ? 'is-error' : ''}`}>
+          {/* <div className={`ppt-autosave ${saveStatus === 'saving' ? 'is-saving' : ''} ${saveStatus === 'error' ? 'is-error' : ''}`}>
             <span />
             {saveText || t('workflow.toolbar.saved')}
-          </div>
+          </div> */}
           <button type="button" className="ppt-style-action" onClick={onChangeStyle}>
             <Palette size={15} />
             {t('ppt.regenStyle')}
@@ -463,7 +494,7 @@ export function PptCanvas({
                   width: layer.width,
                   height: layer.height,
                   transform: `rotate(${layer.rotation || 0}deg)`,
-                  zIndex: selected ? 1000 : index + 1,
+                  zIndex: editingLayerId === layer.id ? 10001 : index + 1,
                 }}
                 onPointerDown={(event) => beginMove(event, layer)}
                 onDoubleClick={(event) => {
@@ -473,7 +504,6 @@ export function PptCanvas({
                   if (event.key === 'Enter' || event.key === ' ') onSelectLayer(layer.id);
                 }}
               >
-                <div className="ppt-layer-frame" />
                 <LayerContent
                   layer={layer}
                   t={t}
@@ -483,38 +513,73 @@ export function PptCanvas({
                   onCommitEditing={commitTextEditing}
                   onCancelEditing={cancelTextEditing}
                 />
-
-                {selected && editingLayerId !== layer.id && (
-                  <>
-                    {['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].map((handle) => (
-                      <span
-                        key={handle}
-                        className={`ppt-resize-handle ${handle}`}
-                        onPointerDown={(event) => beginResize(event, layer, handle)}
-                      />
-                    ))}
-                    <button type="button" className="ppt-rotate-handle" onPointerDown={(event) => beginRotate(event, layer)} aria-label={t('ppt.rotate')}>
-                      <RotateCw size={12} />
-                    </button>
-                    <div className={`ppt-layer-actions ${(Number(layer.y) || 0) < 44 ? 'is-inside' : ''}`}>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onMoveLayer?.('up')} title={t('ppt.moveUp')}>
-                        <ArrowUp size={13} />
-                      </button>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onMoveLayer?.('down')} title={t('ppt.moveDown')}>
-                        <ArrowDown size={13} />
-                      </button>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDuplicateLayer} title={t('common.copy')}>
-                        <Copy size={13} />
-                      </button>
-                      <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDeleteLayer} title={t('common.delete')}>
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-                  </>
-                )}
               </div>
             );
           })}
+
+          {selectedLayer && editingLayerId !== selectedLayer.id && (
+            <div
+              className="ppt-layer sel ppt-selection-overlay"
+              data-layer-type={selectedLayer.type}
+              style={{
+                left: selectedLayer.x,
+                top: selectedLayer.y,
+                width: selectedLayer.width,
+                height: selectedLayer.height,
+                transform: `rotate(${selectedLayer.rotation || 0}deg)`,
+              }}
+            >
+              <div className="ppt-layer-frame" />
+              {selectedLayer.type !== 'audio' && (
+                <div
+                  className={`ppt-selection-drag-surface ${selectedLayer.type === 'video' ? 'is-video' : ''}`}
+                  aria-hidden="true"
+                  onPointerDown={(event) => beginMove(
+                    event,
+                    selectedLayer,
+                    selectedLayer.type === 'text',
+                  )}
+                  onClick={(event) => {
+                    if (selectedLayer.type === 'text' && event.detail > 1) {
+                      startTextEditing(event, selectedLayer);
+                    }
+                  }}
+                />
+              )}
+              {(selectedLayer.type === 'image'
+                ? ['nw', 'ne', 'se', 'sw']
+                : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
+              ).map((handle) => (
+                <span
+                  key={handle}
+                  className={`ppt-resize-handle ${handle}`}
+                  onPointerDown={(event) => beginResize(event, selectedLayer, handle)}
+                />
+              ))}
+              <button
+                type="button"
+                className={`ppt-rotate-handle ${(Number(selectedLayer.y) || 0) < 44 ? 'is-inside' : ''}`}
+                onPointerDown={(event) => beginRotate(event, selectedLayer)}
+                aria-label={t('ppt.rotate')}
+              >
+                <RotateCw size={12} />
+              </button>
+              <div className={`ppt-layer-actions ${(Number(selectedLayer.y) || 0) < 44 ? 'is-inside' : ''}`}>
+                <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onMoveLayer?.('up')} title={t('ppt.moveUp')}>
+                  <ArrowUp size={13} />
+                </button>
+                <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={() => onMoveLayer?.('down')} title={t('ppt.moveDown')}>
+                  <ArrowDown size={13} />
+                </button>
+                <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDuplicateLayer} title={t('common.copy')}>
+                  <Copy size={13} />
+                </button>
+                <button type="button" onPointerDown={(event) => event.stopPropagation()} onClick={onDeleteLayer} title={t('common.delete')}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="ppt-zoom-bar">

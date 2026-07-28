@@ -28,3 +28,4 @@ dist-ssr
 api/.env
 /outputs
 /tmp
+.migration-backups/

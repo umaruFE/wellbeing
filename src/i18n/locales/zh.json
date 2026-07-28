@@ -343,6 +343,8 @@
     "title": "课件设计",
     "addSlide": "添加页面",
     "deleteSlide": "删除页面",
+    "duplicateSlide": "复制页面",
+    "slideCopySuffix": "（副本）",
     "slideLayout": "页面布局",
     "textInput": "文本输入",
     "audioAsset": "音频素材",

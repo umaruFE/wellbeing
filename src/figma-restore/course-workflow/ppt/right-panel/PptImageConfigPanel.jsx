@@ -1,24 +1,16 @@
-import { Button, Form, Input, InputNumber, Select } from 'antd';
+import { Button, Form, Input, InputNumber, Popconfirm, Select } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { History, Maximize2, RotateCcw, Sparkles, Upload, X } from 'lucide-react';
+import { History, Lock, Maximize2, RotateCcw, Sparkles, Upload, X } from 'lucide-react';
+import { PptRotationControl } from './PptRotationControl';
 import '../css/PptImageConfigPanel.css';
 
 const IMAGE_SIZE_PRESETS = [
-  { value: 'cover', label: '铺满画布', width: 960, height: 540 },
+  { value: 'fit', label: '适应画布', width: 940, height: 529 },
   { value: 'wide', label: '宽幅 16:9', width: 640, height: 360 },
   { value: 'square', label: '方形 1:1', width: 360, height: 360 },
   { value: 'portrait', label: '竖图 3:4', width: 360, height: 480 },
   { value: 'banner', label: '横幅', width: 720, height: 220 },
   { value: 'icon', label: '图标', width: 120, height: 120 },
-];
-
-const ROTATION_PRESETS = [
-  { value: 0, label: '0°' },
-  { value: 45, label: '45°' },
-  { value: 90, label: '90°' },
-  { value: 180, label: '180°' },
-  { value: -45, label: '-45°' },
-  { value: -90, label: '-90°' },
 ];
 
 function ImageNumberField({ value, unit, onChange }) {
@@ -93,31 +85,38 @@ export function PptImageConfigPanel({
             })} />
           </Form.Item>
           <Form.Item label="旋转">
-            <div className="image-select-number-stack">
-              <Select
-                value={ROTATION_PRESETS.some((item) => item.value === selectedLayer.rotation) ? selectedLayer.rotation : undefined}
-                placeholder="预设"
-                options={ROTATION_PRESETS}
-                onChange={(rotation) => onUpdateLayer({ rotation })}
-              />
-              <ImageNumberField value={selectedLayer.rotation || 0} unit="°" onChange={(rotation) => onUpdateLayer({ rotation })} />
-            </div>
+            <PptRotationControl
+              value={selectedLayer.rotation}
+              onChange={(rotation) => onUpdateLayer({ rotation })}
+            />
           </Form.Item>
+        </div>
+        <div className="image-aspect-lock" title="拖动四角或修改宽高时保持图片原始比例">
+          <Lock size={14} />
+          <span>已锁定图片纵横比</span>
         </div>
 
         <div className="image-canvas-actions">
           <Button className="image-fit-canvas" icon={<Maximize2 size={15} />} onClick={onFitLayer} block>
             适应画布并居中
           </Button>
-          <Button
-            className="image-set-background"
-            icon={<Maximize2 size={15} />}
-            onClick={onSetAsBackground}
+          <Popconfirm
+            title="设为页面背景？"
+            description="图片将从普通图层移除，但之后仍可还原为图片图层。"
+            okText="设为背景"
+            cancelText="取消"
+            onConfirm={onSetAsBackground}
             disabled={!selectedLayer.url}
-            block
           >
-            {t('ppt.setAsBackground')}
-          </Button>
+            <Button
+              className="image-set-background"
+              icon={<Maximize2 size={15} />}
+              disabled={!selectedLayer.url}
+              block
+            >
+              {t('ppt.setAsBackground')}
+            </Button>
+          </Popconfirm>
         </div>
 
         <button className="image-replace-drop" type="button">

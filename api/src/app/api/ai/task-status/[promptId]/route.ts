@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { uploadFile } from '@/lib/fileUpload';
 
 /**
  * N8N 任务状态查询路由
@@ -18,9 +19,9 @@ export const fetchCache = 'force-no-store';
 const COMFYUI_URL = process.env.COMFYUI_URL || 'http://117.50.218.161:8188';
 
 /**
- * 从 URL 下载图片并上传到 OSS，带超时和重试
+ * 从 GPU 临时地址下载图片并上传到当前持久存储，带超时和重试
  */
-async function downloadAndUploadToOSS(imageUrl: string, folder: string, maxRetries = 2): Promise<string> {
+async function downloadAndPersistImage(imageUrl: string, folder: string, maxRetries = 2): Promise<string> {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       // 下载图片，设置30秒超时
@@ -45,30 +46,11 @@ async function downloadAndUploadToOSS(imageUrl: string, folder: string, maxRetri
       const contentType = response.headers.get('content-type') || 'image/png';
       const filename = `image-${Date.now()}.png`;
       
-      // 上传到 OSS
-      const isProduction = process.env.NODE_ENV === 'production';
-      const uploadBase = isProduction ? 'http://8.130.93.151:10012' : 'http://localhost:4000';
-      const uploadUrl = new URL('/api/upload', uploadBase);
-      const formData = new FormData();
-      const file = new File([buffer], filename, { type: contentType });
-      formData.append('file', file);
-      formData.append('folder', folder);
-
-      const uploadResponse = await fetch(uploadUrl, {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!uploadResponse.ok) {
-        const data = await uploadResponse.json();
-        throw new Error(data.error || '上传到OSS失败');
-      }
-
-      const data = await uploadResponse.json();
-      console.log('[task-status] OSS上传成功:', data.url);
-      return data.url;
+      const persistedUrl = await uploadFile(buffer, folder, filename);
+      console.log('[task-status] 图片持久化成功:', persistedUrl);
+      return persistedUrl;
     } catch (error) {
-      console.error(`[task-status] OSS上传失败(尝试${attempt + 1}/${maxRetries + 1}):`, error instanceof Error ? error.message : String(error));
+      console.error(`[task-status] 图片持久化失败(尝试${attempt + 1}/${maxRetries + 1}):`, error instanceof Error ? error.message : String(error));
       if (attempt < maxRetries) {
         console.log(`[task-status] 等待 ${attempt + 1} 秒后重试...`);
         await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 1000));
@@ -77,7 +59,7 @@ async function downloadAndUploadToOSS(imageUrl: string, folder: string, maxRetri
       }
     }
   }
-  throw new Error('OSS上传重试次数耗尽');
+  throw new Error('图片持久化重试次数耗尽');
 }
 
 /**
@@ -115,14 +97,14 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, uploadToOS
           // 如果需要上传到 OSS
           if (uploadToOSS) {
             try {
-              const ossUrl = await downloadAndUploadToOSS(comfyUrl, 'ai-generated-images');
+              const persistedUrl = await downloadAndPersistImage(comfyUrl, 'ai-generated-images');
               return {
                 status: 'completed',
-                url: ossUrl,
+                url: persistedUrl,
                 filename: images[0].filename
               };
             } catch (uploadError) {
-              console.error('[task-status] OSS上传失败，拒绝返回临时图片地址');
+              console.error('[task-status] 图片持久化失败，拒绝返回临时图片地址');
               return {
                 status: 'error',
                 error: uploadError instanceof Error ? uploadError.message : 'Image persistence failed'

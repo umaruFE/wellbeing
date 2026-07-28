@@ -80,8 +80,9 @@ export const uploadToOss = async (
     result = await client.put(filePath, file as Buffer);
   }
 
-  // 返回签名URL（私有文件需要签名）
-  return getSignedUrl(filePath, 86400 * 7); // 7天有效期
+  // 数据库中必须保存稳定地址，不能保存会在数天后失效的签名 URL。
+  // 访问时由媒体代理即时生成短期签名并重定向到 OSS。
+  return `/api/media/oss?path=${encodeURIComponent(filePath)}`;
 };
 
 /**
@@ -98,7 +99,5 @@ export const deleteFromOss = async (filePath: string): Promise<void> => {
  * @param filePath OSS上的文件路径
  */
 export const getAccessUrl = (filePath: string): string => {
-  const endpoint = process.env.ALIYUN_OSS_ENDPOINT || 'wellbeing1.oss-cn-beijing.aliyuncs.com';
-  return `https://${endpoint}/${filePath}`;
+  return `/api/media/oss?path=${encodeURIComponent(filePath.replace(/^\/+/, ''))}`;
 };
-

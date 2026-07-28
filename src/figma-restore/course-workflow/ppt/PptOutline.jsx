@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronRight, FileText, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Copy, FileText, Plus, Trash2 } from 'lucide-react';
 import { resolvePptMediaUrl } from './pptMediaUrl';
 import './css/PptOutline.css';
 
@@ -25,6 +25,7 @@ export function PptOutline({
   activeSlideId,
   onSelectStep,
   onAddSlide,
+  onDuplicateSlide,
   onDeleteSlide,
 }) {
   const { t } = useTranslation();
@@ -69,6 +70,18 @@ export function PptOutline({
                   onClick={() => onSelectStep(phase.key, step.id, slide.id)}
                 >
                   <PptOutlineThumb slide={slide} slideIndex={slideIndex} />
+                </button>
+                <button
+                  type="button"
+                  className="ppt-slide-copy-btn"
+                  title={t('ppt.duplicateSlide')}
+                  aria-label={t('ppt.duplicateSlide')}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onDuplicateSlide?.(phase.key, step.id, slide.id);
+                  }}
+                >
+                  <Copy size={13} />
                 </button>
                 <button
                   type="button"

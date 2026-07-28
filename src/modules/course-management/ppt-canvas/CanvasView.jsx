@@ -25,7 +25,6 @@ import {
   RotateCw,
   X,
   History,
-  RefreshCw,
   Edit3,
   Layout,
   Loader2,
@@ -674,8 +673,14 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
 
     setActions(
       <>
-        <span className="text-xs font-medium text-gray-400 flex items-center gap-1.5 mr-2">
-          {isSaving ? <><Loader2 size={12} className="animate-spin" /> 保存中...</> : <><RefreshCw size={12} /> 所有更改已保存</>}
+        <span
+          className="w-7 h-7 shrink-0 rounded-full text-gray-400 flex items-center justify-center mr-2"
+          title={isSaving ? '保存中...' : '所有更改已保存'}
+          aria-label={isSaving ? '保存中' : '所有更改已保存'}
+        >
+          {isSaving
+            ? <Loader2 size={16} className="animate-spin" />
+            : <Check size={16} />}
         </span>
         <button
           onClick={handleSave}
@@ -838,7 +843,7 @@ export const CanvasView = forwardRef(({ navigation, initialConfig }, ref) => {
         type: 'text',
         title: '文本',
         url: '',
-        content: '',
+        content: '双击编辑文本',
         prompt: '',
         referenceImage: null,
         x: 100, y: 100, width: 300, height: 100, rotation: 0,

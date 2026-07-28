@@ -154,15 +154,14 @@ export async function PUT(
       updateData.reading_materials_data = toJsonbValue(readingMaterialsData);
     }
 
-    const { data, error } = await db.from('courses').update(updateData).eq('id', id).select().single();
-
-    if (error) {
-      console.error('Error updating course:', error);
-      return NextResponse.json(
-        { error: (error as Error).message },
-        { status: 500 }
-      );
-    }
+    const columns = Object.keys(updateData);
+    const values = Object.values(updateData);
+    const setClause = columns.map((column, index) => `${column} = $${index + 1}`).join(', ');
+    const result = await db.query(
+      `UPDATE courses SET ${setClause} WHERE id = $${values.length + 1} RETURNING *`,
+      [...values, id],
+    );
+    const data = result.rows[0];
 
     if (!data) {
       return NextResponse.json(

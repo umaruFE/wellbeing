@@ -1,0 +1,29 @@
+#ed-ppt .ppt-rotation-control {
+  width: 100%;
+}
+
+#ed-ppt .ppt-rotation-control .ant-input-affix-wrapper {
+  min-height: 40px;
+  border: 2px solid #364153;
+  border-radius: 9px;
+  box-shadow: none;
+}
+
+#ed-ppt .ppt-rotation-control .ant-input-affix-wrapper:hover,
+#ed-ppt .ppt-rotation-control .ant-input-affix-wrapper-focused {
+  border-color: #ff705d;
+}
+
+#ed-ppt .ppt-rotation-control input {
+  color: #364153;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+#ed-ppt .ppt-rotation-suffix {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #7b8492;
+  pointer-events: none;
+}
