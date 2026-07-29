@@ -821,7 +821,7 @@
     "submitTime": "Submit Time",
     "genConfig": "Generation Config",
     "genPrompt": "Generation Prompt",
-    "insertCanvas": "Insert to Canvas",
+    "insertCanvas": "Insert into Current Canvas",
     "regenerate": "Regenerate",
     "groupImage": "Image Materials",
     "groupVideo": "Video Materials",

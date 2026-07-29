@@ -108,9 +108,23 @@ async function completeAndSaveVideo(asset, generated) {
       const url = findVideoUrl(status);
       if (url) {
         completed = { ...completed, url, status: 'completed' };
+        if (completed.backgroundTaskId) {
+          apiService.post(`/api/background-tasks/${completed.backgroundTaskId}`, {
+            action: 'complete',
+            result: { ...status, url },
+          }).catch((error) => {
+            console.warn('[VideoAssetWizard] 后台任务完成状态同步失败:', error);
+          });
+        }
         break;
       }
       if (state === 'failed' || state === 'error') {
+        if (completed.backgroundTaskId) {
+          apiService.post(`/api/background-tasks/${completed.backgroundTaskId}`, {
+            action: 'fail',
+            error: status?.error || '视频生成失败',
+          }).catch(() => {});
+        }
         throw new Error(status?.error || '视频生成失败');
       }
     }

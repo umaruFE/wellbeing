@@ -511,13 +511,17 @@ export async function POST(request: NextRequest) {
     const persistedAssets = type === 'image'
       ? await persistComfyImagesInValue(assets)
       : assets;
-    const asset = persistedAssets[0];
+    const trackedAssets = persistedAssets.map((item: any) => ({
+      ...item,
+      backgroundTaskId,
+    }));
+    const asset = trackedAssets[0];
     if (backgroundTaskId) {
       if (asset?.url) {
         await finishGenerationTask(backgroundTaskId, 'succeeded', {
           ...asset,
           url: asset.url,
-          assets: persistedAssets,
+          assets: trackedAssets,
         });
       } else {
         await attachGenerationTaskTracking(
@@ -536,7 +540,7 @@ export async function POST(request: NextRequest) {
       audioSubtype: type === 'audio' ? audioSubtypeByCode[String(assetCode || '').toUpperCase()] || 'ppt_audio' : undefined,
       videoSubtype: type === 'video' ? videoSubtypeByCode[String(assetCode || '').toUpperCase()] || 'ppt_video' : undefined,
       asset,
-      assets: persistedAssets,
+      assets: trackedAssets,
     }, { headers: corsHeaders() });
   } catch (error) {
     console.error('[generate-ppt-asset] 失败:', error);

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import './TaskCenter.css';
 import { TaskDetailModal, createCanvasAssetPayload } from './TaskDetailModal';
+import { resolvePptMediaUrl } from './course-workflow/ppt/pptMediaUrl';
 
 const getIcon = (type) => {
   switch (type) {
@@ -381,6 +382,31 @@ const formatTaskTime = (value) => {
   }
 };
 
+const findTaskMediaUrl = (value, depth = 0) => {
+  if (!value || depth > 6) return '';
+  if (typeof value === 'string') {
+    return /^(https?:\/\/|\/api\/|\/upload\/)/.test(value) ? value : '';
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = findTaskMediaUrl(item, depth + 1);
+      if (url) return url;
+    }
+    return '';
+  }
+  if (typeof value === 'object') {
+    for (const key of ['thumbnailUrl', 'thumbnail_url', 'url', 'imageUrl', 'image_url', 'videoUrl', 'video_url', 'audioUrl', 'audio_url']) {
+      const url = findTaskMediaUrl(value[key], depth + 1);
+      if (url) return url;
+    }
+    for (const item of Object.values(value)) {
+      const url = findTaskMediaUrl(item, depth + 1);
+      if (url) return url;
+    }
+  }
+  return '';
+};
+
 const getTaskStatusText = (task) => {
   if (task.status === 'queued') return '排队中 · 等待 GPU 分配';
   if (task.status === 'running') return task.progress >= 80 ? '正在整理生成结果' : 'AI 引擎正在生成中...';
@@ -405,6 +431,7 @@ const normalizeTask = (task) => {
     progressText: getTaskStatusText(task),
     statusText: getTaskStatusText(task),
     time: formatTaskTime(task.finished_at || task.created_at),
+    mediaUrl: findTaskMediaUrl(task.result),
     showInsert: task.status === 'succeeded',
     detailKey: task.type === 'video' ? 'videoWaiting' : task.type === 'audio' ? 'audioBgm' : 'imageRunning',
   };
@@ -470,13 +497,19 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
       <div className="history-task-header">
         <div className="history-task-info">
           <div
-            className="history-task-icon"
+            className={`history-task-icon ${task.mediaUrl ? 'has-thumbnail' : ''}`}
             style={{
               backgroundColor: iconColors.bg,
               borderColor: iconColors.border,
             }}
           >
-            <IconComponent size={20} style={{ color: '#ffffff' }} />
+            {task.mediaUrl && task.type === 'image' ? (
+              <img src={resolvePptMediaUrl(task.mediaUrl)} alt="" />
+            ) : task.mediaUrl && task.type === 'video' ? (
+              <video src={resolvePptMediaUrl(task.mediaUrl)} muted preload="metadata" />
+            ) : (
+              <IconComponent size={20} style={{ color: '#ffffff' }} />
+            )}
           </div>
           <div className="history-task-detail">
             <div className="history-task-title-row">
@@ -502,7 +535,7 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
             }}
           >
             <CirclePlus size={14} />
-            <span>插入画布</span>
+            <span>插入当前画布</span>
           </Button>
         )}
         {['failed', 'cancelled'].includes(task.rawStatus) && (
@@ -583,7 +616,7 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
             }}
           >
             <CirclePlus size={14} />
-            <span>插入画布</span>
+            <span>插入当前画布</span>
           </Button>
         )}
         {['waiting', 'processing'].includes(task.status) && (
@@ -636,14 +669,18 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
   };
 
   useEffect(() => {
-    loadTasks(activeTab);
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab !== 'queue') return undefined;
-    const timer = window.setInterval(() => loadTasks('queue'), 5000);
-    return () => window.clearInterval(timer);
-  }, [activeTab]);
+    let disposed = false;
+    const refreshAllTasks = async () => {
+      await loadTasks('queue');
+      if (!disposed) await loadTasks('history');
+    };
+    refreshAllTasks();
+    const timer = window.setInterval(refreshAllTasks, 5000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const currentTasks = useMemo(
     () => (activeTab === 'queue' ? queueTasks : historyTasks),

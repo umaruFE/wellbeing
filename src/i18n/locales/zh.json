@@ -821,7 +821,7 @@
     "submitTime": "提交时间",
     "genConfig": "生成配置",
     "genPrompt": "生成提示词",
-    "insertCanvas": "插入画布",
+    "insertCanvas": "插入当前画布",
     "regenerate": "重新生成",
     "groupImage": "图文素材",
     "groupVideo": "视频素材",

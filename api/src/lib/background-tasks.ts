@@ -135,11 +135,36 @@ export async function finishGenerationTask(
   return rows[0] || null;
 }
 
-function normalizeExternalStatus(data: any) {
-  const status = data?.status || data?.data?.status;
-  const url = data?.url || data?.data?.url || data?.data?.videoData?.url || data?.data?.videoData?.videoUrl || data?.data?.videoData?.video_url;
+function findGeneratedUrl(value: any, depth = 0): string | null {
+  if (!value || depth > 6) return null;
+  if (typeof value === 'string') {
+    return /^(https?:\/\/|\/api\/|\/upload\/)/.test(value) ? value : null;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = findGeneratedUrl(item, depth + 1);
+      if (url) return url;
+    }
+    return null;
+  }
+  if (typeof value === 'object') {
+    for (const key of ['url', 'imageUrl', 'image_url', 'videoUrl', 'video_url', 'audioUrl', 'audio_url', 'outputUrl', 'assetUrl']) {
+      const url = findGeneratedUrl(value[key], depth + 1);
+      if (url) return url;
+    }
+    for (const item of Object.values(value)) {
+      const url = findGeneratedUrl(item, depth + 1);
+      if (url) return url;
+    }
+  }
+  return null;
+}
 
-  if (status === 'completed' || status === 'success' || data?.success === true && url) {
+function normalizeExternalStatus(data: any) {
+  const status = String(data?.status || data?.data?.status || '').toLowerCase();
+  const url = findGeneratedUrl(data);
+
+  if (['completed', 'success', 'succeeded', 'done', 'finished'].includes(status) || data?.success === true && url) {
     return {
       status: 'succeeded' as GenerationTaskStatus,
       progress: 100,
@@ -150,7 +175,7 @@ function normalizeExternalStatus(data: any) {
     };
   }
 
-  if (status === 'error' || status === 'failed' || data?.success === false) {
+  if (['error', 'failed', 'cancelled', 'canceled'].includes(status) || data?.success === false) {
     return {
       status: 'failed' as GenerationTaskStatus,
       progress: 100,
@@ -165,7 +190,7 @@ function normalizeExternalStatus(data: any) {
 }
 
 async function pollTaskStatus(task: any) {
-  if (!task.status_url || !task.external_task_id || task.status !== 'running') return task;
+  if (!task.status_url || task.status !== 'running') return task;
 
   try {
     const baseUrl = process.env.INTERNAL_API_BASE_URL || process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:4000';
@@ -235,7 +260,7 @@ export async function listGenerationTasks(userId: string | null, scope: 'active'
     for (const task of rows) {
       updated.push(await pollTaskStatus(task));
     }
-    return updated;
+    return updated.filter((task) => statuses.includes(task.status));
   }
 
   return rows;

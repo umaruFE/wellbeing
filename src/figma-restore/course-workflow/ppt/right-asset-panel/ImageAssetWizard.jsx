@@ -294,6 +294,14 @@ async function pollGeneratedImage(asset) {
     await wait(3000);
     const status = await apiService.get(asset.statusUrl);
     if (status.status === 'completed' && status.url) {
+      if (asset.backgroundTaskId) {
+        apiService.post(`/api/background-tasks/${asset.backgroundTaskId}`, {
+          action: 'complete',
+          result: { ...status, url: status.url },
+        }).catch((error) => {
+          console.warn('[ImageAssetWizard] 后台任务完成状态同步失败:', error);
+        });
+      }
       return {
         ...asset,
         url: status.url,
@@ -302,6 +310,12 @@ async function pollGeneratedImage(asset) {
       };
     }
     if (status.status === 'error') {
+      if (asset.backgroundTaskId) {
+        apiService.post(`/api/background-tasks/${asset.backgroundTaskId}`, {
+          action: 'fail',
+          error: status.error || 'Image generation failed',
+        }).catch(() => {});
+      }
       throw new Error(status.error || 'Image generation failed');
     }
   }

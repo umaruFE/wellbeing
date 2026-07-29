@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/lib/auth';
-import { cancelGenerationTask, createGenerationTask, getGenerationTask } from '@/lib/background-tasks';
+import { cancelGenerationTask, createGenerationTask, finishGenerationTask, getGenerationTask } from '@/lib/background-tasks';
 import { n8nClient } from '@/lib/n8n/client';
 
 function corsHeaders() {
@@ -55,6 +55,23 @@ export async function POST(
     const body = await request.json();
     if (body.action === 'cancel') {
       const task = await cancelGenerationTask(params.id, authResult.user?.id);
+      return NextResponse.json({ success: true, data: { task } }, { headers: corsHeaders() });
+    }
+
+    if (body.action === 'complete' || body.action === 'fail') {
+      const originalTask = await getGenerationTask(params.id);
+      if (!originalTask) {
+        return NextResponse.json({ error: '任务不存在' }, { status: 404, headers: corsHeaders() });
+      }
+      if (originalTask.user_id && originalTask.user_id !== authResult.user?.id) {
+        return NextResponse.json({ error: '无权操作该任务' }, { status: 403, headers: corsHeaders() });
+      }
+      const task = await finishGenerationTask(
+        params.id,
+        body.action === 'complete' ? 'succeeded' : 'failed',
+        body.result || null,
+        body.error || null,
+      );
       return NextResponse.json({ success: true, data: { task } }, { headers: corsHeaders() });
     }
 

@@ -5,12 +5,12 @@ import {
   CirclePlus,
   Image as ImageIcon,
   Music,
-  Play,
   RotateCcw,
   Video,
   X,
 } from 'lucide-react';
 import './TaskCenter.css';
+import { resolvePptMediaUrl } from './course-workflow/ppt/pptMediaUrl';
 
 const getIcon = (type) => {
   switch (type) {
@@ -34,13 +34,44 @@ const sceneLabelKeys = {
   teacherSmile: 'taskDetail.sceneTeacherSmile',
 };
 
+const findGeneratedMediaUrl = (value, type, depth = 0) => {
+  if (!value || depth > 6) return '';
+  if (typeof value === 'string') {
+    return /^(https?:\/\/|\/api\/|\/upload\/)/.test(value) ? value : '';
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = findGeneratedMediaUrl(item, type, depth + 1);
+      if (url) return url;
+    }
+    return '';
+  }
+  if (typeof value === 'object') {
+    const typeKeys = type === 'video'
+      ? ['videoUrl', 'video_url', 'url', 'outputUrl']
+      : type === 'audio'
+        ? ['audioUrl', 'audio_url', 'url', 'outputUrl']
+        : ['imageUrl', 'image_url', 'url', 'outputUrl'];
+    for (const key of typeKeys) {
+      const url = findGeneratedMediaUrl(value[key], type, depth + 1);
+      if (url) return url;
+    }
+    for (const item of Object.values(value)) {
+      const url = findGeneratedMediaUrl(item, type, depth + 1);
+      if (url) return url;
+    }
+  }
+  return '';
+};
+
 export const createCanvasAssetPayload = (task) => {
   const type = task.type === 'video' ? 'video' : task.type === 'audio' ? 'audio' : 'image';
+  const resultUrl = findGeneratedMediaUrl(task.result, type);
   const common = {
     title: task.title,
     prompt: task.prompt,
-    url: task.result?.url,
-    src: task.result?.url,
+    url: resultUrl,
+    src: resultUrl,
   };
 
   if (type === 'video') {
@@ -251,60 +282,28 @@ const getCompactConfigRows = (task, t) => {
   return rows;
 };
 
-const ImagePreview = ({ task, t }) => (
-  <div className="tdm-panel">
-    <div className="tdm-panel-title"><span className="tdm-dot" />{t('taskDetail.imageCandidates')}</div>
-    <div className="tdm-preview-grid">
-      {(task.scenes || []).map((scene, index) => (
-        <button className="tdm-preview-card" type="button" key={`${scene}-${index}`}>
-          <div className={`tdm-scene tdm-scene-${scene}`} data-label={t(sceneLabelKeys[scene]) || scene} />
-          <span className="tdm-preview-label">{t('taskDetail.candidate', { num: index + 1 })}</span>
-        </button>
-      ))}
+const ResultPanel = ({ task }) => {
+  const url = findGeneratedMediaUrl(task.result, task.type);
+  return (
+    <div className="tdm-panel">
+      <div className="tdm-panel-title"><span className="tdm-dot" />生成结果</div>
+      <div className={`tdm-single-result is-${task.type}`}>
+        {!url ? (
+          <div className="tdm-result-empty">生成资源暂不可用</div>
+        ) : task.type === 'video' ? (
+          <video src={resolvePptMediaUrl(url)} controls preload="metadata" />
+        ) : task.type === 'audio' ? (
+          <audio src={resolvePptMediaUrl(url)} controls preload="metadata" />
+        ) : (
+          <img src={resolvePptMediaUrl(url)} alt={task.title || '生成图片'} />
+        )}
+      </div>
     </div>
-  </div>
-);
-
-const VideoPreview = ({ task, t }) => (
-  <div className="tdm-panel">
-    <div className="tdm-panel-title"><span className="tdm-dot" />{t('taskDetail.videoPreview')}</div>
-    <div className={`tdm-video-hero tdm-scene-${task.hero || 'classroom'}`}>
-      <div className="tdm-play-big"><Play size={28} fill="currentColor" /></div>
-      <div className="tdm-duration-badge">00:35</div>
-    </div>
-    <div className="tdm-storyboard">
-      {(task.shots || []).map((shot, index) => (
-        <div className="tdm-shot" key={shot}>
-          <strong>{index + 1}. {shot}</strong>
-          <span>{index === 0 ? '建立课堂情境与观看期待' : index === 1 ? '呈现核心动作与语言输入' : '保留学生模仿和回应节奏'}</span>
-        </div>
-      ))}
-    </div>
-  </div>
-);
-
-const AudioPreview = ({ task, t }) => (
-  <div className="tdm-panel">
-    <div className="tdm-panel-title"><span className="tdm-dot" />{t('taskDetail.audioList')}</div>
-    <div className="tdm-audio-stack">
-      {(task.tracks || []).map((track, index) => (
-        <div className="tdm-audio-track" key={track}>
-          <div className={`tdm-audio-thumb wave-${index + 1}`}><div className="tdm-waveform" /></div>
-          <div className="tdm-audio-copy">
-            <div className="tdm-audio-name">{track}</div>
-            <div className="tdm-audio-desc">00:{index === 0 ? '30' : index === 1 ? '24' : '18'} · MP3 · {t('taskDetail.loopable')}</div>
-          </div>
-          <Button className="tdm-small-btn" onClick={(event) => event.stopPropagation()}>{t('taskDetail.listen')}</Button>
-        </div>
-      ))}
-    </div>
-  </div>
-);
+  );
+};
 
 const TaskPreview = ({ task, t }) => {
-  if (task.type === 'video') return <VideoPreview task={task} t={t} />;
-  if (task.type === 'audio') return <AudioPreview task={task} t={t} />;
-  return <ImagePreview task={task} t={t} />;
+  return <ResultPanel task={task} />;
 };
 
 export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
