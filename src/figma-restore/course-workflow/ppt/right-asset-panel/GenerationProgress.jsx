@@ -2,7 +2,7 @@ import { Check, LoaderCircle, Pause } from 'lucide-react';
 
 const steps = ['组装 Prompt 模板', '调用生成工作流', '轮询任务状态', '获取生成结果'];
 
-export function GenerationProgress({ title, subtitle, progress = 58, batch, onViewResult }) {
+export function GenerationProgress({ title, subtitle, progress = 58, batch, onHang, onViewResult }) {
   return (
     <div className="ppt-gen-progress">
       <LoaderCircle className="ppt-gen-spinner" size={34} />
@@ -24,7 +24,9 @@ export function GenerationProgress({ title, subtitle, progress = 58, batch, onVi
           </div>
         ))}
       </div> */}
-      <button type="button" className="ppt-hang-btn"><Pause size={13} />挂起后台，继续编辑课件</button>
+      <button type="button" className="ppt-hang-btn" onClick={onHang}>
+        <Pause size={13} />挂起后台，继续编辑课件
+      </button>
       {onViewResult ? (
         <button type="button" className="ppt-primary-btn" onClick={onViewResult}>查看生成结果</button>
       ) : null}

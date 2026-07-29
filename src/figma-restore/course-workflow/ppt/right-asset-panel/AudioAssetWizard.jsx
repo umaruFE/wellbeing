@@ -803,7 +803,7 @@ export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChan
   }, [asset.title, onTitleChange, stage]);
 
   if (stage === 'generating') {
-    return <GenerationProgress title="AI 正在生成音频" subtitle={`${asset.title} · 自动保存到音频素材库`} progress={72} onViewResult={() => setStage('result')} />;
+    return <GenerationProgress title="AI 正在生成音频" subtitle={`${asset.title} · 自动保存到音频素材库`} progress={72} onHang={onClose} onViewResult={() => setStage('result')} />;
   }
 
   if (stage === 'result') {

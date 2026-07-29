@@ -91,6 +91,50 @@ export async function createGenerationTask(input: CreateGenerationTaskInput) {
   return rows[0];
 }
 
+export async function attachGenerationTaskTracking(
+  id: string,
+  externalTaskId?: string | null,
+  statusUrl?: string | null,
+) {
+  const { rows } = await db.query(`
+    UPDATE generation_tasks
+    SET external_task_id = COALESCE($1, external_task_id),
+        status_url = COALESCE($2, status_url),
+        status = 'running',
+        progress = GREATEST(progress, 10),
+        started_at = COALESCE(started_at, now()),
+        updated_at = now()
+    WHERE id = $3
+    RETURNING *
+  `, [externalTaskId || null, statusUrl || null, id]);
+  return rows[0] || null;
+}
+
+export async function finishGenerationTask(
+  id: string,
+  status: 'succeeded' | 'failed',
+  result?: Record<string, any> | null,
+  errorMessage?: string | null,
+) {
+  const { rows } = await db.query(`
+    UPDATE generation_tasks
+    SET status = $1,
+        progress = 100,
+        result = COALESCE($2::jsonb, result),
+        error_message = $3,
+        finished_at = now(),
+        updated_at = now()
+    WHERE id = $4
+    RETURNING *
+  `, [
+    status,
+    result ? JSON.stringify(result) : null,
+    errorMessage || null,
+    id,
+  ]);
+  return rows[0] || null;
+}
+
 function normalizeExternalStatus(data: any) {
   const status = data?.status || data?.data?.status;
   const url = data?.url || data?.data?.url || data?.data?.videoData?.url || data?.data?.videoData?.videoUrl || data?.data?.videoData?.video_url;

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { BookOpen, Search, Star, Users, Clock, Grid, List, Copy, Book, Sparkles, Tag } from 'lucide-react';
 import apiService from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { getCourseCoverUrl, getDisplayCourseTitle } from '../../figma-restore/courseImages';
 
 export const CourseSquarePage = () => {
   const { t } = useTranslation();
@@ -74,10 +75,19 @@ export const CourseSquarePage = () => {
             return tags.length > 0 ? tags : [t('square.catGeneral')];
           };
 
+          const author = [
+            course.author_name,
+            course.authorName,
+            course.creator_name,
+            course.creatorName,
+            course.user_name,
+            course.userName,
+          ].find(value => typeof value === 'string' && value.trim()) || '';
+
           return {
             id: course.id,
-            title: course.title || t('dashboard.unnamedCourse'),
-            author: course.user_name || course.userName || t('square.unknownAuthor'),
+            title: getDisplayCourseTitle(course, t('dashboard.unnamedCourse')),
+            author,
             age: age,
             grade: grade || ageGroup || t('course.notSet'),
             unit: unitEN,
@@ -90,7 +100,8 @@ export const CourseSquarePage = () => {
             rating: 4.5,
             students: course.view_count || course.viewCount || 0,
             copies: course.copy_count || course.copyCount || 0,
-            thumbnail: course.thumbnail || getThumbnail(),
+            thumbnail: getCourseCoverUrl(course),
+            thumbnailFallback: getThumbnail(),
             tags: getTags()
           };
         });
@@ -120,8 +131,9 @@ export const CourseSquarePage = () => {
     const matchesSearch = (course.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (course.unit || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (course.storyTheme || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const categoryName = categories.find(category => category.id === selectedCategory)?.name || '';
     const matchesCategory = selectedCategory === 'all' ||
-                           course.tags?.some(tag => tag.toLowerCase().includes(selectedCategory.toLowerCase()));
+                           course.tags?.some(tag => tag.toLowerCase() === categoryName.toLowerCase());
     return matchesSearch && matchesCategory;
   });
 
@@ -178,7 +190,7 @@ export const CourseSquarePage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-surface">
+    <div className="h-full min-h-0 flex flex-col bg-surface">
       {/* Header */}
       <div className="bg-surface border-b-2 border-stroke-light shrink-0">
         <div className="max-w-7xl mx-auto px-6 py-6">
@@ -230,7 +242,7 @@ export const CourseSquarePage = () => {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-200 ${
                   selectedCategory === category.id
-                    ? 'bg-dark text-white border-2 border-primary'
+                    ? '!bg-[#344054] !text-white border-2 border-[#344054] font-semibold'
                     : 'bg-surface-alt text-primary-secondary hover:bg-warning-light hover:border-2 hover:border-primary'
                 }`}
               >
@@ -242,7 +254,7 @@ export const CourseSquarePage = () => {
       </div>
 
       {/* Course List */}
-      <div className="flex-1 overflow-y-auto max-w-7xl mx-auto px-6 py-6 w-full">
+      <div className="flex-1 min-h-0 overflow-y-auto max-w-7xl mx-auto px-6 py-6 w-full">
         {error && (
           <div className="bg-error-light border border-error-border text-error-active px-4 py-3 rounded-lg mb-4">
             {error}
@@ -263,14 +275,20 @@ export const CourseSquarePage = () => {
                 key={course.id}
                 className="bg-white rounded-[24px] border-2 border-stroke-light overflow-hidden cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
               >
-                <div className="h-40 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] flex items-center justify-center text-6xl relative border-b-2 border-stroke-light">
-                  {course.thumbnail}
+                <div className="h-40 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] flex items-center justify-center text-6xl relative border-b-2 border-stroke-light overflow-hidden">
+                  {course.thumbnail ? (
+                    <img
+                      src={course.thumbnail}
+                      alt={course.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  ) : course.thumbnailFallback}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       handleCopyCourse(course.id);
                     }}
-                    className="absolute top-3 right-3 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-neo hover:bg-warning-light"
+                    className="absolute z-10 top-3 right-3 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-neo hover:bg-warning-light"
                   >
                     <Copy className="w-4 h-4" />
                     {t('square.copyCourse')}
@@ -280,7 +298,9 @@ export const CourseSquarePage = () => {
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-bold text-primary flex-1 pr-2">{course.title}</h3>
                   </div>
-                  <p className="text-xs text-primary-placeholder mb-3">by {course.author}</p>
+                  {course.author && (
+                    <p className="text-xs text-primary-placeholder mb-3">by {course.author}</p>
+                  )}
 
                   <div className="space-y-2 mb-4">
                     <div className="flex items-center gap-2 text-sm text-primary-secondary">
@@ -336,14 +356,20 @@ export const CourseSquarePage = () => {
                 className="bg-white rounded-[24px] border-2 border-stroke-light p-5 cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
               >
                 <div className="flex gap-5">
-                  <div className="w-36 h-36 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] rounded-2xl flex items-center justify-center text-5xl shrink-0 relative border-2 border-stroke-light">
-                    {course.thumbnail}
+                  <div className="w-36 h-36 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] rounded-2xl flex items-center justify-center text-5xl shrink-0 relative border-2 border-stroke-light overflow-hidden">
+                    {course.thumbnail ? (
+                      <img
+                        src={course.thumbnail}
+                        alt={course.title}
+                        className="absolute inset-0 h-full w-full object-cover"
+                      />
+                    ) : course.thumbnailFallback}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleCopyCourse(course.id);
                       }}
-                      className="absolute -bottom-2 -right-2 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 shadow-neo opacity-0 group-hover:opacity-100 transition-all hover:bg-warning-light"
+                      className="absolute z-10 bottom-2 right-2 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 shadow-neo opacity-0 group-hover:opacity-100 transition-all hover:bg-warning-light"
                     >
                       <Copy className="w-4 h-4" />
                       {t('square.copy')}
@@ -354,7 +380,9 @@ export const CourseSquarePage = () => {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="text-xl font-bold text-primary">{course.title}</h3>
-                        <p className="text-sm text-primary-placeholder">by {course.author}</p>
+                        {course.author && (
+                          <p className="text-sm text-primary-placeholder">by {course.author}</p>
+                        )}
                       </div>
                       <span className="px-2 py-1 bg-warning-light border border-primary text-dark rounded-lg text-xs font-bold">
                         {course.grade}

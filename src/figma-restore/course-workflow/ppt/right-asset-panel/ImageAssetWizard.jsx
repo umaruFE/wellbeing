@@ -1751,7 +1751,7 @@ function ImageTypeContent({ asset, values, setValue }) {
   );
 }
 
-export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange, insertLabel }) {
+export function ImageAssetWizard({ asset, onBack, onClose, onInsert, onTitleChange, insertLabel }) {
   const { t, i18n } = useTranslation();
   const isEn = i18n.language?.startsWith('en');
   const [stage, setStage] = React.useState('form');
@@ -1897,6 +1897,7 @@ export function ImageAssetWizard({ asset, onBack, onInsert, onTitleChange, inser
         title={t('assetPanel.iwAiGeneratingTitle')}
         subtitle={asset.code === 'B13' ? `${values.ipCharacters.join('、')} · ${values.ratio}` : `${values.style} · ${values.ratio}`}
         batch={['B3', 'B9', 'B11'].includes(asset.code) ? { done: 0, total: batchItems.length || 1, unit: t('assetPanel.iwPages') } : null}
+        onHang={onClose}
       />
     );
   }

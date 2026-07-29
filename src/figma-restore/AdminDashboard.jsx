@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Row, Col, Button, Segmented, Tag, Progress } from 'antd';
+import { Row, Col, Button, Segmented, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
-  Sparkles, Plus, Package, RefreshCw, Zap, ListTodo, Clock, Award, Users,
+  Sparkles, Plus, Package, RefreshCw, ListTodo, Clock, Award, Users,
   Loader2
 } from 'lucide-react';
 import apiService from '../services/api';
@@ -233,10 +233,9 @@ const CreateSection = ({ onCreateCourse, navigate }) => {
 
 const AssetSection = ({ stats, statsLoading }) => {
   const { t } = useTranslation();
-  const totalMediaCount = (stats.media?.images || 0) + (stats.media?.videos || 0) + (stats.media?.audios || 0);
-  const computeUsage = stats.compute || { used: 0, total: 40000, remaining: 40000 };
-  const remaining = computeUsage.total - computeUsage.used;
-  const percent = computeUsage.total > 0 ? (remaining / computeUsage.total) * 100 : 100;
+  const courseCount = stats.content?.courses ?? stats.courses?.total ?? 0;
+  const pictureBookCount = stats.content?.pictureBooks ?? 0;
+  const totalContentCount = stats.content?.total ?? (courseCount + pictureBookCount);
 
   return (
     <div className="asset-section">
@@ -265,29 +264,23 @@ const AssetSection = ({ stats, statsLoading }) => {
               <Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} />
             ) : (
               <>
-                <span className="stat-number">{totalMediaCount}</span>
+                <span className="stat-number">{totalContentCount}</span>
                 <span className="stat-label">{t('dashboard.unit')}</span>
               </>
             )}
           </div>
         </div>
-        <div className="power-row">
-          <div className="power-info">
-            <Zap size={14} />
-            <span className="power-label">{t('dashboard.remainingPower')}</span>
+        <div className="content-counts-row">
+          <div className="content-count-item">
+            <BookOpen size={15} />
+            <span>{t('dashboard.courseCount')}</span>
+            <strong>{courseCount}</strong>
           </div>
-          <div className="power-content">
-            <span className="power-value">
-              <span className="power-current">{remaining.toLocaleString()}</span>
-              <span className="power-total">/ {computeUsage.total / 1000}k</span>
-            </span>
-            <Progress
-              percent={percent}
-              strokeColor="#333E4E"
-              strokeWidth={6}
-              showInfo={false}
-              className="power-progress"
-            />
+          <div className="content-count-divider" />
+          <div className="content-count-item">
+            <Image size={15} />
+            <span>{t('dashboard.pictureBookCount')}</span>
+            <strong>{pictureBookCount}</strong>
           </div>
         </div>
       </div>
@@ -499,6 +492,7 @@ export const AdminDashboard = () => {
 
   const [stats, setStats] = useState({
     courses: { total: 0 },
+    content: { total: 0, courses: 0, pictureBooks: 0 },
     media: { images: 0, videos: 0, audios: 0 },
     tasks: { running: 0, completed: 0, queued: 0 },
     todayCompleted: 0,

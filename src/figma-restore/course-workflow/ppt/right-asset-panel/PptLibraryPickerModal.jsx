@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { CirclePlus, Music, Play, Search, X } from 'lucide-react';
 import { Button, Input, Modal, Pagination, Select, Tag, message } from 'antd';
 import { AssetPreviewModal } from '../../../image-library/AssetPreviewModal';
@@ -143,6 +144,7 @@ function DetailModal({ type, asset, onClose, onViewTask }) {
 }
 
 export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
+  const { t } = useTranslation();
   const fallbackAssets = assetSource[type] || assetSource.image;
   const [libraryAssets, setLibraryAssets] = React.useState([]);
   const assets = libraryAssets;
@@ -300,9 +302,13 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
 
   const selectedAsset = filteredAssets.find((asset) => asset.id === selectedId) || null;
 
+  const createTaskDetail = React.useCallback((asset) => {
+    if (!asset) return null;
+    return taskFactory[type]?.(asset, t) || null;
+  }, [t, type]);
+
   const insertAsset = (asset) => {
-    if (!asset) return;
-    const task = taskFactory[type]?.(asset);
+    const task = createTaskDetail(asset);
     if (!task) return;
     onInsert?.(createCanvasAssetPayload(task));
     setDetailAsset(null);
@@ -415,7 +421,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
         asset={detailAsset}
         onClose={() => setDetailAsset(null)}
         onViewTask={(asset) => {
-          const task = taskFactory[type]?.(asset);
+          const task = createTaskDetail(asset);
           if (!task) return;
           setTaskDetail(task);
           setDetailAsset(null);

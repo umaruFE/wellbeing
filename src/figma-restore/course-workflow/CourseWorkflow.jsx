@@ -1,10 +1,11 @@
 import React from 'react';
-import { Button, message } from 'antd';
+import { Button, Drawer, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Check, CircleAlert, Download, Loader2 } from 'lucide-react';
 import pptxgen from 'pptxgenjs';
 import apiService from '../../services/api';
 import { getDisplayCourseTitle } from '../courseImages';
+import { TaskCenter } from '../TaskCenter';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { CourseMapView } from './CourseMapView';
 import { LessonPlanView } from './LessonPlanView';
@@ -176,7 +177,27 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   const pptDirtyVersionRef = React.useRef(0);
   const [publishing, setPublishing] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
+  const [taskDrawerOpen, setTaskDrawerOpen] = React.useState(false);
+  const [taskCount, setTaskCount] = React.useState(0);
+  const [pendingTaskAsset, setPendingTaskAsset] = React.useState(null);
   const displayCourseTitle = getDisplayCourseTitle(course, t('course.newCourse'));
+
+  const loadTaskCount = React.useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('/api/background-tasks?scope=active', {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setTaskCount(result.data?.tasks?.length || 0);
+      }
+    } catch {
+      setTaskCount(0);
+    }
+  }, []);
 
   React.useEffect(() => {
     document.body.classList.add('fr-workflow-route-active');
@@ -184,6 +205,12 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       document.body.classList.remove('fr-workflow-route-active');
     };
   }, []);
+
+  React.useEffect(() => {
+    loadTaskCount();
+    const timer = window.setInterval(loadTaskCount, 5000);
+    return () => window.clearInterval(timer);
+  }, [loadTaskCount]);
 
   React.useEffect(() => {
     latestPptCanvasRef.current = initialPptData;
@@ -510,6 +537,8 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       onCourseChange={handlePptCanvasChange}
       saveStatus={pptSaveStatus}
       saveText={pptSaveText}
+      pendingTaskAsset={pendingTaskAsset}
+      onConsumeTaskAsset={() => setPendingTaskAsset(null)}
     />,
     <ReadingMaterialView key="reading" course={course} materials={materials} onMaterialsChange={setMaterials} />,
   ];
@@ -571,11 +600,48 @@ export function CourseWorkflow({ initialCourse, onBack }) {
             {t('workflow.toolbar.export')}
           </Button>
         )}
+        <button
+          type="button"
+          className="fr-task-button"
+          onClick={() => {
+            loadTaskCount();
+            setTaskDrawerOpen(true);
+          }}
+        >
+          <span className="task-dot" />
+          <span className="task-text">{t('header.taskCenter')} {taskCount}</span>
+        </button>
         <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
         <Button className="fr-publish-btn" loading={publishing} onClick={handlePublish}>{t('workflow.toolbar.publish')}</Button>
       </header>
 
       {content[current]}
+      <Drawer
+        placement="right"
+        onClose={() => {
+          setTaskDrawerOpen(false);
+          loadTaskCount();
+        }}
+        open={taskDrawerOpen}
+        width={420}
+        styles={{ body: { padding: 0 }, header: { display: 'none' } }}
+      >
+        <TaskCenter
+          onClose={() => {
+            setTaskDrawerOpen(false);
+            loadTaskCount();
+          }}
+          onInsertTaskAsset={(payload) => {
+            setCurrent(2);
+            setPendingTaskAsset({
+              ...payload,
+              requestId: `${Date.now()}-${Math.random()}`,
+            });
+            setTaskDrawerOpen(false);
+            loadTaskCount();
+          }}
+        />
+      </Drawer>
     </section>
   );
 }

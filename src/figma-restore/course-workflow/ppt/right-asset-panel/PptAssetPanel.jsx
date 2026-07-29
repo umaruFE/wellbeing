@@ -61,7 +61,7 @@ export function PptAssetPanel({ type, onClose, onInsert }) {
 
   let content = <AssetTypeSelector type={type} onSelect={chooseAsset} onOpenLibrary={openLibrary} />;
   if (validAsset && type === 'image') {
-    content = <ImageAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(getResetTitle()); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
+    content = <ImageAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(getResetTitle()); }} onClose={onClose} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
   }
   if (validAsset && type === 'video') {
     content = <VideoAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(getResetTitle()); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;

@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     // 并行查询多个统计数据
     const [
       coursesResult,
+      pictureBooksResult,
       pptImagesResult,
       videosResult,
       voicesResult,
@@ -29,6 +30,8 @@ export async function GET(request: NextRequest) {
     ] = await Promise.all([
       // 课程总数
       db.query('SELECT COUNT(*) as count FROM courses').catch(() => ({ rows: [{ count: '0' }] })),
+      // 绘本总数
+      db.query('SELECT COUNT(*) as count FROM picture_books').catch(() => ({ rows: [{ count: '0' }] })),
       // 图片素材总数
       db.query('SELECT COUNT(*) as count FROM ppt_images').catch(() => ({ rows: [{ count: '0' }] })),
       // 视频素材总数
@@ -46,6 +49,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     const totalCourses = parseInt(coursesResult.rows[0]?.count || '0');
+    const totalPictureBooks = parseInt(pictureBooksResult.rows[0]?.count || '0');
     const totalImages = parseInt(pptImagesResult.rows[0]?.count || '0');
     const totalVideos = parseInt(videosResult.rows[0]?.count || '0');
     const totalAudios = parseInt(voicesResult.rows[0]?.count || '0');
@@ -60,6 +64,11 @@ export async function GET(request: NextRequest) {
     const stats = {
       courses: {
         total: totalCourses,
+      },
+      content: {
+        total: totalCourses + totalPictureBooks,
+        courses: totalCourses,
+        pictureBooks: totalPictureBooks,
       },
       media: {
         images: totalImages,

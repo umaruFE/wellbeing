@@ -1,4 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { authenticate } from '@/lib/auth';
+import {
+  attachGenerationTaskTracking,
+  createGenerationTask,
+  finishGenerationTask,
+} from '@/lib/background-tasks';
 import { n8nClient } from '@/lib/n8n/client';
 import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
@@ -360,7 +366,16 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
+  let backgroundTaskId: string | null = null;
   try {
+    const authResult = await authenticate(request);
+    if (!authResult.success) {
+      return NextResponse.json(
+        { error: authResult.error || '认证失败' },
+        { status: 401, headers: corsHeaders() },
+      );
+    }
+
     const body = await request.json();
     const {
       assetType,
@@ -434,6 +449,27 @@ export async function POST(request: NextRequest) {
       ? buildBatchImagePayloads(basePayload, assetCode, options)
       : [];
 
+    try {
+      const backgroundTask = await createGenerationTask({
+        userId: authResult.user?.id || user_id || null,
+        organizationId: organization_id || authResult.user?.organizationId || null,
+        courseId: body.course_id || null,
+        type,
+        title: assetName || `${type}素材生成`,
+        count: type === 'image' ? imagePayloads.length || 1 : 1,
+        related: body.course_title || 'PPT 课件',
+        provider: 'n8n',
+        input: {
+          ...basePayload,
+          workflow,
+        },
+        status: 'running',
+      });
+      backgroundTaskId = backgroundTask?.id || null;
+    } catch (taskError) {
+      console.error('[generate-ppt-asset] 创建后台任务失败:', taskError);
+    }
+
     console.log('[generate-ppt-asset] 调用 N8N:', {
       workflow,
       assetType: type,
@@ -476,9 +512,25 @@ export async function POST(request: NextRequest) {
       ? await persistComfyImagesInValue(assets)
       : assets;
     const asset = persistedAssets[0];
+    if (backgroundTaskId) {
+      if (asset?.url) {
+        await finishGenerationTask(backgroundTaskId, 'succeeded', {
+          ...asset,
+          url: asset.url,
+          assets: persistedAssets,
+        });
+      } else {
+        await attachGenerationTaskTracking(
+          backgroundTaskId,
+          asset?.taskId || null,
+          asset?.statusUrl || null,
+        );
+      }
+    }
 
     return NextResponse.json({
       success: true,
+      backgroundTaskId,
       workflow,
       imageSubtype: type === 'image' ? imageSubtypeByCode[String(assetCode || '').toUpperCase()] || 'ppt_image' : undefined,
       audioSubtype: type === 'audio' ? audioSubtypeByCode[String(assetCode || '').toUpperCase()] || 'ppt_audio' : undefined,
@@ -488,6 +540,18 @@ export async function POST(request: NextRequest) {
     }, { headers: corsHeaders() });
   } catch (error) {
     console.error('[generate-ppt-asset] 失败:', error);
+    if (backgroundTaskId) {
+      try {
+        await finishGenerationTask(
+          backgroundTaskId,
+          'failed',
+          null,
+          error instanceof Error ? error.message : 'PPT 素材生成失败',
+        );
+      } catch (taskError) {
+        console.error('[generate-ppt-asset] 更新后台任务失败:', taskError);
+      }
+    }
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'PPT 素材生成失败',
