@@ -112,7 +112,7 @@ function LayerContent({
           className="ppt-video-layer"
           data-ppt-video-id={layer.id}
           src={resolvePptMediaUrl(layer.url)}
-          controls
+          playsInline
           autoPlay={!!layer.autoplay}
           muted={!!layer.muted}
           loop={!!layer.loop}
@@ -213,7 +213,7 @@ export function PptCanvas({
   }, []);
 
   const beginMove = (event, layer, preserveClick = false) => {
-    if (event.target.closest('video, audio, input, button')) {
+    if (event.target.closest('audio, input, button')) {
       onSelectLayer(layer.id);
       return;
     }

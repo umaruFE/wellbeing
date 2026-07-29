@@ -427,6 +427,7 @@ img.ppt-image-layer {
 video.ppt-video-layer {
   object-fit: contain;
   background: #111827;
+  pointer-events: none;
 }
 
 .ppt-selection-overlay {
