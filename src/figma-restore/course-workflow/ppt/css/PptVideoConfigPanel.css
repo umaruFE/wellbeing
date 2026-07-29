@@ -19,6 +19,27 @@
   margin: 0 0 12px;
 }
 
+#ed-ppt .ppt-video-config-panel .video-playback-button {
+  height: 38px;
+  margin: 0 0 12px;
+  border-color: #ff705d;
+  color: #d94f3e;
+  font-weight: 900;
+}
+
+#ed-ppt .ppt-video-config-panel .video-playback-button:hover,
+#ed-ppt .ppt-video-config-panel .video-playback-button.is-playing {
+  border-color: #ff705d;
+  background: #ff705d;
+  color: #ffffff;
+}
+
+#ed-ppt .ppt-video-config-panel .video-playback-button:disabled {
+  border-color: #d9d5cf;
+  background: #f4f2ee;
+  color: #aaa39a;
+}
+
 #ed-ppt .ppt-video-config-panel .video-info-card {
   border: 1.5px solid #c8c2b9;
   border-radius: 6px;

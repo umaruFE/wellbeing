@@ -1,5 +1,6 @@
+import React from 'react';
 import { Button, Form, Input, InputNumber, Select, Switch } from 'antd';
-import { History, Maximize2, RotateCcw, X } from 'lucide-react';
+import { History, Maximize2, Pause, Play, RotateCcw, X } from 'lucide-react';
 import { PptRotationControl } from './PptRotationControl';
 import '../css/PptVideoConfigPanel.css';
 
@@ -27,6 +28,42 @@ function VideoNumberField({ value, unit, onChange }) {
 
 export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLayer, onFitLayer }) {
   const aspectRatio = (Number(selectedLayer.width) || 1) / (Number(selectedLayer.height) || 1);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+
+  const getVideoElement = React.useCallback(() => (
+    Array.from(document.querySelectorAll('video[data-ppt-video-id]'))
+      .find((video) => video.dataset.pptVideoId === selectedLayer.id) || null
+  ), [selectedLayer.id]);
+
+  React.useEffect(() => {
+    const video = getVideoElement();
+    if (!video) {
+      setIsPlaying(false);
+      return undefined;
+    }
+
+    const syncPlaybackState = () => setIsPlaying(!video.paused && !video.ended);
+    syncPlaybackState();
+    video.addEventListener('play', syncPlaybackState);
+    video.addEventListener('pause', syncPlaybackState);
+    video.addEventListener('ended', syncPlaybackState);
+    return () => {
+      video.removeEventListener('play', syncPlaybackState);
+      video.removeEventListener('pause', syncPlaybackState);
+      video.removeEventListener('ended', syncPlaybackState);
+    };
+  }, [getVideoElement, selectedLayer.url]);
+
+  const togglePlayback = () => {
+    const video = getVideoElement();
+    if (!video) return;
+    if (video.paused || video.ended) {
+      video.play().catch(() => setIsPlaying(false));
+    } else {
+      video.pause();
+    }
+  };
+
   return (
     <aside className="ppt-right ppt-video-config-panel">
       <div className="video-panel-head">
@@ -82,6 +119,16 @@ export function PptVideoConfigPanel({ selectedLayer, onUpdateLayer, onSelectLaye
 
         <Button className="video-fit-canvas" icon={<Maximize2 size={15} />} onClick={onFitLayer} block>
           适应画布并居中
+        </Button>
+
+        <Button
+          className={`video-playback-button ${isPlaying ? 'is-playing' : ''}`}
+          icon={isPlaying ? <Pause size={16} /> : <Play size={16} />}
+          onClick={togglePlayback}
+          disabled={!selectedLayer.url}
+          block
+        >
+          {isPlaying ? '暂停视频' : '播放视频'}
         </Button>
 
         <div className="video-info-card">

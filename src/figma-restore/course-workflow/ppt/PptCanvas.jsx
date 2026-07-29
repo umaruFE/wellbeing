@@ -110,6 +110,7 @@ function LayerContent({
       return (
         <video
           className="ppt-video-layer"
+          data-ppt-video-id={layer.id}
           src={resolvePptMediaUrl(layer.url)}
           controls
           autoPlay={!!layer.autoplay}

@@ -206,10 +206,21 @@ export function buildGeneratedPatch(kind, asset) {
   if (kind === 'audio') {
     return { title, width: 230, height: 74, url: asset?.url, taskId: asset?.taskId, statusUrl: asset?.statusUrl, generationStatus: asset?.status, dur: asset?.duration || '01:00', duration: asset?.duration || '' };
   }
+  const sourceWidth = Number(asset?.width);
+  const sourceHeight = Number(asset?.height);
+  const hasSourceSize = sourceWidth > 0 && sourceHeight > 0;
+  const scale = hasSourceSize
+    ? Math.min(360 / sourceWidth, 260 / sourceHeight, 1)
+    : 1;
+  const canvasWidth = hasSourceSize ? Math.round(sourceWidth * scale) : 280;
+  const canvasHeight = hasSourceSize ? Math.round(sourceHeight * scale) : 158;
+
   return {
     title,
-    width: asset?.width || 280,
-    height: asset?.height || 158,
+    // Generated assets report their original pixel dimensions. Keep those pixels
+    // in the source image, but insert a manageable, aspect-ratio-preserving layer.
+    width: canvasWidth,
+    height: canvasHeight,
     url: asset?.url,
     placement: asset?.placement || 'layer',
     items: asset?.items,
