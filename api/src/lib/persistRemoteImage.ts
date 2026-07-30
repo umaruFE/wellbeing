@@ -5,6 +5,19 @@ const COMFYUI_PUBLIC_URL = process.env.COMFYUI_PUBLIC_URL
   || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
 const IMAGE_FILENAME_PATTERN = /^[\w.-]+\.(?:png|jpe?g|webp|gif)(?:\?.*)?$/i;
 
+function isImageMediaUrl(value: string) {
+  try {
+    const url = new URL(value, 'http://localhost');
+    const filename = url.searchParams.get('filename')
+      || url.searchParams.get('path')
+      || url.pathname.split('/').pop()
+      || '';
+    return IMAGE_FILENAME_PATTERN.test(decodeURIComponent(filename));
+  } catch {
+    return IMAGE_FILENAME_PATTERN.test(value.split('/').pop() || '');
+  }
+}
+
 function isOssUrl(value: string) {
   const endpoint = process.env.ALIYUN_OSS_ENDPOINT || 'wellbeing1.oss-cn-beijing.aliyuncs.com';
   return value.includes('aliyuncs.com') || value.includes(endpoint);
@@ -29,7 +42,8 @@ function isComfyImageUrl(value: string) {
     return (
       url.host === configuredHost
       || url.host.endsWith('.container.x-gpu.com')
-    ) && url.pathname.includes('/view');
+    ) && url.pathname.includes('/view')
+      && isImageMediaUrl(value);
   } catch {
     return false;
   }
@@ -70,7 +84,7 @@ export async function persistComfyImageUrl(
   folder = 'ppt-generated-images',
 ): Promise<string> {
   const sourceUrl = toComfyImageUrl(imageUrl)
-    || (isOssUrl(imageUrl) && getUploadProvider() === 'ftp' ? imageUrl : null);
+    || (isOssUrl(imageUrl) && isImageMediaUrl(imageUrl) && getUploadProvider() === 'ftp' ? imageUrl : null);
   if (!sourceUrl) return stableOssUrl(imageUrl);
 
   const controller = new AbortController();
@@ -108,6 +122,9 @@ export async function persistComfyImagesInValue<T>(value: T, folder = 'ppt-gener
   const visit = async (current: unknown): Promise<unknown> => {
     if (typeof current === 'string') {
       if (isOssUrl(current)) {
+        // Canvas data also contains video/audio URLs. They must remain untouched;
+        // this helper only downloads and migrates actual image files.
+        if (!isImageMediaUrl(current)) return current;
         if (getUploadProvider() !== 'ftp') return stableOssUrl(current);
         if (!cache.has(current)) {
           cache.set(current, persistComfyImageUrl(current, folder));

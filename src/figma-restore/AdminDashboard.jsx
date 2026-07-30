@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
-  Sparkles, Plus, Package, RefreshCw, ListTodo, Clock, Award, Users,
+  Sparkles, Plus, Package, RefreshCw, Clock, Award, Users,
   Loader2
 } from 'lucide-react';
 import apiService from '../services/api';
@@ -285,56 +285,6 @@ const AssetSection = ({ stats, statsLoading }) => {
         </div>
       </div>
     </div>
-  );
-};
-
-const TaskSection = ({ stats, statsLoading }) => {
-  const { t } = useTranslation();
-  return (
-  <div className="task-section">
-    <div className="section-header">
-      <div className="section-title-wrapper">
-        <ListTodo size={18} />
-        <div className="section-title title-6">
-          <span className="title-text">{t('dashboard.taskOverview')}</span>
-          <div className="title-decoration" />
-          <div className="title-dots">
-            <span className="dot-large" />
-            <span className="dot-small" />
-          </div>
-        </div>
-      </div>
-    </div>
-    <div className="task-content">
-      <div className="task-stats-row">
-        <span className="info-text">{t('dashboard.todayCompleted')}</span>
-        <div className="stat-number-wrapper">
-          {statsLoading ? (
-            <Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} />
-          ) : (
-            <>
-              <span className="stat-number">{stats.tasks?.completed || 0}</span>
-              <span className="stat-label">{t('dashboard.unit')}</span>
-            </>
-          )}
-        </div>
-      </div>
-      <div className="task-cards-row">
-        <div className="task-card task-card-running">
-          <span className="task-label">{t('taskCenter.activeTasks')}</span>
-          <span className="task-value">{statsLoading ? '-' : (stats.tasks?.running || 0)}</span>
-        </div>
-        <div className="task-card task-card-done">
-          <span className="task-label">{t('taskCenter.completedTasks')}</span>
-          <span className="task-value">{statsLoading ? '-' : (stats.tasks?.completed || 0)}</span>
-        </div>
-        <div className="task-card task-card-queue">
-          <span className="task-label">{t('dashboard.queued')}</span>
-          <span className="task-value">{statsLoading ? '-' : (stats.tasks?.queued || 0)}</span>
-        </div>
-      </div>
-    </div>
-  </div>
   );
 };
 
@@ -690,14 +640,11 @@ export const AdminDashboard = () => {
   return (
     <div className="admin-dashboard">
       <Row className="dashboard-top-modules" gutter={[20, 20]} style={{ marginBottom: 20 }}>
-        <Col xs={24} lg={8}>
+        <Col xs={24} lg={12}>
           <CreateSection onCreateCourse={handleCreateCourse} navigate={navigate} />
         </Col>
-        <Col xs={24} lg={8}>
+        <Col xs={24} lg={12}>
           <AssetSection stats={stats} statsLoading={statsLoading} />
-        </Col>
-        <Col xs={24} lg={8}>
-          <TaskSection stats={stats} statsLoading={statsLoading} />
         </Col>
       </Row>
       <RecentSection
