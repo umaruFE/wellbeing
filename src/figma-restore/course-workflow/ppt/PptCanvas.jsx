@@ -332,7 +332,9 @@ export function PptCanvas({
         next.height = drag.origin.height - dy;
       }
 
-      const isMediaCorner = (drag.layer.type === 'image' || drag.layer.type === 'video')
+      const shouldLockMediaRatio = drag.layer.type === 'video'
+        || (drag.layer.type === 'image' && drag.layer.lockAspectRatio !== false);
+      const isMediaCorner = shouldLockMediaRatio
         && drag.handle.length === 2;
       if (isMediaCorner) {
         const aspectRatio = drag.origin.width / drag.origin.height;
@@ -547,7 +549,7 @@ export function PptCanvas({
                   }}
                 />
               )}
-              {(selectedLayer.type === 'image'
+              {(selectedLayer.type === 'image' && selectedLayer.lockAspectRatio !== false
                 ? ['nw', 'ne', 'se', 'sw']
                 : ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w']
               ).map((handle) => (

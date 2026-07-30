@@ -1,6 +1,6 @@
-import { Button, Form, Input, InputNumber, Popconfirm, Select } from 'antd';
+import { Button, Form, Input, InputNumber, Popconfirm, Select, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { History, Lock, Maximize2, RotateCcw, Sparkles, Upload, X } from 'lucide-react';
+import { History, Lock, Maximize2, RotateCcw, Sparkles, Unlock, Upload, X } from 'lucide-react';
 import { PptRotationControl } from './PptRotationControl';
 import '../css/PptImageConfigPanel.css';
 
@@ -37,6 +37,7 @@ export function PptImageConfigPanel({
   const { t } = useTranslation();
   const prompt = selectedLayer.prompt || selectedLayer.imageMeta?.prompt || '';
   const aspectRatio = (Number(selectedLayer.width) || 1) / (Number(selectedLayer.height) || 1);
+  const isAspectRatioLocked = selectedLayer.lockAspectRatio !== false;
 
   return (
     <aside className="ppt-right ppt-image-config-panel">
@@ -75,12 +76,12 @@ export function PptImageConfigPanel({
           <Form.Item label="宽">
             <ImageNumberField value={selectedLayer.width} unit="px" onChange={(width) => onUpdateLayer({
               width,
-              height: Math.round(width / aspectRatio),
+              ...(isAspectRatioLocked ? { height: Math.round(width / aspectRatio) } : {}),
             })} />
           </Form.Item>
           <Form.Item label="高">
             <ImageNumberField value={selectedLayer.height} unit="px" onChange={(height) => onUpdateLayer({
-              width: Math.round(height * aspectRatio),
+              ...(isAspectRatioLocked ? { width: Math.round(height * aspectRatio) } : {}),
               height,
             })} />
           </Form.Item>
@@ -91,9 +92,18 @@ export function PptImageConfigPanel({
             />
           </Form.Item>
         </div>
-        <div className="image-aspect-lock" title="拖动四角或修改宽高时保持图片原始比例">
-          <Lock size={14} />
-          <span>已锁定图片纵横比</span>
+        <div
+          className={`image-aspect-lock ${isAspectRatioLocked ? 'is-locked' : 'is-unlocked'}`}
+          title={isAspectRatioLocked ? '缩放或修改宽高时保持图片纵横比' : '宽度和高度可以独立调整'}
+        >
+          {isAspectRatioLocked ? <Lock size={14} /> : <Unlock size={14} />}
+          <span>{isAspectRatioLocked ? '锁定图片纵横比' : '自由调整宽高'}</span>
+          <Switch
+            size="small"
+            checked={isAspectRatioLocked}
+            onChange={(checked) => onUpdateLayer({ lockAspectRatio: checked })}
+            aria-label="锁定图片纵横比"
+          />
         </div>
 
         <div className="image-canvas-actions">

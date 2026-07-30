@@ -198,7 +198,7 @@ export function PptCoursewareView({
     setMode('editor');
   };
 
-  const updateCourse = React.useCallback((recipe) => {
+  const updateCourse = React.useCallback((recipe, changeMeta = {}) => {
     const current = courseRef.current;
     if (!interactionSnapshotRef.current) {
       undoStackRef.current = [...undoStackRef.current.slice(-49), cloneData(current)];
@@ -209,7 +209,7 @@ export function PptCoursewareView({
     recipe(next);
     courseRef.current = next;
     setCourse(next);
-    onCourseChange?.(next, { source: 'edit' });
+    onCourseChange?.(next, { source: 'edit', ...changeMeta });
   }, [onCourseChange]);
 
   const beginCanvasInteraction = React.useCallback(() => {
@@ -348,7 +348,7 @@ export function PptCoursewareView({
     setSelectedLayerId(null);
   };
 
-  const insertGeneratedAsset = React.useCallback((type, patch = {}) => {
+  const insertGeneratedAsset = React.useCallback((type, patch = {}, changeMeta = {}) => {
     const count = slide?.layers.length || 0;
     const items = type === 'image' && Array.isArray(patch.items)
       ? patch.items.filter((item) => item?.url)
@@ -376,7 +376,7 @@ export function PptCoursewareView({
         }));
         firstSlideId = storybookSlides[0]?.id || null;
         targetStep.slides.splice(activeIndex + 1, 0, ...storybookSlides);
-      });
+      }, changeMeta);
       setActiveSlideId(firstSlideId);
       setSelectedLayerId(null);
       setAssetPanelType(null);
@@ -387,7 +387,7 @@ export function PptCoursewareView({
       updateCourse((draft) => {
         const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
         applySlideBackground(active.slide, backgroundUrl);
-      });
+      }, changeMeta);
       setAssetPanelType(null);
       setSelectedLayerId(null);
       return;
@@ -418,7 +418,7 @@ export function PptCoursewareView({
       updateCourse((draft) => {
         const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
         active.slide?.layers.push(...nextLayers);
-      });
+      }, changeMeta);
       setAssetPanelType(null);
       setSelectedLayerId(nextLayers[0]?.id || null);
       return;
@@ -443,7 +443,7 @@ export function PptCoursewareView({
     updateCourse((draft) => {
       const active = findActiveSlide(draft, activePhaseKey, activeStepId, activeSlideId);
       active.slide?.layers.push(nextLayer);
-    });
+    }, changeMeta);
     setAssetPanelType(null);
     setSelectedLayerId(nextLayer.id);
   }, [activePhaseKey, activeStepId, activeSlideId, slide?.layers.length, updateCourse]);
@@ -453,7 +453,11 @@ export function PptCoursewareView({
   React.useEffect(() => {
     if (!pendingTaskAsset?.requestId || consumedTaskAssetRef.current === pendingTaskAsset.requestId) return;
     consumedTaskAssetRef.current = pendingTaskAsset.requestId;
-    insertGeneratedAsset(pendingTaskAsset.type, pendingTaskAsset.patch || {});
+    insertGeneratedAsset(
+      pendingTaskAsset.type,
+      pendingTaskAsset.patch || {},
+      { saveNow: true, source: 'task-center-insert' },
+    );
     onConsumeTaskAsset?.();
   }, [insertGeneratedAsset, onConsumeTaskAsset, pendingTaskAsset]);
 

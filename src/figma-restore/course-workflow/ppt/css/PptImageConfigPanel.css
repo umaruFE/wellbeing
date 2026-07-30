@@ -25,8 +25,16 @@
   font-weight: 700;
 }
 
+#ed-ppt .ppt-image-config-panel .image-aspect-lock span {
+  flex: 1;
+}
+
 #ed-ppt .ppt-image-config-panel .image-aspect-lock svg {
   color: #ff705d;
+}
+
+#ed-ppt .ppt-image-config-panel .image-aspect-lock.is-unlocked svg {
+  color: #8a94a4;
 }
 
 #ed-ppt .ppt-image-config-panel .image-canvas-actions {

@@ -175,6 +175,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   const courseDirtyVersionRef = React.useRef(0);
   const pptSaveSequenceRef = React.useRef(0);
   const pptDirtyVersionRef = React.useRef(0);
+  const pptSaveQueueRef = React.useRef(Promise.resolve());
   const [publishing, setPublishing] = React.useState(false);
   const [exporting, setExporting] = React.useState(false);
   const [taskDrawerOpen, setTaskDrawerOpen] = React.useState(false);
@@ -245,25 +246,37 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     setPptSaveStatus('saving');
     setPptSaveError('');
 
+    const queuedSave = pptSaveQueueRef.current
+      .catch(() => undefined)
+      .then(async () => {
+        try {
+          const courseId = course?.id;
+          const isPersistedCourse = courseId && !String(courseId).startsWith('created-');
+
+          if (isPersistedCourse) {
+            await apiService.updateCourse(courseId, { canvasData: data });
+          } else {
+            localStorage.setItem(getDraftSaveKey(), JSON.stringify(data));
+          }
+
+          if (pptSaveSequenceRef.current === saveId && pptDirtyVersionRef.current === savingVersion) {
+            setPptSaveStatus('saved');
+          }
+        } catch (error) {
+          console.error('保存 PPT 课件失败:', error);
+          if (pptSaveSequenceRef.current === saveId) {
+            setPptSaveStatus('error');
+            setPptSaveError(error?.message || '保存失败');
+          }
+          throw error;
+        }
+      });
+
+    pptSaveQueueRef.current = queuedSave;
     try {
-      const courseId = course?.id;
-      const isPersistedCourse = courseId && !String(courseId).startsWith('created-');
-
-      if (isPersistedCourse) {
-        await apiService.updateCourse(courseId, { canvasData: data });
-      } else {
-        localStorage.setItem(getDraftSaveKey(), JSON.stringify(data));
-      }
-
-      if (pptSaveSequenceRef.current === saveId && pptDirtyVersionRef.current === savingVersion) {
-        setPptSaveStatus('saved');
-      }
-    } catch (error) {
-      console.error('保存 PPT 课件失败:', error);
-      if (pptSaveSequenceRef.current === saveId) {
-        setPptSaveStatus('error');
-        setPptSaveError(error?.message || '保存失败');
-      }
+      await queuedSave;
+    } catch {
+      // The queued operation has already updated the visible save error state.
     }
   }, [course?.id, getDraftSaveKey]);
 
@@ -355,7 +368,10 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     pptDirtyVersionRef.current += 1;
     setPptSaveStatus('dirty');
     setPptSaveError('');
-  }, []);
+    if (meta.saveNow) {
+      savePptCanvas(nextData);
+    }
+  }, [savePptCanvas]);
 
   React.useEffect(() => {
     if (courseSaveStatus !== 'dirty' || !course) return undefined;

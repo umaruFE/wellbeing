@@ -131,6 +131,7 @@ export function createMediaLayer(type, overrides = {}) {
     id: `layer-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     type,
     rotation: 0,
+    lockAspectRatio: type === 'image' ? true : undefined,
     prompt: '',
     duration: '',
     videoMeta: type === 'video'
