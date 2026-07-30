@@ -475,17 +475,60 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           return fallback;
         }
       };
+      const mediaDataCache = new Map();
+      const loadMediaForExport = async (url, type) => {
+        const cacheKey = `${type}:${url}`;
+        if (mediaDataCache.has(cacheKey)) return mediaDataCache.get(cacheKey);
 
-      pptData.forEach((phase) => {
-        (phase.steps || []).forEach((step) => {
-          (step.slides || []).forEach((slideData) => {
+        const token = localStorage.getItem('token');
+        const response = await fetch(exportMediaPath(url), {
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+        if (!response.ok) {
+          const errorBody = await response.json().catch(() => ({}));
+          throw new Error(errorBody.error || `${type === 'video' ? '视频' : '音频'}资源读取失败：HTTP ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const contentType = String(blob.type || response.headers.get('content-type') || '').toLowerCase();
+        if (!blob.size || !contentType.startsWith(`${type}/`)) {
+          throw new Error(`${type === 'video' ? '视频' : '音频'}资源格式无效：${contentType || 'unknown'}`);
+        }
+
+        const data = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error(`${type === 'video' ? '视频' : '音频'}资源读取失败`));
+          reader.readAsDataURL(blob);
+        });
+        const mimeExtension = {
+          'video/mp4': 'mp4',
+          'video/webm': 'webm',
+          'video/quicktime': 'mov',
+          'audio/mpeg': 'mp3',
+          'audio/mp3': 'mp3',
+          'audio/mp4': 'm4a',
+          'audio/wav': 'wav',
+          'audio/x-wav': 'wav',
+        }[contentType.split(';')[0]];
+        const result = {
+          data,
+          extn: mimeExtension || mediaExtension(url, type === 'video' ? 'mp4' : 'mp3'),
+        };
+        mediaDataCache.set(cacheKey, result);
+        return result;
+      };
+
+      for (const phase of pptData) {
+        for (const step of (phase.steps || [])) {
+          for (const slideData of (step.slides || [])) {
             const slide = pres.addSlide();
             slide.background = { color: asHex(slideData.background, 'FFFFFF') };
             if (slideData.backgroundImage) {
               slide.addImage({ path: slideData.backgroundImage, x: 0, y: 0, w: 13.333, h: 7.5 });
             }
 
-            (slideData.layers || []).filter((layer) => !layer.hidden).forEach((layer) => {
+            for (const layer of (slideData.layers || []).filter((item) => !item.hidden)) {
               const x = (Number(layer.x) || 0) * scaleX;
               const y = (Number(layer.y) || 0) * scaleY;
               const w = (Number(layer.width) || 120) * scaleX;
@@ -497,10 +540,11 @@ export function CourseWorkflow({ initialCourse, onBack }) {
               }
 
               if (layer.type === 'video' && layer.url) {
+                const media = await loadMediaForExport(layer.url, 'video');
                 slide.addMedia({
                   type: 'video',
-                  path: exportMediaPath(layer.url),
-                  extn: mediaExtension(layer.url, 'mp4'),
+                  data: media.data,
+                  extn: media.extn,
                   x,
                   y,
                   w,
@@ -510,10 +554,11 @@ export function CourseWorkflow({ initialCourse, onBack }) {
               }
 
               if (layer.type === 'audio' && layer.url) {
+                const media = await loadMediaForExport(layer.url, 'audio');
                 slide.addMedia({
                   type: 'audio',
-                  path: exportMediaPath(layer.url),
-                  extn: mediaExtension(layer.url, 'mp3'),
+                  data: media.data,
+                  extn: media.extn,
                   x,
                   y,
                   w,
@@ -540,10 +585,10 @@ export function CourseWorkflow({ initialCourse, onBack }) {
                 margin: 0.04,
                 fit: 'shrink',
               });
-            });
-          });
-        });
-      });
+            }
+          }
+        }
+      }
 
       const title = (latestCourseRef.current?.courseTitle || latestCourseRef.current?.title || 'Lesson Slides')
         .replace(/[\\/:*?"<>|]/g, '_');
