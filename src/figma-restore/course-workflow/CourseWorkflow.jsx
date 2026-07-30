@@ -536,7 +536,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
 
               if (layer.type === 'image' && layer.url) {
                 slide.addImage({ path: layer.url, x, y, w, h, rotate: Number(layer.rotation) || 0 });
-                return;
+                continue;
               }
 
               if (layer.type === 'video' && layer.url) {
@@ -550,7 +550,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
                   w,
                   h,
                 });
-                return;
+                continue;
               }
 
               if (layer.type === 'audio' && layer.url) {
@@ -564,7 +564,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
                   w,
                   h,
                 });
-                return;
+                continue;
               }
 
               const text = layer.type === 'text'
