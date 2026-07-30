@@ -458,6 +458,23 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       const scaleX = 13.333 / 940;
       const scaleY = 7.5 / 529;
       const asHex = (value, fallback = 'FFFFFF') => String(value || fallback).replace('#', '').slice(0, 6);
+      const exportMediaPath = (value) => {
+        const url = String(value || '').trim();
+        if (!url || /^(?:data:|blob:)/i.test(url)) return url;
+        return `/api/media/export?url=${encodeURIComponent(url)}`;
+      };
+      const mediaExtension = (value, fallback) => {
+        try {
+          const url = new URL(String(value || ''), window.location.origin);
+          const filename = url.searchParams.get('filename')
+            || url.searchParams.get('path')
+            || url.pathname;
+          const extension = filename.split('.').pop()?.toLowerCase();
+          return extension && /^[a-z0-9]{2,5}$/.test(extension) ? extension : fallback;
+        } catch {
+          return fallback;
+        }
+      };
 
       pptData.forEach((phase) => {
         (phase.steps || []).forEach((step) => {
@@ -476,6 +493,32 @@ export function CourseWorkflow({ initialCourse, onBack }) {
 
               if (layer.type === 'image' && layer.url) {
                 slide.addImage({ path: layer.url, x, y, w, h, rotate: Number(layer.rotation) || 0 });
+                return;
+              }
+
+              if (layer.type === 'video' && layer.url) {
+                slide.addMedia({
+                  type: 'video',
+                  path: exportMediaPath(layer.url),
+                  extn: mediaExtension(layer.url, 'mp4'),
+                  x,
+                  y,
+                  w,
+                  h,
+                });
+                return;
+              }
+
+              if (layer.type === 'audio' && layer.url) {
+                slide.addMedia({
+                  type: 'audio',
+                  path: exportMediaPath(layer.url),
+                  extn: mediaExtension(layer.url, 'mp3'),
+                  x,
+                  y,
+                  w,
+                  h,
+                });
                 return;
               }
 
