@@ -16,8 +16,11 @@ export function fitLayerToSlide(layer, { center = false } = {}) {
   const isMedia = next.type === 'image' || next.type === 'video';
   const maxWidth = PPT_SLIDE_WIDTH;
   const maxHeight = PPT_SLIDE_HEIGHT;
-  let width = Math.max(28, Number(next.width) || (next.type === 'audio' ? 280 : 300));
-  let height = Math.max(28, Number(next.height) || (next.type === 'audio' ? 52 : 190));
+  // The editor validates the dimension the user directly changes (minimum 28).
+  // Do not clamp both values here: when aspect ratio is locked, the other
+  // dimension is derived and can legitimately be below 28 (e.g. 28 x 16).
+  let width = Number(next.width) || (next.type === 'audio' ? 280 : 300);
+  let height = Number(next.height) || (next.type === 'audio' ? 52 : 190);
 
   if (isMedia && (width > maxWidth || height > maxHeight)) {
     const ratio = Math.min(maxWidth / width, maxHeight / height);

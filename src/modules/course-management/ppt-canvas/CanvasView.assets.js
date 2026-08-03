@@ -48,7 +48,12 @@ export const handleAssetChange = (assetId, field, value, activePhase, activeStep
   const step = stepsOrSlides.find(s => s.id === activeStepId);
   if (!step) return;
   if (updateAssetInCollections(step, assetId, asset => {
-    asset[field] = value;
+    if (typeof field === 'object' && field !== null) {
+      // 支持批量更新多个字段: handleAssetChange(id, { width: w, height: h })
+      Object.keys(field).forEach(k => { asset[k] = field[k]; });
+    } else {
+      asset[field] = value;
+    }
   })) {
     setCourseData(newCourseData);
     if (saveToHistory) saveToHistory();

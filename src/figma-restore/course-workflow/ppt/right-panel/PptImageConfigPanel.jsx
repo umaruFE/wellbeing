@@ -1,4 +1,5 @@
-import { Button, Form, Input, InputNumber, Popconfirm, Select, Switch } from 'antd';
+import React from 'react';
+import { Button, Form, Input, Popconfirm, Select, Switch } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { History, Lock, Maximize2, RotateCcw, Sparkles, Unlock, Upload, X } from 'lucide-react';
 import { PptRotationControl } from './PptRotationControl';
@@ -14,14 +15,38 @@ const IMAGE_SIZE_PRESETS = [
 ];
 
 function ImageNumberField({ value, unit, onChange }) {
+  const [draft, setDraft] = React.useState(String(value ?? ''));
+
+  React.useEffect(() => {
+    setDraft(String(value ?? ''));
+  }, [value]);
+
+  const commit = () => {
+    const next = Number(draft);
+    // The 28px minimum is a validation boundary only. An invalid value must
+    // not be persisted and must never resize the other dimension.
+    if (!Number.isFinite(next) || next < 28) {
+      setDraft(String(value ?? ''));
+      return;
+    }
+    onChange(next);
+  };
+
   return (
     <div className="image-number-field">
-      <InputNumber
-        controls={false}
-        value={value || 0}
+      <Input
+        inputMode="numeric"
+        value={draft}
         addonAfter={unit}
         style={{ width: '100%' }}
-        onChange={(next) => onChange(Number(next) || 0)}
+        onChange={(event) => {
+          const nextDraft = event.target.value;
+          setDraft(nextDraft);
+          const next = Number(nextDraft);
+          if (Number.isFinite(next) && next >= 28) onChange(next);
+        }}
+        onBlur={commit}
+        onPressEnter={commit}
       />
     </div>
   );
@@ -36,8 +61,36 @@ export function PptImageConfigPanel({
 }) {
   const { t } = useTranslation();
   const prompt = selectedLayer.prompt || selectedLayer.imageMeta?.prompt || '';
-  const aspectRatio = (Number(selectedLayer.width) || 1) / (Number(selectedLayer.height) || 1);
   const isAspectRatioLocked = selectedLayer.lockAspectRatio !== false;
+
+  // 缓存原始比例，只在切换图层或锁定状态变化时更新，避免编辑过程中比例漂移
+  const [cachedRatio, setCachedRatio] = React.useState(null);
+  const [trackedId, setTrackedId] = React.useState(null);
+  const [trackedLock, setTrackedLock] = React.useState(null);
+
+  React.useEffect(() => {
+    const id = selectedLayer.id || selectedLayer._localId;
+    const lock = selectedLayer.lockAspectRatio !== false;
+    // 切换图层、或从解锁切回锁定时，重新捕获当前比例
+    if (id !== trackedId || (lock && !trackedLock)) {
+      setTrackedId(id);
+      setTrackedLock(lock);
+      const w = Number(selectedLayer.width) || 1;
+      const h = Number(selectedLayer.height) || 1;
+      setCachedRatio(w / h);
+    } else if (lock !== trackedLock) {
+      setTrackedLock(lock);
+    }
+  }, [selectedLayer.id, selectedLayer._localId, isAspectRatioLocked]);
+
+  const aspectRatio = cachedRatio || ((Number(selectedLayer.width) || 1) / (Number(selectedLayer.height) || 1));
+
+  const applySizePreset = (option) => {
+    // Presets replace both dimensions, so they also become the new source of
+    // truth for a subsequently locked resize (for example 640 / 360 = 16:9).
+    setCachedRatio(option.width / option.height);
+    onUpdateLayer({ width: option.width, height: option.height });
+  };
 
   return (
     <aside className="ppt-right ppt-image-config-panel">
@@ -67,10 +120,7 @@ export function PptImageConfigPanel({
               placeholder="选择尺寸"
               value={undefined}
               options={IMAGE_SIZE_PRESETS}
-              onChange={(_, option) => onUpdateLayer({
-                width: option.width,
-                height: option.height,
-              })}
+              onChange={(_, option) => applySizePreset(option)}
             />
           </Form.Item>
           <Form.Item label="宽">

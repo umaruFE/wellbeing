@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Form, Input, InputNumber, Select, Switch } from 'antd';
+import { Button, Form, Input, Select, Switch } from 'antd';
 import { History, Maximize2, Pause, Play, RotateCcw, X } from 'lucide-react';
 import { PptRotationControl } from './PptRotationControl';
 import '../css/PptVideoConfigPanel.css';
@@ -13,14 +13,36 @@ const VIDEO_SIZE_PRESETS = [
 ];
 
 function VideoNumberField({ value, unit, onChange }) {
+  const [draft, setDraft] = React.useState(String(value ?? ''));
+
+  React.useEffect(() => {
+    setDraft(String(value ?? ''));
+  }, [value]);
+
+  const commit = () => {
+    const next = Number(draft);
+    if (!Number.isFinite(next) || next < 28) {
+      setDraft(String(value ?? ''));
+      return;
+    }
+    onChange(next);
+  };
+
   return (
     <div className="panel-number-field">
-      <InputNumber
-        controls={false}
-        value={value || 0}
+      <Input
+        inputMode="numeric"
+        value={draft}
         addonAfter={unit}
         style={{ width: '100%' }}
-        onChange={(next) => onChange(Number(next) || 0)}
+        onChange={(event) => {
+          const nextDraft = event.target.value;
+          setDraft(nextDraft);
+          const next = Number(nextDraft);
+          if (Number.isFinite(next) && next >= 28) onChange(next);
+        }}
+        onBlur={commit}
+        onPressEnter={commit}
       />
     </div>
   );
