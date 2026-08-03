@@ -275,14 +275,13 @@ export const CourseSquarePage = () => {
                 key={course.id}
                 className="bg-white rounded-[24px] border-2 border-stroke-light overflow-hidden cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
               >
-                <div className="h-40 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] flex items-center justify-center text-6xl relative border-b-2 border-stroke-light overflow-hidden">
-                  {course.thumbnail ? (
-                    <img
-                      src={course.thumbnail}
-                      alt={course.title}
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
-                  ) : course.thumbnailFallback}
+                <div className="h-40 relative border-b-2 border-stroke-light overflow-hidden">
+                  <img
+                    src={course.thumbnail || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
+                    alt={course.title}
+                    className="absolute inset-0 h-full w-full object-cover"
+                    onError={(e) => { e.target.src = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'; }}
+                  />
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -356,14 +355,13 @@ export const CourseSquarePage = () => {
                 className="bg-white rounded-[24px] border-2 border-stroke-light p-5 cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
               >
                 <div className="flex gap-5">
-                  <div className="w-36 h-36 bg-gradient-to-br from-[#fffbe6] to-[#e5e3db] rounded-2xl flex items-center justify-center text-5xl shrink-0 relative border-2 border-stroke-light overflow-hidden">
-                    {course.thumbnail ? (
-                      <img
-                        src={course.thumbnail}
-                        alt={course.title}
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-                    ) : course.thumbnailFallback}
+                  <div className="w-36 h-36 rounded-2xl shrink-0 relative border-2 border-stroke-light overflow-hidden">
+                    <img
+                      src={course.thumbnail || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
+                      alt={course.title}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      onError={(e) => { e.target.src = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'; }}
+                    />
                     <button
                       onClick={(e) => {
                         e.stopPropagation();

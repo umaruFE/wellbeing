@@ -135,6 +135,23 @@
   margin: 0 auto 9px;
 }
 
+#ed-ppt .ppt-asset-sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background-image: url('/ppt/image/image%207.png');
+  background-size: 400% 300%;
+  background-repeat: no-repeat;
+}
+
+#ed-ppt .ppt-asset-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 #ed-ppt .tone-blue { --asset-tone: var(--ppt-blue); }
 #ed-ppt .tone-purple { --asset-tone: var(--ppt-purple); }
 #ed-ppt .tone-coral { --asset-tone: var(--ppt-coral); }
@@ -286,6 +303,17 @@
   height: 36px;
   border-radius: 8px;
   margin-bottom: 10px;
+}
+
+#ed-ppt .ppt-asset-panel-image .ppt-asset-card.has-art-icon .ppt-asset-card-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 7px;
+  background: transparent;
+}
+
+#ed-ppt .ppt-asset-panel-image .ppt-asset-card.has-art-icon .ppt-asset-card-image {
+  object-fit: contain;
 }
 
 #ed-ppt .ppt-asset-panel-image .ppt-asset-card-copy {

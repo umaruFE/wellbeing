@@ -245,10 +245,7 @@ export const CourseManagementPage = () => {
                   {course.thumbnail ? (
                     <img src={course.thumbnail} alt={course.title} className="w-full h-full object-cover" />
                   ) : (
-                    <>
-                      <LayoutTemplate className="w-8 h-8 mb-1" />
-                      <span className="text-[10px]">{t('course.noCover')}</span>
-                    </>
+                    <img src="/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg" alt={course.title} className="w-full h-full object-cover" />
                   )}
                 </div>
 

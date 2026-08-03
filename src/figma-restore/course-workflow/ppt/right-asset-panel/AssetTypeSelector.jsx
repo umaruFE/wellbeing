@@ -12,15 +12,30 @@ export function AssetTypeSelector({ type, onSelect, onOpenLibrary }) {
           <div className={`ppt-asset-type-grid type-${type || 'all'}`}>
             {group.items.map((item) => {
               const Icon = item.icon;
+              const hasSprite = item.spriteCol !== undefined;
+              const hasImage = Boolean(item.imageSrc);
               return (
                 <button
                   type="button"
                   key={item.code}
-                  className={`ppt-asset-card tone-${item.tone} ${item.disabled ? 'is-disabled' : ''}`}
+                  className={`ppt-asset-card tone-${item.tone} ${hasImage ? 'has-art-icon' : ''} ${item.disabled ? 'is-disabled' : ''}`}
                   onClick={() => !item.disabled && onSelect(item)}
                   disabled={item.disabled}
                 >
-                  <span className="ppt-asset-card-icon"><Icon size={20} /></span>
+                  <span className="ppt-asset-card-icon">
+                    {hasImage ? (
+                      <img className="ppt-asset-card-image" src={item.imageSrc} alt="" />
+                    ) : hasSprite ? (
+                      <span
+                        className="ppt-asset-sprite"
+                        style={{
+                          backgroundPosition: `${-item.spriteCol * 100}% ${-item.spriteRow * 100}%`,
+                        }}
+                      />
+                    ) : (
+                      <Icon size={20} />
+                    )}
+                  </span>
                   <span className="ppt-asset-card-copy">
                     <strong>{item.title}</strong>
                     <span>{item.desc}</span>

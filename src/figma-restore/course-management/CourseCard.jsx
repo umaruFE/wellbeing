@@ -3,6 +3,8 @@ import { Users, Clock, Award, CircleDot, CheckCircle2, Trash2 } from 'lucide-rea
 import { useTranslation } from 'react-i18next';
 import { CourseCoverFallback } from '../CourseCoverFallback';
 
+const DEFAULT_COVER = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg';
+
 function CourseManagementCover({ course }) {
   const [errored, setErrored] = React.useState(false);
   const src = course.themeImageUrl || course.thumbnail;
@@ -12,7 +14,7 @@ function CourseManagementCover({ course }) {
   }, [src]);
 
   if (!src || errored) {
-    return <CourseCoverFallback />;
+    return <img className="fr-cm-cover-image" src={DEFAULT_COVER} alt={course.title || ''} />;
   }
 
   return (

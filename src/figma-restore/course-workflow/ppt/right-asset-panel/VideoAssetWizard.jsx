@@ -305,7 +305,7 @@ function SceneRoleStep({ values, setValue }) {
         <Input.TextArea placeholder="例：太空场景，宇宙飞船驾驶舱" maxLength={40} />
         <div>
           <span>0 / 40</span>
-          <button type="button"><Sparkles size={14} />帮我写</button>
+          {/* <button type="button"><Sparkles size={14} />帮我写</button> */}
         </div>
       </div>
 

@@ -317,13 +317,12 @@ const CreateCoursePageContent = () => {
               </div>
 
               <div className="relative rounded-xl overflow-hidden mt-auto bg-[#FDF8F5] flex items-center justify-center group min-h-[200px]">
-                {displayData.thumbnail ? (
-                  <img src={displayData.thumbnail} alt="Course Cover" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center" style={{ color: colors.neutral.text.disabled }}>
-                    <span className="text-[13px] font-bold">{t('courseOverview.noCover')}</span>
-                  </div>
-                )}
+                <img
+                  src={displayData.thumbnail || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
+                  alt="Course Cover"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.src = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'; }}
+                />
                 <div className="absolute bottom-4 left-4 bg-white px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase shadow-sm text-gray-400">
                   PREVIEW
                 </div>

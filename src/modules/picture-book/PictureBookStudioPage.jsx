@@ -952,13 +952,7 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
           {books.map((book) => (
             <article key={book.id} className="pbv2-book-card" onClick={() => onOpen(book)}>
               <div className="pbv2-book-cover">
-                {book.cover_url ? (
-                  <img src={book.cover_url} alt={book.title} />
-                ) : (
-                  <div className="pbv2-book-cover-placeholder">
-                    <LayoutTemplate size={32} />
-                  </div>
-                )}
+                <img src={book.cover_url || '/assets/empty/ccde8c7986169924dc032228775c34fd.jpg'} alt={book.title} onError={(e) => { e.target.src = '/assets/empty/ccde8c7986169924dc032228775c34fd.jpg'; }} />
                 <span className={`pbv2-book-status ${book.status || 'draft'}`}>
                   {book.status === 'published' ? t('pictureBook.published') : t('pictureBook.draft')}
                 </span>

@@ -48,12 +48,14 @@ const StatusTag = ({ status }) => {
   );
 };
 
+const DEFAULT_COVER = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg';
+
 const CourseCoverImage = ({ course }) => {
   const [errored, setErrored] = useState(false);
   const src = course.thumbnail;
 
   if (!src || errored) {
-    return <CourseCoverFallback className="course-image" />;
+    return <img src={DEFAULT_COVER} alt={course.title || ''} className="course-image" />;
   }
 
   return (

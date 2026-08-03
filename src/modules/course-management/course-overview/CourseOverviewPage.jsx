@@ -426,11 +426,14 @@ const CourseOverviewPage = () => {
                 src={courseData.thumbnail}
                 alt="Course Cover"
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                onError={(e) => { e.target.src = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'; }}
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center" style={{ color: colors.neutral.text.disabled }}>
-                {t('courseOverview.noCover')}
-              </div>
+              <img
+                src="/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg"
+                alt="Course Cover"
+                className="w-full h-full object-cover"
+              />
             )}
             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
               <button className="px-6 py-2.5 rounded-xl font-bold flex items-center gap-2" style={primaryNeoButtonStyle}>
