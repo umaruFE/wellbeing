@@ -470,6 +470,12 @@
   cursor: pointer;
 }
 
+#ed-ppt .ppt-asset-library-icon {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 #ed-ppt .ppt-option-grid .ppt-option-preview {
   display: block;
   width: calc(100% - 12px);
@@ -2918,6 +2924,13 @@
   margin: 0 auto 9px;
 }
 
+#ed-ppt .ppt-asset-panel-audio .ppt-asset-card.has-art-icon .ppt-asset-card-icon {
+  width: 52px;
+  height: 52px;
+  margin-bottom: 7px;
+  background: transparent;
+}
+
 #ed-ppt .ppt-asset-panel-audio .tone-coral { --asset-tone: #f36f5e; }
 #ed-ppt .ppt-asset-panel-audio .tone-purple { --asset-tone: #8f56d6; }
 #ed-ppt .ppt-asset-panel-audio .tone-green { --asset-tone: #4ca66f; }
@@ -3691,6 +3704,12 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
+}
+
+#ed-ppt .ppt-asset-panel-video .ppt-asset-card.has-art-icon .ppt-asset-card-icon {
+  width: 52px;
+  height: 52px;
+  background: transparent;
 }
 
 #ed-ppt .ppt-asset-panel-video .ppt-asset-card-copy strong {

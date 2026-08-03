@@ -880,27 +880,12 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
             <div className="course-map-v2-cover">
               <div className="overview-hero-img">
-                {map.themeImageUrl ? (
-                  <img
-                    className="course-map-theme-image"
-                    src={map.themeImageUrl}
-                    alt={map.title}
-                  />
-                ) : (
-                  <div className="course-map-cover-art" aria-hidden="true">
-                    <div className="cm-kitchen-wall">
-                      <span className="cm-cabinet left" />
-                      <span className="cm-hood" />
-                      <span className="cm-cabinet right" />
-                      <span className="cm-stove" />
-                      <span className="cm-counter" />
-                    </div>
-                    <div className="cm-character pear"><span className="cm-eye one" /><span className="cm-eye two" /><span className="cm-mouth" /></div>
-                    <div className="cm-character brain"><span className="cm-eye one" /><span className="cm-eye two" /><span className="cm-mouth" /></div>
-                    <div className="cm-character orange"><span className="cm-eye one" /><span className="cm-eye two" /><span className="cm-mouth" /></div>
-                    <div className="cm-floor" />
-                  </div>
-                )}
+                <img
+                  className="course-map-theme-image"
+                  src={map.themeImageUrl || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
+                  alt={map.title}
+                  onError={(e) => { e.target.src = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'; }}
+                />
                 <div className="course-map-v2-cover-actions">
                   <Button
                     icon={<RefreshCw size={16} />}

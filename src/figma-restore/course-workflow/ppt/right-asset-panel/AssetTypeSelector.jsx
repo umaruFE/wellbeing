@@ -1,4 +1,3 @@
-import { Library } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getAssetGroups } from './assetPanelData';
 
@@ -50,7 +49,7 @@ export function AssetTypeSelector({ type, onSelect, onOpenLibrary }) {
       <section className="ppt-asset-type-section">
         <div className="ppt-asset-sec-title">{t('assetPanel.assetLibrary')}</div>
         <button type="button" className="ppt-asset-library-btn" onClick={onOpenLibrary}>
-          {type === 'audio' ? null : <Library size={15} />}
+          <img className="ppt-asset-library-icon" src="/ppt/image/library-folder.png" alt="" />
           {t('assetPanel.selectFromLibrary')}
         </button>
       </section>

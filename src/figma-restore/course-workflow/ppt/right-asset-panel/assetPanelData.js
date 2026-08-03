@@ -41,20 +41,20 @@ export function getImageAssetTypes(t) {
 
 export function getAudioAssetTypes(t) {
   return [
-    { code: 'C1', title: t('assetPanel.c1Title'), desc: t('assetPanel.c1Desc'), tone: 'coral', icon: Smile },
-    { code: 'C2', title: t('assetPanel.c2Title'), desc: t('assetPanel.c2Desc'), tone: 'purple', icon: Volume2 },
-    { code: 'C3', title: t('assetPanel.c3Title'), desc: t('assetPanel.c3Desc'), tone: 'green', icon: Mic },
-    { code: 'C4', title: t('assetPanel.c4Title'), desc: t('assetPanel.c4Desc'), tone: 'blue', icon: Speech },
-    { code: 'C5', title: t('assetPanel.c5Title'), desc: t('assetPanel.c5Desc'), tone: 'purple', icon: Mic },
-    { code: 'C6', title: t('assetPanel.c6Title'), desc: t('assetPanel.c6Desc'), tone: 'coral', icon: Wind },
+    { code: 'C1', title: t('assetPanel.c1Title'), desc: t('assetPanel.c1Desc'), tone: 'coral', icon: Smile, imageSrc: '/ppt/image/audio-icons/music.png' },
+    { code: 'C2', title: t('assetPanel.c2Title'), desc: t('assetPanel.c2Desc'), tone: 'purple', icon: Volume2, imageSrc: '/ppt/image/audio-icons/megaphone.png' },
+    { code: 'C3', title: t('assetPanel.c3Title'), desc: t('assetPanel.c3Desc'), tone: 'green', icon: Mic, imageSrc: '/ppt/image/audio-icons/voice.png' },
+    { code: 'C4', title: t('assetPanel.c4Title'), desc: t('assetPanel.c4Desc'), tone: 'blue', icon: Speech, imageSrc: '/ppt/image/audio-icons/dialogue.png' },
+    { code: 'C5', title: t('assetPanel.c5Title'), desc: t('assetPanel.c5Desc'), tone: 'purple', icon: Mic, imageSrc: '/ppt/image/audio-icons/microphone.png' },
+    { code: 'C6', title: t('assetPanel.c6Title'), desc: t('assetPanel.c6Desc'), tone: 'coral', icon: Wind, imageSrc: '/ppt/image/audio-icons/feather.png' },
   ];
 }
 
 export function getVideoAssetTypes(t) {
   return [
-    { code: 'V1', title: t('assetPanel.v1Title'), desc: t('assetPanel.v1Desc'), tone: 'blue', icon: Dumbbell },
-    { code: 'VM', title: t('assetPanel.vmTitle'), desc: t('assetPanel.vmDesc'), tone: 'purple', icon: Clapperboard },
-    { code: 'V3', title: t('assetPanel.v3Title'), desc: t('assetPanel.v3Desc'), tone: 'coral', icon: Film, disabled: true },
+    { code: 'V1', title: t('assetPanel.v1Title'), desc: t('assetPanel.v1Desc'), tone: 'blue', icon: Dumbbell, imageSrc: '/ppt/image/video-icons/fitness-challenge.png' },
+    { code: 'VM', title: t('assetPanel.vmTitle'), desc: t('assetPanel.vmDesc'), tone: 'purple', icon: Clapperboard, imageSrc: '/ppt/image/video-icons/story-narrative.png' },
+    { code: 'V3', title: t('assetPanel.v3Title'), desc: t('assetPanel.v3Desc'), tone: 'coral', icon: Film, imageSrc: '/ppt/image/video-icons/teaching-animation.png', disabled: true },
   ];
 }
 
