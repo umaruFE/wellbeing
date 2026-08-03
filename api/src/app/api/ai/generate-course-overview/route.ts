@@ -101,6 +101,7 @@ function buildOutputInstruction(isEnglish: boolean) {
 
   return [
     '请返回结构化 JSON。',
+    'courseOverview.courseTitle 必须使用中英双语格式："中文课程名称 | English Course Title"。竖线两侧均不能为空；除 courseTitle 外，其他面向用户字段仍使用中文。',
     'courseOverview 中必须包含 journey 字段。',
     'journey 必须包含 engage、empower、execute、elevate 四个字段。',
     '课堂旅程必须基于本课程的主题、故事情境、语言目标、最终成果和成长目标生成，不能使用通用模板句。',

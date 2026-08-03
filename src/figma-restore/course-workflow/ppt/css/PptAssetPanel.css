@@ -3689,6 +3689,11 @@
   gap: 14px;
 }
 
+/* Separate consecutive video groups so the next group label clears card shadows. */
+#ed-ppt .ppt-asset-panel-video .ppt-asset-type-section:not(:first-child):not(:last-child) {
+  margin-top: 24px;
+}
+
 #ed-ppt .ppt-asset-panel-video .ppt-asset-card {
   min-height: 108px;
   background: #ffffff;
