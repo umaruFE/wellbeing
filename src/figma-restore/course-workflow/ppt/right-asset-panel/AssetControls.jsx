@@ -44,7 +44,7 @@ export function PromptField({ label, value, onChange, placeholder, maxLength = 8
       />
       <div className="ppt-prompt-foot">
         <span>{value.length} / {maxLength}</span>
-        {/* <button type="button"><WandSparkles size={13} />帮我写</button> */}
+        <button type="button"><WandSparkles size={13} />帮我写</button>
       </div>
     </FieldBlock>
   );
