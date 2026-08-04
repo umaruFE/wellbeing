@@ -14,7 +14,7 @@
             {
               "id": "bce999ce-9040-4f70-a70a-6df392427116",
               "name": "image_filepath",
-              "value": "={{ '/home/node/files/' + $json.image_filepath.split('file=').pop().split('?')[0] }}",
+              "value": "={{ $json.image_filepath.startsWith('http') ? $json.image_filepath : '/home/node/files/' + $json.image_filepath.split('file=').pop().split('?')[0] }}",
               "type": "string"
             },
             {
@@ -47,6 +47,54 @@
       ],
       "id": "5b8bcbaf-55b5-4663-be7c-9f9bbfc3af71",
       "name": "配置字段"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cond-remote-url",
+              "leftValue": "={{ $json.image_filepath }}",
+              "rightValue": "http",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        352,
+        240
+      ],
+      "id": "if-remote-url-check-002",
+      "name": "是否为远程图片"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.image_filepath }}",
+        "responseFormat": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        464,
+        80
+      ],
+      "id": "http-download-remote-002",
+      "name": "下载远程图片"
     },
     {
       "parameters": {
@@ -157,7 +205,7 @@
       "typeVersion": 1,
       "position": [
         464,
-        240
+        400
       ],
       "id": "661158b8-7933-4110-8776-4ba0c9fb38f5",
       "name": "Read/Write Files from Disk1"
@@ -408,7 +456,36 @@
       "main": [
         [
           {
+            "node": "是否为远程图片",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "是否为远程图片": {
+      "main": [
+        [
+          {
+            "node": "下载远程图片",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
             "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "下载远程图片": {
+      "main": [
+        [
+          {
+            "node": "上传图片",
             "type": "main",
             "index": 0
           }
