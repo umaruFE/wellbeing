@@ -72,7 +72,9 @@ async function getVideoData(executionId: string): Promise<any> {
       throw new Error(`获取视频数据失败: ${errorText}`);
     }
 
-    const data = await response.json();
+    const responseText = await response.text();
+    if (!responseText.trim()) return null;
+    const data = JSON.parse(responseText);
     console.log('获取视频数据成功:', data);
     return data;
   } catch (error: any) {
@@ -82,6 +84,52 @@ async function getVideoData(executionId: string): Promise<any> {
     }
     throw error;
   }
+}
+
+function findVideoUrl(value: unknown, depth = 0): string {
+  if (depth > 14 || value == null) return '';
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    // 匹配标准 URL: http://xxx/video.mp4 或 http://xxx/video.mp4?token=xxx
+    const standardMatch = /^https?:\/\/[^\s"']+\.(?:mp4|mov|webm)(?:\?[^\s"']*)?$/i.test(trimmed);
+    // 匹配 ComfyUI 风格 URL: http://xxx/view?filename=xxx.mp4&subfolder=&type=output
+    const comfyuiMatch = /^https?:\/\/[^\s"']*[?&][^\s"']*\.(?:mp4|mov|webm)[^\s"']*$/i.test(trimmed);
+    return (standardMatch || comfyuiMatch) ? trimmed : '';
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const url = findVideoUrl(item, depth + 1);
+      if (url) return url;
+    }
+    return '';
+  }
+  if (typeof value === 'object') {
+    const record = value as Record<string, unknown>;
+    const preferredKeys = ['video_url', 'videoUrl', 'url', 'response', 'data', 'outputUrl', 'output_url', 'filename', 'file', 'result', 'outputs'];
+    for (const key of preferredKeys) {
+      if (!(key in record)) continue;
+      const url = findVideoUrl(record[key], depth + 1);
+      if (url) return url;
+    }
+    for (const item of Object.values(record)) {
+      const url = findVideoUrl(item, depth + 1);
+      if (url) return url;
+    }
+  }
+  return '';
+}
+
+function completedResponse(executionId: string, videoUrl: string, videoData?: unknown) {
+  return NextResponse.json({
+    success: true,
+    data: {
+      executionId,
+      status: 'completed',
+      videoData: videoData || { url: videoUrl, video_url: videoUrl },
+    },
+  }, {
+    headers: { 'Access-Control-Allow-Origin': '*' },
+  });
 }
 
 export async function GET(request: NextRequest) {
@@ -106,37 +154,69 @@ export async function GET(request: NextRequest) {
     
     if (statusData.status === 'success' && statusData.finished) {
       console.log('执行完成，获取视频数据...');
+
+      // DEBUG: 打印执行数据中的所有 URL 和关键字段，帮助定位视频 URL 存储位置
+      const debugUrls: string[] = [];
+      const collectUrls = (val: unknown, path = '') => {
+        if (typeof val === 'string' && /^https?:\/\//i.test(val)) {
+          debugUrls.push(`${path}: ${val}`);
+        } else if (Array.isArray(val)) {
+          val.forEach((item, i) => collectUrls(item, `${path}[${i}]`));
+        } else if (val && typeof val === 'object') {
+          for (const [k, v] of Object.entries(val)) collectUrls(v, path ? `${path}.${k}` : k);
+        }
+      };
+      collectUrls(executionStatus);
+      console.log('[video-status] 执行数据中所有 URL:', JSON.stringify(debugUrls, null, 2));
+
+      // A completed n8n execution already contains the final `Insert row`
+      // response. Prefer it so a delayed get-resource webhook cannot keep the
+      // UI polling forever.
+      const executionVideoUrl = findVideoUrl(executionStatus);
+      console.log('[video-status] findVideoUrl(executionData) 结果:', executionVideoUrl || '(未找到)');
+      if (executionVideoUrl) {
+        return completedResponse(executionId, executionVideoUrl);
+      }
       
       try {
         const videoData = await getVideoData(executionId);
-        
-        console.log('获取视频数据成功，返回给前端');
-        
+        console.log('[video-status] get-resource 返回:', JSON.stringify(videoData, null, 2)?.slice(0, 2000));
+        const normalizedVideoData = videoData?.data || videoData;
+        const resourceVideoUrl = findVideoUrl(normalizedVideoData);
+        console.log('[video-status] findVideoUrl(getResource) 结果:', resourceVideoUrl || '(未找到)');
+        if (resourceVideoUrl) {
+          console.log('获取视频数据成功，返回给前端');
+          return completedResponse(executionId, resourceVideoUrl, normalizedVideoData);
+        }
+
+        // 如果 get-resource 返回了任何包含 URL 的数据，也记录下来
+        const resourceUrls: string[] = [];
+        collectUrls(normalizedVideoData);
+        console.log('[video-status] get-resource 中的 URL:', JSON.stringify(resourceUrls, null, 2));
+
+        const stoppedAt = Date.parse(String((executionStatus as any).stoppedAt || ''));
+        const isWithinSyncGracePeriod = Number.isFinite(stoppedAt) && Date.now() - stoppedAt < 60_000;
+        if (isWithinSyncGracePeriod) {
+          return NextResponse.json({
+            success: true,
+            message: '视频数据正在同步，请继续轮询',
+            data: { executionId, status: 'processing' },
+          }, { headers: { 'Access-Control-Allow-Origin': '*' } });
+        }
+
         return NextResponse.json({
-          success: true,
-          data: {
-            executionId: executionId,
-            status: 'completed',
-            videoData: videoData.data || videoData
-          }
-        }, {
-          headers: {
-            'Access-Control-Allow-Origin': '*'
-          }
-        });
+          success: false,
+          error: 'n8n 执行已结束，但没有返回视频文件',
+          data: { executionId, status: 'failed' },
+        }, { headers: { 'Access-Control-Allow-Origin': '*' } });
       } catch (error) {
-        console.warn('执行已完成，但视频数据尚未就绪，继续等待:', error);
+        console.warn('执行已完成，但读取视频数据失败:', error);
         return NextResponse.json({
-          success: true,
-          message: '视频数据正在同步，请继续轮询',
-          data: {
-            executionId: executionId,
-            status: 'processing'
-          }
+          success: false,
+          error: error instanceof Error ? error.message : '读取视频结果失败',
+          data: { executionId, status: 'failed' },
         }, {
-          headers: {
-            'Access-Control-Allow-Origin': '*'
-          }
+          headers: { 'Access-Control-Allow-Origin': '*' }
         });
       }
     } else if (statusData.status === 'error' || statusData.status === 'failed') {
