@@ -89,12 +89,9 @@ async function getVideoData(executionId: string): Promise<any> {
 function findVideoUrl(value: unknown, depth = 0): string {
   if (depth > 14 || value == null) return '';
   if (typeof value === 'string') {
-    const trimmed = value.trim();
-    // 匹配标准 URL: http://xxx/video.mp4 或 http://xxx/video.mp4?token=xxx
-    const standardMatch = /^https?:\/\/[^\s"']+\.(?:mp4|mov|webm)(?:\?[^\s"']*)?$/i.test(trimmed);
-    // 匹配 ComfyUI 风格 URL: http://xxx/view?filename=xxx.mp4&subfolder=&type=output
-    const comfyuiMatch = /^https?:\/\/[^\s"']*[?&][^\s"']*\.(?:mp4|mov|webm)[^\s"']*$/i.test(trimmed);
-    return (standardMatch || comfyuiMatch) ? trimmed : '';
+    return /^https?:\/\/[^\s"']+\.(?:mp4|mov|webm)(?:\?[^\s"']*)?$/i.test(value.trim())
+      ? value.trim()
+      : '';
   }
   if (Array.isArray(value)) {
     for (const item of value) {
@@ -105,7 +102,7 @@ function findVideoUrl(value: unknown, depth = 0): string {
   }
   if (typeof value === 'object') {
     const record = value as Record<string, unknown>;
-    const preferredKeys = ['video_url', 'videoUrl', 'url', 'response', 'data', 'outputUrl', 'output_url', 'filename', 'file', 'result', 'outputs'];
+    const preferredKeys = ['video_url', 'videoUrl', 'url', 'response', 'data', 'outputUrl', 'output_url'];
     for (const key of preferredKeys) {
       if (!(key in record)) continue;
       const url = findVideoUrl(record[key], depth + 1);
@@ -155,44 +152,22 @@ export async function GET(request: NextRequest) {
     if (statusData.status === 'success' && statusData.finished) {
       console.log('执行完成，获取视频数据...');
 
-      // DEBUG: 打印执行数据中的所有 URL 和关键字段，帮助定位视频 URL 存储位置
-      const debugUrls: string[] = [];
-      const collectUrls = (val: unknown, path = '') => {
-        if (typeof val === 'string' && /^https?:\/\//i.test(val)) {
-          debugUrls.push(`${path}: ${val}`);
-        } else if (Array.isArray(val)) {
-          val.forEach((item, i) => collectUrls(item, `${path}[${i}]`));
-        } else if (val && typeof val === 'object') {
-          for (const [k, v] of Object.entries(val)) collectUrls(v, path ? `${path}.${k}` : k);
-        }
-      };
-      collectUrls(executionStatus);
-      console.log('[video-status] 执行数据中所有 URL:', JSON.stringify(debugUrls, null, 2));
-
       // A completed n8n execution already contains the final `Insert row`
       // response. Prefer it so a delayed get-resource webhook cannot keep the
       // UI polling forever.
       const executionVideoUrl = findVideoUrl(executionStatus);
-      console.log('[video-status] findVideoUrl(executionData) 结果:', executionVideoUrl || '(未找到)');
       if (executionVideoUrl) {
         return completedResponse(executionId, executionVideoUrl);
       }
       
       try {
         const videoData = await getVideoData(executionId);
-        console.log('[video-status] get-resource 返回:', JSON.stringify(videoData, null, 2)?.slice(0, 2000));
         const normalizedVideoData = videoData?.data || videoData;
         const resourceVideoUrl = findVideoUrl(normalizedVideoData);
-        console.log('[video-status] findVideoUrl(getResource) 结果:', resourceVideoUrl || '(未找到)');
         if (resourceVideoUrl) {
           console.log('获取视频数据成功，返回给前端');
           return completedResponse(executionId, resourceVideoUrl, normalizedVideoData);
         }
-
-        // 如果 get-resource 返回了任何包含 URL 的数据，也记录下来
-        const resourceUrls: string[] = [];
-        collectUrls(normalizedVideoData);
-        console.log('[video-status] get-resource 中的 URL:', JSON.stringify(resourceUrls, null, 2));
 
         const stoppedAt = Date.parse(String((executionStatus as any).stoppedAt || ''));
         const isWithinSyncGracePeriod = Number.isFinite(stoppedAt) && Date.now() - stoppedAt < 60_000;
