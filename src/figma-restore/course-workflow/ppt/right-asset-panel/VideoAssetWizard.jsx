@@ -546,7 +546,7 @@ function StoryboardImagesStep({ storyboard, generating, onRegenerate }) {
   );
 }
 
-function ConfirmStep({ values, generating }) {
+function ConfirmStep({ values, generating, onHang }) {
   return (
     <div className="ppt-v1-body">
       <div className="ppt-v1-section-title">确认并生成视频</div>
@@ -568,6 +568,9 @@ function ConfirmStep({ values, generating }) {
               </div>
             ))}
           </div>
+          <button type="button" className="ppt-hang-btn ppt-video-hang-btn" onClick={onHang}>
+            <Pause size={13} />挂起后台，继续编辑课件
+          </button>
         </div>
       ) : null}
     </div>
@@ -659,7 +662,7 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
             onRegenerate={generateStoryboard}
           />
         ) : null}
-        {step === 3 ? <ConfirmStep values={values} generating={generating} /> : null}
+        {step === 3 ? <ConfirmStep values={values} generating={generating} onHang={handleHang} /> : null}
         {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
@@ -668,11 +671,6 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
             <button type="button" className="ppt-v1-primary is-disabled">
               {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
             </button>
-            {generating ? (
-              <button type="button" className="ppt-hang-btn" onClick={handleHang}>
-                <Pause size={13} />挂起后台，继续编辑课件
-              </button>
-            ) : null}
           </>
         ) : (
           <>
@@ -1053,7 +1051,7 @@ function StorySummary({ values }) {
   );
 }
 
-function StoryGenerateStep({ values, generating }) {
+function StoryGenerateStep({ values, generating, onHang }) {
   return (
     <div className="ppt-vm-body">
       <div className="ppt-vm-section-title">确认并生成视频</div>
@@ -1075,6 +1073,9 @@ function StoryGenerateStep({ values, generating }) {
               </div>
             ))}
           </div>
+          <button type="button" className="ppt-hang-btn ppt-video-hang-btn" onClick={onHang}>
+            <Pause size={13} />挂起后台，继续编辑课件
+          </button>
         </div>
       ) : null}
     </div>
@@ -1158,7 +1159,7 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
             onRegenerate={generateStoryboard}
           />
         ) : null}
-        {step === 3 ? <StoryGenerateStep values={values} generating={generating} /> : null}
+        {step === 3 ? <StoryGenerateStep values={values} generating={generating} onHang={handleHang} /> : null}
         {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
@@ -1167,11 +1168,6 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
             <button type="button" className="ppt-v1-primary is-disabled">
               {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
             </button>
-            {generating ? (
-              <button type="button" className="ppt-hang-btn" onClick={handleHang}>
-                <Pause size={13} />挂起后台，继续编辑课件
-              </button>
-            ) : null}
           </>
         ) : (
           <>
