@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, message } from 'antd';
 import { RefreshCw, TriangleAlert } from 'lucide-react';
-import apiService from '../../services/api';
+import { request } from '../../services/api';
 
 export function MediaDomainMigrationPanel() {
   const [preview, setPreview] = React.useState(null);
@@ -12,7 +12,7 @@ export function MediaDomainMigrationPanel() {
     setLoading(true);
     setErrorMessage('');
     try {
-      const result = await apiService.get('/api/admin/media-domain-migration');
+      const result = await request('/admin/media-domain-migration', { method: 'GET' });
       setPreview(result.data);
     } catch (error) {
       const nextError = error.message || '读取迁移预览失败';
@@ -32,7 +32,10 @@ export function MediaDomainMigrationPanel() {
     setLoading(true);
     setErrorMessage('');
     try {
-      const result = await apiService.post('/api/admin/media-domain-migration', { confirm: true });
+      const result = await request('/admin/media-domain-migration', {
+        method: 'POST',
+        body: JSON.stringify({ confirm: true }),
+      });
       message.success(`已替换 ${result.data.total} 条记录`);
       await inspect();
     } catch (error) {
