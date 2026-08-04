@@ -668,9 +668,11 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
             <button type="button" className="ppt-v1-primary is-disabled">
               {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
             </button>
-            <button type="button" className="ppt-hang-btn" onClick={handleHang}>
-              <Pause size={13} />挂起后台，继续编辑课件
-            </button>
+            {generating ? (
+              <button type="button" className="ppt-hang-btn" onClick={handleHang}>
+                <Pause size={13} />挂起后台，继续编辑课件
+              </button>
+            ) : null}
           </>
         ) : (
           <>
@@ -1165,9 +1167,11 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
             <button type="button" className="ppt-v1-primary is-disabled">
               {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
             </button>
-            <button type="button" className="ppt-hang-btn" onClick={handleHang}>
-              <Pause size={13} />挂起后台，继续编辑课件
-            </button>
+            {generating ? (
+              <button type="button" className="ppt-hang-btn" onClick={handleHang}>
+                <Pause size={13} />挂起后台，继续编辑课件
+              </button>
+            ) : null}
           </>
         ) : (
           <>
