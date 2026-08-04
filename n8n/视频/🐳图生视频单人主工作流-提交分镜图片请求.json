@@ -44,25 +44,6 @@
     },
     {
       "parameters": {
-        "promptType": "define",
-        "text": "=你是一位经验丰富的电影导演和分镜师,精通视觉叙事、镜头语言和情感表达。你的任务是根据我给出的'故事分镜脚本'和'角色设定',为视频生成配音方案。\n\n\n以下是视频分镜脚本：\n{{ JSON.stringify($json.data) }}\n\n【任务指令】\n请严格按照以下步骤和要求,将所有输出整合到一个JSON对象中。\n\n1. **音色方案设计 (characters_timbre)**:\n   * **灵活选择原则**: 根据故事风格和叙事需求，自主决定使用何种音色组合：\n     - 纯旁白叙事：适合文学性强、史诗感的故事（只设计旁白音色）\n     - 纯角色对话：适合第一人称、沉浸式体验的故事（只设计角色音色）\n     - 旁白+角色：适合需要客观叙述和主观表达结合的故事（设计两种音色）\n   \n   * **音色设计要求**:\n     - 为你选择的音色类型设计符合年龄、性别、性格的音色描述\n     - 每个音色设定一个唯一的timbre_id（从0开始递增）\n     - 输出到字段characters_timbre数组中\n\n2. **配音脚本生成 (voice_scripts)** - 【核心约束，必须严格遵守】:\n\n   **一、强制性一对一映射规则**:\n   * 有多少个分镜脚本，就生成多少段配音，**严格一一对应**\n   * 示例：4个分镜 → 4段配音；10个分镜 → 10段配音\n   * **每个分镜内只能有一段配音**，绝对禁止在单个分镜内生成多段配音\n   * 配音顺序必须与分镜顺序一致\n\n   **二、时间窗口严格约束**:\n   * 每个分镜有对应的duration（秒），这是该分镜的播放时长\n   * **时间窗口计算**（以毫秒为单位）:\n     - 分镜1的时间窗口：0 到 duration1×1000 毫秒\n     - 分镜2的时间窗口：duration1×1000 到 (duration1+duration2)×1000 毫秒\n     - 以此类推...\n   \n   * **强制要求**：\n     - 每段配音的start_time和end_time必须完全落在其对应分镜的时间窗口内\n     - 不得跨越分镜边界\n     - 不得与其他配音时间重叠\n     - 配音结束时间与下一段配音开始时间之间建议留出300-800ms的自然停顿\n\n   **三、字数限制铁律**:\n   * **语速上限**: 每秒最多3个字（这是物理极限）\n   * **计算步骤**（按顺序执行）:\n     1. 确定该分镜的时间窗口（起始毫秒到结束毫秒）\n     2. 在该窗口内规划配音的start_time和end_time（预留停顿空间）\n     3. 计算配音持续时长（秒）= (end_time - start_time) ÷ 1000\n     4. 计算字数上限 = 持续时长 × 3\n     5. **实际文本字数必须 ≤ 字数上限**，建议控制在上限的70-85%以保证自然语速\n   \n   * **实例演示**:\n     - 分镜1: duration=5秒，窗口0-5000ms\n       - 规划配音：100ms到4500ms（持续4.4秒）\n       - 字数上限：4.4×3=13.2字\n       - 建议实际：9-11字\n     \n     - 分镜2: duration=3秒，窗口5000-8000ms\n       - 规划配音：5300ms到7800ms（持续2.5秒）\n       - 字数上限：2.5×3=7.5字\n       - 建议实际：5-6字\n\n   **四、内容创作原则**:\n   * 在字数限制内，提炼每个分镜的**核心情感点**或**关键信息**\n   * 优先选择：\n     - 情感化的短句（\"心跳加速\"）\n     - 意象化的旁白（\"夜色如墨\"）\n     - 简短有力的对白（\"我在这里\"）\n   * 追求\"精准传达\"而非\"面面俱到\"\n   * 根据你在步骤1中选择的音色方案，使用相应的timbre_id\n\n【输出格式】\n请将你的所有工作成果严格按照下面的JSON结构返回，不要有任何JSON之外的文字：\n\n{\n  \"characters_timbre\": [\n    {\n      \"timbre_name\": \"旁白/主角（根据实际选择）\",\n      \"timbre_des\": \"音色描述\",\n      \"timbre_id\": 0\n    }\n    // 根据需要可以只有1个或2个音色\n  ],\n  \"voice_scripts\": [\n    {\n      \"text\": \"第一个分镜的配音文本（字数符合计算规则）\",\n      \"timbre_id\": 0,\n      \"start_time\": 100,\n      \"end_time\": 4500\n    },\n    {\n      \"text\": \"第二个分镜的配音文本（字数符合计算规则）\",\n      \"timbre_id\": 0,\n      \"start_time\": 5300,\n      \"end_time\": 7800\n    }\n    // 配音数量 = 分镜数量\n  ]\n}\n\n【最终检查清单】\n生成结果前，请务必验证：\n✓ voice_scripts数组长度 = 分镜脚本数量\n✓ 每段配音的时间范围都在其对应分镜的duration窗口内\n✓ 每段配音的文本字数 ≤ (持续时长×3)，且建议在70-85%范围\n✓ 所有配音时间无重叠，有合理停顿间隙\n✓ 音色选择符合故事风格，并正确关联timbre_id",
-        "hasOutputParser": true,
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 2.2,
-      "position": [
-        2064,
-        320
-      ],
-      "id": "251f32eb-fb4c-4412-9d62-8a4c1167ccfb",
-      "name": "生成语音脚本",
-      "retryOnFail": true,
-      "waitBetweenTries": 1000,
-      "maxTries": 5
-    },
-    {
-      "parameters": {
         "jsCode": "return {\n  data: $('生成视频分镜脚本').first().json.output.storyboard_prompts.map(item => {\n    return {\n      ...item,\n    }\n  })\n}"
       },
       "type": "n8n-nodes-base.code",
@@ -588,9 +569,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "Qwen3.5",
+          "value": "deepseek-v4-flash",
           "mode": "list",
-          "cachedResultName": "Qwen3.5"
+          "cachedResultName": "deepseek-v4-flash"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -605,8 +586,8 @@
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
-          "id": "gM924akHUPCvr5sE",
-          "name": "supper center"
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
         }
       }
     },
@@ -614,9 +595,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "Qwen3.5",
+          "value": "deepseek-v4-flash",
           "mode": "list",
-          "cachedResultName": "Qwen3.5"
+          "cachedResultName": "deepseek-v4-flash"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -631,8 +612,8 @@
       "name": "OpenAI Chat Model2",
       "credentials": {
         "openAiApi": {
-          "id": "gM924akHUPCvr5sE",
-          "name": "supper center"
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
         }
       }
     },
@@ -640,9 +621,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "Qwen3.5",
+          "value": "deepseek-v4-flash",
           "mode": "list",
-          "cachedResultName": "Qwen3.5"
+          "cachedResultName": "deepseek-v4-flash"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -657,34 +638,8 @@
       "name": "OpenAI Chat Model3",
       "credentials": {
         "openAiApi": {
-          "id": "gM924akHUPCvr5sE",
-          "name": "supper center"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "Qwen3.5",
-          "mode": "list",
-          "cachedResultName": "Qwen3.5"
-        },
-        "responsesApiEnabled": false,
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
-      "position": [
-        2064,
-        512
-      ],
-      "id": "9eade82d-26d0-44d1-a35f-6c191452e580",
-      "name": "OpenAI Chat Model4",
-      "credentials": {
-        "openAiApi": {
-          "id": "gM924akHUPCvr5sE",
-          "name": "supper center"
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
         }
       }
     },
@@ -1149,6 +1104,50 @@
       ],
       "id": "6ab14c14-c707-46f5-8478-5d00a0cfab43",
       "name": "🐓单人Lora-生成分镜图片"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "deepseek-v4-flash",
+          "mode": "list",
+          "cachedResultName": "deepseek-v4-flash"
+        },
+        "responsesApiEnabled": false,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2064,
+        512
+      ],
+      "id": "bd03d36b-7f45-49bb-9a0b-451d08e4027a",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=你是一位经验丰富的电影导演和分镜师,精通视觉叙事、镜头语言和情感表达。你的任务是根据我给出的'故事分镜脚本'和'角色设定',为视频生成配音方案。\n\n\n以下是视频分镜脚本：\n{{ JSON.stringify($json.data) }}\n\n【任务指令】\n请严格按照以下步骤和要求,将所有输出整合到一个JSON对象中。\n\n1. **音色方案设计 (characters_timbre)**:\n   * **灵活选择原则**: 根据故事风格和叙事需求，自主决定使用何种音色组合：\n     - 纯旁白叙事：适合文学性强、史诗感的故事（只设计旁白音色）\n     - 纯角色对话：适合第一人称、沉浸式体验的故事（只设计角色音色）\n     - 旁白+角色：适合需要客观叙述和主观表达结合的故事（设计两种音色）\n   \n   * **音色设计要求**:\n     - 为你选择的音色类型设计符合年龄、性别、性格的音色描述\n     - 每个音色设定一个唯一的timbre_id（从0开始递增）\n     - 输出到字段characters_timbre数组中\n\n2. **配音脚本生成 (voice_scripts)** - 【核心约束，必须严格遵守】:\n\n   **一、强制性一对一映射规则**:\n   * 有多少个分镜脚本，就生成多少段配音，**严格一一对应**\n   * 示例：4个分镜 → 4段配音；10个分镜 → 10段配音\n   * **每个分镜内只能有一段配音**，绝对禁止在单个分镜内生成多段配音\n   * 配音顺序必须与分镜顺序一致\n\n   **二、时间窗口严格约束**:\n   * 每个分镜有对应的duration（秒），这是该分镜的播放时长\n   * **时间窗口计算**（以毫秒为单位）:\n     - 分镜1的时间窗口：0 到 duration1×1000 毫秒\n     - 分镜2的时间窗口：duration1×1000 到 (duration1+duration2)×1000 毫秒\n     - 以此类推...\n   \n   * **强制要求**：\n     - 每段配音的start_time和end_time必须完全落在其对应分镜的时间窗口内\n     - 不得跨越分镜边界\n     - 不得与其他配音时间重叠\n     - 配音结束时间与下一段配音开始时间之间建议留出300-800ms的自然停顿\n\n   **三、字数限制铁律**:\n   * **语速上限**: 每秒最多3个字（这是物理极限）\n   * **计算步骤**（按顺序执行）:\n     1. 确定该分镜的时间窗口（起始毫秒到结束毫秒）\n     2. 在该窗口内规划配音的start_time和end_time（预留停顿空间）\n     3. 计算配音持续时长（秒）= (end_time - start_time) ÷ 1000\n     4. 计算字数上限 = 持续时长 × 3\n     5. **实际文本字数必须 ≤ 字数上限**，建议控制在上限的70-85%以保证自然语速\n   \n   * **实例演示**:\n     - 分镜1: duration=5秒，窗口0-5000ms\n       - 规划配音：100ms到4500ms（持续4.4秒）\n       - 字数上限：4.4×3=13.2字\n       - 建议实际：9-11字\n     \n     - 分镜2: duration=3秒，窗口5000-8000ms\n       - 规划配音：5300ms到7800ms（持续2.5秒）\n       - 字数上限：2.5×3=7.5字\n       - 建议实际：5-6字\n\n   **四、内容创作原则**:\n   * 在字数限制内，提炼每个分镜的**核心情感点**或**关键信息**\n   * 优先选择：\n     - 情感化的短句（\"心跳加速\"）\n     - 意象化的旁白（\"夜色如墨\"）\n     - 简短有力的对白（\"我在这里\"）\n   * 追求\"精准传达\"而非\"面面俱到\"\n   * 根据你在步骤1中选择的音色方案，使用相应的timbre_id\n\n【输出格式】\n请将你的所有工作成果严格按照下面的JSON结构返回，不要有任何JSON之外的文字：\n\n{\n  \"characters_timbre\": [\n    {\n      \"timbre_name\": \"旁白/主角（根据实际选择）\",\n      \"timbre_des\": \"音色描述\",\n      \"timbre_id\": 0\n    }\n    // 根据需要可以只有1个或2个音色\n  ],\n  \"voice_scripts\": [\n    {\n      \"text\": \"第一个分镜的配音文本（字数符合计算规则）\",\n      \"timbre_id\": 0,\n      \"start_time\": 100,\n      \"end_time\": 4500\n    },\n    {\n      \"text\": \"第二个分镜的配音文本（字数符合计算规则）\",\n      \"timbre_id\": 0,\n      \"start_time\": 5300,\n      \"end_time\": 7800\n    }\n    // 配音数量 = 分镜数量\n  ]\n}\n\n【最终检查清单】\n生成结果前，请务必验证：\n✓ voice_scripts数组长度 = 分镜脚本数量\n✓ 每段配音的时间范围都在其对应分镜的duration窗口内\n✓ 每段配音的文本字数 ≤ (持续时长×3)，且建议在70-85%范围\n✓ 所有配音时间无重叠，有合理停顿间隙\n✓ 音色选择符合故事风格，并正确关联timbre_id",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2080,
+        320
+      ],
+      "id": "35cfb51e-e365-4455-b83c-7244c2da9b8f",
+      "name": "生成语音脚本",
+      "retryOnFail": true,
+      "maxTries": 5
     }
   ],
   "pinData": {
@@ -1158,37 +1157,27 @@
           "headers": {
             "host": "117.50.218.161:5678",
             "connection": "keep-alive",
-            "content-type": "multipart/form-data; boundary=----formdata-undici-069701655260",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
             "accept": "*/*",
             "accept-language": "*",
             "sec-fetch-mode": "cors",
             "user-agent": "node",
             "accept-encoding": "gzip, deflate",
-            "content-length": "189046"
+            "content-length": "439"
           },
           "params": {},
           "query": {},
           "body": {
-            "role": "edi",
+            "role": "poppy",
             "video_ratio": "16:9",
-            "story": "edi在花园里开着红色的甲壳虫",
-            "video_width": "1280",
-            "video_height": "720"
+            "story": "生成适合儿童英语PPT课件的体能闯关视频。场景：森林。闯关词汇：Dennis、James、Ricky。引导句型：Jump high!；Run to the gate!。单词气泡样式：胶囊。背景音乐：开启。英文旁白：关闭。单词发音音效：关闭。保持角色形象一致，动作清晰，节奏活泼。",
+            "video_width": 1280,
+            "video_height": 720,
+            "timestamp": 1785834171495
           },
           "webhookUrl": "http://117.50.218.161:5678/webhook/gene-images",
           "executionMode": "production"
-        },
-        "binary": {
-          "image": {
-            "mimeType": "image/png",
-            "fileType": "image",
-            "fileExtension": "png",
-            "data": "filesystem-v2",
-            "fileName": "edi.png",
-            "id": "filesystem-v2:workflows/IVVcupJEZDLRHQwF/executions/temp/binary_data/1803f5f6-59eb-4b90-8d3c-ecaa5857bfd4",
-            "fileSize": "188 kB",
-            "bytes": 188376
-          }
         },
         "pairedItem": {
           "item": 0
@@ -1202,17 +1191,6 @@
         [
           {
             "node": "Code in JavaScript8",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "生成语音脚本": {
-      "main": [
-        [
-          {
-            "node": "角色和分镜脚本字段整理",
             "type": "main",
             "index": 0
           }
@@ -1534,17 +1512,6 @@
         ]
       ]
     },
-    "OpenAI Chat Model4": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "生成语音脚本",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "🦅单人视频-生成配音": {
       "main": [
         [
@@ -1659,6 +1626,28 @@
           }
         ]
       ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "生成语音脚本",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "生成语音脚本": {
+      "main": [
+        [
+          {
+            "node": "角色和分镜脚本字段整理",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -1667,7 +1656,7 @@
     "binaryMode": "separate",
     "availableInMCP": false
   },
-  "versionId": "5ea0cdc1-bd51-47e6-b13c-42f382adaa51",
+  "versionId": "380d4664-5dfe-4e47-a1e1-167504da353d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
