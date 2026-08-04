@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
 
 /**
  * N8N 分镜图生成路由
@@ -154,6 +155,10 @@ export async function GET(request: NextRequest) {
       try {
         // 调用 get-images webhook 获取图片 (GET 请求)
         const storyboardData = await n8nClient.call('get-images', { execution_id: executionId }, { method: 'GET' });
+        const persistedStoryboardData = await persistComfyImagesInValue(
+          storyboardData,
+          'ai-generated-images/storyboards',
+        );
         console.log('[generate-storyboard] 分镜图片数据:', storyboardData);
 
         return NextResponse.json({
@@ -161,7 +166,7 @@ export async function GET(request: NextRequest) {
           data: {
             executionId: executionId,
             status: 'completed',
-            storyboardData
+            storyboardData: persistedStoryboardData
           }
         }, { headers: corsHeaders() });
 

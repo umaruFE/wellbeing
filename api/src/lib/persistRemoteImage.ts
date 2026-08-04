@@ -3,6 +3,7 @@ import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const COMFYUI_PUBLIC_URL = process.env.COMFYUI_PUBLIC_URL
   || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+const N8N_API_BASE_URL = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
 const IMAGE_FILENAME_PATTERN = /^[\w.-]+\.(?:png|jpe?g|webp|gif)(?:\?.*)?$/i;
 
 function isImageMediaUrl(value: string) {
@@ -10,6 +11,7 @@ function isImageMediaUrl(value: string) {
     const url = new URL(value, 'http://localhost');
     const filename = url.searchParams.get('filename')
       || url.searchParams.get('path')
+      || url.searchParams.get('file')
       || url.pathname.split('/').pop()
       || '';
     return IMAGE_FILENAME_PATTERN.test(decodeURIComponent(filename));
@@ -49,12 +51,25 @@ function isComfyImageUrl(value: string) {
   }
 }
 
+function isN8nImageUrl(value: string) {
+  if (!/^https?:\/\//i.test(value)) return false;
+  try {
+    const url = new URL(value);
+    const n8nHost = new URL(N8N_API_BASE_URL).host;
+    return url.host === n8nHost
+      && url.pathname === '/webhook/files'
+      && isImageMediaUrl(value);
+  } catch {
+    return false;
+  }
+}
+
 function toComfyImageUrl(value: string) {
   const raw = value.trim();
   if (!raw || isOssUrl(raw)) return null;
 
   if (/^https?:\/\//i.test(raw)) {
-    return isComfyImageUrl(raw) ? raw : null;
+    return isComfyImageUrl(raw) || isN8nImageUrl(raw) ? raw : null;
   }
 
   if (raw.startsWith('/view?') || raw.startsWith('view?')) {
