@@ -11,8 +11,22 @@ API_DIR="$PROJECT_DIR/api"
 FRONTEND_DIR="$PROJECT_DIR"
 NGINX_WWW_DIR="/home/newstar/wellbeing/dist"
 
+# Load the production upload settings before build/restart so `pm2 --update-env`
+# replaces any FTP values retained by the previous process.
+if [ -f "$API_DIR/.env" ]; then
+  set -a
+  . "$API_DIR/.env"
+  set +a
+fi
+
 # Production always uses FTP, regardless of NODE_ENV or values retained by PM2.
 export UPLOAD_PROVIDER=ftp
+for required_ftp_var in FTP_HOST FTP_USER FTP_PASSWORD FTP_CDN_DOMAIN FTP_BASE_DIR; do
+  if [ -z "${!required_ftp_var:-}" ]; then
+    echo "❌ 缺少生产 FTP 配置: $required_ftp_var"
+    exit 1
+  fi
+done
 
 echo "========================================"
 echo "🚀 开始部署 Wellbeing 系统..."

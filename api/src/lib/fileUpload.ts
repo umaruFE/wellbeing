@@ -32,10 +32,23 @@ export function generatePath(folder: string, filename: string): string {
   return generateFilePath(folder, filename);
 }
 
+// The production FTP server limits pending PASV listeners per source IP.
+// Keep every FTP transfer in one process-wide queue so concurrent image/task
+// requests cannot exhaust that limit.
+let ftpUploadQueue: Promise<void> = Promise.resolve();
+
+function enqueueFtpUpload<T>(operation: () => Promise<T>): Promise<T> {
+  const queuedOperation = ftpUploadQueue
+    .catch(() => undefined)
+    .then(operation);
+  ftpUploadQueue = queuedOperation.then(() => undefined, () => undefined);
+  return queuedOperation;
+}
+
 /**
  * 上传文件到 FTP 服务器
  */
-async function uploadToFtp(
+async function performFtpUpload(
   file: File | ArrayBuffer | Buffer,
   folder: string,
   filename: string
@@ -80,13 +93,24 @@ async function uploadToFtp(
       lastError = error;
       console.error(`[fileUpload] FTP upload attempt ${attempt}/3 failed:`, error);
       if (attempt < 3) {
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const isPasvLimitError = /(?:425|too many pending PASV)/i.test(errorMessage);
+        const retryDelay = isPasvLimitError ? attempt * 5000 : attempt * 1500;
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
       }
     } finally {
       client.close();
     }
   }
   throw lastError instanceof Error ? lastError : new Error('FTP upload failed');
+}
+
+async function uploadToFtp(
+  file: File | ArrayBuffer | Buffer,
+  folder: string,
+  filename: string
+): Promise<string> {
+  return enqueueFtpUpload(() => performFtpUpload(file, folder, filename));
 }
 
 /**
