@@ -1,6 +1,6 @@
 import React from 'react';
 import { Input } from 'antd';
-import { Check, Sparkles, X } from 'lucide-react';
+import { Check, Pause, Sparkles, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import poppy from '../../../../assets/ip/poppy.png';
 import edi from '../../../../assets/ip/edi.png';
@@ -546,7 +546,7 @@ function StoryboardImagesStep({ storyboard, generating, onRegenerate }) {
   );
 }
 
-function ConfirmStep({ values, generating }) {
+function ConfirmStep({ values, generating, onHang }) {
   return (
     <div className="ppt-v1-body">
       <div className="ppt-v1-section-title">确认并生成视频</div>
@@ -568,25 +568,29 @@ function ConfirmStep({ values, generating }) {
               </div>
             ))}
           </div>
+          <button type="button" className="ppt-hang-btn ppt-video-hang-btn" onClick={onHang}>
+            <Pause size={13} />挂起后台，继续编辑课件
+          </button>
         </div>
       ) : null}
     </div>
   );
 }
 
-export function VideoAssetWizard({ asset, onBack, onInsert, onTitleChange }) {
+export function VideoAssetWizard({ asset, onBack, onClose, onInsert, onTitleChange }) {
   if (asset.code === 'VM') {
-    return <StoryVideoFlow asset={asset} onBack={onBack} onInsert={onInsert} onTitleChange={onTitleChange} />;
+    return <StoryVideoFlow asset={asset} onBack={onBack} onClose={onClose} onInsert={onInsert} onTitleChange={onTitleChange} />;
   }
-  return <FitnessVideoFlow asset={asset} onBack={onBack} onInsert={onInsert} onTitleChange={onTitleChange} />;
+  return <FitnessVideoFlow asset={asset} onBack={onBack} onClose={onClose} onInsert={onInsert} onTitleChange={onTitleChange} />;
 }
 
-function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
+function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
   const [storyboardGenerating, setStoryboardGenerating] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
   const [storyboard, setStoryboard] = React.useState(null);
   const [errorMessage, setErrorMessage] = React.useState('');
+  const suspendedRef = React.useRef(false);
   const [values, setValues] = React.useState({
     scene: '森林',
     character: 'Poppy',
@@ -626,15 +630,23 @@ function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
       setStep(2);
       return;
     }
+    suspendedRef.current = false;
     setGenerating(true);
     setErrorMessage('');
     try {
       const generated = await composeStoryboardVideo(asset, storyboard);
-      onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
+      if (!suspendedRef.current) {
+        onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
+      }
     } catch (error) {
       setErrorMessage(error.message || '视频生成任务提交失败');
       setGenerating(false);
     }
+  };
+
+  const handleHang = () => {
+    suspendedRef.current = true;
+    onClose?.();
   };
 
   return (
@@ -650,14 +662,16 @@ function FitnessVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
             onRegenerate={generateStoryboard}
           />
         ) : null}
-        {step === 3 ? <ConfirmStep values={values} generating={generating} /> : null}
+        {step === 3 ? <ConfirmStep values={values} generating={generating} onHang={handleHang} /> : null}
         {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
         {generating || storyboardGenerating ? (
-          <button type="button" className="ppt-v1-primary is-disabled">
-            {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
-          </button>
+          <>
+            <button type="button" className="ppt-v1-primary is-disabled">
+              {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
+            </button>
+          </>
         ) : (
           <>
             <button type="button" className="ppt-v1-secondary" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}>
@@ -1037,7 +1051,7 @@ function StorySummary({ values }) {
   );
 }
 
-function StoryGenerateStep({ values, generating }) {
+function StoryGenerateStep({ values, generating, onHang }) {
   return (
     <div className="ppt-vm-body">
       <div className="ppt-vm-section-title">确认并生成视频</div>
@@ -1059,18 +1073,22 @@ function StoryGenerateStep({ values, generating }) {
               </div>
             ))}
           </div>
+          <button type="button" className="ppt-hang-btn ppt-video-hang-btn" onClick={onHang}>
+            <Pause size={13} />挂起后台，继续编辑课件
+          </button>
         </div>
       ) : null}
     </div>
   );
 }
 
-function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
+function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
   const [step, setStep] = React.useState(0);
   const [storyboardGenerating, setStoryboardGenerating] = React.useState(false);
   const [generating, setGenerating] = React.useState(false);
   const [storyboard, setStoryboard] = React.useState(null);
   const [errorMessage, setErrorMessage] = React.useState('');
+  const suspendedRef = React.useRef(false);
   const [values, setValues] = React.useState({
     character: 'Poppy',
     direction: '16:9',
@@ -1109,15 +1127,23 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
       setStep(2);
       return;
     }
+    suspendedRef.current = false;
     setGenerating(true);
     setErrorMessage('');
     try {
       const generated = await composeStoryboardVideo(asset, storyboard);
-      onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
+      if (!suspendedRef.current) {
+        onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
+      }
     } catch (error) {
       setErrorMessage(error.message || '视频生成任务提交失败');
       setGenerating(false);
     }
+  };
+
+  const handleHang = () => {
+    suspendedRef.current = true;
+    onClose?.();
   };
 
   return (
@@ -1133,14 +1159,16 @@ function StoryVideoFlow({ asset, onBack, onInsert, onTitleChange }) {
             onRegenerate={generateStoryboard}
           />
         ) : null}
-        {step === 3 ? <StoryGenerateStep values={values} generating={generating} /> : null}
+        {step === 3 ? <StoryGenerateStep values={values} generating={generating} onHang={handleHang} /> : null}
         {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       </div>
       <div className="ppt-v1-footer">
         {generating || storyboardGenerating ? (
-          <button type="button" className="ppt-v1-primary is-disabled">
-            {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
-          </button>
+          <>
+            <button type="button" className="ppt-v1-primary is-disabled">
+              {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
+            </button>
+          </>
         ) : (
           <>
             <button type="button" className="ppt-v1-secondary" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}>

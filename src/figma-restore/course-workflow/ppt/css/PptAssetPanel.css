@@ -2008,6 +2008,10 @@
   color: var(--ppt-coral);
 }
 
+#ed-ppt .ppt-video-hang-btn {
+  margin-top: 12px;
+}
+
 #ed-ppt .ppt-result-desc {
   color: var(--ppt-muted);
   font-size: 12px;

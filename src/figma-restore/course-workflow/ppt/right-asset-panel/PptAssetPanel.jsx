@@ -64,7 +64,7 @@ export function PptAssetPanel({ type, onClose, onInsert }) {
     content = <ImageAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(getResetTitle()); }} onClose={onClose} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
   }
   if (validAsset && type === 'video') {
-    content = <VideoAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(getResetTitle()); }} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
+    content = <VideoAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(getResetTitle()); }} onClose={onClose} onInsert={handleInsert} onTitleChange={setPanelTitle} />;
   }
   if (validAsset && type === 'audio') {
     content = <AudioAssetWizard asset={validAsset} onBack={() => { setAsset(null); setPanelTitle(getResetTitle()); }} onClose={onClose} onInsert={handleInsert} onTitleChange={setPanelTitle} />;

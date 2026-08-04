@@ -3,6 +3,7 @@ import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const COMFYUI_PUBLIC_URL = process.env.COMFYUI_PUBLIC_URL
   || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+const N8N_API_BASE_URL = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
 const IMAGE_FILENAME_PATTERN = /^[\w.-]+\.(?:png|jpe?g|webp|gif)(?:\?.*)?$/i;
 
 function isImageMediaUrl(value: string) {
@@ -10,6 +11,7 @@ function isImageMediaUrl(value: string) {
     const url = new URL(value, 'http://localhost');
     const filename = url.searchParams.get('filename')
       || url.searchParams.get('path')
+      || url.searchParams.get('file')
       || url.pathname.split('/').pop()
       || '';
     return IMAGE_FILENAME_PATTERN.test(decodeURIComponent(filename));
@@ -49,12 +51,25 @@ function isComfyImageUrl(value: string) {
   }
 }
 
+function isN8nImageUrl(value: string) {
+  if (!/^https?:\/\//i.test(value)) return false;
+  try {
+    const url = new URL(value);
+    const n8nHost = new URL(N8N_API_BASE_URL).host;
+    return url.host === n8nHost
+      && url.pathname === '/webhook/files'
+      && isImageMediaUrl(value);
+  } catch {
+    return false;
+  }
+}
+
 function toComfyImageUrl(value: string) {
   const raw = value.trim();
   if (!raw || isOssUrl(raw)) return null;
 
   if (/^https?:\/\//i.test(raw)) {
-    return isComfyImageUrl(raw) ? raw : null;
+    return isComfyImageUrl(raw) || isN8nImageUrl(raw) ? raw : null;
   }
 
   if (raw.startsWith('/view?') || raw.startsWith('view?')) {
@@ -119,6 +134,22 @@ export async function persistComfyImageUrl(
 export async function persistComfyImagesInValue<T>(value: T, folder = 'ppt-generated-images'): Promise<T> {
   const cache = new Map<string, Promise<string>>();
 
+  const persistSafely = (cacheKey: string, sourceUrl: string, fallbackUrl: string) => {
+    if (!cache.has(cacheKey)) {
+      cache.set(cacheKey, persistComfyImageUrl(sourceUrl, folder).catch((error) => {
+        // Persisting generated media must not prevent an otherwise valid course
+        // or PPT auto-save. The original URL remains usable and can be migrated
+        // on a later save after the upload service is available again.
+        console.warn('[persistRemoteImage] Keeping original image URL after persistence failed:', {
+          sourceUrl,
+          error: error instanceof Error ? error.message : error,
+        });
+        return fallbackUrl;
+      }));
+    }
+    return cache.get(cacheKey)!;
+  };
+
   const visit = async (current: unknown): Promise<unknown> => {
     if (typeof current === 'string') {
       if (isOssUrl(current)) {
@@ -126,17 +157,11 @@ export async function persistComfyImagesInValue<T>(value: T, folder = 'ppt-gener
         // this helper only downloads and migrates actual image files.
         if (!isImageMediaUrl(current)) return current;
         if (getUploadProvider() !== 'ftp') return stableOssUrl(current);
-        if (!cache.has(current)) {
-          cache.set(current, persistComfyImageUrl(current, folder));
-        }
-        return cache.get(current);
+        return persistSafely(current, current, stableOssUrl(current));
       }
       const comfyImageUrl = toComfyImageUrl(current);
       if (!comfyImageUrl) return current;
-      if (!cache.has(comfyImageUrl)) {
-        cache.set(comfyImageUrl, persistComfyImageUrl(comfyImageUrl, folder));
-      }
-      return cache.get(comfyImageUrl);
+      return persistSafely(comfyImageUrl, comfyImageUrl, current);
     }
     if (Array.isArray(current)) {
       return Promise.all(current.map(visit));

@@ -38,7 +38,13 @@ class ApiService {
     try {
       const response = await fetch(url, config);
 
-      const data = await response.json();
+      const responseText = await response.text();
+      let data = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch {
+        data = { error: response.status >= 500 ? '服务器错误，请稍后重试' : '接口返回了无效响应' };
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'API request failed');
