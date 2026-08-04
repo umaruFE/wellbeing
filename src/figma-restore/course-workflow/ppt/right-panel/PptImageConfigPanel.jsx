@@ -39,14 +39,8 @@ function ImageNumberField({ value, unit, onChange }) {
         value={draft}
         addonAfter={unit}
         style={{ width: '100%' }}
-        onChange={(event) => {
-          const nextDraft = event.target.value;
-          setDraft(nextDraft);
-          const next = Number(nextDraft);
-          if (Number.isFinite(next) && next >= 28) onChange(next);
-        }}
+        onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}
-        onPressEnter={commit}
       />
     </div>
   );

@@ -119,6 +119,22 @@ export async function persistComfyImageUrl(
 export async function persistComfyImagesInValue<T>(value: T, folder = 'ppt-generated-images'): Promise<T> {
   const cache = new Map<string, Promise<string>>();
 
+  const persistSafely = (cacheKey: string, sourceUrl: string, fallbackUrl: string) => {
+    if (!cache.has(cacheKey)) {
+      cache.set(cacheKey, persistComfyImageUrl(sourceUrl, folder).catch((error) => {
+        // Persisting generated media must not prevent an otherwise valid course
+        // or PPT auto-save. The original URL remains usable and can be migrated
+        // on a later save after the upload service is available again.
+        console.warn('[persistRemoteImage] Keeping original image URL after persistence failed:', {
+          sourceUrl,
+          error: error instanceof Error ? error.message : error,
+        });
+        return fallbackUrl;
+      }));
+    }
+    return cache.get(cacheKey)!;
+  };
+
   const visit = async (current: unknown): Promise<unknown> => {
     if (typeof current === 'string') {
       if (isOssUrl(current)) {
@@ -126,17 +142,11 @@ export async function persistComfyImagesInValue<T>(value: T, folder = 'ppt-gener
         // this helper only downloads and migrates actual image files.
         if (!isImageMediaUrl(current)) return current;
         if (getUploadProvider() !== 'ftp') return stableOssUrl(current);
-        if (!cache.has(current)) {
-          cache.set(current, persistComfyImageUrl(current, folder));
-        }
-        return cache.get(current);
+        return persistSafely(current, current, stableOssUrl(current));
       }
       const comfyImageUrl = toComfyImageUrl(current);
       if (!comfyImageUrl) return current;
-      if (!cache.has(comfyImageUrl)) {
-        cache.set(comfyImageUrl, persistComfyImageUrl(comfyImageUrl, folder));
-      }
-      return cache.get(comfyImageUrl);
+      return persistSafely(comfyImageUrl, comfyImageUrl, current);
     }
     if (Array.isArray(current)) {
       return Promise.all(current.map(visit));

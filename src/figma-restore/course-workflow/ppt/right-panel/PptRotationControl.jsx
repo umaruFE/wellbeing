@@ -44,10 +44,7 @@ export function PptRotationControl({ value, onChange }) {
       onBlur={() => {
         if (!applyRotation(draft)) setDraft(String(rotation));
       }}
-      filterOption={(inputValue, option) => (
-        String(option?.label || '').includes(inputValue)
-        || String(option?.value || '').includes(inputValue)
-      )}
+      filterOption={false}
     >
       <Input
         inputMode="decimal"
