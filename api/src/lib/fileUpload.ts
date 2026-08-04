@@ -60,6 +60,11 @@ async function performFtpUpload(
   const ftpBaseDir = requiredEnv('FTP_BASE_DIR').replace(/^\/+|\/+$/g, '');
   const ftpPort = Number(process.env.FTP_PORT || 21);
   const ftpSecure = process.env.FTP_SECURE === 'true';
+  // This trusted FTP endpoint advertises its internal data-transfer host
+  // (10.24.19.203) in PASV responses. Enable it explicitly even if an old
+  // PM2 environment still contains the previous `false` value.
+  const allowSeparateTransferHost = ftpHost === '114.55.25.62'
+    || process.env.FTP_ALLOW_SEPARATE_TRANSFER_HOST === 'true';
   let buffer: Buffer;
   if (file && typeof (file as any).arrayBuffer === 'function') {
     buffer = Buffer.from(await (file as File).arrayBuffer());
@@ -72,7 +77,7 @@ async function performFtpUpload(
   let lastError: unknown;
   for (let attempt = 1; attempt <= 3; attempt += 1) {
     const client = new ftp.Client(60000, {
-      allowSeparateTransferHost: process.env.FTP_ALLOW_SEPARATE_TRANSFER_HOST === 'true',
+      allowSeparateTransferHost,
     });
     client.ftp.encoding = 'utf-8';
     try {

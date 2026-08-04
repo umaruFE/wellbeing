@@ -21,6 +21,8 @@ fi
 
 # Production always uses FTP, regardless of NODE_ENV or values retained by PM2.
 export UPLOAD_PROVIDER=ftp
+# The current FTP control endpoint advertises its trusted internal PASV host.
+export FTP_ALLOW_SEPARATE_TRANSFER_HOST=true
 for required_ftp_var in FTP_HOST FTP_USER FTP_PASSWORD FTP_CDN_DOMAIN FTP_BASE_DIR; do
   if [ -z "${!required_ftp_var:-}" ]; then
     echo "❌ 缺少生产 FTP 配置: $required_ftp_var"
