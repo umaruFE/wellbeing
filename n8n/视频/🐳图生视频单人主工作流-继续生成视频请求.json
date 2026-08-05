@@ -648,7 +648,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "response": "=http://117.50.218.161:5678/webhook/files?file={{ $json.videoPath.split('files/')[1] }}",
+            "response": "=http://117.50.218.161:5678/webhook/files?file={{ ($json.outputPath || $json.videoPath).split('files/')[1] }}",
             "execution_id": "={{ $execution.id }}",
             "status": "success"
           },
