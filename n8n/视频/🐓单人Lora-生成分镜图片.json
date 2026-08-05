@@ -33,7 +33,10 @@
       "name": "When Executed by Another Workflow"
     },
     {
-      "parameters": {},
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
@@ -56,7 +59,7 @@
           "conditions": [
             {
               "id": "95b5670e-5019-45a7-b701-08a608311038",
-              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "leftValue": "={{ Object.values($json)[0]?.status?.status_str ?? '' }}",
               "rightValue": "success",
               "operator": {
                 "type": "string",
@@ -97,6 +100,29 @@
         "assignments": {
           "assignments": [
             {
+              "id": "2e9cac2b-55bd-41db-ae46-f11b52cf2725",
+              "name": "comfyBaseUrl",
+              "value": "={{ ['https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'][$itemIndex % 5] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        560,
+        400
+      ],
+      "id": "8a7c18ee-f562-4c1e-9e45-0994f56fa2ea",
+      "name": "分配 ComfyUI 节点"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
               "id": "02866e68-1a03-4696-8c44-bdc9af560966",
               "name": "images",
               "value": "={{ $json.values()[0].outputs['105'].images }}",
@@ -117,6 +143,7 @@
     },
     {
       "parameters": {
+        "batchSize": 5,
         "options": {}
       },
       "type": "n8n-nodes-base.splitInBatches",
@@ -176,7 +203,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/prompt",
+        "url": "={{ $('分配 ComfyUI 节点').item.json.comfyBaseUrl + '/prompt' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
@@ -201,7 +228,7 @@
     },
     {
       "parameters": {
-        "url": "=https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/history/{{ $('产生分镜图片请求').item.json.prompt_id }}",
+        "url": "={{ $('分配 ComfyUI 节点').item.json.comfyBaseUrl + '/history/' + $('产生分镜图片请求').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -223,7 +250,7 @@
     },
     {
       "parameters": {
-        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/view",
+        "url": "={{ $('分配 ComfyUI 节点').item.json.comfyBaseUrl + '/view' }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -414,7 +441,10 @@
       "name": "初始配置1"
     },
     {
-      "parameters": {},
+      "parameters": {
+        "amount": 5,
+        "unit": "seconds"
+      },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
@@ -437,7 +467,7 @@
           "conditions": [
             {
               "id": "95b5670e-5019-45a7-b701-08a608311038",
-              "leftValue": "={{ $json.values()[0].status.status_str }}",
+              "leftValue": "={{ Object.values($json)[0]?.status?.status_str ?? '' }}",
               "rightValue": "success",
               "operator": {
                 "type": "string",
@@ -730,6 +760,17 @@
       ]
     },
     "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "分配 ComfyUI 节点",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "分配 ComfyUI 节点": {
       "main": [
         [
           {
