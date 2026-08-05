@@ -638,6 +638,26 @@
     },
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://wellbeing.newstaredu.cn/api/media/cache",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { url: 'http://117.50.218.161:5678/webhook/files?file=' + (($json.outputPath || $json.videoPath).split('files/')[1]), type: 'video' } }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1744,
+        1360
+      ],
+      "id": "ecbbccea-f04c-4317-ad7d-9dcd76e6f4f8",
+      "name": "上传最终视频到 FTP"
+    },
+    {
+      "parameters": {
         "dataTableId": {
           "__rl": true,
           "value": "J3YaofTO0eHhgjAp",
@@ -648,7 +668,7 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "response": "=http://117.50.218.161:5678/webhook/files?file={{ ($json.outputPath || $json.videoPath).split('files/')[1] }}",
+            "response": "={{ $json.data.url }}",
             "execution_id": "={{ $execution.id }}",
             "status": "success"
           },
@@ -693,7 +713,7 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        1744,
+        2000,
         1360
       ],
       "id": "5785b987-452a-44e4-9068-88acee471f2d",
@@ -1091,6 +1111,17 @@
       ]
     },
     "Video Composer3": {
+      "main": [
+        [
+          {
+            "node": "上传最终视频到 FTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "上传最终视频到 FTP": {
       "main": [
         [
           {
