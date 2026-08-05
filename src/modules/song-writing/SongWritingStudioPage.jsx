@@ -38,7 +38,16 @@ const instruments = [
 ];
 
 function makeDraft({ languagePoint, theme, melody }) {
-  const words = (languagePoint || 'happy, excited, sad, angry, tired, bored, shy, calm').split(/[,，、\s]+/).filter(Boolean).slice(0, 8);
+  const baseWords = (languagePoint || 'happy, excited, sad, angry, tired, bored, shy, calm').split(/[,，、\s]+/).filter(Boolean);
+  const extraByTheme = {
+    '情绪表达': ['scared', 'proud', 'lonely', 'surprised', 'confused', 'grateful', 'hopeful', 'peaceful'],
+    '自然探索': ['sunny', 'rainy', 'windy', 'curious', 'amazed', 'free', 'wild', 'bright'],
+    '自我认知': ['strong', 'weak', 'growing', 'learning', 'unique', 'special', 'confident', 'honest'],
+    '人际关系': ['friendly', 'kind', 'helpful', 'sharing', 'caring', 'listening', 'loving', 'trusting'],
+    '勇气与冒险': ['brave', 'bold', 'daring', 'adventurous', 'fearless', 'strong', 'ready', 'determined'],
+  };
+  const extras = extraByTheme[theme] || extraByTheme['情绪表达'];
+  const words = [...new Set([...baseWords, ...extras])].slice(0, 16);
   const title = theme === '勇气与冒险' ? 'A Brave Little Sky' : theme === '自然探索' ? 'The Sky Inside Me' : 'My Little Bright Song';
   return {
     title,
