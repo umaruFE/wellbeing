@@ -24,6 +24,7 @@ const melodies = [
   { id: 'twinkle', name: 'Twinkle, Twinkle, Little Star', hint: '小星星', src: '/audio/twinkle-little-star.mp3' },
   { id: 'sunshine', name: "You Are My Sunshine", hint: '你是我的阳光', src: '/audio/you-are-my-sunshine.mp3' },
   { id: 'edelweiss', name: 'Edelweiss', hint: '雪绒花', src: '/audio/edelweiss.mp3' },
+  { id: 'if-youre-happy', name: "If You're Happy and You Know It", hint: 'If You’re Happy and You Know It', src: "/audio/If You're Happy and You Know It (Karaoke Version) (Originally Performed By Kids Karaoke) - Zoom Karaoke.mp3" },
 ];
 
 const instruments = [
@@ -82,6 +83,7 @@ export function SongWritingStudioPage() {
   const [speed, setSpeed] = React.useState(1);
   const [volume, setVolume] = React.useState(.75);
   const [activeBlank, setActiveBlank] = React.useState(null);
+  const [blankValues, setBlankValues] = React.useState({});
   const [arrangement, setArrangement] = React.useState({});
   const [showWords, setShowWords] = React.useState(false);
   const [showPlan, setShowPlan] = React.useState(false);
@@ -99,6 +101,34 @@ export function SongWritingStudioPage() {
     audioRef.current.playbackRate = speed;
     audioRef.current.volume = volume;
   }, [speed, volume]);
+
+  React.useEffect(() => {
+    const root = document.querySelector('.song-writing-page');
+    if (!root) return undefined;
+
+    const cleanups = [];
+    const listen = (element, eventName, handler) => {
+      element.addEventListener(eventName, handler);
+      cleanups.push(() => element.removeEventListener(eventName, handler));
+    };
+    const setPayload = (event, payload) => {
+      event.dataTransfer.effectAllowed = 'copy';
+      event.dataTransfer.setData('application/x-song-writing', JSON.stringify(payload));
+    };
+    root.querySelectorAll('.word-chips button').forEach((button) => {
+      const word = draft.words.find((item) => button.textContent.trim().endsWith(item));
+      if (!word) return;
+      button.draggable = true;
+      listen(button, 'dragstart', (event) => setPayload(event, { type: 'word', word }));
+    });
+    root.querySelectorAll('.instrument-chips button').forEach((button) => {
+      const instrument = instruments.find((item) => button.textContent.trim().endsWith(item.label));
+      if (!instrument) return;
+      button.draggable = true;
+      listen(button, 'dragstart', (event) => setPayload(event, { type: 'instrument', instrument }));
+    });
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [draft.lines, draft.words]);
 
   const toggleAudio = async () => {
     if (!audioRef.current) return;
@@ -118,22 +148,34 @@ export function SongWritingStudioPage() {
   const regenerate = () => {
     setDraft(makeDraft(form));
     setActiveBlank(null);
+    setBlankValues({});
     setArrangement({});
+  };
+
+  const fillWordAt = (word, lineIndex) => {
+    if (lineIndex === null || lineIndex === undefined) return;
+    setBlankValues((current) => ({ ...current, [lineIndex]: word }));
   };
 
   const fillWord = (word) => {
     if (activeBlank === null) return;
-    setDraft((current) => ({
-      ...current,
-      lines: current.lines.map((line, index) => index === activeBlank ? line.replace('______', word) : line),
-    }));
+    fillWordAt(word, activeBlank);
     setActiveBlank(null);
   };
 
-  const updateLine = (index, value) => setDraft((current) => ({ ...current, lines: current.lines.map((line, itemIndex) => itemIndex === index ? value : line) }));
   const addInstrument = (lineIndex, instrument) => setArrangement((current) => ({ ...current, [lineIndex]: [...(current[lineIndex] || []), instrument] }));
+  const dropOnLine = (event, lineIndex, target) => {
+    event.preventDefault();
+    try {
+      const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing'));
+      if (payload.type === 'word' && target === 'word') fillWordAt(payload.word, lineIndex);
+      if (payload.type === 'instrument' && target === 'instrument') addInstrument(lineIndex, payload.instrument);
+    } catch {
+      // Ignore drops that did not originate from the song-writing studio.
+    }
+  };
   const saveWork = () => {
-    const work = { id: Date.now(), title: draft.title, draft, form, arrangement, date: new Date().toLocaleDateString('zh-CN') };
+    const work = { id: Date.now(), title: draft.title, draft, form, blankValues, arrangement, date: new Date().toLocaleDateString('zh-CN') };
     const next = [work, ...works.filter((item) => item.title !== work.title)];
     setWorks(next);
     localStorage.setItem('song-writing-works', JSON.stringify(next));
@@ -149,6 +191,7 @@ export function SongWritingStudioPage() {
       const data = result.data;
       setDraft({ title: data.title, melody: form.melody, words: data.words, lines: data.lines });
       setGeneratedPlan({ ...data.activityPlan, teacherGuide: data.teacherGuide });
+      setBlankValues({});
       setArrangement({});
       setView('preview');
     } catch (error) {
@@ -159,11 +202,11 @@ export function SongWritingStudioPage() {
   if (view === 'list') {
     const filteredWorks = works.filter((work) => work.title.toLowerCase().includes(searchTerm.toLowerCase()));
     const removeWork = (id) => { const next = works.filter((work) => work.id !== id); setWorks(next); localStorage.setItem('song-writing-works', JSON.stringify(next)); };
-    const openWork = (work) => { setDraft(work.draft); setForm(work.form); setArrangement(work.arrangement || {}); setView('preview'); };
+    const openWork = (work) => { setDraft(work.draft); setForm(work.form); setBlankValues(work.blankValues || {}); setArrangement(work.arrangement || {}); setView('preview'); };
     return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>歌曲编排</h1><p>创建和管理你的歌曲互动作品</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={() => setView('form')}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>新建歌曲</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索歌曲..." /></div></div>{filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>还没有歌曲作品，点击右上角创建</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover"><div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div><span className="pbv2-book-status draft">草稿</span></div><div className="pbv2-book-info"><h3>{work.title || '未命名歌曲'}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />编辑</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />删除</button></div></div></article>)}</div>}</main>;
   }
 
-  if (view === 'form') return <main className="song-hub"><header><div><p>步骤 1 / 2</p><h1>设置生成条件</h1><span>先设定语言点、年龄、难度、主题和旋律。</span></div><button type="button" className="plain" onClick={() => setView('list')}>返回列表</button></header><section className="song-condition-card"><div className="condition-title"><span>✨</span><div><h2>歌曲创编参数</h2><p>将由大模型生成歌曲、词库、教学引导和活动方案。</p></div></div><div className="song-form-grid"><label className="song-wide">目标语言点<input value={form.languagePoint} onChange={(e) => setForm({ ...form, languagePoint: e.target.value })} /></label><Select label="年龄段" value={form.age} options={['7-9', '10-12', '13-15']} onChange={(age) => setForm({ ...form, age })} /><Select label="英文水平" value={form.level} options={['初级', '中级', '高级']} onChange={(level) => setForm({ ...form, level })} /><Select label="填词难度" value={form.difficulty} options={['低', '中', '高']} onChange={(difficulty) => setForm({ ...form, difficulty })} /><Select label="幸福力主题" value={form.theme} options={['情绪表达', '自然探索', '自我认知', '人际关系', '勇气与冒险']} onChange={(theme) => setForm({ ...form, theme })} /><label>旋律选择<select value={form.melody} onChange={(e) => setForm({ ...form, melody: e.target.value })}><option value="twinkle">小星星</option><option value="sunshine">You Are My Sunshine</option><option value="edelweiss">雪绒花</option></select></label></div><button type="button" className="generate-html" disabled={isGenerating} onClick={generateSong}><Sparkles size={18} />{isGenerating ? '正在生成…' : '生成互动 HTML 页面'}</button></section></main>;
+  if (view === 'form') return <main className="song-hub"><header><div><p>步骤 1 / 2</p><h1>设置生成条件</h1><span>先设定语言点、年龄、难度、主题和旋律。</span></div><button type="button" className="plain" onClick={() => setView('list')}>返回列表</button></header><section className="song-condition-card"><div className="condition-title"><span>✨</span><div><h2>歌曲创编参数</h2><p>将由大模型生成歌曲、词库、教学引导和活动方案。</p></div></div><div className="song-form-grid"><label className="song-wide">目标语言点<input value={form.languagePoint} onChange={(e) => setForm({ ...form, languagePoint: e.target.value })} /></label><Select label="年龄段" value={form.age} options={['7-9', '10-12', '13-15']} onChange={(age) => setForm({ ...form, age })} /><Select label="英文水平" value={form.level} options={['初级', '中级', '高级']} onChange={(level) => setForm({ ...form, level })} /><Select label="填词难度" value={form.difficulty} options={['低', '中', '高']} onChange={(difficulty) => setForm({ ...form, difficulty })} /><Select label="幸福力主题" value={form.theme} options={['情绪表达', '自然探索', '自我认知', '人际关系', '勇气与冒险']} onChange={(theme) => setForm({ ...form, theme })} /><label>旋律选择<select value={form.melody} onChange={(e) => setForm({ ...form, melody: e.target.value })}><option value="twinkle">小星星</option><option value="sunshine">You Are My Sunshine</option><option value="edelweiss">雪绒花</option><option value="if-youre-happy">If You're Happy and You Know It</option></select></label></div><button type="button" className="generate-html" disabled={isGenerating} onClick={generateSong}><Sparkles size={18} />{isGenerating ? '正在生成…' : '生成互动 HTML 页面'}</button></section></main>;
 
   return (
     <main className="song-writing-page sky-song-page">
@@ -206,10 +249,10 @@ export function SongWritingStudioPage() {
             {draft.lines.map((line, index) => (
               <div className="lyric-line" key={`${index}-${line}`}>
                 {(() => {
-                  const editable = /^(When I (?:am|feel) )(.*?)(, I (?:want to|close|breathe).*)$/.exec(line);
-                  return editable ? <><span className="lyric-copy">{editable[1]}</span><input className="lyric-blank" aria-label={`第 ${index + 1} 行填词`} value={editable[2] === '______' ? '' : editable[2]} onFocus={() => setActiveBlank(index)} onChange={(e) => updateLine(index, `${editable[1]}${e.target.value || '______'}${editable[3]}`)} /><span className="lyric-copy">{editable[3]}</span></> : <span className="lyric-copy">{line}</span>;
+                  const editable = /^(.*?)(______)(.*)$/.exec(line);
+                  return editable ? <><span className="lyric-copy">{editable[1]}</span><input className="lyric-blank" aria-label={`第 ${index + 1} 行填词`} value={blankValues[index] || ''} onFocus={() => setActiveBlank(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'word')} onChange={(e) => setBlankValues((current) => ({ ...current, [index]: e.target.value }))} /><span className="lyric-copy">{editable[3]}</span></> : <span className="lyric-copy">{line}</span>;
                 })()}
-                <div className="line-instruments">{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`}>{instrument.emoji}</span>)}<button type="button" title="为这一句配器" onClick={() => addInstrument(index, instruments[index % instruments.length])}>＋</button></div>
+                <div className="line-instruments" onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`}>{instrument.emoji}</span>)}<button type="button" title="为这一句配器" onClick={() => addInstrument(index, instruments[index % instruments.length])}>＋</button></div>
               </div>
             ))}
             </div><button type="button" className="sky-clear" onClick={regenerate}><RefreshCw size={14} />清空所有填空</button>
