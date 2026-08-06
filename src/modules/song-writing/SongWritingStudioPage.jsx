@@ -1,8 +1,6 @@
 import React from 'react';
 import {
-  BookOpenCheck,
   BookOpenText,
-  ChevronDown,
   Clock,
   Expand,
   Music2,
@@ -50,20 +48,17 @@ function makeDraft({ languagePoint, theme, melody }) {
   const extras = extraByTheme[theme] || extraByTheme['情绪表达'];
   const words = [...new Set([...baseWords, ...extras])].slice(0, 16);
   const title = theme === '勇气与冒险' ? 'A Brave Little Sky' : theme === '自然探索' ? 'The Sky Inside Me' : 'My Little Bright Song';
+  const linesByMelody = {
+    twinkle: ['Twinkle, twinkle, I feel ______.', 'Twinkle, twinkle, bright and ______.', 'Up above, I sing today.', 'My ______ feelings light the way.', 'Twinkle, twinkle, hear me say.', 'I can share my ______ today.'],
+    sunshine: ['You are my ______, my only ______.', 'You make me ______ when skies are gray.', 'You will never know, dear friends,', 'How ______ you make me feel today.'],
+    edelweiss: ['Edelweiss, edelweiss, ______ and ______.', 'Every morning you greet me.', 'Small and white, clean and bright,', 'You make me feel ______ and light.'],
+    'if-youre-happy': ["If you're ______ and you know it, clap your hands.", "If you're ______ and you know it, clap your hands.", "If you're ______ and you know it, then your face will surely show it.", "If you're ______ and you know it, clap your hands."],
+  };
   return {
     title,
     melody,
     words,
-    lines: [
-      'When I am ______, I want to sing.',
-      'When I am ______, I want to sleep.',
-      'When I feel ______, I close my eyes.',
-      'Oh, my feelings change like the sky.',
-      'When I am ______, I want to hide.',
-      'When I am ______, I want to cry.',
-      'When I feel ______, I breathe in deep.',
-      'Oh, my feelings, mine to keep.',
-    ],
+    lines: linesByMelody[melody] || linesByMelody.twinkle,
   };
 }
 
@@ -77,7 +72,8 @@ function downloadInteractiveHtml(draft, form, melody) {
 
 export function SongWritingStudioPage() {
   const audioRef = React.useRef(null);
-  const [form, setForm] = React.useState({ languagePoint: 'happy, calm, brave', age: '7-9', level: '初级', difficulty: '低', theme: '情绪表达', melody: 'twinkle' });
+  const melodyPreviewRef = React.useRef(null);
+  const [form, setForm] = React.useState({ languagePoint: 'happy, calm, brave', age: '7-9', level: '初级（会字母和简单词）', theme: '情绪表达', melody: 'twinkle' });
   const [draft, setDraft] = React.useState(() => makeDraft({ languagePoint: 'happy, calm, brave', theme: '情绪表达', melody: 'twinkle' }));
   const [playing, setPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
@@ -87,7 +83,7 @@ export function SongWritingStudioPage() {
   const [arrangement, setArrangement] = React.useState({});
   const [showWords, setShowWords] = React.useState(false);
   const [showPlan, setShowPlan] = React.useState(false);
-  const [showGuide, setShowGuide] = React.useState(false);
+  const [showContentEditor, setShowContentEditor] = React.useState(false);
   const [view, setView] = React.useState('list');
   const [works, setWorks] = React.useState(() => JSON.parse(localStorage.getItem('song-writing-works') || '[]'));
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -185,12 +181,12 @@ export function SongWritingStudioPage() {
   const generateSong = async () => {
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/ai/generate-song-writing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+      const response = await fetch('/api/ai/generate-song-writing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, melody: selectedMelody.name }) });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || '歌曲生成失败');
       const data = result.data;
       setDraft({ title: data.title, melody: form.melody, words: data.words, lines: data.lines });
-      setGeneratedPlan({ ...data.activityPlan, teacherGuide: data.teacherGuide });
+      setGeneratedPlan(data.activityPlan);
       setBlankValues({});
       setArrangement({});
       setView('preview');
@@ -206,7 +202,9 @@ export function SongWritingStudioPage() {
     return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>歌曲编排</h1><p>创建和管理你的歌曲互动作品</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={() => setView('form')}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>新建歌曲</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索歌曲..." /></div></div>{filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>还没有歌曲作品，点击右上角创建</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover"><div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div><span className="pbv2-book-status draft">草稿</span></div><div className="pbv2-book-info"><h3>{work.title || '未命名歌曲'}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />编辑</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />删除</button></div></div></article>)}</div>}</main>;
   }
 
-  if (view === 'form') return <main className="song-hub"><header><div><p>步骤 1 / 2</p><h1>设置生成条件</h1><span>先设定语言点、年龄、难度、主题和旋律。</span></div><button type="button" className="plain" onClick={() => setView('list')}>返回列表</button></header><section className="song-condition-card"><div className="condition-title"><span>✨</span><div><h2>歌曲创编参数</h2><p>将由大模型生成歌曲、词库、教学引导和活动方案。</p></div></div><div className="song-form-grid"><label className="song-wide">目标语言点<input value={form.languagePoint} onChange={(e) => setForm({ ...form, languagePoint: e.target.value })} /></label><Select label="年龄段" value={form.age} options={['7-9', '10-12', '13-15']} onChange={(age) => setForm({ ...form, age })} /><Select label="英文水平" value={form.level} options={['初级', '中级', '高级']} onChange={(level) => setForm({ ...form, level })} /><Select label="填词难度" value={form.difficulty} options={['低', '中', '高']} onChange={(difficulty) => setForm({ ...form, difficulty })} /><Select label="幸福力主题" value={form.theme} options={['情绪表达', '自然探索', '自我认知', '人际关系', '勇气与冒险']} onChange={(theme) => setForm({ ...form, theme })} /><label>旋律选择<select value={form.melody} onChange={(e) => setForm({ ...form, melody: e.target.value })}><option value="twinkle">小星星</option><option value="sunshine">You Are My Sunshine</option><option value="edelweiss">雪绒花</option><option value="if-youre-happy">If You're Happy and You Know It</option></select></label></div><button type="button" className="generate-html" disabled={isGenerating} onClick={generateSong}><Sparkles size={18} />{isGenerating ? '正在生成…' : '生成互动 HTML 页面'}</button></section></main>;
+  if (view === 'form' && isGenerating) return <SongGenerationLoading />;
+
+  if (view === 'form') return <main className="song-hub song-setup-page"><header><div><p>步骤 1 / 2</p><h1>创建歌曲互动</h1><span>设置课堂对象与歌曲主题，生成后可继续编辑歌词和词库。</span></div><button type="button" className="plain" onClick={() => setView('list')}>返回列表</button></header><section className="song-condition-card"><div className="condition-title"><span>✨</span><div><h2>歌曲创编参数</h2><p>选择适合孩子的语言点与旋律。</p></div></div><audio ref={melodyPreviewRef} src={selectedMelody.src} onEnded={() => setPlaying(false)} /><div className="song-form-grid"><label className="song-wide">目标语言点<input value={form.languagePoint} placeholder="例如：happy, calm, brave" onChange={(e) => setForm({ ...form, languagePoint: e.target.value })} /></label><ChoiceField label="年龄段" value={form.age} options={['7-9', '10-12', '13-15']} onChange={(age) => setForm({ ...form, age })} /><ChoiceField label="英文水平" value={form.level} options={['初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）']} onChange={(level) => setForm({ ...form, level })} /><ChoiceField label="幸福力主题" value={form.theme} options={['情绪表达', '自然探索', '自我认知', '人际关系', '勇气与冒险']} onChange={(theme) => setForm({ ...form, theme })} /><div className="melody-control"><label>旋律选择<select value={form.melody} onChange={(e) => setForm({ ...form, melody: e.target.value })}>{melodies.map((melody) => <option value={melody.id} key={melody.id}>{melody.name}</option>)}</select></label><button type="button" className="melody-preview" onClick={() => melodyPreviewRef.current?.play()}><Play size={15} />试听</button></div></div><button type="button" className="generate-html" disabled={isGenerating} onClick={generateSong}><Sparkles size={18} />生成歌词和词库</button></section></main>;
 
   return (
     <main className="song-writing-page sky-song-page">
@@ -233,7 +231,7 @@ export function SongWritingStudioPage() {
       <svg className="bg-deco star3" width="22" height="22" viewBox="0 0 22 22"><polygon points="11,1 13,8 21,8 14.5,13 16.5,20 11,15.5 5.5,20 7.5,13 1,8 9,8" fill="#f0a080" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <svg className="bg-deco star4" width="26" height="26" viewBox="0 0 26 26"><polygon points="13,1 15.5,9.5 25,9.5 17.5,15 20,24 13,19 6,24 8.5,15 1,9.5 10.5,9.5" fill="#f7d958" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <header className="sky-title"><h1>{draft.title}</h1><p>旋律：{selectedMelody.name} · {form.age}岁 · {form.level}</p></header>
-      <div className="sky-actions"><button type="button" onClick={saveWork}>💾 保存作品</button><button type="button" onClick={() => downloadInteractiveHtml(draft, form, selectedMelody)}>下载 HTML</button><button type="button" onClick={() => setShowPlan(true)}>📋 活动方案</button><button type="button" aria-label="教学引导" onClick={() => setShowGuide(true)}><BookOpenCheck size={17} /></button>{saveMessage && <span role="status">{saveMessage}</span>}</div><button type="button" className="sky-back" onClick={() => setView('list')}>← 返回作品列表</button>
+      <div className="sky-actions"><button type="button" onClick={() => setShowContentEditor(true)}>编辑歌词和词库</button><button type="button" onClick={saveWork}>💾 保存作品</button><button type="button" onClick={() => downloadInteractiveHtml(draft, form, selectedMelody)}>下载 HTML</button><button type="button" onClick={() => setShowPlan(true)}>📋 活动方案</button>{saveMessage && <span role="status">{saveMessage}</span>}</div><button type="button" className="sky-back" onClick={() => setView('list')}>← 返回作品列表</button>
 
       <section className="sky-studio">
         <article className="sky-player">
@@ -266,11 +264,12 @@ export function SongWritingStudioPage() {
       </section>
 
       {showWords && <Overlay title="Word Bank · 选词区" onClose={() => setShowWords(false)}><p>把词卡投到大屏上，邀请孩子先读、做动作或选出最贴近自己的词。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => { fillWord(word); setShowWords(false); }}><span>{['☀️', '☁️', '⭐', '🌈', '💛'][index % 5]}</span>{word}</button>)}</div></Overlay>}
-      {showPlan && <Overlay title="活动方案" onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><p><b>英文目标：</b>{generatedPlan.englishGoal}</p><p><b>幸福力目标：</b>{generatedPlan.wellbeingGoal}</p><p><b>材料：</b>{(generatedPlan.materials || []).join('、')}</p><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><b>{step.title}（{step.duration}）</b>：{step.teacherGuide}</li>)}</ol></div> : <p>请先使用“生成互动 HTML 页面”，由大模型生成本作品的活动方案。</p>}</Overlay>}
-      {showGuide && <Overlay title="教学引导" onClose={() => setShowGuide(false)}><div className="guide-copy"><h3>不追求唱得标准，先让表达发生。</h3><p>当孩子犹豫时，给出两个词卡作为选择，并接纳所有合理答案。可先由教师示范一行，再让小组分句配器和演唱。</p><p>提示语：<em>“Which word sounds like your feeling today?”</em></p></div></Overlay>}
+      {showContentEditor && <Overlay title="编辑歌词和 Word Bank" onClose={() => setShowContentEditor(false)}><div className="song-content-editor"><section><h3>歌词模板</h3>{draft.lines.map((line, index) => <textarea key={index} value={line} rows={2} onChange={(event) => setDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} />)}</section><section><h3>Word Bank</h3>{draft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" onClick={() => setDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}>删除</button></label>)}<button type="button" className="add-word" onClick={() => setDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}>+ 添加词卡</button></section><button type="button" className="generate-html" onClick={() => { setBlankValues({}); setShowContentEditor(false); }}>保存修改</button></div></Overlay>}
+      {showPlan && <Overlay title="活动方案" onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><section><h3>学习目标</h3><p><b>英文：</b>{generatedPlan.englishGoal}</p><p><b>幸福力：</b>{generatedPlan.wellbeingGoal}</p></section><section><h3>课前准备</h3><p>{(generatedPlan.materials || []).join('、')}</p></section><section><h3>课堂流程</h3><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><div><b>{index + 1}. {step.title}</b><em>{step.duration}</em></div><p>{step.teacherGuide}</p></li>)}</ol></section></div> : <p>请先生成歌词和词库，即可查看本作品的活动方案。</p>}</Overlay>}
     </main>
   );
 }
 
-function Select({ label, value, options, onChange }) { return <label>{label}<select value={value} onChange={(e) => onChange(e.target.value)}>{options.map((option) => <option value={option} key={option}>{option}</option>)}</select><ChevronDown size={14} /></label>; }
+function ChoiceField({ label, value, options, onChange }) { return <section className="song-choice-field"><b>{label}</b><div>{options.map((option) => <button type="button" key={option} className={value === option ? 'selected' : ''} onClick={() => onChange(option)}>{option}</button>)}</div></section>; }
+function SongGenerationLoading() { return <main className="song-generation-page"><section className="song-generation-loading"><svg className="song-loading-illustration" width="165" height="145" viewBox="0 0 165 145" aria-hidden="true"><circle cx="138" cy="25" r="5" fill="#c48cff"/><circle cx="15" cy="108" r="7" fill="none" stroke="#ff7c73" strokeWidth="4"/><path d="M42 99c25 10 56 10 82-1" fill="none" stroke="#d7dce3" strokeWidth="3" strokeDasharray="5 5"/><g transform="rotate(-7 64 66)"><rect x="20" y="35" width="67" height="79" rx="12" fill="#fffdf7" stroke="#344255" strokeWidth="4"/><path d="M39 66h27M39 81h20" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(12 105 69)"><rect x="81" y="43" width="62" height="72" rx="12" fill="#f7e6ef" stroke="#344255" strokeWidth="4"/><path d="M100 71h25M100 86h17" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(-18 87 48)"><rect x="64" y="39" width="63" height="14" rx="7" fill="#ffcc63" stroke="#344255" strokeWidth="3"/><path d="M111 40h11v12h-11z" fill="#ff7c73"/><path d="M77 42h23" stroke="#fffdf7" strokeWidth="4" strokeLinecap="round"/></g></svg><h1>正在生成歌曲<span><i></i><i></i><i></i></span></h1></section></main>; }
 function Overlay({ title, onClose, children }) { return <div className="song-overlay" role="dialog" aria-modal="true"><div className="song-modal"><div className="modal-head"><h2>{title}</h2><button type="button" onClick={onClose}><X /></button></div>{children}</div></div>; }
