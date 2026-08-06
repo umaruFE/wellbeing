@@ -76,6 +76,7 @@ export function SongWritingStudioPage() {
   const [form, setForm] = React.useState({ languagePoint: 'happy, calm, brave', age: '7-9', level: '初级（会字母和简单词）', theme: '情绪表达', melody: 'twinkle' });
   const [draft, setDraft] = React.useState(() => makeDraft({ languagePoint: 'happy, calm, brave', theme: '情绪表达', melody: 'twinkle' }));
   const [playing, setPlaying] = React.useState(false);
+  const [melodyPreviewPlaying, setMelodyPreviewPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
   const [volume, setVolume] = React.useState(.75);
   const [activeBlank, setActiveBlank] = React.useState(null);
@@ -97,6 +98,13 @@ export function SongWritingStudioPage() {
     audioRef.current.playbackRate = speed;
     audioRef.current.volume = volume;
   }, [speed, volume]);
+
+  React.useEffect(() => {
+    setMelodyPreviewPlaying(false);
+    if (!melodyPreviewRef.current) return;
+    melodyPreviewRef.current.pause();
+    melodyPreviewRef.current.currentTime = 0;
+  }, [form.melody]);
 
   React.useEffect(() => {
     const root = document.querySelector('.song-writing-page');
@@ -138,6 +146,22 @@ export function SongWritingStudioPage() {
       setPlaying(true);
     } catch {
       setPlaying(false);
+    }
+  };
+
+  const toggleMelodyPreview = async () => {
+    const audio = melodyPreviewRef.current;
+    if (!audio) return;
+    if (!audio.paused) {
+      audio.pause();
+      setMelodyPreviewPlaying(false);
+      return;
+    }
+    try {
+      await audio.play();
+      setMelodyPreviewPlaying(true);
+    } catch {
+      setMelodyPreviewPlaying(false);
     }
   };
 
@@ -204,7 +228,7 @@ export function SongWritingStudioPage() {
 
   if (view === 'form' && isGenerating) return <SongGenerationLoading />;
 
-  if (view === 'form') return <main className="song-hub song-setup-page"><header><div><p>步骤 1 / 2</p><h1>创建歌曲互动</h1><span>设置课堂对象与歌曲主题，生成后可继续编辑歌词和词库。</span></div><button type="button" className="plain" onClick={() => setView('list')}>返回列表</button></header><section className="song-condition-card"><div className="condition-title"><span>✨</span><div><h2>歌曲创编参数</h2><p>选择适合孩子的语言点与旋律。</p></div></div><audio ref={melodyPreviewRef} src={selectedMelody.src} onEnded={() => setPlaying(false)} /><div className="song-form-grid"><label className="song-wide">目标语言点<input value={form.languagePoint} placeholder="例如：happy, calm, brave" onChange={(e) => setForm({ ...form, languagePoint: e.target.value })} /></label><ChoiceField label="年龄段" value={form.age} options={['7-9', '10-12', '13-15']} onChange={(age) => setForm({ ...form, age })} /><ChoiceField label="英文水平" value={form.level} options={['初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）']} onChange={(level) => setForm({ ...form, level })} /><ChoiceField label="幸福力主题" value={form.theme} options={['情绪表达', '自然探索', '自我认知', '人际关系', '勇气与冒险']} onChange={(theme) => setForm({ ...form, theme })} /><div className="melody-control"><label>旋律选择<select value={form.melody} onChange={(e) => setForm({ ...form, melody: e.target.value })}>{melodies.map((melody) => <option value={melody.id} key={melody.id}>{melody.name}</option>)}</select></label><button type="button" className="melody-preview" onClick={() => melodyPreviewRef.current?.play()}><Play size={15} />试听</button></div></div><button type="button" className="generate-html" disabled={isGenerating} onClick={generateSong}><Sparkles size={18} />生成歌词和词库</button></section></main>;
+  if (view === 'form') return <main className="song-hub song-setup-page"><header><div><p>步骤 1 / 2</p><h1>创建歌曲互动</h1><span>设置课堂对象与歌曲主题，生成后可继续编辑歌词和词库。</span></div><button type="button" className="plain" onClick={() => setView('list')}>返回列表</button></header><section className="song-condition-card"><div className="condition-title"><span>✨</span><div><h2>歌曲创编参数</h2><p>选择适合孩子的语言点与旋律。</p></div></div><audio ref={melodyPreviewRef} src={selectedMelody.src} onEnded={() => setMelodyPreviewPlaying(false)} /><div className="song-form-grid"><label className="song-wide">目标语言点<input value={form.languagePoint} placeholder="例如：happy, calm, brave" onChange={(e) => setForm({ ...form, languagePoint: e.target.value })} /></label><ChoiceField label="年龄段" value={form.age} options={['7-9', '10-12', '13-15']} onChange={(age) => setForm({ ...form, age })} /><ChoiceField label="英文水平" value={form.level} options={['初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）']} onChange={(level) => setForm({ ...form, level })} /><ChoiceField label="幸福力主题" value={form.theme} options={['情绪表达', '自然探索', '自我认知', '人际关系', '勇气与冒险']} onChange={(theme) => setForm({ ...form, theme })} /><div className="melody-control"><label>旋律选择<select value={form.melody} onChange={(e) => setForm({ ...form, melody: e.target.value })}>{melodies.map((melody) => <option value={melody.id} key={melody.id}>{melody.name}</option>)}</select></label><button type="button" className={`melody-preview${melodyPreviewPlaying ? ' is-playing' : ''}`} onClick={toggleMelodyPreview} aria-label={melodyPreviewPlaying ? `暂停试听 ${selectedMelody.name}` : `试听 ${selectedMelody.name}`} aria-pressed={melodyPreviewPlaying}>{melodyPreviewPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}{melodyPreviewPlaying ? '暂停' : '试听'}</button></div></div><button type="button" className="generate-html" disabled={isGenerating} onClick={generateSong}><Sparkles size={18} />生成歌词和词库</button></section></main>;
 
   return (
     <main className="song-writing-page sky-song-page">
