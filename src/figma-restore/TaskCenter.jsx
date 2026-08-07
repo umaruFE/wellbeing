@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { parseJsonSafely, responseErrorMessage } from '../utils/responseUtils';
 import { Tag, Button, Progress, message } from 'antd';
 import {
   CheckCircle,
@@ -649,10 +650,10 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
       const response = await fetch(`/api/background-tasks?scope=${scope === 'history' ? 'history' : 'active'}`, {
         headers: getAuthHeaders(),
       });
-      const result = await response.json();
+      const result = await parseJsonSafely(response);
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || '后台任务获取失败');
+      if (!response.ok || !result?.success) {
+        throw new Error(responseErrorMessage(response, result, '后台任务获取失败'));
       }
 
       const tasks = (result.data?.tasks || []).map(normalizeTask);

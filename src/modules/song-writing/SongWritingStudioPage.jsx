@@ -16,6 +16,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react';
+import { parseJsonSafely, responseErrorMessage } from '../../utils/responseUtils';
 import './SongWritingStudioPage.css';
 
 const melodies = [
@@ -206,8 +207,10 @@ export function SongWritingStudioPage() {
     setIsGenerating(true);
     try {
       const response = await fetch('/api/ai/generate-song-writing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, melody: selectedMelody.name }) });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || '歌曲生成失败');
+      const result = await parseJsonSafely(response);
+      if (!response.ok || !result?.success) {
+        throw new Error(responseErrorMessage(response, result, '歌曲生成失败，请稍后重试'));
+      }
       const data = result.data;
       setDraft({ title: data.title, melody: form.melody, words: data.words, lines: data.lines });
       setGeneratedPlan(data.activityPlan);
@@ -287,7 +290,7 @@ export function SongWritingStudioPage() {
         <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>
       </section>
 
-      {showWords && <Overlay title="Word Bank · 选词区" onClose={() => setShowWords(false)}><p>把词卡投到大屏上，邀请孩子先读、做动作或选出最贴近自己的词。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => { fillWord(word); setShowWords(false); }}><span>{['☀️', '☁️', '⭐', '🌈', '💛'][index % 5]}</span>{word}</button>)}</div></Overlay>}
+      {showWords && <Overlay title="Word Bank · 选词区" className="word-bank-modal" onClose={() => setShowWords(false)}><p>投屏模式：邀请孩子先读、做动作，再选择最贴近自己感受的词卡。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => { fillWord(word); setShowWords(false); }}><span>{['☀️', '☁️', '⭐', '🌈', '💛'][index % 5]}</span>{word}</button>)}</div></Overlay>}
       {showContentEditor && <Overlay title="编辑歌词和 Word Bank" onClose={() => setShowContentEditor(false)}><div className="song-content-editor"><section><h3>歌词模板</h3>{draft.lines.map((line, index) => <textarea key={index} value={line} rows={2} onChange={(event) => setDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} />)}</section><section><h3>Word Bank</h3>{draft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" onClick={() => setDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}>删除</button></label>)}<button type="button" className="add-word" onClick={() => setDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}>+ 添加词卡</button></section><button type="button" className="generate-html" onClick={() => { setBlankValues({}); setShowContentEditor(false); }}>保存修改</button></div></Overlay>}
       {showPlan && <Overlay title="活动方案" onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><section><h3>学习目标</h3><p><b>英文：</b>{generatedPlan.englishGoal}</p><p><b>幸福力：</b>{generatedPlan.wellbeingGoal}</p></section><section><h3>课前准备</h3><p>{(generatedPlan.materials || []).join('、')}</p></section><section><h3>课堂流程</h3><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><div><b>{index + 1}. {step.title}</b><em>{step.duration}</em></div><p>{step.teacherGuide}</p></li>)}</ol></section></div> : <p>请先生成歌词和词库，即可查看本作品的活动方案。</p>}</Overlay>}
     </main>
@@ -296,4 +299,4 @@ export function SongWritingStudioPage() {
 
 function ChoiceField({ label, value, options, onChange }) { return <section className="song-choice-field"><b>{label}</b><div>{options.map((option) => <button type="button" key={option} className={value === option ? 'selected' : ''} onClick={() => onChange(option)}>{option}</button>)}</div></section>; }
 function SongGenerationLoading() { return <main className="song-generation-page"><section className="song-generation-loading"><svg className="song-loading-illustration" width="165" height="145" viewBox="0 0 165 145" aria-hidden="true"><circle cx="138" cy="25" r="5" fill="#c48cff"/><circle cx="15" cy="108" r="7" fill="none" stroke="#ff7c73" strokeWidth="4"/><path d="M42 99c25 10 56 10 82-1" fill="none" stroke="#d7dce3" strokeWidth="3" strokeDasharray="5 5"/><g transform="rotate(-7 64 66)"><rect x="20" y="35" width="67" height="79" rx="12" fill="#fffdf7" stroke="#344255" strokeWidth="4"/><path d="M39 66h27M39 81h20" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(12 105 69)"><rect x="81" y="43" width="62" height="72" rx="12" fill="#f7e6ef" stroke="#344255" strokeWidth="4"/><path d="M100 71h25M100 86h17" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(-18 87 48)"><rect x="64" y="39" width="63" height="14" rx="7" fill="#ffcc63" stroke="#344255" strokeWidth="3"/><path d="M111 40h11v12h-11z" fill="#ff7c73"/><path d="M77 42h23" stroke="#fffdf7" strokeWidth="4" strokeLinecap="round"/></g></svg><h1>正在生成歌曲<span><i></i><i></i><i></i></span></h1></section></main>; }
-function Overlay({ title, onClose, children }) { return <div className="song-overlay" role="dialog" aria-modal="true"><div className="song-modal"><div className="modal-head"><h2>{title}</h2><button type="button" onClick={onClose}><X /></button></div>{children}</div></div>; }
+function Overlay({ title, onClose, children, className = '' }) { return <div className="song-overlay" role="dialog" aria-modal="true"><div className={`song-modal ${className}`}><div className="modal-head"><h2>{title}</h2><button type="button" onClick={onClose}><X /></button></div>{children}</div></div>; }

@@ -6,6 +6,7 @@ import { Search, BellOff, ChevronDown } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { TaskCenter } from './TaskCenter';
 import { LanguageSwitcher } from '../components/LanguageSwitcher';
+import { parseJsonSafely } from '../utils/responseUtils';
 import './Header.css';
 
 export const Header = ({ title }) => {
@@ -39,8 +40,8 @@ export const Header = ({ title }) => {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
-      const result = await response.json();
-      if (response.ok && result.success) {
+      const result = await parseJsonSafely(response);
+      if (response.ok && result?.success) {
         setTaskCount(result.data?.tasks?.length || 0);
       }
     } catch {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { parseJsonSafely } from '../../utils/responseUtils';
 import { Button, Drawer, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Check, CircleAlert, Download, Loader2 } from 'lucide-react';
@@ -191,8 +192,8 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       });
-      const result = await response.json();
-      if (response.ok && result.success) {
+      const result = await parseJsonSafely(response);
+      if (response.ok && result?.success) {
         setTaskCount(result.data?.tasks?.length || 0);
       }
     } catch {
