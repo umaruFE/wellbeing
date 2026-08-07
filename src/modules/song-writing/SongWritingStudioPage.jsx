@@ -72,6 +72,10 @@ function wordIcon(word) {
   return '💬';
 }
 
+function wordCardIcon(word, wordEmojis) {
+  return wordEmojis?.[word] || wordIcon(word);
+}
+
 function makeDraft({ languagePoint, theme, melody }) {
   const baseWords = (languagePoint || 'happy, excited, sad, angry, tired, bored, shy, calm').split(/[,，、\s]+/).filter(Boolean);
   const extraByTheme = {
@@ -247,7 +251,7 @@ export function SongWritingStudioPage() {
         throw new Error(responseErrorMessage(response, result, '歌曲生成失败，请稍后重试'));
       }
       const data = result.data;
-      setDraft({ title: data.title, melody: form.melody, words: data.words, lines: data.lines });
+      setDraft({ title: data.title, melody: form.melody, words: data.words, lines: data.lines, wordEmojis: data.wordEmojis || {} });
       setGeneratedPlan(data.activityPlan);
       setBlankValues({});
       setArrangement({});
@@ -318,14 +322,14 @@ export function SongWritingStudioPage() {
             </div><button type="button" className="sky-clear" onClick={regenerate}><RefreshCw size={14} />清空所有填空</button>
           </article>
           <div className="sky-sidecards">
-            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => setShowWords(true)}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => fillWord(word)}><i>{wordIcon(word)}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
+            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => setShowWords(true)}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
             <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{instruments.map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}</div><p>💡 先点击乐器，再点击歌词旁的圆圈</p></article>
           </div>
         </div>
         <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>
       </section>
 
-      {showWords && <Overlay title="Word Bank · 选词区" className="word-bank-modal" onClose={() => setShowWords(false)}><p>投屏模式：邀请孩子先读、做动作，再选择最贴近自己感受的词卡。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => { fillWord(word); setShowWords(false); }}><span>{wordIcon(word)}</span>{word}</button>)}</div></Overlay>}
+      {showWords && <Overlay title="Word Bank · 选词区" className="word-bank-modal" onClose={() => setShowWords(false)}><p>投屏模式：邀请孩子先读、做动作，再选择最贴近自己感受的词卡。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => { fillWord(word); setShowWords(false); }}><span>{wordCardIcon(word, draft.wordEmojis)}</span>{word}</button>)}</div></Overlay>}
       {showContentEditor && <Overlay title="编辑歌词和 Word Bank" onClose={() => setShowContentEditor(false)}><div className="song-content-editor"><section><h3>歌词模板</h3>{draft.lines.map((line, index) => <textarea key={index} value={line} rows={2} onChange={(event) => setDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} />)}</section><section><h3>Word Bank</h3>{draft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" onClick={() => setDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}>删除</button></label>)}<button type="button" className="add-word" onClick={() => setDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}>+ 添加词卡</button></section><button type="button" className="generate-html" onClick={() => { setBlankValues({}); setShowContentEditor(false); }}>保存修改</button></div></Overlay>}
       {showPlan && <Overlay title="活动方案" onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><section><h3>学习目标</h3><p><b>英文：</b>{generatedPlan.englishGoal}</p><p><b>幸福力：</b>{generatedPlan.wellbeingGoal}</p></section><section><h3>课前准备</h3><p>{(generatedPlan.materials || []).join('、')}</p></section><section><h3>课堂流程</h3><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><div><b>{index + 1}. {step.title}</b><em>{step.duration}</em></div><p>{step.teacherGuide}</p></li>)}</ol></section></div> : <p>请先生成歌词和词库，即可查看本作品的活动方案。</p>}</Overlay>}
     </main>
