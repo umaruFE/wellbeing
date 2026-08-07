@@ -27,14 +27,21 @@ const melodies = [
 ];
 
 const instruments = [
-  { id: 'maracas', emoji: '🪇', label: '砂槌' },
-  { id: 'tambourine', emoji: '🪘', label: '铃鼓' },
-  { id: 'hand-drum', emoji: '🥁', label: '手鼓' },
-  { id: 'triangle', emoji: '△', label: '三角铁' },
-  { id: 'ukulele', emoji: '🎸', label: '尤克里里' },
-  { id: 'castanets', emoji: '🪇', label: '响板' },
-  { id: 'shaker', emoji: '🪇', label: '沙锤' },
-  { id: 'xylophone', emoji: '🎹', label: '木琴' },
+  { id: 'bell', icon: '/audio/icon/bell.png', label: '铃铛' },
+  { id: 'bongo', icon: '/audio/icon/Bongo.png', label: '邦戈鼓' },
+  { id: 'maracas', icon: '/audio/icon/Maracas.png', label: '砂槌' },
+  { id: 'tambourine', icon: '/audio/icon/Tambourine.png', label: '铃鼓' },
+  { id: 'hand-drum', icon: '/audio/icon/hand drum.png', label: '手鼓' },
+  { id: 'triangle', icon: '/audio/icon/Triangle.webp', label: '三角铁' },
+  { id: 'djembe', icon: '/audio/icon/Djembe.png', label: '非洲鼓' },
+  { id: 'castanets', icon: '/audio/icon/Castanets.png', label: '响板' },
+  { id: 'cabasa', icon: '/audio/icon/Cabasa.png', label: '沙锤' },
+  { id: 'xylophone', icon: '/audio/icon/Xylophone.png', label: '木琴' },
+  { id: 'drum', icon: '/audio/icon/drum.png', label: '鼓' },
+  { id: 'finger-cymbals', icon: '/audio/icon/Finger Cymbals.png', label: '指钹' },
+  { id: 'hand-bell', icon: '/audio/icon/Hand bell.png', label: '手铃' },
+  { id: 'sleigh-bell', icon: '/audio/icon/Sleigh bell.png', label: '雪橇铃' },
+  { id: 'wood-block', icon: '/audio/icon/Wood block.png', label: '木鱼' },
 ];
 
 function makeDraft({ languagePoint, theme, melody }) {
@@ -277,14 +284,14 @@ export function SongWritingStudioPage() {
                   const editable = /^(.*?)(______)(.*)$/.exec(line);
                   return editable ? <><span className="lyric-copy">{editable[1]}</span><input className="lyric-blank" aria-label={`第 ${index + 1} 行填词`} value={blankValues[index] || ''} onFocus={() => setActiveBlank(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'word')} onChange={(e) => setBlankValues((current) => ({ ...current, [index]: e.target.value }))} /><span className="lyric-copy">{editable[3]}</span></> : <span className="lyric-copy">{line}</span>;
                 })()}
-                <div className="line-instruments" onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`}>{instrument.emoji}</span>)}<button type="button" title="为这一句配器" onClick={() => addInstrument(index, instruments[index % instruments.length])}>＋</button></div>
+                <div className="line-instruments" onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`}><img src={instrument.icon} alt={instrument.label} /></span>)}<button type="button" title="为这一句配器" onClick={() => addInstrument(index, instruments[index % instruments.length])}>＋</button></div>
               </div>
             ))}
             </div><button type="button" className="sky-clear" onClick={regenerate}><RefreshCw size={14} />清空所有填空</button>
           </article>
           <div className="sky-sidecards">
             <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => setShowWords(true)}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => fillWord(word)}><i>{['😊','😌','😎','🌈','⭐'][index % 5]}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
-            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{instruments.map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank, instrument)}><i>{instrument.emoji}</i>{instrument.label}</button>)}</div><p>💡 先点击乐器，再点击歌词旁的圆圈</p></article>
+            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{instruments.map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}</div><p>💡 先点击乐器，再点击歌词旁的圆圈</p></article>
           </div>
         </div>
         <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>
