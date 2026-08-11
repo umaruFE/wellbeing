@@ -147,6 +147,24 @@ export function SongWritingStudioPage() {
   }, [form.melody]);
 
   React.useEffect(() => {
+    const handleSameRouteNav = (event) => {
+      if (event.detail?.path !== '/song-writing') return;
+
+      audioRef.current?.pause();
+      melodyPreviewRef.current?.pause();
+      setPlaying(false);
+      setMelodyPreviewPlaying(false);
+      setShowWords(false);
+      setShowPlan(false);
+      setShowContentEditor(false);
+      setView('list');
+    };
+
+    window.addEventListener('wellbeing:nav-same-route', handleSameRouteNav);
+    return () => window.removeEventListener('wellbeing:nav-same-route', handleSameRouteNav);
+  }, []);
+
+  React.useEffect(() => {
     const root = document.querySelector('.song-writing-page');
     if (!root) return undefined;
 

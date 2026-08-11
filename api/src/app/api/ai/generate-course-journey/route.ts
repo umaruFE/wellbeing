@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { buildCourseJourneyPrompt } from '@/prompts';
 
 const WORKFLOW = process.env.N8N_COURSE_JOURNEY_WORKFLOW || 'course-overview-generator';
 
@@ -89,28 +90,11 @@ export async function POST(request: NextRequest) {
       organizationId,
     } = body;
 
-    const prompt = [
-      '你是一名儿童英语课程设计专家，请为 CourseGen AI 的课程地图生成“课堂旅程 Class Journey”。',
-      '必须基于课程主题、故事情境、语言目标、最终成果和成长目标生成，不能使用通用模板句。',
-      '请严格输出 JSON，不要 Markdown，不要解释。',
-      'JSON 格式：{"journey":{"engage":"...","empower":"...","execute":"...","elevate":"..."}}',
-      '四个字段要求：每项 35-70 个中文字符；必须出现本课程的具体任务、语言工具或成果物；elevate 必须体现迁移/反思/成长。',
-      '课程信息：',
-      `课程标题：${courseTitle || ''}`,
-      `年龄：${age || ''}`,
-      `时长：${duration || ''}`,
-      `班级规模：${classSize || ''}`,
-      `任务主题：${taskName || theme || ''}`,
-      `故事情境：${storyContext || ''}`,
-      `最终成果：${keyOutcome || ''}`,
-      `词汇：${Array.isArray(vocabulary) ? vocabulary.join(', ') : vocabulary || ''}`,
-      `句型/语法：${Array.isArray(grammar) ? grammar.join('\n') : grammar || ''}`,
-      `能力侧重：${Array.isArray(skills) ? skills.join('、') : skills || ''}`,
-      `体验路径：${experiencePath || ''}`,
-      `课堂氛围：${atmosphere || ''}`,
-      `成长目标：${growth || ''}`,
-      `特殊要求：${specialRequirements || ''}`,
-    ].join('\n');
+    const prompt = buildCourseJourneyPrompt({
+      courseTitle, age, duration, classSize, vocabulary, grammar, skills,
+      experiencePath, taskName, theme, storyContext, keyOutcome, growth,
+      atmosphere, specialRequirements,
+    });
 
     const n8nPayload = {
       taskType: 'generate-course-journey',

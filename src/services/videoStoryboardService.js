@@ -1,5 +1,3 @@
-const API_KEY = import.meta.env.VITE_DASHSCOPE_API_KEY;
-const API_URL = import.meta.env.VITE_DASHSCOPE_API_URL;
 // 使用相对路径，这样在任何环境下都能正确访问
 const API_BASE_URL = '';
 
@@ -318,139 +316,6 @@ export const generateCharacterReferenceImagesWithPrompt = async (characterDescri
   } catch (error) {
     console.error('生成人物参考图失败:', error);
     throw error;
-  }
-};
-
-/**
- * 生成分镜脚本
- * @param {string} description - 视频描述
- * @param {string[]} referenceImages - 参考图片
- * @param {number} duration - 视频时长（秒）
- * @returns {Promise<{scenes: Array, title: string}>}
- */
-export const generateStoryboardScript = async (description, referenceImages = [], duration = 30) => {
-  const systemPrompt = `你是一位专业的视频分镜师，擅长根据视频描述和人物参考图片生成分镜脚本。
-
-请根据用户提供的视频描述，生成详细的分镜脚本。每个分镜需要包含：
-1. 时长（如：0-3s, 3-6s）
-2. 景别（如：中景、近景、特写、全景）
-3. 运镜（如：缓慢推镜、固定镜头、轻微跟镜）
-4. 画面内容（详细的场景描述）
-
-要求：
-- 分镜要符合视频的整体节奏和情感
-- 总时长约 ${duration} 秒
-- 每个分镜时长3-5秒
-- 画面内容要具体、可执行
-- 如果有参考图片，要确保人物形象一致
-
-请严格按照以下JSON格式返回，不要包含任何其他文字：
-{
-  "title": "视频标题",
-  "scenes": [
-    {
-      "sequence": 1,
-      "duration": "0-3s",
-      "shotType": "中景",
-      "cameraMovement": "缓慢推镜",
-      "content": "画面内容描述"
-    }
-  ]
-}`;
-
-  const userContent = `视频描述：${description}
-视频时长：${duration}秒
-${referenceImages.length > 0 ? `参考图片数量：${referenceImages.length}张` : ''}
-
-请生成分镜脚本。`;
-
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${API_KEY}`
-      },
-      body: JSON.stringify({
-        model: 'qwen-plus',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt
-          },
-          {
-            role: 'user',
-            content: userContent
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`API调用失败: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const content = data.choices[0].message.content;
-    
-    // 提取JSON部分
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error('无法解析分镜脚本');
-    }
-    
-    const storyboard = JSON.parse(jsonMatch[0]);
-    
-    // 确保scenes是数组
-    if (!Array.isArray(storyboard.scenes)) {
-      throw new Error('分镜脚本格式错误');
-    }
-    
-    // 为每个分镜添加narration字段（如果没有）
-    storyboard.scenes = storyboard.scenes.map((scene, index) => ({
-      ...scene,
-      narration: scene.narration || '',
-      generatedImage: null
-    }));
-    
-    return storyboard;
-  } catch (error) {
-    console.error('生成分镜脚本失败:', error);
-    // 返回默认分镜
-    return {
-      title: '默认分镜脚本',
-      scenes: [
-        {
-          sequence: 1,
-          duration: '0-3s',
-          shotType: '中景',
-          cameraMovement: '固定镜头',
-          content: '开场画面',
-          narration: '',
-          generatedImage: null
-        },
-        {
-          sequence: 2,
-          duration: '3-6s',
-          shotType: '近景',
-          cameraMovement: '缓慢推镜',
-          content: '主要内容',
-          narration: '',
-          generatedImage: null
-        },
-        {
-          sequence: 3,
-          duration: '6-9s',
-          shotType: '全景',
-          cameraMovement: '拉远',
-          content: '结尾画面',
-          narration: '',
-          generatedImage: null
-        }
-      ]
-    };
   }
 };
 
@@ -1100,7 +965,6 @@ export default {
   generateCharacterReferenceImages,
   generateCharacterReferenceImagesWithPrompt,
   pollTaskAndGetImageUrl,
-  generateStoryboardScript,
   generateSceneImage,
   pollTaskAndGetVideoUrl,
   callWebhookGenerateImages,
