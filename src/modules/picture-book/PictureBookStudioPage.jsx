@@ -27,7 +27,6 @@ const initialBasicInfo = {
   age: '',
   level: '',
   participants: '',
-  duration: '',
   themes: [],
   themeOther: '',
   materials: [],
@@ -105,13 +104,10 @@ function getMaterialsText(info, isEn = false) {
 function recommendFallbackPageCount(info) {
   const vocabularyCount = String(info.vocabulary || '').split(/[,，、\s]+/).filter(Boolean).length;
   const materialCount = info.materials.length + (info.materialOther ? 1 : 0);
-  const duration = Number.parseInt(String(info.duration || ''), 10) || 15;
   let count = 6;
   if (vocabularyCount > 4) count += 1;
   if (vocabularyCount > 8) count += 1;
   if (materialCount > 2) count += 1;
-  if (duration >= 30) count += 1;
-  if (duration >= 45) count += 1;
   return Math.min(12, Math.max(6, count));
 }
 
@@ -987,7 +983,6 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
   const localizedAgeOptions = t('pictureBook.ageOptions', { returnObjects: true });
   const localizedLevelOptions = t('pictureBook.levelOptions', { returnObjects: true });
   const localizedParticipantOptions = t('pictureBook.participantOptions', { returnObjects: true });
-  const localizedDurationOptions = t('pictureBook.durationOptions', { returnObjects: true });
   const localizedThemeOptions = t('pictureBook.themeOptions', { returnObjects: true });
   const localizedMaterialOptions = t('pictureBook.materialOptions', { returnObjects: true });
   return (
@@ -996,7 +991,6 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
         <OptionGroup tone="coral" required label={t('pictureBook.studentAge')} options={localizedAgeOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
         <OptionGroup tone="blue" required label={t('pictureBook.englishLevel')} options={localizedLevelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
         <OptionGroup tone="yellow" label={t('pictureBook.participants')} options={localizedParticipantOptions} value={basicInfo.participants} onChange={(value) => setBasicField('participants', value)} />
-        <OptionGroup tone="green" label={t('pictureBook.duration')} options={localizedDurationOptions} value={basicInfo.duration} onChange={(value) => setBasicField('duration', value)} />
       </div>
 
       <CheckboxGroup

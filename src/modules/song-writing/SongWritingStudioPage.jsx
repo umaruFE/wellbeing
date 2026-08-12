@@ -49,7 +49,6 @@ const instruments = [
 const ageOptions = ['4-6岁', '7-9岁', '10-12岁', '13-15岁'];
 const levelOptions = ['零基础', '初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）'];
 const participantOptions = ['单人', '小组（2-4人）', '大组（5-10人）', '班级（10+）'];
-const durationOptions = ['5分钟', '10分钟', '15分钟', '30分钟', '45分钟', '60分钟'];
 const themeOptions = ['情绪表达', '自然探索', '自我认知', '人际关系', '家庭与归属', '成长与变化', '感恩与善意', '身体与感知', '动物与生命', '勇气与冒险'];
 
 function toggleList(list, value) {
@@ -127,7 +126,7 @@ function downloadInteractiveHtml(draft, form, melody) {
 export function SongWritingStudioPage() {
   const audioRef = React.useRef(null);
   const melodyPreviewRef = React.useRef(null);
-  const [form, setForm] = React.useState({ age: '', level: '', participants: '', duration: '', themes: [], themeOther: '', vocabulary: '', grammar: '', melody: 'twinkle' });
+  const [form, setForm] = React.useState({ age: '', level: '', participants: '', themes: [], themeOther: '', vocabulary: '', grammar: '', melody: 'twinkle' });
   const [draft, setDraft] = React.useState(() => makeDraft({ vocabulary: 'happy, calm, brave', themes: ['情绪表达'], melody: 'twinkle' }));
   const [playing, setPlaying] = React.useState(false);
   const [melodyPreviewPlaying, setMelodyPreviewPlaying] = React.useState(false);
@@ -137,6 +136,7 @@ export function SongWritingStudioPage() {
   const [blankValues, setBlankValues] = React.useState({});
   const [arrangement, setArrangement] = React.useState({});
   const [showWords, setShowWords] = React.useState(false);
+  const [showAllInstruments, setShowAllInstruments] = React.useState(false);
   const [showPlan, setShowPlan] = React.useState(false);
   const [showContentEditor, setShowContentEditor] = React.useState(false);
   const [view, setView] = React.useState('list');
@@ -318,7 +318,6 @@ export function SongWritingStudioPage() {
         age: oldForm.age || '',
         level: oldForm.level || '',
         participants: oldForm.participants || '',
-        duration: oldForm.duration || '',
         themes: Array.isArray(oldForm.themes) ? oldForm.themes : (oldForm.theme ? [oldForm.theme] : []),
         themeOther: oldForm.themeOther || '',
         vocabulary: oldForm.vocabulary || oldForm.languagePoint || '',
@@ -370,7 +369,6 @@ export function SongWritingStudioPage() {
               <OptionGroup tone="coral" required label="学生年龄" options={ageOptions} value={form.age} onChange={(value) => setFormField('age', value)} />
               <OptionGroup tone="blue" required label="英文水平" options={levelOptions} value={form.level} onChange={(value) => setFormField('level', value)} />
               <OptionGroup tone="yellow" label="参与人数" options={participantOptions} value={form.participants} onChange={(value) => setFormField('participants', value)} />
-              <OptionGroup tone="green" label="活动时长" options={durationOptions} value={form.duration} onChange={(value) => setFormField('duration', value)} />
             </div>
 
             <CheckboxGroup
@@ -468,7 +466,7 @@ export function SongWritingStudioPage() {
           </article>
           <div className="sky-sidecards">
             <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => setShowWords(true)}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
-            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{instruments.map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}</div><p>💡 先点击乐器，再点击歌词旁的圆圈</p></article>
+            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 先点击乐器，再点击歌词旁的圆圈</p></article>
           </div>
         </div>
         <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>

@@ -7,7 +7,6 @@ export interface SongWritingPromptInput {
   age: string;
   level: string;
   participants: string;
-  duration: string;
   themeText: string;
   vocabulary: string;
   grammar: string;
@@ -20,7 +19,6 @@ export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
     `学生年龄=${input.age || '7-9岁'}`,
     `英文水平=${input.level || '初级（会字母和简单词）'}`,
     `参与人数=${input.participants || '未指定'}`,
-    `活动时长=${input.duration || '未指定'}`,
     `幸福力主题=${input.themeText}`,
     `核心词汇=${input.vocabulary || '未指定，请根据主题和年龄自选适合的词汇'}`,
     `核心句型/语法=${input.grammar || '未指定，请根据主题和水平自选适合的句型'}`,

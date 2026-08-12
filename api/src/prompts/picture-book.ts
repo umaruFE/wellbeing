@@ -41,7 +41,6 @@ ${useEnglish
 - Themes: ${themes.join(', ') || 'Not specified'}
 - Core vocabulary: ${basicInfo?.vocabulary || 'Not specified'}
 - Core sentence patterns/grammar: ${basicInfo?.grammar || 'Not specified'}
-- Activity duration: ${basicInfo?.duration || 'Not specified'}
 - Participants: ${basicInfo?.participants || 'Not specified'}
 ${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
 

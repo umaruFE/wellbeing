@@ -12,7 +12,7 @@ const melodyReferences: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { age, level, participants, duration, themes, themeOther, vocabulary, grammar, melody } = await request.json();
+    const { age, level, participants, themes, themeOther, vocabulary, grammar, melody } = await request.json();
     const themeList = Array.isArray(themes) ? themes.filter(Boolean) : [];
     if (themeOther) themeList.push(themeOther);
     const themeText = themeList.join('、') || '情绪表达';
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         model: 'qwen-plus', temperature: 0.8, response_format: { type: 'json_object' },
         messages: [
           ...SONG_WRITING_SYSTEM_PROMPTS.map((content) => ({ role: 'system', content })),
-          { role: 'user', content: buildSongWritingUserPrompt({ age, level, participants, duration, themeText, vocabulary, grammar, melody, melodyReference }) },
+          { role: 'user', content: buildSongWritingUserPrompt({ age, level, participants, themeText, vocabulary, grammar, melody, melodyReference }) },
         ],
       }),
     });
