@@ -12,7 +12,10 @@ const melodyReferences: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { languagePoint, age, level, theme, melody } = await request.json();
+    const { age, level, participants, duration, themes, themeOther, vocabulary, grammar, melody } = await request.json();
+    const themeList = Array.isArray(themes) ? themes.filter(Boolean) : [];
+    if (themeOther) themeList.push(themeOther);
+    const themeText = themeList.join('、') || '情绪表达';
     const melodyReference = melodyReferences[melody] || '暂无专属案例，可根据该旋律的节奏、重复句式和副歌结构自由创编。';
     const apiKey = process.env.VITE_DASHSCOPE_API_KEY;
     const apiUrl = process.env.VITE_DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
@@ -25,7 +28,7 @@ export async function POST(request: NextRequest) {
         model: 'qwen-plus', temperature: 0.8, response_format: { type: 'json_object' },
         messages: [
           ...SONG_WRITING_SYSTEM_PROMPTS.map((content) => ({ role: 'system', content })),
-          { role: 'user', content: buildSongWritingUserPrompt({ languagePoint, age, level, theme, melody, melodyReference }) },
+          { role: 'user', content: buildSongWritingUserPrompt({ age, level, participants, duration, themeText, vocabulary, grammar, melody, melodyReference }) },
         ],
       }),
     });

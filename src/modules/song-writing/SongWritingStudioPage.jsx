@@ -1,17 +1,19 @@
 import React from 'react';
 import {
+  ArrowLeft,
   BookOpenText,
+  ChevronRight,
   Clock,
   Expand,
+  Loader2,
   Music2,
   Pause,
   Play,
   Plus,
   RefreshCw,
   Search,
-  SlidersHorizontal,
-  Sparkles,
   Volume2,
+  Wand2,
   X,
   Pencil,
   Trash2,
@@ -43,6 +45,16 @@ const instruments = [
   { id: 'sleigh-bell', icon: '/audio/icon/Sleigh bell.png', label: '雪橇铃' },
   { id: 'wood-block', icon: '/audio/icon/Wood block.png', label: '木鱼' },
 ];
+
+const ageOptions = ['4-6岁', '7-9岁', '10-12岁', '13-15岁'];
+const levelOptions = ['零基础', '初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）'];
+const participantOptions = ['单人', '小组（2-4人）', '大组（5-10人）', '班级（10+）'];
+const durationOptions = ['5分钟', '10分钟', '15分钟', '30分钟', '45分钟', '60分钟'];
+const themeOptions = ['情绪表达', '自然探索', '自我认知', '人际关系', '家庭与归属', '成长与变化', '感恩与善意', '身体与感知', '动物与生命', '勇气与冒险'];
+
+function toggleList(list, value) {
+  return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+}
 
 function wordIcon(word) {
   const value = word.toLowerCase();
@@ -76,8 +88,10 @@ function wordCardIcon(word, wordEmojis) {
   return wordEmojis?.[word] || wordIcon(word);
 }
 
-function makeDraft({ languagePoint, theme, melody }) {
-  const baseWords = (languagePoint || 'happy, excited, sad, angry, tired, bored, shy, calm').split(/[,，、\s]+/).filter(Boolean);
+function makeDraft({ vocabulary, themes, themeOther, melody } = {}) {
+  const languagePoint = vocabulary || 'happy, calm, brave, sad, angry, tired, bored, shy, calm';
+  const theme = themes?.[0] || themeOther || '情绪表达';
+  const baseWords = languagePoint.split(/[,，、\s]+/).filter(Boolean);
   const extraByTheme = {
     '情绪表达': ['scared', 'proud', 'lonely', 'surprised', 'confused', 'grateful', 'hopeful', 'peaceful'],
     '自然探索': ['sunny', 'rainy', 'windy', 'curious', 'amazed', 'free', 'wild', 'bright'],
@@ -105,7 +119,7 @@ function makeDraft({ languagePoint, theme, melody }) {
 function downloadInteractiveHtml(draft, form, melody) {
   const lines = draft.lines.map((line) => `<p>${line.replace('______', '<input aria-label="fill in the blank">')}</p>`).join('');
   const words = draft.words.map((word) => `<button>${word}</button>`).join('');
-  const html = `<!doctype html><html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${draft.title}</title><style>body{margin:0;font-family:Arial,"Microsoft YaHei";color:#514d56}main{max-width:625px;margin:25px auto;text-align:center}h1{margin:0;font-size:28px}small{color:#aaa}.player{margin-top:20px;padding:16px;border-radius:16px;background:#a9ded7;border-bottom:4px solid #7cc8bd}.grid{display:grid;grid-template-columns:398px 212px;gap:15px;margin-top:14px;text-align:left}.lyrics,.words,.instruments{padding:14px;border-radius:14px}.lyrics{background:#e9def3}.words{background:#f9da50}.instruments{margin-top:12px;background:#f29c79}.lyrics p{padding:7px;border-bottom:1px solid #d6c8e2}.lyrics input{width:60px;border:2px solid #555;border-radius:8px}.words button{width:48%;margin:3px;border:2px solid #555;border-radius:16px;background:#fff;padding:6px;font-weight:bold}.foot{color:#eabf35;padding:20px}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style><main><h1>${draft.title}</h1><small>旋律：${melody.name} · ${form.age}岁 · ${form.level}</small><section class="player">🎵 伴奏播放 ▶ ━━━━━━ 音量</section><div class="grid"><section class="lyrics"><b>🎶 填词模板</b>${lines}</section><div><section class="words"><b>📚 Word Bank</b><p>点击单词填入空格</p>${words}</section><section class="instruments"><b>🎸 乐器</b><p>👏 拍手 🥁 手鼓 🔔 铃鼓 🪇 沙锤</p></section></div></div><div class="foot">⭐ ☀️ 🌈 🎵 💛 ⭐<br><small>幸福力英文歌曲创编 · 轻松唱出心情</small></div></main></html>`;
+  const html = `<!doctype html><html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${draft.title}</title><style>body{margin:0;font-family:Arial,"Microsoft YaHei";color:#514d56}main{max-width:625px;margin:25px auto;text-align:center}h1{margin:0;font-size:28px}small{color:#aaa}.player{margin-top:20px;padding:16px;border-radius:16px;background:#a9ded7;border-bottom:4px solid #7cc8bd}.grid{display:grid;grid-template-columns:398px 212px;gap:15px;margin-top:14px;text-align:left}.lyrics,.words,.instruments{padding:14px;border-radius:14px}.lyrics{background:#e9def3}.words{background:#f9da50}.instruments{margin-top:12px;background:#f29c79}.lyrics p{padding:7px;border-bottom:1px solid #d6c8e2}.lyrics input{width:60px;border:2px solid #555;border-radius:8px}.words button{width:48%;margin:3px;border:2px solid #555;border-radius:16px;background:#fff;padding:6px;font-weight:bold}.foot{color:#eabf35;padding:20px}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style><main><h1>${draft.title}</h1><small>旋律：${melody.name} · ${form.age} · ${form.level}</small><section class="player">🎵 伴奏播放 ▶ ━━━━━━ 音量</section><div class="grid"><section class="lyrics"><b>🎶 填词模板</b>${lines}</section><div><section class="words"><b>📚 Word Bank</b><p>点击单词填入空格</p>${words}</section><section class="instruments"><b>🎸 乐器</b><p>👏 拍手 🥁 手鼓 🔔 铃鼓 🪇 沙锤</p></section></div></div><div class="foot">⭐ ☀️ 🌈 🎵 💛 ⭐<br><small>幸福力英文歌曲创编 · 轻松唱出心情</small></div></main></html>`;
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const link = document.createElement('a'); link.href = url; link.download = `${draft.title || 'song-writing'}.html`; link.click(); URL.revokeObjectURL(url);
 }
@@ -113,8 +127,8 @@ function downloadInteractiveHtml(draft, form, melody) {
 export function SongWritingStudioPage() {
   const audioRef = React.useRef(null);
   const melodyPreviewRef = React.useRef(null);
-  const [form, setForm] = React.useState({ languagePoint: 'happy, calm, brave', age: '7-9', level: '初级（会字母和简单词）', theme: '情绪表达', melody: 'twinkle' });
-  const [draft, setDraft] = React.useState(() => makeDraft({ languagePoint: 'happy, calm, brave', theme: '情绪表达', melody: 'twinkle' }));
+  const [form, setForm] = React.useState({ age: '', level: '', participants: '', duration: '', themes: [], themeOther: '', vocabulary: '', grammar: '', melody: 'twinkle' });
+  const [draft, setDraft] = React.useState(() => makeDraft({ vocabulary: 'happy, calm, brave', themes: ['情绪表达'], melody: 'twinkle' }));
   const [playing, setPlaying] = React.useState(false);
   const [melodyPreviewPlaying, setMelodyPreviewPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
@@ -126,12 +140,27 @@ export function SongWritingStudioPage() {
   const [showPlan, setShowPlan] = React.useState(false);
   const [showContentEditor, setShowContentEditor] = React.useState(false);
   const [view, setView] = React.useState('list');
+  const [step, setStep] = React.useState(0);
   const [works, setWorks] = React.useState(() => JSON.parse(localStorage.getItem('song-writing-works') || '[]'));
   const [searchTerm, setSearchTerm] = React.useState('');
   const [saveMessage, setSaveMessage] = React.useState('');
   const [generatedPlan, setGeneratedPlan] = React.useState(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const selectedMelody = melodies.find((item) => item.id === form.melody) || melodies[0];
+  const canGenerate = Boolean(form.age && form.level);
+  const setFormField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+  const steps = ['基础信息', '歌曲制作'];
+  const goToStep = (nextStep) => {
+    if (nextStep > 0 && !generatedPlan) return;
+    setStep(nextStep);
+  };
+  const startNewSong = () => { setSaveMessage(''); setGeneratedPlan(null); setStep(0); setView('studio'); };
+
+  React.useEffect(() => {
+    const handler = () => { setView('list'); setStep(0); };
+    window.addEventListener('wellbeing:nav-same-route', handler);
+    return () => window.removeEventListener('wellbeing:nav-same-route', handler);
+  }, []);
 
   React.useEffect(() => {
     if (!audioRef.current) return;
@@ -253,7 +282,7 @@ export function SongWritingStudioPage() {
     }
   };
   const saveWork = () => {
-    const work = { id: Date.now(), title: draft.title, draft, form, blankValues, arrangement, date: new Date().toLocaleDateString('zh-CN') };
+    const work = { id: Date.now(), title: draft.title, draft: { ...draft, activityPlan: generatedPlan }, form, blankValues, arrangement, date: new Date().toLocaleDateString('zh-CN') };
     const next = [work, ...works.filter((item) => item.title !== work.title)];
     setWorks(next);
     localStorage.setItem('song-writing-works', JSON.stringify(next));
@@ -273,7 +302,7 @@ export function SongWritingStudioPage() {
       setGeneratedPlan(data.activityPlan);
       setBlankValues({});
       setArrangement({});
-      setView('preview');
+      setStep(1);
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : '歌曲生成失败');
     } finally { setIsGenerating(false); }
@@ -282,17 +311,115 @@ export function SongWritingStudioPage() {
   if (view === 'list') {
     const filteredWorks = works.filter((work) => work.title.toLowerCase().includes(searchTerm.toLowerCase()));
     const removeWork = (id) => { const next = works.filter((work) => work.id !== id); setWorks(next); localStorage.setItem('song-writing-works', JSON.stringify(next)); };
-    const openWork = (work) => { setDraft(work.draft); setForm(work.form); setBlankValues(work.blankValues || {}); setArrangement(work.arrangement || {}); setView('preview'); };
-    return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>歌曲编排</h1><p>创建和管理你的歌曲互动作品</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={() => setView('form')}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>新建歌曲</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索歌曲..." /></div></div>{filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>还没有歌曲作品，点击右上角创建</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover"><div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div><span className="pbv2-book-status draft">草稿</span></div><div className="pbv2-book-info"><h3>{work.title || '未命名歌曲'}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />编辑</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />删除</button></div></div></article>)}</div>}</main>;
+    const openWork = (work) => {
+      setDraft(work.draft);
+      const oldForm = work.form || {};
+      setForm({
+        age: oldForm.age || '',
+        level: oldForm.level || '',
+        participants: oldForm.participants || '',
+        duration: oldForm.duration || '',
+        themes: Array.isArray(oldForm.themes) ? oldForm.themes : (oldForm.theme ? [oldForm.theme] : []),
+        themeOther: oldForm.themeOther || '',
+        vocabulary: oldForm.vocabulary || oldForm.languagePoint || '',
+        grammar: oldForm.grammar || '',
+        melody: oldForm.melody || 'twinkle',
+      });
+      setBlankValues(work.blankValues || {});
+      setArrangement(work.arrangement || {});
+      setGeneratedPlan(work.draft?.activityPlan || null);
+      setStep(1);
+      setView('studio');
+    };
+    return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>歌曲编排</h1><p>创建和管理你的歌曲互动作品</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={startNewSong}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>新建歌曲</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索歌曲..." /></div></div>{filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>还没有歌曲作品，点击右上角创建</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover"><div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div><span className="pbv2-book-status draft">草稿</span></div><div className="pbv2-book-info"><h3>{work.title || '未命名歌曲'}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />编辑</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />删除</button></div></div></article>)}</div>}</main>;
   }
 
-  if (view === 'form' && isGenerating) return <SongGenerationLoading />;
+  if (view === 'studio' && isGenerating && step === 0) return <SongGenerationLoading />;
 
-  if (view === 'form') return <main className="song-hub song-setup-page"><header><div><p>步骤 1 / 2</p><h1>创建歌曲互动</h1><span>设置课堂对象与歌曲主题，生成后可继续编辑歌词和词库。</span></div><button type="button" className="plain" onClick={() => setView('list')}>返回列表</button></header><section className="song-condition-card"><div className="condition-title"><span>✨</span><div><h2>歌曲创编参数</h2><p>选择适合孩子的语言点与旋律。</p></div></div><audio ref={melodyPreviewRef} src={selectedMelody.src} onEnded={() => setMelodyPreviewPlaying(false)} /><div className="song-form-grid"><label className="song-wide">目标语言点<input value={form.languagePoint} placeholder="例如：happy, calm, brave" onChange={(e) => setForm({ ...form, languagePoint: e.target.value })} /></label><ChoiceField label="年龄段" value={form.age} options={['7-9', '10-12', '13-15']} onChange={(age) => setForm({ ...form, age })} /><ChoiceField label="英文水平" value={form.level} options={['初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）']} onChange={(level) => setForm({ ...form, level })} /><ChoiceField label="幸福力主题" value={form.theme} options={['情绪表达', '自然探索', '自我认知', '人际关系', '勇气与冒险']} onChange={(theme) => setForm({ ...form, theme })} /><div className="melody-control"><label>旋律选择<select value={form.melody} onChange={(e) => setForm({ ...form, melody: e.target.value })}>{melodies.map((melody) => <option value={melody.id} key={melody.id}>{melody.name}</option>)}</select></label><button type="button" className={`melody-preview${melodyPreviewPlaying ? ' is-playing' : ''}`} onClick={toggleMelodyPreview} aria-label={melodyPreviewPlaying ? `暂停试听 ${selectedMelody.name}` : `试听 ${selectedMelody.name}`} aria-pressed={melodyPreviewPlaying}>{melodyPreviewPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}{melodyPreviewPlaying ? '暂停' : '试听'}</button></div></div><button type="button" className="generate-html" disabled={isGenerating} onClick={generateSong}><Sparkles size={18} />生成歌词和词库</button></section></main>;
+  if (view === 'studio') return (
+    <main className="picture-book-studio-v2">
+      <header className="pbv2-topbar">
+        <div className="pbv2-topbar-left">
+          <div className="pbv2-topbar-icon"><Music2 size={28} /></div>
+          <div>
+            <h1>歌曲编排工作室</h1>
+            <p>设计适合课堂使用的英文幸福力歌曲互动</p>
+          </div>
+        </div>
+        <div className="pbv2-topbar-actions">
+          <button type="button" className="pbv2-back-btn" onClick={() => setView('list')}>
+            <ArrowLeft size={16} />返回列表
+          </button>
+        </div>
+      </header>
+      <div className="pbv2-shell">
+        <aside className="pbv2-steps">
+          {steps.map((label, index) => (
+            <button type="button" key={label} className={`${step === index ? 'is-active' : ''}${step > index ? ' is-done' : ''}`} disabled={index > 0 && !generatedPlan} onClick={() => goToStep(index)}>
+              <span>{index + 1}</span>
+              <strong>{label}</strong>
+            </button>
+          ))}
+        </aside>
+        <section className={`pbv2-workspace pbv2-workspace-step-${step}`}>
+          {saveMessage && <div className="pbv2-message">{saveMessage}</div>}
 
-  return (
-    <main className="song-writing-page sky-song-page">
-      <audio ref={audioRef} src={selectedMelody.src} onEnded={() => setPlaying(false)} />
+          {step === 0 && (
+          <div className="pbv2-step-panel">
+            <div className="pbv2-form-grid two">
+              <OptionGroup tone="coral" required label="学生年龄" options={ageOptions} value={form.age} onChange={(value) => setFormField('age', value)} />
+              <OptionGroup tone="blue" required label="英文水平" options={levelOptions} value={form.level} onChange={(value) => setFormField('level', value)} />
+              <OptionGroup tone="yellow" label="参与人数" options={participantOptions} value={form.participants} onChange={(value) => setFormField('participants', value)} />
+              <OptionGroup tone="green" label="活动时长" options={durationOptions} value={form.duration} onChange={(value) => setFormField('duration', value)} />
+            </div>
+
+            <CheckboxGroup
+              tone="yellow"
+              label="活动主题偏好"
+              options={themeOptions}
+              value={form.themes}
+              otherValue={form.themeOther}
+              onToggle={(value) => setFormField('themes', toggleList(form.themes, value))}
+              onOther={(value) => setFormField('themeOther', value)}
+            />
+
+            <section className="pbv2-card pbv2-tone-blue">
+              <div className="pbv2-card-title">语言目标（非必填）</div>
+              <div className="pbv2-form-grid two">
+                <Field label="核心词汇" value={form.vocabulary} onChange={(value) => setFormField('vocabulary', value)} placeholder="例如：happy, sad, body, friend" />
+                <Field label="核心句型/语法" value={form.grammar} onChange={(value) => setFormField('grammar', value)} placeholder="例如：My friend has... / My friend is..." />
+              </div>
+            </section>
+
+            <section className="pbv2-card pbv2-tone-coral">
+              <div className="pbv2-card-title">旋律选择</div>
+              <audio ref={melodyPreviewRef} src={selectedMelody.src} onEnded={() => setMelodyPreviewPlaying(false)} />
+              <div className="song-melody-row">
+                <label className="pbv2-field">
+                  <span>选择旋律</span>
+                  <select value={form.melody} onChange={(e) => setFormField('melody', e.target.value)}>
+                    {melodies.map((melody) => <option value={melody.id} key={melody.id}>{melody.name}</option>)}
+                  </select>
+                </label>
+                <button type="button" className={`song-melody-preview${melodyPreviewPlaying ? ' is-playing' : ''}`} onClick={toggleMelodyPreview} aria-label={melodyPreviewPlaying ? `暂停试听 ${selectedMelody.name}` : `试听 ${selectedMelody.name}`} aria-pressed={melodyPreviewPlaying}>
+                  {melodyPreviewPlaying ? <Pause size={15} fill="currentColor" /> : <Play size={15} fill="currentColor" />}
+                  {melodyPreviewPlaying ? '暂停' : '试听'}
+                </button>
+              </div>
+            </section>
+
+            <FooterActions>
+              <button type="button" className="pbv2-primary" disabled={!canGenerate || isGenerating} onClick={generateSong}>
+                {isGenerating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
+                {isGenerating ? '生成中...' : '生成歌词和词库'}
+              </button>
+            </FooterActions>
+          </div>
+          )}
+
+          {step === 1 && (
+          <div className="song-writing-page sky-song-page pbv2-song-making">
+            <audio ref={audioRef} src={selectedMelody.src} onEnded={() => setPlaying(false)} />
       {/* Background decorations */}
       <svg className="bg-deco note1" width="40" height="52" viewBox="0 0 40 52"><ellipse cx="12" cy="42" rx="7" ry="5.5" fill="#e8ddf0" stroke="#2d2d2d" strokeWidth="2" transform="rotate(-20,12,42)"/><line x1="18" y1="38" x2="18" y2="8" stroke="#2d2d2d" strokeWidth="2.5"/><path d="M18 8 Q28 6 26 18 Q24 14 18 14" fill="#e8ddf0" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <svg className="bg-deco note2" width="44" height="52" viewBox="0 0 44 52"><ellipse cx="10" cy="42" rx="7" ry="5.5" fill="#a8e0d8" stroke="#2d2d2d" strokeWidth="2" transform="rotate(-20,10,42)"/><ellipse cx="30" cy="38" rx="7" ry="5.5" fill="#a8e0d8" stroke="#2d2d2d" strokeWidth="2" transform="rotate(-20,30,38)"/><line x1="16" y1="38" x2="16" y2="8" stroke="#2d2d2d" strokeWidth="2.5"/><line x1="36" y1="34" x2="36" y2="8" stroke="#2d2d2d" strokeWidth="2.5"/><line x1="16" y1="8" x2="36" y2="8" stroke="#2d2d2d" strokeWidth="3"/></svg>
@@ -314,8 +441,8 @@ export function SongWritingStudioPage() {
       <svg className="bg-deco star2" width="24" height="24" viewBox="0 0 24 24"><polygon points="12,1 14.5,9 23,9 16,14 18.5,22 12,17 5.5,22 8,14 1,9 9.5,9" fill="#e8ddf0" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <svg className="bg-deco star3" width="22" height="22" viewBox="0 0 22 22"><polygon points="11,1 13,8 21,8 14.5,13 16.5,20 11,15.5 5.5,20 7.5,13 1,8 9,8" fill="#f0a080" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <svg className="bg-deco star4" width="26" height="26" viewBox="0 0 26 26"><polygon points="13,1 15.5,9.5 25,9.5 17.5,15 20,24 13,19 6,24 8.5,15 1,9.5 10.5,9.5" fill="#f7d958" stroke="#2d2d2d" strokeWidth="2"/></svg>
-      <header className="sky-title"><h1>{draft.title}</h1><p>旋律：{selectedMelody.name} · {form.age}岁 · {form.level}</p></header>
-      <div className="sky-actions"><button type="button" onClick={() => setShowContentEditor(true)}>编辑歌词和词库</button><button type="button" onClick={saveWork}>💾 保存作品</button><button type="button" onClick={() => downloadInteractiveHtml(draft, form, selectedMelody)}>下载 HTML</button><button type="button" onClick={() => setShowPlan(true)}>📋 活动方案</button>{saveMessage && <span role="status">{saveMessage}</span>}</div><button type="button" className="sky-back" onClick={() => setView('list')}>← 返回作品列表</button>
+      <header className="sky-title"><h1>{draft.title}</h1><p>旋律：{selectedMelody.name} · {form.age} · {form.level}</p></header>
+      <div className="sky-actions"><button type="button" onClick={() => setShowContentEditor(true)}>编辑歌词和词库</button><button type="button" onClick={saveWork}>💾 保存作品</button><button type="button" onClick={() => downloadInteractiveHtml(draft, form, selectedMelody)}>下载 HTML</button><button type="button" onClick={() => setShowPlan(true)}>📋 活动方案</button>{saveMessage && <span role="status">{saveMessage}</span>}</div>
 
       <section className="sky-studio">
         <article className="sky-player">
@@ -350,10 +477,65 @@ export function SongWritingStudioPage() {
       {showWords && <Overlay title="Word Bank · 选词区" className="word-bank-modal" onClose={() => setShowWords(false)}><p>投屏模式：邀请孩子先读、做动作，再选择最贴近自己感受的词卡。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => { fillWord(word); setShowWords(false); }}><span>{wordCardIcon(word, draft.wordEmojis)}</span>{word}</button>)}</div></Overlay>}
       {showContentEditor && <Overlay title="编辑歌词和 Word Bank" onClose={() => setShowContentEditor(false)}><div className="song-content-editor"><section><h3>歌词模板</h3>{draft.lines.map((line, index) => <textarea key={index} value={line} rows={2} onChange={(event) => setDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} />)}</section><section><h3>Word Bank</h3>{draft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" onClick={() => setDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}>删除</button></label>)}<button type="button" className="add-word" onClick={() => setDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}>+ 添加词卡</button></section><button type="button" className="generate-html" onClick={() => { setBlankValues({}); setShowContentEditor(false); }}>保存修改</button></div></Overlay>}
       {showPlan && <Overlay title="活动方案" onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><section><h3>学习目标</h3><p><b>英文：</b>{generatedPlan.englishGoal}</p><p><b>幸福力：</b>{generatedPlan.wellbeingGoal}</p></section><section><h3>课前准备</h3><p>{(generatedPlan.materials || []).join('、')}</p></section><section><h3>课堂流程</h3><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><div><b>{index + 1}. {step.title}</b><em>{step.duration}</em></div><p>{step.teacherGuide}</p></li>)}</ol></section></div> : <p>请先生成歌词和词库，即可查看本作品的活动方案。</p>}</Overlay>}
+          </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }
 
-function ChoiceField({ label, value, options, onChange }) { return <section className="song-choice-field"><b>{label}</b><div>{options.map((option) => <button type="button" key={option} className={value === option ? 'selected' : ''} onClick={() => onChange(option)}>{option}</button>)}</div></section>; }
+function OptionGroup({ label, required, options, value, onChange, tone = 'coral' }) {
+  return (
+    <section className={`pbv2-fieldset pbv2-tone-${tone}`}>
+      <div className="pbv2-label">{label}{required && <b>*</b>}</div>
+      <div className="pbv2-option-grid">
+        {options.map((option) => (
+          <button type="button" key={option} className={value === option ? 'is-active' : ''} onClick={() => onChange(value === option ? '' : option)}>
+            {option}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther, tone = 'yellow' }) {
+  return (
+    <section className={`pbv2-card pbv2-tone-${tone}`}>
+      <div className="pbv2-card-title">{label}</div>
+      <div className="pbv2-chip-grid">
+        {options.map((option) => (
+          <button type="button" key={option} className={value.includes(option) ? 'is-active' : ''} onClick={() => onToggle(option)}>
+            {option}
+          </button>
+        ))}
+      </div>
+      <input className="pbv2-input" value={otherValue} onChange={(event) => onOther(event.target.value)} placeholder="其他（自由输入）" />
+    </section>
+  );
+}
+
+function Field({ label, value, onChange, placeholder, area }) {
+  return (
+    <label className="pbv2-field">
+      <span>{label}</span>
+      {area ? (
+        <textarea value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      ) : (
+        <input value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      )}
+    </label>
+  );
+}
+
+function FooterActions({ children }) {
+  return (
+    <footer className="pbv2-actions">
+      <ChevronRight size={16} />
+      {children}
+    </footer>
+  );
+}
 function SongGenerationLoading() { return <main className="song-generation-page"><section className="song-generation-loading"><svg className="song-loading-illustration" width="165" height="145" viewBox="0 0 165 145" aria-hidden="true"><circle cx="138" cy="25" r="5" fill="#c48cff"/><circle cx="15" cy="108" r="7" fill="none" stroke="#ff7c73" strokeWidth="4"/><path d="M42 99c25 10 56 10 82-1" fill="none" stroke="#d7dce3" strokeWidth="3" strokeDasharray="5 5"/><g transform="rotate(-7 64 66)"><rect x="20" y="35" width="67" height="79" rx="12" fill="#fffdf7" stroke="#344255" strokeWidth="4"/><path d="M39 66h27M39 81h20" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(12 105 69)"><rect x="81" y="43" width="62" height="72" rx="12" fill="#f7e6ef" stroke="#344255" strokeWidth="4"/><path d="M100 71h25M100 86h17" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(-18 87 48)"><rect x="64" y="39" width="63" height="14" rx="7" fill="#ffcc63" stroke="#344255" strokeWidth="3"/><path d="M111 40h11v12h-11z" fill="#ff7c73"/><path d="M77 42h23" stroke="#fffdf7" strokeWidth="4" strokeLinecap="round"/></g></svg><h1>正在生成歌曲<span><i></i><i></i><i></i></span></h1></section></main>; }
 function Overlay({ title, onClose, children, className = '' }) { return <div className="song-overlay" role="dialog" aria-modal="true"><div className={`song-modal ${className}`}><div className="modal-head"><h2>{title}</h2><button type="button" onClick={onClose}><X /></button></div>{children}</div></div>; }

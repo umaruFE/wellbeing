@@ -4,17 +4,32 @@ export const SONG_WRITING_SYSTEM_PROMPTS = [
 ] as const;
 
 export interface SongWritingPromptInput {
-  languagePoint: string;
-  age: string | number;
+  age: string;
   level: string;
-  theme: string;
+  participants: string;
+  duration: string;
+  themeText: string;
+  vocabulary: string;
+  grammar: string;
   melody: string;
   melodyReference: string;
 }
 
 export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
-  return `根据以下条件生成一首可课堂互动的英文歌曲：语言点=${input.languagePoint}；年龄=${input.age}岁；英文水平=${input.level}；幸福力主题=${input.theme}；旋律=${input.melody}。
+  const conditions = [
+    `学生年龄=${input.age || '7-9岁'}`,
+    `英文水平=${input.level || '初级（会字母和简单词）'}`,
+    `参与人数=${input.participants || '未指定'}`,
+    `活动时长=${input.duration || '未指定'}`,
+    `幸福力主题=${input.themeText}`,
+    `核心词汇=${input.vocabulary || '未指定，请根据主题和年龄自选适合的词汇'}`,
+    `核心句型/语法=${input.grammar || '未指定，请根据主题和水平自选适合的句型'}`,
+    `旋律=${input.melody}`,
+  ];
+
+  return `根据以下条件生成一首可课堂互动的英文歌曲：\n${conditions.join('；\n')}。
+
 旋律案例参考（仅用于借鉴节奏、句式和词库方向，绝不是必须照抄的内容要求；请优先匹配本次语言目标与主题）：${input.melodyReference}
+
 返回严格 JSON：{ "title":"英文歌名", "words":["8-12个能填入歌词空格的英文词或短语"], "lines":["8句英文歌词，其中4-6句含 ______ 填空；歌词句式与所选旋律匹配"], "activityPlan":{"englishGoal":"可观察的语言目标", "wellbeingGoal":"可观察的幸福力目标", "materials":["材料"], "steps":[{"title":"环节名称", "duration":"分钟", "teacherGuide":"教师可直接说的引导语与学生动作"}]}}。活动方案按导入、学唱填词、合作表演、回顾四步输出，具体、可执行。`;
 }
-
