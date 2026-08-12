@@ -6,6 +6,7 @@ import {
   BookOpenText,
   ChevronRight,
   Compass,
+  Disc,
   FileText,
   Image,
   LayoutDashboard,
@@ -68,6 +69,7 @@ export const Sidebar = () => {
       items: [
         { id: 'image-library', label: t('sidebar.imageLibrary'), icon: Image, path: '/ppt-images' },
         { id: 'audio-library', label: t('sidebar.audioLibrary'), icon: Music, path: '/voices' },
+        { id: 'song-library', label: '曲库管理', icon: Disc, path: '/song-library' },
         { id: 'video-library', label: t('sidebar.videoLibrary'), icon: Video, path: '/video-materials' },
         { id: 'material', label: t('sidebar.materialResource'), icon: FileText, path: '/knowledge-base' },
         { id: 'picture-book-knowledge', label: '绘本知识库', icon: BookOpenText, path: '/picture-book-knowledge' },

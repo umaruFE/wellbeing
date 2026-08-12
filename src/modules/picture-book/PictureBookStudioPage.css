@@ -1010,3 +1010,122 @@
 .pbv2-book-actions button:hover {
   background: var(--pb-coral-soft);
 }
+
+/* ====== 授课模式 / Presentation overlay ====== */
+.pbv2-presentation {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pbv2-presentation-stage {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pbv2-presentation-stage img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, .5);
+}
+
+.pbv2-presentation-placeholder {
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pbv2-presentation-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64px;
+  height: 64px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .12);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.pbv2-presentation-nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .26);
+}
+
+.pbv2-presentation-nav:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+.pbv2-presentation-prev {
+  left: 24px;
+}
+
+.pbv2-presentation-next {
+  right: 24px;
+}
+
+.pbv2-presentation-text {
+  position: absolute;
+  left: 50%;
+  bottom: 56px;
+  transform: translateX(-50%);
+  max-width: min(900px, 86%);
+  padding: 14px 24px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, .6);
+  color: #fff;
+  text-align: center;
+  font-size: 22px;
+  line-height: 32px;
+  font-weight: 600;
+}
+
+.pbv2-presentation-counter {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 16px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pbv2-presentation-exit {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+
+.pbv2-presentation-exit:hover {
+  background: rgba(255, 255, 255, .3);
+}

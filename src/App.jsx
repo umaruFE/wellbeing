@@ -33,6 +33,7 @@ import DesignSystemPreview from './modules/design-system/DesignSystemPreview';
 import { PictureBookStudioPage } from './modules/picture-book/PictureBookStudioPage';
 import { KnowledgeUploadPage } from './modules/picture-book/KnowledgeUploadPage';
 import { SongWritingStudioPage } from './modules/song-writing/SongWritingStudioPage';
+import { SongLibraryPage } from './modules/song-library/SongLibraryPage';
 
 function App() {
   return (
@@ -119,6 +120,15 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
                   <SongWritingStudioPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/song-library"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin']}>
+                  <SongLibraryPage />
                 </RequireAuth>
               }
             />

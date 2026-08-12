@@ -2,6 +2,7 @@ import React from 'react';
 import {
   ArrowLeft,
   BookOpenText,
+  ChevronLeft,
   ChevronRight,
   Clock,
   Image,
@@ -16,6 +17,7 @@ import {
   Trash2,
   Upload,
   Wand2,
+  X,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
@@ -344,6 +346,8 @@ export function PictureBookStudioPage() {
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
   const editingBookIdRef = React.useRef(null);
+  const [showPresentation, setShowPresentation] = React.useState(false);
+  const [presentPageIndex, setPresentPageIndex] = React.useState(0);
 
   const fetchBookList = React.useCallback(async () => {
     setListLoading(true);
@@ -369,6 +373,21 @@ export function PictureBookStudioPage() {
     window.addEventListener('wellbeing:nav-same-route', handler);
     return () => window.removeEventListener('wellbeing:nav-same-route', handler);
   }, []);
+
+  React.useEffect(() => {
+    if (!showPresentation) return undefined;
+    const handler = (event) => {
+      if (event.key === 'ArrowLeft') {
+        setPresentPageIndex((index) => Math.max(0, index - 1));
+      } else if (event.key === 'ArrowRight') {
+        setPresentPageIndex((index) => Math.min(pages.length - 1, index + 1));
+      } else if (event.key === 'Escape') {
+        setShowPresentation(false);
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [showPresentation, pages.length]);
 
   const deleteBook = async (bookId) => {
     if (!window.confirm(t('pictureBook.confirmDelete'))) return;
@@ -892,11 +911,25 @@ export function PictureBookStudioPage() {
               onGenerateOne={generateOneImage}
               onUpload={uploadPageImage}
               generatingAll={generatingAll}
+              onPresent={() => {
+                setPresentPageIndex(0);
+                setShowPresentation(true);
+              }}
             />
           )}
         </section>
       </div>
         </>
+      )}
+
+      {showPresentation && pages.length > 0 && (
+        <PresentationOverlay
+          pages={pages}
+          index={presentPageIndex}
+          onPrev={() => setPresentPageIndex((i) => Math.max(0, i - 1))}
+          onNext={() => setPresentPageIndex((i) => Math.min(pages.length - 1, i + 1))}
+          onExit={() => setShowPresentation(false)}
+        />
       )}
     </main>
   );
@@ -1092,7 +1125,7 @@ function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack,
   );
 }
 
-function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll }) {
+function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll, onPresent }) {
   const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
@@ -1100,6 +1133,9 @@ function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGen
         <button type="button" className="pbv2-primary" disabled={generatingAll} onClick={onGenerateAll}>
           {generatingAll ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
           {t('pictureBook.regenerateAll')}
+        </button>
+        <button type="button" className="pbv2-ghost" onClick={onPresent} disabled={pages.length === 0}>
+          🖥️ 授课模式
         </button>
         <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToDesign')}</button>
       </div>
@@ -1230,5 +1266,50 @@ function FooterActions({ children }) {
       <ChevronRight size={16} />
       {children}
     </footer>
+  );
+}
+
+function PresentationOverlay({ pages, index, onPrev, onNext, onExit }) {
+  const page = pages[index];
+  if (!page) return null;
+  return (
+    <div className="pbv2-presentation">
+      <button type="button" className="pbv2-presentation-exit" onClick={onExit} aria-label="exit">
+        <X size={24} />
+      </button>
+      <button
+        type="button"
+        className="pbv2-presentation-nav pbv2-presentation-prev"
+        onClick={onPrev}
+        disabled={index === 0}
+        aria-label="previous"
+      >
+        <ChevronLeft size={48} />
+      </button>
+      <div className="pbv2-presentation-stage">
+        {page.imageUrl ? (
+          <img src={page.imageUrl} alt={`Page ${page.page}`} />
+        ) : (
+          <div className="pbv2-presentation-placeholder">
+            <Image size={64} />
+          </div>
+        )}
+      </div>
+      <button
+        type="button"
+        className="pbv2-presentation-nav pbv2-presentation-next"
+        onClick={onNext}
+        disabled={index === pages.length - 1}
+        aria-label="next"
+      >
+        <ChevronRight size={48} />
+      </button>
+      {page.text ? (
+        <div className="pbv2-presentation-text">{page.text}</div>
+      ) : null}
+      <div className="pbv2-presentation-counter">
+        {index + 1} / {pages.length}
+      </div>
+    </div>
   );
 }
