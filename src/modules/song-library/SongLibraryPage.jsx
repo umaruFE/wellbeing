@@ -5,10 +5,34 @@ import uploadService from '../../services/uploadService';
 import './SongLibraryPage.css';
 
 const MELODY_TYPES = [
-  { id: 'edelweiss', name: 'Edelweiss', label: '雪绒花', color: '#6d59c5' },
-  { id: 'sunshine', name: 'You Are My Sunshine', label: '你是我的阳光', color: '#F5A233' },
-  { id: 'twinkle', name: 'Twinkle Twinkle', label: '小星星', color: '#4482E5' },
-  { id: 'if-youre-happy', name: "If You're Happy", label: '如果你很开心', color: '#CF5846' },
+  {
+    id: 'lyrical',
+    value: 'Edelweiss',
+    name: '舒缓抒情型',
+    description: '旋律柔和、起伏舒展，情感逐步推进',
+    color: '#6d59c5',
+  },
+  {
+    id: 'warm',
+    value: 'You Are My Sunshine',
+    name: '温暖舒展型',
+    description: '旋律明朗温暖，长句自然流动',
+    color: '#F5A233',
+  },
+  {
+    id: 'light',
+    value: 'Twinkle, Twinkle, Little Star',
+    name: '轻快跳跃型',
+    description: '节奏均匀、短句重复，旋律轻巧活泼',
+    color: '#4482E5',
+  },
+  {
+    id: 'interactive',
+    value: "If You're Happy and You Know It",
+    name: '欢快互动型',
+    description: '长短句交替、节奏鲜明，适合动作互动',
+    color: '#CF5846',
+  },
 ];
 
 const EMPTY_FORM = {
@@ -20,14 +44,15 @@ const EMPTY_FORM = {
   description: '',
 };
 
-const getMelody = (id) => MELODY_TYPES.find((m) => m.id === id);
+const getMelody = (value) => MELODY_TYPES.find((m) => m.value === value || m.id === value);
 
 export const SongLibraryPage = () => {
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingSong, setEditingSong] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [uploadingField, setUploadingField] = useState(null);
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState(EMPTY_FORM);
 
   const fetchSongs = async () => {
@@ -55,12 +80,14 @@ export const SongLibraryPage = () => {
   };
 
   const handleEdit = (song) => {
+    const storedMelodyType = song.melodyType || song.melody_type || '';
+    const melody = getMelody(storedMelodyType);
     setEditingSong(song);
     setFormData({
       name: song.name || '',
-      melodyType: song.melodyType || '',
-      vocalUrl: song.vocalUrl || '',
-      instrumentalUrl: song.instrumentalUrl || '',
+      melodyType: melody?.value || storedMelodyType,
+      vocalUrl: song.vocalUrl || song.vocal_url || '',
+      instrumentalUrl: song.instrumentalUrl || song.instrumental_url || '',
       lyrics: song.lyrics || '',
       description: song.description || '',
     });
@@ -76,7 +103,7 @@ export const SongLibraryPage = () => {
   const handleFileUpload = async (file, field) => {
     if (!file) return;
     try {
-      setUploading(true);
+      setUploadingField(field);
       const uploadResult = await uploadService.uploadFile(file, 'song-library');
       if (!uploadResult.success) {
         alert(uploadResult.error || '上传失败');
@@ -87,7 +114,7 @@ export const SongLibraryPage = () => {
       console.error('upload file failed:', err);
       alert('上传失败');
     } finally {
-      setUploading(false);
+      setUploadingField(null);
     }
   };
 
@@ -98,7 +125,7 @@ export const SongLibraryPage = () => {
       return;
     }
     try {
-      setUploading(true);
+      setSaving(true);
       const payload = {
         name: formData.name.trim(),
         melodyType: formData.melodyType,
@@ -126,7 +153,7 @@ export const SongLibraryPage = () => {
       console.error('save song failed:', err);
       alert('保存失败');
     } finally {
-      setUploading(false);
+      setSaving(false);
     }
   };
 
@@ -168,7 +195,8 @@ export const SongLibraryPage = () => {
 
       <div className="song-library-grid">
         {songs.map((song) => {
-          const melody = getMelody(song.melodyType);
+          const melodyType = song.melodyType || song.melody_type;
+          const melody = getMelody(melodyType);
           return (
             <div className="song-card" key={song.id}>
               <div className="song-card-head">
@@ -209,7 +237,7 @@ export const SongLibraryPage = () => {
                   }}
                 >
                   <Disc className="w-3 h-3" />
-                  {melody ? `${melody.name} · ${melody.label}` : song.melodyType}
+                  {melody ? melody.name : melodyType}
                 </span>
               </div>
 
@@ -218,8 +246,8 @@ export const SongLibraryPage = () => {
                   <Play className="w-3 h-3" />
                   演唱版
                 </div>
-                {song.vocalUrl ? (
-                  <audio controls src={song.vocalUrl} className="song-audio-player" />
+                {song.vocalUrl || song.vocal_url ? (
+                  <audio controls src={song.vocalUrl || song.vocal_url} className="song-audio-player" />
                 ) : (
                   <span className="song-audio-empty">暂无音频</span>
                 )}
@@ -230,8 +258,8 @@ export const SongLibraryPage = () => {
                   <Pause className="w-3 h-3" />
                   伴奏版
                 </div>
-                {song.instrumentalUrl ? (
-                  <audio controls src={song.instrumentalUrl} className="song-audio-player" />
+                {song.instrumentalUrl || song.instrumental_url ? (
+                  <audio controls src={song.instrumentalUrl || song.instrumental_url} className="song-audio-player" />
                 ) : (
                   <span className="song-audio-empty">暂无音频</span>
                 )}
@@ -285,8 +313,8 @@ export const SongLibraryPage = () => {
                 >
                   <option value="">请选择旋律类型</option>
                   {MELODY_TYPES.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name} · {m.label}
+                    <option key={m.id} value={m.value}>
+                      {m.name}｜{m.description}
                     </option>
                   ))}
                 </select>
@@ -297,13 +325,13 @@ export const SongLibraryPage = () => {
                 <div className="song-form-upload">
                   <label className="song-form-upload-btn">
                     <Upload className="w-4 h-4" />
-                    {uploading ? '上传中...' : '选择文件'}
+                    {uploadingField === 'vocalUrl' ? '上传中...' : '选择文件'}
                     <input
                       type="file"
                       accept="audio/*"
                       className="song-form-upload-input"
                       onChange={(e) => handleFileUpload(e.target.files[0], 'vocalUrl')}
-                      disabled={uploading}
+                      disabled={uploadingField !== null}
                     />
                   </label>
                   {formData.vocalUrl && (
@@ -319,13 +347,13 @@ export const SongLibraryPage = () => {
                 <div className="song-form-upload">
                   <label className="song-form-upload-btn">
                     <Upload className="w-4 h-4" />
-                    {uploading ? '上传中...' : '选择文件'}
+                    {uploadingField === 'instrumentalUrl' ? '上传中...' : '选择文件'}
                     <input
                       type="file"
                       accept="audio/*"
                       className="song-form-upload-input"
                       onChange={(e) => handleFileUpload(e.target.files[0], 'instrumentalUrl')}
-                      disabled={uploading}
+                      disabled={uploadingField !== null}
                     />
                   </label>
                   {formData.instrumentalUrl && (
@@ -362,8 +390,8 @@ export const SongLibraryPage = () => {
                 <button type="button" className="song-form-cancel" onClick={handleCancel}>
                   取消
                 </button>
-                <button type="submit" className="song-form-save" disabled={uploading}>
-                  {uploading ? '保存中...' : '保存'}
+                <button type="submit" className="song-form-save" disabled={uploadingField !== null || saving}>
+                  {saving ? '保存中...' : '保存'}
                 </button>
               </div>
             </form>
