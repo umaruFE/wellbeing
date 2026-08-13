@@ -838,7 +838,7 @@ function SongPresentation({ draft, blankValues, audioRef, playing, toggleAudio, 
     return parts.map((part, i) => (
       <React.Fragment key={i}>
         {part}
-        {i < parts.length - 1 && <span className="present-blank filled">{blankValues?.[index] || '______'}</span>}
+        {i < parts.length - 1 && <span className="present-blank filled">{(blankValues?.[`${index}:${i}`] ?? (i === 0 ? blankValues?.[index] : '')) || '______'}</span>}
       </React.Fragment>
     ));
   };
