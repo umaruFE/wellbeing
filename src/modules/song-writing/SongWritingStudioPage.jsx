@@ -19,6 +19,7 @@ import {
   Pencil,
   Trash2,
 } from 'lucide-react';
+import apiService from '../../services/api';
 import { parseJsonSafely, responseErrorMessage } from '../../utils/responseUtils';
 import './SongWritingStudioPage.css';
 
@@ -28,6 +29,13 @@ const melodies = [
   { id: 'edelweiss', name: 'Edelweiss', hint: '雪绒花', src: '/audio/edelweiss.mp3' },
   { id: 'if-youre-happy', name: "If You're Happy and You Know It", hint: 'If You’re Happy and You Know It', src: "/audio/If You're Happy and You Know It (Karaoke Version) (Originally Performed By Kids Karaoke) - Zoom Karaoke.mp3" },
 ];
+
+const melodyTypeLabels = {
+  Edelweiss: '舒缓抒情型',
+  'You Are My Sunshine': '温暖舒展型',
+  'Twinkle, Twinkle, Little Star': '轻快跳跃型',
+  "If You're Happy and You Know It": '欢快互动型',
+};
 
 const instruments = [
   { id: 'bell', icon: '/audio/icon/bell.png', label: '铃铛' },
@@ -88,6 +96,12 @@ function wordCardIcon(word, wordEmojis) {
   return wordEmojis?.[word] || wordIcon(word);
 }
 
+function formatAudioTime(seconds) {
+  if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  const minutes = Math.floor(seconds / 60);
+  return `${minutes}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
+}
+
 function makeDraft({ vocabulary, themes, themeOther, melody } = {}) {
   const languagePoint = vocabulary || 'happy, calm, brave, sad, angry, tired, bored, shy, calm';
   const theme = themes?.[0] || themeOther || '情绪表达';
@@ -141,9 +155,11 @@ function generateCoverSvg(title, melodyId, melodyName) {
 export function SongWritingStudioPage() {
   const audioRef = React.useRef(null);
   const melodyPreviewRef = React.useRef(null);
-  const [form, setForm] = React.useState({ age: '', level: '', participants: '', themes: [], themeOther: '', vocabulary: '', grammar: '', melody: 'twinkle' });
+  const [form, setForm] = React.useState({ age: '', level: '', participants: '', themes: [], themeOther: '', vocabulary: '', grammar: '', melody: '' });
   const [draft, setDraft] = React.useState(() => makeDraft({ vocabulary: 'happy, calm, brave', themes: ['情绪表达'], melody: 'twinkle' }));
   const [playing, setPlaying] = React.useState(false);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
   const [melodyPreviewPlaying, setMelodyPreviewPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
   const [volume, setVolume] = React.useState(.75);
@@ -157,7 +173,12 @@ export function SongWritingStudioPage() {
   const [regeneratingLine, setRegeneratingLine] = React.useState(null);
   const [regeneratingAll, setRegeneratingAll] = React.useState(false);
   const [songLibrary, setSongLibrary] = React.useState([]);
+  const [songLibraryLoading, setSongLibraryLoading] = React.useState(true);
+  const [songLibraryError, setSongLibraryError] = React.useState('');
+  const [showSongPicker, setShowSongPicker] = React.useState(false);
+  const [songTypeFilter, setSongTypeFilter] = React.useState('all');
   const [previewSongId, setPreviewSongId] = React.useState(null);
+  const [previewAudioMode, setPreviewAudioMode] = React.useState('instrumental');
   const previewRef = React.useRef(null);
   const [audioMode, setAudioMode] = React.useState('instrumental');
   const [view, setView] = React.useState('list');
@@ -170,15 +191,21 @@ export function SongWritingStudioPage() {
   const [showPresentation, setShowPresentation] = React.useState(false);
   const presentationHistoryActiveRef = React.useRef(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
-  const selectedMelody = melodies.find((item) => item.id === form.melody) || melodies[0];
-  const canGenerate = Boolean(form.age && form.level);
+  const legacyMelody = melodies.find((item) => item.id === form.melody);
+  const canGenerate = Boolean(form.age && form.level && form.melody && songLibrary.some((song) => String(song.id) === String(form.melody)));
   const setFormField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
   const steps = ['基础信息', '歌曲制作'];
   const goToStep = (nextStep) => {
     if (nextStep > 0 && !generatedPlan) return;
     setStep(nextStep);
   };
-  const startNewSong = () => { setSaveMessage(''); setGeneratedPlan(null); setStep(0); setView('studio'); };
+  const startNewSong = () => {
+    setSaveMessage('');
+    setGeneratedPlan(null);
+    setForm({ age: '', level: '', participants: '', themes: [], themeOther: '', vocabulary: '', grammar: '', melody: '' });
+    setStep(0);
+    setView('studio');
+  };
 
   const openPresentation = React.useCallback(() => {
     if (!presentationHistoryActiveRef.current) {
@@ -211,32 +238,107 @@ export function SongWritingStudioPage() {
     return () => window.removeEventListener('wellbeing:nav-same-route', handler);
   }, []);
 
-  React.useEffect(() => {
-    fetch('/api/song-library').then((res) => res.json()).then((result) => {
-      if (result?.data) setSongLibrary(result.data);
-    }).catch(() => {});
+  const fetchSongLibrary = React.useCallback(async () => {
+    setSongLibraryLoading(true);
+    setSongLibraryError('');
+    try {
+      const result = await apiService.request('/api/song-library');
+      setSongLibrary(Array.isArray(result?.data) ? result.data : []);
+    } catch (error) {
+      setSongLibrary([]);
+      setSongLibraryError(error instanceof Error ? error.message : '曲目库加载失败');
+    } finally {
+      setSongLibraryLoading(false);
+    }
   }, []);
+
+  React.useEffect(() => { fetchSongLibrary(); }, [fetchSongLibrary]);
 
   const librarySong = React.useMemo(() => {
     const byId = songLibrary.find((song) => song.id == form.melody || String(song.id) === String(form.melody));
     if (byId) return byId;
-    return songLibrary.find((song) => song.melody_type === selectedMelody.name || song.melodyType === selectedMelody.name);
-  }, [songLibrary, form.melody, selectedMelody]);
+    if (!legacyMelody) return null;
+    return songLibrary.find((song) => (song.melody_type || song.melodyType) === legacyMelody.name) || null;
+  }, [songLibrary, form.melody, legacyMelody]);
+
+  const selectedMelody = React.useMemo(() => {
+    if (librarySong) {
+      return {
+        id: librarySong.id,
+        name: librarySong.name,
+        hint: librarySong.description || librarySong.melody_type || librarySong.melodyType || '曲目库',
+        src: librarySong.instrumental_url || librarySong.instrumentalUrl || librarySong.vocal_url || librarySong.vocalUrl || '',
+      };
+    }
+    return legacyMelody || { id: '', name: '未选择曲目', hint: '', src: '' };
+  }, [librarySong, legacyMelody]);
 
   const currentAudioSrc = React.useMemo(() => {
     if (librarySong) {
-      if (audioMode === 'vocal' && librarySong.vocal_url) return librarySong.vocal_url;
-      if (audioMode === 'instrumental' && librarySong.instrumental_url) return librarySong.instrumental_url;
-      return librarySong.vocal_url || librarySong.instrumental_url || selectedMelody.src;
+      const vocalUrl = librarySong.vocal_url || librarySong.vocalUrl;
+      const instrumentalUrl = librarySong.instrumental_url || librarySong.instrumentalUrl;
+      if (audioMode === 'vocal' && vocalUrl) return vocalUrl;
+      if (audioMode === 'instrumental' && instrumentalUrl) return instrumentalUrl;
+      return vocalUrl || instrumentalUrl || '';
     }
-    return selectedMelody.src;
-  }, [librarySong, audioMode, selectedMelody]);
+    return legacyMelody?.src || '';
+  }, [librarySong, audioMode, legacyMelody]);
+
+  const songTypes = React.useMemo(() => [...new Set(songLibrary.map((song) => song.melody_type || song.melodyType).filter(Boolean))], [songLibrary]);
+  const filteredSongLibrary = React.useMemo(() => songLibrary.filter((song) => songTypeFilter === 'all' || (song.melody_type || song.melodyType) === songTypeFilter), [songLibrary, songTypeFilter]);
+
+  const stopSongPreview = React.useCallback(() => {
+    previewRef.current?.pause();
+    if (previewRef.current) previewRef.current.currentTime = 0;
+    setPreviewSongId(null);
+  }, []);
+
+  const previewLibrarySong = async (song, mode) => {
+    const vocalUrl = song.vocal_url || song.vocalUrl;
+    const instrumentalUrl = song.instrumental_url || song.instrumentalUrl;
+    const src = mode === 'vocal' ? vocalUrl : instrumentalUrl;
+    if (!src || !previewRef.current) return;
+    const samePreview = String(previewSongId) === String(song.id) && previewAudioMode === mode;
+    if (samePreview && !previewRef.current.paused) {
+      stopSongPreview();
+      return;
+    }
+    previewRef.current.pause();
+    previewRef.current.src = src;
+    previewRef.current.currentTime = 0;
+    setPreviewSongId(song.id);
+    setPreviewAudioMode(mode);
+    try {
+      await previewRef.current.play();
+    } catch {
+      setPreviewSongId(null);
+    }
+  };
 
   React.useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.playbackRate = speed;
     audioRef.current.volume = volume;
   }, [speed, volume]);
+
+  React.useEffect(() => {
+    audioRef.current?.pause();
+    setPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [audioMode, currentAudioSrc]);
+
+  const syncAudioDuration = (event) => {
+    const nextDuration = event.currentTarget.duration;
+    setDuration(Number.isFinite(nextDuration) ? nextDuration : 0);
+  };
+
+  const seekAudio = (event) => {
+    const nextTime = Number(event.target.value);
+    if (!audioRef.current || !Number.isFinite(nextTime)) return;
+    audioRef.current.currentTime = nextTime;
+    setCurrentTime(nextTime);
+  };
 
   React.useEffect(() => {
     setMelodyPreviewPlaying(false);
@@ -360,9 +462,13 @@ export function SongWritingStudioPage() {
     window.setTimeout(() => setSaveMessage(''), 2400);
   };
   const generateSong = async () => {
+    if (!librarySong) {
+      setSaveMessage('请先从曲目库选择一首歌曲');
+      return;
+    }
     setIsGenerating(true);
     try {
-      const melodyName = librarySong?.melody_type || librarySong?.name || selectedMelody.name;
+      const melodyName = librarySong.melody_type || librarySong.melodyType || librarySong.name;
       const response = await fetch('/api/ai/generate-song-writing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, melody: melodyName }) });
       const result = await parseJsonSafely(response);
       if (!response.ok || !result?.success) {
@@ -516,66 +622,27 @@ export function SongWritingStudioPage() {
             </section>
 
             <section className="pbv2-card pbv2-tone-coral">
-              <div className="pbv2-card-title">从曲库选择旋律</div>
-              <audio ref={previewRef} onEnded={() => setPreviewSongId(null)} />
-              {songLibrary.length === 0 ? (
+              <div className="pbv2-card-title">从曲目库选择歌曲 <span className="pbv2-required">*</span></div>
+              {songLibraryLoading ? (
+                <div className="song-library-empty">
+                  <Loader2 className="spin" size={28} />
+                  <p>正在加载曲目库...</p>
+                </div>
+              ) : songLibraryError ? (
                 <div className="song-library-empty">
                   <Music2 size={32} />
-                  <p>曲库暂无曲目，正在使用默认旋律</p>
-                  <div className="song-melody-fallback">
-                    {melodies.map((m) => (
-                      <button key={m.id} type="button" className={`song-melody-chip${form.melody === m.id ? ' selected' : ''}`} onClick={() => setFormField('melody', m.id)}>
-                        <Play size={13} fill="currentColor" />
-                        <span>{m.name}</span>
-                        {form.melody === m.id && <span className="chip-check">✓</span>}
-                      </button>
-                    ))}
-                  </div>
+                  <p>{songLibraryError}</p>
+                  <button type="button" className="pbv2-ghost" onClick={fetchSongLibrary}>重新加载</button>
+                </div>
+              ) : songLibrary.length === 0 ? (
+                <div className="song-library-empty">
+                  <Music2 size={32} />
+                  <p>曲目库暂无歌曲，请先到曲目库添加歌曲</p>
                 </div>
               ) : (
-                <div className="song-library-grid">
-                  {songLibrary.map((song) => {
-                    const isSelected = form.melody === song.id;
-                    const isPreviewing = previewSongId === song.id;
-                    const previewSrc = song.instrumental_url || song.vocal_url || '';
-                    return (
-                      <div key={song.id} className={`song-library-card${isSelected ? ' selected' : ''}`} onClick={() => setFormField('melody', song.id)}>
-                        <div className="song-library-card-head">
-                          <span className="song-library-name">{song.name}</span>
-                          {isSelected && <span className="song-library-check">✓</span>}
-                        </div>
-                        {song.description && <p className="song-library-desc">{song.description}</p>}
-                        {previewSrc && (
-                          <button
-                            type="button"
-                            className={`song-library-preview${isPreviewing ? ' playing' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (isPreviewing) {
-                                previewRef.current?.pause();
-                                setPreviewSongId(null);
-                              } else {
-                                if (previewRef.current) {
-                                  previewRef.current.src = previewSrc;
-                                  previewRef.current.play().catch(() => {});
-                                }
-                                setPreviewSongId(song.id);
-                              }
-                            }}
-                          >
-                            {isPreviewing ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
-                            {isPreviewing ? '暂停' : '试听'}
-                          </button>
-                        )}
-                        {song.vocal_url && song.instrumental_url && (
-                          <div className="song-library-modes">
-                            <span className={audioMode === 'instrumental' ? 'active' : ''}>伴奏</span>
-                            <span className={audioMode === 'vocal' ? 'active' : ''}>演唱</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="song-picker-selected">
+                  {librarySong ? <div><strong>{librarySong.name}</strong><span>{melodyTypeLabels[librarySong.melody_type || librarySong.melodyType] || librarySong.melody_type || librarySong.melodyType}</span></div> : <p>尚未选择歌曲</p>}
+                  <button type="button" className="pbv2-ghost" onClick={() => setShowSongPicker(true)}>{librarySong ? '更换歌曲' : '选择歌曲'}</button>
                 </div>
               )}
             </section>
@@ -585,13 +652,44 @@ export function SongWritingStudioPage() {
                 {isGenerating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
                 {isGenerating ? '生成中...' : '生成歌词和词库'}
               </button>
+              {!songLibraryLoading && !librarySong && songLibrary.length > 0 && <span className="pbv2-action-hint">请先选择一首曲目库歌曲</span>}
             </FooterActions>
           </div>
           )}
 
+          {showSongPicker && (
+            <div className="song-overlay" onClick={() => { stopSongPreview(); setShowSongPicker(false); }}>
+              <div className="song-modal song-picker-modal" onClick={(event) => event.stopPropagation()}>
+                <div className="modal-head"><div><h2>从曲目库选择歌曲</h2><p>可按旋律类型筛选，并分别试听演唱版或伴奏版</p></div><button type="button" onClick={() => { stopSongPreview(); setShowSongPicker(false); }}><X size={18} /></button></div>
+                <audio ref={previewRef} onEnded={() => setPreviewSongId(null)} />
+                <div className="song-picker-filters">
+                  <button type="button" className={songTypeFilter === 'all' ? 'active' : ''} onClick={() => setSongTypeFilter('all')}>全部</button>
+                  {songTypes.map((type) => <button type="button" key={type} className={songTypeFilter === type ? 'active' : ''} onClick={() => setSongTypeFilter(type)}>{melodyTypeLabels[type] || type}</button>)}
+                </div>
+                <div className="song-library-grid">
+                  {filteredSongLibrary.map((song) => {
+                    const isSelected = String(form.melody) === String(song.id);
+                    const vocalUrl = song.vocal_url || song.vocalUrl;
+                    const instrumentalUrl = song.instrumental_url || song.instrumentalUrl;
+                    return <div key={song.id} className={`song-library-card${isSelected ? ' selected' : ''}`} onClick={() => { setFormField('melody', song.id); stopSongPreview(); setShowSongPicker(false); }}>
+                      <div className="song-library-card-head"><span className="song-library-name">{song.name}</span>{isSelected && <span className="song-library-check">✓</span>}</div>
+                      <span className="song-library-type">{melodyTypeLabels[song.melody_type || song.melodyType] || song.melody_type || song.melodyType}</span>
+                      {song.description && <p className="song-library-desc">{song.description}</p>}
+                      <div className="song-library-preview-actions">
+                        <button type="button" disabled={!vocalUrl} className={`song-library-preview${String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? ' playing' : ''}`} onClick={(event) => { event.stopPropagation(); previewLibrarySong(song, 'vocal'); }}>{String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}演唱版</button>
+                        <button type="button" disabled={!instrumentalUrl} className={`song-library-preview${String(previewSongId) === String(song.id) && previewAudioMode === 'instrumental' ? ' playing' : ''}`} onClick={(event) => { event.stopPropagation(); previewLibrarySong(song, 'instrumental'); }}>{String(previewSongId) === String(song.id) && previewAudioMode === 'instrumental' ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}伴奏版</button>
+                      </div>
+                    </div>;
+                  })}
+                </div>
+                {filteredSongLibrary.length === 0 && <div className="song-library-empty"><p>该类型下暂无歌曲</p></div>}
+              </div>
+            </div>
+          )}
+
           {step === 1 && (
           <div className="song-writing-page sky-song-page pbv2-song-making">
-            <audio ref={audioRef} src={currentAudioSrc} onEnded={() => setPlaying(false)} />
+            <audio ref={audioRef} src={currentAudioSrc} onLoadedMetadata={syncAudioDuration} onDurationChange={syncAudioDuration} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onEnded={() => { setPlaying(false); setCurrentTime(0); }} />
       {/* Background decorations */}
       <svg className="bg-deco note1" width="40" height="52" viewBox="0 0 40 52"><ellipse cx="12" cy="42" rx="7" ry="5.5" fill="#e8ddf0" stroke="#2d2d2d" strokeWidth="2" transform="rotate(-20,12,42)"/><line x1="18" y1="38" x2="18" y2="8" stroke="#2d2d2d" strokeWidth="2.5"/><path d="M18 8 Q28 6 26 18 Q24 14 18 14" fill="#e8ddf0" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <svg className="bg-deco note2" width="44" height="52" viewBox="0 0 44 52"><ellipse cx="10" cy="42" rx="7" ry="5.5" fill="#a8e0d8" stroke="#2d2d2d" strokeWidth="2" transform="rotate(-20,10,42)"/><ellipse cx="30" cy="38" rx="7" ry="5.5" fill="#a8e0d8" stroke="#2d2d2d" strokeWidth="2" transform="rotate(-20,30,38)"/><line x1="16" y1="38" x2="16" y2="8" stroke="#2d2d2d" strokeWidth="2.5"/><line x1="36" y1="34" x2="36" y2="8" stroke="#2d2d2d" strokeWidth="2.5"/><line x1="16" y1="8" x2="36" y2="8" stroke="#2d2d2d" strokeWidth="3"/></svg>
@@ -624,13 +722,13 @@ export function SongWritingStudioPage() {
       <section className="sky-studio">
         <article className="sky-player">
           <strong>🎵 {audioMode === 'vocal' ? '演唱版' : '伴奏播放'}</strong>
-          {librarySong && (librarySong.vocal_url || librarySong.instrumental_url) && (
+          {librarySong && (librarySong.vocal_url || librarySong.vocalUrl || librarySong.instrumental_url || librarySong.instrumentalUrl) && (
             <div className="audio-mode-toggle sky-mode-toggle">
-              <button type="button" className={audioMode === 'instrumental' ? 'active' : ''} onClick={() => setAudioMode('instrumental')}>伴奏版</button>
-              <button type="button" className={audioMode === 'vocal' ? 'active' : ''} onClick={() => setAudioMode('vocal')}>演唱版</button>
+              <button type="button" disabled={!(librarySong.instrumental_url || librarySong.instrumentalUrl)} className={audioMode === 'instrumental' ? 'active' : ''} onClick={() => setAudioMode('instrumental')}>伴奏版</button>
+              <button type="button" disabled={!(librarySong.vocal_url || librarySong.vocalUrl)} className={audioMode === 'vocal' ? 'active' : ''} onClick={() => setAudioMode('vocal')}>演唱版</button>
             </div>
           )}
-          <div className="sky-player-row"><button type="button" className="sky-play" onClick={toggleAudio}>{playing ? <Pause fill="currentColor" size={17} /> : <Play fill="currentColor" size={17} />}</button><small>0:00</small><input aria-label="播放进度" type="range" /><small>0:00</small></div>
+          <div className="sky-player-row"><button type="button" className="sky-play" onClick={toggleAudio}>{playing ? <Pause fill="currentColor" size={17} /> : <Play fill="currentColor" size={17} />}</button><small>{formatAudioTime(currentTime)}</small><input aria-label="播放进度" type="range" min="0" max={duration || 0} step="0.1" value={Math.min(currentTime, duration || 0)} disabled={!duration} onChange={seekAudio} /><small>{formatAudioTime(duration)}</small></div>
           <div className="speed-row">{[0.5,0.75,1,1.25,1.5].map((item) => <button type="button" className={speed === item ? 'active' : ''} key={item} onClick={() => setSpeed(item)}>{item}×</button>)}</div>
           <label className="sky-volume"><Volume2 size={14} /><input aria-label="音量" type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} /><b>{Math.round(volume * 100)}%</b></label><p>{selectedMelody.name} · {selectedMelody.hint}</p>
         </article>
