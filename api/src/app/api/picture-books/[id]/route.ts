@@ -41,7 +41,7 @@ export async function PUT(
 
     const { id } = params;
     const body = await request.json();
-    const { title, status, coverUrl, bookData } = body;
+    const { title, status, coverUrl, bookData, backgroundMusic } = body;
 
     const updates: string[] = ['updated_at = NOW()'];
     const values: any[] = [];
@@ -68,6 +68,10 @@ export async function PUT(
         'picture-book-images',
       );
       values.push(JSON.stringify(persistedBookData));
+    }
+    if (backgroundMusic !== undefined) {
+      updates.push(`book_data = jsonb_set(COALESCE(book_data, '{}'::jsonb), '{backgroundMusic}', $${paramIndex++}::jsonb, true)`);
+      values.push(JSON.stringify(backgroundMusic));
     }
 
     values.push(id);

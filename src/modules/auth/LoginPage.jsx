@@ -20,8 +20,8 @@ export const LoginPage = () => {
     setLoading(true);
 
     try {
-      await login(username, password);
-      navigate('/');
+      const user = await login(username, password);
+      navigate(user.role === 'picture_song_creator' ? '/picture-books' : '/');
     } catch (err) {
       setError(err.message || t('login.loginFailed'));
     } finally {

@@ -1,18 +1,39 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, Plus, Trash2, Search } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import apiService from '../../services/api';
 
 export const AccountManagement = () => {
   const { t } = useTranslation();
   const { ROLE_NAMES } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [accounts, setAccounts] = useState([
-    { id: 1, username: 'org1_admin', name: 'Org 1 Admin', organizationId: 1, organizationName: 'Org 1', role: 'org_admin', createdAt: '2024-01-01' },
-    { id: 2, username: 'org1_leader', name: 'Leader 1', organizationId: 1, organizationName: 'Org 1', role: 'research_leader', createdAt: '2024-01-02' },
-    { id: 3, username: 'org2_admin', name: 'Org 2 Admin', organizationId: 2, organizationName: 'Org 2', role: 'org_admin', createdAt: '2024-01-05' },
-  ]);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadAccounts = async () => {
+    setLoading(true);
+    try {
+      const result = await apiService.getUsers();
+      setAccounts((result.data || []).map((account) => ({
+        id: account.id,
+        username: account.email,
+        name: account.name,
+        organizationId: account.organization_id,
+        organizationName: account.organization?.name || '未分配机构',
+        role: account.role,
+        createdAt: account.created_at ? new Date(account.created_at).toLocaleDateString('zh-CN') : '-',
+      })));
+    } catch (error) {
+      console.error('load accounts failed:', error);
+      setAccounts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { loadAccounts(); }, []);
 
   const organizations = [
     { id: 1, name: 'Org 1' },
@@ -20,7 +41,7 @@ export const AccountManagement = () => {
     { id: 3, name: 'Org 3' },
   ];
 
-  const handleCreateAccount = () => {
+  const handleCreateAccount = async () => {
     const orgId = prompt(t('account.promptOrgId'));
     const username = prompt(t('account.promptUsername'));
     const name = prompt(t('account.promptName'));
@@ -28,22 +49,24 @@ export const AccountManagement = () => {
 
     if (orgId && username && name && role) {
       const org = organizations.find(o => o.id === parseInt(orgId));
-      const newAccount = {
-        id: accounts.length + 1,
-        username,
-        name,
-        organizationId: parseInt(orgId),
-        organizationName: org?.name || t('account.unknownOrg'),
-        role,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setAccounts([...accounts, newAccount]);
+      try {
+        await apiService.createUser({ email: username, name, role, organizationId: org?.id || null });
+        await loadAccounts();
+        alert('账号创建成功，初始密码：TempPassword123!');
+      } catch (error) {
+        alert(error instanceof Error ? error.message : '账号创建失败');
+      }
     }
   };
 
-  const handleDeleteAccount = (accountId) => {
+  const handleDeleteAccount = async (accountId) => {
     if (window.confirm(t('account.confirmDelete'))) {
-      setAccounts(accounts.filter(a => a.id !== accountId));
+      try {
+        await apiService.request(`/api/users/${accountId}`, { method: 'DELETE' });
+        setAccounts(accounts.filter(a => a.id !== accountId));
+      } catch (error) {
+        alert(error instanceof Error ? error.message : '删除失败');
+      }
     }
   };
 
@@ -93,7 +116,7 @@ export const AccountManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredAccounts.map(account => (
+            {!loading && filteredAccounts.map(account => (
               <tr key={account.id} className="border-b border-stroke-light hover:bg-warning-light">
                 <td className="px-4 py-3 text-sm text-primary">{account.username}</td>
                 <td className="px-4 py-3 text-sm text-primary-secondary">{account.name}</td>
@@ -116,7 +139,8 @@ export const AccountManagement = () => {
             ))}
           </tbody>
         </table>
-        {filteredAccounts.length === 0 && (
+        {loading && <div className="text-center py-12 text-primary-muted">加载中...</div>}
+        {!loading && filteredAccounts.length === 0 && (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
             <p className="text-primary-muted">{t('account.noAccounts')}</p>

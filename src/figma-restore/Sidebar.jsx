@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useAuth } from '../contexts/AuthContext';
 import {
   BookOpen,
   BookOpenText,
@@ -42,6 +43,7 @@ const MenuLink = ({ item, className, iconClassName, textClassName, collapsed }) 
 
 export const Sidebar = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [collapsed, setCollapsed] = React.useState(false);
 
   const menuItems = [
@@ -84,6 +86,9 @@ export const Sidebar = () => {
       ],
     },
   ];
+  const visibleMenuItems = user?.role === 'picture_song_creator'
+    ? [{ type: 'group', title: t('sidebar.courseGroup'), items: menuItems.flatMap((item) => item.items || []).filter((item) => ['picture-book', 'song-writing'].includes(item.id)) }]
+    : menuItems;
 
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
@@ -95,7 +100,7 @@ export const Sidebar = () => {
           <span className="logo-text">{t('common.appName')}</span>
         </div>
         <div className="sidebar-menu">
-          {menuItems.map((item) => {
+          {visibleMenuItems.map((item) => {
             if (item.type === 'item') {
               return (
                 <MenuLink

@@ -16,6 +16,7 @@ export const ROLES = {
   ORG_ADMIN: 'org_admin',
   RESEARCH_LEADER: 'research_leader',
   CREATOR: 'creator',
+  PICTURE_SONG_CREATOR: 'picture_song_creator',
   VIEWER: 'viewer'
 };
 
@@ -25,6 +26,7 @@ export const ROLE_NAMES = {
   [ROLES.ORG_ADMIN]: '机构管理员',
   [ROLES.RESEARCH_LEADER]: '教研组长',
   [ROLES.CREATOR]: '课件制作人',
+  [ROLES.PICTURE_SONG_CREATOR]: '绘本歌曲制作人',
   [ROLES.VIEWER]: '普通老师'
 };
 

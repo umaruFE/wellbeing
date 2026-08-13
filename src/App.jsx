@@ -109,7 +109,7 @@ function App() {
             <Route
               path="/picture-books"
               element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator']}>
                   <PictureBookStudioPage />
                 </RequireAuth>
               }
@@ -118,7 +118,7 @@ function App() {
             <Route
               path="/song-writing"
               element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator']}>
                   <SongWritingStudioPage />
                 </RequireAuth>
               }

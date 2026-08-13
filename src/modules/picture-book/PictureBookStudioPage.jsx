@@ -8,7 +8,10 @@ import {
   Image,
   LayoutTemplate,
   Loader2,
+  Music2,
+  Pause,
   Pencil,
+  Play,
   Plus,
   RefreshCw,
   Save,
@@ -16,6 +19,7 @@ import {
   Sparkles,
   Trash2,
   Upload,
+  Volume2,
   Wand2,
   X,
 } from 'lucide-react';
@@ -348,6 +352,17 @@ export function PictureBookStudioPage() {
   const editingBookIdRef = React.useRef(null);
   const [showPresentation, setShowPresentation] = React.useState(false);
   const [presentPageIndex, setPresentPageIndex] = React.useState(0);
+  const [backgroundMusic, setBackgroundMusic] = React.useState(null);
+  const [audioLibrary, setAudioLibrary] = React.useState([]);
+  const [songLibrary, setSongLibrary] = React.useState([]);
+  const [showMusicPicker, setShowMusicPicker] = React.useState(false);
+  const [musicSourceTab, setMusicSourceTab] = React.useState('audio');
+  const [previewMusicId, setPreviewMusicId] = React.useState(null);
+  const [aiMusicForm, setAiMusicForm] = React.useState({ prompt: '', style: 'calm, peaceful, warm, instrumental', duration: 30 });
+  const [aiMusicGenerating, setAiMusicGenerating] = React.useState(false);
+  const [aiMusicResult, setAiMusicResult] = React.useState(null);
+  const [aiMusicError, setAiMusicError] = React.useState('');
+  const musicPreviewRef = React.useRef(null);
 
   const fetchBookList = React.useCallback(async () => {
     setListLoading(true);
@@ -367,6 +382,56 @@ export function PictureBookStudioPage() {
   React.useEffect(() => {
     if (view === 'list') fetchBookList();
   }, [view, fetchBookList]);
+
+  React.useEffect(() => {
+    Promise.all([apiService.getVoiceConfigs(user?.id), apiService.request('/api/audio-assets?limit=100')]).then(([voiceResult, assetResult]) => {
+      const assets = [...(voiceResult.data || []), ...(assetResult.data || [])].map((item) => ({
+        id: item.id,
+        name: item.name || item.title || item.voice_name || '未命名音频',
+        type: item.type || item.audio_type || item.voice_type || '',
+        description: item.description || item.theme || item.style || '',
+        url: item.audio_url || item.audioUrl || item.url || item.file_url || item.object_url || '',
+      })).filter((item) => item.url && (/bgm|music|背景音乐/i.test(item.type) || item.tags?.some?.((tag) => /bgm|music|背景音乐/i.test(tag))));
+      setAudioLibrary(assets);
+    }).catch(() => setAudioLibrary([]));
+  }, [user?.id]);
+
+  React.useEffect(() => {
+    apiService.request('/api/song-library').then((result) => setSongLibrary((result.data || []).map((song) => ({
+      id: song.id,
+      name: song.name,
+      description: song.description || song.melody_type || song.melodyType || '曲目库',
+      vocalUrl: song.vocal_url || song.vocalUrl || '',
+      instrumentalUrl: song.instrumental_url || song.instrumentalUrl || '',
+    })))).catch(() => setSongLibrary([]));
+  }, []);
+
+  const generateAiMusic = async () => {
+    if (!aiMusicForm.prompt.trim() || aiMusicGenerating) return;
+    setAiMusicGenerating(true); setAiMusicError(''); setAiMusicResult(null);
+    try {
+      const response = await fetch('/api/ai/generate-audio', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` }, body: JSON.stringify({ prompt: aiMusicForm.prompt.trim(), count: 1, o3ics: aiMusicForm.style, duration: aiMusicForm.duration, user_id: user?.id || null, organization_id: user?.organizationId || null }) });
+      const data = await response.json();
+      if (!response.ok || !data.executionId) throw new Error(data.error || '生成任务创建失败');
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 3000));
+        const statusResponse = await fetch(`/api/ai/generate-audio?executionId=${encodeURIComponent(data.executionId)}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } });
+        if (!statusResponse.ok) continue;
+        const status = await statusResponse.json();
+        if (status.status === 'completed' && status.results?.[0]?.url) {
+          const generatedName = aiMusicForm.prompt.trim().slice(0, 30) || 'AI 背景音乐';
+          const saved = await apiService.request('/api/audio-assets', { method: 'POST', body: JSON.stringify({ name: generatedName, audioUrl: status.results[0].url, duration: `${aiMusicForm.duration}s`, tags: ['背景音乐', 'AI生成'], description: aiMusicForm.prompt.trim() }) });
+          const savedMusic = { id: saved.data?.id || `ai-${data.executionId}`, name: generatedName, description: 'AI 生成背景音乐', url: saved.data?.audio_url || status.results[0].url, source: 'ai' };
+          setAiMusicResult(savedMusic);
+          setAudioLibrary((current) => [savedMusic, ...current.filter((item) => item.id !== savedMusic.id)]);
+          return;
+        }
+        if (status.status === 'error') throw new Error('音乐生成失败，请重试');
+      }
+      throw new Error('音乐生成超时，请稍后重试');
+    } catch (error) { setAiMusicError(error instanceof Error ? error.message : '音乐生成失败'); }
+    finally { setAiMusicGenerating(false); }
+  };
 
   React.useEffect(() => {
     const handler = () => setView('list');
@@ -406,6 +471,7 @@ export function PictureBookStudioPage() {
     if (data.basicInfo) setBasicInfo(data.basicInfo);
     if (data.activityPlan) setActivityPlan(data.activityPlan);
     if (data.pages) setPages(data.pages);
+    setBackgroundMusic(data.backgroundMusic || null);
     setStep(Number.isInteger(data.step) ? data.step : 0);
     setView('studio');
   };
@@ -416,6 +482,7 @@ export function PictureBookStudioPage() {
     setBasicInfo(initialBasicInfo);
     setActivityPlan(initialActivityPlan);
     setPages([]);
+    setBackgroundMusic(null);
     setStep(0);
     setMessage('');
     setView('studio');
@@ -426,6 +493,7 @@ export function PictureBookStudioPage() {
       basicInfo: extraData.basicInfo || basicInfo,
       activityPlan: extraData.activityPlan || activityPlan,
       pages: extraData.pages || pages,
+      backgroundMusic: extraData.backgroundMusic !== undefined ? extraData.backgroundMusic : backgroundMusic,
       step: Number.isInteger(extraData.step) ? extraData.step : step,
     };
     const coverUrl = bookData.pages.find((p) => p.imageUrl)?.imageUrl || '';
@@ -463,6 +531,22 @@ export function PictureBookStudioPage() {
       return false;
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveBackgroundMusic = async (music) => {
+    const currentBookId = editingBookIdRef.current || editingBookId;
+    if (!currentBookId) {
+      setBackgroundMusic(music);
+      return saveBook({ backgroundMusic: music });
+    }
+    try {
+      await apiService.request(`/api/picture-books/${currentBookId}`, { method: 'PUT', body: JSON.stringify({ backgroundMusic: music }) });
+      return true;
+    } catch (error) {
+      console.error('save picture book background music failed:', error);
+      setMessage('背景音乐保存失败，请重试');
+      return false;
     }
   };
 
@@ -829,6 +913,7 @@ export function PictureBookStudioPage() {
           onPresent={(book) => {
             const data = book.book_data || {};
             if (data.pages) setPages(data.pages); else setPages([]);
+            setBackgroundMusic(data.backgroundMusic || null);
             setPresentPageIndex(0);
             setShowPresentation(true);
           }}
@@ -917,6 +1002,9 @@ export function PictureBookStudioPage() {
               onGenerateOne={generateOneImage}
               onUpload={uploadPageImage}
               generatingAll={generatingAll}
+              backgroundMusic={backgroundMusic}
+              onChooseMusic={() => setShowMusicPicker(true)}
+              onRemoveMusic={async () => { setBackgroundMusic(null); await saveBackgroundMusic(null); }}
               onPresent={() => {
                 setPresentPageIndex(0);
                 setShowPresentation(true);
@@ -935,7 +1023,20 @@ export function PictureBookStudioPage() {
           onPrev={() => setPresentPageIndex((i) => Math.max(0, i - 1))}
           onNext={() => setPresentPageIndex((i) => Math.min(pages.length - 1, i + 1))}
           onExit={() => setShowPresentation(false)}
+          backgroundMusic={backgroundMusic}
         />
+      )}
+      {showMusicPicker && (
+        <div className="pbv2-music-overlay" onClick={() => setShowMusicPicker(false)}>
+          <div className="pbv2-music-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="pbv2-music-head"><div><h2>选择背景音乐</h2><p>背景音乐将在授课模式中循环播放</p></div><button type="button" onClick={() => setShowMusicPicker(false)}><X size={18} /></button></div>
+            <audio ref={musicPreviewRef} onEnded={() => setPreviewMusicId(null)} />
+            <div className="pbv2-music-tabs"><button type="button" className={musicSourceTab === 'audio' ? 'active' : ''} onClick={() => setMusicSourceTab('audio')}>音频库</button><button type="button" className={musicSourceTab === 'song' ? 'active' : ''} onClick={() => setMusicSourceTab('song')}>曲目库</button><button type="button" className={musicSourceTab === 'ai' ? 'active' : ''} onClick={() => setMusicSourceTab('ai')}><Wand2 size={14} />AI 生成</button></div>
+            {musicSourceTab === 'audio' && <div className="pbv2-music-list">{audioLibrary.map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{audioLibrary.length === 0 && <div className="pbv2-music-empty">音频库暂无背景音乐，请先在音频库添加。</div>}</div>}
+            {musicSourceTab === 'song' && <div className="pbv2-music-list">{songLibrary.flatMap((song) => [{ ...song, id: `song-${song.id}-instrumental`, name: `${song.name}（伴奏版）`, url: song.instrumentalUrl, source: 'song' }, { ...song, id: `song-${song.id}-vocal`, name: `${song.name}（演唱版）`, url: song.vocalUrl, source: 'song' }]).filter((music) => music.url).map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{songLibrary.every((song) => !song.instrumentalUrl && !song.vocalUrl) && <div className="pbv2-music-empty">曲目库暂无可播放歌曲。</div>}</div>}
+            {musicSourceTab === 'ai' && <div className="pbv2-ai-music"><label><span>音乐描述</span><textarea value={aiMusicForm.prompt} onChange={(event) => setAiMusicForm((current) => ({ ...current, prompt: event.target.value }))} placeholder="例如：温暖、轻柔、适合儿童绘本朗读的纯音乐，不要人声" /></label><div className="pbv2-ai-music-row"><label><span>风格</span><select value={aiMusicForm.style} onChange={(event) => setAiMusicForm((current) => ({ ...current, style: event.target.value }))}><option value="calm, peaceful, warm, instrumental">温暖舒缓</option><option value="happy, cheerful, playful, instrumental">轻快童趣</option><option value="dreamy, magical, gentle, instrumental">梦幻童话</option><option value="nature, peaceful, acoustic, instrumental">自然治愈</option></select></label><label><span>时长</span><select value={aiMusicForm.duration} onChange={(event) => setAiMusicForm((current) => ({ ...current, duration: Number(event.target.value) }))}>{[15, 30, 60, 90].map((duration) => <option key={duration} value={duration}>{duration} 秒</option>)}</select></label></div><button type="button" className="pbv2-ai-generate" disabled={!aiMusicForm.prompt.trim() || aiMusicGenerating} onClick={generateAiMusic}>{aiMusicGenerating ? <Loader2 className="spin" size={15} /> : <Wand2 size={15} />}{aiMusicGenerating ? '正在生成，可能需要几分钟…' : '生成背景音乐'}</button>{aiMusicError && <p className="pbv2-ai-music-error">{aiMusicError}</p>}{aiMusicResult && <MusicPickerItem music={aiMusicResult} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} selectLabel="使用此音乐" onSelect={async () => { setBackgroundMusic(aiMusicResult); setShowMusicPicker(false); await saveBackgroundMusic(aiMusicResult); }} />}</div>}
+          </div>
+        </div>
       )}
     </main>
   );
@@ -1134,7 +1235,7 @@ function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack,
   );
 }
 
-function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll, onPresent }) {
+function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll, onPresent, backgroundMusic, onChooseMusic, onRemoveMusic }) {
   const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
@@ -1147,6 +1248,12 @@ function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGen
           🖥️ 授课模式
         </button>
         <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToDesign')}</button>
+        <div className={`pbv2-background-music${backgroundMusic ? ' selected' : ''}`}>
+          <Music2 size={17} />
+          <span title={backgroundMusic?.name}>{backgroundMusic?.name || '未选择背景音乐'}</span>
+          <button type="button" onClick={onChooseMusic}>{backgroundMusic ? '更换' : '选择音乐'}</button>
+          {backgroundMusic && <button type="button" className="pbv2-music-remove" onClick={onRemoveMusic} title="移除背景音乐"><X size={14} /></button>}
+        </div>
       </div>
       <div className="pbv2-production-grid">
         {pages.map((page, index) => (
@@ -1278,11 +1385,30 @@ function FooterActions({ children }) {
   );
 }
 
-function PresentationOverlay({ pages, index, onPrev, onNext, onExit }) {
+function MusicPickerItem({ music, backgroundMusic, previewMusicId, previewRef, setPreviewMusicId, onSelect, selectLabel = '选择' }) {
+  const isPreviewing = previewMusicId === music.id;
+  return <div className={`pbv2-music-item${backgroundMusic?.id === music.id ? ' selected' : ''}`}><div><strong>{music.name}</strong><span>{music.description || '背景音乐'}</span></div><button type="button" onClick={() => { const audio = previewRef.current; if (!audio) return; if (isPreviewing && !audio.paused) { audio.pause(); setPreviewMusicId(null); } else { audio.src = music.url; audio.play().then(() => setPreviewMusicId(music.id)).catch(() => setPreviewMusicId(null)); } }}>{isPreviewing ? <Pause size={15} /> : <Play size={15} />}试听</button><button type="button" className="pbv2-music-select" onClick={() => { previewRef.current?.pause(); setPreviewMusicId(null); onSelect(); }}>{selectLabel}</button></div>;
+}
+
+function PresentationOverlay({ pages, index, onPrev, onNext, onExit, backgroundMusic }) {
+  const bgmRef = React.useRef(null);
+  const [musicPlaying, setMusicPlaying] = React.useState(false);
+  const [musicVolume, setMusicVolume] = React.useState(0.35);
+  React.useEffect(() => {
+    if (bgmRef.current) bgmRef.current.volume = musicVolume;
+  }, [backgroundMusic?.url]);
   const page = pages[index];
   if (!page) return null;
+  const toggleMusic = async () => {
+    const audio = bgmRef.current;
+    if (!audio) return;
+    if (!audio.paused) { audio.pause(); setMusicPlaying(false); return; }
+    try { await audio.play(); setMusicPlaying(true); } catch { setMusicPlaying(false); }
+  };
   return (
     <div className="pbv2-presentation">
+      {backgroundMusic?.url && <audio ref={bgmRef} src={backgroundMusic.url} loop autoPlay onPlay={() => setMusicPlaying(true)} onPause={() => setMusicPlaying(false)} />}
+      {backgroundMusic?.url && <div className="pbv2-presentation-music"><button type="button" onClick={toggleMusic}>{musicPlaying ? <Pause size={17} /> : <Play size={17} />}</button><Music2 size={16} /><span>{backgroundMusic.name}</span><Volume2 size={15} /><input aria-label="背景音乐音量" type="range" min="0" max="1" step="0.05" value={musicVolume} onChange={(event) => { const value = Number(event.target.value); setMusicVolume(value); if (bgmRef.current) bgmRef.current.volume = value; }} /></div>}
       <button type="button" className="pbv2-presentation-exit" onClick={onExit} aria-label="exit">
         <X size={24} />
       </button>
