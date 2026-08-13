@@ -191,8 +191,10 @@
 .song-content-editor-modal .song-content-editor h3{margin:0 0 10px;color:#263b58;font-size:15px;font-weight:700}
 .song-content-editor-modal .blank-hint{margin:0 0 12px;color:#7f899b;font-size:12px}
 .song-content-editor-modal .lyric-edit-row{
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr);
   gap:8px;
-  margin-bottom:10px;
+  margin-bottom:14px;
   padding:0;
   border:0;
   background:transparent;
@@ -211,18 +213,29 @@
 .song-content-editor-modal input{height:38px;padding:0 11px}
 .song-content-editor-modal textarea:focus,
 .song-content-editor-modal input:focus{border-color:#ff6f61;box-shadow:0 0 0 3px rgba(255,111,97,.14)}
-.song-content-editor-modal .line-actions{gap:6px}
+.song-content-editor-modal .lyric-edit-row textarea{grid-column:2;margin-bottom:0}
+.song-content-editor-modal .line-actions{grid-column:2;display:flex;flex-direction:row;align-items:center;justify-content:space-between;gap:10px;margin-top:0}
+.song-content-editor-modal .blank-actions{display:flex;align-items:center;gap:7px}
 .song-content-editor-modal .blank-toggle,
+.song-content-editor-modal .blank-clear,
 .song-content-editor-modal .line-regenerate{
-  min-width:58px;
-  min-height:25px;
-  padding:4px 9px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  min-width:0;
+  min-height:32px;
+  padding:6px 11px;
   border:2px solid #344255;
   border-radius:7px;
   background:#fff;
   color:#344255;
-  font-size:11px;
+  font-size:12px;
+  font-weight:600;
+  white-space:nowrap;
 }
+.song-content-editor-modal .blank-clear{border-color:#ff9b91;color:#e85f52}
+.song-content-editor-modal .blank-clear:hover{background:#fff1ef}
 .song-content-editor-modal .blank-toggle:hover,
 .song-content-editor-modal .blank-toggle.has-blank{border-color:#ff6f61;background:#fff4f1;color:#ff6f61}
 .song-content-editor-modal .line-regenerate{border-color:#9964db;color:#8952cf}

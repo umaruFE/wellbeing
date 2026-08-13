@@ -155,6 +155,7 @@ function generateCoverSvg(title, melodyId, melodyName) {
 export function SongWritingStudioPage() {
   const audioRef = React.useRef(null);
   const melodyPreviewRef = React.useRef(null);
+  const lyricEditorRefs = React.useRef([]);
   const [form, setForm] = React.useState({ age: '', level: '', participants: '', themes: [], themeOther: '', vocabulary: '', grammar: '', melody: '' });
   const [draft, setDraft] = React.useState(() => makeDraft({ vocabulary: 'happy, calm, brave', themes: ['情绪表达'], melody: 'twinkle' }));
   const [playing, setPlaying] = React.useState(false);
@@ -431,9 +432,9 @@ export function SongWritingStudioPage() {
     setArrangement({});
   };
 
-  const fillWordAt = (word, lineIndex) => {
-    if (lineIndex === null || lineIndex === undefined) return;
-    setBlankValues((current) => ({ ...current, [lineIndex]: word }));
+  const fillWordAt = (word, blankTarget) => {
+    if (!blankTarget || blankTarget.lineIndex === undefined) return;
+    setBlankValues((current) => ({ ...current, [`${blankTarget.lineIndex}:${blankTarget.blankIndex}`]: word }));
   };
 
   const fillWord = (word) => {
@@ -447,7 +448,7 @@ export function SongWritingStudioPage() {
     event.preventDefault();
     try {
       const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing'));
-      if (payload.type === 'word' && target === 'word') fillWordAt(payload.word, lineIndex);
+      if (payload.type === 'word' && target === 'word') fillWordAt(payload.word, { lineIndex, blankIndex: 0 });
       if (payload.type === 'instrument' && target === 'instrument') addInstrument(lineIndex, payload.instrument);
     } catch {
       // Ignore drops that did not originate from the song-writing studio.
@@ -521,17 +522,22 @@ export function SongWritingStudioPage() {
     } finally { setRegeneratingAll(false); setIsGenerating(false); }
   };
 
-  const toggleBlankInLine = (index) => {
+  const insertBlankInLine = (index) => {
+    const textarea = lyricEditorRefs.current[index];
     setDraft((current) => {
       const line = current.lines[index];
-      if (line.includes('______')) {
-        return { ...current, lines: current.lines.map((l, i) => (i === index ? l.replace('______', '').replace(/ {2,}/g, ' ').trim() : l)) };
-      }
-      const words = line.split(' ');
-      const midIndex = Math.floor(words.length / 2);
-      const newLine = [...words.slice(0, midIndex), '______', ...words.slice(midIndex)].join(' ');
+      const start = textarea?.selectionStart ?? line.length;
+      const end = textarea?.selectionEnd ?? start;
+      const before = line.slice(0, start).replace(/\s*$/, '');
+      const after = line.slice(end).replace(/^\s*/, '');
+      const newLine = `${before}${before ? ' ' : ''}______${after ? ' ' : ''}${after}`;
       return { ...current, lines: current.lines.map((l, i) => (i === index ? newLine : l)) };
     });
+    setBlankValues({});
+  };
+
+  const clearBlanksInLine = (index) => {
+    setDraft((current) => ({ ...current, lines: current.lines.map((line, itemIndex) => itemIndex === index ? line.replace(/\s*______\s*/g, ' ').replace(/ {2,}/g, ' ').trim() : line) }));
     setBlankValues({});
   };
 
@@ -740,8 +746,8 @@ export function SongWritingStudioPage() {
             {draft.lines.map((line, index) => (
               <div className="lyric-line" key={`${index}-${line}`}>
                 {(() => {
-                  const editable = /^(.*?)(______)(.*)$/.exec(line);
-                  return editable ? <><span className="lyric-copy">{editable[1]}</span><input className="lyric-blank" aria-label={`第 ${index + 1} 行填词`} value={blankValues[index] || ''} onFocus={() => setActiveBlank(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'word')} onChange={(e) => setBlankValues((current) => ({ ...current, [index]: e.target.value }))} /><span className="lyric-copy">{editable[3]}</span></> : <span className="lyric-copy">{line}</span>;
+                  if (!line.includes('______')) return <span className="lyric-copy">{line}</span>;
+                  return line.split('______').map((part, blankIndex, parts) => <React.Fragment key={`${index}-${blankIndex}`}><span className="lyric-copy">{part}</span>{blankIndex < parts.length - 1 && <input className="lyric-blank" aria-label={`第 ${index + 1} 行第 ${blankIndex + 1} 个填空`} value={blankValues[`${index}:${blankIndex}`] ?? (blankIndex === 0 ? blankValues[index] || '' : '')} onFocus={() => setActiveBlank({ lineIndex: index, blankIndex })} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); try { const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing')); if (payload.type === 'word') fillWordAt(payload.word, { lineIndex: index, blankIndex }); } catch { /* Ignore invalid drops. */ } }} onChange={(e) => setBlankValues((current) => ({ ...current, [`${index}:${blankIndex}`]: e.target.value }))} />}</React.Fragment>);
                 })()}
                 <div className="line-instruments" onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`}><img src={instrument.icon} alt={instrument.label} /></span>)}<button type="button" title="为这一句配器" onClick={() => addInstrument(index, instruments[index % instruments.length])}>＋</button></div>
               </div>
@@ -750,14 +756,14 @@ export function SongWritingStudioPage() {
           </article>
           <div className="sky-sidecards">
             <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => setShowWords(true)}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
-            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 先点击乐器，再点击歌词旁的圆圈</p></article>
+            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank.lineIndex, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 先点击乐器，再点击歌词旁的圆圈</p></article>
           </div>
         </div>
         <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>
       </section>
 
       {showWords && <Overlay title="Word Bank · 选词区" className="word-bank-modal" onClose={() => setShowWords(false)}><p>投屏模式：邀请孩子先读、做动作，再选择最贴近自己感受的词卡。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => { fillWord(word); setShowWords(false); }}><span>{wordCardIcon(word, draft.wordEmojis)}</span>{word}</button>)}</div></Overlay>}
-      {showContentEditor && <Overlay title="编辑歌词和 Word Bank" onClose={() => setShowContentEditor(false)}><div className="song-content-editor pbv2-editor"><section className="pbv2-editor-section"><div className="song-editor-header"><h3>歌词模板</h3><button type="button" className="regenerate-all-btn" disabled={regeneratingAll} onClick={regenerateAllLines}>{regeneratingAll ? <Loader2 className="spin" size={13} /> : <RefreshCw size={13} />}{regeneratingAll ? '生成中...' : '全部重新生成'}</button></div><p className="blank-hint">💡 点击「填空」按钮可在行中插入或移除 ______ 填空标记</p>{draft.lines.map((line, index) => <div key={index} className="lyric-edit-row"><span className="line-number">L{index + 1}</span><textarea value={line} rows={2} onChange={(event) => setDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><div className="line-actions"><button type="button" className={`blank-toggle${line.includes('______') ? ' has-blank' : ''}`} onClick={() => toggleBlankInLine(index)}>{line.includes('______') ? '取消填空' : '填空'}</button><button type="button" className="line-regenerate" disabled={regeneratingLine === index} onClick={() => regenerateLine(index)}>{regeneratingLine === index ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />}AI</button></div></div>)}</section><section className="pbv2-editor-section"><h3>Word Bank</h3>{draft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" onClick={() => setDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}><Trash2 size={12} /></button></label>)}<button type="button" className="add-word" onClick={() => setDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}><Plus size={13} /> 添加词卡</button></section><button type="button" className="generate-html pbv2-editor-save" onClick={() => { setBlankValues({}); setShowContentEditor(false); }}>保存修改</button></div></Overlay>}
+      {showContentEditor && <Overlay title="编辑歌词和 Word Bank" onClose={() => setShowContentEditor(false)}><div className="song-content-editor pbv2-editor"><section className="pbv2-editor-section"><div className="song-editor-header"><h3>歌词模板</h3><button type="button" className="regenerate-all-btn" disabled={regeneratingAll} onClick={regenerateAllLines}>{regeneratingAll ? <Loader2 className="spin" size={13} /> : <RefreshCw size={13} />}{regeneratingAll ? '生成中...' : '全部重新生成'}</button></div><p className="blank-hint">💡 在文本中点击指定位置，或选中要替换的文字，再点「插入填空」；可重复插入多个</p>{draft.lines.map((line, index) => <div key={index} className="lyric-edit-row"><span className="line-number">L{index + 1}</span><textarea ref={(element) => { lyricEditorRefs.current[index] = element; }} value={line} rows={2} onChange={(event) => setDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><div className="line-actions"><div className="blank-actions"><button type="button" className="blank-toggle" onClick={() => insertBlankInLine(index)}><Plus size={12} />插入填空</button>{line.includes('______') && <button type="button" className="blank-clear" onClick={() => clearBlanksInLine(index)}><Trash2 size={12} />清空填空</button>}</div><button type="button" className="line-regenerate" disabled={regeneratingLine === index} onClick={() => regenerateLine(index)}>{regeneratingLine === index ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />}{regeneratingLine === index ? '生成中' : 'AI 重新生成'}</button></div></div>)}</section><section className="pbv2-editor-section"><h3>Word Bank</h3>{draft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" onClick={() => setDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}><Trash2 size={12} /></button></label>)}<button type="button" className="add-word" onClick={() => setDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}><Plus size={13} /> 添加词卡</button></section><button type="button" className="generate-html pbv2-editor-save" onClick={() => { setBlankValues({}); setShowContentEditor(false); }}>保存修改</button></div></Overlay>}
       {showPlan && <Overlay title="活动方案" onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><section><h3>学习目标</h3><p><b>英文：</b>{generatedPlan.englishGoal}</p><p><b>幸福力：</b>{generatedPlan.wellbeingGoal}</p></section><section><h3>课前准备</h3><p>{(generatedPlan.materials || []).join('、')}</p></section><section><h3>课堂流程</h3><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><div><b>{index + 1}. {step.title}</b><em>{step.duration}</em></div><p>{step.teacherGuide}</p></li>)}</ol></section></div> : <p>请先生成歌词和词库，即可查看本作品的活动方案。</p>}</Overlay>}
       {showPresentation && <SongPresentation draft={draft} blankValues={blankValues} audioRef={audioRef} playing={playing} toggleAudio={toggleAudio} speed={speed} setSpeed={setSpeed} volume={volume} setVolume={setVolume} selectedMelody={selectedMelody} audioMode={audioMode} setAudioMode={setAudioMode} librarySong={librarySong} currentAudioSrc={currentAudioSrc} onClose={closePresentation} />}
           </div>
