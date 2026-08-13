@@ -1129,3 +1129,52 @@
 .pbv2-presentation-exit:hover {
   background: rgba(255, 255, 255, .3);
 }
+
+/* System-style teaching presentation */
+.pbv2-presentation {
+  background: var(--pb-surface);
+  color: var(--pb-ink);
+}
+
+.pbv2-presentation-stage {
+  width: min(1100px, calc(100% - 176px));
+  height: min(72vh, 760px);
+  padding: 18px;
+  border: 1px solid var(--pb-soft-line);
+  border-radius: 12px;
+  background: var(--pb-panel);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, .16);
+}
+
+.pbv2-presentation-stage img { border-radius: 8px; box-shadow: none; }
+.pbv2-presentation-placeholder { color: var(--pb-muted); }
+.pbv2-presentation-nav,
+.pbv2-presentation-exit {
+  border: 2px solid var(--pb-ink);
+  background: #fff;
+  color: var(--pb-ink);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .22);
+}
+.pbv2-presentation-nav:hover:not(:disabled),
+.pbv2-presentation-exit:hover { background: var(--pb-coral-soft); }
+.pbv2-presentation-text {
+  bottom: 28px;
+  border: 1px solid var(--pb-soft-line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--pb-ink);
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, .12);
+}
+.pbv2-presentation-counter {
+  border: 1px solid var(--pb-soft-line);
+  background: #fff;
+  color: var(--pb-ink);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, .12);
+}
+@media (max-width: 720px) {
+  .pbv2-presentation-stage { width: calc(100% - 32px); height: min(68vh, 620px); }
+  .pbv2-presentation-nav { width: 46px; height: 46px; }
+  .pbv2-presentation-prev { left: 10px; }
+  .pbv2-presentation-next { right: 10px; }
+  .pbv2-presentation-text { bottom: 18px; max-width: calc(100% - 32px); font-size: 16px; line-height: 24px; }
+}

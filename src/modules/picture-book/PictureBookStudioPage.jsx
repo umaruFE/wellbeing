@@ -826,6 +826,12 @@ export function PictureBookStudioPage() {
           onCreate={createNewBook}
           onOpen={openBook}
           onDelete={deleteBook}
+          onPresent={(book) => {
+            const data = book.book_data || {};
+            if (data.pages) setPages(data.pages); else setPages([]);
+            setPresentPageIndex(0);
+            setShowPresentation(true);
+          }}
         />
       ) : (
         <>
@@ -935,7 +941,7 @@ export function PictureBookStudioPage() {
   );
 }
 
-function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCreate, onOpen, onDelete }) {
+function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCreate, onOpen, onDelete, onPresent }) {
   const { t } = useTranslation();
   return (
     <div className="pbv2-list-page">
@@ -996,6 +1002,9 @@ function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCrea
                   <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(book); }}>
                     <Pencil size={14} />
                     {t('common.edit')}
+                  </button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); onPresent(book); }}>
+                    🖥️ {t('pictureBook.present', '授课')}
                   </button>
                   <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(book.id); }}>
                     <Trash2 size={14} />
