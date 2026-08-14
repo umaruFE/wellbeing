@@ -10,6 +10,34 @@ const melodyReferences: Record<string, string> = {
   "If You're Happy and You Know It": '参考：身体部位与动作指令。可借鉴“If you’re happy and you know it, touch your ______!”“shake your ______!”的节奏与重复结构；词库可围绕 head, face, hand, knee, foot 等。',
 };
 
+function fallbackWordEmoji(word: string) {
+  const value = word.toLowerCase();
+  if (/(happy|joy|cheerful|smile)/.test(value)) return '😊';
+  if (/(sad|cry|blue)/.test(value)) return '😢';
+  if (/(angry|mad)/.test(value)) return '😠';
+  if (/(calm|quiet|peace|relax)/.test(value)) return '😌';
+  if (/(scared|afraid|fear)/.test(value)) return '😨';
+  if (/(excited|wow)/.test(value)) return '🤩';
+  if (/(tired|sleepy|sleep)/.test(value)) return '😴';
+  if (/(brave|strong|bold)/.test(value)) return '💪';
+  if (/(sun|sunny|bright|shine)/.test(value)) return '☀️';
+  if (/(cloud|cloudy)/.test(value)) return '☁️';
+  if (/(tree|forest)/.test(value)) return '🌳';
+  if (/(leaf|leaves|grass)/.test(value)) return '🍃';
+  if (/(river|ocean|wave|lake|water)/.test(value)) return '🌊';
+  if (/(flower|bloom)/.test(value)) return '🌸';
+  if (/(heart|love|kind)/.test(value)) return '❤️';
+  if (/(hand|clap)/.test(value)) return '👏';
+  if (/(hug|hold)/.test(value)) return '🤗';
+  if (/(jump|hop)/.test(value)) return '🦘';
+  if (/(dance|move|wiggle)/.test(value)) return '💃';
+  if (/(sing|song)/.test(value)) return '🎵';
+  if (/(breathe|breath|air)/.test(value)) return '🌬️';
+  if (/(stand|tall|up)/.test(value)) return '🧍';
+  if (/(pause|stop)/.test(value)) return '⏸️';
+  return '✨';
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { age, level, participants, themes, themeOther, vocabulary, grammar, melody, adjustmentRequest } = await request.json();
@@ -40,7 +68,10 @@ export async function POST(request: NextRequest) {
     const wordEmojis = Object.fromEntries(
       words
         .filter((word: unknown): word is string => typeof word === 'string')
-        .map((word: string) => [word, typeof data.wordEmojis?.[word] === 'string' ? data.wordEmojis[word] : '💬']),
+        .map((word: string) => {
+          const generated = typeof data.wordEmojis?.[word] === 'string' ? data.wordEmojis[word].trim() : '';
+          return [word, generated && generated !== '💬' ? generated : fallbackWordEmoji(word)];
+        }),
     );
     return NextResponse.json({ success: true, data: { ...data, words, wordEmojis, lines: data.lines.slice(0, 8) } });
   } catch (error) {

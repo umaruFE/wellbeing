@@ -92,20 +92,23 @@ function wordIcon(word) {
   if (/(hand|clap)/.test(value)) return '👏';
   if (/(touch|hold|hug)/.test(value)) return '🤲';
   if (/(jump|hop)/.test(value)) return '🤸';
-  if (/(dance|move)/.test(value)) return '💃';
+  if (/(dance|move|wiggle)/.test(value)) return '💃';
   if (/(sing|song)/.test(value)) return '🎵';
   if (/(shake|maraca)/.test(value)) return '🪇';
   if (/(drum|beat)/.test(value)) return '🥁';
   if (/(sun|bright)/.test(value)) return '☀️';
+  if (/(cloud|cloudy)/.test(value)) return '☁️';
   if (/(rainbow|colour|color)/.test(value)) return '🌈';
   if (/(mountain)/.test(value)) return '⛰️';
   if (/(river|ocean|wave|lake)/.test(value)) return '🌊';
   if (/(tree|forest|leaf|grass)/.test(value)) return '🌳';
-  return '💬';
+  if (/(pause|stop)/.test(value)) return '⏸️';
+  return '✨';
 }
 
 function wordCardIcon(word, wordEmojis) {
-  return wordEmojis?.[word] || wordIcon(word);
+  const generatedEmoji = wordEmojis?.[word];
+  return generatedEmoji && generatedEmoji !== '💬' ? generatedEmoji : wordIcon(word);
 }
 
 function formatAudioTime(seconds) {
