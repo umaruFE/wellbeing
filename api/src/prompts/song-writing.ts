@@ -81,6 +81,7 @@ export interface SongWritingPromptInput {
   grammar: string;
   melody: string;
   melodyReference: string;
+  adjustmentRequest?: string;
 }
 
 export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
@@ -92,6 +93,7 @@ export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
     `核心词汇=${input.vocabulary || '未指定，请根据主题和年龄自选适合的词汇'}`,
     `核心句型/语法=${input.grammar || '未指定，请根据主题和水平自选适合的句型'}`,
     `旋律=${input.melody}`,
+    `本次具体调整需求=${input.adjustmentRequest || '无额外要求'}`,
   ];
 
   const rules = getMelodyRules(input.melody);
@@ -120,6 +122,7 @@ export interface SongWritingLinePromptInput {
   lines: string[];
   regenerateIndex: number;
   melodyReference: string;
+  adjustmentRequest?: string;
 }
 
 export function buildSongWritingLinePrompt(input: SongWritingLinePromptInput) {
@@ -131,6 +134,7 @@ export function buildSongWritingLinePrompt(input: SongWritingLinePromptInput) {
 主题：${input.themeText}
 核心词汇：${input.vocabulary || '未指定'}
 核心句型：${input.grammar || '未指定'}
+本次具体调整需求：${input.adjustmentRequest || '无额外要求'}
 
 ${rules}
 

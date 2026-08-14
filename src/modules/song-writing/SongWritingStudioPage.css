@@ -293,3 +293,138 @@
   .song-content-editor-modal .song-content-editor{grid-template-columns:1fr;padding:14px}
   .song-content-editor-modal .song-content-editor>.generate-html{grid-column:auto;width:100%}
 }
+
+/* Compact, always-actionable lyrics editor */
+.song-content-editor-modal .song-content-editor{
+  height:min(760px,calc(90vh - 64px));
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.song-content-editor-modal .song-editor-scroll{
+  display:grid;
+  grid-template-columns:minmax(0,1.55fr) minmax(340px,.8fr);
+  grid-auto-rows:max-content;
+  align-items:stretch;
+  gap:20px;
+  min-height:0;
+  overflow-y:auto;
+  padding-right:6px;
+  scrollbar-width:thin;
+  scrollbar-color:#aeb4bd transparent;
+}
+.song-content-editor-modal .song-editor-scroll::-webkit-scrollbar{width:7px}
+.song-content-editor-modal .song-editor-scroll::-webkit-scrollbar-track{background:transparent}
+.song-content-editor-modal .song-editor-scroll::-webkit-scrollbar-thumb{border-radius:999px;background:#aeb4bd}
+.song-content-editor-modal .song-editor-scroll>.pbv2-editor-section{box-sizing:border-box;min-height:100%;overflow:visible}
+.song-content-editor-modal .lyric-edit-row{margin-bottom:9px}
+.song-content-editor-modal textarea{min-height:40px;padding:7px 10px;line-height:1.35}
+.song-content-editor-modal .pbv2-editor-save{
+  flex:0 0 auto;
+  align-self:flex-end;
+  justify-self:end;
+  margin-top:14px;
+  position:relative;
+  z-index:2;
+}
+.song-adjustment-box{margin:0 0 14px;padding:12px;border:1px solid #e1dce8;border-radius:8px;background:#fff}
+.song-adjustment-box>label{display:block;margin-bottom:7px;color:#344255;font-size:13px;font-weight:700}
+.song-adjustment-box>textarea{box-sizing:border-box;width:100%;min-height:54px;margin:0;resize:vertical}
+.song-adjustment-suggestions{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.song-adjustment-suggestions button{padding:5px 9px;border:1px solid #cfc7dc;border-radius:999px;background:#fff;color:#70647f;font:600 11px inherit;cursor:pointer}
+.song-adjustment-suggestions button:hover,.song-adjustment-suggestions button.is-active{border-color:#9964db;background:#f5effd;color:#7c45c3}
+.song-adjustment-submit{display:flex;align-items:center;justify-content:center;gap:6px;min-height:36px;margin:10px 0 0 auto;padding:7px 14px;border:2px solid #9964db;border-radius:8px;background:#9964db;color:#fff;font:700 12px inherit;cursor:pointer}
+.song-adjustment-submit:hover:not(:disabled){background:#854bcf}
+.song-adjustment-submit:disabled{opacity:.6;cursor:wait}
+
+/* Enlarged Word Bank keeps the dialog open and highlights only the selected card */
+.word-bank-modal .word-chips.large button.is-selected{
+  border-color:#f4785e;
+  background:#fdece8;
+  color:#cf5846;
+  box-shadow:3px 3px 0 #f0a08f;
+  transform:translate(-1px,-1px);
+}
+
+/* Friendly classroom presentation */
+.song-presentation{
+  background:
+    radial-gradient(circle at 10% 15%,rgba(247,217,88,.28),transparent 24%),
+    radial-gradient(circle at 88% 82%,rgba(168,224,216,.38),transparent 26%),
+    linear-gradient(145deg,#fff9f1 0%,#f7f2fb 52%,#eef9f7 100%);
+}
+.song-present-content{position:relative;z-index:1;max-width:1080px}
+.song-present-title{color:#344255;font-size:2.45rem}
+.song-present-subtitle{padding:5px 14px;border-radius:999px;background:#fff;color:#7b6a88;box-shadow:1px 1px 0 rgba(52,66,85,.14)}
+.song-present-player-bar{border:2px solid #344255;background:#fffdf8;box-shadow:4px 4px 0 #a8e0d8}
+.song-present-lyrics{max-width:940px}
+.song-present-line{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  min-height:62px;
+  border:2px solid #344255;
+  background:#fff;
+  box-shadow:3px 3px 0 rgba(52,66,85,.16);
+}
+.song-present-line:nth-child(4n+1){background:#fff7d9;box-shadow:3px 3px 0 #e8cd68}
+.song-present-line:nth-child(4n+2){background:#f2eafb;box-shadow:3px 3px 0 #c7a9e7}
+.song-present-line:nth-child(4n+3){background:#e9f7f4;box-shadow:3px 3px 0 #8fcfc5}
+.song-present-line:nth-child(4n){background:#fff0eb;box-shadow:3px 3px 0 #efa28d}
+.song-present-line-copy{flex:1;text-align:center}
+.song-present-instruments{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;flex:0 0 auto}
+.song-present-instruments>span{display:flex;align-items:center;gap:4px;padding:4px 7px;border:1px solid rgba(52,66,85,.28);border-radius:999px;background:rgba(255,255,255,.82)}
+.song-present-instruments img{width:26px;height:26px;object-fit:contain}
+.song-present-instruments small{color:#596273;font-size:11px;font-weight:700}
+.song-present-deco{position:absolute;z-index:0;pointer-events:none;font-weight:900;opacity:.48}
+.song-present-deco.deco-note{left:6%;top:12%;color:#9964db;font-size:58px;transform:rotate(-12deg)}
+.song-present-deco.deco-star{right:8%;top:15%;color:#efbd31;font-size:54px}
+.song-present-deco.deco-heart{left:8%;bottom:10%;color:#f4785e;font-size:42px;transform:rotate(10deg)}
+.song-present-deco.deco-wave{right:7%;bottom:12%;color:#58aaa0;font-size:64px}
+@media(max-width:720px){
+  .song-content-editor-modal .song-content-editor{height:min(760px,calc(94vh - 64px));overflow:hidden}
+  .song-content-editor-modal .song-editor-scroll{grid-template-columns:1fr}
+  .song-content-editor-modal .pbv2-editor-save{width:100%;position:relative;bottom:auto}
+  .song-present-line{flex-direction:column;gap:8px}
+  .song-present-instruments{justify-content:center}
+  .song-present-deco{display:none}
+}
+
+/* Compact song-making header */
+.pbv2-song-making .sky-title{margin:0 0 3px}
+.pbv2-song-making .sky-title h1{font-size:22px;line-height:28px}
+.pbv2-song-making .sky-title p{margin-top:0;font-size:10px;line-height:15px}
+.pbv2-song-making .pbv2-making-toolbar{
+  min-height:0;
+  margin-top:5px;
+  padding-top:6px;
+  gap:6px;
+}
+.pbv2-song-making .pbv2-making-toolbar button{min-height:32px;padding:0 11px;font-size:12px}
+.pbv2-song-making .sky-studio{margin-top:7px}
+.pbv2-song-making .bg-deco.flower1{top:0;right:3%;opacity:.4}
+.pbv2-song-making .pbv2-making-toolbar{z-index:3}
+.pbv2-song-making .sky-content{grid-template-columns:minmax(0,56%) minmax(0,44%);gap:16px}
+.pbv2-song-making .sky-sidecards{gap:14px}
+.pbv2-song-making .sky-words,.pbv2-song-making .sky-instruments{padding:16px}
+.pbv2-song-making .sky-words .sky-card-title>button{cursor:pointer;transition:transform .15s ease,color .15s ease}
+.pbv2-song-making .sky-words .sky-card-title>button:hover{color:#cf5846;transform:scale(1.12)}
+.pbv2-song-making .sky-words .word-chips,
+.pbv2-song-making .sky-instruments .instrument-chips{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pbv2-song-making .sky-words .word-chips button,
+.pbv2-song-making .sky-instruments .instrument-chips button{min-width:0;min-height:34px;padding:5px 7px;font-size:11px}
+.pbv2-song-making .sky-mode-toggle{position:absolute;top:10px;right:16px;width:max-content;margin:0;border-width:1px;border-radius:7px}
+.pbv2-song-making .sky-mode-toggle button{min-height:26px;padding:3px 9px;font-size:10px;line-height:18px}
+.pbv2-song-making .sky-player{position:relative;padding:11px 18px;margin-bottom:14px}
+.pbv2-song-making .sky-player strong{margin-bottom:4px}
+.pbv2-song-making .sky-player-row{margin-bottom:5px}
+.pbv2-song-making .speed-row{margin-bottom:5px}
+@media(max-width:720px){
+  .pbv2-song-making .sky-title h1{font-size:20px;line-height:26px}
+  .pbv2-song-making .pbv2-making-toolbar{margin-top:4px;padding-top:5px}
+  .pbv2-song-making .sky-content{grid-template-columns:1fr}
+  .pbv2-song-making .sky-words .word-chips,
+  .pbv2-song-making .sky-instruments .instrument-chips{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .pbv2-song-making .sky-mode-toggle{top:9px;right:10px}
+}
