@@ -102,7 +102,7 @@
             {
               "id": "2e9cac2b-55bd-41db-ae46-f11b52cf2725",
               "name": "comfyBaseUrl",
-              "value": "={{ ['https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com', 'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'][$itemIndex % 5] }}",
+              "value": "={{ $('汇总存活 GPU').first().json.aliveGpuUrls[$itemIndex % $('汇总存活 GPU').first().json.aliveGpuUrls.length] }}",
               "type": "string"
             }
           ]
@@ -376,7 +376,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/prompt",
+        "url": "={{ $('初始配置1').item.json.comfyBaseUrl }}/prompt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
@@ -425,6 +425,12 @@
               "id": "c2f2a8b9-937c-40e4-af7c-1af68d3ccfaf",
               "name": "role",
               "value": "={{ $json.body.role }}",
+              "type": "string"
+            },
+            {
+              "id": "gpu-pick-regene-image",
+              "name": "comfyBaseUrl",
+              "value": "={{ $('汇总存活 GPU').first().json.aliveGpuUrls[Math.floor(Math.random() * $('汇总存活 GPU').first().json.aliveGpuUrls.length)] }}",
               "type": "string"
             }
           ]
@@ -537,7 +543,7 @@
     },
     {
       "parameters": {
-        "url": "=https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/history/{{ $('产生分镜图片请求1').item.json.prompt_id }}",
+        "url": "={{ $('初始配置1').item.json.comfyBaseUrl }}/history/{{ $('产生分镜图片请求1').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -559,7 +565,7 @@
     },
     {
       "parameters": {
-        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/view",
+        "url": "={{ $('初始配置1').item.json.comfyBaseUrl }}/view",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -669,6 +675,62 @@
       ],
       "id": "a9178b0a-9194-403e-8d98-0f2f28b3d69e",
       "name": "Insert row"
+    },
+    {
+      "parameters": {
+        "jsCode": "const comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        624
+      ],
+      "id": "gpu-candidate-list-storyboard",
+      "name": "GPU 候选列表"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}/system_stats",
+        "options": {
+          "timeout": 5000,
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 0
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        624
+      ],
+      "id": "gpu-probe-storyboard",
+      "name": "探测 GPU",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidates = $('GPU 候选列表').all().map((item) => item.json.url);\nconst results = $input.all();\nconst aliveGpuUrls = [];\nresults.forEach((item, index) => {\n  const res = item.json || {};\n  if (res && res.system && res.devices && candidates[index]) {\n    aliveGpuUrls.push(candidates[index]);\n  }\n});\nif (!aliveGpuUrls.length) {\n  throw new Error('没有可用的 GPU 绘图服务：5 个 ComfyUI 候选实例全部探测失败，请确认至少启动了一个 GPU 实例。');\n}\nreturn [{ json: { aliveGpuUrls, aliveCount: aliveGpuUrls.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        128,
+        624
+      ],
+      "id": "gpu-alive-summary-storyboard",
+      "name": "汇总存活 GPU"
     }
   ],
   "pinData": {
@@ -723,7 +785,34 @@
       "main": [
         [
           {
+            "node": "GPU 候选列表",
+            "type": "main",
+            "index": 0
+          },
+          {
             "node": "初始配置",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPU 候选列表": {
+      "main": [
+        [
+          {
+            "node": "探测 GPU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "探测 GPU": {
+      "main": [
+        [
+          {
+            "node": "汇总存活 GPU",
             "type": "main",
             "index": 0
           }
@@ -873,6 +962,11 @@
     "Webhook": {
       "main": [
         [
+          {
+            "node": "GPU 候选列表",
+            "type": "main",
+            "index": 0
+          },
           {
             "node": "初始配置1",
             "type": "main",

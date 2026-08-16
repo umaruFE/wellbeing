@@ -20,7 +20,63 @@
     },
     {
       "parameters": {
-        "jsCode": "// 1. 定义 API 格式模板\nconst bgWorkflowRaw = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": 2048, \"height\": 1152, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"11\": { \"inputs\": { \"lora_name\": \"poppy.safetensors\", \"strength_model\": 0.8, \"strength_clip\": 1, \"model\": [\"4\", 0], \"clip\": [\"3\", 0] }, \"class_type\": \"LoraLoader\" },\n  \"6\": { \"inputs\": { \"text\": \"\", \"clip\": [\"11\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"7\": { \"inputs\": { \"text\": \"\", \"clip\": [\"11\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"8\": { \"inputs\": { \"seed\": 0, \"steps\": 15, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"11\", 0], \"positive\": [\"6\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"9\": { \"inputs\": { \"samples\": [\"8\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"10\": { \"inputs\": { \"filename_prefix\": \"Universal_Scene\", \"images\": [\"9\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\nconst charWorkflowRaw = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": 1024, \"height\": 1024, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"7\": { \"inputs\": { \"text\": \"blurry, low quality, 3d, realistic, detailed face, pupils, eyelashes\", \"clip\": [\"3\", 0] }, \"class_type\": \"CLIPTextEncode\" },\n  \"101\": { \"inputs\": { \"lora_name\": \"poppy.safetensors\", \"strength_model\": 0.8, \"strength_clip\": 1, \"model\": [\"4\", 0], \"clip\": [\"3\", 0] }, \"class_type\": \"LoraLoader\" },\n  \"102\": { \"inputs\": { \"text\": \"\", \"clip\": [\"101\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"103\": { \"inputs\": { \"seed\": 0, \"steps\": 20, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"101\", 0], \"positive\": [\"102\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"104\": { \"inputs\": { \"samples\": [\"103\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"105\": { \"inputs\": { \"filename_prefix\": \"Asset_Poppy\", \"images\": [\"104\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\n// 2. 解析数据\nconst inputData = $input.first()?.json || {};\nconst body = inputData.body || {};\n\nconst role = (body.character_name || body.name || body.role || 'bg').toLowerCase();\nlet rawPrompt = body.prompt || \"\";\n\n// --- 核心逻辑：强制注入触发词 ---\nlet userPrompt = rawPrompt;\nif (role === 'poppy') {\n    // 强制增加触发词，并确保 Poppy 视觉守则（极简黑眼豆豆眼）\n    userPrompt = `poppy_character, minimalist, solid black dot eyes, no pupils, ${rawPrompt}`;\n} else if (role !== 'bg') {\n    // 其他角色也可以按需增加对应的触发词，例如 edi_character\n    userPrompt = `${role}_character, ${rawPrompt}`;\n}\n\nconst userNegative = body.negative_prompt || \"blurry, low quality, 3d, realistic, detailed face, pupils, eyelashes\";\n\nconst comfyuiUrls = {\n  'poppy': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'edi': 'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'rolly': 'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'milo': 'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'ace': 'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com',\n  'bg': 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com'\n};\n\n// 3. 参数注入\nlet finalPrompt = JSON.parse(JSON.stringify((role === 'bg' && body.workflow_type !== 'ip-character') ? bgWorkflowRaw : charWorkflowRaw));\n\nif (role === 'bg' && body.workflow_type !== 'ip-character') {\n  finalPrompt[\"11\"].inputs.lora_name = \"poppy.safetensors\"; \n  finalPrompt[\"6\"].inputs.text = userPrompt;\n  finalPrompt[\"7\"].inputs.text = userNegative;\n  finalPrompt[\"8\"].inputs.seed = Math.floor(Math.random() * 100000000000000);\n} else {\n  if (finalPrompt[\"101\"]) {\n    finalPrompt[\"101\"].inputs.lora_name = `${role}.safetensors`;\n    finalPrompt[\"105\"].inputs.filename_prefix = `Asset_${role}`;\n  }\n  finalPrompt[\"102\"].inputs.text = userPrompt;\n  finalPrompt[\"7\"].inputs.text = userNegative;\n  finalPrompt[\"103\"].inputs.seed = Math.floor(Math.random() * 100000000000000);\n\n  if (body.width) finalPrompt[\"5\"].inputs.width = body.width;\n  if (body.height) finalPrompt[\"5\"].inputs.height = body.height;\n}\n\nreturn [{\n  json: {\n    comfyui_url: comfyuiUrls[role] || comfyuiUrls.bg,\n    comfyui_payload: { prompt: finalPrompt },\n    debug: {\n      role_identified: role,\n      final_prompt: userPrompt,\n      lora_used: role === 'bg' ? \"poppy.safetensors\" : `${role}.safetensors`\n    }\n  }\n}];"
+        "jsCode": "const comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
+      },
+      "name": "🖥️ GPU 候选列表",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        320
+      ],
+      "id": "gpu-candidate-list-imggen"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}/system_stats",
+        "options": {
+          "timeout": 5000,
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 0
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "name": "🖥️ 探测 GPU",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        144,
+        320
+      ],
+      "id": "gpu-probe-imggen",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidates = $('🖥️ GPU 候选列表').all().map((item) => item.json.url);\nconst results = $input.all();\nconst aliveGpuUrls = [];\nresults.forEach((item, index) => {\n  const res = item.json || {};\n  if (res && res.system && res.devices && candidates[index]) {\n    aliveGpuUrls.push(candidates[index]);\n  }\n});\nif (!aliveGpuUrls.length) {\n  throw new Error('没有可用的 GPU 绘图服务：5 个 ComfyUI 候选实例全部探测失败，请确认至少启动了一个 GPU 实例。');\n}\nreturn [{ json: { aliveGpuUrls, aliveCount: aliveGpuUrls.length } }];"
+      },
+      "name": "🖥️ 汇总存活 GPU",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        320
+      ],
+      "id": "gpu-alive-summary-imggen"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 定义 API 格式模板\nconst bgWorkflowRaw = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": 2048, \"height\": 1152, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"11\": { \"inputs\": { \"lora_name\": \"poppy.safetensors\", \"strength_model\": 0.8, \"strength_clip\": 1, \"model\": [\"4\", 0], \"clip\": [\"3\", 0] }, \"class_type\": \"LoraLoader\" },\n  \"6\": { \"inputs\": { \"text\": \"\", \"clip\": [\"11\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"7\": { \"inputs\": { \"text\": \"\", \"clip\": [\"11\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"8\": { \"inputs\": { \"seed\": 0, \"steps\": 15, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"11\", 0], \"positive\": [\"6\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"9\": { \"inputs\": { \"samples\": [\"8\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"10\": { \"inputs\": { \"filename_prefix\": \"Universal_Scene\", \"images\": [\"9\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\nconst charWorkflowRaw = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": 1024, \"height\": 1024, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"7\": { \"inputs\": { \"text\": \"blurry, low quality, 3d, realistic, detailed face, pupils, eyelashes\", \"clip\": [\"3\", 0] }, \"class_type\": \"CLIPTextEncode\" },\n  \"101\": { \"inputs\": { \"lora_name\": \"poppy.safetensors\", \"strength_model\": 0.8, \"strength_clip\": 1, \"model\": [\"4\", 0], \"clip\": [\"3\", 0] }, \"class_type\": \"LoraLoader\" },\n  \"102\": { \"inputs\": { \"text\": \"\", \"clip\": [\"101\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"103\": { \"inputs\": { \"seed\": 0, \"steps\": 20, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"101\", 0], \"positive\": [\"102\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"104\": { \"inputs\": { \"samples\": [\"103\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"105\": { \"inputs\": { \"filename_prefix\": \"Asset_Poppy\", \"images\": [\"104\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\n// 2. 解析数据\nconst body = $('📥 Webhook 接收').first().json.body || {};\n\nconst role = (body.character_name || body.name || body.role || 'bg').toLowerCase();\nlet rawPrompt = body.prompt || \"\";\n\n// --- 核心逻辑：强制注入触发词 ---\nlet userPrompt = rawPrompt;\nif (role === 'poppy') {\n    // 强制增加触发词，并确保 Poppy 视觉守则（极简黑眼豆豆眼）\n    userPrompt = `poppy_character, minimalist, solid black dot eyes, no pupils, ${rawPrompt}`;\n} else if (role !== 'bg') {\n    // 其他角色也可以按需增加对应的触发词，例如 edi_character\n    userPrompt = `${role}_character, ${rawPrompt}`;\n}\n\nconst userNegative = body.negative_prompt || \"blurry, low quality, 3d, realistic, detailed face, pupils, eyelashes\";\n\nconst aliveGpuUrls = $input.first()?.json?.aliveGpuUrls || [];\nif (!aliveGpuUrls.length) throw new Error('没有可用的 GPU 绘图服务，请确认至少启动了一个 ComfyUI 实例。');\nconst roleOrder = ['poppy', 'edi', 'rolly', 'milo', 'ace', 'bg'];\nconst roleIndex = roleOrder.indexOf(role);\nconst comfyuiUrl = aliveGpuUrls[(roleIndex === -1 ? 0 : roleIndex) % aliveGpuUrls.length];\n\n// 3. 参数注入\nlet finalPrompt = JSON.parse(JSON.stringify((role === 'bg' && body.workflow_type !== 'ip-character') ? bgWorkflowRaw : charWorkflowRaw));\n\nif (role === 'bg' && body.workflow_type !== 'ip-character') {\n  finalPrompt[\"11\"].inputs.lora_name = \"poppy.safetensors\"; \n  finalPrompt[\"6\"].inputs.text = userPrompt;\n  finalPrompt[\"7\"].inputs.text = userNegative;\n  finalPrompt[\"8\"].inputs.seed = Math.floor(Math.random() * 100000000000000);\n} else {\n  if (finalPrompt[\"101\"]) {\n    finalPrompt[\"101\"].inputs.lora_name = `${role}.safetensors`;\n    finalPrompt[\"105\"].inputs.filename_prefix = `Asset_${role}`;\n  }\n  finalPrompt[\"102\"].inputs.text = userPrompt;\n  finalPrompt[\"7\"].inputs.text = userNegative;\n  finalPrompt[\"103\"].inputs.seed = Math.floor(Math.random() * 100000000000000);\n\n  if (body.width) finalPrompt[\"5\"].inputs.width = body.width;\n  if (body.height) finalPrompt[\"5\"].inputs.height = body.height;\n}\n\nreturn [{\n  json: {\n    comfyui_url: comfyuiUrl,\n    comfyui_payload: { prompt: finalPrompt },\n    debug: {\n      role_identified: role,\n      final_prompt: userPrompt,\n      lora_used: role === 'bg' ? \"poppy.safetensors\" : `${role}.safetensors`\n    }\n  }\n}];"
       },
       "name": "🎨 准备生成参数",
       "type": "n8n-nodes-base.code",
@@ -124,6 +180,39 @@
   },
   "connections": {
     "📥 Webhook 接收": {
+      "main": [
+        [
+          {
+            "node": "🖥️ GPU 候选列表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖥️ GPU 候选列表": {
+      "main": [
+        [
+          {
+            "node": "🖥️ 探测 GPU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖥️ 探测 GPU": {
+      "main": [
+        [
+          {
+            "node": "🖥️ 汇总存活 GPU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖥️ 汇总存活 GPU": {
       "main": [
         [
           {

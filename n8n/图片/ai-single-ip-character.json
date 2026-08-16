@@ -20,7 +20,63 @@
     },
     {
       "parameters": {
-        "jsCode": "// 单个IP人物生成 - ComfyUI 工作流构建\nconst inputData = $input.first()?.json || {};\nconst body = inputData.body || {};\n\nconst role = (body.character_name || body.name || body.role || 'poppy').toLowerCase();\nconst rawPrompt = body.prompt || '';\nconst userNegative = body.negative_prompt || 'blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background details';\n\n// 角色触发词映射\nconst triggerWords = {\n  poppy: 'cj_vector_style, poppy_character, minimalist, solid black dot eyes, no pupils',\n  edi: 'cj_vector_style, edi_character',\n  rolly: 'cj_vector_style, rolly_character',\n  ace: 'cj_vector_style, ace_character',\n  milo: 'cj_vector_style, milo_character'\n};\n\nconst userPrompt = `${triggerWords[role] || `${role}_character`}, ${rawPrompt}`;\n\n// 构建单个角色的 ComfyUI 工作流\nconst workflow = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": body.width || 1024, \"height\": body.height || 1024, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"7\": { \"inputs\": { \"text\": userNegative, \"clip\": [\"3\", 0] }, \"class_type\": \"CLIPTextEncode\" },\n  \"101\": { \"inputs\": { \"lora_name\": `${role}.safetensors`, \"strength_model\": 0.8, \"strength_clip\": 1, \"model\": [\"4\", 0], \"clip\": [\"3\", 0] }, \"class_type\": \"LoraLoader\" },\n  \"102\": { \"inputs\": { \"text\": userPrompt, \"clip\": [\"101\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"103\": { \"inputs\": { \"seed\": Math.floor(Math.random() * 100000000000000), \"steps\": 20, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"101\", 0], \"positive\": [\"102\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"104\": { \"inputs\": { \"samples\": [\"103\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"105\": { \"inputs\": { \"filename_prefix\": `Asset_${role}`, \"images\": [\"104\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\nconst comfyuiUrl = 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';\n\nreturn [{\n  json: {\n    comfyui_url: comfyuiUrl,\n    comfyui_payload: { prompt: workflow },\n    debug: {\n      role_identified: role,\n      final_prompt: userPrompt,\n      lora_used: `${role}.safetensors`\n    }\n  }\n}];"
+        "jsCode": "const comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
+      },
+      "name": "🖥️ GPU 候选列表",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        96,
+        208
+      ],
+      "id": "gpu-candidate-list-ipchar"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}/system_stats",
+        "options": {
+          "timeout": 5000,
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 0
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "name": "🖥️ 探测 GPU",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        192,
+        208
+      ],
+      "id": "gpu-probe-ipchar",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidates = $('🖥️ GPU 候选列表').all().map((item) => item.json.url);\nconst results = $input.all();\nconst aliveGpuUrls = [];\nresults.forEach((item, index) => {\n  const res = item.json || {};\n  if (res && res.system && res.devices && candidates[index]) {\n    aliveGpuUrls.push(candidates[index]);\n  }\n});\nif (!aliveGpuUrls.length) {\n  throw new Error('没有可用的 GPU 绘图服务：5 个 ComfyUI 候选实例全部探测失败，请确认至少启动了一个 GPU 实例。');\n}\nreturn [{ json: { aliveGpuUrls, aliveCount: aliveGpuUrls.length } }];"
+      },
+      "name": "🖥️ 汇总存活 GPU",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        208
+      ],
+      "id": "gpu-alive-summary-ipchar"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 单个IP人物生成 - ComfyUI 工作流构建\nconst body = $('📥 Webhook 接收').first().json.body || {};\n\nconst role = (body.character_name || body.name || body.role || 'poppy').toLowerCase();\nconst rawPrompt = body.prompt || '';\nconst userNegative = body.negative_prompt || 'blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background details';\n\n// 角色触发词映射\nconst triggerWords = {\n  poppy: 'cj_vector_style, poppy_character, minimalist, solid black dot eyes, no pupils',\n  edi: 'cj_vector_style, edi_character',\n  rolly: 'cj_vector_style, rolly_character',\n  ace: 'cj_vector_style, ace_character',\n  milo: 'cj_vector_style, milo_character'\n};\n\nconst userPrompt = `${triggerWords[role] || `${role}_character`}, ${rawPrompt}`;\n\n// 构建单个角色的 ComfyUI 工作流\nconst workflow = {\n  \"1\": { \"inputs\": { \"unet_name\": \"z_image_turbo_bf16.safetensors\", \"weight_dtype\": \"default\" }, \"class_type\": \"UNETLoader\" },\n  \"2\": { \"inputs\": { \"vae_name\": \"ae.safetensors\" }, \"class_type\": \"VAELoader\" },\n  \"3\": { \"inputs\": { \"clip_name\": \"qwen_3_4b.safetensors\", \"type\": \"lumina2\", \"device\": \"default\" }, \"class_type\": \"CLIPLoader\" },\n  \"4\": { \"inputs\": { \"shift\": 3, \"model\": [\"1\", 0] }, \"class_type\": \"ModelSamplingAuraFlow\" },\n  \"5\": { \"inputs\": { \"width\": body.width || 1024, \"height\": body.height || 1024, \"batch_size\": 1 }, \"class_type\": \"EmptySD3LatentImage\" },\n  \"7\": { \"inputs\": { \"text\": userNegative, \"clip\": [\"3\", 0] }, \"class_type\": \"CLIPTextEncode\" },\n  \"101\": { \"inputs\": { \"lora_name\": `${role}.safetensors`, \"strength_model\": 0.8, \"strength_clip\": 1, \"model\": [\"4\", 0], \"clip\": [\"3\", 0] }, \"class_type\": \"LoraLoader\" },\n  \"102\": { \"inputs\": { \"text\": userPrompt, \"clip\": [\"101\", 1] }, \"class_type\": \"CLIPTextEncode\" },\n  \"103\": { \"inputs\": { \"seed\": Math.floor(Math.random() * 100000000000000), \"steps\": 20, \"cfg\": 1.5, \"sampler_name\": \"euler\", \"scheduler\": \"simple\", \"denoise\": 1, \"model\": [\"101\", 0], \"positive\": [\"102\", 0], \"negative\": [\"7\", 0], \"latent_image\": [\"5\", 0] }, \"class_type\": \"KSampler\" },\n  \"104\": { \"inputs\": { \"samples\": [\"103\", 0], \"vae\": [\"2\", 0] }, \"class_type\": \"VAEDecode\" },\n  \"105\": { \"inputs\": { \"filename_prefix\": `Asset_${role}`, \"images\": [\"104\", 0] }, \"class_type\": \"SaveImage\" }\n};\n\nconst aliveGpuUrls = $input.first()?.json?.aliveGpuUrls || [];\nif (!aliveGpuUrls.length) throw new Error('没有可用的 GPU 绘图服务，请确认至少启动了一个 ComfyUI 实例。');\nconst comfyuiUrl = aliveGpuUrls[Math.floor(Math.random() * aliveGpuUrls.length)];\n\nreturn [{\n  json: {\n    comfyui_url: comfyuiUrl,\n    comfyui_payload: { prompt: workflow },\n    debug: {\n      role_identified: role,\n      final_prompt: userPrompt,\n      lora_used: `${role}.safetensors`\n    }\n  }\n}];"
       },
       "name": "🎨 准备生成参数",
       "type": "n8n-nodes-base.code",
@@ -116,6 +172,39 @@
   },
   "connections": {
     "📥 Webhook 接收": {
+      "main": [
+        [
+          {
+            "node": "🖥️ GPU 候选列表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖥️ GPU 候选列表": {
+      "main": [
+        [
+          {
+            "node": "🖥️ 探测 GPU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖥️ 探测 GPU": {
+      "main": [
+        [
+          {
+            "node": "🖥️ 汇总存活 GPU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖥️ 汇总存活 GPU": {
       "main": [
         [
           {

@@ -75,7 +75,63 @@
     },
     {
       "parameters": {
-        "jsCode": "// 1. 获取前置节点的数据，并做兼容处理\nconst raw = $input.item.json;\nlet overview = raw.courseOverview;\n\nif (!overview && raw.text) {\n  try {\n    overview = JSON.parse(raw.text).courseOverview;\n  } catch(e) {}\n}\nif (!overview) {\n  overview = raw; // 兜底逻辑\n}\n\nconst language = $('参数组装').first().json.language || 'zh';\nconst outputLanguage = $('参数组装').first().json.outputLanguage || (language === 'en' ? 'English' : 'Chinese');\n\nfunction sanitizeThemeImagePrompt(value) {\n  return String(value || '')\n    .replace(/Do not include[^.\\n]*(speech bubbles|dialogue balloons|thought bubbles|comic bubbles|text boxes|blank white panels|whiteboards|posters|visual container)[^.\\n]*\\.?/gi, '')\n    .replace(/Absolutely no visible text[^.\\n]*\\.?/gi, '')\n    .replace(/No text,\\s*no speech bubbles,\\s*no posters,\\s*no writing of any kind\\.?/gi, 'Textless visual illustration.')\n    .replace(/no written whiteboard,\\s*no poster text,\\s*no speech bubbles\\.?/gi, '')\n    .replace(/speech bubbles|dialogue balloons|thought bubbles|comic bubbles|callout bubbles|text boxes|empty caption boxes|blank white panels|white rounded rectangles|empty rounded rectangles|blank whiteboards|blank posters|blank signs|whiteboards|posters|display boards|presentation boards|UI panels|comic panels|frames reserved for text|visual containers? designed to hold text/gi, '')\n    .replace(/cj_vector_style,?\\s*textless full-bleed course-cover illustration,?\\s*one continuous immersive scene across the whole canvas,?\\s*theme-specific environment and props from the prompt only,?/gi, '')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nconst fallbackPrompt = outputLanguage === 'English'\n  ? 'A textless flat vector course-cover illustration based on the course theme, using only theme-specific scenery, props, icons, and atmosphere.'\n  : '根据课程主题生成无文字扁平矢量封面插画，只使用与主题直接相关的场景、道具、图标和氛围。';\n\n// 2. 提取大模型生成的生图提示词\nconst generatedPrompt = sanitizeThemeImagePrompt(overview.themeImagePrompt || fallbackPrompt);\n\nconst stylePositive = [\n  'cj_vector_style',\n  'textless full-bleed course-cover illustration',\n  'one continuous immersive scene across the whole canvas',\n  'theme-specific environment and props from the prompt only',\n  'flat vector illustration, even black outline, single-line style, 2D flat design',\n  'low-saturation solid colors, soft harmonious palette, clean friendly environmental line art',\n  'rich background details fill the canvas, balanced composition, fully illustrated edges',\n  'character-free scenery, prop-focused environment, empty of living figures'\n].join(', ');\n\nconst imagePrompt = [stylePositive, generatedPrompt].filter(Boolean).join(', ');\n\n// Keep these only in the negative prompt. Repeating object names in the positive prompt makes the model draw them.\nconst negativePrompt = [\n  'readable writing, typography, letters, words, numbers, Chinese characters, English words',\n  'captions, labels, title, logo, watermark, poster-like writing, classroom writing',\n  'comic layout, worksheet layout, presentation layout, interface layout, template layout',\n  'large blank geometric areas, empty placeholder areas, separated layout regions',\n  'people, humans, characters, animals, blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients'\n].join(', ');\n\n// 3. 生成随机种子，确保每次调用的画面都不一样\nconst seed = Math.floor(Math.random() * 1000000000000);\n\n// 4. 构建 ComfyUI 工作流。保留低强度场景 LoRA 统一画风，但让课程主题主导画面内容。\nconst workflow = {\n  \"1\": {\n    \"inputs\": {\n      \"unet_name\": \"z_image_turbo_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\"\n  },\n  \"2\": {\n    \"inputs\": {\n      \"vae_name\": \"ae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\"\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_3_4b.safetensors\",\n      \"type\": \"lumina2\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\"\n  },\n  \"4\": {\n    \"inputs\": {\n      \"shift\": 3,\n      \"model\": [ \"1\", 0 ]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\"\n  },\n  \"5\": {\n    \"inputs\": {\n      \"width\": 1968,\n      \"height\": 1152,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptySD3LatentImage\"\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": negativePrompt,\n      \"clip\": [ \"101\", 1 ]\n    },\n    \"class_type\": \"CLIPTextEncode\"\n  },\n  \"101\": {\n    \"inputs\": {\n      \"lora_name\": \"poppy.safetensors\",\n      \"strength_model\": 0.35,\n      \"strength_clip\": 0.45,\n      \"model\": [ \"4\", 0 ],\n      \"clip\": [ \"3\", 0 ]\n    },\n    \"class_type\": \"LoraLoader\"\n  },\n  \"102\": {\n    \"inputs\": {\n      \"text\": imagePrompt,\n      \"clip\": [ \"101\", 1 ]\n    },\n    \"class_type\": \"CLIPTextEncode\"\n  },\n  \"103\": {\n    \"inputs\": {\n      \"seed\": seed,\n      \"steps\": 20,\n      \"cfg\": 1.5,\n      \"sampler_name\": \"euler\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [ \"101\", 0 ],\n      \"positive\": [ \"102\", 0 ],\n      \"negative\": [ \"7\", 0 ],\n      \"latent_image\": [ \"5\", 0 ]\n    },\n    \"class_type\": \"KSampler\"\n  },\n  \"104\": {\n    \"inputs\": {\n      \"samples\": [ \"103\", 0 ],\n      \"vae\": [ \"2\", 0 ]\n    },\n    \"class_type\": \"VAEDecode\"\n  },\n  \"105\": {\n    \"inputs\": {\n      \"filename_prefix\": \"Course_Theme\",\n      \"images\": [ \"104\", 0 ]\n    },\n    \"class_type\": \"SaveImage\"\n  }\n};\n\n// 5. 返回组装好的对象，将大模型生成的概览数据一起透传下去\nreturn {\n  courseOverview: overview,\n  comfyuiPayload: {\n    prompt: workflow\n  }\n};"
+        "jsCode": "const comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3664,
+        400
+      ],
+      "id": "gpu-candidate-list-overview",
+      "name": "GPU 候选列表"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.url }}/system_stats",
+        "options": {
+          "timeout": 5000,
+          "batching": {
+            "batch": {
+              "batchSize": 5,
+              "batchInterval": 0
+            }
+          },
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3792,
+        400
+      ],
+      "id": "gpu-probe-overview",
+      "name": "探测 GPU",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const candidates = $('GPU 候选列表').all().map((item) => item.json.url);\nconst results = $input.all();\nconst aliveGpuUrls = [];\nresults.forEach((item, index) => {\n  const res = item.json || {};\n  if (res && res.system && res.devices && candidates[index]) {\n    aliveGpuUrls.push(candidates[index]);\n  }\n});\nif (!aliveGpuUrls.length) {\n  throw new Error('没有可用的 GPU 绘图服务：5 个 ComfyUI 候选实例全部探测失败，请确认至少启动了一个 GPU 实例。');\n}\nreturn [{ json: { aliveGpuUrls, aliveCount: aliveGpuUrls.length } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3920,
+        400
+      ],
+      "id": "gpu-alive-summary-overview",
+      "name": "汇总存活 GPU"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. 获取前置节点的数据，并做兼容处理\nconst raw = $('概览生成').first().json;\nlet overview = raw.courseOverview;\n\nif (!overview && raw.text) {\n  try {\n    overview = JSON.parse(raw.text).courseOverview;\n  } catch(e) {}\n}\nif (!overview) {\n  overview = raw; // 兜底逻辑\n}\n\nconst language = $('参数组装').first().json.language || 'zh';\nconst outputLanguage = $('参数组装').first().json.outputLanguage || (language === 'en' ? 'English' : 'Chinese');\n\nfunction sanitizeThemeImagePrompt(value) {\n  return String(value || '')\n    .replace(/Do not include[^.\\n]*(speech bubbles|dialogue balloons|thought bubbles|comic bubbles|text boxes|blank white panels|whiteboards|posters|visual container)[^.\\n]*\\.?/gi, '')\n    .replace(/Absolutely no visible text[^.\\n]*\\.?/gi, '')\n    .replace(/No text,\\s*no speech bubbles,\\s*no posters,\\s*no writing of any kind\\.?/gi, 'Textless visual illustration.')\n    .replace(/no written whiteboard,\\s*no poster text,\\s*no speech bubbles\\.?/gi, '')\n    .replace(/speech bubbles|dialogue balloons|thought bubbles|comic bubbles|callout bubbles|text boxes|empty caption boxes|blank white panels|white rounded rectangles|empty rounded rectangles|blank whiteboards|blank posters|blank signs|whiteboards|posters|display boards|presentation boards|UI panels|comic panels|frames reserved for text|visual containers? designed to hold text/gi, '')\n    .replace(/cj_vector_style,?\\s*textless full-bleed course-cover illustration,?\\s*one continuous immersive scene across the whole canvas,?\\s*theme-specific environment and props from the prompt only,?/gi, '')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nconst fallbackPrompt = outputLanguage === 'English'\n  ? 'A textless flat vector course-cover illustration based on the course theme, using only theme-specific scenery, props, icons, and atmosphere.'\n  : '根据课程主题生成无文字扁平矢量封面插画，只使用与主题直接相关的场景、道具、图标和氛围。';\n\n// 2. 提取大模型生成的生图提示词\nconst generatedPrompt = sanitizeThemeImagePrompt(overview.themeImagePrompt || fallbackPrompt);\n\nconst stylePositive = [\n  'cj_vector_style',\n  'textless full-bleed course-cover illustration',\n  'one continuous immersive scene across the whole canvas',\n  'theme-specific environment and props from the prompt only',\n  'flat vector illustration, even black outline, single-line style, 2D flat design',\n  'low-saturation solid colors, soft harmonious palette, clean friendly environmental line art',\n  'rich background details fill the canvas, balanced composition, fully illustrated edges',\n  'character-free scenery, prop-focused environment, empty of living figures'\n].join(', ');\n\nconst imagePrompt = [stylePositive, generatedPrompt].filter(Boolean).join(', ');\n\n// Keep these only in the negative prompt. Repeating object names in the positive prompt makes the model draw them.\nconst negativePrompt = [\n  'readable writing, typography, letters, words, numbers, Chinese characters, English words',\n  'captions, labels, title, logo, watermark, poster-like writing, classroom writing',\n  'comic layout, worksheet layout, presentation layout, interface layout, template layout',\n  'large blank geometric areas, empty placeholder areas, separated layout regions',\n  'people, humans, characters, animals, blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients'\n].join(', ');\n\n// 3. 生成随机种子，确保每次调用的画面都不一样\nconst seed = Math.floor(Math.random() * 1000000000000);\n\n// 4. 构建 ComfyUI 工作流。保留低强度场景 LoRA 统一画风，但让课程主题主导画面内容。\nconst workflow = {\n  \"1\": {\n    \"inputs\": {\n      \"unet_name\": \"z_image_turbo_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\"\n  },\n  \"2\": {\n    \"inputs\": {\n      \"vae_name\": \"ae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\"\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_3_4b.safetensors\",\n      \"type\": \"lumina2\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\"\n  },\n  \"4\": {\n    \"inputs\": {\n      \"shift\": 3,\n      \"model\": [ \"1\", 0 ]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\"\n  },\n  \"5\": {\n    \"inputs\": {\n      \"width\": 1968,\n      \"height\": 1152,\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptySD3LatentImage\"\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": negativePrompt,\n      \"clip\": [ \"101\", 1 ]\n    },\n    \"class_type\": \"CLIPTextEncode\"\n  },\n  \"101\": {\n    \"inputs\": {\n      \"lora_name\": \"poppy.safetensors\",\n      \"strength_model\": 0.35,\n      \"strength_clip\": 0.45,\n      \"model\": [ \"4\", 0 ],\n      \"clip\": [ \"3\", 0 ]\n    },\n    \"class_type\": \"LoraLoader\"\n  },\n  \"102\": {\n    \"inputs\": {\n      \"text\": imagePrompt,\n      \"clip\": [ \"101\", 1 ]\n    },\n    \"class_type\": \"CLIPTextEncode\"\n  },\n  \"103\": {\n    \"inputs\": {\n      \"seed\": seed,\n      \"steps\": 20,\n      \"cfg\": 1.5,\n      \"sampler_name\": \"euler\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [ \"101\", 0 ],\n      \"positive\": [ \"102\", 0 ],\n      \"negative\": [ \"7\", 0 ],\n      \"latent_image\": [ \"5\", 0 ]\n    },\n    \"class_type\": \"KSampler\"\n  },\n  \"104\": {\n    \"inputs\": {\n      \"samples\": [ \"103\", 0 ],\n      \"vae\": [ \"2\", 0 ]\n    },\n    \"class_type\": \"VAEDecode\"\n  },\n  \"105\": {\n    \"inputs\": {\n      \"filename_prefix\": \"Course_Theme\",\n      \"images\": [ \"104\", 0 ]\n    },\n    \"class_type\": \"SaveImage\"\n  }\n};\n\n// 5. 返回组装好的对象，将大模型生成的概览数据一起透传下去\nconst aliveGpuUrls = $input.first()?.json?.aliveGpuUrls || [];\nif (!aliveGpuUrls.length) throw new Error('没有可用的 GPU 绘图服务，请确认至少启动了一个 ComfyUI 实例。');\nconst comfyuiUrl = aliveGpuUrls[Math.floor(Math.random() * aliveGpuUrls.length)];\n\nreturn {\n  courseOverview: overview,\n  comfyuiUrl,\n  comfyuiPayload: {\n    prompt: workflow\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -89,7 +145,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com/prompt",
+        "url": "={{$json.comfyuiUrl}}/prompt",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -117,7 +173,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const promptId = $input.item.json.prompt_id;\n\n// 去拿\"概览生成\"或者\"构建图片工作流\"里透传下来的纯净 JSON\nconst cleanCourseOverview = $('构建图片工作流').first().json.courseOverview;\n\nconst comfyUrl = \"https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com\";\nconst maxAttempts = 600;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  // 每 3 秒查一次\n  await new Promise(r => setTimeout(r, 3000));\n  \n  try {\n    const res = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${comfyUrl}/history/${promptId}`,\n      json: true\n    });\n    \n    const taskData = Object.values(res)[0];\n    \n    if (taskData && taskData.outputs) {\n      let images = [];\n      // 动态遍历所有 output 节点，寻找里面包含 images 数组的节点（无视节点ID变动）\n      for (const nodeId in taskData.outputs) {\n        if (taskData.outputs[nodeId].images && taskData.outputs[nodeId].images.length > 0) {\n          images = taskData.outputs[nodeId].images;\n          break;\n        }\n      }\n\n      if (images.length > 0) {\n        const img = images[0];\n        const imageUrl = `${comfyUrl}/view?filename=${img.filename}&subfolder=${img.subfolder || ''}&type=${img.type || 'output'}`;\n        \n        return {\n          courseOverview: cleanCourseOverview,\n          themeImageUrl: imageUrl\n        };\n      }\n    }\n    \n    if (taskData?.status?.status_str === 'error') {\n      return {\n        courseOverview: cleanCourseOverview,\n        themeImageUrl: null,\n        error: '图片生成失败(ComfyUI内部报错)'\n      };\n    }\n  } catch (e) {\n    console.log(\"轮询报错，继续重试:\", e.message);\n  }\n}\n\nreturn {\n  courseOverview: cleanCourseOverview,\n  themeImageUrl: null,\n  error: '图片生成超时'\n};"
+        "jsCode": "const promptId = $input.item.json.prompt_id;\n\n// 去拿\"概览生成\"或者\"构建图片工作流\"里透传下来的纯净 JSON\nconst cleanCourseOverview = $('构建图片工作流').first().json.courseOverview;\n\nconst comfyUrl = $('构建图片工作流').first().json.comfyuiUrl;\nif (!comfyUrl) throw new Error('没有可用的 GPU 绘图服务，请确认至少启动了一个 ComfyUI 实例。');\nconst maxAttempts = 600;\n\nfor (let i = 0; i < maxAttempts; i++) {\n  // 每 3 秒查一次\n  await new Promise(r => setTimeout(r, 3000));\n  \n  try {\n    const res = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `${comfyUrl}/history/${promptId}`,\n      json: true\n    });\n    \n    const taskData = Object.values(res)[0];\n    \n    if (taskData && taskData.outputs) {\n      let images = [];\n      // 动态遍历所有 output 节点，寻找里面包含 images 数组的节点（无视节点ID变动）\n      for (const nodeId in taskData.outputs) {\n        if (taskData.outputs[nodeId].images && taskData.outputs[nodeId].images.length > 0) {\n          images = taskData.outputs[nodeId].images;\n          break;\n        }\n      }\n\n      if (images.length > 0) {\n        const img = images[0];\n        const imageUrl = `${comfyUrl}/view?filename=${img.filename}&subfolder=${img.subfolder || ''}&type=${img.type || 'output'}`;\n        \n        return {\n          courseOverview: cleanCourseOverview,\n          themeImageUrl: imageUrl\n        };\n      }\n    }\n    \n    if (taskData?.status?.status_str === 'error') {\n      return {\n        courseOverview: cleanCourseOverview,\n        themeImageUrl: null,\n        error: '图片生成失败(ComfyUI内部报错)'\n      };\n    }\n  } catch (e) {\n    console.log(\"轮询报错，继续重试:\", e.message);\n  }\n}\n\nreturn {\n  courseOverview: cleanCourseOverview,\n  themeImageUrl: null,\n  error: '图片生成超时'\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -180,6 +236,39 @@
       ]
     },
     "概览生成": {
+      "main": [
+        [
+          {
+            "node": "GPU 候选列表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPU 候选列表": {
+      "main": [
+        [
+          {
+            "node": "探测 GPU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "探测 GPU": {
+      "main": [
+        [
+          {
+            "node": "汇总存活 GPU",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "汇总存活 GPU": {
       "main": [
         [
           {
