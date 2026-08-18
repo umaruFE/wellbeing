@@ -562,7 +562,7 @@ export function SongWritingStudioPage() {
       const melodyName = librarySong?.melody_type || librarySong?.name || selectedMelody.name;
       const response = await fetch('/api/ai/generate-song-writing-line', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ melody: melodyName, themes: themeList, vocabulary: form.vocabulary, grammar: form.grammar, lines: editorDraft.lines, regenerateIndex: index, adjustmentRequest }),
+        body: JSON.stringify({ age: form.age, level: form.level, melody: melodyName, themes: themeList, vocabulary: form.vocabulary, grammar: form.grammar, lines: editorDraft.lines, regenerateIndex: index, adjustmentRequest }),
       });
       const result = await parseJsonSafely(response);
       if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, '重新生成失败'));

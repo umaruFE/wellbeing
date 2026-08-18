@@ -72,6 +72,37 @@ export function getMelodyRules(melody: string): string {
   return MELODY_RULES[melody] || '';
 }
 
+export function getLearnerLanguageRules(age: string, level: string): string {
+  let ageRules: string;
+  if (/(?:3|4)\s*-\s*6|3到6|4到6/.test(age)) {
+    ageRules = '使用可看见、可表演的具体概念和生活情境；高频重复、动作指令和拟声表达优先；避免抽象隐喻，每个固定歌词片段尽量不超过 6 个英文单词。';
+  } else if (/7\s*-\s*9|7到9/.test(age)) {
+    ageRules = '围绕家庭、学校、朋友、身体、自然和基本情绪；允许简单叙述与因果，但表达保持直白；每行只承载一个主要意思。';
+  } else if (/10\s*-\s*12|10到12/.test(age)) {
+    ageRules = '可涉及自我认知、合作、成长和较丰富的情绪；允许清晰的比较、原因与结果以及容易理解的意象，但避免成人化说教。';
+  } else {
+    ageRules = '内容应尊重青少年表达方式，可讨论身份、关系、压力、选择和成长；避免幼儿化措辞，但仍须保持自然、可唱和符合课堂语境。';
+  }
+
+  let levelRules: string;
+  if (/零基础/.test(level)) {
+    levelRules = '按 Pre-A1：只用最常见的单词、固定短语和 I am/I like/I can/This is 等句型；通过重复适配旋律；全曲重点实义词约 3-5 个，Word Bank 只用单个词。';
+  } else if (/初级/.test(level)) {
+    levelRules = '按 A1：使用高频词、一般现在时、be 动词和 can 等简单结构；不使用复杂从句和低频抽象词；全曲重点实义词约 5-8 个，Word Bank 优先单个词。';
+  } else if (/中级/.test(level)) {
+    levelRules = '按 A2-B1：可使用 because/when/if 连接的简短复句、常见过去或将来表达和基础情绪词；全曲重点词约 8-12 个，避免罕见书面词。';
+  } else {
+    levelRules = '按 B1-B2：可使用较丰富的情绪词、意象和复合句，但避免生僻文学词与过长句；全曲重点词约 10-14 个，歌词仍应自然、清晰、易唱。';
+  }
+
+  return `【年龄 × 英文水平 · 最高优先级硬约束】
+- 年龄要求（${age || '未指定'}）：${ageRules}
+- 水平要求（${level || '未指定'}）：${levelRules}
+- 两项要求必须同时满足；若发生冲突，以较简单的一项为准，不得为了押韵或凑音节提高语言难度
+- 用户明确指定的核心词和句型必须保留；其余词汇必须匹配上述分级
+- 返回前逐行检查词汇、语法、句长和主题成熟度，替换所有不符合所选年龄或水平的表达`;
+}
+
 export interface SongWritingPromptInput {
   age: string;
   level: string;
@@ -99,6 +130,7 @@ export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
   ];
 
   const rules = getMelodyRules(input.melody);
+  const learnerRules = getLearnerLanguageRules(input.age, input.level);
   const isRevision = Boolean(input.adjustmentRequest?.trim() && input.currentLines?.length);
   const currentBlankCount = (input.currentLines || []).reduce((total, line) => total + (line.match(/______/g) || []).length, 0);
   const requestedBlankTarget = input.adjustmentRequest?.includes('填空太多')
@@ -121,6 +153,8 @@ export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
 
   return `根据以下条件生成一首可课堂互动的英文歌曲：\n${conditions.join('；\n')}。
 
+${learnerRules}
+
 ${rules}
 ${currentVersion}${revisionRules}
 
@@ -137,6 +171,8 @@ ${currentVersion}${revisionRules}
 
 // 单行歌词重新生成
 export interface SongWritingLinePromptInput {
+  age: string;
+  level: string;
   melody: string;
   themeText: string;
   vocabulary: string;
@@ -149,14 +185,19 @@ export interface SongWritingLinePromptInput {
 
 export function buildSongWritingLinePrompt(input: SongWritingLinePromptInput) {
   const rules = getMelodyRules(input.melody);
+  const learnerRules = getLearnerLanguageRules(input.age, input.level);
   const currentLines = input.lines.map((line, i) => `L${i + 1}: ${line}`).join('\n');
 
   return `你是儿童英语歌曲创编专家。以下是一首基于「${input.melody}」旋律的英文歌曲，请仅重新生成第 L${input.regenerateIndex + 1} 行歌词，其余行保持不变。
 
 主题：${input.themeText}
+学生年龄：${input.age}
+英文水平：${input.level}
 核心词汇：${input.vocabulary || '未指定'}
 核心句型：${input.grammar || '未指定'}
 本次具体调整需求：${input.adjustmentRequest || '无额外要求'}
+
+${learnerRules}
 
 ${rules}
 

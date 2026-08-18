@@ -12,7 +12,7 @@ const melodyReferences: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
   try {
-    const { melody, themes, themeOther, vocabulary, grammar, lines, regenerateIndex, adjustmentRequest } = await request.json();
+    const { age, level, melody, themes, themeOther, vocabulary, grammar, lines, regenerateIndex, adjustmentRequest } = await request.json();
     const themeList = Array.isArray(themes) ? themes.filter(Boolean) : [];
     if (themeOther) themeList.push(themeOther);
     const themeText = themeList.join('、') || '情绪表达';
@@ -25,10 +25,10 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: 'qwen-plus', temperature: 0.8, response_format: { type: 'json_object' },
+        model: 'qwen-plus', temperature: 0.65, response_format: { type: 'json_object' },
         messages: [
           ...SONG_WRITING_SYSTEM_PROMPTS.map((content) => ({ role: 'system', content })),
-          { role: 'user', content: buildSongWritingLinePrompt({ melody, themeText, vocabulary, grammar, lines, regenerateIndex, melodyReference, adjustmentRequest }) },
+          { role: 'user', content: buildSongWritingLinePrompt({ age, level, melody, themeText, vocabulary, grammar, lines, regenerateIndex, melodyReference, adjustmentRequest }) },
         ],
       }),
     });

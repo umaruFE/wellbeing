@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: 'qwen-plus', temperature: 0.8, response_format: { type: 'json_object' },
+        model: 'qwen-plus', temperature: 0.65, response_format: { type: 'json_object' },
         messages: [
           ...SONG_WRITING_SYSTEM_PROMPTS.map((content) => ({ role: 'system', content })),
           { role: 'user', content: buildSongWritingUserPrompt({ age, level, participants, themeText, vocabulary, grammar, melody, melodyReference, adjustmentRequest, currentLines, currentWords }) },
