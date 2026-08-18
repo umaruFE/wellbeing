@@ -82,6 +82,8 @@ export interface SongWritingPromptInput {
   melody: string;
   melodyReference: string;
   adjustmentRequest?: string;
+  currentLines?: string[];
+  currentWords?: string[];
 }
 
 export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
@@ -97,10 +99,24 @@ export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
   ];
 
   const rules = getMelodyRules(input.melody);
+  const isRevision = Boolean(input.adjustmentRequest?.trim() && input.currentLines?.length);
+  const currentVersion = isRevision
+    ? `\n当前版本（必须以此为基础做出可见修改）：\n歌词：\n${input.currentLines!.map((line, index) => `L${index + 1}: ${line}`).join('\n')}\nWord Bank：${(input.currentWords || []).join(', ') || '无'}\n`
+    : '';
+  const revisionRules = isRevision
+    ? `\n本次是定向修订，不是重新随机创作。调整需求的优先级高于“建议空格位置/建议空格数量”，但仍须满足旋律、行数和音节硬约束。逐项落实用户要求：
+- “核心语言点丢失”：必须让核心词汇和核心句型真实出现在固定歌词或可由 Word Bank 填入的空格中；如果核心词汇未填写，则优先保留当前 Word Bank 的关键词。
+- “填空太多”：空格总数必须少于当前版本，通常减少 1-2 个，并把被移除的空格补成完整歌词。
+- “填空太少”：空格总数必须多于当前版本，通常增加 1-2 个。
+- “词汇太难/太简单”：同步改写歌词与 Word Bank，而不只是替换词库。
+- 指定某一行时，必须重点修改该行。
+不要原样返回当前歌词；返回前自行核对调整是否产生可见变化。`
+    : '';
 
   return `根据以下条件生成一首可课堂互动的英文歌曲：\n${conditions.join('；\n')}。
 
 ${rules}
+${currentVersion}${revisionRules}
 
 旋律案例参考（仅用于借鉴节奏、句式和词库方向，绝不是必须照抄的内容要求；请优先匹配本次语言目标与主题）：${input.melodyReference}
 

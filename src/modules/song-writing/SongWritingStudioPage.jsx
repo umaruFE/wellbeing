@@ -571,17 +571,33 @@ export function SongWritingStudioPage() {
   };
 
   const regenerateAllLines = async () => {
+    const requestText = adjustmentRequest.trim();
+    if (!requestText) {
+      setSaveMessage('请先填写或选择一项具体调整需求');
+      return;
+    }
     setRegeneratingAll(true);
     setIsGenerating(true);
     try {
       const melodyName2 = librarySong?.melody_type || librarySong?.name || selectedMelody.name;
-      const response = await fetch('/api/ai/generate-song-writing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, melody: melodyName2, adjustmentRequest }) });
+      const response = await fetch('/api/ai/generate-song-writing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...form,
+          melody: melodyName2,
+          adjustmentRequest: requestText,
+          currentLines: draft.lines,
+          currentWords: draft.words,
+        }),
+      });
       const result = await parseJsonSafely(response);
       if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, '重新生成失败'));
       const data = result.data;
       setDraft((current) => ({ ...current, lines: data.lines, words: data.words, wordEmojis: data.wordEmojis || {} }));
       setBlankValues({});
       setShowAdjustmentPanel(false);
+      setSaveMessage('已按调整需求更新歌词和 Word Bank');
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : '重新生成失败');
     } finally { setRegeneratingAll(false); setIsGenerating(false); }
