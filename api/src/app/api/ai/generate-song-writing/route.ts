@@ -38,6 +38,33 @@ function fallbackWordEmoji(word: string) {
   return '✨';
 }
 
+function countBlanks(lines: unknown[]): number {
+  return lines.reduce<number>((total, line) => total + (typeof line === 'string' ? (line.match(/______/g) || []).length : 0), 0);
+}
+
+function enforceFewerBlanks(lines: string[], words: string[], currentLines: unknown[]): string[] {
+  const currentCount = countBlanks(currentLines);
+  const targetCount = Math.max(0, currentCount - 2);
+  let remainingToRemove = Math.max(0, countBlanks(lines) - targetCount);
+  if (!remainingToRemove) return lines;
+
+  const blankLineIndexes = lines.flatMap((line, index) => line.includes('______') ? [index] : []);
+  const preferredIndexes = blankLineIndexes.filter((_, position) => position % 2 === 1)
+    .concat(blankLineIndexes.filter((_, position) => position % 2 === 0).reverse());
+  const removeFrom = new Set(preferredIndexes.slice(0, remainingToRemove));
+  let wordIndex = 0;
+  return lines.map((line, lineIndex) => {
+    if (!removeFrom.has(lineIndex) || !line.includes('______')) return line;
+    return line.replace(/______/g, () => {
+      if (remainingToRemove <= 0) return '______';
+      remainingToRemove -= 1;
+      const replacement = words[wordIndex % Math.max(words.length, 1)] || 'happy';
+      wordIndex += 1;
+      return replacement;
+    });
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { age, level, participants, themes, themeOther, vocabulary, grammar, melody, adjustmentRequest, currentLines, currentWords } = await request.json();
@@ -64,7 +91,12 @@ export async function POST(request: NextRequest) {
     const payload = await response.json();
     const data = JSON.parse(payload.choices?.[0]?.message?.content || '{}');
     if (!Array.isArray(data.lines) || !Array.isArray(data.words) || !data.activityPlan) throw new Error('大模型返回内容不完整');
-    const words = data.words.slice(0, 12);
+    const rawWords = data.words.filter((word: unknown): word is string => typeof word === 'string');
+    const lines = adjustmentRequest?.includes('填空太多') && Array.isArray(currentLines)
+      ? enforceFewerBlanks(data.lines, rawWords, currentLines)
+      : data.lines;
+    const blankCount = countBlanks(lines);
+    const words = rawWords.slice(0, Math.min(12, Math.max(blankCount + 2, blankCount + 3)));
     const wordEmojis = Object.fromEntries(
       words
         .filter((word: unknown): word is string => typeof word === 'string')
@@ -73,7 +105,7 @@ export async function POST(request: NextRequest) {
           return [word, generated && generated !== '💬' ? generated : fallbackWordEmoji(word)];
         }),
     );
-    return NextResponse.json({ success: true, data: { ...data, words, wordEmojis, lines: data.lines.slice(0, 8) } });
+    return NextResponse.json({ success: true, data: { ...data, words, wordEmojis, lines: lines.slice(0, 8) } });
   } catch (error) {
     return NextResponse.json({ success: false, error: error instanceof Error ? error.message : '歌曲生成失败' }, { status: 500 });
   }

@@ -33,7 +33,7 @@ export const MELODY_RULES: Record<string, string> = {
 - L7: 7-9 音节（含填空词），全曲情感最高点
 - L8: 7-8 音节，第二段收束句，固定不设空
 - 空格规则：每行最多 1 个空格（______）；空格放在前半句（逗号前），后半句固定保证尾词押韵
-- 每段 3 个空格，共 6 个（L1/L2/L3 + L5/L6/L7）
+- 默认每段 3 个空格，共 6 个（L1/L2/L3 + L5/L6/L7）；若用户明确要求减少填空，可改为每段 2 个，共 4 个
 - 前半句句型：两段使用统一句型模板（如 "When I am ___" / "In the ___"）
 - 后半句句型：每行不同，动作/感受各不重复
 - Word Bank 词汇量 = 空格数 + 2-3 个干扰词
@@ -100,14 +100,20 @@ export function buildSongWritingUserPrompt(input: SongWritingPromptInput) {
 
   const rules = getMelodyRules(input.melody);
   const isRevision = Boolean(input.adjustmentRequest?.trim() && input.currentLines?.length);
+  const currentBlankCount = (input.currentLines || []).reduce((total, line) => total + (line.match(/______/g) || []).length, 0);
+  const requestedBlankTarget = input.adjustmentRequest?.includes('填空太多')
+    ? Math.max(0, currentBlankCount - 2)
+    : input.adjustmentRequest?.includes('填空太少')
+      ? currentBlankCount + 1
+      : null;
   const currentVersion = isRevision
     ? `\n当前版本（必须以此为基础做出可见修改）：\n歌词：\n${input.currentLines!.map((line, index) => `L${index + 1}: ${line}`).join('\n')}\nWord Bank：${(input.currentWords || []).join(', ') || '无'}\n`
     : '';
   const revisionRules = isRevision
     ? `\n本次是定向修订，不是重新随机创作。调整需求的优先级高于“建议空格位置/建议空格数量”，但仍须满足旋律、行数和音节硬约束。逐项落实用户要求：
 - “核心语言点丢失”：必须让核心词汇和核心句型真实出现在固定歌词或可由 Word Bank 填入的空格中；如果核心词汇未填写，则优先保留当前 Word Bank 的关键词。
-- “填空太多”：空格总数必须少于当前版本，通常减少 1-2 个，并把被移除的空格补成完整歌词。
-- “填空太少”：空格总数必须多于当前版本，通常增加 1-2 个。
+- “填空太多”：空格总数必须少于当前版本，并把被移除的空格补成完整歌词。本次当前版本有 ${currentBlankCount} 个空格，返回结果必须恰好有 ${requestedBlankTarget} 个。
+- “填空太少”：空格总数必须多于当前版本。本次应返回 ${requestedBlankTarget ?? currentBlankCount + 1} 个空格。
 - “词汇太难/太简单”：同步改写歌词与 Word Bank，而不只是替换词库。
 - 指定某一行时，必须重点修改该行。
 不要原样返回当前歌词；返回前自行核对调整是否产生可见变化。`
