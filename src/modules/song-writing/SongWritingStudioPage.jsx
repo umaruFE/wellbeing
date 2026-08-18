@@ -189,6 +189,7 @@ export function SongWritingStudioPage() {
   const [showAllInstruments, setShowAllInstruments] = React.useState(false);
   const [showPlan, setShowPlan] = React.useState(false);
   const [showContentEditor, setShowContentEditor] = React.useState(false);
+  const [editorDraft, setEditorDraft] = React.useState(null);
   const [showAdjustmentPanel, setShowAdjustmentPanel] = React.useState(false);
   const [adjustmentRequest, setAdjustmentRequest] = React.useState('');
   const [regeneratingLine, setRegeneratingLine] = React.useState(null);
@@ -424,6 +425,7 @@ export function SongWritingStudioPage() {
       setShowWords(false);
       setShowPlan(false);
       setShowContentEditor(false);
+      setEditorDraft(null);
       setView('list');
     };
 
@@ -552,6 +554,7 @@ export function SongWritingStudioPage() {
   };
 
   const regenerateLine = async (index) => {
+    if (!editorDraft) return;
     setRegeneratingLine(index);
     try {
       const themeList = [...(form.themes || [])];
@@ -559,18 +562,18 @@ export function SongWritingStudioPage() {
       const melodyName = librarySong?.melody_type || librarySong?.name || selectedMelody.name;
       const response = await fetch('/api/ai/generate-song-writing-line', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ melody: melodyName, themes: themeList, vocabulary: form.vocabulary, grammar: form.grammar, lines: draft.lines, regenerateIndex: index, adjustmentRequest }),
+        body: JSON.stringify({ melody: melodyName, themes: themeList, vocabulary: form.vocabulary, grammar: form.grammar, lines: editorDraft.lines, regenerateIndex: index, adjustmentRequest }),
       });
       const result = await parseJsonSafely(response);
       if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, '重新生成失败'));
-      setDraft((current) => ({ ...current, lines: current.lines.map((line, i) => (i === index ? result.data.line : line)) }));
-      setBlankValues({});
+      setEditorDraft((current) => ({ ...current, lines: current.lines.map((line, i) => (i === index ? result.data.line : line)) }));
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : '重新生成失败');
     } finally { setRegeneratingLine(null); }
   };
 
   const regenerateAllLines = async () => {
+    if (!editorDraft) return;
     const requestText = adjustmentRequest.trim();
     if (!requestText) {
       setSaveMessage('请先填写或选择一项具体调整需求');
@@ -587,17 +590,16 @@ export function SongWritingStudioPage() {
           ...form,
           melody: melodyName2,
           adjustmentRequest: requestText,
-          currentLines: draft.lines,
-          currentWords: draft.words,
+          currentLines: editorDraft.lines,
+          currentWords: editorDraft.words,
         }),
       });
       const result = await parseJsonSafely(response);
       if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, '重新生成失败'));
       const data = result.data;
-      setDraft((current) => ({ ...current, lines: data.lines, words: data.words, wordEmojis: data.wordEmojis || {} }));
-      setBlankValues({});
+      setEditorDraft((current) => ({ ...current, lines: data.lines, words: data.words, wordEmojis: data.wordEmojis || {} }));
       setShowAdjustmentPanel(false);
-      setSaveMessage('已按调整需求更新歌词和 Word Bank');
+      setSaveMessage('AI 优化结果已生成，点击“保存修改”后生效');
     } catch (error) {
       setSaveMessage(error instanceof Error ? error.message : '重新生成失败');
     } finally { setRegeneratingAll(false); setIsGenerating(false); }
@@ -605,7 +607,7 @@ export function SongWritingStudioPage() {
 
   const insertBlankInLine = (index) => {
     const textarea = lyricEditorRefs.current[index];
-    setDraft((current) => {
+    setEditorDraft((current) => {
       const line = current.lines[index];
       const start = textarea?.selectionStart ?? line.length;
       const end = textarea?.selectionEnd ?? start;
@@ -614,12 +616,10 @@ export function SongWritingStudioPage() {
       const newLine = `${before}${before ? ' ' : ''}______${after ? ' ' : ''}${after}`;
       return { ...current, lines: current.lines.map((l, i) => (i === index ? newLine : l)) };
     });
-    setBlankValues({});
   };
 
   const clearBlanksInLine = (index) => {
-    setDraft((current) => ({ ...current, lines: current.lines.map((line, itemIndex) => itemIndex === index ? line.replace(/\s*______\s*/g, ' ').replace(/ {2,}/g, ' ').trim() : line) }));
-    setBlankValues({});
+    setEditorDraft((current) => ({ ...current, lines: current.lines.map((line, itemIndex) => itemIndex === index ? line.replace(/\s*______\s*/g, ' ').replace(/ {2,}/g, ' ').trim() : line) }));
   };
 
   const toggleAdjustmentSuggestion = (suggestion) => {
@@ -631,9 +631,12 @@ export function SongWritingStudioPage() {
   };
 
   const saveContentEdits = () => {
+    if (!editorDraft) return;
+    setDraft(editorDraft);
     setBlankValues({});
     setShowContentEditor(false);
-    setSaveMessage('修改已自动保存');
+    setEditorDraft(null);
+    setSaveMessage('修改已保存');
     window.setTimeout(() => setSaveMessage(''), 2400);
   };
 
@@ -816,7 +819,7 @@ export function SongWritingStudioPage() {
       <svg className="bg-deco star4" width="26" height="26" viewBox="0 0 26 26"><polygon points="13,1 15.5,9.5 25,9.5 17.5,15 20,24 13,19 6,24 8.5,15 1,9.5 10.5,9.5" fill="#f7d958" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <header className="sky-title"><h1>{draft.title}</h1><p>旋律：{selectedMelody.name} · {form.age} · {form.level}</p></header>
       <div className="pbv2-making-toolbar">
-        <button type="button" className="pbv2-ghost" onClick={() => setShowContentEditor(true)}>编辑歌词和词库</button>
+        <button type="button" className="pbv2-ghost" onClick={() => { setEditorDraft({ ...draft, lines: [...draft.lines], words: [...draft.words], wordEmojis: { ...(draft.wordEmojis || {}) } }); setShowContentEditor(true); }}>编辑歌词和词库</button>
         {/* <button type="button" className="pbv2-ghost" onClick={() => downloadInteractiveHtml(draft, form, selectedMelody)}>下载 HTML</button> */}
         <button type="button" className="pbv2-ghost" onClick={() => setShowPlan(true)}>📋 活动方案</button>
         <button type="button" className="pbv2-primary" onClick={openPresentation}>🖥️ 授课模式</button>
@@ -860,8 +863,8 @@ export function SongWritingStudioPage() {
       </section>
 
       {showWords && <Overlay title="Word Bank · 选词区" className="word-bank-modal" onClose={() => setShowWords(false)}><p>投屏模式：点击词卡进行课堂聚焦，再次点击可取消选中。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" className={selectedLargeWord === word ? 'is-selected' : ''} key={`${word}-${index}`} onClick={() => setSelectedLargeWord((current) => current === word ? '' : word)}><span>{wordCardIcon(word, draft.wordEmojis)}</span>{word}</button>)}</div></Overlay>}
-      {showContentEditor && (
-        <Overlay title="编辑歌词和 Word Bank" onClose={() => setShowContentEditor(false)}>
+      {showContentEditor && editorDraft && (
+        <Overlay title="编辑歌词和 Word Bank" onClose={() => { setShowContentEditor(false); setEditorDraft(null); }}>
           <div className="song-content-editor pbv2-editor">
             <div className="song-editor-scroll">
             <section className="pbv2-editor-section lyrics-editor-section">
@@ -869,7 +872,7 @@ export function SongWritingStudioPage() {
                 <h3>歌词模板</h3>
                 <button type="button" className="regenerate-all-btn" disabled={regeneratingAll} onClick={() => setShowAdjustmentPanel((current) => !current)}>
                   {regeneratingAll ? <Loader2 className="spin" size={13} /> : <RefreshCw size={13} />}
-                  {regeneratingAll ? '生成中...' : showAdjustmentPanel ? '收起调整' : '全部重新生成'}
+                  {regeneratingAll ? '优化中...' : showAdjustmentPanel ? '收起优化设置' : 'AI 优化歌词'}
                 </button>
               </div>
               <p className="blank-hint">💡 在文本中点击指定位置，或选中要替换的文字，再点「插入填空」；可重复插入多个</p>
@@ -881,10 +884,10 @@ export function SongWritingStudioPage() {
                 </div>
                 <button type="button" className="song-adjustment-submit" disabled={regeneratingAll} onClick={regenerateAllLines}>{regeneratingAll ? <Loader2 className="spin" size={13} /> : <Wand2 size={13} />}{regeneratingAll ? '正在重新生成...' : '按调整需求重新生成'}</button>
               </div>}
-              {draft.lines.map((line, index) => (
+              {editorDraft.lines.map((line, index) => (
                 <div key={index} className="lyric-edit-row">
                   <span className="line-number">L{index + 1}</span>
-                  <textarea ref={(element) => { lyricEditorRefs.current[index] = element; }} value={line} rows={1} onChange={(event) => setDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} />
+                  <textarea ref={(element) => { lyricEditorRefs.current[index] = element; }} value={line} rows={1} onChange={(event) => setEditorDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} />
                   <div className="line-actions">
                     <div className="blank-actions"><button type="button" className="blank-toggle" onClick={() => insertBlankInLine(index)}><Plus size={12} />插入填空</button>{line.includes('______') && <button type="button" className="blank-clear" onClick={() => clearBlanksInLine(index)}><Trash2 size={12} />清空填空</button>}</div>
                     <button type="button" className="line-regenerate" disabled={regeneratingLine === index} onClick={() => regenerateLine(index)}>{regeneratingLine === index ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />}{regeneratingLine === index ? '生成中' : 'AI 重新生成'}</button>
@@ -894,8 +897,8 @@ export function SongWritingStudioPage() {
             </section>
             <section className="pbv2-editor-section word-editor-section">
               <h3>Word Bank</h3>
-              {draft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" aria-label={`删除 ${word}`} onClick={() => setDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}><Trash2 size={15} /></button></label>)}
-              <button type="button" className="add-word" onClick={() => setDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}><Plus size={13} /> 添加词卡</button>
+              {editorDraft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setEditorDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" aria-label={`删除 ${word}`} onClick={() => setEditorDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}><Trash2 size={15} /></button></label>)}
+              <button type="button" className="add-word" onClick={() => setEditorDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}><Plus size={13} /> 添加词卡</button>
             </section>
             </div>
             <button type="button" className="generate-html pbv2-editor-save" onClick={saveContentEdits}>保存修改</button>
