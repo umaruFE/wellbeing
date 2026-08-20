@@ -100,8 +100,11 @@ function wordIcon(word) {
   if (/(cloud|cloudy)/.test(value)) return '☁️';
   if (/(rainbow|colour|color)/.test(value)) return '🌈';
   if (/(mountain)/.test(value)) return '⛰️';
-  if (/(river|ocean|wave|lake)/.test(value)) return '🌊';
-  if (/(tree|forest|leaf|grass)/.test(value)) return '🌳';
+  if (/(river|ocean|wave|lake|water)/.test(value)) return '🌊';
+  if (/(field|farm|meadow)/.test(value)) return '🌾';
+  if (/(ground|earth|soil|land)/.test(value)) return '🌱';
+  if (/(leaf|leaves|grass)/.test(value)) return '🍃';
+  if (/(tree|trees|forest)/.test(value)) return '🌳';
   if (/(pause|stop)/.test(value)) return '⏸️';
   return '✨';
 }
@@ -109,6 +112,11 @@ function wordIcon(word) {
 function wordCardIcon(word, wordEmojis) {
   const generatedEmoji = wordEmojis?.[word];
   return generatedEmoji && generatedEmoji !== '💬' ? generatedEmoji : wordIcon(word);
+}
+
+function setDragPayload(event, payload) {
+  event.dataTransfer.effectAllowed = 'copy';
+  event.dataTransfer.setData('application/x-song-writing', JSON.stringify(payload));
 }
 
 function formatAudioTime(seconds) {
@@ -194,6 +202,7 @@ export function SongWritingStudioPage() {
   const [adjustmentRequest, setAdjustmentRequest] = React.useState('');
   const [regeneratingLine, setRegeneratingLine] = React.useState(null);
   const [regeneratingAll, setRegeneratingAll] = React.useState(false);
+  const [savingContentEdits, setSavingContentEdits] = React.useState(false);
   const [songLibrary, setSongLibrary] = React.useState([]);
   const [songLibraryLoading, setSongLibraryLoading] = React.useState(true);
   const [songLibraryError, setSongLibraryError] = React.useState('');
@@ -433,34 +442,6 @@ export function SongWritingStudioPage() {
     return () => window.removeEventListener('wellbeing:nav-same-route', handleSameRouteNav);
   }, []);
 
-  React.useEffect(() => {
-    const root = document.querySelector('.song-writing-page');
-    if (!root) return undefined;
-
-    const cleanups = [];
-    const listen = (element, eventName, handler) => {
-      element.addEventListener(eventName, handler);
-      cleanups.push(() => element.removeEventListener(eventName, handler));
-    };
-    const setPayload = (event, payload) => {
-      event.dataTransfer.effectAllowed = 'copy';
-      event.dataTransfer.setData('application/x-song-writing', JSON.stringify(payload));
-    };
-    root.querySelectorAll('.word-chips button').forEach((button) => {
-      const word = draft.words.find((item) => button.textContent.trim().endsWith(item));
-      if (!word) return;
-      button.draggable = true;
-      listen(button, 'dragstart', (event) => setPayload(event, { type: 'word', word }));
-    });
-    root.querySelectorAll('.instrument-chips button').forEach((button) => {
-      const instrument = instruments.find((item) => button.textContent.trim().endsWith(item.label));
-      if (!instrument) return;
-      button.draggable = true;
-      listen(button, 'dragstart', (event) => setPayload(event, { type: 'instrument', instrument }));
-    });
-    return () => cleanups.forEach((cleanup) => cleanup());
-  }, [draft.lines, draft.words]);
-
   const toggleAudio = async () => {
     if (!audioRef.current) return;
     if (playing) {
@@ -630,14 +611,33 @@ export function SongWritingStudioPage() {
     });
   };
 
-  const saveContentEdits = () => {
+  const saveContentEdits = async () => {
     if (!editorDraft) return;
-    setDraft(editorDraft);
+    const words = editorDraft.words.map((word) => word.trim()).filter(Boolean);
+    const missingEmojiWords = words.filter((word) => !editorDraft.wordEmojis?.[word]);
+    let generatedEmojis = {};
+    setSavingContentEdits(true);
+    try {
+      if (missingEmojiWords.length) {
+        const response = await fetch('/api/ai/generate-word-emojis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ words: missingEmojiWords }),
+        });
+        const result = await parseJsonSafely(response);
+        if (response.ok && result?.success) generatedEmojis = result.data || {};
+      }
+    } catch {
+      // Saving the user's edits is more important than optional AI emoji generation.
+    }
+    const wordEmojis = Object.fromEntries(words.map((word) => [word, editorDraft.wordEmojis?.[word] || generatedEmojis[word] || wordIcon(word)]));
+    setDraft({ ...editorDraft, words, wordEmojis });
     setBlankValues({});
     setShowContentEditor(false);
     setEditorDraft(null);
     setSaveMessage('修改已保存');
     window.setTimeout(() => setSaveMessage(''), 2400);
+    setSavingContentEdits(false);
   };
 
   if (view === 'list') {
@@ -855,8 +855,8 @@ export function SongWritingStudioPage() {
             </div><button type="button" className="sky-clear" onClick={regenerate}><RefreshCw size={14} />清空所有填空</button>
           </article>
           <div className="sky-sidecards">
-            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => { setSelectedLargeWord(''); setShowWords(true); }}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" key={`${word}-${index}`} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
-            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable key={instrument.id} onClick={() => activeBlank !== null && addInstrument(activeBlank.lineIndex, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 先点击乐器，再点击歌词旁的圆圈；每句最多 3 个，点击已添加的乐器可移除</p></article>
+            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => { setSelectedLargeWord(''); setShowWords(true); }}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" draggable key={`${word}-${index}`} onDragStart={(event) => setDragPayload(event, { type: 'word', word })} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
+            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable key={instrument.id} onDragStart={(event) => setDragPayload(event, { type: 'instrument', instrument })} onClick={() => activeBlank !== null && addInstrument(activeBlank.lineIndex, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 先点击乐器，再点击歌词旁的圆圈；每句最多 3 个，点击已添加的乐器可移除</p></article>
           </div>
         </div>
         <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>
@@ -901,7 +901,7 @@ export function SongWritingStudioPage() {
               <button type="button" className="add-word" onClick={() => setEditorDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}><Plus size={13} /> 添加词卡</button>
             </section>
             </div>
-            <button type="button" className="generate-html pbv2-editor-save" onClick={saveContentEdits}>保存修改</button>
+            <button type="button" className="generate-html pbv2-editor-save" disabled={savingContentEdits} onClick={saveContentEdits}>{savingContentEdits ? <><Loader2 className="spin" size={13} />正在匹配词卡图标...</> : '保存修改'}</button>
           </div>
         </Overlay>
       )}

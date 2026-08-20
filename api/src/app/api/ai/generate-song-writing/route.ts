@@ -76,21 +76,34 @@ export async function POST(request: NextRequest) {
     const apiUrl = process.env.VITE_DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
     if (!apiKey) throw new Error('未配置大模型 API Key');
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'qwen-plus', temperature: 0.65, response_format: { type: 'json_object' },
-        messages: [
-          ...SONG_WRITING_SYSTEM_PROMPTS.map((content) => ({ role: 'system', content })),
-          { role: 'user', content: buildSongWritingUserPrompt({ age, level, participants, themeText, vocabulary, grammar, melody, melodyReference, adjustmentRequest, currentLines, currentWords }) },
-        ],
-      }),
-    });
-    if (!response.ok) throw new Error(`大模型请求失败：${response.status}`);
-    const payload = await response.json();
-    const data = JSON.parse(payload.choices?.[0]?.message?.content || '{}');
+    const basePrompt = buildSongWritingUserPrompt({ age, level, participants, themeText, vocabulary, grammar, melody, melodyReference, adjustmentRequest, currentLines, currentWords });
+    const isRevision = Boolean(adjustmentRequest?.trim() && Array.isArray(currentLines) && currentLines.length);
+    let data: any;
+    for (let attempt = 0; attempt < (isRevision ? 3 : 1); attempt += 1) {
+      const retryInstruction = attempt > 0
+        ? `\n上一次候选结果未通过变化校验。第 ${attempt + 1} 次必须改写至少两行固定歌词，并逐项落实“${adjustmentRequest}”；禁止原样返回当前歌词。`
+        : '';
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'qwen-plus', temperature: attempt > 0 ? 0.8 : 0.65, response_format: { type: 'json_object' },
+          messages: [
+            ...SONG_WRITING_SYSTEM_PROMPTS.map((content) => ({ role: 'system', content })),
+            { role: 'user', content: basePrompt + retryInstruction },
+          ],
+        }),
+      });
+      if (!response.ok) throw new Error(`大模型请求失败：${response.status}`);
+      const payload = await response.json();
+      data = JSON.parse(payload.choices?.[0]?.message?.content || '{}');
+      const linesChanged = Array.isArray(data.lines) && JSON.stringify(data.lines) !== JSON.stringify(currentLines);
+      const blankCountChangedAsRequested = !adjustmentRequest?.includes('填空太多') || countBlanks(data.lines || []) < countBlanks(currentLines || []);
+      const moreBlanksChangedAsRequested = !adjustmentRequest?.includes('填空太少') || countBlanks(data.lines || []) > countBlanks(currentLines || []);
+      if (!isRevision || (linesChanged && blankCountChangedAsRequested && moreBlanksChangedAsRequested)) break;
+    }
     if (!Array.isArray(data.lines) || !Array.isArray(data.words) || !data.activityPlan) throw new Error('大模型返回内容不完整');
+    if (isRevision && JSON.stringify(data.lines) === JSON.stringify(currentLines)) throw new Error('AI 未能生成有效变化，请重新尝试或补充更具体的调整要求');
     const rawWords = data.words.filter((word: unknown): word is string => typeof word === 'string');
     const lines = adjustmentRequest?.includes('填空太多') && Array.isArray(currentLines)
       ? enforceFewerBlanks(data.lines, rawWords, currentLines)
