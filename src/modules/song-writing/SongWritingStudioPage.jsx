@@ -656,6 +656,8 @@ export function SongWritingStudioPage() {
 
   const saveContentEdits = async () => {
     if (!editorDraft) return;
+    const title = editorDraft.title.trim() || '未命名歌曲';
+    const titleChanged = title !== draft.title;
     const words = editorDraft.words.map((word) => word.trim()).filter(Boolean);
     const missingEmojiWords = words.filter((word) => !editorDraft.wordEmojis?.[word]);
     let generatedEmojis = {};
@@ -674,7 +676,8 @@ export function SongWritingStudioPage() {
       // Saving the user's edits is more important than optional AI emoji generation.
     }
     const wordEmojis = Object.fromEntries(words.map((word) => [word, editorDraft.wordEmojis?.[word] || generatedEmojis[word] || wordIcon(word)]));
-    setDraft({ ...editorDraft, words, wordEmojis });
+    setDraft({ ...editorDraft, title, words, wordEmojis });
+    if (titleChanged) setCoverUrl(generateCoverSvg(title, form.melody, selectedMelody.name));
     setBlankValues({});
     setShowContentEditor(false);
     setEditorDraft(null);
@@ -918,6 +921,10 @@ export function SongWritingStudioPage() {
         <Overlay title="编辑歌词和 Word Bank" onClose={() => { setShowContentEditor(false); setEditorDraft(null); }}>
           <div className="song-content-editor pbv2-editor">
             <div className="song-editor-scroll">
+            <section className="pbv2-editor-section song-title-editor-section">
+              <h3>歌曲名称</h3>
+              <input value={editorDraft.title} maxLength={100} onChange={(event) => setEditorDraft((current) => ({ ...current, title: event.target.value }))} placeholder="请输入歌曲名称" />
+            </section>
             <section className="pbv2-editor-section lyrics-editor-section">
               <div className="song-editor-header">
                 <h3>歌词模板</h3>

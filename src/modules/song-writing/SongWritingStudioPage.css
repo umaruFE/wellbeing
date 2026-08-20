@@ -317,6 +317,7 @@
 .song-content-editor-modal .song-editor-scroll::-webkit-scrollbar-track{background:transparent}
 .song-content-editor-modal .song-editor-scroll::-webkit-scrollbar-thumb{border-radius:999px;background:#aeb4bd}
 .song-content-editor-modal .song-editor-scroll>.pbv2-editor-section{box-sizing:border-box;min-height:100%;overflow:visible}
+.song-content-editor-modal .song-editor-scroll>.song-title-editor-section{grid-column:1 / -1;min-height:auto}
 .song-content-editor-modal .lyric-edit-row{margin-bottom:9px}
 .song-content-editor-modal textarea{min-height:40px;padding:7px 10px;line-height:1.35}
 .song-content-editor-modal .pbv2-editor-save{
