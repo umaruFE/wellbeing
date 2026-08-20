@@ -214,8 +214,10 @@ export function SongWritingStudioPage() {
   const [audioMode, setAudioMode] = React.useState('instrumental');
   const [view, setView] = React.useState(() => initialSession?.view === 'studio' ? 'studio' : 'list');
   const [step, setStep] = React.useState(() => initialSession?.step ?? 0);
-  const [works, setWorks] = React.useState(() => readStoredJson(SONG_WORKS_KEY, []));
+  const [works, setWorks] = React.useState([]);
+  const [worksLoading, setWorksLoading] = React.useState(true);
   const [activeWorkId, setActiveWorkId] = React.useState(() => initialSession?.activeWorkId || null);
+  const activeWorkIdRef = React.useRef(initialSession?.activeWorkId || null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [saveMessage, setSaveMessage] = React.useState('');
   const [generatedPlan, setGeneratedPlan] = React.useState(() => initialSession?.generatedPlan || null);
@@ -223,6 +225,7 @@ export function SongWritingStudioPage() {
   const [showPresentation, setShowPresentation] = React.useState(false);
   const presentationHistoryActiveRef = React.useRef(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const saveInFlightRef = React.useRef(null);
   const legacyMelody = melodies.find((item) => item.id === form.melody);
   const canGenerate = Boolean(form.age && form.level && form.melody && songLibrary.some((song) => String(song.id) === String(form.melody)));
   const setFormField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
@@ -235,6 +238,7 @@ export function SongWritingStudioPage() {
     setSaveMessage('');
     setGeneratedPlan(null);
     setActiveWorkId(null);
+    activeWorkIdRef.current = null;
     setCoverUrl('');
     setBlankValues({});
     setArrangement({});
@@ -324,30 +328,69 @@ export function SongWritingStudioPage() {
   const songTypes = React.useMemo(() => [...new Set(songLibrary.map((song) => song.melody_type || song.melodyType).filter(Boolean))], [songLibrary]);
   const filteredSongLibrary = React.useMemo(() => songLibrary.filter((song) => songTypeFilter === 'all' || (song.melody_type || song.melodyType) === songTypeFilter), [songLibrary, songTypeFilter]);
 
-  const persistWork = React.useCallback((showConfirmation = false) => {
+  const persistWork = React.useCallback(async (showConfirmation = false) => {
     if (view !== 'studio' || step !== 1 || !draft?.title) return;
-    const id = activeWorkId || Date.now();
-    const work = {
-      id,
+    if (saveInFlightRef.current) await saveInFlightRef.current;
+    const cover = coverUrl || generateCoverSvg(draft.title, form.melody, selectedMelody.name);
+    const workData = {
       title: draft.title,
-      coverUrl: coverUrl || generateCoverSvg(draft.title, form.melody, selectedMelody.name),
+      coverUrl: cover,
       draft: { ...draft, activityPlan: generatedPlan },
       form,
       blankValues,
       arrangement,
       date: new Date().toLocaleDateString('zh-CN'),
     };
-    setActiveWorkId(id);
-    setWorks((current) => {
-      const next = [work, ...current.filter((item) => item.id !== id && (activeWorkId || item.title !== work.title))];
-      localStorage.setItem(SONG_WORKS_KEY, JSON.stringify(next));
-      return next;
+    const serverWorkId = activeWorkIdRef.current || activeWorkId;
+    const savePromise = apiService.request(`/api/song-writing-works${serverWorkId ? `/${serverWorkId}` : ''}`, {
+      method: serverWorkId ? 'PUT' : 'POST',
+      body: JSON.stringify({ title: draft.title, coverUrl: cover, workData }),
     });
-    if (showConfirmation) {
-      setSaveMessage('已保存作品');
-      window.setTimeout(() => setSaveMessage(''), 2400);
+    saveInFlightRef.current = savePromise;
+    try {
+      const result = await savePromise;
+      const row = result.data;
+      const work = { ...(row.work_data || workData), id: row.id, title: row.title, coverUrl: row.cover_url || cover };
+      activeWorkIdRef.current = row.id;
+      setActiveWorkId(row.id);
+      setWorks((current) => [work, ...current.filter((item) => String(item.id) !== String(row.id))]);
+      if (showConfirmation) {
+        setSaveMessage('已保存到服务端');
+        window.setTimeout(() => setSaveMessage(''), 2400);
+      }
+    } catch (error) {
+      setSaveMessage(error instanceof Error ? error.message : '作品保存失败');
+    } finally {
+      if (saveInFlightRef.current === savePromise) saveInFlightRef.current = null;
     }
   }, [activeWorkId, arrangement, blankValues, coverUrl, draft, form, generatedPlan, selectedMelody.name, step, view]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    const loadWorks = async () => {
+      setWorksLoading(true);
+      try {
+        let result = await apiService.request('/api/song-writing-works');
+        let rows = Array.isArray(result?.data) ? result.data : [];
+        const legacyWorks = readStoredJson(SONG_WORKS_KEY, []);
+        if (legacyWorks.length) {
+          const migrated = await Promise.all(legacyWorks.map((work) => apiService.request('/api/song-writing-works', {
+            method: 'POST',
+            body: JSON.stringify({ title: work.title, coverUrl: work.coverUrl, workData: work }),
+          })));
+          rows = [...migrated.map((item) => item.data), ...rows];
+          localStorage.removeItem(SONG_WORKS_KEY);
+        }
+        if (!cancelled) setWorks(rows.map((row) => ({ ...(row.work_data || {}), id: row.id, title: row.title, coverUrl: row.cover_url || row.work_data?.coverUrl || '', date: row.work_data?.date || new Date(row.updated_at).toLocaleDateString('zh-CN') })));
+      } catch (error) {
+        if (!cancelled) setSaveMessage(error instanceof Error ? error.message : '作品列表加载失败');
+      } finally {
+        if (!cancelled) setWorksLoading(false);
+      }
+    };
+    loadWorks();
+    return () => { cancelled = true; };
+  }, []);
 
   React.useEffect(() => {
     if (view !== 'studio') {
@@ -642,7 +685,14 @@ export function SongWritingStudioPage() {
 
   if (view === 'list') {
     const filteredWorks = works.filter((work) => work.title.toLowerCase().includes(searchTerm.toLowerCase()));
-    const removeWork = (id) => { const next = works.filter((work) => work.id !== id); setWorks(next); localStorage.setItem(SONG_WORKS_KEY, JSON.stringify(next)); };
+    const removeWork = async (id) => {
+      try {
+        await apiService.request(`/api/song-writing-works/${id}`, { method: 'DELETE' });
+        setWorks((current) => current.filter((work) => String(work.id) !== String(id)));
+      } catch (error) {
+        setSaveMessage(error instanceof Error ? error.message : '作品删除失败');
+      }
+    };
     const loadWork = (work) => {
       setDraft(work.draft);
       const oldForm = work.form || {};
@@ -661,10 +711,11 @@ export function SongWritingStudioPage() {
       setGeneratedPlan(work.draft?.activityPlan || null);
       setCoverUrl(work.coverUrl || '');
       setActiveWorkId(work.id);
+      activeWorkIdRef.current = work.id;
     };
     const openWork = (work) => { loadWork(work); setStep(1); setView('studio'); };
     const presentWork = (work) => { loadWork(work); setStep(1); setView('studio'); openPresentation(); };
-    return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>歌曲编排</h1><p>创建和管理你的歌曲互动作品</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={startNewSong}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>新建歌曲</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索歌曲..." /></div></div>{filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>还没有歌曲作品，点击右上角创建</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover">{work.coverUrl ? <img src={work.coverUrl} alt={work.title} className="pbv2-book-cover-img" /> : <div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div>}<span className="pbv2-book-status draft">草稿</span></div><div className="pbv2-book-info"><h3>{work.title || '未命名歌曲'}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />编辑</button><button type="button" onClick={(e) => { e.stopPropagation(); presentWork(work); }}>🖥️ 授课</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />删除</button></div></div></article>)}</div>}</main>;
+    return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>歌曲编排</h1><p>创建和管理你的歌曲互动作品</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={startNewSong}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>新建歌曲</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索歌曲..." /></div></div>{worksLoading ? <div className="pbv2-list-empty"><Loader2 className="spin" size={38} /><p>正在加载歌曲作品...</p></div> : filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>还没有歌曲作品，点击右上角创建</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover">{work.coverUrl ? <img src={work.coverUrl} alt={work.title} className="pbv2-book-cover-img" /> : <div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div>}<span className="pbv2-book-status draft">草稿</span></div><div className="pbv2-book-info"><h3>{work.title || '未命名歌曲'}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />编辑</button><button type="button" onClick={(e) => { e.stopPropagation(); presentWork(work); }}>🖥️ 授课</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />删除</button></div></div></article>)}</div>}</main>;
   }
 
   if (view === 'studio' && isGenerating && step === 0) return <SongGenerationLoading />;
