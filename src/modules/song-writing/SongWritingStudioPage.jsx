@@ -190,6 +190,9 @@ export function SongWritingStudioPage() {
   const [speed, setSpeed] = React.useState(1);
   const [volume, setVolume] = React.useState(.75);
   const [activeBlank, setActiveBlank] = React.useState(null);
+  const [selectedWord, setSelectedWord] = React.useState('');
+  const [selectedInstrument, setSelectedInstrument] = React.useState(null);
+  const [activeInstrumentLine, setActiveInstrumentLine] = React.useState(null);
   const [blankValues, setBlankValues] = React.useState(() => initialSession?.blankValues || {});
   const [arrangement, setArrangement] = React.useState(() => initialSession?.arrangement || {});
   const [showWords, setShowWords] = React.useState(false);
@@ -529,9 +532,23 @@ export function SongWritingStudioPage() {
   };
 
   const fillWord = (word) => {
-    if (activeBlank === null) return;
-    fillWordAt(word, activeBlank);
-    setActiveBlank(null);
+    if (activeBlank !== null) {
+      fillWordAt(word, activeBlank);
+      setActiveBlank(null);
+      setSelectedWord('');
+      return;
+    }
+    setSelectedWord((current) => current === word ? '' : word);
+  };
+
+  const selectBlank = (blankTarget) => {
+    if (selectedWord) {
+      fillWordAt(selectedWord, blankTarget);
+      setSelectedWord('');
+      setActiveBlank(null);
+      return;
+    }
+    setActiveBlank((current) => current?.lineIndex === blankTarget.lineIndex && current?.blankIndex === blankTarget.blankIndex ? null : blankTarget);
   };
 
   const MAX_INSTRUMENTS_PER_LINE = 3;
@@ -541,6 +558,24 @@ export function SongWritingStudioPage() {
     return { ...current, [lineIndex]: [...currentLine, instrument] };
   });
   const removeInstrument = (lineIndex, itemIndex) => setArrangement((current) => ({ ...current, [lineIndex]: (current[lineIndex] || []).filter((_, i) => i !== itemIndex) }));
+  const selectInstrument = (instrument) => {
+    if (activeInstrumentLine !== null) {
+      addInstrument(activeInstrumentLine, instrument);
+      setActiveInstrumentLine(null);
+      setSelectedInstrument(null);
+      return;
+    }
+    setSelectedInstrument((current) => current?.id === instrument.id ? null : instrument);
+  };
+  const selectInstrumentTarget = (lineIndex) => {
+    if (selectedInstrument) {
+      addInstrument(lineIndex, selectedInstrument);
+      setSelectedInstrument(null);
+      setActiveInstrumentLine(null);
+      return;
+    }
+    setActiveInstrumentLine((current) => current === lineIndex ? null : lineIndex);
+  };
   const dropOnLine = (event, lineIndex, target) => {
     event.preventDefault();
     try {
@@ -895,22 +930,27 @@ export function SongWritingStudioPage() {
 
         <div className="sky-content">
           <article className="sky-lyrics">
-            <div className="sky-card-title"><b>🎶 填词模板</b><span>拖拽单词或直接输入</span></div>
+            <div className="sky-card-title"><b>🎶 填词模板</b><span>拖拽，或点选单词和空格</span></div>
             <div className="lyrics-lines">
             {draft.lines.map((line, index) => (
               <div className="lyric-line" key={`${index}-${line}`}>
                 {(() => {
                   if (!line.includes('______')) return <span className="lyric-copy">{line}</span>;
-                  return line.split('______').map((part, blankIndex, parts) => <React.Fragment key={`${index}-${blankIndex}`}><span className="lyric-copy">{part}</span>{blankIndex < parts.length - 1 && <input className="lyric-blank" aria-label={`第 ${index + 1} 行第 ${blankIndex + 1} 个填空`} value={blankValues[`${index}:${blankIndex}`] ?? (blankIndex === 0 ? blankValues[index] || '' : '')} onFocus={() => setActiveBlank({ lineIndex: index, blankIndex })} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); try { const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing')); if (payload.type === 'word') fillWordAt(payload.word, { lineIndex: index, blankIndex }); } catch { /* Ignore invalid drops. */ } }} onChange={(e) => setBlankValues((current) => ({ ...current, [`${index}:${blankIndex}`]: e.target.value }))} />}</React.Fragment>);
+                  return line.split('______').map((part, blankIndex, parts) => {
+                    const target = { lineIndex: index, blankIndex };
+                    const value = blankValues[`${index}:${blankIndex}`] ?? (blankIndex === 0 ? blankValues[index] || '' : '');
+                    const isActive = activeBlank?.lineIndex === index && activeBlank?.blankIndex === blankIndex;
+                    return <React.Fragment key={`${index}-${blankIndex}`}><span className="lyric-copy">{part}</span>{blankIndex < parts.length - 1 && <button type="button" className={`lyric-blank${isActive ? ' is-selected' : ''}`} aria-label={`第 ${index + 1} 行第 ${blankIndex + 1} 个填空`} aria-pressed={isActive} onClick={() => selectBlank(target)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); try { const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing')); if (payload.type === 'word') fillWordAt(payload.word, target); } catch { /* Ignore invalid drops. */ } }}>{value || '______'}</button>}</React.Fragment>;
+                  });
                 })()}
-                <div className="line-instruments" onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`} className="line-instrument-chip" title={`${instrument.label}（点击移除）`} role="button" tabIndex={0} onClick={() => removeInstrument(index, itemIndex)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') removeInstrument(index, itemIndex); }}><img src={instrument.icon} alt={instrument.label} /></span>)}<button type="button" title={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE ? '每句最多 3 个乐器' : '为这一句配器'} disabled={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE} onClick={() => addInstrument(index, instruments[index % instruments.length])}>＋</button></div>
+                <div className={`line-instruments${activeInstrumentLine === index ? ' is-selected' : ''}`} onClick={() => selectInstrumentTarget(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`} className="line-instrument-chip" title={`${instrument.label}（点击移除）`} role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); removeInstrument(index, itemIndex); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') removeInstrument(index, itemIndex); }}><img src={instrument.icon} alt={instrument.label} /></span>)}<button type="button" title={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE ? '每句最多 3 个乐器' : '点击后再选择乐器'} disabled={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE} onClick={(event) => { event.stopPropagation(); selectInstrumentTarget(index); }}>＋</button></div>
               </div>
             ))}
             </div><button type="button" className="sky-clear" onClick={regenerate}><RefreshCw size={14} />清空所有填空</button>
           </article>
           <div className="sky-sidecards">
-            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => { setSelectedLargeWord(''); setShowWords(true); }}><Expand size={15} /></button></div><span>拖到左边空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" draggable key={`${word}-${index}`} onDragStart={(event) => setDragPayload(event, { type: 'word', word })} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 先点击歌词空格，再点击单词填入</p></article>
-            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖到歌词旁</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable key={instrument.id} onDragStart={(event) => setDragPayload(event, { type: 'instrument', instrument })} onClick={() => activeBlank !== null && addInstrument(activeBlank.lineIndex, instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 先点击乐器，再点击歌词旁的圆圈；每句最多 3 个，点击已添加的乐器可移除</p></article>
+            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => { setSelectedLargeWord(''); setShowWords(true); }}><Expand size={15} /></button></div><span>拖动，或依次点击单词和空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" draggable className={selectedWord === word ? 'is-selected' : ''} aria-pressed={selectedWord === word} key={`${word}-${index}`} onDragStart={(event) => setDragPayload(event, { type: 'word', word })} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 可先点单词再点空格，也可先点空格再点单词</p></article>
+            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖动，或依次点击乐器和圆圈</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable className={selectedInstrument?.id === instrument.id ? 'is-selected' : ''} aria-pressed={selectedInstrument?.id === instrument.id} key={instrument.id} onDragStart={(event) => setDragPayload(event, { type: 'instrument', instrument })} onClick={() => selectInstrument(instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 可先点乐器再点圆圈，也可先点圆圈再点乐器；每句最多 3 个</p></article>
           </div>
         </div>
         <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>

@@ -429,3 +429,9 @@
   .pbv2-song-making .sky-instruments .instrument-chips{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pbv2-song-making .sky-mode-toggle{top:9px;right:10px}
 }
+
+/* Mouse drag + touch tap interaction */
+.lyric-blank,.word-chips button,.instrument-chips button,.line-instruments{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.lyric-blank.is-selected,.line-instruments.is-selected{border-color:#e05a4e;box-shadow:0 0 0 4px rgba(224,90,78,.18)}
+.word-chips button.is-selected,.instrument-chips button.is-selected{background:#2d2d2d;color:#fff;box-shadow:0 0 0 4px rgba(45,45,45,.16);transform:translateY(-2px)}
+@media (pointer:coarse){.lyric-blank{min-height:44px}.word-chips button,.instrument-chips button{min-height:46px}.line-instruments span,.line-instruments button{width:38px;height:38px}.word-chips button[draggable="true"],.instrument-chips button[draggable="true"]{cursor:pointer;user-select:none;-webkit-user-select:none}}
