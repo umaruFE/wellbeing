@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
+import { getDefaultRouteForRole } from './authRoutes';
 import { Sparkles, LogIn, AlertCircle } from 'lucide-react';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 
@@ -21,7 +22,7 @@ export const LoginPage = () => {
 
     try {
       const user = await login(username, password);
-      navigate(user.role === 'picture_song_creator' ? '/picture-books' : '/');
+      navigate(getDefaultRouteForRole(user.role), { replace: true });
     } catch (err) {
       setError(err.message || t('login.loginFailed'));
     } finally {

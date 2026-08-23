@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
+import { AuthProvider, ROLES, useAuth } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { RequireAuth } from './components/RequireAuth';
 import { LoginPage } from './modules/auth/LoginPage';
@@ -35,6 +35,20 @@ import { KnowledgeUploadPage } from './modules/picture-book/KnowledgeUploadPage'
 import { SongWritingStudioPage } from './modules/song-writing/SongWritingStudioPage';
 import { SongLibraryPage } from './modules/song-library/SongLibraryPage';
 
+const HomeRoute = () => {
+  const { user } = useAuth();
+
+  if (user?.role === ROLES.PICTURE_SONG_CREATOR) {
+    return <Navigate to="/picture-books" replace />;
+  }
+
+  return (
+    <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'viewer']}>
+      <AdminDashboard />
+    </RequireAuth>
+  );
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -59,11 +73,7 @@ function App() {
             {/* 首页 - Dashboard */}
             <Route
               path="/"
-              element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'viewer']}>
-                  <AdminDashboard />
-                </RequireAuth>
-              }
+              element={<HomeRoute />}
             />
 
             {/* 创建课程页面 */}
