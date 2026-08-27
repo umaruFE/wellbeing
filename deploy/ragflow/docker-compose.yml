@@ -1,0 +1,106 @@
+# RAGFlow 独立编排（与根 docker-compose.yml 分离部署）
+# 参考 RAGFlow v0.17 官方 docker/docker-compose.yml 结构
+# 资源要求：>= 4 核 8G（ES 需 ~2G）；镜像较大，首次拉取较慢
+# 使用：
+#   cd deploy/ragflow
+#   docker compose up -d
+# 访问：http://<服务器IP>:9380（首次注册管理员，再在 用户设置→API 生成 API Key）
+# 注意：若宿主 6379 已被占用，把 redis 的端口映射改为 "6380:6379" 并同步修改 service_conf.yaml
+
+services:
+  es01:
+    image: elasticsearch:8.11.3
+    container_name: ragflow-es01
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.minimal=true
+      - ELASTIC_PASSWORD=infini_rag_flow
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - bootstrap.memory_lock=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    ports:
+      - 9200:1200
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:infini_rag_flow http://localhost:1200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
+      interval: 30s
+      timeout: 20s
+      retries: 10
+
+  mysql:
+    image: mysql:8.0
+    container_name: ragflow-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: rag_flow
+      MYSQL_USER: root
+      MYSQL_PASSWORD: infini_rag_flow
+      MYSQL_ROOT_PASSWORD: infini_rag_flow
+    command: --lower_case_table_names=1
+    volumes:
+      - mysqldata:/var/lib/mysql
+    ports:
+      - 5455:3306
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2023-12-20T23-17-00Z
+    container_name: ragflow-minio
+    restart: always
+    command: server --console-address ":9001" /data
+    environment:
+      MINIO_ROOT_USER: rag_flow
+      MINIO_ROOT_PASSWORD: infini_rag_flow
+    volumes:
+      - miniodata:/data
+    ports:
+      - 9000:9000
+      - 9001:9001
+
+  redis:
+    image: valkey/valkey:8
+    container_name: ragflow-redis
+    restart: always
+    command: valkey-server --requirepass infini_rag_flow --save ""
+    volumes:
+      - redisdata:/data
+    ports:
+      - 6379:6379
+
+  ragflow:
+    image: ${RAGFLOW_IMAGE:-infiniflow/ragflow:v0.17.2}
+    container_name: ragflow-server
+    restart: always
+    depends_on:
+      es01:
+        condition: service_healthy
+      mysql:
+        condition: service_started
+      minio:
+        condition: service_started
+      redis:
+        condition: service_started
+    volumes:
+      - ./service_conf.yaml:/ragflow/conf/service_conf.yaml
+      - ragflow-logs:/ragflow/logs
+      - ragflow-data:/ragflow/data
+    ports:
+      - 9380:80
+
+volumes:
+  esdata01:
+    driver: local
+  mysqldata:
+    driver: local
+  miniodata:
+    driver: local
+  redisdata:
+    driver: local
+  ragflow-logs:
+    driver: local
+  ragflow-data:
+    driver: local

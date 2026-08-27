@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { getRawTemplate } from '@/prompts/registry';
 
 /**
  * N8N 人物特征提取路由
@@ -51,17 +52,18 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[extract-character] 调用 N8N Workflow:', {
-      workflow: 'ai-prompt-processing',
+      workflow: 'ai-prompt-processing-v2',
       taskType: 'character-extract',
       videoStyle: videoStyle || 'default',
       descriptionLength: description.length
     });
 
     // 调用 N8N Workflow
-    const result = await n8nClient.call('ai-prompt-processing', {
+    const result = await n8nClient.call('ai-prompt-processing-v2', {
       taskType: 'character-extract',
       description,
       videoStyle: videoStyle || 'default',
+      promptTemplate: await getRawTemplate('n8n.scene-keywords'),
       timestamp: Date.now()
     });
 

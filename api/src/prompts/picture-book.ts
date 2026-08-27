@@ -1,3 +1,5 @@
+import { renderTemplate } from '@/lib/prompt-library';
+
 export interface ActivityPlanPromptInput {
   useEnglish: boolean;
   basicInfo: any;
@@ -5,9 +7,13 @@ export interface ActivityPlanPromptInput {
   knowledgeContext: string;
 }
 
-export function buildActivityPlanPrompts(input: ActivityPlanPromptInput) {
-  const { useEnglish, basicInfo, themes, knowledgeContext } = input;
-  const system = `You are a professional designer of action-led children's English guided picture books.
+/**
+ * 模板常量（纯文本 + {{var}}）：
+ *   - builtin 注册表引用（getPromptPair 的兜底模板）
+ *   - Wiki 页面 wellbeing/prompts/picture-book-activity-plan 为覆盖版本
+ */
+export const ACTIVITY_PLAN_TEMPLATE = {
+  system: `You are a professional designer of action-led children's English guided picture books.
 
 CORE DEFINITION — UNDERSTAND THIS BEFORE GENERATING:
 A guided picture book is NOT a story picture book. Never create characters with plots, narrative scenes, story arcs, or pages about what happened to someone else. The child must never be a passive reader.
@@ -31,22 +37,37 @@ Return JSON only, using this exact shape:
 The title must always be English, action-oriented, memorable, and at most 8 words. Keep storyTitleZh empty.
 storyContent must describe what children notice, choose, make, and express. It must not contain a plot, protagonist, conflict, story arc, or narrative sequence.
 Choose recommendedPageCount from 6 to 14 according to the actual amount of meaningful content and child actions. Use 6–8 pages for a simple focused activity, 9–10 for a normal activity, and 11–14 only for genuinely complex content. Never add filler pages merely to increase the count.
-${useEnglish
-  ? 'Write every generated field entirely in English. Do not include Chinese translations, bilingual labels, or Chinese text anywhere in the output.'
-  : 'Write storyContent, englishGoal, wellbeingGoal, outputGoal, and materials in Simplified Chinese. Keep storyTitleEn entirely in English.'}`;
+{{languageRule}}`,
+  user: `Student information:
+- Age: {{age}}
+- English level: {{level}}
+- Themes: {{themes}}
+- Core vocabulary: {{vocabulary}}
+- Core sentence patterns/grammar: {{grammar}}
+- Participants: {{participants}}
+{{knowledgeBlock}}
+Design a guided picture-book activity plan suitable for the students' age and English level. Preserve the three simultaneous layers: artistic expression, wellbeing, and natural English use. Output language: {{outputLanguage}}.`,
+};
 
-  const user = `Student information:
-- Age: ${basicInfo?.age || 'Not specified'}
-- English level: ${basicInfo?.level || 'Not specified'}
-- Themes: ${themes.join(', ') || 'Not specified'}
-- Core vocabulary: ${basicInfo?.vocabulary || 'Not specified'}
-- Core sentence patterns/grammar: ${basicInfo?.grammar || 'Not specified'}
-- Participants: ${basicInfo?.participants || 'Not specified'}
-${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
-
-Design a guided picture-book activity plan suitable for the students' age and English level. Preserve the three simultaneous layers: artistic expression, wellbeing, and natural English use. Output language: ${useEnglish ? 'English' : 'Simplified Chinese, except for the English title'}.`;
-
-  return { system, user };
+export function buildActivityPlanPrompts(input: ActivityPlanPromptInput) {
+  const { useEnglish, basicInfo, themes, knowledgeContext } = input;
+  return {
+    system: renderTemplate(ACTIVITY_PLAN_TEMPLATE.system, {
+      languageRule: useEnglish
+        ? 'Write every generated field entirely in English. Do not include Chinese translations, bilingual labels, or Chinese text anywhere in the output.'
+        : 'Write storyContent, englishGoal, wellbeingGoal, outputGoal, and materials in Simplified Chinese. Keep storyTitleEn entirely in English.',
+    }),
+    user: renderTemplate(ACTIVITY_PLAN_TEMPLATE.user, {
+      age: basicInfo?.age || 'Not specified',
+      level: basicInfo?.level || 'Not specified',
+      themes: themes.join(', ') || 'Not specified',
+      vocabulary: basicInfo?.vocabulary || 'Not specified',
+      grammar: basicInfo?.grammar || 'Not specified',
+      participants: basicInfo?.participants || 'Not specified',
+      knowledgeBlock: knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}\n` : '',
+      outputLanguage: useEnglish ? 'English' : 'Simplified Chinese, except for the English title',
+    }),
+  };
 }
 
 export interface PictureBookDesignPromptInput {
@@ -57,9 +78,8 @@ export interface PictureBookDesignPromptInput {
   knowledgeContext: string;
 }
 
-export function buildPictureBookDesignPrompts(input: PictureBookDesignPromptInput) {
-  const { useEnglish, pageCount, activityPlan, basicInfo, knowledgeContext } = input;
-  const system = `You are a professional designer of action-led children's English guided picture books.
+export const PICTURE_BOOK_DESIGN_TEMPLATE = {
+  system: `You are a professional designer of action-led children's English guided picture books.
 
 NON-NEGOTIABLE DEFINITION:
 This is a GUIDED PICTURE BOOK, never a story picture book. Do not create a plot, protagonist journey, narrative scene, story arc, exposition, conflict, or sequence such as “then they...” and “the character went...”. The child is the active creator, not a passive reader.
@@ -88,7 +108,7 @@ The final back cover is the soul of the book. It must contain only one memorable
 TEXT AND VISUAL RULES:
 - Core page text must always be English and at most 10 English words.
 - pageType values must use the English enum shown in the JSON schema.
-- ${useEnglish ? 'Write every imageDescription in English. Do not include Chinese anywhere.' : 'Write every imageDescription in clear Simplified Chinese, while keeping every text field entirely in English.'}
+- {{imageDescriptionLanguageRule}}
 - visualWords must always be an empty array. The text field is the single source of visible typography.
 - imageDescription must describe the child’s action, visible choices/tools, and response space—not a narrative scene. It must not request labels, headings, captions, annotations, or any writing beyond the exact text field.
 - imagePrompt must always be an English-only, non-visible scene instruction. Prefer concise visual phrases instead of display-ready headings or sentences. It must allow only the exact text field while forbidding all other typography.
@@ -114,24 +134,48 @@ Return JSON only, using this exact shape:
     }
   ]
 }
-Create exactly ${pageCount} pages. Page 1 must be type cover and its text must be the English title exactly: ${activityPlan?.storyTitleEn || 'My Picture Book'}. The final page must be type back-cover and contain only the landing point. Every page between them must use one allowed activity type. Include a purposeful progression from noticing to choosing, making, naming, and sharing; this is a progression of child actions, never a plot.`;
-
-  const user = `Activity plan:
-- English title: ${activityPlan?.storyTitleEn || 'My Picture Book'}
-- Story content: ${activityPlan?.storyContent || ''}
-- English goals: ${activityPlan?.englishGoal || ''}
-- Wellbeing goals: ${activityPlan?.wellbeingGoal || ''}
-- Expected output: ${activityPlan?.outputGoal || ''}
-- Materials: ${activityPlan?.materials || ''}
+Create exactly {{pageCount}} pages. Page 1 must be type cover and its text must be the English title exactly: {{storyTitleEn}}. The final page must be type back-cover and contain only the landing point. Every page between them must use one allowed activity type. Include a purposeful progression from noticing to choosing, making, naming, and sharing; this is a progression of child actions, never a plot.`,
+  user: `Activity plan:
+- English title: {{storyTitleEn}}
+- Story content: {{storyContent}}
+- English goals: {{englishGoal}}
+- Wellbeing goals: {{wellbeingGoal}}
+- Expected output: {{outputGoal}}
+- Materials: {{materials}}
 
 Student information:
-- Age: ${basicInfo?.age || 'Not specified'}
-- English level: ${basicInfo?.level || 'Not specified'}
-- Core vocabulary: ${basicInfo?.vocabulary || ''}
-- Core sentence patterns: ${basicInfo?.grammar || ''}
-${knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}` : ''}
+- Age: {{age}}
+- English level: {{level}}
+- Core vocabulary: {{vocabulary}}
+- Core sentence patterns/grammar: {{grammar}}
+{{knowledgeBlock}}
+Design {{pageCount}} guided picture-book pages. Page text must be English. Image-description language: {{imageDescriptionLanguage}}.`,
+};
 
-Design ${pageCount} guided picture-book pages. Page text must be English. Image-description language: ${useEnglish ? 'English' : 'Simplified Chinese'}.`;
-
-  return { system, user };
+export function buildPictureBookDesignPrompts(input: PictureBookDesignPromptInput) {
+  const { useEnglish, pageCount, activityPlan, basicInfo, knowledgeContext } = input;
+  return {
+    system: renderTemplate(PICTURE_BOOK_DESIGN_TEMPLATE.system, {
+      pageCount,
+      storyTitleEn: activityPlan?.storyTitleEn || 'My Picture Book',
+      imageDescriptionLanguageRule: useEnglish
+        ? 'Write every imageDescription in English. Do not include Chinese anywhere.'
+        : 'Write every imageDescription in clear Simplified Chinese, while keeping every text field entirely in English.',
+    }),
+    user: renderTemplate(PICTURE_BOOK_DESIGN_TEMPLATE.user, {
+      pageCount,
+      storyTitleEn: activityPlan?.storyTitleEn || 'My Picture Book',
+      storyContent: activityPlan?.storyContent || '',
+      englishGoal: activityPlan?.englishGoal || '',
+      wellbeingGoal: activityPlan?.wellbeingGoal || '',
+      outputGoal: activityPlan?.outputGoal || '',
+      materials: activityPlan?.materials || '',
+      age: basicInfo?.age || 'Not specified',
+      level: basicInfo?.level || 'Not specified',
+      vocabulary: basicInfo?.vocabulary || '',
+      grammar: basicInfo?.grammar || '',
+      knowledgeBlock: knowledgeContext ? `\nReference material from the knowledge base:\n${knowledgeContext}\n` : '',
+      imageDescriptionLanguage: useEnglish ? 'English' : 'Simplified Chinese',
+    }),
+  };
 }

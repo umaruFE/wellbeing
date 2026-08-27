@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { normalizeActivitySteps } from '@/lib/course-normalize';
+import { getRawTemplate } from '@/prompts/registry';
 
 function corsHeaders() {
   return {
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     let n8nPayload: Record<string, unknown>;
 
     if (isRegenerate) {
-      workflowName = 'course-step-regenerator';
+      workflowName = 'course-step-regenerator-v2';
       n8nPayload = {
         phaseKey,
         stepId,
@@ -80,10 +81,11 @@ export async function POST(request: NextRequest) {
         otherPhases: otherPhases || null,
         userId,
         organizationId,
+        promptTemplate: await getRawTemplate('n8n.course-step-regen'),
         timestamp: Date.now()
       };
     } else {
-      workflowName = 'course-step-generator';
+      workflowName = 'course-step-generator-v2';
       n8nPayload = {
         phaseKey,
         title,
@@ -102,6 +104,7 @@ export async function POST(request: NextRequest) {
         nextStep: nextStep || null,
         userId,
         organizationId,
+        promptTemplate: await getRawTemplate('n8n.course-step'),
         timestamp: Date.now()
       };
     }

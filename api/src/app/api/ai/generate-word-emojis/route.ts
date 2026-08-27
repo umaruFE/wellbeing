@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getPromptPair } from '@/prompts/registry';
 
 export const runtime = 'nodejs';
 
@@ -14,6 +15,8 @@ export async function POST(request: NextRequest) {
     const apiUrl = process.env.VITE_DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
     if (!apiKey) throw new Error('未配置大模型 API Key');
 
+    const { system, user } = await getPromptPair('ai.word-emojis', {}, { words: JSON.stringify(words) });
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
@@ -22,11 +25,8 @@ export async function POST(request: NextRequest) {
         temperature: 0.2,
         response_format: { type: 'json_object' },
         messages: [
-          {
-            role: 'system',
-            content: '你负责给儿童英文词卡匹配图标。每个词只返回一个语义最直接、儿童容易理解的 emoji；不要统一使用星星、对话框或问号。严格返回 JSON 对象，键必须与输入词完全一致，值只能是 emoji。',
-          },
-          { role: 'user', content: `为这些词匹配 emoji：${JSON.stringify(words)}` },
+          { role: 'system', content: system },
+          { role: 'user', content: user },
         ],
       }),
     });

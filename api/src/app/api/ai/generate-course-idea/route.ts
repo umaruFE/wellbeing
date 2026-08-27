@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { getRawTemplate } from '@/prompts/registry';
 
 function corsHeaders() {
   return {
@@ -17,9 +18,12 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    console.log('[generate-course-idea] 调用 N8N 工作流: course-idea-generator');
+    console.log('[generate-course-idea] 调用 N8N 工作流: course-idea-generator-v2');
 
-    const result = await n8nClient.call('course-idea-generator', body, { timeout: 120000 });
+    const result = await n8nClient.call('course-idea-generator-v2', {
+      ...body,
+      promptTemplate: await getRawTemplate('n8n.course-idea'),
+    }, { timeout: 120000 });
 
     console.log('[generate-course-idea] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
 

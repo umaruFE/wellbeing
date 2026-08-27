@@ -1,0 +1,43 @@
+# RAGFlow 服务配置（挂载进容器 /ragflow/conf/service_conf.yaml）
+# 服务名对应 deploy/ragflow/docker-compose.yml 中的容器
+# LLM 不在此配置：推荐在 RAGFlow Web UI（系统模型设置）中配置 DashScope/OpenAI 兼容端点
+
+mysql:
+  name: 'rag_flow'
+  user: 'root'
+  password: 'infini_rag_flow'
+  host: 'mysql'
+  port: 3306
+  max_connections: 60
+  stale_timeout: 300
+
+minio:
+  user: 'rag_flow'
+  password: 'infini_rag_flow'
+  host: 'minio:9000'
+
+es:
+  hosts: 'http://es01:1200'
+  username: 'elastic'
+  password: 'infini_rag_flow'
+
+redis:
+  db: 1
+  password: 'infini_rag_flow'
+  host: 'redis:6379'
+
+# 站点配置
+oauth:
+  Facebook:
+    client_id: ~
+    secret_key: ~
+  GitHub:
+    client_id: ~
+    secret_key: ~
+  WeChat:
+    client_id: ~
+    secret_key: ~
+user_default_llm:
+  factory: ~
+  api_key: ~
+  base_url: ~

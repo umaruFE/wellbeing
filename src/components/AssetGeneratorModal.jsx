@@ -3,6 +3,7 @@ import { X, Loader2, Play, Pause, Download, Volume2, Music, Mic, Image, Wand2 } 
 import { IPSceneGenerator } from './IPSceneGenerator';
 import IPCharacterGenerator from './IPCharacterGenerator';
 import { VideoStoryboardModal } from './VideoStoryboardModal';
+import { VOICE_OPTIONS, SPEED_OPTIONS, EMOTION_OPTIONS, AUDIO_STYLES } from '../constants/aiOptions';
 
 const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
   const [prompt, setPrompt] = useState('');
@@ -129,44 +130,6 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
     </div>
   );
 };
-
-const VOICE_OPTIONS = [
-  { id: '活力女声', name: '活力女声', description: '充满活力的女性声音' },
-  { id: '不羁男声', name: '不羁男声', description: '自由不羁的男性声音' },
-  { id: '沉稳男声', name: '沉稳男声', description: '沉稳有力的男性声音' },
-  { id: '成熟女声', name: '成熟女声', description: '成熟优雅的女性声音' },
-  { id: '聪明儿童男声', name: '聪明儿童男声', description: '聪明伶俐的儿童男声' },
-  { id: '淡雅女声', name: '淡雅女声', description: '淡雅温柔的女性声音' },
-  { id: '可爱儿童男声', name: '可爱儿童男声', description: '可爱活泼的儿童男声' },
-  { id: '可爱儿童女声', name: '可爱儿童女声', description: '可爱甜美的儿童女声' },
-  { id: '甜美女声', name: '甜美女声', description: '甜美动听的女性声音' },
-  { id: '温暖少女', name: '温暖少女', description: '温暖治愈的少女声音' },
-  { id: '温润男声', name: '温润男声', description: '温润如玉的男性声音' },
-];
-
-const SPEED_OPTIONS = [
-  { id: 0.8, label: '0.8x（慢）' },
-  { id: 1.0, label: '1.0x（标准）' },
-  { id: 1.2, label: '1.2x（较快）' },
-  { id: 1.5, label: '1.5x（快）' },
-];
-
-const EMOTION_OPTIONS = [
-  { id: 'neutral', label: '中性', emotion_prompt: '' },
-  { id: 'cheerful', label: '愉快', emotion_prompt: '开心快乐的语气' },
-  { id: 'sad', label: '悲伤', emotion_prompt: '低沉悲伤的语气' },
-  { id: 'angry', label: '愤怒', emotion_prompt: '生气激动的语气' },
-  { id: 'excited', label: '兴奋', emotion_prompt: '激动兴奋的语气' },
-  { id: 'gentle', label: '温柔', emotion_prompt: '柔和温暖的语气' },
-];
-
-const AUDIO_STYLES = [
-  { id: 'happy', name: '开心', tags: 'happy, cheerful, upbeat' },
-  { id: 'sad', name: '悲伤', tags: 'sad, emotional, melancholic' },
-  { id: 'calm', name: '平静', tags: 'calm, peaceful, relaxing' },
-  { id: 'excited', name: '兴奋', tags: 'excited, energetic, dynamic' },
-  { id: 'narration', name: '旁白', tags: 'narration, clear, storytelling' },
-];
 
 const DURATION_OPTIONS = [15, 30, 60, 90];
 

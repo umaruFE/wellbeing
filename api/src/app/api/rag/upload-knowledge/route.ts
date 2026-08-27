@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { uploadFile } from '@/lib/fileUpload';
+import { isRagflowEnabled, ensureDataset, documents as ragflowDocs } from '@/lib/ragflow/client';
+import { recordEvent } from '@/lib/usage-tracking';
 import JSZip from 'jszip';
 
 export const runtime = 'nodejs';
@@ -8,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 const TABLE = 'picturebook_knowledge';
 const MAX_BYTES = 20 * 1024 * 1024;
+const RAGFLOW_DATASET_NAME = process.env.RAGFLOW_PICTUREBOOK_DATASET || 'picturebook-knowledge';
 
 function decodeXmlEntities(value: string) {
   return value
@@ -78,7 +81,7 @@ async function ensureTable() {
     )
   `);
   // Add columns if missing (for existing tables)
-  for (const col of ['content TEXT NOT NULL DEFAULT \'\'', 'oss_url TEXT NOT NULL DEFAULT \'\'']) {
+  for (const col of ['content TEXT NOT NULL DEFAULT \'\'', 'oss_url TEXT NOT NULL DEFAULT \'\'', 'ragflow_document_id TEXT']) {
     try {
       await db.query(`ALTER TABLE ${TABLE} ADD COLUMN IF NOT EXISTS ${col}`);
     } catch {
@@ -149,10 +152,38 @@ export async function POST(request: NextRequest) {
       [documentId, title, category, ageRange, sourceType, filename, ossUrl, extractedText, chunkCount, uploadedBy, uploaderName]
     );
 
+    // 同步至 RAGFlow（启用时）：上传 Markdown 文档并触发解析，失败不影响 PG 结果
+    let ragflowSynced = false;
+    if (isRagflowEnabled()) {
+      try {
+        const datasetId = await ensureDataset(RAGFLOW_DATASET_NAME, '绘本制作知识库（picturebook_knowledge 同步）');
+        const ragflowDocId = await ragflowDocs.uploadAndParse(
+          datasetId,
+          `${documentId}.md`,
+          `# ${title || documentId}\n\n分类：${category}${ageRange ? `｜年龄：${ageRange}` : ''}\n\n${extractedText}`
+        );
+        await db.query(`UPDATE ${TABLE} SET ragflow_document_id = $1 WHERE document_id = $2`, [
+          ragflowDocId,
+          documentId,
+        ]);
+        ragflowSynced = true;
+      } catch (rfErr) {
+        console.error('[rag/upload-knowledge] RAGFlow sync failed (non-fatal):', rfErr);
+      }
+    }
+
+    recordEvent({
+      userId: uploadedBy,
+      action: 'rag.knowledge.upload',
+      resourceType: 'picturebook_knowledge',
+      details: { documentId, title, category, ageRange, sourceType, chunkCount, ragflowSynced },
+    });
+
     return NextResponse.json({
       success: true,
       documentId,
       chunkCount,
+      ragflowSynced,
     });
   } catch (error) {
     console.error('[rag/upload-knowledge] failed:', error);

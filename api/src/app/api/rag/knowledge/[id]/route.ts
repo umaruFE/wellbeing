@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { isRagflowEnabled, ensureDataset, documents as ragflowDocs } from '@/lib/ragflow/client';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const TABLE = 'picturebook_knowledge';
+const RAGFLOW_DATASET_NAME = process.env.RAGFLOW_PICTUREBOOK_DATASET || 'picturebook-knowledge';
 
 export async function DELETE(
   request: NextRequest,
@@ -13,7 +15,7 @@ export async function DELETE(
   try {
     const id = params.id;
 
-    // 先查出来拿 document_id 和 collection
+    // 先查出来拿 document_id
     const rows = await db.query(`SELECT * FROM ${TABLE} WHERE id = $1`, [id]);
     if (rows.rows.length === 0) {
       return NextResponse.json(
@@ -24,29 +26,14 @@ export async function DELETE(
 
     const record = rows.rows[0];
 
-    // 删除 Qdrant 中的 points（按 document_id filter）
-    const qdrantUrl = process.env.QDRANT_URL || 'http://localhost:6333';
-    const qdrantCollection = record.qdrant_collection || 'picturebook_knowledge';
-    const qdrantApiKey = process.env.QDRANT_API_KEY || '';
-
-    try {
-      await fetch(
-        `${qdrantUrl}/collections/${qdrantCollection}/points/delete`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(qdrantApiKey ? { 'api-key': qdrantApiKey } : {}),
-          },
-          body: JSON.stringify({
-            filter: {
-              must: [{ key: 'documentId', match: { value: record.document_id } }],
-            },
-          }),
-        }
-      );
-    } catch (qdrantErr) {
-      console.error('[rag/knowledge] Qdrant delete failed (non-fatal):', qdrantErr);
+    // 删除 RAGFlow 中的对应文档（启用且已同步过时）
+    if (isRagflowEnabled() && record.ragflow_document_id) {
+      try {
+        const datasetId = await ensureDataset(RAGFLOW_DATASET_NAME);
+        await ragflowDocs.delete(datasetId, [record.ragflow_document_id]);
+      } catch (rfErr) {
+        console.error('[rag/knowledge] RAGFlow delete failed (non-fatal):', rfErr);
+      }
     }
 
     // 删除数据库记录

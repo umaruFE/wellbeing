@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
+import { getPrompt } from '@/prompts/registry';
 const ROUTE_VERSION = 'generate-course-overview-2026-06-24-language-forwarding-v2';
-const TEXTLESS_THEME_IMAGE_REQUIREMENT = [
-  'Theme image requirement:',
-  'The cover image must be a textless full-canvas illustration with theme-specific scenery and props.',
-  'Avoid listing forbidden text-container object names in themeImagePrompt; use positive composition language such as rich background details, continuous scenery, icons, colors, paths, props, and non-text symbols.',
-  'If the course outcome mentions a card, promise, message, writing, or title, represent the idea with scenery, abstract decorative shapes, icons, colors, paths, props, or non-text symbols only.',
-].join(' ');
 
 async function transferThemeImage(imageUrl: string): Promise<string | null> {
   try {
@@ -86,30 +81,6 @@ function normalizeOutputLanguage(language?: string, outputLanguage?: string) {
   };
 }
 
-function buildOutputInstruction(isEnglish: boolean) {
-  if (isEnglish) {
-    return [
-      'Return structured JSON only. Do not include Markdown, explanations, or Chinese text.',
-      'All user-facing fields in courseOverview must be written in English, including courseTitle, overallContext, languageGoals, selGoals, permaGoals, finalTask, themeImagePrompt, and every journey field.',
-      'themeImagePrompt must describe a textless full-canvas cover illustration. Use positive visual language only: theme-specific scenery, props, icons, colors, paths, background details, and non-text symbols. Do not mention speech bubbles, text boxes, whiteboards, posters, blank panels, or other text-container object names.',
-      'courseOverview must include a journey field.',
-      'journey must include engage, empower, execute, and elevate.',
-      'The class journey must be based on this course theme, story context, language goals, final outcome, and growth goals. Do not use generic template sentences.',
-      'Each journey field should be 20-45 English words and include concrete classroom actions.',
-    ].join('\n');
-  }
-
-  return [
-    '请返回结构化 JSON。',
-    'courseOverview.courseTitle 必须使用中英双语格式："中文课程名称 | English Course Title"。竖线两侧均不能为空；除 courseTitle 外，其他面向用户字段仍使用中文。',
-    'courseOverview 中必须包含 journey 字段。',
-    'journey 必须包含 engage、empower、execute、elevate 四个字段。',
-    '课堂旅程必须基于本课程的主题、故事情境、语言目标、最终成果和成长目标生成，不能使用通用模板句。',
-    '每个 journey 字段 35-70 个中文字符，并体现具体课堂动作。',
-    'themeImagePrompt 必须描述无文字、全画幅、连续场景的封面插画，只使用与主题相关的场景、道具、图标、颜色、路径和非文字符号。不要在 themeImagePrompt 中提及对话气泡、文本框、白板、海报、空白面板等文字容器名称。',
-  ].join('\n');
-}
-
 function sanitizeThemeImagePrompt(prompt?: string) {
   return String(prompt || '')
     .replace(/Do not include[^.\n]*(speech bubbles|dialogue balloons|thought bubbles|comic bubbles|text boxes|blank white panels|whiteboards|posters|visual container)[^.\n]*\.?/gi, '')
@@ -131,10 +102,9 @@ function enforceTextlessCoverPrompt(prompt?: string) {
   ].join('\n');
 }
 
-function appendTextlessImageRequirement(value?: string) {
+function appendTextlessImageRequirement(value: string | undefined, requirement: string) {
   const text = String(value || '').trim();
-  if (!text) return TEXTLESS_THEME_IMAGE_REQUIREMENT;
-  return `${text}\n\n${TEXTLESS_THEME_IMAGE_REQUIREMENT}`;
+  return text ? `${text}\n\n${requirement}` : requirement;
 }
 
 export async function POST(request: NextRequest) {
@@ -179,6 +149,13 @@ export async function POST(request: NextRequest) {
       outputLanguage: languageConfig.outputLanguage,
     });
 
+    // 提示词统一走注册表（Wiki 可覆盖，builtin 兜底）
+    const lang = languageConfig.isEnglish ? 'en' : 'zh';
+    const [textlessRequirement, outputInstructionText] = await Promise.all([
+      getPrompt('course.theme-image-requirement'),
+      getPrompt(`course.overview.output-instruction.${lang}`),
+    ]);
+
     const n8nPayload = {
       language: languageConfig.language,
       outputLanguage: languageConfig.outputLanguage,
@@ -190,7 +167,7 @@ export async function POST(request: NextRequest) {
       skills: skills || [],
       paths: paths || [],
       theme: theme || '',
-      requirements: appendTextlessImageRequirement(requirements || specialRequirements || ''),
+      requirements: appendTextlessImageRequirement(requirements || specialRequirements || '', textlessRequirement),
       adjustments: adjustments || '',
       existing_overview: existingOverview || existing_overview || inputCourseOverview
         ? (typeof (existingOverview || existing_overview || inputCourseOverview) === 'string'
@@ -203,7 +180,7 @@ export async function POST(request: NextRequest) {
       keyOutcome: keyOutcome || '',
       atmosphere: atmosphere || '',
       attachments: attachments || [],
-      outputInstruction: buildOutputInstruction(languageConfig.isEnglish),
+      outputInstruction: outputInstructionText,
       themeImageInstruction: enforceTextlessCoverPrompt(''),
       routeVersion: ROUTE_VERSION,
       expectedFields: {

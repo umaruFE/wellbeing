@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { getRawTemplate } from '@/prompts/registry';
 
 function corsHeaders() {
   return {
@@ -65,10 +66,11 @@ export async function POST(request: NextRequest) {
       keyOutcome: keyOutcome || courseOverview?.finalTask || '',
       userId,
       organizationId,
+      promptTemplate: await getRawTemplate('n8n.overview-tips'),
       timestamp: Date.now(),
     };
 
-    const result = await n8nClient.call('course-overview-adjustment-tips-generator', payload, { timeout: 120000 });
+    const result = await n8nClient.call('course-overview-adjustment-tips-generator-v2', payload, { timeout: 120000 });
     const firstItem = Array.isArray(result) ? result[0] : result;
     const tips = normalizeTips(firstItem);
 

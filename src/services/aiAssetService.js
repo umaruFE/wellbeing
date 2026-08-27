@@ -1,7 +1,12 @@
 // AI素材生成服务（图片、音频、视频）
+import { getPromptTemplate } from './promptLibrary';
+
 const AI_API_BASE_URL = '/ai';
 // 使用相对路径，这样在任何环境下都能正确访问
 const API_BASE_URL = '';
+
+// 负面提示词兜底（权威版本在 api/src/prompts 注册表，key: frontend.comfyui-negative-zh）
+const FALLBACK_NEGATIVE_PROMPT_ZH = '模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物';
 
 // 获取认证token并添加到请求头
 function getAuthHeaders() {
@@ -73,7 +78,7 @@ export const aiAssetService = {
       },
       "8": {
         "inputs": {
-          "text": "模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物",
+          "text": await getPromptTemplate('frontend.comfyui-negative-zh', FALLBACK_NEGATIVE_PROMPT_ZH),
           "clip": ["3", 0]
         },
         "class_type": "CLIPTextEncode",

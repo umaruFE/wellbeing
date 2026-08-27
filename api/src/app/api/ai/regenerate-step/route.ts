@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { normalizeActivitySteps } from '@/lib/course-normalize';
+import { getRawTemplate } from '@/prompts/registry';
 
 function corsHeaders() {
   return {
@@ -60,12 +61,13 @@ export async function POST(request: NextRequest) {
       otherPhases: otherPhases || null,
       userId,
       organizationId,
+      promptTemplate: await getRawTemplate('n8n.course-step-regen'),
       timestamp: Date.now()
     };
 
-    console.log('[regenerate-step] 调用 N8N:', { workflow: 'course-step-regenerator', stepId });
+    console.log('[regenerate-step] 调用 N8N:', { workflow: 'course-step-regenerator-v2', stepId });
 
-    const result = await n8nClient.call('course-step-regenerator', n8nPayload, { timeout: 300000 });
+    const result = await n8nClient.call('course-step-regenerator-v2', n8nPayload, { timeout: 300000 });
 
     console.log('[regenerate-step] N8N 响应:', JSON.stringify(result, null, 2).substring(0, 500));
 

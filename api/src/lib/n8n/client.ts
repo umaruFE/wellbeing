@@ -7,8 +7,33 @@
  * - getExecutionData(executionId): 获取执行结果
  */
 
+// 使用习惯埋点：n8nClient.call 是所有 AI 工作流调用的统一入口，
+// 在此埋点一次即可覆盖全部 AI 生成行为（写入 audit_logs，供 ETL 聚合）
+import { recordEvent } from '@/lib/usage-tracking';
+
 const N8N_API_BASE = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
 const N8N_API_KEY = process.env.N8N_API_KEY;
+
+function trackWorkflowCall(
+  workflowName: string,
+  method: string,
+  payload: Record<string, any>,
+  result: 'success' | 'error',
+  durationMs: number
+) {
+  recordEvent({
+    userId: payload?.userId || payload?.user_id || null,
+    organizationId: payload?.organizationId || payload?.organization_id || null,
+    action: `ai.workflow.${result === 'success' ? 'call' : 'error'}`,
+    resourceType: 'n8n_workflow',
+    details: {
+      workflowName,
+      method,
+      durationMs,
+      courseId: payload?.courseId || payload?.course_id || null,
+    },
+  });
+}
 
 interface CallOptions {
   method?: string;
@@ -43,6 +68,7 @@ class N8NClient {
     const method = options.method || 'POST';
 
     let webhookUrl = `${this.baseUrl}/webhook/${workflowName}`;
+    const startedAt = Date.now();
 
     // GET 请求将 payload 转为 query string
     if (method === 'GET' && payload) {
@@ -87,6 +113,7 @@ class N8NClient {
 
       const resultText = await response.text();
       console.log(`[n8n.call] 响应结果: ${resultText || '(空响应)'}`);
+      trackWorkflowCall(workflowName, method, payload, 'success', Date.now() - startedAt);
       if (!resultText.trim()) {
         return null;
       }
@@ -94,6 +121,7 @@ class N8NClient {
       return result;
 
     } catch (error: any) {
+      trackWorkflowCall(workflowName, method, payload, 'error', Date.now() - startedAt);
       if (error.name === 'AbortError') {
         throw new Error(`N8N调用超时: ${timeout}ms`);
       }

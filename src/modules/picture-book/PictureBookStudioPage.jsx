@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 import uploadService from '../../services/uploadService';
+import { getPromptTemplate } from '../../services/promptLibrary';
 import './PictureBookStudioPage.css';
 
 const initialBasicInfo = {
@@ -52,7 +53,9 @@ const initialActivityPlan = {
   recommendedPageCount: 0,
 };
 
-const STORYBOOK_VISUAL_STYLE = [
+// 兜底常量：后端注册表（/api/prompts/frontend.*）不可用时使用；权威版本在
+// api/src/prompts/builtin.ts 与 Wiki 页面 wellbeing/prompts/frontend.*
+const FALLBACK_VISUAL_STYLE = [
   'Oliver Jeffers-inspired loose watercolor washes with expressive black pen-and-ink sketch lines, warm, restrained, playful, and emotionally gentle.',
   'Use an extremely low-saturation washed palette of gray-blue, dusty gray-pink, sage gray-green, muted gray-orange, pale gray-yellow, and soft gray-purple.',
   'Let each page-specific image prompt determine the number of elements, layout, density, and composition.',
@@ -63,7 +66,7 @@ const STORYBOOK_VISUAL_STYLE = [
   'Do not invent or display any words from the visual description or generation prompt.',
 ].join(' ');
 
-const STORYBOOK_TEXT_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English text, unrequested words, extra letters, captions, annotations, speech bubbles, callouts, explanatory symbols, page numbers, borders, frames, open-book mockup, photographed book, saturated colors, neon colors, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text';
+const FALLBACK_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English text, unrequested words, extra letters, captions, annotations, speech bubbles, callouts, explanatory symbols, page numbers, borders, frames, open-book mockup, photographed book, saturated colors, neon colors, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text';
 
 function getPageVisualWords(page) {
   // Visible typography has one source of truth: page.text.
@@ -352,6 +355,22 @@ export function PictureBookStudioPage() {
   const editingBookIdRef = React.useRef(null);
   const [showPresentation, setShowPresentation] = React.useState(false);
   const [presentPageIndex, setPresentPageIndex] = React.useState(0);
+
+  // 提示词统一从后端注册表拉取（Wiki 可覆盖），本地常量仅兜底
+  const [storybookPrompts, setStorybookPrompts] = React.useState({
+    visualStyle: FALLBACK_VISUAL_STYLE,
+    negative: FALLBACK_NEGATIVE_PROMPT,
+  });
+  React.useEffect(() => {
+    let alive = true;
+    Promise.all([
+      getPromptTemplate('frontend.storybook-visual-style', FALLBACK_VISUAL_STYLE),
+      getPromptTemplate('frontend.storybook-negative', FALLBACK_NEGATIVE_PROMPT),
+    ]).then(([visualStyle, negative]) => {
+      if (alive) setStorybookPrompts({ visualStyle, negative });
+    });
+    return () => { alive = false; };
+  }, []);
   const [backgroundMusic, setBackgroundMusic] = React.useState(null);
   const [audioLibrary, setAudioLibrary] = React.useState([]);
   const [songLibrary, setSongLibrary] = React.useState([]);
@@ -711,11 +730,11 @@ export function PictureBookStudioPage() {
     assetType: 'image',
     assetCode: 'B9',
     assetName: t('pictureBook.batchImages'),
-    prompt: `${STORYBOOK_VISUAL_STYLE}\nBook title: ${activityPlan.storyTitleEn}.\nGuided activity concept: ${activityPlan.storyContent}`,
+    prompt: `${storybookPrompts.visualStyle}\nBook title: ${activityPlan.storyTitleEn}.\nGuided activity concept: ${activityPlan.storyContent}`,
     options: {
       imageRatio: '16:9',
       imageStyle: 'Watercolor Picture Book',
-      negativePrompt: STORYBOOK_TEXT_NEGATIVE_PROMPT,
+      negativePrompt: storybookPrompts.negative,
       referenceNotes: [
         'These are prompt-only visual directions for an action-led guided picture book. They must guide composition but must never be rendered as visible page text.',
         'ABSOLUTE TYPOGRAPHY RULE: each image may display only its visibleEnglishText value exactly. Never display imageDescription, imagePrompt, pageType, labels, captions, annotations, speech bubbles, Chinese characters, pseudo-text, or any other words.',
@@ -739,7 +758,7 @@ export function PictureBookStudioPage() {
         visualWords: [],
         prompt: [
           `Create a guided picture-book ${page.pageType || 'instruction'} page, never a narrative story scene.`,
-          STORYBOOK_VISUAL_STYLE,
+          storybookPrompts.visualStyle,
           `NON-VISIBLE SCENE INSTRUCTIONS — interpret as pictures, never typography: ${getPageVisualPrompt(page)}.`,
           `Render this exact English core text: “${page.text}”.`,
           'Do not add any word labels beyond the exact core text.',
@@ -820,7 +839,7 @@ export function PictureBookStudioPage() {
       const prompt = [
         `Children picture-book illustration for page ${targetPage.page}.`,
         `Story title: ${activityPlan.storyTitleEn || 'Picture Book'}.`,
-        STORYBOOK_VISUAL_STYLE,
+        storybookPrompts.visualStyle,
         `NON-VISIBLE SCENE INSTRUCTIONS — interpret as pictures, never typography: ${getPageVisualPrompt(targetPage)}.`,
         `Page mode: ${targetPage.pageType || 'instruction'}. This is an action-led guided picture book, not a narrative story scene.`,
         'Make the requested child action, choices, tools, or response space visually obvious.',
@@ -839,7 +858,7 @@ export function PictureBookStudioPage() {
           options: {
             imageRatio: '16:9',
             imageStyle: 'Watercolor Picture Book',
-            negativePrompt: STORYBOOK_TEXT_NEGATIVE_PROMPT,
+            negativePrompt: storybookPrompts.negative,
             batchItems: [{
               page: targetPage.page,
               pageType: targetPage.pageType || 'instruction',

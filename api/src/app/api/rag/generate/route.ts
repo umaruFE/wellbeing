@@ -1,13 +1,54 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { buildActivityPlanPrompts, buildPictureBookDesignPrompts } from '@/prompts';
+import { getPromptPair } from '@/prompts/registry';
+import { isRagflowEnabled, ensureDataset, retrieval } from '@/lib/ragflow/client';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const TABLE = 'picturebook_knowledge';
+const RAGFLOW_DATASET_NAME = process.env.RAGFLOW_PICTUREBOOK_DATASET || 'picturebook-knowledge';
 
-async function fetchKnowledgeContext(themes: string[], ageRange: string): Promise<string> {
+/**
+ * RAGFlow 向量检索（启用时优先）
+ * 用课程主题构造自然语言问题，在绘本知识数据集中检索相关切片
+ */
+async function fetchKnowledgeContextFromRagflow(themes: string[], basicInfo: any): Promise<string> {
+  if (!isRagflowEnabled()) return '';
+  try {
+    const datasetId = await ensureDataset(RAGFLOW_DATASET_NAME, '绘本制作知识库（picturebook_knowledge 同步）');
+    const question = [
+      basicInfo?.title,
+      Array.isArray(themes) ? themes.join(', ') : '',
+      basicInfo?.ageRange ? `${basicInfo.ageRange} 岁` : '',
+      'picture book creation knowledge 绘本创作知识',
+    ]
+      .filter(Boolean)
+      .join(' ');
+
+    const chunks = await retrieval({ question, datasetIds: [datasetId], topK: 10 });
+    if (!chunks.length) return '';
+
+    const parts: string[] = [];
+    let totalLen = 0;
+    for (const chunk of chunks) {
+      const text = chunk.content.slice(0, 2000);
+      if (totalLen + text.length > 8000) break;
+      parts.push(`【${chunk.documentKeyword || '知识切片'}】\n${text}`);
+      totalLen += text.length;
+    }
+    return parts.join('\n\n---\n\n');
+  } catch (err) {
+    console.error('[rag/generate] RAGFlow retrieval failed, fallback to PostgreSQL:', err);
+    return '';
+  }
+}
+
+/**
+ * PostgreSQL 兜底检索（原有逻辑：category 匹配 + 最近 10 条）
+ */
+async function fetchKnowledgeContextFromPg(themes: string[], ageRange: string): Promise<string> {
   try {
     let rows;
     if (themes.length > 0) {
@@ -42,6 +83,90 @@ async function fetchKnowledgeContext(themes: string[], ageRange: string): Promis
   } catch (err) {
     console.error('[rag/generate] fetch knowledge failed:', err);
     return '';
+  }
+}
+
+/** 统一入口：RAGFlow 向量检索优先，未启用/无结果/失败时回落 PG category 匹配 */
+async function fetchKnowledgeContext(themes: string[], ageRange: string, basicInfo: any): Promise<string> {
+  const ragflowContext = await fetchKnowledgeContextFromRagflow(themes, basicInfo);
+  if (ragflowContext) return ragflowContext;
+  return fetchKnowledgeContextFromPg(themes, ageRange);
+}
+
+function knowledgeBlock(context: string): string {
+  return context ? `\nReference material from the knowledge base:\n${context}\n` : '';
+}
+
+/**
+ * 知识库提示词统一入口（registry）：Wiki 覆盖 → builtin 模板；异常时回落原构建函数。
+ */
+async function resolveActivityPlanPrompts(input: {
+  useEnglish: boolean;
+  basicInfo: any;
+  themes: string[];
+  knowledgeContext: string;
+}): Promise<{ system: string; user: string }> {
+  const { useEnglish, basicInfo, themes, knowledgeContext } = input;
+  try {
+    return await getPromptPair(
+      'picture-book-activity-plan',
+      {
+        languageRule: useEnglish
+          ? 'Write every generated field entirely in English. Do not include Chinese translations, bilingual labels, or Chinese text anywhere in the output.'
+          : 'Write storyContent, englishGoal, wellbeingGoal, outputGoal, and materials in Simplified Chinese. Keep storyTitleEn entirely in English.',
+      },
+      {
+        age: basicInfo?.age || 'Not specified',
+        level: basicInfo?.level || 'Not specified',
+        themes: themes.join(', ') || 'Not specified',
+        vocabulary: basicInfo?.vocabulary || 'Not specified',
+        grammar: basicInfo?.grammar || 'Not specified',
+        participants: basicInfo?.participants || 'Not specified',
+        knowledgeBlock: knowledgeBlock(knowledgeContext),
+        outputLanguage: useEnglish ? 'English' : 'Simplified Chinese, except for the English title',
+      }
+    );
+  } catch {
+    return buildActivityPlanPrompts(input);
+  }
+}
+
+async function resolvePictureBookDesignPrompts(input: {
+  useEnglish: boolean;
+  pageCount: number;
+  activityPlan: any;
+  basicInfo: any;
+  knowledgeContext: string;
+}): Promise<{ system: string; user: string }> {
+  const { useEnglish, pageCount, activityPlan, basicInfo, knowledgeContext } = input;
+  try {
+    return await getPromptPair(
+      'picture-book-design',
+      {
+        pageCount,
+        storyTitleEn: activityPlan?.storyTitleEn || 'My Picture Book',
+        imageDescriptionLanguageRule: useEnglish
+          ? 'Write every imageDescription in English. Do not include Chinese anywhere.'
+          : 'Write every imageDescription in clear Simplified Chinese, while keeping every text field entirely in English.',
+      },
+      {
+        pageCount,
+        storyTitleEn: activityPlan?.storyTitleEn || 'My Picture Book',
+        storyContent: activityPlan?.storyContent || '',
+        englishGoal: activityPlan?.englishGoal || '',
+        wellbeingGoal: activityPlan?.wellbeingGoal || '',
+        outputGoal: activityPlan?.outputGoal || '',
+        materials: activityPlan?.materials || '',
+        age: basicInfo?.age || 'Not specified',
+        level: basicInfo?.level || 'Not specified',
+        vocabulary: basicInfo?.vocabulary || '',
+        grammar: basicInfo?.grammar || '',
+        knowledgeBlock: knowledgeBlock(knowledgeContext),
+        imageDescriptionLanguage: useEnglish ? 'English' : 'Simplified Chinese',
+      }
+    );
+  } catch {
+    return buildPictureBookDesignPrompts(input);
   }
 }
 
@@ -147,10 +272,10 @@ export async function POST(request: NextRequest) {
     // Fetch knowledge context
     const themes = basicInfo?.themes || [];
     const ageRange = basicInfo?.ageRange || '';
-    const knowledgeContext = await fetchKnowledgeContext(themes, ageRange);
+    const knowledgeContext = await fetchKnowledgeContext(themes, ageRange, basicInfo);
 
     if (type === 'activity-plan') {
-      const prompts = buildActivityPlanPrompts({ useEnglish, basicInfo, themes, knowledgeContext });
+      const prompts = await resolveActivityPlanPrompts({ useEnglish, basicInfo, themes, knowledgeContext });
       const result = await callLLM(prompts.system, prompts.user);
       const recommendedPageCount = normalizePageCount(
         result.recommendedPageCount,
@@ -171,7 +296,7 @@ export async function POST(request: NextRequest) {
         body.pageCount || activityPlan?.recommendedPageCount,
         inferPageCount(activityPlan, basicInfo)
       );
-      const prompts = buildPictureBookDesignPrompts({
+      const prompts = await resolvePictureBookDesignPrompts({
         useEnglish,
         pageCount,
         activityPlan,

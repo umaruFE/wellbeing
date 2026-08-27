@@ -7,6 +7,7 @@ import {
 } from '@/lib/background-tasks';
 import { n8nClient } from '@/lib/n8n/client';
 import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
+import { getPrompt } from '@/prompts/registry';
 
 type AssetType = 'image' | 'audio' | 'video';
 
@@ -132,7 +133,7 @@ function defaultImageNegativePrompt(assetCode?: string) {
   return 'blurry, low quality, watermark, logo, deformed, ugly, bad composition, extra limbs, cropped';
 }
 
-function buildImagePayload(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
+async function buildImagePayload(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
   const code = typeof assetCode === 'string' ? assetCode.toUpperCase() : '';
   const subtype = imageSubtypeByCode[code] || 'ppt_image';
   const role = code === 'B11' && options.character ? String(options.character).toLowerCase() : 'bg';
@@ -149,15 +150,13 @@ function buildImagePayload(basePayload: Record<string, any>, assetCode?: string,
     styleInstruction ? `Visual style requirements: ${styleInstruction}` : '',
   ].filter(Boolean).join(' ');
   const posterPrompt = code === 'B2'
-    ? [
-        'Create a PPT poster-style atmospheric image with clear readable typography.',
-        scene ? `Main scene: ${scene}.` : '',
-        overlayText ? `Render exactly this overlay text in the image: "${overlayText}".` : '',
-        textLayout ? `Text layout: ${textLayout}.` : '',
-        whitespace ? `Whitespace area: ${whitespace}.` : '',
-        styleInstruction ? `Visual style requirements: ${styleInstruction}` : '',
-        'Clean composition for a classroom PPT cover. Do not add watermark, logo, or unrelated extra text.',
-      ].filter(Boolean).join(' ')
+    ? await getPrompt('ppt.poster-b2', {
+        scene: scene ? ` Main scene: ${scene}.` : '',
+        overlayText: overlayText ? ` Render exactly this overlay text in the image: "${overlayText}".` : '',
+        textLayout: textLayout ? ` Text layout: ${textLayout}.` : '',
+        whitespace: whitespace ? ` Whitespace area: ${whitespace}.` : '',
+        styleInstruction: styleInstruction ? ` Visual style requirements: ${styleInstruction}.` : '',
+      })
     : styledBasePrompt;
   const negativePrompt = [
     options.negativePrompt || defaultImageNegativePrompt(code),
@@ -196,30 +195,27 @@ function buildImagePayload(basePayload: Record<string, any>, assetCode?: string,
   };
 }
 
-function buildBatchImagePayloads(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
+async function buildBatchImagePayloads(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
   const code = typeof assetCode === 'string' ? assetCode.toUpperCase() : '';
   const batchItems = Array.isArray(options.batchItems) ? options.batchItems.filter(Boolean) : [];
 
   if (code !== 'B3') {
-    return [buildImagePayload(basePayload, assetCode, options)];
+    return [await buildImagePayload(basePayload, assetCode, options)];
   }
 
   const normalizedItems = batchItems.length ? batchItems : [options.rawValues?.words || basePayload.prompt];
 
-  return normalizedItems.map((item, index) => {
+  const payloads = [];
+  for (let index = 0; index < normalizedItems.length; index++) {
+    const item = normalizedItems[index];
     const word = typeof item === 'string' ? item : item?.word || item?.text || `word ${index + 1}`;
-    const prompt = [
-      `Create one very simple vocabulary flashcard for the word "${word}".`,
-      'Minimal white rounded card on a plain light background.',
-      'Top area: one simple child-friendly illustration only.',
-      'Middle: large bold lowercase English word.',
-      options.includeChinese !== false ? 'Bottom: small Chinese meaning.' : 'No Chinese text.',
-      options.includePhonetic ? 'Include phonetic transcription.' : '',
-      'Use lots of blank space, clean alignment, soft shadow, no decorative frame.',
-      'Do not create a grid, worksheet, collage, icons list, labels, extra words, or complex layout.',
-    ].filter(Boolean).join(' ');
+    const prompt = await getPrompt('ppt.flashcard-b3', {
+      word,
+      chineseRule: options.includeChinese !== false ? 'Bottom: small Chinese meaning.' : 'No Chinese text.',
+      phoneticRule: options.includePhonetic ? 'Include phonetic transcription.' : '',
+    });
 
-    return buildImagePayload(
+    payloads.push(await buildImagePayload(
       {
         ...basePayload,
         prompt,
@@ -231,8 +227,9 @@ function buildBatchImagePayloads(basePayload: Record<string, any>, assetCode?: s
         batchItems: [item],
         currentBatchItem: item,
       },
-    );
-  });
+    ));
+  }
+  return payloads;
 }
 
 function buildAudioPayload(basePayload: Record<string, any>, assetCode?: string, options: Record<string, any> = {}) {
@@ -441,12 +438,12 @@ export async function POST(request: NextRequest) {
       } : {}),
     };
     const n8nPayload = type === 'image'
-      ? buildImagePayload(basePayload, assetCode, options)
+      ? await buildImagePayload(basePayload, assetCode, options)
       : type === 'audio'
         ? buildAudioPayload(basePayload, assetCode, options)
         : buildVideoPayload(basePayload, assetCode, options);
     const imagePayloads = type === 'image'
-      ? buildBatchImagePayloads(basePayload, assetCode, options)
+      ? await buildBatchImagePayloads(basePayload, assetCode, options)
       : [];
 
     try {

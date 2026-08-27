@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
+import { getRawTemplate } from '@/prompts/registry';
 
 const CJK_PATTERN = /[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]/;
 
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const workflow = process.env.N8N_PPT_CONTENT_WORKFLOW || 'ppt-content-generator';
+    const workflow = process.env.N8N_PPT_CONTENT_WORKFLOW || 'ppt-content-generator-v2';
     const result = await n8nClient.call(workflow, {
       courseMeta: body.courseMeta || {},
       courseTitle: body.courseTitle || '',
@@ -74,6 +75,8 @@ export async function POST(request: NextRequest) {
       templateId: body.templateId || 'blue-business',
       totalSlides: Math.min(40, Math.max(stepCount + 1, Number(body.totalSlides) || stepCount * 2)),
       outputLanguage: 'English',
+      promptTemplate: await getRawTemplate('n8n.ppt-plan'),
+      promptTemplateSlide: await getRawTemplate('n8n.ppt-slide'),
       timestamp: Date.now(),
     }, { timeout: 300000 });
 

@@ -2,14 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Music, Wand2, Play, Pause, Download, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-
-const AUDIO_STYLES = [
-  { id: 'happy', name: '开心', tags: 'happy, cheerful, upbeat' },
-  { id: 'sad', name: '悲伤', tags: 'sad, emotional, melancholic' },
-  { id: 'calm', name: '平静', tags: 'calm, peaceful, relaxing' },
-  { id: 'excited', name: '兴奋', tags: 'excited, energetic, dynamic' },
-  { id: 'narration', name: '旁白', tags: 'narration, clear, storytelling' },
-];
+import { AUDIO_STYLES } from '../../constants/aiOptions';
 
 const DURATION_OPTIONS = [15, 30, 60, 90];
 

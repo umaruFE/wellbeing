@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/lib/auth';
 import { n8nClient } from '@/lib/n8n/client';
+import { getRawTemplate } from '@/prompts/registry';
 
 /**
  * N8N 关键词提取路由
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[extract-keywords] 调用 N8N Workflow:', {
-      workflow: 'ai-prompt-processing',
+      workflow: 'ai-prompt-optimize-v2',
       taskType: 'keyword-extract',
       promptLength: prompt.length,
       roleCount: selectedRoles.length
@@ -71,10 +72,11 @@ export async function POST(request: NextRequest) {
 
     // 4. 调用 N8N Workflow
     // 需要的参数：prompt（场景描述）、task_type（任务类型：extract-keywords）、selectedRoles（角色列表）
-    const result = await n8nClient.call('ai-prompt-optimize', {
+    const result = await n8nClient.call('ai-prompt-optimize-v2', {
       task_type: 'extract-keywords',
       prompt,
-      selectedRoles
+      selectedRoles,
+      promptTemplate: await getRawTemplate('n8n.optimize.extract-keywords')
     });
 
     console.log('[extract-keywords] N8N 响应:', result);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { normalizePhaseDurations } from '@/lib/course-normalize';
+import { getPrompt } from '@/prompts/registry';
 
 /**
  * N8N 课件生成路由
@@ -156,32 +157,18 @@ function normalizeOutputLanguage(language?: string, outputLanguage?: string) {
   };
 }
 
-function buildOverviewText(overview: any, isEnglish: boolean) {
-  if (!overview) return '';
-
-  if (isEnglish) {
-    return [
-      'Existing course overview is provided below. Generate the lesson plan strictly based on this overview, keeping the story context, learning goals, and output task fully consistent.',
-      `Title: ${overview.courseTitle || ''}`,
-      `Context: ${overview.overallContext || ''}`,
-      `Language goals: vocabulary=${overview.languageGoals?.vocabulary || ''}, sentence patterns=${overview.languageGoals?.grammar || ''}`,
-      `SEL goals: ${overview.selGoals || ''}`,
-      `PERMA goals: ${overview.permaGoals || ''}`,
-      `Output task: ${overview.finalTask || ''}`,
-      `Image prompt: ${overview.themeImagePrompt || ''}`,
-    ].join('\n');
-  }
-
-  return [
-    '已有课程概览如下，请严格基于此概览生成教案，保持故事情境、教学目标、产出任务完全一致：',
-    `标题：${overview.courseTitle || ''}`,
-    `情境：${overview.overallContext || ''}`,
-    `语言目标：词汇=${overview.languageGoals?.vocabulary || ''}，句型=${overview.languageGoals?.grammar || ''}`,
-    `SEL目标：${overview.selGoals || ''}`,
-    `PERMA目标：${overview.permaGoals || ''}`,
-    `产出任务：${overview.finalTask || ''}`,
-    `生图提示词：${overview.themeImagePrompt || ''}`,
-  ].join('\n');
+function buildOverviewText(overview: any, isEnglish: boolean): Record<string, string> {
+  if (!overview) return {};
+  return {
+    title: overview.courseTitle || '',
+    context: overview.overallContext || '',
+    vocabulary: overview.languageGoals?.vocabulary || '',
+    grammar: overview.languageGoals?.grammar || '',
+    sel: overview.selGoals || '',
+    perma: overview.permaGoals || '',
+    finalTask: overview.finalTask || '',
+    imagePrompt: overview.themeImagePrompt || '',
+  };
 }
 
 /**
@@ -250,6 +237,13 @@ export async function POST(request: NextRequest) {
     }
 
     const languageConfig = normalizeOutputLanguage(language, outputLanguage);
+    const lang = languageConfig.isEnglish ? 'en' : 'zh';
+
+    // 提示词统一走注册表（Wiki 可覆盖，builtin 兜底）
+    const [overviewText, outputInstruction] = await Promise.all([
+      overview ? getPrompt(`course.overview-text.${lang}`, buildOverviewText(overview, languageConfig.isEnglish)) : Promise.resolve(''),
+      getPrompt(`course.output-instruction.${lang}`),
+    ]);
 
     const n8nPayload = {
       language: languageConfig.language,
@@ -271,10 +265,8 @@ export async function POST(request: NextRequest) {
       atmosphere: atmosphere || '',
       specialRequirements: specialRequirements || '',
       course_overview: overview ? JSON.stringify(overview) : '',
-      course_overview_text: buildOverviewText(overview, languageConfig.isEnglish),
-      outputInstruction: languageConfig.isEnglish
-        ? 'Generate all user-facing lesson plan content in English. Return structured JSON only. Do not include Chinese text unless it is explicitly provided as target language content by the user.'
-        : '请用中文生成所有面向用户展示的教案内容，并返回结构化 JSON。',
+      course_overview_text: overviewText,
+      outputInstruction,
       userId,
       organizationId,
       timestamp: Date.now()

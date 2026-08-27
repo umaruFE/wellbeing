@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/lib/auth';
 import { n8nClient } from '@/lib/n8n/client';
+import { getPrompt } from '@/prompts/registry';
 
 /**
  * 场景生成路由 - 并行生成背景和角色图
@@ -87,7 +88,11 @@ export async function POST(request: NextRequest) {
       bg: 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com'
     };
 
-    // 4. 准备 N8N 任务
+    // 4. 准备 N8N 任务（负面提示词统一走注册表）
+    const [bgNegative, characterNegative] = await Promise.all([
+      getPrompt('scene.negative.background'),
+      getPrompt('scene.negative.character'),
+    ]);
     const tasks = [];
 
     // 背景图任务
@@ -99,7 +104,7 @@ export async function POST(request: NextRequest) {
         payload: {
           name: 'bg',
           prompt: backgroundPrompt,
-          negative_prompt: 'blurry, low quality, deformed, ugly, bad anatomy, disfigured, poorly drawn face, mutation, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body',
+          negative_prompt: bgNegative,
           width: backgroundWidth,
           height: backgroundHeight
         }
@@ -117,7 +122,7 @@ export async function POST(request: NextRequest) {
           name: role.name,
           character_name: role.name,
           prompt: role.prompt,
-          negative_prompt: 'blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients, background details',
+          negative_prompt: characterNegative,
           width: role.width || 1024,
           height: role.height || 1024
         },

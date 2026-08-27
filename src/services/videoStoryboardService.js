@@ -1,5 +1,16 @@
 // 使用相对路径，这样在任何环境下都能正确访问
+import { getPromptTemplate, renderPromptTemplate } from './promptLibrary';
+
 const API_BASE_URL = '';
+
+// 人物参考图提示词兜底（权威版本在 api/src/prompts 注册表，key: frontend.character-reference-zh）
+const FALLBACK_CHARACTER_REFERENCE_PROMPT = '{{characterDescription}}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格';
+
+/** 组装人物参考图提示词（模板从后端注册表拉取，{{characterDescription}} 占位符渲染） */
+async function buildCharacterPrompt(characterDescription) {
+  const template = await getPromptTemplate('frontend.character-reference-zh', FALLBACK_CHARACTER_REFERENCE_PROMPT);
+  return renderPromptTemplate(template, { characterDescription });
+}
 
 // 获取认证token并添加到请求头
 function getAuthHeaders() {
@@ -217,26 +228,9 @@ export const generateCharacterReferenceImages = async (description, uploadedImag
  * @returns {Promise<string[]>} - 生成的图片URL数组
  */
 export const generateCharacterReferenceImagesWithPrompt = async (characterDescription, uploadedImages = [], userId = null, organizationId = null, width = 512, height = 512, videoStyle = '') => {
-  // 从后端获取人物参考图提示词（传递风格参数）
-  let characterPrompt = `${characterDescription}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
-  try {
-    const promptResponse = await fetch('/api/ai/get-character-prompt', {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({ characterDescription, videoStyle })
-    });
-    
-    if (promptResponse.ok) {
-      const promptData = await promptResponse.json();
-      if (promptData.prompt) {
-        characterPrompt = promptData.prompt;
-        console.log('使用后端提示词:', characterPrompt);
-      }
-    }
-  } catch (error) {
-    console.error('获取后端提示词失败，使用默认提示词:', error);
-  }
-  
+  // 人物参考图提示词（从后端注册表拉取模板，风格参数由提取环节处理）
+  const characterPrompt = await buildCharacterPrompt(characterDescription);
+
   try {
     let response;
     

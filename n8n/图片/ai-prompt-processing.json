@@ -1,10 +1,10 @@
 {
-  "name": "ai-prompt-processing",
+  "name": "ai-prompt-processing [v2]",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "ai-prompt-processing",
+        "path": "ai-prompt-processing-v2",
         "responseMode": "lastNode",
         "options": {}
       },
@@ -15,12 +15,12 @@
         0,
         0
       ],
-      "webhookId": "ai-prompt-processing",
+      "webhookId": "ai-prompt-processing-v2",
       "id": "a3665771-662e-4086-9d78-25ff5b7bdee9"
     },
     {
       "parameters": {
-        "jsCode": "// 提取关键词、人物、风格\nconst item = $input.first()?.json || {};\nconst text = $input.first().json.body.prompt;\nconst type = item.body.type || 'keywords';\n\n// 调用 DashScope 提取\nreturn [{\n  json: {\n    original_text: text,\n    type: type,\n    timestamp: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// 提取关键词、人物、风格\nconst item = $input.first()?.json || {};\nconst text = $input.first().json.body.prompt;\nconst type = item.body.type || 'keywords';\n\n// 调用 DashScope 提取\nconst __template = item.body?.promptTemplate;\nif (!__template) throw new Error('缺少 promptTemplate：后端提示词注册表未下发，请先部署最新 api/src/prompts 再导入本工作流');\nreturn [{\n  json: {\n    system_prompt: __template,\n    original_text: text,\n    type: type,\n    timestamp: new Date().toISOString()\n  }\n}];"
       },
       "name": "🔍 解析与提取",
       "type": "n8n-nodes-base.code",
@@ -62,7 +62,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "你是一个专业的场景关键词提取专家。\n\n## 任务\n根据用户提供的场景描述，提取背景关键词和角色动作描述。\n\n## 输入格式\n- prompt: 用户提供的场景描述文本\n- selectedRoles: 需要提取的角色列表（如 [\"poppy\", \"edi\"]）\n\n## 输出格式（必须严格返回JSON）\n{\n  \"background\": \"背景描述（简短）\",\n  \"roles\": {\n    \"角色名1\": \"该角色的具体动作描述\",\n    \"角色名2\": \"该角色的具体动作描述\"\n  }\n}\n\n## 要求\n1. 只输出JSON，不要添加任何解释或额外文字\n2. background 提取场景的核心背景\n3. roles 中每个角色的描述要具体",
+        "text": "={{ $json.system_prompt }}",
         "hasOutputParser": true,
         "options": {}
       },

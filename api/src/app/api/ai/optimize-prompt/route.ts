@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
+import { getRawTemplate } from '@/prompts/registry';
 
 /**
  * N8N 提示词优化路由
@@ -52,15 +53,17 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[optimize-prompt] 调用 N8N Workflow:', {
-      workflow: 'ai-prompt-optimize',
+      workflow: 'ai-prompt-optimize-v2',
       originalPromptLength: originalPrompt.length,
       elementType: elementType || 'general'
     });
 
-    // 调用 N8N Workflow
-    const result = await n8nClient.call('ai-prompt-optimize', {
+    // 调用 N8N Workflow（task_type 未登记时回落 general 模板，与原工作流行为一致）
+    const taskType = elementType || 'general';
+    const result = await n8nClient.call('ai-prompt-optimize-v2', {
       prompt: originalPrompt,
-      task_type: elementType || 'general',
+      task_type: taskType,
+      promptTemplate: await getRawTemplate(`n8n.optimize.${taskType}`).catch(() => getRawTemplate('n8n.optimize.general')),
       timestamp: Date.now()
     });
 
