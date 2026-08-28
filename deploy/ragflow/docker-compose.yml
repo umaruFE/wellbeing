@@ -1,95 +1,128 @@
-# RAGFlow 独立编排（与根 docker-compose.yml 分离部署）
-# 参考 RAGFlow v0.17 官方 docker/docker-compose.yml 结构
-# 资源要求：>= 4 核 8G（ES 需 ~2G）；镜像较大，首次拉取较慢
+# RAGFlow v0.27.0 独立编排（自包含，不依赖官方仓库）
+# 对齐官方 v0.27.0 docker/docker-compose.yml + docker-compose-base.yml 结构
+# 配置机制：不挂载 service_conf.yaml，全部经 .env 环境变量由镜像内置 entrypoint 渲染
+# 资源：ES 堆压至 1G，全套 idle 约 5G，适合 14G 内存服务器与既有服务共存
 # 使用：
 #   cd deploy/ragflow
 #   docker compose up -d
-# 访问：http://<服务器IP>:9380（首次注册管理员，再在 用户设置→API 生成 API Key）
-# 注意：若宿主 6379 已被占用，把 redis 的端口映射改为 "6380:6379" 并同步修改 service_conf.yaml
+# 访问：Web http://<服务器IP>:8888（首次注册即管理员）
+#       API http://<服务器IP>:9380（后端对接用，/v1）
+# 文档引擎：elasticsearch（官方默认路径，比 infinity 更省内存可控）
 
 services:
   es01:
-    image: elasticsearch:8.11.3
+    image: elasticsearch:${STACK_VERSION:-8.11.3}
     container_name: ragflow-es01
-    restart: always
+    restart: unless-stopped
     environment:
-      - discovery.type=single-node
-      - xpack.security.minimal=true
-      - ELASTIC_PASSWORD=infini_rag_flow
-      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - node.name=es01
+      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD:-infini_rag_flow}
       - bootstrap.memory_lock=false
+      - discovery.type=single-node
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - xpack.security.transport.ssl.enabled=false
+      - ES_JAVA_OPTS=${ES_JAVA_OPTS:--Xms1g -Xmx1g}
+    tmpfs:
+      - /tmp:mode=1777,size=512m
+    volumes:
+      - esdata01:/usr/share/elasticsearch/data
+    mem_limit: ${ES_MEM_LIMIT:-4g}
     ulimits:
       memlock:
         soft: -1
         hard: -1
-    volumes:
-      - esdata01:/usr/share/elasticsearch/data
-    ports:
-      - 9200:1200
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -u elastic:infini_rag_flow http://localhost:1200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
-      interval: 30s
-      timeout: 20s
-      retries: 10
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - ragflow
 
   mysql:
-    image: mysql:8.0
+    image: mysql:8.0.40
     container_name: ragflow-mysql
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_DATABASE: rag_flow
-      MYSQL_USER: root
-      MYSQL_PASSWORD: infini_rag_flow
-      MYSQL_ROOT_PASSWORD: infini_rag_flow
-    command: --lower_case_table_names=1
+      - MYSQL_ROOT_PASSWORD=${MYSQL_PASSWORD:-infini_rag_flow}
+      - MYSQL_DATABASE=${MYSQL_DBNAME:-rag_flow}
+    command:
+      --max_connections=1000
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+      --binlog_expire_logs_seconds=604800
     volumes:
       - mysqldata:/var/lib/mysql
-    ports:
-      - 5455:3306
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-uroot", "-p${MYSQL_PASSWORD:-infini_rag_flow}"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - ragflow
 
   minio:
-    image: quay.io/minio/minio:RELEASE.2023-12-20T23-17-00Z
+    # 官方 v0.27 改用 silo（minio 社区延续版）；拉取慢可临时换 minio/minio:RELEASE.2023-12-20T23-17-00Z
+    image: pgsty/silo:RELEASE.2026-08-06T00-00-00Z
     container_name: ragflow-minio
-    restart: always
-    command: server --console-address ":9001" /data
+    restart: unless-stopped
+    command: ["server", "--console-address", ":9001", "/data"]
     environment:
-      MINIO_ROOT_USER: rag_flow
-      MINIO_ROOT_PASSWORD: infini_rag_flow
+      - MINIO_ROOT_USER=${MINIO_USER:-rag_flow}
+      - MINIO_ROOT_PASSWORD=${MINIO_PASSWORD:-infini_rag_flow}
     volumes:
       - miniodata:/data
-    ports:
-      - 9000:9000
-      - 9001:9001
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - ragflow
 
   redis:
     image: valkey/valkey:8
     container_name: ragflow-redis
-    restart: always
-    command: valkey-server --requirepass infini_rag_flow --save ""
+    restart: unless-stopped
+    command: ["valkey-server", "--requirepass", "${REDIS_PASSWORD:-infini_rag_flow}", "--maxmemory", "128mb", "--maxmemory-policy", "volatile-lru"]
     volumes:
       - redisdata:/data
-    ports:
-      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-infini_rag_flow}", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 120
+    networks:
+      - ragflow
 
   ragflow:
-    image: ${RAGFLOW_IMAGE:-infiniflow/ragflow:v0.17.2}
+    image: ${RAGFLOW_IMAGE:-swr.cn-north-4.myhuaweicloud.com/infiniflow/ragflow:v0.27.0}
     container_name: ragflow-server
-    restart: always
+    restart: unless-stopped
     depends_on:
       es01:
         condition: service_healthy
       mysql:
-        condition: service_started
+        condition: service_healthy
       minio:
         condition: service_started
       redis:
         condition: service_started
-    volumes:
-      - ./service_conf.yaml:/ragflow/conf/service_conf.yaml
-      - ragflow-logs:/ragflow/logs
-      - ragflow-data:/ragflow/data
+    command:
+      - --enable-adminserver
+      - --init-model-provider-tables
     ports:
-      - 9380:80
+      - ${SVR_WEB_HTTP_PORT:-8888}:80      # Web 界面（80/443 已被宿主反代占用，故用 8888）
+      - ${SVR_HTTP_PORT:-9380}:9380        # HTTP API（后端对接 /v1）
+    env_file: .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./ragflow-logs:/ragflow/logs
+    networks:
+      - ragflow
 
 volumes:
   esdata01:
@@ -100,7 +133,7 @@ volumes:
     driver: local
   redisdata:
     driver: local
-  ragflow-logs:
-    driver: local
-  ragflow-data:
-    driver: local
+
+networks:
+  ragflow:
+    driver: bridge
