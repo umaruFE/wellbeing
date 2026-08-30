@@ -7,6 +7,7 @@
  * action 命名规范：{域}.{对象}.{动作}，如 ai.workflow.call、page.view、asset.download
  */
 import { db } from '@/lib/db';
+import { documents, ensureDataset, isRagflowEnabled } from '@/lib/ragflow/client';
 
 export interface UsageEvent {
   userId?: string | null;
@@ -19,6 +20,33 @@ export interface UsageEvent {
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const HABITS_DATASET = process.env.RAGFLOW_HABITS_DATASET || 'usage-habits';
+
+async function mirrorPictureBookEvent(event: UsageEvent): Promise<void> {
+  if (!isRagflowEnabled() || !event.action.startsWith('picturebook.')) return;
+
+  const datasetId = await ensureDataset(HABITS_DATASET, '用户使用记录（实时事件 + ETL 聚合画像）');
+  const timestamp = new Date().toISOString();
+  const safeTimestamp = timestamp.replace(/[:.]/g, '-');
+  const filename = `usage-event-${safeTimestamp}-${crypto.randomUUID()}.md`;
+  const content = [
+    '# 用户操作记录',
+    '',
+    `- 时间：${timestamp}`,
+    `- 用户 ID：${event.userId || 'anonymous'}`,
+    `- 组织 ID：${event.organizationId || 'unknown'}`,
+    `- 操作：${event.action}`,
+    `- 资源类型：${event.resourceType || 'web'}`,
+    `- 资源 ID：${event.resourceId || 'unknown'}`,
+    '',
+    '## 操作详情',
+    '',
+    '```json',
+    JSON.stringify(event.details || {}, null, 2),
+    '```',
+  ].join('\n');
+  await documents.uploadAndParse(datasetId, filename, content);
+}
 
 let tableReady = false;
 async function ensureTable() {
@@ -45,9 +73,8 @@ async function ensureTable() {
 /**
  * 记录一条使用事件（fire-and-forget，不阻塞业务请求、失败不影响主流程）
  */
-export function recordEvent(event: UsageEvent): void {
-  void (async () => {
-    try {
+export async function recordEvent(event: UsageEvent): Promise<void> {
+  try {
       await ensureTable();
       const userId = event.userId && UUID_RE.test(event.userId) ? event.userId : null;
       const resourceId = event.resourceId && UUID_RE.test(event.resourceId) ? event.resourceId : null;
@@ -63,13 +90,13 @@ export function recordEvent(event: UsageEvent): void {
           JSON.stringify(event.details || {}),
         ]
       );
-    } catch (err) {
-      console.warn('[usage-tracking] record failed (ignored):', err instanceof Error ? err.message : err);
-    }
-  })();
+      await mirrorPictureBookEvent(event);
+  } catch (err) {
+    console.warn('[usage-tracking] record failed (ignored):', err instanceof Error ? err.message : err);
+  }
 }
 
 /** 批量记录（/api/events 上报入口使用） */
-export function recordEvents(events: UsageEvent[]): void {
-  for (const event of events) recordEvent(event);
+export async function recordEvents(events: UsageEvent[]): Promise<void> {
+  await Promise.all(events.map((event) => recordEvent(event)));
 }

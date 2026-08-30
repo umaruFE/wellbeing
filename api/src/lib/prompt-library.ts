@@ -125,10 +125,20 @@ async function fetchFromWiki(key: string): Promise<PromptTemplate | null> {
 const sectionCache = new Map<string, { text: string | null; fetchedAt: number }>();
 
 export async function loadPromptSection(key: string): Promise<string | null> {
-  if (!isPromptLibraryEnabled()) return null;
+  if (!isPromptLibraryEnabled()) {
+    console.info(`[prompt-library] MISS key=${key} reason=wiki-disabled fallback=builtin`);
+    return null;
+  }
 
   const cached = sectionCache.get(key);
-  if (cached && Date.now() - cached.fetchedAt < TTL_MS) return cached.text;
+  if (cached && Date.now() - cached.fetchedAt < TTL_MS) {
+    console.info(
+      cached.text
+        ? `[prompt-library] HIT key=${key} source=wiki-cache`
+        : `[prompt-library] MISS key=${key} source=wiki-cache fallback=builtin`
+    );
+    return cached.text;
+  }
 
   const path = `${ROOT}/${key}`;
   const query = `query ($path: String!, $locale: String!) {
@@ -143,15 +153,30 @@ export async function loadPromptSection(key: string): Promise<string | null> {
       body: JSON.stringify({ query, variables: { path, locale: LOCALE } }),
       signal: controller.signal,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      console.info(`[prompt-library] MISS key=${key} reason=http-${response.status} fallback=builtin`);
+      return null;
+    }
     const json = await response.json();
     const content: string | undefined = json?.data?.pages?.singleByPath?.content;
-    if (!content) return null;
+    if (!content) {
+      console.info(`[prompt-library] MISS key=${key} reason=page-not-found fallback=builtin`);
+      return null;
+    }
     const sections = parseSections(content);
     const text = sections.main ?? null;
     sectionCache.set(key, { text, fetchedAt: Date.now() });
+    console.info(
+      text
+        ? `[prompt-library] HIT key=${key} source=wiki`
+        : `[prompt-library] MISS key=${key} reason=main-section-missing fallback=builtin`
+    );
     return text;
-  } catch {
+  } catch (err) {
+    console.warn(
+      `[prompt-library] MISS key=${key} reason=request-error fallback=builtin:`,
+      err instanceof Error ? err.message : err
+    );
     return null;
   } finally {
     clearTimeout(timer);
@@ -163,10 +188,18 @@ export async function loadPromptSection(key: string): Promise<string | null> {
  * @returns 模板；未启用/失败/页面缺失时返回 null，调用方回落代码内置模板
  */
 export async function loadPromptTemplate(key: string): Promise<PromptTemplate | null> {
-  if (!isPromptLibraryEnabled()) return null;
+  if (!isPromptLibraryEnabled()) {
+    console.info(`[prompt-library] MISS key=${key} reason=wiki-disabled fallback=builtin`);
+    return null;
+  }
 
   const cached = cache.get(key);
   if (cached && Date.now() - cached.fetchedAt < TTL_MS) {
+    console.info(
+      cached.template
+        ? `[prompt-library] HIT key=${key} source=wiki-cache`
+        : `[prompt-library] MISS key=${key} source=wiki-cache fallback=builtin`
+    );
     return cached.template ? { ...cached.template, source: 'cache' } : null;
   }
 
@@ -177,6 +210,11 @@ export async function loadPromptTemplate(key: string): Promise<PromptTemplate | 
     console.warn(`[prompt-library] 加载 ${key} 失败，使用代码内置模板:`, err instanceof Error ? err.message : err);
   }
   cache.set(key, { template, fetchedAt: Date.now() });
+  console.info(
+    template
+      ? `[prompt-library] HIT key=${key} source=wiki`
+      : `[prompt-library] MISS key=${key} reason=page-not-found-or-invalid fallback=builtin`
+  );
   return template;
 }
 

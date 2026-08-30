@@ -28,6 +28,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 import uploadService from '../../services/uploadService';
 import { getPromptTemplate } from '../../services/promptLibrary';
+import { trackEvent } from '../../utils/usageTracker';
 import './PictureBookStudioPage.css';
 
 const initialBasicInfo = {
@@ -626,6 +627,12 @@ export function PictureBookStudioPage() {
         setMessage('');
         setStep(1);
         await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
+        trackEvent('picturebook.activity-plan.generate.success', 'picture_book', editingBookIdRef.current || editingBookId, {
+          themes: basicInfo.themes,
+          age: basicInfo.age,
+          level: basicInfo.level,
+          source: 'ai',
+        });
       } else {
         // Fallback to local template
         const nextPlan = buildActivityPlan(basicInfo, isEn);
@@ -634,6 +641,10 @@ export function PictureBookStudioPage() {
         setMessage(data.error || t('pictureBook.planFallback'));
         setStep(1);
         await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
+        trackEvent('picturebook.activity-plan.generate.fallback', 'picture_book', editingBookIdRef.current || editingBookId, {
+          error: data.error || 'API generation failed',
+          source: 'local-template',
+        });
       }
     } catch (err) {
       // Fallback to local template
@@ -643,6 +654,10 @@ export function PictureBookStudioPage() {
       setMessage(`${t('pictureBook.planFallback')}: ${err.message}`);
       setStep(1);
       await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
+      trackEvent('picturebook.activity-plan.generate.error', 'picture_book', editingBookIdRef.current || editingBookId, {
+        error: err.message,
+        source: 'local-template',
+      });
     } finally {
       setGenerating(false);
     }
@@ -685,6 +700,10 @@ export function PictureBookStudioPage() {
         setMessage('');
         setStep(2);
         await saveBook({ pages: nextPages, step: 2 });
+        trackEvent('picturebook.design.generate.success', 'picture_book', editingBookIdRef.current || editingBookId, {
+          pageCount: nextPages.length,
+          source: 'ai',
+        });
       } else {
         // Fallback to local template
         const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount, isEn);
@@ -692,6 +711,11 @@ export function PictureBookStudioPage() {
         setMessage(data.error || t('pictureBook.designFallback'));
         setStep(2);
         await saveBook({ pages: fallbackPages, step: 2 });
+        trackEvent('picturebook.design.generate.fallback', 'picture_book', editingBookIdRef.current || editingBookId, {
+          pageCount: fallbackPages.length,
+          error: data.error || 'API generation failed',
+          source: 'local-template',
+        });
       }
     } catch (err) {
       // Fallback to local template
@@ -700,6 +724,11 @@ export function PictureBookStudioPage() {
       setMessage(`${t('pictureBook.designFallback')}: ${err.message}`);
       setStep(2);
       await saveBook({ pages: fallbackPages, step: 2 });
+      trackEvent('picturebook.design.generate.error', 'picture_book', editingBookIdRef.current || editingBookId, {
+        pageCount: fallbackPages.length,
+        error: err.message,
+        source: 'local-template',
+      });
     } finally {
       setGenerating(false);
     }

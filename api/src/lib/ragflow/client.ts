@@ -10,6 +10,7 @@
 
 const BASE_URL = process.env.RAGFLOW_API_URL || 'http://localhost:9380';
 const API_KEY = process.env.RAGFLOW_API_KEY || '';
+const API_PREFIX = process.env.RAGFLOW_API_PREFIX || '/api/v1';
 
 export function isRagflowEnabled(): boolean {
   return Boolean(process.env.RAGFLOW_ENABLED === 'true' && API_KEY);
@@ -31,7 +32,7 @@ async function request<T = any>(
   if (formData) fetchOptions.body = formData;
   else if (body !== undefined) fetchOptions.body = JSON.stringify(body);
 
-  const response = await fetch(`${BASE_URL}/v1${path}`, fetchOptions);
+  const response = await fetch(`${BASE_URL}${API_PREFIX}${path}`, fetchOptions);
   const text = await response.text();
   let json: any = null;
   try {

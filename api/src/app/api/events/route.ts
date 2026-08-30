@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       (e: any) => e && typeof e.action === 'string' && e.action.length <= 100
     );
 
-    recordEvents(
+    await recordEvents(
       events.map((e: any) => ({
         userId: userId || null,
         organizationId: organizationId || null,

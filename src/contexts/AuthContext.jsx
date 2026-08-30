@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { setTrackingContext } from '../utils/usageTracker';
 
 const AuthContext = createContext(null);
 
@@ -69,6 +70,13 @@ export const PERMISSIONS = {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setTrackingContext({
+      userId: user?.id || null,
+      organizationId: user?.organizationId || user?.organization_id || null,
+    });
+  }, [user]);
 
   // 从 localStorage 恢复登录状态
   useEffect(() => {

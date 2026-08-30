@@ -21,6 +21,7 @@ const DAYS = daysArg ? Number.parseInt(daysArg.split('=')[1], 10) || 30 : 30;
 
 const RAGFLOW_API_URL = process.env.RAGFLOW_API_URL || 'http://localhost:9380';
 const RAGFLOW_API_KEY = process.env.RAGFLOW_API_KEY || '';
+const RAGFLOW_API_PREFIX = process.env.RAGFLOW_API_PREFIX || '/api/v1';
 const DATASET_NAME = process.env.RAGFLOW_HABITS_DATASET || 'usage-habits';
 const DOC_PREFIX = 'usage-habits-';
 
@@ -49,7 +50,7 @@ async function safeQ(sql, params = []) {
 
 // ---------- RAGFlow ----------
 async function rf(path, options = {}) {
-  const response = await fetch(`${RAGFLOW_API_URL}/v1${path}`, {
+  const response = await fetch(`${RAGFLOW_API_URL}${RAGFLOW_API_PREFIX}${path}`, {
     ...options,
     headers: {
       ...(options.formData ? {} : { 'Content-Type': 'application/json' }),

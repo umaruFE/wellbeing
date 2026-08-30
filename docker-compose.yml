@@ -75,6 +75,19 @@ services:
       # ---- 第三方 AI 服务 ----
       REMOVEBG_API_KEY: ${REMOVEBG_API_KEY}
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      # ---- RAGFlow 向量检索（值来自根目录 .env）----
+      RAGFLOW_ENABLED: ${RAGFLOW_ENABLED:-false}
+      RAGFLOW_API_URL: ${RAGFLOW_API_URL:-http://localhost:9380}
+      RAGFLOW_API_KEY: ${RAGFLOW_API_KEY:-}
+      RAGFLOW_PICTUREBOOK_DATASET: ${RAGFLOW_PICTUREBOOK_DATASET:-picturebook-knowledge}
+      RAGFLOW_HABITS_DATASET: ${RAGFLOW_HABITS_DATASET:-usage-habits}
+      # ---- Wiki.js 提示词库 ----
+      WIKI_PROMPT_ENABLED: ${WIKI_PROMPT_ENABLED:-false}
+      WIKI_API_URL: ${WIKI_API_URL:-http://localhost:3000}
+      WIKI_API_KEY: ${WIKI_API_KEY:-}
+      WIKI_PROMPT_ROOT: ${WIKI_PROMPT_ROOT:-wellbeing/prompts}
+      WIKI_PROMPT_LOCALE: ${WIKI_PROMPT_LOCALE:-zh}
+      WIKI_PROMPT_CACHE_TTL_SEC: ${WIKI_PROMPT_CACHE_TTL_SEC:-300}
       # ---- 内部 API 回调地址（后台任务用）----
       INTERNAL_API_BASE_URL: http://backend:4000
     volumes:
