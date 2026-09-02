@@ -99,7 +99,7 @@ export const ExperiencePage = ({ experience }) => {
         <div className="pbv2-list-page" style={{ '--cw-accent': config.accent }}>
         <header className="pbv2-topbar">
           <div className="pbv2-topbar-left">
-            <div className="pbv2-topbar-icon exp-topbar-icon"><Icon size={28} /></div>
+            <div className="pbv2-topbar-icon"><Icon size={28} /></div>
             <div>
               <h1>{config.type}</h1>
               <p>{config.subtitle}</p>
