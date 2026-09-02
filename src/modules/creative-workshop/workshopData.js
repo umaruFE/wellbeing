@@ -43,7 +43,7 @@ export const WORKSHOP_MODULES = {
     eyebrow: '创作工坊 · 模块 4', title: '完整课程', icon: BookOpen, accent: '#509f69',
     description: '输入教学目标，生成符合幸福力设计框架的完整课程方案与 PPT 课件。',
     paths: [
-      { title: '创建完整课程', description: '从教学目标开始完整备课', icon: Sparkles, path: '/create', action: '开始创建' },
+      { title: '创建完整课程', description: '从教学目标开始完整备课', icon: Sparkles, path: '/figma-courses', action: '开始创建' },
       { title: '管理课程', description: '继续编辑已有课程和课件', icon: BookOpen, path: '/figma-courses', action: '查看课程' },
     ],
   },

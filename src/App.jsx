@@ -5,15 +5,8 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { RequireAuth } from './components/RequireAuth';
 import { LoginPage } from './modules/auth/LoginPage';
 import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
-import { MainLayout } from './components/MainLayout';
 
 import { Layout } from './figma-restore/Layout';
-import CourseOverviewPage from './modules/course-management/course-overview/CourseOverviewPage';
-import LessonPlanPage from './modules/course-management/lesson-plan/LessonPlanPage';
-import { CanvasView } from './modules/course-management/ppt-canvas/CanvasView';
-import { ReadingMaterialCanvasView } from './modules/course-management/reading-material/ReadingMaterialCanvasView';
-import { CourseLayout } from './components/CourseLayout';
-import CreateCoursePage from './modules/course-management/create-course/CreateCoursePage';
 import { CourseSquarePage } from './modules/course-square/CourseSquarePage';
 import { AudioGeneratorPage } from './modules/test/AudioGeneratorPage';
 import { SuperAdminPage } from './modules/admin/SuperAdminPage';
@@ -67,7 +60,6 @@ function App() {
           <Route
             element={
               <ProtectedRoute>
-                {/* <MainLayout /> */}
                 <Layout />
               </ProtectedRoute>
             }
@@ -78,16 +70,6 @@ function App() {
               element={<HomeRoute />}
             />
 
-            {/* 创建课程页面 */}
-            <Route
-              path="/create"
-              element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <CreateCoursePage />
-                </RequireAuth>
-              }
-            />
-
             <Route
               path="/figma-courses"
               element={
@@ -96,13 +78,6 @@ function App() {
                 </RequireAuth>
               }
             />
-
-            <Route path="/courses/:courseId" element={<CourseLayout />}>
-              <Route path="overview" element={<CourseOverviewPage />} />
-              <Route path="lesson-plan" element={<LessonPlanPage />} />
-              <Route path="ppt" element={<CanvasView />} />
-              <Route path="reading" element={<ReadingMaterialCanvasView />} />
-            </Route>
 
             <Route
               path="/course-square"
