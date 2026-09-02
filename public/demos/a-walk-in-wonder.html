@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Walk in Wonder — Yoga Guide</title>
+<style>
+  :root {
+    --forest: #4A7C59;
+    --sand: #F5EDE3;
+    --dark: #3A3A3A;
+    --bg: #C8DCC8;
+    --border: #e8e3dc;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* ============ 授课模式 ============ */
+  .teach-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    width: 100vw;
+    background: var(--bg);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .teach-mode.hidden { display: none; }
+
+  .page-image {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    transition: opacity 0.8s ease;
+    z-index: 0;
+  }
+
+  /* 字幕 - 无框大字 */
+  .subtitle-overlay {
+    position: absolute;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 4;
+    text-align: center;
+    max-width: 85vw;
+    pointer-events: none;
+  }
+
+  .subtitle-overlay .subtitle {
+    font-size: 34px;
+    font-weight: 700;
+    color: #2a2a2a;
+    line-height: 1.35;
+    text-shadow: 0 1px 8px rgba(255, 255, 255, 0.7), 0 1px 2px rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.02em;
+  }
+
+  /* 旅程路径 */
+  .journey-path {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    z-index: 4;
+    background: rgba(255, 255, 255, 0.55);
+    padding: 6px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(6px);
+  }
+
+  .journey-node {
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    transition: all 0.4s ease;
+    background: rgba(200, 220, 200, 0.6);
+    cursor: default;
+    position: relative;
+  }
+
+  .journey-node.done {
+    background: rgba(74, 124, 89, 0.25);
+    border: 1.5px solid rgba(74, 124, 89, 0.4);
+  }
+
+  .journey-node.current {
+    background: rgba(74, 124, 89, 0.35);
+    border: 2px solid var(--forest);
+    box-shadow: 0 0 10px rgba(74, 124, 89, 0.3);
+    transform: scale(1.2);
+    z-index: 5;
+  }
+
+  .journey-node.upcoming {
+    background: rgba(200, 220, 200, 0.4);
+    opacity: 0.5;
+  }
+
+  .journey-line { width: 10px; height: 1px; background: rgba(74, 124, 89, 0.2); }
+
+  .journey-node .tooltip {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: #ccc;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .journey-node:hover .tooltip { opacity: 1; }
+
+  .exit-btn {
+    position: absolute;
+    bottom: 12px; right: 12px;
+    background: rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: rgba(0, 0, 0, 0.3);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 14px;
+    cursor: pointer;
+    z-index: 10;
+    transition: all 0.3s;
+  }
+
+  .exit-btn:hover { background: rgba(0, 0, 0, 0.12); color: rgba(0, 0, 0, 0.5); }
+
+  .key-hint {
+    position: absolute;
+    bottom: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    color: rgba(0, 0, 0, 0.12);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* ============ 备课模式 ============ */
+  .prep-mode {
+    display: none;
+    height: 100vh;
+    width: 100vw;
+    background: #faf8f5;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .prep-mode.active { display: flex; }
+
+  .prep-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 24px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+
+  .prep-topbar .title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--dark);
+  }
+
+  .prep-topbar .actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .prep-topbar .btn {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--forest); color: #fff; }
+  .btn-primary:hover { background: #3d6a4a; }
+  .btn-secondary { background: #f0ece6; color: var(--dark); }
+  .btn-secondary:hover { background: #e5e0d8; }
+  .btn-secondary.active { background: var(--forest); color: #fff; }
+
+  /* ============ 音频面板 ============ */
+  .audio-panel {
+    display: none;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    flex-shrink: 0;
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  .audio-panel.open { display: block; }
+
+  .audio-panel h3 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #aaa;
+    margin-bottom: 12px;
+  }
+
+  .audio-section {
+    margin-bottom: 16px;
+  }
+
+  .audio-section:last-child { margin-bottom: 0; }
+
+  .audio-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #999;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+
+  .audio-upload-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+  }
+
+  .audio-upload-row select {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 12px;
+    background: #fff;
+    color: var(--dark);
+  }
+
+  .audio-upload-row input[type="file"] {
+    font-size: 12px;
+  }
+
+  .audio-upload-row .btn-sm {
+    padding: 5px 12px;
+    font-size: 11px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .audio-upload-row .btn-sm:hover { background: #f5f2ed; }
+
+  .track-list { display: flex; flex-direction: column; gap: 6px; }
+
+  .track-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #f9f7f4;
+    border-radius: 8px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .track-item .track-name {
+    font-weight: 600;
+    color: var(--dark);
+    min-width: 100px;
+    max-width: 160px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .track-item .badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .badge-music { background: #e8f0e8; color: var(--forest); }
+  .badge-sfx { background: #fef3e8; color: #c7853e; }
+
+  .track-item .vol-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #999;
+  }
+
+  .track-item input[type="range"] {
+    width: 80px;
+    accent-color: var(--forest);
+  }
+
+  .track-item .track-settings {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 11px;
+    color: #777;
+    flex-wrap: wrap;
+  }
+
+  .track-item .track-settings select,
+  .track-item .track-settings input {
+    padding: 3px 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 11px;
+    background: #fff;
+  }
+
+  .track-item .track-settings input[type="number"] {
+    width: 48px;
+  }
+
+  .track-item .track-settings label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+  }
+
+  .track-item .btn-del {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    margin-left: auto;
+  }
+
+  .track-item .btn-del:hover { color: #e88; }
+
+  .no-tracks {
+    font-size: 12px;
+    color: #ccc;
+    font-style: italic;
+    padding: 4px 0;
+  }
+
+  /* ============ 教学方案抽屉 ============ */
+  .drawer-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(0,0,0,0.25);
+    z-index: 900;
+  }
+  .drawer-overlay.open { display: block; }
+
+  .teaching-plan-drawer {
+    position: fixed;
+    top: 0; right: 0;
+    width: 480px;
+    max-width: 92vw;
+    height: 100vh;
+    background: #fff;
+    z-index: 1000;
+    box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+  }
+  .teaching-plan-drawer.open { transform: translateX(0); }
+
+  .teaching-plan-drawer.zoomed {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .drawer-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 0;
+  }
+  .drawer-header .drawer-btns {
+    display: flex;
+    gap: 8px;
+  }
+  .drawer-header .drawer-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    background: #fff;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    color: #666;
+  }
+  .drawer-header .drawer-btn:hover { background: #f5f2ed; color: var(--dark); }
+
+  .drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+  }
+
+  .drawer-content h4 {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--forest);
+    margin: 18px 0 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e8f0e8;
+  }
+  .drawer-content h4:first-child { margin-top: 0; }
+
+  .drawer-content .obj-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    font-size: 12px;
+    color: #555;
+    margin-bottom: 4px;
+  }
+  .drawer-content .obj-grid .obj-label {
+    font-weight: 600;
+    color: #888;
+    font-size: 11px;
+  }
+
+  .drawer-content .step-block {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: #f9f7f4;
+    border-radius: 10px;
+    border-left: 3px solid var(--forest);
+  }
+  .drawer-content .step-block .step-header {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--forest);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .drawer-content .step-block .step-header .pose-tag {
+    font-size: 10px;
+    background: #e8f0e8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+  .drawer-content .step-block .teacher-lang {
+    font-size: 12px;
+    color: #444;
+    line-height: 1.65;
+    font-style: italic;
+  }
+
+  .drawer-content .info-row {
+    display: flex;
+    gap: 8px;
+    font-size: 11px;
+    color: #888;
+    margin-bottom: 4px;
+  }
+  .drawer-content .info-row .info-tag {
+    background: #f0ece6;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .drawer-content .tips-list {
+    font-size: 12px;
+    color: #555;
+    line-height: 1.7;
+    padding-left: 18px;
+  }
+  .drawer-content .tips-list li { margin-bottom: 4px; }
+
+  /* ============ 三列表格 ============ */
+  .prep-table-wrap {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 24px;
+  }
+
+  .prep-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  .prep-table thead { background: #f5f2ed; }
+
+  .prep-table th {
+    padding: 10px 14px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #999;
+    font-weight: 600;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prep-table td {
+    padding: 14px;
+    border-bottom: 1px solid #f0ece6;
+    vertical-align: top;
+  }
+
+  .prep-table tbody tr { transition: background 0.2s; cursor: pointer; }
+  .prep-table tbody tr:hover { background: #fdfcf9; }
+
+  .prep-table tbody tr.current-row { background: rgba(74, 124, 89, 0.06); }
+  .prep-table tbody tr.current-row td:first-child {
+    border-left: 3px solid var(--forest);
+    padding-left: 11px;
+  }
+
+  .prep-table .col-img { width: 200px; text-align: center; }
+  .prep-table .col-img img {
+    width: 180px; height: auto;
+    border-radius: 6px;
+    border: 1px solid #f0ece6;
+  }
+
+  .prep-table .col-img .page-tag {
+    display: inline-block;
+    font-size: 10px; color: #aaa;
+    margin-top: 4px;
+    background: #f5f2ed;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .prep-table .col-subtitle {
+    width: 240px;
+    font-size: 14px;
+    color: var(--dark);
+    font-weight: 500;
+    line-height: 1.5;
+  }
+
+  .prep-table .col-script {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.7;
+  }
+
+  .prep-table .col-script .meta-row {
+    margin-top: 8px;
+    font-size: 11px;
+    color: #aaa;
+    display: flex;
+    gap: 14px;
+  }
+
+  @media (max-width: 900px) {
+    .prep-table .col-img { width: 140px; }
+    .prep-table .col-img img { width: 120px; }
+    .prep-table .col-subtitle { width: 160px; font-size: 13px; }
+    .prep-table .col-script { font-size: 12px; }
+    .subtitle-overlay .subtitle { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ 授课模式 ============ -->
+<div class="teach-mode" id="teachMode">
+  <img class="page-image" id="teachImage" src="" alt="">
+  <div class="subtitle-overlay" id="subtitleOverlay">
+    <span class="subtitle" id="subtitleText"></span>
+  </div>
+  <div class="journey-path" id="journeyPath"></div>
+  <div class="key-hint">click or space →</div>
+  <button class="exit-btn" onclick="toggleMode()">退出授课</button>
+</div>
+
+<!-- ============ 备课模式 ============ -->
+<div class="prep-mode" id="prepMode">
+  <div class="prep-topbar">
+    <span class="title">A Walk in Wonder Yoga Adventure</span>
+    <div class="actions">
+      <button class="btn btn-secondary" id="audioToggleBtn" onclick="toggleAudioPanel()">🎵 音频</button>
+      <button class="btn btn-secondary" onclick="toggleTeachingPlan()">📋 教学方案</button>
+      <button class="btn btn-primary" onclick="toggleMode()">开始授课</button>
+    </div>
+  </div>
+
+  <!-- 音频面板 -->
+  <div class="audio-panel" id="audioPanel">
+    <!-- 音乐区域 -->
+    <div class="audio-section">
+      <div class="audio-section-label">🎼 音乐</div>
+      <div class="audio-upload-row">
+        <input type="file" id="musicFileInput" accept="audio/*" style="display:none">
+        <button class="btn-sm" onclick="document.getElementById('musicFileInput').click()">+ 添加音乐</button>
+        <span style="font-size:11px;color:#bbb;">mp3, wav, ogg</span>
+      </div>
+      <div class="track-list" id="musicTrackList">
+        <div class="no-tracks">暂无音乐</div>
+      </div>
+    </div>
+
+    <!-- 音效区域 -->
+    <div class="audio-section">
+      <div class="audio-section-label">🔊 音效</div>
+      <div class="audio-upload-row">
+        <span style="font-size:11px;color:#888;">添加至</span>
+        <select id="sfxPageSelect"></select>
+        <input type="file" id="sfxFileInput" accept="audio/*" style="display:none">
+        <button class="btn-sm" onclick="document.getElementById('sfxFileInput').click()">+ 添加音效</button>
+      </div>
+      <div class="track-list" id="sfxTrackList">
+        <div class="no-tracks">暂无音效</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 教学方案抽屉 -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleTeachingPlan()"></div>
+  <div class="teaching-plan-drawer" id="teachingPlanDrawer">
+    <div class="drawer-header">
+      <h3>📋 教学方案</h3>
+      <div class="drawer-btns">
+        <button class="drawer-btn" onclick="zoomTeachingPlan()" title="放大">⛶</button>
+        <button class="drawer-btn" onclick="toggleTeachingPlan()" title="关闭">✕</button>
+      </div>
+    </div>
+    <div class="drawer-content">
+      <h4>🎯 教学目标</h4>
+      <div class="obj-grid">
+        <span class="obj-label">语言目标（词汇）</span><span>field, grass, trees, forest, wind, leaves, rock, lake, river, mountain, ground, water</span>
+        <span class="obj-label">语言目标（句型）</span><span>What is there? / Where is the…? / How do…feel? / There is a…</span>
+        <span class="obj-label">瑜伽体式</span><span>Upward Salute → Tree Pose → Side Reach → Standing Balance → Seated Spinal Twist → Mountain Pose → Butterfly Pose → Savasana</span>
+        <span class="obj-label">幸福力目标</span><span>投入（沉浸式身体探索）、成就（登顶俯瞰）、积极情绪（平静与感恩）</span>
+        <span class="obj-label">时长</span><span>约 15–18 分钟</span>
+        <span class="obj-label">年龄</span><span>7–10 岁</span>
+      </div>
+
+      <h4>📖 教学步骤</h4>
+
+      <h4 style="font-size:12px;color:#999;margin:12px 0 8px;border:none;">阶段一：导入（P1–P2）｜约 2–3 分钟</h4>
+
+      <div class="step-block">
+        <div class="step-header">P1 · 声音悬念 + 引出主题 <span class="pose-tag">开场</span></div>
+        <div class="info-row"><span class="info-tag">😊 好奇→神秘→微笑</span><span class="info-tag">🧘 歪头→手指耳朵→微笑</span></div>
+        <div class="teacher-lang">(Play forest sounds 3 sec—birds, rustling leaves—pause, tilt head, confused) "Wait… (pause 2s) did you hear that? (Play 2s more, pause) There it is again! (Lower voice, look around) That's not a classroom sound. I think… it's calling us to take a walk. (Look up at cover, smile) Welcome. Today we're going to explore a peaceful place—with our bodies. Are you ready?"</div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P2 · 跟着声音走</div>
+        <div class="info-row"><span class="info-tag">😊 好奇、期待</span><span class="info-tag">🧘 闭眼深呼吸→睁眼→环视</span></div>
+        <div class="teacher-lang">(Play white noise low volume, walk slowly, feet gently stepping) "(Close eyes, deep breath, then slowly open) Mmm… can you feel that? (Look down, lightly step) Green and soft grass under your feet. (Look around, eyes wide) Where are we? Let's find out together…"</div>
+      </div>
+
+      <h4 style="font-size:12px;color:#999;margin:12px 0 8px;border:none;">阶段二：核心探索（P3–P9）｜约 10–12 分钟</h4>
+
+      <div class="step-block">
+        <div class="step-header">P3 · 仰望巨树 <span class="pose-tag">Upward Salute</span></div>
+        <div class="info-row"><span class="info-tag">😊 惊叹、好奇</span><span class="info-tag">🧘 双臂上举，身体向上伸展</span></div>
+        <div class="teacher-lang">(Look up, arms slowly rising) "The trees here are SO tall! Look at those giant trees… reaching up to the sky! Can you reach up like them? Stretch your arms to the sky… higher… (Body stretching upward) How tall can YOU grow? What do you see way up there?"<br><br><em>→ 如果学生沉默：教师自己先回答（I see a bird! A cloud!），重新问"What else?"</em><br><em>→ 如果学生说了中文：用英文重复 + 点头微笑</em></div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P4 · 成为森林中的树 <span class="pose-tag">Tree Pose</span></div>
+        <div class="info-row"><span class="info-tag">😊 好奇、鼓励</span><span class="info-tag">🧘 单腿站立，手臂展开如树枝</span></div>
+        <div class="teacher-lang">(Look around, amazed) "Look around this forest—every tree is different! That one is tall and thin… (Point) that one is short and round… (Stand firm) Pick ONE tree. Become that tree! (Lift one foot, arms out) Are your branches reaching up high, or stretching wide?"</div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P5 · 接飘落的树叶 <span class="pose-tag">Side Reach</span></div>
+        <div class="info-row"><span class="info-tag">😊 兴奋、活泼</span><span class="info-tag">🧘 站姿左右交替侧伸展</span></div>
+        <div class="teacher-lang">(Body swaying, arms stretching) "Whoosh! The wind is blowing! Leaves are falling everywhere! Quick—reach left! (Body stretches left) Now reach right! (Body stretches right) Left… right… (Alternating) Can you catch one before it touches the ground?"</div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P6 · 岩石上找平衡 <span class="pose-tag">Standing Balance</span></div>
+        <div class="info-row"><span class="info-tag">😊 专注、兴奋</span><span class="info-tag">🧘 单腿站立，双臂展开</span></div>
+        <div class="teacher-lang">(Stand on one foot, arms out) "There's a big rock in the middle of the field. Let's step onto it! One foot first… now the other… (Find balance) Can you balance like a mountain goat? Arms out like wings! (Slight wobble) What's under your feet right now?"<br><br><em>→ 如果学生站不稳：It's okay to wobble! Even mountain goats wobble. Touch the wall if you need. Or keep one toe on the ground.</em></div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P7 · 扭动如水流 <span class="pose-tag">Seated Spinal Twist</span></div>
+        <div class="info-row"><span class="info-tag">😊 惊喜、灵动</span><span class="info-tag">🧘 坐姿身体左右扭转</span></div>
+        <div class="teacher-lang">(Hand shading eyes, looking far) "Wait—I see something sparkling far away! A lake… and a river! (Sit down slowly, body gently twisting) The water wiggles and wiggles, never stopping. Can you wiggle like the water? (Body twists to one side) Wiggle, wiggle this way… now wiggle the other way… (Twist to other side) Where is YOUR river wiggling to?"</div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P8 · 到达山顶 <span class="pose-tag">Mountain Pose</span></div>
+        <div class="info-row"><span class="info-tag">😊 坚定、平静</span><span class="info-tag">🧘 坐姿→站姿，双手合十胸前</span></div>
+        <div class="teacher-lang">(Slowly stand up from sitting, hands on ground) "We've been by the water… now let's climb up! (Slowly stand straight) One step… another step… (Stand tall, hands at heart) Standing tall as the mountain. From up here… (Deep breath) …I can see everything we've explored. How does it feel?"<br><br><em>→ 如果学生说"累"：Me too. My legs feel the climbing. That means we really went somewhere.</em><br><em>→ 如果学生说"开心"：Happy. Me too. Standing on top of the world.</em></div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P9 · 坐下来，感受大地 <span class="pose-tag">Butterfly Pose</span></div>
+        <div class="info-row"><span class="info-tag">😊 温柔、平静</span><span class="info-tag">🧘 坐姿，脚底相对，膝盖轻扇</span></div>
+        <div class="teacher-lang">(Sit down, softly) "We've explored so much—the trees, the wind, the rocks, the water. Our legs are tired now. Let's sit down together. (Soles of feet together) What if your knees were butterfly wings? Softly flap them… up and down. (Knees gently flap) Can you feel the ground holding you? Right here, right now."</div>
+      </div>
+
+      <h4 style="font-size:12px;color:#999;margin:12px 0 8px;border:none;">阶段三：回归放松（P10–P11）｜约 3–4 分钟</h4>
+
+      <div class="step-block">
+        <div class="step-header">P10 · 回顾旅程，躺下休息 <span class="pose-tag">Savasana</span></div>
+        <div class="info-row"><span class="info-tag">😊 温柔、平静</span><span class="info-tag">🧘 仰卧，四肢放松，闭眼</span></div>
+        <div class="teacher-lang">(Lie down, softly, slow down) "We've explored so much—the grass, the trees, the leaves, the rock, the water, and the mountain. It's time to rest now. Lie down… close your eyes… (Deep breath) Your legs remember the walking, the balancing, the wiggling. Your arms remember the reaching. Let it all go. (Silence 10–15 seconds)"</div>
+      </div>
+
+      <div class="step-block">
+        <div class="step-header">P11 · 感谢与告别</div>
+        <div class="info-row"><span class="info-tag">😊 温暖、平静、感恩</span><span class="info-tag">🧘 双手合十，微笑，轻声</span></div>
+        <div class="teacher-lang">(Stay silent 10–15s, then softly, smile) "Thank you for walking with me today. The trees, the wind, the lake, the mountain… they're all inside you now. Take that peaceful feeling with you. See you next time. (Slowly sit up, smile and wait) When you're ready, slowly open your eyes… wiggle your fingers and toes… and sit up."</div>
+      </div>
+
+      <h4>💡 教学提示</h4>
+      <ol class="tips-list">
+        <li>英文是工具，不是目标 — 学生用中文回应完全 OK，教师用英文重复 + 点头微笑即可。</li>
+        <li>体式不求标准 — 每个孩子的身体条件不同，观察但不评判。</li>
+        <li>不比较，不竞赛 — 不要说"看看谁站得最稳"，每个孩子的身体表达都是对的。</li>
+        <li>P7→P8 过渡注意 — 唯一从坐姿回到站姿的节点，教师先自己慢慢站起，给学生时间。</li>
+        <li>P9→P10 过渡注意 — 从 Butterfly Pose 到 Savasana，教师先说"Time to rest"，自然躺下。</li>
+        <li>P10 放松环节不跳过 — 即使时间紧，至少保留 1 分钟，这是整个活动的情感收束。</li>
+        <li>P11 结束不拖沓 — 告别语温暖收尾，不需要额外总结。</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- 三列表格 -->
+  <div class="prep-table-wrap">
+    <table class="prep-table">
+      <thead>
+        <tr>
+          <th class="col-img">Page</th>
+          <th class="col-subtitle">Subtitle</th>
+          <th class="col-script">Teacher Language</th>
+        </tr>
+      </thead>
+      <tbody id="prepTableBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+// ============ DATA ============
+const pages = [
+  { id:'P1',type:'scene',pose:null,subtitle:'A Walk in Wonder',teacherLang:'（微笑，双手合十）Welcome. Today we\'re going to explore a peaceful place—with our bodies. Are you ready?',expression:'微笑、平静',action:'双手合十，站立',node:'🌿',img:'https://www.coze.cn/s/Qo-6gwq7Fhk/' },
+  { id:'P2',type:'transition',pose:null,subtitle:'Green and soft grass... where am I? Let\'s find out!',teacherLang:'（闭眼，深吸一口气，然后慢慢睁眼）Mmm... can you feel that? Green and soft grass under your feet. Where are we? (环视) Let\'s find out together...',expression:'好奇、期待',action:'闭眼深呼吸，睁眼，环视',node:'🌱',img:'https://www.coze.cn/s/ikrm1DLAoh8/' },
+  { id:'P3',type:'action',pose:'Upward Salute',subtitle:'Oh! Look at those giant trees... reaching up to the sky!',teacherLang:'（抬头，手臂慢慢上举）The trees here are SO tall! Can you reach up like them? Stretch your arms to the sky... higher... (身体向上伸展) How tall can YOU grow? What do you see way up there?',expression:'惊叹、好奇',action:'示范 Upward Salute，双臂上举，身体向上伸展',node:'🌳',img:'https://www.coze.cn/s/b2uQgJqe3UA/' },
+  { id:'P4',type:'action',pose:'Tree Pose',subtitle:'So many trees in this forest... each one a different shape!',teacherLang:'（环视，惊叹）Look around this forest—every tree is different! That one is tall and thin... (指) that one is short and round... (站稳) Pick ONE tree. Become that tree! (抬起一只脚，手臂展开) Are your branches reaching up high, or stretching wide?',expression:'惊叹、期待',action:'示范 Tree Pose，单腿站立，手臂展开',node:'🌲',img:'https://www.coze.cn/s/fwlWCwh_INQ/' },
+  { id:'P5',type:'action',pose:'Side Reach',subtitle:'The wind is here! Leaves are falling... reach left, reach right!',teacherLang:'（身体微晃，手臂伸展）Whoosh! The wind is blowing! Leaves are flying everywhere! Quick—reach left! (身体向左伸展) Now reach right! (身体向右伸展) Left... right... (左右交替) Can you catch one before it touches the ground?',expression:'兴奋、专注',action:'示范 Side Reach，左右交替侧伸展',node:'🍃',img:'https://www.coze.cn/s/oInCphb592o/' },
+  { id:'P6',type:'action',pose:'Standing Balance',subtitle:'A big rock! Can I balance on it like a mountain goat?',teacherLang:'（单脚站立，双臂展开）There\'s a big rock in the middle of the field. Let\'s step onto it! One foot first... now the other... (找平衡) Can you balance like a mountain goat? Arms out like wings! (微微摇晃) What\'s under your feet right now?',expression:'专注、兴奋',action:'示范 Standing Balance，单腿站立，双臂展开',node:'🪨',img:'https://www.coze.cn/s/V4qB-OHk3OQ/' },
+  { id:'P7',type:'action',pose:'Seated Spinal Twist',subtitle:'I see something sparkling... a lake and a river! Wiggle, wiggle, like the water...',teacherLang:'（手搭凉棚远眺）Wait—I see something sparkling far away! A lake... and a river! (坐下，身体轻扭) The water wiggles and wiggles, never stopping. Can you wiggle like the water? (身体向一侧扭转) Wiggle, wiggle this way... now wiggle the other way... (扭向另一侧) Where is YOUR river wiggling to?',expression:'好奇、放松',action:'示范 Seated Spinal Twist，坐姿左右扭转',node:'💧',img:'https://www.coze.cn/s/rv9a-c0YlvA/' },
+  { id:'P8',type:'action',pose:'Mountain Pose',subtitle:'I climb up, up, up... I\'m at the mountain! I can see everything!',teacherLang:'（从坐姿慢慢站起，手撑地）We\'ve been by the water... now let\'s climb up! (慢慢站直) One step... another step... (站直，双手合十胸前) Standing tall as the mountain. From up here... (深呼吸) ...I can see everything we\'ve explored. How does it feel?',expression:'坚定、平静',action:'从坐姿过渡到站姿，站直后双手合十胸前',node:'⛰️',img:'https://www.coze.cn/s/2cibWLFD0f8/' },
+  { id:'P9',type:'action',pose:'Butterfly Pose',subtitle:'My legs are tired... let me sit and feel the ground...',teacherLang:'（坐下，轻声）We\'ve explored so much—the trees, the wind, the rocks, the water. Our legs are tired now. Let\'s sit down together. (脚底相对) What if your knees were butterfly wings? Softly flap them... up and down. (膝盖轻轻扇动) Can you feel the ground holding you? Right here, right now.',expression:'温柔、平静',action:'示范 Butterfly Pose，坐姿，脚底相对',node:'🦋',img:'https://www.coze.cn/s/vNSN5hwFOh8/' },
+  { id:'P10',type:'return',pose:'Savasana',subtitle:'Time to rest. My body remembers the journey...',teacherLang:'（躺下，轻声）We\'ve explored so much—the grass, the trees, the leaves, the rock, the water, and the mountain. It\'s time to rest now. Lie down... close your eyes... (深呼吸) Your legs remember the walking, the balancing, the wiggling. Your arms remember the reaching. Let it all go. (安静片刻)',expression:'温柔、平静',action:'示范 Savasana，仰卧，四肢放松，闭眼',node:'🌙',img:'https://www.coze.cn/s/5UYG4u-90N0/' },
+  { id:'P11',type:'ending',pose:null,subtitle:'Thank you, peaceful place.',teacherLang:'（轻声，微笑）Thank you for walking with me today. The trees, the wind, the lake, the mountain… they\'re all inside you now. Take that peaceful feeling with you. See you next time.',expression:'温暖、平静、感恩',action:'双手合十，微笑，轻声',node:'✨',img:'https://www.coze.cn/s/4x0n6MxT3vs/' }
+];
+
+// ============ AUDIO STATE ============
+let audioTracks = [];
+let audioIdCounter = 0;
+let activeMusicElements = {}; // { trackId: Audio } — persistent across page changes
+let activeSfxElements = {};   // { trackId: Audio } — page-specific, stopped on page change
+
+// ============ INDEXEDDB PERSISTENCE ============
+const DB_NAME = 'YogaAudioDB';
+const DB_VERSION = 1;
+let db = null;
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('tracks')) {
+        db.createObjectStore('tracks', { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains('meta')) {
+        db.createObjectStore('meta', { keyPath: 'key' });
+      }
+    };
+    req.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function saveTracksToDB() {
+  if (!db) return;
+  const tx = db.transaction(['tracks', 'meta'], 'readwrite');
+  const tracksStore = tx.objectStore('tracks');
+  const metaStore = tx.objectStore('meta');
+  // Clear and re-add all tracks
+  tracksStore.clear();
+  audioTracks.forEach(t => tracksStore.put(t));
+  // Save counter
+  metaStore.put({ key: 'audioIdCounter', value: audioIdCounter });
+}
+
+function loadTracksFromDB() {
+  return new Promise((resolve) => {
+    if (!db) { resolve(); return; }
+    const tx = db.transaction(['tracks', 'meta'], 'readonly');
+    const tracksStore = tx.objectStore('tracks');
+    const metaStore = tx.objectStore('meta');
+
+    const tracksReq = tracksStore.getAll();
+    tracksReq.onsuccess = () => {
+      audioTracks = tracksReq.result || [];
+    };
+
+    const metaReq = metaStore.get('audioIdCounter');
+    metaReq.onsuccess = () => {
+      if (metaReq.result) audioIdCounter = metaReq.result.value;
+    };
+
+    tx.oncomplete = () => resolve();
+  });
+}
+
+// ============ STATE ============
+let currentPage = 0;
+let isTeachMode = false;
+
+// ============ RENDER TEACH MODE ============
+function renderTeachMode() {
+  const page = pages[currentPage];
+  document.getElementById('teachImage').src = page.img;
+  document.getElementById('subtitleText').textContent = page.subtitle;
+  document.getElementById('subtitleOverlay').style.display = (currentPage === 0) ? 'none' : '';
+
+  // Journey path
+  const pathEl = document.getElementById('journeyPath');
+  pathEl.innerHTML = '';
+  pages.forEach((p, i) => {
+    if (i > 0) {
+      const line = document.createElement('div');
+      line.className = 'journey-line';
+      pathEl.appendChild(line);
+    }
+    const node = document.createElement('div');
+    node.className = 'journey-node';
+    if (i < currentPage) node.classList.add('done');
+    else if (i === currentPage) node.classList.add('current');
+    else node.classList.add('upcoming');
+    node.textContent = p.node;
+    node.style.cursor = 'pointer';
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tooltip';
+    tooltip.textContent = p.id + (p.pose ? ' · ' + p.pose : '');
+    node.appendChild(tooltip);
+    // Click to navigate
+    node.addEventListener('click', (e) => {
+      e.stopPropagation();
+      currentPage = i;
+      updateAll();
+    });
+    pathEl.appendChild(node);
+  });
+
+  // Handle audio for current page
+  handleTeachAudio();
+}
+
+// ============ TEACH MODE AUDIO ============
+function handleTeachAudio() {
+  // --- Music: keep playing, only start/stop when active status changes ---
+  const musicTracks = audioTracks.filter(t => t.type === 'music');
+  const shouldBeActive = new Set();
+
+  musicTracks.forEach(track => {
+    const s = track.settings;
+    let active = false;
+    if (s.mode === 'background') active = true;
+    else if (s.mode === 'range') active = currentPage >= s.startPage && currentPage <= s.endPage;
+    if (active) shouldBeActive.add(track.id);
+  });
+
+  // Stop music tracks that should no longer be active
+  Object.entries(activeMusicElements).forEach(([id, audio]) => {
+    if (!shouldBeActive.has(parseInt(id))) {
+      audio.pause();
+      audio.currentTime = 0;
+      delete activeMusicElements[id];
+    }
+  });
+
+  // Start music tracks that should be active but aren't yet
+  musicTracks.forEach(track => {
+    if (shouldBeActive.has(track.id) && !activeMusicElements[track.id]) {
+      const audio = new Audio(track.dataUrl);
+      audio.volume = track.volume;
+      audio.loop = track.settings.loop;
+      audio.play().catch(() => {});
+      activeMusicElements[track.id] = audio;
+    }
+  });
+
+  // Update volume for currently playing music (in case user changed it)
+  musicTracks.forEach(track => {
+    const audio = activeMusicElements[track.id];
+    if (audio) audio.volume = track.volume;
+  });
+
+  // --- SFX: page-specific, stop on page change ---
+  const sfxTracks = audioTracks.filter(t => t.type === 'sfx');
+  const sfxShouldBeActive = new Set();
+
+  sfxTracks.forEach(track => {
+    if (track.pageIndex === currentPage) {
+      sfxShouldBeActive.add(track.id);
+    }
+  });
+
+  // Stop SFX that should no longer be active
+  Object.entries(activeSfxElements).forEach(([id, audio]) => {
+    if (!sfxShouldBeActive.has(parseInt(id))) {
+      audio.pause();
+      audio.currentTime = 0;
+      delete activeSfxElements[id];
+    }
+  });
+
+  // Start SFX that should be active but aren't yet
+  sfxTracks.forEach(track => {
+    if (sfxShouldBeActive.has(track.id) && !activeSfxElements[track.id]) {
+      const audio = new Audio(track.dataUrl);
+      audio.volume = track.volume;
+      audio.loop = track.settings.loop || false;
+      audio.play().catch(() => {});
+      activeSfxElements[track.id] = audio;
+
+      // If not looping, remove from tracking on natural end
+      if (!track.settings.loop) {
+        audio.addEventListener('ended', () => {
+          delete activeSfxElements[track.id];
+        });
+      }
+    }
+  });
+
+  // Update volume for currently playing SFX
+  sfxTracks.forEach(track => {
+    const audio = activeSfxElements[track.id];
+    if (audio) audio.volume = track.volume;
+  });
+}
+
+function stopAllAudio() {
+  Object.values(activeMusicElements).forEach(a => {
+    a.pause();
+    a.currentTime = 0;
+  });
+  activeMusicElements = {};
+  Object.values(activeSfxElements).forEach(a => {
+    a.pause();
+    a.currentTime = 0;
+  });
+  activeSfxElements = {};
+}
+
+// ============ RENDER PREP MODE ============
+function renderPrepMode() {
+  // Table
+  const tbody = document.getElementById('prepTableBody');
+  tbody.innerHTML = '';
+  pages.forEach((p, i) => {
+    const tr = document.createElement('tr');
+    if (i === currentPage) tr.classList.add('current-row');
+
+    const tdImg = document.createElement('td');
+    tdImg.className = 'col-img';
+    const img = document.createElement('img');
+    img.src = p.img; img.alt = p.id;
+    const tag = document.createElement('div');
+    tag.className = 'page-tag';
+    tag.textContent = p.id + (p.pose ? ' · ' + p.pose : '');
+    tdImg.appendChild(img); tdImg.appendChild(tag);
+
+    const tdSub = document.createElement('td');
+    tdSub.className = 'col-subtitle';
+    tdSub.textContent = p.subtitle;
+
+    const tdScript = document.createElement('td');
+    tdScript.className = 'col-script';
+    tdScript.textContent = p.teacherLang;
+    const meta = document.createElement('div');
+    meta.className = 'meta-row';
+    meta.innerHTML = '<span>😊 ' + p.expression + '</span><span>🧘 ' + p.action + '</span>';
+    tdScript.appendChild(meta);
+
+    tr.appendChild(tdImg); tr.appendChild(tdSub); tr.appendChild(tdScript);
+    tr.addEventListener('click', () => { currentPage = i; updateAll(); });
+    tbody.appendChild(tr);
+  });
+
+  // SFX page select
+  const sfxSelect = document.getElementById('sfxPageSelect');
+  sfxSelect.innerHTML = '';
+  pages.forEach((p, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = p.id + (p.pose ? ' · ' + p.pose : '');
+    sfxSelect.appendChild(opt);
+  });
+
+  renderAudioTracks();
+}
+
+// ============ AUDIO PANEL ============
+function toggleAudioPanel() {
+  const panel = document.getElementById('audioPanel');
+  const btn = document.getElementById('audioToggleBtn');
+  panel.classList.toggle('open');
+  btn.classList.toggle('active');
+}
+
+function renderAudioTracks() {
+  // Music list
+  const musicList = document.getElementById('musicTrackList');
+  const musicTracks = audioTracks.filter(t => t.type === 'music');
+  if (musicTracks.length === 0) {
+    musicList.innerHTML = '<div class="no-tracks">暂无音乐</div>';
+  } else {
+    musicList.innerHTML = musicTracks.map(t => renderTrackItem(t)).join('');
+  }
+
+  // SFX list
+  const sfxList = document.getElementById('sfxTrackList');
+  const sfxTracks = audioTracks.filter(t => t.type === 'sfx');
+  if (sfxTracks.length === 0) {
+    sfxList.innerHTML = '<div class="no-tracks">暂无音效</div>';
+  } else {
+    sfxList.innerHTML = sfxTracks.map(t => renderTrackItem(t)).join('');
+  }
+
+  bindTrackEvents();
+}
+
+function renderTrackItem(track) {
+  let settingsHtml = '';
+  if (track.type === 'music') {
+    const s = track.settings;
+    const bgSel = s.mode === 'background' ? 'selected' : '';
+    const rangeSel = s.mode === 'range' ? 'selected' : '';
+    const loopChecked = s.loop ? 'checked' : '';
+    settingsHtml = `
+      <select data-track="${track.id}" class="music-mode">
+        <option value="background" ${bgSel}>背景音乐</option>
+        <option value="range" ${rangeSel}>指定页范围</option>
+      </select>
+      <span class="range-cfg" style="display:${s.mode==='range'?'inline':'none'}">
+        P<input type="number" data-track="${track.id}" class="range-start" value="${s.startPage+1}" min="1" max="${pages.length}" style="width:36px">
+        ~
+        P<input type="number" data-track="${track.id}" class="range-end" value="${s.endPage+1}" min="1" max="${pages.length}" style="width:36px">
+      </span>
+      <label><input type="checkbox" data-track="${track.id}" class="music-loop" ${loopChecked}> 循环</label>
+    `;
+  } else {
+    const page = pages[track.pageIndex];
+    const loopChecked = track.settings.loop ? 'checked' : '';
+    settingsHtml = `
+      页: <strong>${page ? page.id : '?'}</strong>
+      <label><input type="checkbox" data-track="${track.id}" class="sfx-loop" ${loopChecked}> 循环</label>
+    `;
+  }
+
+  return `
+    <div class="track-item" data-track-id="${track.id}">
+      <span class="badge ${track.type==='music'?'badge-music':'badge-sfx'}">${track.type==='music'?'音乐':'音效'}</span>
+      <span class="track-name" title="${track.name}">${track.name}</span>
+      <div class="vol-wrap">
+        🔈<input type="range" min="0" max="100" value="${Math.round(track.volume*100)}" data-track="${track.id}" class="vol-slider">
+        <span class="vol-val">${Math.round(track.volume*100)}%</span>
+      </div>
+      <div class="track-settings">${settingsHtml}</div>
+      <button class="btn-del" data-track="${track.id}" title="删除">×</button>
+    </div>`;
+}
+
+function bindTrackEvents() {
+  // Volume sliders
+  document.querySelectorAll('.vol-slider').forEach(slider => {
+    slider.addEventListener('change', function() {
+      const id = parseInt(this.dataset.track);
+      const track = audioTracks.find(t => t.id === id);
+      if (track) {
+        track.volume = parseInt(this.value) / 100;
+        this.parentElement.querySelector('.vol-val').textContent = Math.round(track.volume*100) + '%';
+        saveTracksToDB();
+      }
+    });
+    // Also update display on input, save on change
+    slider.addEventListener('input', function() {
+      const id = parseInt(this.dataset.track);
+      const track = audioTracks.find(t => t.id === id);
+      if (track) {
+        track.volume = parseInt(this.value) / 100;
+        this.parentElement.querySelector('.vol-val').textContent = Math.round(track.volume*100) + '%';
+      }
+    });
+  });
+
+  // Music mode switch
+  document.querySelectorAll('.music-mode').forEach(sel => {
+    sel.addEventListener('change', function() {
+      const id = parseInt(this.dataset.track);
+      const track = audioTracks.find(t => t.id === id);
+      if (track) {
+        track.settings.mode = this.value;
+        const item = this.closest('.track-item');
+        const rangeCfg = item.querySelector('.range-cfg');
+        if (rangeCfg) rangeCfg.style.display = this.value === 'range' ? 'inline' : 'none';
+        saveTracksToDB();
+      }
+    });
+  });
+
+  // Range start/end
+  document.querySelectorAll('.range-start, .range-end').forEach(input => {
+    input.addEventListener('change', function() {
+      const id = parseInt(this.dataset.track);
+      const track = audioTracks.find(t => t.id === id);
+      if (track) {
+        const val = Math.max(0, Math.min(pages.length - 1, parseInt(this.value) - 1));
+        if (this.classList.contains('range-start')) track.settings.startPage = val;
+        else track.settings.endPage = val;
+        this.value = val + 1;
+        saveTracksToDB();
+      }
+    });
+  });
+
+  // Loop checkbox (music)
+  document.querySelectorAll('.music-loop').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const id = parseInt(this.dataset.track);
+      const track = audioTracks.find(t => t.id === id);
+      if (track) { track.settings.loop = this.checked; saveTracksToDB(); }
+    });
+  });
+
+  // Loop checkbox (SFX)
+  document.querySelectorAll('.sfx-loop').forEach(cb => {
+    cb.addEventListener('change', function() {
+      const id = parseInt(this.dataset.track);
+      const track = audioTracks.find(t => t.id === id);
+      if (track) { track.settings.loop = this.checked; saveTracksToDB(); }
+    });
+  });
+
+  // Delete buttons
+  document.querySelectorAll('.btn-del').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      const id = parseInt(this.dataset.track);
+      audioTracks = audioTracks.filter(t => t.id !== id);
+      saveTracksToDB();
+      renderAudioTracks();
+    });
+  });
+}
+
+// ============ AUDIO UPLOAD ============
+function addAudioTrack(file, type, pageIndex) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const track = {
+      id: ++audioIdCounter,
+      name: file.name,
+      type: type,
+      dataUrl: e.target.result,
+      volume: 0.7,
+      settings: type === 'music'
+        ? { mode: 'background', startPage: 0, endPage: pages.length - 1, loop: true }
+        : { loop: false },
+      pageIndex: type === 'sfx' ? pageIndex : undefined
+    };
+    audioTracks.push(track);
+    saveTracksToDB();
+    renderAudioTracks();
+  };
+  reader.readAsDataURL(file);
+}
+
+// Music file input
+document.getElementById('musicFileInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (file) { addAudioTrack(file, 'music'); this.value = ''; }
+});
+
+// SFX file input
+document.getElementById('sfxFileInput').addEventListener('change', function() {
+  const file = this.files[0];
+  if (file) {
+    const pageIndex = parseInt(document.getElementById('sfxPageSelect').value);
+    addAudioTrack(file, 'sfx', pageIndex);
+    this.value = '';
+  }
+});
+
+// ============ NAVIGATION ============
+function nextPage() {
+  if (currentPage < pages.length - 1) {
+    currentPage++;
+    updateAll();
+  }
+}
+
+function prevPage() {
+  if (currentPage > 0) {
+    currentPage--;
+    updateAll();
+  }
+}
+
+function updateAll() {
+  renderTeachMode();
+  renderPrepMode();
+}
+
+// ============ MODE SWITCH ============
+function toggleMode() {
+  isTeachMode = !isTeachMode;
+  if (isTeachMode) {
+    // Always start from P1
+    currentPage = 0;
+    document.getElementById('teachMode').classList.remove('hidden');
+    document.getElementById('prepMode').classList.remove('active');
+    renderTeachMode();
+  } else {
+    stopAllAudio();
+    document.getElementById('teachMode').classList.add('hidden');
+    document.getElementById('prepMode').classList.add('active');
+    renderPrepMode();
+  }
+}
+
+// ============ KEYBOARD & CLICK ============
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowRight') {
+    e.preventDefault();
+    if (isTeachMode) nextPage();
+  }
+  if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    if (isTeachMode) prevPage();
+  }
+});
+
+document.getElementById('teachMode').addEventListener('click', (e) => {
+  if (e.target.closest('.exit-btn') || e.target.closest('.journey-path')) return;
+  nextPage();
+});
+
+// ============ TEACHING PLAN DRAWER ============
+function toggleTeachingPlan() {
+  const drawer = document.getElementById('teachingPlanDrawer');
+  const overlay = document.getElementById('drawerOverlay');
+  const isOpen = drawer.classList.contains('open');
+  if (isOpen) {
+    drawer.classList.remove('open', 'zoomed');
+    overlay.classList.remove('open');
+  } else {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+  }
+}
+
+function zoomTeachingPlan() {
+  const drawer = document.getElementById('teachingPlanDrawer');
+  drawer.classList.toggle('zoomed');
+}
+
+// ============ INIT ============
+async function init() {
+  await openDB();
+  await loadTracksFromDB();
+  document.getElementById('teachMode').classList.add('hidden');
+  document.getElementById('prepMode').classList.add('active');
+  renderTeachMode();
+  renderPrepMode();
+}
+init();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>歌曲本体审核 — Where Are You From</title>
+<style>
+  :root {
+    --canvas: #F5F3FF;
+    --surface: #FFFFFF;
+    --text: #1F2433;
+    --text-sub: #6B7086;
+    --text-muted: #9BA0B4;
+    --primary: #5B6CFF;
+    --primary-light: #EEEDFF;
+    --primary-hover: #4A5AE6;
+    --accent: #FF7AB6;
+    --accent-light: #FFF0F6;
+    --green: #55C59D;
+    --green-light: #EDF9F4;
+    --yellow: #FFD166;
+    --yellow-light: #FFF9EB;
+    --border: #E8E5F2;
+    --border-light: #F2F0F8;
+    --radius-sm: 8px;
+    --radius: 12px;
+    --radius-lg: 16px;
+    --shadow-sm: 0 1px 3px rgba(31,36,51,0.04);
+    --shadow: 0 2px 12px rgba(31,36,51,0.06);
+    --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--canvas);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 780px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  .header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 16px; margin-bottom: 24px; flex-wrap: wrap;
+  }
+  .step-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 600; color: var(--primary);
+    background: var(--primary-light); padding: 5px 14px;
+    border-radius: 20px; letter-spacing: 0.5px; margin-bottom: 10px;
+  }
+  .step-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+  .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.3px; line-height: 1.25; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+  .meta-tag {
+    font-size: 12px; font-weight: 500; color: var(--text-sub);
+    background: #F8F7FC; border: 1px solid var(--border-light);
+    padding: 4px 10px; border-radius: 6px;
+  }
+  .meta-tag strong { color: var(--text); }
+
+  .audio-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 28px; padding: 5px; box-shadow: var(--shadow-sm); flex-shrink: 0;
+  }
+  .audio-pill button {
+    border: none; background: none; cursor: pointer;
+    font-size: 13px; font-weight: 600; padding: 8px 16px;
+    border-radius: 24px; color: var(--text-sub); transition: all 0.18s;
+    display: flex; align-items: center; gap: 5px; font-family: var(--font); white-space: nowrap;
+  }
+  .audio-pill button:hover { color: var(--text); background: #F8F7FC; }
+  .audio-pill button.is-playing { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(91,108,255,0.25); }
+  .audio-pill .divider { width: 1px; height: 20px; background: var(--border); }
+
+  .card {
+    background: var(--surface); border-radius: var(--radius-lg);
+    padding: 28px 30px; margin-bottom: 20px;
+    box-shadow: var(--shadow); border: 1px solid var(--border-light);
+  }
+  .card-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .card-header .icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+  }
+  .card-header .icon.lyric { background: var(--primary-light); }
+  .card-header .icon.adjust { background: var(--yellow-light); }
+  .card-header h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.2px; }
+  .card-header .row-count { font-size: 12px; color: var(--text-muted); font-weight: 500; margin-left: auto; }
+
+  .lyric-list { display: flex; flex-direction: column; }
+  .lyric-row {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 12px 0; border-bottom: 1px solid var(--border-light);
+  }
+  .lyric-row:last-child { border-bottom: none; }
+  .lyric-row:hover { background: #FAFAFD; margin: 0 -14px; padding-left: 14px; padding-right: 14px; border-radius: 6px; }
+  .lyric-time {
+    font-family: var(--mono); font-size: 11px; color: var(--text-muted);
+    white-space: nowrap; flex-shrink: 0; min-width: 80px;
+  }
+  .lyric-text { font-weight: 500; font-size: 15px; line-height: 1.5; color: var(--text); }
+  .lyric-text .hl { color: var(--primary); font-weight: 700; }
+
+  .adjust-hint { font-size: 13px; color: var(--text-sub); margin-bottom: 12px; line-height: 1.5; }
+  .hint-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+  .hint-chip {
+    font-size: 12px; padding: 6px 14px; border-radius: 18px;
+    background: #fff; border: 1.5px solid var(--border);
+    cursor: pointer; color: var(--text-sub); transition: all 0.18s;
+    font-family: var(--font); font-weight: 500;
+  }
+  .hint-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+  .adjust-row { display: flex; gap: 10px; align-items: center; }
+  .adjust-row input {
+    flex: 1; padding: 11px 16px; border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 14px; font-family: var(--font);
+    outline: none; transition: border-color 0.2s; background: #FAFAFD; min-width: 0;
+  }
+  .adjust-row input:focus { border-color: var(--primary); background: #fff; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 11px 22px; border-radius: 10px; font-size: 14px;
+    font-weight: 600; font-family: var(--font); cursor: pointer;
+    border: none; transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(91,108,255,0.2); }
+  .btn-primary:hover { background: var(--primary-hover); box-shadow: 0 4px 14px rgba(91,108,255,0.3); }
+  .btn-outline { background: #fff; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 8px; }
+
+  .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; flex-wrap: wrap; }
+
+  .toast {
+    position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+    background: #2A2E3D; color: #fff; padding: 12px 28px; border-radius: 12px;
+    font-size: 14px; font-weight: 600; z-index: 999; opacity: 0;
+    pointer-events: none; transition: opacity 0.3s; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  }
+  .toast.show { opacity: 1; }
+
+  .spinner-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(245,243,255,0.7); backdrop-filter: blur(4px);
+    z-index: 998; align-items: center; justify-content: center;
+  }
+  .spinner-overlay.show { display: flex; }
+  .spinner-box {
+    background: #fff; border-radius: 16px; padding: 36px 48px;
+    text-align: center; box-shadow: 0 8px 32px rgba(31,36,51,0.12);
+  }
+  .spinner-box .spinner {
+    width: 40px; height: 40px; border: 3px solid var(--border);
+    border-top-color: var(--primary); border-radius: 50%;
+    animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+  .spinner-box p { font-size: 14px; font-weight: 600; color: var(--text-sub); }
+
+  @media (max-width: 640px) {
+    .page { padding: 20px 12px 48px; }
+    .card { padding: 20px 16px; }
+    .header { flex-direction: column; }
+    .header h1 { font-size: 22px; }
+    .audio-pill { width: 100%; justify-content: center; }
+    .audio-pill button { padding: 8px 12px; font-size: 12px; }
+    .actions { justify-content: stretch; }
+    .actions .btn { flex: 1; justify-content: center; }
+    .lyric-row { flex-direction: column; gap: 2px; }
+  }
+
+  @media print {
+    body { background: #fff; }
+    .page { max-width: 100%; padding: 0; }
+    .card { box-shadow: none; border: 1px solid #ddd; break-inside: avoid; }
+    .audio-pill, .adjust-area, .actions, .toast, .spinner-overlay { display: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+<div class="spinner-overlay" id="spinnerOverlay">
+  <div class="spinner-box"><div class="spinner"></div><p>AI 正在重新创作歌曲…</p></div>
+</div>
+
+<main class="page">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="step-badge"><span class="dot"></span> 步骤一 · 歌曲本体审核</div>
+      <h1>__TITLE__</h1>
+      <div class="meta" id="songMeta"></div>
+    </div>
+    <div class="audio-pill">
+      <button id="btnOriginal" onclick="playAudio('original')">🔊 原唱</button>
+      <div class="divider"></div>
+      <button id="btnAccomp" onclick="playAudio('accomp')">🎹 伴奏</button>
+      <div class="divider"></div>
+      <button id="btnStop" onclick="stopAudio()" style="display:none;">⏹</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="icon lyric">🎵</div>
+      <h2>歌词</h2>
+      <span class="row-count">16 行</span>
+    </div>
+    <div class="lyric-list" id="lyricList"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="icon adjust">💡</div>
+      <h2>不满意？让 AI 重新生成</h2>
+    </div>
+    <p class="adjust-hint">在下方输入调整需求，或点击提示词快速填入。</p>
+    <div class="hint-chips">
+      <button class="hint-chip" onclick="fillHint('歌词太简单了，增加一些形容词修饰')">歌词太简单了，增加一些形容词</button>
+      <button class="hint-chip" onclick="fillHint('副歌部分节奏感再强一点，更朗朗上口')">副歌节奏感再强一点</button>
+      <button class="hint-chip" onclick="fillHint('整体速度放慢一些，适合低龄学生跟唱')">整体速度放慢一些</button>
+      <button class="hint-chip" onclick="fillHint('增加一段问答呼应的歌词，师生互动')">增加问答呼应式歌词</button>
+      <button class="hint-chip" onclick="fillHint('把 China 替换成更多国家名，如 Japan, France')">加入更多国家名</button>
+    </div>
+    <div class="adjust-row">
+      <input type="text" id="adjustInput" placeholder="描述你想要的调整…" autocomplete="off">
+      <button class="btn btn-outline btn-sm" onclick="reGenerate()">🔄 重新生成</button>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-outline" onclick="reGenerate()">🔄 重新生成歌曲</button>
+    <button class="btn btn-primary" onclick="confirmSong()">✅ 确认歌曲，生成教学素材 →</button>
+  </div>
+
+</main>
+
+<audio id="audioOriginal" src="" preload="auto"></audio>
+<audio id="audioAccomp" src="" preload="auto"></audio>
+
+<script>
+// __SONG_DATA__（生成器替换 lyrics/targetPatterns/songMeta/exercises/teachingPlans 数据区）
+const lyrics = [
+  { time:'00:02–00:04', text:'Hello! Hello!' },
+  { time:'00:05–00:07', text:'From China we start the show!' },
+  { time:'00:07–00:08', text:"What's your name?" },
+  { time:'00:08–00:10', text:'My name is [Name]' },
+  { time:'00:10–00:11', text:"I'm from China" },
+  { time:'00:12–00:13', text:"Let's play music!" },
+  { time:'00:13–00:14', text:'Where are you from?' },
+  { time:'00:14–00:16', text:'Where are you from?' },
+  { time:'00:16–00:19', text:'China, USA, Canada, UK!' },
+  { time:'00:20–00:22', text:'Teacher, student, boy and girl' },
+  { time:'00:22–00:26', text:"Let's sing together, one big world!" },
+  { time:'00:26–00:27', text:'Where are you from?' },
+  { time:'00:27–00:29', text:'Where are you from?' },
+  { time:'00:29–00:32', text:'China, USA, Canada, UK!' },
+  { time:'00:32–00:35', text:'Teacher, student, boy and girl' },
+  { time:'00:35–00:39', text:"Let's sing together, one big world!" },
+];
+
+// 目标句型/词汇（字符串数组，渲染时转正则高亮）
+const targetPatterns = [
+  "Where are you from",
+  "What's your name",
+  "My name is",
+  "China",
+  "USA",
+];
+
+// 歌曲元信息
+const songMeta = {
+  goals: 'Where are you from? / 国家 & 身份词汇',
+  age: '7-10岁',
+  level: '初级',
+  duration: '约 39 秒（中）',
+};
+
+// Stage 1 练习题（示例结构，生成时替换）
+const exercises = {
+  fill: [
+    { sentenceParts: ['Hello! ', ''], answer: 'Hello', options: ['Hello', 'Goodbye', 'Happy'] },
+  ],
+  scramble: [
+    { words: ['from', 'are', 'Where', 'you', '?'], answer: 'Where are you from?' },
+  ],
+};
+
+// 四关教学方案（生成时替换）
+const teachingPlans = {
+  1: { title: 'Stage 1 — Lyric Hunter', sections: [{ title: '教学目标', content: '…' }] },
+};
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+function highlight(text) {
+  let r = escapeHtml(text);
+  targetPatterns.forEach(p => {
+    const esc = String(p).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    r = r.replace(new RegExp('(' + esc + ')', 'gi'), '<span class="hl">$1</span>');
+  });
+  return r;
+}
+
+function renderMeta() {
+  const m = songMeta || {};
+  document.getElementById('songMeta').innerHTML = [
+    m.goals ? `<span class="meta-tag">🎯 目标语言点：<strong>${escapeHtml(m.goals)}</strong></span>` : '',
+    m.age ? `<span class="meta-tag">👧 年龄段：<strong>${escapeHtml(m.age)}</strong></span>` : '',
+    m.level ? `<span class="meta-tag">📊 英文水平：<strong>${escapeHtml(m.level)}</strong></span>` : '',
+    m.duration ? `<span class="meta-tag">⏱ 时长：<strong>${escapeHtml(m.duration)}</strong></span>` : '',
+  ].filter(Boolean).join('');
+}
+
+function renderExercises() {
+  const fill = (exercises && exercises.fill) || [];
+  const scramble = (exercises && exercises.scramble) || [];
+  if (!fill.length && !scramble.length) return;
+  const fillHtml = fill.map(f => {
+    const parts = Array.isArray(f.sentenceParts) ? f.sentenceParts : [f.sentenceParts || ''];
+    const line = parts.map((p, i) => i === parts.length - 1
+      ? `<u class="blank">${escapeHtml(f.answer)}</u>${escapeHtml(p)}`
+      : escapeHtml(p)).join('');
+    return `<li>${line} <small>（选项：${(f.options||[]).map(escapeHtml).join(' / ')}）</small></li>`;
+  }).join('');
+  const scHtml = scramble.map(s =>
+    `<li><strong>${escapeHtml(s.answer)}</strong> <small>（打乱：${(s.words||[]).join(' ')}）</small></li>`).join('');
+  const plans = Object.keys(teachingPlans || {}).map(k => {
+    const p = teachingPlans[k];
+    const secs = (p.sections || []).map(sec =>
+      `<details><summary>${escapeHtml(sec.title)}</summary><div class="plan-body">${sec.content || ''}</div></details>`).join('');
+    return `<div class="plan-item"><h4>${escapeHtml(p.title || ('Stage ' + k))}</h4>${secs}</div>`;
+  }).join('');
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-title">🎮 教学素材预览（闯关 Stage 1 + 四关教学方案）</div>
+    ${fillHtml ? `<h4 style="margin:10px 0 6px;">填空挑战</h4><ul style="padding-left:18px;line-height:1.9;">${fillHtml}</ul>` : ''}
+    ${scHtml ? `<h4 style="margin:14px 0 6px;">连词成句</h4><ul style="padding-left:18px;line-height:1.9;">${scHtml}</ul>` : ''}
+    ${plans ? `<h4 style="margin:14px 0 6px;">四关教学方案</h4>${plans}` : ''}
+    <style>
+      .plan-item h4 { margin: 12px 0 4px; }
+      .plan-item details { border-left: 3px solid #7c4dff; padding: 4px 10px; margin: 6px 0; }
+      .plan-item summary { cursor: pointer; font-weight: 600; }
+      .plan-body { font-size: 13px; color: #555; padding-top: 4px; }
+      u.blank { text-decoration: none; background: #ede7f6; border-bottom: 2px solid #7c4dff; padding: 0 6px; font-weight: 700; }
+    </style>`;
+  document.querySelector('.page').insertBefore(card, document.querySelector('.actions'));
+}
+
+function render() {
+  document.getElementById('lyricList').innerHTML = lyrics.map(row => `
+    <div class="lyric-row">
+      <span class="lyric-time">${row.time}</span>
+      <span class="lyric-text">${highlight(row.text)}</span>
+    </div>
+  `).join('');
+}
+
+let currentAudio = null;
+function playAudio(type) {
+  stopAudio();
+  showToast('🎵 AI 音频生成待接入：当前为歌词与教学素材审核版，示例音频请看官方 Demo');
+}
+function stopAudio() {
+  if (currentAudio) { currentAudio.pause(); currentAudio.currentTime = 0; }
+  ['btnOriginal','btnAccomp'].forEach(id => document.getElementById(id).classList.remove('is-playing'));
+  document.getElementById('btnStop').style.display = 'none';
+  currentAudio = null;
+}
+function fillHint(t) { document.getElementById('adjustInput').value = t; document.getElementById('adjustInput').focus(); }
+function reGenerate() {
+  const input = document.getElementById('adjustInput').value.trim();
+  document.getElementById('spinnerOverlay').classList.add('show');
+  setTimeout(() => {
+    document.getElementById('spinnerOverlay').classList.remove('show');
+    document.getElementById('adjustInput').value = '';
+    showToast('✅ Demo 模式：已模拟 AI 重新生成');
+  }, 1800);
+}
+function confirmSong() { showToast('✅ 歌曲本体已确认！进入步骤二。'); }
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+render();
+renderMeta();
+renderExercises();
+</script>
+</body>
+</html>

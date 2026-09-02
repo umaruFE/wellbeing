@@ -27,14 +27,27 @@ const normalize = (row) => ({
   title: row.title,
   parameters: row.parameters || {},
   status: row.status,
+  hasHtml: Boolean(row.has_html),
+  result: row.result || null,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
 
-export const getCreativeWorks = async () => {
-  const response = await fetch('/api/creative-works', { headers: authHeaders() });
+export const getCreativeWorks = async (moduleId) => {
+  const query = moduleId ? `?moduleId=${encodeURIComponent(moduleId)}` : '';
+  const response = await fetch(`/api/creative-works${query}`, { headers: authHeaders() });
   const json = await parseResponse(response);
   return (json.data || []).map(normalize);
+};
+
+// 触发生成（LLM + 模板注入，耗时 30-120 秒）
+export const generateCreativeWork = async (id) => {
+  const response = await fetch(`/api/creative-works/${id}/generate`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  const json = await parseResponse(response);
+  return { ...normalize({ ...json.data, module_id: '', module_name: '', title: '', parameters: {} }), ...json.data };
 };
 
 export const createCreativeWork = async ({ moduleId, moduleName, title, parameters }) => {

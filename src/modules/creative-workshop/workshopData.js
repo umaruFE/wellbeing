@@ -90,6 +90,7 @@ export const EXPERIENCE_CONFIG = {
     title: 'Music Star Quest',
     subtitle: '歌词理解 × 动作编排 × 分级跟唱 × 作品录制',
     description: '以四关闯关方式完成一首英语歌曲的理解、表演、演唱与录制。',
+    demoUrl: '/demos/music-star-quest.html',
     accent: '#9966d0',
     icon: Music,
     features: ['四关渐进式任务', '歌词与音频同步', '动作和乐器编排', '分组演唱与本地录音'],

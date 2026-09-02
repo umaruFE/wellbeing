@@ -44,6 +44,8 @@ export const PROMPT_META: Record<string, PromptMeta> = {
   'ai.word-emojis': { description: '儿童英文词卡 emoji 匹配', caller: 'ai/generate-word-emojis', kind: 'pair', source: 'builtin' },
   'picture-book-activity-plan': { description: '绘本活动计划生成（step 1）', caller: 'rag/generate', kind: 'pair', source: 'builtin' },
   'picture-book-design': { description: '绘本逐页设计生成（step 2）', caller: 'rag/generate', kind: 'pair', source: 'builtin' },
+  'experience-yoga-design': { description: '互动式情境瑜伽逐页设计生成', caller: 'creative-works/[id]/generate', kind: 'pair', source: 'builtin' },
+  'experience-music-song': { description: '星光录音棚歌曲创作包生成（歌词+练习+四关教学方案）', caller: 'creative-works/[id]/generate', kind: 'pair', source: 'builtin' },
   'course.theme-image-requirement': { description: '无文字封面插画要求', caller: 'ai/generate-course-overview', kind: 'fragment', source: 'builtin' },
   'course.overview.output-instruction.en': { description: '课程概览输出指令（英文）', caller: 'ai/generate-course-overview', kind: 'fragment', source: 'builtin' },
   'course.overview.output-instruction.zh': { description: '课程概览输出指令（中文）', caller: 'ai/generate-course-overview', kind: 'fragment', source: 'builtin' },

@@ -43,7 +43,7 @@ export const MyWorksPage = () => {
       {loading ? (
         <div className="works-empty"><span><BookOpen size={36} /></span><h2>正在加载…</h2></div>
       ) : filtered.length ? (
-        <div className="works-grid">{filtered.map((work) => <article className="work-card" key={work.id}><div className="work-card-top"><span><FileText size={19} /></span><em>草稿</em></div><small>{work.moduleName}</small><h2>{work.title}</h2><p>{work.parameters?.goals || work.parameters?.notes || '等待继续完善创作内容'}</p><footer><span><Clock size={13} /> {formatDate(work.createdAt)}</span><button aria-label="删除" onClick={() => remove(work.id)}><Trash2 size={16} /></button></footer></article>)}</div>
+        <div className="works-grid">{filtered.map((work) => <article className="work-card" key={work.id}><div className="work-card-top"><span><FileText size={19} /></span><em className={work.status === 'done' ? 'work-status-done' : ''}>{work.status === 'done' ? '已生成' : '草稿'}</em></div><small>{work.moduleName}</small><h2>{work.title}</h2><p>{work.parameters?.goals || work.parameters?.notes || '等待继续完善创作内容'}</p><footer><span><Clock size={13} /> {formatDate(work.createdAt)}</span><span className="work-buttons">{work.hasHtml && <a href={`/api/creative-works/${work.id}/html`} target="_blank" rel="noreferrer" title="打开作品"><BookOpen size={16} /></a>}<button aria-label="删除" onClick={() => remove(work.id)}><Trash2 size={16} /></button></span></footer></article>)}</div>
       ) : (
         <div className="works-empty"><span><BookOpen size={36} /></span><h2>还没有符合条件的作品</h2><p>从创作工坊选择一种内容，输入参数生成你的第一份草稿。</p><button className="cw-primary-button" onClick={() => navigate('/workshop/english-plus')}>进入创作工坊</button></div>
       )}

@@ -17,10 +17,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '用户信息缺失' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const moduleId = searchParams.get('moduleId');
+
     const result = await db.query(
-      `SELECT id, module_id, module_name, title, parameters, status, created_at, updated_at
-       FROM creative_works WHERE user_id = $1 ORDER BY created_at DESC`,
-      [userId]
+      `SELECT id, module_id, module_name, title, parameters, status,
+              (html IS NOT NULL) AS has_html, result, created_at, updated_at
+       FROM creative_works WHERE user_id = $1 ${moduleId ? 'AND module_id = $2' : ''}
+       ORDER BY created_at DESC`,
+      moduleId ? [userId, moduleId] : [userId]
     );
     return NextResponse.json({ data: result.rows });
   } catch (error) {

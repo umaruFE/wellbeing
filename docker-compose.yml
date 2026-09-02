@@ -75,6 +75,9 @@ services:
       # ---- 第三方 AI 服务 ----
       REMOVEBG_API_KEY: ${REMOVEBG_API_KEY}
       DASHSCOPE_API_KEY: ${DASHSCOPE_API_KEY}
+      # ---- 体验类生成（情境瑜伽/星光录音棚，直调 qwen-plus）----
+      VITE_DASHSCOPE_API_KEY: ${VITE_DASHSCOPE_API_KEY}
+      VITE_DASHSCOPE_API_URL: ${VITE_DASHSCOPE_API_URL:-https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions}
       # ---- RAGFlow 向量检索（值来自根目录 .env）----
       RAGFLOW_ENABLED: ${RAGFLOW_ENABLED:-false}
       RAGFLOW_API_URL: ${RAGFLOW_API_URL:-http://localhost:9380}

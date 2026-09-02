@@ -10,6 +10,7 @@
  */
 
 import { ACTIVITY_PLAN_TEMPLATE, PICTURE_BOOK_DESIGN_TEMPLATE } from './picture-book';
+import { YOGA_DESIGN_TEMPLATE, MUSIC_SONG_TEMPLATE } from './experience';
 // n8n 工作流提示词快照（由 api/scripts/n8n-prompt-inject.mjs 从工作流提取生成，勿手改；
 // Wiki 页面 wellbeing/prompts/<key> 可覆盖）。渲染发生在 n8n Code 节点，后端经 getRawTemplate 原文下发。
 import n8nTemplates from './n8n-templates.json';
@@ -30,6 +31,10 @@ export const BUILTIN_PROMPTS: Record<string, BuiltinTemplate> = {
   // ── 绘本（模板常量在 picture-book.ts，一份文本两处用）─────
   'picture-book-activity-plan': ACTIVITY_PLAN_TEMPLATE,
   'picture-book-design': PICTURE_BOOK_DESIGN_TEMPLATE,
+
+  // ── 创作工坊 · 体验类（模板常量在 experience.ts）─────
+  'experience-yoga-design': YOGA_DESIGN_TEMPLATE,
+  'experience-music-song': MUSIC_SONG_TEMPLATE,
 
   /** 儿童英文词卡 emoji 匹配（原 generate-word-emojis 内联） */
   'ai.word-emojis': {
