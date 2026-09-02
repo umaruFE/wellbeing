@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Check, ExternalLink, Play, Sparkles, X } from 'lucide-react';
+import { ArrowLeft, Check, Sparkles, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EXPERIENCE_CONFIG } from './workshopData';
 import { createCreativeWork } from './workshopStorage';
@@ -19,16 +19,28 @@ export const ExperiencePage = ({ experience }) => {
   const [mode, setMode] = useState('overview');
   const [form, setForm] = useState({});
   const [created, setCreated] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    createCreativeWork({
-      moduleId: experience === 'yoga' ? 'interactive-yoga' : 'music-star-quest',
-      moduleName: experience === 'yoga' ? '互动式情境瑜伽' : '星光录音棚',
-      title: form.theme || form.goals,
-      parameters: form,
-    });
-    setCreated(true);
+    if (submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await createCreativeWork({
+        moduleId: experience === 'yoga' ? 'interactive-yoga' : 'music-star-quest',
+        moduleName: experience === 'yoga' ? '互动式情境瑜伽' : '星光录音棚',
+        title: form.theme || form.goals,
+        parameters: form,
+      });
+      setCreated(true);
+    } catch (err) {
+      console.error('保存草稿失败:', err);
+      setError(err.message || '保存失败，请重试');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -38,7 +50,6 @@ export const ExperiencePage = ({ experience }) => {
         <div><span>{config.type}</span><h1>{config.title}</h1></div>
         <div className="experience-tabs">
           <button className={mode === 'overview' ? 'active' : ''} onClick={() => setMode('overview')}>活动介绍</button>
-          <button className={mode === 'demo' ? 'active' : ''} onClick={() => setMode('demo')}>经典案例</button>
           <button className={mode === 'create' ? 'active' : ''} onClick={() => { setMode('create'); setCreated(false); }}>生成同款</button>
         </div>
       </header>
@@ -49,17 +60,10 @@ export const ExperiencePage = ({ experience }) => {
             <span className="cw-title-icon"><Icon size={30} /></span>
             <span className="cw-eyebrow">经典类型</span>
             <h2>{config.subtitle}</h2><p>{config.description}</p>
-            <div className="experience-actions"><button className="cw-primary-button" onClick={() => setMode('demo')}><Play size={17} /> 打开完整案例</button><button className="cw-secondary-button" onClick={() => setMode('create')}><Sparkles size={17} /> 生成同款</button></div>
+            <div className="experience-actions"><button className="cw-primary-button" onClick={() => setMode('create')}><Sparkles size={17} /> 生成同款</button></div>
           </section>
           <section className="experience-features">{config.features.map((feature, index) => <div key={feature}><span>0{index + 1}</span><strong>{feature}</strong></div>)}</section>
-          <section className="experience-method"><span>统一创作模式</span><h2>浏览案例 → 输入参数 → 生成草稿 → 管理发布</h2><p>经典案例可以立即进入课堂；生成同款会把教师输入保存到“我的作品”，用于后续生成与编辑。</p></section>
-        </main>
-      )}
-
-      {mode === 'demo' && (
-        <main className="experience-demo">
-          <div className="experience-demo-bar"><div><strong>官方经典案例</strong><span>{config.title}</span></div><a href={config.demoUrl} target="_blank" rel="noreferrer">新窗口打开 <ExternalLink size={15} /></a></div>
-          <iframe title={`${config.title} 经典案例`} src={config.demoUrl} allow="microphone; autoplay" />
+          <section className="experience-method"><span>统一创作模式</span><h2>输入参数 → 生成草稿 → 管理发布</h2><p>生成同款会把教师输入保存到“我的作品”，用于后续生成与编辑。</p></section>
         </main>
       )}
 
@@ -77,7 +81,8 @@ export const ExperiencePage = ({ experience }) => {
                   </label>
                 ))}
               </div>
-              <button className="cw-primary-button" type="submit"><Sparkles size={17} /> 创建生成任务</button>
+              <button className="cw-primary-button" type="submit" disabled={submitting}><Sparkles size={17} /> {submitting ? '保存中…' : '创建生成任务'}</button>
+              {error && <p className="cw-dialog-error" role="alert">{error}</p>}
             </form>
           )}
         </main>

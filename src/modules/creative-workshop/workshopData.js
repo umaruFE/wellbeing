@@ -17,7 +17,6 @@ export const WORKSHOP_MODULES = {
       { title: '音乐律动', description: '节奏 + 身体 + 语言', icon: Music, path: '/workshop/music-star-quest', action: '查看星光录音棚' },
       { title: '歌曲编唱屋', description: '围绕教学目标创作英语歌曲', icon: Mic2, path: '/song-writing', action: '开始歌曲创作' },
     ],
-    examples: ['情绪颜色绘本', 'A Walk in Wonder', 'Where Are You From'],
   },
   'skills-training': {
     eyebrow: '创作工坊 · 模块 2', title: '能力训练', icon: Brain, accent: '#4482e5',
@@ -30,7 +29,6 @@ export const WORKSHOP_MODULES = {
       { title: '阅读', description: '情境阅读与思维支架', icon: BookOpen },
       { title: '写作', description: '从体验到结构化表达', icon: PenLine },
     ],
-    examples: ['Grammar Detective', 'Vocabulary Mission', 'Listen & Move'],
   },
   'fun-practice': {
     eyebrow: '创作工坊 · 模块 3', title: '趣味练习', icon: Gamepad2, accent: '#9966d0',
@@ -40,7 +38,6 @@ export const WORKSHOP_MODULES = {
       { title: '侦探解谜', description: '收集线索、推理与答题', icon: Puzzle },
       { title: '盲盒答题', description: '随机惊喜与挑战', icon: Star },
     ],
-    examples: ['Lost Classroom Escape', 'The Missing Word', 'Lucky Question Box'],
   },
   'complete-course': {
     eyebrow: '创作工坊 · 模块 4', title: '完整课程', icon: BookOpen, accent: '#509f69',
@@ -49,7 +46,6 @@ export const WORKSHOP_MODULES = {
       { title: '创建完整课程', description: '从教学目标开始完整备课', icon: Sparkles, path: '/create', action: '开始创建' },
       { title: '管理课程', description: '继续编辑已有课程和课件', icon: BookOpen, path: '/figma-courses', action: '查看课程' },
     ],
-    examples: ['自然拼读完整课', '主题阅读完整课', '幸福力口语课'],
   },
   'themed-activities': {
     eyebrow: '创作工坊 · 模块 5', title: '主题活动', icon: Theater, accent: '#f5a233',
@@ -59,7 +55,6 @@ export const WORKSHOP_MODULES = {
       { title: '成长主题', description: '友情、自信、感恩与合作', icon: Theater },
       { title: '学科主题', description: '动物、自然、城市与太空', icon: Sparkles },
     ],
-    examples: ['Christmas Kindness Quest', 'Friendship Day', 'Animal World Festival'],
   },
   'teaching-materials': {
     eyebrow: '创作工坊 · 模块 6', title: '教学素材', icon: FileImage, accent: '#cf5846',
@@ -70,7 +65,6 @@ export const WORKSHOP_MODULES = {
       { title: '体式引导图', description: '生成动作清晰的体式素材', icon: Dumbbell, path: '/workshop/interactive-yoga', action: '查看案例' },
       { title: '音频素材', description: '生成课堂配音与音效', icon: Volume2, path: '/test/audio-generator', action: '生成音频' },
     ],
-    examples: ['Nature Flash Cards', 'Emotion Comic', 'Yoga Pose Guide'],
   },
 };
 
@@ -80,7 +74,6 @@ export const EXPERIENCE_CONFIG = {
     title: 'A Walk in Wonder Yoga Adventure',
     subtitle: '身体叙事 × 情境探索 × 英语内化',
     description: '教师以探险向导和瑜伽教练的双重角色，带领学生在连续故事中完成语言学习与身体探索。',
-    demoUrl: '/demos/a-walk-in-wonder.html',
     accent: '#509f69',
     icon: Dumbbell,
     features: ['6–12 页连续故事', '4–8 个情境体式', '教师逐页讲稿', '背景音乐与音效配置'],
@@ -97,7 +90,6 @@ export const EXPERIENCE_CONFIG = {
     title: 'Music Star Quest',
     subtitle: '歌词理解 × 动作编排 × 分级跟唱 × 作品录制',
     description: '以四关闯关方式完成一首英语歌曲的理解、表演、演唱与录制。',
-    demoUrl: '/demos/music-star-quest.html',
     accent: '#9966d0',
     icon: Music,
     features: ['四关渐进式任务', '歌词与音频同步', '动作和乐器编排', '分组演唱与本地录音'],

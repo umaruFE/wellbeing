@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Check, ChevronRight, Clock, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Check, Sparkles, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { WORKSHOP_MODULES } from './workshopData';
 import { createCreativeWork } from './workshopStorage';
@@ -10,11 +10,23 @@ const GenerateDialog = ({ module, moduleId, onClose }) => {
   const navigate = useNavigate();
   const [form, setForm] = useState({ title: '', goals: '', age: '7–10 岁', duration: '20 分钟', notes: '' });
   const [saved, setSaved] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
-  const submit = (event) => {
+  const submit = async (event) => {
     event.preventDefault();
-    createCreativeWork({ moduleId, moduleName: module.title, title: form.title, parameters: form });
-    setSaved(true);
+    if (submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await createCreativeWork({ moduleId, moduleName: module.title, title: form.title, parameters: form });
+      setSaved(true);
+    } catch (err) {
+      console.error('保存草稿失败:', err);
+      setError(err.message || '保存失败，请重试');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -42,8 +54,9 @@ const GenerateDialog = ({ module, moduleId, onClose }) => {
             <label>补充要求<textarea value={form.notes} onChange={(event) => setForm({ ...form, notes: event.target.value })} placeholder="可选：班级特点、教材章节或素材偏好" /></label>
             <div className="cw-dialog-actions">
               <button type="button" className="cw-secondary-button" onClick={onClose}>取消</button>
-              <button type="submit" className="cw-primary-button"><Sparkles size={16} /> 创建草稿</button>
+              <button type="submit" className="cw-primary-button" disabled={submitting}><Sparkles size={16} /> {submitting ? '保存中…' : '创建草稿'}</button>
             </div>
+            {error && <p className="cw-dialog-error" role="alert">{error}</p>}
           </form>
         )}
       </div>
@@ -72,17 +85,13 @@ export const CreativeWorkshopPage = () => {
           <p>{module.description}</p>
           <div className="cw-hero-actions">
             <button type="button" className="cw-primary-button" onClick={() => setShowGenerator(true)}><Sparkles size={17} /> 生成同款</button>
-            <a className="cw-secondary-button" href="#classic-cases">浏览经典案例 <ChevronRight size={16} /></a>
           </div>
         </div>
         <div className="cw-model-card">
           <span className="cw-model-number">01</span>
-          <strong>经典案例可直接用</strong>
-          <span className="cw-model-line" />
-          <span className="cw-model-number">02</span>
           <strong>输入参数生成同款</strong>
           <span className="cw-model-line" />
-          <span className="cw-model-number">03</span>
+          <span className="cw-model-number">02</span>
           <strong>保存、发布与再创作</strong>
         </div>
       </section>
@@ -107,17 +116,6 @@ export const CreativeWorkshopPage = () => {
         </div>
       </section>
 
-      <section className="cw-section" id="classic-cases">
-        <div className="cw-section-heading"><div><span>经典案例</span><h2>先直接用，再做自己的</h2></div></div>
-        <div className="cw-case-grid">
-          {module.examples.map((title, index) => (
-            <article className="cw-case-card" key={title}>
-              <div className={`cw-case-visual visual-${index + 1}`}><Icon size={34} /><span>CLASSIC CASE</span></div>
-              <div className="cw-case-body"><span className="cw-case-tag">官方案例</span><h3>{title}</h3><p><Clock size={14} /> 课堂可直接使用</p><button type="button" onClick={() => setShowGenerator(true)}>制作同款 <ArrowRight size={15} /></button></div>
-            </article>
-          ))}
-        </div>
-      </section>
       {showGenerator && <GenerateDialog module={module} moduleId={moduleId} onClose={() => setShowGenerator(false)} />}
     </div>
   );

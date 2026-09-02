@@ -136,7 +136,7 @@ export const MainLayout = () => {
 
   // 重置 - 跳转到课程列表页
   const handleReset = () => {
-    navigate('/courses');
+    navigate('/figma-courses');
   };
 
   // 导出PPT
@@ -392,10 +392,10 @@ export const MainLayout = () => {
       icon: Home, 
       description: '工作台驾驶舱' 
     },
-    { 
-      id: 'courses', 
-      path: '/courses', 
-      label: '课程管理', 
+    {
+      id: 'courses',
+      path: '/figma-courses',
+      label: '课程管理',
       icon: BookOpen, 
       description: '管理我的课程',
       roles: ['super_admin', 'org_admin', 'research_leader', 'creator']

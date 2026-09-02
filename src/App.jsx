@@ -8,7 +8,6 @@ import { UnauthorizedPage } from './modules/auth/UnauthorizedPage';
 import { MainLayout } from './components/MainLayout';
 
 import { Layout } from './figma-restore/Layout';
-import { CourseManagementPage } from './modules/course-management/CourseManagementPage';
 import CourseOverviewPage from './modules/course-management/course-overview/CourseOverviewPage';
 import LessonPlanPage from './modules/course-management/lesson-plan/LessonPlanPage';
 import { CanvasView } from './modules/course-management/ppt-canvas/CanvasView';
@@ -85,15 +84,6 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
                   <CreateCoursePage />
-                </RequireAuth>
-              }
-            />
-
-            <Route
-              path="/courses"
-              element={
-                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator']}>
-                  <CourseManagementPage />
                 </RequireAuth>
               }
             />

@@ -1,28 +1,56 @@
-const STORAGE_KEY = 'wellbeing:creative-works';
+/**
+ * 创作工坊草稿存储 — 后端数据库版（表 creative_works）
+ * API：GET/POST /api/creative-works，DELETE /api/creative-works/:id
+ */
 
-export const getCreativeWorks = () => {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
-
-export const createCreativeWork = ({ moduleId, moduleName, title, parameters }) => {
-  const work = {
-    id: `work-${Date.now()}`,
-    moduleId,
-    moduleName,
-    title: title || `${moduleName} · 未命名作品`,
-    parameters,
-    status: 'draft',
-    createdAt: new Date().toISOString(),
+const authHeaders = () => {
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('token') : '';
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([work, ...getCreativeWorks()]));
-  return work;
 };
 
-export const deleteCreativeWork = (id) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(getCreativeWorks().filter((work) => work.id !== id)));
+const parseResponse = async (response) => {
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(json.error || `请求失败（${response.status}）`);
+  }
+  return json;
 };
 
+// 数据库行 → 页面字段（camelCase），保持原 localStorage 结构兼容
+const normalize = (row) => ({
+  id: row.id,
+  moduleId: row.module_id,
+  moduleName: row.module_name,
+  title: row.title,
+  parameters: row.parameters || {},
+  status: row.status,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
+export const getCreativeWorks = async () => {
+  const response = await fetch('/api/creative-works', { headers: authHeaders() });
+  const json = await parseResponse(response);
+  return (json.data || []).map(normalize);
+};
+
+export const createCreativeWork = async ({ moduleId, moduleName, title, parameters }) => {
+  const response = await fetch('/api/creative-works', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ moduleId, moduleName, title, parameters }),
+  });
+  const json = await parseResponse(response);
+  return normalize(json.data);
+};
+
+export const deleteCreativeWork = async (id) => {
+  const response = await fetch(`/api/creative-works/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  await parseResponse(response);
+};

@@ -428,7 +428,7 @@
     "preview": "Preview"
   },
   "asset": {
-    "title": "Asset Management",
+    "title": "Textbooks",
     "imageLibrary": "Image Library",
     "audioLibrary": "Audio Library",
     "videoLibrary": "Video Library",
@@ -474,7 +474,7 @@
     "confirmDeleteMsg": "Are you sure you want to delete this character?"
   },
   "imageLib": {
-    "title": "Image Library",
+    "title": "Images",
     "subtitle": "Manage AI-generated, course-synced, and manually uploaded images",
     "uploadImage": "Upload Image",
     "searchPlaceholder": "Search images",
@@ -555,7 +555,7 @@
     "confirmInsert": "Confirm Insert"
   },
   "audioLib": {
-    "title": "Audio Library",
+    "title": "Audio",
     "subtitle": "Manage AI-generated, course-synced, and manually uploaded BGM, narration, songs",
     "uploadAudio": "Upload Audio",
     "searchPlaceholder": "Search audio",
@@ -613,7 +613,7 @@
     "readTextDefault": "Classroom reading text"
   },
   "videoLib": {
-    "title": "Video Library",
+    "title": "Videos",
     "subtitle": "Manage AI-generated, course-synced, and manually uploaded animations, dramas, knowledge videos",
     "uploadVideo": "Upload Video",
     "searchPlaceholder": "Search videos",
@@ -1508,7 +1508,7 @@
     "materialOptions": ["Drawing paper", "Colored pencils / crayons", "Watercolors", "Clay / modeling dough", "Collage materials (magazines / colored paper / glue)", "Natural materials (leaves / stones)", "Recycled materials (boxes / bottle caps)", "Yarn / fabric", "Stamps / ink pads"]
   },
   "square": {
-    "title": "Discover",
+    "title": "Course Square",
     "subtitle": "Discover quality courses, copy and start teaching",
     "searchPlaceholder": "Search courses, units, themes...",
     "copy": "Copy",

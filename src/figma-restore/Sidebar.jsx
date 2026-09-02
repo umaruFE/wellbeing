@@ -124,7 +124,7 @@ export const Sidebar = () => {
       },
       { id: 'skills-training', label: t('sidebar.skillsTraining'), icon: GraduationCap, path: '/workshop/skills-training' },
       { id: 'fun-practice', label: t('sidebar.funPractice'), icon: Gamepad2, path: '/workshop/fun-practice' },
-      { id: 'complete-course', label: t('sidebar.completeCourse'), icon: BookOpen, path: '/workshop/complete-course' },
+      { id: 'complete-course', label: t('sidebar.completeCourse'), icon: BookOpen, path: '/figma-courses' },
       { id: 'themed-activities', label: t('sidebar.themedActivities'), icon: Star, path: '/workshop/themed-activities' },
       { id: 'teaching-materials', label: t('sidebar.teachingMaterials'), icon: Image, path: '/workshop/teaching-materials' },
     ],

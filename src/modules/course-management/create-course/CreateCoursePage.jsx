@@ -190,7 +190,7 @@ const CreateCoursePageContent = () => {
           <div className="text-center">
             <p className="mb-4" style={{ color: colors.neutral.text[2] }}>{t('createCourse.noData')}</p>
             <button
-              onClick={() => navigate('/courses')}
+              onClick={() => navigate('/figma-courses')}
               className="px-4 py-2 rounded-lg font-medium border hover:bg-gray-50 transition-colors"
               style={{ borderColor: colors.neutral.border.DEFAULT, color: colors.neutral.text[2] }}
             >

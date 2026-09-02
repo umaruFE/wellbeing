@@ -428,7 +428,7 @@
     "preview": "预览"
   },
   "asset": {
-    "title": "素材管理",
+    "title": "教材",
     "imageLibrary": "图片库",
     "audioLibrary": "音频库",
     "videoLibrary": "视频库",
@@ -474,7 +474,7 @@
     "confirmDeleteMsg": "确定要删除以下人物吗？"
   },
   "imageLib": {
-    "title": "图片库",
+    "title": "图片",
     "subtitle": "管理 AI 生成、课程同步和手动上传的图片素材",
     "uploadImage": "上传图片",
     "searchPlaceholder": "搜索图片",
@@ -555,7 +555,7 @@
     "confirmInsert": "确认插入"
   },
   "audioLib": {
-    "title": "音频库",
+    "title": "声音",
     "subtitle": "管理 AI 生成、课程同步和手动上传的 BGM、旁白、歌曲素材",
     "uploadAudio": "上传音频",
     "searchPlaceholder": "搜索音频",
@@ -613,7 +613,7 @@
     "readTextDefault": "课堂朗读文本"
   },
   "videoLib": {
-    "title": "视频库",
+    "title": "视频",
     "subtitle": "管理 AI 生成、课程同步和手动上传的动画片段、情景剧、知识讲解素材",
     "uploadVideo": "上传视频",
     "searchPlaceholder": "搜索视频",
