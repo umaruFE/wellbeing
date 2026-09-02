@@ -97,7 +97,7 @@
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   padding: 25px 15px 4px;
-  row-gap: 25px;
+  row-gap: 8px;
   transition: padding 0.24s ease, row-gap 0.24s ease;
 }
 
@@ -117,6 +117,107 @@
 .sidebar.collapsed .sidebar-menu {
   padding: 25px 12px 4px;
   row-gap: 12px;
+}
+
+.sidebar-branch,
+.sidebar-branch-children {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  row-gap: 4px;
+}
+
+.sidebar-node {
+  --menu-depth: 0;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 42px;
+  column-gap: 10px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 0 12px 0 calc(12px + var(--menu-depth) * 14px);
+  background: transparent;
+  color: #333e4e;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.sidebar-node:hover,
+.sidebar-branch-trigger.has-active-child {
+  background: #f3f2ed;
+}
+
+.sidebar-node.active {
+  border-color: #333e4e;
+  background: #f6e6cc;
+}
+
+.sidebar-node-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: currentColor;
+  stroke-width: 2;
+}
+
+.sidebar-node-text {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-branch-chevron {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: #818997;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-branch-chevron.open {
+  transform: rotate(180deg);
+}
+
+.sidebar-node-disabled {
+  color: #9aa1ab;
+  cursor: default;
+}
+
+.sidebar-node-disabled:hover {
+  background: transparent;
+}
+
+.sidebar-coming-soon {
+  flex-shrink: 0;
+  margin-left: auto;
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: #f3f2ed;
+  color: #9298a1;
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-node {
+  width: 44px;
+  min-height: 44px;
+  align-self: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.sidebar.collapsed .sidebar-node-text,
+.sidebar.collapsed .sidebar-branch-chevron,
+.sidebar.collapsed .sidebar-coming-soon {
+  display: none;
 }
 
 .menu-group {

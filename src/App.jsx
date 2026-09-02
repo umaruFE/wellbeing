@@ -34,6 +34,9 @@ import { PictureBookStudioPage } from './modules/picture-book/PictureBookStudioP
 import { KnowledgeUploadPage } from './modules/picture-book/KnowledgeUploadPage';
 import { SongWritingStudioPage } from './modules/song-writing/SongWritingStudioPage';
 import { SongLibraryPage } from './modules/song-library/SongLibraryPage';
+import { CreativeWorkshopPage } from './modules/creative-workshop/CreativeWorkshopPage';
+import { ExperiencePage } from './modules/creative-workshop/ExperiencePage';
+import { MyWorksPage } from './modules/creative-workshop/MyWorksPage';
 
 const HomeRoute = () => {
   const { user } = useAuth();
@@ -130,6 +133,42 @@ function App() {
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator']}>
                   <SongWritingStudioPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/workshop/interactive-yoga"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator', 'viewer']}>
+                  <ExperiencePage experience="yoga" />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/workshop/music-star-quest"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator', 'viewer']}>
+                  <ExperiencePage experience="star" />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/workshop/:moduleId"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator', 'viewer']}>
+                  <CreativeWorkshopPage />
+                </RequireAuth>
+              }
+            />
+
+            <Route
+              path="/my-works"
+              element={
+                <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator', 'viewer']}>
+                  <MyWorksPage />
                 </RequireAuth>
               }
             />
