@@ -14,7 +14,7 @@ export const WORKSHOP_MODULES = {
     paths: [
       { title: '艺术表达', description: '视觉创作 + 情绪表达', icon: Palette, path: '/picture-books', action: '进入绘本制作' },
       { title: '体感探索', description: '身体叙事 + 语言嵌入', icon: Dumbbell, path: '/workshop/interactive-yoga', action: '查看互动瑜伽' },
-      { title: '音乐律动', description: '节奏 + 身体 + 语言', icon: Music, path: '/workshop/music-star-quest', action: '查看星光录音棚' },
+      { title: '星光录音棚', description: '节奏 + 身体 + 语言', icon: Music, path: '/workshop/music-star-quest', action: '开始创作' },
       { title: '歌曲编唱屋', description: '围绕教学目标创作英语歌曲', icon: Mic2, path: '/song-writing', action: '开始歌曲创作' },
     ],
   },
@@ -86,11 +86,10 @@ export const EXPERIENCE_CONFIG = {
     ],
   },
   star: {
-    type: '音乐律动',
+    type: '星光录音棚',
     title: 'Music Star Quest',
     subtitle: '歌词理解 × 动作编排 × 分级跟唱 × 作品录制',
     description: '以四关闯关方式完成一首英语歌曲的理解、表演、演唱与录制。',
-    demoUrl: '/demos/music-star-quest.html',
     accent: '#9966d0',
     icon: Music,
     features: ['四关渐进式任务', '歌词与音频同步', '动作和乐器编排', '分组演唱与本地录音'],

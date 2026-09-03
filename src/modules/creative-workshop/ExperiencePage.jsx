@@ -1,26 +1,48 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Clock, Download, ExternalLink, Loader2, Plus, RefreshCw, Search, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Clock, Download, ExternalLink, Loader2, Plus, RefreshCw, Search, Sparkles, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { EXPERIENCE_CONFIG } from './workshopData';
 import { createCreativeWork, deleteCreativeWork, generateCreativeWork, getCreativeWorks } from './workshopStorage';
 import '../picture-book/PictureBookStudioPage.css';
 import './creativeWorkshop.css';
 
-const FIELD_OPTIONS = {
-  age: ['4–6 岁', '7–10 岁', '11–14 岁'],
-  duration: ['10–15 分钟', '15–20 分钟', '30–60 秒', '60–90 秒', '90–120 秒'],
-  level: ['初级', '中级', '高级'],
-  style: ['欢快', '舒缓', '节奏感强'],
-};
-
 const STATUS_LABEL = { draft: '草稿', generating: '生成中', done: '已生成', failed: '生成失败' };
+
+// 与绘本制作 BasicInfoStep 同款表单小组件（OptionGroup / Field）
+function ExpOptionGroup({ label, required, options, value, onChange, tone = 'coral' }) {
+  return (
+    <section className={`pbv2-fieldset pbv2-tone-${tone}`}>
+      <div className="pbv2-label">{label}{required && <b>*</b>}</div>
+      <div className="pbv2-option-grid">
+        {options.map((option) => (
+          <button type="button" key={option} className={value === option ? 'is-active' : ''} onClick={() => onChange(value === option ? '' : option)}>
+            {option}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ExpField({ label, value, onChange, placeholder, area }) {
+  return (
+    <label className="pbv2-field">
+      <span>{label}</span>
+      {area ? (
+        <textarea value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      ) : (
+        <input value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+      )}
+    </label>
+  );
+}
 
 export const ExperiencePage = ({ experience }) => {
   const config = EXPERIENCE_CONFIG[experience];
   const Icon = config.icon;
   const moduleId = experience === 'yoga' ? 'interactive-yoga' : 'music-star-quest';
   const navigate = useNavigate();
-  const [mode, setMode] = useState('list'); // list | create | demo
+  const [mode, setMode] = useState('list'); // list | create
   const [form, setForm] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -106,9 +128,6 @@ export const ExperiencePage = ({ experience }) => {
             </div>
           </div>
           <div className="pbv2-topbar-actions">
-            <button type="button" className="pbv2-back-btn" onClick={() => setMode('demo')}>
-              🖥️ 经典案例
-            </button>
             <button type="button" className="pbv2-back-btn" onClick={() => navigate('/workshop/english-plus')}>
               <ArrowLeft size={16} /> 返回
             </button>
@@ -188,50 +207,98 @@ export const ExperiencePage = ({ experience }) => {
     );
   }
 
-  // ── 新建 / 经典案例视图 ──
+  // ── 新建视图（1:1 对照绘本 BasicInfoStep 结构）──
+  const optionSets = {
+    age: ['4–6 岁', '7–10 岁', '11–14 岁'],
+    level: ['初级', '中级', '高级'],
+    style: ['欢快', '舒缓', '节奏感强'],
+    duration: experience === 'yoga' ? ['10–15 分钟', '15–20 分钟', '20–30 分钟'] : ['30–60 秒', '60–90 秒', '90–120 秒'],
+  };
+  const optionTones = { age: 'coral', level: 'blue', style: 'yellow', duration: 'green' };
+  const selectFields = config.fields.filter(([name, , , type]) => type === 'select');
+  const themeField = config.fields.find(([name]) => name === 'theme');
+  const requiredFilled = String(form.theme || '').trim() && String(form.goals || '').trim();
+  const canSubmit = requiredFilled && !submitting;
+
   return (
-    <div className="experience-page" style={{ '--cw-accent': config.accent }}>
-      <header className="experience-header">
-        <button type="button" className="cw-icon-button" onClick={() => setMode('list')} aria-label="返回列表"><ArrowLeft size={19} /></button>
-        <div><span>{config.type}</span><h1>{config.title}</h1></div>
-        <div className="experience-tabs">
-          <button className="active">新建作品</button>
-          <button onClick={() => setMode('demo')}>经典案例</button>
+    <main className="picture-book-studio-v2">
+      <header className="pbv2-topbar">
+        <div className="pbv2-topbar-left">
+          <div className="pbv2-topbar-icon"><Icon size={28} /></div>
+          <div>
+            <h1>新建{config.type}作品</h1>
+            <p>填写教学信息，AI 将按官方规范生成完整作品（约 1-2 分钟）</p>
+          </div>
+        </div>
+        <div className="pbv2-topbar-actions">
+          <button type="button" className="pbv2-back-btn" onClick={() => setMode('list')}>
+            <ArrowLeft size={16} /> 返回列表
+          </button>
         </div>
       </header>
 
-      {mode === 'create' && (
-        <main className="experience-create">
-          <form className="experience-form" onSubmit={submit}>
-            <span className="cw-eyebrow">新建作品 · 第 1 步（共 1 步）</span>
-            <h2>告诉 AI 你想教什么</h2>
-            <p>提交后 AI 将按官方规范生成完整作品（约 1-2 分钟）：{experience === 'yoga' ? '情境瑜伽将生成逐页设计 + 可授课页面' : '星光录音棚将生成歌词 + 练习 + 四关教学方案'}。</p>
-            <div className="experience-form-grid">
-              {config.fields.map(([name, label, placeholder, type]) => (
-                <label key={name} className={type === 'textarea' ? 'wide' : ''}>{label}
-                  {type === 'textarea' ? <textarea required={name === 'goals'} value={form[name] || ''} placeholder={placeholder} onChange={(event) => setForm({ ...form, [name]: event.target.value })} /> : type === 'select' ? <select value={form[name] || placeholder} onChange={(event) => setForm({ ...form, [name]: event.target.value })}>{(FIELD_OPTIONS[name] || [placeholder]).map((option) => <option key={option}>{option}</option>)}</select> : <input required={name === 'theme' || name === 'goals'} value={form[name] || ''} placeholder={placeholder} onChange={(event) => setForm({ ...form, [name]: event.target.value })} />}
-                </label>
+      <div className="pbv2-shell">
+        <aside className="pbv2-steps">
+          <button type="button" className="is-active">
+            <span>1</span>
+            <strong>基本信息</strong>
+          </button>
+          <button type="button" disabled>
+            <span>2</span>
+            <strong>AI 生成作品</strong>
+          </button>
+        </aside>
+
+        <section className="pbv2-workspace pbv2-workspace-step-0">
+          {error && <div className="pbv2-message">{error}</div>}
+          <div className="pbv2-step-panel">
+            <div className="pbv2-form-grid two">
+              {selectFields.map(([name, label, placeholder]) => (
+                <ExpOptionGroup
+                  key={name}
+                  required={name === 'age'}
+                  label={label}
+                  options={optionSets[name] || [placeholder]}
+                  value={form[name] || ''}
+                  onChange={(value) => setForm({ ...form, [name]: value })}
+                  tone={optionTones[name] || 'coral'}
+                />
               ))}
             </div>
-            <div className="cw-dialog-actions">
-              <button type="button" className="cw-secondary-button" onClick={() => setMode('list')}>返回列表</button>
-              <button className="cw-primary-button" type="submit" disabled={submitting}><Sparkles size={16} /> {submitting ? '创建并生成中…' : 'AI 生成作品'}</button>
-            </div>
-            {error && <p className="cw-dialog-error" role="alert">{error}</p>}
-          </form>
-        </main>
-      )}
 
-      {mode === 'demo' && (
-        <main className="experience-demo">
-          <div className="experience-demo-bar">
-            <div><strong>官方经典案例</strong><span>{config.title}</span></div>
-            <a className="cw-secondary-button" href={config.demoUrl} target="_blank" rel="noreferrer">新窗口打开 <ExternalLink size={15} /></a>
+            <section className="pbv2-card pbv2-tone-coral">
+              <div className="pbv2-card-title">{themeField ? themeField[1] : '主题'}（必填）</div>
+              <input
+                className="pbv2-input"
+                value={form.theme || ''}
+                onChange={(event) => setForm({ ...form, theme: event.target.value })}
+                placeholder={themeField ? themeField[2] : ''}
+              />
+            </section>
+
+            <section className="pbv2-card pbv2-tone-blue">
+              <div className="pbv2-card-title">语言目标（必填）</div>
+              <div className="pbv2-form-grid two">
+                <ExpField area label="目标语言点" value={form.goals} onChange={(value) => setForm({ ...form, goals: value })} placeholder={experience === 'yoga' ? '例如：ocean, wave, What can you see?' : '例如：China, USA, Where are you from?'} />
+              </div>
+            </section>
+
+            <section className="pbv2-card pbv2-tone-green">
+              <div className="pbv2-card-title">特殊要求（选填）</div>
+              <ExpField area label="补充说明" value={form.requirements} onChange={(value) => setForm({ ...form, requirements: value })} placeholder={experience === 'yoga' ? '角色、道具或体式偏好' : '例如：加入问答呼应'} />
+            </section>
+
+            <footer className="pbv2-actions">
+              <ChevronRight size={16} />
+              <button type="button" className="pbv2-primary" disabled={!canSubmit} onClick={submit}>
+                {submitting ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
+                {submitting ? 'AI 生成中…' : 'AI 生成作品'}
+              </button>
+            </footer>
           </div>
-          <iframe title={`${config.title} 经典案例`} src={config.demoUrl} allow="microphone; autoplay" />
-        </main>
-      )}
-    </div>
+        </section>
+      </div>
+    </main>
   );
 };
 
