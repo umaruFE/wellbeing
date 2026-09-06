@@ -1,0 +1,2719 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Music Star Quest — Where Are You From</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  background:#08081a url(https://www.coze.cn/s/z29I470cjfI/) center/cover no-repeat fixed;
+  min-height:100vh;
+  font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  color:#e0e0ff;
+  -webkit-tap-highlight-color:transparent;
+  overflow-x:hidden;
+  position:relative;
+  padding-bottom:60px;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    repeating-linear-gradient(0deg,rgba(0,229,255,0.04) 0px,rgba(0,229,255,0.04) 1px,transparent 1px,transparent 80px),
+    repeating-linear-gradient(90deg,rgba(255,45,149,0.03) 0px,rgba(255,45,149,0.03) 1px,transparent 1px,transparent 80px),
+    radial-gradient(ellipse at 50% 0%,rgba(0,229,255,0.12) 0%,transparent 55%),
+    radial-gradient(ellipse at 85% 80%,rgba(255,45,149,0.08) 0%,transparent 50%),
+    radial-gradient(ellipse at 15% 60%,rgba(255,184,0,0.06) 0%,transparent 45%);
+}
+
+/* Laser beam decorations */
+.laser-beam{position:fixed;pointer-events:none;z-index:0;opacity:0.25}
+.laser-beam.l1{top:0;left:15%;width:2px;height:100%;background:linear-gradient(180deg,rgba(0,229,255,0.8),transparent 70%);animation:laserPulse 3s ease-in-out infinite}
+.laser-beam.l2{top:0;right:25%;width:2px;height:100%;background:linear-gradient(180deg,transparent 20%,rgba(255,45,149,0.7),transparent 80%);animation:laserPulse 4s ease-in-out 1.5s infinite}
+.laser-beam.l3{top:0;left:50%;width:1px;height:100%;background:linear-gradient(180deg,transparent 40%,rgba(255,184,0,0.5),transparent 90%);animation:laserPulse 5s ease-in-out 0.8s infinite}
+.laser-dot{position:fixed;pointer-events:none;z-index:0;border-radius:50%}
+.laser-dot.d1{top:10%;left:12%;width:3px;height:3px;background:#00e5ff;box-shadow:0 0 8px #00e5ff;animation:dotBlink 2s ease-in-out infinite}
+.laser-dot.d2{top:30%;right:20%;width:4px;height:4px;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:dotBlink 3s ease-in-out 1s infinite}
+.laser-dot.d3{top:60%;left:30%;width:3px;height:3px;background:#ffb800;box-shadow:0 0 8px #ffb800;animation:dotBlink 2.5s ease-in-out 0.5s infinite}
+.laser-dot.d4{top:80%;right:35%;width:2px;height:2px;background:#00e5ff;box-shadow:0 0 6px #00e5ff;animation:dotBlink 3.5s ease-in-out 2s infinite}
+.laser-dot.d5{top:18%;left:55%;width:3px;height:3px;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:dotBlink 2.8s ease-in-out 1.8s infinite}
+.laser-dot.d6{top:45%;right:8%;width:4px;height:4px;background:#ffb800;box-shadow:0 0 12px #ffb800;animation:dotBlink 3.2s ease-in-out 0.3s infinite}
+.laser-dot.d7{top:72%;left:5%;width:2px;height:2px;background:#00e5ff;box-shadow:0 0 8px #00e5ff;animation:dotBlink 4s ease-in-out 2.5s infinite}
+.laser-dot.d8{top:88%;left:48%;width:3px;height:3px;background:#ff2d95;box-shadow:0 0 10px #ff2d95;animation:dotBlink 2.6s ease-in-out 1.2s infinite}
+@keyframes laserPulse{0%,100%{opacity:0.25}50%{opacity:0.5}}
+@keyframes dotBlink{0%,100%{opacity:0.4;transform:scale(1)}50%{opacity:1;transform:scale(1.6)}}
+@keyframes scanLine{0%{transform:translateY(-100%)}100%{transform:translateY(100%)}}
+@keyframes stageGlow{0%,100%{opacity:0.3;transform:scaleX(1)}50%{opacity:0.6;transform:scaleX(1.05)}}
+@keyframes ringPulse{0%,100%{box-shadow:0 0 15px rgba(0,229,255,0.3),0 0 30px rgba(0,229,255,0.15)}50%{box-shadow:0 0 25px rgba(0,229,255,0.5),0 0 50px rgba(255,45,149,0.25)}}
+@keyframes floatParticle{0%,100%{transform:translateY(0) rotate(0deg);opacity:0.3}25%{transform:translateY(-8px) rotate(90deg);opacity:0.7}50%{transform:translateY(0) rotate(180deg);opacity:0.3}75%{transform:translateY(8px) rotate(270deg);opacity:0.7}}
+@keyframes actionBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes actionSway{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes actionNeonPulse{0%,100%{opacity:0.6;text-shadow:0 0 4px #39ff14}50%{opacity:1;text-shadow:0 0 16px #39ff14,0 0 24px #39ff14}}
+@keyframes btnShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@keyframes puzzlePop{0%{transform:scale(0.9);opacity:0}50%{transform:scale(1.05)}100%{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,59,59,0.4)}50%{box-shadow:0 0 0 16px rgba(255,59,59,0)}}
+@keyframes progressPulse{0%,100%{box-shadow:0 0 8px rgba(0,229,255,0.4),0 0 20px rgba(0,229,255,0.15)}50%{box-shadow:0 0 16px rgba(0,229,255,0.7),0 0 36px rgba(0,229,255,0.3)}}
+@keyframes celebrateFloat{0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1}100%{transform:translateY(-120vh) rotate(720deg) scale(0.2);opacity:0}}
+@keyframes celebrateShrink{0%{transform:scale(0);opacity:0}50%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes badgePop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.3) rotate(5deg)}100%{transform:scale(1) rotate(0deg)}}
+
+/* Progress Bar */
+.progress-bar{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;position:relative;z-index:1;padding:0 16px}
+.progress-node-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;flex:0 0 auto}
+.progress-node{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;transition:all 0.4s;position:relative;z-index:1;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.progress-node.locked{background:rgba(255,255,255,0.04);border:2px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.2)}
+.progress-node.active{background:rgba(0,229,255,0.15);border:2px solid #00e5ff;color:#00e5ff;animation:progressPulse 2s ease-in-out infinite}
+.progress-node.completed{background:rgba(57,255,20,0.15);border:2px solid #39ff14;color:#39ff14;box-shadow:0 0 12px rgba(57,255,20,0.3)}
+.progress-node-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.3);text-align:center;transition:color 0.4s;white-space:nowrap}
+.progress-node-wrap.active .progress-node-label{color:#00e5ff}
+.progress-node-wrap.completed .progress-node-label{color:#39ff14}
+.progress-connector{flex:0 0 40px;height:2px;background:rgba(255,255,255,0.08);transition:all 0.5s;position:relative}
+.progress-connector.done{background:linear-gradient(90deg,#39ff14,#00e5ff);box-shadow:0 0 6px rgba(57,255,20,0.3)}
+
+/* Celebration Overlay */
+.celebrate-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:300;pointer-events:none;display:none}
+.celebrate-overlay.active{display:block}
+.celebrate-particle{position:absolute;border-radius:3px;animation:celebrateFloat 2.5s ease-out forwards;pointer-events:none}
+.celebrate-badge{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:301;font-size:64px;animation:celebrateShrink 0.5s ease-out forwards;pointer-events:none;display:none}
+.celebrate-badge.active{display:block}
+
+/* ═══════════ Stage Transition Overlay ═══════════ */
+.stage-transition{position:fixed;top:0;left:0;right:0;bottom:0;z-index:280;background:#08081a;display:none;flex-direction:column;align-items:center;justify-content:center}
+.stage-transition.active{display:flex}
+.stage-transition.clear-mode{background:rgba(8,8,26,0.92);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.stage-transition.clear-mode::before{display:none}
+.stage-transition::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 40%,rgba(0,229,255,0.08) 0%,transparent 60%),radial-gradient(ellipse at 30% 70%,rgba(255,45,149,0.05) 0%,transparent 50%)}
+.st-bg-particles{position:absolute;inset:0;pointer-events:none}
+.st-bg-particle{position:absolute;border-radius:50%;animation:stBgFloat 6s ease-in-out infinite}
+@keyframes stBgFloat{0%,100%{transform:translateY(0) scale(1);opacity:0.3}50%{transform:translateY(-30px) scale(1.5);opacity:0.7}}
+@keyframes stFadeUp{0%{opacity:0;transform:translateY(30px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes stFadeIn{0%{opacity:0}100%{opacity:1}}
+@keyframes stScaleIn{0%{transform:scale(0.3);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
+@keyframes stGlowPulse{0%,100%{text-shadow:0 0 20px currentColor,0 0 40px currentColor}50%{text-shadow:0 0 40px currentColor,0 0 80px currentColor,0 0 120px currentColor}}
+@keyframes stShimmer{0%{transform:translateX(-100%)}100%{transform:translateX(200%)}}
+
+.st-content{position:relative;z-index:1;text-align:center;padding:40px;max-width:600px}
+.st-content.clear .st-stage-num{font-size:16px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;margin-bottom:8px;animation:stFadeUp 0.5s ease-out}
+.st-content.clear .st-icon{font-size:600px;display:block;margin-bottom:24px;animation:stScaleIn 0.6s ease-out 0.1s both;line-height:1}
+.st-content.clear .st-title{font-size:60px;font-weight:900;color:#39ff14;margin-bottom:10px;animation:stFadeUp 0.5s ease-out 0.2s both;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.st-content.clear .st-summary{font-size:16px;color:rgba(255,255,255,0.35);margin-bottom:40px;animation:stFadeUp 0.5s ease-out 0.3s both;line-height:1.6}
+.st-content.clear .st-btn{animation:stFadeUp 0.5s ease-out 0.5s both}
+.clear-mode .st-content.clear{max-width:700px;margin:0 20px;padding:48px 56px}
+
+/* ═══ Stage Intro: Scan Lines ═══ */
+.st-scan-lines{position:absolute;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0px,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 3px)}
+
+/* ═══ Stage Intro: Corner Decor ═══ */
+.st-corner{position:absolute;z-index:0;pointer-events:none;opacity:0.15}
+.st-corner::before,.st-corner::after{content:'';position:absolute}
+.st-corner.tl{top:60px;left:60px;width:60px;height:60px;border-top:2px solid currentColor;border-left:2px solid currentColor}
+.st-corner.tr{top:60px;right:60px;width:60px;height:60px;border-top:2px solid currentColor;border-right:2px solid currentColor}
+.st-corner.bl{bottom:60px;left:60px;width:60px;height:60px;border-bottom:2px solid currentColor;border-left:2px solid currentColor}
+.st-corner.br{bottom:60px;right:60px;width:60px;height:60px;border-bottom:2px solid currentColor;border-right:2px solid currentColor}
+
+/* ═══ Stage Intro: Outer Ring ═══ */
+.st-ring{position:absolute;z-index:0;pointer-events:none;border-radius:50%;border:1px solid rgba(255,255,255,0.06);animation:stRingSlow 20s linear infinite}
+.st-ring.r1{width:420px;height:420px}
+.st-ring.r2{width:500px;height:500px;border-style:dashed;animation-direction:reverse;animation-duration:25s}
+.st-ring.r3{width:340px;height:340px;border-color:rgba(255,255,255,0.04);animation-duration:15s}
+@keyframes stRingSlow{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* ═══ Stage Intro: Orbit Dots ═══ */
+.st-orbit{position:absolute;z-index:0;pointer-events:none;width:10px;height:10px;border-radius:50%;box-shadow:0 0 8px currentColor,0 0 20px currentColor;animation:stOrbitFloat 8s ease-in-out infinite}
+@keyframes stOrbitFloat{0%,100%{transform:translate(0,0) scale(0.5);opacity:0.3}25%{transform:translate(30px,-20px) scale(1.2);opacity:0.8}50%{transform:translate(-10px,25px) scale(0.7);opacity:0.5}75%{transform:translate(-25px,-15px) scale(1);opacity:0.7}}
+
+/* ═══ Stage Intro: Accent Bars ═══ */
+.st-accent{position:absolute;z-index:0;pointer-events:none;width:1px;height:120px;top:50%;transform:translateY(-50%);opacity:0.1}
+.st-accent.left{left:calc(50% - 280px);background:linear-gradient(180deg,transparent,currentColor,transparent)}
+.st-accent.right{right:calc(50% - 280px);background:linear-gradient(180deg,transparent,currentColor,transparent)}
+
+/* ═══ Stage Intro: Stage Label ═══ */
+.st-stage-label{position:absolute;top:40px;left:50%;transform:translateX(-50%);font-size:11px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;color:rgba(255,255,255,0.12);z-index:0;pointer-events:none}
+
+/* ═══ Stage Intro: Content ═══ */
+.st-content.intro{padding:60px 80px;max-width:700px;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,0.02) 0%,transparent 70%)}
+.st-content.intro .st-badge{display:inline-block;padding:6px 22px;border-radius:20px;font-size:13px;font-weight:700;letter-spacing:0.2em;margin-bottom:32px;text-transform:uppercase;animation:stFadeUp 0.4s ease-out;background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.15)}
+.st-content.intro .st-icon{font-size:80px;display:block;margin-bottom:20px;line-height:1;animation:stScaleIn 0.6s ease-out 0.1s both;filter:drop-shadow(0 0 20px rgba(255,255,255,0.15))}
+.st-content.intro .st-level-name{font-size:48px;font-weight:900;color:#fff;margin-bottom:10px;animation:stFadeUp 0.5s ease-out 0.2s both;font-family:"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0.04em;line-height:1.15}
+.st-content.intro .st-divider-wrap{display:flex;align-items:center;justify-content:center;gap:10px;margin:12px auto 20px;animation:stScaleIn 0.4s ease-out 0.25s both}
+.st-content.intro .st-divider-line{width:50px;height:2px;border-radius:1px}
+.st-content.intro .st-divider-diamond{width:6px;height:6px;transform:rotate(45deg);border-radius:1px}
+.st-content.intro .st-desc{font-size:16px;color:rgba(255,255,255,0.65);margin-bottom:28px;animation:stFadeUp 0.5s ease-out 0.3s both;line-height:1.6;max-width:420px;margin-left:auto;margin-right:auto;letter-spacing:0.02em}
+.st-content.intro .st-difficulty{display:flex;gap:10px;justify-content:center;align-items:center;margin-bottom:36px;animation:stFadeUp 0.5s ease-out 0.35s both}
+.st-content.intro .st-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.08);transition:all 0.3s;border:1px solid rgba(255,255,255,0.06)}
+.st-content.intro .st-dot.lit{border-color:transparent;box-shadow:0 0 12px currentColor,0 0 24px currentColor}
+.st-content.intro .st-diff-label{font-size:12px;font-weight:600;color:rgba(255,255,255,0.55);margin-left:8px;letter-spacing:0.08em;text-transform:uppercase}
+.st-content.intro .st-btn{animation:stFadeUp 0.5s ease-out 0.45s both;padding:18px 48px;border-radius:36px;font-size:18px;font-weight:800;border:2px solid;background:rgba(255,255,255,0.04);position:relative;overflow:hidden}
+.st-content.intro .st-btn::after{content:'';position:absolute;inset:0;border-radius:34px;opacity:0;transition:opacity 0.25s}
+.st-content.intro .st-btn:hover{transform:translateY(-3px)}
+.st-content.intro .st-btn:hover::after{opacity:0.15}
+.st-content.intro .st-btn:active{transform:scale(0.96)}
+
+.st-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 36px;border-radius:30px;font-size:16px;font-weight:800;cursor:pointer;border:none;transition:all 0.2s;font-family:"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0.04em}
+.st-btn:hover{transform:translateY(-2px)}
+.st-btn:active{transform:scale(0.96)}
+.st-btn.s1{background:rgba(0,229,255,0.15);color:#00e5ff;border:1.5px solid rgba(0,229,255,0.4);box-shadow:0 0 20px rgba(0,229,255,0.2)}
+.st-btn.s1:hover{background:rgba(0,229,255,0.25);box-shadow:0 0 30px rgba(0,229,255,0.35)}
+.st-btn.s2{background:rgba(255,184,0,0.15);color:#ffb800;border:1.5px solid rgba(255,184,0,0.4);box-shadow:0 0 20px rgba(255,184,0,0.2)}
+.st-btn.s2:hover{background:rgba(255,184,0,0.25);box-shadow:0 0 30px rgba(255,184,0,0.35)}
+.st-btn.s3{background:rgba(255,45,149,0.15);color:#ff2d95;border:1.5px solid rgba(255,45,149,0.4);box-shadow:0 0 20px rgba(255,45,149,0.2)}
+.st-btn.s3:hover{background:rgba(255,45,149,0.25);box-shadow:0 0 30px rgba(255,45,149,0.35)}
+.st-btn.s4{background:rgba(57,255,20,0.15);color:#39ff14;border:1.5px solid rgba(57,255,20,0.4);box-shadow:0 0 20px rgba(57,255,20,0.2)}
+.st-btn.s4:hover{background:rgba(57,255,20,0.25);box-shadow:0 0 30px rgba(57,255,20,0.35)}
+
+/* Stage watermark */
+.stage-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:180px;font-weight:900;color:rgba(255,255,255,0.02);pointer-events:none;z-index:0;white-space:nowrap;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+
+/* Screen shake */
+@keyframes screenShake{0%,100%{transform:translateX(0)}10%{transform:translateX(-6px)}30%{transform:translateX(6px)}50%{transform:translateX(-4px)}70%{transform:translateX(4px)}90%{transform:translateX(-2px)}}
+.shake-it{animation:screenShake 0.4s ease}
+
+/* ═══════════ Game Map: 关卡地图（图片版） ═══════════ */
+.game-map{display:flex;flex-direction:column;align-items:center;padding:16px 0 36px;position:relative;z-index:1}
+.map-img-wrap{position:relative;width:100%;max-width:1600px;margin:0 auto;border-radius:18px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.08);box-shadow:0 0 30px rgba(0,229,255,0.08),0 0 60px rgba(0,0,0,0.4)}
+.map-img-wrap img{display:block;width:100%;height:auto}
+.map-spot{position:absolute;cursor:pointer;border-radius:12px;transition:all 0.3s;z-index:2}
+.map-spot::after{content:'';position:absolute;inset:-3px;border-radius:15px;border:2px solid transparent;transition:all 0.35s;pointer-events:none}
+.map-spot:hover{background:rgba(255,255,255,0.06)}
+.map-spot:active{background:rgba(255,255,255,0.1)}
+.map-spot.locked{cursor:not-allowed;pointer-events:none}
+.map-spot.completed::after{border-color:rgba(57,255,20,0.5);box-shadow:0 0 12px rgba(57,255,20,0.25)}
+.map-spot.s1.completed::after{border-color:transparent;box-shadow:none}
+.map-spot.s2.completed::after{border-color:transparent;box-shadow:none}
+.map-spot.s3.completed::after{border-color:transparent;box-shadow:none}
+.map-spot.active::after{border-color:#00e5ff;box-shadow:0 0 20px rgba(0,229,255,0.4),0 0 40px rgba(0,229,255,0.15);animation:spotPulse 2s ease-in-out infinite}
+.map-spot.s2.active::after{border-color:#ffb800;box-shadow:0 0 20px rgba(255,184,0,0.4),0 0 40px rgba(255,184,0,0.15);animation:spotPulse 2s ease-in-out infinite}
+.map-spot.s3.active::after{border-color:#ff2d95;box-shadow:0 0 20px rgba(255,45,149,0.4),0 0 40px rgba(255,45,149,0.15);animation:spotPulse 2s ease-in-out infinite}
+.map-spot.s4.active::after{border-color:#39ff14;box-shadow:0 0 20px rgba(57,255,20,0.4),0 0 40px rgba(57,255,20,0.15);animation:spotPulse 2s ease-in-out infinite}
+.map-spot.completed .map-spot-badge{display:flex}
+@keyframes spotPulse{0%,100%{box-shadow:0 0 16px rgba(0,229,255,0.3)}50%{box-shadow:0 0 32px rgba(0,229,255,0.6),0 0 48px rgba(0,229,255,0.2)}}
+.map-spot-label{position:absolute;bottom:-36px;left:50%;transform:translateX(-50%);font-size:15px;font-weight:700;color:rgba(255,255,255,0.35);text-align:center;transition:color 0.3s;font-family:"PingFang SC","Microsoft YaHei",sans-serif;pointer-events:none;line-height:1.3;white-space:nowrap}
+.map-spot.locked .map-spot-label{color:rgba(255,255,255,0.18)}
+.map-spot.active .map-spot-label{color:#00e5ff}
+.map-spot.completed .map-spot-label{color:#39ff14}
+.map-spot-badge{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;background:#39ff14;display:none;align-items:center;justify-content:center;font-size:12px;z-index:3;box-shadow:0 0 8px rgba(57,255,20,0.5);pointer-events:none}
+.map-spot.s1 .map-spot-badge{top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:56px;height:56px;font-size:32px;border-radius:50%;background:rgba(57,255,20,0.15);border:2px solid rgba(57,255,20,0.5);box-shadow:0 0 24px rgba(57,255,20,0.35),0 0 48px rgba(57,255,20,0.15)}
+.map-spot.s2 .map-spot-badge{top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:56px;height:56px;font-size:32px;border-radius:50%;background:rgba(57,255,20,0.15);border:2px solid rgba(57,255,20,0.5);box-shadow:0 0 24px rgba(57,255,20,0.35),0 0 48px rgba(57,255,20,0.15)}
+.map-spot.s3 .map-spot-badge{top:50%;left:50%;right:auto;transform:translate(-50%,-50%);width:56px;height:56px;font-size:32px;border-radius:50%;background:rgba(57,255,20,0.15);border:2px solid rgba(57,255,20,0.5);box-shadow:0 0 24px rgba(57,255,20,0.35),0 0 48px rgba(57,255,20,0.15)}
+.map-lock{position:absolute;width:52px;height:52px;border-radius:50%;background:rgba(8,8,26,0.8);display:none;align-items:center;justify-content:center;font-size:24px;z-index:4;pointer-events:none;border:1.5px solid rgba(0,229,255,0.35);box-shadow:0 0 24px rgba(0,229,255,0.25),0 0 0 8px rgba(8,8,26,0.4);transform:translate(-50%,-50%)}
+.map-lock.l2{left:30.4%;top:33.8%}
+.map-lock.l3{left:64.8%;top:29.2%}
+.map-lock.l4{left:60.3%;top:72.2%}
+
+/* Map Sign Overlays — cover the image's built-in "Stage N" plaques */
+.map-sign{position:absolute;z-index:5;pointer-events:none;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px 14px;border-radius:5px;font-weight:800;font-family:"PingFang SC","Microsoft YaHei",sans-serif;letter-spacing:0.02em;background:rgba(8,8,26,0.95);transform:translate(-50%,-50%);line-height:1.3;white-space:nowrap}
+.map-sign.s1{left:12.3%;top:40.3%;font-size:14px;color:#00e5ff;border:1px solid rgba(0,229,255,0.45);box-shadow:0 0 10px rgba(0,229,255,0.25),0 0 0 6px rgba(8,8,26,0.6)}
+.map-sign.s2{left:33.7%;top:8.7%;font-size:14px;color:#ffb800;border:1px solid rgba(255,184,0,0.45);box-shadow:0 0 10px rgba(255,184,0,0.25),0 0 0 6px rgba(8,8,26,0.6)}
+.map-sign.s3{left:78.9%;top:15.7%;font-size:14px;color:#ff2d95;border:1px solid rgba(255,45,149,0.45);box-shadow:0 0 10px rgba(255,45,149,0.25),0 0 0 6px rgba(8,8,26,0.6)}
+.map-sign.s4{left:74.9%;top:55.3%;font-size:14px;color:#39ff14;border:1px solid rgba(57,255,20,0.45);box-shadow:0 0 10px rgba(57,255,20,0.25),0 0 0 6px rgba(8,8,26,0.6)}
+.map-spot.s1{left:3%;top:54%;width:19%;height:42%}
+.map-spot.s2{left:20%;top:14%;width:20%;height:42%}
+.map-spot.s3{left:56%;top:3%;width:19%;height:42%}
+.map-spot.s4{left:50%;top:50%;width:19%;height:42%}
+.map-spot.finish{left:84%;top:22%;width:14%;height:50%;cursor:pointer}
+
+/* Stage View Wrapper */
+.stage-view{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:#08081a;display:none;flex-direction:column;overflow:hidden}
+.stage-view.active{display:flex}
+.stage-view .sv-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(10,10,30,0.95);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;position:sticky;top:0;z-index:10}
+.sv-back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);cursor:pointer;font-size:13px;font-weight:700;font-family:"PingFang SC","Microsoft YaHei",sans-serif;transition:all 0.15s}
+.sv-back:hover{background:rgba(255,255,255,0.1);color:#fff}
+.sv-title{font-size:16px;font-weight:800;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.sv-body{flex:1;min-height:0;padding:20px;position:relative;overflow-y:auto}
+.sv-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:140px;font-weight:900;color:rgba(255,255,255,0.015);pointer-events:none;white-space:nowrap;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+
+@media(max-width:768px){
+  .map-spot-label{font-size:12px}
+  .map-spot.s1{left:2%;top:58%;width:20%;height:38%}
+  .map-spot.s2{left:35%;top:16%;width:21%;height:40%}
+  .map-spot.s3{left:46%;top:6%;width:20%;height:38%}
+  .map-spot.s4{left:50%;top:50%;width:20%;height:38%}
+  .map-spot.finish{left:83%;top:26%;width:15%;height:44%}
+  .sv-watermark{font-size:80px}
+}
+
+.container{max-width:960px;margin:0 auto;padding-top:50px;position:relative;z-index:1}
+
+/* Header */
+header{text-align:center;margin-bottom:20px;position:relative}
+h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-weight:900;color:#fff;letter-spacing:0.06em;margin-bottom:4px;text-shadow:0 0 20px rgba(0,229,255,0.5),0 0 40px rgba(0,229,255,0.2)}
+.subtitle{font-size:1.1em;font-weight:600;color:rgba(0,229,255,0.55);margin-top:8px;letter-spacing:0.02em;line-height:1.5;max-width:900px;margin-left:auto;margin-right:auto}
+.song-name{display:inline-block;font-size:1.1em;font-weight:700;color:#ffb800;margin-top:10px;padding:6px 20px;letter-spacing:0.06em;font-style:italic;border:1px solid rgba(255,184,0,0.25);border-radius:20px;background:rgba(255,184,0,0.06);position:relative}
+.song-name::before{content:'♪ '}
+.song-name::after{content:' ♪'}
+
+/* Stage Navigation */
+.stage-nav{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap}
+.stage-btn{flex:1;min-width:80px;padding:14px 10px;border-radius:16px;border:1.5px solid rgba(255,255,255,0.1);background:rgba(10,10,30,0.7);cursor:pointer;text-align:center;transition:all 0.2s;font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:13px;font-weight:600;color:rgba(255,255,255,0.4);position:relative}
+.stage-btn .stage-num{display:block;font-size:20px;margin-bottom:2px}
+.stage-btn:hover{background:rgba(255,255,255,0.05)}
+.stage-btn.unlocked{border-color:rgba(0,229,255,0.4);color:rgba(0,229,255,0.7);box-shadow:0 0 12px rgba(0,229,255,0.1)}
+.stage-btn.unlocked:hover{background:rgba(0,229,255,0.08);box-shadow:0 0 20px rgba(0,229,255,0.2)}
+.stage-btn.active{border-color:#00e5ff;background:rgba(0,229,255,0.15);color:#00e5ff;box-shadow:0 0 20px rgba(0,229,255,0.3)}
+.stage-btn.locked{cursor:not-allowed;opacity:0.35}
+.stage-btn.shake{animation:btnShake 0.4s ease}
+
+/* Cards */
+.card{background:rgba(10,10,30,0.85);border-radius:20px;padding:28px 30px;margin-bottom:20px;border:1.5px solid rgba(0,229,255,0.2);box-shadow:0 0 20px rgba(0,229,255,0.08),0 0 40px rgba(0,229,255,0.03),inset 0 0 30px rgba(0,229,255,0.02);position:relative;overflow:hidden}
+.card::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,229,255,0.012) 3px,rgba(0,229,255,0.012) 4px);animation:scanLine 8s linear infinite;border-radius:20px}
+.card::before{content:'';position:absolute;top:-1px;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,rgba(0,229,255,0.5) 20%,rgba(0,229,255,0.5) 80%,transparent);z-index:1;pointer-events:none}
+.card-header{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;position:relative;z-index:1}
+.card-header .icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.card-header .icon.s1{background:rgba(0,229,255,0.15);border:1px solid rgba(0,229,255,0.3)}
+.card-header .icon.s2{background:rgba(255,184,0,0.15);border:1px solid rgba(255,184,0,0.3)}
+.card-header .icon.s3{background:rgba(255,45,149,0.15);border:1px solid rgba(255,45,149,0.3)}
+.card-header .icon.s4{background:rgba(57,255,20,0.15);border:1px solid rgba(57,255,20,0.3)}
+.card-header h2{font-size:18px;font-weight:700;color:#fff}
+
+/* ═══════════ Stage 1: Lyric Hunter — Game Challenge ═══════════ */
+.st1-header{position:relative;z-index:1;text-align:center;margin-bottom:28px}
+.st1-header .st1-level-badge{display:inline-block;padding:5px 18px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:12px}
+.st1-header .st1-title-icon{font-size:32px;display:inline-block;vertical-align:middle;margin-right:6px;filter:drop-shadow(0 0 10px rgba(0,229,255,0.3))}
+.st1-header h2{display:inline-block;vertical-align:middle;font-size:28px;font-weight:900;color:#00e5ff;text-shadow:0 0 20px rgba(0,229,255,0.4),0 0 40px rgba(0,229,255,0.15);margin-bottom:4px;letter-spacing:0.04em}
+.st1-header .st1-sub{font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:0.04em}
+.st1-progress{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;position:relative;z-index:1}
+.st1-step{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
+.st1-dot{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;transition:all 0.5s;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.2)}
+.st1-dot.current{border-color:#00e5ff;background:rgba(0,229,255,0.12);color:#00e5ff;box-shadow:0 0 20px rgba(0,229,255,0.3),0 0 40px rgba(0,229,255,0.1);animation:st1DotPulse 2s ease-in-out infinite}
+.st1-dot.done{border-color:#39ff14;background:rgba(57,255,20,0.12);color:#39ff14;box-shadow:0 0 12px rgba(57,255,20,0.25)}
+.st1-dot.done::after{content:'✓';position:absolute;font-size:18px}
+.st1-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.25);text-align:center;transition:color 0.5s;white-space:nowrap}
+.st1-step.current .st1-label{color:#00e5ff}
+.st1-step.done .st1-label{color:#39ff14}
+.st1-line{width:50px;height:2px;background:rgba(255,255,255,0.06);transition:all 0.5s;margin:0 4px;align-self:flex-start;margin-top:21px}
+.st1-line.done{background:linear-gradient(90deg,#39ff14,#00e5ff);box-shadow:0 0 6px rgba(57,255,20,0.3)}
+@keyframes st1DotPulse{0%,100%{box-shadow:0 0 20px rgba(0,229,255,0.3),0 0 40px rgba(0,229,255,0.1)}50%{box-shadow:0 0 30px rgba(0,229,255,0.5),0 0 60px rgba(0,229,255,0.2)}}
+
+.st1-layout{display:flex;gap:20px;width:100%;position:relative;z-index:1;align-items:flex-start}
+.st1-challenge{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px}
+
+.st1-card{background:rgba(10,10,30,0.85);border:1.5px solid rgba(255,255,255,0.08);border-radius:24px;padding:28px;position:relative;overflow:hidden;transition:all 0.5s;display:none}
+.st1-card.visible{display:block;animation:cardReveal 0.5s ease-out}
+.st1-card.done{opacity:0.5;border-color:rgba(57,255,20,0.2)}
+.st1-card.done::after{content:'';position:absolute;inset:0;background:rgba(57,255,20,0.02);pointer-events:none}
+@keyframes cardReveal{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
+.st1-card .st1-card-glow{position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 50% 0%,rgba(0,229,255,0.06) 0%,transparent 50%);pointer-events:none}
+.st1-card .st1-card-num{display:inline-flex;align-items:center;gap:8px;margin-bottom:16px}
+.st1-card .st1-num-badge{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;background:rgba(0,229,255,0.12);color:#00e5ff;border:1px solid rgba(0,229,255,0.25)}
+.st1-card .st1-card-title{font-size:18px;font-weight:800;color:#fff;letter-spacing:0.03em}
+.st1-card .st1-instruction{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:20px;line-height:1.5}
+
+.st1-fill-sentence{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px;padding:16px 20px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.05);font-size:18px}
+.st1-fill-sentence .st1-emoji{font-size:28px;margin-right:8px}
+.st1-blank{display:inline-flex;align-items:center;justify-content:center;min-width:80px;min-height:36px;padding:6px 14px;border-radius:10px;border:2px dashed rgba(0,229,255,0.7);background:rgba(0,229,255,0.12);color:rgba(0,229,255,0.95);font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;text-shadow:0 0 8px rgba(0,229,255,0.4);letter-spacing:2px}
+.st1-blank.selected{border-color:#00e5ff;background:rgba(0,229,255,0.15);box-shadow:0 0 12px rgba(0,229,255,0.2)}
+.st1-blank.filled{border-style:solid;border-color:rgba(0,229,255,0.5);color:#00e5ff;background:rgba(0,229,255,0.1)}
+.st1-blank.correct{border-color:#39ff14;background:rgba(57,255,20,0.1);color:#39ff14;box-shadow:0 0 8px rgba(57,255,20,0.2)}
+.st1-blank.wrong{border-color:#ff2d95;background:rgba(255,45,149,0.1);color:#ff2d95;animation:st1Shake 0.4s ease}
+@keyframes st1Shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+.st1-word-opts{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.st1-word-opt{padding:8px 16px;border-radius:20px;font-size:14px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);transition:all 0.15s}
+.st1-word-opt:hover{background:rgba(0,229,255,0.08);border-color:rgba(0,229,255,0.3);color:#00e5ff}
+
+.st1-build-area{min-height:48px;padding:12px 16px;border-radius:14px;border:2px dashed rgba(0,229,255,0.2);background:rgba(0,229,255,0.03);display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;align-items:center}
+.st1-build-area.correct{border-color:#39ff14;background:rgba(57,255,20,0.05)}
+.st1-build-area.wrong{border-color:#ff2d95;background:rgba(255,45,149,0.05)}
+.st1-build-word{padding:6px 12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:rgba(0,229,255,0.1);color:#00e5ff;border:1px solid rgba(0,229,255,0.2);transition:all 0.15s}
+.st1-build-word:hover{background:rgba(0,229,255,0.2)}
+.st1-bank-word{padding:6px 12px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;background:rgba(255,255,255,0.04);border:1.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.5);transition:all 0.15s}
+.st1-bank-word:hover{background:rgba(0,229,255,0.08);border-color:rgba(0,229,255,0.3);color:#00e5ff}
+.st1-bank{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+
+.st1-listen-opt{display:block;width:100%;padding:12px 18px;margin-bottom:8px;border-radius:14px;border:1.5px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.02);color:rgba(255,255,255,0.5);font-size:14px;font-weight:600;cursor:pointer;text-align:left;transition:all 0.15s;font-family:inherit}
+.st1-listen-opt:hover{background:rgba(0,229,255,0.06);border-color:rgba(0,229,255,0.25);color:#00e5ff}
+.st1-listen-opt.selected{background:rgba(0,229,255,0.1);border-color:#00e5ff;color:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,0.15)}
+.st1-listen-opt.correct{background:rgba(57,255,20,0.1);border-color:#39ff14;color:#39ff14}
+.st1-listen-opt.wrong{background:rgba(255,45,149,0.1);border-color:#ff2d95;color:#ff2d95}
+
+.st1-lyrics{width:260px;flex-shrink:0;position:sticky;top:20px;background:rgba(10,10,30,0.9);border-radius:24px;padding:24px;border:1.5px solid rgba(0,229,255,0.15);box-shadow:0 0 30px rgba(0,229,255,0.06)}
+.st1-lyrics h3{font-size:14px;font-weight:700;color:rgba(0,229,255,0.6);margin-bottom:20px;text-align:center;letter-spacing:0.04em;display:flex;align-items:center;justify-content:center;gap:6px}
+.st1-piece{padding:14px;margin-bottom:10px;border-radius:14px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);color:rgba(255,255,255,0.15);font-size:13px;font-weight:600;text-align:center;transition:all 0.5s;line-height:1.6;position:relative;overflow:hidden}
+.st1-piece.unlocked{background:rgba(0,229,255,0.06);border-color:rgba(0,229,255,0.25);color:#00e5ff;box-shadow:0 0 16px rgba(0,229,255,0.1);animation:pieceUnlock 0.5s ease-out}
+@keyframes pieceUnlock{0%{transform:scale(0.9);opacity:0;box-shadow:0 0 40px rgba(0,229,255,0.3)}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1;box-shadow:0 0 16px rgba(0,229,255,0.1)}}
+.st1-piece .st1-piece-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;color:rgba(255,255,255,0.2)}
+.st1-piece.unlocked .st1-piece-label{color:rgba(0,229,255,0.5)}
+.st1-piece .st1-piece-content{font-size:14px;font-weight:700;line-height:1.7}
+
+.st1-complete{text-align:center;padding:40px 20px;display:none;margin-top:24px}
+.st1-complete.visible{display:block;animation:cardReveal 0.6s ease-out}
+.st1-complete .st1-big-icon{font-size:64px;display:block;margin-bottom:12px}
+.st1-complete h2{font-size:26px;color:#39ff14;margin-bottom:8px;text-shadow:0 0 20px rgba(57,255,20,0.3)}
+.st1-complete p{color:rgba(255,255,255,0.45);margin-bottom:24px;font-size:14px}
+.st1-complete .st1-btn-map{background:rgba(57,255,20,0.1);color:#39ff14;border:1.5px solid rgba(57,255,20,0.3);padding:12px 28px;border-radius:24px;font-size:15px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;letter-spacing:0.03em}
+.st1-complete .st1-btn-map:hover{background:rgba(57,255,20,0.18);box-shadow:0 0 16px rgba(57,255,20,0.2)}
+
+.st1-btn-row{display:flex;gap:10px;margin-top:16px}
+.st1-btn-check{background:rgba(0,229,255,0.12);color:#00e5ff;border:1.5px solid rgba(0,229,255,0.3);padding:11px 24px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;letter-spacing:0.03em}
+.st1-btn-check:hover{background:rgba(0,229,255,0.2);box-shadow:0 0 14px rgba(0,229,255,0.2)}
+.st1-btn-reset{background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);border:1.5px solid rgba(255,255,255,0.08);padding:11px 24px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;letter-spacing:0.03em}
+.st1-btn-reset:hover{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7)}
+.st1-btn-listen{background:rgba(255,184,0,0.1);color:#ffb800;border:1.5px solid rgba(255,184,0,0.25);padding:11px 24px;border-radius:24px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;letter-spacing:0.03em}
+.st1-btn-listen:hover{background:rgba(255,184,0,0.18);box-shadow:0 0 12px rgba(255,184,0,0.2)}
+
+.stage-complete{text-align:center;padding:24px;position:relative;z-index:1}
+.stage-complete .big-emoji{font-size:48px;margin-bottom:12px}
+.stage-complete h3{font-size:18px;font-weight:700;color:#39ff14}
+
+@media(max-width:768px){.st1-layout{flex-direction:column-reverse}.st1-lyrics{width:100%;position:static;display:flex;gap:6px;flex-wrap:wrap;padding:16px}.st1-lyrics h3{width:100%;margin-bottom:8px}.st1-piece{flex:1;min-width:100px;margin-bottom:0}}
+
+/* ═══════════ STAGE 2: 节奏律动 — 暗色主题两栏布局 ═══════════ */
+/* Floating stage decorations */
+.s2-floats{position:fixed;inset:0;pointer-events:none;z-index:2;overflow:hidden}
+.s2-float-item{position:absolute;opacity:0.6;animation:s2FloatDrift var(--dur) var(--delay) infinite ease-in-out;font-size:var(--size);text-shadow:0 0 18px currentColor,0 0 36px currentColor}
+.s2-float-item:nth-child(1){--dur:18s;--delay:0s;--size:42px;top:16%;left:2%;animation-name:s2float1;color:#00e5ff}
+.s2-float-item:nth-child(2){--dur:22s;--delay:-4s;--size:28px;top:22%;right:2%;animation-name:s2float2;color:#ffb800}
+.s2-float-item:nth-child(3){--dur:20s;--delay:-8s;--size:36px;top:35%;left:1%;animation-name:s2float3;color:#ff2d95}
+.s2-float-item:nth-child(4){--dur:24s;--delay:-2s;--size:48px;top:42%;right:1%;animation-name:s2float4;color:#39ff14}
+.s2-float-item:nth-child(5){--dur:16s;--delay:-10s;--size:32px;top:52%;left:3%;animation-name:s2float2;color:#ffb800}
+.s2-float-item:nth-child(6){--dur:26s;--delay:-6s;--size:40px;top:60%;right:3%;animation-name:s2float1;color:#00e5ff}
+.s2-float-item:nth-child(7){--dur:19s;--delay:-12s;--size:24px;top:68%;left:1%;animation-name:s2float3;color:#ff2d95}
+.s2-float-item:nth-child(8){--dur:21s;--delay:-3s;--size:30px;top:18%;right:4%;animation-name:s2float4;color:#39ff14}
+.s2-float-item:nth-child(9){--dur:15s;--delay:-7s;--size:38px;top:78%;right:2%;animation-name:s2float2;color:#ffb800}
+.s2-float-item:nth-child(10){--dur:23s;--delay:-14s;--size:26px;top:28%;left:4%;animation-name:s2float1;color:#00e5ff}
+@keyframes s2float1{0%,100%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(30px,-20px) rotate(5deg)}50%{transform:translate(15px,-40px) rotate(-3deg)}75%{transform:translate(-10px,-15px) rotate(3deg)}}
+@keyframes s2float2{0%,100%{transform:translate(0,0) rotate(0deg)}25%{transform:translate(-25px,-15px) rotate(-5deg)}50%{transform:translate(-10px,-35px) rotate(3deg)}75%{transform:translate(20px,-10px) rotate(-4deg)}}
+@keyframes s2float3{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(20px,10px) scale(1.15)}50%{transform:translate(-5px,25px) scale(0.9)}75%{transform:translate(-15px,5px) scale(1.1)}}
+@keyframes s2float4{0%,100%{transform:translate(0,0) rotate(0deg) scale(1)}25%{transform:translate(-15px,-25px) rotate(-8deg) scale(0.85)}50%{transform:translate(-30px,-10px) rotate(4deg) scale(1.1)}75%{transform:translate(-5px,15px) rotate(-2deg) scale(0.95)}}
+
+.s2-container{display:flex;gap:16px;align-items:flex-start;position:relative;z-index:1;justify-content:center}
+.s2-left{width:520px;flex-shrink:0;display:flex;flex-direction:column}
+.s2-right{flex:0 0 320px;display:flex;flex-direction:column;gap:10px;position:sticky;top:20px}
+
+.s2-actions-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:14px;border:1.5px solid rgba(57,255,20,0.3);box-shadow:0 0 16px rgba(57,255,20,0.08)}
+.s2-actions-panel h3{font-size:13px;color:#39ff14;margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:space-between}
+.s2-actions-panel h3 .hint{font-size:11px;font-weight:400;color:rgba(57,255,20,0.5)}
+.s2-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.s2-action-tag{background:rgba(255,255,255,0.05);color:#e0e0ff;padding:7px 10px;border-radius:14px;font-size:12px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(57,255,20,0.25);display:flex;align-items:center;gap:5px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.s2-action-tag:hover{background:rgba(57,255,20,0.1);border-color:#39ff14;transform:translateY(-1px);box-shadow:0 0 12px rgba(57,255,20,0.2)}
+.s2-action-tag:active{cursor:grabbing}
+
+.s2-inst-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:14px;border:1.5px solid rgba(255,184,0,0.3);box-shadow:0 0 16px rgba(255,184,0,0.08);flex:1;display:flex;flex-direction:column;min-height:0}
+.s2-inst-panel h3{font-size:13px;color:#ffb800;margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:space-between}
+.s2-inst-panel h3 .hint{font-size:11px;font-weight:400;color:rgba(255,184,0,0.5)}
+.s2-inst-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;overflow-y:auto;flex:1;padding-right:2px;scrollbar-width:thin;scrollbar-color:rgba(255,184,0,0.3) transparent}
+.s2-inst-grid::-webkit-scrollbar{width:3px}
+.s2-inst-grid::-webkit-scrollbar-track{background:transparent}
+.s2-inst-grid::-webkit-scrollbar-thumb{background:rgba(255,184,0,0.3);border-radius:2px}
+.s2-inst-tag{background:rgba(255,255,255,0.05);color:#e0e0ff;padding:7px 10px;border-radius:14px;font-size:12px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(255,184,0,0.25);display:flex;align-items:center;gap:5px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.s2-inst-tag img{width:28px;height:28px;object-fit:contain;flex-shrink:0}
+.s2-inst-tag:hover{background:rgba(255,184,0,0.1);border-color:#ffb800;transform:translateY(-1px);box-shadow:0 0 12px rgba(255,184,0,0.2)}
+.s2-inst-tag:active{cursor:grabbing}
+
+.s2-lyrics-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:20px;border:1.5px solid rgba(255,45,149,0.3);box-shadow:0 0 16px rgba(255,45,149,0.08)}
+.s2-lyrics-panel h3{font-size:13px;color:#ff2d95;margin-bottom:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+.s2-lyric-row{display:flex;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid rgba(255,45,149,0.1);gap:4px}
+.s2-lyric-row:last-child{border-bottom:none}
+.s2-lyric-text{font-size:14px;font-weight:700;color:#e0e0ff;white-space:nowrap;flex-shrink:0}
+.s2-lyric-time{font-size:10px;color:rgba(255,45,149,0.4);margin-left:4px}
+
+.s2-slot-group{display:flex;gap:4px;margin-left:12px;align-items:center}
+.s2-drop-slot{width:28px;height:28px;border-radius:50%;border:2px dashed rgba(0,229,255,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all 0.15s;position:relative}
+.s2-drop-slot:hover,.s2-drop-slot.drag-over{border-color:#00e5ff;background:rgba(0,229,255,0.12);transform:scale(1.1)}
+.s2-drop-slot.filled{border-style:solid;border-color:#00e5ff;background:rgba(0,229,255,0.08)}
+.s2-drop-slot img{width:22px;height:22px;object-fit:contain}
+.s2-slot-remove{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:#ff2d95;color:#fff;font-size:8px;line-height:14px;text-align:center;display:none;cursor:pointer}
+.s2-drop-slot.filled:hover .s2-slot-remove{display:block}
+.s2-slot-add{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.06);color:rgba(0,229,255,0.5);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;line-height:1}
+.s2-slot-add:hover{background:rgba(0,229,255,0.15);color:#00e5ff;border-color:rgba(0,229,255,0.4)}
+.s2-slot-del{width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,45,149,0.2);background:rgba(255,45,149,0.06);color:rgba(255,45,149,0.4);font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;line-height:1}
+.s2-slot-del:hover{background:rgba(255,45,149,0.2);color:#ff2d95;border-color:rgba(255,45,149,0.4)}
+
+/* Stage 2 Expand Button */
+.s2-pool-expand-btn{width:28px;height:28px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.4);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0}
+.s2-pool-expand-btn:hover{background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.3);transform:scale(1.1)}
+
+/* Stage 2 Pool Modal */
+.s2-pool-modal{position:fixed;inset:0;z-index:250;display:none;align-items:center;justify-content:center;padding:30px}
+.s2-pool-modal.s2-active{display:flex}
+.s2-pool-modal-backdrop{position:absolute;inset:0;background:rgba(4,4,12,0.92);backdrop-filter:blur(8px)}
+.s2-pool-modal-content{position:relative;z-index:1;width:100%;max-width:1200px;max-height:90vh;background:rgba(10,10,30,0.95);border-radius:28px;padding:36px;border:1.5px solid rgba(255,255,255,0.12);overflow-y:auto;box-shadow:0 0 80px rgba(0,0,0,0.5);animation:s2modalIn 0.3s ease-out}
+.s2-pool-modal-content.s2-actions-modal{border-color:rgba(57,255,20,0.25);box-shadow:0 0 100px rgba(57,255,20,0.08)}
+.s2-pool-modal-content.s2-insts-modal{border-color:rgba(255,184,0,0.25);box-shadow:0 0 100px rgba(255,184,0,0.08)}
+.s2-pool-modal-close{position:absolute;top:16px;right:18px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.s2-pool-modal-close:hover{background:rgba(255,45,149,0.2);color:#ff2d95;border-color:rgba(255,45,149,0.3)}
+.s2-pool-modal h3{font-size:24px;font-weight:900;margin-bottom:24px;display:flex;align-items:center;gap:10px}
+.s2-pool-modal.s2-actions-modal h3{color:#39ff14}
+.s2-pool-modal.s2-insts-modal h3{color:#ffb800}
+.s2-pool-modal .s2-modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.s2-pool-modal .s2-modal-tag{background:rgba(255,255,255,0.04);padding:20px 22px;border-radius:20px;font-size:20px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:14px;transition:all 0.2s;min-height:72px}
+.s2-pool-modal .s2-modal-tag:active{cursor:grabbing}
+.s2-pool-modal .s2-modal-tag.s2-actions{border-color:rgba(57,255,20,0.3)}
+.s2-pool-modal .s2-modal-tag.s2-actions:hover{background:rgba(57,255,20,0.12);border-color:#39ff14;transform:translateY(-3px);box-shadow:0 0 28px rgba(57,255,20,0.2)}
+.s2-pool-modal .s2-modal-tag.s2-instruments{border-color:rgba(255,184,0,0.3)}
+.s2-pool-modal .s2-modal-tag.s2-instruments:hover{background:rgba(255,184,0,0.12);border-color:#ffb800;transform:translateY(-3px);box-shadow:0 0 28px rgba(255,184,0,0.2)}
+.s2-pool-modal .s2-modal-tag img{width:48px;height:48px;object-fit:contain;flex-shrink:0}
+.s2-pool-modal .s2-modal-tag .s2-tag-emoji{font-size:36px;flex-shrink:0;line-height:1}
+@keyframes s2modalIn{0%{opacity:0;transform:scale(0.92)}100%{opacity:1;transform:scale(1)}}
+@keyframes s2TitleGlow{0%,100%{text-shadow:0 0 20px rgba(255,184,0,0.6),0 0 40px rgba(255,184,0,0.4),0 0 80px rgba(255,184,0,0.2)}50%{text-shadow:0 0 30px rgba(255,184,0,0.8),0 0 60px rgba(255,184,0,0.5),0 0 100px rgba(255,184,0,0.3),0 0 150px rgba(255,184,0,0.15)}}
+
+@media(max-width:768px){.s2-container{flex-direction:column;align-items:center}.s2-left{width:100%;max-width:520px}.s2-right{flex:none;width:100%;max-width:520px;flex-direction:row;gap:8px}.s2-actions-panel,.s2-inst-panel{flex:1;min-height:200px}}
+
+/* Stage 2 Header */
+.s2-header{position:relative;z-index:1;text-align:center;margin-bottom:14px}
+.s2-header .s2-level-badge{display:inline-block;padding:5px 18px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
+.s2-header .s2-title-icon{font-size:32px;display:inline-block;vertical-align:middle;margin-right:6px;filter:drop-shadow(0 0 12px rgba(255,184,0,0.5)) drop-shadow(0 0 24px rgba(255,184,0,0.3))}
+.s2-header h1{display:inline-block;vertical-align:middle;font-size:28px;font-weight:900;color:#ffb800;text-shadow:0 0 20px rgba(255,184,0,0.6),0 0 40px rgba(255,184,0,0.4),0 0 80px rgba(255,184,0,0.2),0 0 120px rgba(255,184,0,0.1);margin-bottom:2px;letter-spacing:0.04em;animation:s2TitleGlow 2.5s ease-in-out infinite}
+.s2-header .s2-sub{font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:0.04em}
+
+/* Stage 3 Header */
+.s3-header{position:relative;z-index:1;text-align:center;margin-bottom:14px}
+.s3-header .s3-level-badge{display:inline-block;padding:5px 18px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
+.s3-header .s3-title-icon{font-size:32px;display:inline-block;vertical-align:middle;margin-right:6px;filter:drop-shadow(0 0 12px rgba(255,45,149,0.5)) drop-shadow(0 0 24px rgba(255,45,149,0.3))}
+.s3-header h1{display:inline-block;vertical-align:middle;font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2),0 0 120px rgba(255,45,149,0.1);margin-bottom:2px;letter-spacing:0.04em;animation:s3TitleGlow 2.5s ease-in-out infinite}
+.s3-header .s3-sub{font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:0.04em}
+.s4-header{position:relative;z-index:1;text-align:center;margin-bottom:14px}
+.s4-header .s4-level-badge{display:inline-block;padding:5px 18px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.5);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
+.s4-header .s4-title-icon{font-size:32px;display:inline-block;vertical-align:middle;margin-right:6px;filter:drop-shadow(0 0 12px rgba(57,255,20,0.5)) drop-shadow(0 0 24px rgba(57,255,20,0.3))}
+.s4-header h1{display:inline-block;vertical-align:middle;font-size:28px;font-weight:900;color:#39ff14;text-shadow:0 0 20px rgba(57,255,20,0.6),0 0 40px rgba(57,255,20,0.4),0 0 80px rgba(57,255,20,0.2),0 0 120px rgba(57,255,20,0.1);margin-bottom:2px;letter-spacing:0.04em;animation:s4TitleGlow 2.5s ease-in-out infinite}
+.s4-header .s4-sub{font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:0.04em}
+@keyframes s3TitleGlow{0%,100%{text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2)}50%{text-shadow:0 0 28px rgba(255,45,149,0.8),0 0 50px rgba(255,45,149,0.5),0 0 90px rgba(255,45,149,0.3),0 0 130px rgba(255,45,149,0.15)}}
+@keyframes s4TitleGlow{0%,100%{text-shadow:0 0 20px rgba(57,255,20,0.6),0 0 40px rgba(57,255,20,0.4),0 0 80px rgba(57,255,20,0.2)}50%{text-shadow:0 0 28px rgba(57,255,20,0.8),0 0 50px rgba(57,255,20,0.5),0 0 90px rgba(57,255,20,0.3),0 0 130px rgba(57,255,20,0.15)}}
+
+/* Stage 3 Audio Player */
+.s3-player-bar{position:relative;z-index:1;max-width:1200px;margin:0 auto 18px;background:rgba(10,10,30,0.9);border-radius:14px;padding:10px 18px;border:1.5px solid rgba(255,45,149,0.15);display:flex;align-items:center;gap:10px;flex-wrap:nowrap;box-shadow:0 0 24px rgba(255,45,149,0.06)}
+.s3-player-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,45,149,0.35);background:rgba(255,45,149,0.08);color:#ff2d95;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;padding:0}
+.s3-player-btn:hover{background:rgba(255,45,149,0.18);box-shadow:0 0 16px rgba(255,45,149,0.2)}
+.s3-player-btn svg{width:15px;height:15px;fill:currentColor}
+.s3-player-time{font-size:11px;color:rgba(255,255,255,0.5);min-width:34px;text-align:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+.s3-player-progress{flex:0 1 600px;min-width:80px;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;cursor:pointer;position:relative}
+.s3-player-progress-fill{height:100%;background:linear-gradient(90deg,#ff2d95,#ffb800);border-radius:2px;width:0%;transition:width 0.15s linear;box-shadow:0 0 8px rgba(255,45,149,0.4)}
+.s3-player-progress-thumb{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:#ff2d95;transform:translate(-50%,-50%);left:0%;display:none;box-shadow:0 0 10px rgba(255,45,149,0.5)}
+.s3-player-progress:hover .s3-player-progress-thumb{display:block}
+.s3-player-vol{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.s3-player-vol .s3-vol-icon{font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer}
+.s3-player-vol input[type=range]{-webkit-appearance:none;appearance:none;width:50px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;outline:none}
+.s3-player-vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:#ff2d95;cursor:pointer;box-shadow:0 0 6px rgba(255,45,149,0.5)}
+.s3-player-speed{display:flex;gap:2px;flex-shrink:0}
+.s3-player-speed button{background:transparent;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);padding:3px 7px;border-radius:8px;font-size:10px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.s3-player-speed button:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
+.s3-player-speed button.s3-active{color:#ff2d95;border-color:rgba(255,45,149,0.4);background:rgba(255,45,149,0.08)}
+.s3-player-mode{display:flex;gap:2px;flex-shrink:0;background:rgba(255,255,255,0.04);border-radius:10px;padding:2px;border:1px solid rgba(255,255,255,0.08)}
+.s3-player-mode button{background:transparent;border:none;color:rgba(255,255,255,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;white-space:nowrap}
+.s3-player-mode button:hover{color:rgba(255,255,255,0.7)}
+.s3-player-mode button.s3-active{background:rgba(255,45,149,0.15);color:#ff2d95;box-shadow:0 0 8px rgba(255,45,149,0.15)}
+
+/* Stage 4 Audio Player */
+.s4-player-bar{position:relative;z-index:1;max-width:1200px;margin:0 auto 18px;background:rgba(10,10,30,0.9);border-radius:14px;padding:10px 18px;border:1.5px solid rgba(57,255,20,0.15);display:flex;align-items:center;gap:10px;flex-wrap:nowrap;box-shadow:0 0 24px rgba(57,255,20,0.06)}
+.s4-player-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(57,255,20,0.35);background:rgba(57,255,20,0.08);color:#39ff14;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;padding:0}
+.s4-player-btn:hover{background:rgba(57,255,20,0.18);box-shadow:0 0 16px rgba(57,255,20,0.2)}
+.s4-player-btn svg{width:15px;height:15px;fill:currentColor}
+.s4-player-time{font-size:11px;color:rgba(255,255,255,0.5);min-width:34px;text-align:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+.s4-player-progress{flex:0 1 600px;min-width:80px;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;cursor:pointer;position:relative}
+.s4-player-progress-fill{height:100%;background:linear-gradient(90deg,#39ff14,#00e5ff);border-radius:2px;width:0%;transition:width 0.15s linear;box-shadow:0 0 8px rgba(57,255,20,0.4)}
+.s4-player-progress-thumb{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:#39ff14;transform:translate(-50%,-50%);left:0%;display:none;box-shadow:0 0 10px rgba(57,255,20,0.5)}
+.s4-player-progress:hover .s4-player-progress-thumb{display:block}
+.s4-player-vol{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.s4-player-vol .s4-vol-icon{font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer}
+.s4-player-vol input[type=range]{-webkit-appearance:none;appearance:none;width:50px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;outline:none}
+.s4-player-vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:#39ff14;cursor:pointer;box-shadow:0 0 6px rgba(57,255,20,0.5)}
+.s4-player-speed{display:flex;gap:2px;flex-shrink:0}
+.s4-player-speed button{background:transparent;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);padding:3px 7px;border-radius:8px;font-size:10px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.s4-player-speed button:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
+.s4-player-speed button.s4-active{color:#39ff14;border-color:rgba(57,255,20,0.4);background:rgba(57,255,20,0.08)}
+.s4-player-mode{display:flex;gap:2px;flex-shrink:0;background:rgba(255,255,255,0.04);border-radius:10px;padding:2px;border:1px solid rgba(255,255,255,0.08)}
+.s4-player-mode button{background:transparent;border:none;color:rgba(255,255,255,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;white-space:nowrap}
+.s4-player-mode button:hover{color:rgba(255,255,255,0.7)}
+.s4-player-mode button.s4-active{background:rgba(57,255,20,0.15);color:#39ff14;box-shadow:0 0 8px rgba(57,255,20,0.15)}
+
+/* Stage 2 Audio Player */
+.s2-player-bar{position:relative;z-index:1;max-width:1200px;margin:0 auto 18px;background:rgba(10,10,30,0.9);border-radius:14px;padding:10px 18px;border:1.5px solid rgba(255,184,0,0.15);display:flex;align-items:center;gap:10px;flex-wrap:nowrap;box-shadow:0 0 24px rgba(255,184,0,0.06)}
+.s2-player-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,184,0,0.35);background:rgba(255,184,0,0.08);color:#ffb800;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;padding:0}
+.s2-player-btn:hover{background:rgba(255,184,0,0.18);box-shadow:0 0 16px rgba(255,184,0,0.2)}
+.s2-player-btn svg{width:15px;height:15px;fill:currentColor}
+.s2-player-time{font-size:11px;color:rgba(255,255,255,0.5);min-width:34px;text-align:center;flex-shrink:0;font-variant-numeric:tabular-nums}
+.s2-player-progress{flex:0 1 600px;min-width:80px;height:4px;background:rgba(255,255,255,0.12);border-radius:2px;cursor:pointer;position:relative}
+.s2-player-progress-fill{height:100%;background:linear-gradient(90deg,#ffb800,#ff2d95);border-radius:2px;width:0%;transition:width 0.15s linear;box-shadow:0 0 8px rgba(255,184,0,0.4)}
+.s2-player-progress-thumb{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:#ffb800;transform:translate(-50%,-50%);left:0%;display:none;box-shadow:0 0 10px rgba(255,184,0,0.5)}
+.s2-player-progress:hover .s2-player-progress-thumb{display:block}
+.s2-player-vol{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.s2-player-vol .s2-vol-icon{font-size:13px;color:rgba(255,255,255,0.4);cursor:pointer}
+.s2-player-vol input[type=range]{-webkit-appearance:none;appearance:none;width:50px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;outline:none}
+.s2-player-vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:#ffb800;cursor:pointer;box-shadow:0 0 6px rgba(255,184,0,0.5)}
+.s2-player-speed{display:flex;gap:2px;flex-shrink:0}
+.s2-player-speed button{background:transparent;border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4);padding:3px 7px;border-radius:8px;font-size:10px;cursor:pointer;transition:all 0.15s;font-family:inherit}
+.s2-player-speed button:hover{color:#fff;border-color:rgba(255,255,255,0.25)}
+.s2-player-speed button.s2-active{color:#ffb800;border-color:rgba(255,184,0,0.4);background:rgba(255,184,0,0.08)}
+.s2-player-mode{display:flex;gap:2px;flex-shrink:0;background:rgba(255,255,255,0.04);border-radius:10px;padding:2px;border:1px solid rgba(255,255,255,0.08)}
+.s2-player-mode button{background:transparent;border:none;color:rgba(255,255,255,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;white-space:nowrap}
+.s2-player-mode button:hover{color:rgba(255,255,255,0.7)}
+.s2-player-mode button.s2-active{background:rgba(255,184,0,0.15);color:#ffb800;box-shadow:0 0 8px rgba(255,184,0,0.15)}
+
+/* Stage 2 Playback Overlay */
+.playback-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#08081a url(https://www.coze.cn/s/5lE8XRBAuB8/) center/cover no-repeat;z-index:300;display:none;flex-direction:column;overflow:hidden}
+.playback-overlay::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(0,229,255,0.12) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(255,45,149,0.08) 0%,transparent 50%)}
+.playback-overlay::after{content:'';position:absolute;bottom:0;left:0;right:0;height:180px;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(0,229,255,0.12) 0%,rgba(255,45,149,0.06) 40%,transparent 70%);animation:stageGlow 4s ease-in-out infinite}
+.playback-overlay.active{display:flex}
+.playback-topbar{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);flex-shrink:0;position:relative;z-index:1}
+.playback-topbar .pb-time{font-size:14px;color:rgba(255,255,255,0.6);font-weight:600;min-width:40px;text-align:center}
+.playback-progress-wrap{width:100%;display:flex;align-items:center;gap:8px;padding:0 16px 6px;position:relative;z-index:1}
+.playback-progress-bar{flex:1;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;cursor:pointer;position:relative}
+.playback-progress-fill{height:100%;background:linear-gradient(90deg,#00e5ff,#ff2d95);border-radius:2px;width:0%;transition:width 0.1s linear;box-shadow:0 0 8px rgba(0,229,255,0.5)}
+.playback-lyrics{flex:1;display:flex;flex-direction:column;align-items:center;padding:60px 20px;gap:18px;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;position:relative;z-index:1}
+.playback-lyrics::-webkit-scrollbar{display:none}
+.pb-line{font-size:2.2vw;font-weight:900;color:rgba(255,255,255,0.15);padding:14px 28px;border-radius:14px;text-align:center;transition:all 0.35s;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:8px;min-height:60px;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.pb-line.active{color:#fff;font-size:3.2vw;background:rgba(255,255,255,0.06);border:1px solid rgba(0,229,255,0.2);text-shadow:0 0 20px rgba(0,229,255,0.4);animation:ringPulse 2.5s ease-in-out infinite}
+.pb-line.passed{color:rgba(255,255,255,0.06);font-size:1.8vw}
+.pb-line .pb-actions{display:flex;gap:10px;font-size:1.4em}
+.pb-line.active .pb-actions{animation:actionBounce 0.4s ease-in-out infinite}
+.pb-close{position:fixed;top:12px;right:16px;z-index:110;width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+@media(max-width:640px){.pb-line{font-size:4.5vw}.pb-line.active{font-size:6vw}.pb-line.passed{font-size:3.5vw}}
+
+/* Playback controls bar */
+.pb-controls{display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 16px;flex-shrink:0;position:relative;z-index:1;flex-wrap:wrap}
+.pb-mode-toggle{display:flex;gap:2px;background:rgba(255,255,255,0.04);border-radius:10px;padding:2px;border:1px solid rgba(255,255,255,0.08)}
+.pb-mode-btn{background:transparent;border:none;color:rgba(255,255,255,0.35);padding:4px 10px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;white-space:nowrap}
+.pb-mode-btn:hover{color:rgba(255,255,255,0.7)}
+.pb-mode-btn.active{background:rgba(255,184,0,0.15);color:#ffb800;box-shadow:0 0 8px rgba(255,184,0,0.15)}
+.pb-vol{display:flex;align-items:center;gap:6px}
+.pb-vol-icon{cursor:pointer;font-size:16px;user-select:none}
+.pb-vol input[type=range]{width:70px;height:4px;-webkit-appearance:none;appearance:none;background:rgba(255,255,255,0.15);border-radius:2px;outline:none;cursor:pointer}
+.pb-vol input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#ffb800;cursor:pointer}
+.pb-speed{display:flex;gap:2px;background:rgba(255,255,255,0.04);border-radius:10px;padding:2px;border:1px solid rgba(255,255,255,0.08)}
+.pb-speed button{background:transparent;border:none;color:rgba(255,255,255,0.35);padding:3px 8px;border-radius:8px;font-size:10px;font-weight:700;cursor:pointer;transition:all 0.2s;font-family:inherit;white-space:nowrap}
+.pb-speed button:hover{color:rgba(255,255,255,0.7)}
+.pb-speed button.active{background:rgba(0,229,255,0.15);color:#00e5ff;box-shadow:0 0 8px rgba(0,229,255,0.15)}
+
+/* ═══════════ STAGE 3: 演唱挑战 ═══════════ */
+.sing-level-select{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;position:relative;z-index:1}
+.sing-level-btn{flex:1;min-width:90px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(255,45,149,0.25);background:rgba(10,10,30,0.7);cursor:pointer;text-align:center;font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-weight:600;font-size:13px;transition:all 0.2s;color:rgba(255,45,149,0.5)}
+.sing-level-btn:hover{background:rgba(255,45,149,0.08)}
+.sing-level-btn.active{border-color:#ff2d95;background:rgba(255,45,149,0.12);color:#ff2d95;box-shadow:0 0 16px rgba(255,45,149,0.2)}
+.sing-level-btn.completed{border-color:#39ff14;background:rgba(57,255,20,0.08);color:#39ff14}
+.sing-display{text-align:center;padding:40px 20px;min-height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,10,30,0.7);border-radius:20px;margin-bottom:16px;border:1.5px solid rgba(255,45,149,0.2);position:relative;z-index:1}
+.sing-current-line{font-size:32px;font-weight:900;line-height:1.4;transition:all 0.3s;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.sing-current-line .masked{color:rgba(255,255,255,0.2);letter-spacing:2px}
+.sing-current-line .letter-hint{color:#ff2d95;font-weight:800}
+.sing-progress{display:flex;gap:4px;justify-content:center;margin-top:16px}
+.sing-progress-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.1);transition:all 0.2s}
+.sing-progress-dot.active{background:#ff2d95;transform:scale(1.3);box-shadow:0 0 8px rgba(255,45,149,0.5)}
+.sing-progress-dot.done{background:#39ff14}
+.sing-controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;position:relative;z-index:1}
+
+/* ═══════════ STAGE 4: 录制舞台 ═══════════ */
+.record-setup{margin-bottom:16px;position:relative;z-index:1;max-width:720px;margin-left:auto;margin-right:auto}
+.record-version-select{display:flex;gap:8px;margin-bottom:16px}
+.record-ver-btn{flex:1;padding:10px 14px;border-radius:16px;border:1.5px solid rgba(57,255,20,0.25);background:rgba(10,10,30,0.7);cursor:pointer;text-align:center;font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-weight:600;font-size:13px;transition:all 0.2s;color:rgba(57,255,20,0.5)}
+.record-ver-btn:hover{background:rgba(57,255,20,0.08)}
+.record-ver-btn.active{border-color:#39ff14;background:rgba(57,255,20,0.12);color:#39ff14;box-shadow:0 0 16px rgba(57,255,20,0.2)}
+.record-area{text-align:center;padding:40px 20px;background:rgba(10,10,30,0.85);border-radius:20px;color:#fff;margin-bottom:16px;min-height:200px;border:1.5px solid rgba(57,255,20,0.2);box-shadow:0 0 20px rgba(57,255,20,0.06);position:relative;z-index:1}
+.record-area .record-dot{width:80px;height:80px;border-radius:50%;background:rgba(255,45,149,0.8);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;transition:all 0.2s;box-shadow:0 0 20px rgba(255,45,149,0.4)}
+.record-area .record-dot:hover{transform:scale(1.05);box-shadow:0 0 30px rgba(255,45,149,0.6)}
+.record-area .record-dot.recording{background:#ff3b3b;animation:pulse 1s infinite;box-shadow:0 0 30px rgba(255,59,59,0.5)}
+.record-countdown{font-size:48px;font-weight:900;margin-bottom:16px}
+.record-timer{font-size:20px;font-weight:600;color:rgba(255,255,255,0.5)}
+.record-lyric-display{margin-top:16px;font-size:18px;font-weight:700;color:#fff;padding:12px;background:rgba(255,255,255,0.06);border-radius:12px;min-height:60px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,0.08)}
+.record-lyric-display .upcoming{color:rgba(255,255,255,0.2);font-size:14px;margin-top:4px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:700;font-family:"PingFang SC","Microsoft YaHei",sans-serif;cursor:pointer;border:none;transition:all 0.18s;white-space:nowrap}
+.btn-primary{background:rgba(0,229,255,0.15);color:#00e5ff;border:1.5px solid rgba(0,229,255,0.3);box-shadow:0 0 8px rgba(0,229,255,0.15)}
+.btn-primary:hover{background:rgba(0,229,255,0.25);border-color:#00e5ff;box-shadow:0 0 16px rgba(0,229,255,0.3)}
+.btn-outline{background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7)}
+.btn-outline:hover{border-color:#00e5ff;color:#00e5ff;background:rgba(0,229,255,0.08)}
+.btn-accent{background:rgba(255,45,149,0.15);color:#ff2d95;border:1.5px solid rgba(255,45,149,0.3)}
+.btn-green{background:rgba(57,255,20,0.15);color:#39ff14;border:1.5px solid rgba(57,255,20,0.3)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:16px}
+.btn-check{background:rgba(255,184,0,0.15);color:#ffb800;border:1.5px solid rgba(255,184,0,0.3);font-weight:700}
+.btn-check:hover{background:rgba(255,184,0,0.25);box-shadow:0 0 12px rgba(255,184,0,0.2)}
+.btn-orange{background:rgba(255,184,0,0.15);color:#ffb800;border:1.5px solid rgba(255,184,0,0.3)}
+.btn-orange:hover{background:rgba(255,184,0,0.25);box-shadow:0 0 12px rgba(255,184,0,0.2)}
+.btn:focus-visible{outline:2px solid #00e5ff;outline-offset:2px}
+
+.toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:rgba(10,10,30,0.95);color:#e0e0ff;padding:12px 28px;border-radius:20px;font-size:14px;font-weight:600;z-index:999;opacity:0;pointer-events:none;transition:opacity 0.3s;box-shadow:0 0 20px rgba(0,229,255,0.15);border:1.5px solid rgba(0,229,255,0.3)}
+.toast.show{opacity:1}
+
+/* ═══════════ STAGE 4: 全屏录制 ═══════════ */
+.record-fullscreen{position:fixed;top:0;left:0;right:0;bottom:0;background:#08081a url(https://www.coze.cn/s/5lE8XRBAuB8/) center/cover no-repeat;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.record-fullscreen::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(255,45,149,0.1) 0%,transparent 60%),radial-gradient(ellipse at 50% 80%,rgba(0,229,255,0.08) 0%,transparent 50%)}
+.record-fullscreen.active{display:flex}
+.record-fs-countdown{font-size:96px;font-weight:900;color:#fff;z-index:1;animation:pulse 1s infinite;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.record-fs-dot{width:100px;height:100px;border-radius:50%;background:#ff3b3b;display:flex;align-items:center;justify-content:center;font-size:44px;z-index:1;box-shadow:0 0 40px rgba(255,59,59,0.5);transition:all 0.2s}
+.record-fs-dot.paused{background:#ff7ab6}
+.record-fs-timer{font-size:28px;font-weight:700;color:rgba(255,255,255,0.7);margin-top:12px;z-index:1;font-variant-numeric:tabular-nums}
+.record-fs-lyric{font-size:36px;font-weight:900;color:#fff;text-align:center;margin-top:20px;padding:16px 32px;border-radius:16px;z-index:1;transition:background 0.4s,color 0.4s;min-height:80px;display:flex;align-items:center;justify-content:center;line-height:1.4;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.record-fs-lyric.role-teacher{background:rgba(0,229,255,0.15);border:1px solid rgba(0,229,255,0.4);color:#00e5ff;text-shadow:0 0 12px rgba(0,229,255,0.3)}
+.record-fs-lyric.role-student{background:rgba(57,255,20,0.12);border:1px solid rgba(57,255,20,0.35);color:#39ff14;text-shadow:0 0 12px rgba(57,255,20,0.3)}
+.record-fs-lyric.role-solo{background:rgba(255,45,149,0.15);border:1px solid rgba(255,45,149,0.4);color:#ff2d95;text-shadow:0 0 12px rgba(255,45,149,0.3)}
+.record-fs-lyric.role-all{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12)}
+.record-fs-actions{display:flex;gap:12px;margin-top:16px;z-index:1}
+.record-fs-progress{width:80%;max-width:500px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:20px;z-index:1;overflow:hidden}
+.record-fs-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff2d95,#00e5ff);border-radius:2px;transition:width 0.3s linear;box-shadow:0 0 8px rgba(255,45,149,0.5)}
+.record-fs-btn{padding:10px 24px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;font-weight:700;cursor:pointer;z-index:1;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif;margin-top:18px}
+.record-fs-btn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.4)}
+.record-fs-btn.danger{background:rgba(255,59,59,0.15);border-color:rgba(255,59,59,0.35);color:#ff6b6b}
+.record-fs-btn.danger:hover{background:rgba(255,59,59,0.25);border-color:#ff3b3b}
+.record-fs-ready{display:flex;flex-direction:column;align-items:center;z-index:1}
+.record-fs-ver-btn{padding:12px 24px;border-radius:16px;border:1.5px solid rgba(57,255,20,0.25);background:rgba(10,10,30,0.7);color:rgba(57,255,20,0.5);font-size:14px;font-weight:700;cursor:pointer;font-family:"PingFang SC","Microsoft YaHei",sans-serif;transition:all 0.15s}
+.record-fs-ver-btn:hover{background:rgba(57,255,20,0.08)}
+.record-fs-ver-btn.active{border-color:#39ff14;background:rgba(57,255,20,0.12);color:#39ff14;box-shadow:0 0 16px rgba(57,255,20,0.2)}
+.record-fs-start-btn{padding:18px 48px;border-radius:30px;border:2px solid rgba(0,229,255,0.4);background:rgba(0,229,255,0.12);color:#00e5ff;font-size:18px;font-weight:800;cursor:pointer;font-family:"PingFang SC","Microsoft YaHei",sans-serif;transition:all 0.15s;box-shadow:0 0 20px rgba(0,229,255,0.2)}
+.record-fs-start-btn:hover{background:rgba(0,229,255,0.22);box-shadow:0 0 30px rgba(0,229,255,0.4);transform:translateY(-2px)}
+
+.mark-color-btn{width:32px;height:32px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+.mark-color-btn:hover{transform:scale(1.15)}
+.mark-color-btn.active{border-color:#fff;box-shadow:0 0 0 3px rgba(10,10,30,0.85),0 0 0 5px currentColor}
+.mark-color-teacher{background:#00e5ff;color:#00e5ff}
+.mark-color-student{background:#39ff14;color:#39ff14}
+.mark-color-solo{background:#ff2d95;color:#ff2d95}
+.mark-color-all{background:rgba(255,255,255,0.2);color:rgba(255,255,255,0.4)}
+
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#00e5ff 0%,#ff2d95 50%,#ffb800 100%);z-index:10;box-shadow:0 0 12px rgba(0,229,255,0.3)}
+
+@media(max-width:640px){
+  .page{padding:16px 10px 40px}.card{padding:20px 16px}h1{font-size:1.4em}
+  .puzzle-area{flex-direction:column}.puzzle-collection{width:100%}
+  .sing-current-line{font-size:24px}
+  .record-area{padding:30px 16px}
+  .laser-beam.l3,.laser-dot.d3,.laser-dot.d4,.laser-dot.d6,.laser-dot.d8{display:none}
+}
+
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+@media print{body{background:#fff!important;color:#000}.card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}.toast,button,.playback-overlay,.laser-beam,.laser-dot,.bottom-bar,.stage-view,.stage-transition,.game-map,.map-img-wrap{display:none!important}}
+
+/* ═══════════ Teaching Plan Drawer ═══════════ */
+.teaching-plan-btn{position:absolute;top:8px;right:8px;padding:6px 14px;border-radius:20px;border:1.5px solid rgba(255,184,0,0.5);background:rgba(255,184,0,0.1);color:#ffb800;font-size:12px;font-weight:700;cursor:pointer;z-index:5;transition:all 0.2s;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.teaching-plan-btn:hover{background:rgba(255,184,0,0.22);box-shadow:0 0 16px rgba(255,184,0,0.3)}
+.activity-guide-btn{position:fixed;top:14px;right:14px;display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:24px;border:1.5px solid rgba(57,255,20,0.5);background:rgba(8,8,26,0.92);color:#39ff14;font-size:14px;font-weight:700;cursor:pointer;z-index:100;transition:all 0.2s;font-family:"PingFang SC","Microsoft YaHei",sans-serif;backdrop-filter:blur(6px)}
+.activity-guide-btn:hover{background:rgba(57,255,20,0.18);box-shadow:0 0 20px rgba(57,255,20,0.35);transform:translateY(-1px)}
+.teaching-drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:400;display:none;transition:opacity 0.3s}
+.teaching-drawer-overlay.active{display:block}
+.teaching-drawer{position:fixed;top:0;right:0;width:440px;max-width:90vw;height:100vh;background:#0d0d2b;border-left:1px solid rgba(255,255,255,0.1);z-index:401;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s ease;box-shadow:-8px 0 40px rgba(0,0,0,0.5)}
+.teaching-drawer.active{transform:translateX(0)}
+.teaching-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
+.teaching-drawer-header h2{font-size:18px;font-weight:800;color:#ffb800;margin:0}
+.teaching-drawer-header .td-actions{display:flex;gap:8px}
+.teaching-drawer-header .td-close,.teaching-drawer-header .td-expand{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#ccc;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.teaching-drawer-header .td-close:hover,.teaching-drawer-header .td-expand:hover{background:rgba(255,255,255,0.15);color:#fff}
+.teaching-drawer-body{flex:1;overflow-y:auto;padding:20px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.15) transparent}
+.teaching-drawer-body::-webkit-scrollbar{width:4px}
+.teaching-drawer-body::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+.teaching-plan-section{margin-bottom:24px}
+.teaching-plan-section h3{font-size:15px;font-weight:700;color:#00e5ff;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(0,229,255,0.15)}
+.teaching-plan-section p,.teaching-plan-section li{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.7;margin:0 0 8px}
+.teaching-plan-section ul{padding-left:18px;margin:0}
+.teaching-plan-section ul li{margin-bottom:6px}
+.teaching-plan-section .teacher-talk{background:rgba(255,184,0,0.06);border-left:3px solid #ffb800;padding:10px 14px;border-radius:0 8px 8px 0;font-style:italic;color:rgba(255,255,255,0.8);margin:8px 0}
+
+/* ═══════════ Teaching Plan Fullscreen ═══════════ */
+.teaching-fullscreen{position:fixed;inset:0;background:#0d0d2b;z-index:500;display:none;flex-direction:column;overflow:hidden}
+.teaching-fullscreen.active{display:flex}
+.teaching-fullscreen .tf-header{display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
+.teaching-fullscreen .tf-header h2{font-size:22px;font-weight:800;color:#ffb800;margin:0}
+.teaching-fullscreen .tf-close{width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#ccc;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+.teaching-fullscreen .tf-close:hover{background:rgba(255,255,255,0.15);color:#fff}
+.teaching-fullscreen .tf-body{flex:1;overflow-y:auto;padding:32px 48px;max-width:900px;margin:0 auto;width:100%}
+</style>
+</head>
+<body>
+<button class="activity-guide-btn" onclick="openActivityGuide()">📖 How to Play</button>
+<!-- Laser beam decorations -->
+<div class="laser-beam l1"></div>
+<div class="laser-beam l2"></div>
+<div class="laser-beam l3"></div>
+<div class="laser-dot d1"></div>
+<div class="laser-dot d2"></div>
+<div class="laser-dot d3"></div>
+<div class="laser-dot d4"></div>
+<div class="laser-dot d5"></div>
+<div class="laser-dot d6"></div>
+<div class="laser-dot d7"></div>
+<div class="laser-dot d8"></div>
+
+<div class="container">
+<header>
+<h1>🎵 Music Star Quest</h1>
+<p class="subtitle">Unlock the lyrics, move to the beat, master the song, and shine like a star on your final stage.</p>
+<p class="song-name">"Where Are You From"</p>
+</header>
+
+<div class="game-map" id="gameMap">
+  <div class="map-img-wrap">
+    <img src="https://www.coze.cn/s/EeFIuAHufrg/" alt="Game Map">
+    <div class="map-spot s1 active" data-stage="1" id="mb1" onclick="enterStage(1)"><div class="map-spot-badge">✅</div></div>
+    <div class="map-spot s2 locked" data-stage="2" id="mb2" onclick="enterStage(2)"><div class="map-spot-badge">✅</div></div>
+    <div class="map-spot s3 locked" data-stage="3" id="mb3" onclick="enterStage(3)"><div class="map-spot-badge">✅</div></div>
+    <div class="map-spot s4 locked" data-stage="4" id="mb4" onclick="enterStage(4)"><div class="map-spot-badge">✅</div></div>
+    <div class="map-spot finish" id="mbFinish" onclick="showToast('🏆 Complete all 4 levels to unlock the trophy!')"></div>
+    <div class="map-lock l2" id="lock2">🔒</div>
+    <div class="map-lock l3" id="lock3">🔒</div>
+    <div class="map-lock l4" id="lock4">🔒</div>
+    <div class="map-sign s1">Lyric Hunter</div>
+    <div class="map-sign s2">Melody Mover</div>
+    <div class="map-sign s3">Echo Master</div>
+    <div class="map-sign s4">Stage Star</div>
+  </div>
+</div>
+
+<div class="celebrate-overlay" id="celebrateOverlay"></div>
+<div class="celebrate-badge" id="celebrateBadge">🏆</div>
+<div class="bottom-bar"></div>
+<div class="toast" id="toast"></div>
+</div>
+
+<!-- Stage View -->
+<div class="stage-view" id="stageView">
+  <div class="sv-header">
+    <button class="sv-back" onclick="exitStage()">🗺 Back to Map</button>
+    <span class="sv-title" id="svTitle">Level 1 Lyric Hunter</span>
+    <span style="width:80px;"></span>
+  </div>
+  <div class="sv-body" id="stageContent">
+    <div class="sv-watermark" id="svWatermark">01</div>
+  </div>
+</div>
+
+<!-- Stage Transition Overlay -->
+<div class="stage-transition" id="stageTransition"></div>
+
+<!-- Stage 2 Playback Overlay -->
+<div class="playback-overlay" id="playbackOverlay">
+  <button class="pb-close" onclick="closePlayback()">✕</button>
+  <div class="playback-topbar">
+    <button class="btn btn-sm" style="background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);" onclick="togglePlaybackPlay()" id="pbPlayBtn">▶</button>
+    <span class="pb-time" id="pbTime">0:00</span>
+    <button class="btn btn-sm" style="background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.1);" onclick="pbRestart()" title="Restart">🔄</button>
+  </div>
+  <div class="playback-progress-wrap">
+    <span class="pb-time" style="font-size:12px;min-width:30px;">0:00</span>
+    <div class="playback-progress-bar" id="pbProgressBar" onclick="seekPlayback(event)">
+      <div class="playback-progress-fill" id="pbProgressFill"></div>
+    </div>
+    <span class="pb-time" style="font-size:12px;min-width:30px;" id="pbTotal">0:00</span>
+  </div>
+  <div class="pb-controls">
+    <div class="pb-mode-toggle">
+      <button class="pb-mode-btn active" onclick="pbSwitchMode('vocal')" id="pbModeVocal">🎤 Vocal</button>
+      <button class="pb-mode-btn" onclick="pbSwitchMode('backing')" id="pbModeBacking">🎼 Backing</button>
+    </div>
+    <div class="pb-vol">
+      <span class="pb-vol-icon" onclick="pbToggleMute()" id="pbVolIcon">🔊</span>
+      <input type="range" id="pbVolSlider" min="0" max="100" value="80" oninput="pbSetVolume(this.value)">
+    </div>
+    <div class="pb-speed">
+      <button onclick="pbSetSpeed(0.5)">0.5x</button>
+      <button onclick="pbSetSpeed(0.75)">0.75x</button>
+      <button class="active" onclick="pbSetSpeed(1)">1x</button>
+      <button onclick="pbSetSpeed(1.25)">1.25x</button>
+      <button onclick="pbSetSpeed(1.5)">1.5x</button>
+    </div>
+  </div>
+  <div class="playback-lyrics" id="pbLyrics"></div>
+</div>
+
+<!-- Stage 4 Fullscreen Recording Overlay -->
+<div class="record-fullscreen" id="recordFullscreen">
+  <div class="record-fs-countdown" id="recordFsCountdown" style="display:none;">3</div>
+  <div class="record-fs-dot" id="recordFsDot" style="display:none;">⏺</div>
+  <div class="record-fs-timer" id="recordFsTimer" style="display:none;">00:00</div>
+  <div class="record-fs-lyric" id="recordFsLyric" style="display:none;">Get Ready…</div>
+  <div class="record-fs-progress" id="recordFsProgress" style="display:none;"><div class="record-fs-progress-fill" id="recordFsProgressFill"></div></div>
+  <div class="record-fs-actions" id="recordFsActions" style="display:none;">
+    <button class="record-fs-btn danger" onclick="stopRecording()">⏹ Stop Recording</button>
+  </div>
+  <div class="record-fs-ready" id="recordFsReady" style="display:none;">
+    <button class="record-fs-back-btn" onclick="recordFsExit()" style="position:absolute;top:20px;left:20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-family:inherit;z-index:2;">← Back to Stage 4</button>
+    <div style="display:flex;gap:12px;margin-bottom:20px;">
+      <button class="record-fs-ver-btn active" id="recordFsVerVocal" onclick="recordFsSetVersion('original')">🔊 Vocal</button>
+      <button class="record-fs-ver-btn" id="recordFsVerBacking" onclick="recordFsSetVersion('accomp')">🎹 Backing</button>
+    </div>
+    <button class="record-fs-start-btn" onclick="recordFsStartCountdown()">🎤 Start Recording</button>
+  </div>
+  <div class="record-fs-ready" id="recordFsReview" style="display:none;">
+    <div style="font-size:48px;margin-bottom:12px;">✅</div>
+    <h3 style="color:#39ff14;margin-bottom:8px;">Recording Done!</h3>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:24px;font-size:14px;">Review your recording, then choose:</p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="resetRecording()">🔄 Re-record</button>
+      <button class="btn btn-sm" style="background:rgba(57,255,20,0.15);color:#39ff14;border:1.5px solid rgba(57,255,20,0.4);box-shadow:0 0 20px rgba(57,255,20,0.2);" onclick="completeStage4Challenge()">🏆 Complete Challenge</button>
+      <button class="btn btn-sm btn-outline" style="color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.2);" onclick="recordFsExit()">← Back</button>
+    </div>
+  </div>
+</div>
+
+<audio id="audioOriginal" src="" preload="auto"></audio>
+<audio id="audioAccomp" src="" preload="auto"></audio>
+
+<script>
+var lyrics = [
+  { time:'00:02–00:04', text:'Hello! Hello!' },
+  { time:'00:05–00:07', text:'From China we start the show!' },
+  { time:'00:07–00:08', text:"What's your name?" },
+  { time:'00:08–00:10', text:'My name is [Name]' },
+  { time:'00:10–00:11', text:"I'm from China" },
+  { time:'00:12–00:13', text:"Let's play music!" },
+  { time:'00:13–00:14', text:'Where are you from?' },
+  { time:'00:14–00:16', text:'Where are you from?' },
+  { time:'00:16–00:19', text:'China, USA, Canada, UK!' },
+  { time:'00:20–00:22', text:'Teacher, student, boy and girl' },
+  { time:'00:22–00:26', text:"Let's sing together, one big world!" },
+  { time:'00:26–00:27', text:'Where are you from?' },
+  { time:'00:27–00:29', text:'Where are you from?' },
+  { time:'00:29–00:32', text:'China, USA, Canada, UK!' },
+  { time:'00:32–00:35', text:'Teacher, student, boy and girl' },
+  { time:'00:35–00:39', text:"Let's sing together, one big world!" },
+];
+
+function parseTimeSeconds(timeStr) {
+  var parts = timeStr.split('\u2013');
+  if (parts.length !== 2) return {start:0, end:5};
+  function toSec(s) { var p = s.trim().split(':'); return parseInt(p[0])*60 + parseInt(p[1]); }
+  return {start: toSec(parts[0]), end: toSec(parts[1])};
+}
+
+var actions = [
+  { emoji:'👏', name:'Clap' },{ emoji:'👋', name:'Wave' },{ emoji:'👣', name:'Stomp' },
+  { emoji:'🌀', name:'Spin' },{ emoji:'🚶', name:'March' },{ emoji:'🤏', name:'Snap' },
+  { emoji:'🫶', name:'Heart' },{ emoji:'➜', name:'Point' },{ emoji:'🕺', name:'Wiggle' },
+  { emoji:'🫨', name:'Nod' },{ emoji:'👐', name:'Sway' },
+];
+
+var s2Actions = [
+  {id:'clap',emoji:'👏',name:'Clap'},{id:'wave',emoji:'👋',name:'Wave'},{id:'stomp',emoji:'👣',name:'Stomp'},
+  {id:'spin',emoji:'🌀',name:'Spin'},{id:'march',emoji:'🚶',name:'March'},{id:'snap',emoji:'🤏',name:'Snap'},
+  {id:'heart',emoji:'🫶',name:'Heart'},{id:'point',emoji:'➜',name:'Point'},{id:'twist',emoji:'🕺',name:'Twist'},
+  {id:'shakehead',emoji:'🫨',name:'Shake'},{id:'swingarms',emoji:'👐',name:'Swing'}
+];
+
+var s2Instruments = [
+  {id:'bell',name:'Bell',img:'https://www.coze.cn/s/d1aELORy_iQ/'},
+  {id:'bongo',name:'Bongo',img:'https://www.coze.cn/s/nWJQTx4rKFw/'},
+  {id:'cabasa',name:'Cabasa',img:'https://www.coze.cn/s/uhdEUGvn4Ak/'},
+  {id:'castanets',name:'Castanets',img:'https://www.coze.cn/s/kxRLqF7O9hw/'},
+  {id:'djembe',name:'Djembe',img:'https://www.coze.cn/s/7KyvtB3deeQ/'},
+  {id:'drum',name:'Drum',img:'https://www.coze.cn/s/0Z_LsmNV5Sk/'},
+  {id:'handbell',name:'Handbell',img:'https://www.coze.cn/s/D4eH9g3i-z0/'},
+  {id:'handdrum',name:'Hand Drum',img:'https://www.coze.cn/s/-99XZHSxHy0/'},
+  {id:'maracas',name:'Maracas',img:'https://www.coze.cn/s/G2qRXPMfrV0/'},
+  {id:'sleighbell',name:'Sleigh Bell',img:'https://www.coze.cn/s/RC3TWUqwowY/'},
+  {id:'tambourine',name:'Tambourine',img:'https://www.coze.cn/s/Vczf6m0MouU/'},
+  {id:'xylophone',name:'Xylophone',img:'https://www.coze.cn/s/L9HGHst1MDA/'},
+  {id:'fingerymbals',name:'Finger Cym.',img:'https://www.coze.cn/s/gzjB59N6Kpw/'},
+  {id:'triangle',name:'Triangle',img:'https://www.coze.cn/s/dhkQVgE2Ykg/'},
+  {id:'woodblock',name:'Woodblock',img:'https://www.coze.cn/s/kOLs3_6hONc/'}
+];
+
+var currentStage = 1;
+var unlockedStages = [true, false, false, false];
+var stage1Complete = false, stage2Complete = false, stage3Complete = false;
+var s2LineSlots = [];
+var puzzleUnlocked = [false, false, false];
+var ex1Done = false, ex2Done = false, ex3Done = false;
+var singLevel = 1, singLineIdx = 0;
+var singShowFull = false;
+var recordingState = 'idle', recordTimer = null, recordVersion = 'original';
+var recordMarks = {};
+var recordMarkSetup = false;
+var playbackTimer = null, playbackActive = false;
+
+function enterStage(n) {
+  if (n > 1 && !unlockedStages[n-1]) {
+    showToast('🔒 Complete the previous levels first!');
+    var mb = document.getElementById('mb' + n);
+    if (mb) { mb.classList.add('shake-it'); setTimeout(function() { mb.classList.remove('shake-it'); }, 500); }
+    return;
+  }
+  currentStage = n;
+  showStageIntro(n);
+}
+
+function exitStage() {
+  document.getElementById('stageView').classList.remove('active');
+  document.getElementById('gameMap').style.display = '';
+  updateMapBuildings();
+  updateProgressBar();
+}
+
+function updateMapBuildings() {
+  for (var i = 1; i <= 4; i++) {
+    var mb = document.getElementById('mb' + i);
+    if (!mb) continue;
+    mb.classList.remove('active', 'locked', 'completed');
+    if (i === 1) {
+      if (stage1Complete) mb.classList.add('completed');
+      else if (currentStage === 1) mb.classList.add('active');
+    } else if (unlockedStages[i-1]) {
+      if (i === currentStage) mb.classList.add('active');
+      else mb.classList.add('completed');
+    } else {
+      mb.classList.add('locked');
+    }
+  }
+  for (var j = 2; j <= 4; j++) {
+    var lock = document.getElementById('lock' + j);
+    if (lock) lock.style.display = unlockedStages[j-1] ? 'none' : 'flex';
+  }
+  updateProgressBar();
+}
+
+function showStageIntro(n) {
+  var stageInfo = [
+    {icon:'🔍',name:'Lyric Hunter',desc:'Unlock the lyrics piece by piece',color:'s1',diff:1},
+    {icon:'🥁',name:'Melody Mover',desc:'Match actions and instruments to every line',color:'s2',diff:2},
+    {icon:'🎤',name:'Echo Master',desc:'Sing it right — from beginner to challenge mode',color:'s3',diff:3},
+    {icon:'🌟',name:'Stage Star',desc:'Mark your roles and perform the full song',color:'s4',diff:3}
+  ];
+  var info = stageInfo[n-1];
+  var neonColors = {s1:'#00e5ff',s2:'#ffb800',s3:'#ff2d95',s4:'#39ff14'};
+  var nc = neonColors[info.color];
+  var diffLabels = ['','Easy','Medium','Hard'];
+  var dots = ''; for (var d = 0; d < 3; d++) { dots += '<span class="st-dot' + (d < info.diff ? ' lit' : '') + '" style="' + (d < info.diff ? 'background:' + nc + ';color:' + nc : '') + '"></span>'; }
+  var overlay = document.getElementById('stageTransition');
+  var h = '';
+  // Scan lines
+  h += '<div class="st-scan-lines"></div>';
+  // Stage label
+  h += '<div class="st-stage-label">Stage ' + (n < 10 ? '0' : '') + n + '</div>';
+  // Corners
+  h += '<div class="st-corner tl" style="color:' + nc + '"></div>';
+  h += '<div class="st-corner tr" style="color:' + nc + '"></div>';
+  h += '<div class="st-corner bl" style="color:' + nc + '"></div>';
+  h += '<div class="st-corner br" style="color:' + nc + '"></div>';
+  // Rings
+  h += '<div class="st-ring r1" style="border-color:' + nc + '18"></div>';
+  h += '<div class="st-ring r2" style="border-color:' + nc + '0f"></div>';
+  h += '<div class="st-ring r3" style="border-color:' + nc + '12"></div>';
+  // Orbit dots
+  var orbits = [
+    {t:'22%',l:'18%'},{t:'68%',r:'22%',ad:'2s',adr:'10s'},
+    {t:'35%',r:'15%',ad:'4s',adr:'9s'},{b:'25%',l:'20%',ad:'1s',adr:'11s'},
+    {t:'15%',r:'30%',ad:'3s',adr:'12s'},{b:'35%',r:'10%',ad:'5s',adr:'7s'},
+    {t:'55%',l:'8%',ad:'0.5s',adr:'9s'},{b:'15%',l:'35%',ad:'2.5s',adr:'10s'}
+  ];
+  for (var o = 0; o < orbits.length; o++) {
+    var od = orbits[o];
+    h += '<div class="st-orbit" style="background:' + nc + ';';
+    if (od.t) h += 'top:' + od.t + ';';
+    if (od.b) h += 'bottom:' + od.b + ';';
+    if (od.l) h += 'left:' + od.l + ';';
+    if (od.r) h += 'right:' + od.r + ';';
+    if (od.ad) h += 'animation-delay:' + od.ad + ';';
+    if (od.adr) h += 'animation-duration:' + od.adr + ';';
+    h += '"></div>';
+  }
+  // Accent bars
+  h += '<div class="st-accent left" style="color:' + nc + '"></div>';
+  h += '<div class="st-accent right" style="color:' + nc + '"></div>';
+  // Particles
+  h += '<div class="st-bg-particles">';
+  for (var i = 0; i < 50; i++) {
+    var x = Math.random() * 100, y = Math.random() * 100;
+    var s = 5 + Math.random() * 8, d = 4 + Math.random() * 6;
+    h += '<span class="st-bg-particle" style="left:' + x + '%;top:' + y + '%;width:' + s + 'px;height:' + s + 'px;background:rgba(255,255,255,' + (0.1 + Math.random() * 0.2) + ');animation-delay:' + (Math.random() * 4) + 's;animation-duration:' + d + 's;"></span>';
+  }
+  h += '</div>';
+  // Content
+  h += '<div class="st-content intro">';
+  h += '<div class="st-badge">Level ' + n + '</div>';
+  h += '<span class="st-icon">' + info.icon + '</span>';
+  h += '<div class="st-level-name" style="color:' + nc + ';animation:stFadeUp 0.5s ease-out 0.2s both,stGlowPulse 3s ease-in-out 0.6s infinite;">' + info.name + '</div>';
+  h += '<div class="st-divider-wrap">';
+  h += '<span class="st-divider-line" style="background:' + nc + ';"></span>';
+  h += '<span class="st-divider-diamond" style="background:' + nc + ';box-shadow:0 0 6px ' + nc + ';"></span>';
+  h += '<span class="st-divider-line" style="background:' + nc + ';"></span>';
+  h += '</div>';
+  h += '<div class="st-desc">' + info.desc + '</div>';
+  h += '<div class="st-difficulty">' + dots + '<span class="st-diff-label">' + diffLabels[info.diff] + '</span></div>';
+  h += '<button class="st-btn" style="color:' + nc + ';border-color:' + nc + '44;box-shadow:0 0 30px ' + nc + '18,0 0 60px ' + nc + '08;" onclick="startStage(' + n + ')">▶ &nbsp;Start</button>';
+  h += '</div>';
+  overlay.innerHTML = h;
+  overlay.classList.add('active');
+}
+
+function startStage(n) {
+  document.getElementById('stageTransition').classList.remove('active');
+  if (!unlockedStages[n-1]) unlockStage(n);
+  currentStage = n;
+  renderStage();
+  document.getElementById('stageView').classList.add('active');
+  document.getElementById('gameMap').style.display = 'none';
+  document.getElementById('svTitle').style.display = 'none';
+  document.getElementById('svWatermark').textContent = (n < 10 ? '0' : '') + n;
+  updateMapBuildings();
+}
+
+function showStageClear(n) {
+  var clearInfo = [
+    {title:'All Lyrics Collected!',sub:'You\'ve unlocked the complete song. Stage 2 is now open!',color:'s1'},
+    {title:'Actions & Instruments Matched!',sub:'You\'ve mastered the rhythm. Stage 3 is now open!',color:'s2'},
+    {title:'All Three Levels Cleared!',sub:'You\'ve conquered every difficulty. Stage 4 is now open!',color:'s3'},
+    {title:'Full Performance Recorded!',sub:'You are a true Stage Star! All challenges complete!',color:'s4'}
+  ];
+  var info = clearInfo[n-1];
+  var overlay = document.getElementById('stageTransition');
+  overlay.className = 'stage-transition active clear-mode';
+  overlay.innerHTML = '<div class="st-content clear">';
+  overlay.innerHTML += '<span class="st-icon">🏆</span>';
+  overlay.innerHTML += '<div class="st-title">' + info.title + '</div>';
+  overlay.innerHTML += '<div class="st-summary">' + info.sub + '</div>';
+  overlay.innerHTML += '<button class="st-btn s4" style="color:#39ff14;border-color:rgba(57,255,20,0.3);" onclick="backToMap()">🗺 Back to Map</button>';
+  overlay.innerHTML += '</div>';
+  if (n === 4) { launchConfetti(); } else { celebrate('🏆'); }
+}
+
+function backToMap() {
+  document.getElementById('stageTransition').className = 'stage-transition';
+  document.getElementById('stageView').classList.remove('active');
+  document.getElementById('gameMap').style.display = '';
+  unlockStage(currentStage + 1);
+  currentStage = currentStage + 1;
+  updateMapBuildings();
+}
+
+function advanceToNextStage(n) {
+  document.getElementById('stageTransition').className = 'stage-transition';
+  document.getElementById('stageView').classList.remove('active');
+  document.getElementById('gameMap').style.display = '';
+  unlockStage(n + 1);
+  updateMapBuildings();
+  setTimeout(function() { showStageIntro(n + 1); }, 400);
+}
+
+function finishAllStages() {
+  document.getElementById('stageTransition').className = 'stage-transition';
+  document.getElementById('stageView').classList.remove('active');
+  document.getElementById('gameMap').style.display = '';
+  updateMapBuildings();
+  showToast('🎉 Congratulations! All 4 levels cleared!');
+  celebrate('🏆');
+}
+function unlockStage(n) { if (n < 1 || n > 4) return; unlockedStages[n-1] = true; updateMapBuildings(); }
+function renderStage() { var c = document.getElementById('stageContent'); if (currentStage === 1) renderStage1(c); else if (currentStage === 2) renderStage2(c); else if (currentStage === 3) renderStage3(c); else if (currentStage === 4) renderStage4(c); }
+
+function getLyricPiece(idx) { var ranges = [[0,6],[6,11],[11,16]]; return lyrics.slice(ranges[idx][0], ranges[idx][1]); }
+
+var ex1FillData = [
+  { sentence:['','! ','','!'], blanks:['Hello','Hello'], options:['Hello','Good','Yes','No','OK'], emoji:'👋' },
+  { sentence:['From ','',' we start the show!'], blanks:['China'], options:['China','USA','Canada','UK','Japan'], emoji:'🇨🇳' },
+  { sentence:["What's your ","","?"], blanks:['name'], options:['name','age','country','color','school'], emoji:'📛' },
+  { sentence:["I'm from ","","."], blanks:['China'], options:['China','USA','Canada','UK','Japan'], emoji:'🇨🇳' },
+];
+
+// ═══ Stage 1 State ═══
+var st1FillState = ['', '', '', '', ''];
+var st1ActiveBlank = null;
+var st1FillOpts = null; // cached shuffled options per sentence
+var st1BuildState = {};
+var st1ListenSelected = [null, null];
+
+// ═══ Stage 1: Fill Blanks ═══
+function st1RenderFill() {
+  var area = document.getElementById('st1FillArea');
+  if (!area) return;
+  if (!st1FillOpts) st1FillOpts = ex1FillData.map(function(item) { return shuffleArr(item.options.slice()); });
+  var h = '';
+  var blankId = 0;
+  ex1FillData.forEach(function(item, fi) {
+    h += '<div class="st1-fill-sentence"><span class="st1-emoji">' + item.emoji + '</span>';
+    item.sentence.forEach(function(part, pi) {
+      if (part === '') {
+        var val = st1FillState[blankId];
+        var cls = 'st1-blank';
+        if (val) cls += ' filled';
+        h += '<span class="' + cls + '" id="st1blank' + blankId + '" onclick="st1SelectBlank(' + blankId + ')">' + (val || '...') + '</span>';
+        blankId++;
+      } else {
+        h += '<span style="color:rgba(255,255,255,0.7);">' + part + '</span>';
+      }
+    });
+    h += '</div>';
+    h += '<div class="st1-word-opts">';
+    st1FillOpts[fi].forEach(function(w) {
+      h += '<span class="st1-word-opt" onclick="st1FillWord(\'' + w.replace(/'/g,"\\'") + '\')">' + w + '</span>';
+    });
+    h += '</div>';
+  });
+  area.innerHTML = h;
+  if (st1ActiveBlank !== null) {
+    var ab = document.getElementById('st1blank' + st1ActiveBlank);
+    if (ab) ab.classList.add('selected');
+  }
+}
+
+function st1SelectBlank(id) {
+  if (st1ActiveBlank === id) {
+    var el = document.getElementById('st1blank' + id);
+    if (el) el.classList.remove('selected');
+    st1ActiveBlank = null; return;
+  }
+  if (st1ActiveBlank !== null) {
+    var prev = document.getElementById('st1blank' + st1ActiveBlank);
+    if (prev) prev.classList.remove('selected');
+  }
+  st1ActiveBlank = id;
+  var el = document.getElementById('st1blank' + id);
+  if (el) el.classList.add('selected');
+}
+
+function st1FillWord(word) {
+  if (st1ActiveBlank === null) return;
+  st1FillState[st1ActiveBlank] = word;
+  st1ActiveBlank = null;
+  st1RenderFill();
+}
+
+function st1ResetFill() {
+  st1FillState = ['', '', '', '', ''];
+  st1ActiveBlank = null;
+  st1FillOpts = null;
+  st1RenderFill();
+}
+
+function st1CheckFill() {
+  var allCorrect = true;
+  var blankId = 0;
+  ex1FillData.forEach(function(item) {
+    item.blanks.forEach(function(b) {
+      if (st1FillState[blankId] !== b) allCorrect = false;
+      blankId++;
+    });
+  });
+  st1RenderFill();
+  blankId = 0;
+  ex1FillData.forEach(function(item) {
+    item.blanks.forEach(function(b) {
+      var el = document.getElementById('st1blank' + blankId);
+      if (el) {
+        if (st1FillState[blankId] === b) el.classList.add('correct');
+        else el.classList.add('wrong');
+      }
+      blankId++;
+    });
+  });
+  if (allCorrect) st1CompleteChallenge(0);
+}
+
+// ═══ Stage 1: Build Sentences ═══
+var ex2Items = [
+  { answer:'Where are you from?', words:['Where','are','you','from?'] },
+  { answer:"Let's sing together, one big world!", words:["Let's",'sing','together,','one','big','world!'] },
+];
+
+function st1RenderBuild() {
+  var area = document.getElementById('st1BuildArea');
+  if (!area) return;
+  var h = '';
+  ex2Items.forEach(function(item, idx) {
+    if (!st1BuildState[idx]) st1BuildState[idx] = { built:[], bank: shuffleArr(item.words.slice()) };
+    var state = st1BuildState[idx];
+    h += '<div style="margin-bottom:16px;"><div style="font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:8px;">Sentence ' + (idx+1) + '</div>';
+    h += '<div class="st1-build-area" id="st1BuildArea' + idx + '">';
+    state.built.forEach(function(w, i) {
+      h += '<span class="st1-build-word" onclick="st1RemoveBuild(' + idx + ',' + i + ')">' + w + '</span>';
+    });
+    h += '</div>';
+    h += '<div class="st1-bank">';
+    state.bank.forEach(function(w, i) {
+      h += '<span class="st1-bank-word" onclick="st1AddBuild(' + idx + ',' + i + ')">' + w + '</span>';
+    });
+    h += '</div>';
+    h += '<button class="st1-btn-reset" style="padding:6px 14px;font-size:12px;" onclick="st1ResetBuildOne(' + idx + ')">↩ Reset</button></div>';
+  });
+  area.innerHTML = h;
+}
+
+function st1AddBuild(idx, wi) {
+  var s = st1BuildState[idx];
+  s.built.push(s.bank.splice(wi, 1)[0]);
+  st1RenderBuild();
+}
+function st1RemoveBuild(idx, wi) {
+  var s = st1BuildState[idx];
+  s.bank.push(s.built.splice(wi, 1)[0]);
+  st1RenderBuild();
+}
+function st1ResetBuildOne(idx) {
+  st1BuildState[idx] = { built:[], bank: shuffleArr(ex2Items[idx].words.slice()) };
+  st1RenderBuild();
+}
+function st1ResetBuild() {
+  ex2Items.forEach(function(item, idx) {
+    st1BuildState[idx] = { built:[], bank: shuffleArr(item.words.slice()) };
+  });
+  st1RenderBuild();
+}
+
+function st1CheckBuild() {
+  var norm = function(s) { return s.replace(/\s+([!?,.;:])/g, '$1').trim(); };
+  var correct = 0;
+  ex2Items.forEach(function(item, idx) {
+    var s = st1BuildState[idx];
+    var area = document.getElementById('st1BuildArea' + idx);
+    if (!s || !area) return;
+    area.classList.remove('correct','wrong');
+    if (norm(s.built.join(' ')) === norm(item.answer)) {
+      area.classList.add('correct'); correct++;
+    } else {
+      area.classList.add('wrong');
+    }
+  });
+  if (correct === ex2Items.length) st1CompleteChallenge(1);
+}
+
+// ═══ Stage 1: Listen ═══
+var ex3Data = [
+  { question:'Choose the sentence you hear:', options:["Where are you from?","Where are they from?","Who are you from?"], correct:0 },
+  { question:'Choose the sentence you hear:', options:["China, USA, Canada, UK!","China, USA, Canada, France!","China, USA, Canada, Japan!"], correct:0 },
+];
+
+function st1RenderListen() {
+  var area = document.getElementById('st1ListenArea');
+  if (!area) return;
+  var h = '';
+  ex3Data.forEach(function(item, idx) {
+    h += '<div style="margin-bottom:16px;"><div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:10px;">' + (idx+1) + '. ' + item.question + '</div>';
+    item.options.forEach(function(o, i) {
+      var cls = 'st1-listen-opt';
+      if (st1ListenSelected[idx] === i) cls += ' selected';
+      h += '<button class="' + cls + '" onclick="st1SelectListen(' + idx + ',' + i + ')" id="st1ListenOpt' + idx + '_' + i + '">' + String.fromCharCode(65+i) + '. ' + o + '</button>';
+    });
+    h += '</div>';
+  });
+  area.innerHTML = h;
+}
+
+function st1SelectListen(idx, i) {
+  st1ListenSelected[idx] = i;
+  st1RenderListen();
+}
+function st1ResetListen() {
+  st1ListenSelected = [null, null];
+  st1RenderListen();
+}
+function st1PlayAudio() {
+  var a = document.getElementById('audioOriginal'); a.currentTime = 25;
+  a.play().catch(function() { showToast('⚠️ Playing audio clip...'); });
+  setTimeout(function() { a.pause(); }, 8000);
+}
+
+function st1CheckListen() {
+  var allCorrect = true;
+  ex3Data.forEach(function(item, idx) {
+    var el = document.getElementById('st1ListenOpt' + idx + '_' + item.correct);
+    var sel = document.getElementById('st1ListenOpt' + idx + '_' + st1ListenSelected[idx]);
+    if (el) el.classList.add('correct');
+    if (st1ListenSelected[idx] !== item.correct && sel) { sel.classList.add('wrong'); allCorrect = false; }
+  });
+  if (allCorrect) st1CompleteChallenge(2);
+}
+
+// ═══ Stage 1: Challenge Completion ═══
+function st1CompleteChallenge(idx) {
+  if (idx === 0) ex1Done = true;
+  if (idx === 1) ex2Done = true;
+  if (idx === 2) ex3Done = true;
+  puzzleUnlocked[idx] = true;
+  showToast('🎉 Piece ' + (idx+1) + ' unlocked!');
+
+  // Update lyric piece
+  var piece = document.getElementById('st1Piece' + idx);
+  var lines = getLyricPiece(idx).map(function(l) { return l.text; });
+  if (piece) {
+    piece.querySelector('.st1-piece-label').textContent = 'Piece ' + (idx+1) + ' · Unlocked';
+    piece.querySelector('.st1-piece-content').innerHTML = lines.join('<br>');
+    piece.classList.add('unlocked');
+  }
+
+  // Update progress tracker
+  var stepEl = document.getElementById('st1Step' + (idx+1));
+  if (stepEl) {
+    stepEl.classList.add('done');
+    stepEl.classList.remove('current');
+    var dot = stepEl.querySelector('.st1-dot');
+    if (dot) { dot.classList.add('done'); dot.classList.remove('current'); }
+  }
+  if (idx < 2) {
+    var line = document.getElementById('st1Line' + (idx+1));
+    if (line) line.classList.add('done');
+  }
+
+  // Mark current card as done
+  var card = document.getElementById('st1Card' + (idx+1));
+  if (card) card.classList.add('done');
+
+  if (idx < 2) {
+    setTimeout(function() {
+      var nextCard = document.getElementById('st1Card' + (idx+2));
+      if (nextCard) nextCard.classList.add('visible');
+      var nextStep = document.getElementById('st1Step' + (idx+2));
+      if (nextStep) {
+        nextStep.classList.add('current');
+        var nd = nextStep.querySelector('.st1-dot');
+        if (nd) nd.classList.add('current');
+      }
+      if (idx === 0) {
+        st1RenderBuild();
+      }
+      if (idx === 1) {
+        st1RenderListen();
+      }
+    }, 600);
+  } else {
+    setTimeout(function() {
+      stage1Complete = true;
+      showStageClear(1);
+    }, 600);
+  }
+}
+
+function st1BackToMap() {
+  if (!unlockedStages[1]) unlockStage(2);
+  currentStage = 2;
+  backToMap();
+}
+
+function shuffleArr(arr) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  if (!t) { console.log('[Toast]', msg); return; }
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2500);
+}
+
+function renderStage1(container) {
+  if (stage1Complete) {
+    showStageClear(1);
+    return;
+  }
+  var h = '';
+  // Header — preview style
+  h += '<div class="st1-header"><div class="st1-level-badge">LEVEL 1</div><br><span class="st1-title-icon">🔍</span><h2>Lyric Hunter</h2><br><div class="st1-sub">Complete challenges to unlock the lyrics</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(1)">How to teach</button></div>';
+  // Progress Tracker
+  h += '<div class="st1-progress">';
+  for (var i = 1; i <= 3; i++) {
+    var done = (i === 1 && ex1Done) || (i === 2 && ex2Done) || (i === 3 && ex3Done);
+    var cur = (i === 1 && !ex1Done) || (i === 2 && ex1Done && !ex2Done) || (i === 3 && ex2Done && !ex3Done);
+    h += '<div class="st1-step' + (cur ? ' current' : '') + (done ? ' done' : '') + '" id="st1Step' + i + '">';
+    h += '<div class="st1-dot' + (cur ? ' current' : '') + (done ? ' done' : '') + '">' + i + '</div>';
+    h += '<div class="st1-label">' + ['Fill Blanks','Build Sentence','Listen & Choose'][i-1] + '</div>';
+    h += '</div>';
+    if (i < 3) h += '<div class="st1-line' + ((i === 1 && ex1Done) || (i === 2 && ex2Done) ? ' done' : '') + '" id="st1Line' + i + '"></div>';
+  }
+  h += '</div>';
+  // Main Layout
+  h += '<div class="st1-layout"><div class="st1-challenge">';
+  // Challenge 1
+  h += '<div class="st1-card visible" id="st1Card1"><div class="st1-card-glow"></div>';
+  h += '<div class="st1-card-num"><span class="st1-num-badge">1</span><span class="st1-card-title">Fill the Blanks</span></div>';
+  h += '<div class="st1-instruction">Click a blank space, then choose the correct word. Complete all 4 sentences!</div>';
+  h += '<div id="st1FillArea"></div>';
+  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetFill()">🔄 Reset</button><button class="st1-btn-check" onclick="st1CheckFill()">✅ Check</button></div>';
+  h += '</div>';
+  // Challenge 2
+  h += '<div class="st1-card' + (ex1Done ? ' visible' : '') + '" id="st1Card2"><div class="st1-card-glow"></div>';
+  h += '<div class="st1-card-num"><span class="st1-num-badge">2</span><span class="st1-card-title">Build Sentences</span></div>';
+  h += '<div class="st1-instruction">Click words to build each sentence. Click a word in the build area to remove it.</div>';
+  h += '<div id="st1BuildArea"></div>';
+  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetBuild()">🔄 Reset All</button><button class="st1-btn-check" onclick="st1CheckBuild()">✅ Check</button></div>';
+  h += '</div>';
+  // Challenge 3
+  h += '<div class="st1-card' + (ex2Done ? ' visible' : '') + '" id="st1Card3"><div class="st1-card-glow"></div>';
+  h += '<div class="st1-card-num"><span class="st1-num-badge">3</span><span class="st1-card-title">Listen & Choose</span></div>';
+  h += '<div class="st1-instruction">Listen to the audio clip, then select the sentence you hear.</div>';
+  h += '<div class="st1-btn-row" style="margin-top:0;margin-bottom:20px;"><button class="st1-btn-listen" onclick="st1PlayAudio()">🔊 Play Audio</button></div>';
+  h += '<div id="st1ListenArea"></div>';
+  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetListen()">🔄 Reset</button><button class="st1-btn-check" onclick="st1CheckListen()">✅ Check</button></div>';
+  h += '</div>';
+  h += '</div>'; // close st1-challenge
+  // Lyric Collection
+  h += '<div class="st1-lyrics"><h3>📦 Lyric Pieces</h3>';
+  for (var i = 0; i < 3; i++) {
+    var pl = getLyricPiece(i), pt = pl.map(function(l) { return l.text; }).join('<br>');
+    h += '<div class="st1-piece' + (puzzleUnlocked[i] ? ' unlocked' : '') + '" id="st1Piece' + i + '">';
+    h += '<div class="st1-piece-label">Piece ' + (i+1) + ' · ' + (puzzleUnlocked[i] ? 'Unlocked' : 'Locked') + '</div>';
+    h += '<div class="st1-piece-content">' + (puzzleUnlocked[i] ? pt : '???') + '</div>';
+    h += '</div>';
+  }
+  h += '</div></div>'; // close st1-lyrics, st1-layout
+  // Complete Banner — outside layout, full width at bottom
+  h += '<div class="st1-complete" id="st1Complete"><span class="st1-big-icon">🏆</span><h2>All Lyrics Collected!</h2><p>You\'ve unlocked the complete song. Stage 2 is now open!</p><button class="st1-btn-map" onclick="st1BackToMap()">🗺 Back to Map</button></div>';
+  container.innerHTML = h;
+  st1RenderFill();
+  if (ex1Done) st1RenderBuild();
+  if (ex2Done) st1RenderListen();
+}
+
+function renderStage2(container) {
+  if (!s2LineSlots.length) { s2LineSlots = lyrics.map(function() { return [{}, {}]; }); }
+  var h = '<div class="s2-floats"><div class="s2-float-item">🎵</div><div class="s2-float-item">🥁</div><div class="s2-float-item">🎶</div><div class="s2-float-item">✨</div><div class="s2-float-item">🎼</div><div class="s2-float-item">🎸</div><div class="s2-float-item">⭐</div><div class="s2-float-item">🎹</div><div class="s2-float-item">💫</div><div class="s2-float-item">🎵</div></div>';
+  h += '<div class="s2-header"><div class="s2-level-badge">LEVEL 2</div><br><span class="s2-title-icon">🥁</span><h1>Melody Mover</h1><br><div class="s2-sub">Match actions and instruments to every line</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(2)">How to teach</button></div>';
+  h += '<div class="s2-player-bar"><button class="s2-player-btn" id="s2PlayBtn" onclick="s2TogglePlay()"><svg viewBox="0 0 24 24" id="s2PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s2PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s2-player-time" id="s2CurTime">0:00</span><div class="s2-player-progress" id="s2ProgressBar" onclick="s2SeekAudio(event)"><div class="s2-player-progress-fill" id="s2ProgressFill"></div><div class="s2-player-progress-thumb" id="s2ProgressThumb"></div></div><span class="s2-player-time" id="s2DurTime">0:39</span><div class="s2-player-mode" id="s2ModeToggle"><button class="s2-active" onclick="s2SwitchMode(\'vocal\')" id="s2ModeVocal">🎤 Vocal</button><button onclick="s2SwitchMode(\'backing\')" id="s2ModeBacking">🎼 Backing</button></div><div class="s2-player-vol"><span class="s2-vol-icon" onclick="s2ToggleMute()">🔊</span><input type="range" id="s2VolSlider" min="0" max="100" value="80" oninput="s2SetVolume(this.value)"></div><div class="s2-player-speed"><button onclick="s2SetSpeed(0.5)">0.5x</button><button onclick="s2SetSpeed(0.75)">0.75x</button><button class="s2-active" onclick="s2SetSpeed(1)">1x</button><button onclick="s2SetSpeed(1.25)">1.25x</button><button onclick="s2SetSpeed(1.5)">1.5x</button></div></div>';
+  h += '<div class="card" style="background:#08081a;border:1px solid rgba(255,255,255,0.05);box-shadow:0 0 30px rgba(0,0,0,0.3);">';
+  h += '<div class="s2-container">';
+  h += '<div class="s2-left">';
+  h += '<div class="s2-lyrics-panel"><h3>📝 Lyrics</h3><div style="font-size:16px;font-weight:900;color:#ffb800;text-align:center;margin-bottom:14px;text-shadow:0 0 12px rgba(255,184,0,0.3)">🎵 Where Are You From</div>';
+  lyrics.forEach(function(line, ri) {
+    var slots = s2LineSlots[ri];
+    h += '<div class="s2-lyric-row"><span class="s2-lyric-text">'+line.text+'</span>';
+    h += '<span class="s2-slot-group">';
+    slots.forEach(function(s, si) {
+      var filled = s.type ? ' filled' : '';
+      h += '<span class="s2-drop-slot'+filled+'" data-line="'+ri+'" data-slot="'+si+'" ondragover="s2SlotDragOver(event)" ondragleave="s2SlotDragLeave(event)" ondrop="s2DropOnSlot(event,'+ri+','+si+')" onclick="s2ClearSlot(this)">';
+      if (s.type === 'action') {
+        var act = s2Actions.find(function(a){return a.id===s.id});
+        if (act) h += act.emoji+'<span class="s2-slot-remove">✕</span>';
+      } else if (s.type === 'inst') {
+        var inst = s2Instruments.find(function(i){return i.id===s.id});
+        if (inst) h += '<img src="'+inst.img+'" alt=""><span class="s2-slot-remove">✕</span>';
+      }
+      h += '</span>';
+    });
+    h += '<button class="s2-slot-add" onclick="s2AddSlot('+ri+')" title="Add slot">+</button>';
+    if (slots.length > 1) {
+      h += '<button class="s2-slot-del" onclick="s2RemoveSlot('+ri+')" title="Remove last slot">−</button>';
+    }
+    h += '</span></div>';
+  });
+  h += '<button class="btn btn-sm" style="margin-top:12px;background:rgba(255,45,149,0.1);border:1.5px solid rgba(255,45,149,0.3);color:#ff2d95;font-weight:700;" onclick="s2ResetAll()">🔄 Clear All</button>';
+  h += '</div></div>';
+  h += '<div class="s2-right">';
+  h += '<div class="s2-actions-panel"><h3><span>🤸 Actions <span class="hint">Drag to lyrics</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'actions\')" title="Expand">⛶</button></h3><div class="s2-action-grid">';
+  s2Actions.forEach(function(a) { h += '<span class="s2-action-tag" draggable="true" data-action-id="'+a.id+'" ondragstart="s2ActionDragStart(event)">'+a.emoji+' '+a.name+'</span>'; });
+  h += '</div></div>';
+  h += '<div class="s2-inst-panel"><h3><span>🥁 Instruments <span class="hint">Drag to lyrics</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'instruments\')" title="Expand">⛶</button></h3><div class="s2-inst-grid">';
+  s2Instruments.forEach(function(inst) { h += '<span class="s2-inst-tag" draggable="true" data-inst-id="'+inst.id+'" ondragstart="s2InstDragStart(event)"><img src="'+inst.img+'" alt="">'+inst.name+'</span>'; });
+  h += '</div></div>';
+  h += '</div>';
+  h += '</div>';
+  h += '<div class="rhythm-controls" style="margin-top:16px;position:relative;z-index:1;text-align:center"><button class="btn btn-sm btn-orange" onclick="enterPlayback()">🎬 Enter Performance Mode</button> <button class="btn btn-sm btn-primary" onclick="completeStage2()">✅ Complete Challenge</button></div>';
+  if (stage2Complete) h += '<div class="stage-complete" style="margin-top:20px;"><div class="big-emoji">🏆</div><h3 style="color:#39ff14;">Melody Mover Complete!</h3><p style="color:rgba(255,255,255,0.5);">Stage 3 Unlocked</p></div>';
+  h += '</div>';
+  container.innerHTML = h;
+}
+
+function s2ActionDragStart(e) { e.dataTransfer.setData('application/x-s2-action', e.currentTarget.dataset.actionId); e.dataTransfer.effectAllowed = 'move'; }
+function s2InstDragStart(e) { e.dataTransfer.setData('application/x-s2-inst', e.currentTarget.dataset.instId); e.dataTransfer.effectAllowed = 'move'; }
+function s2SlotDragOver(e) { e.preventDefault(); var sl = e.target.closest('.s2-drop-slot'); if (sl) sl.classList.add('drag-over'); }
+function s2SlotDragLeave(e) { var sl = e.target.closest('.s2-drop-slot'); if (sl) sl.classList.remove('drag-over'); }
+
+function s2DropOnSlot(e, ri, si) {
+  e.preventDefault();
+  var sl = e.target.closest('.s2-drop-slot');
+  if (!sl) return;
+  sl.classList.remove('drag-over');
+  var aid = e.dataTransfer.getData('application/x-s2-action');
+  var iid = e.dataTransfer.getData('application/x-s2-inst');
+  if (aid) {
+    s2LineSlots[ri][si] = {type:'action', id:aid};
+  } else if (iid) {
+    s2LineSlots[ri][si] = {type:'inst', id:iid};
+  } else return;
+  renderStage2(document.getElementById('stageContent'));
+}
+
+function s2AddSlot(ri) {
+  s2LineSlots[ri].push({});
+  renderStage2(document.getElementById('stageContent'));
+}
+
+function s2RemoveSlot(ri) {
+  if (s2LineSlots[ri].length <= 1) return;
+  s2LineSlots[ri].pop();
+  renderStage2(document.getElementById('stageContent'));
+}
+
+function s2ClearSlot(el) {
+  if (!el.classList.contains('filled')) return;
+  var ri = parseInt(el.dataset.line);
+  var si = parseInt(el.dataset.slot);
+  s2LineSlots[ri][si] = {};
+  renderStage2(document.getElementById('stageContent'));
+}
+
+function s2ResetAll() {
+  s2LineSlots = lyrics.map(function() { return [{}, {}]; });
+  renderStage2(document.getElementById('stageContent'));
+}
+
+// ═══ Stage 2 Audio Player ═══
+var s2IsPlaying = false;
+var s2CurrentMode = 'vocal';
+var s2Muted = false;
+var s2PrevVol = 80;
+
+function s2GetActiveAudio() {
+  return s2CurrentMode === 'vocal' ? document.getElementById('audioOriginal') : document.getElementById('audioAccomp');
+}
+
+function s2TogglePlay() {
+  var a = s2GetActiveAudio();
+  if (s2IsPlaying) { a.pause(); }
+  else { a.play().catch(function(){}); }
+}
+
+function s2UpdatePlayIcon(playing) {
+  var playIcon = document.getElementById('s2PlayIcon');
+  var pauseIcon = document.getElementById('s2PauseIcon');
+  if (playIcon) playIcon.style.display = playing ? 'none' : '';
+  if (pauseIcon) pauseIcon.style.display = playing ? '' : 'none';
+}
+
+function s2SwitchMode(mode) {
+  if (s2CurrentMode === mode) return;
+  var wasPlaying = s2IsPlaying;
+  var ct = s2GetActiveAudio().currentTime;
+  s2GetActiveAudio().pause();
+  s2CurrentMode = mode;
+  var a = s2GetActiveAudio();
+  a.currentTime = ct;
+  a.volume = s2Muted ? 0 : (document.getElementById('s2VolSlider').value / 100);
+  if (wasPlaying) { a.play().catch(function(){}); }
+  var mv = document.getElementById('s2ModeVocal');
+  var mb = document.getElementById('s2ModeBacking');
+  if (mv) mv.classList.toggle('s2-active', mode === 'vocal');
+  if (mb) mb.classList.toggle('s2-active', mode === 'backing');
+}
+
+function s2SeekAudio(e) {
+  var bar = document.getElementById('s2ProgressBar');
+  if (!bar) return;
+  var rect = bar.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  pct = Math.max(0, Math.min(1, pct));
+  var a = s2GetActiveAudio();
+  if (a.duration) a.currentTime = pct * a.duration;
+}
+
+function s2SetSpeed(speed) {
+  var a = document.getElementById('audioOriginal');
+  var b = document.getElementById('audioAccomp');
+  if (a) a.playbackRate = speed;
+  if (b) b.playbackRate = speed;
+  var btns = document.querySelectorAll('.s2-player-speed button');
+  btns.forEach(function(btn) {
+    btn.classList.toggle('s2-active', btn.textContent.trim() === speed+'x');
+  });
+}
+
+function s2SetVolume(val) {
+  s2PrevVol = val;
+  if (!s2Muted) {
+    s2GetActiveAudio().volume = val / 100;
+  }
+}
+
+function s2ToggleMute() {
+  s2Muted = !s2Muted;
+  var icon = document.querySelector('.s2-vol-icon');
+  if (s2Muted) {
+    s2GetActiveAudio().volume = 0;
+    if (icon) icon.textContent = '🔇';
+    document.getElementById('s2VolSlider').value = 0;
+  } else {
+    s2GetActiveAudio().volume = s2PrevVol / 100;
+    if (icon) icon.textContent = '🔊';
+    document.getElementById('s2VolSlider').value = s2PrevVol;
+  }
+}
+
+function s2SyncAudioEvents() {
+  var a = document.getElementById('audioOriginal');
+  var b = document.getElementById('audioAccomp');
+  [a, b].forEach(function(el) {
+    if (!el) return;
+    el.addEventListener('play', function() {
+      if (s2GetActiveAudio() !== el) return;
+      s2IsPlaying = true;
+      s2UpdatePlayIcon(true);
+    });
+    el.addEventListener('pause', function() {
+      if (s2GetActiveAudio() !== el) return;
+      s2IsPlaying = false;
+      s2UpdatePlayIcon(false);
+    });
+    el.addEventListener('ended', function() {
+      if (s2GetActiveAudio() !== el) return;
+      s2IsPlaying = false;
+      s2UpdatePlayIcon(false);
+    });
+    el.addEventListener('timeupdate', function() {
+      if (s2GetActiveAudio() !== el) return;
+      var pct = el.duration ? (el.currentTime / el.duration) * 100 : 0;
+      var fill = document.getElementById('s2ProgressFill');
+      var thumb = document.getElementById('s2ProgressThumb');
+      var cur = document.getElementById('s2CurTime');
+      if (fill) fill.style.width = pct + '%';
+      if (thumb) thumb.style.left = pct + '%';
+      if (cur) cur.textContent = formatTime(el.currentTime);
+      var d = el.duration || 0;
+      if (d && d < Infinity) {
+        var dur = document.getElementById('s2DurTime');
+        if (dur) dur.textContent = formatTime(d);
+      }
+    });
+    el.addEventListener('loadedmetadata', function() {
+      if (s2GetActiveAudio() !== el) return;
+      var dur = document.getElementById('s2DurTime');
+      if (dur) dur.textContent = formatTime(el.duration);
+    });
+  });
+}
+
+function s2ClosePoolModal() {
+  document.getElementById('s2PoolModal').classList.remove('s2-active');
+}
+
+function s2OpenPoolModal(type) {
+  var modal = document.getElementById('s2PoolModal');
+  var content = document.getElementById('s2PoolModalContent');
+  var title = document.getElementById('s2PoolModalTitle');
+  var grid = document.getElementById('s2PoolModalGrid');
+  content.className = 's2-pool-modal-content';
+  if (type === 'actions') {
+    content.classList.add('s2-actions-modal');
+    modal.classList.add('s2-actions-modal');
+    title.innerHTML = '🤸 Actions';
+    var h = '';
+    s2Actions.forEach(function(a) {
+      h += '<span class="s2-modal-tag s2-actions" draggable="true" data-action-id="'+a.id+'" ondragstart="s2ActionDragStart(event)"><span class="s2-tag-emoji">'+a.emoji+'</span>'+a.name+'</span>';
+    });
+    grid.innerHTML = h;
+  } else {
+    content.classList.add('s2-insts-modal');
+    modal.classList.add('s2-insts-modal');
+    title.innerHTML = '🥁 Instruments';
+    var h = '';
+    s2Instruments.forEach(function(inst) {
+      h += '<span class="s2-modal-tag s2-instruments" draggable="true" data-inst-id="'+inst.id+'" ondragstart="s2InstDragStart(event)"><img src="'+inst.img+'" alt="">'+inst.name+'</span>';
+    });
+    grid.innerHTML = h;
+  }
+  modal.classList.add('s2-active');
+}
+
+// ═══ Stage 3 Audio Player ═══
+var s3IsPlaying = false;
+var s3CurrentMode = 'vocal';
+var s3Muted = false;
+var s3PrevVol = 80;
+
+function s3GetActiveAudio() {
+  return s3CurrentMode === 'vocal' ? document.getElementById('audioOriginal') : document.getElementById('audioAccomp');
+}
+
+function s3TogglePlay() {
+  var a = s3GetActiveAudio();
+  if (s3IsPlaying) { a.pause(); }
+  else { a.play().catch(function(){}); }
+}
+
+function s3UpdatePlayIcon(playing) {
+  var pi = document.getElementById('s3PlayIcon');
+  var pa = document.getElementById('s3PauseIcon');
+  if (pi) pi.style.display = playing ? 'none' : '';
+  if (pa) pa.style.display = playing ? '' : 'none';
+}
+
+function s3SwitchMode(mode) {
+  if (mode === s3CurrentMode) return;
+  var wasPlaying = s3IsPlaying;
+  var ct = s3GetActiveAudio().currentTime;
+  s3GetActiveAudio().pause();
+  s3CurrentMode = mode;
+  var a = s3GetActiveAudio();
+  a.currentTime = ct;
+  a.volume = s3Muted ? 0 : (document.getElementById('s3VolSlider').value / 100);
+  if (wasPlaying) { a.play().catch(function(){}); }
+  var mv = document.getElementById('s3ModeVocal');
+  var mb = document.getElementById('s3ModeBacking');
+  if (mv) mv.classList.toggle('s3-active', mode === 'vocal');
+  if (mb) mb.classList.toggle('s3-active', mode === 'backing');
+}
+
+function s3SeekAudio(e) {
+  var bar = document.getElementById('s3ProgressBar');
+  if (!bar) return;
+  var rect = bar.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  pct = Math.max(0, Math.min(1, pct));
+  var a = s3GetActiveAudio();
+  if (a.duration) a.currentTime = pct * a.duration;
+}
+
+function s3SetSpeed(speed) {
+  var a = document.getElementById('audioOriginal');
+  var b = document.getElementById('audioAccomp');
+  if (a) a.playbackRate = speed;
+  if (b) b.playbackRate = speed;
+  var btns = document.querySelectorAll('.s3-player-speed button');
+  btns.forEach(function(btn) {
+    btn.classList.toggle('s3-active', btn.textContent.trim() === speed+'x');
+  });
+}
+
+function s3SetVolume(val) {
+  s3PrevVol = val;
+  if (!s3Muted) { s3GetActiveAudio().volume = val / 100; }
+}
+
+function s3ToggleMute() {
+  s3Muted = !s3Muted;
+  var icon = document.querySelector('.s3-vol-icon');
+  if (s3Muted) {
+    s3GetActiveAudio().volume = 0;
+    if (icon) icon.textContent = '🔇';
+    document.getElementById('s3VolSlider').value = 0;
+  } else {
+    s3GetActiveAudio().volume = s3PrevVol / 100;
+    if (icon) icon.textContent = '🔊';
+    document.getElementById('s3VolSlider').value = s3PrevVol;
+  }
+}
+
+function s3SyncAudioEvents() {
+  var a = document.getElementById('audioOriginal');
+  var b = document.getElementById('audioAccomp');
+  [a, b].forEach(function(el) {
+    if (!el) return;
+    el.addEventListener('play', function() {
+      if (s3GetActiveAudio() !== el) return;
+      s3IsPlaying = true;
+      s3UpdatePlayIcon(true);
+    });
+    el.addEventListener('pause', function() {
+      if (s3GetActiveAudio() !== el) return;
+      s3IsPlaying = false;
+      s3UpdatePlayIcon(false);
+    });
+    el.addEventListener('ended', function() {
+      if (s3GetActiveAudio() !== el) return;
+      s3IsPlaying = false;
+      s3UpdatePlayIcon(false);
+    });
+    el.addEventListener('timeupdate', function() {
+      if (s3GetActiveAudio() !== el) return;
+      var pct = el.duration ? (el.currentTime / el.duration) * 100 : 0;
+      var fill = document.getElementById('s3ProgressFill');
+      var thumb = document.getElementById('s3ProgressThumb');
+      var cur = document.getElementById('s3CurTime');
+      if (fill) fill.style.width = pct + '%';
+      if (thumb) thumb.style.left = pct + '%';
+      if (cur) cur.textContent = formatTime(el.currentTime);
+      var d = el.duration || 0;
+      if (d && d < Infinity) {
+        var dur = document.getElementById('s3DurTime');
+        if (dur) dur.textContent = formatTime(d);
+      }
+    });
+    el.addEventListener('loadedmetadata', function() {
+      if (s3GetActiveAudio() !== el) return;
+      var dur = document.getElementById('s3DurTime');
+      if (dur) dur.textContent = formatTime(el.duration);
+    });
+  });
+}
+
+var s4IsPlaying = false;
+var s4CurrentMode = 'vocal';
+var s4Muted = false;
+var s4PrevVol = 80;
+
+function s4GetActiveAudio() {
+  return s4CurrentMode === 'vocal' ? document.getElementById('audioOriginal') : document.getElementById('audioAccomp');
+}
+
+function s4TogglePlay() {
+  var a = s4GetActiveAudio();
+  if (s4IsPlaying) { a.pause(); }
+  else { a.play().catch(function(){}); }
+}
+
+function s4UpdatePlayIcon(playing) {
+  var pi = document.getElementById('s4PlayIcon');
+  var pa = document.getElementById('s4PauseIcon');
+  if (pi) pi.style.display = playing ? 'none' : '';
+  if (pa) pa.style.display = playing ? '' : 'none';
+}
+
+function s4SwitchMode(mode) {
+  if (mode === s4CurrentMode) return;
+  var wasPlaying = s4IsPlaying;
+  var ct = s4GetActiveAudio().currentTime;
+  s4GetActiveAudio().pause();
+  s4CurrentMode = mode;
+  var a = s4GetActiveAudio();
+  a.currentTime = ct;
+  a.volume = s4Muted ? 0 : (document.getElementById('s4VolSlider').value / 100);
+  if (wasPlaying) { a.play().catch(function(){}); }
+  var mv = document.getElementById('s4ModeVocal');
+  var mb = document.getElementById('s4ModeBacking');
+  if (mv) mv.classList.toggle('s4-active', mode === 'vocal');
+  if (mb) mb.classList.toggle('s4-active', mode === 'backing');
+}
+
+function s4SeekAudio(e) {
+  var bar = document.getElementById('s4ProgressBar');
+  if (!bar) return;
+  var rect = bar.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  pct = Math.max(0, Math.min(1, pct));
+  var a = s4GetActiveAudio();
+  if (a.duration) a.currentTime = pct * a.duration;
+}
+
+function s4SetSpeed(speed) {
+  var a = document.getElementById('audioOriginal');
+  var b = document.getElementById('audioAccomp');
+  if (a) a.playbackRate = speed;
+  if (b) b.playbackRate = speed;
+  var btns = document.querySelectorAll('.s4-player-speed button');
+  btns.forEach(function(btn) {
+    btn.classList.toggle('s4-active', btn.textContent.trim() === speed+'x');
+  });
+}
+
+function s4SetVolume(val) {
+  s4PrevVol = val;
+  if (!s4Muted) { s4GetActiveAudio().volume = val / 100; }
+}
+
+function s4ToggleMute() {
+  s4Muted = !s4Muted;
+  var icon = document.querySelector('.s4-vol-icon');
+  if (s4Muted) {
+    s4GetActiveAudio().volume = 0;
+    if (icon) icon.textContent = '🔇';
+    document.getElementById('s4VolSlider').value = 0;
+  } else {
+    s4GetActiveAudio().volume = s4PrevVol / 100;
+    if (icon) icon.textContent = '🔊';
+    document.getElementById('s4VolSlider').value = s4PrevVol;
+  }
+}
+
+function s4SyncAudioEvents() {
+  var a = document.getElementById('audioOriginal');
+  var b = document.getElementById('audioAccomp');
+  [a, b].forEach(function(el) {
+    if (!el) return;
+    el.addEventListener('play', function() {
+      if (s4GetActiveAudio() !== el) return;
+      s4IsPlaying = true;
+      s4UpdatePlayIcon(true);
+    });
+    el.addEventListener('pause', function() {
+      if (s4GetActiveAudio() !== el) return;
+      s4IsPlaying = false;
+      s4UpdatePlayIcon(false);
+    });
+    el.addEventListener('ended', function() {
+      if (s4GetActiveAudio() !== el) return;
+      s4IsPlaying = false;
+      s4UpdatePlayIcon(false);
+    });
+    el.addEventListener('timeupdate', function() {
+      if (s4GetActiveAudio() !== el) return;
+      var pct = el.duration ? (el.currentTime / el.duration) * 100 : 0;
+      var fill = document.getElementById('s4ProgressFill');
+      var thumb = document.getElementById('s4ProgressThumb');
+      var cur = document.getElementById('s4CurTime');
+      if (fill) fill.style.width = pct + '%';
+      if (thumb) thumb.style.left = pct + '%';
+      if (cur) cur.textContent = formatTime(el.currentTime);
+      var d = el.duration || 0;
+      if (d && d < Infinity) {
+        var dur = document.getElementById('s4DurTime');
+        if (dur) dur.textContent = formatTime(d);
+      }
+    });
+    el.addEventListener('loadedmetadata', function() {
+      if (s4GetActiveAudio() !== el) return;
+      var dur = document.getElementById('s4DurTime');
+      if (dur) dur.textContent = formatTime(el.duration);
+    });
+  });
+}
+
+var pbCurrentMode = 'vocal';
+var pbMuted = false;
+var pbPrevVol = 80;
+
+function pbGetAudio() {
+  return pbCurrentMode === 'vocal' ? document.getElementById('audioOriginal') : document.getElementById('audioAccomp');
+}
+
+function enterPlayback() {
+  var overlay = document.getElementById('playbackOverlay');
+  overlay.classList.add('active'); playbackActive = true;
+  var pbLyrics = document.getElementById('pbLyrics'); var h = '';
+  lyrics.forEach(function(line, ri) {
+    var slots = s2LineSlots[ri];
+    var items = [];
+    slots.forEach(function(s) {
+      if (s.type === 'action') {
+        var act = s2Actions.find(function(x){return x.id===s.id});
+        if (act) items.push('<span style="font-size:1.4em">'+act.emoji+'</span>');
+      } else if (s.type === 'inst') {
+        var inst = s2Instruments.find(function(x){return x.id===s.id});
+        if (inst) items.push('<img src="'+inst.img+'" style="width:140px;height:140px;object-fit:contain" alt="">');
+      }
+    });
+    h += '<div class="pb-line" id="pbLine'+ri+'" data-start="'+parseTimeSeconds(line.time).start+'" data-end="'+parseTimeSeconds(line.time).end+'"><span>'+line.text+'</span>';
+    if (items.length>0) h += '<div class="pb-actions" style="gap:8px;align-items:center">'+items.join('')+'</div>';
+    h += '</div>';
+  });
+  pbLyrics.innerHTML = h;
+  var a = pbGetAudio(); a.currentTime = 0; a.volume = pbMuted ? 0 : (pbPrevVol / 100);
+  document.getElementById('pbTotal').textContent = formatTime(39);
+  document.getElementById('pbTime').textContent = '0:00';
+  document.getElementById('pbProgressFill').style.width = '0%';
+  document.getElementById('pbPlayBtn').textContent = '▶';
+  document.getElementById('pbModeVocal').classList.toggle('active', pbCurrentMode === 'vocal');
+  document.getElementById('pbModeBacking').classList.toggle('active', pbCurrentMode === 'backing');
+  a.play().then(function() { document.getElementById('pbPlayBtn').textContent = '⏸'; startPlaybackSync(); }).catch(function() { showToast('⚠️ Demo: Please play audio manually'); });
+}
+
+function startPlaybackSync() {
+  var a = pbGetAudio();
+  function tick() {
+    if (!playbackActive) return;
+    var t = a.currentTime;
+    document.getElementById('pbTime').textContent = formatTime(Math.floor(t));
+    document.getElementById('pbProgressFill').style.width = (t / 39 * 100) + '%';
+    var prevActive = null;
+    lyrics.forEach(function(line, ri) {
+      var ts = parseTimeSeconds(line.time);
+      var el = document.getElementById('pbLine' + ri);
+      if (!el) return;
+      if (el.classList.contains('active')) prevActive = ri;
+      el.classList.remove('active', 'passed');
+      if (t >= ts.start && t < ts.end) { el.classList.add('active'); if (prevActive !== ri) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+      else if (t >= ts.end) { el.classList.add('passed'); }
+    });
+    if (a.paused || a.ended) { stopPlaybackSync(); return; }
+    playbackTimer = requestAnimationFrame(tick);
+  }
+  playbackTimer = requestAnimationFrame(tick);
+}
+
+function stopPlaybackSync() {
+  if (playbackTimer) { cancelAnimationFrame(playbackTimer); playbackTimer = null; }
+  document.getElementById('pbPlayBtn').textContent = '▶';
+}
+
+function togglePlaybackPlay() {
+  var a = pbGetAudio();
+  if (a.paused) {
+    a.play().then(function() {
+      document.getElementById('pbPlayBtn').textContent = '⏸';
+      playbackActive = true;
+      startPlaybackSync();
+    }).catch(function() {});
+  } else {
+    a.pause();
+    stopPlaybackSync();
+    document.getElementById('pbPlayBtn').textContent = '▶';
+  }
+}
+
+function seekPlayback(e) {
+  var bar = document.getElementById('pbProgressBar');
+  var rect = bar.getBoundingClientRect();
+  var pct = (e.clientX - rect.left) / rect.width;
+  var a = pbGetAudio();
+  a.currentTime = pct * 39;
+}
+
+function closePlayback() {
+  playbackActive = false;
+  stopPlaybackSync();
+  pbGetAudio().pause();
+  document.getElementById('playbackOverlay').classList.remove('active');
+}
+
+function pbRestart() {
+  var a = pbGetAudio();
+  a.currentTime = 0;
+  a.play().then(function() {
+    document.getElementById('pbPlayBtn').textContent = '⏸';
+    playbackActive = true;
+    startPlaybackSync();
+  }).catch(function() {});
+}
+
+function pbSwitchMode(mode) {
+  if (pbCurrentMode === mode) return;
+  var wasPlaying = playbackActive;
+  var ct = pbGetAudio().currentTime;
+  pbGetAudio().pause();
+  stopPlaybackSync();
+  pbCurrentMode = mode;
+  var a = pbGetAudio();
+  a.currentTime = ct;
+  a.volume = pbMuted ? 0 : (pbPrevVol / 100);
+  document.getElementById('pbModeVocal').classList.toggle('active', mode === 'vocal');
+  document.getElementById('pbModeBacking').classList.toggle('active', mode === 'backing');
+  if (wasPlaying) {
+    a.play().then(function() {
+      document.getElementById('pbPlayBtn').textContent = '⏸';
+      playbackActive = true;
+      startPlaybackSync();
+    }).catch(function() {});
+  }
+}
+
+function pbSetSpeed(speed) {
+  var a = document.getElementById('audioOriginal');
+  var b = document.getElementById('audioAccomp');
+  if (a) a.playbackRate = speed;
+  if (b) b.playbackRate = speed;
+  var btns = document.querySelectorAll('.pb-speed button');
+  btns.forEach(function(btn) {
+    btn.classList.toggle('active', btn.textContent.trim() === speed+'x');
+  });
+}
+
+function pbSetVolume(val) {
+  pbPrevVol = parseInt(val);
+  if (!pbMuted) pbGetAudio().volume = val / 100;
+}
+
+function pbToggleMute() {
+  pbMuted = !pbMuted;
+  pbGetAudio().volume = pbMuted ? 0 : (pbPrevVol / 100);
+  document.getElementById('pbVolIcon').textContent = pbMuted ? '🔇' : '🔊';
+}
+
+function formatTime(s) { var m = Math.floor(s / 60); var sec = Math.floor(s % 60); return m + ':' + (sec < 10 ? '0' : '') + sec; }
+
+function completeStage2() { stage2Complete = true; showStageClear(2); }
+
+function renderStage3(container) {
+  var h = '';
+  // Header
+  h += '<div class="s3-header"><div class="s3-level-badge">LEVEL 3</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s3-title-icon">🎤</span><span style="font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Echo Master</span></div><div class="s3-sub">Sing it right — from beginner to challenge mode</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(3)">How to teach</button></div>';
+  // Audio Player
+  h += '<div class="s3-player-bar"><button class="s3-player-btn" id="s3PlayBtn" onclick="s3TogglePlay()"><svg viewBox="0 0 24 24" id="s3PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s3PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s3-player-time" id="s3CurTime">0:00</span><div class="s3-player-progress" id="s3ProgressBar" onclick="s3SeekAudio(event)"><div class="s3-player-progress-fill" id="s3ProgressFill"></div><div class="s3-player-progress-thumb" id="s3ProgressThumb"></div></div><span class="s3-player-time" id="s3DurTime">0:39</span><div class="s3-player-mode" id="s3ModeToggle"><button class="s3-active" onclick="s3SwitchMode(\'vocal\')" id="s3ModeVocal">🎤 Vocal</button><button onclick="s3SwitchMode(\'backing\')" id="s3ModeBacking">🎼 Backing</button></div><div class="s3-player-vol"><span class="s3-vol-icon" onclick="s3ToggleMute()">🔊</span><input type="range" id="s3VolSlider" min="0" max="100" value="80" oninput="s3SetVolume(this.value)"></div><div class="s3-player-speed"><button onclick="s3SetSpeed(0.5)">0.5x</button><button onclick="s3SetSpeed(0.75)">0.75x</button><button class="s3-active" onclick="s3SetSpeed(1)">1x</button><button onclick="s3SetSpeed(1.25)">1.25x</button><button onclick="s3SetSpeed(1.5)">1.5x</button></div></div>';
+  // Sing content
+  h += '<div class="card"><div class="sing-level-select">';
+  [{ n:1,label:'⭐ Beginner',desc:'Full Lyrics' },{ n:2,label:'⭐⭐ Intermediate',desc:'Partial Blanks' },{ n:3,label:'⭐⭐⭐ Challenge',desc:'First Letter Only' }].forEach(function(l) {
+    var cls = 'sing-level-btn'; if (l.n === singLevel) cls += ' active'; if (l.n < singLevel) cls += ' completed';
+    h += '<button class="' + cls + '" onclick="setSingLevel(' + l.n + ')">' + l.label + '<br><small>' + l.desc + '</small></button>';
+  });
+  h += '</div><div class="sing-display"><div class="sing-current-line" id="singCurrentLine">' + getMaskedText(lyrics[singLineIdx].text, singLevel) + '</div>';
+  if (singLevel >= 2) {
+    h += '<button class="btn btn-sm btn-outline" id="singShowFullBtn" onclick="toggleShowFullLyrics()" style="margin-top:8px;">👁 Show Full Lyrics</button>';
+  }
+  h += '<button class="btn btn-sm btn-outline" id="singPlayBtn" onclick="playLineSegment(' + singLineIdx + ')" style="margin-top:12px;">▶ Play This Line</button>';
+  h += '<div class="sing-progress">';
+  lyrics.forEach(function(l, i) { var cls = 'sing-progress-dot'; if (i === singLineIdx) cls += ' active'; if (i < singLineIdx) cls += ' done'; h += '<span class="' + cls + '"></span>'; });
+  h += '</div></div><div class="sing-controls">';
+  h += '<button class="btn btn-sm btn-outline" onclick="prevLine()">⬅ Previous</button>';
+  h += '<button class="btn btn-sm btn-outline" onclick="nextLine()">Next ➡</button>';
+  h += '<button class="btn btn-sm btn-primary" onclick="completeSingLevel()">✅ Complete Level</button></div>';
+  if (stage3Complete) h += '<div class="stage-complete" style="margin-top:20px;"><div class="big-emoji">🏆</div><h3 style="color:#39ff14;">Echo Master Complete!</h3><p style="color:rgba(255,255,255,0.5);margin-top:4px;">Stage 4 Unlocked</p></div>';
+  h += '</div>'; container.innerHTML = h;
+}
+
+function getMaskedText(text, level) {
+  if (level === 1) return text;
+  if (level === 2) {
+    var words = text.split(' '), mi = [];
+    if (words.length > 1) {
+      mi.push(Math.floor(Math.random() * words.length));
+    }
+    return words.map(function(w, i) { return mi.indexOf(i) >= 0 ? '<span class="masked">' + '_'.repeat(w.replace(/[^a-zA-Z]/g,'').length) + w.replace(/[a-zA-Z]/g,'') + '</span>' : w; }).join(' ');
+  }
+  if (level === 3) {
+    var words = text.split(' ');
+    var eligible = [];
+    words.forEach(function(w, i) {
+      var clean = w.replace(/[^a-zA-Z]/g, '');
+      if (clean.length >= 3) eligible.push(i);
+    });
+    var hintCount = Math.min(eligible.length, 2);
+    var hintIdx = [];
+    var pool = eligible.slice();
+    for (var n = 0; n < hintCount && pool.length > 0; n++) {
+      var ri = Math.floor(Math.random() * pool.length);
+      hintIdx.push(pool.splice(ri, 1)[0]);
+    }
+    return words.map(function(w, i) {
+      var clean = w.replace(/[^a-zA-Z]/g, '');
+      if (clean.length === 0) return w;
+      if (hintIdx.indexOf(i) >= 0) {
+        return '<span class="letter-hint">' + clean[0] + '</span>' + '_'.repeat(clean.length - 1) + w.replace(/[a-zA-Z]/g, '');
+      } else {
+        return w;
+      }
+    }).join(' ');
+  }
+  return text;
+}
+
+function toggleShowFullLyrics() {
+  singShowFull = !singShowFull;
+  var el = document.getElementById('singCurrentLine');
+  var btn = document.getElementById('singShowFullBtn');
+  if (!el) return;
+  if (singShowFull) {
+    el.innerHTML = lyrics[singLineIdx].text;
+    if (btn) btn.textContent = '🙈 Hide Full Lyrics';
+  } else {
+    el.innerHTML = getMaskedText(lyrics[singLineIdx].text, singLevel);
+    if (btn) btn.textContent = '👁 Show Full Lyrics';
+  }
+}
+
+function s3UpdateLineDisplay() {
+  // Update lyric line text
+  var el = document.getElementById('singCurrentLine');
+  if (el) {
+    el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel);
+  }
+  // Update progress dots
+  var dots = document.querySelectorAll('.sing-progress-dot');
+  dots.forEach(function(dot, i) {
+    dot.classList.remove('active', 'done');
+    if (i === singLineIdx) dot.classList.add('active');
+    if (i < singLineIdx) dot.classList.add('done');
+  });
+  // Update "Play This Line" button
+  var playBtn = document.getElementById('singPlayBtn');
+  if (playBtn) playBtn.setAttribute('onclick', 'playLineSegment(' + singLineIdx + ')');
+  // Update show/hide full lyrics button if visible
+  if (singLevel >= 2) {
+    var showBtn = document.getElementById('singShowFullBtn');
+    if (showBtn) showBtn.textContent = singShowFull ? '🙈 Hide Full Lyrics' : '👁 Show Full Lyrics';
+  }
+}
+function setSingLevel(n) { if (n > singLevel + 1) { showToast('Complete current level first!'); return; } singLevel = n; singLineIdx = 0; singShowFull = false; renderStage(); }
+function nextLine() { if (singLineIdx < lyrics.length - 1) { singLineIdx++; singShowFull = false; s3UpdateLineDisplay(); } else showToast('This is the last line!'); }
+function prevLine() { if (singLineIdx > 0) { singLineIdx--; singShowFull = false; s3UpdateLineDisplay(); } }
+function playFullOriginal() { var a = document.getElementById('audioOriginal'); a.currentTime = 0; a.play().catch(function(){ showToast('⚠️ Demo: Audio not available'); }); }
+function playFullAccomp() { var a = document.getElementById('audioAccomp'); a.currentTime = 0; a.play().catch(function(){ showToast('⚠️ Demo: Audio not available'); }); }
+
+var linePlayTimeout = null;
+
+function playLineSegment(ri) {
+  var line = lyrics[ri];
+  var ts = parseTimeSeconds(line.time);
+  var a = document.getElementById('audioOriginal');
+  var btn = document.getElementById('singPlayBtn');
+  if (btn) { btn.classList.add('playing'); btn.textContent = '⏸ Playing…'; }
+  if (linePlayTimeout) clearTimeout(linePlayTimeout);
+  a.currentTime = ts.start;
+  a.play().then(function() {
+    linePlayTimeout = setTimeout(function() {
+      a.pause();
+      if (btn) { btn.classList.remove('playing'); btn.textContent = '▶ Play This Line'; }
+    }, (ts.end - ts.start) * 1000);
+  }).catch(function() { showToast('⚠️ Demo: Audio not available'); });
+}
+
+function completeSingLevel() {
+  if (singLevel < 3) { singLevel++; singLineIdx = 0; singShowFull = false; showToast('🎉 Level Up!'); renderStage(); }
+  else { stage3Complete = true; showStageClear(3); }
+}
+
+var recordSyncTimer = null;
+
+function renderStage4(container) {
+  var h = '';
+  h += '<div class="s4-header"><div class="s4-level-badge">LEVEL 4</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s4-title-icon">📹</span><span style="font-size:28px;font-weight:900;color:#39ff14;text-shadow:0 0 20px rgba(57,255,20,0.6),0 0 40px rgba(57,255,20,0.4),0 0 80px rgba(57,255,20,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Star Studio</span></div><div class="s4-sub">Mark your parts, hit record, and own the stage</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(4)">How to teach</button></div>';
+  h += '<div class="s4-player-bar"><button class="s4-player-btn" id="s4PlayBtn" onclick="s4TogglePlay()"><svg viewBox="0 0 24 24" id="s4PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s4PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s4-player-time" id="s4CurTime">0:00</span><div class="s4-player-progress" id="s4ProgressBar" onclick="s4SeekAudio(event)"><div class="s4-player-progress-fill" id="s4ProgressFill"></div><div class="s4-player-progress-thumb" id="s4ProgressThumb"></div></div><span class="s4-player-time" id="s4DurTime">0:39</span><div class="s4-player-mode" id="s4ModeToggle"><button class="s4-active" onclick="s4SwitchMode(\'vocal\')" id="s4ModeVocal">🎤 Vocal</button><button onclick="s4SwitchMode(\'backing\')" id="s4ModeBacking">🎼 Backing</button></div><div class="s4-player-vol"><span class="s4-vol-icon" onclick="s4ToggleMute()">🔊</span><input type="range" id="s4VolSlider" min="0" max="100" value="80" oninput="s4SetVolume(this.value)"></div><div class="s4-player-speed"><button onclick="s4SetSpeed(0.5)">0.5x</button><button onclick="s4SetSpeed(0.75)">0.75x</button><button class="s4-active" onclick="s4SetSpeed(1)">1x</button><button onclick="s4SetSpeed(1.25)">1.25x</button><button onclick="s4SetSpeed(1.5)">1.5x</button></div></div>';
+  h += '<div class="card"><div class="record-setup">';
+  h += '<div style="padding:14px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.08);">';
+  h += '<div style="margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-weight:700;font-size:14px;color:#e0e0ff;">🎯 Mark Part</span>';
+  h += '<button class="btn btn-sm btn-outline" onclick="toggleMarkSetup()">' + (recordMarkSetup ? '✅ Done' : '✏️ Mark') + '</button></div>';
+  h += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:6px;">Color-code each line to split singing parts among your group</div>';
+  h += '</div>';
+  if (recordMarkSetup) {
+    h += '<div style="max-height:300px;overflow-y:auto;">';
+    h += '<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:11px;color:rgba(255,255,255,0.3);">';
+    h += '<span style="flex:1;text-align:left;">Lyrics</span><span style="flex-shrink:0;text-align:center;padding-right:8px;">Mark Part</span></div>';
+    lyrics.forEach(function(line, ri) {
+      var mk = recordMarks[ri] || { role: 'all' };
+      var roles = ['all','teacher','student','solo'];
+      var roleColors = {all:'mark-color-all',teacher:'mark-color-teacher',student:'mark-color-student',solo:'mark-color-solo'};
+      var roleLabelMap = {all:'All',teacher:'Teacher',student:'Student',solo:'Solo'};
+      var roleColorMap = {all:'#e0e0ff',teacher:'#00e5ff',student:'#39ff14',solo:'#ff2d95'};
+      var lc = roleColorMap[mk.role] || '#e0e0ff';
+      h += '<div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);">';
+      h += '<span style="font-size:13px;font-weight:600;color:'+lc+';text-align:left;flex:1;transition:color 0.2s;">'+line.text+'</span>';
+      h += '<span style="display:flex;gap:4px;justify-content:center;flex-shrink:0;">';
+      roles.forEach(function(r) {
+        h += '<span class="mark-color-btn '+roleColors[r]+ (mk.role===r?' active':'') + '" onclick="setRecordMark('+ri+',\'role\',\''+r+'\');renderStage();"></span>';
+      });
+      h += '</span></div>';
+    });
+    h += '</div>';
+  } else {
+    }
+  h += '</div></div>';
+  h += '<div class="record-area">';
+  if (recordingState === 'idle') {
+    h += '<div class="record-dot" onclick="startRecording()">🎤</div><p style="font-size:14px;color:rgba(255,255,255,0.7);">Tap to Start Recording</p>';
+  } else if (recordingState === 'countdown') {
+    h += '<div class="record-countdown" id="countdownNum">3</div><p style="color:rgba(255,255,255,0.6);">Get Ready…</p>';
+  } else if (recordingState === 'recording') {
+    h += '<div class="record-dot recording">⏺</div><div class="record-timer" id="recordTimer">00:00</div>';
+    h += '<div class="record-lyric-display" id="recordLyric">Get Ready…</div>';
+    h += '<button class="btn btn-sm btn-outline" style="margin-top:12px;color:#fff;border-color:rgba(255,255,255,0.3);" onclick="stopRecording()">⏹ Stop Recording</button>';
+  } else if (recordingState === 'review') {
+    h += '<div style="font-size:48px;margin-bottom:12px;">✅</div><h3 style="color:#39ff14;">Recording Done!</h3><p style="color:rgba(255,255,255,0.5);margin-bottom:20px;">Review your recording, then submit!</p>';
+    h += '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">';
+    h += '<button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="resetRecording()">🔄 Re-record</button>';
+    h += '<button class="btn btn-sm" style="background:rgba(57,255,20,0.15);color:#39ff14;border:1.5px solid rgba(57,255,20,0.4);box-shadow:0 0 20px rgba(57,255,20,0.2);" onclick="completeStage4Challenge()">🏆 Complete Challenge</button>';
+    h += '</div>';
+  } else {
+  }
+  h += '</div></div>'; container.innerHTML = h;
+}
+
+function toggleMarkSetup() { recordMarkSetup = !recordMarkSetup; if (!recordMarkSetup) { lyrics.forEach(function(l,ri) { if (!recordMarks[ri]) recordMarks[ri] = { role: 'all' }; }); } renderStage(); }
+function setRecordMark(ri, key, val) { if (!recordMarks[ri]) recordMarks[ri] = { role: 'all' }; recordMarks[ri][key] = val; }
+
+function setRecordVersion(v) { recordVersion = v; renderStage(); }
+
+function startRecording() {
+  recordingState = 'ready';
+  var fs = document.getElementById('recordFullscreen');
+  fs.classList.add('active');
+  document.getElementById('recordFsReady').style.display = 'flex';
+  document.getElementById('recordFsCountdown').style.display = 'none';
+  document.getElementById('recordFsDot').style.display = 'none';
+  document.getElementById('recordFsTimer').style.display = 'none';
+  document.getElementById('recordFsLyric').style.display = 'none';
+  document.getElementById('recordFsProgress').style.display = 'none';
+  document.getElementById('recordFsActions').style.display = 'none';
+  document.getElementById('recordFsVerVocal').classList.toggle('active', recordVersion === 'original');
+  document.getElementById('recordFsVerBacking').classList.toggle('active', recordVersion === 'accomp');
+}
+
+function recordFsSetVersion(v) {
+  recordVersion = v;
+  document.getElementById('recordFsVerVocal').classList.toggle('active', v === 'original');
+  document.getElementById('recordFsVerBacking').classList.toggle('active', v === 'accomp');
+}
+
+function recordFsStartCountdown() {
+  recordingState = 'countdown';
+  document.getElementById('recordFsReady').style.display = 'none';
+  document.getElementById('recordFsCountdown').style.display = 'block';
+  document.getElementById('recordFsCountdown').textContent = '3';
+  var c = 3;
+  var iv = setInterval(function() {
+    c--;
+    var el = document.getElementById('recordFsCountdown');
+    if (el) el.textContent = c;
+    if (c <= 0) {
+      clearInterval(iv);
+      recordingState = 'recording';
+      document.getElementById('recordFsCountdown').style.display = 'none';
+      document.getElementById('recordFsDot').style.display = 'flex';
+      document.getElementById('recordFsTimer').style.display = 'block';
+      document.getElementById('recordFsLyric').style.display = 'flex';
+      document.getElementById('recordFsProgress').style.display = 'block';
+      document.getElementById('recordFsActions').style.display = 'flex';
+      document.getElementById('recordFsLyric').textContent = 'Get Ready…';
+      document.getElementById('recordFsLyric').className = 'record-fs-lyric role-all';
+      document.getElementById('recordFsTimer').textContent = '00:00';
+      document.getElementById('recordFsProgressFill').style.width = '0%';
+      var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
+      var a = document.getElementById(audioId);
+      a.currentTime = 0;
+      a.volume = 0.8;
+      a.play().then(function() { startRecordLyricSync(); }).catch(function() { showToast('⚠️ Demo: Audio not available'); });
+      var st = Date.now();
+      recordTimer = setInterval(function() {
+        var el2 = Math.floor((Date.now() - st) / 1000);
+        var m = Math.floor(el2 / 60), s = el2 % 60;
+        var t = document.getElementById('recordFsTimer');
+        if (t) t.textContent = (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+      }, 500);
+    }
+  }, 1000);
+}
+
+function startRecordLyricSync() {
+  var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
+  var a = document.getElementById(audioId);
+  function tick() {
+    if (recordingState !== 'recording') return;
+    var t = a.currentTime;
+    var el = document.getElementById('recordFsLyric');
+    var prog = document.getElementById('recordFsProgressFill');
+    if (prog) prog.style.width = (t / 39 * 100) + '%';
+    if (!el) { recordSyncTimer = requestAnimationFrame(tick); return; }
+    var found = false;
+    for (var i = 0; i < lyrics.length; i++) {
+      var ts = parseTimeSeconds(lyrics[i].time);
+      if (t >= ts.start && t < ts.end) {
+        var mk = recordMarks[i];
+        var role = (mk && mk.role) ? mk.role : 'all';
+        el.textContent = lyrics[i].text;
+        el.className = 'record-fs-lyric role-' + role;
+        found = true; break;
+      }
+    }
+    if (!found && t >= 39) { el.textContent = '🎵 Song Complete!'; el.className = 'record-fs-lyric role-all'; }
+    if (a.paused || a.ended) { return; }
+    recordSyncTimer = requestAnimationFrame(tick);
+  }
+  recordSyncTimer = requestAnimationFrame(tick);
+}
+
+function stopRecording() {
+  if (recordTimer) clearInterval(recordTimer);
+  if (recordSyncTimer) cancelAnimationFrame(recordSyncTimer);
+  var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
+  document.getElementById(audioId).pause();
+  recordingState = 'review';
+  // Stay in fullscreen, show review state
+  document.getElementById('recordFsReady').style.display = 'none';
+  document.getElementById('recordFsCountdown').style.display = 'none';
+  document.getElementById('recordFsDot').style.display = 'none';
+  document.getElementById('recordFsTimer').style.display = 'none';
+  document.getElementById('recordFsLyric').style.display = 'none';
+  document.getElementById('recordFsProgress').style.display = 'none';
+  document.getElementById('recordFsActions').style.display = 'none';
+  document.getElementById('recordFsReview').style.display = 'flex';
+}
+
+function recordFsExit() {
+  if (recordTimer) clearInterval(recordTimer);
+  if (recordSyncTimer) cancelAnimationFrame(recordSyncTimer);
+  var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
+  document.getElementById(audioId).pause();
+  recordingState = 'idle';
+  document.getElementById('recordFullscreen').classList.remove('active');
+  document.getElementById('recordFsReady').style.display = 'none';
+  document.getElementById('recordFsReview').style.display = 'none';
+  document.getElementById('recordFsCountdown').style.display = 'none';
+  document.getElementById('recordFsDot').style.display = 'none';
+  document.getElementById('recordFsTimer').style.display = 'none';
+  document.getElementById('recordFsLyric').style.display = 'none';
+  document.getElementById('recordFsProgress').style.display = 'none';
+  document.getElementById('recordFsActions').style.display = 'none';
+  renderStage();
+}
+
+function completeStage4Challenge() {
+  document.getElementById('recordFullscreen').classList.remove('active');
+  document.getElementById('recordFsReady').style.display = 'none';
+  document.getElementById('recordFsReview').style.display = 'none';
+  showStageClear(4);
+}
+
+function resetRecording() {
+  if (recordTimer) clearInterval(recordTimer);
+  if (recordSyncTimer) cancelAnimationFrame(recordSyncTimer);
+  var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
+  document.getElementById(audioId).pause();
+  document.getElementById(audioId).currentTime = 0;
+  recordingState = 'ready';
+  // Stay in fullscreen, go back to ready state
+  document.getElementById('recordFsReview').style.display = 'none';
+  document.getElementById('recordFsCountdown').style.display = 'none';
+  document.getElementById('recordFsDot').style.display = 'none';
+  document.getElementById('recordFsTimer').style.display = 'none';
+  document.getElementById('recordFsLyric').style.display = 'none';
+  document.getElementById('recordFsProgress').style.display = 'none';
+  document.getElementById('recordFsActions').style.display = 'none';
+  document.getElementById('recordFsReady').style.display = 'flex';
+  document.getElementById('recordFsVerVocal').classList.toggle('active', recordVersion === 'original');
+  document.getElementById('recordFsVerBacking').classList.toggle('active', recordVersion === 'accomp');
+}
+
+function celebrate(emoji) {
+  var overlay = document.getElementById('celebrateOverlay');
+  var badge = document.getElementById('celebrateBadge');
+  if (!overlay || !badge) return;
+  var colors = ['#00e5ff','#ff2d95','#ffb800','#39ff14','#fff','#7b68ee','#ff6b6b','#ffd700'];
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < 60; i++) {
+    var p = document.createElement('div');
+    p.className = 'celebrate-particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = (50 + Math.random() * 40) + '%';
+    p.style.width = (4 + Math.random() * 10) + 'px';
+    p.style.height = (4 + Math.random() * 10) + 'px';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    p.style.animationDelay = Math.random() * 0.4 + 's';
+    p.style.boxShadow = '0 0 ' + (4 + Math.random() * 8) + 'px ' + p.style.background;
+    frag.appendChild(p);
+  }
+  overlay.innerHTML = '';
+  overlay.appendChild(frag);
+  overlay.classList.add('active');
+  badge.textContent = emoji || '🏆';
+  badge.classList.add('active');
+  badge.style.animation = 'none';
+  badge.offsetHeight;
+  badge.style.animation = 'celebrateShrink 0.5s ease-out forwards';
+  setTimeout(function() {
+    overlay.classList.remove('active');
+    overlay.innerHTML = '';
+    badge.classList.remove('active');
+  }, 2800);
+}
+
+function launchConfetti() {
+  var overlay = document.getElementById('celebrateOverlay');
+  var badge = document.getElementById('celebrateBadge');
+  if (!overlay || !badge) return;
+  var colors = ['#00e5ff','#ff2d95','#ffb800','#39ff14','#ff6b6b','#7b68ee','#ffd700','#ff69b4','#00ff88','#ff8c00','#1e90ff','#ff1493'];
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < 150; i++) {
+    var p = document.createElement('div');
+    p.className = 'celebrate-particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.top = -(Math.random() * 30) + '%';
+    var w = 3 + Math.random() * 12;
+    p.style.width = w + 'px';
+    p.style.height = (w * (0.4 + Math.random() * 2.5)) + 'px';
+    p.style.background = colors[Math.floor(Math.random() * colors.length)];
+    p.style.animationDuration = (2 + Math.random() * 3) + 's';
+    p.style.animationDelay = Math.random() * 1.5 + 's';
+    p.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+    p.style.boxShadow = '0 0 ' + (4 + Math.random() * 10) + 'px ' + p.style.background;
+    p.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+    frag.appendChild(p);
+  }
+  overlay.innerHTML = '';
+  overlay.appendChild(frag);
+  overlay.classList.add('active');
+  badge.textContent = '🎉';
+  badge.classList.add('active');
+  badge.style.animation = 'none';
+  badge.offsetHeight;
+  badge.style.animation = 'celebrateShrink 0.5s ease-out forwards';
+  setTimeout(function() {
+    overlay.classList.remove('active');
+    overlay.innerHTML = '';
+    badge.classList.remove('active');
+  }, 4500);
+}
+
+function updateProgressBar() {
+  for (var i = 1; i <= 4; i++) {
+    var wrap = document.getElementById('progWrap' + i);
+    var node = document.getElementById('progNode' + i);
+    var conn = i < 4 ? document.getElementById('progConn' + i) : null;
+    if (!wrap || !node) continue;
+    wrap.classList.remove('active', 'completed');
+    node.classList.remove('active', 'completed', 'locked');
+    if (unlockedStages[i-1] && (i === currentStage || stage1Complete && i <= currentStage)) {
+      if (i === currentStage) {
+        wrap.classList.add('active');
+        node.classList.add('active');
+      } else {
+        wrap.classList.add('completed');
+        node.classList.add('completed');
+      }
+    } else {
+      node.classList.add('locked');
+    }
+    if (conn) {
+      conn.classList.remove('done');
+      if (unlockedStages[i] || (unlockedStages[i-1] && stage1Complete)) {
+        conn.classList.add('done');
+      }
+    }
+  }
+}
+
+(function init() {
+  // Shuffle fill options once so they don't move after selection
+  ex1FillData.forEach(function(item) { item.options = shuffleArr(item.options); });
+  updateMapBuildings();
+  s2SyncAudioEvents();
+  s3SyncAudioEvents();
+  s4SyncAudioEvents();
+  // Debug: press 1-4 on map to jump directly to any stage
+  document.addEventListener('keydown', function(e) {
+    var stageView = document.getElementById('stageView');
+    if (stageView.classList.contains('active')) return;
+    var n = parseInt(e.key);
+    if (n >= 1 && n <= 4) {
+      if (!unlockedStages[n-1]) unlockStage(n);
+      startStage(n);
+    }
+  });
+})();
+
+/* ═══════════ Teaching Plan Data ═══════════ */
+var teachingPlans = {
+  1: {
+    title: 'Stage 1 — Lyric Hunter 教学方案',
+    sections: [
+      {title:'🎯 教学目标',content:'<ul><li>学生通过填空和连词成句任务，熟悉歌词中的核心词汇和句型</li><li>通过填空挑战，学生能识别并补全歌词中的关键词</li><li>通过连词成句任务，学生能理解歌词的语序和结构</li><li>完成全部挑战后解锁完整歌词，建立成就感</li></ul>'},
+      {title:'📋 教学流程',content:'<p><strong>Step 1：任务导入 🔍</strong></p><p>告诉学生：今天我们要当"歌词猎人"！有一首神秘歌曲叫《Where Are You From》，但歌词被打散了——有些词不见了，有些句子顺序乱了。你能帮忙修复吗？激发好奇心后，说明本关任务：完成填空和连词成句挑战，解锁完整歌词。本关不播放完整歌曲，仅第三题含歌曲片段辅助听辨。</p><p><strong>Step 2：填空挑战</strong></p><p>显示带空格的歌词，学生从下方词库中选择正确单词填入。每完成一句，系统高亮下一句。</p><p><strong>Step 3：连词成句</strong></p><p>打乱单词顺序，学生点击单词按正确顺序排列成句。点击已选词可移除。</p><p><strong>Step 4：解锁完整歌词</strong></p><p>完成所有任务后，弹出通关界面，解锁 Stage 2（正式进入完整歌曲聆听与表演）。</p>'},
+      {title:'💬 教师语言',content:'<div class="teacher-talk">"Today you\'re Lyric Hunters! 🔍🕵️ We have a mystery song — \'Where Are You From\'. The lyrics are hidden in pieces! 🧩 Your mission: find the missing words and put the sentences back together. Are you ready for the challenge? 🤩👆"</div><div class="teacher-talk">"Look! Some words are missing! 🔍 Which word fits in this blank? Look at the word bank below 👇 and click your answer. Take your time — no rush! 🧘"</div><div class="teacher-talk">"Now let\'s build the sentence! 🧩 Click the words in the right order — like putting together a puzzle. If you make a mistake, just click the word again to remove it. 🔄 Try again!"</div><div class="teacher-talk">"You\'re doing amazing! 🎉🌟 One more challenge and you\'ll unlock the full lyrics. Keep going — you\'re almost there! 💪"</div>'}
+    ]
+  },
+  2: {
+    title: 'Stage 2 — Melody Mover 教学方案',
+    sections: [
+      {title:'🎯 教学目标',content:'<ul><li>首次聆听完整歌曲，感受旋律与节奏</li><li>学生能为每句歌词匹配动作和乐器，建立节奏感</li><li>通过身体动作（拍手、跺脚、挥手等）增强对歌词韵律的感知</li><li>通过乐器图标配器，理解不同节奏型与歌词段落的对应关系</li><li>在表演模式中完整演绎歌曲，体验合奏的乐趣</li></ul>'},
+      {title:'📋 教学流程',content:'<p><strong>Step 1：任务导入 🕺</strong></p><p>恭喜学生解锁完整歌词！现在身份升级为"旋律舞者"。告诉学生：我们将第一次听到完整歌曲，然后为每句歌词配上动作和乐器，让歌曲"活"起来！激发学生对完整聆听和身体律动的期待。</p><p><strong>Step 2：完整聆听歌曲</strong></p><p>首次播放完整歌曲，让学生感受旋律和节奏。鼓励学生闭上眼睛 👂 专注聆听，或轻轻摇摆身体感受律动。</p><p><strong>Step 3：认识动作和乐器</strong></p><p>带领学生浏览右侧的动作标签和乐器图标，逐一示范动作并模仿乐器声音。老师做、学生跟 👩‍🏫→👧👦。</p><p><strong>Step 4：拖拽匹配</strong></p><p>学生将动作或乐器拖拽到对应歌词行的槽位中。每行可添加多个槽位，支持动作+乐器组合。</p><p><strong>Step 5：进入表演模式</strong></p><p>点击 "Enter Performance Mode"，播放歌曲，系统按时间轴高亮当前歌词行，学生在下方看到自己编排的动作和乐器。</p><p><strong>Step 6：完成挑战</strong></p><p>确认所有行都完成匹配后，点击 "Complete Challenge" 通关。</p>'},
+      {title:'💬 教师语言',content:'<div class="teacher-talk">"Congratulations, Lyric Hunters! 🎉 You unlocked the full lyrics! Now you become MELODY MOVERS! 🕺💃 We\'re going to hear the complete song AND add our own actions and instruments. Get ready to MOVE! 🚀"</div><div class="teacher-talk">"Now we get to hear the FULL song! 🎵🎧 Close your eyes if you like — just listen and feel the rhythm. Let your body sway gently… 🎶"</div><div class="teacher-talk">"Let\'s learn some actions! 🙌 Watch me first: Clap your hands 👏 (clap clap!), stomp your feet 👣 (boom boom!), wave your arm 👋 (swoosh!). Now YOU try — ready, GO! 🚀"</div><div class="teacher-talk">"Look at the instruments! 🥁 Drum goes BOOM, 🪘 tambourine goes jingle-jingle, 🪇 maracas go sh-sh-sh! Which sound matches this line? Let\'s choose together! 🤔🎯"</div><div class="teacher-talk">"Drag an action OR an instrument — or BOTH! 🎨 Mix and match to create your own rhythm pattern. There\'s no wrong answer — get creative! ✨🌈"</div><div class="teacher-talk">"Ready for the BIG SHOW? 🎬🌟 Enter Performance Mode and let\'s perform the whole song together! Stand up, take a deep breath 😮‍💨, and SMILE! 😊🎵"</div>'}
+    ]
+  },
+  3: {
+    title: 'Stage 3 — Echo Master 教学方案',
+    sections: [
+      {title:'🎯 教学目标',content:'<ul><li>学生能逐句跟唱歌曲，掌握正确的发音和语调</li><li>通过三级难度递进，逐步脱离歌词辅助，实现独立演唱</li><li>初级（Beginner）：完整歌词辅助跟唱</li><li>中级（Intermediate）：部分歌词留空，学生凭记忆补全</li><li>高级（Challenge）：仅显示首字母提示，学生独立演唱</li></ul>'},
+      {title:'📋 教学流程',content:'<p><strong>Step 1：任务导入 🎤</strong></p><p>恭喜学生掌握了节奏！现在身份升级为"回声大师"。告诉学生：接下来要开口唱歌了！我们有三个难度级别——初级（完整歌词）、中级（部分隐藏）、高级（仅首字母）。可以从最简单的开始，逐步挑战自己。每个歌手都是这样长大的！</p><p><strong>Step 2：选择难度</strong></p><p>从初级开始，让学生先建立信心。点击 ⭐ Beginner / ⭐⭐ Intermediate / ⭐⭐⭐ Challenge 切换难度。</p><p><strong>Step 3：逐句跟唱</strong></p><p>播放音频（可选择 Vocal 原唱或 Backing 伴奏），学生跟唱当前高亮行。可调节播放速度（0.5x-1.5x）。</p><p><strong>Step 4：进阶挑战</strong></p><p>初级通过后，引导学生尝试中级和高级模式。每次升级后，歌词辅助减少，鼓励学生依靠记忆和首字母提示。</p><p><strong>Step 5：完成</strong></p><p>在任一难度下唱完所有行即视为完成，解锁 Stage 4。</p>'},
+      {title:'💬 教师语言',content:'<div class="teacher-talk">"Welcome to Echo Master! 🎤✨ You\'ve felt the rhythm — now it\'s time to use your VOICE! We have three levels: ⭐ Beginner (easy), ⭐⭐ Intermediate (medium), ⭐⭐⭐ Challenge (hard). Start where you feel comfortable — every singer starts somewhere! 🎵"</div><div class="teacher-talk">"Let\'s start with Beginner mode ⭐ — all the words are right here. Follow the highlighted line and sing with confidence! 👀✨"</div><div class="teacher-talk">"Speed too fast? 🏃 No worries! Slow it down to 0.5x 🐢 — take your time, say each word clearly. You can always speed up later! 🎮"</div><div class="teacher-talk">"Now let\'s level up to Intermediate! ⬆️⭐ Some words are hidden — can you remember them? 🤔💭 Close your eyes, think of the song… YES, you know this! 🙌"</div><div class="teacher-talk">"Challenge mode! ⚡⭐⭐ Only the FIRST LETTER shows. Take a deep breath 😮‍💨, stand tall 🧍, and GO FOR IT! Trust your memory — you\'ve practiced so much! 💪🔥"</div><div class="teacher-talk">"Speed control is your friend! 🎚️ 0.5x = practice mode 🐢 | 1x = normal 🚶 | 1.5x = super fun challenge! 🚀 Which one will you try?"</div>'}
+    ]
+  },
+  4: {
+    title: 'Stage 4 — Star Studio 教学方案',
+    sections: [
+      {title:'🎯 教学目标',content:'<ul><li>学生通过自主选择颜色分工协作，完成歌曲的完整演绎</li><li>学生能自主选择演唱版本（Vocal 原唱 / Backing 伴奏）</li><li>通过录制功能，学生能回听自己的演唱并进行自我评估</li><li>培养团队协作意识和舞台表现力</li></ul>'},
+      {title:'📋 教学流程',content:'<p><strong>Step 1：任务导入 🌟</strong></p><p>这是最后一关了！欢迎来到"星光录音棚"。告诉学生：今天你们就是真正的录音歌手！我们要分工合作——每个人选一个颜色代表自己，用颜色标记各自要唱的歌词，选择伴奏版本，然后录制属于你们自己的歌曲版本。这一刻属于你们！</p><p><strong>Step 2：标记演唱分工</strong></p><p>点击 "Mark" 展开标记面板，让每位学生或小组选择自己的代表颜色，然后用对应颜色标记各自要唱的歌词行。点击颜色按钮即可为当前歌词行分配该颜色，不同颜色直观区分不同演唱者。</p><p><strong>Step 3：选择演唱版本</strong></p><p>在录制界面上方选择 Vocal（带原唱引导）或 Backing（纯伴奏挑战）。</p><p><strong>Step 4：开始录制</strong></p><p>点击 "Start Recording"，倒计时后开始录制。录制时系统实时显示当前歌词行和对应颜色，学生看到自己的颜色亮起就知道轮到自己唱了。</p><p><strong>Step 5：回听与完成</strong></p><p>点击 "Stop Recording" 后停留在录制界面，可选择 Re-record（重录）、Complete Challenge（完成）或返回关卡。</p>'},
+      {title:'💬 教师语言',content:'<div class="teacher-talk">"Welcome to Star Studio! 🌟🎬 This is the GRAND FINALE! You\'re about to become recording artists. Each of you will pick your own color, mark your lines, and record our very own version of the song. This is YOUR moment to shine! ✨🎤"</div><div class="teacher-talk">"Teamwork time! 🤝 Each person or group picks their OWN color! 🎨 Pick your favorite color first — then use it to mark the lines YOU will sing. Your color = your part! 🌈 Ready? Let\'s choose!"</div><div class="teacher-talk">"Look at the screen — when you see YOUR color light up, that\'s YOUR cue to sing! 🎤🎨 Point to your color and get ready — stand tall, take a breath, and GO! 💪✨"</div><div class="teacher-talk">"Choose your backing track! 🎧 Vocal mode = the singer guides you 🎤 | Backing mode = just the music, YOU are the star! 🌟🎸 Which one feels right?"</div><div class="teacher-talk">"When you\'re ready, hit START RECORDING! 🔴 3… 2… 1… GO! 🚀 Stand up straight 🧍, big smile 😊, and give it EVERYTHING you\'ve got! 💪🎶🌟"</div><div class="teacher-talk">"After recording, listen back carefully 👂🎧. What sounded great? 👍 Where can you improve? 🤔 You can always RE-RECORD 🔄 — every try makes you better! Practice makes progress! 📈💫"</div><div class="teacher-talk">"Celebrate your performance! 🎉👏 Every recording is a step forward — you\'re becoming a REAL star! ⭐🌟 Now, shall we listen together? 🎵😊"</div>'}
+    ]
+  }
+};
+
+function openTeachingDrawer(stageNum) {
+  var plan = teachingPlans[stageNum];
+  if (!plan) return;
+  document.getElementById('teachingDrawerTitle').textContent = '📋 ' + plan.title;
+  var body = document.getElementById('teachingDrawerBody');
+  var h = '';
+  plan.sections.forEach(function(sec) {
+    h += '<div class="teaching-plan-section"><h3>' + sec.title + '</h3>' + sec.content + '</div>';
+  });
+  body.innerHTML = h;
+  document.getElementById('teachingDrawerOverlay').classList.add('active');
+  document.getElementById('teachingDrawer').classList.add('active');
+}
+
+function closeTeachingDrawer() {
+  document.getElementById('teachingDrawerOverlay').classList.remove('active');
+  document.getElementById('teachingDrawer').classList.remove('active');
+}
+
+function expandTeachingPlan() {
+  var title = document.getElementById('teachingDrawerTitle').textContent;
+  var body = document.getElementById('teachingDrawerBody').innerHTML;
+  document.getElementById('teachingFullscreenTitle').textContent = title;
+  document.getElementById('teachingFullscreenBody').innerHTML = body;
+  document.getElementById('teachingFullscreen').classList.add('active');
+}
+
+function closeTeachingFullscreen() {
+  document.getElementById('teachingFullscreen').classList.remove('active');
+}
+
+/* ═══════════ Activity Guide Drawer ═══════════ */
+function openActivityGuide() {
+  document.getElementById('activityGuideOverlay').classList.add('active');
+  document.getElementById('activityGuideDrawer').classList.add('active');
+}
+function closeActivityGuide() {
+  document.getElementById('activityGuideOverlay').classList.remove('active');
+  document.getElementById('activityGuideDrawer').classList.remove('active');
+}
+function expandActivityGuide() {
+  var body = document.getElementById('activityGuideDrawerBody').innerHTML;
+  document.getElementById('activityFullscreenBody').innerHTML = body;
+  document.getElementById('activityFullscreen').classList.add('active');
+}
+function closeActivityFullscreen() {
+  document.getElementById('activityFullscreen').classList.remove('active');
+}
+</script>
+
+<!-- Activity Guide Drawer -->
+<div class="teaching-drawer-overlay" id="activityGuideOverlay" onclick="closeActivityGuide()"></div>
+<div class="teaching-drawer" id="activityGuideDrawer">
+  <div class="teaching-drawer-header">
+    <h2>📖 活动说明</h2>
+    <div class="td-actions">
+      <button class="td-expand" onclick="expandActivityGuide()" title="全屏查看">⛶</button>
+      <button class="td-close" onclick="closeActivityGuide()">✕</button>
+    </div>
+  </div>
+  <div class="teaching-drawer-body" id="activityGuideDrawerBody">
+    <div class="teaching-plan-section">
+      <h3>🎯 整体教学目标</h3>
+      <ul>
+        <li>掌握歌曲《Where Are You From》的核心词汇、句型和语序</li>
+        <li>通过身体律动和乐器配器建立节奏感与韵律感知</li>
+        <li>通过三级难度递进，实现从辅助跟唱到独立演唱的过渡</li>
+        <li>通过颜色分工协作完成歌曲完整演绎，培养团队协作和舞台表现力</li>
+      </ul>
+    </div>
+    <div class="teaching-plan-section">
+      <h3>🗺️ 关卡总览</h3>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px">
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.08)">
+          <td style="padding:10px 8px;font-size:20px;width:36px">🔤</td>
+          <td style="padding:10px 8px"><strong style="color:#00e5ff">Stage 1 — Lyric Hunter</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">歌词猎人：填空+连词成句，解锁完整歌词（不播放完整歌曲）</span></td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.08)">
+          <td style="padding:10px 8px;font-size:20px">🕺</td>
+          <td style="padding:10px 8px"><strong style="color:#ffb800">Stage 2 — Melody Mover</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">旋律舞者：首次聆听完整歌曲，为每句歌词配上动作和乐器</span></td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.08)">
+          <td style="padding:10px 8px;font-size:20px">🎤</td>
+          <td style="padding:10px 8px"><strong style="color:#ff2d95">Stage 3 — Echo Master</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">回声大师：三级难度逐句跟唱，从完整歌词到仅首字母提示</span></td>
+        </tr>
+        <tr>
+          <td style="padding:10px 8px;font-size:20px">🌟</td>
+          <td style="padding:10px 8px"><strong style="color:#39ff14">Stage 4 — Star Studio</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">星光录音棚：选颜色分工标记，录制属于自己的歌曲版本</span></td>
+        </tr>
+      </table>
+    </div>
+    <div class="teaching-plan-section">
+      <h3>🎮 操作提示</h3>
+      <ul>
+        <li><strong>逐关解锁</strong>：完成当前关卡后自动解锁下一关，地图上锁 🔒 会变为 ✅</li>
+        <li><strong>数字快捷键</strong>：在地图页面按键盘数字键 <code style="background:rgba(57,255,20,0.15);color:#39ff14;padding:1px 6px;border-radius:3px;margin:0 2px">1</code> <code style="background:rgba(57,255,20,0.15);color:#39ff14;padding:1px 6px;border-radius:3px;margin:0 2px">2</code> <code style="background:rgba(57,255,20,0.15);color:#39ff14;padding:1px 6px;border-radius:3px;margin:0 2px">3</code> <code style="background:rgba(57,255,20,0.15);color:#39ff14;padding:1px 6px;border-radius:3px;margin:0 2px">4</code> 可直接跳入对应关卡，无需鼠标点击地图</li>
+        <li><strong>教学方案</strong>：每个关卡右上角有 "How to teach" 按钮，点击可查看该关卡的详细教学方案（含教学目标、教学流程和教师讲稿）</li>
+        <li><strong>返回地图</strong>：关卡内点击左上角 🏠 按钮可随时回到闯关地图</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Activity Guide Fullscreen -->
+<div class="teaching-fullscreen" id="activityFullscreen">
+  <div class="tf-header">
+    <h2>📖 活动说明</h2>
+    <button class="tf-close" onclick="closeActivityFullscreen()">✕</button>
+  </div>
+  <div class="tf-body" id="activityFullscreenBody"></div>
+</div>
+
+<!-- Teaching Plan Drawer -->
+<div class="teaching-drawer-overlay" id="teachingDrawerOverlay" onclick="closeTeachingDrawer()"></div>
+<div class="teaching-drawer" id="teachingDrawer">
+  <div class="teaching-drawer-header">
+    <h2 id="teachingDrawerTitle">📋 Teaching Plan</h2>
+    <div class="td-actions">
+      <button class="td-expand" onclick="expandTeachingPlan()" title="Fullscreen">⛶</button>
+      <button class="td-close" onclick="closeTeachingDrawer()">✕</button>
+    </div>
+  </div>
+  <div class="teaching-drawer-body" id="teachingDrawerBody"></div>
+</div>
+
+<!-- Teaching Plan Fullscreen -->
+<div class="teaching-fullscreen" id="teachingFullscreen">
+  <div class="tf-header">
+    <h2 id="teachingFullscreenTitle">📋 Teaching Plan</h2>
+    <button class="tf-close" onclick="closeTeachingFullscreen()">✕</button>
+  </div>
+  <div class="tf-body" id="teachingFullscreenBody"></div>
+</div>
+
+<!-- Stage 2 Pool Modal -->
+<div class="s2-pool-modal" id="s2PoolModal" onclick="if(event.target===this)s2ClosePoolModal()">
+  <div class="s2-pool-modal-backdrop"></div>
+  <div class="s2-pool-modal-content" id="s2PoolModalContent">
+    <button class="s2-pool-modal-close" onclick="s2ClosePoolModal()">✕</button>
+    <h3 id="s2PoolModalTitle"></h3>
+    <div class="s2-modal-grid" id="s2PoolModalGrid"></div>
+  </div>
+</div>
+
+</body>
+</html>

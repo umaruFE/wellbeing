@@ -232,3 +232,47 @@ export function clearPromptCache(): void {
   cache.clear();
   sectionCache.clear();
 }
+
+// ---------- 通用 Wiki 文档页加载（按完整路径，供生成时注入规范文档） ----------
+
+const docPageCache = new Map<string, { text: string | null; fetchedAt: number }>();
+
+/**
+ * 按完整路径加载 Wiki 页面原始内容（不做 system/user 段落解析）。
+ * 用于把 wellbeing/docs/ 下的规范文档在生成时注入提示词。
+ * - Wiki 未启用 / 页面缺失 / 请求失败 → 返回 null（调用方跳过注入即可）
+ * - 结果缓存 TTL 与提示词模板一致
+ */
+export async function loadWikiPage(path: string): Promise<string | null> {
+  if (!isPromptLibraryEnabled()) return null;
+
+  const cached = docPageCache.get(path);
+  if (cached && Date.now() - cached.fetchedAt < TTL_MS) return cached.text;
+
+  const query = `query ($path: String!, $locale: String!) {
+    pages { singleByPath(path: $path, locale: $locale) { content } }
+  }`;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  let text: string | null = null;
+  try {
+    const response = await fetch(`${API_URL}/graphql`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${API_KEY}` },
+      body: JSON.stringify({ query, variables: { path, locale: LOCALE } }),
+      signal: controller.signal,
+    });
+    if (response.ok) {
+      const json = await response.json();
+      text = json?.data?.pages?.singleByPath?.content || null;
+    } else {
+      console.warn(`[prompt-library] 加载文档页失败 ${path}: HTTP ${response.status}`);
+    }
+  } catch (err) {
+    console.warn(`[prompt-library] 加载文档页失败 ${path}:`, err instanceof Error ? err.message : err);
+  } finally {
+    clearTimeout(timer);
+  }
+  docPageCache.set(path, { text, fetchedAt: Date.now() });
+  return text;
+}

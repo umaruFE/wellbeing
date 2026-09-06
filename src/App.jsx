@@ -27,7 +27,8 @@ import { KnowledgeUploadPage } from './modules/picture-book/KnowledgeUploadPage'
 import { SongWritingStudioPage } from './modules/song-writing/SongWritingStudioPage';
 import { SongLibraryPage } from './modules/song-library/SongLibraryPage';
 import { CreativeWorkshopPage } from './modules/creative-workshop/CreativeWorkshopPage';
-import { ExperiencePage } from './modules/creative-workshop/ExperiencePage';
+import { YogaStudioPage } from './modules/creative-workshop/YogaStudioPage';
+import { MusicStudioPage } from './modules/creative-workshop/MusicStudioPage';
 import { MyWorksPage } from './modules/creative-workshop/MyWorksPage';
 
 const HomeRoute = () => {
@@ -106,7 +107,7 @@ function App() {
               path="/workshop/interactive-yoga"
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator', 'viewer']}>
-                  <ExperiencePage experience="yoga" />
+                  <YogaStudioPage key="yoga" />
                 </RequireAuth>
               }
             />
@@ -115,7 +116,7 @@ function App() {
               path="/workshop/music-star-quest"
               element={
                 <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator', 'viewer']}>
-                  <ExperiencePage experience="star" />
+                  <MusicStudioPage key="star" />
                 </RequireAuth>
               }
             />

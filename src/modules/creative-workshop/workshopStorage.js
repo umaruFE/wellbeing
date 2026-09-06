@@ -60,6 +60,64 @@ export const createCreativeWork = async ({ moduleId, moduleName, title, paramete
   return normalize(json.data);
 };
 
+// 保存步骤数据（瑜伽工作室）：{ title?, parameters?, plan?, pages? }，服务端同步重渲染 HTML
+export const updateCreativeWork = async (id, payload) => {
+  const response = await fetch(`/api/creative-works/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(payload),
+  });
+  const json = await parseResponse(response);
+  return json.data;
+};
+
+// AI 生成活动方案（工作室 step 2）→ { title, plan }
+export const generateCreativeWorkPlan = async (id) => {
+  const response = await fetch(`/api/creative-works/${id}/plan`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  const json = await parseResponse(response);
+  return json.data;
+};
+
+// AI 生成逐页设计（工作室 step 3，结合已存方案）→ { title, pages }
+export const generateCreativeWorkDesign = async (id) => {
+  const response = await fetch(`/api/creative-works/${id}/design`, {
+    method: 'POST',
+    headers: authHeaders(),
+  });
+  const json = await parseResponse(response);
+  return json.data;
+};
+
+// ── 星光录音棚（Music Star Quest）──
+
+// AI 生成歌曲（歌名 + 歌词时间轴 + 目标句型）→ { title, song }
+export const generateCreativeWorkSong = async (id) => {
+  const response = await fetch(`/api/creative-works/${id}/song`, { method: 'POST', headers: authHeaders() });
+  const json = await parseResponse(response);
+  return json.data;
+};
+
+// AI 生成第一关练习 + 四关教学方案（基于已存歌词）→ exercises
+export const generateCreativeWorkExercises = async (id) => {
+  const response = await fetch(`/api/creative-works/${id}/exercises`, { method: 'POST', headers: authHeaders() });
+  const json = await parseResponse(response);
+  return json.data;
+};
+
+// 渲染四关游戏课件（显式触发，携带音频 data URI）→ { htmlUrl, hasAudio }
+export const renderCreativeWork = async (id, audio) => {
+  const response = await fetch(`/api/creative-works/${id}/render`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ audio }),
+  });
+  const json = await parseResponse(response);
+  return json.data;
+};
+
 export const deleteCreativeWork = async (id) => {
   const response = await fetch(`/api/creative-works/${id}`, {
     method: 'DELETE',

@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import { authenticate } from '@/lib/auth';
+import { extractToken, verifyToken } from '@/lib/auth';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // GET /api/creative-works/[id]/html — 查看/下载生成的作品 HTML（iframe 或新窗口打开）
+// 新窗口打开带不了 Authorization 头，支持 ?token= 查询参数（与 header 二选一）
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const authResult = authenticate(request);
+    const token = extractToken(request) || new URL(request.url).searchParams.get('token');
+    const authResult = token ? verifyToken(token) : { success: false, error: '未提供认证token' };
     if (!authResult.success) {
       return NextResponse.json({ error: authResult.error || '认证失败' }, { status: 401 });
     }

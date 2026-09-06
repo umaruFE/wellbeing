@@ -886,7 +886,7 @@ let isTeachMode = false;
 // ============ RENDER TEACH MODE ============
 function renderTeachMode() {
   const page = pages[currentPage];
-  document.getElementById('teachImage').src = page.img;
+  document.getElementById('teachImage').src = pageImg(page);
   document.getElementById('subtitleText').textContent = page.subtitle;
   document.getElementById('subtitleOverlay').style.display = (currentPage === 0) ? 'none' : '';
 
