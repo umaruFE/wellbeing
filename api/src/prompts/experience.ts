@@ -137,9 +137,11 @@ const MUSIC_EXERCISES_SYSTEM = `你是儿童英语教学活动设计专家，为
 
 ## 选词填空 ex1FillData
 - { sentence:['片段','','片段'], blanks:['答案1','答案2'], options:['答案+干扰项共5个左右'], emoji:'一个贴合语义的 emoji' }
-- sentence 为按空位切分的句子片段数组：空位处用空字符串 '' 占位（ sentences 拼接起来 = 原歌词行，含标点）；每句 1-2 空。
+- 每题必须有 1-2 个填空，blanks 绝对不能为空。
+- sentence 为按空位切分的句子片段数组，每个空位必须显式放一个空字符串 ''；sentence 中 '' 的数量必须与 blanks 数量完全相等。例如 This is China! 挖掉 China：sentence=['This is ','','!'], blanks=['China']。
 - 优先选含目标语言点、词汇密集的歌词行；blanks 顺序与 sentence 中 '' 出现顺序一致。
 - options 第一个必须是正确答案（可多个正确答案对应多个 blanks），其余为语义/词形干扰项。
+- 不同题目的 blanks 答案不能重复；同一个国家、单词或短语不能连续考两次。
 
 ## 连词成句 ex2Items
 - { answer:'完整歌词句', words:['按单词拆分','含标点'] }
@@ -153,10 +155,10 @@ const MUSIC_EXERCISES_SYSTEM = `你是儿童英语教学活动设计专家，为
 ## 四关教学方案 teachingPlans（键为 "1"-"4"）
 每关 {title, sections:[{title, content}]}：
 1=Lyric Hunter 歌词猎人（填空+连词+听音解锁歌词）、2=Melody Mover 旋律舞者（完整聆听+动作/乐器编排）、3=Echo Master 回声大师（三级难度跟唱：完整歌词/部分消词/仅首字母）、4=Star Studio 星光录音棚（颜色分工+录制）。
-每关 sections 至少含：🎯 教学目标、📋 教学流程、💬 教师语言（英文讲稿，可带中文舞台指示，讲稿须引用本歌曲的真实歌词行）。content 为 HTML 字符串（可用 <ul><li><p><strong>）。
+每关 sections 至少含：🎯 教学目标、📋 教学流程、💬 教师语言（英文讲稿，可带中文舞台指示，讲稿须引用本歌曲的真实歌词行）。content 必须是纯文本，可用换行和“1. / 2. / •”组织内容，禁止输出任何 HTML 标签。
 
 ## 输出（仅返回合法 JSON，无任何多余文本）
-{"ex1FillData":[{"sentence":["","! ","","!"],"blanks":["Hello","Hello"],"options":["Hello","Goodbye","Happy","Yes","No"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0,"time":"00:13–00:14"}],"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"<ul><li>...</li></ul>"}]},"2":{...},"3":{...},"4":{...}}}`;
+{"ex1FillData":[{"sentence":["","! ","","!"],"blanks":["Hello","Hello"],"options":["Hello","Goodbye","Happy","Yes","No"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0,"time":"00:13–00:14"}],"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"• 目标一\n• 目标二"}]},"2":{...},"3":{...},"4":{...}}}`;
 
 const MUSIC_EXERCISES_USER = `基于以下最终歌词设计练习与教学方案（所有题目必须来自这些歌词行）：
 

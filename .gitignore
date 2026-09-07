@@ -23,9 +23,15 @@ dist-ssr
 *.sln
 *.sw?
 /api/.next
+/api/tsconfig.tsbuildinfo
+/api/tmp-*.md
+/api/scripts/*.tmp.mjs
 /api/public/uploads
 .env
 api/.env
 /outputs
 /tmp
 .migration-backups/
+/newpage1
+/newpage
+/.zcode

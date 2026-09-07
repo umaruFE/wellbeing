@@ -6,7 +6,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import {
   createCreativeWork, deleteCreativeWork, generateCreativeWorkExercises,
-  generateCreativeWorkSong, getCreativeWorks, renderCreativeWork, updateCreativeWork,
+  generateCreativeWorkLyricLine, generateCreativeWorkSong, getCreativeWorks, renderCreativeWork, updateCreativeWork,
 } from './workshopStorage';
 import '../picture-book/PictureBookStudioPage.css';
 import './creativeWorkshop.css';
@@ -25,7 +25,31 @@ const STRUCTURE_OPTIONS = ['简单重复', '主歌+副歌', '主歌+副歌+桥�
 const initialBasicInfo = { goals: '', theme: '', age: '', level: '', style: '', duration: '', structure: '', requirements: '' };
 const initialSong = { title: '', songMeta: {}, lyrics: [], targetPatterns: [] };
 const initialExercises = { ex1FillData: [], ex2Items: [], ex3Data: [], teachingPlans: {} };
-const STAGE_TITLES = { 1: 'Stage 1', 2: 'Stage 2', 3: 'Stage 3', 4: 'Stage 4' };
+const STAGE_TITLES = { 1: 'Lyric Hunter', 2: 'Melody Mover', 3: 'Echo Master', 4: 'Star Studio' };
+const hasCompleteExercises = (value) => Boolean(
+  value?.ex1FillData?.length
+  && value?.ex2Items?.length
+  && value?.ex3Data?.length
+  && ['1', '2', '3', '4'].every((key) => value?.teachingPlans?.[key])
+);
+const htmlToPlainText = (value) => String(value || '')
+  .replace(/<br\s*\/?>/gi, '\n')
+  .replace(/<\/(p|li|div|ul|ol|h[1-6])>/gi, '\n')
+  .replace(/<li[^>]*>/gi, '• ')
+  .replace(/<[^>]+>/g, '')
+  .replace(/&nbsp;/gi, ' ')
+  .replace(/&amp;/gi, '&')
+  .replace(/&lt;/gi, '<')
+  .replace(/&gt;/gi, '>')
+  .replace(/&quot;/gi, '"')
+  .replace(/&#39;|&apos;/gi, "'")
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
+const plainTeachingPlans = (plans) => Object.fromEntries(Object.entries(plans || {}).map(([key, plan]) => [key, {
+  ...plan,
+  title: htmlToPlainText(plan?.title),
+  sections: (plan?.sections || []).map((section) => ({ ...section, title: htmlToPlainText(section.title), content: htmlToPlainText(section.content) })),
+}]));
 
 // ── 与绘本/瑜伽同款表单小组件 ───────────────────────────────
 function OptionGroup({ label, required, options, value, onChange, tone = 'coral' }) {
@@ -60,33 +84,58 @@ const sentenceToText = (parts) => (parts || []).join('___');
 const textToParts = (text) => String(text).split('___');
 
 // ── 歌词编辑器（step 2）─────────────────────────────────────
-function LyricsEditor({ lyrics, onChange }) {
-  const updateRow = (idx, patch) => onChange(lyrics.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
-  const removeRow = (idx) => onChange(lyrics.filter((_, i) => i !== idx));
+function LyricsEditor({ lyrics, onGenerateLine }) {
+  const [keywords, setKeywords] = React.useState({});
+  const [generatingIndex, setGeneratingIndex] = React.useState(null);
+  const generate = async (idx) => {
+    if (generatingIndex !== null) return;
+    setGeneratingIndex(idx);
+    try {
+      await onGenerateLine(idx, keywords[idx] || '');
+    } finally {
+      setGeneratingIndex(null);
+    }
+  };
   return (
     <section className="pbv2-card pbv2-tone-blue">
       <div className="pbv2-card-title">歌词时间轴（授课时按 time 与音频同步高亮）</div>
+      <p className="yoga-design-hint">时间轴保持不变。输入希望加入或调整的关键词，再单独重新生成对应歌词。</p>
       {lyrics.map((row, idx) => (
         <div key={idx} className="cw-lyric-row">
-          <input className="cw-lyric-time" value={row.time || ''} onChange={(e) => updateRow(idx, { time: e.target.value })} placeholder="00:02–00:04" />
-          <input className="cw-lyric-text" value={row.text || ''} onChange={(e) => updateRow(idx, { text: e.target.value })} placeholder="歌词行" />
-          <button type="button" className="cw-lyric-remove" onClick={() => removeRow(idx)} aria-label="删除歌词行"><Trash2 size={14} /></button>
+          <span className="cw-lyric-time">{row.time || '--:--'}</span>
+          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || '尚未生成'}</span>
+          <input
+            className="cw-lyric-keywords"
+            value={keywords[idx] || ''}
+            onChange={(e) => setKeywords((prev) => ({ ...prev, [idx]: e.target.value }))}
+            placeholder="调整关键词，如：sunshine, hello"
+          />
+          <button type="button" className="pbv2-ghost cw-lyric-generate" disabled={generatingIndex !== null} onClick={() => generate(idx)}>
+            {generatingIndex === idx ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
+            {row.text ? '重新生成' : '生成'}
+          </button>
         </div>
       ))}
-      <button type="button" className="pbv2-add-page" onClick={() => onChange([...lyrics, { time: '', text: '' }])}>
-        <Plus size={16} /> 添加一行
-      </button>
     </section>
   );
 }
 
 // ── 练习编辑器（step 3）─────────────────────────────────────
-function FillEditor({ items, onChange }) {
+function AiSectionButton({ loading, hasContent, onClick }) {
+  return (
+    <button type="button" className="pbv2-ghost cw-section-ai" disabled={loading} onClick={onClick}>
+      {loading ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />}
+      {loading ? 'AI 生成中…' : (hasContent ? 'AI 重新生成' : 'AI 生成')}
+    </button>
+  );
+}
+
+function FillEditor({ items, onChange, onGenerate, generating }) {
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   return (
     <section className="pbv2-card pbv2-tone-yellow">
-      <div className="pbv2-card-title">选词填空（Exercise 1）</div>
+      <div className="cw-section-title"><div className="pbv2-card-title">选词填空（Exercise 1）</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head"><span>第 {idx + 1} 题</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
@@ -105,12 +154,12 @@ function FillEditor({ items, onChange }) {
   );
 }
 
-function ScrambleEditor({ items, onChange }) {
+function ScrambleEditor({ items, onChange, onGenerate, generating }) {
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   return (
     <section className="pbv2-card pbv2-tone-green">
-      <div className="pbv2-card-title">连词成句（Exercise 2，单词顺序游戏内自动打乱）</div>
+      <div className="cw-section-title"><div className="pbv2-card-title">连词成句（Exercise 2，单词顺序游戏内自动打乱）</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head"><span>第 {idx + 1} 题</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
@@ -124,13 +173,13 @@ function ScrambleEditor({ items, onChange }) {
   );
 }
 
-function ListenEditor({ items, onChange }) {
+function ListenEditor({ items, onChange, onGenerate, generating }) {
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   const updateOption = (idx, oi, value) => update(idx, { options: items[idx].options.map((o, i) => (i === oi ? value : o)) });
   return (
     <section className="pbv2-card pbv2-tone-coral">
-      <div className="pbv2-card-title">听音选词（Exercise 3，正确句播放歌曲片段后选择）</div>
+      <div className="cw-section-title"><div className="pbv2-card-title">听音选词（Exercise 3，正确句播放歌曲片段后选择）</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head">
@@ -154,8 +203,9 @@ function ListenEditor({ items, onChange }) {
   );
 }
 
-function PlansEditor({ plans, onChange }) {
+function PlansEditor({ plans, onChange, onGenerate, generating }) {
   const stages = ['1', '2', '3', '4'];
+  const [activeStage, setActiveStage] = React.useState('1');
   const updateStage = (key, patch) => onChange({ ...plans, [key]: { ...(plans[key] || {}), ...patch } });
   const updateSection = (key, si, patch) => {
     const sections = (plans[key]?.sections || []).map((s, i) => (i === si ? { ...s, ...patch } : s));
@@ -163,22 +213,29 @@ function PlansEditor({ plans, onChange }) {
   };
   return (
     <section className="pbv2-card pbv2-tone-blue">
-      <div className="pbv2-card-title">四关教学方案（游戏内「How to teach」抽屉展示）</div>
-      {stages.map((key) => {
-        const plan = plans[key] || { title: '', sections: [] };
+      <div className="cw-section-title"><div className="pbv2-card-title">四关教学方案（游戏内「How to teach」抽屉展示）</div><AiSectionButton loading={generating} hasContent={Object.keys(plans || {}).length > 0} onClick={onGenerate} /></div>
+      <div className="cw-stage-tabs" role="tablist" aria-label="四关教学环节">
+        {stages.map((key, index) => (
+          <button key={key} type="button" role="tab" aria-selected={activeStage === key} className={activeStage === key ? 'is-active' : ''} onClick={() => setActiveStage(key)}>
+            第 {index + 1} 关教案<small>{STAGE_TITLES[key]}</small>
+          </button>
+        ))}
+      </div>
+      {(() => {
+        const plan = plans[activeStage] || { title: '', sections: [] };
         return (
-          <details key={key} className="cw-plan-details">
-            <summary>{STAGE_TITLES[key]} · {plan.title || '未命名'}</summary>
-            <Field label="方案标题" value={plan.title || ''} onChange={(v) => updateStage(key, { title: v })} />
+          <div className="cw-plan-stage" role="tabpanel">
+            <h4>第 {activeStage} 关 · {STAGE_TITLES[activeStage]} · {plan.title || '未命名教学方案'}</h4>
+            <Field label="方案标题" value={plan.title || ''} onChange={(v) => updateStage(activeStage, { title: v })} />
             {(plan.sections || []).map((section, si) => (
               <div key={si} className="cw-plan-section">
-                <Field label={`分节标题 ${si + 1}`} value={section.title || ''} onChange={(v) => updateSection(key, si, { title: v })} />
-                <Field area label="内容（支持 HTML）" value={section.content || ''} onChange={(v) => updateSection(key, si, { content: v })} />
+                <Field label={`分节标题 ${si + 1}`} value={section.title || ''} onChange={(v) => updateSection(activeStage, si, { title: v })} />
+                <Field area label="内容" value={section.content || ''} onChange={(v) => updateSection(activeStage, si, { content: v })} />
               </div>
             ))}
-          </details>
+          </div>
         );
-      })}
+      })()}
     </section>
   );
 }
@@ -231,6 +288,7 @@ export function MusicStudioPage() {
 
   const [songGenerating, setSongGenerating] = React.useState(false);
   const [exGenerating, setExGenerating] = React.useState(false);
+  const [sectionGenerating, setSectionGenerating] = React.useState('');
   const [rendering, setRendering] = React.useState(false);
   const [rendered, setRendered] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
@@ -258,13 +316,21 @@ export function MusicStudioPage() {
       ex1FillData: Array.isArray(r.ex1FillData) ? r.ex1FillData : [],
       ex2Items: Array.isArray(r.ex2Items) ? r.ex2Items : [],
       ex3Data: Array.isArray(r.ex3Data) ? r.ex3Data : [],
-      teachingPlans: r.teachingPlans || {},
+      teachingPlans: plainTeachingPlans(r.teachingPlans),
     });
     setAudio(r.audio || {});
     setRendered(Boolean(work.hasHtml));
     setMessage('');
-    setStep(r.lyrics?.length ? (r.ex1FillData?.length ? 3 : 2) : 0);
+    const exercisesComplete = hasCompleteExercises(r);
+    setStep(r.lyrics?.length ? (exercisesComplete ? 3 : 2) : 0);
     setView('studio');
+    if (r.lyrics?.length && !exercisesComplete) {
+      setExGenerating(true);
+      generateCreativeWorkExercises(work.id)
+        .then((data) => setExercises({ ...initialExercises, ...data }))
+        .catch((err) => setMessage(err.message || '练习与教案生成失败，请点击 AI 生成重试'))
+        .finally(() => setExGenerating(false));
+    }
   };
 
   const createWork = async () => {
@@ -341,9 +407,26 @@ export function MusicStudioPage() {
     }
   };
 
+  const generateLyricLine = async (index, keywords) => {
+    const id = editingIdRef.current;
+    if (!id) return;
+    setMessage('');
+    try {
+      // 先保存歌名与目标句型，确保单行生成使用页面上的最新上下文。
+      await updateCreativeWork(id, { title: song.title || workTitle, song });
+      const data = await generateCreativeWorkLyricLine(id, index, keywords);
+      setSong((current) => ({ ...current, lyrics: data.lyrics || current.lyrics }));
+      setSaveState('单行歌词已生成并保存');
+    } catch (err) {
+      setMessage(err.message || '单行歌词生成失败，请重试');
+      throw err;
+    }
+  };
+
   const saveSong = async () => {
     await persist({ title: song.title || workTitle, song });
     setStep(2);
+    if (!hasCompleteExercises(exercises)) await generateExercises();
   };
 
   // ── step 2：练习与教案 ────────────────────────────────────
@@ -360,6 +443,23 @@ export function MusicStudioPage() {
       setMessage(err.message || '练习生成失败，请重试');
     } finally {
       setExGenerating(false);
+    }
+  };
+
+  const generateExerciseSection = async (section) => {
+    const id = editingIdRef.current;
+    if (!id || sectionGenerating || exGenerating) return;
+    setSectionGenerating(section);
+    setMessage('');
+    try {
+      await persist({ song, title: song.title || workTitle });
+      const data = await generateCreativeWorkExercises(id, section);
+      setExercises((current) => ({ ...current, ...data }));
+      setSaveState('该区块已重新生成并保存');
+    } catch (err) {
+      setMessage(err.message || '该区块生成失败，请重试');
+    } finally {
+      setSectionGenerating('');
     }
   };
 
@@ -403,6 +503,13 @@ export function MusicStudioPage() {
   const filtered = works.filter((w) =>
     `${w.title || ''} ${w.parameters?.theme || ''} ${w.parameters?.goals || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const enterStep = (index) => {
+    setStep(index);
+    if (index === 2 && song.lyrics.length && !hasCompleteExercises(exercises) && !exGenerating) {
+      generateExercises();
+    }
+  };
 
   // ── 列表视图 ─────────────────────────────────────────────
   if (view === 'list') {
@@ -514,7 +621,7 @@ export function MusicStudioPage() {
       <div className="pbv2-shell">
         <aside className="pbv2-steps">
           {STEPS.map((label, index) => (
-            <button type="button" key={label} className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`} onClick={() => setStep(index)}>
+            <button type="button" key={label} className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`} onClick={() => enterStep(index)}>
               <span>{index + 1}</span>
               <strong>{label}</strong>
             </button>
@@ -565,7 +672,7 @@ export function MusicStudioPage() {
                   <Field label="目标句型/词汇（每行一个，用于歌词高亮）" area value={(song.targetPatterns || []).join('\n')} onChange={(v) => setSong({ ...song, targetPatterns: v.split('\n').map((s) => s.trim()).filter(Boolean) })} />
                 </div>
               </section>
-              <LyricsEditor lyrics={song.lyrics} onChange={(lyrics) => setSong({ ...song, lyrics })} />
+              <LyricsEditor lyrics={song.lyrics} onGenerateLine={generateLyricLine} />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>返回基本信息</button>
                 <button type="button" className="pbv2-ghost" disabled={songGenerating} onClick={regenerateSong}>
@@ -583,10 +690,10 @@ export function MusicStudioPage() {
           {step === 2 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">三类练习全部来自歌词（题量按歌曲时长自动匹配 4:3:2 规则），生成后可逐题修改；四关教学方案展示在游戏每关的「How to teach」抽屉里。</p>
-              <FillEditor items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} />
-              <ScrambleEditor items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} />
-              <ListenEditor items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} />
-              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} />
+              <FillEditor items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => generateExerciseSection('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
+              <ScrambleEditor items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => generateExerciseSection('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
+              <ListenEditor items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => generateExerciseSection('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>返回歌曲编辑</button>
                 <button type="button" className="pbv2-ghost" disabled={exGenerating} onClick={generateExercises}>
@@ -609,7 +716,7 @@ export function MusicStudioPage() {
                 <AudioCard label="伴奏（Backing）" name={audio.backingName} dataUri={audio.backing} onPick={({ dataUri, name }) => setAudio({ ...audio, backing: dataUri, backingName: name })} onRemove={() => setAudio({ ...audio, backing: '', backingName: '' })} />
               </div>
               <footer className="pbv2-actions">
-                <button type="button" className="pbv2-ghost" onClick={() => setStep(2)}>返回练习编辑</button>
+                <button type="button" className="pbv2-ghost" onClick={() => enterStep(2)}>返回练习编辑</button>
                 <button type="button" className="pbv2-primary" disabled={rendering} onClick={buildCourseware}>
                   {rendering ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
                   {rendering ? '生成中…' : (rendered ? '重新生成课件' : '生成课件')}

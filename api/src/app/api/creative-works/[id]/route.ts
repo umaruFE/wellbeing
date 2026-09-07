@@ -6,6 +6,35 @@ import { renderYogaHtml, YogaPage, YogaPlan, YogaResult, MusicResult } from '@/l
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// GET /api/creative-works/[id] — 获取当前用户的单条创作工坊草稿
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const authResult = authenticate(request);
+    if (!authResult.success) {
+      return NextResponse.json({ error: authResult.error || '认证失败' }, { status: 401 });
+    }
+    const userId = authResult.user?.id;
+    const numericId = Number(params.id);
+    if (!userId || !Number.isInteger(numericId) || numericId <= 0) {
+      return NextResponse.json({ error: '参数无效' }, { status: 400 });
+    }
+
+    const { rows } = await db.query(
+      `SELECT id, module_id, module_name, title, parameters, status,
+              (html IS NOT NULL) AS has_html, result, created_at, updated_at
+       FROM creative_works WHERE id = $1 AND user_id = $2`,
+      [numericId, userId]
+    );
+    if (!rows.length) {
+      return NextResponse.json({ error: '作品不存在' }, { status: 404 });
+    }
+    return NextResponse.json({ data: rows[0] });
+  } catch (error) {
+    console.error('[creative-works] GET by id failed:', error);
+    return NextResponse.json({ error: '获取作品失败' }, { status: 500 });
+  }
+}
+
 // PUT /api/creative-works/[id] — 保存步骤数据（基础信息/标题/方案/逐页设计），瑜伽作品同步重渲染成品 HTML
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {

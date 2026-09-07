@@ -1154,7 +1154,8 @@ function st1FillWord(word) {
 }
 
 function st1ResetFill() {
-  st1FillState = ['', '', '', '', ''];
+  var blankCount = ex1FillData.reduce(function(total, item) { return total + item.blanks.length; }, 0);
+  st1FillState = Array(blankCount).fill('');
   st1ActiveBlank = null;
   st1FillOpts = null;
   st1RenderFill();
@@ -2588,11 +2589,25 @@ function openTeachingDrawer(stageNum) {
   if (!plan) return;
   document.getElementById('teachingDrawerTitle').textContent = '📋 ' + plan.title;
   var body = document.getElementById('teachingDrawerBody');
-  var h = '';
+  body.innerHTML = '';
   plan.sections.forEach(function(sec) {
-    h += '<div class="teaching-plan-section"><h3>' + sec.title + '</h3>' + sec.content + '</div>';
+    var section = document.createElement('div');
+    section.className = 'teaching-plan-section';
+    var title = document.createElement('h3');
+    title.textContent = sec.title;
+    var content = document.createElement('p');
+    content.style.whiteSpace = 'pre-line';
+    content.textContent = String(sec.content || '')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|li|div|ul|ol|h[1-6])>/gi, '\n')
+      .replace(/<li[^>]*>/gi, '• ')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&');
+    section.appendChild(title);
+    section.appendChild(content);
+    body.appendChild(section);
   });
-  body.innerHTML = h;
   document.getElementById('teachingDrawerOverlay').classList.add('active');
   document.getElementById('teachingDrawer').classList.add('active');
 }

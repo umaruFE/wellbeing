@@ -40,6 +40,12 @@ export const getCreativeWorks = async (moduleId) => {
   return (json.data || []).map(normalize);
 };
 
+export const getCreativeWork = async (id) => {
+  const response = await fetch(`/api/creative-works/${id}`, { headers: authHeaders() });
+  const json = await parseResponse(response);
+  return normalize(json.data);
+};
+
 // 触发生成（LLM + 模板注入，耗时 30-120 秒）
 export const generateCreativeWork = async (id) => {
   const response = await fetch(`/api/creative-works/${id}/generate`, {
@@ -100,9 +106,24 @@ export const generateCreativeWorkSong = async (id) => {
   return json.data;
 };
 
+// 根据关键词生成/重新生成单行歌词，服务端保留该行 time
+export const generateCreativeWorkLyricLine = async (id, index, keywords) => {
+  const response = await fetch(`/api/creative-works/${id}/song/line`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ index, keywords }),
+  });
+  const json = await parseResponse(response);
+  return json.data;
+};
+
 // AI 生成第一关练习 + 四关教学方案（基于已存歌词）→ exercises
-export const generateCreativeWorkExercises = async (id) => {
-  const response = await fetch(`/api/creative-works/${id}/exercises`, { method: 'POST', headers: authHeaders() });
+export const generateCreativeWorkExercises = async (id, section) => {
+  const response = await fetch(`/api/creative-works/${id}/exercises`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(section ? { section } : {}),
+  });
   const json = await parseResponse(response);
   return json.data;
 };

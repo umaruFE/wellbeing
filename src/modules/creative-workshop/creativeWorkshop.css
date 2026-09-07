@@ -35,11 +35,18 @@
 .cw-audio-card h4{margin:0;font-size:14px;color:#333e4e}
 .cw-audio-card audio{width:100%}
 /* 歌词编辑器 */
-.cw-lyric-row{display:flex;gap:8px;margin-bottom:8px}
-.cw-lyric-time{flex:0 0 120px;border:1px solid #dcd8d2;border-radius:8px;padding:7px 10px;background:#fff;font:inherit;font-size:13px}
-.cw-lyric-text{flex:1;border:1px solid #dcd8d2;border-radius:8px;padding:7px 10px;background:#fff;font:inherit;font-size:13px}
+.cw-lyric-row{display:grid;grid-template-columns:110px minmax(180px,1fr) minmax(180px,.8fr) auto;gap:8px;margin-bottom:8px;align-items:center}
+.cw-lyric-time{border:1px solid #dcd8d2;border-radius:8px;padding:7px 10px;background:#f7f5f2;font:inherit;font-size:13px;color:#777;text-align:center}
+.cw-lyric-text{border:1px solid #dcd8d2;border-radius:8px;padding:7px 10px;background:#fff;font:inherit;font-size:13px}
+.cw-lyric-text-readonly{min-height:36px;display:flex;align-items:center}
+.cw-lyric-keywords{min-width:0;border:1px solid #d8c9ea;border-radius:8px;padding:7px 10px;background:#fcf9ff;font:inherit;font-size:13px}
+.cw-lyric-generate{white-space:nowrap;justify-content:center}
+@media(max-width:900px){.cw-lyric-row{grid-template-columns:90px 1fr}.cw-lyric-keywords{grid-column:1/-1}.cw-lyric-generate{grid-column:1/-1}}
 .cw-lyric-remove{display:grid;place-items:center;border:1px solid #f0d3d1;border-radius:8px;background:#fff5f4;color:#cf474b;cursor:pointer}
 /* 练习编辑卡片 */
+.cw-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.cw-section-title .pbv2-card-title{margin-bottom:0}
+.cw-section-ai{flex:0 0 auto;white-space:nowrap}
 .cw-exercise-item{border:1px solid #ebe7e1;border-radius:10px;padding:12px;margin-bottom:12px;background:#fffdf9}
 .cw-exercise-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:13px;font-weight:700;color:#697180}
 .cw-exercise-head button{display:grid;place-items:center;border:1px solid #f0d3d1;border-radius:7px;background:#fff5f4;color:#cf474b;padding:5px;cursor:pointer}
@@ -47,6 +54,13 @@
 .cw-plan-details{border:1px solid #ebe7e1;border-radius:10px;padding:10px 14px;margin-bottom:10px;background:#fffdf9}
 .cw-plan-details summary{cursor:pointer;font-weight:750;font-size:13px;color:#333e4e}
 .cw-plan-section{margin-top:8px}
+.cw-stage-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:4px 0 14px}
+.cw-stage-tabs button{border:1px solid #dcd5e8;border-radius:10px;background:#faf8fd;color:#646078;padding:9px 8px;cursor:pointer;font:inherit;font-weight:700}
+.cw-stage-tabs button small{display:block;margin-top:2px;font-size:10px;font-weight:500;opacity:.68}
+.cw-stage-tabs button.is-active{border-color:#9966d0;background:#f2eafd;color:#7244a6;box-shadow:0 2px 8px rgba(114,68,166,.12)}
+.cw-plan-stage{border:1px solid #e7e0ef;border-radius:12px;padding:14px;background:#fffdfd}
+.cw-plan-stage h4{margin:0 0 10px;color:#443d50}
+@media(max-width:700px){.cw-stage-tabs{grid-template-columns:repeat(2,1fr)}}
 
 /* 情境瑜伽参数选项带说明文字（多选主题/道具） */
 .pbv2-option-grid button small {

@@ -70,13 +70,6 @@ const FALLBACK_VISUAL_STYLE = [
 
 const FALLBACK_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English text, unrequested words, extra letters, captions, annotations, speech bubbles, callouts, explanatory symbols, page numbers, borders, frames, open-book mockup, photographed book, saturated colors, neon colors, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text';
 
-function getPageVisualWords(page) {
-  // Visible typography has one source of truth: page.text.
-  // Never infer labels from imageDescription: words such as "unlabelled"
-  // previously caused whole prompt sentences to be rendered on the image.
-  return [];
-}
-
 function sanitizeNonVisibleVisualPrompt(value) {
   let prompt = String(value || '').replace(/\s+/g, ' ').trim();
   if (!prompt) return '';
@@ -1402,7 +1395,7 @@ function PresentationOverlay({ pages, index, onPrev, onNext, onExit, backgroundM
   const [musicVolume, setMusicVolume] = React.useState(0.35);
   React.useEffect(() => {
     if (bgmRef.current) bgmRef.current.volume = musicVolume;
-  }, [backgroundMusic?.url]);
+  }, [backgroundMusic?.url, musicVolume]);
   const page = pages[index];
   if (!page) return null;
   const toggleMusic = async () => {

@@ -109,6 +109,35 @@ function escapeHtml(s: string): string {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c] as string));
 }
 
+/** 把历史教学方案中的 HTML 转为可编辑纯文本；新生成内容也统一经过这里。 */
+function htmlToPlainText(value: unknown): string {
+  return String(value || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|li|div|ul|ol|h[1-6])>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '• ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function normalizeTeachingPlans(value: MusicExercises['teachingPlans'] | undefined): MusicExercises['teachingPlans'] {
+  const plans = value && typeof value === 'object' ? value : {};
+  return Object.fromEntries(Object.entries(plans).map(([key, plan]) => [key, {
+    title: String(plan?.title || ''),
+    sections: (Array.isArray(plan?.sections) ? plan.sections : []).map((section) => ({
+      title: htmlToPlainText(section?.title),
+      content: htmlToPlainText(section?.content),
+    })),
+  }]));
+}
+
 function readTemplate(name: string): string {
   const file = path.join(process.cwd(), 'public', 'templates', name);
   return fs.readFileSync(file, 'utf-8');
@@ -302,7 +331,7 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
   html = html.replace(/var ex1FillData = \[[\s\S]*?\n\];/, `var ex1FillData = ${JSON.stringify(result.ex1FillData)};`);
   html = html.replace(/var ex2Items = \[[\s\S]*?\n\];/, `var ex2Items = ${JSON.stringify(result.ex2Items)};`);
   html = html.replace(/var ex3Data = \[[\s\S]*?\n\];/, `var ex3Data = ${JSON.stringify(result.ex3Data)};`);
-  html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(result.teachingPlans)};`);
+  html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(normalizeTeachingPlans(result.teachingPlans))};`);
   html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
   const vocal = result.audio?.vocal || '';
   const backing = result.audio?.backing || '';
@@ -335,6 +364,55 @@ export async function generateMusicSong(
   };
 }
 
+/** 按用户关键词生成/重写一行歌词；时间段由调用方保留，避免破坏音频同步。 */
+export async function generateMusicLyricLine(
+  params: Record<string, string>,
+  input: {
+    index: number;
+    time: string;
+    keywords: string;
+    currentText?: string;
+    lyrics: MusicSong['lyrics'];
+    targetPatterns: string[];
+  }
+): Promise<string> {
+  const vars = musicVars(params);
+  const system = await withMusicSpecDocs(`你是儿童英语教学歌曲创作专家。请只生成一行适合 ${vars.age}、${vars.level} 水平儿童演唱的英文歌词。
+要求：语言简单、节奏自然、易唱、尽量押韵；贴合歌曲主题和目标语言点；严格输出 JSON：{"text":"一行英文歌词"}。不要输出时间、解释或其他字段。`, 'flow');
+  const context = input.lyrics
+    .map((line, i) => `${i === input.index ? '→' : ' '} ${line.time} ${line.text}`)
+    .join('\n');
+  const baseUser = `歌曲主题：${vars.theme}
+教学目标：${vars.goals || '无'}
+目标句型/词汇：${input.targetPatterns.join('；') || '无'}
+当前第 ${input.index + 1} 行：${input.currentText || '（尚未生成）'}
+该行时间段：${input.time || '未设置'}
+用户调整关键词：${input.keywords || '无额外关键词，请结合上下文自然生成'}
+完整歌词上下文：
+${context}`;
+  const normalizeForCompare = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  const current = normalizeForCompare(input.currentText || '');
+  const generateCandidate = async (extraInstruction: string) => {
+    const parsed = parseJson<{ text?: unknown }>(await callLLM(
+      system,
+      `${baseUser}\n\n${extraInstruction}`
+    ));
+    return String(parsed.text || '').replace(/[\r\n]+/g, ' ').trim();
+  };
+
+  let text = await generateCandidate(input.currentText
+    ? '这是“重新生成”操作。新歌词必须明显区别于当前歌词，不能原样返回；请改变措辞或句式，同时优先融入用户调整关键词。'
+    : '请生成这一行歌词。');
+  if (current && normalizeForCompare(text) === current) {
+    text = await generateCandidate(`第一次改写与原句重复，必须重新创作一个不同版本。禁止输出："${input.currentText}"。请更换动词、意象或句式，并保持可唱性。`);
+  }
+  if (!text) throw new Error('单行歌词生成结果为空，请重试');
+  if (current && normalizeForCompare(text) === current) {
+    throw new Error('AI 连续返回相同歌词，请补充更具体的调整关键词后重试');
+  }
+  return text;
+}
+
 // ── 工作室流程 step 3：第一关练习 + 四关教学方案（基于最终歌词）──
 export async function generateMusicExercises(
   params: Record<string, string>,
@@ -348,21 +426,129 @@ export async function generateMusicExercises(
     targetPatterns: (song.targetPatterns || []).join('；') || '无',
   };
   const base = await getPromptPair('experience-music-exercises', {}, vars);
-  const system = await withMusicSpecDocs(base.system, 'flow', 'level1');
-  const raw = await callLLM(system, base.user);
-  const ex = parseJson<MusicExercises>(raw);
+  const systemWithDocs = await withMusicSpecDocs(base.system, 'flow', 'level1');
+  const system = `${systemWithDocs}\n\n## 当前产品硬约束（必须执行）\n每道 ex1FillData 必须至少有 1 个空；sentence 中空字符串的数量必须等于 blanks 数量；不同题目的 blanks 答案不得重复。teachingPlans 中所有 title 和 content 必须是纯文本，禁止任何 HTML 标签，可用换行、序号和项目符号排版。`;
+
+  const semanticEmoji = (answer: string, sentenceText = '') => {
+    const text = `${answer} ${sentenceText}`.toLowerCase();
+    const countryEmojis: Record<string, string> = {
+      china: '🇨🇳', usa: '🇺🇸', america: '🇺🇸', uk: '🇬🇧', britain: '🇬🇧',
+      canada: '🇨🇦', japan: '🇯🇵', france: '🇫🇷', australia: '🇦🇺',
+    };
+    const country = Object.entries(countryEmojis).find(([word]) => new RegExp(`\\b${word}\\b`, 'i').test(answer));
+    if (country) return country[1];
+    if (/\b(hello|hi|friend|friends|welcome)\b/.test(text)) return '👋';
+    if (/\b(home|house|family)\b/.test(text)) return '🏠';
+    if (/\b(country|world|earth)\b/.test(text)) return '🌍';
+    if (/\b(snow|white|cold)\b/.test(text)) return '❄️';
+    if (/\b(tea|drink)\b/.test(text)) return '☕';
+    if (/\b(love|heart)\b/.test(text)) return '❤️';
+    if (/\b(star|bright|light|shine)\b/.test(text)) return '✨';
+    if (/\b(proud|strong|tall)\b/.test(text)) return '💪';
+    if (/\b(warm|sun)\b/.test(text)) return '☀️';
+    return '🎤';
+  };
+  const normalizeFillItems = (items: MusicExercises['ex1FillData'] | undefined) => (Array.isArray(items) ? items : []).map((x) => {
+    const blanks = (Array.isArray(x.blanks) ? x.blanks : []).map(String).filter(Boolean);
+    let sentence = (Array.isArray(x.sentence) ? x.sentence : []).map(String);
+    // 模型常返回 ['前文','后文']；有明确答案时可安全补成 ['前文','','后文']。
+    if (!sentence.includes('') && blanks.length && sentence.length === blanks.length + 1) {
+      sentence = sentence.flatMap((part, index) => index < blanks.length ? [part, ''] : [part]);
+    }
+    let blankIndex = 0;
+    const sentenceText = sentence.map((part) => part === '' ? (blanks[blankIndex++] || '') : part).join('');
+    return {
+      sentence,
+      blanks,
+      options: (Array.isArray(x.options) ? x.options : []).map(String),
+      emoji: semanticEmoji(blanks[0] || '', sentenceText),
+    };
+  });
+  const fillErrors = (items: MusicExercises['ex1FillData']) => {
+    const errors: string[] = [];
+    const usedAnswers = new Set<string>();
+    items.forEach((item, index) => {
+      const emptyCount = item.sentence.filter((part) => part === '').length;
+      if (!item.blanks.length) errors.push(`第 ${index + 1} 题没有填空答案`);
+      if (emptyCount !== item.blanks.length) errors.push(`第 ${index + 1} 题空位数与答案数不一致`);
+      for (const blank of item.blanks) {
+        const key = blank.trim().toLowerCase();
+        if (usedAnswers.has(key)) errors.push(`答案「${blank}」重复`);
+        usedAnswers.add(key);
+        if (!item.options.some((option) => option.trim().toLowerCase() === key)) errors.push(`答案「${blank}」不在候选词中`);
+      }
+    });
+    return errors;
+  };
+  const buildValidFillFallback = (): MusicExercises['ex1FillData'] => {
+    const duration = String(params.duration || '').toLowerCase();
+    const count = duration.includes('长') || duration.includes('90-120') ? 7
+      : duration.includes('中') || duration.includes('60-90') ? 5 : 4;
+    const stopWords = new Set(['the', 'and', 'with', 'from', 'this', 'that', 'your', 'you', 'are', 'is', 'am', 'my', 'our', 'come', 'sing']);
+    const targetWords = new Set((song.targetPatterns || []).flatMap((pattern) => String(pattern).toLowerCase().match(/[a-z]+/g) || []));
+    const allCandidates = song.lyrics.flatMap((line) => Array.from(line.text.matchAll(/[A-Za-z]+(?:'[A-Za-z]+)?/g)).map((match) => match[0]));
+    const uniquePool = Array.from(new Map(allCandidates.map((word) => [word.toLowerCase(), word])).values());
+    const used = new Set<string>();
+    const result: MusicExercises['ex1FillData'] = [];
+
+    for (const line of song.lyrics) {
+      if (result.length >= count) break;
+      const matches = Array.from(line.text.matchAll(/[A-Za-z]+(?:'[A-Za-z]+)?/g));
+      const choices = matches
+        .filter((match) => {
+          const word = match[0];
+          const key = word.toLowerCase();
+          return !used.has(key) && !stopWords.has(key) && (word.length > 2 || word === word.toUpperCase());
+        })
+        .sort((a, b) => {
+          const targetDiff = Number(targetWords.has(b[0].toLowerCase())) - Number(targetWords.has(a[0].toLowerCase()));
+          return targetDiff || b[0].length - a[0].length;
+        });
+      const selected = choices[0];
+      if (!selected || selected.index === undefined) continue;
+      const answer = selected[0];
+      used.add(answer.toLowerCase());
+      const distractors = uniquePool
+        .filter((word) => word.toLowerCase() !== answer.toLowerCase() && !used.has(word.toLowerCase()))
+        .slice(0, 4);
+      for (const fallback of ['music', 'happy', 'friend', 'home', 'world']) {
+        if (distractors.length >= 4) break;
+        if (fallback !== answer.toLowerCase() && !distractors.some((word) => word.toLowerCase() === fallback)) distractors.push(fallback);
+      }
+      result.push({
+        emoji: semanticEmoji(answer, line.text),
+        blanks: [answer],
+        options: [answer, ...distractors],
+        sentence: [line.text.slice(0, selected.index), '', line.text.slice(selected.index + answer.length)],
+      });
+    }
+    return result;
+  };
+
+  let ex = parseJson<MusicExercises>(await callLLM(system, base.user));
+  let normalizedFill: MusicExercises['ex1FillData'] = normalizeFillItems(ex.ex1FillData);
+  let errors = fillErrors(normalizedFill);
+  if (errors.length) {
+    ex = parseJson<MusicExercises>(await callLLM(
+      `${system}\n上一次 ex1FillData 不合格：${errors.join('；')}。请重新生成完整 JSON 并逐项修正。`,
+      base.user
+    ));
+    normalizedFill = normalizeFillItems(ex.ex1FillData);
+    errors = fillErrors(normalizedFill);
+  }
+  if (errors.length) {
+    console.warn('[experience/music] AI ex1FillData remained invalid; using deterministic lyric fallback:', errors.join('；'));
+    normalizedFill = buildValidFillFallback();
+    errors = fillErrors(normalizedFill);
+  }
 
   if (!Array.isArray(ex.ex1FillData) || !ex.ex1FillData.length) throw new Error('选词填空生成失败，请重试');
+  if (!normalizedFill.length || errors.length) throw new Error(`选词填空数据不合格：${errors.join('；') || '无法从歌词构造题目'}`);
   if (!Array.isArray(ex.ex2Items) || !ex.ex2Items.length) throw new Error('连词成句生成失败，请重试');
   if (!Array.isArray(ex.ex3Data) || !ex.ex3Data.length) throw new Error('听音选词生成失败，请重试');
 
   return {
-    ex1FillData: ex.ex1FillData.map((x) => ({
-      sentence: (Array.isArray(x.sentence) ? x.sentence : []).map(String),
-      blanks: (Array.isArray(x.blanks) ? x.blanks : []).map(String),
-      options: (Array.isArray(x.options) ? x.options : []).map(String),
-      emoji: x.emoji ? String(x.emoji) : '🎵',
-    })),
+    ex1FillData: normalizedFill,
     ex2Items: (Array.isArray(ex.ex2Items) ? ex.ex2Items : []).map((x) => ({
       answer: String(x.answer || ''),
       words: (Array.isArray(x.words) ? x.words : []).map(String),
@@ -373,7 +559,7 @@ export async function generateMusicExercises(
       correct: Number(x.correct) || 0,
       time: x.time ? String(x.time) : '',
     })),
-    teachingPlans: ex.teachingPlans || {},
+    teachingPlans: normalizeTeachingPlans(ex.teachingPlans),
   };
 }
 

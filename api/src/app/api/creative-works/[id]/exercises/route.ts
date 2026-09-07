@@ -16,6 +16,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
     const userId = authResult.user?.id;
     const numericId = Number(params.id);
+    const body = await request.json().catch(() => ({}));
+    const section = typeof body?.section === 'string' ? body.section : '';
+    const allowedSections = new Set(['ex1FillData', 'ex2Items', 'ex3Data', 'teachingPlans']);
+    if (section && !allowedSections.has(section)) {
+      return NextResponse.json({ error: '不支持的生成区块' }, { status: 400 });
+    }
     if (!userId || !Number.isInteger(numericId)) {
       return NextResponse.json({ error: '参数无效' }, { status: 400 });
     }
@@ -50,13 +56,16 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       targetPatterns: Array.isArray(existing.targetPatterns) ? existing.targetPatterns : [],
     });
 
-    const nextResult: Partial<MusicResult> = { ...existing, ...exercises };
+    const generated = section
+      ? { [section]: exercises[section as keyof typeof exercises] }
+      : exercises;
+    const nextResult: Partial<MusicResult> = { ...existing, ...generated };
     await db.query(
       `UPDATE creative_works SET result = $1::jsonb, updated_at = NOW() WHERE id = $2`,
       [JSON.stringify(nextResult), numericId]
     );
 
-    return NextResponse.json({ data: exercises });
+    return NextResponse.json({ data: generated });
   } catch (error) {
     console.error('[creative-works/exercises] failed:', error);
     return NextResponse.json({ error: (error as Error).message || '练习生成失败，请重试' }, { status: 502 });
