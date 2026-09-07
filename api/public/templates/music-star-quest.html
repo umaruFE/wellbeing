@@ -1262,7 +1262,7 @@ function st1RenderListen() {
   if (!area) return;
   var h = '';
   ex3Data.forEach(function(item, idx) {
-    h += '<div style="margin-bottom:16px;"><div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:10px;">' + (idx+1) + '. ' + item.question + '</div>';
+    h += '<div style="margin-bottom:16px;"><div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;"><span>' + (idx+1) + '. ' + item.question + '</span><button class="st1-btn-listen" style="padding:6px 14px;font-size:12px;flex-shrink:0;" onclick="st1PlayClip(' + idx + ')">🔊</button></div>';
     item.options.forEach(function(o, i) {
       var cls = 'st1-listen-opt';
       if (st1ListenSelected[idx] === i) cls += ' selected';
@@ -1281,10 +1281,22 @@ function st1ResetListen() {
   st1ListenSelected = [null, null];
   st1RenderListen();
 }
-function st1PlayAudio() {
-  var a = document.getElementById('audioOriginal'); a.currentTime = 25;
+var st1ClipTimer = null;
+function st1PlayClip(idx) {
+  var a = document.getElementById('audioOriginal');
+  var item = ex3Data[idx] || {};
+  var seg = parseTimeSeconds(item.time || '');
+  var hasTimeline = item.time && item.time.indexOf('\u2013') !== -1 && seg.end > seg.start;
+  var start = hasTimeline ? seg.start : 25;
+  var dur = hasTimeline ? Math.min(seg.end - seg.start + 0.5, 12) : 8;
+  if (st1ClipTimer) { clearTimeout(st1ClipTimer); st1ClipTimer = null; }
+  try { a.pause(); } catch (e) {}
+  a.currentTime = start;
   a.play().catch(function() { showToast('⚠️ Playing audio clip...'); });
-  setTimeout(function() { a.pause(); }, 8000);
+  st1ClipTimer = setTimeout(function() { st1ClipTimer = null; try { a.pause(); } catch (e) {} }, dur * 1000);
+}
+function st1PlayAudio() {
+  st1PlayClip(0);
 }
 
 function st1CheckListen() {

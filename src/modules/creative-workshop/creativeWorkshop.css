@@ -47,3 +47,12 @@
 .cw-plan-details{border:1px solid #ebe7e1;border-radius:10px;padding:10px 14px;margin-bottom:10px;background:#fffdf9}
 .cw-plan-details summary{cursor:pointer;font-weight:750;font-size:13px;color:#333e4e}
 .cw-plan-section{margin-top:8px}
+
+/* 情境瑜伽参数选项带说明文字（多选主题/道具） */
+.pbv2-option-grid button small {
+  display: block;
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 400;
+  opacity: 0.65;
+}

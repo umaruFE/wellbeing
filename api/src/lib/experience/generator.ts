@@ -61,8 +61,8 @@ export interface MusicExercises {
   ex1FillData: { sentence: string[]; blanks: string[]; options: string[]; emoji?: string }[];
   /** 连词成句：answer 完整句、words 拆词 */
   ex2Items: { answer: string; words: string[] }[];
-  /** 听音选词：options[correct] 为正确句 */
-  ex3Data: { question: string; options: string[]; correct: number }[];
+  /** 听音选词：options[correct] 为正确句；time 为正确句对应歌词行的时间段（如 "00:13–00:14"） */
+  ex3Data: { question: string; options: string[]; correct: number; time?: string }[];
   teachingPlans: Record<string, { title?: string; sections?: { title: string; content: string }[] }>;
 }
 
@@ -144,10 +144,11 @@ export async function withSpecDocs(system: string, ...keys: (keyof typeof YOGA_S
 }
 
 const yogaVars = (params: Record<string, string>) => ({
-  theme: params.theme || params.title || '自然探索',
+  theme: params.theme || '自然探索',
   goals: params.goals || '',
-  age: params.age || '7-10 岁',
-  duration: params.duration || params.duracion || '15 分钟',
+  age: params.age || '7-9岁',
+  duration: params.duration || params.duracion || '5-8分钟',
+  props: params.props || '无道具（纯身体练习）',
   requirements: params.requirements || params.notes || '无',
 });
 
@@ -370,6 +371,7 @@ export async function generateMusicExercises(
       question: String(x.question || 'Choose the sentence you hear:'),
       options: (Array.isArray(x.options) ? x.options : []).map(String),
       correct: Number(x.correct) || 0,
+      time: x.time ? String(x.time) : '',
     })),
     teachingPlans: ex.teachingPlans || {},
   };

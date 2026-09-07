@@ -19,7 +19,7 @@ const YOGA_PLAN_SYSTEM = `你是互动式情境瑜伽的资深课程设计师：
 ## 硬约束
 - storyTitleEn：英文活动标题 ≤ 8 词，有画面感，贴合主题；storyTitleZh 为中文对照。
 - storyContent：情境旅程故事梗概（中文，120-200 字），写清 出发→探索→高潮→回归 的弧线，以及孩子在旅程中会"遇到什么、身体想怎么做"。不得出现具体体式名。
-- recommendedPageCount：建议总页数（6-12 整数；15 分钟约 8 页，20 分钟约 10 页，30 分钟约 12 页）。
+- recommendedPageCount：建议总页数（6-12 整数；3-5分钟约 6 页，5-8分钟约 8 页，9-15分钟约 10-12 页）。
 - englishGoal：本次覆盖的目标词汇与句型（英文，逗号分隔列出，句型用 / 分隔）。
 - wellbeingGoal：幸福力/身心目标（中文，1-2 句）。
 - outputGoal：课堂产出与表现性目标（中文，1 句）。
@@ -31,10 +31,11 @@ const YOGA_PLAN_SYSTEM = `你是互动式情境瑜伽的资深课程设计师：
 
 const YOGA_PLAN_USER = `为以下参数设计互动式情境瑜伽活动方案：
 
-- 情境主题：{{theme}}
+- 情境主题：{{theme}}（可多个，须自然融合进同一条故事旅程）
 - 目标语言点：{{goals}}
 - 年龄段：{{age}}
 - 活动时长：{{duration}}
+- 道具偏好：{{props}}（设计动作时优先使用所选道具；若为"无道具"则全部用纯身体练习，不得要求任何器材）
 - 特殊要求：{{requirements}}
 
 仅返回 JSON。`;
@@ -83,10 +84,11 @@ const YOGA_DESIGN_SYSTEM = `你是互动式情境瑜伽的资深活动设计师�
 
 const YOGA_DESIGN_USER = `为以下参数设计一个完整的互动式情境瑜伽活动（输出 pages JSON，遵守全部结构/字幕/体式/画面描述/hook 硬约束）：
 
-- 情境主题：{{theme}}
+- 情境主题：{{theme}}（可多个，须自然融合进同一条故事旅程）
 - 目标语言点：{{goals}}
 - 年龄段：{{age}}
-- 活动时长：{{duration}}（页数建议：15分钟约8页，20分钟约10页）
+- 活动时长：{{duration}}（页数建议：3-5分钟约6页，5-8分钟约8页，9-15分钟约10-12页）
+- 道具偏好：{{props}}（动作设计优先使用所选道具；若为"无道具"则全部用纯身体练习）
 - 特殊要求：{{requirements}}
 {{plan}}
 要求：先在内部核对故事弧线（出发→探索→高潮→回归→结束）与活动方案一致，再逐页输出；目标词汇全部覆盖；动作页数量按时长匹配。仅返回 JSON。`;
@@ -144,8 +146,9 @@ const MUSIC_EXERCISES_SYSTEM = `你是儿童英语教学活动设计专家，为
 - 优先选含目标句型、长度适中（4-8 词）的完整句；words 为 answer 按单词打乱前的拆分（运行时会自动打乱顺序）。
 
 ## 听音选词 ex3Data
-- { question:'Choose the sentence you hear:', options:['正确句','近音/近形干扰句','另一干扰句'], correct:0 }
+- { question:'Choose the sentence you hear:', options:['正确句','近音/近形干扰句','另一干扰句'], correct:0, time:'00:13–00:14' }
 - correct 恒为 0（正确句放第一位，运行时会自动打乱选项顺序）；干扰句只做最小改动（换一个词/国家/人称），长度与正确句接近。
+- time 必填：正确句所在歌词行的时间段，原样复制歌词时间轴中该行的 time 值（格式 "mm:ss–mm:ss"），游戏将按此时间段播放音频片段。
 
 ## 四关教学方案 teachingPlans（键为 "1"-"4"）
 每关 {title, sections:[{title, content}]}：
@@ -153,7 +156,7 @@ const MUSIC_EXERCISES_SYSTEM = `你是儿童英语教学活动设计专家，为
 每关 sections 至少含：🎯 教学目标、📋 教学流程、💬 教师语言（英文讲稿，可带中文舞台指示，讲稿须引用本歌曲的真实歌词行）。content 为 HTML 字符串（可用 <ul><li><p><strong>）。
 
 ## 输出（仅返回合法 JSON，无任何多余文本）
-{"ex1FillData":[{"sentence":["","! ","","!"],"blanks":["Hello","Hello"],"options":["Hello","Goodbye","Happy","Yes","No"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0}],"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"<ul><li>...</li></ul>"}]},"2":{...},"3":{...},"4":{...}}}`;
+{"ex1FillData":[{"sentence":["","! ","","!"],"blanks":["Hello","Hello"],"options":["Hello","Goodbye","Happy","Yes","No"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0,"time":"00:13–00:14"}],"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"<ul><li>...</li></ul>"}]},"2":{...},"3":{...},"4":{...}}}`;
 
 const MUSIC_EXERCISES_USER = `基于以下最终歌词设计练习与教学方案（所有题目必须来自这些歌词行）：
 

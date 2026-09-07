@@ -34,10 +34,42 @@ const FALLBACK_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English 
 
 const PAGE_TYPE_LABEL = { scene: '场景页', transition: '过渡页', action: '动作页', return: '回归页', ending: '结束页' };
 const PAGE_TYPE_SET = new Set(Object.keys(PAGE_TYPE_LABEL));
-const AGE_OPTIONS = ['4–6 岁', '7–10 岁', '11–14 岁'];
-const DURATION_OPTIONS = ['10–15 分钟', '15–20 分钟', '20–30 分钟'];
+const AGE_OPTIONS = ['3-6岁', '7-9岁', '10-12岁', '13-15岁'];
+const DURATION_OPTIONS = ['3-5分钟', '5-8分钟', '9-15分钟'];
+const THEME_OPTIONS = [
+  { label: '自然探索', hint: '森林、海洋、花园……' },
+  { label: '动物世界', hint: '丛林动物、海洋生物……' },
+  { label: '日常生活', hint: '整理房间、烹饪食物……' },
+  { label: '太空冒险', hint: '星球旅行、宇航员训练……' },
+  { label: '魔法幻想', hint: '魔法学校、精灵世界……' },
+  { label: '季节旅行', hint: '春夏秋冬场景变换' },
+];
+const PROP_OPTIONS = [
+  { label: '无道具', hint: '纯身体练习', value: '无道具（纯身体练习）' },
+  { label: '基础瑜伽道具', hint: '瑜伽垫、瑜伽球、瑜伽砖、泡沫轴', value: '基础瑜伽道具（瑜伽垫、瑜伽球、瑜伽砖、泡沫轴）' },
+  { label: '体适能道具', hint: '平衡木、跷跷板、过河石、弹力带、跳箱、蹦床、小哑铃、弹力绳', value: '体适能道具（平衡木、跷跷板、过河石、弹力带、跳箱、蹦床、小哑铃、弹力绳）' },
+];
 
-const initialBasicInfo = { theme: '', goals: '', age: '', duration: '', requirements: '' };
+const toOption = (option) => (typeof option === 'string' ? { label: option, value: option } : { label: option.label, hint: option.hint, value: option.value || option.label });
+/** 拆分服务端存的顿号串为数组（兼容旧自由文本主题） */
+const splitParamList = (v) => (Array.isArray(v) ? v.map(String) : String(v || '').split(/[、,，]/).map((s) => s.trim()).filter(Boolean));
+const toServerParams = (b) => ({
+  goals: b.goals || '',
+  age: b.age || '',
+  duration: b.duration || '',
+  theme: (b.themes || []).join('、'),
+  props: (b.props || []).join('、'),
+  requirements: b.requirements || '',
+});
+const fromServerParams = (p = {}) => ({
+  goals: p.goals || '',
+  age: p.age || '',
+  duration: p.duration || '',
+  themes: splitParamList(p.theme),
+  props: splitParamList(p.props),
+  requirements: p.requirements || '',
+});
+const initialBasicInfo = fromServerParams();
 const initialPlan = {
   storyTitleEn: '', storyTitleZh: '', recommendedPageCount: 8, storyContent: '',
   englishGoal: '', wellbeingGoal: '', outputGoal: '', materials: '',
@@ -71,14 +103,24 @@ const hydratePages = (list) => (Array.isArray(list) ? list : []).map((p, i) => {
 });
 
 // ── 与绘本 BasicInfoStep 同款表单小组件 ─────────────────────
-function OptionGroup({ label, required, options, value, onChange, tone = 'coral' }) {
+function OptionGroup({ label, required, options, value, onChange, tone = 'coral', multiple = false }) {
+  const all = options.map(toOption);
+  const values = multiple ? (Array.isArray(value) ? value : []) : null;
+  // 多选时保留不在预置项里的历史值（旧作品自由填写的主题），作为额外 chip 展示
+  const extras = multiple ? values.filter((v) => !all.some((o) => o.value === v)).map((label) => ({ label, value: label })) : [];
+  const chips = [...all, ...extras];
+  const isActive = (option) => (multiple ? values.includes(option.value) : value === option.value);
+  const handleClick = (option) => {
+    if (!multiple) { onChange(option.value); return; }
+    onChange(values.includes(option.value) ? values.filter((v) => v !== option.value) : [...values, option.value]);
+  };
   return (
     <section className={`pbv2-fieldset pbv2-tone-${tone}`}>
       <div className="pbv2-label">{label}{required && <b>*</b>}</div>
       <div className="pbv2-option-grid">
-        {options.map((option) => (
-          <button type="button" key={option} className={value === option ? 'is-active' : ''} onClick={() => onChange(option)}>
-            {option}
+        {chips.map((option) => (
+          <button type="button" key={option.value} className={isActive(option) ? 'is-active' : ''} onClick={() => handleClick(option)} title={option.hint || ''}>
+            {option.label}{option.hint && <small>{option.hint}</small>}
           </button>
         ))}
       </div>
@@ -283,8 +325,7 @@ export function YogaStudioPage() {
 
   const openWork = (work) => {
     setEditing(work.id);
-    const params = { ...initialBasicInfo, ...(work.parameters || {}) };
-    setBasicInfo(params);
+    setBasicInfo(fromServerParams(work.parameters || {}));
     const result = work.result || {};
     setWorkTitle(result.title || work.title || '');
     setPlan({ ...initialPlan, ...(result.plan || {}) });
@@ -333,14 +374,14 @@ export function YogaStudioPage() {
   };
 
   // ── step 0：基础信息 → 保存并直接 AI 生成方案（同绘本第 1 步交互）──
-  const basicReady = String(basicInfo.theme || '').trim() && String(basicInfo.goals || '').trim();
+  const basicReady = String(basicInfo.goals || '').trim().length > 0;
   const generatePlanAndAdvance = async () => {
     const id = editingIdRef.current;
     if (!id || planGenerating) return;
     setPlanGenerating(true);
     setMessage('');
     try {
-      await updateCreativeWork(id, { title: basicInfo.theme || '未命名情境瑜伽', parameters: basicInfo });
+      await updateCreativeWork(id, { title: (basicInfo.themes || [])[0] || basicInfo.goals?.slice(0, 20) || '未命名情境瑜伽', parameters: toServerParams(basicInfo) });
       const data = await generateCreativeWorkPlan(id);
       setPlan({ ...initialPlan, ...data.plan });
       if (data.title) setWorkTitle(data.title);
@@ -359,7 +400,7 @@ export function YogaStudioPage() {
     setPlanGenerating(true);
     setMessage('');
     try {
-      await persist({ parameters: basicInfo });
+      await persist({ parameters: toServerParams(basicInfo) });
       const data = await generateCreativeWorkPlan(id);
       setPlan({ ...initialPlan, ...data.plan });
       if (data.title) setWorkTitle(data.title);
@@ -447,7 +488,7 @@ export function YogaStudioPage() {
     assetType: 'image',
     assetCode: 'B9',
     assetName: `${MODULE_NAME}插图`,
-    prompt: `${storybookPrompts.visualStyle}\nAdventure title: ${plan.storyTitleEn || workTitle || 'Yoga Adventure'}.\nGuided yoga concept: ${plan.storyContent || basicInfo.theme || ''}`,
+    prompt: `${storybookPrompts.visualStyle}\nAdventure title: ${plan.storyTitleEn || workTitle || 'Yoga Adventure'}.\nGuided yoga concept: ${plan.storyContent || (basicInfo.themes || []).join('、') || ''}`,
     options: {
       imageRatio: '16:9',
       imageStyle: 'Watercolor Picture Book',
@@ -462,7 +503,7 @@ export function YogaStudioPage() {
         storybookTitle: plan.storyTitleEn || workTitle || 'Yoga Adventure',
         storybookContent: targetPages.map((p) => p.subtitle).join('\n'),
         storybookStyle: 'Watercolor Picture Book',
-        storybookGrade: basicInfo.age || '7–10 岁',
+        storybookGrade: basicInfo.age || '7-9岁',
       },
     },
   });
@@ -706,15 +747,19 @@ export function YogaStudioPage() {
           {step === 0 && (
             <div className="pbv2-step-panel">
               <div className="pbv2-form-grid two">
-                <OptionGroup required label="年龄段" options={AGE_OPTIONS} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
-                <OptionGroup label="活动时长" options={DURATION_OPTIONS} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
+                <OptionGroup label="年龄段" options={AGE_OPTIONS} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
+                <OptionGroup label="时长范围" options={DURATION_OPTIONS} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
               </div>
               <section className="pbv2-card pbv2-tone-coral">
-                <div className="pbv2-card-title">情境主题（必填）</div>
-                <input className="pbv2-input" value={basicInfo.theme} onChange={(e) => setBasicInfo({ ...basicInfo, theme: e.target.value })} placeholder="例如：海洋探险、森林漫步" />
+                <div className="pbv2-card-title">情境主题（可多选）</div>
+                <OptionGroup options={THEME_OPTIONS} multiple value={basicInfo.themes} onChange={(themes) => setBasicInfo({ ...basicInfo, themes })} tone="coral" />
+              </section>
+              <section className="pbv2-card pbv2-tone-green">
+                <div className="pbv2-card-title">道具偏好（可多选，未选则默认无道具）</div>
+                <OptionGroup options={PROP_OPTIONS} multiple value={basicInfo.props} onChange={(props) => setBasicInfo({ ...basicInfo, props })} tone="green" />
               </section>
               <section className="pbv2-card pbv2-tone-blue">
-                <div className="pbv2-card-title">目标语言点（必填）</div>
+                <div className="pbv2-card-title">目标语言（必填）</div>
                 <Field area label="目标词汇与句型" value={basicInfo.goals} onChange={(v) => setBasicInfo({ ...basicInfo, goals: v })} placeholder="例如：ocean, wave, What can you see?" />
               </section>
               <section className="pbv2-card pbv2-tone-green">

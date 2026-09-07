@@ -20,6 +20,7 @@ const MenuLink = ({ item, depth = 0, collapsed }) => {
       <div
         className="sidebar-node sidebar-node-disabled"
         style={{ '--menu-depth': depth }}
+        data-depth={depth}
         title={collapsed ? item.label : `${item.label}（待建设）`}
         aria-disabled="true"
       >
@@ -42,6 +43,7 @@ const MenuLink = ({ item, depth = 0, collapsed }) => {
       }}
       className={({ isActive }) => `sidebar-node ${isActive ? 'active' : ''}`}
       style={{ '--menu-depth': depth }}
+      data-depth={depth}
     >
       <IconComponent className="sidebar-node-icon" size={14} />
       <span className="sidebar-node-text">{item.label}</span>
@@ -64,6 +66,7 @@ const MenuBranch = ({ item, depth = 0, collapsed, openBranches, onToggle }) => {
         type="button"
         className={`sidebar-node sidebar-branch-trigger ${hasActiveDescendant(item, location.pathname) ? 'has-active-child' : ''}`}
         style={{ '--menu-depth': depth }}
+        data-depth={depth}
         title={collapsed ? item.label : undefined}
         aria-expanded={isOpen}
         onClick={() => onToggle(item.id)}

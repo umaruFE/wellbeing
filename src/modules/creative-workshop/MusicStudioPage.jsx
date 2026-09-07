@@ -139,6 +139,7 @@ function ListenEditor({ items, onChange }) {
                 {(item.options || []).map((_, i) => <option key={i} value={i}>选项 {i + 1}</option>)}
               </select>
             </span>
+            <input style={{ width: 110 }} placeholder="00:13–00:14" value={item.time || ''} onChange={(e) => update(idx, { time: e.target.value })} title="正确句所在歌词行的时间段（游戏按此播放片段，留空则从 25 秒处播 8 秒）" />
             <button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button>
           </div>
           {(item.options || []).map((opt, oi) => (
