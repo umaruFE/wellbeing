@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   BookOpenText,
@@ -21,6 +22,9 @@ import {
 } from 'lucide-react';
 import apiService from '../../services/api';
 import { parseJsonSafely, responseErrorMessage } from '../../utils/responseUtils';
+import { openSongWindow } from '../../utils/teachingWindow';
+// 授课窗口背景（已传 FTP CDN，对应 src/assets/song 三张图的 918 暖色音乐底）
+const songTeachingBg = 'https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026/09/08/1788870782301-cmq6ekuofe5.jpg';
 import './SongWritingStudioPage.css';
 
 const melodies = [
@@ -55,9 +59,6 @@ const instruments = [
   { id: 'wood-block', icon: '/audio/icon/Wood block.png', label: '木鱼' },
 ];
 
-const ageOptions = ['4-6岁', '7-9岁', '10-12岁', '13-15岁'];
-const levelOptions = ['零基础', '初级（会字母和简单词）', '中级（能简单对话）', '高级（能阅读和表达）'];
-const participantOptions = ['单人', '小组（2-4人）', '大组（5-10人）', '班级（10+）'];
 const themeOptions = ['情绪表达', '自然探索', '自我认知', '人际关系', '家庭与归属', '成长与变化', '感恩与善意', '身体与感知', '动物与生命', '勇气与冒险'];
 const adjustmentSuggestions = ['词汇太难', '词汇太简单', '核心语言点丢失', '句式太重复', '填空太多', '填空太少', 'L1唱起来不顺', 'L2音节数不对'];
 const SONG_WORKS_KEY = 'song-writing-works';
@@ -176,6 +177,7 @@ function generateCoverSvg(title, melodyId, melodyName) {
 }
 
 export function SongWritingStudioPage() {
+  const { t } = useTranslation();
   const initialSessionRef = React.useRef(readStoredJson(SONG_SESSION_KEY, null));
   const initialSession = initialSessionRef.current;
   const audioRef = React.useRef(null);
@@ -225,14 +227,12 @@ export function SongWritingStudioPage() {
   const [saveMessage, setSaveMessage] = React.useState('');
   const [generatedPlan, setGeneratedPlan] = React.useState(() => initialSession?.generatedPlan || null);
   const [coverUrl, setCoverUrl] = React.useState(() => initialSession?.coverUrl || '');
-  const [showPresentation, setShowPresentation] = React.useState(false);
-  const presentationHistoryActiveRef = React.useRef(false);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const saveInFlightRef = React.useRef(null);
   const legacyMelody = melodies.find((item) => item.id === form.melody);
   const canGenerate = Boolean(form.age && form.level && form.melody && songLibrary.some((song) => String(song.id) === String(form.melody)));
   const setFormField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
-  const steps = ['基础信息', '歌曲制作'];
+  const steps = ['stepBasic', 'stepMake'];
   const goToStep = (nextStep) => {
     if (nextStep > 0 && !generatedPlan) return;
     setStep(nextStep);
@@ -251,31 +251,6 @@ export function SongWritingStudioPage() {
     setView('studio');
   };
 
-  const openPresentation = React.useCallback(() => {
-    if (!presentationHistoryActiveRef.current) {
-      window.history.pushState({ ...window.history.state, songWritingPresentation: true }, '');
-      presentationHistoryActiveRef.current = true;
-    }
-    setShowPresentation(true);
-  }, []);
-
-  const closePresentation = React.useCallback(() => {
-    if (presentationHistoryActiveRef.current) {
-      window.history.back();
-      return;
-    }
-    setShowPresentation(false);
-  }, []);
-
-  React.useEffect(() => {
-    const handlePopState = () => {
-      presentationHistoryActiveRef.current = false;
-      setShowPresentation(false);
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
   React.useEffect(() => {
     const handler = () => { setView('list'); setStep(0); };
     window.addEventListener('wellbeing:nav-same-route', handler);
@@ -290,11 +265,11 @@ export function SongWritingStudioPage() {
       setSongLibrary(Array.isArray(result?.data) ? result.data : []);
     } catch (error) {
       setSongLibrary([]);
-      setSongLibraryError(error instanceof Error ? error.message : '曲目库加载失败');
+      setSongLibraryError(error instanceof Error ? error.message : t('songWriting.libraryLoadFailed'));
     } finally {
       setSongLibraryLoading(false);
     }
-  }, []);
+  }, [t]);
 
   React.useEffect(() => { fetchSongLibrary(); }, [fetchSongLibrary]);
 
@@ -310,12 +285,12 @@ export function SongWritingStudioPage() {
       return {
         id: librarySong.id,
         name: librarySong.name,
-        hint: librarySong.description || librarySong.melody_type || librarySong.melodyType || '曲目库',
+        hint: librarySong.description || librarySong.melody_type || librarySong.melodyType || t('songWriting.libraryFallback'),
         src: librarySong.instrumental_url || librarySong.instrumentalUrl || librarySong.vocal_url || librarySong.vocalUrl || '',
       };
     }
-    return legacyMelody || { id: '', name: '未选择曲目', hint: '', src: '' };
-  }, [librarySong, legacyMelody]);
+    return legacyMelody || { id: '', name: t('songWriting.noSongSelected'), hint: '', src: '' };
+  }, [librarySong, legacyMelody, t]);
 
   const currentAudioSrc = React.useMemo(() => {
     if (librarySong) {
@@ -358,15 +333,15 @@ export function SongWritingStudioPage() {
       setActiveWorkId(row.id);
       setWorks((current) => [work, ...current.filter((item) => String(item.id) !== String(row.id))]);
       if (showConfirmation) {
-        setSaveMessage('已保存到服务端');
+        setSaveMessage(t('songWriting.savedToServer'));
         window.setTimeout(() => setSaveMessage(''), 2400);
       }
     } catch (error) {
-      setSaveMessage(error instanceof Error ? error.message : '作品保存失败');
+      setSaveMessage(error instanceof Error ? error.message : t('songWriting.saveFailed'));
     } finally {
       if (saveInFlightRef.current === savePromise) saveInFlightRef.current = null;
     }
-  }, [activeWorkId, arrangement, blankValues, coverUrl, draft, form, generatedPlan, selectedMelody.name, step, view]);
+  }, [activeWorkId, arrangement, blankValues, coverUrl, draft, form, generatedPlan, selectedMelody.name, step, t, view]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -386,14 +361,14 @@ export function SongWritingStudioPage() {
         }
         if (!cancelled) setWorks(rows.map((row) => ({ ...(row.work_data || {}), id: row.id, title: row.title, coverUrl: row.cover_url || row.work_data?.coverUrl || '', date: row.work_data?.date || new Date(row.updated_at).toLocaleDateString('zh-CN') })));
       } catch (error) {
-        if (!cancelled) setSaveMessage(error instanceof Error ? error.message : '作品列表加载失败');
+        if (!cancelled) setSaveMessage(error instanceof Error ? error.message : t('songWriting.worksLoadFailed'));
       } finally {
         if (!cancelled) setWorksLoading(false);
       }
     };
     loadWorks();
     return () => { cancelled = true; };
-  }, []);
+  }, [t]);
 
   React.useEffect(() => {
     if (view !== 'studio') {
@@ -589,7 +564,7 @@ export function SongWritingStudioPage() {
   const saveWork = () => persistWork(true);
   const generateSong = async () => {
     if (!librarySong) {
-      setSaveMessage('请先从曲目库选择一首歌曲');
+      setSaveMessage(t('songWriting.pickLibrarySongFirst'));
       return;
     }
     setIsGenerating(true);
@@ -598,7 +573,7 @@ export function SongWritingStudioPage() {
       const response = await fetch('/api/ai/generate-song-writing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, melody: melodyName }) });
       const result = await parseJsonSafely(response);
       if (!response.ok || !result?.success) {
-        throw new Error(responseErrorMessage(response, result, '歌曲生成失败，请稍后重试'));
+        throw new Error(responseErrorMessage(response, result, t('songWriting.songGenFailedRetry')));
       }
       const data = result.data;
       setDraft({ title: data.title, melody: form.melody, words: data.words, lines: data.lines, wordEmojis: data.wordEmojis || {} });
@@ -608,7 +583,7 @@ export function SongWritingStudioPage() {
       setArrangement({});
       setStep(1);
     } catch (error) {
-      setSaveMessage(error instanceof Error ? error.message : '歌曲生成失败');
+      setSaveMessage(error instanceof Error ? error.message : t('songWriting.songGenFailed'));
     } finally { setIsGenerating(false); }
   };
 
@@ -624,10 +599,10 @@ export function SongWritingStudioPage() {
         body: JSON.stringify({ age: form.age, level: form.level, melody: melodyName, themes: themeList, vocabulary: form.vocabulary, grammar: form.grammar, lines: editorDraft.lines, regenerateIndex: index, adjustmentRequest }),
       });
       const result = await parseJsonSafely(response);
-      if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, '重新生成失败'));
+      if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, t('songWriting.regenFailed')));
       setEditorDraft((current) => ({ ...current, lines: current.lines.map((line, i) => (i === index ? result.data.line : line)) }));
     } catch (error) {
-      setSaveMessage(error instanceof Error ? error.message : '重新生成失败');
+      setSaveMessage(error instanceof Error ? error.message : t('songWriting.regenFailed'));
     } finally { setRegeneratingLine(null); }
   };
 
@@ -635,7 +610,7 @@ export function SongWritingStudioPage() {
     if (!editorDraft) return;
     const requestText = adjustmentRequest.trim();
     if (!requestText) {
-      setSaveMessage('请先填写或选择一项具体调整需求');
+      setSaveMessage(t('songWriting.pickAdjustFirst'));
       return;
     }
     setRegeneratingAll(true);
@@ -654,13 +629,13 @@ export function SongWritingStudioPage() {
         }),
       });
       const result = await parseJsonSafely(response);
-      if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, '重新生成失败'));
+      if (!response.ok || !result?.success) throw new Error(responseErrorMessage(response, result, t('songWriting.regenFailed')));
       const data = result.data;
       setEditorDraft((current) => ({ ...current, lines: data.lines, words: data.words, wordEmojis: data.wordEmojis || {} }));
       setShowAdjustmentPanel(false);
-      setSaveMessage('AI 优化结果已生成，点击“保存修改”后生效');
+      setSaveMessage(t('songWriting.aiOptimized'));
     } catch (error) {
-      setSaveMessage(error instanceof Error ? error.message : '重新生成失败');
+      setSaveMessage(error instanceof Error ? error.message : t('songWriting.regenFailed'));
     } finally { setRegeneratingAll(false); setIsGenerating(false); }
   };
 
@@ -691,7 +666,7 @@ export function SongWritingStudioPage() {
 
   const saveContentEdits = async () => {
     if (!editorDraft) return;
-    const title = editorDraft.title.trim() || '未命名歌曲';
+    const title = editorDraft.title.trim() || t('songWriting.untitledSong');
     const titleChanged = title !== draft.title;
     const words = editorDraft.words.map((word) => word.trim()).filter(Boolean);
     const missingEmojiWords = words.filter((word) => !editorDraft.wordEmojis?.[word]);
@@ -716,7 +691,7 @@ export function SongWritingStudioPage() {
     setBlankValues({});
     setShowContentEditor(false);
     setEditorDraft(null);
-    setSaveMessage('修改已保存');
+    setSaveMessage(t('songWriting.changesSaved'));
     window.setTimeout(() => setSaveMessage(''), 2400);
     setSavingContentEdits(false);
   };
@@ -728,7 +703,7 @@ export function SongWritingStudioPage() {
         await apiService.request(`/api/song-writing-works/${id}`, { method: 'DELETE' });
         setWorks((current) => current.filter((work) => String(work.id) !== String(id)));
       } catch (error) {
-        setSaveMessage(error instanceof Error ? error.message : '作品删除失败');
+        setSaveMessage(error instanceof Error ? error.message : t('songWriting.deleteFailed'));
       }
     };
     const loadWork = (work) => {
@@ -752,8 +727,27 @@ export function SongWritingStudioPage() {
       activeWorkIdRef.current = work.id;
     };
     const openWork = (work) => { loadWork(work); setStep(1); setView('studio'); };
-    const presentWork = (work) => { loadWork(work); setStep(1); setView('studio'); openPresentation(); };
-    return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>歌曲编排</h1><p>创建和管理你的歌曲互动作品</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={startNewSong}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>新建歌曲</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索歌曲..." /></div></div>{worksLoading ? <div className="pbv2-list-empty"><Loader2 className="spin" size={38} /><p>正在加载歌曲作品...</p></div> : filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>还没有歌曲作品，点击右上角创建</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover">{work.coverUrl ? <img src={work.coverUrl} alt={work.title} className="pbv2-book-cover-img" /> : <div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div>}<span className="pbv2-book-status draft">草稿</span></div><div className="pbv2-book-info"><h3>{work.title || '未命名歌曲'}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />编辑</button><button type="button" onClick={(e) => { e.stopPropagation(); presentWork(work); }}>🖥️ 授课</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />删除</button></div></div></article>)}</div>}</main>;
+    // 列表「授课」：直接用作品数据在新窗口播放（曲目库优先，旧曲目按 id 匹配本地旋律）
+    const presentWork = (work) => {
+      const melodyId = work.form?.melody || 'twinkle';
+      const lib = songLibrary.find((song) => String(song.id) === String(melodyId))
+        || songLibrary.find((song) => (song.melody_type || song.melodyType) === (melodies.find((m) => m.id === melodyId) || {}).name)
+        || null;
+      const legacy = melodies.find((m) => m.id === melodyId);
+      if (!openSongWindow({
+        draft: work.draft,
+        blankValues: work.blankValues || {},
+        arrangement: work.arrangement || {},
+        backgroundUrl: songTeachingBg,
+        audio: {
+          name: lib?.name || legacy?.name || t('songWriting.noSongSelected'),
+          vocalUrl: lib?.vocal_url || lib?.vocalUrl || '',
+          instrumentalUrl: lib?.instrumental_url || lib?.instrumentalUrl || '',
+          fallbackUrl: (!lib && legacy?.src) || '',
+        },
+      })) setSaveMessage(t('songWriting.noTeachableLyrics'));
+    };
+    return <main className="picture-book-studio-v2 pbv2-list-page"><header className="pbv2-topbar"><div className="pbv2-topbar-left"><div className="pbv2-topbar-icon"><BookOpenText size={28} /></div><div><h1>{t('songWriting.moduleName')}</h1><p>{t('songWriting.listSubtitle')}</p></div></div><button type="button" className="pbv2-create-btn" style={{ display: 'inline-flex', minWidth: 126, color: '#fff', background: '#ef7865' }} onClick={startNewSong}><Plus size={18} color="#fff" /><span style={{ display: 'inline', color: '#fff' }}>{t('songWriting.newSong')}</span></button></header><div className="pbv2-list-toolbar"><div className="pbv2-search-box"><Search size={16} /><input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t('songWriting.searchPlaceholder')} /></div></div>{worksLoading ? <div className="pbv2-list-empty"><Loader2 className="spin" size={38} /><p>{t('songWriting.loadingWorks')}</p></div> : filteredWorks.length === 0 ? <div className="pbv2-list-empty"><BookOpenText size={48} /><p>{t('songWriting.emptyWorks')}</p></div> : <div className="pbv2-card-grid">{filteredWorks.map((work) => <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}><div className="pbv2-book-cover">{work.coverUrl ? <img src={work.coverUrl} alt={work.title} className="pbv2-book-cover-img" /> : <div className="pbv2-book-cover-placeholder"><Music2 size={32} /></div>}<span className="pbv2-book-status draft">{t('songWriting.statusDraft')}</span></div><div className="pbv2-book-info"><h3>{work.title || t('songWriting.untitledSong')}</h3><div className="pbv2-book-meta"><Clock size={13} /><span>{work.date}</span></div><div className="pbv2-book-actions"><button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}><Pencil size={14} />{t('songWriting.edit')}</button><button type="button" onClick={(e) => { e.stopPropagation(); presentWork(work); }}>🖥️ {t('common.teach')}</button><button type="button" onClick={(e) => { e.stopPropagation(); removeWork(work.id); }}><Trash2 size={14} />{t('songWriting.delete')}</button></div></div></article>)}</div>}</main>;
   }
 
   if (view === 'studio' && isGenerating && step === 0) return <SongGenerationLoading />;
@@ -764,17 +758,17 @@ export function SongWritingStudioPage() {
         <div className="pbv2-topbar-left">
           <div className="pbv2-topbar-icon"><Music2 size={28} /></div>
           <div>
-            <h1>歌曲编排工作室</h1>
+            <h1>歌曲编唱屋</h1>
             <p>设计适合课堂使用的英文幸福力歌曲互动</p>
           </div>
         </div>
         <div className="pbv2-topbar-actions">
-          <span className="pbv2-save-state">{saveMessage || '自动保存已开启'}</span>
+          <span className="pbv2-save-state">{saveMessage || t('songWriting.saveStateAuto')}</span>
           <button type="button" className="pbv2-save-btn" onClick={saveWork}>
-            <Save size={16} />保存作品
+            <Save size={16} />{t('songWriting.saveWork')}
           </button>
           <button type="button" className="pbv2-back-btn" onClick={() => setView('list')}>
-            <ArrowLeft size={16} />返回列表
+            <ArrowLeft size={16} />{t('songWriting.backToList')}
           </button>
         </div>
       </header>
@@ -783,7 +777,7 @@ export function SongWritingStudioPage() {
           {steps.map((label, index) => (
             <button type="button" key={label} className={`${step === index ? 'is-active' : ''}${step > index ? ' is-done' : ''}`} disabled={index > 0 && !generatedPlan} onClick={() => goToStep(index)}>
               <span>{index + 1}</span>
-              <strong>{label}</strong>
+              <strong>{t('songWriting.' + label)}</strong>
             </button>
           ))}
         </aside>
@@ -793,15 +787,15 @@ export function SongWritingStudioPage() {
           {step === 0 && (
           <div className="pbv2-step-panel">
             <div className="pbv2-form-grid two">
-              <OptionGroup tone="coral" required label="学生年龄" options={ageOptions} value={form.age} onChange={(value) => setFormField('age', value)} />
-              <OptionGroup tone="blue" required label="英文水平" options={levelOptions} value={form.level} onChange={(value) => setFormField('level', value)} />
-              <OptionGroup tone="yellow" label="参与人数" options={participantOptions} value={form.participants} onChange={(value) => setFormField('participants', value)} />
+              <OptionGroup tone="coral" required label={t('songWriting.ageLabel')} options={[{ value: '4-6岁', label: t('songWriting.age46') }, { value: '7-9岁', label: t('songWriting.age79') }, { value: '10-12岁', label: t('songWriting.age1012') }, { value: '13-15岁', label: t('songWriting.age1315') }]} value={form.age} onChange={(value) => setFormField('age', value)} />
+              <OptionGroup tone="blue" required label={t('songWriting.levelLabel')} options={[{ value: '零基础', label: t('songWriting.levelZero') }, { value: '初级（会字母和简单词）', label: t('songWriting.levelBeginner') }, { value: '中级（能简单对话）', label: t('songWriting.levelIntermediate') }, { value: '高级（能阅读和表达）', label: t('songWriting.levelAdvanced') }]} value={form.level} onChange={(value) => setFormField('level', value)} />
+              <OptionGroup tone="yellow" label={t('songWriting.participantLabel')} options={[{ value: '单人', label: t('songWriting.partSingle') }, { value: '小组（2-4人）', label: t('songWriting.partSmallGroup') }, { value: '大组（5-10人）', label: t('songWriting.partBigGroup') }, { value: '班级（10+）', label: t('songWriting.partClass') }]} value={form.participants} onChange={(value) => setFormField('participants', value)} />
             </div>
 
             <CheckboxGroup
               tone="yellow"
-              label="活动主题偏好"
-              options={themeOptions}
+              label={t('songWriting.themeLabel')}
+              options={themeOptions.map((v, i) => ({ value: v, label: t('songWriting.theme' + i) }))}
               value={form.themes}
               otherValue={form.themeOther}
               onToggle={(value) => setFormField('themes', toggleList(form.themes, value))}
@@ -809,35 +803,35 @@ export function SongWritingStudioPage() {
             />
 
             <section className="pbv2-card pbv2-tone-blue">
-              <div className="pbv2-card-title">语言目标（非必填）</div>
+              <div className="pbv2-card-title">{t('songWriting.langGoalsTitle')}</div>
               <div className="pbv2-form-grid two">
-                <Field label="核心词汇" value={form.vocabulary} onChange={(value) => setFormField('vocabulary', value)} placeholder="例如：happy, sad, body, friend" />
-                <Field label="核心句型/语法" value={form.grammar} onChange={(value) => setFormField('grammar', value)} placeholder="例如：My friend has... / My friend is..." />
+                <Field label={t('songWriting.vocabLabel')} value={form.vocabulary} onChange={(value) => setFormField('vocabulary', value)} placeholder={t('songWriting.vocabPlaceholder')} />
+                <Field label={t('songWriting.grammarLabel')} value={form.grammar} onChange={(value) => setFormField('grammar', value)} placeholder={t('songWriting.grammarPlaceholder')} />
               </div>
             </section>
 
             <section className="pbv2-card pbv2-tone-coral">
-              <div className="pbv2-card-title">从曲目库选择歌曲 <span className="pbv2-required">*</span></div>
+              <div className="pbv2-card-title">{t('songWriting.pickSongTitle')} <span className="pbv2-required">*</span></div>
               {songLibraryLoading ? (
                 <div className="song-library-empty">
                   <Loader2 className="spin" size={28} />
-                  <p>正在加载曲目库...</p>
+                  <p>{t('songWriting.loadingLibrary')}</p>
                 </div>
               ) : songLibraryError ? (
                 <div className="song-library-empty">
                   <Music2 size={32} />
                   <p>{songLibraryError}</p>
-                  <button type="button" className="pbv2-ghost" onClick={fetchSongLibrary}>重新加载</button>
+                  <button type="button" className="pbv2-ghost" onClick={fetchSongLibrary}>{t('songWriting.reload')}</button>
                 </div>
               ) : songLibrary.length === 0 ? (
                 <div className="song-library-empty">
                   <Music2 size={32} />
-                  <p>曲目库暂无歌曲，请先到曲目库添加歌曲</p>
+                  <p>{t('songWriting.libraryEmpty')}</p>
                 </div>
               ) : (
                 <div className="song-picker-selected">
-                  {librarySong ? <div><strong>{librarySong.name}</strong><span>{melodyTypeLabels[librarySong.melody_type || librarySong.melodyType] || librarySong.melody_type || librarySong.melodyType}</span></div> : <p>尚未选择歌曲</p>}
-                  <button type="button" className="pbv2-ghost" onClick={() => setShowSongPicker(true)}>{librarySong ? '更换歌曲' : '选择歌曲'}</button>
+                  {librarySong ? <div><strong>{librarySong.name}</strong><span>{melodyTypeLabels[librarySong.melody_type || librarySong.melodyType] || librarySong.melody_type || librarySong.melodyType}</span></div> : <p>{t('songWriting.notSelected')}</p>}
+                  <button type="button" className="pbv2-ghost" onClick={() => setShowSongPicker(true)}>{librarySong ? t('songWriting.changeSong') : t('songWriting.chooseSong')}</button>
                 </div>
               )}
             </section>
@@ -845,9 +839,9 @@ export function SongWritingStudioPage() {
             <FooterActions>
               <button type="button" className="pbv2-primary" disabled={!canGenerate || isGenerating} onClick={generateSong}>
                 {isGenerating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
-                {isGenerating ? '生成中...' : '生成歌词和词库'}
+                {isGenerating ? t('songWriting.generating') : t('songWriting.generateLyrics')}
               </button>
-              {!songLibraryLoading && !librarySong && songLibrary.length > 0 && <span className="pbv2-action-hint">请先选择一首曲目库歌曲</span>}
+              {!songLibraryLoading && !librarySong && songLibrary.length > 0 && <span className="pbv2-action-hint">{t('songWriting.pickFirst')}</span>}
             </FooterActions>
           </div>
           )}
@@ -855,10 +849,10 @@ export function SongWritingStudioPage() {
           {showSongPicker && (
             <div className="song-overlay" onClick={() => { stopSongPreview(); setShowSongPicker(false); }}>
               <div className="song-modal song-picker-modal" onClick={(event) => event.stopPropagation()}>
-                <div className="modal-head"><div><h2>从曲目库选择歌曲</h2><p>可按旋律类型筛选，并分别试听演唱版或伴奏版</p></div><button type="button" onClick={() => { stopSongPreview(); setShowSongPicker(false); }}><X size={18} /></button></div>
+                <div className="modal-head"><div><h2>{t('songWriting.pickerTitle')}</h2><p>{t('songWriting.pickerHint')}</p></div><button type="button" onClick={() => { stopSongPreview(); setShowSongPicker(false); }}><X size={18} /></button></div>
                 <audio ref={previewRef} onEnded={() => setPreviewSongId(null)} />
                 <div className="song-picker-filters">
-                  <button type="button" className={songTypeFilter === 'all' ? 'active' : ''} onClick={() => setSongTypeFilter('all')}>全部</button>
+                  <button type="button" className={songTypeFilter === 'all' ? 'active' : ''} onClick={() => setSongTypeFilter('all')}>{t('songWriting.filterAll')}</button>
                   {songTypes.map((type) => <button type="button" key={type} className={songTypeFilter === type ? 'active' : ''} onClick={() => setSongTypeFilter(type)}>{melodyTypeLabels[type] || type}</button>)}
                 </div>
                 <div className="song-library-grid">
@@ -871,13 +865,13 @@ export function SongWritingStudioPage() {
                       <span className="song-library-type">{melodyTypeLabels[song.melody_type || song.melodyType] || song.melody_type || song.melodyType}</span>
                       {song.description && <p className="song-library-desc">{song.description}</p>}
                       <div className="song-library-preview-actions">
-                        <button type="button" disabled={!vocalUrl} className={`song-library-preview${String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? ' playing' : ''}`} onClick={(event) => { event.stopPropagation(); previewLibrarySong(song, 'vocal'); }}>{String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}演唱版</button>
-                        <button type="button" disabled={!instrumentalUrl} className={`song-library-preview${String(previewSongId) === String(song.id) && previewAudioMode === 'instrumental' ? ' playing' : ''}`} onClick={(event) => { event.stopPropagation(); previewLibrarySong(song, 'instrumental'); }}>{String(previewSongId) === String(song.id) && previewAudioMode === 'instrumental' ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}伴奏版</button>
+                        <button type="button" disabled={!vocalUrl} className={`song-library-preview${String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? ' playing' : ''}`} onClick={(event) => { event.stopPropagation(); previewLibrarySong(song, 'vocal'); }}>{String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{t('songWriting.vocalVersion')}</button>
+                        <button type="button" disabled={!instrumentalUrl} className={`song-library-preview${String(previewSongId) === String(song.id) && previewAudioMode === 'instrumental' ? ' playing' : ''}`} onClick={(event) => { event.stopPropagation(); previewLibrarySong(song, 'instrumental'); }}>{String(previewSongId) === String(song.id) && previewAudioMode === 'instrumental' ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{t('songWriting.instrumentalVersion')}</button>
                       </div>
                     </div>;
                   })}
                 </div>
-                {filteredSongLibrary.length === 0 && <div className="song-library-empty"><p>该类型下暂无歌曲</p></div>}
+                {filteredSongLibrary.length === 0 && <div className="song-library-empty"><p>{t('songWriting.noSongsOfType')}</p></div>}
               </div>
             </div>
           )}
@@ -906,31 +900,31 @@ export function SongWritingStudioPage() {
       <svg className="bg-deco star2" width="24" height="24" viewBox="0 0 24 24"><polygon points="12,1 14.5,9 23,9 16,14 18.5,22 12,17 5.5,22 8,14 1,9 9.5,9" fill="#e8ddf0" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <svg className="bg-deco star3" width="22" height="22" viewBox="0 0 22 22"><polygon points="11,1 13,8 21,8 14.5,13 16.5,20 11,15.5 5.5,20 7.5,13 1,8 9,8" fill="#f0a080" stroke="#2d2d2d" strokeWidth="2"/></svg>
       <svg className="bg-deco star4" width="26" height="26" viewBox="0 0 26 26"><polygon points="13,1 15.5,9.5 25,9.5 17.5,15 20,24 13,19 6,24 8.5,15 1,9.5 10.5,9.5" fill="#f7d958" stroke="#2d2d2d" strokeWidth="2"/></svg>
-      <header className="sky-title"><h1>{draft.title}</h1><p>旋律：{selectedMelody.name} · {form.age} · {form.level}</p></header>
+      <header className="sky-title"><h1>{draft.title}</h1><p>{t('songWriting.melodyLabel')}{selectedMelody.name} · {form.age} · {form.level}</p></header>
       <div className="pbv2-making-toolbar">
-        <button type="button" className="pbv2-ghost" onClick={() => { setEditorDraft({ ...draft, lines: [...draft.lines], words: [...draft.words], wordEmojis: { ...(draft.wordEmojis || {}) } }); setShowContentEditor(true); }}>编辑歌词和词库</button>
+        <button type="button" className="pbv2-ghost" onClick={() => { setEditorDraft({ ...draft, lines: [...draft.lines], words: [...draft.words], wordEmojis: { ...(draft.wordEmojis || {}) } }); setShowContentEditor(true); }}>{t('songWriting.editLyricsBtn')}</button>
         {/* <button type="button" className="pbv2-ghost" onClick={() => downloadInteractiveHtml(draft, form, selectedMelody)}>下载 HTML</button> */}
-        <button type="button" className="pbv2-ghost" onClick={() => setShowPlan(true)}>📋 活动方案</button>
-        <button type="button" className="pbv2-primary" onClick={openPresentation}>🖥️ 授课模式</button>
+        <button type="button" className="pbv2-ghost" onClick={() => setShowPlan(true)}>{t('songWriting.planBtn')}</button>
+        <button type="button" className="pbv2-primary" onClick={() => { if (!openSongWindow({ draft, blankValues, arrangement, backgroundUrl: songTeachingBg, audio: { name: selectedMelody?.name, vocalUrl: librarySong?.vocal_url || librarySong?.vocalUrl || '', instrumentalUrl: librarySong?.instrumental_url || librarySong?.instrumentalUrl || '', fallbackUrl: legacyMelody?.src || '' } })) setSaveMessage(t('songWriting.noTeachableLyrics')); }}>🖥️ {t('common.teachMode')}</button>
       </div>
 
       <section className="sky-studio">
         <article className="sky-player">
-          <strong>🎵 {audioMode === 'vocal' ? '演唱版' : '伴奏播放'}</strong>
+          <strong>🎵 {audioMode === 'vocal' ? t('songWriting.vocalVersion') : t('songWriting.audioInstrumentalPlay')}</strong>
           {librarySong && (librarySong.vocal_url || librarySong.vocalUrl || librarySong.instrumental_url || librarySong.instrumentalUrl) && (
             <div className="audio-mode-toggle sky-mode-toggle">
-              <button type="button" disabled={!(librarySong.instrumental_url || librarySong.instrumentalUrl)} className={audioMode === 'instrumental' ? 'active' : ''} onClick={() => setAudioMode('instrumental')}>伴奏版</button>
-              <button type="button" disabled={!(librarySong.vocal_url || librarySong.vocalUrl)} className={audioMode === 'vocal' ? 'active' : ''} onClick={() => setAudioMode('vocal')}>演唱版</button>
+              <button type="button" disabled={!(librarySong.instrumental_url || librarySong.instrumentalUrl)} className={audioMode === 'instrumental' ? 'active' : ''} onClick={() => setAudioMode('instrumental')}>{t('songWriting.instrumentalVersion')}</button>
+              <button type="button" disabled={!(librarySong.vocal_url || librarySong.vocalUrl)} className={audioMode === 'vocal' ? 'active' : ''} onClick={() => setAudioMode('vocal')}>{t('songWriting.vocalVersion')}</button>
             </div>
           )}
-          <div className="sky-player-row"><button type="button" className="sky-play" onClick={toggleAudio}>{playing ? <Pause fill="currentColor" size={17} /> : <Play fill="currentColor" size={17} />}</button><small>{formatAudioTime(currentTime)}</small><input aria-label="播放进度" type="range" min="0" max={duration || 0} step="0.1" value={Math.min(currentTime, duration || 0)} disabled={!duration} onChange={seekAudio} /><small>{formatAudioTime(duration)}</small></div>
+          <div className="sky-player-row"><button type="button" className="sky-play" onClick={toggleAudio}>{playing ? <Pause fill="currentColor" size={17} /> : <Play fill="currentColor" size={17} />}</button><small>{formatAudioTime(currentTime)}</small><input aria-label={t('songWriting.progressAria')} type="range" min="0" max={duration || 0} step="0.1" value={Math.min(currentTime, duration || 0)} disabled={!duration} onChange={seekAudio} /><small>{formatAudioTime(duration)}</small></div>
           <div className="speed-row">{[0.5,0.75,1,1.25,1.5].map((item) => <button type="button" className={speed === item ? 'active' : ''} key={item} onClick={() => setSpeed(item)}>{item}×</button>)}</div>
-          <label className="sky-volume"><Volume2 size={14} /><input aria-label="音量" type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} /><b>{Math.round(volume * 100)}%</b></label><p>{selectedMelody.name} · {selectedMelody.hint}</p>
+          <label className="sky-volume"><Volume2 size={14} /><input aria-label={t('songWriting.volumeAria')} type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} /><b>{Math.round(volume * 100)}%</b></label><p>{selectedMelody.name} · {selectedMelody.hint}</p>
         </article>
 
         <div className="sky-content">
           <article className="sky-lyrics">
-            <div className="sky-card-title"><b>🎶 填词模板</b><span>拖拽，或点选单词和空格</span></div>
+            <div className="sky-card-title"><b>{t('songWriting.templateTitle')}</b><span>{t('songWriting.templateHint')}</span></div>
             <div className="lyrics-lines">
             {draft.lines.map((line, index) => (
               <div className="lyric-line" key={`${index}-${line}`}>
@@ -943,68 +937,67 @@ export function SongWritingStudioPage() {
                     return <React.Fragment key={`${index}-${blankIndex}`}><span className="lyric-copy">{part}</span>{blankIndex < parts.length - 1 && <button type="button" className={`lyric-blank${isActive ? ' is-selected' : ''}`} aria-label={`第 ${index + 1} 行第 ${blankIndex + 1} 个填空`} aria-pressed={isActive} onClick={() => selectBlank(target)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); try { const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing')); if (payload.type === 'word') fillWordAt(payload.word, target); } catch { /* Ignore invalid drops. */ } }}>{value || '______'}</button>}</React.Fragment>;
                   });
                 })()}
-                <div className={`line-instruments${activeInstrumentLine === index ? ' is-selected' : ''}`} onClick={() => selectInstrumentTarget(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`} className="line-instrument-chip" title={`${instrument.label}（点击移除）`} role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); removeInstrument(index, itemIndex); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') removeInstrument(index, itemIndex); }}><img src={instrument.icon} alt={instrument.label} /></span>)}<button type="button" title={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE ? '每句最多 3 个乐器' : '点击后再选择乐器'} disabled={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE} onClick={(event) => { event.stopPropagation(); selectInstrumentTarget(index); }}>＋</button></div>
+                <div className={`line-instruments${activeInstrumentLine === index ? ' is-selected' : ''}`} onClick={() => selectInstrumentTarget(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`} className="line-instrument-chip" title={`${t('songWriting.inst_' + instrument.id)}${t('songWriting.chipRemoveSuffix')}`} role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); removeInstrument(index, itemIndex); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') removeInstrument(index, itemIndex); }}><img src={instrument.icon} alt={t('songWriting.inst_' + instrument.id)} /></span>)}<button type="button" title={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE ? t('songWriting.maxPerLine') : t('songWriting.pickInstrumentFirst')} disabled={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE} onClick={(event) => { event.stopPropagation(); selectInstrumentTarget(index); }}>＋</button></div>
               </div>
             ))}
-            </div><button type="button" className="sky-clear" onClick={regenerate}><RefreshCw size={14} />清空所有填空</button>
+            </div><button type="button" className="sky-clear" onClick={regenerate}><RefreshCw size={14} />{t('songWriting.clearAllBlanks')}</button>
           </article>
           <div className="sky-sidecards">
-            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => { setSelectedLargeWord(''); setShowWords(true); }}><Expand size={15} /></button></div><span>拖动，或依次点击单词和空格</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" draggable className={selectedWord === word ? 'is-selected' : ''} aria-pressed={selectedWord === word} key={`${word}-${index}`} onDragStart={(event) => setDragPayload(event, { type: 'word', word })} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>💡 可先点单词再点空格，也可先点空格再点单词</p></article>
-            <article className="sky-instruments"><div className="sky-card-title"><b>🎸 乐器</b><span>拖动，或依次点击乐器和圆圈</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable className={selectedInstrument?.id === instrument.id ? 'is-selected' : ''} aria-pressed={selectedInstrument?.id === instrument.id} key={instrument.id} onDragStart={(event) => setDragPayload(event, { type: 'instrument', instrument })} onClick={() => selectInstrument(instrument)}><img src={instrument.icon} alt="" />{instrument.label}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? '收起' : `展开 (${instruments.length - 8})`}</button>}</div><p>💡 可先点乐器再点圆圈，也可先点圆圈再点乐器；每句最多 3 个</p></article>
+            <article className="sky-words"><div className="sky-card-title"><b>📚 Word Bank</b><button type="button" onClick={() => { setSelectedLargeWord(''); setShowWords(true); }}><Expand size={15} /></button></div><span>{t('songWriting.wordBankHint')}</span><div className="word-chips">{draft.words.map((word, index) => <button type="button" draggable className={selectedWord === word ? 'is-selected' : ''} aria-pressed={selectedWord === word} key={`${word}-${index}`} onDragStart={(event) => setDragPayload(event, { type: 'word', word })} onClick={() => fillWord(word)}><i>{wordCardIcon(word, draft.wordEmojis)}</i>{word}</button>)}</div><p>{t('songWriting.wordBankTip')}</p></article>
+            <article className="sky-instruments"><div className="sky-card-title"><b>{t('songWriting.instrumentsTitle')}</b><span>{t('songWriting.instrumentsHint')}</span></div><div className="instrument-chips">{(showAllInstruments ? instruments : instruments.slice(0, 8)).map((instrument) => <button type="button" draggable className={selectedInstrument?.id === instrument.id ? 'is-selected' : ''} aria-pressed={selectedInstrument?.id === instrument.id} key={instrument.id} onDragStart={(event) => setDragPayload(event, { type: 'instrument', instrument })} onClick={() => selectInstrument(instrument)}><img src={instrument.icon} alt="" />{t('songWriting.inst_' + instrument.id)}</button>)}{instruments.length > 8 && <button type="button" className="instrument-toggle" onClick={() => setShowAllInstruments((v) => !v)}>{showAllInstruments ? t('songWriting.collapse') : t('songWriting.expandMore', { n: instruments.length - 8 })}</button>}</div><p>{t('songWriting.instrumentsTip')}</p></article>
           </div>
         </div>
-        <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>幸福力英文歌曲创编 · 轻松唱出心情</span></footer>
+        <footer className="sky-footer">⭐ ☀️ 🌈 🎵 💛 ⭐<span>{t('songWriting.footerNote')}</span></footer>
       </section>
 
-      {showWords && <Overlay title="Word Bank · 选词区" className="word-bank-modal" onClose={() => setShowWords(false)}><p>投屏模式：点击词卡进行课堂聚焦，再次点击可取消选中。</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" className={selectedLargeWord === word ? 'is-selected' : ''} key={`${word}-${index}`} onClick={() => setSelectedLargeWord((current) => current === word ? '' : word)}><span>{wordCardIcon(word, draft.wordEmojis)}</span>{word}</button>)}</div></Overlay>}
+      {showWords && <Overlay title={t('songWriting.wordBankOverlayTitle')} className="word-bank-modal" onClose={() => setShowWords(false)}><p>{t('songWriting.wordBankOverlayHint')}</p><div className="word-chips large">{draft.words.map((word, index) => <button type="button" className={selectedLargeWord === word ? 'is-selected' : ''} key={`${word}-${index}`} onClick={() => setSelectedLargeWord((current) => current === word ? '' : word)}><span>{wordCardIcon(word, draft.wordEmojis)}</span>{word}</button>)}</div></Overlay>}
       {showContentEditor && editorDraft && (
-        <Overlay title="编辑歌词和 Word Bank" onClose={() => { setShowContentEditor(false); setEditorDraft(null); }}>
+        <Overlay title={t('songWriting.contentEditorTitle')} onClose={() => { setShowContentEditor(false); setEditorDraft(null); }}>
           <div className="song-content-editor pbv2-editor">
             <div className="song-editor-scroll">
             <section className="pbv2-editor-section song-title-editor-section">
-              <h3>歌曲名称</h3>
-              <input value={editorDraft.title} maxLength={100} onChange={(event) => setEditorDraft((current) => ({ ...current, title: event.target.value }))} placeholder="请输入歌曲名称" />
+              <h3>{t('songWriting.songTitleLabel')}</h3>
+              <input value={editorDraft.title} maxLength={100} onChange={(event) => setEditorDraft((current) => ({ ...current, title: event.target.value }))} placeholder={t('songWriting.songTitlePlaceholder')} />
             </section>
             <section className="pbv2-editor-section lyrics-editor-section">
               <div className="song-editor-header">
-                <h3>歌词模板</h3>
+                <h3>{t('songWriting.lyricTemplateLabel')}</h3>
                 <button type="button" className="regenerate-all-btn" disabled={regeneratingAll} onClick={() => setShowAdjustmentPanel((current) => !current)}>
                   {regeneratingAll ? <Loader2 className="spin" size={13} /> : <RefreshCw size={13} />}
-                  {regeneratingAll ? '优化中...' : showAdjustmentPanel ? '收起优化设置' : 'AI 优化歌词'}
+                  {regeneratingAll ? t('songWriting.optimizing') : showAdjustmentPanel ? t('songWriting.hideAdjust') : t('songWriting.aiOptimize')}
                 </button>
               </div>
-              <p className="blank-hint">💡 在文本中点击指定位置，或选中要替换的文字，再点「插入填空」；可重复插入多个</p>
+              <p className="blank-hint">{t('songWriting.blankHint')}</p>
               {showAdjustmentPanel && <div className="song-adjustment-box">
-                <label htmlFor="song-adjustment-request">具体调整需求</label>
-                <textarea id="song-adjustment-request" rows={2} value={adjustmentRequest} onChange={(event) => setAdjustmentRequest(event.target.value)} placeholder="例如：保留核心句型，让 L1 更顺口，并减少一个填空" />
+                <label htmlFor="song-adjustment-request">{t('songWriting.adjustLabel')}</label>
+                <textarea id="song-adjustment-request" rows={2} value={adjustmentRequest} onChange={(event) => setAdjustmentRequest(event.target.value)} placeholder={t('songWriting.adjustPlaceholder')} />
                 <div className="song-adjustment-suggestions">
-                  {adjustmentSuggestions.map((suggestion) => <button type="button" key={suggestion} className={adjustmentRequest.includes(suggestion) ? 'is-active' : ''} onClick={() => toggleAdjustmentSuggestion(suggestion)}>{suggestion}</button>)}
+                  {adjustmentSuggestions.map((suggestion, suggestionIndex) => <button type="button" key={suggestion} className={adjustmentRequest.includes(suggestion) ? 'is-active' : ''} onClick={() => toggleAdjustmentSuggestion(suggestion)}>{t('songWriting.adj' + suggestionIndex)}</button>)}
                 </div>
-                <button type="button" className="song-adjustment-submit" disabled={regeneratingAll} onClick={regenerateAllLines}>{regeneratingAll ? <Loader2 className="spin" size={13} /> : <Wand2 size={13} />}{regeneratingAll ? '正在重新生成...' : '按调整需求重新生成'}</button>
+                <button type="button" className="song-adjustment-submit" disabled={regeneratingAll} onClick={regenerateAllLines}>{regeneratingAll ? <Loader2 className="spin" size={13} /> : <Wand2 size={13} />}{regeneratingAll ? t('songWriting.regenerating') : t('songWriting.regenByAdjust')}</button>
               </div>}
               {editorDraft.lines.map((line, index) => (
                 <div key={index} className="lyric-edit-row">
                   <span className="line-number">L{index + 1}</span>
                   <textarea ref={(element) => { lyricEditorRefs.current[index] = element; }} value={line} rows={1} onChange={(event) => setEditorDraft((current) => ({ ...current, lines: current.lines.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} />
                   <div className="line-actions">
-                    <div className="blank-actions"><button type="button" className="blank-toggle" onClick={() => insertBlankInLine(index)}><Plus size={12} />插入填空</button>{line.includes('______') && <button type="button" className="blank-clear" onClick={() => clearBlanksInLine(index)}><Trash2 size={12} />清空填空</button>}</div>
-                    <button type="button" className="line-regenerate" disabled={regeneratingLine === index} onClick={() => regenerateLine(index)}>{regeneratingLine === index ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />}{regeneratingLine === index ? '生成中' : 'AI 重新生成'}</button>
+                    <div className="blank-actions"><button type="button" className="blank-toggle" onClick={() => insertBlankInLine(index)}><Plus size={12} />{t('songWriting.insertBlank')}</button>{line.includes('______') && <button type="button" className="blank-clear" onClick={() => clearBlanksInLine(index)}><Trash2 size={12} />{t('songWriting.clearBlanks')}</button>}</div>
+                    <button type="button" className="line-regenerate" disabled={regeneratingLine === index} onClick={() => regenerateLine(index)}>{regeneratingLine === index ? <Loader2 className="spin" size={12} /> : <RefreshCw size={12} />}{regeneratingLine === index ? t('songWriting.generating') : t('songWriting.aiRegenLine')}</button>
                   </div>
                 </div>
               ))}
             </section>
             <section className="pbv2-editor-section word-editor-section">
               <h3>Word Bank</h3>
-              {editorDraft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setEditorDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" aria-label={`删除 ${word}`} onClick={() => setEditorDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}><Trash2 size={15} /></button></label>)}
-              <button type="button" className="add-word" onClick={() => setEditorDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}><Plus size={13} /> 添加词卡</button>
+              {editorDraft.words.map((word, index) => <label key={index}><input value={word} onChange={(event) => setEditorDraft((current) => ({ ...current, words: current.words.map((item, itemIndex) => itemIndex === index ? event.target.value : item) }))} /><button type="button" aria-label={t('songWriting.removeWordAria', { word })} onClick={() => setEditorDraft((current) => ({ ...current, words: current.words.filter((_, itemIndex) => itemIndex !== index) }))}><Trash2 size={15} /></button></label>)}
+              <button type="button" className="add-word" onClick={() => setEditorDraft((current) => ({ ...current, words: [...current.words, 'new word'] }))}><Plus size={13} /> {t('songWriting.addWord')}</button>
             </section>
             </div>
-            <button type="button" className="generate-html pbv2-editor-save" disabled={savingContentEdits} onClick={saveContentEdits}>{savingContentEdits ? <><Loader2 className="spin" size={13} />正在匹配词卡图标...</> : '保存修改'}</button>
+            <button type="button" className="generate-html pbv2-editor-save" disabled={savingContentEdits} onClick={saveContentEdits}>{savingContentEdits ? <><Loader2 className="spin" size={13} />{t('songWriting.matchingIcons')}</> : t('songWriting.saveChanges')}</button>
           </div>
         </Overlay>
       )}
-      {showPlan && <Overlay title="活动方案" onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><section><h3>学习目标</h3><p><b>英文：</b>{generatedPlan.englishGoal}</p><p><b>幸福力：</b>{generatedPlan.wellbeingGoal}</p></section><section><h3>课前准备</h3><p>{(generatedPlan.materials || []).join('、')}</p></section><section><h3>课堂流程</h3><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><div><b>{index + 1}. {step.title}</b><em>{step.duration}</em></div><p>{step.teacherGuide}</p></li>)}</ol></section></div> : <p>请先生成歌词和词库，即可查看本作品的活动方案。</p>}</Overlay>}
-      {showPresentation && <SongPresentation draft={draft} blankValues={blankValues} arrangement={arrangement} audioRef={audioRef} playing={playing} toggleAudio={toggleAudio} speed={speed} setSpeed={setSpeed} volume={volume} setVolume={setVolume} selectedMelody={selectedMelody} audioMode={audioMode} setAudioMode={setAudioMode} librarySong={librarySong} currentAudioSrc={currentAudioSrc} onClose={closePresentation} />}
+      {showPlan && <Overlay title={t('songWriting.planTitle')} onClose={() => setShowPlan(false)}>{generatedPlan ? <div className="song-plan"><section><h3>{t('songWriting.goalTitle')}</h3><p><b>{t('songWriting.englishLabel')}</b>{generatedPlan.englishGoal}</p><p><b>{t('songWriting.wellbeingLabel')}</b>{generatedPlan.wellbeingGoal}</p></section><section><h3>{t('songWriting.prepTitle')}</h3><p>{(generatedPlan.materials || []).join('、')}</p></section><section><h3>{t('songWriting.flowTitle')}</h3><ol>{(generatedPlan.steps || []).map((step, index) => <li key={index}><div><b>{index + 1}. {step.title}</b><em>{step.duration}</em></div><p>{step.teacherGuide}</p></li>)}</ol></section></div> : <p>{t('songWriting.planEmpty')}</p>}</Overlay>}
           </div>
           )}
         </section>
@@ -1029,6 +1022,7 @@ function OptionGroup({ label, required, options, value, onChange, tone = 'coral'
 }
 
 function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther, tone = 'yellow' }) {
+  const { t } = useTranslation();
   return (
     <section className={`pbv2-card pbv2-tone-${tone}`}>
       <div className="pbv2-card-title">{label}</div>
@@ -1039,7 +1033,7 @@ function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther, t
           </button>
         ))}
       </div>
-      <input className="pbv2-input" value={otherValue} onChange={(event) => onOther(event.target.value)} placeholder="其他（自由输入）" />
+      <input className="pbv2-input" value={otherValue} onChange={(event) => onOther(event.target.value)} placeholder={t('songWriting.otherPlaceholder')} />
     </section>
   );
 }
@@ -1065,55 +1059,10 @@ function FooterActions({ children }) {
     </footer>
   );
 }
-function SongGenerationLoading() { return <main className="song-generation-page"><section className="song-generation-loading"><svg className="song-loading-illustration" width="165" height="145" viewBox="0 0 165 145" aria-hidden="true"><circle cx="138" cy="25" r="5" fill="#c48cff"/><circle cx="15" cy="108" r="7" fill="none" stroke="#ff7c73" strokeWidth="4"/><path d="M42 99c25 10 56 10 82-1" fill="none" stroke="#d7dce3" strokeWidth="3" strokeDasharray="5 5"/><g transform="rotate(-7 64 66)"><rect x="20" y="35" width="67" height="79" rx="12" fill="#fffdf7" stroke="#344255" strokeWidth="4"/><path d="M39 66h27M39 81h20" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(12 105 69)"><rect x="81" y="43" width="62" height="72" rx="12" fill="#f7e6ef" stroke="#344255" strokeWidth="4"/><path d="M100 71h25M100 86h17" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(-18 87 48)"><rect x="64" y="39" width="63" height="14" rx="7" fill="#ffcc63" stroke="#344255" strokeWidth="3"/><path d="M111 40h11v12h-11z" fill="#ff7c73"/><path d="M77 42h23" stroke="#fffdf7" strokeWidth="4" strokeLinecap="round"/></g></svg><h1>正在生成歌曲<span><i></i><i></i><i></i></span></h1></section></main>; }
+function SongGenerationLoading() {
+  const { t } = useTranslation(); return <main className="song-generation-page"><section className="song-generation-loading"><svg className="song-loading-illustration" width="165" height="145" viewBox="0 0 165 145" aria-hidden="true"><circle cx="138" cy="25" r="5" fill="#c48cff"/><circle cx="15" cy="108" r="7" fill="none" stroke="#ff7c73" strokeWidth="4"/><path d="M42 99c25 10 56 10 82-1" fill="none" stroke="#d7dce3" strokeWidth="3" strokeDasharray="5 5"/><g transform="rotate(-7 64 66)"><rect x="20" y="35" width="67" height="79" rx="12" fill="#fffdf7" stroke="#344255" strokeWidth="4"/><path d="M39 66h27M39 81h20" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(12 105 69)"><rect x="81" y="43" width="62" height="72" rx="12" fill="#f7e6ef" stroke="#344255" strokeWidth="4"/><path d="M100 71h25M100 86h17" stroke="#75a9e8" strokeWidth="4" strokeLinecap="round"/></g><g transform="rotate(-18 87 48)"><rect x="64" y="39" width="63" height="14" rx="7" fill="#ffcc63" stroke="#344255" strokeWidth="3"/><path d="M111 40h11v12h-11z" fill="#ff7c73"/><path d="M77 42h23" stroke="#fffdf7" strokeWidth="4" strokeLinecap="round"/></g></svg><h1>{t('songWriting.generatingSongPage')}<span><i></i><i></i><i></i></span></h1></section></main>; }
 function Overlay({ title, onClose, children, className = '' }) {
-  const editorClass = title === '编辑歌词和 Word Bank' ? 'song-content-editor-modal' : '';
+  const { t } = useTranslation();
+  const editorClass = title === t('songWriting.contentEditorTitle') ? 'song-content-editor-modal' : '';
   return <div className="song-overlay" role="dialog" aria-modal="true"><div className={`song-modal ${editorClass} ${className}`}><div className="modal-head"><h2>{title}</h2><button type="button" onClick={onClose}><X /></button></div>{children}</div></div>;
-}
-function SongPresentation({ draft, blankValues, arrangement, audioRef, playing, toggleAudio, speed, setSpeed, volume, setVolume, selectedMelody, audioMode, setAudioMode, librarySong, currentAudioSrc, onClose }) {
-  const renderLine = (line, index) => {
-    if (!line.includes('______')) return line;
-    const parts = line.split('______');
-    return parts.map((part, i) => (
-      <React.Fragment key={i}>
-        {part}
-        {i < parts.length - 1 && <span className="present-blank filled">{(blankValues?.[`${index}:${i}`] ?? (i === 0 ? blankValues?.[index] : '')) || '______'}</span>}
-      </React.Fragment>
-    ));
-  };
-  return (
-    <div className="pbv2-presentation song-presentation" role="dialog" aria-modal="true">
-      <span className="song-present-deco deco-note">♫</span>
-      <span className="song-present-deco deco-star">✦</span>
-      <span className="song-present-deco deco-heart">♥</span>
-      <span className="song-present-deco deco-wave">〰</span>
-      <button type="button" className="pbv2-presentation-exit" onClick={onClose} aria-label="exit"><X size={24} /></button>
-      <div className="song-present-content">
-        <h1 className="song-present-title">{draft.title}</h1>
-        <p className="song-present-subtitle">{selectedMelody.name}</p>
-        <div className="song-present-player-bar">
-          <audio ref={audioRef} src={currentAudioSrc} />
-          <button type="button" className="song-present-play" onClick={toggleAudio}>{playing ? <Pause size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" />}</button>
-          <div className="song-present-controls">
-            <div className="song-present-speed">{[0.5,0.75,1,1.25,1.5].map((item) => <button type="button" className={speed === item ? 'active' : ''} key={item} onClick={() => setSpeed(item)}>{item}×</button>)}</div>
-            <label className="song-present-volume"><Volume2 size={16} /><input aria-label="音量" type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} /><b>{Math.round(volume * 100)}%</b></label>
-            {librarySong && (librarySong.vocal_url || librarySong.instrumental_url) && (
-              <div className="song-present-mode">
-                <button type="button" className={audioMode === 'instrumental' ? 'active' : ''} onClick={() => setAudioMode('instrumental')}>伴奏版</button>
-                <button type="button" className={audioMode === 'vocal' ? 'active' : ''} onClick={() => setAudioMode('vocal')}>演唱版</button>
-              </div>
-            )}
-          </div>
-        </div>
-        <div className="song-present-lyrics">
-          {draft.lines.map((line, index) => (
-            <div key={index} className="song-present-line">
-              <span className="song-present-line-copy">{renderLine(line, index)}</span>
-              {(arrangement?.[index] || []).length > 0 && <span className="song-present-instruments">{arrangement[index].map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`} title={instrument.label}><img src={instrument.icon} alt={instrument.label} /><small>{instrument.label}</small></span>)}</span>}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 }

@@ -25,11 +25,6 @@
 .yoga-making-toolbar{margin-top:0;border-top:0;padding-top:0;margin-bottom:20px}
 .yoga-make-card{grid-template-columns:minmax(0,46%) minmax(0,1fr)}
 .yoga-make-card .pbv2-preview{width:100%;height:100%;min-height:230px;aspect-ratio:auto}
-/* 星光录音棚：游戏课件全屏试玩 */
-.cw-game-overlay{position:fixed;inset:0;z-index:2000;background:#08081a}
-.cw-game-overlay iframe{width:100%;height:100%;border:0}
-.cw-game-close{position:fixed;top:14px;right:16px;z-index:2001;display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:7px 14px;background:rgba(255,255,255,.1);color:#fff;font-size:13px;font-weight:700;cursor:pointer}
-.cw-game-close:hover{background:rgba(255,255,255,.2)}
 .cw-audio-card{border:2px dashed var(--pb-line,#e6e3de);border-radius:12px;padding:18px;background:#fcfbf9;display:flex;flex-direction:column;gap:10px}
 .cw-audio-card.has{border-style:solid;border-color:var(--pb-green,#509f69)}
 .cw-audio-card h4{margin:0;font-size:14px;color:#333e4e}
@@ -77,3 +72,9 @@
 .cw-star-role-chip:hover{border-color:#b8b2a9;color:#4a443c}
 .cw-star-role-chip.is-active{background:#f6f1e4;border-color:#8a7a3f;color:#5c4f24}
 @media(max-width:900px){.cw-star-role-picker{grid-column:1/-1}}
+
+/* 星光录音棚：制作步骤与授课四关对应（共 7 步），步骤条固定分两行（4 + 3） */
+.pbv2-steps.cw-steps-seven{display:flex;flex-direction:column;gap:12px}
+.cw-steps-row{display:flex;align-items:center;justify-content:center;gap:10px}
+.pbv2-steps.cw-steps-seven .cw-steps-row button:not(:last-child){margin-right:44px}
+.pbv2-steps.cw-steps-seven .cw-steps-row button:not(:last-child)::after{width:34px;min-width:34px}

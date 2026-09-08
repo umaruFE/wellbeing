@@ -4,6 +4,7 @@ import {
   RefreshCw, Save, Search, Sparkles, Trash2, Wand2, X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   createCreativeWork, deleteCreativeWork, generateCreativeWorkExercises,
   generateCreativeWorkLyricLine, generateCreativeWorkSong, getCreativeWorks, renderCreativeWork, updateCreativeWork,
@@ -13,26 +14,19 @@ import './creativeWorkshop.css';
 
 const MODULE_ID = 'music-star-quest';
 const MODULE_NAME = '星光录音棚';
-const STEPS = ['基本信息', '歌曲创作', '练习与教案', '音频与课件'];
+// 制作步骤与授课模式的四个关卡一一对应：2~5 步分别是第一~四关（练习 + 该关教案），序号见步骤圆标
+const STEPS = ['stepBasic', 'stepSong', 'stepStage1', 'stepStage2', 'stepStage3', 'stepStage4', 'stepAudio'];
+const STAGE_STEPS = { 1: 2, 2: 3, 3: 4, 4: 5 };
+const AUDIO_STEP = 6;
 const ACCENT = '#9966d0';
 
-const AGE_OPTIONS = ['4–6 岁', '7–10 岁', '11–14 岁'];
-const LEVEL_OPTIONS = ['初级', '中级', '高级'];
-const STYLE_OPTIONS = ['欢快', '舒缓', '节奏感强'];
-const DURATION_OPTIONS = ['短 (30-60s)', '中 (60-90s)', '长 (90-120s)'];
-const STRUCTURE_OPTIONS = ['简单重复', '主歌+副歌', '主歌+副歌+桥段'];
 
 const initialBasicInfo = { goals: '', theme: '', age: '', level: '', style: '', duration: '', structure: '', requirements: '' };
 const initialSong = { title: '', songMeta: {}, lyrics: [], targetPatterns: [] };
 const initialExercises = { ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {} };
 const STAGE_TITLES = { 1: 'Lyric Hunter', 2: 'Melody Mover', 3: 'Echo Master', 4: 'Star Studio' };
 // 第四关角色（与游戏模板 recordMarks 一致）
-const STAR_ROLE_OPTIONS = [
-  { value: 'all', label: 'All 齐唱' },
-  { value: 'teacher', label: 'Teacher 教师' },
-  { value: 'student', label: 'Student 学生' },
-  { value: 'solo', label: 'Solo 独唱' },
-];
+const STAR_ROLE_OPTIONS = [{ value: 'all' }, { value: 'teacher' }, { value: 'student' }, { value: 'solo' }];
 
 // ── 歌词时间轴工具 ─────────────────────────────────────────
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
@@ -169,11 +163,14 @@ function OptionGroup({ label, required, options, value, onChange, tone = 'coral'
     <section className={`pbv2-fieldset pbv2-tone-${tone}`}>
       <div className="pbv2-label">{label}{required && <b>*</b>}</div>
       <div className="pbv2-option-grid">
-        {options.map((option) => (
-          <button type="button" key={option} className={value === option ? 'is-active' : ''} onClick={() => onChange(option)}>
-            {option}
-          </button>
-        ))}
+        {options.map((option) => {
+          const opt = typeof option === 'string' ? { value: option, label: option } : option;
+          return (
+            <button type="button" key={opt.value} className={value === opt.value ? 'is-active' : ''} onClick={() => onChange(opt.value)}>
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
     </section>
   );
@@ -197,6 +194,7 @@ const textToParts = (text) => String(text).split('___');
 
 // ── 歌词编辑器（step 2）─────────────────────────────────────
 function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
+  const { t } = useTranslation();
   const [keywords, setKeywords] = React.useState({});
   const [generatingIndex, setGeneratingIndex] = React.useState(null);
   const fileRef = React.useRef(null);
@@ -217,8 +215,8 @@ function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
       try {
         const parsed = parseLyricsFile(String(reader.result || ''));
         onChange(parsed);
-      } catch (err) {
-        window.alert(err.message || '歌词文件解析失败');
+      } catch {
+        window.alert(t('musicStudio.lyricsParseFail'));
       }
     };
     reader.readAsText(file, 'utf-8');
@@ -227,11 +225,11 @@ function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
   return (
     <section className="pbv2-card pbv2-tone-blue">
       <div className="cw-section-title">
-        <div className="pbv2-card-title">歌词时间轴（授课时按 time 与音频同步高亮）</div>
-        <button type="button" className="pbv2-ghost" onClick={() => fileRef.current?.click()}>上传歌词（.lrc / .txt）</button>
+        <div className="pbv2-card-title">{t('musicStudio.lyricsTimeline')}</div>
+        <button type="button" className="pbv2-ghost" onClick={() => fileRef.current?.click()}>{t('musicStudio.uploadLyrics')}</button>
         <input ref={fileRef} type="file" accept=".lrc,.txt,text/plain" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
       </div>
-      <p className="yoga-design-hint">支持上传 LRC / 文本歌词（时间格式 mm:ss–mm:ss 或 [mm:ss]；无时间则自动按每行 3 秒顺延，可手动修改）。AI 逐行重新生成时保持时间不变。</p>
+      <p className="yoga-design-hint">{t('musicStudio.lyricsHint')}</p>
       {lyrics.map((row, idx) => (
         <div key={idx} className="cw-lyric-row">
           <input
@@ -240,18 +238,18 @@ function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
             value={row.time || ''}
             onChange={(e) => updateRow(idx, { time: e.target.value })}
             placeholder="mm:ss–mm:ss"
-            title="该行起止时间（与音频同步高亮用）"
+            title={t('musicStudio.timeTitle')}
           />
-          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || '尚未生成'}</span>
+          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
           <input
             className="cw-lyric-keywords"
             value={keywords[idx] || ''}
             onChange={(e) => setKeywords((prev) => ({ ...prev, [idx]: e.target.value }))}
-            placeholder="调整关键词，如：sunshine, hello"
+            placeholder={t('musicStudio.keywordPlaceholder')}
           />
           <button type="button" className="pbv2-ghost cw-lyric-generate" disabled={generatingIndex !== null} onClick={() => generate(idx)}>
             {generatingIndex === idx ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
-            {row.text ? '重新生成' : '生成'}
+            {row.text ? t('musicStudio.regen') : t('musicStudio.generate')}
           </button>
         </div>
       ))}
@@ -261,82 +259,86 @@ function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
 
 // ── 练习编辑器（step 3）─────────────────────────────────────
 function AiSectionButton({ loading, hasContent, onClick }) {
+  const { t } = useTranslation();
   return (
     <button type="button" className="pbv2-ghost cw-section-ai" disabled={loading} onClick={onClick}>
       {loading ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />}
-      {loading ? 'AI 生成中…' : (hasContent ? 'AI 重新生成' : 'AI 生成')}
+      {loading ? t('musicStudio.aiGenerating') : (hasContent ? t('musicStudio.aiRegen') : t('musicStudio.aiGenerate'))}
     </button>
   );
 }
 
 function FillEditor({ items, onChange, onGenerate, generating }) {
+  const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   return (
     <section className="pbv2-card pbv2-tone-yellow">
-      <div className="cw-section-title"><div className="pbv2-card-title">选词填空（Exercise 1）</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
+      <div className="cw-section-title"><div className="pbv2-card-title">{t('musicStudio.ex1Title')}</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
-          <div className="cw-exercise-head"><span>第 {idx + 1} 题</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
+          <div className="cw-exercise-head"><span>{t('musicStudio.questionN', { n: idx + 1 })}</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
           <div className="cw-exercise-grid">
-            <Field label="句子（___ 为空位）" value={sentenceToText(item.sentence)} onChange={(v) => update(idx, { sentence: textToParts(v) })} />
-            <Field label="答案（顺序对应空位，逗号分隔）" value={(item.blanks || []).join(', ')} onChange={(v) => update(idx, { blanks: v.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
-            <Field label="候选词（逗号分隔，含干扰项）" value={(item.options || []).join(', ')} onChange={(v) => update(idx, { options: v.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
+            <Field label={t('musicStudio.sentenceLabel')} value={sentenceToText(item.sentence)} onChange={(v) => update(idx, { sentence: textToParts(v) })} />
+            <Field label={t('musicStudio.answerLabel')} value={(item.blanks || []).join(', ')} onChange={(v) => update(idx, { blanks: v.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
+            <Field label={t('musicStudio.optionsLabel')} value={(item.options || []).join(', ')} onChange={(v) => update(idx, { options: v.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
             <Field label="emoji" value={item.emoji || ''} onChange={(v) => update(idx, { emoji: v })} />
           </div>
         </div>
       ))}
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { sentence: ['', ''], blanks: [''], options: [], emoji: '🎵' }])}>
-        <Plus size={16} /> 添加填空题
+        <Plus size={16} /> {t('musicStudio.addFill')}
       </button>
     </section>
   );
 }
 
 function ScrambleEditor({ items, onChange, onGenerate, generating }) {
+  const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   return (
     <section className="pbv2-card pbv2-tone-green">
-      <div className="cw-section-title"><div className="pbv2-card-title">连词成句（Exercise 2，单词顺序游戏内自动打乱）</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
+      <div className="cw-section-title"><div className="pbv2-card-title">{t('musicStudio.ex2Title')}</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
-          <div className="cw-exercise-head"><span>第 {idx + 1} 题</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
-          <Field label="完整句子" value={item.answer} onChange={(v) => update(idx, { answer: v, words: v.trim().split(/\s+/).filter(Boolean) })} />
+          <div className="cw-exercise-head"><span>{t('musicStudio.questionN', { n: idx + 1 })}</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
+          <Field label={t('musicStudio.fullSentence')} value={item.answer} onChange={(v) => update(idx, { answer: v, words: v.trim().split(/\s+/).filter(Boolean) })} />
         </div>
       ))}
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { answer: '', words: [] }])}>
-        <Plus size={16} /> 添加连词成句
+        <Plus size={16} /> {t('musicStudio.addScramble')}
       </button>
     </section>
   );
 }
 
 function ListenEditor({ items, onChange, onGenerate, generating }) {
+  const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   const updateOption = (idx, oi, value) => update(idx, { options: items[idx].options.map((o, i) => (i === oi ? value : o)) });
   return (
     <section className="pbv2-card pbv2-tone-coral">
-      <div className="cw-section-title"><div className="pbv2-card-title">听音选词（Exercise 3，正确句播放歌曲片段后选择）</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
+      <div className="cw-section-title"><div className="pbv2-card-title">{t('musicStudio.ex3Title')}</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head">
-            <span>第 {idx + 1} 题 · 正确句：
+            <span>{t('musicStudio.questionN', { n: idx + 1 })} · {t('musicStudio.correctSentence')}
               <select value={item.correct ?? 0} onChange={(e) => update(idx, { correct: Number(e.target.value) })}>
-                {(item.options || []).map((_, i) => <option key={i} value={i}>选项 {i + 1}</option>)}
+                {(item.options || []).map((_, i) => <option key={i} value={i}>{t('musicStudio.optionN', { n: i + 1 })}</option>)}
               </select>
             </span>
-            <input style={{ width: 110 }} placeholder="00:13–00:14" value={item.time || ''} onChange={(e) => update(idx, { time: e.target.value })} title="正确句所在歌词行的时间段（游戏按此播放片段，留空则从 25 秒处播 8 秒）" />
+            <input style={{ width: 110 }} placeholder="00:13–00:14" value={item.time || ''} onChange={(e) => update(idx, { time: e.target.value })} title={t('musicStudio.timeTitleEx3')} />
             <button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button>
           </div>
           {(item.options || []).map((opt, oi) => (
-            <Field key={oi} label={`选项 ${oi + 1}${item.correct === oi ? '（正确）' : ''}`} value={opt} onChange={(v) => updateOption(idx, oi, v)} />
+            <Field key={oi} label={t('musicStudio.optionLabel', { n: oi + 1 }) + (item.correct === oi ? t('musicStudio.correctTag') : '')} value={opt} onChange={(v) => updateOption(idx, oi, v)} />
           ))}
         </div>
       ))}
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { question: 'Choose the sentence you hear:', options: ['', '', ''], correct: 0 }])}>
-        <Plus size={16} /> 添加听音选词
+        <Plus size={16} /> {t('musicStudio.addListen')}
       </button>
     </section>
   );
@@ -344,32 +346,36 @@ function ListenEditor({ items, onChange, onGenerate, generating }) {
 
 // ── 第四关 Stage Star 分工编辑器（step 3）────────────────────
 function StarRolesEditor({ lyrics, roles, onChange, onGenerate, generating }) {
+  const { t } = useTranslation();
   const roleOf = (idx) => STAR_ROLE_OPTIONS.some((r) => r.value === roles[idx]) ? roles[idx] : 'all';
   const setRole = (idx, value) => onChange(lyrics.map((_, i) => (i === idx ? value : roleOf(i))));
   return (
     <section className="pbv2-card pbv2-tone-green">
       <div className="cw-section-title">
-        <div className="pbv2-card-title">Stage Star 分工（Exercise 4，第四关按颜色分工演唱并录制）</div>
+        <div className="pbv2-card-title">{t('musicStudio.ex4Title')}</div>
         <AiSectionButton loading={generating} hasContent={roles.length > 0} onClick={onGenerate} />
       </div>
-      <p className="yoga-design-hint">逐行选择演唱角色（All 齐唱 / Teacher 教师领 / Student 学生 / Solo 独唱）；此处仅作预设，课堂中第四关 Mark Part 仍可现场改色。</p>
-      {lyrics.length === 0 && <p className="yoga-design-hint">请先在第 2 步生成歌词。</p>}
+      <p className="yoga-design-hint">{t('musicStudio.rolesHint')}</p>
+      {lyrics.length === 0 && <p className="yoga-design-hint">{t('musicStudio.needLyricsFirst')}</p>}
       {lyrics.map((row, idx) => (
         <div key={idx} className="cw-lyric-row">
           <span className="cw-lyric-time">{row.time || '--:--'}</span>
-          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || '尚未生成'}</span>
+          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
           <span className="cw-star-role-picker">
-            {STAR_ROLE_OPTIONS.map((r) => (
-              <button
-                key={r.value}
-                type="button"
-                className={`cw-star-role-chip${roleOf(idx) === r.value ? ' is-active' : ''}`}
-                onClick={() => setRole(idx, r.value)}
-                title={r.label}
-              >
-                {r.label}
-              </button>
-            ))}
+            {STAR_ROLE_OPTIONS.map((r) => {
+              const roleLabel = t('musicStudio.role_' + r.value);
+              return (
+                <button
+                  key={r.value}
+                  type="button"
+                  className={`cw-star-role-chip${roleOf(idx) === r.value ? ' is-active' : ''}`}
+                  onClick={() => setRole(idx, r.value)}
+                  title={roleLabel}
+                >
+                  {roleLabel}
+                </button>
+              );
+            })}
           </span>
         </div>
       ))}
@@ -377,9 +383,11 @@ function StarRolesEditor({ lyrics, roles, onChange, onGenerate, generating }) {
   );
 }
 
-function PlansEditor({ plans, onChange, onGenerate, generating }) {
+function PlansEditor({ plans, onChange, onGenerate, generating, stage }) {
+  const { t } = useTranslation();
   const stages = ['1', '2', '3', '4'];
   const [activeStage, setActiveStage] = React.useState('1');
+  const currentStage = stage || activeStage;
   const updateStage = (key, patch) => onChange({ ...plans, [key]: { ...(plans[key] || {}), ...patch } });
   const updateSection = (key, si, patch) => {
     const sections = (plans[key]?.sections || []).map((s, i) => (i === si ? { ...s, ...patch } : s));
@@ -387,24 +395,26 @@ function PlansEditor({ plans, onChange, onGenerate, generating }) {
   };
   return (
     <section className="pbv2-card pbv2-tone-blue">
-      <div className="cw-section-title"><div className="pbv2-card-title">四关教学方案（游戏内「How to teach」抽屉展示）</div><AiSectionButton loading={generating} hasContent={Object.keys(plans || {}).length > 0} onClick={onGenerate} /></div>
-      <div className="cw-stage-tabs" role="tablist" aria-label="四关教学环节">
-        {stages.map((key, index) => (
-          <button key={key} type="button" role="tab" aria-selected={activeStage === key} className={activeStage === key ? 'is-active' : ''} onClick={() => setActiveStage(key)}>
-            第 {index + 1} 关教案<small>{STAGE_TITLES[key]}</small>
-          </button>
-        ))}
-      </div>
+      <div className="cw-section-title"><div className="pbv2-card-title">{stage ? t('musicStudio.planTitleStage', { stage }) : t('musicStudio.planTitleAll')}</div><AiSectionButton loading={generating} hasContent={Boolean(plans?.[currentStage])} onClick={onGenerate} /></div>
+      {!stage && (
+        <div className="cw-stage-tabs" role="tablist" aria-label={t('musicStudio.planTabsAria')}>
+          {stages.map((key, index) => (
+            <button key={key} type="button" role="tab" aria-selected={activeStage === key} className={activeStage === key ? 'is-active' : ''} onClick={() => setActiveStage(key)}>
+              {t('musicStudio.planTab', { n: index + 1 })}<small>{STAGE_TITLES[key]}</small>
+            </button>
+          ))}
+        </div>
+      )}
       {(() => {
-        const plan = plans[activeStage] || { title: '', sections: [] };
+        const plan = plans[currentStage] || { title: '', sections: [] };
         return (
           <div className="cw-plan-stage" role="tabpanel">
-            <h4>第 {activeStage} 关 · {STAGE_TITLES[activeStage]} · {plan.title || '未命名教学方案'}</h4>
-            <Field label="方案标题" value={plan.title || ''} onChange={(v) => updateStage(activeStage, { title: v })} />
+            <h4>{t('musicStudio.planHeading', { stage: currentStage, name: STAGE_TITLES[currentStage] })} · {plan.title || t('musicStudio.unnamedPlan')}</h4>
+            <Field label={t('musicStudio.planTitleLabel')} value={plan.title || ''} onChange={(v) => updateStage(currentStage, { title: v })} />
             {(plan.sections || []).map((section, si) => (
               <div key={si} className="cw-plan-section">
-                <Field label={`分节标题 ${si + 1}`} value={section.title || ''} onChange={(v) => updateSection(activeStage, si, { title: v })} />
-                <Field area label="内容" value={section.content || ''} onChange={(v) => updateSection(activeStage, si, { content: v })} />
+                <Field label={t('musicStudio.sectionTitleLabel', { n: si + 1 })} value={section.title || ''} onChange={(v) => updateSection(currentStage, si, { title: v })} />
+                <Field area label={t('musicStudio.contentLabel')} value={section.content || ''} onChange={(v) => updateSection(currentStage, si, { content: v })} />
               </div>
             ))}
           </div>
@@ -416,27 +426,28 @@ function PlansEditor({ plans, onChange, onGenerate, generating }) {
 
 // ── 音频上传卡片（step 4）───────────────────────────────────
 function AudioCard({ label, name, dataUri, onPick, onRemove }) {
+  const { t } = useTranslation();
   const inputRef = React.useRef(null);
   const handleFile = (file) => {
     if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { window.alert('音频不能超过 8MB，请压缩后再上传'); return; }
+    if (file.size > 8 * 1024 * 1024) { window.alert(t('musicStudio.audioTooLarge')); return; }
     const reader = new FileReader();
     reader.onload = () => onPick({ dataUri: String(reader.result || ''), name: file.name });
     reader.readAsDataURL(file);
   };
   return (
     <div className={`cw-audio-card${dataUri ? ' has' : ''}`}>
-      <h4>{label}{dataUri ? ' · 已上传' : ' · 未上传'}</h4>
+      <h4>{label}{dataUri ? ' · ' + t('musicStudio.uploaded') : ' · ' + t('musicStudio.notUploaded')}</h4>
       {dataUri ? (
         <>
           <audio controls src={dataUri} />
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="pbv2-ghost" onClick={() => inputRef.current?.click()}>重新上传</button>
-            <button type="button" className="pbv2-ghost" onClick={onRemove}><Trash2 size={14} /> 移除</button>
+            <button type="button" className="pbv2-ghost" onClick={() => inputRef.current?.click()}>{t('musicStudio.reupload')}</button>
+            <button type="button" className="pbv2-ghost" onClick={onRemove}><Trash2 size={14} /> {t('musicStudio.remove')}</button>
           </div>
         </>
       ) : (
-        <button type="button" className="pbv2-ghost" onClick={() => inputRef.current?.click()}>选择 mp3 文件（≤8MB）</button>
+        <button type="button" className="pbv2-ghost" onClick={() => inputRef.current?.click()}>{t('musicStudio.pickMp3')}</button>
       )}
       {name && <small style={{ color: '#818997' }}>{name}</small>}
       <input ref={inputRef} type="file" accept="audio/mpeg,.mp3" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
@@ -445,6 +456,7 @@ function AudioCard({ label, name, dataUri, onPick, onRemove }) {
 }
 
 export function MusicStudioPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = React.useState('list');
   const [works, setWorks] = React.useState([]);
@@ -468,7 +480,6 @@ export function MusicStudioPage() {
   const [rendered, setRendered] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
-  const [gameWorkId, setGameWorkId] = React.useState(null);
 
   const loadWorks = React.useCallback(() => {
     setListLoading(true);
@@ -498,20 +509,20 @@ export function MusicStudioPage() {
     setRendered(Boolean(work.hasHtml));
     setMessage('');
     const exercisesComplete = hasCompleteExercises(r);
-    setStep(r.lyrics?.length ? (exercisesComplete ? 3 : 2) : 0);
+    setStep(r.lyrics?.length ? (exercisesComplete ? AUDIO_STEP : STAGE_STEPS[1]) : 0);
     setView('studio');
     if (r.lyrics?.length && !exercisesComplete) {
       setExGenerating(true);
       generateCreativeWorkExercises(work.id)
         .then((data) => setExercises({ ...initialExercises, ...data }))
-        .catch((err) => setMessage(err.message || '练习与教案生成失败，请点击 AI 生成重试'))
+        .catch((err) => setMessage(err.message || t('musicStudio.exercisesGenFail')))
         .finally(() => setExGenerating(false));
     }
   };
 
   const createWork = async () => {
     try {
-      const work = await createCreativeWork({ moduleId: MODULE_ID, moduleName: MODULE_NAME, title: '未命名歌曲课件', parameters: initialBasicInfo });
+      const work = await createCreativeWork({ moduleId: MODULE_ID, moduleName: MODULE_NAME, title: t('musicStudio.untitledWorkTitle'), parameters: initialBasicInfo });
       await loadWorks();
       setEditing(work.id);
       setBasicInfo(initialBasicInfo);
@@ -524,7 +535,7 @@ export function MusicStudioPage() {
       setMessage('');
       setView('studio');
     } catch (err) {
-      window.alert(err.message || '创建失败，请重试');
+      window.alert(err.message || t('musicStudio.createFailed'));
     }
   };
 
@@ -536,10 +547,10 @@ export function MusicStudioPage() {
     setSaving(true);
     try {
       await updateCreativeWork(id, payload);
-      setSaveState(`已保存 ${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`);
+      setSaveState(t('musicStudio.savedAt', { time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }));
     } catch (err) {
-      setSaveState('保存失败');
-      setMessage(err.message || '保存失败，请重试');
+      setSaveState(t('musicStudio.saveFailedShort'));
+      setMessage(err.message || t('musicStudio.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -559,7 +570,7 @@ export function MusicStudioPage() {
       if (data.title) setWorkTitle(data.title);
       setStep(1);
     } catch (err) {
-      setMessage(err.message || '歌曲生成失败，请重试');
+      setMessage(err.message || t('musicStudio.songGenFail'));
     } finally {
       setSongGenerating(false);
     }
@@ -577,7 +588,7 @@ export function MusicStudioPage() {
       setSong({ title: data.title || '', songMeta: data.song?.songMeta || {}, lyrics: data.song?.lyrics || [], targetPatterns: data.song?.targetPatterns || [] });
       if (data.title) setWorkTitle(data.title);
     } catch (err) {
-      setMessage(err.message || '歌曲生成失败，请重试');
+      setMessage(err.message || t('musicStudio.songGenFail'));
     } finally {
       setSongGenerating(false);
     }
@@ -592,9 +603,9 @@ export function MusicStudioPage() {
       await updateCreativeWork(id, { title: song.title || workTitle, song });
       const data = await generateCreativeWorkLyricLine(id, index, keywords);
       setSong((current) => ({ ...current, lyrics: data.lyrics || current.lyrics }));
-      setSaveState('单行歌词已生成并保存');
+      setSaveState(t('musicStudio.lineSaved'));
     } catch (err) {
-      setMessage(err.message || '单行歌词生成失败，请重试');
+      setMessage(err.message || t('musicStudio.lineGenFail'));
       throw err;
     }
   };
@@ -616,7 +627,7 @@ export function MusicStudioPage() {
       const data = await generateCreativeWorkExercises(id);
       setExercises({ ...initialExercises, ...data });
     } catch (err) {
-      setMessage(err.message || '练习生成失败，请重试');
+      setMessage(err.message || t('musicStudio.exGenFail'));
     } finally {
       setExGenerating(false);
     }
@@ -631,17 +642,17 @@ export function MusicStudioPage() {
       await persist({ song, title: song.title || workTitle });
       const data = await generateCreativeWorkExercises(id, section);
       setExercises((current) => ({ ...current, ...data }));
-      setSaveState('该区块已重新生成并保存');
+      setSaveState(t('musicStudio.sectionSaved'));
     } catch (err) {
-      setMessage(err.message || '该区块生成失败，请重试');
+      setMessage(err.message || t('musicStudio.sectionGenFail'));
     } finally {
       setSectionGenerating('');
     }
   };
 
-  const saveExercises = async () => {
+  const saveExercises = async (nextStep) => {
     await persist({ exercises });
-    setStep(3);
+    setStep(nextStep);
   };
 
   // ── step 3：音频与课件 ────────────────────────────────────
@@ -664,9 +675,9 @@ export function MusicStudioPage() {
         duration,
       });
       setSegment(idx, dataUri);
-      setSaveState(`第 ${idx + 1} 段音频已生成`);
+      setSaveState(t('musicStudio.segAudioDone', { n: idx + 1 }));
     } catch (err) {
-      setMessage(err.message || `第 ${idx + 1} 段音频生成失败`);
+      setMessage(err.message || t('musicStudio.segAudioFail', { n: idx + 1 }));
     } finally {
       setSegmentBusy(null);
     }
@@ -674,16 +685,16 @@ export function MusicStudioPage() {
   const generateAllSegments = async () => {
     if (segmentBusy) return;
     const targets = song.lyrics.map((row, idx) => ({ row, idx })).filter(({ row, idx }) => row.text && !segments[idx]);
-    if (!targets.length) { setMessage('全部分段都已生成'); return; }
+    if (!targets.length) { setMessage(t('musicStudio.allSegsDone')); return; }
     for (let n = 0; n < targets.length; n++) {
       const { idx } = targets[n];
       setSegmentBusy(idx);
-      setMessage(`正在生成分段音频 ${n + 1}/${targets.length}…`);
+      setMessage(t('musicStudio.segProgress', { done: n + 1, total: targets.length }));
       await generateSegmentDuringBatch(idx);
     }
     setSegmentBusy(null);
     setMessage('');
-    setSaveState('分段音频生成完成');
+    setSaveState(t('musicStudio.segsDone'));
   };
   const generateSegmentDuringBatch = async (idx) => {
     const row = song.lyrics[idx];
@@ -697,22 +708,22 @@ export function MusicStudioPage() {
       setSegment(idx, dataUri);
     } catch (err) {
       console.error(`分段 ${idx + 1} 生成失败:`, err);
-      setMessage(`第 ${idx + 1} 段生成失败：${err.message || '未知错误'}，已跳过`);
+      setMessage(t('musicStudio.segSkipped', { n: idx + 1, msg: err.message || t('musicStudio.unknownError') }));
     }
   };
   const mergeSegmentsToVocal = async () => {
     const merged = mergeMp3DataUris(song.lyrics.map((_, i) => segments[i]));
-    if (!merged) { setMessage('还没有可合并的分段音频'); return; }
-    await persist({ audio: { ...audio, vocal: merged, vocalName: `AI 分段合并（${segments.filter(Boolean).length} 段）` } });
-    setAudio((current) => ({ ...current, vocal: merged, vocalName: `AI 分段合并（${segments.filter(Boolean).length} 段）` }));
-    setSaveState('分段已合并为原唱');
+    if (!merged) { setMessage(t('musicStudio.noSegsToMerge')); return; }
+    await persist({ audio: { ...audio, vocal: merged, vocalName: t('musicStudio.mergedName', { n: segments.filter(Boolean).length }) } });
+    setAudio((current) => ({ ...current, vocal: merged, vocalName: t('musicStudio.mergedName', { n: segments.filter(Boolean).length }) }));
+    setSaveState(t('musicStudio.segsMerged'));
   };
 
   // 进入音频与课件步 / 音频发生变化后，自动（重新）渲染课件，无需手动点按钮
   const lastRenderedAudioRef = React.useRef('');
   const renderTimerRef = React.useRef(null);
   React.useEffect(() => {
-    if (step !== 3) return;
+    if (step !== AUDIO_STEP) return;
     if (JSON.stringify(audio) === lastRenderedAudioRef.current) return;
     if (renderTimerRef.current) clearTimeout(renderTimerRef.current);
     renderTimerRef.current = setTimeout(() => { buildCourseware(); }, 800);
@@ -731,17 +742,17 @@ export function MusicStudioPage() {
       applyGameHtml(data?.html);
       lastRenderedAudioRef.current = JSON.stringify(audio);
       setRendered(true);
-      setSaveState('课件已生成');
+      setSaveState(t('musicStudio.coursewareReady'));
       return data;
     } catch (err) {
-      setMessage(err.message || '课件生成失败，请重试');
+      setMessage(err.message || t('musicStudio.coursewareFail'));
       return null;
     } finally {
       setRendering(false);
     }
   };
 
-  // 授课模式：课件 HTML 由 render 接口返回，前端转 Blob URL 在 iframe 播放（无独立查看/下载后端路由）
+  // 授课模式：课件 HTML 由 render 接口返回，转 Blob URL 后在新窗口打开（无独立查看/下载后端路由）
   const gameHtmlUrlRef = React.useRef(null);
   const applyGameHtml = (html) => {
     if (gameHtmlUrlRef.current) URL.revokeObjectURL(gameHtmlUrlRef.current);
@@ -750,42 +761,47 @@ export function MusicStudioPage() {
   };
   React.useEffect(() => () => { if (gameHtmlUrlRef.current) URL.revokeObjectURL(gameHtmlUrlRef.current); }, []);
 
-  // 列表卡片「授课」：hasHtml 时按已存数据重渲染取回 HTML 再全屏试玩
-  const presentFromList = async (work) => {
+  // 弹窗必须在用户手势内同步打开，取到课件后再定向，避免被浏览器拦截
+  const openGameWindow = (win, url) => {
+    if (!win) { setMessage(t('musicStudio.popupBlocked')); return false; }
+    try { win.document.title = 'Music Star Quest'; } catch { /* about:blank 跨窗口写入失败可忽略 */ }
+    win.location.href = url;
+    return true;
+  };
+
+  // 列表卡片「授课」：hasHtml 时按已存数据重渲染取回 HTML，新窗口打开
+  const presentFromList = (work) => {
     if (!work.hasHtml) return;
+    const win = window.open('', '_blank');
     setMessage('');
-    try {
-      const data = await renderCreativeWork(work.id);
-      if (!applyGameHtml(data?.html)) throw new Error('课件内容为空');
-      setGameWorkId(work.id);
-    } catch (err) {
-      setMessage(err.message || '课件加载失败，请重试');
-    }
+    renderCreativeWork(work.id)
+      .then((data) => {
+        const url = applyGameHtml(data?.html);
+        if (!url) throw new Error(t('musicStudio.coursewareEmpty'));
+        openGameWindow(win, url);
+      })
+      .catch((err) => {
+        if (win) win.close();
+        setMessage(err.message || t('musicStudio.coursewareLoadFail'));
+      });
   };
   const presentCurrent = async () => {
     const id = editingIdRef.current;
     if (!id) return;
-    // 已有 Blob（本会话渲染过）直接用；否则按已存数据重渲染
-    if (gameHtmlUrlRef.current) { setGameWorkId(id); return; }
+    // 已有 Blob（本会话渲染过）直接开新窗口；否则按已存数据重渲染
+    if (gameHtmlUrlRef.current) { window.open(gameHtmlUrlRef.current, '_blank'); return; }
     const data = await renderCreativeWork(id).catch(() => null);
-    if (applyGameHtml(data?.html)) setGameWorkId(id);
+    const url = applyGameHtml(data?.html);
+    if (url) window.open(url, '_blank');
   };
-  const gameOverlay = gameWorkId ? (
-    <div className="cw-game-overlay">
-      <button type="button" className="cw-game-close" onClick={() => setGameWorkId(null)}>
-        <X size={16} /> 退出试玩
-      </button>
-      <iframe src={gameHtmlUrlRef.current || 'about:blank'} title="Music Star Quest" allow="autoplay" />
-    </div>
-  ) : null;
 
   const remove = async (id) => {
-    if (!window.confirm('确认删除这份作品？')) return;
+    if (!window.confirm(t('musicStudio.confirmDelete'))) return;
     try {
       await deleteCreativeWork(id);
       setWorks((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
-      window.alert(err.message || '删除失败，请重试');
+      window.alert(err.message || t('musicStudio.deleteFailed'));
     }
   };
 
@@ -809,16 +825,16 @@ export function MusicStudioPage() {
             <div className="pbv2-topbar-left">
               <div className="pbv2-topbar-icon"><Music size={28} /></div>
               <div>
-                <h1>{MODULE_NAME}</h1>
-                <p>AI 创歌 → 练习设计 → 上传音频 → 四关闯关游戏课件</p>
+                <h1>{t('musicStudio.moduleName')}</h1>
+                <p>{t('musicStudio.listSubtitle')}</p>
               </div>
             </div>
             <div className="pbv2-topbar-actions">
               <button type="button" className="pbv2-back-btn" onClick={() => navigate('/workshop/english-plus')}>
-                <ArrowLeft size={16} /> 返回
+                <ArrowLeft size={16} /> {t('musicStudio.back')}
               </button>
               <button type="button" className="pbv2-create-btn" onClick={createWork}>
-                <Plus size={18} /> 新建作品
+                <Plus size={18} /> {t('musicStudio.newWork')}
               </button>
             </div>
           </header>
@@ -826,7 +842,7 @@ export function MusicStudioPage() {
           <div className="pbv2-list-toolbar">
             <div className="pbv2-search-box">
               <Search size={16} />
-              <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索作品或歌曲主题…" />
+              <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t('musicStudio.searchPlaceholder')} />
             </div>
           </div>
 
@@ -837,7 +853,7 @@ export function MusicStudioPage() {
           ) : filtered.length === 0 ? (
             <div className="pbv2-list-empty">
               <Music size={48} />
-              <p>{searchTerm ? '没有匹配的作品' : '还没有作品，点击「新建作品」开始创作'}</p>
+              <p>{searchTerm ? t('musicStudio.noMatch') : t('musicStudio.emptyList')}</p>
             </div>
           ) : (
             <div className="pbv2-card-grid">
@@ -848,11 +864,11 @@ export function MusicStudioPage() {
                     <div className="pbv2-book-cover exp-cover">
                       <Music size={52} />
                       <span className={`pbv2-book-status ${work.hasHtml ? 'published' : 'draft'}`}>
-                        {work.hasHtml ? '已生成课件' : (lyricCount ? '创作中' : '草稿')}
+                        {work.hasHtml ? t('musicStudio.statusDone') : (lyricCount ? t('musicStudio.statusInProgress') : t('musicStudio.statusDraft'))}
                       </span>
                     </div>
                     <div className="pbv2-book-info">
-                      <h3>{work.title || '未命名作品'}</h3>
+                      <h3>{work.title || t('musicStudio.untitled')}</h3>
                       <div className="pbv2-book-meta">
                         <Clock size={13} />
                         <span>{work.parameters?.age || ''}{work.parameters?.duration ? ` · ${work.parameters.duration}` : ''}</span>
@@ -861,15 +877,15 @@ export function MusicStudioPage() {
                       </div>
                       <div className="pbv2-book-actions">
                         <button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}>
-                          <Pencil size={14} /> 编辑
+                          <Pencil size={14} /> {t('musicStudio.edit')}
                         </button>
                         {work.hasHtml && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); presentFromList(work); }}>
-                            🖥️ 授课
+                            🖥️ {t('common.teach')}
                           </button>
                         )}
                         <button type="button" onClick={(e) => { e.stopPropagation(); remove(work.id); }}>
-                          <Trash2 size={14} /> 删除
+                          <Trash2 size={14} /> {t('musicStudio.delete')}
                         </button>
                       </div>
                     </div>
@@ -879,38 +895,47 @@ export function MusicStudioPage() {
             </div>
           )}
         </div>
-        {gameOverlay}
       </main>
     );
   }
 
-  // ── 工作室视图（4 步）─────────────────────────────────────
+  // ── 工作室视图（7 步，与授课四关对应）──────────────────────
   return (
     <main className="picture-book-studio-v2">
       <header className="pbv2-topbar">
         <div className="pbv2-topbar-left">
           <div className="pbv2-topbar-icon"><Music size={28} /></div>
           <div>
-            <h1>{workTitle || '新建歌曲课件'}</h1>
-            <p>按绘本制作流程完成：基本信息 → 歌曲创作 → 练习与教案 → 音频与课件</p>
+            <h1>{workTitle || t('musicStudio.newCourseware')}</h1>
+            <p>{t('musicStudio.studioSubtitle')}</p>
           </div>
         </div>
         <div className="pbv2-topbar-actions">
-          <span className={`pbv2-save-state ${saveState === '保存失败' ? 'is-error' : ''}`}>{saveState}</span>
+          <span className={`pbv2-save-state ${saveState === t('musicStudio.saveFailedShort') ? 'is-error' : ''}`}>{saveState}</span>
           <button type="button" className="pbv2-back-btn" onClick={backToList}>
-            <ArrowLeft size={16} /> 返回列表
+            <ArrowLeft size={16} /> {t('musicStudio.backToList')}
           </button>
         </div>
       </header>
 
       <div className="pbv2-shell">
-        <aside className="pbv2-steps">
-          {STEPS.map((label, index) => (
-            <button type="button" key={label} className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`} onClick={() => enterStep(index)}>
-              <span>{index + 1}</span>
-              <strong>{label}</strong>
-            </button>
-          ))}
+        <aside className="pbv2-steps cw-steps-seven">
+          <div className="cw-steps-row">
+            {STEPS.slice(0, 4).map((label, index) => (
+              <button type="button" key={label} className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`} onClick={() => enterStep(index)}>
+                <span>{index + 1}</span>
+                <strong>{t('musicStudio.' + label)}</strong>
+              </button>
+            ))}
+          </div>
+          <div className="cw-steps-row">
+            {STEPS.slice(4).map((label, index) => (
+              <button type="button" key={label} className={`${step === index + 4 ? 'is-active' : ''} ${step > index + 4 ? 'is-done' : ''}`} onClick={() => enterStep(index + 4)}>
+                <span>{index + 5}</span>
+                <strong>{t('musicStudio.' + label)}</strong>
+              </button>
+            ))}
+          </div>
         </aside>
 
         <section className={`pbv2-workspace pbv2-workspace-step-${step}`}>
@@ -920,29 +945,29 @@ export function MusicStudioPage() {
           {step === 0 && (
             <div className="pbv2-step-panel">
               <div className="pbv2-form-grid two">
-                <OptionGroup required label="年龄段" options={AGE_OPTIONS} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
-                <OptionGroup required label="英文水平" options={LEVEL_OPTIONS} value={basicInfo.level} onChange={(v) => setBasicInfo({ ...basicInfo, level: v })} tone="blue" />
-                <OptionGroup label="风格偏好" options={STYLE_OPTIONS} value={basicInfo.style} onChange={(v) => setBasicInfo({ ...basicInfo, style: v })} tone="yellow" />
-                <OptionGroup label="歌曲时长" options={DURATION_OPTIONS} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
-                <OptionGroup label="结构要求" options={STRUCTURE_OPTIONS} value={basicInfo.structure} onChange={(v) => setBasicInfo({ ...basicInfo, structure: v })} tone="coral" />
+                <OptionGroup required label={t('musicStudio.ageLabel')} options={[{ value: '4–6 岁', label: t('musicStudio.age4to6') }, { value: '7–10 岁', label: t('musicStudio.age7to10') }, { value: '11–14 岁', label: t('musicStudio.age11to14') }]} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
+                <OptionGroup required label={t('musicStudio.levelLabel')} options={[{ value: '初级', label: t('musicStudio.levelBeginner') }, { value: '中级', label: t('musicStudio.levelIntermediate') }, { value: '高级', label: t('musicStudio.levelAdvanced') }]} value={basicInfo.level} onChange={(v) => setBasicInfo({ ...basicInfo, level: v })} tone="blue" />
+                <OptionGroup label={t('musicStudio.styleLabel')} options={[{ value: '欢快', label: t('musicStudio.styleCheerful') }, { value: '舒缓', label: t('musicStudio.styleSoothing') }, { value: '节奏感强', label: t('musicStudio.styleRhythmic') }]} value={basicInfo.style} onChange={(v) => setBasicInfo({ ...basicInfo, style: v })} tone="yellow" />
+                <OptionGroup label={t('musicStudio.durationLabel')} options={[{ value: '短 (30-60s)', label: t('musicStudio.durShort') }, { value: '中 (60-90s)', label: t('musicStudio.durMedium') }, { value: '长 (90-120s)', label: t('musicStudio.durLong') }]} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
+                <OptionGroup label={t('musicStudio.structLabel')} options={[{ value: '简单重复', label: t('musicStudio.structSimple') }, { value: '主歌+副歌', label: t('musicStudio.structVerseChorus') }, { value: '主歌+副歌+桥段', label: t('musicStudio.structFull') }]} value={basicInfo.structure} onChange={(v) => setBasicInfo({ ...basicInfo, structure: v })} tone="coral" />
               </div>
               <section className="pbv2-card pbv2-tone-coral">
-                <div className="pbv2-card-title">目标语言点（必填）</div>
-                <input className="pbv2-input" value={basicInfo.goals} onChange={(e) => setBasicInfo({ ...basicInfo, goals: e.target.value })} placeholder="例如：China, USA, Where are you from?" />
+                <div className="pbv2-card-title">{t('musicStudio.goalsLabel')}</div>
+                <input className="pbv2-input" value={basicInfo.goals} onChange={(e) => setBasicInfo({ ...basicInfo, goals: e.target.value })} placeholder={t('musicStudio.goalsPlaceholder')} />
               </section>
               <section className="pbv2-card pbv2-tone-blue">
-                <div className="pbv2-card-title">歌曲主题（必填）</div>
-                <input className="pbv2-input" value={basicInfo.theme} onChange={(e) => setBasicInfo({ ...basicInfo, theme: e.target.value })} placeholder="例如：国家与问候" />
+                <div className="pbv2-card-title">{t('musicStudio.themeLabel')}</div>
+                <input className="pbv2-input" value={basicInfo.theme} onChange={(e) => setBasicInfo({ ...basicInfo, theme: e.target.value })} placeholder={t('musicStudio.themePlaceholder')} />
               </section>
               <section className="pbv2-card pbv2-tone-green">
-                <div className="pbv2-card-title">特殊要求（选填）</div>
-                <Field area label="补充说明" value={basicInfo.requirements} onChange={(v) => setBasicInfo({ ...basicInfo, requirements: v })} placeholder="例如：要有问答呼应" />
+                <div className="pbv2-card-title">{t('musicStudio.reqLabel')}</div>
+                <Field area label={t('musicStudio.reqField')} value={basicInfo.requirements} onChange={(v) => setBasicInfo({ ...basicInfo, requirements: v })} placeholder={t('musicStudio.reqPlaceholder')} />
               </section>
               <footer className="pbv2-actions">
                 <ChevronRight size={16} />
                 <button type="button" className="pbv2-primary" disabled={!basicReady || songGenerating} onClick={generateSongAndAdvance}>
                   {songGenerating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
-                  {songGenerating ? 'AI 生成中…' : 'AI 生成歌曲'}
+                  {songGenerating ? t('musicStudio.aiGenerating') : t('musicStudio.aiGenSong')}
                 </button>
               </footer>
             </div>
@@ -953,84 +978,134 @@ export function MusicStudioPage() {
             <div className="pbv2-step-panel">
               <section className="pbv2-plan-block pbv2-tone-coral">
                 <div className="pbv2-form-grid two">
-                  <Field label="歌名" value={song.title} onChange={(v) => { setSong({ ...song, title: v }); setWorkTitle(v); }} />
-                  <Field label="目标句型/词汇（每行一个，用于歌词高亮）" area value={(song.targetPatterns || []).join('\n')} onChange={(v) => setSong({ ...song, targetPatterns: v.split('\n').map((s) => s.trim()).filter(Boolean) })} />
+                  <Field label={t('musicStudio.songTitleLabel')} value={song.title} onChange={(v) => { setSong({ ...song, title: v }); setWorkTitle(v); }} />
+                  <Field label={t('musicStudio.patternsLabel')} area value={(song.targetPatterns || []).join('\n')} onChange={(v) => setSong({ ...song, targetPatterns: v.split('\n').map((s) => s.trim()).filter(Boolean) })} />
                 </div>
               </section>
               <LyricsEditor lyrics={song.lyrics} onGenerateLine={generateLyricLine} onChange={(lyrics) => setSong({ ...song, lyrics })} />
               <footer className="pbv2-actions">
-                <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>返回基本信息</button>
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>{t('musicStudio.backToBasic')}</button>
                 <button type="button" className="pbv2-ghost" disabled={songGenerating} onClick={regenerateSong}>
                   {songGenerating ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
-                  {songGenerating ? 'AI 生成中…' : 'AI 重新生成歌曲'}
+                  {songGenerating ? t('musicStudio.aiGenerating') : t('musicStudio.aiRegenSong')}
                 </button>
                 <button type="button" className="pbv2-primary" disabled={saving} onClick={saveSong}>
-                  <Save size={16} /> 保存并设计练习
+                  <Save size={16} /> {t('musicStudio.saveToExercises')}
                 </button>
               </footer>
             </div>
           )}
 
-          {/* step 3 · 练习与教案 */}
+          {/* step 3 · 第一关 Lyric Hunter（填空 + 连词 + 听音 + 教案） */}
           {step === 2 && (
             <div className="pbv2-step-panel">
-              <p className="yoga-design-hint">三类练习全部来自歌词（题量按歌曲时长自动匹配 4:3:2 规则），生成后可逐题修改；四关教学方案展示在游戏每关的「How to teach」抽屉里。</p>
+              <p className="yoga-design-hint">{t('musicStudio.stage1Hint')}</p>
               <FillEditor items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => generateExerciseSection('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
               <ScrambleEditor items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => generateExerciseSection('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
               <ListenEditor items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => generateExerciseSection('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
-              <StarRolesEditor lyrics={song.lyrics} roles={exercises.starRoles} onChange={(starRoles) => setExercises({ ...exercises, starRoles })} onGenerate={() => generateExerciseSection('starRoles')} generating={sectionGenerating === 'starRoles'} />
-              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} />
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="1" />
               <footer className="pbv2-actions">
-                <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>返回歌曲编辑</button>
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>{t('musicStudio.backToSong')}</button>
                 <button type="button" className="pbv2-ghost" disabled={exGenerating} onClick={generateExercises}>
                   {exGenerating ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
-                  {exGenerating ? 'AI 生成中…' : 'AI 生成练习与教案'}
+                  {exGenerating ? t('musicStudio.aiGenerating') : t('musicStudio.aiGenExercises')}
                 </button>
-                <button type="button" className="pbv2-primary" disabled={saving} onClick={saveExercises}>
-                  <Save size={16} /> 保存，进入音频与课件
+                <button type="button" className="pbv2-primary" disabled={saving} onClick={() => saveExercises(STAGE_STEPS[2])}>
+                  <Save size={16} /> {t('musicStudio.saveNext2')}
                 </button>
               </footer>
             </div>
           )}
 
-          {/* step 4 · 音频与课件 */}
+          {/* step 4 · 第二关 Melody Mover（教案） */}
           {step === 3 && (
             <div className="pbv2-step-panel">
+              <p className="yoga-design-hint">{t('musicStudio.stage2Hint')}</p>
+              <section className="pbv2-card pbv2-tone-green">
+                <div className="pbv2-card-title">{t('musicStudio.autoGenCardTitle')}</div>
+                <p>{t('musicStudio.stage2CardText')}</p>
+              </section>
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="2" />
+              <footer className="pbv2-actions">
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[1])}>{t('musicStudio.backStage1')}</button>
+                <button type="button" className="pbv2-primary" disabled={saving} onClick={() => saveExercises(STAGE_STEPS[3])}>
+                  <Save size={16} /> {t('musicStudio.saveNext3')}
+                </button>
+              </footer>
+            </div>
+          )}
+
+          {/* step 5 · 第三关 Echo Master（教案） */}
+          {step === 4 && (
+            <div className="pbv2-step-panel">
+              <p className="yoga-design-hint">{t('musicStudio.stage3Hint')}</p>
+              <section className="pbv2-card pbv2-tone-yellow">
+                <div className="pbv2-card-title">{t('musicStudio.autoGenCardTitle')}</div>
+                <p>{t('musicStudio.stage3CardText')}</p>
+              </section>
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
+              <footer className="pbv2-actions">
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[2])}>{t('musicStudio.backStage2')}</button>
+                <button type="button" className="pbv2-primary" disabled={saving} onClick={() => saveExercises(STAGE_STEPS[4])}>
+                  <Save size={16} /> {t('musicStudio.saveNext4')}
+                </button>
+              </footer>
+            </div>
+          )}
+
+          {/* step 6 · 第四关 Star Studio（颜色分工 + 教案） */}
+          {step === 5 && (
+            <div className="pbv2-step-panel">
+              <p className="yoga-design-hint">{t('musicStudio.stage4Hint')}</p>
+              <StarRolesEditor lyrics={song.lyrics} roles={exercises.starRoles} onChange={(starRoles) => setExercises({ ...exercises, starRoles })} onGenerate={() => generateExerciseSection('starRoles')} generating={sectionGenerating === 'starRoles'} />
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="4" />
+              <footer className="pbv2-actions">
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[3])}>{t('musicStudio.backStage3')}</button>
+                <button type="button" className="pbv2-primary" disabled={saving} onClick={() => saveExercises(AUDIO_STEP)}>
+                  <Save size={16} /> {t('musicStudio.saveNextAudio')}
+                </button>
+              </footer>
+            </div>
+          )}
+
+          {/* step 7 · 音频与课件 */}
+          {step === AUDIO_STEP && (
+            <div className="pbv2-step-panel">
               <div className="pbv2-making-toolbar">
-                <button type="button" className="pbv2-ghost" onClick={() => enterStep(2)}>返回练习编辑</button>
+                <button type="button" className="pbv2-ghost" onClick={() => enterStep(STAGE_STEPS[4])}>{t('musicStudio.backStage4')}</button>
                 <button type="button" className="pbv2-ghost" disabled={!rendered || rendering} onClick={() => presentCurrent()}>
                   {rendering ? <Loader2 className="spin" size={16} /> : null}
-                  🖥️ 授课模式
+                  🖥️ {t('common.teachMode')}
                 </button>
-                <span className="pbv2-save-state">{rendering ? '课件生成中…' : (rendered ? '课件已就绪' : '')}</span>
+                <span className="pbv2-save-state">{rendering ? t('musicStudio.rendering') : (rendered ? t('musicStudio.renderedReady') : '')}</span>
               </div>
-              <p className="yoga-design-hint">进入本步或调整音频后，课件会自动生成并更新，无需手动操作。原唱用于完整聆听/跟唱/录制，伴奏用于无原唱演唱；音频以离线方式嵌入课件（单文件 ≤8MB），不上传时涉及听音的环节将无法播放。</p>
+              <p className="yoga-design-hint">{t('musicStudio.audioStepHint')}</p>
               <div className="pbv2-form-grid two">
-                <AudioCard label="原唱（Vocal）" name={audio.vocalName} dataUri={audio.vocal} onPick={({ dataUri, name }) => setAudio({ ...audio, vocal: dataUri, vocalName: name })} onRemove={() => setAudio({ ...audio, vocal: '', vocalName: '' })} />
-                <AudioCard label="伴奏（Backing）" name={audio.backingName} dataUri={audio.backing} onPick={({ dataUri, name }) => setAudio({ ...audio, backing: dataUri, backingName: name })} onRemove={() => setAudio({ ...audio, backing: '', backingName: '' })} />
+                <AudioCard label={t('musicStudio.vocalLabel')} name={audio.vocalName} dataUri={audio.vocal} onPick={({ dataUri, name }) => setAudio({ ...audio, vocal: dataUri, vocalName: name })} onRemove={() => setAudio({ ...audio, vocal: '', vocalName: '' })} />
+                <AudioCard label={t('musicStudio.backingLabel')} name={audio.backingName} dataUri={audio.backing} onPick={({ dataUri, name }) => setAudio({ ...audio, backing: dataUri, backingName: name })} onRemove={() => setAudio({ ...audio, backing: '', backingName: '' })} />
               </div>
               <section className="pbv2-card pbv2-tone-yellow">
                 <div className="cw-section-title">
-                  <div className="pbv2-card-title">AI 生成分段音频（按歌词逐段生成）</div>
+                  <div className="pbv2-card-title">{t('musicStudio.aiSegTitle')}</div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !song.lyrics.length} onClick={generateAllSegments}>
-                      {segmentBusy === 'all' ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />} 生成分段音频
+                      {segmentBusy === 'all' ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />} {t('musicStudio.genSegments')}
                     </button>
-                    <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !segments.some(Boolean)} onClick={mergeSegmentsToVocal} title="把已生成的分段按顺序拼接为完整原唱（mp3 直接连接）">
-                      合并为原唱
+                    <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !segments.some(Boolean)} onClick={mergeSegmentsToVocal} title={t('musicStudio.mergeTitle')}>
+                      {t('musicStudio.mergeBtn')}
                     </button>
                   </div>
                 </div>
-                <p className="yoga-design-hint">逐段生成、可单独试听与重生成；全部生成后点「合并为原唱」即可作为 Vocal 嵌入课件（也可继续上传完整音频覆盖）。伴奏暂不支持 AI 生成。</p>
+                <p className="yoga-design-hint">{t('musicStudio.segHint')}</p>
                 {song.lyrics.map((row, idx) => (
                   <div key={idx} className="cw-lyric-row">
                     <span className="cw-lyric-time">{row.time || '--:--'}</span>
-                    <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || '尚未生成'}</span>
+                    <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
                     <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                       {segments[idx] ? <audio controls preload="none" src={segments[idx]} style={{ height: 30 }} /> : null}
                       <button type="button" className="pbv2-ghost cw-lyric-generate" disabled={segmentBusy !== null} onClick={() => generateSegment(idx)}>
                         {segmentBusy === idx ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
-                        {segments[idx] ? '重新生成' : '生成'}
+                        {segments[idx] ? t('musicStudio.regen') : t('musicStudio.generate')}
                       </button>
                       {segments[idx] ? <button type="button" className="pbv2-ghost" onClick={() => setSegment(idx, '')}><Trash2 size={14} /></button> : null}
                     </span>
@@ -1041,8 +1116,6 @@ export function MusicStudioPage() {
           )}
         </section>
       </div>
-
-      {gameOverlay}
     </main>
   );
 }

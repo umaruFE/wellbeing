@@ -8,7 +8,7 @@
 *{margin:0;padding:0;box-sizing:border-box}
 
 body{
-  background:#08081a url(https://www.coze.cn/s/z29I470cjfI/) center/cover no-repeat fixed;
+  background:#08081a url('https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026/09/08/1788870778428-gapd7gjh27h.jpg') center/cover no-repeat fixed;
   min-height:100vh;
   font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
   color:#e0e0ff;
@@ -117,6 +117,7 @@ body::before{
 .st-ring.r1{width:420px;height:420px}
 .st-ring.r2{width:500px;height:500px;border-style:dashed;animation-direction:reverse;animation-duration:25s}
 .st-ring.r3{width:340px;height:340px;border-color:rgba(255,255,255,0.04);animation-duration:15s}
+.st-ring,.st-orbit{display:none}
 @keyframes stRingSlow{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
 /* ═══ Stage Intro: Orbit Dots ═══ */
@@ -214,7 +215,7 @@ body::before{
 .map-spot.finish{left:84%;top:22%;width:14%;height:50%;cursor:pointer}
 
 /* Stage View Wrapper */
-.stage-view{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:#08081a;display:none;flex-direction:column;overflow:hidden}
+.stage-view{position:fixed;top:0;left:0;right:0;bottom:0;z-index:200;background:#08081a url('https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026/09/08/1788870778428-gapd7gjh27h.jpg') center/cover no-repeat;display:none;flex-direction:column;overflow:hidden}
 .stage-view.active{display:flex}
 .stage-view .sv-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:rgba(10,10,30,0.95);border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;position:sticky;top:0;z-index:10}
 .sv-back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);cursor:pointer;font-size:13px;font-weight:700;font-family:"PingFang SC","Microsoft YaHei",sans-serif;transition:all 0.15s}
@@ -540,7 +541,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .s2-player-mode button.s2-active{background:rgba(255,184,0,0.15);color:#ffb800;box-shadow:0 0 8px rgba(255,184,0,0.15)}
 
 /* Stage 2 Playback Overlay */
-.playback-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#08081a url(https://www.coze.cn/s/5lE8XRBAuB8/) center/cover no-repeat;z-index:300;display:none;flex-direction:column;overflow:hidden}
+.playback-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#08081a url('https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026/09/08/1788870782301-cmq6ekuofe5.jpg') center/cover no-repeat;z-index:300;display:none;flex-direction:column;overflow:hidden}
 .playback-overlay::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(0,229,255,0.12) 0%,transparent 60%),radial-gradient(ellipse at 20% 80%,rgba(255,45,149,0.08) 0%,transparent 50%)}
 .playback-overlay::after{content:'';position:absolute;bottom:0;left:0;right:0;height:180px;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(0,229,255,0.12) 0%,rgba(255,45,149,0.06) 40%,transparent 70%);animation:stageGlow 4s ease-in-out infinite}
 .playback-overlay.active{display:flex}
@@ -625,7 +626,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .toast.show{opacity:1}
 
 /* ═══════════ STAGE 4: 全屏录制 ═══════════ */
-.record-fullscreen{position:fixed;top:0;left:0;right:0;bottom:0;background:#08081a url(https://www.coze.cn/s/5lE8XRBAuB8/) center/cover no-repeat;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
+.record-fullscreen{position:fixed;top:0;left:0;right:0;bottom:0;background:#08081a url('https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026/09/08/1788870782301-cmq6ekuofe5.jpg') center/cover no-repeat;z-index:300;display:none;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}
 .record-fullscreen::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,rgba(255,45,149,0.1) 0%,transparent 60%),radial-gradient(ellipse at 50% 80%,rgba(0,229,255,0.08) 0%,transparent 50%)}
 .record-fullscreen.active{display:flex}
 .record-fs-countdown{font-size:96px;font-weight:900;color:#fff;z-index:1;animation:pulse 1s infinite;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
@@ -730,7 +731,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 
 <div class="game-map" id="gameMap">
   <div class="map-img-wrap">
-    <img src="https://www.coze.cn/s/EeFIuAHufrg/" alt="Game Map">
+    <img class="quest-map-image" src="https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026/09/08/1788870777660-qg0j20t1i3.jpg" alt="Music Star Quest 音乐闯关地图">
     <div class="map-spot s1 active" data-stage="1" id="mb1" onclick="enterStage(1)"><div class="map-spot-badge">✅</div></div>
     <div class="map-spot s2 locked" data-stage="2" id="mb2" onclick="enterStage(2)"><div class="map-spot-badge">✅</div></div>
     <div class="map-spot s3 locked" data-stage="3" id="mb3" onclick="enterStage(3)"><div class="map-spot-badge">✅</div></div>

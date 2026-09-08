@@ -4,9 +4,11 @@ import {
   Loader2, Pencil, Plus, RefreshCw, Save, Search, Sparkles, Trash2, Wand2, X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiService from '../../services/api';
 import { getPromptTemplate } from '../../services/promptLibrary';
 import { resolveGeneratedAsset } from '../../utils/assetGeneration';
+import { openTeachingWindow } from '../../utils/teachingWindow';
 import {
   createCreativeWork, deleteCreativeWork, generateCreativeWorkDesign,
   generateCreativeWorkPlan, getCreativeWorks, updateCreativeWork,
@@ -17,7 +19,7 @@ import './creativeWorkshop.css';
 
 const MODULE_ID = 'interactive-yoga';
 const MODULE_NAME = '互动式情境瑜伽';
-const STEPS = ['基本信息', '活动方案', '页面设计', '制作插图'];
+const STEPS = ['stepBasic', 'stepPlan', 'stepDesign', 'stepMaking'];
 const ACCENT = '#509f69';
 
 // 兜底常量：权威版本在 api/src/prompts/builtin.ts（frontend.storybook-*），与绘本共用同一风格
@@ -32,22 +34,13 @@ const FALLBACK_VISUAL_STYLE = [
 ].join(' ');
 const FALLBACK_NEGATIVE_PROMPT = 'Chinese characters, Chinese text, non-English text, unrequested words, extra letters, captions, annotations, speech bubbles, callouts, explanatory symbols, page numbers, borders, frames, open-book mockup, photographed book, saturated colors, neon colors, gibberish typography, pseudo-text, misspelled text, duplicated title, repeated text';
 
-const PAGE_TYPE_LABEL = { scene: '场景页', transition: '过渡页', action: '动作页', return: '回归页', ending: '结束页' };
+const PAGE_TYPE_LABEL = { scene: 'pageTypeScene', transition: 'pageTypeTransition', action: 'pageTypeAction', return: 'pageTypeReturn', ending: 'pageTypeEnding' };
 const PAGE_TYPE_SET = new Set(Object.keys(PAGE_TYPE_LABEL));
-const AGE_OPTIONS = ['3-6岁', '7-9岁', '10-12岁', '13-15岁'];
-const DURATION_OPTIONS = ['3-5分钟', '5-8分钟', '9-15分钟'];
-const THEME_OPTIONS = [
-  { label: '自然探索', hint: '森林、海洋、花园……' },
-  { label: '动物世界', hint: '丛林动物、海洋生物……' },
-  { label: '日常生活', hint: '整理房间、烹饪食物……' },
-  { label: '太空冒险', hint: '星球旅行、宇航员训练……' },
-  { label: '魔法幻想', hint: '魔法学校、精灵世界……' },
-  { label: '季节旅行', hint: '春夏秋冬场景变换' },
-];
+const THEME_VALUES = ['自然探索', '动物世界', '日常生活', '太空冒险', '魔法幻想', '季节旅行'];
 const PROP_OPTIONS = [
-  { label: '无道具', hint: '纯身体练习', value: '无道具（纯身体练习）' },
-  { label: '基础瑜伽道具', hint: '瑜伽垫、瑜伽球、瑜伽砖、泡沫轴', value: '基础瑜伽道具（瑜伽垫、瑜伽球、瑜伽砖、泡沫轴）' },
-  { label: '体适能道具', hint: '平衡木、跷跷板、过河石、弹力带、跳箱、蹦床、小哑铃、弹力绳', value: '体适能道具（平衡木、跷跷板、过河石、弹力带、跳箱、蹦床、小哑铃、弹力绳）' },
+  { value: '无道具（纯身体练习）', key: 'propNone' },
+  { value: '基础瑜伽道具（瑜伽垫、瑜伽球、瑜伽砖、泡沫轴）', key: 'propYoga' },
+  { value: '体适能道具（平衡木、跷跷板、过河石、弹力带、跳箱、蹦床、小哑铃、弹力绳）', key: 'propFit' },
 ];
 
 const toOption = (option) => (typeof option === 'string' ? { label: option, value: option } : { label: option.label, hint: option.hint, value: option.value || option.label });
@@ -143,6 +136,7 @@ function Field({ label, value, onChange, placeholder, area }) {
 
 // ── 逐页设计卡片（step 3）───────────────────────────────────
 function PageDesignCard({ page, index, onPageChange, onRemove }) {
+  const { t } = useTranslation();
   const poseValue = page.pose || '';
   const poseInfo = findYogaPose(poseValue);
   const poseMissing = page.type === 'action' && !poseValue;
@@ -150,33 +144,33 @@ function PageDesignCard({ page, index, onPageChange, onRemove }) {
     <article className={`pbv2-production-card yoga-design-card pbv2-tone-${PRODUCTION_TONES[index % PRODUCTION_TONES.length]}`}>
       <div className="pbv2-production-body">
         <strong>
-          P{index + 1} · {PAGE_TYPE_LABEL[page.type] || page.type}
+          P{index + 1} · {PAGE_TYPE_LABEL[page.type] ? t('yogaStudio.' + PAGE_TYPE_LABEL[page.type]) : page.type}
           {poseInfo ? ` — ${poseInfo.zh}` : ''}
-          {poseMissing && <em className="yoga-pose-warning"> 动作页未选体式</em>}
+          {poseMissing && <em className="yoga-pose-warning"> {t('yogaStudio.poseMissingWarning')}</em>}
         </strong>
         <div className="pbv2-form-grid two">
           <label className="pbv2-field">
-            <span>页面类型</span>
+            <span>{t('yogaStudio.pageTypeLabel')}</span>
             <select value={page.type} onChange={(e) => onPageChange(page.id, { type: e.target.value })}>
               {Object.entries(PAGE_TYPE_LABEL).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </select>
           </label>
           <label className="pbv2-field">
-            <span>瑜伽动作</span>
+            <span>{t('yogaStudio.poseLabel')}</span>
             <select value={poseValue} onChange={(e) => onPageChange(page.id, { pose: e.target.value || null })}>
-              <option value="">无</option>
+              <option value="">{t('yogaStudio.poseNone')}</option>
               {YOGA_POSES.map((pose) => (
                 <option key={pose.en} value={pose.en}>{pose.zh}（{pose.en}｜{'★'.repeat(pose.level)}）</option>
               ))}
             </select>
           </label>
         </div>
-        {poseInfo && <p className="yoga-pose-desc">体式形态：{poseInfo.body}</p>}
-        <Field label="英文字幕" value={page.subtitle} onChange={(v) => onPageChange(page.id, { subtitle: v })} />
-        <Field area label="画面描述" value={page.imagePrompt} onChange={(v) => onPageChange(page.id, { imagePrompt: v })} />
-        <Field area label="教师引导词" value={page.teacherLang} onChange={(v) => onPageChange(page.id, { teacherLang: v })} />
+        {poseInfo && <p className="yoga-pose-desc">{t('yogaStudio.poseShape', { body: poseInfo.body })}</p>}
+        <Field label={t('yogaStudio.subtitleLabel')} value={page.subtitle} onChange={(v) => onPageChange(page.id, { subtitle: v })} />
+        <Field area label={t('yogaStudio.imageDescLabel')} value={page.imagePrompt} onChange={(v) => onPageChange(page.id, { imagePrompt: v })} />
+        <Field area label={t('yogaStudio.teacherLangLabel')} value={page.teacherLang} onChange={(v) => onPageChange(page.id, { teacherLang: v })} />
         <button type="button" className="pbv2-ghost" onClick={() => onRemove(page.id)}>
-          <Trash2 size={14} /> 删除此页
+          <Trash2 size={14} /> {t('yogaStudio.deletePage')}
         </button>
       </div>
     </article>
@@ -187,35 +181,36 @@ function PageDesignCard({ page, index, onPageChange, onRemove }) {
 const PRODUCTION_TONES = ['yellow', 'blue', 'green', 'coral'];
 
 function ProductionCard({ page, index, onPageChange, onGenerateOne }) {
+  const { t } = useTranslation();
   return (
     <article className={`pbv2-production-card yoga-make-card pbv2-tone-${PRODUCTION_TONES[index % PRODUCTION_TONES.length]}`}>
       <div className="pbv2-preview">
         {page.status === 'generating' ? (
-          <div className="pbv2-generating"><Loader2 className="spin" size={24} /> 生成中…</div>
+          <div className="pbv2-generating"><Loader2 className="spin" size={24} /> {t('yogaStudio.generating')}</div>
         ) : page.img ? (
           <img src={page.img} alt={`P${index + 1}`} />
         ) : (
-          <div className="pbv2-placeholder"><ImageIcon size={24} /> 未生成</div>
+          <div className="pbv2-placeholder"><ImageIcon size={24} /> {t('yogaStudio.notGenerated')}</div>
         )}
       </div>
       <div className="pbv2-production-body">
-        <strong>P{index + 1} · {PAGE_TYPE_LABEL[page.type] || page.type}{page.pose ? ` — ${findYogaPose(page.pose)?.zh || page.pose}` : ''}</strong>
+        <strong>P{index + 1} · {PAGE_TYPE_LABEL[page.type] ? t('yogaStudio.' + PAGE_TYPE_LABEL[page.type]) : page.type}{page.pose ? ` — ${findYogaPose(page.pose)?.zh || page.pose}` : ''}</strong>
         <label className="pbv2-field">
-          <span>瑜伽动作</span>
+          <span>{t('yogaStudio.poseLabel')}</span>
           <select value={page.pose || ''} onChange={(e) => onPageChange(page.id, { pose: e.target.value || null })}>
-            <option value="">无</option>
+            <option value="">{t('yogaStudio.poseNone')}</option>
             {YOGA_POSES.map((pose) => (
               <option key={pose.en} value={pose.en}>{pose.zh}（{pose.en}｜{'★'.repeat(pose.level)}）</option>
             ))}
           </select>
         </label>
-        <Field label="英文字幕" value={page.subtitle} onChange={(v) => onPageChange(page.id, { subtitle: v })} />
-        <Field area label="画面描述" value={page.imagePrompt} onChange={(v) => onPageChange(page.id, { imagePrompt: v })} />
+        <Field label={t('yogaStudio.subtitleLabel')} value={page.subtitle} onChange={(v) => onPageChange(page.id, { subtitle: v })} />
+        <Field area label={t('yogaStudio.imageDescLabel')} value={page.imagePrompt} onChange={(v) => onPageChange(page.id, { imagePrompt: v })} />
         {page.error && <em>{page.error}</em>}
         <div className="pbv2-card-actions">
           <button type="button" disabled={page.status === 'generating'} onClick={() => onGenerateOne(page)}>
             {page.status === 'generating' ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
-            生成或调整
+            {t('yogaStudio.genOrAdjust')}
           </button>
         </div>
       </div>
@@ -223,47 +218,14 @@ function ProductionCard({ page, index, onPageChange, onGenerateOne }) {
   );
 }
 
-// ── 授课模式：应用内全屏播放（同绘本），键盘 ←/→ 翻页、Esc 退出 ──
-function YogaPresentation({ pages, index, setPageIndex, onExit }) {
-  const page = pages[index];
-  if (!page) return null;
-  return (
-    <div className="pbv2-presentation">
-      <button type="button" className="pbv2-presentation-exit" onClick={onExit} aria-label="exit">
-        <X size={24} />
-      </button>
-      <button
-        type="button"
-        className="pbv2-presentation-nav pbv2-presentation-prev"
-        onClick={() => setPageIndex(Math.max(0, index - 1))}
-        disabled={index === 0}
-        aria-label="previous"
-      >
-        <ChevronLeft size={48} />
-      </button>
-      <div className="pbv2-presentation-stage">
-        {page.img ? (
-          <img src={page.img} alt={`Page ${index + 1}`} />
-        ) : (
-          <div className="pbv2-presentation-placeholder"><ImageIcon size={64} /></div>
-        )}
-      </div>
-      <button
-        type="button"
-        className="pbv2-presentation-nav pbv2-presentation-next"
-        onClick={() => setPageIndex(Math.min(pages.length - 1, index + 1))}
-        disabled={index === pages.length - 1}
-        aria-label="next"
-      >
-        <ChevronRight size={48} />
-      </button>
-      {page.subtitle ? <div className="pbv2-presentation-text">{page.subtitle}</div> : null}
-      <div className="pbv2-presentation-counter">{index + 1} / {pages.length}</div>
-    </div>
-  );
-}
+// ── 授课模式：新窗口播放（utils/teachingWindow，键盘 ←/→ 翻页、Esc 退出） ──
+const openYogaTeaching = (pages, title) => openTeachingWindow({
+  pages: (pages || []).map((p) => ({ image: p.img, subtitle: p.subtitle })),
+  title,
+});
 
 export function YogaStudioPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [view, setView] = React.useState('list');
   const [works, setWorks] = React.useState([]);
@@ -283,19 +245,6 @@ export function YogaStudioPage() {
   const [generatingAll, setGeneratingAll] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
-  const [showPresent, setShowPresent] = React.useState(false);
-  const [presentIndex, setPresentIndex] = React.useState(0);
-
-  React.useEffect(() => {
-    if (!showPresent) return undefined;
-    const handler = (event) => {
-      if (event.key === 'ArrowLeft') setPresentIndex((i) => Math.max(0, i - 1));
-      else if (event.key === 'ArrowRight') setPresentIndex((i) => Math.min(pages.length - 1, i + 1));
-      else if (event.key === 'Escape') setShowPresent(false);
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [showPresent, pages.length]);
 
   const [storybookPrompts, setStorybookPrompts] = React.useState({
     visualStyle: FALLBACK_VISUAL_STYLE,
@@ -337,7 +286,7 @@ export function YogaStudioPage() {
 
   const createWork = async () => {
     try {
-      const work = await createCreativeWork({ moduleId: MODULE_ID, moduleName: MODULE_NAME, title: '未命名情境瑜伽', parameters: initialBasicInfo });
+      const work = await createCreativeWork({ moduleId: MODULE_ID, moduleName: MODULE_NAME, title: t('yogaStudio.untitledYoga'), parameters: initialBasicInfo });
       await loadWorks();
       setEditing(work.id);
       setBasicInfo(initialBasicInfo);
@@ -348,7 +297,7 @@ export function YogaStudioPage() {
       setMessage('');
       setView('studio');
     } catch (err) {
-      window.alert(err.message || '创建失败，请重试');
+      window.alert(err.message || t('yogaStudio.createFailed'));
     }
   };
 
@@ -364,10 +313,10 @@ export function YogaStudioPage() {
     setSaving(true);
     try {
       await updateCreativeWork(id, payload);
-      setSaveState(`已保存 ${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`);
+      setSaveState(t('yogaStudio.savedAt', { time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }));
     } catch (err) {
-      setSaveState('保存失败');
-      setMessage(err.message || '保存失败，请重试');
+      setSaveState(t('yogaStudio.saveFailedShort'));
+      setMessage(err.message || t('yogaStudio.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -381,13 +330,13 @@ export function YogaStudioPage() {
     setPlanGenerating(true);
     setMessage('');
     try {
-      await updateCreativeWork(id, { title: (basicInfo.themes || [])[0] || basicInfo.goals?.slice(0, 20) || '未命名情境瑜伽', parameters: toServerParams(basicInfo) });
+      await updateCreativeWork(id, { title: (basicInfo.themes || [])[0] || basicInfo.goals?.slice(0, 20) || t('yogaStudio.untitledYoga'), parameters: toServerParams(basicInfo) });
       const data = await generateCreativeWorkPlan(id);
       setPlan({ ...initialPlan, ...data.plan });
       if (data.title) setWorkTitle(data.title);
       setStep(1);
     } catch (err) {
-      setMessage(err.message || '方案生成失败，请重试');
+      setMessage(err.message || t('yogaStudio.planGenFail'));
     } finally {
       setPlanGenerating(false);
     }
@@ -405,7 +354,7 @@ export function YogaStudioPage() {
       setPlan({ ...initialPlan, ...data.plan });
       if (data.title) setWorkTitle(data.title);
     } catch (err) {
-      setMessage(err.message || '方案生成失败，请重试');
+      setMessage(err.message || t('yogaStudio.planGenFail'));
     } finally {
       setPlanGenerating(false);
     }
@@ -428,7 +377,7 @@ export function YogaStudioPage() {
       setPages(hydratePages(data.pages));
       if (data.title) setWorkTitle(data.title);
     } catch (err) {
-      setMessage(err.message || '逐页设计生成失败，请重试');
+      setMessage(err.message || t('yogaStudio.designGenFail'));
     } finally {
       setDesignGenerating(false);
     }
@@ -512,9 +461,9 @@ export function YogaStudioPage() {
     const storagePages = toStoragePages(finalPages);
     try {
       await updateCreativeWork(editingIdRef.current, { pages: storagePages });
-      setSaveState(`已保存 ${new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}`);
+      setSaveState(t('yogaStudio.savedAt', { time: new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) }));
     } catch {
-      setSaveState('保存失败');
+      setSaveState(t('yogaStudio.saveFailedShort'));
     }
   };
 
@@ -547,7 +496,7 @@ export function YogaStudioPage() {
         return {
           pageNumber,
           url: await resolveGeneratedAsset(asset, {
-            fallbackError: '图片生成失败',
+            fallbackError: t('yogaStudio.imgFail'),
             onResolved: (url) => setPages((current) => current.map((page) => (
               page.page === pageNumber ? { ...page, img: url, status: 'done', error: '' } : page
             ))),
@@ -561,20 +510,20 @@ export function YogaStudioPage() {
         if (resultForAsset.status === 'fulfilled' && resultForAsset.value?.url) {
           fulfilledByPage.set(resultForAsset.value.pageNumber, resultForAsset.value.url);
         } else if (resultForAsset.status === 'rejected') {
-          rejectedByPage.set(fallbackPage, resultForAsset.reason?.message || '图片生成失败');
+          rejectedByPage.set(fallbackPage, resultForAsset.reason?.message || t('yogaStudio.imgFail'));
         }
       });
       const finalPages = sourcePages.map((page) => {
         const url = fulfilledByPage.get(page.page);
         if (url) return { ...page, img: url, status: 'done', error: '' };
         if (page.img) return { ...page, status: 'done', error: '' };
-        return { ...page, status: 'placeholder', error: rejectedByPage.get(page.page) || '图片生成超时，请单独重试' };
+        return { ...page, status: 'placeholder', error: rejectedByPage.get(page.page) || t('yogaStudio.imgTimeoutSingle') };
       });
       setPages(finalPages);
       await savePagesSilently(finalPages);
     } catch (error) {
       setPages((current) => current.map((page) => ({ ...page, status: page.img ? 'done' : 'placeholder', error: error.message })));
-      setMessage(error.message || '批量生成失败，请重试');
+      setMessage(error.message || t('yogaStudio.batchFail'));
     } finally {
       setGeneratingAll(false);
     }
@@ -588,29 +537,29 @@ export function YogaStudioPage() {
         body: JSON.stringify(buildImageRequest([targetPage])),
       });
       const url = await resolveGeneratedAsset(result.asset || result.assets?.[0] || result, {
-        fallbackError: '图片生成失败',
+        fallbackError: t('yogaStudio.imgFail'),
       });
       const finalPages = pages.map((page) => (page.id === targetPage.id ? {
         ...page,
         img: url || page.img,
         status: url ? 'done' : 'placeholder',
-        error: url ? '' : '图片生成超时，请重试',
+        error: url ? '' : t('yogaStudio.imgTimeout'),
       } : page));
       setPages(finalPages);
       if (url) await savePagesSilently(finalPages);
     } catch (error) {
-      updatePage(targetPage.id, { status: 'placeholder', error: error.message || '图片生成失败，请重试' });
+      updatePage(targetPage.id, { status: 'placeholder', error: error.message || t('yogaStudio.imgFailRetry') });
     }
   };
 
   // ── 列表操作 ─────────────────────────────────────────────
   const remove = async (id) => {
-    if (!window.confirm('确认删除这份作品？')) return;
+    if (!window.confirm(t('yogaStudio.confirmDelete'))) return;
     try {
       await deleteCreativeWork(id);
       setWorks((prev) => prev.filter((w) => w.id !== id));
     } catch (err) {
-      window.alert(err.message || '删除失败，请重试');
+      window.alert(err.message || t('yogaStudio.deleteFailed'));
     }
   };
 
@@ -618,15 +567,12 @@ export function YogaStudioPage() {
     `${w.title || ''} ${w.parameters?.theme || ''} ${w.parameters?.goals || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // 列表卡片「授课」：直接用已保存的页面进入应用内全屏演示
+  // 列表卡片「授课」：直接用已保存的页面进入新窗口授课
   const presentFromList = (work) => {
-    setPages(hydratePages(work.result?.pages));
-    setPresentIndex(0);
-    setShowPresent(true);
+    if (!openYogaTeaching(work.result?.pages, work.title || work.result?.title || t('yogaStudio.teachTitleFallback'))) {
+      setMessage(t('yogaStudio.noPlayablePages'));
+    }
   };
-  const presentOverlay = showPresent && pages.length > 0 ? (
-    <YogaPresentation pages={pages} index={presentIndex} setPageIndex={setPresentIndex} onExit={() => setShowPresent(false)} />
-  ) : null;
 
   // ── 列表视图 ─────────────────────────────────────────────
   if (view === 'list') {
@@ -637,16 +583,16 @@ export function YogaStudioPage() {
             <div className="pbv2-topbar-left">
               <div className="pbv2-topbar-icon"><Dumbbell size={28} /></div>
               <div>
-                <h1>{MODULE_NAME}</h1>
-                <p>身体叙事 × 情境探索 × 英语内化，AI 生成带插图的授课课件</p>
+                <h1>{t('yogaStudio.moduleName')}</h1>
+                <p>{t('yogaStudio.listSubtitle')}</p>
               </div>
             </div>
             <div className="pbv2-topbar-actions">
               <button type="button" className="pbv2-back-btn" onClick={() => navigate('/workshop/english-plus')}>
-                <ArrowLeft size={16} /> 返回
+                <ArrowLeft size={16} /> {t('yogaStudio.back')}
               </button>
               <button type="button" className="pbv2-create-btn" onClick={createWork}>
-                <Plus size={18} /> 新建作品
+                <Plus size={18} /> {t('yogaStudio.newWork')}
               </button>
             </div>
           </header>
@@ -654,7 +600,7 @@ export function YogaStudioPage() {
           <div className="pbv2-list-toolbar">
             <div className="pbv2-search-box">
               <Search size={16} />
-              <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="搜索作品或情境主题…" />
+              <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder={t('yogaStudio.searchPlaceholder')} />
             </div>
           </div>
 
@@ -665,14 +611,14 @@ export function YogaStudioPage() {
           ) : filtered.length === 0 ? (
             <div className="pbv2-list-empty">
               <Dumbbell size={48} />
-              <p>{searchTerm ? '没有匹配的作品' : '还没有作品，点击「新建作品」开始创作'}</p>
+              <p>{searchTerm ? t('yogaStudio.noMatch') : t('yogaStudio.emptyList')}</p>
             </div>
           ) : (
             <div className="pbv2-card-grid">
               {filtered.map((work) => {
                 const resultPages = Array.isArray(work.result?.pages) ? work.result.pages : [];
                 const imageCount = resultPages.filter((p) => p.img).length;
-                const statusLabel = resultPages.length === 0 ? '草稿' : (imageCount >= resultPages.length ? '已生成' : `插图 ${imageCount}/${resultPages.length}`);
+                const statusLabel = resultPages.length === 0 ? t('yogaStudio.statusDraft') : (imageCount >= resultPages.length ? t('yogaStudio.statusDone') : t('yogaStudio.statusImages', { done: imageCount, total: resultPages.length }));
                 return (
                   <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}>
                     <div className="pbv2-book-cover exp-cover">
@@ -682,7 +628,7 @@ export function YogaStudioPage() {
                       </span>
                     </div>
                     <div className="pbv2-book-info">
-                      <h3>{work.title || '未命名作品'}</h3>
+                      <h3>{work.title || t('yogaStudio.untitled')}</h3>
                       <div className="pbv2-book-meta">
                         <Clock size={13} />
                         <span>{work.parameters?.age || ''}{work.parameters?.duration ? ` · ${work.parameters.duration}` : ''}</span>
@@ -691,15 +637,15 @@ export function YogaStudioPage() {
                       </div>
                       <div className="pbv2-book-actions">
                         <button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}>
-                          <Pencil size={14} /> 编辑
+                          <Pencil size={14} /> {t('yogaStudio.edit')}
                         </button>
                         {resultPages.length > 0 && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); presentFromList(work); }}>
-                            🖥️ 授课
+                            🖥️ {t('common.teach')}
                           </button>
                         )}
                         <button type="button" onClick={(e) => { e.stopPropagation(); remove(work.id); }}>
-                          <Trash2 size={14} /> 删除
+                          <Trash2 size={14} /> {t('yogaStudio.delete')}
                         </button>
                       </div>
                     </div>
@@ -709,7 +655,6 @@ export function YogaStudioPage() {
             </div>
           )}
         </div>
-        {presentOverlay}
       </main>
     );
   }
@@ -721,14 +666,14 @@ export function YogaStudioPage() {
         <div className="pbv2-topbar-left">
           <div className="pbv2-topbar-icon"><Dumbbell size={28} /></div>
           <div>
-            <h1>{workTitle || '新建情境瑜伽作品'}</h1>
-            <p>按绘本制作流程完成：基本信息 → 活动方案 → 页面设计 → 制作插图</p>
+            <h1>{workTitle || t('yogaStudio.newWorkTitle')}</h1>
+            <p>{t('yogaStudio.studioSubtitle')}</p>
           </div>
         </div>
         <div className="pbv2-topbar-actions">
-          <span className={`pbv2-save-state ${saveState === '保存失败' ? 'is-error' : ''}`}>{saveState}</span>
+          <span className={`pbv2-save-state ${saveState === t('yogaStudio.saveFailedShort') ? 'is-error' : ''}`}>{saveState}</span>
           <button type="button" className="pbv2-back-btn" onClick={backToList}>
-            <ArrowLeft size={16} /> 返回列表
+            <ArrowLeft size={16} /> {t('yogaStudio.backToList')}
           </button>
         </div>
       </header>
@@ -738,7 +683,7 @@ export function YogaStudioPage() {
           {STEPS.map((label, index) => (
             <button type="button" key={label} className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`} onClick={() => setStep(index)}>
               <span>{index + 1}</span>
-              <strong>{label}</strong>
+              <strong>{t('yogaStudio.' + label)}</strong>
             </button>
           ))}
         </aside>
@@ -750,30 +695,30 @@ export function YogaStudioPage() {
           {step === 0 && (
             <div className="pbv2-step-panel">
               <div className="pbv2-form-grid two">
-                <OptionGroup label="年龄段" options={AGE_OPTIONS} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
-                <OptionGroup label="时长范围" options={DURATION_OPTIONS} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
+                <OptionGroup label={t('yogaStudio.ageLabel')} options={[{ value: '3-6岁', label: t('yogaStudio.age36') }, { value: '7-9岁', label: t('yogaStudio.age79') }, { value: '10-12岁', label: t('yogaStudio.age1012') }, { value: '13-15岁', label: t('yogaStudio.age1315') }]} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
+                <OptionGroup label={t('yogaStudio.durationLabel')} options={[{ value: '3-5分钟', label: t('yogaStudio.dur35') }, { value: '5-8分钟', label: t('yogaStudio.dur58') }, { value: '9-15分钟', label: t('yogaStudio.dur915') }]} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
               </div>
               <section className="pbv2-card pbv2-tone-coral">
-                <div className="pbv2-card-title">情境主题（可多选）</div>
-                <OptionGroup options={THEME_OPTIONS} multiple value={basicInfo.themes} onChange={(themes) => setBasicInfo({ ...basicInfo, themes })} tone="coral" />
+                <div className="pbv2-card-title">{t('yogaStudio.themesLabel')}</div>
+                <OptionGroup options={THEME_VALUES.map((v, i) => ({ value: v, label: t('yogaStudio.theme' + i), hint: t('yogaStudio.themeHint' + i) }))} multiple value={basicInfo.themes} onChange={(themes) => setBasicInfo({ ...basicInfo, themes })} tone="coral" />
               </section>
               <section className="pbv2-card pbv2-tone-green">
-                <div className="pbv2-card-title">道具偏好（可多选，未选则默认无道具）</div>
-                <OptionGroup options={PROP_OPTIONS} multiple value={basicInfo.props} onChange={(props) => setBasicInfo({ ...basicInfo, props })} tone="green" />
+                <div className="pbv2-card-title">{t('yogaStudio.propsLabel')}</div>
+                <OptionGroup options={PROP_OPTIONS.map((p) => ({ value: p.value, label: t('yogaStudio.' + p.key), hint: t('yogaStudio.' + p.key + 'Hint') }))} multiple value={basicInfo.props} onChange={(props) => setBasicInfo({ ...basicInfo, props })} tone="green" />
               </section>
               <section className="pbv2-card pbv2-tone-blue">
-                <div className="pbv2-card-title">目标语言（必填）</div>
-                <Field area label="目标词汇与句型" value={basicInfo.goals} onChange={(v) => setBasicInfo({ ...basicInfo, goals: v })} placeholder="例如：ocean, wave, What can you see?" />
+                <div className="pbv2-card-title">{t('yogaStudio.goalsLabel')}</div>
+                <Field area label={t('yogaStudio.goalsField')} value={basicInfo.goals} onChange={(v) => setBasicInfo({ ...basicInfo, goals: v })} placeholder={t('yogaStudio.goalsPlaceholder')} />
               </section>
               <section className="pbv2-card pbv2-tone-green">
-                <div className="pbv2-card-title">特殊要求（选填）</div>
-                <Field area label="补充说明" value={basicInfo.requirements} onChange={(v) => setBasicInfo({ ...basicInfo, requirements: v })} placeholder="角色、道具或体式偏好" />
+                <div className="pbv2-card-title">{t('yogaStudio.reqLabel')}</div>
+                <Field area label={t('yogaStudio.reqField')} value={basicInfo.requirements} onChange={(v) => setBasicInfo({ ...basicInfo, requirements: v })} placeholder={t('yogaStudio.reqPlaceholder')} />
               </section>
               <footer className="pbv2-actions">
                 <ChevronRight size={16} />
                 <button type="button" className="pbv2-primary" disabled={!basicReady || planGenerating} onClick={generatePlanAndAdvance}>
                   {planGenerating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
-                  {planGenerating ? 'AI 生成中…' : 'AI 生成活动方案'}
+                  {planGenerating ? t('yogaStudio.aiGenerating') : t('yogaStudio.aiGenPlan')}
                 </button>
               </footer>
             </div>
@@ -784,31 +729,31 @@ export function YogaStudioPage() {
             <div className="pbv2-step-panel">
               <section className="pbv2-plan-block pbv2-tone-coral">
                 <div className="pbv2-form-grid three">
-                  <Field label="英文活动标题" value={plan.storyTitleEn} onChange={(v) => setPlan({ ...plan, storyTitleEn: v })} />
-                  <Field label="中文标题" value={plan.storyTitleZh} onChange={(v) => setPlan({ ...plan, storyTitleZh: v })} />
-                  <Field label="建议页数" value={plan.recommendedPageCount} onChange={(v) => setPlan({ ...plan, recommendedPageCount: v })} />
+                  <Field label={t('yogaStudio.titleEn')} value={plan.storyTitleEn} onChange={(v) => setPlan({ ...plan, storyTitleEn: v })} />
+                  <Field label={t('yogaStudio.titleZh')} value={plan.storyTitleZh} onChange={(v) => setPlan({ ...plan, storyTitleZh: v })} />
+                  <Field label={t('yogaStudio.pageCount')} value={plan.recommendedPageCount} onChange={(v) => setPlan({ ...plan, recommendedPageCount: v })} />
                 </div>
-                <Field area label="情境旅程故事" value={plan.storyContent} onChange={(v) => setPlan({ ...plan, storyContent: v })} />
+                <Field area label={t('yogaStudio.storyLabel')} value={plan.storyContent} onChange={(v) => setPlan({ ...plan, storyContent: v })} />
               </section>
               <section className="pbv2-card pbv2-tone-yellow">
-                <div className="pbv2-card-title">活动目标</div>
+                <div className="pbv2-card-title">{t('yogaStudio.goalsTitle')}</div>
                 <div className="pbv2-form-grid three">
-                  <Field area label="英语目标" value={plan.englishGoal} onChange={(v) => setPlan({ ...plan, englishGoal: v })} />
-                  <Field area label="身心目标" value={plan.wellbeingGoal} onChange={(v) => setPlan({ ...plan, wellbeingGoal: v })} />
-                  <Field area label="产出目标" value={plan.outputGoal} onChange={(v) => setPlan({ ...plan, outputGoal: v })} />
+                  <Field area label={t('yogaStudio.englishGoal')} value={plan.englishGoal} onChange={(v) => setPlan({ ...plan, englishGoal: v })} />
+                  <Field area label={t('yogaStudio.wellbeingGoal')} value={plan.wellbeingGoal} onChange={(v) => setPlan({ ...plan, wellbeingGoal: v })} />
+                  <Field area label={t('yogaStudio.outputGoal')} value={plan.outputGoal} onChange={(v) => setPlan({ ...plan, outputGoal: v })} />
                 </div>
               </section>
               <section className="pbv2-plan-block pbv2-tone-green">
-                <Field area label="所需材料" value={plan.materials} onChange={(v) => setPlan({ ...plan, materials: v })} />
+                <Field area label={t('yogaStudio.materialsLabel')} value={plan.materials} onChange={(v) => setPlan({ ...plan, materials: v })} />
               </section>
               <footer className="pbv2-actions">
-                <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>返回基本信息</button>
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>{t('yogaStudio.backToBasic')}</button>
                 <button type="button" className="pbv2-ghost" disabled={planGenerating} onClick={generatePlan}>
                   {planGenerating ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
-                  {planGenerating ? 'AI 生成中…' : 'AI 重新生成方案'}
+                  {planGenerating ? t('yogaStudio.aiGenerating') : t('yogaStudio.aiRegenPlan')}
                 </button>
                 <button type="button" className="pbv2-primary" disabled={saving} onClick={savePlan}>
-                  <Save size={16} /> 保存并设计页面
+                  <Save size={16} /> {t('yogaStudio.saveToDesign')}
                 </button>
               </footer>
             </div>
@@ -817,7 +762,7 @@ export function YogaStudioPage() {
           {/* step 3 · 页面设计 */}
           {step === 2 && (
             <div className="pbv2-step-panel">
-              <p className="yoga-design-hint">动作页必须选择「瑜伽动作」：插图中角色会清楚示范该体式的身体动作（图内不带任何文字）。「画面描述」是 AI 插图的依据，动作页请写清该体式的身体动作；「英文字幕」在授课模式叠加显示，不会画进图中。</p>
+              <p className="yoga-design-hint">{t('yogaStudio.designHint')}</p>
               <div className="pbv2-page-list">
                 {pages.map((page, index) => (
                   <PageDesignCard key={page.id} page={page} index={index} onPageChange={updatePage} onRemove={removePage} />
@@ -826,20 +771,20 @@ export function YogaStudioPage() {
               {pages.length === 0 && (
                 <div className="pbv2-list-empty">
                   <Dumbbell size={48} />
-                  <p>还没有页面设计，点击「AI 生成逐页设计」自动产出，或手动添加</p>
+                  <p>{t('yogaStudio.noDesignYet')}</p>
                 </div>
               )}
               <button type="button" className="pbv2-add-page" onClick={addPage}>
-                <Plus size={16} /> 添加一页
+                <Plus size={16} /> {t('yogaStudio.addPage')}
               </button>
               <footer className="pbv2-actions">
-                <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>返回方案</button>
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>{t('yogaStudio.backToPlan')}</button>
                 <button type="button" className="pbv2-primary" disabled={designGenerating} onClick={generateDesign}>
                   {designGenerating ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
-                  {designGenerating ? 'AI 生成中…' : 'AI 生成逐页设计'}
+                  {designGenerating ? t('yogaStudio.aiGenerating') : t('yogaStudio.aiGenDesign')}
                 </button>
                 <button type="button" className="pbv2-primary" disabled={pages.length === 0 || saving} onClick={savePages}>
-                  <Save size={16} /> 保存并制作插图
+                  <Save size={16} /> {t('yogaStudio.saveToMaking')}
                 </button>
               </footer>
             </div>
@@ -851,24 +796,23 @@ export function YogaStudioPage() {
               <div className="pbv2-making-toolbar yoga-making-toolbar">
                 <button type="button" className="pbv2-primary" disabled={generatingAll || pages.length < 2} onClick={generateAllImages}>
                   {generatingAll ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
-                  {generatingAll ? '正在批量生成…' : '重新生成全部图片'}
+                  {generatingAll ? t('yogaStudio.batchGenerating') : t('yogaStudio.regenAll')}
                 </button>
-                <button type="button" className="pbv2-ghost" onClick={() => { setPresentIndex(0); setShowPresent(true); }} disabled={!pages.length}>
-                  🖥️ 授课模式
+                <button type="button" className="pbv2-ghost" onClick={() => { if (!openYogaTeaching(pages, workTitle || t('yogaStudio.teachTitleFallback'))) setMessage(t('yogaStudio.noPlayablePages')); }} disabled={!pages.length}>
+                  🖥️ {t('common.teachMode')}
                 </button>
-                <button type="button" className="pbv2-ghost" onClick={() => setStep(2)}>返回页面设计</button>
+                <button type="button" className="pbv2-ghost" onClick={() => setStep(2)}>{t('yogaStudio.backToDesign')}</button>
               </div>
               <div className="pbv2-page-list">
                 {pages.map((page, index) => (
                   <ProductionCard key={page.id} page={page} index={index} onPageChange={updateMadePage} onGenerateOne={generateOneImage} />
                 ))}
               </div>
-              <p className="yoga-making-hint">插图说明：动作页的角色会清楚示范对应瑜伽体式的身体动作，图内不带任何文字；英文字幕在授课模式下叠加显示。对某页不满意时，直接修改该页的「瑜伽动作」「画面描述」或「英文字幕」（自动保存），再点「生成或调整」即按新内容重绘。批量生成约需 1-3 分钟。</p>
+              <p className="yoga-making-hint">{t('yogaStudio.makingHint')}</p>
             </div>
           )}
         </section>
       </div>
-      {presentOverlay}
     </main>
   );
 }

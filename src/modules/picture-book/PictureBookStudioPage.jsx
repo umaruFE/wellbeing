@@ -29,6 +29,7 @@ import apiService from '../../services/api';
 import uploadService from '../../services/uploadService';
 import { getPromptTemplate } from '../../services/promptLibrary';
 import { resolveGeneratedAsset } from '../../utils/assetGeneration';
+import { openTeachingWindow } from '../../utils/teachingWindow';
 import { trackEvent } from '../../utils/usageTracker';
 import './PictureBookStudioPage.css';
 
@@ -305,8 +306,6 @@ export function PictureBookStudioPage() {
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
   const editingBookIdRef = React.useRef(null);
-  const [showPresentation, setShowPresentation] = React.useState(false);
-  const [presentPageIndex, setPresentPageIndex] = React.useState(0);
 
   // 提示词统一从后端注册表拉取（Wiki 可覆盖），本地常量仅兜底
   const [storybookPrompts, setStorybookPrompts] = React.useState({
@@ -358,24 +357,24 @@ export function PictureBookStudioPage() {
     Promise.all([apiService.getVoiceConfigs(user?.id), apiService.request('/api/audio-assets?limit=100')]).then(([voiceResult, assetResult]) => {
       const assets = [...(voiceResult.data || []), ...(assetResult.data || [])].map((item) => ({
         id: item.id,
-        name: item.name || item.title || item.voice_name || '未命名音频',
+        name: item.name || item.title || item.voice_name || t('pictureBook.untitledAudio'),
         type: item.type || item.audio_type || item.voice_type || '',
         description: item.description || item.theme || item.style || '',
         url: item.audio_url || item.audioUrl || item.url || item.file_url || item.object_url || '',
       })).filter((item) => item.url && (/bgm|music|背景音乐/i.test(item.type) || item.tags?.some?.((tag) => /bgm|music|背景音乐/i.test(tag))));
       setAudioLibrary(assets);
     }).catch(() => setAudioLibrary([]));
-  }, [user?.id]);
+  }, [t, user?.id]);
 
   React.useEffect(() => {
     apiService.request('/api/song-library').then((result) => setSongLibrary((result.data || []).map((song) => ({
       id: song.id,
       name: song.name,
-      description: song.description || song.melody_type || song.melodyType || '曲目库',
+      description: song.description || song.melody_type || song.melodyType || t('pictureBook.songLibFallback'),
       vocalUrl: song.vocal_url || song.vocalUrl || '',
       instrumentalUrl: song.instrumental_url || song.instrumentalUrl || '',
     })))).catch(() => setSongLibrary([]));
-  }, []);
+  }, [t]);
 
   const generateAiMusic = async () => {
     if (!aiMusicForm.prompt.trim() || aiMusicGenerating) return;
@@ -383,7 +382,7 @@ export function PictureBookStudioPage() {
     try {
       const response = await fetch('/api/ai/generate-audio', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token') || ''}` }, body: JSON.stringify({ prompt: aiMusicForm.prompt.trim(), count: 1, o3ics: aiMusicForm.style, duration: aiMusicForm.duration, user_id: user?.id || null, organization_id: user?.organizationId || null }) });
       const data = await response.json();
-      if (!response.ok || !data.executionId) throw new Error(data.error || '生成任务创建失败');
+      if (!response.ok || !data.executionId) throw new Error(data.error || t('pictureBook.aiTaskCreateFailed'));
       for (let attempt = 0; attempt < 60; attempt += 1) {
         await new Promise((resolve) => window.setTimeout(resolve, 3000));
         const statusResponse = await fetch(`/api/ai/generate-audio?executionId=${encodeURIComponent(data.executionId)}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token') || ''}` } });
@@ -397,10 +396,10 @@ export function PictureBookStudioPage() {
           setAudioLibrary((current) => [savedMusic, ...current.filter((item) => item.id !== savedMusic.id)]);
           return;
         }
-        if (status.status === 'error') throw new Error('音乐生成失败，请重试');
+        if (status.status === 'error') throw new Error(t('pictureBook.aiMusicFailed'));
       }
-      throw new Error('音乐生成超时，请稍后重试');
-    } catch (error) { setAiMusicError(error instanceof Error ? error.message : '音乐生成失败'); }
+      throw new Error(t('pictureBook.aiMusicTimeout'));
+    } catch (error) { setAiMusicError(error instanceof Error ? error.message : t('pictureBook.aiMusicFailed')); }
     finally { setAiMusicGenerating(false); }
   };
 
@@ -409,21 +408,6 @@ export function PictureBookStudioPage() {
     window.addEventListener('wellbeing:nav-same-route', handler);
     return () => window.removeEventListener('wellbeing:nav-same-route', handler);
   }, []);
-
-  React.useEffect(() => {
-    if (!showPresentation) return undefined;
-    const handler = (event) => {
-      if (event.key === 'ArrowLeft') {
-        setPresentPageIndex((index) => Math.max(0, index - 1));
-      } else if (event.key === 'ArrowRight') {
-        setPresentPageIndex((index) => Math.min(pages.length - 1, index + 1));
-      } else if (event.key === 'Escape') {
-        setShowPresentation(false);
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [showPresentation, pages.length]);
 
   const deleteBook = async (bookId) => {
     if (!window.confirm(t('pictureBook.confirmDelete'))) return;
@@ -516,7 +500,7 @@ export function PictureBookStudioPage() {
       return true;
     } catch (error) {
       console.error('save picture book background music failed:', error);
-      setMessage('背景音乐保存失败，请重试');
+      setMessage(t('pictureBook.musicSaveFailed'));
       return false;
     }
   };
@@ -911,10 +895,9 @@ export function PictureBookStudioPage() {
           onDelete={deleteBook}
           onPresent={(book) => {
             const data = book.book_data || {};
-            if (data.pages) setPages(data.pages); else setPages([]);
-            setBackgroundMusic(data.backgroundMusic || null);
-            setPresentPageIndex(0);
-            setShowPresentation(true);
+            if (!openTeachingWindow({ pages: data.pages || [], title: book.title || t('pictureBook.present', '授课'), backgroundMusic: data.backgroundMusic || null })) {
+              setMessage(t('pictureBook.presentEmpty', '该绘本还没有可播放的页面'));
+            }
           }}
         />
       ) : (
@@ -1005,8 +988,9 @@ export function PictureBookStudioPage() {
               onChooseMusic={() => setShowMusicPicker(true)}
               onRemoveMusic={async () => { setBackgroundMusic(null); await saveBackgroundMusic(null); }}
               onPresent={() => {
-                setPresentPageIndex(0);
-                setShowPresentation(true);
+                if (!openTeachingWindow({ pages, title: activityPlan.storyTitleEn || t('pictureBook.untitled'), backgroundMusic })) {
+                  setMessage(t('pictureBook.presentEmpty', '该绘本还没有可播放的页面'));
+                }
               }}
             />
           )}
@@ -1015,25 +999,15 @@ export function PictureBookStudioPage() {
         </>
       )}
 
-      {showPresentation && pages.length > 0 && (
-        <PresentationOverlay
-          pages={pages}
-          index={presentPageIndex}
-          onPrev={() => setPresentPageIndex((i) => Math.max(0, i - 1))}
-          onNext={() => setPresentPageIndex((i) => Math.min(pages.length - 1, i + 1))}
-          onExit={() => setShowPresentation(false)}
-          backgroundMusic={backgroundMusic}
-        />
-      )}
       {showMusicPicker && (
         <div className="pbv2-music-overlay" onClick={() => setShowMusicPicker(false)}>
           <div className="pbv2-music-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="pbv2-music-head"><div><h2>选择背景音乐</h2><p>背景音乐将在授课模式中循环播放</p></div><button type="button" onClick={() => setShowMusicPicker(false)}><X size={18} /></button></div>
+            <div className="pbv2-music-head"><div><h2>{t('pictureBook.musicPickerTitle')}</h2><p>{t('pictureBook.musicPickerHint')}</p></div><button type="button" onClick={() => setShowMusicPicker(false)}><X size={18} /></button></div>
             <audio ref={musicPreviewRef} onEnded={() => setPreviewMusicId(null)} />
-            <div className="pbv2-music-tabs"><button type="button" className={musicSourceTab === 'audio' ? 'active' : ''} onClick={() => setMusicSourceTab('audio')}>音频库</button><button type="button" className={musicSourceTab === 'song' ? 'active' : ''} onClick={() => setMusicSourceTab('song')}>曲目库</button><button type="button" className={musicSourceTab === 'ai' ? 'active' : ''} onClick={() => setMusicSourceTab('ai')}><Wand2 size={14} />AI 生成</button></div>
-            {musicSourceTab === 'audio' && <div className="pbv2-music-list">{audioLibrary.map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{audioLibrary.length === 0 && <div className="pbv2-music-empty">音频库暂无背景音乐，请先在音频库添加。</div>}</div>}
-            {musicSourceTab === 'song' && <div className="pbv2-music-list">{songLibrary.flatMap((song) => [{ ...song, id: `song-${song.id}-instrumental`, name: `${song.name}（伴奏版）`, url: song.instrumentalUrl, source: 'song' }, { ...song, id: `song-${song.id}-vocal`, name: `${song.name}（演唱版）`, url: song.vocalUrl, source: 'song' }]).filter((music) => music.url).map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{songLibrary.every((song) => !song.instrumentalUrl && !song.vocalUrl) && <div className="pbv2-music-empty">曲目库暂无可播放歌曲。</div>}</div>}
-            {musicSourceTab === 'ai' && <div className="pbv2-ai-music"><label><span>音乐描述</span><textarea value={aiMusicForm.prompt} onChange={(event) => setAiMusicForm((current) => ({ ...current, prompt: event.target.value }))} placeholder="例如：温暖、轻柔、适合儿童绘本朗读的纯音乐，不要人声" /></label><div className="pbv2-ai-music-row"><label><span>风格</span><select value={aiMusicForm.style} onChange={(event) => setAiMusicForm((current) => ({ ...current, style: event.target.value }))}><option value="calm, peaceful, warm, instrumental">温暖舒缓</option><option value="happy, cheerful, playful, instrumental">轻快童趣</option><option value="dreamy, magical, gentle, instrumental">梦幻童话</option><option value="nature, peaceful, acoustic, instrumental">自然治愈</option></select></label><label><span>时长</span><select value={aiMusicForm.duration} onChange={(event) => setAiMusicForm((current) => ({ ...current, duration: Number(event.target.value) }))}>{[15, 30, 60, 90].map((duration) => <option key={duration} value={duration}>{duration} 秒</option>)}</select></label></div><button type="button" className="pbv2-ai-generate" disabled={!aiMusicForm.prompt.trim() || aiMusicGenerating} onClick={generateAiMusic}>{aiMusicGenerating ? <Loader2 className="spin" size={15} /> : <Wand2 size={15} />}{aiMusicGenerating ? '正在生成，可能需要几分钟…' : '生成背景音乐'}</button>{aiMusicError && <p className="pbv2-ai-music-error">{aiMusicError}</p>}{aiMusicResult && <MusicPickerItem music={aiMusicResult} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} selectLabel="使用此音乐" onSelect={async () => { setBackgroundMusic(aiMusicResult); setShowMusicPicker(false); await saveBackgroundMusic(aiMusicResult); }} />}</div>}
+            <div className="pbv2-music-tabs"><button type="button" className={musicSourceTab === 'audio' ? 'active' : ''} onClick={() => setMusicSourceTab('audio')}>{t('pictureBook.tabAudioLibrary')}</button><button type="button" className={musicSourceTab === 'song' ? 'active' : ''} onClick={() => setMusicSourceTab('song')}>{t('pictureBook.tabSongLibrary')}</button><button type="button" className={musicSourceTab === 'ai' ? 'active' : ''} onClick={() => setMusicSourceTab('ai')}><Wand2 size={14} />{t('pictureBook.tabAiGenerate')}</button></div>
+            {musicSourceTab === 'audio' && <div className="pbv2-music-list">{audioLibrary.map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{audioLibrary.length === 0 && <div className="pbv2-music-empty">{t('pictureBook.audioEmptyMusic')}</div>}</div>}
+            {musicSourceTab === 'song' && <div className="pbv2-music-list">{songLibrary.flatMap((song) => [{ ...song, id: `song-${song.id}-instrumental`, name: `${song.name}${t('pictureBook.nameInstrumental')}`, url: song.instrumentalUrl, source: 'song' }, { ...song, id: `song-${song.id}-vocal`, name: `${song.name}${t('pictureBook.nameVocal')}`, url: song.vocalUrl, source: 'song' }]).filter((music) => music.url).map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{songLibrary.every((song) => !song.instrumentalUrl && !song.vocalUrl) && <div className="pbv2-music-empty">{t('pictureBook.songEmptyMusic')}</div>}</div>}
+            {musicSourceTab === 'ai' && <div className="pbv2-ai-music"><label><span>{t('pictureBook.aiDescLabel')}</span><textarea value={aiMusicForm.prompt} onChange={(event) => setAiMusicForm((current) => ({ ...current, prompt: event.target.value }))} placeholder={t('pictureBook.aiDescPlaceholder')} /></label><div className="pbv2-ai-music-row"><label><span>{t('pictureBook.aiStyleLabel')}</span><select value={aiMusicForm.style} onChange={(event) => setAiMusicForm((current) => ({ ...current, style: event.target.value }))}><option value="calm, peaceful, warm, instrumental">{t('pictureBook.styleCalm')}</option><option value="happy, cheerful, playful, instrumental">{t('pictureBook.stylePlayful')}</option><option value="dreamy, magical, gentle, instrumental">{t('pictureBook.styleDreamy')}</option><option value="nature, peaceful, acoustic, instrumental">{t('pictureBook.styleNature')}</option></select></label><label><span>{t('pictureBook.aiDurationLabel')}</span><select value={aiMusicForm.duration} onChange={(event) => setAiMusicForm((current) => ({ ...current, duration: Number(event.target.value) }))}>{[15, 30, 60, 90].map((duration) => <option key={duration} value={duration}>{t('pictureBook.durationSeconds', { n: duration })}</option>)}</select></label></div><button type="button" className="pbv2-ai-generate" disabled={!aiMusicForm.prompt.trim() || aiMusicGenerating} onClick={generateAiMusic}>{aiMusicGenerating ? <Loader2 className="spin" size={15} /> : <Wand2 size={15} />}{aiMusicGenerating ? t('pictureBook.aiGeneratingLong') : t('pictureBook.aiGenerateMusic')}</button>{aiMusicError && <p className="pbv2-ai-music-error">{aiMusicError}</p>}{aiMusicResult && <MusicPickerItem music={aiMusicResult} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} selectLabel={t('pictureBook.useThisMusic')} onSelect={async () => { setBackgroundMusic(aiMusicResult); setShowMusicPicker(false); await saveBackgroundMusic(aiMusicResult); }} />}</div>}
           </div>
         </div>
       )}
@@ -1244,14 +1218,14 @@ function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGen
           {t('pictureBook.regenerateAll')}
         </button>
         <button type="button" className="pbv2-ghost" onClick={onPresent} disabled={pages.length === 0}>
-          🖥️ 授课模式
+          🖥️ {t('common.teachMode')}
         </button>
         <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToDesign')}</button>
         <div className={`pbv2-background-music${backgroundMusic ? ' selected' : ''}`}>
           <Music2 size={17} />
-          <span title={backgroundMusic?.name}>{backgroundMusic?.name || '未选择背景音乐'}</span>
-          <button type="button" onClick={onChooseMusic}>{backgroundMusic ? '更换' : '选择音乐'}</button>
-          {backgroundMusic && <button type="button" className="pbv2-music-remove" onClick={onRemoveMusic} title="移除背景音乐"><X size={14} /></button>}
+          <span title={backgroundMusic?.name}>{backgroundMusic?.name || t('pictureBook.noMusicSelected')}</span>
+          <button type="button" onClick={onChooseMusic}>{backgroundMusic ? t('pictureBook.changeMusic') : t('pictureBook.chooseMusic')}</button>
+          {backgroundMusic && <button type="button" className="pbv2-music-remove" onClick={onRemoveMusic} title={t('pictureBook.removeMusic')}><X size={14} /></button>}
         </div>
       </div>
       <div className="pbv2-production-grid">
@@ -1384,66 +1358,9 @@ function FooterActions({ children }) {
   );
 }
 
-function MusicPickerItem({ music, backgroundMusic, previewMusicId, previewRef, setPreviewMusicId, onSelect, selectLabel = '选择' }) {
+function MusicPickerItem({ music, backgroundMusic, previewMusicId, previewRef, setPreviewMusicId, onSelect, selectLabel = '' }) {
+  const { t } = useTranslation();
   const isPreviewing = previewMusicId === music.id;
-  return <div className={`pbv2-music-item${backgroundMusic?.id === music.id ? ' selected' : ''}`}><div><strong>{music.name}</strong><span>{music.description || '背景音乐'}</span></div><button type="button" onClick={() => { const audio = previewRef.current; if (!audio) return; if (isPreviewing && !audio.paused) { audio.pause(); setPreviewMusicId(null); } else { audio.src = music.url; audio.play().then(() => setPreviewMusicId(music.id)).catch(() => setPreviewMusicId(null)); } }}>{isPreviewing ? <Pause size={15} /> : <Play size={15} />}试听</button><button type="button" className="pbv2-music-select" onClick={() => { previewRef.current?.pause(); setPreviewMusicId(null); onSelect(); }}>{selectLabel}</button></div>;
+  return <div className={`pbv2-music-item${backgroundMusic?.id === music.id ? ' selected' : ''}`}><div><strong>{music.name}</strong><span>{music.description || t('pictureBook.bgmFallback')}</span></div><button type="button" onClick={() => { const audio = previewRef.current; if (!audio) return; if (isPreviewing && !audio.paused) { audio.pause(); setPreviewMusicId(null); } else { audio.src = music.url; audio.play().then(() => setPreviewMusicId(music.id)).catch(() => setPreviewMusicId(null)); } }}>{isPreviewing ? <Pause size={15} /> : <Play size={15} />}{t('pictureBook.preview')}</button><button type="button" className="pbv2-music-select" onClick={() => { previewRef.current?.pause(); setPreviewMusicId(null); onSelect(); }}>{selectLabel || t('pictureBook.select')}</button></div>;
 }
 
-function PresentationOverlay({ pages, index, onPrev, onNext, onExit, backgroundMusic }) {
-  const bgmRef = React.useRef(null);
-  const [musicPlaying, setMusicPlaying] = React.useState(false);
-  const [musicVolume, setMusicVolume] = React.useState(0.35);
-  React.useEffect(() => {
-    if (bgmRef.current) bgmRef.current.volume = musicVolume;
-  }, [backgroundMusic?.url, musicVolume]);
-  const page = pages[index];
-  if (!page) return null;
-  const toggleMusic = async () => {
-    const audio = bgmRef.current;
-    if (!audio) return;
-    if (!audio.paused) { audio.pause(); setMusicPlaying(false); return; }
-    try { await audio.play(); setMusicPlaying(true); } catch { setMusicPlaying(false); }
-  };
-  return (
-    <div className="pbv2-presentation">
-      {backgroundMusic?.url && <audio ref={bgmRef} src={backgroundMusic.url} loop autoPlay onPlay={() => setMusicPlaying(true)} onPause={() => setMusicPlaying(false)} />}
-      {backgroundMusic?.url && <div className="pbv2-presentation-music"><button type="button" onClick={toggleMusic}>{musicPlaying ? <Pause size={17} /> : <Play size={17} />}</button><Music2 size={16} /><span>{backgroundMusic.name}</span><Volume2 size={15} /><input aria-label="背景音乐音量" type="range" min="0" max="1" step="0.05" value={musicVolume} onChange={(event) => { const value = Number(event.target.value); setMusicVolume(value); if (bgmRef.current) bgmRef.current.volume = value; }} /></div>}
-      <button type="button" className="pbv2-presentation-exit" onClick={onExit} aria-label="exit">
-        <X size={24} />
-      </button>
-      <button
-        type="button"
-        className="pbv2-presentation-nav pbv2-presentation-prev"
-        onClick={onPrev}
-        disabled={index === 0}
-        aria-label="previous"
-      >
-        <ChevronLeft size={48} />
-      </button>
-      <div className="pbv2-presentation-stage">
-        {page.imageUrl ? (
-          <img src={page.imageUrl} alt={`Page ${page.page}`} />
-        ) : (
-          <div className="pbv2-presentation-placeholder">
-            <Image size={64} />
-          </div>
-        )}
-      </div>
-      <button
-        type="button"
-        className="pbv2-presentation-nav pbv2-presentation-next"
-        onClick={onNext}
-        disabled={index === pages.length - 1}
-        aria-label="next"
-      >
-        <ChevronRight size={48} />
-      </button>
-      {page.text ? (
-        <div className="pbv2-presentation-text">{page.text}</div>
-      ) : null}
-      <div className="pbv2-presentation-counter">
-        {index + 1} / {pages.length}
-      </div>
-    </div>
-  );
-}
