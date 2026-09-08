@@ -70,3 +70,10 @@
   font-weight: 400;
   opacity: 0.65;
 }
+
+/* 第四关 Stage Star 分工编辑器（中性样式，与其他编辑器按钮一致） */
+.cw-star-role-picker{display:flex;gap:6px;flex-wrap:wrap}
+.cw-star-role-chip{border:1.5px solid #dcd8d2;border-radius:14px;padding:4px 12px;font:inherit;font-size:12px;font-weight:700;cursor:pointer;background:#fff;color:#697180;transition:all .15s}
+.cw-star-role-chip:hover{border-color:#b8b2a9;color:#4a443c}
+.cw-star-role-chip.is-active{background:#f6f1e4;border-color:#8a7a3f;color:#5c4f24}
+@media(max-width:900px){.cw-star-role-picker{grid-column:1/-1}}

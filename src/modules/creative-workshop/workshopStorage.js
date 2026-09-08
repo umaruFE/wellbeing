@@ -128,7 +128,7 @@ export const generateCreativeWorkExercises = async (id, section) => {
   return json.data;
 };
 
-// 渲染四关游戏课件（显式触发，携带音频 data URI）→ { htmlUrl, hasAudio }
+// 渲染四关游戏课件（显式触发，携带音频 data URI）→ { html, hasAudio }
 export const renderCreativeWork = async (id, audio) => {
   const response = await fetch(`/api/creative-works/${id}/render`, {
     method: 'POST',

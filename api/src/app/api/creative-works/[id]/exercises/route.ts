@@ -18,7 +18,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const numericId = Number(params.id);
     const body = await request.json().catch(() => ({}));
     const section = typeof body?.section === 'string' ? body.section : '';
-    const allowedSections = new Set(['ex1FillData', 'ex2Items', 'ex3Data', 'teachingPlans']);
+    const allowedSections = new Set(['ex1FillData', 'ex2Items', 'ex3Data', 'starRoles', 'teachingPlans']);
     if (section && !allowedSections.has(section)) {
       return NextResponse.json({ error: '不支持的生成区块' }, { status: 400 });
     }

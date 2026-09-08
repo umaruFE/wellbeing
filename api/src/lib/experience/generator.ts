@@ -63,6 +63,8 @@ export interface MusicExercises {
   ex2Items: { answer: string; words: string[] }[];
   /** 听音选词：options[correct] 为正确句；time 为正确句对应歌词行的时间段（如 "00:13–00:14"） */
   ex3Data: { question: string; options: string[]; correct: number; time?: string }[];
+  /** 第四关 Stage Star 分工：与歌词行一一对应的角色（all=齐唱/teacher=教师/student=学生/solo=独唱），游戏内可再手动改色 */
+  starRoles: string[];
   teachingPlans: Record<string, { title?: string; sections?: { title: string; content: string }[] }>;
 }
 
@@ -324,6 +326,18 @@ function normalizeMusicLyrics(lyrics: unknown): { time: string; text: string }[]
     .filter((l) => l.text);
 }
 
+const STAR_ROLES = new Set(['all', 'teacher', 'student', 'solo']);
+/** 第四关分工归一化：校验取值、对齐歌词行数（短补 all，长截断） */
+function normalizeStarRoles(roles: unknown, lyricsCount: number): string[] {
+  const list = Array.isArray(roles) ? roles : [];
+  const out: string[] = [];
+  for (let i = 0; i < lyricsCount; i++) {
+    const role = String(list[i] || '').toLowerCase().trim();
+    out.push(STAR_ROLES.has(role) ? role : 'all');
+  }
+  return out;
+}
+
 /** 渲染四关游戏课件（自包含单文件；双音频为 base64 data URI，可为空串） */
 export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music Star Quest'): string {
   let html = readTemplate('music-star-quest.html');
@@ -331,6 +345,7 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
   html = html.replace(/var ex1FillData = \[[\s\S]*?\n\];/, `var ex1FillData = ${JSON.stringify(result.ex1FillData)};`);
   html = html.replace(/var ex2Items = \[[\s\S]*?\n\];/, `var ex2Items = ${JSON.stringify(result.ex2Items)};`);
   html = html.replace(/var ex3Data = \[[\s\S]*?\n\];/, `var ex3Data = ${JSON.stringify(result.ex3Data)};`);
+  html = html.replace(/var starRoles = \[[\s\S]*?\n\];/, `var starRoles = ${JSON.stringify(normalizeStarRoles(result.starRoles, result.lyrics?.length || 0))};`);
   html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(normalizeTeachingPlans(result.teachingPlans))};`);
   html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
   const vocal = result.audio?.vocal || '';
@@ -559,6 +574,7 @@ export async function generateMusicExercises(
       correct: Number(x.correct) || 0,
       time: x.time ? String(x.time) : '',
     })),
+    starRoles: normalizeStarRoles(ex.starRoles, song.lyrics.length),
     teachingPlans: normalizeTeachingPlans(ex.teachingPlans),
   };
 }

@@ -47,7 +47,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       [JSON.stringify(nextResult), html, numericId]
     );
 
-    return NextResponse.json({ data: { htmlUrl: `/api/creative-works/${numericId}/html`, hasAudio: Boolean(nextResult.audio?.vocal || nextResult.audio?.backing) } });
+    // HTML 直接随响应返回（前端用 Blob URL 在 iframe 中播放），不再提供独立的查看/下载路由
+    return NextResponse.json({ data: { html, hasAudio: Boolean(nextResult.audio?.vocal || nextResult.audio?.backing) } });
   } catch (error) {
     console.error('[creative-works/render] failed:', error);
     return NextResponse.json({ error: (error as Error).message || '课件渲染失败，请重试' }, { status: 502 });

@@ -903,7 +903,11 @@ var ex1Done = false, ex2Done = false, ex3Done = false;
 var singLevel = 1, singLineIdx = 0;
 var singShowFull = false;
 var recordingState = 'idle', recordTimer = null, recordVersion = 'original';
+var starRoles = [
+];
+// 第四关初始分工来自生成器（与歌词行对齐），课堂Mark面板可继续手动改色
 var recordMarks = {};
+starRoles.forEach(function(role, ri) { recordMarks[ri] = { role: role || 'all' }; });
 var recordMarkSetup = false;
 var playbackTimer = null, playbackActive = false;
 

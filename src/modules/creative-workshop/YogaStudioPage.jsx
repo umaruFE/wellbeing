@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowLeft, ChevronLeft, ChevronRight, Clock, Download, Dumbbell, ExternalLink, Image as ImageIcon,
+  ArrowLeft, ChevronLeft, ChevronRight, Clock, Dumbbell, Image as ImageIcon,
   Loader2, Pencil, Plus, RefreshCw, Save, Search, Sparkles, Trash2, Wand2, X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -618,8 +618,15 @@ export function YogaStudioPage() {
     `${w.title || ''} ${w.parameters?.theme || ''} ${w.parameters?.goals || ''}`.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const openHtml = (id) => window.open(`/api/creative-works/${id}/html?token=${encodeURIComponent(localStorage.getItem('token') || '')}`, '_blank');
-  const downloadHtml = (id) => { window.location.href = `/api/creative-works/${id}/html?download=1&token=${encodeURIComponent(localStorage.getItem('token') || '')}`; };
+  // 列表卡片「授课」：直接用已保存的页面进入应用内全屏演示
+  const presentFromList = (work) => {
+    setPages(hydratePages(work.result?.pages));
+    setPresentIndex(0);
+    setShowPresent(true);
+  };
+  const presentOverlay = showPresent && pages.length > 0 ? (
+    <YogaPresentation pages={pages} index={presentIndex} setPageIndex={setPresentIndex} onExit={() => setShowPresent(false)} />
+  ) : null;
 
   // ── 列表视图 ─────────────────────────────────────────────
   if (view === 'list') {
@@ -683,19 +690,14 @@ export function YogaStudioPage() {
                         <span>{work.updatedAt ? new Date(work.updatedAt).toLocaleDateString() : ''}</span>
                       </div>
                       <div className="pbv2-book-actions">
-                        {resultPages.length > 0 && (
-                          <>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); openHtml(work.id); }}>
-                              <ExternalLink size={14} /> 打开
-                            </button>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); downloadHtml(work.id); }}>
-                              <Download size={14} /> 下载
-                            </button>
-                          </>
-                        )}
                         <button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}>
                           <Pencil size={14} /> 编辑
                         </button>
+                        {resultPages.length > 0 && (
+                          <button type="button" onClick={(e) => { e.stopPropagation(); presentFromList(work); }}>
+                            🖥️ 授课
+                          </button>
+                        )}
                         <button type="button" onClick={(e) => { e.stopPropagation(); remove(work.id); }}>
                           <Trash2 size={14} /> 删除
                         </button>
@@ -707,6 +709,7 @@ export function YogaStudioPage() {
             </div>
           )}
         </div>
+        {presentOverlay}
       </main>
     );
   }
@@ -865,9 +868,7 @@ export function YogaStudioPage() {
           )}
         </section>
       </div>
-      {showPresent && pages.length > 0 && (
-        <YogaPresentation pages={pages} index={presentIndex} setPageIndex={setPresentIndex} onExit={() => setShowPresent(false)} />
-      )}
+      {presentOverlay}
     </main>
   );
 }

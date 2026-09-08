@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowLeft, ChevronRight, Clock, Download, ExternalLink, Loader2, Music, Pencil, Plus,
+  ArrowLeft, ChevronRight, Clock, Loader2, Music, Pencil, Plus,
   RefreshCw, Save, Search, Sparkles, Trash2, Wand2, X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -24,12 +24,124 @@ const STRUCTURE_OPTIONS = ['简单重复', '主歌+副歌', '主歌+副歌+桥�
 
 const initialBasicInfo = { goals: '', theme: '', age: '', level: '', style: '', duration: '', structure: '', requirements: '' };
 const initialSong = { title: '', songMeta: {}, lyrics: [], targetPatterns: [] };
-const initialExercises = { ex1FillData: [], ex2Items: [], ex3Data: [], teachingPlans: {} };
+const initialExercises = { ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {} };
 const STAGE_TITLES = { 1: 'Lyric Hunter', 2: 'Melody Mover', 3: 'Echo Master', 4: 'Star Studio' };
+// 第四关角色（与游戏模板 recordMarks 一致）
+const STAR_ROLE_OPTIONS = [
+  { value: 'all', label: 'All 齐唱' },
+  { value: 'teacher', label: 'Teacher 教师' },
+  { value: 'student', label: 'Student 学生' },
+  { value: 'solo', label: 'Solo 独唱' },
+];
+
+// ── 歌词时间轴工具 ─────────────────────────────────────────
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const toTimeStr = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
+const toRangeStr = (start, end) => `${toTimeStr(start)}–${toTimeStr(Math.max(end, start + 1))}`;
+function parseTimeRange(time) {
+  const m = String(time || '').match(/^(\d{1,2}):(\d{2})\s*[–—-]\s*(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const toSec = (mm, ss) => Number(mm) * 60 + Number(ss);
+  const start = toSec(m[1], m[2]);
+  const end = toSec(m[3], m[4]);
+  return end > start ? { start, end } : null;
+}
+/** 解析上传的 .lrc / .txt 歌词：支持 [mm:ss.xx]行、mm:ss–mm:ss 行、纯文本行 */
+function parseLyricsFile(text) {
+  const rows = [];
+  String(text || '').split(/\r?\n/).forEach((raw) => {
+    const line = raw.trim();
+    if (!line) return;
+    const range = line.match(/^(\d{1,2}):(\d{2})\s*[–—-]\s*(\d{1,2}):(\d{2})\s+(.*)$/);
+    if (range) {
+      rows.push({ start: Number(range[1]) * 60 + Number(range[2]), end: Number(range[3]) * 60 + Number(range[4]), text: range[5].trim() });
+      return;
+    }
+    const lrcMatches = [...line.matchAll(/\[(\d{1,2}):(\d{2})(?:[.:]\d{1,3})?\]/g)];
+    if (lrcMatches.length) {
+      const lyricText = line.replace(/\[(\d{1,2}):(\d{2})(?:[.:]\d{1,3})?\]/g, '').trim();
+      if (lyricText) lrcMatches.forEach((m) => rows.push({ start: Number(m[1]) * 60 + Number(m[2]), end: 0, text: lyricText }));
+      return;
+    }
+    rows.push({ start: 0, end: 0, text: line });
+  });
+  if (!rows.length) throw new Error('未解析到任何歌词行');
+  // LRC 只有起点：终点 = 下一行起点；纯文本行：从上一行结束处起每行 3 秒顺延
+  let cursor = 0;
+  return rows.map((row, idx) => {
+    if (row.end > row.start) {
+      cursor = Math.max(cursor, row.end);
+      return { time: toRangeStr(row.start, row.end), text: row.text };
+    }
+    const nextStart = rows.slice(idx + 1).find((r) => r.start > row.start);
+    if (row.start > 0 || nextStart) {
+      const start = row.start > 0 ? row.start : cursor;
+      const end = nextStart ? Math.max(nextStart.start, start + 1) : start + 3;
+      cursor = Math.max(cursor, end);
+      return { time: toRangeStr(start, end), text: row.text };
+    }
+    const time = toRangeStr(cursor, cursor + 3);
+    cursor += 3;
+    return { time, text: row.text };
+  });
+}
+
+// ── AI 分段音频（n8n 音乐生成 → 缓存 → base64） ───────────────
+const authJsonHeaders = () => ({
+  'Content-Type': 'application/json',
+  Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
+});
+/** 生成一段歌曲音频，返回可直接嵌入课件的 mp3 data URI */
+async function generateSegmentAudio({ prompt, duration }) {
+  const submit = await fetch('/api/ai/generate-audio', {
+    method: 'POST',
+    headers: authJsonHeaders(),
+    body: JSON.stringify({ prompt, count: 1, duration: clamp(Math.round(duration) || 5, 3, 15) }),
+  });
+  if (!submit.ok) throw new Error((await submit.json().catch(() => ({}))).error || '音频任务提交失败');
+  const { executionId } = await submit.json();
+  if (!executionId) throw new Error('音频任务提交失败（缺少 executionId）');
+  let url = '';
+  for (let attempt = 0; attempt < 100 && !url; attempt++) {
+    await new Promise((r) => setTimeout(r, 3000));
+    const status = await fetch(`/api/ai/generate-audio?executionId=${executionId}`, { headers: authJsonHeaders() });
+    if (!status.ok) continue;
+    const data = await status.json();
+    if (data.status === 'error') throw new Error('音频生成失败，请重试');
+    if (data.status === 'completed' && data.results?.length) url = data.results[0].url;
+  }
+  if (!url) throw new Error('音频生成超时，请重试');
+  // OSS 地址跨域，先经后端缓存为同源地址再取字节
+  const cacheRes = await fetch('/api/media/cache', {
+    method: 'POST',
+    headers: authJsonHeaders(),
+    body: JSON.stringify({ url, type: 'audio' }),
+  });
+  const cacheJson = await cacheRes.json().catch(() => ({}));
+  const localUrl = cacheJson?.data?.url || url;
+  const blob = await (await fetch(localUrl)).blob();
+  if (blob.size > 8 * 1024 * 1024) throw new Error('生成的音频超过 8MB');
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+/** 顺次拼接 mp3 分段（mp3 帧可直接字节级连接），得到完整原唱 data URI */
+function mergeMp3DataUris(dataUris) {
+  const valid = dataUris.filter(Boolean);
+  if (!valid.length) return '';
+  const payload = valid
+    .map((uri) => String(uri).replace(/^data:audio\/[^;]+;base64,/, ''))
+    .join('');
+  return `data:audio/mpeg;base64,${payload}`;
+}
 const hasCompleteExercises = (value) => Boolean(
   value?.ex1FillData?.length
   && value?.ex2Items?.length
   && value?.ex3Data?.length
+  && value?.starRoles?.length
   && ['1', '2', '3', '4'].every((key) => value?.teachingPlans?.[key])
 );
 const htmlToPlainText = (value) => String(value || '')
@@ -84,9 +196,10 @@ const sentenceToText = (parts) => (parts || []).join('___');
 const textToParts = (text) => String(text).split('___');
 
 // ── 歌词编辑器（step 2）─────────────────────────────────────
-function LyricsEditor({ lyrics, onGenerateLine }) {
+function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
   const [keywords, setKeywords] = React.useState({});
   const [generatingIndex, setGeneratingIndex] = React.useState(null);
+  const fileRef = React.useRef(null);
   const generate = async (idx) => {
     if (generatingIndex !== null) return;
     setGeneratingIndex(idx);
@@ -96,13 +209,39 @@ function LyricsEditor({ lyrics, onGenerateLine }) {
       setGeneratingIndex(null);
     }
   };
+  const updateRow = (idx, patch) => onChange(lyrics.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
+  const handleFile = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = parseLyricsFile(String(reader.result || ''));
+        onChange(parsed);
+      } catch (err) {
+        window.alert(err.message || '歌词文件解析失败');
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+    if (fileRef.current) fileRef.current.value = '';
+  };
   return (
     <section className="pbv2-card pbv2-tone-blue">
-      <div className="pbv2-card-title">歌词时间轴（授课时按 time 与音频同步高亮）</div>
-      <p className="yoga-design-hint">时间轴保持不变。输入希望加入或调整的关键词，再单独重新生成对应歌词。</p>
+      <div className="cw-section-title">
+        <div className="pbv2-card-title">歌词时间轴（授课时按 time 与音频同步高亮）</div>
+        <button type="button" className="pbv2-ghost" onClick={() => fileRef.current?.click()}>上传歌词（.lrc / .txt）</button>
+        <input ref={fileRef} type="file" accept=".lrc,.txt,text/plain" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
+      </div>
+      <p className="yoga-design-hint">支持上传 LRC / 文本歌词（时间格式 mm:ss–mm:ss 或 [mm:ss]；无时间则自动按每行 3 秒顺延，可手动修改）。AI 逐行重新生成时保持时间不变。</p>
       {lyrics.map((row, idx) => (
         <div key={idx} className="cw-lyric-row">
-          <span className="cw-lyric-time">{row.time || '--:--'}</span>
+          <input
+            className="cw-lyric-time"
+            style={{ width: 110 }}
+            value={row.time || ''}
+            onChange={(e) => updateRow(idx, { time: e.target.value })}
+            placeholder="mm:ss–mm:ss"
+            title="该行起止时间（与音频同步高亮用）"
+          />
           <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || '尚未生成'}</span>
           <input
             className="cw-lyric-keywords"
@@ -203,6 +342,41 @@ function ListenEditor({ items, onChange, onGenerate, generating }) {
   );
 }
 
+// ── 第四关 Stage Star 分工编辑器（step 3）────────────────────
+function StarRolesEditor({ lyrics, roles, onChange, onGenerate, generating }) {
+  const roleOf = (idx) => STAR_ROLE_OPTIONS.some((r) => r.value === roles[idx]) ? roles[idx] : 'all';
+  const setRole = (idx, value) => onChange(lyrics.map((_, i) => (i === idx ? value : roleOf(i))));
+  return (
+    <section className="pbv2-card pbv2-tone-green">
+      <div className="cw-section-title">
+        <div className="pbv2-card-title">Stage Star 分工（Exercise 4，第四关按颜色分工演唱并录制）</div>
+        <AiSectionButton loading={generating} hasContent={roles.length > 0} onClick={onGenerate} />
+      </div>
+      <p className="yoga-design-hint">逐行选择演唱角色（All 齐唱 / Teacher 教师领 / Student 学生 / Solo 独唱）；此处仅作预设，课堂中第四关 Mark Part 仍可现场改色。</p>
+      {lyrics.length === 0 && <p className="yoga-design-hint">请先在第 2 步生成歌词。</p>}
+      {lyrics.map((row, idx) => (
+        <div key={idx} className="cw-lyric-row">
+          <span className="cw-lyric-time">{row.time || '--:--'}</span>
+          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || '尚未生成'}</span>
+          <span className="cw-star-role-picker">
+            {STAR_ROLE_OPTIONS.map((r) => (
+              <button
+                key={r.value}
+                type="button"
+                className={`cw-star-role-chip${roleOf(idx) === r.value ? ' is-active' : ''}`}
+                onClick={() => setRole(idx, r.value)}
+                title={r.label}
+              >
+                {r.label}
+              </button>
+            ))}
+          </span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
 function PlansEditor({ plans, onChange, onGenerate, generating }) {
   const stages = ['1', '2', '3', '4'];
   const [activeStage, setActiveStage] = React.useState('1');
@@ -284,6 +458,7 @@ export function MusicStudioPage() {
   const [song, setSong] = React.useState(initialSong);
   const [exercises, setExercises] = React.useState(initialExercises);
   const [audio, setAudio] = React.useState({});
+  const [segmentBusy, setSegmentBusy] = React.useState(null);
   const [workTitle, setWorkTitle] = React.useState('');
 
   const [songGenerating, setSongGenerating] = React.useState(false);
@@ -293,7 +468,7 @@ export function MusicStudioPage() {
   const [rendered, setRendered] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
-  const [showGame, setShowGame] = React.useState(false);
+  const [gameWorkId, setGameWorkId] = React.useState(null);
 
   const loadWorks = React.useCallback(() => {
     setListLoading(true);
@@ -316,6 +491,7 @@ export function MusicStudioPage() {
       ex1FillData: Array.isArray(r.ex1FillData) ? r.ex1FillData : [],
       ex2Items: Array.isArray(r.ex2Items) ? r.ex2Items : [],
       ex3Data: Array.isArray(r.ex3Data) ? r.ex3Data : [],
+      starRoles: Array.isArray(r.starRoles) ? r.starRoles : [],
       teachingPlans: plainTeachingPlans(r.teachingPlans),
     });
     setAudio(r.audio || {});
@@ -469,26 +645,139 @@ export function MusicStudioPage() {
   };
 
   // ── step 3：音频与课件 ────────────────────────────────────
+  const segments = Array.isArray(audio.segments) ? audio.segments : [];
+  const setSegment = (idx, dataUri) => {
+    const next = song.lyrics.map((_, i) => (i === idx ? dataUri : segments[i] || ''));
+    setAudio({ ...audio, segments: next });
+  };
+  const generateSegment = async (idx) => {
+    const row = song.lyrics[idx];
+    if (!row?.text || segmentBusy) return;
+    setSegmentBusy(idx);
+    setMessage('');
+    try {
+      const range = parseTimeRange(row.time);
+      const duration = range ? range.end - range.start : 5;
+      const style = basicInfo.style || '欢快';
+      const dataUri = await generateSegmentAudio({
+        prompt: `儿童英语教学歌曲《${song.title || 'Music Star Quest'}》的一个分段。风格：${style}，清脆童声、节奏明快。只唱这一句歌词："${row.text}"，不要添加其他歌词或念白。`,
+        duration,
+      });
+      setSegment(idx, dataUri);
+      setSaveState(`第 ${idx + 1} 段音频已生成`);
+    } catch (err) {
+      setMessage(err.message || `第 ${idx + 1} 段音频生成失败`);
+    } finally {
+      setSegmentBusy(null);
+    }
+  };
+  const generateAllSegments = async () => {
+    if (segmentBusy) return;
+    const targets = song.lyrics.map((row, idx) => ({ row, idx })).filter(({ row, idx }) => row.text && !segments[idx]);
+    if (!targets.length) { setMessage('全部分段都已生成'); return; }
+    for (let n = 0; n < targets.length; n++) {
+      const { idx } = targets[n];
+      setSegmentBusy(idx);
+      setMessage(`正在生成分段音频 ${n + 1}/${targets.length}…`);
+      await generateSegmentDuringBatch(idx);
+    }
+    setSegmentBusy(null);
+    setMessage('');
+    setSaveState('分段音频生成完成');
+  };
+  const generateSegmentDuringBatch = async (idx) => {
+    const row = song.lyrics[idx];
+    const range = parseTimeRange(row.time);
+    const style = basicInfo.style || '欢快';
+    try {
+      const dataUri = await generateSegmentAudio({
+        prompt: `儿童英语教学歌曲《${song.title || 'Music Star Quest'}》的一个分段。风格：${style}，清脆童声、节奏明快。只唱这一句歌词："${row.text}"，不要添加其他歌词或念白。`,
+        duration: range ? range.end - range.start : 5,
+      });
+      setSegment(idx, dataUri);
+    } catch (err) {
+      console.error(`分段 ${idx + 1} 生成失败:`, err);
+      setMessage(`第 ${idx + 1} 段生成失败：${err.message || '未知错误'}，已跳过`);
+    }
+  };
+  const mergeSegmentsToVocal = async () => {
+    const merged = mergeMp3DataUris(song.lyrics.map((_, i) => segments[i]));
+    if (!merged) { setMessage('还没有可合并的分段音频'); return; }
+    await persist({ audio: { ...audio, vocal: merged, vocalName: `AI 分段合并（${segments.filter(Boolean).length} 段）` } });
+    setAudio((current) => ({ ...current, vocal: merged, vocalName: `AI 分段合并（${segments.filter(Boolean).length} 段）` }));
+    setSaveState('分段已合并为原唱');
+  };
+
+  // 进入音频与课件步 / 音频发生变化后，自动（重新）渲染课件，无需手动点按钮
+  const lastRenderedAudioRef = React.useRef('');
+  const renderTimerRef = React.useRef(null);
+  React.useEffect(() => {
+    if (step !== 3) return;
+    if (JSON.stringify(audio) === lastRenderedAudioRef.current) return;
+    if (renderTimerRef.current) clearTimeout(renderTimerRef.current);
+    renderTimerRef.current = setTimeout(() => { buildCourseware(); }, 800);
+    return () => { if (renderTimerRef.current) clearTimeout(renderTimerRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, audio]);
+
   const buildCourseware = async () => {
     const id = editingIdRef.current;
     if (!id || rendering) return;
     setRendering(true);
     setMessage('');
     try {
-      await persist({ exercises, title: song.title || workTitle });
-      await renderCreativeWork(id, audio);
+      await persist({ exercises, title: song.title || workTitle, audio });
+      const data = await renderCreativeWork(id, audio);
+      applyGameHtml(data?.html);
+      lastRenderedAudioRef.current = JSON.stringify(audio);
       setRendered(true);
       setSaveState('课件已生成');
+      return data;
     } catch (err) {
       setMessage(err.message || '课件生成失败，请重试');
+      return null;
     } finally {
       setRendering(false);
     }
   };
 
-  const tokenQS = `token=${encodeURIComponent(localStorage.getItem('token') || '')}`;
-  const openHtml = (id) => window.open(`/api/creative-works/${id}/html?${tokenQS}`, '_blank');
-  const downloadHtml = (id) => { window.location.href = `/api/creative-works/${id}/html?download=1&${tokenQS}`; };
+  // 授课模式：课件 HTML 由 render 接口返回，前端转 Blob URL 在 iframe 播放（无独立查看/下载后端路由）
+  const gameHtmlUrlRef = React.useRef(null);
+  const applyGameHtml = (html) => {
+    if (gameHtmlUrlRef.current) URL.revokeObjectURL(gameHtmlUrlRef.current);
+    gameHtmlUrlRef.current = html ? URL.createObjectURL(new Blob([html], { type: 'text/html' })) : null;
+    return gameHtmlUrlRef.current;
+  };
+  React.useEffect(() => () => { if (gameHtmlUrlRef.current) URL.revokeObjectURL(gameHtmlUrlRef.current); }, []);
+
+  // 列表卡片「授课」：hasHtml 时按已存数据重渲染取回 HTML 再全屏试玩
+  const presentFromList = async (work) => {
+    if (!work.hasHtml) return;
+    setMessage('');
+    try {
+      const data = await renderCreativeWork(work.id);
+      if (!applyGameHtml(data?.html)) throw new Error('课件内容为空');
+      setGameWorkId(work.id);
+    } catch (err) {
+      setMessage(err.message || '课件加载失败，请重试');
+    }
+  };
+  const presentCurrent = async () => {
+    const id = editingIdRef.current;
+    if (!id) return;
+    // 已有 Blob（本会话渲染过）直接用；否则按已存数据重渲染
+    if (gameHtmlUrlRef.current) { setGameWorkId(id); return; }
+    const data = await renderCreativeWork(id).catch(() => null);
+    if (applyGameHtml(data?.html)) setGameWorkId(id);
+  };
+  const gameOverlay = gameWorkId ? (
+    <div className="cw-game-overlay">
+      <button type="button" className="cw-game-close" onClick={() => setGameWorkId(null)}>
+        <X size={16} /> 退出试玩
+      </button>
+      <iframe src={gameHtmlUrlRef.current || 'about:blank'} title="Music Star Quest" allow="autoplay" />
+    </div>
+  ) : null;
 
   const remove = async (id) => {
     if (!window.confirm('确认删除这份作品？')) return;
@@ -571,19 +860,14 @@ export function MusicStudioPage() {
                         <span>{work.updatedAt ? new Date(work.updatedAt).toLocaleDateString() : ''}</span>
                       </div>
                       <div className="pbv2-book-actions">
-                        {work.hasHtml && (
-                          <>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); openHtml(work.id); }}>
-                              <ExternalLink size={14} /> 打开
-                            </button>
-                            <button type="button" onClick={(e) => { e.stopPropagation(); downloadHtml(work.id); }}>
-                              <Download size={14} /> 下载
-                            </button>
-                          </>
-                        )}
                         <button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}>
                           <Pencil size={14} /> 编辑
                         </button>
+                        {work.hasHtml && (
+                          <button type="button" onClick={(e) => { e.stopPropagation(); presentFromList(work); }}>
+                            🖥️ 授课
+                          </button>
+                        )}
                         <button type="button" onClick={(e) => { e.stopPropagation(); remove(work.id); }}>
                           <Trash2 size={14} /> 删除
                         </button>
@@ -595,6 +879,7 @@ export function MusicStudioPage() {
             </div>
           )}
         </div>
+        {gameOverlay}
       </main>
     );
   }
@@ -672,7 +957,7 @@ export function MusicStudioPage() {
                   <Field label="目标句型/词汇（每行一个，用于歌词高亮）" area value={(song.targetPatterns || []).join('\n')} onChange={(v) => setSong({ ...song, targetPatterns: v.split('\n').map((s) => s.trim()).filter(Boolean) })} />
                 </div>
               </section>
-              <LyricsEditor lyrics={song.lyrics} onGenerateLine={generateLyricLine} />
+              <LyricsEditor lyrics={song.lyrics} onGenerateLine={generateLyricLine} onChange={(lyrics) => setSong({ ...song, lyrics })} />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>返回基本信息</button>
                 <button type="button" className="pbv2-ghost" disabled={songGenerating} onClick={regenerateSong}>
@@ -693,6 +978,7 @@ export function MusicStudioPage() {
               <FillEditor items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => generateExerciseSection('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
               <ScrambleEditor items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => generateExerciseSection('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
               <ListenEditor items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => generateExerciseSection('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
+              <StarRolesEditor lyrics={song.lyrics} roles={exercises.starRoles} onChange={(starRoles) => setExercises({ ...exercises, starRoles })} onGenerate={() => generateExerciseSection('starRoles')} generating={sectionGenerating === 'starRoles'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>返回歌曲编辑</button>
@@ -701,7 +987,7 @@ export function MusicStudioPage() {
                   {exGenerating ? 'AI 生成中…' : 'AI 生成练习与教案'}
                 </button>
                 <button type="button" className="pbv2-primary" disabled={saving} onClick={saveExercises}>
-                  <Save size={16} /> 保存并上传音频
+                  <Save size={16} /> 保存，进入音频与课件
                 </button>
               </footer>
             </div>
@@ -710,40 +996,53 @@ export function MusicStudioPage() {
           {/* step 4 · 音频与课件 */}
           {step === 3 && (
             <div className="pbv2-step-panel">
-              <p className="yoga-design-hint">上传歌曲音频后点「生成课件」：原唱用于完整聆听/跟唱/录制，伴奏用于无原唱演唱。音频会以离线方式嵌入课件（单文件 ≤8MB）。不上传音频也可以生成课件，但涉及听音的环节将无法播放。</p>
+              <div className="pbv2-making-toolbar">
+                <button type="button" className="pbv2-ghost" onClick={() => enterStep(2)}>返回练习编辑</button>
+                <button type="button" className="pbv2-ghost" disabled={!rendered || rendering} onClick={() => presentCurrent()}>
+                  {rendering ? <Loader2 className="spin" size={16} /> : null}
+                  🖥️ 授课模式
+                </button>
+                <span className="pbv2-save-state">{rendering ? '课件生成中…' : (rendered ? '课件已就绪' : '')}</span>
+              </div>
+              <p className="yoga-design-hint">进入本步或调整音频后，课件会自动生成并更新，无需手动操作。原唱用于完整聆听/跟唱/录制，伴奏用于无原唱演唱；音频以离线方式嵌入课件（单文件 ≤8MB），不上传时涉及听音的环节将无法播放。</p>
               <div className="pbv2-form-grid two">
                 <AudioCard label="原唱（Vocal）" name={audio.vocalName} dataUri={audio.vocal} onPick={({ dataUri, name }) => setAudio({ ...audio, vocal: dataUri, vocalName: name })} onRemove={() => setAudio({ ...audio, vocal: '', vocalName: '' })} />
                 <AudioCard label="伴奏（Backing）" name={audio.backingName} dataUri={audio.backing} onPick={({ dataUri, name }) => setAudio({ ...audio, backing: dataUri, backingName: name })} onRemove={() => setAudio({ ...audio, backing: '', backingName: '' })} />
               </div>
-              <footer className="pbv2-actions">
-                <button type="button" className="pbv2-ghost" onClick={() => enterStep(2)}>返回练习编辑</button>
-                <button type="button" className="pbv2-primary" disabled={rendering} onClick={buildCourseware}>
-                  {rendering ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
-                  {rendering ? '生成中…' : (rendered ? '重新生成课件' : '生成课件')}
-                </button>
-                <button type="button" className="pbv2-ghost" disabled={!rendered} onClick={() => setShowGame(true)}>
-                  🖥️ 授课模式
-                </button>
-                <button type="button" className="pbv2-ghost" disabled={!rendered} onClick={() => openHtml(editingIdRef.current)}>
-                  <ExternalLink size={16} /> 打开课件
-                </button>
-                <button type="button" className="pbv2-ghost" disabled={!rendered} onClick={() => downloadHtml(editingIdRef.current)}>
-                  <Download size={16} /> 下载课件
-                </button>
-              </footer>
+              <section className="pbv2-card pbv2-tone-yellow">
+                <div className="cw-section-title">
+                  <div className="pbv2-card-title">AI 生成分段音频（按歌词逐段生成）</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !song.lyrics.length} onClick={generateAllSegments}>
+                      {segmentBusy === 'all' ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />} 生成分段音频
+                    </button>
+                    <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !segments.some(Boolean)} onClick={mergeSegmentsToVocal} title="把已生成的分段按顺序拼接为完整原唱（mp3 直接连接）">
+                      合并为原唱
+                    </button>
+                  </div>
+                </div>
+                <p className="yoga-design-hint">逐段生成、可单独试听与重生成；全部生成后点「合并为原唱」即可作为 Vocal 嵌入课件（也可继续上传完整音频覆盖）。伴奏暂不支持 AI 生成。</p>
+                {song.lyrics.map((row, idx) => (
+                  <div key={idx} className="cw-lyric-row">
+                    <span className="cw-lyric-time">{row.time || '--:--'}</span>
+                    <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || '尚未生成'}</span>
+                    <span style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                      {segments[idx] ? <audio controls preload="none" src={segments[idx]} style={{ height: 30 }} /> : null}
+                      <button type="button" className="pbv2-ghost cw-lyric-generate" disabled={segmentBusy !== null} onClick={() => generateSegment(idx)}>
+                        {segmentBusy === idx ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
+                        {segments[idx] ? '重新生成' : '生成'}
+                      </button>
+                      {segments[idx] ? <button type="button" className="pbv2-ghost" onClick={() => setSegment(idx, '')}><Trash2 size={14} /></button> : null}
+                    </span>
+                  </div>
+                ))}
+              </section>
             </div>
           )}
         </section>
       </div>
 
-      {showGame && (
-        <div className="cw-game-overlay">
-          <button type="button" className="cw-game-close" onClick={() => setShowGame(false)}>
-            <X size={16} /> 退出试玩
-          </button>
-          <iframe src={`/api/creative-works/${editingIdRef.current}/html?${tokenQS}`} title="Music Star Quest" allow="autoplay" />
-        </div>
-      )}
+      {gameOverlay}
     </main>
   );
 }
