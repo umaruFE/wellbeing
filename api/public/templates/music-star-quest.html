@@ -824,8 +824,10 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
   <div class="record-fs-ready" id="recordFsReview" style="display:none;">
     <div style="font-size:48px;margin-bottom:12px;">✅</div>
     <h3 style="color:#39ff14;margin-bottom:8px;">Recording Done!</h3>
-    <p style="color:rgba(255,255,255,0.5);margin-bottom:24px;font-size:14px;">Review your recording, then choose:</p>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:12px;font-size:14px;">Review your recording, then choose:</p>
+    <audio id="recordedAudio" controls style="width:min(520px,80vw);margin-bottom:16px;"></audio>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a id="recordDownload" class="btn btn-sm btn-outline" style="color:#00e5ff;border-color:rgba(0,229,255,0.4);text-decoration:none;" download="star-studio-recording.webm">⬇ Download Recording</a>
       <button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="resetRecording()">🔄 Re-record</button>
       <button class="btn btn-sm" style="background:rgba(57,255,20,0.15);color:#39ff14;border:1.5px solid rgba(57,255,20,0.4);box-shadow:0 0 20px rgba(57,255,20,0.2);" onclick="completeStage4Challenge()">🏆 Complete Challenge</button>
       <button class="btn btn-sm btn-outline" style="color:rgba(255,255,255,0.5);border-color:rgba(255,255,255,0.2);" onclick="recordFsExit()">← Back</button>
@@ -895,6 +897,27 @@ var s2Instruments = [
   {id:'woodblock',name:'Woodblock',img:'https://www.coze.cn/s/kOLs3_6hONc/'}
 ];
 
+// 制作端注入：各关难度、教师自定义动作/乐器、Echo Master 挖空词。
+var stageDifficulties = {1:'easy',2:'easy',3:'easy',4:'easy'};
+var teacherActions = [
+];
+var teacherInstruments = [
+];
+var echoBlanks = [
+];
+if (teacherActions.length) {
+  s2Actions = teacherActions.filter(Boolean).map(function(label, i) {
+    var match = String(label).trim().match(/^(\p{Extended_Pictographic}|[^A-Za-z0-9\s])\s*(.*)$/u);
+    return {id:'custom-action-'+i,emoji:match ? match[1] : '✨',name:(match && match[2]) ? match[2] : String(label)};
+  });
+}
+if (teacherInstruments.length) {
+  var instrumentImages = s2Instruments.map(function(item) { return item.img; });
+  s2Instruments = teacherInstruments.filter(Boolean).map(function(label, i) {
+    return {id:'custom-inst-'+i,name:String(label),img:instrumentImages[i % instrumentImages.length]};
+  });
+}
+
 var currentStage = 1;
 var unlockedStages = [true, false, false, false];
 var stage1Complete = false, stage2Complete = false, stage3Complete = false;
@@ -904,6 +927,7 @@ var ex1Done = false, ex2Done = false, ex3Done = false;
 var singLevel = 1, singLineIdx = 0;
 var singShowFull = false;
 var recordingState = 'idle', recordTimer = null, recordVersion = 'original';
+var mediaRecorder = null, microphoneStream = null, recordedChunks = [], recordedAudioUrl = '';
 var starRoles = [
 ];
 // 第四关初始分工来自生成器（与歌词行对齐），课堂Mark面板可继续手动改色
@@ -960,6 +984,8 @@ function showStageIntro(n) {
     {icon:'🌟',name:'Stage Star',desc:'Mark your roles and perform the full song',color:'s4',diff:3}
   ];
   var info = stageInfo[n-1];
+  var configuredDifficulty = stageDifficulties[n] || 'easy';
+  info.diff = configuredDifficulty === 'hard' ? 3 : (configuredDifficulty === 'medium' ? 2 : 1);
   var neonColors = {s1:'#00e5ff',s2:'#ffb800',s3:'#ff2d95',s4:'#39ff14'};
   var nc = neonColors[info.color];
   var diffLabels = ['','Easy','Medium','Hard'];
@@ -1030,6 +1056,8 @@ function startStage(n) {
   document.getElementById('stageTransition').classList.remove('active');
   if (!unlockedStages[n-1]) unlockStage(n);
   currentStage = n;
+  if (n === 3) singLevel = stageDifficulties[3] === 'hard' ? 3 : (stageDifficulties[3] === 'medium' ? 2 : 1);
+  if (n === 4) recordVersion = stageDifficulties[4] === 'easy' ? 'original' : 'accomp';
   renderStage();
   document.getElementById('stageView').classList.add('active');
   document.getElementById('gameMap').style.display = 'none';
@@ -1262,6 +1290,10 @@ var ex3Data = [
   { question:'Choose the sentence you hear:', options:["Where are you from?","Where are they from?","Who are you from?"], correct:0 },
   { question:'Choose the sentence you hear:', options:["China, USA, Canada, UK!","China, USA, Canada, France!","China, USA, Canada, Japan!"], correct:0 },
 ];
+var stage1QuestionCount = stageDifficulties[1] === 'hard' ? Infinity : (stageDifficulties[1] === 'medium' ? 2 : 1);
+ex1FillData = ex1FillData.slice(0, stage1QuestionCount);
+ex2Items = ex2Items.slice(0, stage1QuestionCount);
+ex3Data = ex3Data.slice(0, stage1QuestionCount);
 
 function st1RenderListen() {
   var area = document.getElementById('st1ListenArea');
@@ -1453,7 +1485,8 @@ function renderStage1(container) {
 }
 
 function renderStage2(container) {
-  if (!s2LineSlots.length) { s2LineSlots = lyrics.map(function() { return [{}, {}]; }); }
+  var initialSlots = stageDifficulties[2] === 'hard' ? 3 : (stageDifficulties[2] === 'medium' ? 2 : 1);
+  if (!s2LineSlots.length) { s2LineSlots = lyrics.map(function() { return Array.from({length:initialSlots}, function(){ return {}; }); }); }
   var h = '<div class="s2-floats"><div class="s2-float-item">🎵</div><div class="s2-float-item">🥁</div><div class="s2-float-item">🎶</div><div class="s2-float-item">✨</div><div class="s2-float-item">🎼</div><div class="s2-float-item">🎸</div><div class="s2-float-item">⭐</div><div class="s2-float-item">🎹</div><div class="s2-float-item">💫</div><div class="s2-float-item">🎵</div></div>';
   h += '<div class="s2-header"><div class="s2-level-badge">LEVEL 2</div><br><span class="s2-title-icon">🥁</span><h1>Melody Mover</h1><br><div class="s2-sub">Match actions and instruments to every line</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(2)">How to teach</button></div>';
   h += '<div class="s2-player-bar"><button class="s2-player-btn" id="s2PlayBtn" onclick="s2TogglePlay()"><svg viewBox="0 0 24 24" id="s2PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s2PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s2-player-time" id="s2CurTime">0:00</span><div class="s2-player-progress" id="s2ProgressBar" onclick="s2SeekAudio(event)"><div class="s2-player-progress-fill" id="s2ProgressFill"></div><div class="s2-player-progress-thumb" id="s2ProgressThumb"></div></div><span class="s2-player-time" id="s2DurTime">0:39</span><div class="s2-player-mode" id="s2ModeToggle"><button class="s2-active" onclick="s2SwitchMode(\'vocal\')" id="s2ModeVocal">🎤 Vocal</button><button onclick="s2SwitchMode(\'backing\')" id="s2ModeBacking">🎼 Backing</button></div><div class="s2-player-vol"><span class="s2-vol-icon" onclick="s2ToggleMute()">🔊</span><input type="range" id="s2VolSlider" min="0" max="100" value="80" oninput="s2SetVolume(this.value)"></div><div class="s2-player-speed"><button onclick="s2SetSpeed(0.5)">0.5x</button><button onclick="s2SetSpeed(0.75)">0.75x</button><button class="s2-active" onclick="s2SetSpeed(1)">1x</button><button onclick="s2SetSpeed(1.25)">1.25x</button><button onclick="s2SetSpeed(1.5)">1.5x</button></div></div>';
@@ -2109,7 +2142,7 @@ function renderStage3(container) {
     var cls = 'sing-level-btn'; if (l.n === singLevel) cls += ' active'; if (l.n < singLevel) cls += ' completed';
     h += '<button class="' + cls + '" onclick="setSingLevel(' + l.n + ')">' + l.label + '<br><small>' + l.desc + '</small></button>';
   });
-  h += '</div><div class="sing-display"><div class="sing-current-line" id="singCurrentLine">' + getMaskedText(lyrics[singLineIdx].text, singLevel) + '</div>';
+  h += '</div><div class="sing-display"><div class="sing-current-line" id="singCurrentLine">' + getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx) + '</div>';
   if (singLevel >= 2) {
     h += '<button class="btn btn-sm btn-outline" id="singShowFullBtn" onclick="toggleShowFullLyrics()" style="margin-top:8px;">👁 Show Full Lyrics</button>';
   }
@@ -2124,13 +2157,13 @@ function renderStage3(container) {
   h += '</div>'; container.innerHTML = h;
 }
 
-function getMaskedText(text, level) {
+function getMaskedText(text, level, lineIndex) {
   if (level === 1) return text;
   if (level === 2) {
-    var words = text.split(' '), mi = [];
-    if (words.length > 1) {
-      mi.push(Math.floor(Math.random() * words.length));
-    }
+    var words = text.split(' '), configured = Array.isArray(echoBlanks[lineIndex]) ? echoBlanks[lineIndex].map(function(w){return String(w).toLowerCase();}) : [];
+    var mi = [];
+    words.forEach(function(w, i) { if (configured.indexOf(w.replace(/[^a-zA-Z']/g,'').toLowerCase()) >= 0) mi.push(i); });
+    if (!mi.length && words.length > 1) mi.push(Math.floor(words.length / 2));
     return words.map(function(w, i) { return mi.indexOf(i) >= 0 ? '<span class="masked">' + '_'.repeat(w.replace(/[^a-zA-Z]/g,'').length) + w.replace(/[a-zA-Z]/g,'') + '</span>' : w; }).join(' ');
   }
   if (level === 3) {
@@ -2169,7 +2202,7 @@ function toggleShowFullLyrics() {
     el.innerHTML = lyrics[singLineIdx].text;
     if (btn) btn.textContent = '🙈 Hide Full Lyrics';
   } else {
-    el.innerHTML = getMaskedText(lyrics[singLineIdx].text, singLevel);
+    el.innerHTML = getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx);
     if (btn) btn.textContent = '👁 Show Full Lyrics';
   }
 }
@@ -2178,7 +2211,7 @@ function s3UpdateLineDisplay() {
   // Update lyric line text
   var el = document.getElementById('singCurrentLine');
   if (el) {
-    el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel);
+    el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx);
   }
   // Update progress dots
   var dots = document.querySelectorAll('.sing-progress-dot');
@@ -2306,7 +2339,24 @@ function recordFsSetVersion(v) {
   document.getElementById('recordFsVerBacking').classList.toggle('active', v === 'accomp');
 }
 
-function recordFsStartCountdown() {
+async function recordFsStartCountdown() {
+  if (!navigator.mediaDevices || !window.MediaRecorder) { showToast('⚠️ This browser does not support microphone recording'); return; }
+  try {
+    microphoneStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(microphoneStream);
+    mediaRecorder.ondataavailable = function(event) { if (event.data && event.data.size) recordedChunks.push(event.data); };
+    mediaRecorder.onstop = function() {
+      if (recordedAudioUrl) URL.revokeObjectURL(recordedAudioUrl);
+      recordedAudioUrl = URL.createObjectURL(new Blob(recordedChunks, {type:mediaRecorder.mimeType || 'audio/webm'}));
+      var player = document.getElementById('recordedAudio');
+      var download = document.getElementById('recordDownload');
+      if (player) player.src = recordedAudioUrl;
+      if (download) download.href = recordedAudioUrl;
+      if (microphoneStream) microphoneStream.getTracks().forEach(function(track){track.stop();});
+      microphoneStream = null;
+    };
+  } catch (error) { showToast('⚠️ Microphone permission is required to record'); return; }
   recordingState = 'countdown';
   document.getElementById('recordFsReady').style.display = 'none';
   document.getElementById('recordFsCountdown').style.display = 'block';
@@ -2331,6 +2381,7 @@ function recordFsStartCountdown() {
       document.getElementById('recordFsProgressFill').style.width = '0%';
       var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
       var a = document.getElementById(audioId);
+      mediaRecorder.start();
       a.currentTime = 0;
       a.volume = 0.8;
       a.play().then(function() { startRecordLyricSync(); }).catch(function() { showToast('⚠️ Demo: Audio not available'); });
@@ -2378,6 +2429,7 @@ function stopRecording() {
   if (recordSyncTimer) cancelAnimationFrame(recordSyncTimer);
   var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
   document.getElementById(audioId).pause();
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
   recordingState = 'review';
   // Stay in fullscreen, show review state
   document.getElementById('recordFsReady').style.display = 'none';
@@ -2395,6 +2447,8 @@ function recordFsExit() {
   if (recordSyncTimer) cancelAnimationFrame(recordSyncTimer);
   var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
   document.getElementById(audioId).pause();
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  if (microphoneStream) microphoneStream.getTracks().forEach(function(track){track.stop();});
   recordingState = 'idle';
   document.getElementById('recordFullscreen').classList.remove('active');
   document.getElementById('recordFsReady').style.display = 'none';
@@ -2421,6 +2475,9 @@ function resetRecording() {
   var audioId = recordVersion === 'original' ? 'audioOriginal' : 'audioAccomp';
   document.getElementById(audioId).pause();
   document.getElementById(audioId).currentTime = 0;
+  if (recordedAudioUrl) { URL.revokeObjectURL(recordedAudioUrl); recordedAudioUrl = ''; }
+  var recordedPlayer = document.getElementById('recordedAudio');
+  if (recordedPlayer) recordedPlayer.removeAttribute('src');
   recordingState = 'ready';
   // Stay in fullscreen, go back to ready state
   document.getElementById('recordFsReview').style.display = 'none';

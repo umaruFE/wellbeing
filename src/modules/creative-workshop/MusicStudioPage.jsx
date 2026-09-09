@@ -23,7 +23,15 @@ const ACCENT = '#9966d0';
 
 const initialBasicInfo = { goals: '', theme: '', age: '', level: '', style: '', duration: '', structure: '', requirements: '' };
 const initialSong = { title: '', songMeta: {}, lyrics: [], targetPatterns: [] };
-const initialExercises = { ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {} };
+const DEFAULT_ACTIONS = ['👏 Clap', '👋 Wave', '👣 Stomp', '🌀 Spin', '🚶 March', '🤏 Snap', '🫶 Heart', '➜ Point', '🕺 Twist', '🫨 Shake', '👐 Swing'];
+const DEFAULT_INSTRUMENTS = ['Bell', 'Bongo', 'Cabasa', 'Castanets', 'Djembe', 'Drum', 'Handbell', 'Hand Drum', 'Maracas', 'Sleigh Bell', 'Tambourine', 'Xylophone', 'Finger Cym.', 'Triangle', 'Woodblock'];
+const initialExercises = {
+  ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {},
+  stageDifficulties: { 1: 'easy', 2: 'easy', 3: 'easy', 4: 'easy' },
+  melodyActions: DEFAULT_ACTIONS,
+  melodyInstruments: DEFAULT_INSTRUMENTS,
+  echoBlanks: [],
+};
 const STAGE_TITLES = { 1: 'Lyric Hunter', 2: 'Melody Mover', 3: 'Echo Master', 4: 'Star Studio' };
 // 第四关角色（与游戏模板 recordMarks 一致）
 const STAR_ROLE_OPTIONS = [{ value: 'all' }, { value: 'teacher' }, { value: 'student' }, { value: 'solo' }];
@@ -191,6 +199,61 @@ function Field({ label, value, onChange, placeholder, area }) {
 
 const sentenceToText = (parts) => (parts || []).join('___');
 const textToParts = (text) => String(text).split('___');
+const fillToFullText = (item) => {
+  let blank = 0;
+  return (item?.sentence || []).map((part) => part === '' ? (item?.blanks?.[blank++] || '') : part).join('');
+};
+const lyricIndexForText = (lyrics, text) => lyrics.findIndex((row) => row.text === text);
+const uniqueWords = (text) => Array.from(new Set(String(text || '').match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) || []));
+const escapeRegExp = (text) => String(text).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const makeFillItem = (lyricText, selectedWords, previous = {}) => {
+  const wanted = selectedWords.filter(Boolean);
+  if (!wanted.length) return { ...previous, lyricText, sentence: [lyricText], blanks: [], options: [] };
+  const matcher = new RegExp(`\\b(${wanted.map(escapeRegExp).join('|')})\\b`, 'gi');
+  const blanks = [];
+  const sentence = [];
+  let lastIndex = 0;
+  lyricText.replace(matcher, (match, _group, offset) => {
+    const before = lyricText.slice(lastIndex, offset);
+    if (before) sentence.push(before);
+    sentence.push('');
+    blanks.push(match);
+    lastIndex = offset + match.length;
+    return match;
+  });
+  const after = lyricText.slice(lastIndex);
+  if (after) sentence.push(after);
+  return { ...previous, lyricText, sentence, blanks, options: Array.from(new Set([...blanks, ...(previous.options || [])])).slice(0, 6) };
+};
+
+function DifficultyEditor({ stage, value, onChange }) {
+  const { t } = useTranslation();
+  return (
+    <section className="pbv2-card pbv2-tone-blue cw-difficulty-card">
+      <div className="pbv2-card-title">{t('musicStudio.difficultyTitle')}</div>
+      <div className="cw-star-role-picker">
+        {['easy', 'medium', 'hard'].map((level) => (
+          <button key={level} type="button" className={`cw-star-role-chip${value === level ? ' is-active' : ''}`} onClick={() => onChange(level)}>
+            {t(`musicStudio.difficulty_${level}`)}
+          </button>
+        ))}
+      </div>
+      <p className="yoga-design-hint">{t('musicStudio.difficultyHint', { stage })}</p>
+    </section>
+  );
+}
+
+function LyricSelect({ lyrics, value, onChange, label }) {
+  return (
+    <label className="pbv2-field">
+      <span>{label}</span>
+      <select value={value} onChange={(event) => onChange(Number(event.target.value))}>
+        <option value={-1}>—</option>
+        {lyrics.map((row, idx) => <option key={`${idx}-${row.text}`} value={idx}>{idx + 1}. {row.text}</option>)}
+      </select>
+    </label>
+  );
+}
 
 // ── 歌词编辑器（step 2）─────────────────────────────────────
 function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
@@ -268,7 +331,7 @@ function AiSectionButton({ loading, hasContent, onClick }) {
   );
 }
 
-function FillEditor({ items, onChange, onGenerate, generating }) {
+function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
@@ -279,8 +342,19 @@ function FillEditor({ items, onChange, onGenerate, generating }) {
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head"><span>{t('musicStudio.questionN', { n: idx + 1 })}</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
           <div className="cw-exercise-grid">
-            <Field label={t('musicStudio.sentenceLabel')} value={sentenceToText(item.sentence)} onChange={(v) => update(idx, { sentence: textToParts(v) })} />
-            <Field label={t('musicStudio.answerLabel')} value={(item.blanks || []).join(', ')} onChange={(v) => update(idx, { blanks: v.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
+            <LyricSelect lyrics={lyrics} label={t('musicStudio.selectLyric')} value={lyricIndexForText(lyrics, item.lyricText || fillToFullText(item))} onChange={(li) => {
+              const text = lyrics[li]?.text || '';
+              update(idx, makeFillItem(text, [], item));
+            }} />
+            <label className="pbv2-field"><span>{t('musicStudio.selectBlankWords')}</span><div className="cw-word-picker">
+              {uniqueWords(item.lyricText || fillToFullText(item)).map((word) => {
+                const active = (item.blanks || []).some((blank) => blank.toLowerCase() === word.toLowerCase());
+                return <button key={word} type="button" className={active ? 'is-active' : ''} onClick={() => {
+                  const selected = active ? (item.blanks || []).filter((w) => w.toLowerCase() !== word.toLowerCase()) : [...(item.blanks || []), word];
+                  update(idx, makeFillItem(item.lyricText || fillToFullText(item), selected, item));
+                }}>{word}</button>;
+              })}
+            </div></label>
             <Field label={t('musicStudio.optionsLabel')} value={(item.options || []).join(', ')} onChange={(v) => update(idx, { options: v.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
             <Field label="emoji" value={item.emoji || ''} onChange={(v) => update(idx, { emoji: v })} />
           </div>
@@ -293,7 +367,7 @@ function FillEditor({ items, onChange, onGenerate, generating }) {
   );
 }
 
-function ScrambleEditor({ items, onChange, onGenerate, generating }) {
+function ScrambleEditor({ items, lyrics, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
@@ -303,7 +377,10 @@ function ScrambleEditor({ items, onChange, onGenerate, generating }) {
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head"><span>{t('musicStudio.questionN', { n: idx + 1 })}</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
-          <Field label={t('musicStudio.fullSentence')} value={item.answer} onChange={(v) => update(idx, { answer: v, words: v.trim().split(/\s+/).filter(Boolean) })} />
+          <LyricSelect lyrics={lyrics} label={t('musicStudio.selectLyric')} value={lyricIndexForText(lyrics, item.answer)} onChange={(li) => {
+            const answer = lyrics[li]?.text || '';
+            update(idx, { answer, words: answer.trim().split(/\s+/).filter(Boolean) });
+          }} />
         </div>
       ))}
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { answer: '', words: [] }])}>
@@ -313,7 +390,7 @@ function ScrambleEditor({ items, onChange, onGenerate, generating }) {
   );
 }
 
-function ListenEditor({ items, onChange, onGenerate, generating }) {
+function ListenEditor({ items, lyrics, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
@@ -332,6 +409,14 @@ function ListenEditor({ items, onChange, onGenerate, generating }) {
             <input style={{ width: 110 }} placeholder="00:13–00:14" value={item.time || ''} onChange={(e) => update(idx, { time: e.target.value })} title={t('musicStudio.timeTitleEx3')} />
             <button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button>
           </div>
+          <LyricSelect lyrics={lyrics} label={t('musicStudio.selectCorrectLyric')} value={lyricIndexForText(lyrics, item.options?.[item.correct ?? 0])} onChange={(li) => {
+            const row = lyrics[li];
+            if (!row) return;
+            const correct = item.correct ?? 0;
+            const options = [...(item.options || ['', '', ''])];
+            options[correct] = row.text;
+            update(idx, { options, time: row.time });
+          }} />
           {(item.options || []).map((opt, oi) => (
             <Field key={oi} label={t('musicStudio.optionLabel', { n: oi + 1 }) + (item.correct === oi ? t('musicStudio.correctTag') : '')} value={opt} onChange={(v) => updateOption(idx, oi, v)} />
           ))}
@@ -340,6 +425,39 @@ function ListenEditor({ items, onChange, onGenerate, generating }) {
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { question: 'Choose the sentence you hear:', options: ['', '', ''], correct: 0 }])}>
         <Plus size={16} /> {t('musicStudio.addListen')}
       </button>
+    </section>
+  );
+}
+
+function EditablePool({ title, hint, items, onChange, placeholder }) {
+  const { t } = useTranslation();
+  const update = (idx, value) => onChange(items.map((item, i) => i === idx ? value : item));
+  return (
+    <section className="pbv2-card pbv2-tone-green">
+      <div className="pbv2-card-title">{title}</div>
+      <p className="yoga-design-hint">{hint}</p>
+      <div className="cw-pool-editor">
+        {items.map((item, idx) => <div key={idx}><input value={item} onChange={(e) => update(idx, e.target.value)} /><button type="button" onClick={() => onChange(items.filter((_, i) => i !== idx))}><Trash2 size={13} /></button></div>)}
+      </div>
+      <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, ''])}><Plus size={16} /> {t('musicStudio.addItem', { item: placeholder })}</button>
+    </section>
+  );
+}
+
+function EchoBlanksEditor({ lyrics, values, onChange }) {
+  const { t } = useTranslation();
+  const selectedFor = (idx) => Array.isArray(values[idx]) ? values[idx] : [];
+  const toggle = (idx, word) => {
+    const current = selectedFor(idx);
+    const active = current.some((item) => item.toLowerCase() === word.toLowerCase());
+    const nextLine = active ? current.filter((item) => item.toLowerCase() !== word.toLowerCase()) : [...current, word];
+    onChange(lyrics.map((_, i) => i === idx ? nextLine : selectedFor(i)));
+  };
+  return (
+    <section className="pbv2-card pbv2-tone-yellow">
+      <div className="pbv2-card-title">{t('musicStudio.echoBlanksTitle')}</div>
+      <p className="yoga-design-hint">{t('musicStudio.echoBlanksHint')}</p>
+      {lyrics.map((row, idx) => <div key={idx} className="cw-echo-line"><strong>{idx + 1}. {row.text}</strong><div className="cw-word-picker">{uniqueWords(row.text).map((word) => <button key={word} type="button" className={selectedFor(idx).some((item) => item.toLowerCase() === word.toLowerCase()) ? 'is-active' : ''} onClick={() => toggle(idx, word)}>{word}</button>)}</div></div>)}
     </section>
   );
 }
@@ -504,6 +622,10 @@ export function MusicStudioPage() {
       ex3Data: Array.isArray(r.ex3Data) ? r.ex3Data : [],
       starRoles: Array.isArray(r.starRoles) ? r.starRoles : [],
       teachingPlans: plainTeachingPlans(r.teachingPlans),
+      stageDifficulties: { ...initialExercises.stageDifficulties, ...(r.stageDifficulties || {}) },
+      melodyActions: Array.isArray(r.melodyActions) ? r.melodyActions : DEFAULT_ACTIONS,
+      melodyInstruments: Array.isArray(r.melodyInstruments) ? r.melodyInstruments : DEFAULT_INSTRUMENTS,
+      echoBlanks: Array.isArray(r.echoBlanks) ? r.echoBlanks : [],
     });
     setAudio(r.audio || {});
     setRendered(Boolean(work.hasHtml));
@@ -983,6 +1105,17 @@ export function MusicStudioPage() {
                 </div>
               </section>
               <LyricsEditor lyrics={song.lyrics} onGenerateLine={generateLyricLine} onChange={(lyrics) => setSong({ ...song, lyrics })} />
+              <section className="pbv2-card pbv2-tone-yellow">
+                <div className="cw-section-title">
+                  <div className="pbv2-card-title">{t('musicStudio.aiSegTitle')}</div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !song.lyrics.length} onClick={generateAllSegments}><Sparkles size={14} /> {t('musicStudio.genSegments')}</button>
+                    <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !segments.some(Boolean)} onClick={mergeSegmentsToVocal}>{t('musicStudio.mergeBtn')}</button>
+                  </div>
+                </div>
+                <p className="yoga-design-hint">{t('musicStudio.songAudioEarlyHint')}</p>
+                {song.lyrics.map((row, idx) => <div key={idx} className="cw-lyric-row"><span className="cw-lyric-time">{row.time || '--:--'}</span><span className="cw-lyric-text cw-lyric-text-readonly">{row.text}</span><span style={{ display: 'flex', gap: 8, alignItems: 'center' }}>{segments[idx] ? <audio controls preload="none" src={segments[idx]} style={{ height: 30 }} /> : null}<button type="button" className="pbv2-ghost" disabled={segmentBusy !== null} onClick={() => generateSegment(idx)}>{segmentBusy === idx ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />} {segments[idx] ? t('musicStudio.regen') : t('musicStudio.generate')}</button></span></div>)}
+              </section>
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>{t('musicStudio.backToBasic')}</button>
                 <button type="button" className="pbv2-ghost" disabled={songGenerating} onClick={regenerateSong}>
@@ -1000,9 +1133,10 @@ export function MusicStudioPage() {
           {step === 2 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">{t('musicStudio.stage1Hint')}</p>
-              <FillEditor items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => generateExerciseSection('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
-              <ScrambleEditor items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => generateExerciseSection('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
-              <ListenEditor items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => generateExerciseSection('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
+              <DifficultyEditor stage={1} value={exercises.stageDifficulties?.[1] || 'easy'} onChange={(value) => setExercises({ ...exercises, stageDifficulties: { ...exercises.stageDifficulties, 1: value } })} />
+              <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => generateExerciseSection('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
+              <ScrambleEditor lyrics={song.lyrics} items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => generateExerciseSection('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
+              <ListenEditor lyrics={song.lyrics} items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => generateExerciseSection('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="1" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>{t('musicStudio.backToSong')}</button>
@@ -1021,10 +1155,9 @@ export function MusicStudioPage() {
           {step === 3 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">{t('musicStudio.stage2Hint')}</p>
-              <section className="pbv2-card pbv2-tone-green">
-                <div className="pbv2-card-title">{t('musicStudio.autoGenCardTitle')}</div>
-                <p>{t('musicStudio.stage2CardText')}</p>
-              </section>
+              <DifficultyEditor stage={2} value={exercises.stageDifficulties?.[2] || 'easy'} onChange={(value) => setExercises({ ...exercises, stageDifficulties: { ...exercises.stageDifficulties, 2: value } })} />
+              <EditablePool title="Actions" hint={t('musicStudio.actionsHint')} placeholder="Action" items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
+              <EditablePool title="Instruments" hint={t('musicStudio.instrumentsHint')} placeholder="Instrument" items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="2" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[1])}>{t('musicStudio.backStage1')}</button>
@@ -1039,10 +1172,8 @@ export function MusicStudioPage() {
           {step === 4 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">{t('musicStudio.stage3Hint')}</p>
-              <section className="pbv2-card pbv2-tone-yellow">
-                <div className="pbv2-card-title">{t('musicStudio.autoGenCardTitle')}</div>
-                <p>{t('musicStudio.stage3CardText')}</p>
-              </section>
+              <DifficultyEditor stage={3} value={exercises.stageDifficulties?.[3] || 'easy'} onChange={(value) => setExercises({ ...exercises, stageDifficulties: { ...exercises.stageDifficulties, 3: value } })} />
+              <EchoBlanksEditor lyrics={song.lyrics} values={exercises.echoBlanks || []} onChange={(echoBlanks) => setExercises({ ...exercises, echoBlanks })} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[2])}>{t('musicStudio.backStage2')}</button>
@@ -1057,6 +1188,7 @@ export function MusicStudioPage() {
           {step === 5 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">{t('musicStudio.stage4Hint')}</p>
+              <DifficultyEditor stage={4} value={exercises.stageDifficulties?.[4] || 'easy'} onChange={(value) => setExercises({ ...exercises, stageDifficulties: { ...exercises.stageDifficulties, 4: value } })} />
               <StarRolesEditor lyrics={song.lyrics} roles={exercises.starRoles} onChange={(starRoles) => setExercises({ ...exercises, starRoles })} onGenerate={() => generateExerciseSection('starRoles')} generating={sectionGenerating === 'starRoles'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="4" />
               <footer className="pbv2-actions">

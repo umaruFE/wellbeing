@@ -75,6 +75,15 @@
 
 /* 星光录音棚：制作步骤与授课四关对应（共 7 步），步骤条固定分两行（4 + 3） */
 .pbv2-steps.cw-steps-seven{display:flex;flex-direction:column;gap:12px}
-.cw-steps-row{display:flex;align-items:center;justify-content:center;gap:10px}
+.cw-steps-row{display:flex;width:100%;min-width:max-content;align-items:center;justify-content:center;gap:10px}
+.pbv2-steps.cw-steps-seven .cw-steps-row button{flex:0 0 180px;max-width:none}
+.pbv2-steps.cw-steps-seven .cw-steps-row button strong{overflow:visible;text-overflow:clip}
 .pbv2-steps.cw-steps-seven .cw-steps-row button:not(:last-child){margin-right:44px}
 .pbv2-steps.cw-steps-seven .cw-steps-row button:not(:last-child)::after{width:34px;min-width:34px}
+.cw-word-picker{display:flex;flex-wrap:wrap;gap:7px;padding:8px 0}
+.cw-word-picker button{border:1px solid #dcd8d2;border-radius:999px;padding:6px 11px;background:#fff;color:#697180;font:700 12px inherit;cursor:pointer}
+.cw-word-picker button.is-active{border-color:#4482e5;background:#edf5ff;color:#245fae}
+.cw-pool-editor{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:12px}
+.cw-pool-editor>div{display:flex;gap:6px}.cw-pool-editor input{min-width:0;flex:1;border:1px solid #dcd8d2;border-radius:8px;padding:9px;font:inherit}.cw-pool-editor button{border:0;background:transparent;color:#a4abb8;cursor:pointer}
+.cw-echo-line{padding:12px 0;border-bottom:1px solid #eeeae4}.cw-echo-line:last-child{border-bottom:0}.cw-echo-line>strong{display:block;color:#443d50;font-size:13px}
+.cw-difficulty-card .cw-star-role-picker{margin-top:12px}
