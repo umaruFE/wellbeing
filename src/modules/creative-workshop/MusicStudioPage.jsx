@@ -28,6 +28,7 @@ const initialExercises = {
   ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {},
   melodyActions: DEFAULT_ACTIONS,
   melodyInstruments: DEFAULT_INSTRUMENTS,
+  echoData: { intermediate: [], challenge: [] },
 };
 const STAGE_TITLES = { 1: 'Lyric Hunter', 2: 'Melody Mover', 3: 'Echo Master', 4: 'Star Studio' };
 // 第四关角色（与游戏模板 recordMarks 一致）
@@ -422,22 +423,29 @@ function EditablePool({ title, hint, items, onChange, placeholder }) {
   );
 }
 
-function echoPreviewText(text, mode) {
+function echoPreviewText(text, mode, words) {
   if (mode === 'beginner') return text;
-  return String(text || '').split(' ').map((word, index) => {
+  const targets = new Set((Array.isArray(words) ? words : []).map((word) => String(word).toLowerCase()));
+  return String(text || '').split(' ').map((word) => {
     const clean = word.replace(/[^a-zA-Z']/g, '');
     const suffix = word.replace(/[a-zA-Z']/g, '');
-    if (!clean) return word;
-    if (mode === 'intermediate') return index % 2 === 1 ? `${'_'.repeat(clean.length)}${suffix}` : word;
+    if (!clean || !targets.has(clean.toLowerCase())) return word;
+    if (mode === 'intermediate') return `${'_'.repeat(clean.length)}${suffix}`;
     return `${clean[0]}${'_'.repeat(Math.max(0, clean.length - 1))}${suffix}`;
   }).join(' ');
 }
 
-function EchoMasterPreview({ lyrics, audio }) {
+function EchoMasterPreview({ lyrics, audio, echoData, onGenerate, generating }) {
   const { t } = useTranslation();
   const [mode, setMode] = React.useState('beginner');
   const failures = new Set(Array.isArray(audio?.segmentFailures) ? audio.segmentFailures : []);
   const segments = Array.isArray(audio?.segments) ? audio.segments : [];
+  const hasEchoData = Boolean((echoData?.intermediate?.length || 0) + (echoData?.challenge?.length || 0));
+  const maskedWords = (idx) => {
+    if (mode === 'intermediate') return echoData?.intermediate?.[idx] || [];
+    if (mode === 'challenge') return echoData?.challenge?.[idx] || [];
+    return [];
+  };
   const modes = [
     { value: 'beginner', label: '⭐ Beginner', detail: 'Full Lyrics' },
     { value: 'intermediate', label: '⭐⭐ Intermediate', detail: 'Partial Blanks' },
@@ -445,8 +453,12 @@ function EchoMasterPreview({ lyrics, audio }) {
   ];
   return (
     <section className="pbv2-card pbv2-tone-yellow cw-echo-preview">
-      <div className="pbv2-card-title">{t('musicStudio.echoPreviewTitle')}</div>
+      <div className="cw-section-title">
+        <div className="pbv2-card-title">{t('musicStudio.echoPreviewTitle')}</div>
+        <AiSectionButton loading={generating} hasContent={hasEchoData} onClick={onGenerate} />
+      </div>
       <p className="yoga-design-hint">{t('musicStudio.echoPreviewHint')}</p>
+      <p className="yoga-design-hint">{t('musicStudio.echoGenerateHint')}</p>
       <div className="cw-echo-modes">
         {modes.map((item) => (
           <button key={item.value} type="button" className={mode === item.value ? 'is-active' : ''} onClick={() => setMode(item.value)}>
@@ -461,7 +473,7 @@ function EchoMasterPreview({ lyrics, audio }) {
           return (
             <div key={`${idx}-${row.time}`} className={`cw-echo-preview-line${failed ? ' is-failed' : ''}`}>
               <span className="cw-lyric-time">{row.time || '--:--'}</span>
-              <strong>{echoPreviewText(row.text, mode)}</strong>
+              <strong>{echoPreviewText(row.text, mode, maskedWords(idx))}</strong>
               {failed ? <span className="cw-echo-audio-status is-failed">{t('musicStudio.segmentAudioFailed')}</span>
                 : segment ? <audio controls preload="none" src={segment} />
                   : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
@@ -609,6 +621,9 @@ export function MusicStudioPage() {
   const [rendered, setRendered] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
+  const [promptOpen, setPromptOpen] = React.useState(false);
+  const [promptText, setPromptText] = React.useState('');
+  const promptActionRef = React.useRef(null);
 
   const loadWorks = React.useCallback(() => {
     setListLoading(true);
@@ -635,6 +650,10 @@ export function MusicStudioPage() {
       teachingPlans: plainTeachingPlans(r.teachingPlans),
       melodyActions: Array.isArray(r.melodyActions) ? r.melodyActions : DEFAULT_ACTIONS,
       melodyInstruments: Array.isArray(r.melodyInstruments) ? r.melodyInstruments : DEFAULT_INSTRUMENTS,
+      echoData: r.echoData ? {
+        intermediate: Array.isArray(r.echoData.intermediate) ? r.echoData.intermediate : [],
+        challenge: Array.isArray(r.echoData.challenge) ? r.echoData.challenge : [],
+      } : { intermediate: [], challenge: [] },
     });
     setAudio(r.audio || {});
     setRendered(Boolean(work.hasHtml));
@@ -710,14 +729,14 @@ export function MusicStudioPage() {
   };
 
   // ── step 1：歌曲编辑 ──────────────────────────────────────
-  const regenerateSong = async () => {
+  const regenerateSong = async (adjustment) => {
     const id = editingIdRef.current;
     if (!id || songGenerating) return;
     setSongGenerating(true);
     setMessage('');
     try {
       await updateCreativeWork(id, { parameters: basicInfo });
-      const data = await generateCreativeWorkSong(id);
+      const data = await generateCreativeWorkSong(id, adjustment);
       const nextSong = { title: data.title || '', songMeta: data.song?.songMeta || {}, lyrics: data.song?.lyrics || [], targetPatterns: data.song?.targetPatterns || [] };
       setSong(nextSong);
       if (data.title) setWorkTitle(data.title);
@@ -768,14 +787,14 @@ export function MusicStudioPage() {
     }
   };
 
-  const generateExerciseSection = async (section) => {
+  const generateExerciseSection = async (section, adjustment) => {
     const id = editingIdRef.current;
     if (!id || sectionGenerating || exGenerating) return;
     setSectionGenerating(section);
     setMessage('');
     try {
       await persist({ song, title: song.title || workTitle });
-      const data = await generateCreativeWorkExercises(id, section);
+      const data = await generateCreativeWorkExercises(id, section, adjustment);
       setExercises((current) => ({ ...current, ...data }));
       setSaveState(t('musicStudio.sectionSaved'));
     } catch (err) {
@@ -784,6 +803,21 @@ export function MusicStudioPage() {
       setSectionGenerating('');
     }
   };
+
+  const openAdjustPrompt = (action) => {
+    promptActionRef.current = action;
+    setPromptText('');
+    setPromptOpen(true);
+  };
+  const confirmAdjustPrompt = async () => {
+    const action = promptActionRef.current;
+    promptActionRef.current = null;
+    setPromptOpen(false);
+    if (!action) return;
+    await action(promptText.trim());
+  };
+  const requestSongRegen = () => openAdjustPrompt(regenerateSong);
+  const requestSectionRegen = (section) => openAdjustPrompt((adjustment) => generateExerciseSection(section, adjustment));
 
   const saveExercises = async (nextStep) => {
     await persist({ exercises });
@@ -1136,7 +1170,7 @@ export function MusicStudioPage() {
               </section>
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>{t('musicStudio.backToBasic')}</button>
-                <button type="button" className="pbv2-ghost" disabled={songGenerating} onClick={regenerateSong}>
+                <button type="button" className="pbv2-ghost" disabled={songGenerating} onClick={requestSongRegen}>
                   {songGenerating ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
                   {songGenerating ? t('musicStudio.aiGenerating') : t('musicStudio.aiRegenSong')}
                 </button>
@@ -1151,10 +1185,10 @@ export function MusicStudioPage() {
           {step === 2 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">{t('musicStudio.stage1Hint')}</p>
-              <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => generateExerciseSection('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
-              <ScrambleEditor lyrics={song.lyrics} items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => generateExerciseSection('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
-              <ListenEditor lyrics={song.lyrics} items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => generateExerciseSection('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
-              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="1" />
+              <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => requestSectionRegen('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
+              <ScrambleEditor lyrics={song.lyrics} items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => requestSectionRegen('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
+              <ListenEditor lyrics={song.lyrics} items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => requestSectionRegen('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="1" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>{t('musicStudio.backToSong')}</button>
                 <button type="button" className="pbv2-ghost" disabled={exGenerating} onClick={generateExercises}>
@@ -1174,7 +1208,7 @@ export function MusicStudioPage() {
               <p className="yoga-design-hint">{t('musicStudio.stage2Hint')}</p>
               <EditablePool title="Actions" hint={t('musicStudio.actionsHint')} placeholder="Action" items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
               <EditablePool title="Instruments" hint={t('musicStudio.instrumentsHint')} placeholder="Instrument" items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
-              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="2" />
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="2" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[1])}>{t('musicStudio.backStage1')}</button>
                 <button type="button" className="pbv2-primary" disabled={saving} onClick={() => saveExercises(STAGE_STEPS[3])}>
@@ -1188,8 +1222,8 @@ export function MusicStudioPage() {
           {step === 4 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">{t('musicStudio.stage3Hint')}</p>
-              <EchoMasterPreview lyrics={song.lyrics} audio={audio} />
-              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
+              <EchoMasterPreview lyrics={song.lyrics} audio={audio} echoData={exercises.echoData} onGenerate={() => requestSectionRegen('echoData')} generating={sectionGenerating === 'echoData'} />
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[2])}>{t('musicStudio.backStage2')}</button>
                 <button type="button" className="pbv2-primary" disabled={saving} onClick={() => saveExercises(STAGE_STEPS[4])}>
@@ -1210,8 +1244,8 @@ export function MusicStudioPage() {
                 <span className="pbv2-save-state">{rendering ? t('musicStudio.rendering') : (rendered ? t('musicStudio.renderedReady') : '')}</span>
               </div>
               <p className="yoga-design-hint">{t('musicStudio.stage4Hint')}</p>
-              <StarRolesEditor lyrics={song.lyrics} roles={exercises.starRoles} onChange={(starRoles) => setExercises({ ...exercises, starRoles })} onGenerate={() => generateExerciseSection('starRoles')} generating={sectionGenerating === 'starRoles'} />
-              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="4" />
+              <StarRolesEditor lyrics={song.lyrics} roles={exercises.starRoles} onChange={(starRoles) => setExercises({ ...exercises, starRoles })} onGenerate={() => requestSectionRegen('starRoles')} generating={sectionGenerating === 'starRoles'} />
+              <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="4" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[3])}>{t('musicStudio.backStage3')}</button>
                 <button type="button" className="pbv2-primary" disabled={saving || rendering} onClick={buildCourseware}>
@@ -1222,6 +1256,24 @@ export function MusicStudioPage() {
           )}
         </section>
       </div>
+
+      {promptOpen && (
+        <div className="cw-dialog-backdrop" onClick={() => setPromptOpen(false)}>
+          <div className="cw-dialog" onClick={(e) => e.stopPropagation()}>
+            <button type="button" className="cw-icon-button cw-dialog-close" onClick={() => setPromptOpen(false)}><X size={16} /></button>
+            <h2>{t('musicStudio.adjustPromptTitle')}</h2>
+            <p className="cw-dialog-intro">{t('musicStudio.adjustPromptDescription')}</p>
+            <label>
+              {t('musicStudio.adjustPromptLabel')}
+              <textarea value={promptText} onChange={(e) => setPromptText(e.target.value)} placeholder={t('musicStudio.adjustPromptPlaceholder')} autoFocus />
+            </label>
+            <div className="cw-dialog-actions">
+              <button type="button" className="cw-secondary-button" onClick={() => setPromptOpen(false)}>{t('musicStudio.cancel')}</button>
+              <button type="button" className="cw-primary-button" onClick={confirmAdjustPrompt}>{t('musicStudio.confirmGenerate')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -18,7 +18,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const numericId = Number(params.id);
     const body = await request.json().catch(() => ({}));
     const section = typeof body?.section === 'string' ? body.section : '';
-    const allowedSections = new Set(['ex1FillData', 'ex2Items', 'ex3Data', 'starRoles', 'teachingPlans']);
+    const adjustment = typeof body?.adjustment === 'string' ? body.adjustment.trim().slice(0, 500) : '';
+    const allowedSections = new Set(['ex1FillData', 'ex2Items', 'ex3Data', 'starRoles', 'teachingPlans', 'echoData']);
     if (section && !allowedSections.has(section)) {
       return NextResponse.json({ error: '不支持的生成区块' }, { status: 400 });
     }
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       title: existing.title || work.title,
       lyrics,
       targetPatterns: Array.isArray(existing.targetPatterns) ? existing.targetPatterns : [],
-    });
+    }, adjustment);
 
     const generated = section
       ? { [section]: exercises[section as keyof typeof exercises] }

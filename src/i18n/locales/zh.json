@@ -1754,7 +1754,14 @@
     "genSegments": "生成分段音频",
     "mergeTitle": "把已生成的分段按顺序拼接为完整原唱（mp3 直接连接）",
     "mergeBtn": "合并为原唱",
-    "segHint": "逐段生成、可单独试听与重生成；全部生成后点「合并为原唱」即可作为 Vocal 嵌入课件（也可继续上传完整音频覆盖）。伴奏暂不支持 AI 生成。"
+    "segHint": "逐段生成、可单独试听与重生成；全部生成后点「合并为原唱」即可作为 Vocal 嵌入课件（也可继续上传完整音频覆盖）。伴奏暂不支持 AI 生成。",
+    "echoGenerateHint": "点击「AI 生成」让 AI 根据目标语言点自动设计 Intermediate 挖空与 Challenge 首字母提示；生成后可重新生成并输入提示词调整挖空方向。",
+    "adjustPromptTitle": "输入提示词调整生成方向",
+    "adjustPromptDescription": "可选：描述你希望 AI 调整的方向，留空则按默认方向生成。",
+    "adjustPromptLabel": "提示词",
+    "adjustPromptPlaceholder": "例如：挖空更聚焦目标句型、歌词更押韵、加入动物主题词汇…",
+    "confirmGenerate": "确认生成",
+    "cancel": "取消"
   },
   "yogaStudio": {
     "moduleName": "互动式情境瑜伽",

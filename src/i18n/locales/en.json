@@ -1754,7 +1754,14 @@
     "genSegments": "Generate Segment Audio",
     "mergeTitle": "Concatenate the generated segments in order into a full vocal (direct mp3 join)",
     "mergeBtn": "Merge into Vocal",
-    "segHint": "Generate per segment with individual preview & regeneration; once all are done, \"Merge into Vocal\" embeds them as the Vocal (or upload a full file to override). Backing cannot be AI-generated yet."
+    "segHint": "Generate per segment with individual preview & regeneration; once all are done, \"Merge into Vocal\" embeds them as the Vocal (or upload a full file to override). Backing cannot be AI-generated yet.",
+    "echoGenerateHint": "Click \"AI Generate\" to let the AI design the Intermediate blanks and Challenge first-letter hints based on the target language points; you can regenerate and enter a prompt to steer the masking direction.",
+    "adjustPromptTitle": "Enter a prompt to steer generation",
+    "adjustPromptDescription": "Optional: describe the direction you want the AI to adjust; leave empty to generate with the default direction.",
+    "adjustPromptLabel": "Prompt",
+    "adjustPromptPlaceholder": "e.g. focus the blanks on target sentence patterns, make the lyrics rhyme more, add animal-themed words…",
+    "confirmGenerate": "Confirm Generation",
+    "cancel": "Cancel"
   },
   "yogaStudio": {
     "moduleName": "Interactive Contextual Yoga",

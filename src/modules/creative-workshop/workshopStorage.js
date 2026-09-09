@@ -100,29 +100,33 @@ export const generateCreativeWorkDesign = async (id) => {
 // ── 星光录音棚（Music Star Quest）──
 
 // AI 生成歌曲（歌名 + 歌词时间轴 + 目标句型）→ { title, song }
-export const generateCreativeWorkSong = async (id) => {
-  const response = await fetch(`/api/creative-works/${id}/song`, { method: 'POST', headers: authHeaders() });
+export const generateCreativeWorkSong = async (id, adjustment) => {
+  const response = await fetch(`/api/creative-works/${id}/song`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(adjustment ? { adjustment } : {}),
+  });
   const json = await parseResponse(response);
   return json.data;
 };
 
 // 根据关键词生成/重新生成单行歌词，服务端保留该行 time
-export const generateCreativeWorkLyricLine = async (id, index, keywords) => {
+export const generateCreativeWorkLyricLine = async (id, index, keywords, adjustment) => {
   const response = await fetch(`/api/creative-works/${id}/song/line`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify({ index, keywords }),
+    body: JSON.stringify({ index, keywords, adjustment }),
   });
   const json = await parseResponse(response);
   return json.data;
 };
 
 // AI 生成第一关练习 + 四关教学方案（基于已存歌词）→ exercises
-export const generateCreativeWorkExercises = async (id, section) => {
+export const generateCreativeWorkExercises = async (id, section, adjustment) => {
   const response = await fetch(`/api/creative-works/${id}/exercises`, {
     method: 'POST',
     headers: authHeaders(),
-    body: JSON.stringify(section ? { section } : {}),
+    body: JSON.stringify({ section, adjustment }),
   });
   const json = await parseResponse(response);
   return json.data;

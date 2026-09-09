@@ -929,6 +929,10 @@ var recordingState = 'idle', recordTimer = null, recordVersion = 'original';
 var mediaRecorder = null, microphoneStream = null, recordedChunks = [], recordedAudioUrl = '';
 var starRoles = [
 ];
+var echoData = {
+  intermediate: [],
+  challenge: []
+};
 // 第四关初始分工来自生成器（与歌词行对齐），课堂Mark面板可继续手动改色
 var recordMarks = {};
 starRoles.forEach(function(role, ri) { recordMarks[ri] = { role: role || 'all' }; });
@@ -2136,7 +2140,7 @@ function renderStage3(container) {
     var cls = 'sing-level-btn'; if (l.n === singLevel) cls += ' active'; if (l.n < singLevel) cls += ' completed';
     h += '<button class="' + cls + '" onclick="setSingLevel(' + l.n + ')">' + l.label + '<br><small>' + l.desc + '</small></button>';
   });
-  h += '</div><div class="sing-display"><div class="sing-current-line" id="singCurrentLine">' + getMaskedText(lyrics[singLineIdx].text, singLevel) + '</div>';
+  h += '</div><div class="sing-display"><div class="sing-current-line" id="singCurrentLine">' + getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx) + '</div>';
   if (singLevel >= 2) h += '<button class="btn btn-sm btn-outline" id="singShowFullBtn" onclick="toggleShowFullLyrics()" style="margin-top:8px;">👁 Show Full Lyrics</button>';
   var currentAudioFailed = lineAudioFailures.indexOf(singLineIdx) >= 0;
   if (currentAudioFailed) h += '<div class="sing-audio-error" id="singAudioStatus">⚠️ This line\'s audio generation failed</div>';
@@ -2151,21 +2155,19 @@ function renderStage3(container) {
   h += '</div>'; container.innerHTML = h;
 }
 
-function getMaskedText(text, level) {
+function getMaskedText(text, level, lineIdx) {
   if (level === 1) return text;
-  var words = text.split(' ');
-  if (level === 2) {
-    return words.map(function(word, index) {
-      var clean = word.replace(/[^a-zA-Z']/g, '');
-      return clean.length >= 2 && index % 2 === 1
-        ? '<span class="masked">' + '_'.repeat(clean.length) + word.replace(/[a-zA-Z']/g, '') + '</span>'
-        : word;
-    }).join(' ');
-  }
-  return words.map(function(word) {
+  var levelData = level === 2 ? echoData.intermediate : echoData.challenge;
+  var row = (levelData && levelData[lineIdx]) || [];
+  var targets = row.map(function(w) { return String(w).toLowerCase(); });
+  return text.split(' ').map(function(word) {
     var clean = word.replace(/[^a-zA-Z']/g, '');
-    if (!clean) return word;
-    return '<span class="letter-hint">' + clean[0] + '</span>' + '_'.repeat(Math.max(0, clean.length - 1)) + word.replace(/[a-zA-Z']/g, '');
+    var suffix = word.replace(/[a-zA-Z']/g, '');
+    if (!clean || targets.indexOf(clean.toLowerCase()) < 0) return word;
+    if (level === 2) {
+      return '<span class="masked">' + '_'.repeat(clean.length) + suffix + '</span>';
+    }
+    return '<span class="letter-hint">' + clean[0] + '</span>' + '_'.repeat(Math.max(0, clean.length - 1)) + suffix;
   }).join(' ');
 }
 
@@ -2173,7 +2175,7 @@ function toggleShowFullLyrics() {
   singShowFull = !singShowFull;
   var el = document.getElementById('singCurrentLine');
   var btn = document.getElementById('singShowFullBtn');
-  if (el) el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel);
+  if (el) el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx);
   if (btn) btn.textContent = singShowFull ? '🙈 Hide Full Lyrics' : '👁 Show Full Lyrics';
 }
 
@@ -2181,7 +2183,7 @@ function s3UpdateLineDisplay() {
   // Update lyric line text
   var el = document.getElementById('singCurrentLine');
   if (el) {
-    el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel);
+    el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx);
   }
   // Update progress dots
   var dots = document.querySelectorAll('.sing-progress-dot');
