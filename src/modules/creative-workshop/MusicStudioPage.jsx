@@ -422,6 +422,57 @@ function EditablePool({ title, hint, items, onChange, placeholder }) {
   );
 }
 
+function echoPreviewText(text, mode) {
+  if (mode === 'beginner') return text;
+  return String(text || '').split(' ').map((word, index) => {
+    const clean = word.replace(/[^a-zA-Z']/g, '');
+    const suffix = word.replace(/[a-zA-Z']/g, '');
+    if (!clean) return word;
+    if (mode === 'intermediate') return index % 2 === 1 ? `${'_'.repeat(clean.length)}${suffix}` : word;
+    return `${clean[0]}${'_'.repeat(Math.max(0, clean.length - 1))}${suffix}`;
+  }).join(' ');
+}
+
+function EchoMasterPreview({ lyrics, audio }) {
+  const { t } = useTranslation();
+  const [mode, setMode] = React.useState('beginner');
+  const failures = new Set(Array.isArray(audio?.segmentFailures) ? audio.segmentFailures : []);
+  const segments = Array.isArray(audio?.segments) ? audio.segments : [];
+  const modes = [
+    { value: 'beginner', label: '⭐ Beginner', detail: 'Full Lyrics' },
+    { value: 'intermediate', label: '⭐⭐ Intermediate', detail: 'Partial Blanks' },
+    { value: 'challenge', label: '⭐⭐⭐ Challenge', detail: 'First Letter Only' },
+  ];
+  return (
+    <section className="pbv2-card pbv2-tone-yellow cw-echo-preview">
+      <div className="pbv2-card-title">{t('musicStudio.echoPreviewTitle')}</div>
+      <p className="yoga-design-hint">{t('musicStudio.echoPreviewHint')}</p>
+      <div className="cw-echo-modes">
+        {modes.map((item) => (
+          <button key={item.value} type="button" className={mode === item.value ? 'is-active' : ''} onClick={() => setMode(item.value)}>
+            <strong>{item.label}</strong><small>{item.detail}</small>
+          </button>
+        ))}
+      </div>
+      <div className="cw-echo-preview-lines">
+        {lyrics.map((row, idx) => {
+          const failed = failures.has(idx);
+          const segment = segments[idx];
+          return (
+            <div key={`${idx}-${row.time}`} className={`cw-echo-preview-line${failed ? ' is-failed' : ''}`}>
+              <span className="cw-lyric-time">{row.time || '--:--'}</span>
+              <strong>{echoPreviewText(row.text, mode)}</strong>
+              {failed ? <span className="cw-echo-audio-status is-failed">{t('musicStudio.segmentAudioFailed')}</span>
+                : segment ? <audio controls preload="none" src={segment} />
+                  : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 // ── 第四关 Stage Star 分工编辑器（step 3）────────────────────
 function StarRolesEditor({ lyrics, roles, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
@@ -766,7 +817,15 @@ export function MusicStudioPage() {
         }
       }
       if (failed.length) {
-        setAudio((current) => ({ ...current, segments: nextSegments }));
+        const partialAudio = {
+          ...audio,
+          vocal: '',
+          vocalName: '',
+          segments: nextSegments,
+          segmentFailures: failed.map((lineNumber) => lineNumber - 1),
+        };
+        setAudio(partialAudio);
+        await persist({ audio: partialAudio, song: activeSong, title: activeTitle });
         throw new Error(t('musicStudio.fullSongPartialFail', { lines: failed.join(', ') }));
       }
       const merged = mergeMp3DataUris(nextSegments);
@@ -779,7 +838,7 @@ export function MusicStudioPage() {
         duration: backingDuration,
         maxDuration: 120,
       });
-      const nextAudio = { ...audio, segments: nextSegments, vocal: merged, vocalName: t('musicStudio.aiFullSongName'), backing, backingName: t('musicStudio.aiBackingName') };
+      const nextAudio = { ...audio, segments: nextSegments, segmentFailures: [], vocal: merged, vocalName: t('musicStudio.aiFullSongName'), backing, backingName: t('musicStudio.aiBackingName') };
       setAudio(nextAudio);
       await persist({ audio: nextAudio, song: activeSong, title: activeTitle });
       setMessage('');
@@ -1129,6 +1188,7 @@ export function MusicStudioPage() {
           {step === 4 && (
             <div className="pbv2-step-panel">
               <p className="yoga-design-hint">{t('musicStudio.stage3Hint')}</p>
+              <EchoMasterPreview lyrics={song.lyrics} audio={audio} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => generateExerciseSection('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[2])}>{t('musicStudio.backStage2')}</button>

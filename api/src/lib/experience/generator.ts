@@ -72,7 +72,14 @@ export interface MusicExercises {
 
 export interface MusicResult extends MusicSong, MusicExercises {
   /** 双音频 data URI（base64，体积大，仅在显式操作时写入） */
-  audio?: { vocal?: string; backing?: string; vocalName?: string; backingName?: string };
+  audio?: {
+    vocal?: string;
+    backing?: string;
+    vocalName?: string;
+    backingName?: string;
+    segments?: string[];
+    segmentFailures?: number[];
+  };
 }
 
 async function callLLM(system: string, user: string): Promise<string> {
@@ -344,6 +351,8 @@ function normalizeStarRoles(roles: unknown, lyricsCount: number): string[] {
 export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music Star Quest'): string {
   let html = readTemplate('music-star-quest.html');
   html = html.replace(/var lyrics = \[[\s\S]*?\n\];/, `var lyrics = ${JSON.stringify(result.lyrics)};`);
+  html = html.replace(/var lineAudioSegments = \[[\s\S]*?\n\];/, `var lineAudioSegments = ${JSON.stringify(result.audio?.segments || [])};`);
+  html = html.replace(/var lineAudioFailures = \[[\s\S]*?\n\];/, `var lineAudioFailures = ${JSON.stringify(result.audio?.segmentFailures || [])};`);
   html = html.replace(/var ex1FillData = \[[\s\S]*?\n\];/, `var ex1FillData = ${JSON.stringify(result.ex1FillData)};`);
   html = html.replace(/var ex2Items = \[[\s\S]*?\n\];/, `var ex2Items = ${JSON.stringify(result.ex2Items)};`);
   html = html.replace(/var ex3Data = \[[\s\S]*?\n\];/, `var ex3Data = ${JSON.stringify(result.ex3Data)};`);
