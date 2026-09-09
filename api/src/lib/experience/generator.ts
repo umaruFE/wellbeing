@@ -65,10 +65,8 @@ export interface MusicExercises {
   ex3Data: { question: string; options: string[]; correct: number; time?: string }[];
   /** 第四关 Stage Star 分工：与歌词行一一对应的角色（all=齐唱/teacher=教师/student=学生/solo=独唱），游戏内可再手动改色 */
   starRoles: string[];
-  stageDifficulties?: Record<string, 'easy' | 'medium' | 'hard'>;
   melodyActions?: string[];
   melodyInstruments?: string[];
-  echoBlanks?: string[][];
   teachingPlans: Record<string, { title?: string; sections?: { title: string; content: string }[] }>;
 }
 
@@ -350,10 +348,8 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
   html = html.replace(/var ex2Items = \[[\s\S]*?\n\];/, `var ex2Items = ${JSON.stringify(result.ex2Items)};`);
   html = html.replace(/var ex3Data = \[[\s\S]*?\n\];/, `var ex3Data = ${JSON.stringify(result.ex3Data)};`);
   html = html.replace(/var starRoles = \[[\s\S]*?\n\];/, `var starRoles = ${JSON.stringify(normalizeStarRoles(result.starRoles, result.lyrics?.length || 0))};`);
-  html = html.replace(/var stageDifficulties = \{[^\n]*\};/, `var stageDifficulties = ${JSON.stringify(result.stageDifficulties || { 1: 'easy', 2: 'easy', 3: 'easy', 4: 'easy' })};`);
   html = html.replace(/var teacherActions = \[[\s\S]*?\n\];/, `var teacherActions = ${JSON.stringify(result.melodyActions || [])};`);
   html = html.replace(/var teacherInstruments = \[[\s\S]*?\n\];/, `var teacherInstruments = ${JSON.stringify(result.melodyInstruments || [])};`);
-  html = html.replace(/var echoBlanks = \[[\s\S]*?\n\];/, `var echoBlanks = ${JSON.stringify(result.echoBlanks || [])};`);
   html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(normalizeTeachingPlans(result.teachingPlans))};`);
   html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
   const vocal = result.audio?.vocal || '';

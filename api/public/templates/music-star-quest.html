@@ -141,10 +141,6 @@ body::before{
 .st-content.intro .st-divider-line{width:50px;height:2px;border-radius:1px}
 .st-content.intro .st-divider-diamond{width:6px;height:6px;transform:rotate(45deg);border-radius:1px}
 .st-content.intro .st-desc{font-size:16px;color:rgba(255,255,255,0.65);margin-bottom:28px;animation:stFadeUp 0.5s ease-out 0.3s both;line-height:1.6;max-width:420px;margin-left:auto;margin-right:auto;letter-spacing:0.02em}
-.st-content.intro .st-difficulty{display:flex;gap:10px;justify-content:center;align-items:center;margin-bottom:36px;animation:stFadeUp 0.5s ease-out 0.35s both}
-.st-content.intro .st-dot{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,0.08);transition:all 0.3s;border:1px solid rgba(255,255,255,0.06)}
-.st-content.intro .st-dot.lit{border-color:transparent;box-shadow:0 0 12px currentColor,0 0 24px currentColor}
-.st-content.intro .st-diff-label{font-size:12px;font-weight:600;color:rgba(255,255,255,0.55);margin-left:8px;letter-spacing:0.08em;text-transform:uppercase}
 .st-content.intro .st-btn{animation:stFadeUp 0.5s ease-out 0.45s both;padding:18px 48px;border-radius:36px;font-size:18px;font-weight:800;border:2px solid;background:rgba(255,255,255,0.04);position:relative;overflow:hidden}
 .st-content.intro .st-btn::after{content:'';position:absolute;inset:0;border-radius:34px;opacity:0;transition:opacity 0.25s}
 .st-content.intro .st-btn:hover{transform:translateY(-3px)}
@@ -897,13 +893,10 @@ var s2Instruments = [
   {id:'woodblock',name:'Woodblock',img:'https://www.coze.cn/s/kOLs3_6hONc/'}
 ];
 
-// 制作端注入：各关难度、教师自定义动作/乐器、Echo Master 挖空词。
-var stageDifficulties = {1:'easy',2:'easy',3:'easy',4:'easy'};
+// 制作端注入：教师自定义动作与乐器。
 var teacherActions = [
 ];
 var teacherInstruments = [
-];
-var echoBlanks = [
 ];
 if (teacherActions.length) {
   s2Actions = teacherActions.filter(Boolean).map(function(label, i) {
@@ -978,18 +971,14 @@ function updateMapBuildings() {
 
 function showStageIntro(n) {
   var stageInfo = [
-    {icon:'🔍',name:'Lyric Hunter',desc:'Unlock the lyrics piece by piece',color:'s1',diff:1},
-    {icon:'🥁',name:'Melody Mover',desc:'Match actions and instruments to every line',color:'s2',diff:2},
-    {icon:'🎤',name:'Echo Master',desc:'Sing it right — from beginner to challenge mode',color:'s3',diff:3},
-    {icon:'🌟',name:'Stage Star',desc:'Mark your roles and perform the full song',color:'s4',diff:3}
+    {icon:'🔍',name:'Lyric Hunter',desc:'Unlock the lyrics piece by piece',color:'s1'},
+    {icon:'🥁',name:'Melody Mover',desc:'Match actions and instruments to every line',color:'s2'},
+    {icon:'🎤',name:'Echo Master',desc:'Sing through three lyric-display modes',color:'s3'},
+    {icon:'🌟',name:'Stage Star',desc:'Mark your roles and perform the full song',color:'s4'}
   ];
   var info = stageInfo[n-1];
-  var configuredDifficulty = stageDifficulties[n] || 'easy';
-  info.diff = configuredDifficulty === 'hard' ? 3 : (configuredDifficulty === 'medium' ? 2 : 1);
   var neonColors = {s1:'#00e5ff',s2:'#ffb800',s3:'#ff2d95',s4:'#39ff14'};
   var nc = neonColors[info.color];
-  var diffLabels = ['','Easy','Medium','Hard'];
-  var dots = ''; for (var d = 0; d < 3; d++) { dots += '<span class="st-dot' + (d < info.diff ? ' lit' : '') + '" style="' + (d < info.diff ? 'background:' + nc + ';color:' + nc : '') + '"></span>'; }
   var overlay = document.getElementById('stageTransition');
   var h = '';
   // Scan lines
@@ -1045,7 +1034,6 @@ function showStageIntro(n) {
   h += '<span class="st-divider-line" style="background:' + nc + ';"></span>';
   h += '</div>';
   h += '<div class="st-desc">' + info.desc + '</div>';
-  h += '<div class="st-difficulty">' + dots + '<span class="st-diff-label">' + diffLabels[info.diff] + '</span></div>';
   h += '<button class="st-btn" style="color:' + nc + ';border-color:' + nc + '44;box-shadow:0 0 30px ' + nc + '18,0 0 60px ' + nc + '08;" onclick="startStage(' + n + ')">▶ &nbsp;Start</button>';
   h += '</div>';
   overlay.innerHTML = h;
@@ -1056,8 +1044,8 @@ function startStage(n) {
   document.getElementById('stageTransition').classList.remove('active');
   if (!unlockedStages[n-1]) unlockStage(n);
   currentStage = n;
-  if (n === 3) singLevel = stageDifficulties[3] === 'hard' ? 3 : (stageDifficulties[3] === 'medium' ? 2 : 1);
-  if (n === 4) recordVersion = stageDifficulties[4] === 'easy' ? 'original' : 'accomp';
+  if (n === 3) { singLevel = 1; singLineIdx = 0; singShowFull = false; }
+  if (n === 4) recordVersion = 'original';
   renderStage();
   document.getElementById('stageView').classList.add('active');
   document.getElementById('gameMap').style.display = 'none';
@@ -1070,7 +1058,7 @@ function showStageClear(n) {
   var clearInfo = [
     {title:'All Lyrics Collected!',sub:'You\'ve unlocked the complete song. Stage 2 is now open!',color:'s1'},
     {title:'Actions & Instruments Matched!',sub:'You\'ve mastered the rhythm. Stage 3 is now open!',color:'s2'},
-    {title:'All Three Levels Cleared!',sub:'You\'ve conquered every difficulty. Stage 4 is now open!',color:'s3'},
+    {title:'All Three Modes Cleared!',sub:'You\'ve completed every Echo Master mode. Stage 4 is now open!',color:'s3'},
     {title:'Full Performance Recorded!',sub:'You are a true Stage Star! All challenges complete!',color:'s4'}
   ];
   var info = clearInfo[n-1];
@@ -1290,7 +1278,7 @@ var ex3Data = [
   { question:'Choose the sentence you hear:', options:["Where are you from?","Where are they from?","Who are you from?"], correct:0 },
   { question:'Choose the sentence you hear:', options:["China, USA, Canada, UK!","China, USA, Canada, France!","China, USA, Canada, Japan!"], correct:0 },
 ];
-var stage1QuestionCount = stageDifficulties[1] === 'hard' ? Infinity : (stageDifficulties[1] === 'medium' ? 2 : 1);
+var stage1QuestionCount = Infinity;
 ex1FillData = ex1FillData.slice(0, stage1QuestionCount);
 ex2Items = ex2Items.slice(0, stage1QuestionCount);
 ex3Data = ex3Data.slice(0, stage1QuestionCount);
@@ -1485,7 +1473,7 @@ function renderStage1(container) {
 }
 
 function renderStage2(container) {
-  var initialSlots = stageDifficulties[2] === 'hard' ? 3 : (stageDifficulties[2] === 'medium' ? 2 : 1);
+  var initialSlots = 1;
   if (!s2LineSlots.length) { s2LineSlots = lyrics.map(function() { return Array.from({length:initialSlots}, function(){ return {}; }); }); }
   var h = '<div class="s2-floats"><div class="s2-float-item">🎵</div><div class="s2-float-item">🥁</div><div class="s2-float-item">🎶</div><div class="s2-float-item">✨</div><div class="s2-float-item">🎼</div><div class="s2-float-item">🎸</div><div class="s2-float-item">⭐</div><div class="s2-float-item">🎹</div><div class="s2-float-item">💫</div><div class="s2-float-item">🎵</div></div>';
   h += '<div class="s2-header"><div class="s2-level-badge">LEVEL 2</div><br><span class="s2-title-icon">🥁</span><h1>Melody Mover</h1><br><div class="s2-sub">Match actions and instruments to every line</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(2)">How to teach</button></div>';
@@ -2133,7 +2121,7 @@ function completeStage2() { stage2Complete = true; showStageClear(2); }
 function renderStage3(container) {
   var h = '';
   // Header
-  h += '<div class="s3-header"><div class="s3-level-badge">LEVEL 3</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s3-title-icon">🎤</span><span style="font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Echo Master</span></div><div class="s3-sub">Sing it right — from beginner to challenge mode</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(3)">How to teach</button></div>';
+  h += '<div class="s3-header"><div class="s3-level-badge">LEVEL 3</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s3-title-icon">🎤</span><span style="font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Echo Master</span></div><div class="s3-sub">Full lyrics, partial blanks, then first-letter clues</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(3)">How to teach</button></div>';
   // Audio Player
   h += '<div class="s3-player-bar"><button class="s3-player-btn" id="s3PlayBtn" onclick="s3TogglePlay()"><svg viewBox="0 0 24 24" id="s3PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s3PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s3-player-time" id="s3CurTime">0:00</span><div class="s3-player-progress" id="s3ProgressBar" onclick="s3SeekAudio(event)"><div class="s3-player-progress-fill" id="s3ProgressFill"></div><div class="s3-player-progress-thumb" id="s3ProgressThumb"></div></div><span class="s3-player-time" id="s3DurTime">0:39</span><div class="s3-player-mode" id="s3ModeToggle"><button class="s3-active" onclick="s3SwitchMode(\'vocal\')" id="s3ModeVocal">🎤 Vocal</button><button onclick="s3SwitchMode(\'backing\')" id="s3ModeBacking">🎼 Backing</button></div><div class="s3-player-vol"><span class="s3-vol-icon" onclick="s3ToggleMute()">🔊</span><input type="range" id="s3VolSlider" min="0" max="100" value="80" oninput="s3SetVolume(this.value)"></div><div class="s3-player-speed"><button onclick="s3SetSpeed(0.5)">0.5x</button><button onclick="s3SetSpeed(0.75)">0.75x</button><button class="s3-active" onclick="s3SetSpeed(1)">1x</button><button onclick="s3SetSpeed(1.25)">1.25x</button><button onclick="s3SetSpeed(1.5)">1.5x</button></div></div>';
   // Sing content
@@ -2142,76 +2130,50 @@ function renderStage3(container) {
     var cls = 'sing-level-btn'; if (l.n === singLevel) cls += ' active'; if (l.n < singLevel) cls += ' completed';
     h += '<button class="' + cls + '" onclick="setSingLevel(' + l.n + ')">' + l.label + '<br><small>' + l.desc + '</small></button>';
   });
-  h += '</div><div class="sing-display"><div class="sing-current-line" id="singCurrentLine">' + getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx) + '</div>';
-  if (singLevel >= 2) {
-    h += '<button class="btn btn-sm btn-outline" id="singShowFullBtn" onclick="toggleShowFullLyrics()" style="margin-top:8px;">👁 Show Full Lyrics</button>';
-  }
+  h += '</div><div class="sing-display"><div class="sing-current-line" id="singCurrentLine">' + getMaskedText(lyrics[singLineIdx].text, singLevel) + '</div>';
+  if (singLevel >= 2) h += '<button class="btn btn-sm btn-outline" id="singShowFullBtn" onclick="toggleShowFullLyrics()" style="margin-top:8px;">👁 Show Full Lyrics</button>';
   h += '<button class="btn btn-sm btn-outline" id="singPlayBtn" onclick="playLineSegment(' + singLineIdx + ')" style="margin-top:12px;">▶ Play This Line</button>';
   h += '<div class="sing-progress">';
   lyrics.forEach(function(l, i) { var cls = 'sing-progress-dot'; if (i === singLineIdx) cls += ' active'; if (i < singLineIdx) cls += ' done'; h += '<span class="' + cls + '"></span>'; });
   h += '</div></div><div class="sing-controls">';
   h += '<button class="btn btn-sm btn-outline" onclick="prevLine()">⬅ Previous</button>';
   h += '<button class="btn btn-sm btn-outline" onclick="nextLine()">Next ➡</button>';
-  h += '<button class="btn btn-sm btn-primary" onclick="completeSingLevel()">✅ Complete Level</button></div>';
+  h += '<button class="btn btn-sm btn-primary" onclick="completeSingLevel()">✅ Complete Mode</button></div>';
   if (stage3Complete) h += '<div class="stage-complete" style="margin-top:20px;"><div class="big-emoji">🏆</div><h3 style="color:#39ff14;">Echo Master Complete!</h3><p style="color:rgba(255,255,255,0.5);margin-top:4px;">Stage 4 Unlocked</p></div>';
   h += '</div>'; container.innerHTML = h;
 }
 
-function getMaskedText(text, level, lineIndex) {
+function getMaskedText(text, level) {
   if (level === 1) return text;
+  var words = text.split(' ');
   if (level === 2) {
-    var words = text.split(' '), configured = Array.isArray(echoBlanks[lineIndex]) ? echoBlanks[lineIndex].map(function(w){return String(w).toLowerCase();}) : [];
-    var mi = [];
-    words.forEach(function(w, i) { if (configured.indexOf(w.replace(/[^a-zA-Z']/g,'').toLowerCase()) >= 0) mi.push(i); });
-    if (!mi.length && words.length > 1) mi.push(Math.floor(words.length / 2));
-    return words.map(function(w, i) { return mi.indexOf(i) >= 0 ? '<span class="masked">' + '_'.repeat(w.replace(/[^a-zA-Z]/g,'').length) + w.replace(/[a-zA-Z]/g,'') + '</span>' : w; }).join(' ');
-  }
-  if (level === 3) {
-    var words = text.split(' ');
-    var eligible = [];
-    words.forEach(function(w, i) {
-      var clean = w.replace(/[^a-zA-Z]/g, '');
-      if (clean.length >= 3) eligible.push(i);
-    });
-    var hintCount = Math.min(eligible.length, 2);
-    var hintIdx = [];
-    var pool = eligible.slice();
-    for (var n = 0; n < hintCount && pool.length > 0; n++) {
-      var ri = Math.floor(Math.random() * pool.length);
-      hintIdx.push(pool.splice(ri, 1)[0]);
-    }
-    return words.map(function(w, i) {
-      var clean = w.replace(/[^a-zA-Z]/g, '');
-      if (clean.length === 0) return w;
-      if (hintIdx.indexOf(i) >= 0) {
-        return '<span class="letter-hint">' + clean[0] + '</span>' + '_'.repeat(clean.length - 1) + w.replace(/[a-zA-Z]/g, '');
-      } else {
-        return w;
-      }
+    return words.map(function(word, index) {
+      var clean = word.replace(/[^a-zA-Z']/g, '');
+      return clean.length >= 2 && index % 2 === 1
+        ? '<span class="masked">' + '_'.repeat(clean.length) + word.replace(/[a-zA-Z']/g, '') + '</span>'
+        : word;
     }).join(' ');
   }
-  return text;
+  return words.map(function(word) {
+    var clean = word.replace(/[^a-zA-Z']/g, '');
+    if (!clean) return word;
+    return '<span class="letter-hint">' + clean[0] + '</span>' + '_'.repeat(Math.max(0, clean.length - 1)) + word.replace(/[a-zA-Z']/g, '');
+  }).join(' ');
 }
 
 function toggleShowFullLyrics() {
   singShowFull = !singShowFull;
   var el = document.getElementById('singCurrentLine');
   var btn = document.getElementById('singShowFullBtn');
-  if (!el) return;
-  if (singShowFull) {
-    el.innerHTML = lyrics[singLineIdx].text;
-    if (btn) btn.textContent = '🙈 Hide Full Lyrics';
-  } else {
-    el.innerHTML = getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx);
-    if (btn) btn.textContent = '👁 Show Full Lyrics';
-  }
+  if (el) el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel);
+  if (btn) btn.textContent = singShowFull ? '🙈 Hide Full Lyrics' : '👁 Show Full Lyrics';
 }
 
 function s3UpdateLineDisplay() {
   // Update lyric line text
   var el = document.getElementById('singCurrentLine');
   if (el) {
-    el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel, singLineIdx);
+    el.innerHTML = singShowFull ? lyrics[singLineIdx].text : getMaskedText(lyrics[singLineIdx].text, singLevel);
   }
   // Update progress dots
   var dots = document.querySelectorAll('.sing-progress-dot');
@@ -2223,13 +2185,10 @@ function s3UpdateLineDisplay() {
   // Update "Play This Line" button
   var playBtn = document.getElementById('singPlayBtn');
   if (playBtn) playBtn.setAttribute('onclick', 'playLineSegment(' + singLineIdx + ')');
-  // Update show/hide full lyrics button if visible
-  if (singLevel >= 2) {
-    var showBtn = document.getElementById('singShowFullBtn');
-    if (showBtn) showBtn.textContent = singShowFull ? '🙈 Hide Full Lyrics' : '👁 Show Full Lyrics';
-  }
+  var showBtn = document.getElementById('singShowFullBtn');
+  if (showBtn) showBtn.textContent = singShowFull ? '🙈 Hide Full Lyrics' : '👁 Show Full Lyrics';
 }
-function setSingLevel(n) { if (n > singLevel + 1) { showToast('Complete current level first!'); return; } singLevel = n; singLineIdx = 0; singShowFull = false; renderStage(); }
+function setSingLevel(n) { singLevel = n; singLineIdx = 0; singShowFull = false; renderStage(); }
 function nextLine() { if (singLineIdx < lyrics.length - 1) { singLineIdx++; singShowFull = false; s3UpdateLineDisplay(); } else showToast('This is the last line!'); }
 function prevLine() { if (singLineIdx > 0) { singLineIdx--; singShowFull = false; s3UpdateLineDisplay(); } }
 function playFullOriginal() { var a = document.getElementById('audioOriginal'); a.currentTime = 0; a.play().catch(function(){ showToast('⚠️ Demo: Audio not available'); }); }
@@ -2254,8 +2213,16 @@ function playLineSegment(ri) {
 }
 
 function completeSingLevel() {
-  if (singLevel < 3) { singLevel++; singLineIdx = 0; singShowFull = false; showToast('🎉 Level Up!'); renderStage(); }
-  else { stage3Complete = true; showStageClear(3); }
+  if (singLevel < 3) {
+    singLevel++;
+    singLineIdx = 0;
+    singShowFull = false;
+    showToast('🎉 Next mode unlocked!');
+    renderStage();
+  } else {
+    stage3Complete = true;
+    showStageClear(3);
+  }
 }
 
 var recordSyncTimer = null;
@@ -2631,9 +2598,9 @@ var teachingPlans = {
   3: {
     title: 'Stage 3 — Echo Master 教学方案',
     sections: [
-      {title:'🎯 教学目标',content:'<ul><li>学生能逐句跟唱歌曲，掌握正确的发音和语调</li><li>通过三级难度递进，逐步脱离歌词辅助，实现独立演唱</li><li>初级（Beginner）：完整歌词辅助跟唱</li><li>中级（Intermediate）：部分歌词留空，学生凭记忆补全</li><li>高级（Challenge）：仅显示首字母提示，学生独立演唱</li></ul>'},
-      {title:'📋 教学流程',content:'<p><strong>Step 1：任务导入 🎤</strong></p><p>恭喜学生掌握了节奏！现在身份升级为"回声大师"。告诉学生：接下来要开口唱歌了！我们有三个难度级别——初级（完整歌词）、中级（部分隐藏）、高级（仅首字母）。可以从最简单的开始，逐步挑战自己。每个歌手都是这样长大的！</p><p><strong>Step 2：选择难度</strong></p><p>从初级开始，让学生先建立信心。点击 ⭐ Beginner / ⭐⭐ Intermediate / ⭐⭐⭐ Challenge 切换难度。</p><p><strong>Step 3：逐句跟唱</strong></p><p>播放音频（可选择 Vocal 原唱或 Backing 伴奏），学生跟唱当前高亮行。可调节播放速度（0.5x-1.5x）。</p><p><strong>Step 4：进阶挑战</strong></p><p>初级通过后，引导学生尝试中级和高级模式。每次升级后，歌词辅助减少，鼓励学生依靠记忆和首字母提示。</p><p><strong>Step 5：完成</strong></p><p>在任一难度下唱完所有行即视为完成，解锁 Stage 4。</p>'},
-      {title:'💬 教师语言',content:'<div class="teacher-talk">"Welcome to Echo Master! 🎤✨ You\'ve felt the rhythm — now it\'s time to use your VOICE! We have three levels: ⭐ Beginner (easy), ⭐⭐ Intermediate (medium), ⭐⭐⭐ Challenge (hard). Start where you feel comfortable — every singer starts somewhere! 🎵"</div><div class="teacher-talk">"Let\'s start with Beginner mode ⭐ — all the words are right here. Follow the highlighted line and sing with confidence! 👀✨"</div><div class="teacher-talk">"Speed too fast? 🏃 No worries! Slow it down to 0.5x 🐢 — take your time, say each word clearly. You can always speed up later! 🎮"</div><div class="teacher-talk">"Now let\'s level up to Intermediate! ⬆️⭐ Some words are hidden — can you remember them? 🤔💭 Close your eyes, think of the song… YES, you know this! 🙌"</div><div class="teacher-talk">"Challenge mode! ⚡⭐⭐ Only the FIRST LETTER shows. Take a deep breath 😮‍💨, stand tall 🧍, and GO FOR IT! Trust your memory — you\'ve practiced so much! 💪🔥"</div><div class="teacher-talk">"Speed control is your friend! 🎚️ 0.5x = practice mode 🐢 | 1x = normal 🚶 | 1.5x = super fun challenge! 🚀 Which one will you try?"</div>'}
+      {title:'🎯 教学目标',content:'<ul><li>学生能看着完整歌词逐句跟唱</li><li>学生能根据时间轴高亮把握进入时机</li><li>学生能借助原唱或伴奏练习发音、语调和节奏</li></ul>'},
+      {title:'📋 教学流程',content:'<p><strong>Step 1：任务导入 🎤</strong></p><p>恭喜学生掌握了节奏！现在身份升级为“回声大师”，准备跟随完整歌词开口演唱。</p><p><strong>Step 2：示范聆听</strong></p><p>播放 Vocal 原唱，让学生观察歌词时间轴如何逐句高亮。</p><p><strong>Step 3：逐句跟唱</strong></p><p>点击 Play This Line 播放当前歌词片段，老师先示范，学生看着完整歌词模仿演唱。</p><p><strong>Step 4：连贯演唱</strong></p><p>播放完整歌曲，学生跟随高亮歌词连续演唱；需要时可调节播放速度或切换 Backing 伴奏。</p><p><strong>Step 5：完成</strong></p><p>唱完全部歌词行后点击 Complete Stage，解锁 Stage 4。</p>'},
+      {title:'💬 教师语言',content:'<div class="teacher-talk">“Welcome to Echo Master! 🎤 Follow the highlighted lyrics and sing every line with me!”</div><div class="teacher-talk">“Watch the words light up. Listen first, then echo the line clearly.”</div><div class="teacher-talk">“Let’s sing the whole song together. Keep your eyes on the lyrics and stay with the beat!”</div>'}
     ]
   },
   4: {
@@ -2726,7 +2693,7 @@ function closeActivityFullscreen() {
       <ul>
         <li>掌握歌曲《Where Are You From》的核心词汇、句型和语序</li>
         <li>通过身体律动和乐器配器建立节奏感与韵律感知</li>
-        <li>通过三级难度递进，实现从辅助跟唱到独立演唱的过渡</li>
+        <li>通过完整歌词和时间轴高亮，完成逐句跟唱与连贯演唱</li>
         <li>通过颜色分工协作完成歌曲完整演绎，培养团队协作和舞台表现力</li>
       </ul>
     </div>
@@ -2743,7 +2710,7 @@ function closeActivityFullscreen() {
         </tr>
         <tr style="border-bottom:1px solid rgba(255,255,255,0.08)">
           <td style="padding:10px 8px;font-size:20px">🎤</td>
-          <td style="padding:10px 8px"><strong style="color:#ff2d95">Stage 3 — Echo Master</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">回声大师：三级难度逐句跟唱，从完整歌词到仅首字母提示</span></td>
+          <td style="padding:10px 8px"><strong style="color:#ff2d95">Stage 3 — Echo Master</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">回声大师：跟随完整歌词与时间轴高亮逐句演唱</span></td>
         </tr>
         <tr>
           <td style="padding:10px 8px;font-size:20px">🌟</td>
