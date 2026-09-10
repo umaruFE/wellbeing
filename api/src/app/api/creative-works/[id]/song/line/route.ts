@@ -17,6 +17,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const body = await request.json().catch(() => null);
     const index = Number(body?.index);
     const keywords = String(body?.keywords || '').trim().slice(0, 200);
+    const adjustment = String(body?.adjustment || '').trim().slice(0, 500);
     if (!userId || !Number.isInteger(numericId) || numericId <= 0 || !Number.isInteger(index) || index < 0) {
       return NextResponse.json({ error: '参数无效' }, { status: 400 });
     }
@@ -41,6 +42,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       time: String(lyrics[index].time || ''),
       currentText: String(lyrics[index].text || ''),
       keywords,
+      adjustment,
       lyrics,
       targetPatterns: Array.isArray(existing.targetPatterns) ? existing.targetPatterns.map(String) : [],
     });

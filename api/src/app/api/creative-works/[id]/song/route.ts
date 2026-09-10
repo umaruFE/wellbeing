@@ -19,6 +19,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (!userId || !Number.isInteger(numericId)) {
       return NextResponse.json({ error: '参数无效' }, { status: 400 });
     }
+    const body = await request.json().catch(() => ({}));
+    const adjustment = typeof body?.adjustment === 'string' ? body.adjustment.trim().slice(0, 500) : '';
 
     const { rows } = await db.query(
       `SELECT id, module_id, title, parameters, result FROM creative_works WHERE id = $1 AND user_id = $2`,
@@ -39,7 +41,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
     if (work.title && !scalarParams.title) scalarParams.title = work.title;
 
-    const { title, song } = await generateMusicSong(scalarParams);
+    const { title, song } = await generateMusicSong(scalarParams, adjustment);
 
     const existing = (work.result && typeof work.result === 'object') ? work.result as Partial<MusicResult> : {};
     const nextResult: Partial<MusicResult> = {

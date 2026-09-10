@@ -65,16 +65,23 @@ export interface MusicExercises {
   ex3Data: { question: string; options: string[]; correct: number; time?: string }[];
   /** 第四关 Stage Star 分工：与歌词行一一对应的角色（all=齐唱/teacher=教师/student=学生/solo=独唱），游戏内可再手动改色 */
   starRoles: string[];
-  stageDifficulties?: Record<string, 'easy' | 'medium' | 'hard'>;
   melodyActions?: string[];
   melodyInstruments?: string[];
-  echoBlanks?: string[][];
   teachingPlans: Record<string, { title?: string; sections?: { title: string; content: string }[] }>;
+  /** 第三关 Echo Master 回声大师跟唱遮挡：intermediate/challenge 均与歌词行一一对应（原词数组，可为空） */
+  echoData?: { intermediate: string[][]; challenge: string[][] };
 }
 
 export interface MusicResult extends MusicSong, MusicExercises {
   /** 双音频 data URI（base64，体积大，仅在显式操作时写入） */
-  audio?: { vocal?: string; backing?: string; vocalName?: string; backingName?: string };
+  audio?: {
+    vocal?: string;
+    backing?: string;
+    vocalName?: string;
+    backingName?: string;
+    segments?: string[];
+    segmentFailures?: number[];
+  };
 }
 
 async function callLLM(system: string, user: string): Promise<string> {
@@ -342,18 +349,35 @@ function normalizeStarRoles(roles: unknown, lyricsCount: number): string[] {
   return out;
 }
 
+/** 第三关回声大师遮挡数据归一化：intermediate/challenge 均与歌词行一一对齐（缺行补空、多余截断），每行仅保留非空原词 */
+function normalizeEchoData(value: MusicExercises['echoData'], lyricsCount: number): NonNullable<MusicExercises['echoData']> {
+  const cleanRow = (row: unknown): string[] => (Array.isArray(row) ? row : []).map((w) => String(w || '').trim()).filter(Boolean);
+  const rows = (level: unknown): string[][] => (Array.isArray(level) ? level : []).map(cleanRow);
+  const align = (list: string[][]): string[][] => {
+    const out: string[][] = [];
+    for (let i = 0; i < lyricsCount; i++) out.push(list[i] || []);
+    return out;
+  };
+  const data = value && typeof value === 'object' ? value : {};
+  return {
+    intermediate: align(rows((data as { intermediate?: unknown }).intermediate)),
+    challenge: align(rows((data as { challenge?: unknown }).challenge)),
+  };
+}
+
 /** 渲染四关游戏课件（自包含单文件；双音频为 base64 data URI，可为空串） */
 export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music Star Quest'): string {
   let html = readTemplate('music-star-quest.html');
   html = html.replace(/var lyrics = \[[\s\S]*?\n\];/, `var lyrics = ${JSON.stringify(result.lyrics)};`);
+  html = html.replace(/var lineAudioSegments = \[[\s\S]*?\n\];/, `var lineAudioSegments = ${JSON.stringify(result.audio?.segments || [])};`);
+  html = html.replace(/var lineAudioFailures = \[[\s\S]*?\n\];/, `var lineAudioFailures = ${JSON.stringify(result.audio?.segmentFailures || [])};`);
   html = html.replace(/var ex1FillData = \[[\s\S]*?\n\];/, `var ex1FillData = ${JSON.stringify(result.ex1FillData)};`);
   html = html.replace(/var ex2Items = \[[\s\S]*?\n\];/, `var ex2Items = ${JSON.stringify(result.ex2Items)};`);
   html = html.replace(/var ex3Data = \[[\s\S]*?\n\];/, `var ex3Data = ${JSON.stringify(result.ex3Data)};`);
   html = html.replace(/var starRoles = \[[\s\S]*?\n\];/, `var starRoles = ${JSON.stringify(normalizeStarRoles(result.starRoles, result.lyrics?.length || 0))};`);
-  html = html.replace(/var stageDifficulties = \{[^\n]*\};/, `var stageDifficulties = ${JSON.stringify(result.stageDifficulties || { 1: 'easy', 2: 'easy', 3: 'easy', 4: 'easy' })};`);
+  html = html.replace(/var echoData = \{[\s\S]*?\n\};/, `var echoData = ${JSON.stringify(normalizeEchoData(result.echoData, result.lyrics?.length || 0))};`);
   html = html.replace(/var teacherActions = \[[\s\S]*?\n\];/, `var teacherActions = ${JSON.stringify(result.melodyActions || [])};`);
   html = html.replace(/var teacherInstruments = \[[\s\S]*?\n\];/, `var teacherInstruments = ${JSON.stringify(result.melodyInstruments || [])};`);
-  html = html.replace(/var echoBlanks = \[[\s\S]*?\n\];/, `var echoBlanks = ${JSON.stringify(result.echoBlanks || [])};`);
   html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(normalizeTeachingPlans(result.teachingPlans))};`);
   html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
   const vocal = result.audio?.vocal || '';
@@ -365,12 +389,16 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
 
 // ── 工作室流程 step 2：歌曲创作 ────────────────────────────────
 export async function generateMusicSong(
-  params: Record<string, string>
+  params: Record<string, string>,
+  adjustment?: string
 ): Promise<{ title: string; song: { songMeta: MusicSong['songMeta']; lyrics: MusicSong['lyrics']; targetPatterns: string[] } }> {
   const vars = musicVars(params);
   const base = await getPromptPair('experience-music-song', {}, vars);
   const system = await withMusicSpecDocs(base.system, 'flow');
-  const raw = await callLLM(system, base.user);
+  const user = adjustment
+    ? `${base.user}\n\n## 重新生成调整方向（用户提示词，必须优先遵循）\n${adjustment}`
+    : base.user;
+  const raw = await callLLM(system, user);
   const song = parseJson<MusicSong>(raw);
 
   const lyrics = normalizeMusicLyrics(song.lyrics);
@@ -394,6 +422,7 @@ export async function generateMusicLyricLine(
     index: number;
     time: string;
     keywords: string;
+    adjustment?: string;
     currentText?: string;
     lyrics: MusicSong['lyrics'];
     targetPatterns: string[];
@@ -410,7 +439,7 @@ export async function generateMusicLyricLine(
 目标句型/词汇：${input.targetPatterns.join('；') || '无'}
 当前第 ${input.index + 1} 行：${input.currentText || '（尚未生成）'}
 该行时间段：${input.time || '未设置'}
-用户调整关键词：${input.keywords || '无额外关键词，请结合上下文自然生成'}
+用户调整关键词：${input.adjustment || input.keywords || '无额外关键词，请结合上下文自然生成'}
 完整歌词上下文：
 ${context}`;
   const normalizeForCompare = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -439,7 +468,8 @@ ${context}`;
 // ── 工作室流程 step 3：第一关练习 + 四关教学方案（基于最终歌词）──
 export async function generateMusicExercises(
   params: Record<string, string>,
-  song: { title: string; lyrics: MusicSong['lyrics']; targetPatterns: string[] }
+  song: { title: string; lyrics: MusicSong['lyrics']; targetPatterns: string[] },
+  adjustment?: string
 ): Promise<MusicExercises> {
   const lyricsText = song.lyrics.map((l) => `${l.time} ${l.text}`).join('\n');
   const vars = {
@@ -451,6 +481,9 @@ export async function generateMusicExercises(
   const base = await getPromptPair('experience-music-exercises', {}, vars);
   const systemWithDocs = await withMusicSpecDocs(base.system, 'flow', 'level1');
   const system = `${systemWithDocs}\n\n## 当前产品硬约束（必须执行）\n每道 ex1FillData 必须至少有 1 个空；sentence 中空字符串的数量必须等于 blanks 数量；不同题目的 blanks 答案不得重复。teachingPlans 中所有 title 和 content 必须是纯文本，禁止任何 HTML 标签，可用换行、序号和项目符号排版。`;
+  const user = adjustment
+    ? `${base.user}\n\n## 重新生成调整方向（用户提示词，必须优先遵循）\n${adjustment}`
+    : base.user;
 
   const semanticEmoji = (answer: string, sentenceText = '') => {
     const text = `${answer} ${sentenceText}`.toLowerCase();
@@ -548,13 +581,13 @@ export async function generateMusicExercises(
     return result;
   };
 
-  let ex = parseJson<MusicExercises>(await callLLM(system, base.user));
+  let ex = parseJson<MusicExercises>(await callLLM(system, user));
   let normalizedFill: MusicExercises['ex1FillData'] = normalizeFillItems(ex.ex1FillData);
   let errors = fillErrors(normalizedFill);
   if (errors.length) {
     ex = parseJson<MusicExercises>(await callLLM(
       `${system}\n上一次 ex1FillData 不合格：${errors.join('；')}。请重新生成完整 JSON 并逐项修正。`,
-      base.user
+      user
     ));
     normalizedFill = normalizeFillItems(ex.ex1FillData);
     errors = fillErrors(normalizedFill);
@@ -584,6 +617,7 @@ export async function generateMusicExercises(
     })),
     starRoles: normalizeStarRoles(ex.starRoles, song.lyrics.length),
     teachingPlans: normalizeTeachingPlans(ex.teachingPlans),
+    echoData: normalizeEchoData(ex.echoData, song.lyrics.length),
   };
 }
 

@@ -159,11 +159,18 @@ const MUSIC_EXERCISES_SYSTEM = `你是儿童英语教学活动设计专家，为
 
 ## 四关教学方案 teachingPlans（键为 "1"-"4"）
 每关 {title, sections:[{title, content}]}：
-1=Lyric Hunter 歌词猎人（填空+连词+听音解锁歌词）、2=Melody Mover 旋律舞者（完整聆听+动作/乐器编排）、3=Echo Master 回声大师（三级难度跟唱：完整歌词/部分消词/仅首字母）、4=Star Studio 星光录音棚（颜色分工+录制）。
+1=Lyric Hunter 歌词猎人（填空+连词+听音解锁歌词）、2=Melody Mover 旋律舞者（完整聆听+动作/乐器编排）、3=Echo Master 回声大师（三种固定玩法：Beginner 完整歌词、Intermediate 部分挖空、Challenge 仅首字母）、4=Star Studio 星光录音棚（颜色分工+录制）。
 每关 sections 至少含：🎯 教学目标、📋 教学流程、💬 教师语言（英文讲稿，可带中文舞台指示，讲稿须引用本歌曲的真实歌词行）。content 必须是纯文本，可用换行和“1. / 2. / •”组织内容，禁止输出任何 HTML 标签。
+不得设计或提及独立的“授课难度”设置；Echo Master 的 Beginner / Intermediate / Challenge 是固定玩法模式，必须保留；其 Intermediate / Challenge 的具体遮挡方案由 echoData 指定。
+
+## 回声大师跟唱遮挡 echoData（第三关 Echo Master）
+- { intermediate: string[][], challenge: string[][] }，两个数组都与歌词行**一一对应、数量完全相等**。
+- intermediate[i]：第 i 行在 Intermediate（部分挖空）模式下要被挖空的目标词（原词数组），优先挖目标语言点/核心实词；可为空数组表示该行不挖空。
+- challenge[i]：第 i 行在 Challenge（仅首字母）模式下只显示首字母的目标词（原词数组），优先选目标语言点词汇；可为空数组表示该行不挖空。
+- 挖空与首字母提示由游戏按词精确渲染，你只需输出原词（大小写与歌词一致），不要输出下划线或占位符。
 
 ## 输出（仅返回合法 JSON，无任何多余文本）
-{"ex1FillData":[{"sentence":["","! ","","!"],"blanks":["Hello","Hello"],"options":["Hello","Goodbye","Happy","Yes","No"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0,"time":"00:13–00:14"}],"starRoles":["teacher","student","all","all","solo","student","all","all"],"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"• 目标一\n• 目标二"}]},"2":{...},"3":{...},"4":{...}}}`;
+{"ex1FillData":[{"sentence":["","! ","","!"],"blanks":["Hello","Hello"],"options":["Hello","Goodbye","Happy","Yes","No"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0,"time":"00:13–00:14"}],"starRoles":["teacher","student","all","all","solo","student","all","all"],"echoData":{"intermediate":[["China"],["Where"],["name"]],"challenge":[["China"],["Where"],["name"]]},"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"• 目标一\n• 目标二"}]},"2":{...},"3":{...},"4":{...}}}`;
 
 const MUSIC_EXERCISES_USER = `基于以下最终歌词设计练习与教学方案（所有题目必须来自这些歌词行）：
 
