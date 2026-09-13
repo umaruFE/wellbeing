@@ -1,0 +1,31 @@
+// Fault injection: network interruption must retain an accepted task and must not hide a real failure.
+import fs from 'node:fs';import vm from 'node:vm';import crypto from 'node:crypto';import ts from 'typescript';
+const manifest=JSON.parse(fs.readFileSync(process.argv[2]||'/tmp/wellbeing-music-ftp-test-result.json','utf8'));
+const task={status:'submitted',executionId:'test-execution',lyricsHash:crypto.createHash('sha256').update(JSON.stringify(manifest.lyrics.map(l=>l.text))).digest('hex')};
+let work={id:1,module_id:'music-star-quest',result:{lyrics:manifest.lyrics,audio:{generationTask:task}}},networkCalls=0,queryCalls=0;
+let network=async()=>{const e=Error('The operation was aborted due to timeout');e.name='TimeoutError';throw e;};
+const next={NextResponse:{json:(value,options)=>new Response(JSON.stringify(value),options)}};
+const module={exports:{}};
+const context={module,exports:module.exports,process,Buffer,URL,AbortSignal,fetch:(...args)=>{networkCalls++;return network(...args);},require:name=>{
+ if(name==='next/server')return next;if(name==='crypto')return crypto;
+ if(name==='@/lib/auth')return {authenticate:()=>({success:true,user:{id:1}})};
+ if(name==='@/lib/db')return {db:{query:async()=>{queryCalls++;return {rows:queryCalls===1?[work]:[{id:1}]};}}};
+ if(name==='@/lib/musicBacking')return {ensureMusicBacking:async()=>({status:'processing'}),retryMusicBacking:async()=>{}};
+ if(name==='@/lib/musicAudioUrls')return {isMusicCdnUrl:value=>typeof value==='string'&&value.startsWith('https://z.wellbeing.newstaredu.cn/')};
+ if(name==='@/lib/musicPlayback')return {musicPublicOrigin:()=> 'http://localhost:5174',playableMusicManifest:value=>({...value,cdnUrl:value.url,fallbackFilename:value.filename,lyrics:value.lyrics.map(l=>({...l,cdnUrl:l.url}))})};
+ throw Error('Unknown import '+name);
+}};
+vm.runInNewContext(ts.transpileModule(fs.readFileSync(new URL('../src/app/api/creative-works/[id]/music/route.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,context);
+const request={url:'http://localhost:5174/api/creative-works/1/music',headers:new Headers()};
+let result=await module.exports.GET(request,{params:{id:'1'}});let json=await result.json();
+if(result.status!==200||json.data?.status!=='pending'||json.data.phase!=='reconnecting'||networkCalls!==1)throw Error('Read timeout terminated task');
+queryCalls=0;networkCalls=0;
+result=await module.exports.POST(request,{params:{id:'1'}});json=await result.json();
+if(result.status!==202||json.data?.executionId!==task.executionId||networkCalls!==1||queryCalls!==1)throw Error('Regenerate timeout submitted a duplicate task');
+work.result.audio.generationTask={...task,completedManifest:manifest,backingSourceFilename:manifest.filename};networkCalls=0;queryCalls=0;
+result=await module.exports.GET(request,{params:{id:'1'}});json=await result.json();
+if(json.data?.phase!=='backing'||networkCalls!==0||queryCalls!==1)throw Error('Cached completion still queried n8n');
+work.result.audio.generationTask=task;queryCalls=0;network=async()=>new Response(JSON.stringify({status:'error',data:{resultData:{error:{message:'GPU failed',node:{name:'generation'}}}}}));
+result=await module.exports.GET(request,{params:{id:'1'}});json=await result.json();
+if(json.data?.status!=='error'||!json.data.error.includes('GPU failed'))throw Error('Real generation failure hidden');
+console.log(JSON.stringify({verified:true,timeoutContinuesExistingTask:true,regenerateRetainsAcceptedTask:true,cachedManifestSkipsN8n:true,realFailureReported:true}));

@@ -1,3 +1,4 @@
+import { ensureMusicBacking, retryMusicBacking } from '@/lib/musicBacking';
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticate } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -34,10 +35,21 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const previous = result.audio?.generationTask;
     const lyricsHash = fingerprint(lyrics);
     if (previous?.status === 'submitted' && previous.lyricsHash === lyricsHash) {
-      const check = await fetch(`${baseUrl}/api/v1/executions/${encodeURIComponent(previous.executionId)}`, { headers: headers(), signal: AbortSignal.timeout(15000) });
-      if (!check.ok) throw new Error('无法确认已有任务状态，请稍后重试，避免重复生成');
-      const execution = await check.json();
-      if (!['error', 'stopped', 'canceled', 'crashed'].includes(execution.status)) return NextResponse.json({ data: previous }, { status: 202 });
+      try {
+        const check = await fetch(`${baseUrl}/api/v1/executions/${encodeURIComponent(previous.executionId)}`, { headers: headers(), signal: AbortSignal.timeout(15000) });
+        if (!check.ok) throw new Error('无法确认已有任务状态，请稍后重试，避免重复生成');
+        const execution = await check.json();
+        if (!['error', 'stopped', 'canceled', 'crashed'].includes(execution.status)) {
+          if (execution.status === 'success' && previous.backingSourceFilename) await retryMusicBacking(previous.backingSourceFilename);
+          return NextResponse.json({ data: previous }, { status: 202 });
+        }
+      } catch (error) {
+        const failure = error as Error;
+        if (['TimeoutError', 'AbortError'].includes(failure.name) || /timeout|timed out|fetch failed/i.test(failure.message)) {
+          return NextResponse.json({ data: previous }, { status: 202 });
+        }
+        throw error;
+      }
     }
     const p = work.parameters || {};
     // Reserve intro/outro and enough singing time; old LLM timestamps are NOT alignment.
@@ -52,34 +64,41 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     await db.query("UPDATE creative_works SET result=jsonb_set(COALESCE(result,'{}'::jsonb),'{audio}',$1::jsonb), updated_at=NOW() WHERE id=$2", [JSON.stringify({ ...(result.audio || {}), generationTask: task }), work.id]);
     return NextResponse.json({ data: task }, { status: 202 });
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message || '整曲任务提交失败' }, { status: 502 });
+    const failure = error as Error;
+    const message = ['TimeoutError', 'AbortError'].includes(failure.name) ? '重新生成请求提交超时，暂时无法确认是否被接受；请先刷新作品查看任务状态，再决定是否重试' : failure.message;
+    return NextResponse.json({ error: message || '整曲任务提交失败' }, { status: 502 });
   }
 }
 
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+  let queryingExecutionId: string | undefined;
   try {
     const access = await readWork(request, params.id);
     if (access.response) return access.response;
     const work = access.work!;
     const task = work.result?.audio?.generationTask;
+    queryingExecutionId = task?.executionId;
     if (!task?.executionId) return NextResponse.json({ error: '没有待查询的整曲任务' }, { status: 404 });
     if (task.status !== 'completed' && task.lyricsHash !== fingerprint(work.result.lyrics || [])) return NextResponse.json({ error: '歌词已变更，旧歌曲任务已失效，请重新生成' }, { status: 409 });
     const stored = work.result?.audio;
-    if (task.status === 'completed' && stored?.transcription?.storage === 'ftp') {
+    if (task.status === 'completed' && stored?.transcription?.storage === 'ftp' && stored.transcription.backing) {
       const cached = playableMusicManifest(stored.transcription, musicPublicOrigin(request));
       return NextResponse.json({ data: { ...cached, status: 'completed', url: cached.url, executionId: task.executionId, promptId: task.promptId, lyricsHash: task.lyricsHash, requestedIntroSeconds: task.requestedIntroSeconds } });
     }
-    const response = await fetch(`${baseUrl}/api/v1/executions/${encodeURIComponent(task.executionId)}?includeData=true`, { headers: headers(), signal: AbortSignal.timeout(15000) });
-    if (!response.ok) throw new Error(`n8n任务查询失败（${response.status}）`);
-    const execution = await response.json();
-    if (['error', 'stopped', 'canceled', 'crashed'].includes(execution.status)) {
-      const failure = execution.data?.resultData?.error;
-      return NextResponse.json({ data: { status: 'error', executionId: task.executionId, error: `整曲流程失败：${failure?.node?.name || 'n8n'} — ${failure?.description || failure?.message || '请查看执行记录'}` } });
+    let output = task.status === 'completed' && stored?.transcription?.storage === 'ftp' ? stored.transcription : task.completedManifest || null;
+    if (!output) {
+      const response = await fetch(`${baseUrl}/api/v1/executions/${encodeURIComponent(task.executionId)}?includeData=true`, { headers: headers(), signal: AbortSignal.timeout(15000) });
+      if (!response.ok) throw new Error(`n8n任务查询失败（${response.status}）`);
+      const execution = await response.json();
+      if (['error', 'stopped', 'canceled', 'crashed'].includes(execution.status)) {
+        const failure = execution.data?.resultData?.error;
+        return NextResponse.json({ data: { status: 'error', executionId: task.executionId, error: `整曲流程失败：${failure?.node?.name || 'n8n'} — ${failure?.description || failure?.message || '请查看执行记录'}` } });
+      }
+      if (execution.status !== 'success') return NextResponse.json({ data: { status: 'pending', executionId: task.executionId } });
+      const runs = execution.data?.resultData?.runData?.['执行结束返回字段'];
+      output = runs?.[runs.length - 1]?.data?.main?.[0]?.[0]?.json;
     }
-    if (execution.status !== 'success') return NextResponse.json({ data: { status: 'pending', executionId: task.executionId } });
-    const runs = execution.data?.resultData?.runData?.['执行结束返回字段'];
-    const output = runs?.[runs.length - 1]?.data?.main?.[0]?.[0]?.json;
-    const manifest = output?.splitterVersion === '2.0' ? playableMusicManifest(output, musicPublicOrigin(request)) : null;
+    let manifest = output?.splitterVersion === '2.0' ? playableMusicManifest(output, musicPublicOrigin(request)) : null;
     if (!manifest?.lyrics?.length) throw new Error('任务缺少v2实际歌词与切句结果，请使用新版流程重新生成');
     let lastEnd = 0;
     for (const line of manifest.lyrics) {
@@ -88,16 +107,34 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
     const url = manifest.url;
     if (!isMusicCdnUrl(manifest.cdnUrl) || manifest.lyrics.some((line: any) => !isMusicCdnUrl(line.cdnUrl))) throw new Error('任务尚未将整曲与句片段上传FTP，请使用新版流程重新生成');
+    // Use the same master; do not synthesize an unrelated instrumental.
+    if (!manifest.backing) {
+      const source = manifest.fallbackFilename;
+      const backingJob = await ensureMusicBacking(source);
+      if (backingJob.status === 'error') return NextResponse.json({ data: { status: 'error', phase: 'backing', executionId: task.executionId, error: backingJob.error + '；点击重新生成可重试伴奏' } });
+      if (backingJob.status !== 'ready') {
+        if (!task.completedManifest) await db.query("UPDATE creative_works SET result=jsonb_set(result,'{audio,generationTask}',$1::jsonb) WHERE id=$2 AND result#>>'{audio,generationTask,executionId}'=$3 AND result->'lyrics'=$4::jsonb", [JSON.stringify({ ...task, backingSourceFilename: source, completedManifest: output }), work.id, task.executionId, JSON.stringify(work.result.lyrics)]);
+        return NextResponse.json({ data: { status: 'pending', phase: 'backing', executionId: task.executionId } });
+      }
+      if (Math.abs(backingJob.backing.actualDuration - manifest.actualDuration) > 0.01) throw new Error('伴奏与整曲时长不一致');
+      manifest = playableMusicManifest({ ...manifest, backing: backingJob.backing }, musicPublicOrigin(request));
+    }
+    const { completedManifest, ...completedTask } = task;
     const nextAudio = {
-      ...(work.result.audio || {}), vocal: url, backing: '', segments: manifest.lyrics.map((line: any) => line.url),
+      ...(work.result.audio || {}), vocal: url, backing: manifest.backingUrl, backingStatus: 'completed', segments: manifest.lyrics.map((line: any) => line.url),
       segmentFailures: [], transcription: manifest, actualDuration: manifest.actualDuration,
       alignmentStatus: 'needs_review', timingSource: manifest.timingSource,
-      generationTask: { ...task, status: 'completed' }, requestedIntroSeconds: task.requestedIntroSeconds,
+      generationTask: { ...completedTask, status: 'completed' }, requestedIntroSeconds: task.requestedIntroSeconds,
     };
-    const saved = await db.query("UPDATE creative_works SET result=jsonb_set(jsonb_set(result,'{lyrics}',$1::jsonb),'{audio}',$2::jsonb), updated_at=NOW() WHERE id=$3 AND result#>>'{audio,generationTask,executionId}'=$4 AND result->'lyrics'=$5::jsonb RETURNING id", [JSON.stringify(manifest.lyrics), JSON.stringify(nextAudio), work.id, task.executionId, JSON.stringify(work.result.lyrics)]);
+    const saved = await db.query("UPDATE creative_works SET result=jsonb_set(jsonb_set(result,'{lyrics}',$1::jsonb),'{audio}',$2::jsonb), updated_at=NOW() WHERE id=$3 AND result#>>'{audio,generationTask,executionId}'=$4 AND result->'lyrics'=$5::jsonb RETURNING id", [JSON.stringify(task.status === 'completed' ? work.result.lyrics : manifest.lyrics), JSON.stringify(nextAudio), work.id, task.executionId, JSON.stringify(work.result.lyrics)]);
     if (!saved.rows.length) return NextResponse.json({ error: '作品或歌词已变更，请重新打开作品' }, { status: 409 });
     return NextResponse.json({ data: { ...manifest, status: 'completed', executionId: task.executionId, promptId: task.promptId, lyricsHash: task.lyricsHash, url, requestedDuration: task.requestedDuration, requestedIntroSeconds: task.requestedIntroSeconds, alignmentStatus: 'needs_review' } });
   } catch (error) {
-    return NextResponse.json({ error: (error as Error).message || '整曲任务查询失败' }, { status: 502 });
+    const failure = error as Error;
+    if (queryingExecutionId && (['TimeoutError', 'AbortError'].includes(failure.name) || /timeout|timed out|fetch failed/i.test(failure.message))) {
+      // A read timeout does not stop an accepted n8n execution. Continue polling it.
+      return NextResponse.json({ data: { status: 'pending', phase: 'reconnecting', executionId: queryingExecutionId } });
+    }
+    return NextResponse.json({ error: failure.message || '整曲任务查询失败' }, { status: 502 });
   }
 }

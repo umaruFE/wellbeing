@@ -1569,6 +1569,9 @@
     "catGeneral": "General"
   },
   "musicStudio": {
+    "fullSongReconnecting": "The status request timed out. Your song is still processing; reconnecting…",
+    "editRegenerateSong": "Edit / regenerate song",
+    "backingGenerating": "Song and lyric clips are ready. Extracting and uploading the matching instrumental…",
     "moduleName": "Music Star Quest",
     "stepBasic": "Basic Info",
     "stepSong": "Song Writing",

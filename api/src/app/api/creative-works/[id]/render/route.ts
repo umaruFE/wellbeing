@@ -51,7 +51,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const source = (nextResult.audio as any)?.transcription;
     if (source?.storage === 'ftp') {
       const playable = playableMusicManifest(source, musicPublicOrigin(request));
-      nextResult.audio = { ...nextResult.audio, vocal: playable.url, segments: nextResult.audio?.segments?.length ? playable.segments : [], transcription: playable } as any;
+      nextResult.audio = { ...nextResult.audio, vocal: playable.url, backing: playable.backingUrl || '', segments: nextResult.audio?.segments?.length ? playable.segments : [], transcription: playable } as any;
     }
     const html = renderMusicGameHtml(nextResult as MusicResult, work.title);
     await db.query(

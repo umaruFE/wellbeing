@@ -1,3 +1,6 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { musicRuntimeDirectory } from '@/lib/musicBacking';
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyMusicPlayback, musicByteRange } from '@/lib/musicPlayback';
 
@@ -32,6 +35,14 @@ async function backupAudio(file: string): Promise<Buffer> {
   if (existing && existing.until > Date.now()) return existing.bytes;
   if (inFlight.has(file)) return inFlight.get(file)!;
   const pending = (async () => {
+    if (/^backing_[a-f0-9]{32}\.flac$/.test(file)) {
+      const local = path.join(musicRuntimeDirectory(), 'audio', file);
+      const stat = await fs.stat(local);
+      if (stat.size > MAX_FILE) throw new Error('伴奏超过40MB');
+      const bytes = await fs.readFile(local);
+      if (bytes.subarray(0, 4).toString() !== 'fLaC') throw new Error('伴奏文件无效');
+      return bytes;
+    }
     const base = process.env.N8N_API_BASE_URL || 'http://117.50.218.161:5678';
     const url = new URL('/webhook/files', base); url.searchParams.set('file', file);
     const response = await fetch(url, { signal: AbortSignal.timeout(45000), cache: 'no-store', redirect: 'error' });
@@ -72,7 +83,7 @@ async function serve(request: NextRequest, head = false) {
     const range = musicByteRange(rangeHeader, bytes.length);
     if (!range) return new NextResponse(null, { status: 416, headers: { ...cors, 'Content-Range': `bytes */${bytes.length}` } });
     const [start, end] = range;
-    const headers: Record<string, string> = { ...cors, 'Content-Type': 'audio/flac', 'Content-Length': String(end - start + 1), 'Accept-Ranges': 'bytes', 'Cache-Control': 'private, max-age=60', 'X-Music-Source': 'n8n-fallback' };
+    const headers: Record<string, string> = { ...cors, 'Content-Type': 'audio/flac', 'Content-Length': String(end - start + 1), 'Accept-Ranges': 'bytes', 'Cache-Control': 'private, max-age=60', 'X-Music-Source': file.startsWith('backing_') ? 'local-backing-fallback' : 'n8n-fallback' };
     if (rangeHeader) headers['Content-Range'] = `bytes ${start}-${end}/${bytes.length}`;
     return new NextResponse(head ? null : new Uint8Array(bytes.subarray(start, end + 1)), { status: rangeHeader ? 206 : 200, headers });
   } catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 502, headers: cors }); }

@@ -36,3 +36,7 @@ api/.env
 /newpage
 /.zcode
 /api/scripts
+
+# Local same-song source separation runtime
+/api/.venv-music/
+/api/.music-runtime/

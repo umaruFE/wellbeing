@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (work.module_id === 'music-star-quest' && work.result?.audio?.transcription?.storage === 'ftp') {
       const audio = work.result.audio;
       const playable = playableMusicManifest(audio.transcription, musicPublicOrigin(request));
-      work.result.audio = { ...audio, vocal: playable.url, segments: audio.segments?.length ? playable.segments : [], transcription: playable };
+      work.result.audio = { ...audio, vocal: playable.url, backing: playable.backingUrl || '', segments: audio.segments?.length ? playable.segments : [], transcription: playable };
     }
     return NextResponse.json({ data: work });
   } catch (error) {

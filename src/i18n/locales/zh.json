@@ -1569,6 +1569,9 @@
     "catGeneral": "通用课程"
   },
   "musicStudio": {
+    "fullSongReconnecting": "查询暂时超时，歌曲任务仍在后台运行，正在重新连接…",
+    "editRegenerateSong": "编辑／重新生成歌曲",
+    "backingGenerating": "整曲和切句已完成，正在提取同曲伴奏并上传，请稍候…",
     "moduleName": "星光录音棚",
     "stepBasic": "基本信息",
     "stepSong": "歌曲创作",

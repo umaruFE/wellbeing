@@ -95,11 +95,19 @@ async function generateFullSongAudio({ id, resume, onProgress, isCurrent }) {
   for (let attempt = 0; attempt < 360 && !url; attempt++) {
     if (!isCurrent()) throw new Error('已离开当前作品，歌曲继续在后台生成');
     await new Promise((r) => setTimeout(r, 5000));
-    const status = await fetch(`/api/creative-works/${id}/music`, { headers: authJsonHeaders() });
+    let status;
+    try {
+      status = await fetch(`/api/creative-works/${id}/music`, { headers: authJsonHeaders(), signal: AbortSignal.timeout(30000) });
+    } catch (error) {
+      if (!isCurrent()) throw new Error('已离开当前作品，歌曲继续在后台生成');
+      if (error instanceof TypeError || ['TimeoutError', 'AbortError'].includes(error.name)) { onProgress('', 'reconnecting'); continue; }
+      throw error;
+    }
+    if ([503, 504].includes(status.status)) { onProgress('', 'reconnecting'); continue; }
     const json = await status.json().catch(() => ({}));
     if (!status.ok) throw new Error(json.error || '歌曲任务查询失败');
     const data = json.data || {};
-    onProgress(data.executionId);
+    onProgress(data.executionId, data.phase);
     if (data.status === 'error') throw new Error(data.error || '音频生成失败，请重试');
     if (data.status === 'completed') { url = data.url; completed = data; }
   }
@@ -526,7 +534,7 @@ function PlansEditor({ plans, onChange, onGenerate, generating, stage }) {
   );
 }
 
-function PrepSongPlayer({ song, audio, onGenerateFull, generating }) {
+function PrepSongPlayer({ song, audio, onGenerateFull, onEditSong, generating }) {
   const { t } = useTranslation();
   return (
     <section className="pbv2-card pbv2-tone-coral cw-prep-player">
@@ -535,6 +543,7 @@ function PrepSongPlayer({ song, audio, onGenerateFull, generating }) {
         <p>{t('musicStudio.prepPlayerHint')}</p>
         {onGenerateFull && <p>{t('musicStudio.aiFullSongHint')}</p>}
         {audio.actualDuration > 0 && <p>{t('musicStudio.actualDuration', { time: formatMusicTime(audio.actualDuration) })}</p>}
+        {onEditSong && <button type="button" className="pbv2-ghost" style={{ marginTop: 8 }} onClick={onEditSong}><Pencil size={14} />{t('musicStudio.editRegenerateSong')}</button>}
         {onGenerateFull && (
           <button type="button" className="pbv2-ghost" style={{ marginTop: 8 }} disabled={generating || !song.lyrics.length} onClick={onGenerateFull}>
             {generating ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />}
@@ -631,7 +640,7 @@ export function MusicStudioPage() {
     setRendered(Boolean(work.hasHtml) && r.audio?.alignmentStatus !== 'pending');
     setMessage('');
     const exercisesComplete = hasCompleteExercises(r);
-    setStep(r.audio?.generationTask?.status === 'submitted' || r.audio?.alignmentStatus === 'pending' ? 1 : r.lyrics?.length ? (exercisesComplete ? STAGE_STEPS[4] : STAGE_STEPS[1]) : 0);
+    setStep(r.lyrics?.length || r.audio?.generationTask?.status === 'submitted' || r.audio?.alignmentStatus === 'pending' ? 1 : 0);
     setView('studio');
     if (r.lyrics?.length && !exercisesComplete) {
       setExGenerating(true);
@@ -819,7 +828,7 @@ export function MusicStudioPage() {
       if (!resume) await updateCreativeWork(id, { song: activeSong, title: activeTitle, parameters: basicInfo });
       const generated = await generateFullSongAudio({
         id, resume, isCurrent: () => editingIdRef.current === id,
-        onProgress: (executionId) => setMessage(t('musicStudio.fullSongWaiting', { id: executionId })),
+        onProgress: (executionId, phase) => setMessage(t(phase === 'backing' ? 'musicStudio.backingGenerating' : phase === 'reconnecting' ? 'musicStudio.fullSongReconnecting' : 'musicStudio.fullSongWaiting', { id: executionId })),
       });
       if (editingIdRef.current !== id) return;
       // Old lyric ranges, fragments and independently-generated backing do not belong to this new master.
@@ -827,7 +836,7 @@ export function MusicStudioPage() {
       const segments = generated.lyrics.map(line => line.url);
       const nextExercises = { ...exercises, ex3Data: exercises.ex3Data.map(row => ({ ...row, time: '' })) };
       const nextAudio = { ...currentAudio, vocal: generated.url, vocalName: t('musicStudio.aiFullSongName'),
-        backing: '', backingName: '', segments, segmentFailures: [], actualDuration: generated.actualDuration,
+        backing: generated.backingUrl || '', backingName: generated.backingUrl ? t('musicStudio.backingLabel') : '', backingStatus: generated.backing ? 'completed' : 'not_generated', segments, segmentFailures: [], actualDuration: generated.actualDuration,
         transcription: generated, timingSource: generated.timingSource,
         alignmentStatus: 'needs_review', generationTask: { executionId: generated.executionId, promptId: generated.promptId, lyricsHash: generated.lyricsHash, status: 'completed' },
         requestedIntroSeconds: generated.requestedIntroSeconds };
@@ -1165,7 +1174,7 @@ export function MusicStudioPage() {
           {/* step 3 · 第一关 Lyric Hunter（填空 + 连词 + 听音 + 教案） */}
           {step === 2 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} />
+              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
               <p className="yoga-design-hint">{t('musicStudio.stage1Hint')}</p>
               <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => requestSectionRegen('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
               <ScrambleEditor lyrics={song.lyrics} items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => requestSectionRegen('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
@@ -1187,7 +1196,7 @@ export function MusicStudioPage() {
           {/* step 4 · 第二关 Melody Mover（教案） */}
           {step === 3 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} />
+              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
               <p className="yoga-design-hint">{t('musicStudio.stage2Hint')}</p>
               <EditablePool title="Actions" hint={t('musicStudio.actionsHint')} placeholder="Action" items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
               <EditablePool title="Instruments" hint={t('musicStudio.instrumentsHint')} placeholder="Instrument" items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
@@ -1204,7 +1213,7 @@ export function MusicStudioPage() {
           {/* step 5 · 第三关 Echo Master（教案） */}
           {step === 4 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} />
+              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
               <p className="yoga-design-hint">{t('musicStudio.stage3Hint')}</p>
               <EchoMasterPreview lyrics={song.lyrics} audio={audio} echoData={exercises.echoData} onChange={(echoData) => setExercises({ ...exercises, echoData })} onGenerate={() => requestSectionRegen('echoData')} generating={sectionGenerating === 'echoData'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
@@ -1220,7 +1229,7 @@ export function MusicStudioPage() {
           {/* step 6 · 第四关 Star Studio（颜色分工 + 教案） */}
           {step === 5 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} />
+              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
               <div className="pbv2-making-toolbar">
                 <button type="button" className="pbv2-ghost" disabled={!rendered || rendering} onClick={() => presentCurrent()}>
                   {rendering ? <Loader2 className="spin" size={16} /> : null}

@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { isMusicCdnUrl } from './musicAudioUrls';
-const filePattern = /^(?:full_song_\d+_\d+|song_\d+_\d+_line_\d+)\.flac$/;
+const filePattern = /^(?:full_song_\d+_\d+|song_\d+_\d+_line_\d+|backing_[a-f0-9]{32})\.flac$/;
 export const validMusicFile = (file: string) => filePattern.test(file);
 const signature = (cdn: string, file: string) => createHmac('sha256', process.env.JWT_SECRET || 'wellbeing-secret-key-2024').update(JSON.stringify([cdn, file])).digest('hex');
 export function verifyMusicPlayback(cdn: string, file: string, token: string): boolean {
@@ -32,7 +32,8 @@ export function playableMusicManifest(manifest: any, origin: string) {
     const fallbackFilename = line.fallbackFilename || resource?.localFilename;
     return { ...line, cdnUrl, fallbackFilename, url: musicPlaybackUrl(cdnUrl, fallbackFilename, origin) };
   });
-  return { ...manifest, cdnUrl: cdn, fallbackFilename: manifest.fallbackFilename || manifest.filename,
+  const backing = manifest.backing ? { ...manifest.backing, url: musicPlaybackUrl(manifest.backing.cdnUrl, manifest.backing.fallbackFilename, origin) } : undefined;
+  return { ...manifest, backing, backingStatus: backing ? 'completed' : 'not_generated', backingUrl: backing?.url || '', cdnUrl: cdn, fallbackFilename: manifest.fallbackFilename || manifest.filename,
     url: musicPlaybackUrl(cdn, manifest.fallbackFilename || manifest.filename, origin), lyrics,
     segments: lyrics.map((line: any) => line.url), playbackPolicy: 'cdn_with_n8n_fallback' };
 }
