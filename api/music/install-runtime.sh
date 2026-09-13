@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Install the same-song instrumental runtime on the backend host (run as the API user).
 set -euo pipefail
+export PIP_DEFAULT_TIMEOUT="${PIP_DEFAULT_TIMEOUT:-180}"
+export PIP_RETRIES="${PIP_RETRIES:-3}"
 music_api_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 music_python="${MUSIC_SEPARATION_PYTHON:-$music_api_dir/.venv-music/bin/python}"
 music_runtime="${MUSIC_RUNTIME_DIR:-$music_api_dir/.music-runtime}"

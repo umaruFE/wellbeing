@@ -14,11 +14,17 @@ export function musicPlaybackUrl(cdn: string, file: string, origin: string): str
   return url.toString();
 }
 export function musicPublicOrigin(request: { url: string; headers: Headers }): string {
-  if (process.env.MUSIC_PUBLIC_BASE_URL) return new URL(process.env.MUSIC_PUBLIC_BASE_URL).origin;
+  const production = process.env.NODE_ENV === 'production';
+  if (process.env.MUSIC_PUBLIC_BASE_URL) {
+    const configured = new URL(process.env.MUSIC_PUBLIC_BASE_URL);
+    if (!production || !['localhost', '127.0.0.1', '[::1]'].includes(configured.hostname)) return configured.origin;
+  }
+  // Nginx may give Next.js an internal localhost URL even for a public HTTPS request.
+  if (production) return 'https://wellbeing.newstaredu.cn';
   const current = new URL(request.url);
   if (['localhost', '127.0.0.1'].includes(current.hostname)) {
     const referer = request.headers.get('referer');
-    if (referer) { const page = new URL(referer); if (['localhost', '127.0.0.1'].includes(page.hostname)) return page.origin; }
+    if (referer) { try { const page = new URL(referer); if (['localhost', '127.0.0.1'].includes(page.hostname)) return page.origin; } catch { /* Ignore an invalid Referer. */ } }
     return current.origin;
   }
   return 'https://wellbeing.newstaredu.cn';
@@ -36,6 +42,15 @@ export function playableMusicManifest(manifest: any, origin: string) {
   return { ...manifest, backing, backingStatus: backing ? 'completed' : 'not_generated', backingUrl: backing?.url || '', cdnUrl: cdn, fallbackFilename: manifest.fallbackFilename || manifest.filename,
     url: musicPlaybackUrl(cdn, manifest.fallbackFilename || manifest.filename, origin), lyrics,
     segments: lyrics.map((line: any) => line.url), playbackPolicy: 'cdn_with_n8n_fallback' };
+}
+// Refresh capabilities without changing edited lyric text, repeats or timestamps.
+export function refreshMusicLyricUrls(lyrics: any[], playable: any, hasClips: boolean) {
+  return lyrics.map(line => {
+    if (!hasClips) { const { url, ...rest } = line; return rest; }
+    const clip = playable.lyrics.find((item: any) =>
+      line.lineId ? item.lineId === line.lineId : line.filename && item.filename === line.filename && item.subfolder === line.subfolder);
+    return clip ? { ...line, url: clip.url, cdnUrl: clip.cdnUrl, fallbackFilename: clip.fallbackFilename } : line;
+  });
 }
 export function musicByteRange(header: string | null, size: number): [number, number] | null {
   if (!header) return [0, size - 1];

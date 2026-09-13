@@ -1,4 +1,4 @@
-import { playableMusicManifest, musicPublicOrigin } from '@/lib/musicPlayback';
+import { playableMusicManifest, musicPublicOrigin, refreshMusicLyricUrls } from '@/lib/musicPlayback';
 import { assertMusicAudioUrls } from '@/lib/musicAudioUrls';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
@@ -51,6 +51,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const source = (nextResult.audio as any)?.transcription;
     if (source?.storage === 'ftp') {
       const playable = playableMusicManifest(source, musicPublicOrigin(request));
+      nextResult.lyrics = refreshMusicLyricUrls(nextResult.lyrics, playable, Boolean(nextResult.audio?.segments?.length));
       nextResult.audio = { ...nextResult.audio, vocal: playable.url, backing: playable.backingUrl || '', segments: nextResult.audio?.segments?.length ? playable.segments : [], transcription: playable } as any;
     }
     const html = renderMusicGameHtml(nextResult as MusicResult, work.title);
