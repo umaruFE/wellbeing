@@ -1740,7 +1740,7 @@
     "backToList": "Back to List",
     "goalsLabel": "Target Language (required)",
     "goalsPlaceholder": "e.g. China, USA, Where are you from?",
-    "themeLabel": "Song Theme (required)",
+    "themeLabel": "Song Theme (optional)",
     "themePlaceholder": "e.g. Countries & Greetings",
     "reqLabel": "Special Requirements (optional)",
     "reqField": "Notes",

@@ -1740,7 +1740,7 @@
     "backToList": "返回列表",
     "goalsLabel": "目标语言点（必填）",
     "goalsPlaceholder": "例如：China, USA, Where are you from?",
-    "themeLabel": "歌曲主题",
+    "themeLabel": "歌曲主题（选填）",
     "themePlaceholder": "例如：国家与问候",
     "reqLabel": "特殊要求（选填）",
     "reqField": "补充说明",
