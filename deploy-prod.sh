@@ -48,6 +48,9 @@ echo "📦 [4/5] 正在检查并安装后端依赖..."
 cd "$API_DIR"
 npm install
 
+echo "🎵 正在检查伴奏分离运行环境..."
+bash "$API_DIR/music/install-runtime.sh"
+
 echo "🏗️  [5/5] 正在构建后端 (Next.js Build)..."
 npm run build
 

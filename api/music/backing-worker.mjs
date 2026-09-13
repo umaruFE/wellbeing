@@ -26,7 +26,7 @@ try{
   const child=spawn(python,[path.join(apiRoot,'music','separate_backing.py'),input,temporary],{env:{...process.env,TORCH_HOME:path.join(root,'models')},stdio:['ignore','pipe','inherit']});
   let stdout='';child.stdout.on('data',c=>{stdout+=c;if(stdout.length>65536)stdout=stdout.slice(-65536);});
   const timeout=setTimeout(()=>{child.kill('SIGKILL');reject(Error('伴奏分离超过15分钟'));},15*60*1000);
-  child.on('error',e=>{clearTimeout(timeout);reject(e);});child.on('exit',code=>{clearTimeout(timeout);if(code!==0)return reject(Error('同曲伴奏分离失败，请查看本地 .music-runtime 日志'));try{resolve(JSON.parse(stdout.trim().split('\n').at(-1)));}catch{reject(Error('伴奏结果缺少音频信息'));}});
+  child.on('error',e=>{clearTimeout(timeout);reject(e.code==='ENOENT' ? Error('服务器未安装伴奏Python运行环境，请先运行 bash music/install-runtime.sh，安装后再重试伴奏') : e);});child.on('exit',code=>{clearTimeout(timeout);if(code!==0)return reject(Error('同曲伴奏分离失败，请查看本地 .music-runtime 日志'));try{resolve(JSON.parse(stdout.trim().split('\n').at(-1)));}catch{reject(Error('伴奏结果缺少音频信息'));}});
  });
  await fs.rename(temporary,output);await fs.rm(input,{force:true});
  await write({status:'processing',pid:process.pid,phase:'uploading'});

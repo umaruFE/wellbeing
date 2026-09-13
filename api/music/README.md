@@ -26,3 +26,7 @@ python3 -m venv --system-site-packages .venv-music
 ## 实际验证
 
 `node music/verify-backing.mjs <实际FTP结果清单.json>` 用已有实际生成的音频验证分离、FTP 保存、歌曲结果、详情和课件的伴奏引用及 Range 播放，临时数据库作品和临时 n8n 工作流用完删除。
+
+## Linux 服务器安装
+
+在 API 的运行用户（生产为 `newstar`）下运行 `bash /home/newstar/wellbeing/api/music/install-runtime.sh`。脚本创建隔离环境、安装 CPU 版 torch/torchaudio 与 Demucs、下载模型并实际检查推理；生产部署脚本已增加该检查。Ubuntu/Debian 若提示 venv 不可用，先由服务器管理员安装 `python3-venv`。安装成功后重新生成可重试之前失败的伴奏任务。脚本也支持 `MUSIC_SEPARATION_PYTHON` 与 `MUSIC_RUNTIME_DIR`。
