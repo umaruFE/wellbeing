@@ -29,21 +29,38 @@ const normalize = (row) => ({
   status: row.status,
   hasHtml: Boolean(row.has_html),
   result: row.result || null,
+  isSummary: Boolean(row.is_summary),
+  lyricCount: Number(row.lyric_count || 0),
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
 
 export const getCreativeWorks = async (moduleId) => {
   const query = moduleId ? `?moduleId=${encodeURIComponent(moduleId)}` : '';
-  const response = await fetch(`/api/creative-works${query}`, { headers: authHeaders() });
-  const json = await parseResponse(response);
-  return (json.data || []).map(normalize);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const response = await fetch(`/api/creative-works${query}`, { headers: authHeaders(), signal: controller.signal });
+    const json = await parseResponse(response);
+    return (json.data || []).map(normalize);
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error('创作列表加载超时，请检查本地 API 和数据库连接后重试');
+    throw error;
+  } finally { clearTimeout(timeout); }
 };
 
 export const getCreativeWork = async (id) => {
-  const response = await fetch(`/api/creative-works/${id}`, { headers: authHeaders() });
-  const json = await parseResponse(response);
-  return normalize(json.data);
+  // Full audio belongs to the detail request, which may take longer than a list.
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000);
+  try {
+    const response = await fetch(`/api/creative-works/${id}`, { headers: authHeaders(), signal: controller.signal });
+    const json = await parseResponse(response);
+    return normalize(json.data);
+  } catch (error) {
+    if (controller.signal.aborted) throw new Error('作品音频加载超时，请检查网络和数据库连接后重试');
+    throw error;
+  } finally { clearTimeout(timeout); }
 };
 
 // 触发生成（LLM + 模板注入，耗时 30-120 秒）

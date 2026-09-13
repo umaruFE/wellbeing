@@ -7,10 +7,11 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   createCreativeWork, deleteCreativeWork, generateCreativeWorkExercises,
-  generateCreativeWorkLyricLine, generateCreativeWorkSong, getCreativeWorks, renderCreativeWork, updateCreativeWork,
+  generateCreativeWorkSong, getCreativeWorks, getCreativeWork, renderCreativeWork, updateCreativeWork,
 } from './workshopStorage';
 import '../picture-book/PictureBookStudioPage.css';
 import './creativeWorkshop.css';
+import { applyActualLrc, formatMusicTime } from './musicTiming';
 
 const MODULE_ID = 'music-star-quest';
 const MODULE_NAME = '星光录音棚';
@@ -31,21 +32,10 @@ const initialExercises = {
   echoData: { intermediate: [], challenge: [] },
 };
 const STAGE_TITLES = { 1: 'Lyric Hunter', 2: 'Melody Mover', 3: 'Echo Master', 4: 'Star Studio' };
-// 第四关角色（与游戏模板 recordMarks 一致）
-const STAR_ROLE_OPTIONS = [{ value: 'all' }, { value: 'teacher' }, { value: 'student' }, { value: 'solo' }];
 
 // ── 歌词时间轴工具 ─────────────────────────────────────────
-const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-const toTimeStr = (sec) => `${String(Math.floor(sec / 60)).padStart(2, '0')}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
+const toTimeStr = formatMusicTime;
 const toRangeStr = (start, end) => `${toTimeStr(start)}–${toTimeStr(Math.max(end, start + 1))}`;
-function parseTimeRange(time) {
-  const m = String(time || '').match(/^(\d{1,2}):(\d{2})\s*[–—-]\s*(\d{1,2}):(\d{2})$/);
-  if (!m) return null;
-  const toSec = (mm, ss) => Number(mm) * 60 + Number(ss);
-  const start = toSec(m[1], m[2]);
-  const end = toSec(m[3], m[4]);
-  return end > start ? { start, end } : null;
-}
 /** 解析上传的 .lrc / .txt 歌词：支持 [mm:ss.xx]行、mm:ss–mm:ss 行、纯文本行 */
 function parseLyricsFile(text) {
   const rows = [];
@@ -86,56 +76,35 @@ function parseLyricsFile(text) {
   });
 }
 
-// ── AI 分段音频（n8n 音乐生成 → 缓存 → base64） ───────────────
+// ── AI 整曲音频（n8n 提交 → 轮询 → 通用资源下载 → 缓存） ──────
 const authJsonHeaders = () => ({
   'Content-Type': 'application/json',
   Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
 });
-/** 生成一段歌曲音频，返回可直接嵌入课件的 mp3 data URI */
-async function generateSegmentAudio({ prompt, duration, maxDuration = 15 }) {
-  const submit = await fetch('/api/ai/generate-audio', {
-    method: 'POST',
-    headers: authJsonHeaders(),
-    body: JSON.stringify({ prompt, count: 1, duration: clamp(Math.round(duration) || 5, 3, maxDuration) }),
-  });
-  if (!submit.ok) throw new Error((await submit.json().catch(() => ({}))).error || '音频任务提交失败');
-  const { executionId } = await submit.json();
-  if (!executionId) throw new Error('音频任务提交失败（缺少 executionId）');
+/** 生成整曲，返回 FTP/CDN 音频 URL 与服务端测得的实际时长。 */
+async function generateFullSongAudio({ id, resume, onProgress, isCurrent }) {
+  if (!resume) {
+    const submit = await fetch(`/api/creative-works/${id}/music`, {
+      method: 'POST',
+      headers: authJsonHeaders(),
+    });
+    if (!submit.ok) throw new Error((await submit.json().catch(() => ({}))).error || '音频任务提交失败');
+  }
   let url = '';
-  for (let attempt = 0; attempt < 100 && !url; attempt++) {
-    await new Promise((r) => setTimeout(r, 3000));
-    const status = await fetch(`/api/ai/generate-audio?executionId=${executionId}`, { headers: authJsonHeaders() });
-    if (!status.ok) continue;
-    const data = await status.json();
-    if (data.status === 'error') throw new Error('音频生成失败，请重试');
-    if (data.status === 'completed' && data.results?.length) url = data.results[0].url;
+  let completed;
+  for (let attempt = 0; attempt < 360 && !url; attempt++) {
+    if (!isCurrent()) throw new Error('已离开当前作品，歌曲继续在后台生成');
+    await new Promise((r) => setTimeout(r, 5000));
+    const status = await fetch(`/api/creative-works/${id}/music`, { headers: authJsonHeaders() });
+    const json = await status.json().catch(() => ({}));
+    if (!status.ok) throw new Error(json.error || '歌曲任务查询失败');
+    const data = json.data || {};
+    onProgress(data.executionId);
+    if (data.status === 'error') throw new Error(data.error || '音频生成失败，请重试');
+    if (data.status === 'completed') { url = data.url; completed = data; }
   }
   if (!url) throw new Error('音频生成超时，请重试');
-  // OSS 地址跨域，先经后端缓存为同源地址再取字节
-  const cacheRes = await fetch('/api/media/cache', {
-    method: 'POST',
-    headers: authJsonHeaders(),
-    body: JSON.stringify({ url, type: 'audio' }),
-  });
-  const cacheJson = await cacheRes.json().catch(() => ({}));
-  const localUrl = cacheJson?.data?.url || url;
-  const blob = await (await fetch(localUrl)).blob();
-  if (blob.size > 8 * 1024 * 1024) throw new Error('生成的音频超过 8MB');
-  return await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
-/** 顺次拼接 mp3 分段（mp3 帧可直接字节级连接），得到完整原唱 data URI */
-function mergeMp3DataUris(dataUris) {
-  const valid = dataUris.filter(Boolean);
-  if (!valid.length) return '';
-  const payload = valid
-    .map((uri) => String(uri).replace(/^data:audio\/[^;]+;base64,/, ''))
-    .join('');
-  return `data:audio/mpeg;base64,${payload}`;
+  return completed;
 }
 const hasCompleteExercises = (value) => Boolean(
   value?.ex1FillData?.length
@@ -223,11 +192,12 @@ const makeFillItem = (lyricText, selectedWords, previous = {}) => {
 };
 
 function LyricSelect({ lyrics, value, onChange, label }) {
+  const { t } = useTranslation();
   return (
     <label className="pbv2-field">
       <span>{label}</span>
       <select value={value} onChange={(event) => onChange(Number(event.target.value))}>
-        <option value={-1}>—</option>
+        <option value={-1}>{t('musicStudio.selectLyricPlaceholder')}</option>
         {lyrics.map((row, idx) => <option key={`${idx}-${row.text}`} value={idx}>{idx + 1}. {row.text}</option>)}
       </select>
     </label>
@@ -235,64 +205,61 @@ function LyricSelect({ lyrics, value, onChange, label }) {
 }
 
 // ── 歌词编辑器（step 2）─────────────────────────────────────
-function LyricsEditor({ lyrics, onGenerateLine, onChange }) {
+function LyricClipPlayer({ source, workId, index, canLoad, onPlay }) {
   const { t } = useTranslation();
-  const [keywords, setKeywords] = React.useState({});
-  const [generatingIndex, setGeneratingIndex] = React.useState(null);
-  const fileRef = React.useRef(null);
-  const generate = async (idx) => {
-    if (generatingIndex !== null) return;
-    setGeneratingIndex(idx);
+  const [loaded, setLoaded] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState(false);
+  const requestVersion = React.useRef(0);
+  React.useEffect(() => {
+    return () => { requestVersion.current += 1; };
+  }, [workId, index, source, canLoad]);
+  const loadClip = async () => {
+    const version = ++requestVersion.current;
+    setLoading(true);
+    setError(false);
     try {
-      await onGenerateLine(idx, keywords[idx] || '');
+      const response = await fetch(`/api/creative-works/${workId}/music`, { headers: authJsonHeaders() });
+      const payload = await response.json();
+      const url = payload.data?.lyrics?.[index]?.url;
+      if (!response.ok || typeof url !== 'string' || !url.startsWith('https://')) throw new Error('clip URL unavailable');
+      if (version === requestVersion.current) setLoaded(url);
+    } catch {
+      if (version === requestVersion.current) setError(true);
     } finally {
-      setGeneratingIndex(null);
+      if (version === requestVersion.current) setLoading(false);
     }
   };
-  const updateRow = (idx, patch) => onChange(lyrics.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
-  const handleFile = (file) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = parseLyricsFile(String(reader.result || ''));
-        onChange(parsed);
-      } catch {
-        window.alert(t('musicStudio.lyricsParseFail'));
-      }
-    };
-    reader.readAsText(file, 'utf-8');
-    if (fileRef.current) fileRef.current.value = '';
+  return (
+    <div className="cw-lyric-clip">
+      {source || loaded ? <audio controls preload="none" src={source || loaded} aria-label={t('musicStudio.lyricClipLabel', { n: index + 1 })} onPlay={onPlay} onError={() => setError(true)} />
+        : canLoad ? <button type="button" className="pbv2-ghost" disabled={loading} onClick={loadClip}>
+          {loading && <Loader2 className="spin" size={14} />}{t(loading ? 'musicStudio.lyricClipLoading' : 'musicStudio.lyricClipLoad')}
+        </button> : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
+      {error && <span role="alert" className="cw-echo-audio-status is-failed">{t('musicStudio.lyricClipError')}</span>}
+    </div>
+  );
+}
+
+function LyricsEditor({ lyrics, audio = {}, workId }) {
+  const { t } = useTranslation();
+  const clips = React.useRef(null);
+  const segments = Array.isArray(audio.segments) ? audio.segments : [];
+  const recognized = audio.transcription?.lyrics || [];
+  const pauseOtherClips = event => {
+    clips.current?.querySelectorAll('audio').forEach(player => { if (player !== event.currentTarget) player.pause(); });
   };
   return (
-    <section className="pbv2-card pbv2-tone-blue">
-      <div className="cw-section-title">
-        <div className="pbv2-card-title">{t('musicStudio.lyricsTimeline')}</div>
-        <button type="button" className="pbv2-ghost" onClick={() => fileRef.current?.click()}>{t('musicStudio.uploadLyrics')}</button>
-        <input ref={fileRef} type="file" accept=".lrc,.txt,text/plain" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
-      </div>
-      <p className="yoga-design-hint">{t('musicStudio.lyricsHint')}</p>
+    <section className="pbv2-card pbv2-tone-blue" ref={clips}>
+      <div className="pbv2-card-title">{t('musicStudio.lyricsTimeline')}</div>
+      <p className="yoga-design-hint">{t('musicStudio.lyricsReadonlyHint')}</p>
+      <p className="yoga-design-hint">{t('musicStudio.lyricClipHint')}</p>
       {lyrics.map((row, idx) => (
-        <div key={idx} className="cw-lyric-row">
-          <input
-            className="cw-lyric-time"
-            style={{ width: 110 }}
-            value={row.time || ''}
-            onChange={(e) => updateRow(idx, { time: e.target.value })}
-            placeholder="mm:ss–mm:ss"
-            title={t('musicStudio.timeTitle')}
-          />
+        <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className="cw-lyric-row cw-lyric-row-with-clip">
+          <span className="cw-lyric-time">{row.time || t('musicStudio.alignmentPending')}</span>
           <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
-          <input
-            className="cw-lyric-keywords"
-            value={keywords[idx] || ''}
-            onChange={(e) => setKeywords((prev) => ({ ...prev, [idx]: e.target.value }))}
-            placeholder={t('musicStudio.keywordPlaceholder')}
-          />
-          <button type="button" className="pbv2-ghost cw-lyric-generate" disabled={generatingIndex !== null} onClick={() => generate(idx)}>
-            {generatingIndex === idx ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
-            {row.text ? t('musicStudio.regen') : t('musicStudio.generate')}
-          </button>
+          <LyricClipPlayer source={segments[idx]} workId={workId} index={idx} onPlay={pauseOtherClips}
+            canLoad={Boolean(workId && audio.generationTask?.status === 'completed' && recognized[idx]?.text === row.text && recognized[idx]?.time === row.time)} />
         </div>
       ))}
     </section>
@@ -314,6 +281,11 @@ function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
+  const updateOption = (idx, optionIndex, value) => {
+    const options = Array.from({ length: 4 }, (_, i) => items[idx].options?.[i] || '');
+    options[optionIndex] = value;
+    update(idx, { options });
+  };
   return (
     <section className="pbv2-card pbv2-tone-yellow">
       <div className="cw-section-title"><div className="pbv2-card-title">{t('musicStudio.ex1Title')}</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
@@ -329,12 +301,16 @@ function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
               {uniqueWords(item.lyricText || fillToFullText(item)).map((word) => {
                 const active = (item.blanks || []).some((blank) => blank.toLowerCase() === word.toLowerCase());
                 return <button key={word} type="button" className={active ? 'is-active' : ''} onClick={() => {
-                  const selected = active ? (item.blanks || []).filter((w) => w.toLowerCase() !== word.toLowerCase()) : [...(item.blanks || []), word];
+                  const selected = active ? [] : [word];
                   update(idx, makeFillItem(item.lyricText || fillToFullText(item), selected, item));
                 }}>{word}</button>;
               })}
             </div></label>
-            <Field label={t('musicStudio.optionsLabel')} value={(item.options || []).join(', ')} onChange={(v) => update(idx, { options: v.split(/[,，]/).map((s) => s.trim()).filter(Boolean) })} />
+            <div className="cw-fixed-options">
+              {Array.from({ length: 4 }, (_, optionIndex) => (
+                <Field key={optionIndex} label={optionIndex === 0 ? t('musicStudio.correctOption') : t('musicStudio.distractorOption', { n: optionIndex })} value={item.options?.[optionIndex] || ''} onChange={(value) => updateOption(idx, optionIndex, value)} />
+              ))}
+            </div>
             <Field label="emoji" value={item.emoji || ''} onChange={(v) => update(idx, { emoji: v })} />
           </div>
         </div>
@@ -435,21 +411,29 @@ function echoPreviewText(text, mode, words) {
   }).join(' ');
 }
 
-function EchoMasterPreview({ lyrics, audio, echoData, onGenerate, generating }) {
+function EchoMasterPreview({ lyrics, audio, echoData, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
-  const [mode, setMode] = React.useState('beginner');
   const failures = new Set(Array.isArray(audio?.segmentFailures) ? audio.segmentFailures : []);
   const segments = Array.isArray(audio?.segments) ? audio.segments : [];
   const hasEchoData = Boolean((echoData?.intermediate?.length || 0) + (echoData?.challenge?.length || 0));
-  const maskedWords = (idx) => {
-    if (mode === 'intermediate') return echoData?.intermediate?.[idx] || [];
-    if (mode === 'challenge') return echoData?.challenge?.[idx] || [];
-    return [];
+  const selectedWords = (mode, idx) => Array.isArray(echoData?.[mode]?.[idx]) ? echoData[mode][idx] : [];
+  const toggleWord = (mode, idx, word) => {
+    const current = selectedWords(mode, idx);
+    const active = current.some((item) => item.toLowerCase() === word.toLowerCase());
+    if (!active && current.length >= 2) return;
+    const nextRow = active ? current.filter((item) => item.toLowerCase() !== word.toLowerCase()) : [...current, word];
+    const currentRows = Array.isArray(echoData?.[mode]) ? echoData[mode] : [];
+    const nextRows = lyrics.map((_, lineIdx) => lineIdx === idx ? nextRow : (currentRows[lineIdx] || []));
+    onChange({
+      intermediate: Array.isArray(echoData?.intermediate) ? echoData.intermediate : [],
+      challenge: Array.isArray(echoData?.challenge) ? echoData.challenge : [],
+      [mode]: nextRows,
+    });
   };
   const modes = [
-    { value: 'beginner', label: '⭐ Beginner', detail: 'Full Lyrics' },
-    { value: 'intermediate', label: '⭐⭐ Intermediate', detail: 'Partial Blanks' },
-    { value: 'challenge', label: '⭐⭐⭐ Challenge', detail: 'First Letter Only' },
+    { value: 'beginner', dataKey: 'beginner', label: '1. ⭐ Beginner', detail: 'Full Lyrics' },
+    { value: 'challenge', dataKey: 'challenge', label: '2. ⭐⭐ Intermediate', detail: 'First Letter Fill' },
+    { value: 'intermediate', dataKey: 'intermediate', label: '3. ⭐⭐⭐ Challenge', detail: 'Whole Word Blanks' },
   ];
   return (
     <section className="pbv2-card pbv2-tone-yellow cw-echo-preview">
@@ -459,71 +443,48 @@ function EchoMasterPreview({ lyrics, audio, echoData, onGenerate, generating }) 
       </div>
       <p className="yoga-design-hint">{t('musicStudio.echoPreviewHint')}</p>
       <p className="yoga-design-hint">{t('musicStudio.echoGenerateHint')}</p>
-      <div className="cw-echo-modes">
+      <div className="cw-echo-levels">
         {modes.map((item) => (
-          <button key={item.value} type="button" className={mode === item.value ? 'is-active' : ''} onClick={() => setMode(item.value)}>
-            <strong>{item.label}</strong><small>{item.detail}</small>
-          </button>
-        ))}
-      </div>
-      <div className="cw-echo-preview-lines">
-        {lyrics.map((row, idx) => {
-          const failed = failures.has(idx);
-          const segment = segments[idx];
-          return (
-            <div key={`${idx}-${row.time}`} className={`cw-echo-preview-line${failed ? ' is-failed' : ''}`}>
-              <span className="cw-lyric-time">{row.time || '--:--'}</span>
-              <strong>{echoPreviewText(row.text, mode, maskedWords(idx))}</strong>
-              {failed ? <span className="cw-echo-audio-status is-failed">{t('musicStudio.segmentAudioFailed')}</span>
-                : segment ? <audio controls preload="none" src={segment} />
-                  : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
+          <section key={item.value} className="cw-echo-level">
+            <header>
+              <strong>{item.label}</strong>
+              <span>{item.detail}{item.value === 'challenge' ? ` · ${t('musicStudio.echoMaxTwo')}` : ''}</span>
+            </header>
+            <div className="cw-echo-preview-lines">
+              {lyrics.map((row, idx) => {
+                const failed = failures.has(idx);
+                const segment = segments[idx];
+                const words = Array.from(new Map((row.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) || []).map((word) => [word.toLowerCase(), word])).values());
+                const selected = selectedWords(item.dataKey, idx);
+                return (
+                  <div key={`${item.value}-${idx}-${row.time}`} className={`cw-echo-preview-line${failed ? ' is-failed' : ''}`}>
+                    <span className="cw-lyric-time">{row.time || '--:--'}</span>
+                    <div className="cw-echo-line-content">
+                      <strong>{echoPreviewText(row.text, item.value, selected)}</strong>
+                      {item.value !== 'beginner' && (
+                        <div className="cw-word-picker">
+                          {words.map((word) => {
+                            const active = selected.some((value) => value.toLowerCase() === word.toLowerCase());
+                            return <button key={word} type="button" className={active ? 'is-active' : ''} onClick={() => toggleWord(item.dataKey, idx, word)}>{word}</button>;
+                          })}
+                        </div>
+                      )}
+                    </div>
+                    {failed ? <span className="cw-echo-audio-status is-failed">{t('musicStudio.segmentAudioFailed')}</span>
+                      : segment ? <audio controls preload="none" src={segment} />
+                        : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
+                  </div>
+                );
+              })}
             </div>
-          );
-        })}
+          </section>
+        ))}
       </div>
     </section>
   );
 }
 
 // ── 第四关 Stage Star 分工编辑器（step 3）────────────────────
-function StarRolesEditor({ lyrics, roles, onChange, onGenerate, generating }) {
-  const { t } = useTranslation();
-  const roleOf = (idx) => STAR_ROLE_OPTIONS.some((r) => r.value === roles[idx]) ? roles[idx] : 'all';
-  const setRole = (idx, value) => onChange(lyrics.map((_, i) => (i === idx ? value : roleOf(i))));
-  return (
-    <section className="pbv2-card pbv2-tone-green">
-      <div className="cw-section-title">
-        <div className="pbv2-card-title">{t('musicStudio.ex4Title')}</div>
-        <AiSectionButton loading={generating} hasContent={roles.length > 0} onClick={onGenerate} />
-      </div>
-      <p className="yoga-design-hint">{t('musicStudio.rolesHint')}</p>
-      {lyrics.length === 0 && <p className="yoga-design-hint">{t('musicStudio.needLyricsFirst')}</p>}
-      {lyrics.map((row, idx) => (
-        <div key={idx} className="cw-lyric-row">
-          <span className="cw-lyric-time">{row.time || '--:--'}</span>
-          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
-          <span className="cw-star-role-picker">
-            {STAR_ROLE_OPTIONS.map((r) => {
-              const roleLabel = t('musicStudio.role_' + r.value);
-              return (
-                <button
-                  key={r.value}
-                  type="button"
-                  className={`cw-star-role-chip${roleOf(idx) === r.value ? ' is-active' : ''}`}
-                  onClick={() => setRole(idx, r.value)}
-                  title={roleLabel}
-                >
-                  {roleLabel}
-                </button>
-              );
-            })}
-          </span>
-        </div>
-      ))}
-    </section>
-  );
-}
-
 function PlansEditor({ plans, onChange, onGenerate, generating, stage }) {
   const { t } = useTranslation();
   const stages = ['1', '2', '3', '4'];
@@ -565,34 +526,28 @@ function PlansEditor({ plans, onChange, onGenerate, generating, stage }) {
   );
 }
 
-// ── 音频上传卡片（step 4）───────────────────────────────────
-function AudioCard({ label, name, dataUri, onPick, onRemove }) {
+function PrepSongPlayer({ song, audio, onGenerateFull, generating }) {
   const { t } = useTranslation();
-  const inputRef = React.useRef(null);
-  const handleFile = (file) => {
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { window.alert(t('musicStudio.audioTooLarge')); return; }
-    const reader = new FileReader();
-    reader.onload = () => onPick({ dataUri: String(reader.result || ''), name: file.name });
-    reader.readAsDataURL(file);
-  };
   return (
-    <div className={`cw-audio-card${dataUri ? ' has' : ''}`}>
-      <h4>{label}{dataUri ? ' · ' + t('musicStudio.uploaded') : ' · ' + t('musicStudio.notUploaded')}</h4>
-      {dataUri ? (
-        <>
-          <audio controls src={dataUri} />
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" className="pbv2-ghost" onClick={() => inputRef.current?.click()}>{t('musicStudio.reupload')}</button>
-            <button type="button" className="pbv2-ghost" onClick={onRemove}><Trash2 size={14} /> {t('musicStudio.remove')}</button>
-          </div>
-        </>
-      ) : (
-        <button type="button" className="pbv2-ghost" onClick={() => inputRef.current?.click()}>{t('musicStudio.pickMp3')}</button>
-      )}
-      {name && <small style={{ color: '#818997' }}>{name}</small>}
-      <input ref={inputRef} type="file" accept="audio/mpeg,.mp3" hidden onChange={(e) => handleFile(e.target.files?.[0])} />
-    </div>
+    <section className="pbv2-card pbv2-tone-coral cw-prep-player">
+      <div>
+        <div className="pbv2-card-title">🎵 {song.title || t('musicStudio.untitled')}</div>
+        <p>{t('musicStudio.prepPlayerHint')}</p>
+        {onGenerateFull && <p>{t('musicStudio.aiFullSongHint')}</p>}
+        {audio.actualDuration > 0 && <p>{t('musicStudio.actualDuration', { time: formatMusicTime(audio.actualDuration) })}</p>}
+        {onGenerateFull && (
+          <button type="button" className="pbv2-ghost" style={{ marginTop: 8 }} disabled={generating || !song.lyrics.length} onClick={onGenerateFull}>
+            {generating ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />}
+            {generating ? t('musicStudio.aiGenerating') : (audio.vocal ? t('musicStudio.regenerateFullSong') : t('musicStudio.generateFullSong'))}
+          </button>
+        )}
+      </div>
+      <div className="cw-prep-player-tracks">
+        {audio.vocal && <label><span>{t('musicStudio.vocalLabel')}</span><audio controls preload="metadata" src={audio.vocal} /></label>}
+        {audio.backing && <label><span>{t('musicStudio.backingLabel')}</span><audio controls preload="metadata" src={audio.backing} /></label>}
+        {!audio.vocal && !audio.backing && <span className="cw-echo-audio-status">{t('musicStudio.songAudioUnavailable')}</span>}
+      </div>
+    </section>
   );
 }
 
@@ -602,6 +557,9 @@ export function MusicStudioPage() {
   const [view, setView] = React.useState('list');
   const [works, setWorks] = React.useState([]);
   const [listLoading, setListLoading] = React.useState(true);
+  const [listError, setListError] = React.useState('');
+  const [openingWorkId, setOpeningWorkId] = React.useState(null);
+  const openingWorkRef = React.useRef(null);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [message, setMessage] = React.useState('');
 
@@ -611,6 +569,7 @@ export function MusicStudioPage() {
   const [song, setSong] = React.useState(initialSong);
   const [exercises, setExercises] = React.useState(initialExercises);
   const [audio, setAudio] = React.useState({});
+  const [songLibrary, setSongLibrary] = React.useState([]);
   const [segmentBusy, setSegmentBusy] = React.useState(null);
   const [workTitle, setWorkTitle] = React.useState('');
 
@@ -627,16 +586,29 @@ export function MusicStudioPage() {
 
   const loadWorks = React.useCallback(() => {
     setListLoading(true);
-    getCreativeWorks(MODULE_ID)
+    setListError('');
+    return getCreativeWorks(MODULE_ID)
       .then(setWorks)
-      .catch(() => {})
+      .catch((error) => setListError(error.message))
       .finally(() => setListLoading(false));
   }, []);
   React.useEffect(() => { loadWorks(); }, [loadWorks]);
+  React.useEffect(() => {
+    fetch('/api/song-library', { headers: authJsonHeaders() })
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error('song library')))
+      .then((data) => setSongLibrary(Array.isArray(data?.data) ? data.data : []))
+      .catch(() => setSongLibrary([]));
+  }, []);
 
   const setEditing = (id) => { editingIdRef.current = id; };
 
-  const openWork = (work) => {
+  const openWork = async (summary) => {
+    if (openingWorkRef.current !== null) return;
+    openingWorkRef.current = summary.id;
+    setOpeningWorkId(summary.id);
+    setMessage('');
+    try {
+      const work = summary.isSummary ? await getCreativeWork(summary.id) : summary;
     setEditing(work.id);
     setBasicInfo({ ...initialBasicInfo, ...(work.parameters || {}) });
     const r = work.result || {};
@@ -656,10 +628,10 @@ export function MusicStudioPage() {
       } : { intermediate: [], challenge: [] },
     });
     setAudio(r.audio || {});
-    setRendered(Boolean(work.hasHtml));
+    setRendered(Boolean(work.hasHtml) && r.audio?.alignmentStatus !== 'pending');
     setMessage('');
     const exercisesComplete = hasCompleteExercises(r);
-    setStep(r.lyrics?.length ? (exercisesComplete ? STAGE_STEPS[4] : STAGE_STEPS[1]) : 0);
+    setStep(r.audio?.generationTask?.status === 'submitted' || r.audio?.alignmentStatus === 'pending' ? 1 : r.lyrics?.length ? (exercisesComplete ? STAGE_STEPS[4] : STAGE_STEPS[1]) : 0);
     setView('studio');
     if (r.lyrics?.length && !exercisesComplete) {
       setExGenerating(true);
@@ -667,6 +639,12 @@ export function MusicStudioPage() {
         .then((data) => setExercises({ ...initialExercises, ...data }))
         .catch((err) => setMessage(err.message || t('musicStudio.exercisesGenFail')))
         .finally(() => setExGenerating(false));
+    }
+    } catch (error) {
+      setMessage(error.message || t('musicStudio.workLoadFailed'));
+    } finally {
+      openingWorkRef.current = null;
+      setOpeningWorkId(null);
     }
   };
 
@@ -707,7 +685,7 @@ export function MusicStudioPage() {
   };
 
   // ── step 0：基本信息 → AI 生成歌曲（同瑜伽第 1 步交互）──────
-  const basicReady = String(basicInfo.goals || '').trim() && String(basicInfo.theme || '').trim();
+  const basicReady = String(basicInfo.goals || '').trim();
   const generateSongAndAdvance = async () => {
     const id = editingIdRef.current;
     if (!id || songGenerating) return;
@@ -718,6 +696,7 @@ export function MusicStudioPage() {
       const data = await generateCreativeWorkSong(id);
       const nextSong = { title: data.title || '', songMeta: data.song?.songMeta || {}, lyrics: data.song?.lyrics || [], targetPatterns: data.song?.targetPatterns || [] };
       setSong(nextSong);
+      setAudio({ alignmentStatus: 'pending' });
       if (data.title) setWorkTitle(data.title);
       setStep(1);
       await generateAllSegments(nextSong, data.title || basicInfo.theme);
@@ -739,6 +718,7 @@ export function MusicStudioPage() {
       const data = await generateCreativeWorkSong(id, adjustment);
       const nextSong = { title: data.title || '', songMeta: data.song?.songMeta || {}, lyrics: data.song?.lyrics || [], targetPatterns: data.song?.targetPatterns || [] };
       setSong(nextSong);
+      setAudio({ alignmentStatus: 'pending' });
       if (data.title) setWorkTitle(data.title);
       await generateAllSegments(nextSong, data.title || basicInfo.theme);
     } catch (err) {
@@ -748,20 +728,20 @@ export function MusicStudioPage() {
     }
   };
 
-  const generateLyricLine = async (index, keywords) => {
-    const id = editingIdRef.current;
-    if (!id) return;
-    setMessage('');
+  const selectLibrarySong = (songId) => {
+    const picked = songLibrary.find((item) => String(item.id) === String(songId));
+    if (!picked) return;
+    let lyrics = [];
     try {
-      // 先保存歌名与目标句型，确保单行生成使用页面上的最新上下文。
-      await updateCreativeWork(id, { title: song.title || workTitle, song });
-      const data = await generateCreativeWorkLyricLine(id, index, keywords);
-      setSong((current) => ({ ...current, lyrics: data.lyrics || current.lyrics }));
-      setSaveState(t('musicStudio.lineSaved'));
-    } catch (err) {
-      setMessage(err.message || t('musicStudio.lineGenFail'));
-      throw err;
-    }
+      lyrics = parseLyricsFile(picked.lyrics || '').map((row) => ({
+        ...row,
+        text: row.text.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').replace(/\s*[—–]\s*/g, ' ').replace(/\s+-\s+/g, ' ').replace(/\s{2,}/g, ' ').trim(),
+      }));
+    } catch { lyrics = []; }
+    const title = picked.name || t('musicStudio.untitled');
+    setSong({ title, songMeta: { source: 'library', melodyType: picked.melody_type || picked.melodyType || '' }, lyrics, targetPatterns: String(basicInfo.goals || '').split(/[,，；;\n]/).map((item) => item.trim()).filter(Boolean) });
+    setWorkTitle(title);
+    setAudio({ vocal: picked.vocal_url || picked.vocalUrl || '', vocalName: title, backing: picked.instrumental_url || picked.instrumentalUrl || '', backingName: title });
   };
 
   const saveSong = async () => {
@@ -825,63 +805,63 @@ export function MusicStudioPage() {
   };
 
   // ── step 3：音频与课件 ────────────────────────────────────
-  const generateAllSegments = async (songOverride, titleOverride) => {
+  const generateAllSegments = async (songOverride, titleOverride, resume = false, audioOverride) => {
     if (segmentBusy) return;
     const activeSong = songOverride?.lyrics ? songOverride : song;
     const activeTitle = titleOverride || activeSong.title || workTitle || 'Music Star Quest';
-    const targets = activeSong.lyrics.map((row, idx) => ({ row, idx })).filter(({ row }) => row.text);
-    if (!targets.length) { setMessage(t('musicStudio.noLyricsForAudio')); return; }
+    if (!activeSong.lyrics.length) { setMessage(t('musicStudio.noLyricsForAudio')); return; }
+    const id = editingIdRef.current;
+    if (!id) return;
+    const currentAudio = audioOverride || audio;
     setSegmentBusy('all');
-    setMessage('');
-    const nextSegments = activeSong.lyrics.map(() => '');
-    const failed = [];
+    setMessage(t('musicStudio.fullSongSubmitting'));
     try {
-      for (let n = 0; n < targets.length; n++) {
-        const { row, idx } = targets[n];
-        setMessage(t('musicStudio.segProgress', { done: n + 1, total: targets.length }));
-        const range = parseTimeRange(row.time);
-        try {
-          nextSegments[idx] = await generateSegmentAudio({
-            prompt: `儿童英语教学歌曲《${activeTitle}》的一个分段。风格：${basicInfo.style || '欢快'}，清脆童声、节奏明快。只唱这一句歌词："${row.text}"，不要添加其他歌词或念白。`,
-            duration: range ? range.end - range.start : 5,
-          });
-        } catch (err) {
-          console.error(`分段 ${idx + 1} 生成失败:`, err);
-          failed.push(idx + 1);
-        }
-      }
-      if (failed.length) {
-        const partialAudio = {
-          ...audio,
-          vocal: '',
-          vocalName: '',
-          segments: nextSegments,
-          segmentFailures: failed.map((lineNumber) => lineNumber - 1),
-        };
-        setAudio(partialAudio);
-        await persist({ audio: partialAudio, song: activeSong, title: activeTitle });
-        throw new Error(t('musicStudio.fullSongPartialFail', { lines: failed.join(', ') }));
-      }
-      const merged = mergeMp3DataUris(nextSegments);
-      if (!merged) throw new Error(t('musicStudio.noSegsToMerge'));
-      setMessage(t('musicStudio.generatingBacking'));
-      const lastRange = [...activeSong.lyrics].reverse().map((row) => parseTimeRange(row.time)).find(Boolean);
-      const backingDuration = lastRange?.end || Math.max(30, activeSong.lyrics.length * 3);
-      const backing = await generateSegmentAudio({
-        prompt: `儿童英语教学歌曲《${activeTitle}》的纯伴奏。风格：${basicInfo.style || '欢快'}，适合儿童课堂演唱，旋律清晰、节奏稳定。严格不要人声、歌词、念白或合唱。`,
-        duration: backingDuration,
-        maxDuration: 120,
+      if (!resume) await updateCreativeWork(id, { song: activeSong, title: activeTitle, parameters: basicInfo });
+      const generated = await generateFullSongAudio({
+        id, resume, isCurrent: () => editingIdRef.current === id,
+        onProgress: (executionId) => setMessage(t('musicStudio.fullSongWaiting', { id: executionId })),
       });
-      const nextAudio = { ...audio, segments: nextSegments, segmentFailures: [], vocal: merged, vocalName: t('musicStudio.aiFullSongName'), backing, backingName: t('musicStudio.aiBackingName') };
+      if (editingIdRef.current !== id) return;
+      // Old lyric ranges, fragments and independently-generated backing do not belong to this new master.
+      const nextSong = { ...activeSong, lyrics: generated.lyrics };
+      const segments = generated.lyrics.map(line => line.url);
+      const nextExercises = { ...exercises, ex3Data: exercises.ex3Data.map(row => ({ ...row, time: '' })) };
+      const nextAudio = { ...currentAudio, vocal: generated.url, vocalName: t('musicStudio.aiFullSongName'),
+        backing: '', backingName: '', segments, segmentFailures: [], actualDuration: generated.actualDuration,
+        transcription: generated, timingSource: generated.timingSource,
+        alignmentStatus: 'needs_review', generationTask: { executionId: generated.executionId, promptId: generated.promptId, lyricsHash: generated.lyricsHash, status: 'completed' },
+        requestedIntroSeconds: generated.requestedIntroSeconds };
+      setSong(nextSong);
       setAudio(nextAudio);
-      await persist({ audio: nextAudio, song: activeSong, title: activeTitle });
-      setMessage('');
+      setExercises(nextExercises);
+      await updateCreativeWork(id, { audio: nextAudio, song: nextSong, title: activeTitle, exercises: nextExercises });
+      setRendered(false);
+      setMessage(t('musicStudio.transcriptionNeedsReview'));
       setSaveState(t('musicStudio.aiFullSongReady'));
     } catch (err) {
-      setMessage(err.message || t('musicStudio.fullSongFail'));
+      if (editingIdRef.current === id) setMessage(err.message || t('musicStudio.fullSongFail'));
     } finally {
       setSegmentBusy(null);
     }
+  };
+
+  const importActualLrc = async (file) => {
+    if (!file || !audio.vocal || !audio.actualDuration) return;
+    const id = editingIdRef.current;
+    try {
+      const lyrics = applyActualLrc(await file.text(), song.lyrics, audio.actualDuration);
+      if (editingIdRef.current !== id) return;
+      const nextSong = { ...song, lyrics };
+      const nextAudio = { ...audio, alignmentStatus: 'lrc_imported', segments: [] };
+      const nextExercises = { ...exercises, ex3Data: exercises.ex3Data.map(row => ({ ...row, time: lyrics.find(line => line.text === row.options?.[row.correct])?.time || '' })) };
+      await updateCreativeWork(id, { song: nextSong, audio: nextAudio, exercises: nextExercises });
+      if (editingIdRef.current !== id) return;
+      setSong(nextSong);
+      setAudio(nextAudio);
+      setExercises(nextExercises);
+      setRendered(false);
+      setMessage(t('musicStudio.actualLrcImported'));
+    } catch (err) { setMessage(err.message); }
   };
 
   // 进入第四关 / 音频发生变化后，自动（重新）渲染课件，无需额外的第七步
@@ -1015,6 +995,11 @@ export function MusicStudioPage() {
 
           {listLoading ? (
             <div className="pbv2-list-loading"><Loader2 className="spin" size={28} /></div>
+          ) : listError ? (
+            <div className="pbv2-list-empty" role="alert">
+              <p>{listError}</p>
+              <button type="button" className="pbv2-ghost" onClick={loadWorks}>{t('common.retry')}</button>
+            </div>
           ) : filtered.length === 0 ? (
             <div className="pbv2-list-empty">
               <Music size={48} />
@@ -1023,7 +1008,7 @@ export function MusicStudioPage() {
           ) : (
             <div className="pbv2-card-grid">
               {filtered.map((work) => {
-                const lyricCount = work.result?.lyrics?.length || 0;
+                const lyricCount = work.isSummary ? work.lyricCount : work.result?.lyrics?.length || 0;
                 return (
                   <article key={work.id} className="pbv2-book-card" onClick={() => openWork(work)}>
                     <div className="pbv2-book-cover exp-cover">
@@ -1041,8 +1026,8 @@ export function MusicStudioPage() {
                         <span>{work.updatedAt ? new Date(work.updatedAt).toLocaleDateString() : ''}</span>
                       </div>
                       <div className="pbv2-book-actions">
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openWork(work); }}>
-                          <Pencil size={14} /> {t('musicStudio.edit')}
+                        <button type="button" disabled={openingWorkId !== null} onClick={(e) => { e.stopPropagation(); openWork(work); }}>
+                          {openingWorkId === work.id ? <Loader2 className="spin" size={14} /> : <Pencil size={14} />} {t(openingWorkId === work.id ? 'musicStudio.workLoading' : 'musicStudio.edit')}
                         </button>
                         {work.hasHtml && (
                           <button type="button" onClick={(e) => { e.stopPropagation(); presentFromList(work); }}>
@@ -1110,8 +1095,8 @@ export function MusicStudioPage() {
           {step === 0 && (
             <div className="pbv2-step-panel">
               <div className="pbv2-form-grid two">
-                <OptionGroup required label={t('musicStudio.ageLabel')} options={[{ value: '4–6 岁', label: t('musicStudio.age4to6') }, { value: '7–10 岁', label: t('musicStudio.age7to10') }, { value: '11–14 岁', label: t('musicStudio.age11to14') }]} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
-                <OptionGroup required label={t('musicStudio.levelLabel')} options={[{ value: '初级', label: t('musicStudio.levelBeginner') }, { value: '中级', label: t('musicStudio.levelIntermediate') }, { value: '高级', label: t('musicStudio.levelAdvanced') }]} value={basicInfo.level} onChange={(v) => setBasicInfo({ ...basicInfo, level: v })} tone="blue" />
+                <OptionGroup label={t('musicStudio.ageLabel')} options={[{ value: '4–6 岁', label: t('musicStudio.age4to6') }, { value: '7–10 岁', label: t('musicStudio.age7to10') }, { value: '11–14 岁', label: t('musicStudio.age11to14') }]} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
+                <OptionGroup label={t('musicStudio.levelLabel')} options={[{ value: '零基础', label: t('musicStudio.levelZero') }, { value: '初级（会字母和简单词）', label: t('musicStudio.levelBeginner') }, { value: '中级（能简单对话）', label: t('musicStudio.levelIntermediate') }, { value: '高级（能阅读和表达）', label: t('musicStudio.levelAdvanced') }]} value={basicInfo.level} onChange={(v) => setBasicInfo({ ...basicInfo, level: v })} tone="blue" />
                 <OptionGroup label={t('musicStudio.styleLabel')} options={[{ value: '欢快', label: t('musicStudio.styleCheerful') }, { value: '舒缓', label: t('musicStudio.styleSoothing') }, { value: '节奏感强', label: t('musicStudio.styleRhythmic') }]} value={basicInfo.style} onChange={(v) => setBasicInfo({ ...basicInfo, style: v })} tone="yellow" />
                 <OptionGroup label={t('musicStudio.durationLabel')} options={[{ value: '短 (30-60s)', label: t('musicStudio.durShort') }, { value: '中 (60-90s)', label: t('musicStudio.durMedium') }, { value: '长 (90-120s)', label: t('musicStudio.durLong') }]} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
                 <OptionGroup label={t('musicStudio.structLabel')} options={[{ value: '简单重复', label: t('musicStudio.structSimple') }, { value: '主歌+副歌', label: t('musicStudio.structVerseChorus') }, { value: '主歌+副歌+桥段', label: t('musicStudio.structFull') }]} value={basicInfo.structure} onChange={(v) => setBasicInfo({ ...basicInfo, structure: v })} tone="coral" />
@@ -1141,40 +1126,36 @@ export function MusicStudioPage() {
           {/* step 2 · 歌曲创作 */}
           {step === 1 && (
             <div className="pbv2-step-panel">
+              <PrepSongPlayer song={song} audio={audio} onGenerateFull={() => generateAllSegments()} generating={segmentBusy === 'all' || songGenerating} />
+              {audio.generationTask?.status === 'submitted' && <p>{t('musicStudio.resumeFullSong')}</p>}
+              {audio.alignmentStatus === 'needs_review' && <p>{t('musicStudio.transcriptionNeedsReview')}</p>}
+              {audio.alignmentStatus === 'pending' && (
+                <section className="pbv2-card pbv2-tone-yellow">
+                  <p>{t('musicStudio.actualLrcHint')}</p>
+                  <label className="pbv2-ghost">{t('musicStudio.importActualLrc')}<input type="file" accept=".lrc" disabled={Boolean(segmentBusy)} onChange={event => { importActualLrc(event.target.files?.[0]); event.target.value = ''; }} /></label>
+                </section>
+              )}
+              <section className="pbv2-card pbv2-tone-yellow">
+                <div className="pbv2-card-title">{t('musicStudio.chooseLibrarySong')}</div>
+                <select className="pbv2-input" disabled={Boolean(segmentBusy) || songGenerating} defaultValue="" onChange={(event) => selectLibrarySong(event.target.value)}>
+                  <option value="">{t('musicStudio.chooseLibrarySongPlaceholder')}</option>
+                  {songLibrary.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </section>
               <section className="pbv2-plan-block pbv2-tone-coral">
                 <div className="pbv2-form-grid two">
-                  <Field label={t('musicStudio.songTitleLabel')} value={song.title} onChange={(v) => { setSong({ ...song, title: v }); setWorkTitle(v); }} />
-                  <Field label={t('musicStudio.patternsLabel')} area value={(song.targetPatterns || []).join('\n')} onChange={(v) => setSong({ ...song, targetPatterns: v.split('\n').map((s) => s.trim()).filter(Boolean) })} />
+                  <div className="pbv2-field"><span>{t('musicStudio.songTitleLabel')}</span><div className="cw-readonly-value">{song.title || '—'}</div></div>
+                  <div className="pbv2-field"><span>{t('musicStudio.patternsLabel')}</span><div className="cw-readonly-value">{(song.targetPatterns || []).join('、') || '—'}</div></div>
                 </div>
               </section>
-              <LyricsEditor lyrics={song.lyrics} onGenerateLine={generateLyricLine} onChange={(lyrics) => setSong({ ...song, lyrics })} />
-              <section className="pbv2-card pbv2-tone-green">
-                <div className="pbv2-card-title">{t('musicStudio.replaceAudioTitle')}</div>
-                <p className="yoga-design-hint">{t('musicStudio.replaceAudioHint')}</p>
-                <div className="pbv2-form-grid two">
-                  <AudioCard label={t('musicStudio.vocalLabel')} name={audio.vocalName} dataUri={audio.vocal} onPick={({ dataUri, name }) => setAudio({ ...audio, vocal: dataUri, vocalName: name })} onRemove={() => setAudio({ ...audio, vocal: '', vocalName: '' })} />
-                  <AudioCard label={t('musicStudio.backingLabel')} name={audio.backingName} dataUri={audio.backing} onPick={({ dataUri, name }) => setAudio({ ...audio, backing: dataUri, backingName: name })} onRemove={() => setAudio({ ...audio, backing: '', backingName: '' })} />
-                </div>
-              </section>
-              <section className="pbv2-card pbv2-tone-yellow">
-                <div className="cw-section-title">
-                  <div className="pbv2-card-title">{t('musicStudio.aiFullSongTitle')}</div>
-                  <button type="button" className="pbv2-ghost" disabled={segmentBusy !== null || !song.lyrics.length} onClick={() => generateAllSegments()}>
-                    {segmentBusy === 'all' ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />}
-                    {segmentBusy === 'all' ? t('musicStudio.aiGenerating') : (audio.vocal ? t('musicStudio.regenerateFullSong') : t('musicStudio.generateFullSong'))}
-                  </button>
-                </div>
-                <p className="yoga-design-hint">{t('musicStudio.aiFullSongHint')}</p>
-                {audio.vocal ? <div className="cw-generated-song"><strong>{audio.vocalName || t('musicStudio.aiFullSongName')}</strong><audio controls preload="metadata" src={audio.vocal} /></div> : null}
-                {audio.backing ? <div className="cw-generated-song"><strong>{audio.backingName || t('musicStudio.aiBackingName')}</strong><audio controls preload="metadata" src={audio.backing} /></div> : null}
-              </section>
+              <LyricsEditor lyrics={song.lyrics} audio={audio} workId={editingIdRef.current} />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>{t('musicStudio.backToBasic')}</button>
-                <button type="button" className="pbv2-ghost" disabled={songGenerating} onClick={requestSongRegen}>
+                <button type="button" className="pbv2-ghost" disabled={songGenerating || Boolean(segmentBusy)} onClick={requestSongRegen}>
                   {songGenerating ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
                   {songGenerating ? t('musicStudio.aiGenerating') : t('musicStudio.aiRegenSong')}
                 </button>
-                <button type="button" className="pbv2-primary" disabled={saving} onClick={saveSong}>
+                <button type="button" className="pbv2-primary" disabled={saving || Boolean(segmentBusy)} onClick={saveSong}>
                   <Save size={16} /> {t('musicStudio.saveToExercises')}
                 </button>
               </footer>
@@ -1184,6 +1165,7 @@ export function MusicStudioPage() {
           {/* step 3 · 第一关 Lyric Hunter（填空 + 连词 + 听音 + 教案） */}
           {step === 2 && (
             <div className="pbv2-step-panel">
+              <PrepSongPlayer song={song} audio={audio} />
               <p className="yoga-design-hint">{t('musicStudio.stage1Hint')}</p>
               <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => requestSectionRegen('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
               <ScrambleEditor lyrics={song.lyrics} items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => requestSectionRegen('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
@@ -1205,6 +1187,7 @@ export function MusicStudioPage() {
           {/* step 4 · 第二关 Melody Mover（教案） */}
           {step === 3 && (
             <div className="pbv2-step-panel">
+              <PrepSongPlayer song={song} audio={audio} />
               <p className="yoga-design-hint">{t('musicStudio.stage2Hint')}</p>
               <EditablePool title="Actions" hint={t('musicStudio.actionsHint')} placeholder="Action" items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
               <EditablePool title="Instruments" hint={t('musicStudio.instrumentsHint')} placeholder="Instrument" items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
@@ -1221,8 +1204,9 @@ export function MusicStudioPage() {
           {/* step 5 · 第三关 Echo Master（教案） */}
           {step === 4 && (
             <div className="pbv2-step-panel">
+              <PrepSongPlayer song={song} audio={audio} />
               <p className="yoga-design-hint">{t('musicStudio.stage3Hint')}</p>
-              <EchoMasterPreview lyrics={song.lyrics} audio={audio} echoData={exercises.echoData} onGenerate={() => requestSectionRegen('echoData')} generating={sectionGenerating === 'echoData'} />
+              <EchoMasterPreview lyrics={song.lyrics} audio={audio} echoData={exercises.echoData} onChange={(echoData) => setExercises({ ...exercises, echoData })} onGenerate={() => requestSectionRegen('echoData')} generating={sectionGenerating === 'echoData'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[2])}>{t('musicStudio.backStage2')}</button>
@@ -1236,6 +1220,7 @@ export function MusicStudioPage() {
           {/* step 6 · 第四关 Star Studio（颜色分工 + 教案） */}
           {step === 5 && (
             <div className="pbv2-step-panel">
+              <PrepSongPlayer song={song} audio={audio} />
               <div className="pbv2-making-toolbar">
                 <button type="button" className="pbv2-ghost" disabled={!rendered || rendering} onClick={() => presentCurrent()}>
                   {rendering ? <Loader2 className="spin" size={16} /> : null}
@@ -1244,7 +1229,6 @@ export function MusicStudioPage() {
                 <span className="pbv2-save-state">{rendering ? t('musicStudio.rendering') : (rendered ? t('musicStudio.renderedReady') : '')}</span>
               </div>
               <p className="yoga-design-hint">{t('musicStudio.stage4Hint')}</p>
-              <StarRolesEditor lyrics={song.lyrics} roles={exercises.starRoles} onChange={(starRoles) => setExercises({ ...exercises, starRoles })} onGenerate={() => requestSectionRegen('starRoles')} generating={sectionGenerating === 'starRoles'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="4" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[3])}>{t('musicStudio.backStage3')}</button>
@@ -1256,6 +1240,16 @@ export function MusicStudioPage() {
           )}
         </section>
       </div>
+
+      {exGenerating && (
+        <div className="cw-global-loading" role="status" aria-live="polite" aria-busy="true">
+          <div className="cw-global-loading-card">
+            <Loader2 className="spin" size={36} />
+            <strong>{t('musicStudio.loadingExercisesTitle')}</strong>
+            <span>{t('musicStudio.loadingExercisesHint')}</span>
+          </div>
+        </div>
+      )}
 
       {promptOpen && (
         <div className="cw-dialog-backdrop" onClick={() => setPromptOpen(false)}>

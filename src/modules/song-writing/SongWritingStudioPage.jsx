@@ -230,7 +230,7 @@ export function SongWritingStudioPage() {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const saveInFlightRef = React.useRef(null);
   const legacyMelody = melodies.find((item) => item.id === form.melody);
-  const canGenerate = Boolean(form.age && form.level && form.melody && songLibrary.some((song) => String(song.id) === String(form.melody)));
+  const canGenerate = Boolean(String(form.vocabulary || '').trim() || String(form.grammar || '').trim());
   const setFormField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
   const steps = ['stepBasic', 'stepMake'];
   const goToStep = (nextStep) => {
@@ -563,13 +563,9 @@ export function SongWritingStudioPage() {
   };
   const saveWork = () => persistWork(true);
   const generateSong = async () => {
-    if (!librarySong) {
-      setSaveMessage(t('songWriting.pickLibrarySongFirst'));
-      return;
-    }
     setIsGenerating(true);
     try {
-      const melodyName = librarySong.melody_type || librarySong.melodyType || librarySong.name;
+      const melodyName = librarySong?.melody_type || librarySong?.melodyType || librarySong?.name || 'Twinkle, Twinkle, Little Star';
       const response = await fetch('/api/ai/generate-song-writing', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, melody: melodyName }) });
       const result = await parseJsonSafely(response);
       if (!response.ok || !result?.success) {
@@ -787,8 +783,8 @@ export function SongWritingStudioPage() {
           {step === 0 && (
           <div className="pbv2-step-panel">
             <div className="pbv2-form-grid two">
-              <OptionGroup tone="coral" required label={t('songWriting.ageLabel')} options={[{ value: '4-6岁', label: t('songWriting.age46') }, { value: '7-9岁', label: t('songWriting.age79') }, { value: '10-12岁', label: t('songWriting.age1012') }, { value: '13-15岁', label: t('songWriting.age1315') }]} value={form.age} onChange={(value) => setFormField('age', value)} />
-              <OptionGroup tone="blue" required label={t('songWriting.levelLabel')} options={[{ value: '零基础', label: t('songWriting.levelZero') }, { value: '初级（会字母和简单词）', label: t('songWriting.levelBeginner') }, { value: '中级（能简单对话）', label: t('songWriting.levelIntermediate') }, { value: '高级（能阅读和表达）', label: t('songWriting.levelAdvanced') }]} value={form.level} onChange={(value) => setFormField('level', value)} />
+              <OptionGroup tone="coral" label={t('songWriting.ageLabel')} options={[{ value: '4-6岁', label: t('songWriting.age46') }, { value: '7-9岁', label: t('songWriting.age79') }, { value: '10-12岁', label: t('songWriting.age1012') }, { value: '13-15岁', label: t('songWriting.age1315') }]} value={form.age} onChange={(value) => setFormField('age', value)} />
+              <OptionGroup tone="blue" label={t('songWriting.levelLabel')} options={[{ value: '零基础', label: t('songWriting.levelZero') }, { value: '初级（会字母和简单词）', label: t('songWriting.levelBeginner') }, { value: '中级（能简单对话）', label: t('songWriting.levelIntermediate') }, { value: '高级（能阅读和表达）', label: t('songWriting.levelAdvanced') }]} value={form.level} onChange={(value) => setFormField('level', value)} />
               <OptionGroup tone="yellow" label={t('songWriting.participantLabel')} options={[{ value: '单人', label: t('songWriting.partSingle') }, { value: '小组（2-4人）', label: t('songWriting.partSmallGroup') }, { value: '大组（5-10人）', label: t('songWriting.partBigGroup') }, { value: '班级（10+）', label: t('songWriting.partClass') }]} value={form.participants} onChange={(value) => setFormField('participants', value)} />
             </div>
 
@@ -803,7 +799,7 @@ export function SongWritingStudioPage() {
             />
 
             <section className="pbv2-card pbv2-tone-blue">
-              <div className="pbv2-card-title">{t('songWriting.langGoalsTitle')}</div>
+              <div className="pbv2-card-title">{t('songWriting.langGoalsTitle')} <span className="pbv2-required">*</span></div>
               <div className="pbv2-form-grid two">
                 <Field label={t('songWriting.vocabLabel')} value={form.vocabulary} onChange={(value) => setFormField('vocabulary', value)} placeholder={t('songWriting.vocabPlaceholder')} />
                 <Field label={t('songWriting.grammarLabel')} value={form.grammar} onChange={(value) => setFormField('grammar', value)} placeholder={t('songWriting.grammarPlaceholder')} />
@@ -811,7 +807,7 @@ export function SongWritingStudioPage() {
             </section>
 
             <section className="pbv2-card pbv2-tone-coral">
-              <div className="pbv2-card-title">{t('songWriting.pickSongTitle')} <span className="pbv2-required">*</span></div>
+              <div className="pbv2-card-title">{t('songWriting.pickSongTitle')}</div>
               {songLibraryLoading ? (
                 <div className="song-library-empty">
                   <Loader2 className="spin" size={28} />
@@ -841,7 +837,6 @@ export function SongWritingStudioPage() {
                 {isGenerating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
                 {isGenerating ? t('songWriting.generating') : t('songWriting.generateLyrics')}
               </button>
-              {!songLibraryLoading && !librarySong && songLibrary.length > 0 && <span className="pbv2-action-hint">{t('songWriting.pickFirst')}</span>}
             </FooterActions>
           </div>
           )}

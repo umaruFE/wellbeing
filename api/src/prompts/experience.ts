@@ -105,6 +105,7 @@ const MUSIC_SONG_SYSTEM = `你是儿童英语教学歌曲创作专家，为「Mu
 - 每行 ≤ 10 词；行尾尽量押韵；可用 [Name] 等可替换占位。
 - 目标词汇/句型必须全部出现在歌词中，副歌优先承载核心句型。
 - time 为 "mm:ss–mm:ss"（en dash 分隔），从 00:02 左右开始，逐行递增不重叠，总时长匹配所选歌曲时长档位（短30-60s/中60-90s/长90-120s）。
+- text 只能包含要演唱的英文歌词和正常英文标点；禁止加入 🎵 等音符、emoji、标签、项目符号，也禁止使用破折号连接句子。
 - targetPatterns：4-8 个目标句型/词汇字符串（用于歌词高亮与后续练习出题）。
 
 ## 输出（仅返回合法 JSON，无任何多余文本）
@@ -136,11 +137,11 @@ const MUSIC_EXERCISES_SYSTEM = `你是儿童英语教学活动设计专家，为
 - 长歌(90-120s)：选词填空 5-7 题、连词成句 4-5 题、听音选词 3-4 题
 
 ## 选词填空 ex1FillData
-- { sentence:['片段','','片段'], blanks:['答案1','答案2'], options:['答案+干扰项共5个左右'], emoji:'一个贴合语义的 emoji' }
-- 每题必须有 1-2 个填空，blanks 绝对不能为空。
+- { sentence:['片段','','片段'], blanks:['答案'], options:['正确答案','干扰项1','干扰项2','干扰项3'], emoji:'一个贴合语义的 emoji' }
+- 每题必须且只能有 1 个填空，blanks 绝对不能为空。
 - sentence 为按空位切分的句子片段数组，每个空位必须显式放一个空字符串 ''；sentence 中 '' 的数量必须与 blanks 数量完全相等。例如 This is China! 挖掉 China：sentence=['This is ','','!'], blanks=['China']。
 - 优先选含目标语言点、词汇密集的歌词行；blanks 顺序与 sentence 中 '' 出现顺序一致。
-- options 第一个必须是正确答案（可多个正确答案对应多个 blanks），其余为语义/词形干扰项。
+- options 固定 4 个且第一个必须是唯一正确答案，其余 3 个为语义/词形干扰项。
 - 不同题目的 blanks 答案不能重复；同一个国家、单词或短语不能连续考两次。
 
 ## 连词成句 ex2Items
@@ -159,18 +160,18 @@ const MUSIC_EXERCISES_SYSTEM = `你是儿童英语教学活动设计专家，为
 
 ## 四关教学方案 teachingPlans（键为 "1"-"4"）
 每关 {title, sections:[{title, content}]}：
-1=Lyric Hunter 歌词猎人（填空+连词+听音解锁歌词）、2=Melody Mover 旋律舞者（完整聆听+动作/乐器编排）、3=Echo Master 回声大师（三种固定玩法：Beginner 完整歌词、Intermediate 部分挖空、Challenge 仅首字母）、4=Star Studio 星光录音棚（颜色分工+录制）。
+1=Lyric Hunter 歌词猎人（填空+连词+听音解锁歌词）、2=Melody Mover 旋律舞者（完整聆听+动作/乐器编排）、3=Echo Master 回声大师（三种固定玩法：Beginner 完整歌词、Intermediate 首字母填词、Challenge 整词挖空）、4=Star Studio 星光录音棚（颜色分工+录制）。
 每关 sections 至少含：🎯 教学目标、📋 教学流程、💬 教师语言（英文讲稿，可带中文舞台指示，讲稿须引用本歌曲的真实歌词行）。content 必须是纯文本，可用换行和“1. / 2. / •”组织内容，禁止输出任何 HTML 标签。
 不得设计或提及独立的“授课难度”设置；Echo Master 的 Beginner / Intermediate / Challenge 是固定玩法模式，必须保留；其 Intermediate / Challenge 的具体遮挡方案由 echoData 指定。
 
 ## 回声大师跟唱遮挡 echoData（第三关 Echo Master）
 - { intermediate: string[][], challenge: string[][] }，两个数组都与歌词行**一一对应、数量完全相等**。
-- intermediate[i]：第 i 行在 Intermediate（部分挖空）模式下要被挖空的目标词（原词数组），优先挖目标语言点/核心实词；可为空数组表示该行不挖空。
-- challenge[i]：第 i 行在 Challenge（仅首字母）模式下只显示首字母的目标词（原词数组），优先选目标语言点词汇；可为空数组表示该行不挖空。
+- challenge[i]：第 i 行在 Intermediate（首字母填词）模式下只显示首字母的目标词（原词数组）；每行必须选择 1-2 个词。
+- intermediate[i]：第 i 行在 Challenge（整词挖空）模式下完全隐藏的目标词（原词数组）；每行必须选择 1-2 个词。
 - 挖空与首字母提示由游戏按词精确渲染，你只需输出原词（大小写与歌词一致），不要输出下划线或占位符。
 
 ## 输出（仅返回合法 JSON，无任何多余文本）
-{"ex1FillData":[{"sentence":["","! ","","!"],"blanks":["Hello","Hello"],"options":["Hello","Goodbye","Happy","Yes","No"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0,"time":"00:13–00:14"}],"starRoles":["teacher","student","all","all","solo","student","all","all"],"echoData":{"intermediate":[["China"],["Where"],["name"]],"challenge":[["China"],["Where"],["name"]]},"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"• 目标一\n• 目标二"}]},"2":{...},"3":{...},"4":{...}}}`;
+{"ex1FillData":[{"sentence":["","!"],"blanks":["Hello"],"options":["Hello","Goodbye","Happy","Yes"],"emoji":"👋"}],"ex2Items":[{"answer":"Where are you from?","words":["Where","are","you","from?"]}],"ex3Data":[{"question":"Choose the sentence you hear:","options":["Where are you from?","Where are they from?","Who are you from?"],"correct":0,"time":"00:13–00:14"}],"starRoles":["teacher","student","all","all","solo","student","all","all"],"echoData":{"intermediate":[["China"],["Where"],["name"]],"challenge":[["China"],["Where"],["name"]]},"teachingPlans":{"1":{"title":"Stage 1 — ... 教学方案","sections":[{"title":"🎯 教学目标","content":"• 目标一\n• 目标二"}]},"2":{...},"3":{...},"4":{...}}}`;
 
 const MUSIC_EXERCISES_USER = `基于以下最终歌词设计练习与教学方案（所有题目必须来自这些歌词行）：
 

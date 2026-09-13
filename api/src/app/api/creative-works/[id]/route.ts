@@ -1,3 +1,5 @@
+import { playableMusicManifest, musicPublicOrigin } from '@/lib/musicPlayback';
+import { assertMusicAudioUrls } from '@/lib/musicAudioUrls';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
@@ -28,7 +30,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (!rows.length) {
       return NextResponse.json({ error: '作品不存在' }, { status: 404 });
     }
-    return NextResponse.json({ data: rows[0] });
+    const work = rows[0];
+    if (work.module_id === 'music-star-quest' && work.result?.audio?.transcription?.storage === 'ftp') {
+      const audio = work.result.audio;
+      const playable = playableMusicManifest(audio.transcription, musicPublicOrigin(request));
+      work.result.audio = { ...audio, vocal: playable.url, segments: audio.segments?.length ? playable.segments : [], transcription: playable };
+    }
+    return NextResponse.json({ data: work });
   } catch (error) {
     console.error('[creative-works] GET by id failed:', error);
     return NextResponse.json({ error: '获取作品失败' }, { status: 500 });
@@ -70,7 +78,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const existing = (work.result && typeof work.result === 'object') ? { ...work.result } as Partial<YogaResult & MusicResult> : {};
     if (body.plan !== undefined) existing.plan = body.plan as YogaPlan;
     if (Array.isArray(body.pages)) existing.pages = body.pages as YogaPage[];
-    // 星光录音棚：歌曲 / 练习 / 音频 分段保存（音频 base64 体积大，仅显式上传时携带）
+    // 星光录音棚：歌曲 / 练习 / 音频 分段保存（音频已上传 FTP，仅保存 URL）
     if (body.song && typeof body.song === 'object') {
       if (body.song.songMeta !== undefined) existing.songMeta = body.song.songMeta;
       if (Array.isArray(body.song.lyrics)) existing.lyrics = body.song.lyrics;
@@ -85,7 +93,12 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       if (Array.isArray(body.exercises.melodyInstruments)) existing.melodyInstruments = body.exercises.melodyInstruments;
       if (body.exercises.teachingPlans !== undefined) existing.teachingPlans = body.exercises.teachingPlans;
     }
-    if (body.audio !== undefined) existing.audio = body.audio;
+    if (body.audio !== undefined) {
+      if (work.module_id === 'music-star-quest') {
+        try { assertMusicAudioUrls(body.audio); } catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 400 }); }
+      }
+      existing.audio = body.audio;
+    }
     if (typeof body.title === 'string' && body.title.trim()) existing.title = body.title.trim();
     const title = existing.title || work.title;
 

@@ -1,0 +1,1100 @@
+{
+  "updatedAt": "2026-09-12T16:11:49.185Z",
+  "createdAt": "2026-09-12T06:53:44.163Z",
+  "id": "dSzHC0vfUXO3GgTo",
+  "name": "gene-music-full-song · ACE-Step整曲生成",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gene-music-full-song",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "19d86767-9be9-4a36-a89d-28425d2a13a6",
+      "name": "接收整曲请求",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        2640,
+        1328
+      ],
+      "webhookId": "gene-music-full-song"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 在此修改服务地址和模型实际路径，不从Webhook接收服务URL或密钥。\nconst config = { comfyUrl: 'http://117.50.214.226:8188', unet: 'acestep1.5/acestep_v1.5_turbo.safetensors', clip1: 'qwen_0.6b_ace15.safetensors', clip2: 'qwen_1.7b_ace15.safetensors', vae: 'ace_1.5_vae.safetensors', maxPolls: 120 };\nconst input = $input.first().json;\nconst body = input.body || {};\nconst caption = String(body.caption || body.prompt || '').trim();\nconst rawLyrics = Array.isArray(body.lyrics) ? body.lyrics.map(row => typeof row === 'string' ? row : row?.text || '').join('\\n') : String(body.lyrics || '');\nconst lyrics = rawLyrics.replace(/\\[(?:\\d+:\\d+(?:\\.\\d+)?)\\]/g, '').replace(/[\\p{Extended_Pictographic}\\uFE0F\\u200D]/gu, '').replace(/[—–]/g, ' ').trim();\nif (!caption || !lyrics) throw new Error('caption/prompt和完整lyrics均为必填，歌词请独立传入。');\nif (caption.length > 6000 || lyrics.length > 12000) throw new Error('提示词或歌词过长。');\nfunction number(value, fallback, min, max, integer = false) { const n = value == null ? fallback : Number(value); if (!Number.isFinite(n) || n < min || n > max || (integer && !Number.isInteger(n))) throw new Error('数值参数超出范围：' + value); return n; }\nconst duration = number(body.duration, 60, 10, 120);\nconst bpm = number(body.bpm, 100, 30, 300, true);\nconst steps = number(body.steps, 8, 1, 20, true);\nconst seed = number(body.seed, Math.floor(Math.random() * 1000000000000), 0, Number.MAX_SAFE_INTEGER, true);\nconst language = String(body.language || 'en');\nif (!['en','zh','ja','ko','es','fr','de','it','pt','ru','yue','unknown'].includes(language)) throw new Error('不支持的language，请在配置节点扩展已安装节点支持的语言。');\nconst keyscale = String(body.keyscale || 'C major');\nif (!/^(?:C|C#|Db|D|D#|Eb|E|F|F#|Gb|G|G#|Ab|A|A#|Bb|B) (?:major|minor)$/.test(keyscale)) throw new Error('keyscale格式不正确，例如C major。');\nconst prompt = {\n '1': { class_type: 'UNETLoader', inputs: { unet_name: config.unet, weight_dtype: 'default' } },\n '2': { class_type: 'DualCLIPLoader', inputs: { clip_name1: config.clip1, clip_name2: config.clip2, type: 'ace', device: 'default' } },\n '3': { class_type: 'VAELoader', inputs: { vae_name: config.vae } },\n '6': { class_type: 'TextEncodeAceStepAudio1.5', inputs: { clip: ['2',0], tags: caption, lyrics, seed, bpm, duration, timesignature: '4', language, keyscale, generate_audio_codes: true, cfg_scale: 2, temperature: 0.85, top_p: 0.9, top_k: 0, min_p: 0 } },\n '7': { class_type: 'ModelSamplingAuraFlow', inputs: { model: ['1',0], shift: 3 } },\n '8': { class_type: 'ConditioningZeroOut', inputs: { conditioning: ['6',0] } },\n '9': { class_type: 'EmptyAceStep1.5LatentAudio', inputs: { seconds: duration, batch_size: 1 } },\n '10': { class_type: 'KSampler', inputs: { model: ['7',0], positive: ['6',0], negative: ['8',0], latent_image: ['9',0], seed, steps, cfg: 1, sampler_name: 'euler', scheduler: 'simple', denoise: 1 } },\n '11': { class_type: 'VAEDecodeAudio', inputs: { samples: ['10',0], vae: ['3',0] } },\n '12': { class_type: 'SaveAudio', inputs: { audio: ['11',0], filename_prefix: 'music-star-quest/full-song-' + seed } }\n};\nreturn [{ json: { ...config, caption, lyrics, duration, bpm, seed, language, keyscale, payload: { prompt, client_id: 'n8n-full-song-' + $execution.id } } }];"
+      },
+      "id": "40cf284c-ec10-40db-816f-970557253029",
+      "name": "配置与构建ComfyUI API图",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2880,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('配置与构建ComfyUI API图').first().json.comfyUrl + '/prompt' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.payload }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "ca50a0fe-24c7-46e2-8712-4fda9d4aefe9",
+      "name": "提交ComfyUI整曲任务",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        1328
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nif (!result.prompt_id || (result.node_errors && Object.keys(result.node_errors).length)) throw new Error('ComfyUI未接受流程，请检查模型文件和缺失节点。');\nreturn [{ json: { success: true, executionId: String($execution.id), promptId: result.prompt_id, workflowType: 'music', workflow: 'gene-music-full-song', status: 'submitted', alignmentStatus: 'not_generated', message: '整曲任务已提交，后台继续生成；executionId为n8n执行ID，promptId为ComfyUI任务ID。' } }];"
+      },
+      "id": "1ca89528-0597-4323-9a13-6408d9678889",
+      "name": "校验提交结果",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "id": "79f1c23a-8c46-4c4a-9f74-42c7ef4546df",
+      "name": "立即返回n8n执行ID",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3600,
+        1328
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7bfb4e70-d92d-4b2d-bca7-52980f4133e5",
+      "name": "等待5秒",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3840,
+        1328
+      ],
+      "webhookId": "full-song-wait"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('配置与构建ComfyUI API图').first().json.comfyUrl + '/history/' + encodeURIComponent($('校验提交结果').first().json.promptId) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 30000
+        }
+      },
+      "id": "c27e770d-fb8a-4e90-83c9-8c2b83522438",
+      "name": "查询ComfyUI结果",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4080,
+        1328
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const config = $('配置与构建ComfyUI API图').first().json;\nconst task = $('校验提交结果').first().json;\nconst history = $input.first().json;\nconst result = history[task.promptId];\nconst poll = $runIndex + 1;\nif (result?.status?.status_str === 'error' || result?.status?.messages?.some(m => ['execution_error','execution_interrupted'].includes(m[0]))) throw new Error('ComfyUI任务失败或被中断：' + task.promptId);\nconst output = result?.outputs?.['12'];\nconst files = output?.audio || output?.audios || [];\nconst file = files.find(f => f.type === 'output' && /\\.flac$/i.test(f.filename || ''));\nif (file) {\n if (!file.filename || file.filename.includes('/') || file.filename.includes('\\\\') || String(file.subfolder || '').split('/').includes('..')) throw new Error('ComfyUI返回了非法文件路径。');\n const query = 'filename=' + encodeURIComponent(file.filename) + '&subfolder=' + encodeURIComponent(file.subfolder || '') + '&type=output';\n return [{ json: { executionId: task.executionId, promptId: task.promptId, ready: true, filename: file.filename, comfyAudioUrl: config.comfyUrl + '/view?' + query, duration: config.duration, seed: config.seed, lyrics: config.lyrics, poll } }];\n}\nif (result?.status?.completed) throw new Error('任务已结束但SaveAudio节点没有返回FLAC音频，请检查节点12。');\nif (poll >= config.maxPolls) throw new Error('轮询达到上限；未取消GPU任务，请在ComfyUI确认其状态。promptId=' + task.promptId);\nreturn [{ json: { executionId: task.executionId, promptId: task.promptId, ready: false, poll } }];"
+      },
+      "id": "e602cbae-19d1-4d29-8325-fef96d85a7a8",
+      "name": "检查完成与轮询上限",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4320,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-ready",
+              "leftValue": "={{ $json.ready }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "738b809c-1c41-4eb8-87ff-6bf66ba962df",
+      "name": "音频已就绪",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4560,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.comfyAudioUrl }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "1ed36798-570e-440d-8952-7d4050f37bb0",
+      "name": "认证下载完整歌曲",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4800,
+        1232
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('音频已就绪').item.json;\nconst bytes = await this.helpers.getBinaryDataBuffer(0, 'data');\nif (!bytes.length || bytes.subarray(0,4).toString('ascii') !== 'fLaC') throw new Error('下载内容不是有效FLAC文件头，请检查ComfyUI认证。');\nconst localFilename = 'full_song_' + String($execution.id).replace(/[^a-zA-Z0-9_-]/g, '') + '_' + Date.now() + '.flac';\nreturn [{ json: { ...meta, localFilename, localFilePath: '/home/node/files/' + localFilename }, binary: $input.first().binary, pairedItem: { item: 0 } }];"
+      },
+      "id": "b10c7c02-1fb4-4ecc-ab05-63b0a3a96bb6",
+      "name": "校验歌曲文件",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5040,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.localFilePath }}",
+        "options": {}
+      },
+      "id": "a138c278-0562-41f3-9c3e-6c1f82e3218e",
+      "name": "保存到n8n本地资源目录",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        5280,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const meta = $('校验歌曲文件').first().json;\n// 复用现有/files读取流程；它读取本地文件，不负责从ComfyUI下载。\nconst url = 'http://117.50.218.161:5678/webhook/files?file=' + encodeURIComponent(meta.localFilename);\nreturn [{ json: { success: true, status: 'completed', executionId: meta.executionId, promptId: meta.promptId, workflowType: 'music', filename: meta.localFilename, url, audio_url: url, music_filepath: url, comfyAudioUrl: meta.comfyAudioUrl, duration: meta.duration, durationSource: 'requested_not_measured', seed: meta.seed, lyrics: meta.lyrics, alignmentStatus: 'not_generated', backingStatus: 'not_generated', results: [{ url, filename: meta.localFilename }] } }];"
+      },
+      "id": "f782a6e1-c532-4add-af87-3c239fa63ff6",
+      "name": "组装通用资源地址",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5520,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "J3YaofTO0eHhgjAp",
+          "mode": "list",
+          "cachedResultName": "tworkflow"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "execution_id": "={{ $json.executionId }}",
+            "response": "={{ $json.music_filepath }}",
+            "status": "success"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "response",
+              "displayName": "response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "45d6ccb5-2fe9-4b4f-8bc2-e054668a1acc",
+      "name": "写入通用资源表",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        5760,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 仅在本地保存与数据表写入均成功后返回completed。\nreturn [{ json: $('组装通用资源地址').first().json }];"
+      },
+      "id": "14cf1e5a-1f95-4706-8204-2dfdc627c383",
+      "name": "执行结束返回字段",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6000,
+        1232
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 导入后配置（新版复用通用资源链路）\n1. 三个HTTP Request节点均选择项目已有的ComfyUI Bearer Auth凭据。\n2. Webhook需绑定Header Auth凭据：Name=X-N8N-API-KEY，Value使用项目后端现有n8n密钥。Respond说明文字本身不是缺节点报错；本图已连接立即返回n8n执行ID节点。\n3. 配置节点设置模型实际路径；保存目录为/home/node/files/，需与现有/files流程挂载相同目录并可写。\n4. 写入通用资源表节点使用现有tworkflow表ID；导入同一n8n项目，检查表权限。\n5. 链路：提交ComfyUI → 返回n8n执行ID → Wait/history轮询 → 认证下载/view → 本地保存 → 写tworkflow → 完成。\n6. 完成后调用GET /webhook/get-resource?execution_id=<n8n执行ID>，它返回/files音频地址，浏览器可播放。不要把ComfyUI promptId用于查询资源表。\n7. 不覆盖gene-music；未替换现有前端逐句生成，未生成伴奏或时间轴。新版未上传线上，需更新导入的流程。",
+        "height": 390,
+        "width": 1080
+      },
+      "id": "1ef8f86a-3f48-4df6-9789-18a247f7d8e2",
+      "name": "导入后必读",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2640,
+        864
+      ]
+    }
+  ],
+  "connections": {
+    "接收整曲请求": {
+      "main": [
+        [
+          {
+            "node": "配置与构建ComfyUI API图",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "配置与构建ComfyUI API图": {
+      "main": [
+        [
+          {
+            "node": "提交ComfyUI整曲任务",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "提交ComfyUI整曲任务": {
+      "main": [
+        [
+          {
+            "node": "校验提交结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验提交结果": {
+      "main": [
+        [
+          {
+            "node": "立即返回n8n执行ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "立即返回n8n执行ID": {
+      "main": [
+        [
+          {
+            "node": "等待5秒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待5秒": {
+      "main": [
+        [
+          {
+            "node": "查询ComfyUI结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "查询ComfyUI结果": {
+      "main": [
+        [
+          {
+            "node": "检查完成与轮询上限",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "检查完成与轮询上限": {
+      "main": [
+        [
+          {
+            "node": "音频已就绪",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "音频已就绪": {
+      "main": [
+        [
+          {
+            "node": "认证下载完整歌曲",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "等待5秒",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "认证下载完整歌曲": {
+      "main": [
+        [
+          {
+            "node": "校验歌曲文件",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "校验歌曲文件": {
+      "main": [
+        [
+          {
+            "node": "保存到n8n本地资源目录",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "保存到n8n本地资源目录": {
+      "main": [
+        [
+          {
+            "node": "组装通用资源地址",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "组装通用资源地址": {
+      "main": [
+        [
+          {
+            "node": "写入通用资源表",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "写入通用资源表": {
+      "main": [
+        [
+          {
+            "node": "执行结束返回字段",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "2f2c8ec3-c5af-476a-94a0-8bd4dd7b5f2c",
+  "activeVersionId": "2f2c8ec3-c5af-476a-94a0-8bd4dd7b5f2c",
+  "versionCounter": 21,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-09-12T06:53:44.166Z",
+      "createdAt": "2026-09-12T06:53:44.166Z",
+      "role": "workflow:owner",
+      "workflowId": "dSzHC0vfUXO3GgTo",
+      "projectId": "A1HdxbOAbMRJMiPU",
+      "project": {
+        "updatedAt": "2026-04-01T06:46:13.169Z",
+        "createdAt": "2026-04-01T06:24:56.072Z",
+        "id": "A1HdxbOAbMRJMiPU",
+        "name": "vincent zou <343854933@qq.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-09-12T16:11:49.186Z",
+    "createdAt": "2026-09-12T16:11:49.186Z",
+    "versionId": "2f2c8ec3-c5af-476a-94a0-8bd4dd7b5f2c",
+    "workflowId": "dSzHC0vfUXO3GgTo",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "gene-music-full-song",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "19d86767-9be9-4a36-a89d-28425d2a13a6",
+        "name": "接收整曲请求",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          2640,
+          1328
+        ],
+        "webhookId": "gene-music-full-song"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 在此修改服务地址和模型实际路径，不从Webhook接收服务URL或密钥。\nconst config = { comfyUrl: 'http://117.50.214.226:8188', unet: 'acestep1.5/acestep_v1.5_turbo.safetensors', clip1: 'qwen_0.6b_ace15.safetensors', clip2: 'qwen_1.7b_ace15.safetensors', vae: 'ace_1.5_vae.safetensors', maxPolls: 120 };\nconst input = $input.first().json;\nconst body = input.body || {};\nconst caption = String(body.caption || body.prompt || '').trim();\nconst rawLyrics = Array.isArray(body.lyrics) ? body.lyrics.map(row => typeof row === 'string' ? row : row?.text || '').join('\\n') : String(body.lyrics || '');\nconst lyrics = rawLyrics.replace(/\\[(?:\\d+:\\d+(?:\\.\\d+)?)\\]/g, '').replace(/[\\p{Extended_Pictographic}\\uFE0F\\u200D]/gu, '').replace(/[—–]/g, ' ').trim();\nif (!caption || !lyrics) throw new Error('caption/prompt和完整lyrics均为必填，歌词请独立传入。');\nif (caption.length > 6000 || lyrics.length > 12000) throw new Error('提示词或歌词过长。');\nfunction number(value, fallback, min, max, integer = false) { const n = value == null ? fallback : Number(value); if (!Number.isFinite(n) || n < min || n > max || (integer && !Number.isInteger(n))) throw new Error('数值参数超出范围：' + value); return n; }\nconst duration = number(body.duration, 60, 10, 120);\nconst bpm = number(body.bpm, 100, 30, 300, true);\nconst steps = number(body.steps, 8, 1, 20, true);\nconst seed = number(body.seed, Math.floor(Math.random() * 1000000000000), 0, Number.MAX_SAFE_INTEGER, true);\nconst language = String(body.language || 'en');\nif (!['en','zh','ja','ko','es','fr','de','it','pt','ru','yue','unknown'].includes(language)) throw new Error('不支持的language，请在配置节点扩展已安装节点支持的语言。');\nconst keyscale = String(body.keyscale || 'C major');\nif (!/^(?:C|C#|Db|D|D#|Eb|E|F|F#|Gb|G|G#|Ab|A|A#|Bb|B) (?:major|minor)$/.test(keyscale)) throw new Error('keyscale格式不正确，例如C major。');\nconst prompt = {\n '1': { class_type: 'UNETLoader', inputs: { unet_name: config.unet, weight_dtype: 'default' } },\n '2': { class_type: 'DualCLIPLoader', inputs: { clip_name1: config.clip1, clip_name2: config.clip2, type: 'ace', device: 'default' } },\n '3': { class_type: 'VAELoader', inputs: { vae_name: config.vae } },\n '6': { class_type: 'TextEncodeAceStepAudio1.5', inputs: { clip: ['2',0], tags: caption, lyrics, seed, bpm, duration, timesignature: '4', language, keyscale, generate_audio_codes: true, cfg_scale: 2, temperature: 0.85, top_p: 0.9, top_k: 0, min_p: 0 } },\n '7': { class_type: 'ModelSamplingAuraFlow', inputs: { model: ['1',0], shift: 3 } },\n '8': { class_type: 'ConditioningZeroOut', inputs: { conditioning: ['6',0] } },\n '9': { class_type: 'EmptyAceStep1.5LatentAudio', inputs: { seconds: duration, batch_size: 1 } },\n '10': { class_type: 'KSampler', inputs: { model: ['7',0], positive: ['6',0], negative: ['8',0], latent_image: ['9',0], seed, steps, cfg: 1, sampler_name: 'euler', scheduler: 'simple', denoise: 1 } },\n '11': { class_type: 'VAEDecodeAudio', inputs: { samples: ['10',0], vae: ['3',0] } },\n '12': { class_type: 'SaveAudio', inputs: { audio: ['11',0], filename_prefix: 'music-star-quest/full-song-' + seed } }\n};\nreturn [{ json: { ...config, caption, lyrics, duration, bpm, seed, language, keyscale, payload: { prompt, client_id: 'n8n-full-song-' + $execution.id } } }];"
+        },
+        "id": "40cf284c-ec10-40db-816f-970557253029",
+        "name": "配置与构建ComfyUI API图",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2880,
+          1328
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('配置与构建ComfyUI API图').first().json.comfyUrl + '/prompt' }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ $json.payload }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            },
+            "timeout": 30000
+          }
+        },
+        "id": "ca50a0fe-24c7-46e2-8712-4fda9d4aefe9",
+        "name": "提交ComfyUI整曲任务",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3120,
+          1328
+        ],
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const result = $input.first().json;\nif (!result.prompt_id || (result.node_errors && Object.keys(result.node_errors).length)) throw new Error('ComfyUI未接受流程，请检查模型文件和缺失节点。');\nreturn [{ json: { success: true, executionId: String($execution.id), promptId: result.prompt_id, workflowType: 'music', workflow: 'gene-music-full-song', status: 'submitted', alignmentStatus: 'not_generated', message: '整曲任务已提交，后台继续生成；executionId为n8n执行ID，promptId为ComfyUI任务ID。' } }];"
+        },
+        "id": "1ca89528-0597-4323-9a13-6408d9678889",
+        "name": "校验提交结果",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3360,
+          1328
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {
+            "responseCode": 202
+          }
+        },
+        "id": "79f1c23a-8c46-4c4a-9f74-42c7ef4546df",
+        "name": "立即返回n8n执行ID",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          3600,
+          1328
+        ]
+      },
+      {
+        "parameters": {},
+        "id": "7bfb4e70-d92d-4b2d-bca7-52980f4133e5",
+        "name": "等待5秒",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          3840,
+          1328
+        ],
+        "webhookId": "full-song-wait"
+      },
+      {
+        "parameters": {
+          "url": "={{ $('配置与构建ComfyUI API图').first().json.comfyUrl + '/history/' + encodeURIComponent($('校验提交结果').first().json.promptId) }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "json"
+              }
+            },
+            "timeout": 30000
+          }
+        },
+        "id": "c27e770d-fb8a-4e90-83c9-8c2b83522438",
+        "name": "查询ComfyUI结果",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4080,
+          1328
+        ],
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const config = $('配置与构建ComfyUI API图').first().json;\nconst task = $('校验提交结果').first().json;\nconst history = $input.first().json;\nconst result = history[task.promptId];\nconst poll = $runIndex + 1;\nif (result?.status?.status_str === 'error' || result?.status?.messages?.some(m => ['execution_error','execution_interrupted'].includes(m[0]))) throw new Error('ComfyUI任务失败或被中断：' + task.promptId);\nconst output = result?.outputs?.['12'];\nconst files = output?.audio || output?.audios || [];\nconst file = files.find(f => f.type === 'output' && /\\.flac$/i.test(f.filename || ''));\nif (file) {\n if (!file.filename || file.filename.includes('/') || file.filename.includes('\\\\') || String(file.subfolder || '').split('/').includes('..')) throw new Error('ComfyUI返回了非法文件路径。');\n const query = 'filename=' + encodeURIComponent(file.filename) + '&subfolder=' + encodeURIComponent(file.subfolder || '') + '&type=output';\n return [{ json: { executionId: task.executionId, promptId: task.promptId, ready: true, filename: file.filename, comfyAudioUrl: config.comfyUrl + '/view?' + query, duration: config.duration, seed: config.seed, lyrics: config.lyrics, poll } }];\n}\nif (result?.status?.completed) throw new Error('任务已结束但SaveAudio节点没有返回FLAC音频，请检查节点12。');\nif (poll >= config.maxPolls) throw new Error('轮询达到上限；未取消GPU任务，请在ComfyUI确认其状态。promptId=' + task.promptId);\nreturn [{ json: { executionId: task.executionId, promptId: task.promptId, ready: false, poll } }];"
+        },
+        "id": "e602cbae-19d1-4d29-8325-fef96d85a7a8",
+        "name": "检查完成与轮询上限",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4320,
+          1328
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "is-ready",
+                "leftValue": "={{ $json.ready }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "738b809c-1c41-4eb8-87ff-6bf66ba962df",
+        "name": "音频已就绪",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          4560,
+          1328
+        ]
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.comfyAudioUrl }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "file"
+              }
+            },
+            "timeout": 120000
+          }
+        },
+        "id": "1ed36798-570e-440d-8952-7d4050f37bb0",
+        "name": "认证下载完整歌曲",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          4800,
+          1232
+        ],
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const meta = $('音频已就绪').item.json;\nconst bytes = await this.helpers.getBinaryDataBuffer(0, 'data');\nif (!bytes.length || bytes.subarray(0,4).toString('ascii') !== 'fLaC') throw new Error('下载内容不是有效FLAC文件头，请检查ComfyUI认证。');\nconst localFilename = 'full_song_' + String($execution.id).replace(/[^a-zA-Z0-9_-]/g, '') + '_' + Date.now() + '.flac';\nreturn [{ json: { ...meta, localFilename, localFilePath: '/home/node/files/' + localFilename }, binary: $input.first().binary, pairedItem: { item: 0 } }];"
+        },
+        "id": "b10c7c02-1fb4-4ecc-ab05-63b0a3a96bb6",
+        "name": "校验歌曲文件",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5040,
+          1232
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "write",
+          "fileName": "={{ $json.localFilePath }}",
+          "options": {}
+        },
+        "id": "a138c278-0562-41f3-9c3e-6c1f82e3218e",
+        "name": "保存到n8n本地资源目录",
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          5280,
+          1232
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const meta = $('校验歌曲文件').first().json;\n// 复用现有/files读取流程；它读取本地文件，不负责从ComfyUI下载。\nconst url = 'http://117.50.218.161:5678/webhook/files?file=' + encodeURIComponent(meta.localFilename);\nreturn [{ json: { success: true, status: 'completed', executionId: meta.executionId, promptId: meta.promptId, workflowType: 'music', filename: meta.localFilename, url, audio_url: url, music_filepath: url, comfyAudioUrl: meta.comfyAudioUrl, duration: meta.duration, durationSource: 'requested_not_measured', seed: meta.seed, lyrics: meta.lyrics, alignmentStatus: 'not_generated', backingStatus: 'not_generated', results: [{ url, filename: meta.localFilename }] } }];"
+        },
+        "id": "f782a6e1-c532-4add-af87-3c239fa63ff6",
+        "name": "组装通用资源地址",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          5520,
+          1232
+        ]
+      },
+      {
+        "parameters": {
+          "dataTableId": {
+            "__rl": true,
+            "value": "J3YaofTO0eHhgjAp",
+            "mode": "list",
+            "cachedResultName": "tworkflow"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "execution_id": "={{ $json.executionId }}",
+              "response": "={{ $json.music_filepath }}",
+              "status": "success"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "execution_id",
+                "displayName": "execution_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "response",
+                "displayName": "response",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "45d6ccb5-2fe9-4b4f-8bc2-e054668a1acc",
+        "name": "写入通用资源表",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          5760,
+          1232
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 仅在本地保存与数据表写入均成功后返回completed。\nreturn [{ json: $('组装通用资源地址').first().json }];"
+        },
+        "id": "14cf1e5a-1f95-4706-8204-2dfdc627c383",
+        "name": "执行结束返回字段",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          6000,
+          1232
+        ]
+      },
+      {
+        "parameters": {
+          "content": "## 导入后配置（新版复用通用资源链路）\n1. 三个HTTP Request节点均选择项目已有的ComfyUI Bearer Auth凭据。\n2. Webhook需绑定Header Auth凭据：Name=X-N8N-API-KEY，Value使用项目后端现有n8n密钥。Respond说明文字本身不是缺节点报错；本图已连接立即返回n8n执行ID节点。\n3. 配置节点设置模型实际路径；保存目录为/home/node/files/，需与现有/files流程挂载相同目录并可写。\n4. 写入通用资源表节点使用现有tworkflow表ID；导入同一n8n项目，检查表权限。\n5. 链路：提交ComfyUI → 返回n8n执行ID → Wait/history轮询 → 认证下载/view → 本地保存 → 写tworkflow → 完成。\n6. 完成后调用GET /webhook/get-resource?execution_id=<n8n执行ID>，它返回/files音频地址，浏览器可播放。不要把ComfyUI promptId用于查询资源表。\n7. 不覆盖gene-music；未替换现有前端逐句生成，未生成伴奏或时间轴。新版未上传线上，需更新导入的流程。",
+          "height": 390,
+          "width": 1080
+        },
+        "id": "1ef8f86a-3f48-4df6-9789-18a247f7d8e2",
+        "name": "导入后必读",
+        "type": "n8n-nodes-base.stickyNote",
+        "typeVersion": 1,
+        "position": [
+          2640,
+          864
+        ]
+      }
+    ],
+    "connections": {
+      "接收整曲请求": {
+        "main": [
+          [
+            {
+              "node": "配置与构建ComfyUI API图",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "配置与构建ComfyUI API图": {
+        "main": [
+          [
+            {
+              "node": "提交ComfyUI整曲任务",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "提交ComfyUI整曲任务": {
+        "main": [
+          [
+            {
+              "node": "校验提交结果",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "校验提交结果": {
+        "main": [
+          [
+            {
+              "node": "立即返回n8n执行ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "立即返回n8n执行ID": {
+        "main": [
+          [
+            {
+              "node": "等待5秒",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待5秒": {
+        "main": [
+          [
+            {
+              "node": "查询ComfyUI结果",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "查询ComfyUI结果": {
+        "main": [
+          [
+            {
+              "node": "检查完成与轮询上限",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "检查完成与轮询上限": {
+        "main": [
+          [
+            {
+              "node": "音频已就绪",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "音频已就绪": {
+        "main": [
+          [
+            {
+              "node": "认证下载完整歌曲",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "等待5秒",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "认证下载完整歌曲": {
+        "main": [
+          [
+            {
+              "node": "校验歌曲文件",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "校验歌曲文件": {
+        "main": [
+          [
+            {
+              "node": "保存到n8n本地资源目录",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "保存到n8n本地资源目录": {
+        "main": [
+          [
+            {
+              "node": "组装通用资源地址",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "组装通用资源地址": {
+        "main": [
+          [
+            {
+              "node": "写入通用资源表",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "写入通用资源表": {
+        "main": [
+          [
+            {
+              "node": "执行结束返回字段",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "vincent zou",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-09-12T16:11:49.231Z",
+        "id": 790,
+        "workflowId": "dSzHC0vfUXO3GgTo",
+        "versionId": "2f2c8ec3-c5af-476a-94a0-8bd4dd7b5f2c",
+        "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      },
+      {
+        "createdAt": "2026-09-12T16:11:49.344Z",
+        "id": 792,
+        "workflowId": "dSzHC0vfUXO3GgTo",
+        "versionId": "2f2c8ec3-c5af-476a-94a0-8bd4dd7b5f2c",
+        "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      },
+      {
+        "createdAt": "2026-09-12T16:11:49.216Z",
+        "id": 789,
+        "workflowId": "dSzHC0vfUXO3GgTo",
+        "versionId": "2f2c8ec3-c5af-476a-94a0-8bd4dd7b5f2c",
+        "event": "deactivated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      },
+      {
+        "createdAt": "2026-09-12T16:11:49.329Z",
+        "id": 791,
+        "workflowId": "dSzHC0vfUXO3GgTo",
+        "versionId": "2f2c8ec3-c5af-476a-94a0-8bd4dd7b5f2c",
+        "event": "deactivated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    ]
+  }
+}

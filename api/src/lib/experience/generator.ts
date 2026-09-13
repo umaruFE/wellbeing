@@ -73,7 +73,7 @@ export interface MusicExercises {
 }
 
 export interface MusicResult extends MusicSong, MusicExercises {
-  /** 双音频 data URI（base64，体积大，仅在显式操作时写入） */
+  /** 歌曲与伴奏 FTP/CDN URL */
   audio?: {
     vocal?: string;
     backing?: string;
@@ -81,6 +81,8 @@ export interface MusicResult extends MusicSong, MusicExercises {
     backingName?: string;
     segments?: string[];
     segmentFailures?: number[];
+    actualDuration?: number;
+    alignmentStatus?: string;
   };
 }
 
@@ -333,7 +335,15 @@ const musicVars = (params: Record<string, string>) => ({
 
 function normalizeMusicLyrics(lyrics: unknown): { time: string; text: string }[] {
   return (Array.isArray(lyrics) ? lyrics : [])
-    .map((l) => ({ time: String((l as { time?: unknown })?.time || ''), text: String((l as { text?: unknown })?.text || '') }))
+    .map((l) => ({
+      time: String((l as { time?: unknown })?.time || ''),
+      text: String((l as { text?: unknown })?.text || '')
+        .replace(/[\u2600-\u27BF\uD83C-\uDBFF\uDC00-\uDFFF\uFE0F\u200D]/g, '')
+        .replace(/\s*[—–]\s*/g, ' ')
+        .replace(/\s+-\s+/g, ' ')
+        .replace(/\s{2,}/g, ' ')
+        .trim(),
+    }))
     .filter((l) => l.text);
 }
 
@@ -350,7 +360,8 @@ function normalizeStarRoles(roles: unknown, lyricsCount: number): string[] {
 }
 
 /** 第三关回声大师遮挡数据归一化：intermediate/challenge 均与歌词行一一对齐（缺行补空、多余截断），每行仅保留非空原词 */
-function normalizeEchoData(value: MusicExercises['echoData'], lyricsCount: number): NonNullable<MusicExercises['echoData']> {
+function normalizeEchoData(value: MusicExercises['echoData'], lyrics: { text: string }[]): NonNullable<MusicExercises['echoData']> {
+  const lyricsCount = lyrics.length;
   const cleanRow = (row: unknown): string[] => (Array.isArray(row) ? row : []).map((w) => String(w || '').trim()).filter(Boolean);
   const rows = (level: unknown): string[][] => (Array.isArray(level) ? level : []).map(cleanRow);
   const align = (list: string[][]): string[][] => {
@@ -359,15 +370,28 @@ function normalizeEchoData(value: MusicExercises['echoData'], lyricsCount: numbe
     return out;
   };
   const data = value && typeof value === 'object' ? value : {};
-  return {
-    intermediate: align(rows((data as { intermediate?: unknown }).intermediate)),
-    challenge: align(rows((data as { challenge?: unknown }).challenge)),
-  };
+  const intermediate = align(rows((data as { intermediate?: unknown }).intermediate));
+  const challenge = align(rows((data as { challenge?: unknown }).challenge));
+  lyrics.forEach((line, index) => {
+    const words = Array.from(new Map((line.text.match(/[A-Za-z]+(?:'[A-Za-z]+)?/g) || []).map((word) => [word.toLowerCase(), word])).values());
+    const valid = new Map(words.map((word) => [word.toLowerCase(), word]));
+    intermediate[index] = Array.from(new Set(intermediate[index].map((word) => valid.get(word.toLowerCase())).filter(Boolean) as string[])).slice(0, 2);
+    challenge[index] = Array.from(new Set(challenge[index].map((word) => valid.get(word.toLowerCase())).filter(Boolean) as string[])).slice(0, 2);
+    if (!intermediate[index].length && words.length) intermediate[index] = [words.slice().sort((a, b) => b.length - a.length)[0]];
+    if (!challenge[index].length && words.length) challenge[index] = words.slice(0, 2);
+  });
+  return { intermediate, challenge };
 }
 
-/** 渲染四关游戏课件（自包含单文件；双音频为 base64 data URI，可为空串） */
+/** 渲染四关游戏课件（单文件 HTML；音频引用 FTP/CDN URL，可为空串） */
 export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music Star Quest'): string {
   let html = readTemplate('music-star-quest.html');
+  // Preserve the user's template edits; fix fractional-second parsing only in the rendered output.
+  html = html.replace(/function parseTimeSeconds\(timeStr\) \{[\s\S]*?\n\}/, `function parseTimeSeconds(timeStr) {
+  var parts = String(timeStr || '').split(/[–—-]/);
+  function toSec(s) { var p = s.trim().split(':'); return Number(p[0])*60 + Number(p[1]); }
+  return parts.length === 2 ? {start: toSec(parts[0]), end: toSec(parts[1])} : {start: Infinity, end: Infinity};
+}`);
   html = html.replace(/var lyrics = \[[\s\S]*?\n\];/, `var lyrics = ${JSON.stringify(result.lyrics)};`);
   html = html.replace(/var lineAudioSegments = \[[\s\S]*?\n\];/, `var lineAudioSegments = ${JSON.stringify(result.audio?.segments || [])};`);
   html = html.replace(/var lineAudioFailures = \[[\s\S]*?\n\];/, `var lineAudioFailures = ${JSON.stringify(result.audio?.segmentFailures || [])};`);
@@ -375,15 +399,15 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
   html = html.replace(/var ex2Items = \[[\s\S]*?\n\];/, `var ex2Items = ${JSON.stringify(result.ex2Items)};`);
   html = html.replace(/var ex3Data = \[[\s\S]*?\n\];/, `var ex3Data = ${JSON.stringify(result.ex3Data)};`);
   html = html.replace(/var starRoles = \[[\s\S]*?\n\];/, `var starRoles = ${JSON.stringify(normalizeStarRoles(result.starRoles, result.lyrics?.length || 0))};`);
-  html = html.replace(/var echoData = \{[\s\S]*?\n\};/, `var echoData = ${JSON.stringify(normalizeEchoData(result.echoData, result.lyrics?.length || 0))};`);
+  html = html.replace(/var echoData = \{[\s\S]*?\n\};/, `var echoData = ${JSON.stringify(normalizeEchoData(result.echoData, result.lyrics || []))};`);
   html = html.replace(/var teacherActions = \[[\s\S]*?\n\];/, `var teacherActions = ${JSON.stringify(result.melodyActions || [])};`);
   html = html.replace(/var teacherInstruments = \[[\s\S]*?\n\];/, `var teacherInstruments = ${JSON.stringify(result.melodyInstruments || [])};`);
   html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(normalizeTeachingPlans(result.teachingPlans))};`);
   html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
   const vocal = result.audio?.vocal || '';
   const backing = result.audio?.backing || '';
-  html = html.replace(/(<audio id="audioOriginal" src=")[^"]*(")/, `$1${vocal}$2`);
-  html = html.replace(/(<audio id="audioAccomp" src=")[^"]*(")/, `$1${backing}$2`);
+  html = html.replace(/(<audio id="audioOriginal" src=")[^"]*(")/, `$1${escapeHtml(vocal)}$2`);
+  html = html.replace(/(<audio id="audioAccomp" src=")[^"]*(")/, `$1${escapeHtml(backing)}$2`);
   return html;
 }
 
@@ -480,7 +504,7 @@ export async function generateMusicExercises(
   };
   const base = await getPromptPair('experience-music-exercises', {}, vars);
   const systemWithDocs = await withMusicSpecDocs(base.system, 'flow', 'level1');
-  const system = `${systemWithDocs}\n\n## 当前产品硬约束（必须执行）\n每道 ex1FillData 必须至少有 1 个空；sentence 中空字符串的数量必须等于 blanks 数量；不同题目的 blanks 答案不得重复。teachingPlans 中所有 title 和 content 必须是纯文本，禁止任何 HTML 标签，可用换行、序号和项目符号排版。`;
+  const system = `${systemWithDocs}\n\n## 当前产品硬约束（必须执行）\n每道 ex1FillData 必须且只能有 1 个空、1 个正确答案和 4 个候选词（正确答案 + 3 个干扰项）；sentence 中空字符串的数量必须等于 blanks 数量；不同题目的 blanks 答案不得重复。teachingPlans 中所有 title 和 content 必须是纯文本，禁止任何 HTML 标签，可用换行、序号和项目符号排版。`;
   const user = adjustment
     ? `${base.user}\n\n## 重新生成调整方向（用户提示词，必须优先遵循）\n${adjustment}`
     : base.user;
@@ -505,7 +529,7 @@ export async function generateMusicExercises(
     return '🎤';
   };
   const normalizeFillItems = (items: MusicExercises['ex1FillData'] | undefined) => (Array.isArray(items) ? items : []).map((x) => {
-    const blanks = (Array.isArray(x.blanks) ? x.blanks : []).map(String).filter(Boolean);
+    const blanks = (Array.isArray(x.blanks) ? x.blanks : []).map(String).filter(Boolean).slice(0, 1);
     let sentence = (Array.isArray(x.sentence) ? x.sentence : []).map(String);
     // 模型常返回 ['前文','后文']；有明确答案时可安全补成 ['前文','','后文']。
     if (!sentence.includes('') && blanks.length && sentence.length === blanks.length + 1) {
@@ -513,10 +537,17 @@ export async function generateMusicExercises(
     }
     let blankIndex = 0;
     const sentenceText = sentence.map((part) => part === '' ? (blanks[blankIndex++] || '') : part).join('');
+    const candidates = (Array.isArray(x.options) ? x.options : []).map(String).map((word) => word.trim()).filter(Boolean);
+    const answer = blanks[0] || '';
+    const options = [answer, ...candidates.filter((word) => word.toLowerCase() !== answer.toLowerCase())];
+    for (const fallback of ['happy', 'friend', 'music', 'world', 'hello']) {
+      if (options.length >= 4) break;
+      if (!options.some((word) => word.toLowerCase() === fallback)) options.push(fallback);
+    }
     return {
       sentence,
       blanks,
-      options: (Array.isArray(x.options) ? x.options : []).map(String),
+      options: options.slice(0, 4),
       emoji: semanticEmoji(blanks[0] || '', sentenceText),
     };
   });
@@ -617,7 +648,7 @@ export async function generateMusicExercises(
     })),
     starRoles: normalizeStarRoles(ex.starRoles, song.lyrics.length),
     teachingPlans: normalizeTeachingPlans(ex.teachingPlans),
-    echoData: normalizeEchoData(ex.echoData, song.lyrics.length),
+    echoData: normalizeEchoData(ex.echoData, song.lyrics),
   };
 }
 

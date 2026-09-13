@@ -1,3 +1,5 @@
+import { playableMusicManifest, musicPublicOrigin } from '@/lib/musicPlayback';
+import { assertMusicAudioUrls } from '@/lib/musicAudioUrls';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
@@ -33,6 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     const body = await request.json().catch(() => ({}));
+    try { assertMusicAudioUrls(body.audio); } catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 400 }); }
     const existing = (work.result && typeof work.result === 'object') ? work.result as Partial<MusicResult> : {};
     const nextResult: Partial<MusicResult> = { ...existing };
     if (body?.audio && typeof body.audio === 'object') nextResult.audio = body.audio;
@@ -40,7 +43,16 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (!Array.isArray(nextResult.lyrics) || !nextResult.lyrics.length) {
       return NextResponse.json({ error: '请先完成「歌曲创作」步骤' }, { status: 400 });
     }
+    if (nextResult.audio?.alignmentStatus === 'pending') {
+      return NextResponse.json({ error: '整曲已生成，但歌词时间轴尚未对齐。请在歌曲创作页导入对应的实际LRC后再生成授课课件。' }, { status: 422 });
+    }
 
+    // Regenerate asset capabilities for this host, including local/production changes.
+    const source = (nextResult.audio as any)?.transcription;
+    if (source?.storage === 'ftp') {
+      const playable = playableMusicManifest(source, musicPublicOrigin(request));
+      nextResult.audio = { ...nextResult.audio, vocal: playable.url, segments: nextResult.audio?.segments?.length ? playable.segments : [], transcription: playable } as any;
+    }
     const html = renderMusicGameHtml(nextResult as MusicResult, work.title);
     await db.query(
       `UPDATE creative_works SET result = $1::jsonb, html = $2, status = 'done', updated_at = NOW() WHERE id = $3`,

@@ -42,6 +42,8 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (work.title && !scalarParams.title) scalarParams.title = work.title;
 
     const { title, song } = await generateMusicSong(scalarParams, adjustment);
+    // Lyrics are generated before audio; LLM ranges cannot represent actual alignment.
+    song.lyrics = song.lyrics.map(line => ({ ...line, time: '' }));
 
     const existing = (work.result && typeof work.result === 'object') ? work.result as Partial<MusicResult> : {};
     const nextResult: Partial<MusicResult> = {
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       songMeta: song.songMeta,
       lyrics: song.lyrics,
       targetPatterns: song.targetPatterns,
+      audio: { vocal: '', backing: '', segments: [], segmentFailures: [], alignmentStatus: 'pending' },
     };
 
     await db.query(

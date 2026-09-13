@@ -522,7 +522,7 @@ export function PictureBookStudioPage() {
     t('pictureBook.stepMaking'),
   ];
 
-  const canBuildPlan = Boolean(basicInfo.age && basicInfo.level);
+  const canBuildPlan = Boolean(String(basicInfo.vocabulary || '').trim() || String(basicInfo.grammar || '').trim());
 
   const setBasicField = (field, value) => {
     setBasicInfo((current) => ({ ...current, [field]: value }));
@@ -1104,8 +1104,8 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
   return (
     <div className="pbv2-step-panel">
       <div className="pbv2-form-grid two">
-        <OptionGroup tone="coral" required label={t('pictureBook.studentAge')} options={localizedAgeOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
-        <OptionGroup tone="blue" required label={t('pictureBook.englishLevel')} options={localizedLevelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
+        <OptionGroup tone="coral" label={t('pictureBook.studentAge')} options={localizedAgeOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
+        <OptionGroup tone="blue" label={t('pictureBook.englishLevel')} options={localizedLevelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
         <OptionGroup tone="yellow" label={t('pictureBook.participants')} options={localizedParticipantOptions} value={basicInfo.participants} onChange={(value) => setBasicField('participants', value)} />
       </div>
 
@@ -1130,7 +1130,7 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
       />
 
       <section className="pbv2-card pbv2-tone-blue">
-        <div className="pbv2-card-title">{t('pictureBook.languageGoalsOptional')}</div>
+        <div className="pbv2-card-title">{t('pictureBook.languageGoalsOptional')} <span className="pbv2-required">*</span></div>
         <div className="pbv2-form-grid two">
           <Field label={t('pictureBook.coreVocabulary')} value={basicInfo.vocabulary} onChange={(value) => setBasicField('vocabulary', value)} placeholder={t('pictureBook.vocabularyPlaceholder')} />
           <Field label={t('pictureBook.coreGrammar')} value={basicInfo.grammar} onChange={(value) => setBasicField('grammar', value)} placeholder={t('pictureBook.grammarPlaceholder')} />
@@ -1363,4 +1363,3 @@ function MusicPickerItem({ music, backgroundMusic, previewMusicId, previewRef, s
   const isPreviewing = previewMusicId === music.id;
   return <div className={`pbv2-music-item${backgroundMusic?.id === music.id ? ' selected' : ''}`}><div><strong>{music.name}</strong><span>{music.description || t('pictureBook.bgmFallback')}</span></div><button type="button" onClick={() => { const audio = previewRef.current; if (!audio) return; if (isPreviewing && !audio.paused) { audio.pause(); setPreviewMusicId(null); } else { audio.src = music.url; audio.play().then(() => setPreviewMusicId(music.id)).catch(() => setPreviewMusicId(null)); } }}>{isPreviewing ? <Pause size={15} /> : <Play size={15} />}{t('pictureBook.preview')}</button><button type="button" className="pbv2-music-select" onClick={() => { previewRef.current?.pause(); setPreviewMusicId(null); onSelect(); }}>{selectLabel || t('pictureBook.select')}</button></div>;
 }
-

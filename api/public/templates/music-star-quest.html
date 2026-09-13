@@ -9,13 +9,14 @@
 
 body{
   background:#08081a url('https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026/09/08/1788870778428-gapd7gjh27h.jpg') center/cover no-repeat fixed;
-  min-height:100vh;
+  height:100vh;
+  min-height:0;
   font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
   color:#e0e0ff;
   -webkit-tap-highlight-color:transparent;
-  overflow-x:hidden;
+  overflow:hidden;
   position:relative;
-  padding-bottom:60px;
+  padding-bottom:0;
 }
 body::before{
   content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -95,9 +96,9 @@ body::before{
 
 .st-content{position:relative;z-index:1;text-align:center;padding:40px;max-width:600px}
 .st-content.clear .st-stage-num{font-size:16px;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;margin-bottom:8px;animation:stFadeUp 0.5s ease-out}
-.st-content.clear .st-icon{font-size:600px;display:block;margin-bottom:24px;animation:stScaleIn 0.6s ease-out 0.1s both;line-height:1}
-.st-content.clear .st-title{font-size:60px;font-weight:900;color:#39ff14;margin-bottom:10px;animation:stFadeUp 0.5s ease-out 0.2s both;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
-.st-content.clear .st-summary{font-size:16px;color:rgba(255,255,255,0.35);margin-bottom:40px;animation:stFadeUp 0.5s ease-out 0.3s both;line-height:1.6}
+.st-content.clear .st-icon{font-size:112px;display:block;margin-bottom:28px;animation:stScaleIn 0.6s ease-out 0.1s both;line-height:1;filter:drop-shadow(0 0 30px rgba(255,184,0,.5))}
+.st-content.clear .st-title{font-size:clamp(36px,5vw,64px);font-weight:900;color:#39ff14;margin-bottom:16px;animation:stFadeUp 0.5s ease-out 0.2s both;font-family:"PingFang SC","Microsoft YaHei",sans-serif;text-shadow:0 0 26px rgba(57,255,20,.3)}
+.st-content.clear .st-summary{font-size:clamp(18px,2vw,24px);font-weight:650;color:rgba(255,255,255,0.72);margin-bottom:42px;animation:stFadeUp 0.5s ease-out 0.3s both;line-height:1.6}
 .st-content.clear .st-btn{animation:stFadeUp 0.5s ease-out 0.5s both}
 .clear-mode .st-content.clear{max-width:700px;margin:0 20px;padding:48px 56px}
 
@@ -167,9 +168,9 @@ body::before{
 .shake-it{animation:screenShake 0.4s ease}
 
 /* ═══════════ Game Map: 关卡地图（图片版） ═══════════ */
-.game-map{display:flex;flex-direction:column;align-items:center;padding:16px 0 36px;position:relative;z-index:1}
-.map-img-wrap{position:relative;width:100%;max-width:1600px;margin:0 auto;border-radius:18px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.08);box-shadow:0 0 30px rgba(0,229,255,0.08),0 0 60px rgba(0,0,0,0.4)}
-.map-img-wrap img{display:block;width:100%;height:auto}
+.game-map{display:flex;flex:1;min-height:0;flex-direction:column;align-items:center;justify-content:center;padding:4px 0 12px;position:relative;z-index:1}
+.map-img-wrap{position:relative;width:min(100%,calc((100vh - 170px) * 1.77778));max-width:none;max-height:calc(100vh - 170px);aspect-ratio:16/9;margin:0 auto;border-radius:18px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.08);box-shadow:0 0 30px rgba(0,229,255,0.08),0 0 60px rgba(0,0,0,0.4)}
+.map-img-wrap img{display:block;width:100%;height:100%;object-fit:contain}
 .map-spot{position:absolute;cursor:pointer;border-radius:12px;transition:all 0.3s;z-index:2}
 .map-spot::after{content:'';position:absolute;inset:-3px;border-radius:15px;border:2px solid transparent;transition:all 0.35s;pointer-events:none}
 .map-spot:hover{background:rgba(255,255,255,0.06)}
@@ -224,10 +225,10 @@ body::before{
   .sv-watermark{font-size:80px}
 }
 
-.container{max-width:960px;margin:0 auto;padding-top:50px;position:relative;z-index:1}
+.container{width:min(1440px,calc(100% - 24px));height:100vh;max-width:none;margin:0 auto;padding-top:12px;position:relative;z-index:1;display:flex;flex-direction:column}
 
 /* Header */
-header{text-align:center;margin-bottom:20px;position:relative}
+header{text-align:center;margin-bottom:10px;position:relative;flex:0 0 auto}
 h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-weight:900;color:#fff;letter-spacing:0.06em;margin-bottom:4px;text-shadow:0 0 20px rgba(0,229,255,0.5),0 0 40px rgba(0,229,255,0.2)}
 .subtitle{font-size:1.1em;font-weight:600;color:rgba(0,229,255,0.55);margin-top:8px;letter-spacing:0.02em;line-height:1.5;max-width:900px;margin-left:auto;margin-right:auto}
 .song-name{display:inline-block;font-size:1.1em;font-weight:700;color:#ffb800;margin-top:10px;padding:6px 20px;letter-spacing:0.06em;font-style:italic;border:1px solid rgba(255,184,0,0.25);border-radius:20px;background:rgba(255,184,0,0.06);position:relative}
@@ -731,6 +732,10 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
     <div class="map-lock l2" id="lock2">🔒</div>
     <div class="map-lock l3" id="lock3">🔒</div>
     <div class="map-lock l4" id="lock4">🔒</div>
+    <!-- <div class="map-sign s1">Lyric Hunter</div>
+    <div class="map-sign s2">Melody Mover</div>
+    <div class="map-sign s3">Echo Master</div>
+    <div class="map-sign s4">Stage Star</div> -->
   </div>
 </div>
 
@@ -973,7 +978,7 @@ function showStageIntro(n) {
   var stageInfo = [
     {icon:'🔍',name:'Lyric Hunter',desc:'Unlock the lyrics piece by piece',color:'s1'},
     {icon:'🥁',name:'Melody Mover',desc:'Match actions and instruments to every line',color:'s2'},
-    {icon:'🎤',name:'Echo Master',desc:'Sing through three lyric-display modes',color:'s3'},
+    {icon:'🎤',name:'Echo Master',desc:'Full lyrics, first-letter fills, then whole-word blanks',color:'s3'},
     {icon:'🌟',name:'Stage Star',desc:'Mark your roles and perform the full song',color:'s4'}
   ];
   var info = stageInfo[n-1];
@@ -1203,7 +1208,7 @@ function st1CheckFill() {
       blankId++;
     });
   });
-  if (allCorrect) st1CompleteChallenge(0);
+  return allCorrect;
 }
 
 // ═══ Stage 1: Build Sentences ═══
@@ -1270,7 +1275,7 @@ function st1CheckBuild() {
       area.classList.add('wrong');
     }
   });
-  if (correct === ex2Items.length) st1CompleteChallenge(1);
+  return correct === ex2Items.length;
 }
 
 // ═══ Stage 1: Listen ═══
@@ -1304,7 +1309,7 @@ function st1SelectListen(idx, i) {
   st1RenderListen();
 }
 function st1ResetListen() {
-  st1ListenSelected = [null, null];
+  st1ListenSelected = Array(ex3Data.length).fill(null);
   st1RenderListen();
 }
 var st1ClipTimer = null;
@@ -1331,71 +1336,46 @@ function st1CheckListen() {
     var el = document.getElementById('st1ListenOpt' + idx + '_' + item.correct);
     var sel = document.getElementById('st1ListenOpt' + idx + '_' + st1ListenSelected[idx]);
     if (el) el.classList.add('correct');
-    if (st1ListenSelected[idx] !== item.correct && sel) { sel.classList.add('wrong'); allCorrect = false; }
+    if (st1ListenSelected[idx] !== item.correct) {
+      allCorrect = false;
+      if (sel) sel.classList.add('wrong');
+    }
   });
-  if (allCorrect) st1CompleteChallenge(2);
+  return allCorrect;
 }
 
-// ═══ Stage 1: Challenge Completion ═══
-function st1CompleteChallenge(idx) {
-  if (idx === 0) ex1Done = true;
-  if (idx === 1) ex2Done = true;
-  if (idx === 2) ex3Done = true;
-  puzzleUnlocked[idx] = true;
-  showToast('🎉 Piece ' + (idx+1) + ' unlocked!');
-
-  // Update lyric piece
-  var piece = document.getElementById('st1Piece' + idx);
-  var lines = getLyricPiece(idx).map(function(l) { return l.text; });
-  if (piece) {
-    piece.querySelector('.st1-piece-label').textContent = 'Piece ' + (idx+1) + ' · Unlocked';
-    piece.querySelector('.st1-piece-content').innerHTML = lines.join('<br>');
-    piece.classList.add('unlocked');
+// ═══ Stage 1: Unified Check & Full Lyrics Reveal ═══
+function st1CheckAll() {
+  var fillCorrect = st1CheckFill();
+  var buildCorrect = st1CheckBuild();
+  var listenCorrect = st1CheckListen();
+  if (!fillCorrect || !buildCorrect || !listenCorrect) {
+    showToast('Please correct the highlighted answers and check again.');
+    return;
   }
-
-  // Update progress tracker
-  var stepEl = document.getElementById('st1Step' + (idx+1));
-  if (stepEl) {
-    stepEl.classList.add('done');
-    stepEl.classList.remove('current');
-    var dot = stepEl.querySelector('.st1-dot');
-    if (dot) { dot.classList.add('done'); dot.classList.remove('current'); }
+  ex1Done = true;
+  ex2Done = true;
+  ex3Done = true;
+  puzzleUnlocked = [true, true, true];
+  for (var i = 1; i <= 3; i++) {
+    var card = document.getElementById('st1Card' + i);
+    if (card) card.classList.add('done');
   }
-  if (idx < 2) {
-    var line = document.getElementById('st1Line' + (idx+1));
-    if (line) line.classList.add('done');
+  var lyricsPanel = document.getElementById('st1AllLyrics');
+  if (lyricsPanel) {
+    lyricsPanel.querySelector('.st1-piece-label').textContent = 'Complete Lyrics · Unlocked';
+    lyricsPanel.querySelector('.st1-piece-content').innerHTML = lyrics.map(function(line) { return line.text; }).join('<br>');
+    lyricsPanel.classList.add('unlocked');
+    lyricsPanel.scrollIntoView({ behavior:'smooth', block:'center' });
   }
-
-  // Mark current card as done
-  var card = document.getElementById('st1Card' + (idx+1));
-  if (card) card.classList.add('done');
-
-  if (idx < 2) {
-    setTimeout(function() {
-      var nextCard = document.getElementById('st1Card' + (idx+2));
-      if (nextCard) nextCard.classList.add('visible');
-      var nextStep = document.getElementById('st1Step' + (idx+2));
-      if (nextStep) {
-        nextStep.classList.add('current');
-        var nd = nextStep.querySelector('.st1-dot');
-        if (nd) nd.classList.add('current');
-      }
-      if (idx === 0) {
-        st1RenderBuild();
-      }
-      if (idx === 1) {
-        st1RenderListen();
-      }
-    }, 600);
-  } else {
-    setTimeout(function() {
-      stage1Complete = true;
-      showStageClear(1);
-    }, 600);
-  }
+  var complete = document.getElementById('st1Complete');
+  if (complete) complete.classList.add('visible');
+  if (!unlockedStages[1]) unlockStage(2);
+  showToast('🎉 All lyrics unlocked!');
 }
 
 function st1BackToMap() {
+  stage1Complete = true;
   if (!unlockedStages[1]) unlockStage(2);
   currentStage = 2;
   backToMap();
@@ -1417,59 +1397,49 @@ function renderStage1(container) {
   var h = '';
   // Header — preview style
   h += '<div class="st1-header"><div class="st1-level-badge">LEVEL 1</div><br><span class="st1-title-icon">🔍</span><h2>Lyric Hunter</h2><br><div class="st1-sub">Complete challenges to unlock the lyrics</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(1)">How to teach</button></div>';
-  // Progress Tracker
-  h += '<div class="st1-progress">';
-  for (var i = 1; i <= 3; i++) {
-    var done = (i === 1 && ex1Done) || (i === 2 && ex2Done) || (i === 3 && ex3Done);
-    var cur = (i === 1 && !ex1Done) || (i === 2 && ex1Done && !ex2Done) || (i === 3 && ex2Done && !ex3Done);
-    h += '<div class="st1-step' + (cur ? ' current' : '') + (done ? ' done' : '') + '" id="st1Step' + i + '">';
-    h += '<div class="st1-dot' + (cur ? ' current' : '') + (done ? ' done' : '') + '">' + i + '</div>';
-    h += '<div class="st1-label">' + ['Fill Blanks','Build Sentence','Listen & Choose'][i-1] + '</div>';
-    h += '</div>';
-    if (i < 3) h += '<div class="st1-line' + ((i === 1 && ex1Done) || (i === 2 && ex2Done) ? ' done' : '') + '" id="st1Line' + i + '"></div>';
-  }
-  h += '</div>';
   // Main Layout
   h += '<div class="st1-layout"><div class="st1-challenge">';
   // Challenge 1
   h += '<div class="st1-card visible" id="st1Card1"><div class="st1-card-glow"></div>';
   h += '<div class="st1-card-num"><span class="st1-num-badge">1</span><span class="st1-card-title">Fill the Blanks</span></div>';
-  h += '<div class="st1-instruction">Click a blank space, then choose the correct word. Complete all 4 sentences!</div>';
+  h += '<div class="st1-instruction">Click a blank space, then choose the correct word. Complete every sentence!</div>';
   h += '<div id="st1FillArea"></div>';
-  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetFill()">🔄 Reset</button><button class="st1-btn-check" onclick="st1CheckFill()">✅ Check</button></div>';
+  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetFill()">🔄 Reset</button></div>';
   h += '</div>';
   // Challenge 2
-  h += '<div class="st1-card' + (ex1Done ? ' visible' : '') + '" id="st1Card2"><div class="st1-card-glow"></div>';
+  h += '<div class="st1-card visible" id="st1Card2"><div class="st1-card-glow"></div>';
   h += '<div class="st1-card-num"><span class="st1-num-badge">2</span><span class="st1-card-title">Build Sentences</span></div>';
   h += '<div class="st1-instruction">Click words to build each sentence. Click a word in the build area to remove it.</div>';
   h += '<div id="st1BuildArea"></div>';
-  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetBuild()">🔄 Reset All</button><button class="st1-btn-check" onclick="st1CheckBuild()">✅ Check</button></div>';
+  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetBuild()">🔄 Reset All</button></div>';
   h += '</div>';
   // Challenge 3
-  h += '<div class="st1-card' + (ex2Done ? ' visible' : '') + '" id="st1Card3"><div class="st1-card-glow"></div>';
+  h += '<div class="st1-card visible" id="st1Card3"><div class="st1-card-glow"></div>';
   h += '<div class="st1-card-num"><span class="st1-num-badge">3</span><span class="st1-card-title">Listen & Choose</span></div>';
   h += '<div class="st1-instruction">Listen to the audio clip, then select the sentence you hear.</div>';
   h += '<div class="st1-btn-row" style="margin-top:0;margin-bottom:20px;"><button class="st1-btn-listen" onclick="st1PlayAudio()">🔊 Play Audio</button></div>';
   h += '<div id="st1ListenArea"></div>';
-  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetListen()">🔄 Reset</button><button class="st1-btn-check" onclick="st1CheckListen()">✅ Check</button></div>';
+  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetListen()">🔄 Reset</button></div>';
   h += '</div>';
+  h += '<div class="st1-btn-row" style="margin:24px 0 0;"><button class="st1-btn-check" style="min-width:240px;font-size:17px;padding:14px 30px;" onclick="st1CheckAll()">✅ Check All Answers</button></div>';
   h += '</div>'; // close st1-challenge
   // Lyric Collection
-  h += '<div class="st1-lyrics"><h3>📦 Lyric Pieces</h3>';
-  for (var i = 0; i < 3; i++) {
-    var pl = getLyricPiece(i), pt = pl.map(function(l) { return l.text; }).join('<br>');
-    h += '<div class="st1-piece' + (puzzleUnlocked[i] ? ' unlocked' : '') + '" id="st1Piece' + i + '">';
-    h += '<div class="st1-piece-label">Piece ' + (i+1) + ' · ' + (puzzleUnlocked[i] ? 'Unlocked' : 'Locked') + '</div>';
-    h += '<div class="st1-piece-content">' + (puzzleUnlocked[i] ? pt : '???') + '</div>';
-    h += '</div>';
-  }
+  var allUnlocked = ex1Done && ex2Done && ex3Done;
+  h += '<div class="st1-lyrics"><h3>📦 Complete Lyrics</h3>';
+  h += '<div class="st1-piece' + (allUnlocked ? ' unlocked' : '') + '" id="st1AllLyrics">';
+  h += '<div class="st1-piece-label">Complete Lyrics · ' + (allUnlocked ? 'Unlocked' : 'Locked') + '</div>';
+  h += '<div class="st1-piece-content">' + (allUnlocked ? lyrics.map(function(line) { return line.text; }).join('<br>') : 'Finish all three exercise types, then check all answers to reveal the complete lyrics.') + '</div>';
+  h += '</div>';
   h += '</div></div>'; // close st1-lyrics, st1-layout
   // Complete Banner — outside layout, full width at bottom
   h += '<div class="st1-complete" id="st1Complete"><span class="st1-big-icon">🏆</span><h2>All Lyrics Collected!</h2><p>You\'ve unlocked the complete song. Stage 2 is now open!</p><button class="st1-btn-map" onclick="st1BackToMap()">🗺 Back to Map</button></div>';
   container.innerHTML = h;
+  var blankCount = ex1FillData.reduce(function(total, item) { return total + item.blanks.length; }, 0);
+  if (st1FillState.length !== blankCount) st1FillState = Array(blankCount).fill('');
+  if (st1ListenSelected.length !== ex3Data.length) st1ListenSelected = Array(ex3Data.length).fill(null);
   st1RenderFill();
-  if (ex1Done) st1RenderBuild();
-  if (ex2Done) st1RenderListen();
+  st1RenderBuild();
+  st1RenderListen();
 }
 
 function renderStage2(container) {
@@ -2121,12 +2091,12 @@ function completeStage2() { stage2Complete = true; showStageClear(2); }
 function renderStage3(container) {
   var h = '';
   // Header
-  h += '<div class="s3-header"><div class="s3-level-badge">LEVEL 3</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s3-title-icon">🎤</span><span style="font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Echo Master</span></div><div class="s3-sub">Full lyrics, partial blanks, then first-letter clues</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(3)">How to teach</button></div>';
+  h += '<div class="s3-header"><div class="s3-level-badge">LEVEL 3</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s3-title-icon">🎤</span><span style="font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Echo Master</span></div><div class="s3-sub">Full lyrics, first-letter fills, then whole-word blanks</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(3)">How to teach</button></div>';
   // Audio Player
   h += '<div class="s3-player-bar"><button class="s3-player-btn" id="s3PlayBtn" onclick="s3TogglePlay()"><svg viewBox="0 0 24 24" id="s3PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s3PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s3-player-time" id="s3CurTime">0:00</span><div class="s3-player-progress" id="s3ProgressBar" onclick="s3SeekAudio(event)"><div class="s3-player-progress-fill" id="s3ProgressFill"></div><div class="s3-player-progress-thumb" id="s3ProgressThumb"></div></div><span class="s3-player-time" id="s3DurTime">0:39</span><div class="s3-player-mode" id="s3ModeToggle"><button class="s3-active" onclick="s3SwitchMode(\'vocal\')" id="s3ModeVocal">🎤 Vocal</button><button onclick="s3SwitchMode(\'backing\')" id="s3ModeBacking">🎼 Backing</button></div><div class="s3-player-vol"><span class="s3-vol-icon" onclick="s3ToggleMute()">🔊</span><input type="range" id="s3VolSlider" min="0" max="100" value="80" oninput="s3SetVolume(this.value)"></div><div class="s3-player-speed"><button onclick="s3SetSpeed(0.5)">0.5x</button><button onclick="s3SetSpeed(0.75)">0.75x</button><button class="s3-active" onclick="s3SetSpeed(1)">1x</button><button onclick="s3SetSpeed(1.25)">1.25x</button><button onclick="s3SetSpeed(1.5)">1.5x</button></div></div>';
   // Sing content
   h += '<div class="card"><div class="sing-level-select">';
-  [{ n:1,label:'⭐ Beginner',desc:'Full Lyrics' },{ n:2,label:'⭐⭐ Intermediate',desc:'Partial Blanks' },{ n:3,label:'⭐⭐⭐ Challenge',desc:'First Letter Only' }].forEach(function(l) {
+  [{ n:1,label:'⭐ Beginner',desc:'Full Lyrics' },{ n:2,label:'⭐⭐ Intermediate',desc:'First Letter Fill' },{ n:3,label:'⭐⭐⭐ Challenge',desc:'Whole Word Blanks' }].forEach(function(l) {
     var cls = 'sing-level-btn'; if (l.n === singLevel) cls += ' active'; if (l.n < singLevel) cls += ' completed';
     h += '<button class="' + cls + '" onclick="setSingLevel(' + l.n + ')">' + l.label + '<br><small>' + l.desc + '</small></button>';
   });
@@ -2147,17 +2117,15 @@ function renderStage3(container) {
 
 function getMaskedText(text, level, lineIdx) {
   if (level === 1) return text;
-  var levelData = level === 2 ? echoData.intermediate : echoData.challenge;
+  var levelData = level === 2 ? echoData.challenge : echoData.intermediate;
   var row = (levelData && levelData[lineIdx]) || [];
   var targets = row.map(function(w) { return String(w).toLowerCase(); });
   return text.split(' ').map(function(word) {
     var clean = word.replace(/[^a-zA-Z']/g, '');
     var suffix = word.replace(/[a-zA-Z']/g, '');
     if (!clean || targets.indexOf(clean.toLowerCase()) < 0) return word;
-    if (level === 2) {
-      return '<span class="masked">' + '_'.repeat(clean.length) + suffix + '</span>';
-    }
-    return '<span class="letter-hint">' + clean[0] + '</span>' + '_'.repeat(Math.max(0, clean.length - 1)) + suffix;
+    if (level === 2) return '<span class="letter-hint">' + clean[0] + '</span>' + '_'.repeat(Math.max(0, clean.length - 1)) + suffix;
+    return '<span class="masked">' + '_'.repeat(clean.length) + suffix + '</span>';
   }).join(' ');
 }
 
@@ -2629,8 +2597,8 @@ var teachingPlans = {
   3: {
     title: 'Stage 3 — Echo Master 教学方案',
     sections: [
-      {title:'🎯 教学目标',content:'<ul><li>学生能看着完整歌词逐句跟唱</li><li>学生能根据时间轴高亮把握进入时机</li><li>学生能借助原唱或伴奏练习发音、语调和节奏</li></ul>'},
-      {title:'📋 教学流程',content:'<p><strong>Step 1：任务导入 🎤</strong></p><p>恭喜学生掌握了节奏！现在身份升级为“回声大师”，准备跟随完整歌词开口演唱。</p><p><strong>Step 2：示范聆听</strong></p><p>播放 Vocal 原唱，让学生观察歌词时间轴如何逐句高亮。</p><p><strong>Step 3：逐句跟唱</strong></p><p>点击 Play This Line 播放当前歌词片段，老师先示范，学生看着完整歌词模仿演唱。</p><p><strong>Step 4：连贯演唱</strong></p><p>播放完整歌曲，学生跟随高亮歌词连续演唱；需要时可调节播放速度或切换 Backing 伴奏。</p><p><strong>Step 5：完成</strong></p><p>唱完全部歌词行后点击 Complete Stage，解锁 Stage 4。</p>'},
+      {title:'🎯 教学目标',content:'<ul><li>学生能从完整歌词逐步过渡到首字母提示和整词挖空</li><li>学生能根据时间轴高亮把握进入时机</li><li>每句完成 1-2 个目标词的回忆与演唱</li></ul>'},
+      {title:'📋 教学流程',content:'<p><strong>Step 1：完整歌词</strong></p><p>播放 Vocal 原唱，学生跟随完整歌词和时间轴高亮逐句演唱。</p><p><strong>Step 2：首字母填词</strong></p><p>进入 Intermediate，每句根据首字母补全 1-2 个目标词并演唱。</p><p><strong>Step 3：整词挖空</strong></p><p>进入 Challenge，每句回忆被完整挖空的 1-2 个目标词并演唱。</p><p><strong>Step 4：完成</strong></p><p>完成三个模式后解锁 Stage 4。</p>'},
       {title:'💬 教师语言',content:'<div class="teacher-talk">“Welcome to Echo Master! 🎤 Follow the highlighted lyrics and sing every line with me!”</div><div class="teacher-talk">“Watch the words light up. Listen first, then echo the line clearly.”</div><div class="teacher-talk">“Let’s sing the whole song together. Keep your eyes on the lyrics and stay with the beat!”</div>'}
     ]
   },
@@ -2741,7 +2709,7 @@ function closeActivityFullscreen() {
         </tr>
         <tr style="border-bottom:1px solid rgba(255,255,255,0.08)">
           <td style="padding:10px 8px;font-size:20px">🎤</td>
-          <td style="padding:10px 8px"><strong style="color:#ff2d95">Stage 3 — Echo Master</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">回声大师：跟随完整歌词与时间轴高亮逐句演唱</span></td>
+          <td style="padding:10px 8px"><strong style="color:#ff2d95">Stage 3 — Echo Master</strong><br><span style="font-size:12px;color:rgba(255,255,255,0.6)">回声大师：完整歌词 → 首字母填词 → 整词挖空</span></td>
         </tr>
         <tr>
           <td style="padding:10px 8px;font-size:20px">🌟</td>

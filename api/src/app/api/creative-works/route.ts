@@ -22,7 +22,12 @@ export async function GET(request: NextRequest) {
 
     const result = await db.query(
       `SELECT id, module_id, module_name, title, parameters, status,
-              (html IS NOT NULL) AS has_html, result, created_at, updated_at
+              (html IS NOT NULL) AS has_html,
+              CASE WHEN module_id = 'music-star-quest' THEN NULL ELSE result END AS result,
+              (module_id = 'music-star-quest') AS is_summary,
+              CASE WHEN module_id = 'music-star-quest' AND jsonb_typeof(result->'lyrics') = 'array'
+                   THEN jsonb_array_length(result->'lyrics') ELSE 0 END AS lyric_count,
+              created_at, updated_at
        FROM creative_works WHERE user_id = $1 ${moduleId ? 'AND module_id = $2' : ''}
        ORDER BY created_at DESC`,
       moduleId ? [userId, moduleId] : [userId]

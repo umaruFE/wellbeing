@@ -1,0 +1,397 @@
+{
+  "last_node_id": 24,
+  "last_link_id": 6,
+  "version": 0.4,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "ACE_STEP_SimpleMode",
+      "title": "1 · 输入歌曲提示词（无需手填歌词）",
+      "pos": [
+        0,
+        0
+      ],
+      "size": [
+        520,
+        680
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "lora_info",
+          "type": "ACE_STEP_LORA_INFO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            1,
+            3,
+            4
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "audio_path",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "metadata",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "sample_info",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ACE_STEP_SimpleMode"
+      },
+      "widgets_values": [
+        "Create a complete English classroom action song for young beginners. Theme: feeling happy. Include these target expressions naturally: clap your hands, stomp your feet, feel so happy. Cheerful acoustic pop with ukulele, piano and light hand claps, about 100 BPM, one prominent clear lead singer. Simple short phrases, easy vocabulary, natural English pronunciation. Request about 60–75 seconds, approximately 8 seconds instrumental intro and 4 seconds outro. No rap, spoken introduction, unnecessary ad libs or excessive harmonies. These are musical requests, not guaranteed timings. Invent appropriate lyrics internally; the final classroom lyrics will be transcribed from the actual song.",
+        "Ace-Step1.5",
+        "acestep-v15-turbo",
+        "acestep-5Hz-lm-1.7B",
+        1,
+        -1,
+        "fixed",
+        8,
+        "auto",
+        false,
+        "en",
+        "None",
+        false,
+        true,
+        "flac"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "SaveAudio",
+      "title": "2 · 完整歌曲试听与保存",
+      "pos": [
+        600,
+        0
+      ],
+      "size": [
+        380,
+        200
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 1
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveAudio"
+      },
+      "widgets_values": [
+        "music-star-quest/prompt-full-song"
+      ]
+    },
+    {
+      "id": 18,
+      "type": "STT7LoadModel",
+      "title": "3 · 识别模型（CPU避免与歌曲争抢显存）",
+      "pos": [
+        600,
+        300
+      ],
+      "size": [
+        380,
+        220
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "STT7_MODEL",
+          "links": [
+            2
+          ],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "STT7LoadModel"
+      },
+      "widgets_values": [
+        "faster-whisper",
+        "medium",
+        "cpu",
+        "int8"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "STT7TranscribeAudio",
+      "title": "4 · 转写实际演唱，保留重复句与词时间",
+      "pos": [
+        1050,
+        0
+      ],
+      "size": [
+        430,
+        410
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "STT7_MODEL",
+          "link": 2
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "result",
+          "type": "STT7_RESULT",
+          "links": [
+            5
+          ],
+          "slot_index": 1
+        },
+        {
+          "name": "language",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "duration",
+          "type": "FLOAT",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "STT7TranscribeAudio"
+      },
+      "widgets_values": [
+        "en",
+        "transcribe",
+        false,
+        true,
+        5,
+        0,
+        ""
+      ]
+    },
+    {
+      "id": 21,
+      "type": "MSQSplitLyricsAudio",
+      "title": "5 · 按实际词时间切割歌词短句及音频",
+      "pos": [
+        1540,
+        0
+      ],
+      "size": [
+        430,
+        440
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 4
+        },
+        {
+          "name": "result",
+          "type": "STT7_RESULT",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "lyrics_and_clips_json",
+          "type": "STRING",
+          "links": [
+            6
+          ],
+          "slot_index": 0
+        },
+        {
+          "name": "lrc",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        },
+        {
+          "name": "manifest_path",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MSQSplitLyricsAudio"
+      },
+      "widgets_values": [
+        "clap your hands\nstomp your feet\nfeel so happy",
+        8,
+        6,
+        0.65,
+        0.08,
+        "music-star-quest"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "PreviewAny",
+      "title": "6 · 查看实际歌词、切点和目标词检查",
+      "pos": [
+        2020,
+        0
+      ],
+      "size": [
+        560,
+        600
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [],
+          "slot_index": 0
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 24,
+      "type": "MarkdownNote",
+      "title": "导入要求与准确度边界",
+      "pos": [
+        0,
+        760
+      ],
+      "size": [
+        560,
+        250
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MarkdownNote"
+      },
+      "widgets_values": [
+        "需要安装 ComfyUI-MPC-Ace-Step、STT7，以及附带 music_star_lyrics 节点。SimpleMode 需要完整 ACE-Step 模型目录，不能仅用原生4个分拆safetensors文件。不会连接到新API服务，模型在ComfyUI进程内运行。CPU识别较慢。提示词中的时长与前奏长度不保证。最终歌词来自实际音频识别，内部草稿不作为最终答案。"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      12,
+      0,
+      "AUDIO"
+    ],
+    [
+      2,
+      18,
+      0,
+      19,
+      0,
+      "STT7_MODEL"
+    ],
+    [
+      3,
+      1,
+      0,
+      19,
+      1,
+      "AUDIO"
+    ],
+    [
+      4,
+      1,
+      0,
+      21,
+      0,
+      "AUDIO"
+    ],
+    [
+      5,
+      19,
+      1,
+      21,
+      1,
+      "STT7_RESULT"
+    ],
+    [
+      6,
+      21,
+      0,
+      23,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [
+        40,
+        40
+      ]
+    },
+    "workflowPurpose": "Whisper-estimated actual lyric phrases and matching audio clips; review required"
+  },
+  "revision": 0
+}
