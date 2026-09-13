@@ -4,7 +4,7 @@ set -euo pipefail
 music_api_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 music_python="${MUSIC_SEPARATION_PYTHON:-$music_api_dir/.venv-music/bin/python}"
 music_runtime="${MUSIC_RUNTIME_DIR:-$music_api_dir/.music-runtime}"
-if [ ! -x "$music_python" ]; then
+if [ ! -x "$music_python" ] || ! "$music_python" -m pip --version >/dev/null 2>&1; then
   if [ -n "${MUSIC_SEPARATION_PYTHON:-}" ]; then
     echo "MUSIC_SEPARATION_PYTHON 指定的 Python 不存在: $music_python" >&2
     exit 1
