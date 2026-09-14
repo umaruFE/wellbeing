@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-14T06:29:13.506Z",
+  "updatedAt": "2026-09-14T16:21:10.380Z",
   "createdAt": "2026-04-08T13:45:47.013Z",
   "id": "IVVcupJEZDLRHQwF",
   "name": "🐳图生视频单人主工作流-提交分镜图片请求",
@@ -1666,9 +1666,9 @@
       }
     ]
   },
-  "versionId": "78b93c0f-dc8b-4a25-9034-67e77294e4ab",
-  "activeVersionId": "78b93c0f-dc8b-4a25-9034-67e77294e4ab",
-  "versionCounter": 598,
+  "versionId": "03c54454-83b7-4e64-a041-84f068bc2802",
+  "activeVersionId": "03c54454-83b7-4e64-a041-84f068bc2802",
+  "versionCounter": 604,
   "triggerCount": 1,
   "shared": [
     {
@@ -1691,9 +1691,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-09-14T06:29:13.508Z",
-    "createdAt": "2026-09-14T06:29:13.508Z",
-    "versionId": "78b93c0f-dc8b-4a25-9034-67e77294e4ab",
+    "updatedAt": "2026-09-14T16:21:10.381Z",
+    "createdAt": "2026-09-14T16:21:10.381Z",
+    "versionId": "03c54454-83b7-4e64-a041-84f068bc2802",
     "workflowId": "IVVcupJEZDLRHQwF",
     "nodes": [
       {
@@ -3316,11 +3316,19 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-09-14T06:29:13.762Z",
-        "id": 840,
+        "createdAt": "2026-09-14T16:21:10.453Z",
+        "id": 861,
         "workflowId": "IVVcupJEZDLRHQwF",
-        "versionId": "78b93c0f-dc8b-4a25-9034-67e77294e4ab",
+        "versionId": "03c54454-83b7-4e64-a041-84f068bc2802",
         "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      },
+      {
+        "createdAt": "2026-09-14T16:21:10.435Z",
+        "id": 860,
+        "workflowId": "IVVcupJEZDLRHQwF",
+        "versionId": "03c54454-83b7-4e64-a041-84f068bc2802",
+        "event": "deactivated",
         "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
       }
     ]

@@ -333,8 +333,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 5,
-          "lastNodeId": 116,
-          "lastLinkId": 229,
+          "lastNodeId": 122,
+          "lastLinkId": 232,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -689,7 +689,7 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  167
+                  232
                 ]
               }
             ],
@@ -1238,7 +1238,7 @@
               "Node name for S&R": "ComfyMathExpression"
             },
             "widgets_values": [
-              "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
+              "max(96, round(a * 24)) + (5 - (max(96, round(a * 24)) % 17)) % 17"
             ]
           },
           {
@@ -1272,7 +1272,8 @@
                 "name": "FLOAT",
                 "type": "FLOAT",
                 "links": [
-                  205
+                  205,
+                  230
                 ]
               }
             ],
@@ -1367,6 +1368,115 @@
               "Node name for S&R": "MiniMaxH3SigmaShift"
             },
             "flags": {}
+          },
+          {
+            "id": 121,
+            "type": "ComfyMathExpression",
+            "pos": [
+              -1000,
+              5500
+            ],
+            "size": [
+              360,
+              160
+            ],
+            "flags": {
+              "collapsed": false
+            },
+            "order": 13,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "a",
+                "localized_name": "values.a",
+                "name": "values.a",
+                "type": "FLOAT,INT,BOOLEAN",
+                "link": 230
+              },
+              {
+                "label": "b",
+                "localized_name": "values.b",
+                "name": "values.b",
+                "shape": 7,
+                "type": "FLOAT,INT,BOOLEAN",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "浮点",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": null
+              },
+              {
+                "localized_name": "整数",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  231
+                ]
+              },
+              {
+                "localized_name": "布尔值",
+                "name": "BOOL",
+                "type": "BOOLEAN",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression"
+            },
+            "widgets_values": [
+              "max(1, round(a * 24))"
+            ]
+          },
+          {
+            "id": 122,
+            "type": "ImageFromBatch",
+            "pos": [
+              -650,
+              5200
+            ],
+            "size": [
+              300,
+              120
+            ],
+            "flags": {},
+            "order": 30,
+            "mode": 0,
+            "inputs": [
+              {
+                "name": "image",
+                "type": "IMAGE",
+                "link": 232
+              },
+              {
+                "name": "length",
+                "type": "INT",
+                "widget": {
+                  "name": "length"
+                },
+                "link": 231
+              }
+            ],
+            "outputs": [
+              {
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  167
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageFromBatch"
+            },
+            "widgets_values": [
+              0,
+              120
+            ],
+            "title": "按分镜时长截取视频帧"
           }
         ],
         "groups": [
@@ -1502,7 +1612,7 @@
           },
           {
             "id": 167,
-            "origin_id": 10,
+            "origin_id": 122,
             "origin_slot": 0,
             "target_id": 91,
             "target_slot": 0,
@@ -1667,6 +1777,30 @@
             "origin_id": 115,
             "type": "MODEL",
             "id": 229
+          },
+          {
+            "id": 230,
+            "origin_id": 111,
+            "origin_slot": 0,
+            "target_id": 121,
+            "target_slot": 0,
+            "type": "FLOAT"
+          },
+          {
+            "id": 231,
+            "origin_id": 121,
+            "origin_slot": 1,
+            "target_id": 122,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 232,
+            "origin_id": 10,
+            "origin_slot": 0,
+            "target_id": 122,
+            "target_slot": 0,
+            "type": "IMAGE"
           }
         ],
         "extra": {}

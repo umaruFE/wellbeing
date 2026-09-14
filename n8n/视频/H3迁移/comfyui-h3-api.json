@@ -50,7 +50,7 @@
   },
   "105:17": {
     "inputs": {
-      "sampler_name": "euler"
+      "sampler_name": "res_multistep"
     },
     "class_type": "KSamplerSelect",
     "_meta": {
@@ -60,10 +60,10 @@
   "105:9": {
     "inputs": {
       "scheduler": "simple",
-      "steps": 8,
+      "steps": 20,
       "denoise": 1,
       "model": [
-        "h3:shift",
+        "105:6",
         0
       ]
     },
@@ -103,7 +103,7 @@
   "105:16": {
     "inputs": {
       "model": [
-        "h3:shift",
+        "105:6",
         0
       ],
       "conditioning": [
@@ -151,7 +151,7 @@
       "fps": 24,
       "bit_depth": 8,
       "images": [
-        "105:10",
+        "h3:trim",
         0
       ]
     },
@@ -184,26 +184,18 @@
       "title": "MiniMax H3 Image to Video"
     }
   },
-  "h3:lora": {
-    "class_type": "LoraLoaderModelOnly",
+  "h3:trim": {
+    "class_type": "ImageFromBatch",
     "inputs": {
-      "strength_model": 1,
-      "model": [
-        "105:6",
+      "image": [
+        "105:10",
         0
       ],
-      "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors"
-    }
-  },
-  "h3:shift": {
-    "class_type": "MiniMaxH3SigmaShift",
-    "inputs": {
-      "model": [
-        "h3:lora",
-        0
-      ],
-      "shift_audio": 3,
-      "shift_video": 6
+      "batch_index": 0,
+      "length": 120
+    },
+    "_meta": {
+      "title": "按分镜时长截取视频帧"
     }
   }
 }

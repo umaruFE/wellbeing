@@ -164,8 +164,8 @@ async function generateStoryboardAsset(asset, values) {
   const role = String(values.character || 'Poppy').toLowerCase();
   const direction = values.direction || '16:9';
   const isVertical = direction === '9:16';
-  const videoWidth = isVertical ? 720 : 1280;
-  const videoHeight = isVertical ? 1280 : 720;
+  const videoWidth = isVertical ? 480 : 864;
+  const videoHeight = isVertical ? 864 : 480;
 
   const storyboardResult = await videoStoryboardService.callWebhookGenerateImages(
     role,

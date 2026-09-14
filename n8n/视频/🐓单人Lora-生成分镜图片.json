@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-09-14T15:38:44.754Z",
+  "createdAt": "2026-04-12T03:43:25.660Z",
+  "id": "1rBY3rKFlO4kzMN4",
   "name": "🐓单人Lora-生成分镜图片",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -26,24 +32,21 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
       "position": [
-        -128,
-        400
+        1312,
+        1616
       ],
-      "id": "d96850c7-e7aa-446d-907b-1a6b5edbbd22",
+      "id": "a53748a2-4d94-4be7-8de1-d63de7f77ab9",
       "name": "When Executed by Another Workflow"
     },
     {
-      "parameters": {
-        "amount": 5,
-        "unit": "seconds"
-      },
+      "parameters": {},
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1216,
-        416
+        2656,
+        1632
       ],
-      "id": "fb668664-c572-434a-84d4-ab95a14a5a38",
+      "id": "31352e5f-e5fe-4d8c-8d0e-06936ae28a85",
       "name": "Wait",
       "webhookId": "6f074b41-3d01-4703-bd18-c3531ab30e1e"
     },
@@ -74,10 +77,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1664,
-        416
+        3104,
+        1632
       ],
-      "id": "2e5bdf04-6866-439e-9cfa-1ba47f6d3abe",
+      "id": "1ac5b72c-35c1-41cc-beaa-58296b91a5f0",
       "name": "If",
       "retryOnFail": true
     },
@@ -89,10 +92,10 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        432,
-        400
+        1872,
+        1616
       ],
-      "id": "d536a07b-0e32-4d30-aefd-caa84a294c6d",
+      "id": "59506f4e-2bed-4ee6-843d-d1db0513eb3d",
       "name": "Split Out1"
     },
     {
@@ -112,10 +115,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        560,
-        400
+        2000,
+        1616
       ],
-      "id": "8a7c18ee-f562-4c1e-9e45-0994f56fa2ea",
+      "id": "e4aee377-516f-4db8-b58d-590c7b86550a",
       "name": "分配 ComfyUI 节点"
     },
     {
@@ -135,10 +138,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1872,
-        400
+        3312,
+        1616
       ],
-      "id": "1d6a051b-ebb1-4e04-b6e7-0986fef8950a",
+      "id": "aa1e554e-e4ec-4be6-b98e-fa364a276f79",
       "name": "Edit Fields1"
     },
     {
@@ -149,10 +152,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        688,
-        400
+        2128,
+        1616
       ],
-      "id": "91987f00-02b9-4f4a-9b93-b42f9a1e5c9d",
+      "id": "ee387721-3b2a-44cb-abbd-a2b9a8220167",
       "name": "Loop Over Items"
     },
     {
@@ -171,10 +174,10 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        960,
-        240
+        2400,
+        1456
       ],
-      "id": "e8eb706f-8201-4de8-814e-5477889b5d1d",
+      "id": "11f8e85e-cf69-4cfa-a343-3cfa1e86ca95",
       "name": "Aggregate1"
     },
     {
@@ -194,10 +197,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2400,
-        400
+        3840,
+        1616
       ],
-      "id": "3b50e0e5-1b57-4919-a238-ee242977c2d4",
+      "id": "df7b2486-452d-42ae-8717-f08bd0b827d3",
       "name": "Edit Fields2"
     },
     {
@@ -214,10 +217,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        960,
-        416
+        2400,
+        1632
       ],
-      "id": "089fe9e1-2390-4b4c-94bc-c00e3895fe48",
+      "id": "6f493e5d-1abc-4fe9-8536-5db9f77df468",
       "name": "产生分镜图片请求",
       "credentials": {
         "httpBearerAuth": {
@@ -236,10 +239,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1440,
-        416
+        2880,
+        1632
       ],
-      "id": "c3dbef60-254f-449b-a576-5fbaa159d202",
+      "id": "b64b59d6-1256-4136-b185-3288ea925905",
       "name": "检查是否完成",
       "credentials": {
         "httpBearerAuth": {
@@ -271,10 +274,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        2048,
-        400
+        3488,
+        1616
       ],
-      "id": "37f03749-7f80-49ff-8092-e4840e746937",
+      "id": "8baffdf1-b0cb-49ce-91a2-4189a87e83a4",
       "name": "获取素材",
       "credentials": {
         "httpBearerAuth": {
@@ -292,10 +295,10 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        2224,
-        400
+        3664,
+        1616
       ],
-      "id": "42880383-ad04-4686-99cd-f6ac382faeb0",
+      "id": "168faafd-2337-49cd-9cab-2900f290c994",
       "name": "写入本地"
     },
     {
@@ -310,10 +313,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        0,
-        -16
+        1440,
+        1200
       ],
-      "id": "32193b7a-19c8-4904-84fd-4db64044c124",
+      "id": "95188113-68d5-4137-9ad7-782dd9cccc02",
       "name": "Webhook",
       "webhookId": "9fb129b7-a172-44c1-ab2b-8c558661829a"
     },
@@ -326,10 +329,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        192,
-        -224
+        1632,
+        992
       ],
-      "id": "349c760f-9beb-4f3f-89c5-a2136aed714d",
+      "id": "f11749c2-ff82-4ca5-8b24-156f0ed208d8",
       "name": "Respond to Webhook"
     },
     {
@@ -367,10 +370,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        160,
-        400
+        1600,
+        1616
       ],
-      "id": "0f9ee426-c6cc-4222-ac87-0707ce0e0d4d",
+      "id": "c0e2290b-3db8-4682-a8e9-97ac052eea1b",
       "name": "初始配置"
     },
     {
@@ -387,10 +390,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        512,
-        -16
+        1952,
+        1200
       ],
-      "id": "648a998b-ecf0-4254-8d7d-71b10ce1b806",
+      "id": "9dbb152a-f022-4c4d-b89b-0e98b406523a",
       "name": "产生分镜图片请求1",
       "credentials": {
         "httpBearerAuth": {
@@ -440,24 +443,21 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        208,
-        -16
+        1648,
+        1200
       ],
-      "id": "0e670666-08b8-4baa-8936-c11cfc5bd9b1",
+      "id": "9151c6f9-9a1e-4df6-9bf3-447afdc03f70",
       "name": "初始配置1"
     },
     {
-      "parameters": {
-        "amount": 5,
-        "unit": "seconds"
-      },
+      "parameters": {},
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        768,
-        -16
+        2208,
+        1200
       ],
-      "id": "457138b7-7daa-4a80-8c03-f39ea8d463c5",
+      "id": "b065178e-a8c0-4591-b9b5-5b470f7a435a",
       "name": "Wait1",
       "webhookId": "6f074b41-3d01-4703-bd18-c3531ab30e1e"
     },
@@ -488,10 +488,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1216,
-        -16
+        2656,
+        1200
       ],
-      "id": "59b06afb-ae53-490e-9d09-9af9081a63cd",
+      "id": "e035ca9c-0c4c-4ca8-b859-ccd9b0e340b1",
       "name": "If1",
       "retryOnFail": true
     },
@@ -512,10 +512,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1424,
-        -32
+        2864,
+        1184
       ],
-      "id": "2726e5d5-b9cf-4e7e-b6ac-6774e22ac974",
+      "id": "155b5650-6516-4a01-9f1a-09e698b78a73",
       "name": "Edit Fields"
     },
     {
@@ -535,10 +535,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1952,
-        -32
+        3392,
+        1184
       ],
-      "id": "ed740c77-e270-433f-8fd4-3eb2d1ba18bc",
+      "id": "e30c1e51-a84c-4bc1-a19a-ff33f19e55a7",
       "name": "Edit Fields3"
     },
     {
@@ -551,10 +551,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        992,
-        -16
+        2432,
+        1200
       ],
-      "id": "91f3b964-39bd-42cc-823e-d1d6702f0f96",
+      "id": "bc2831fb-8d58-4e36-810e-d00779bb406b",
       "name": "检查是否完成1",
       "credentials": {
         "httpBearerAuth": {
@@ -586,10 +586,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        1600,
-        -32
+        3040,
+        1184
       ],
-      "id": "e1e5a958-e7f0-4dc4-b2de-1ceb51116eb7",
+      "id": "c760a6f2-b6e8-41af-93f7-aa30508e4ed5",
       "name": "获取素材1",
       "credentials": {
         "httpBearerAuth": {
@@ -607,10 +607,10 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        1776,
-        -32
+        3216,
+        1184
       ],
-      "id": "dcf40945-0fc5-412c-9985-145d1219b4ad",
+      "id": "948b5d22-c097-46df-a528-ccc06d5d2742",
       "name": "写入本地1"
     },
     {
@@ -670,10 +670,10 @@
       "type": "n8n-nodes-base.dataTable",
       "typeVersion": 1.1,
       "position": [
-        2160,
-        -32
+        3600,
+        1184
       ],
-      "id": "a9178b0a-9194-403e-8d98-0f2f28b3d69e",
+      "id": "f4570c60-4951-4a09-be31-1e13cd8d8224",
       "name": "Insert row"
     },
     {
@@ -683,18 +683,16 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -128,
-        624
+        1312,
+        1840
       ],
-      "id": "gpu-candidate-list-storyboard",
+      "id": "c0d35b4a-d54c-4faa-9a68-5a5489ca8ee5",
       "name": "GPU 候选列表"
     },
     {
       "parameters": {
-        "method": "GET",
         "url": "={{ $json.url }}/system_stats",
         "options": {
-          "timeout": 5000,
           "batching": {
             "batch": {
               "batchSize": 5,
@@ -705,19 +703,20 @@
             "response": {
               "neverError": true
             }
-          }
+          },
+          "timeout": 5000
         }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        0,
-        624
+        1440,
+        1840
       ],
-      "id": "gpu-probe-storyboard",
+      "id": "ce0e8db1-e581-4dde-9880-c139d2f28446",
       "name": "探测 GPU",
-      "onError": "continueRegularOutput",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
@@ -726,60 +725,76 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        128,
-        624
+        1568,
+        1840
       ],
-      "id": "gpu-alive-summary-storyboard",
+      "id": "c51426d4-ec64-4e12-9501-18e68a4b1690",
       "name": "汇总存活 GPU"
+    },
+    {
+      "id": "854a0f83-3a32-42c6-9c0c-de3f37440fd3",
+      "name": "等待 GPU 探测-批量分镜",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        1400
+      ],
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      }
+    },
+    {
+      "id": "775e7965-647f-46c9-8157-af8ee6bda767",
+      "name": "等待 GPU 探测-重生成",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1200,
+        1900
+      ],
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      }
+    },
+    {
+      "id": "8a2fc94a-9964-459b-a926-1d78f7579ce4",
+      "name": "按入口分发 GPU 结果",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1000,
+        1300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c58446a2-64a3-432d-93d5-3e9cbc67d4d4",
+              "leftValue": "={{ $(\"When Executed by Another Workflow\").isExecuted }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
     }
   ],
-  "pinData": {
-    "When Executed by Another Workflow": [
-      {
-        "json": {
-          "prompts": [
-            "晨光中的湖面，薄雾如轻纱般漂浮在水面，远处青山若隐若现，湖水倒映着朝霞的金红色彩。Rolly独自坐在湖心的小船上，双手握桨，桨叶有节奏地划破水面，荡开一圈圈涟漪，船身随波浪轻微起伏晃动。",
-            "光线逐渐转为黄昏色调，天空呈现橙紫渐变，湖面波光粼粼。Rolly划船动作放缓，桨叶划过水面的力度减弱，身体微微前倾，抬头望向远方，眼神中流露出若有所思的孤独感。",
-            "夜幕降临，月光洒在湖面形成银色光带，四周寂静无声。Rolly停止划船，双手抱桨静止不动，船身随水波缓缓旋转，身体前倾俯向水面，仿佛在凝视水中自己的倒影。"
-          ],
-          "role": "rolly",
-          "width": 928,
-          "height": 1656
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "117.50.218.161:5678",
-            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
-            "content-length": "672",
-            "accept": "*/*",
-            "connection": "keep-alive",
-            "content-type": "multipart/form-data; boundary=----WebKitFormBoundary1lYgEyUbP9tI8SkZ",
-            "accept-encoding": "gzip"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "prompt": "edi在阳光下奔跑。阳光明媚的花园里，鲜花盛开，蝴蝶飞舞，远处有喷泉。快速奔跑，双臂摆动。广角镜头，自然光，暖色调，低角度拍摄，构图采用三分法。动态模糊效果，营造轻盈感。",
-            "width": "1096",
-            "role": "edi",
-            "height": "867"
-          },
-          "webhookUrl": "http://117.50.218.161:5678/webhook/regene-image",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
   "connections": {
     "When Executed by Another Workflow": {
       "main": [
@@ -790,7 +805,7 @@
             "index": 0
           },
           {
-            "node": "初始配置",
+            "node": "等待 GPU 探测-批量分镜",
             "type": "main",
             "index": 0
           }
@@ -899,11 +914,6 @@
         ]
       ]
     },
-    "Aggregate1": {
-      "main": [
-        []
-      ]
-    },
     "Edit Fields2": {
       "main": [
         [
@@ -968,7 +978,7 @@
             "index": 0
           },
           {
-            "node": "初始配置1",
+            "node": "等待 GPU 探测-重生成",
             "type": "main",
             "index": 0
           },
@@ -1096,18 +1106,1317 @@
           }
         ]
       ]
+    },
+    "等待 GPU 探测-批量分镜": {
+      "main": [
+        [
+          {
+            "node": "初始配置",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "等待 GPU 探测-重生成": {
+      "main": [
+        [
+          {
+            "node": "初始配置1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "汇总存活 GPU": {
+      "main": [
+        [
+          {
+            "node": "按入口分发 GPU 结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "按入口分发 GPU 结果": {
+      "main": [
+        [
+          {
+            "node": "等待 GPU 探测-批量分镜",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "等待 GPU 探测-重生成",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "9d5dce63-af5a-4923-accd-3327967ef6b5",
-  "meta": {
-    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "prompts": [
+            "晨光中的湖面，薄雾如轻纱般漂浮在水面，远处青山若隐若现，湖水倒映着朝霞的金红色彩。Rolly独自坐在湖心的小船上，双手握桨，桨叶有节奏地划破水面，荡开一圈圈涟漪，船身随波浪轻微起伏晃动。",
+            "光线逐渐转为黄昏色调，天空呈现橙紫渐变，湖面波光粼粼。Rolly划船动作放缓，桨叶划过水面的力度减弱，身体微微前倾，抬头望向远方，眼神中流露出若有所思的孤独感。",
+            "夜幕降临，月光洒在湖面形成银色光带，四周寂静无声。Rolly停止划船，双手抱桨静止不动，船身随水波缓缓旋转，身体前倾俯向水面，仿佛在凝视水中自己的倒影。"
+          ],
+          "role": "rolly",
+          "width": 928,
+          "height": 1656
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "user-agent": "Apifox/1.0.0 (https://apifox.com)",
+            "content-length": "672",
+            "accept": "*/*",
+            "connection": "keep-alive",
+            "content-type": "multipart/form-data; boundary=----WebKitFormBoundary1lYgEyUbP9tI8SkZ",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "prompt": "edi在阳光下奔跑。阳光明媚的花园里，鲜花盛开，蝴蝶飞舞，远处有喷泉。快速奔跑，双臂摆动。广角镜头，自然光，暖色调，低角度拍摄，构图采用三分法。动态模糊效果，营造轻盈感。",
+            "width": "1096",
+            "role": "edi",
+            "height": "867"
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/regene-image",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
   },
-  "id": "1rBY3rKFlO4kzMN4",
-  "tags": []
+  "versionId": "7298f080-fae4-4ef6-a4e2-86be9f6ea71a",
+  "activeVersionId": "7298f080-fae4-4ef6-a4e2-86be9f6ea71a",
+  "versionCounter": 254,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-12T03:43:25.664Z",
+      "createdAt": "2026-04-12T03:43:25.664Z",
+      "role": "workflow:owner",
+      "workflowId": "1rBY3rKFlO4kzMN4",
+      "projectId": "A1HdxbOAbMRJMiPU",
+      "project": {
+        "updatedAt": "2026-04-01T06:46:13.169Z",
+        "createdAt": "2026-04-01T06:24:56.072Z",
+        "id": "A1HdxbOAbMRJMiPU",
+        "name": "vincent zou <343854933@qq.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-09-14T15:38:44.756Z",
+    "createdAt": "2026-09-14T15:38:44.756Z",
+    "versionId": "7298f080-fae4-4ef6-a4e2-86be9f6ea71a",
+    "workflowId": "1rBY3rKFlO4kzMN4",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "prompts",
+                "type": "array"
+              },
+              {
+                "name": "role"
+              },
+              {
+                "name": "width",
+                "type": "number"
+              },
+              {
+                "name": "height",
+                "type": "number"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
+        "position": [
+          1312,
+          1616
+        ],
+        "id": "a53748a2-4d94-4be7-8de1-d63de7f77ab9",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2656,
+          1632
+        ],
+        "id": "31352e5f-e5fe-4d8c-8d0e-06936ae28a85",
+        "name": "Wait",
+        "webhookId": "6f074b41-3d01-4703-bd18-c3531ab30e1e"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "95b5670e-5019-45a7-b701-08a608311038",
+                "leftValue": "={{ Object.values($json)[0]?.status?.status_str ?? '' }}",
+                "rightValue": "success",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          3104,
+          1632
+        ],
+        "id": "1ac5b72c-35c1-41cc-beaa-58296b91a5f0",
+        "name": "If",
+        "retryOnFail": true
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "prompts",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1872,
+          1616
+        ],
+        "id": "59506f4e-2bed-4ee6-843d-d1db0513eb3d",
+        "name": "Split Out1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "2e9cac2b-55bd-41db-ae46-f11b52cf2725",
+                "name": "comfyBaseUrl",
+                "value": "={{ $('汇总存活 GPU').first().json.aliveGpuUrls[$itemIndex % $('汇总存活 GPU').first().json.aliveGpuUrls.length] }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2000,
+          1616
+        ],
+        "id": "e4aee377-516f-4db8-b58d-590c7b86550a",
+        "name": "分配 ComfyUI 节点"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "02866e68-1a03-4696-8c44-bdc9af560966",
+                "name": "images",
+                "value": "={{ $json.values()[0].outputs['105'].images }}",
+                "type": "array"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          3312,
+          1616
+        ],
+        "id": "aa1e554e-e4ec-4be6-b98e-fa364a276f79",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "batchSize": 5,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          2128,
+          1616
+        ],
+        "id": "ee387721-3b2a-44cb-abbd-a2b9a8220167",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "fieldsToAggregate": {
+            "fieldToAggregate": [
+              {
+                "fieldToAggregate": "fileName",
+                "renameField": true,
+                "outputFieldName": "images_filepath"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          2400,
+          1456
+        ],
+        "id": "11f8e85e-cf69-4cfa-a343-3cfa1e86ca95",
+        "name": "Aggregate1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e58dd683-28f3-406b-84b6-3447331c8bb3",
+                "name": "fileName",
+                "value": "=http://117.50.218.161:5678/webhook/files?file={{ $json.images[0].filename }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          3840,
+          1616
+        ],
+        "id": "df7b2486-452d-42ae-8717-f08bd0b827d3",
+        "name": "Edit Fields2"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('分配 ComfyUI 节点').item.json.comfyBaseUrl + '/prompt' }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"prompt\":{\n  \"1\": {\n    \"inputs\": {\n      \"unet_name\": \"z_image_turbo_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"UNet加载器\"\n    }\n  },\n  \"2\": {\n    \"inputs\": {\n      \"vae_name\": \"ae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"加载VAE\"\n    }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_3_4b.safetensors\",\n      \"type\": \"lumina2\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": {\n      \"title\": \"加载CLIP\"\n    }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"shift\": 3,\n      \"model\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\",\n    \"_meta\": {\n      \"title\": \"采样算法（AuraFlow）\"\n    }\n  },\n  \"5\": {\n    \"inputs\": {\n      \"width\": {{ $('初始配置').item.json.width }},\n      \"height\": {{ $('初始配置').item.json.height }},\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptySD3LatentImage\",\n    \"_meta\": {\n      \"title\": \"空Latent图像（SD3）\"\n    }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": \"blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients\",\n      \"clip\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"全局负面提示词 (Global Negative)\"\n    }\n  },\n  \"101\": {\n    \"inputs\": {\n      \"lora_name\": \"{{ $('初始配置').item.json.role }}.safetensors\",\n      \"strength_model\": 0.8,\n      \"strength_clip\": 1,\n      \"model\": [\n        \"4\",\n        0\n      ],\n      \"clip\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"LoraLoader\",\n    \"_meta\": {\n      \"title\": \"1. LoRA - Poppy\"\n    }\n  },\n  \"102\": {\n    \"inputs\": {\n      \"text\": \"cj_vector_style, {{ $('初始配置').item.json.role }}_character, {{ JSON.stringify(String($json.prompts ?? '')).slice(1, -1) }}, 扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，角色的符号化表情，干净亲和的美学，沉浸式叙事扁平背景\",\n      \"clip\": [\n        \"101\",\n        1\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"1. 动作 - Poppy (粉色)\"\n    }\n  },\n  \"103\": {\n    \"inputs\": {\n      \"seed\": {{ (Math.floor(Math.random()*9e14)+1e14).toString() }},\n      \"steps\": 20,\n      \"cfg\": 1.5,\n      \"sampler_name\": \"euler\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [\n        \"101\",\n        0\n      ],\n      \"positive\": [\n        \"102\",\n        0\n      ],\n      \"negative\": [\n        \"7\",\n        0\n      ],\n      \"latent_image\": [\n        \"5\",\n        0\n      ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": {\n      \"title\": \"1. 生成 Poppy\"\n    }\n  },\n  \"104\": {\n    \"inputs\": {\n      \"samples\": [\n        \"103\",\n        0\n      ],\n      \"vae\": [\n        \"2\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE解码\"\n    }\n  },\n  \"105\": {\n    \"inputs\": {\n      \"filename_prefix\": \"Asset_Poppy\",\n      \"images\": [\n        \"104\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": {\n      \"title\": \"保存 Poppy 资产\"\n    }\n  }\n}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2400,
+          1632
+        ],
+        "id": "6f493e5d-1abc-4fe9-8536-5db9f77df468",
+        "name": "产生分镜图片请求",
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "={{ $('分配 ComfyUI 节点').item.json.comfyBaseUrl + '/history/' + $('产生分镜图片请求').item.json.prompt_id }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2880,
+          1632
+        ],
+        "id": "b64b59d6-1256-4136-b185-3288ea925905",
+        "name": "检查是否完成",
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "={{ $('分配 ComfyUI 节点').item.json.comfyBaseUrl + '/view' }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "filename",
+                "value": "={{ $json.images[0].filename }}"
+              },
+              {
+                "name": "type",
+                "value": "output"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3488,
+          1616
+        ],
+        "id": "8baffdf1-b0cb-49ce-91a2-4189a87e83a4",
+        "name": "获取素材",
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "write",
+          "fileName": "=/home/node/files/{{ $binary.data.fileName }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          3664,
+          1616
+        ],
+        "id": "168faafd-2337-49cd-9cab-2900f290c994",
+        "name": "写入本地"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "regene-image",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          1440,
+          1200
+        ],
+        "id": "95188113-68d5-4137-9ad7-782dd9cccc02",
+        "name": "Webhook",
+        "webhookId": "9fb129b7-a172-44c1-ab2b-8c558661829a"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={\n  \"executionId\": \"{{ $execution.id }}\",\n  \"status\": \"success\",\n  \"message\": \"Workflow executed successfully\"\n}  ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1632,
+          992
+        ],
+        "id": "f11749c2-ff82-4ca5-8b24-156f0ed208d8",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ee167488-7e24-4412-bf58-a0b9581c9c6e",
+                "name": "prompts",
+                "value": "={{ $json.prompts }}",
+                "type": "array"
+              },
+              {
+                "id": "35a93395-b828-4cb3-a165-b688f3e59e09",
+                "name": "width",
+                "value": "={{ $json.width }}",
+                "type": "number"
+              },
+              {
+                "id": "a5443dc7-e335-475a-a8f7-0894f7531397",
+                "name": "height",
+                "value": "={{ $json.height }}",
+                "type": "string"
+              },
+              {
+                "id": "b165b2bd-76da-4c56-8464-fb82122da0af",
+                "name": "role",
+                "value": "={{ $json.role }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1600,
+          1616
+        ],
+        "id": "c0e2290b-3db8-4682-a8e9-97ac052eea1b",
+        "name": "初始配置"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "={{ $('初始配置1').item.json.comfyBaseUrl }}/prompt",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"prompt\":{\n  \"1\": {\n    \"inputs\": {\n      \"unet_name\": \"z_image_turbo_bf16.safetensors\",\n      \"weight_dtype\": \"default\"\n    },\n    \"class_type\": \"UNETLoader\",\n    \"_meta\": {\n      \"title\": \"UNet加载器\"\n    }\n  },\n  \"2\": {\n    \"inputs\": {\n      \"vae_name\": \"ae.safetensors\"\n    },\n    \"class_type\": \"VAELoader\",\n    \"_meta\": {\n      \"title\": \"加载VAE\"\n    }\n  },\n  \"3\": {\n    \"inputs\": {\n      \"clip_name\": \"qwen_3_4b.safetensors\",\n      \"type\": \"lumina2\",\n      \"device\": \"default\"\n    },\n    \"class_type\": \"CLIPLoader\",\n    \"_meta\": {\n      \"title\": \"加载CLIP\"\n    }\n  },\n  \"4\": {\n    \"inputs\": {\n      \"shift\": 3,\n      \"model\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"ModelSamplingAuraFlow\",\n    \"_meta\": {\n      \"title\": \"采样算法（AuraFlow）\"\n    }\n  },\n  \"5\": {\n    \"inputs\": {\n      \"width\": {{ $('初始配置1').item.json.width }},\n      \"height\": {{ $('初始配置1').item.json.height }},\n      \"batch_size\": 1\n    },\n    \"class_type\": \"EmptySD3LatentImage\",\n    \"_meta\": {\n      \"title\": \"空Latent图像（SD3）\"\n    }\n  },\n  \"7\": {\n    \"inputs\": {\n      \"text\": \"blurry, 3d, realistic, complex textures, bad anatomy, deformed, shadows, gradients\",\n      \"clip\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"全局负面提示词 (Global Negative)\"\n    }\n  },\n  \"101\": {\n    \"inputs\": {\n      \"lora_name\": \"{{ $('初始配置1').item.json.role }}.safetensors\",\n      \"strength_model\": 0.8,\n      \"strength_clip\": 1,\n      \"model\": [\n        \"4\",\n        0\n      ],\n      \"clip\": [\n        \"3\",\n        0\n      ]\n    },\n    \"class_type\": \"LoraLoader\",\n    \"_meta\": {\n      \"title\": \"1. LoRA - Poppy\"\n    }\n  },\n  \"102\": {\n    \"inputs\": {\n      \"text\": \"cj_vector_style, {{ $('初始配置1').item.json.role }}_character, {{ JSON.stringify($json.prompt ?? '').slice(1, -1) }}, 扁平矢量插画，粗细均匀的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度的平涂色彩、和谐的柔和色调、连贯的配色方案，简化但风格化的背景环境，清晰的环境线稿，非写实扁平插画，角色的符号化表情，干净亲和的美学，沉浸式叙事扁平背景\",\n      \"clip\": [\n        \"101\",\n        1\n      ]\n    },\n    \"class_type\": \"CLIPTextEncode\",\n    \"_meta\": {\n      \"title\": \"1. 动作 - Poppy (粉色)\"\n    }\n  },\n  \"103\": {\n    \"inputs\": {\n      \"seed\": {{ (Math.floor(Math.random()*9e14)+1e14).toString() }},\n      \"steps\": 20,\n      \"cfg\": 1.5,\n      \"sampler_name\": \"euler\",\n      \"scheduler\": \"simple\",\n      \"denoise\": 1,\n      \"model\": [\n        \"101\",\n        0\n      ],\n      \"positive\": [\n        \"102\",\n        0\n      ],\n      \"negative\": [\n        \"7\",\n        0\n      ],\n      \"latent_image\": [\n        \"5\",\n        0\n      ]\n    },\n    \"class_type\": \"KSampler\",\n    \"_meta\": {\n      \"title\": \"1. 生成 Poppy\"\n    }\n  },\n  \"104\": {\n    \"inputs\": {\n      \"samples\": [\n        \"103\",\n        0\n      ],\n      \"vae\": [\n        \"2\",\n        0\n      ]\n    },\n    \"class_type\": \"VAEDecode\",\n    \"_meta\": {\n      \"title\": \"VAE解码\"\n    }\n  },\n  \"105\": {\n    \"inputs\": {\n      \"filename_prefix\": \"Asset_Poppy\",\n      \"images\": [\n        \"104\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveImage\",\n    \"_meta\": {\n      \"title\": \"保存 Poppy 资产\"\n    }\n  }\n}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1952,
+          1200
+        ],
+        "id": "9dbb152a-f022-4c4d-b89b-0e98b406523a",
+        "name": "产生分镜图片请求1",
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "bec5b821-bfff-4739-aac8-2c57001936a5",
+                "name": "prompt",
+                "value": "={{ $json.body.prompt }}",
+                "type": "string"
+              },
+              {
+                "id": "f8ffdc31-bef6-4bcf-98cc-cf557a287135",
+                "name": "width",
+                "value": "={{ $json.body.width }}",
+                "type": "string"
+              },
+              {
+                "id": "38fefbd3-7adb-40ec-a28e-c288e61a6779",
+                "name": "height",
+                "value": "={{ $json.body.height }}",
+                "type": "string"
+              },
+              {
+                "id": "c2f2a8b9-937c-40e4-af7c-1af68d3ccfaf",
+                "name": "role",
+                "value": "={{ $json.body.role }}",
+                "type": "string"
+              },
+              {
+                "id": "gpu-pick-regene-image",
+                "name": "comfyBaseUrl",
+                "value": "={{ $('汇总存活 GPU').first().json.aliveGpuUrls[Math.floor(Math.random() * $('汇总存活 GPU').first().json.aliveGpuUrls.length)] }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1648,
+          1200
+        ],
+        "id": "9151c6f9-9a1e-4df6-9bf3-447afdc03f70",
+        "name": "初始配置1"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          2208,
+          1200
+        ],
+        "id": "b065178e-a8c0-4591-b9b5-5b470f7a435a",
+        "name": "Wait1",
+        "webhookId": "6f074b41-3d01-4703-bd18-c3531ab30e1e"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "95b5670e-5019-45a7-b701-08a608311038",
+                "leftValue": "={{ Object.values($json)[0]?.status?.status_str ?? '' }}",
+                "rightValue": "success",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          2656,
+          1200
+        ],
+        "id": "e035ca9c-0c4c-4ca8-b859-ccd9b0e340b1",
+        "name": "If1",
+        "retryOnFail": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "02866e68-1a03-4696-8c44-bdc9af560966",
+                "name": "images",
+                "value": "={{ $json.values()[0].outputs['105'].images }}",
+                "type": "array"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          2864,
+          1184
+        ],
+        "id": "155b5650-6516-4a01-9f1a-09e698b78a73",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "e58dd683-28f3-406b-84b6-3447331c8bb3",
+                "name": "fileName",
+                "value": "=http://117.50.218.161:5678/webhook/files?file={{ $json.images[0].filename }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          3392,
+          1184
+        ],
+        "id": "e30c1e51-a84c-4bc1-a19a-ff33f19e55a7",
+        "name": "Edit Fields3"
+      },
+      {
+        "parameters": {
+          "url": "={{ $('初始配置1').item.json.comfyBaseUrl }}/history/{{ $('产生分镜图片请求1').item.json.prompt_id }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2432,
+          1200
+        ],
+        "id": "bc2831fb-8d58-4e36-810e-d00779bb406b",
+        "name": "检查是否完成1",
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "={{ $('初始配置1').item.json.comfyBaseUrl }}/view",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpBearerAuth",
+          "sendQuery": true,
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "filename",
+                "value": "={{ $json.images[0].filename }}"
+              },
+              {
+                "name": "type",
+                "value": "output"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          3040,
+          1184
+        ],
+        "id": "c760a6f2-b6e8-41af-93f7-aa30508e4ed5",
+        "name": "获取素材1",
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "write",
+          "fileName": "=/home/node/files/{{ $binary.data.fileName }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.readWriteFile",
+        "typeVersion": 1,
+        "position": [
+          3216,
+          1184
+        ],
+        "id": "948b5d22-c097-46df-a528-ccc06d5d2742",
+        "name": "写入本地1"
+      },
+      {
+        "parameters": {
+          "dataTableId": {
+            "__rl": true,
+            "value": "J3YaofTO0eHhgjAp",
+            "mode": "list",
+            "cachedResultName": "tworkflow",
+            "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "execution_id": "={{ $execution.id }}",
+              "status": "sucess",
+              "response": "={{ $json.fileName }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "execution_id",
+                "displayName": "execution_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "response",
+                "displayName": "response",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          3600,
+          1184
+        ],
+        "id": "f4570c60-4951-4a09-be31-1e13cd8d8224",
+        "name": "Insert row"
+      },
+      {
+        "parameters": {
+          "jsCode": "const comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1312,
+          1840
+        ],
+        "id": "c0d35b4a-d54c-4faa-9a68-5a5489ca8ee5",
+        "name": "GPU 候选列表"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.url }}/system_stats",
+          "options": {
+            "batching": {
+              "batch": {
+                "batchSize": 5,
+                "batchInterval": 0
+              }
+            },
+            "response": {
+              "response": {
+                "neverError": true
+              }
+            },
+            "timeout": 5000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1440,
+          1840
+        ],
+        "id": "ce0e8db1-e581-4dde-9880-c139d2f28446",
+        "name": "探测 GPU",
+        "alwaysOutputData": true,
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const candidates = $('GPU 候选列表').all().map((item) => item.json.url);\nconst results = $input.all();\nconst aliveGpuUrls = [];\nresults.forEach((item, index) => {\n  const res = item.json || {};\n  if (res && res.system && res.devices && candidates[index]) {\n    aliveGpuUrls.push(candidates[index]);\n  }\n});\nif (!aliveGpuUrls.length) {\n  throw new Error('没有可用的 GPU 绘图服务：5 个 ComfyUI 候选实例全部探测失败，请确认至少启动了一个 GPU 实例。');\n}\nreturn [{ json: { aliveGpuUrls, aliveCount: aliveGpuUrls.length } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          1840
+        ],
+        "id": "c51426d4-ec64-4e12-9501-18e68a4b1690",
+        "name": "汇总存活 GPU"
+      },
+      {
+        "id": "854a0f83-3a32-42c6-9c0c-de3f37440fd3",
+        "name": "等待 GPU 探测-批量分镜",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1200,
+          1400
+        ],
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        }
+      },
+      {
+        "id": "775e7965-647f-46c9-8157-af8ee6bda767",
+        "name": "等待 GPU 探测-重生成",
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1200,
+          1900
+        ],
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineByPosition",
+          "options": {}
+        }
+      },
+      {
+        "id": "8a2fc94a-9964-459b-a926-1d78f7579ce4",
+        "name": "按入口分发 GPU 结果",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1000,
+          1300
+        ],
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "c58446a2-64a3-432d-93d5-3e9cbc67d4d4",
+                "leftValue": "={{ $(\"When Executed by Another Workflow\").isExecuted }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "GPU 候选列表",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "等待 GPU 探测-批量分镜",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "GPU 候选列表": {
+        "main": [
+          [
+            {
+              "node": "探测 GPU",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "探测 GPU": {
+        "main": [
+          [
+            {
+              "node": "汇总存活 GPU",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "检查是否完成",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out1": {
+        "main": [
+          [
+            {
+              "node": "分配 ComfyUI 节点",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "分配 ComfyUI 节点": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "获取素材",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "Aggregate1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "产生分镜图片请求",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields2": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "产生分镜图片请求": {
+        "main": [
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "检查是否完成": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取素材": {
+        "main": [
+          [
+            {
+              "node": "写入本地",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "写入本地": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "GPU 候选列表",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "等待 GPU 探测-重生成",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "初始配置": {
+        "main": [
+          [
+            {
+              "node": "Split Out1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "初始配置1": {
+        "main": [
+          [
+            {
+              "node": "产生分镜图片请求1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait1": {
+        "main": [
+          [
+            {
+              "node": "检查是否完成1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "获取素材1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "检查是否完成1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取素材1": {
+        "main": [
+          [
+            {
+              "node": "写入本地1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "写入本地1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "产生分镜图片请求1": {
+        "main": [
+          [
+            {
+              "node": "Wait1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Insert row",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待 GPU 探测-批量分镜": {
+        "main": [
+          [
+            {
+              "node": "初始配置",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "等待 GPU 探测-重生成": {
+        "main": [
+          [
+            {
+              "node": "初始配置1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "汇总存活 GPU": {
+        "main": [
+          [
+            {
+              "node": "按入口分发 GPU 结果",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "按入口分发 GPU 结果": {
+        "main": [
+          [
+            {
+              "node": "等待 GPU 探测-批量分镜",
+              "type": "main",
+              "index": 1
+            }
+          ],
+          [
+            {
+              "node": "等待 GPU 探测-重生成",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "vincent zou",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-09-14T15:38:44.799Z",
+        "id": 851,
+        "workflowId": "1rBY3rKFlO4kzMN4",
+        "versionId": "7298f080-fae4-4ef6-a4e2-86be9f6ea71a",
+        "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      },
+      {
+        "createdAt": "2026-09-14T15:38:44.785Z",
+        "id": 850,
+        "workflowId": "1rBY3rKFlO4kzMN4",
+        "versionId": "7298f080-fae4-4ef6-a4e2-86be9f6ea71a",
+        "event": "deactivated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    ]
+  }
 }

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-14T07:53:57.684Z",
+  "updatedAt": "2026-09-14T16:21:11.042Z",
   "createdAt": "2026-04-10T03:51:08.502Z",
   "id": "aXjvMzbOugVM8uFm",
   "name": "🐳图生视频单人主工作流-继续生成视频请求",
@@ -1328,9 +1328,9 @@
       }
     ]
   },
-  "versionId": "cc8b65e0-7df1-42d7-bc6b-b89e66930db8",
-  "activeVersionId": "cc8b65e0-7df1-42d7-bc6b-b89e66930db8",
-  "versionCounter": 222,
+  "versionId": "77d2a1a8-dfd4-49be-8d18-d03c972a48da",
+  "activeVersionId": "77d2a1a8-dfd4-49be-8d18-d03c972a48da",
+  "versionCounter": 228,
   "triggerCount": 1,
   "shared": [
     {
@@ -1353,9 +1353,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-09-14T07:53:57.685Z",
-    "createdAt": "2026-09-14T07:53:57.685Z",
-    "versionId": "cc8b65e0-7df1-42d7-bc6b-b89e66930db8",
+    "updatedAt": "2026-09-14T16:21:11.043Z",
+    "createdAt": "2026-09-14T16:21:11.043Z",
+    "versionId": "77d2a1a8-dfd4-49be-8d18-d03c972a48da",
     "workflowId": "aXjvMzbOugVM8uFm",
     "nodes": [
       {
@@ -2579,18 +2579,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-09-14T07:53:57.741Z",
-        "id": 847,
+        "createdAt": "2026-09-14T16:21:11.096Z",
+        "id": 863,
         "workflowId": "aXjvMzbOugVM8uFm",
-        "versionId": "cc8b65e0-7df1-42d7-bc6b-b89e66930db8",
+        "versionId": "77d2a1a8-dfd4-49be-8d18-d03c972a48da",
         "event": "activated",
         "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
       },
       {
-        "createdAt": "2026-09-14T07:53:57.725Z",
-        "id": 846,
+        "createdAt": "2026-09-14T16:21:11.080Z",
+        "id": 862,
         "workflowId": "aXjvMzbOugVM8uFm",
-        "versionId": "cc8b65e0-7df1-42d7-bc6b-b89e66930db8",
+        "versionId": "77d2a1a8-dfd4-49be-8d18-d03c972a48da",
         "event": "deactivated",
         "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
       }
