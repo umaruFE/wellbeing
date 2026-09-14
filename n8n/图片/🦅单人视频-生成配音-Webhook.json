@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-09-14T04:33:01.199Z",
+  "createdAt": "2026-04-21T13:41:29.580Z",
+  "id": "FYRzERdowSuGbhMy",
   "name": "🦅单人视频-生成配音-Webhook",
+  "description": null,
+  "active": false,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -85,12 +91,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://117.50.214.226:8188/prompt",
+        "url": "http://117.50.171.219:8188/prompt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{\n  {\n    \"prompt\": {\n      \"1\": {\n        \"inputs\": {\n          \"top_k\": 30,\n          \"top_p\": 0.8,\n          \"temperature\": 0.8,\n          \"num_beams\": 3,\n          \"max_mel_tokens\": 1500,\n          \"max_text_tokens_per_sentence\": 120,\n          \"custom_cuda_kernel\": false,\n          \"deepspeed\": true,\n          \"unload_model\": true,\n          \"emo_alpha\": 1,\n          \"emo_vector\": \"\",\n          \"use_emo_text\": $json.emotion_prompt ? true : false,\n          \"emo_text\": $json.emotion_prompt || \"\",\n          \"use_random\": false,\n          \"emo_alpha_s2\": 1.0000000000000002,\n          \"emo_vector_s2\": \"\",\n          \"use_emo_text_s2\": false,\n          \"emo_text_s2\": \"\",\n          \"use_random_s2\": false,\n          \"audio\": [\n            \"9\",\n            0\n          ],\n          \"text\": [\n            \"6\",\n            0\n          ]\n        },\n        \"class_type\": \"IndexTTS2Run\",\n        \"_meta\": {\n          \"title\": \"IndexTTS2 Run\"\n        }\n      },\n      \"6\": {\n        \"inputs\": {\n          \"text\": $json.text\n        },\n        \"class_type\": \"Text Multiline\",\n        \"_meta\": {\n          \"title\": \"多行文本\"\n        }\n      },\n      \"9\": {\n        \"inputs\": {\n          \"audio\": \"voice/\" + $json.voice_id,\n          \"audioUI\": \"/api/view?filename=%E6%90%9E%E7%AC%91%E5%A4%A7%E7%88%B7.flac&type=input&subfolder=&rand=0.6831432869771068\"\n        },\n        \"class_type\": \"LoadAudio\",\n        \"_meta\": {\n          \"title\": \"Load Audio\"\n        }\n      },\n      \"14\": {\n        \"inputs\": {\n          \"filename_prefix\": \"audio/ComfyUI\",\n          \"audioUI\": \"/api/view?filename=ComfyUI_00003_.flac&type=output&subfolder=audio&rand=0.\" + Math.random().toString().slice(2, 18),\n          \"audio\": [\n            \"1\",\n            0\n          ]\n        },\n        \"class_type\": \"SaveAudio\",\n        \"_meta\": {\n          \"title\": \"Save Audio (FLAC)\"\n        }\n      }\n    }\n  }\n}}",
+        "jsonBody": "={{\n  {\n    \"prompt\": {\n      \"1\": {\n        \"inputs\": {\n          \"top_k\": 30,\n          \"top_p\": 0.8,\n          \"temperature\": 0.8,\n          \"num_beams\": 3,\n          \"max_mel_tokens\": 1500,\n          \"max_text_tokens_per_sentence\": 120,\n          \"custom_cuda_kernel\": false,\n          \"deepspeed\": true,\n          \"unload_model\": false,\n          \"emo_alpha\": 1,\n          \"emo_vector\": \"\",\n          \"use_emo_text\": $json.emotion_prompt ? true : false,\n          \"emo_text\": $json.emotion_prompt || \"\",\n          \"use_random\": false,\n          \"emo_alpha_s2\": 1.0000000000000002,\n          \"emo_vector_s2\": \"\",\n          \"use_emo_text_s2\": false,\n          \"emo_text_s2\": \"\",\n          \"use_random_s2\": false,\n          \"audio\": [\n            \"9\",\n            0\n          ],\n          \"text\": [\n            \"6\",\n            0\n          ]\n        },\n        \"class_type\": \"IndexTTS2Run\",\n        \"_meta\": {\n          \"title\": \"IndexTTS2 Run\"\n        }\n      },\n      \"6\": {\n        \"inputs\": {\n          \"text\": $json.text\n        },\n        \"class_type\": \"Text Multiline\",\n        \"_meta\": {\n          \"title\": \"多行文本\"\n        }\n      },\n      \"9\": {\n        \"inputs\": {\n          \"audio\": \"voice/\" + $json.voice_id,\n          \"audioUI\": \"/api/view?filename=%E6%90%9E%E7%AC%91%E5%A4%A7%E7%88%B7.flac&type=input&subfolder=&rand=0.6831432869771068\"\n        },\n        \"class_type\": \"LoadAudio\",\n        \"_meta\": {\n          \"title\": \"Load Audio\"\n        }\n      },\n      \"14\": {\n        \"inputs\": {\n          \"filename_prefix\": \"audio/ComfyUI\",\n          \"audioUI\": \"/api/view?filename=ComfyUI_00003_.flac&type=output&subfolder=audio&rand=0.\" + Math.random().toString().slice(2, 18),\n          \"audio\": [\n            \"1\",\n            0\n          ]\n        },\n        \"class_type\": \"SaveAudio\",\n        \"_meta\": {\n          \"title\": \"Save Audio (FLAC)\"\n        }\n      }\n    }\n  }\n}}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -110,7 +116,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.214.226:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
+        "url": "http://117.50.171.219:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -132,7 +138,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.214.226:8188/view",
+        "url": "http://117.50.171.219:8188/view",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -351,51 +357,6 @@
       "name": "Respond to Webhook"
     }
   ],
-  "pinData": {
-    "When clicking ‘Execute workflow’": [
-      {
-        "json": {},
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "Webhook": [
-      {
-        "json": {
-          "headers": {
-            "host": "117.50.218.161:5678",
-            "connection": "keep-alive",
-            "content-type": "application/json",
-            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
-            "accept": "*/*",
-            "accept-language": "*",
-            "sec-fetch-mode": "cors",
-            "user-agent": "node",
-            "accept-encoding": "gzip, deflate",
-            "content-length": "216"
-          },
-          "params": {},
-          "query": {},
-          "body": {
-            "text": "happy birthday",
-            "voice_id": "可爱儿童女声",
-            "speed": 1,
-            "pitch": 1,
-            "emotion_prompt": "开心快乐的语气",
-            "user_id": "a60de280-e685-4e11-b69b-72ec1b723a22",
-            "organization_id": null,
-            "timestamp": 1777357917033
-          },
-          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-audio",
-          "executionMode": "production"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ]
-  },
   "connections": {
     "配置字段": {
       "main": [
@@ -542,17 +503,84 @@
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "73113a44-54fd-459a-aff8-5a55e72eda31",
+  "staticData": null,
   "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "7185505d6331a771c013a5da6d967be5270273cfc524175c4267715e3ff62d5c"
+    "templateCredsSetupCompleted": true
   },
-  "id": "FYRzERdowSuGbhMy",
-  "tags": []
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "117.50.218.161:5678",
+            "connection": "keep-alive",
+            "content-type": "application/json",
+            "x-n8n-api-key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NWQyZTAzYS02MDIwLTRiMTMtOTQxYy01ZDQzNWY5MDEyODIiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwianRpIjoiNWRhYjRlZjAtMDA0Mi00ZjlkLWE0Y2YtZDRlYjllMWI0ZmZjIiwiaWF0IjoxNzc1Njk2NjY0fQ.zB0gcR4_AdzSiyYcWbIGKQH1tTGoVdzaBepuwFTzZCE",
+            "accept": "*/*",
+            "accept-language": "*",
+            "sec-fetch-mode": "cors",
+            "user-agent": "node",
+            "accept-encoding": "gzip, deflate",
+            "content-length": "216"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "text": "happy birthday",
+            "voice_id": "可爱儿童女声",
+            "speed": 1,
+            "pitch": 1,
+            "emotion_prompt": "开心快乐的语气",
+            "user_id": "a60de280-e685-4e11-b69b-72ec1b723a22",
+            "organization_id": null,
+            "timestamp": 1777357917033
+          },
+          "webhookUrl": "http://117.50.218.161:5678/webhook/gene-audio",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "d785a4b8-6ec9-43d0-88a8-1529a3a25e3a",
+  "activeVersionId": null,
+  "versionCounter": 122,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-04-21T13:41:29.581Z",
+      "createdAt": "2026-04-21T13:41:29.581Z",
+      "role": "workflow:owner",
+      "workflowId": "FYRzERdowSuGbhMy",
+      "projectId": "A1HdxbOAbMRJMiPU",
+      "project": {
+        "updatedAt": "2026-04-01T06:46:13.169Z",
+        "createdAt": "2026-04-01T06:24:56.072Z",
+        "id": "A1HdxbOAbMRJMiPU",
+        "name": "vincent zou <343854933@qq.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
 }

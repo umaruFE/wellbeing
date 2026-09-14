@@ -1,0 +1,575 @@
+{
+  "updatedAt": "2026-09-14T07:51:45.363Z",
+  "createdAt": "2026-09-14T07:51:45.363Z",
+  "id": "2QPcRKzRzhvlVKAM",
+  "name": "H3 并行音频协调子流程",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "job_id"
+            },
+            {
+              "name": "voice",
+              "type": "object"
+            },
+            {
+              "name": "storyboard_prompts",
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "position": [
+        0,
+        0
+      ],
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "id": "5bfb8b2e-f8a1-42d5-8962-eece833adf2b",
+      "typeVersion": 1.1,
+      "name": "Audio input"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "htV9YwPHhjaIGOcn",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/htV9YwPHhjaIGOcn",
+          "cachedResultName": "🦅单人视频-生成配音"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "voice_script": "={{ $(\"Audio input\").first().json.voice }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "voice_script",
+              "displayName": "voice_script",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "object",
+              "removed": false
+            },
+            {
+              "id": "output_folder_path",
+              "displayName": "output_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            },
+            {
+              "id": "voice_example_folder_path",
+              "displayName": "voice_example_folder_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        0
+      ],
+      "id": "04e1eae8-dcc7-4981-a059-f4a9b4323873",
+      "name": "🦅单人视频-生成配音",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "YaPEJOrK4FpAa1LY",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/YaPEJOrK4FpAa1LY",
+          "cachedResultName": "🪿单人视频-生成背景音乐"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "storyboard_prompts": "={{ $(\"Audio input\").first().json.storyboard_prompts }}"
+          },
+          "matchingColumns": [
+            "storyboard_prompts"
+          ],
+          "schema": [
+            {
+              "id": "storyboard_prompts",
+              "displayName": "storyboard_prompts",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "array",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        480,
+        0
+      ],
+      "id": "527fccc3-27d5-45c4-8c8d-96fc3a7ae9de",
+      "name": "视频生成-生成背景音乐",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const job=$('Audio input').first().json;\nconst voice=$('🦅单人视频-生成配音').first().json;\nconst music=$input.first().json;\nlet error='';\nif(voice.error || !Array.isArray(voice.data)) error='配音子流程失败：'+JSON.stringify(voice.error || voice);\nelse if(music.error || typeof music.music_filepath !== 'string' || !music.music_filepath) error='音乐子流程失败：'+JSON.stringify(music.error || music);\nreturn [{json:{execution_id:job.job_id,status:error?'error':'success',response:JSON.stringify({job_id:job.job_id,audio_execution_id:$execution.id,voice,music,error,completed_at:Date.now()})}}];"
+      },
+      "position": [
+        720,
+        0
+      ],
+      "type": "n8n-nodes-base.code",
+      "id": "835d61da-8f52-4129-b75e-ba74ee21179c",
+      "typeVersion": 2,
+      "name": "打包音频结果"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "J3YaofTO0eHhgjAp",
+          "mode": "list",
+          "cachedResultName": "tworkflow",
+          "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "={{ $json.status }}",
+            "execution_id": "={{ $json.execution_id }}",
+            "response": "={{ $json.response }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "execution_id",
+              "displayName": "execution_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "response",
+              "displayName": "response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        960,
+        0
+      ],
+      "id": "f3f695f2-517c-4ee7-b038-f983d17ea605",
+      "name": "写入并行音频结果"
+    }
+  ],
+  "connections": {
+    "🦅单人视频-生成配音": {
+      "main": [
+        [
+          {
+            "node": "视频生成-生成背景音乐",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audio input": {
+      "main": [
+        [
+          {
+            "node": "🦅单人视频-生成配音",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "视频生成-生成背景音乐": {
+      "main": [
+        [
+          {
+            "node": "打包音频结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "打包音频结果": {
+      "main": [
+        [
+          {
+            "node": "写入并行音频结果",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "26e30ce7-81c2-49a0-8f84-81f9a0c21cbc",
+  "activeVersionId": "26e30ce7-81c2-49a0-8f84-81f9a0c21cbc",
+  "versionCounter": 3,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-09-14T07:51:45.365Z",
+      "createdAt": "2026-09-14T07:51:45.365Z",
+      "role": "workflow:owner",
+      "workflowId": "2QPcRKzRzhvlVKAM",
+      "projectId": "A1HdxbOAbMRJMiPU",
+      "project": {
+        "updatedAt": "2026-04-01T06:46:13.169Z",
+        "createdAt": "2026-04-01T06:24:56.072Z",
+        "id": "A1HdxbOAbMRJMiPU",
+        "name": "vincent zou <343854933@qq.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-09-14T07:51:45.369Z",
+    "createdAt": "2026-09-14T07:51:45.369Z",
+    "versionId": "26e30ce7-81c2-49a0-8f84-81f9a0c21cbc",
+    "workflowId": "2QPcRKzRzhvlVKAM",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "job_id"
+              },
+              {
+                "name": "voice",
+                "type": "object"
+              },
+              {
+                "name": "storyboard_prompts",
+                "type": "array"
+              }
+            ]
+          }
+        },
+        "position": [
+          0,
+          0
+        ],
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "id": "5bfb8b2e-f8a1-42d5-8962-eece833adf2b",
+        "typeVersion": 1.1,
+        "name": "Audio input"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "htV9YwPHhjaIGOcn",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/htV9YwPHhjaIGOcn",
+            "cachedResultName": "🦅单人视频-生成配音"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "voice_script": "={{ $(\"Audio input\").first().json.voice }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "voice_script",
+                "displayName": "voice_script",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "object",
+                "removed": false
+              },
+              {
+                "id": "output_folder_path",
+                "displayName": "output_folder_path",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": true
+              },
+              {
+                "id": "voice_example_folder_path",
+                "displayName": "voice_example_folder_path",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          240,
+          0
+        ],
+        "id": "04e1eae8-dcc7-4981-a059-f4a9b4323873",
+        "name": "🦅单人视频-生成配音",
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "YaPEJOrK4FpAa1LY",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/YaPEJOrK4FpAa1LY",
+            "cachedResultName": "🪿单人视频-生成背景音乐"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "storyboard_prompts": "={{ $(\"Audio input\").first().json.storyboard_prompts }}"
+            },
+            "matchingColumns": [
+              "storyboard_prompts"
+            ],
+            "schema": [
+              {
+                "id": "storyboard_prompts",
+                "displayName": "storyboard_prompts",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "array",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.3,
+        "position": [
+          480,
+          0
+        ],
+        "id": "527fccc3-27d5-45c4-8c8d-96fc3a7ae9de",
+        "name": "视频生成-生成背景音乐",
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const job=$('Audio input').first().json;\nconst voice=$('🦅单人视频-生成配音').first().json;\nconst music=$input.first().json;\nlet error='';\nif(voice.error || !Array.isArray(voice.data)) error='配音子流程失败：'+JSON.stringify(voice.error || voice);\nelse if(music.error || typeof music.music_filepath !== 'string' || !music.music_filepath) error='音乐子流程失败：'+JSON.stringify(music.error || music);\nreturn [{json:{execution_id:job.job_id,status:error?'error':'success',response:JSON.stringify({job_id:job.job_id,audio_execution_id:$execution.id,voice,music,error,completed_at:Date.now()})}}];"
+        },
+        "position": [
+          720,
+          0
+        ],
+        "type": "n8n-nodes-base.code",
+        "id": "835d61da-8f52-4129-b75e-ba74ee21179c",
+        "typeVersion": 2,
+        "name": "打包音频结果"
+      },
+      {
+        "parameters": {
+          "dataTableId": {
+            "__rl": true,
+            "value": "J3YaofTO0eHhgjAp",
+            "mode": "list",
+            "cachedResultName": "tworkflow",
+            "cachedResultUrl": "/projects/A1HdxbOAbMRJMiPU/datatables/J3YaofTO0eHhgjAp"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "status": "={{ $json.status }}",
+              "execution_id": "={{ $json.execution_id }}",
+              "response": "={{ $json.response }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "execution_id",
+                "displayName": "execution_id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "response",
+                "displayName": "response",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          960,
+          0
+        ],
+        "id": "f3f695f2-517c-4ee7-b038-f983d17ea605",
+        "name": "写入并行音频结果"
+      }
+    ],
+    "connections": {
+      "🦅单人视频-生成配音": {
+        "main": [
+          [
+            {
+              "node": "视频生成-生成背景音乐",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Audio input": {
+        "main": [
+          [
+            {
+              "node": "🦅单人视频-生成配音",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "视频生成-生成背景音乐": {
+        "main": [
+          [
+            {
+              "node": "打包音频结果",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "打包音频结果": {
+        "main": [
+          [
+            {
+              "node": "写入并行音频结果",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "vincent zou",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-09-14T07:52:18.357Z",
+        "id": 844,
+        "workflowId": "2QPcRKzRzhvlVKAM",
+        "versionId": "26e30ce7-81c2-49a0-8f84-81f9a0c21cbc",
+        "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    ]
+  }
+}

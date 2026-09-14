@@ -40,3 +40,4 @@ api/.env
 # Local same-song source separation runtime
 /api/.venv-music/
 /api/.music-runtime/
+/scripts

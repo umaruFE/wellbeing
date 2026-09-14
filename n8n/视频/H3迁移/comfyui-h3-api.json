@@ -50,7 +50,7 @@
   },
   "105:17": {
     "inputs": {
-      "sampler_name": "res_multistep"
+      "sampler_name": "euler"
     },
     "class_type": "KSamplerSelect",
     "_meta": {
@@ -60,10 +60,10 @@
   "105:9": {
     "inputs": {
       "scheduler": "simple",
-      "steps": 20,
+      "steps": 8,
       "denoise": 1,
       "model": [
-        "105:6",
+        "h3:shift",
         0
       ]
     },
@@ -103,7 +103,7 @@
   "105:16": {
     "inputs": {
       "model": [
-        "105:6",
+        "h3:shift",
         0
       ],
       "conditioning": [
@@ -118,7 +118,7 @@
   },
   "105:6": {
     "inputs": {
-      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "unet_name": "minimax_h3_fl2va_bf16.safetensors",
       "weight_dtype": "default"
     },
     "class_type": "UNETLoader",
@@ -182,6 +182,28 @@
     "class_type": "MiniMaxH3ImageToVideo",
     "_meta": {
       "title": "MiniMax H3 Image to Video"
+    }
+  },
+  "h3:lora": {
+    "class_type": "LoraLoaderModelOnly",
+    "inputs": {
+      "strength_model": 1,
+      "model": [
+        "105:6",
+        0
+      ],
+      "lora_name": "minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors"
+    }
+  },
+  "h3:shift": {
+    "class_type": "MiniMaxH3SigmaShift",
+    "inputs": {
+      "model": [
+        "h3:lora",
+        0
+      ],
+      "shift_audio": 3,
+      "shift_video": 6
     }
   }
 }
