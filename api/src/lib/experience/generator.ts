@@ -58,7 +58,7 @@ export interface MusicSong {
 /** Stage 1 三类练习（结构对齐游戏模板 music-star-quest.html 的注入点） */
 export interface MusicExercises {
   /** 选词填空：sentence 片段数组（'' 为空位）、blanks 答案、options 候选、emoji */
-  ex1FillData: { sentence: string[]; blanks: string[]; options: string[]; emoji?: string }[];
+  ex1FillData: { sentence: string[]; blanks: string[]; options: string[]; emoji?: string; imageUrl?: string }[];
   /** 连词成句：answer 完整句、words 拆词 */
   ex2Items: { answer: string; words: string[] }[];
   /** 听音选词：options[correct] 为正确句；time 为正确句对应歌词行的时间段（如 "00:13–00:14"） */

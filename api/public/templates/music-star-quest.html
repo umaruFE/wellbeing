@@ -237,7 +237,7 @@ body::before{
 /* Header */
 header{text-align:center;margin-bottom:10px;position:relative;flex:0 0 auto}
 h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-weight:900;color:#fff;letter-spacing:0.06em;margin-bottom:4px;text-shadow:0 0 20px rgba(0,229,255,0.5),0 0 40px rgba(0,229,255,0.2)}
-.subtitle{font-size:1.1em;font-weight:600;color:rgba(0,229,255,0.55);margin-top:8px;letter-spacing:0.02em;line-height:1.5;max-width:900px;margin-left:auto;margin-right:auto}
+.subtitle{font-family:"Comic Sans MS","Trebuchet MS","Arial Rounded MT Bold",cursive;font-size:clamp(17px,2vw,22px);font-weight:800;color:#ffe28a;margin-top:10px;letter-spacing:.035em;line-height:1.55;max-width:900px;margin-left:auto;margin-right:auto;text-shadow:0 3px 0 rgba(93,45,120,.75),0 0 18px rgba(255,184,0,.35);transform:rotate(-1deg)}
 .song-name{display:inline-block;font-size:1.1em;font-weight:700;color:#ffb800;margin-top:10px;padding:6px 20px;letter-spacing:0.06em;font-style:italic;border:1px solid rgba(255,184,0,0.25);border-radius:20px;background:rgba(255,184,0,0.06);position:relative}
 .song-name::before{content:'♪ '}
 .song-name::after{content:' ♪'}
@@ -271,6 +271,9 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .st1-header .st1-title-icon{font-size:32px;display:inline-block;vertical-align:middle;margin-right:6px;filter:drop-shadow(0 0 10px rgba(0,229,255,0.3))}
 .st1-header h2{display:inline-block;vertical-align:middle;font-size:28px;font-weight:900;color:#00e5ff;text-shadow:0 0 20px rgba(0,229,255,0.4),0 0 40px rgba(0,229,255,0.15);margin-bottom:4px;letter-spacing:0.04em}
 .st1-header .st1-sub{font-size:13px;color:rgba(255,255,255,0.35);letter-spacing:0.04em}
+.st1-skip-footer{text-align:center;margin:28px 0 12px;position:relative;z-index:1}
+.st1-skip-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 16px;border:1px solid rgba(255,255,255,.24);border-radius:999px;background:rgba(255,255,255,.07);color:rgba(255,255,255,.8);font:700 13px "Trebuchet MS",sans-serif;cursor:pointer;transition:background .2s,border-color .2s}
+.st1-skip-btn:hover{background:rgba(0,229,255,.14);border-color:rgba(0,229,255,.55);color:#fff}
 .st1-progress{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:24px;position:relative;z-index:1}
 .st1-step{display:flex;flex-direction:column;align-items:center;gap:8px;position:relative}
 .st1-dot{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;transition:all 0.5s;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.2)}
@@ -340,6 +343,8 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .st1-lyrics-dialog{width:min(680px,100%);max-height:85vh;overflow:auto;padding:32px;border-radius:28px;text-align:center;background:linear-gradient(145deg,#172149,#13102e);border:2px solid rgba(0,229,255,.4);box-shadow:0 24px 80px rgba(0,0,0,.55),0 0 45px rgba(0,229,255,.16)}
 .st1-lyrics-dialog .st1-piece-label{font-size:22px;font-weight:900;color:#00e5ff;margin-bottom:20px}
 .st1-lyrics-dialog .st1-piece-content{font-size:20px;line-height:1.9;color:#fff;margin-bottom:24px}
+.st1-lyrics-dialog .st1-btn-map{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:11px 26px;border:1.5px solid rgba(0,229,255,.55);border-radius:999px;background:linear-gradient(135deg,#00d9ef,#8c70e6);color:#10152f;font:800 15px "Trebuchet MS","PingFang SC",sans-serif;cursor:pointer;box-shadow:0 8px 24px rgba(0,229,255,.2);transition:transform .2s,box-shadow .2s}
+.st1-lyrics-dialog .st1-btn-map:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,229,255,.32)}
 
 .st1-complete{text-align:center;padding:40px 20px;display:none;margin-top:24px}
 .st1-complete.visible{display:block;animation:cardReveal 0.6s ease-out}
@@ -408,12 +413,14 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 
 .s2-lyrics-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:20px;border:1.5px solid rgba(255,45,149,0.3);box-shadow:0 0 16px rgba(255,45,149,0.08)}
 .s2-lyrics-panel h3{font-size:13px;color:#ff2d95;margin-bottom:14px;font-weight:700;display:flex;align-items:center;gap:6px}
-.s2-lyric-row{display:flex;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid rgba(255,45,149,0.1);gap:4px}
+.s2-lyric-row{display:flex;align-items:center;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid rgba(255,45,149,0.1);gap:8px}
 .s2-lyric-row:last-child{border-bottom:none}
 .s2-lyric-text{font-size:14px;font-weight:700;color:#e0e0ff;white-space:nowrap;flex-shrink:0}
 .s2-lyric-time{font-size:10px;color:rgba(255,45,149,0.4);margin-left:4px}
 
 .s2-slot-group{display:flex;gap:4px;margin-left:12px;align-items:center}
+.s2-slot-group{margin-left:auto;flex-wrap:wrap}.s2-drop-slot{flex-shrink:0}.s2-lyric-text{white-space:normal;flex:1;min-width:180px}
+.s2-placement-hint{font-size:12px;color:rgba(255,255,255,.55);margin:0 0 12px;line-height:1.5}
 .s2-drop-slot{width:28px;height:28px;border-radius:50%;border:2px dashed rgba(0,229,255,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all 0.15s;position:relative}
 .s2-drop-slot:hover,.s2-drop-slot.drag-over{border-color:#00e5ff;background:rgba(0,229,255,0.12);transform:scale(1.1)}
 .s2-drop-slot.filled{border-style:solid;border-color:#00e5ff;background:rgba(0,229,255,0.08)}
@@ -505,7 +512,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .s4-player-bar{position:sticky;top:0;z-index:30;backdrop-filter:blur(16px);box-shadow:0 12px 30px rgba(0,0,0,.42)}
 .s2-action-tag,.s2-inst-tag,.s2-modal-tag{cursor:pointer;font-family:inherit}
 .s2-action-tag.is-selected,.s2-inst-tag.is-selected,.s2-modal-tag.is-selected{border:2px solid #ffb800!important;background:rgba(255,184,0,.2)!important;color:#ffe28a!important;box-shadow:0 0 16px rgba(255,184,0,.25)}
-.ip-mark-row{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:7px 0;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09)}
+.ip-mark-row{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:7px 0;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09);flex-wrap:wrap}
 .ip-mark-row .ip-lyric{flex:1;color:#fff;font-size:15px;font-weight:650}
 .ip-picker{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 .ip-picker button{width:48px;height:56px;padding:3px;border:2px solid transparent;border-radius:13px;background:rgba(255,255,255,.05);cursor:pointer;opacity:.55}
@@ -513,6 +520,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .ip-picker img,.ip-assignee img{width:100%;height:100%;object-fit:contain}
 .ip-assignee{display:flex;align-items:center;gap:5px;color:#ffda76;font-size:12px;font-weight:800;min-width:68px}
 .ip-assignee img{width:42px;height:42px}
+.ip-assignee{min-width:105px;text-transform:capitalize}.ip-picker{margin-left:auto}.ip-picker button:hover{opacity:1;transform:translateY(-2px)}
 .s4-player-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(57,255,20,0.35);background:rgba(57,255,20,0.08);color:#39ff14;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;padding:0}
 .s4-player-btn:hover{background:rgba(57,255,20,0.18);box-shadow:0 0 16px rgba(57,255,20,0.2)}
 .s4-player-btn svg{width:15px;height:15px;fill:currentColor}
@@ -949,6 +957,7 @@ var stage1Complete = false, stage2Complete = false, stage3Complete = false;
 var s2LineSlots = [];
 var s2SelectedActions = [];
 var s2SelectedInstruments = [];
+var s2PlacementSelection = null;
 var puzzleUnlocked = [false, false, false];
 var ex1Done = false, ex2Done = false, ex3Done = false;
 var singLevel = 1, singLineIdx = 0;
@@ -972,7 +981,6 @@ var echoData = {
 // 第四关初始分工来自生成器（与歌词行对齐），课堂Mark面板可继续手动改色
 var recordMarks = {};
 starRoles.forEach(function(role, ri) { recordMarks[ri] = { role: ipForRole(role, ri) }; });
-var recordMarkSetup = false;
 var playbackTimer = null, playbackActive = false;
 
 function enterStage(n) {
@@ -1170,7 +1178,8 @@ function st1RenderFill() {
   var h = '';
   var blankId = 0;
   ex1FillData.forEach(function(item, fi) {
-    h += '<div class="st1-fill-sentence"><span class="st1-emoji">' + item.emoji + '</span>';
+    var imageUrl = typeof item.imageUrl === 'string' && /^https:\/\//.test(item.imageUrl) ? item.imageUrl : '';
+    h += '<div class="st1-fill-sentence"><span class="st1-emoji">' + (imageUrl ? '<img src="' + safeText(imageUrl) + '" alt="" style="width:36px;height:36px;object-fit:contain;vertical-align:middle">' : safeText(item.emoji || '🎵')) + '</span>';
     item.sentence.forEach(function(part, pi) {
       if (part === '') {
         var val = st1FillState[blankId];
@@ -1188,7 +1197,7 @@ function st1RenderFill() {
       h += '<span class="st1-word-opt" onclick="st1FillWord(\'' + w.replace(/'/g,"\\'") + '\')">' + w + '</span>';
     });
     h += '</div>';
-    h += '<div class="st1-btn-row"><button class="st1-btn-check" onclick="st1CheckOne(\'fill\',' + fi + ')">✅ Check ' + (fi+1) + '</button><span id="st1Status-fill-' + fi + '" class="st1-check-status"></span></div>';
+    h += '<div class="st1-btn-row"><button class="st1-btn-check" onclick="st1CheckOne(\'fill\',' + fi + ')">✅ Check ' + (fi+1) + '</button><button class="st1-btn-reset" onclick="st1ResetFillOne(' + fi + ')">🔄 Reset</button><span id="st1Status-fill-' + fi + '" class="st1-check-status"></span></div>';
   });
   area.innerHTML = h;
   if (st1ActiveBlank !== null) {
@@ -1263,12 +1272,11 @@ function st1UpdateRevealButton() {
   if (button) button.disabled = !st1ReadyToReveal;
 }
 
-function st1ResetFill() {
-  var blankCount = ex1FillData.reduce(function(total, item) { return total + item.blanks.length; }, 0);
-  st1FillState = Array(blankCount).fill('');
+function st1ResetFillOne(idx) {
+  var offset = ex1FillData.slice(0, idx).reduce(function(total, item) { return total + item.blanks.length; }, 0);
+  ex1FillData[idx].blanks.forEach(function(_, blankIndex) { st1FillState[offset + blankIndex] = ''; });
   st1ActiveBlank = null;
-  st1FillOpts = null;
-  st1Checked.fill = {};
+  delete st1Checked.fill[idx];
   st1UpdateRevealButton();
   st1RenderFill();
 }
@@ -1343,14 +1351,6 @@ function st1ResetBuildOne(idx) {
   st1BuildState[idx] = { built:[], bank: shuffleArr(ex2Items[idx].words.slice()) };
   st1RenderBuild();
 }
-function st1ResetBuild() {
-  st1Checked.build = {}; st1UpdateRevealButton();
-  ex2Items.forEach(function(item, idx) {
-    st1BuildState[idx] = { built:[], bank: shuffleArr(item.words.slice()) };
-  });
-  st1RenderBuild();
-}
-
 function st1CheckBuild() {
   var norm = function(s) { return s.replace(/\s+([!?,.;:])/g, '$1').trim(); };
   var correct = 0;
@@ -1389,7 +1389,7 @@ function st1RenderListen() {
       if (st1ListenSelected[idx] === i) cls += ' selected';
       h += '<button class="' + cls + '" onclick="st1SelectListen(' + idx + ',' + i + ')" id="st1ListenOpt' + idx + '_' + i + '">' + String.fromCharCode(65+i) + '. ' + o + '</button>';
     });
-    h += '<button class="st1-btn-check" onclick="st1CheckOne(\'listen\',' + idx + ')">✅ Check</button> <span id="st1Status-listen-' + idx + '" class="st1-check-status"></span>';
+    h += '<div class="st1-btn-row"><button class="st1-btn-check" onclick="st1CheckOne(\'listen\',' + idx + ')">✅ Check</button><button class="st1-btn-reset" onclick="st1ResetListenOne(' + idx + ')">🔄 Reset</button><span id="st1Status-listen-' + idx + '" class="st1-check-status"></span></div>';
     h += '</div>';
   });
   area.innerHTML = h;
@@ -1400,9 +1400,10 @@ function st1SelectListen(idx, i) {
   st1ListenSelected[idx] = i;
   st1RenderListen();
 }
-function st1ResetListen() {
-  st1Checked.listen = {}; st1UpdateRevealButton();
-  st1ListenSelected = Array(ex3Data.length).fill(null);
+function st1ResetListenOne(idx) {
+  st1ListenSelected[idx] = null;
+  delete st1Checked.listen[idx];
+  st1UpdateRevealButton();
   st1RenderListen();
 }
 var st1ClipTimer = null;
@@ -1464,6 +1465,11 @@ function st1BackToMap() {
   backToMap();
 }
 
+function st1SkipStage() {
+  stage1Complete = true;
+  backToMap();
+}
+
 function shuffleArr(arr) { var a = arr.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 function showToast(msg) {
   var t = document.getElementById('toast');
@@ -1487,14 +1493,12 @@ function renderStage1(container) {
   h += '<div class="st1-card-num"><span class="st1-num-badge">1</span><span class="st1-card-title">Fill the Blanks</span></div>';
   h += '<div class="st1-instruction">Click a blank space, then choose the correct word. Complete every sentence!</div>';
   h += '<div id="st1FillArea"></div>';
-  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetFill()">🔄 Reset</button></div>';
   h += '</div>';
   // Challenge 2
   h += '<div class="st1-card visible" id="st1Card2"><div class="st1-card-glow"></div>';
   h += '<div class="st1-card-num"><span class="st1-num-badge">2</span><span class="st1-card-title">Build Sentences</span></div>';
   h += '<div class="st1-instruction">Click words to build each sentence. Click a word in the build area to remove it.</div>';
   h += '<div id="st1BuildArea"></div>';
-  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetBuild()">🔄 Reset All</button></div>';
   h += '</div>';
   // Challenge 3
   h += '<div class="st1-card visible" id="st1Card3"><div class="st1-card-glow"></div>';
@@ -1502,11 +1506,11 @@ function renderStage1(container) {
   h += '<div class="st1-instruction">Listen to the audio clip, then select the sentence you hear.</div>';
   h += '<div class="st1-btn-row" style="margin-top:0;margin-bottom:20px;"><button class="st1-btn-listen" onclick="st1PlayAudio()">🔊 Play Audio</button></div>';
   h += '<div id="st1ListenArea"></div>';
-  h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetListen()">🔄 Reset</button></div>';
   h += '</div>';
   h += '<div class="st1-btn-row" style="margin:24px 0 0;"><button id="st1RevealButton" class="st1-btn-check" style="min-width:240px;font-size:17px;padding:14px 30px;" onclick="st1RevealLyrics()" disabled>📜 Reveal Complete Lyrics</button></div>';
   h += '</div>'; // close st1-challenge
   h += '</div>'; // close st1-layout
+  h += '<div class="st1-skip-footer"><button type="button" class="st1-skip-btn" onclick="st1SkipStage()">Skip Level 1 →</button></div>';
   h += '<div class="st1-lyrics-modal" id="st1LyricsModal"><div class="st1-lyrics-dialog"><div class="st1-piece-label">🎉 Complete Lyrics · Unlocked</div><div class="st1-piece-content"></div><button class="st1-btn-map" onclick="st1BackToMap()">🗺 Back to Map</button></div></div>';
   container.innerHTML = h;
   var blankCount = ex1FillData.reduce(function(total, item) { return total + item.blanks.length; }, 0);
@@ -1519,24 +1523,28 @@ function renderStage1(container) {
 }
 
 function renderStage2(container) {
-  if (!s2LineSlots.length) s2LineSlots = lyrics.map(function() { return []; });
+  if (s2LineSlots.length !== lyrics.length) s2LineSlots = lyrics.map(function() { return [{}, {}]; });
   var h = '<div class="s2-floats"><div class="s2-float-item">🎵</div><div class="s2-float-item">🥁</div><div class="s2-float-item">🎶</div><div class="s2-float-item">✨</div><div class="s2-float-item">🎼</div><div class="s2-float-item">🎸</div><div class="s2-float-item">⭐</div><div class="s2-float-item">🎹</div><div class="s2-float-item">💫</div><div class="s2-float-item">🎵</div></div>';
   h += '<div class="s2-header"><div class="s2-level-badge">LEVEL 2</div><br><span class="s2-title-icon">🥁</span><h1>Melody Mover</h1><br><div class="s2-sub">Choose the actions and instruments for your performance</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(2)">How to teach</button></div>';
   h += '<div class="s2-player-bar"><button class="s2-player-btn" id="s2PlayBtn" onclick="s2TogglePlay()"><svg viewBox="0 0 24 24" id="s2PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s2PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s2-player-time" id="s2CurTime">0:00</span><div class="s2-player-progress" id="s2ProgressBar" onclick="s2SeekAudio(event)"><div class="s2-player-progress-fill" id="s2ProgressFill"></div><div class="s2-player-progress-thumb" id="s2ProgressThumb"></div></div><span class="s2-player-time" id="s2DurTime">0:39</span><div class="s2-player-mode" id="s2ModeToggle"><button class="s2-active" onclick="s2SwitchMode(\'vocal\')" id="s2ModeVocal">🎤 Vocal</button><button onclick="s2SwitchMode(\'backing\')" id="s2ModeBacking">🎼 Backing</button></div><div class="s2-player-vol"><span class="s2-vol-icon" onclick="s2ToggleMute()">🔊</span><input type="range" id="s2VolSlider" min="0" max="100" value="80" oninput="s2SetVolume(this.value)"></div><div class="s2-player-speed"><button onclick="s2SetSpeed(0.5)">0.5x</button><button onclick="s2SetSpeed(0.75)">0.75x</button><button class="s2-active" onclick="s2SetSpeed(1)">1x</button><button onclick="s2SetSpeed(1.25)">1.25x</button><button onclick="s2SetSpeed(1.5)">1.5x</button></div></div>';
   h += '<div class="card" style="background:#08081a;border:1px solid rgba(255,255,255,0.05);box-shadow:0 0 30px rgba(0,0,0,0.3);">';
   h += '<div class="s2-container">';
   h += '<div class="s2-left">';
-  h += '<div class="s2-lyrics-panel"><h3>📝 Lyrics</h3><div style="font-size:16px;font-weight:900;color:#ffb800;text-align:center;margin-bottom:14px;text-shadow:0 0 12px rgba(255,184,0,0.3)">🎵 '+safeText(songTitle)+'</div>';
+  h += '<div class="s2-lyrics-panel"><h3>📝 Lyrics &amp; Beat</h3><div style="font-size:16px;font-weight:900;color:#ffb800;text-align:center;margin-bottom:14px;text-shadow:0 0 12px rgba(255,184,0,0.3)">🎵 '+safeText(songTitle)+'</div><p class="s2-placement-hint">Choose an action or instrument, then tap a circle beside a lyric. You can also drag it into place.</p>';
   lyrics.forEach(function(line, ri) {
-    h += '<div class="s2-lyric-row"><span class="s2-lyric-text">'+safeText(line.text)+'</span></div>';
+    h += '<div class="s2-lyric-row"><span class="s2-lyric-text">'+safeText(line.text)+'</span><span class="s2-slot-group">';
+    (s2LineSlots[ri] || []).forEach(function(slot, si) { h += s2SlotMarkup(slot, ri, si); });
+    h += '<button class="s2-slot-add" title="Add a place" aria-label="Add place for line '+(ri+1)+'" onclick="s2AddSlot('+ri+')">+</button>';
+    if (s2LineSlots[ri].length > 1) h += '<button class="s2-slot-del" title="Remove a place" aria-label="Remove place from line '+(ri+1)+'" onclick="s2RemoveSlot('+ri+')">−</button>';
+    h += '</span></div>';
   });
   h += '</div></div>';
   h += '<div class="s2-right">';
   h += '<div class="s2-actions-panel"><h3><span>🤸 Actions <span class="hint">Choose any you will use</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'actions\')" title="Expand">⛶</button></h3><div class="s2-action-grid">';
-  s2Actions.forEach(function(a) { h += '<button class="s2-action-tag'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')">'+a.emoji+' '+safeText(a.name)+'</button>'; });
+  s2Actions.forEach(function(a) { h += '<button draggable="true" ondragstart="s2ActionDragStart(event)" data-action-id="'+a.id+'" class="s2-action-tag'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')">'+a.emoji+' '+safeText(a.name)+'</button>'; });
   h += '</div></div>';
   h += '<div class="s2-inst-panel"><h3><span>🥁 Instruments <span class="hint">Choose any you will use</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'instruments\')" title="Expand">⛶</button></h3><div class="s2-inst-grid">';
-  s2Instruments.forEach(function(inst) { h += '<button class="s2-inst-tag'+(s2SelectedInstruments.indexOf(inst.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'inst\',\''+inst.id+'\')"><img src="'+inst.img+'" alt="">'+safeText(inst.name)+'</button>'; });
+  s2Instruments.forEach(function(inst) { h += '<button draggable="true" ondragstart="s2InstDragStart(event)" data-inst-id="'+inst.id+'" class="s2-inst-tag'+(s2SelectedInstruments.indexOf(inst.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'inst\',\''+inst.id+'\')"><img src="'+inst.img+'" alt="">'+safeText(inst.name)+'</button>'; });
   h += '</div></div>';
   h += '</div>';
   h += '</div>';
@@ -1546,11 +1554,24 @@ function renderStage2(container) {
   container.innerHTML = h;
 }
 
+function s2SlotMarkup(slot, ri, si) {
+  var item = slot.type === 'action' ? s2Actions.find(function(a) { return a.id === slot.id; }) : s2Instruments.find(function(inst) { return inst.id === slot.id; });
+  var visual = item ? (slot.type === 'action' ? item.emoji : '<img src="'+item.img+'" alt="">') : '+';
+  return '<button type="button" class="s2-drop-slot'+(item?' filled':'')+'" data-line="'+ri+'" data-slot="'+si+'" title="'+(item ? safeText(item.name) : 'Place action or instrument')+'" aria-label="'+(item ? safeText(item.name) : 'Place action or instrument')+' for line '+(ri+1)+'" onclick="s2ClickSlot('+ri+','+si+')" ondragover="s2SlotDragOver(event)" ondragleave="s2SlotDragLeave(event)" ondrop="s2DropOnSlot(event,'+ri+','+si+')">'+visual+'</button>';
+}
+
+function s2ClickSlot(ri, si) {
+  if (s2PlacementSelection) s2LineSlots[ri][si] = {type:s2PlacementSelection.type,id:s2PlacementSelection.id};
+  else s2LineSlots[ri][si] = {};
+  renderStage2(document.getElementById('stageContent'));
+}
+
 function s2ActionDragStart(e) { e.dataTransfer.setData('application/x-s2-action', e.currentTarget.dataset.actionId); e.dataTransfer.effectAllowed = 'move'; }
 function s2ToggleSelection(type, id) {
   var selected = type === 'action' ? s2SelectedActions : s2SelectedInstruments;
   var index = selected.indexOf(id);
   if (index >= 0) selected.splice(index, 1); else selected.push(id);
+  s2PlacementSelection = index >= 0 ? null : {type:type,id:id};
   renderStage2(document.getElementById('stageContent'));
   if (document.getElementById('s2PoolModal').classList.contains('s2-active')) s2OpenPoolModal(type === 'action' ? 'actions' : 'instruments');
 }
@@ -1574,6 +1595,7 @@ function s2DropOnSlot(e, ri, si) {
 }
 
 function s2AddSlot(ri) {
+  if (s2LineSlots[ri].length >= 4) return;
   s2LineSlots[ri].push({});
   renderStage2(document.getElementById('stageContent'));
 }
@@ -1594,6 +1616,7 @@ function s2ClearSlot(el) {
 
 function s2ResetAll() {
   s2LineSlots = lyrics.map(function() { return [{}, {}]; });
+  s2PlacementSelection = null;
   renderStage2(document.getElementById('stageContent'));
 }
 
@@ -2010,13 +2033,14 @@ function enterPlayback() {
   var pbLyrics = document.getElementById('pbLyrics'); var h = '';
   lyrics.forEach(function(line, ri) {
     var items = [];
-    s2SelectedActions.forEach(function(id) {
-      var act = s2Actions.find(function(x){return x.id===id});
-      if (act) items.push('<span style="font-size:1.4em" title="'+safeText(act.name)+'">'+act.emoji+'</span>');
-    });
-    s2SelectedInstruments.forEach(function(id) {
-      var inst = s2Instruments.find(function(x){return x.id===id});
-      if (inst) items.push('<img src="'+inst.img+'" style="width:90px;height:90px;object-fit:contain" alt="'+safeText(inst.name)+'">');
+    (s2LineSlots[ri] || []).forEach(function(slot) {
+      if (slot.type === 'action') {
+        var act = s2Actions.find(function(x){return x.id===slot.id});
+        if (act) items.push('<span style="font-size:1.4em" title="'+safeText(act.name)+'">'+act.emoji+'</span>');
+      } else if (slot.type === 'inst') {
+        var inst = s2Instruments.find(function(x){return x.id===slot.id});
+        if (inst) items.push('<img src="'+inst.img+'" style="width:90px;height:90px;object-fit:contain" alt="'+safeText(inst.name)+'">');
+      }
     });
     var singer = ipForRole(recordMarks[ri] && recordMarks[ri].role, ri);
     h += '<div class="pb-line" id="pbLine'+ri+'" data-start="'+parseTimeSeconds(line.time).start+'" data-end="'+parseTimeSeconds(line.time).end+'"><span class="ip-performer"><img src="'+ipImages[singer]+'" alt="'+singer+'"><span>'+safeText(line.text)+'</span></span>';
@@ -2147,7 +2171,7 @@ function pbToggleMute() {
 
 function formatTime(s) { var m = Math.floor(s / 60); var sec = Math.floor(s % 60); return m + ':' + (sec < 10 ? '0' : '') + sec; }
 
-function completeStage2() { if (!s2SelectedActions.length && !s2SelectedInstruments.length) { showToast('Choose at least one action or instrument first.'); return; } stage2Complete = true; showStageClear(2); }
+function completeStage2() { if (!s2LineSlots.some(function(slots) { return slots.some(function(slot) { return slot.id; }); })) { showToast('Place at least one action or instrument beside a lyric first.'); return; } stage2Complete = true; showStageClear(2); }
 
 function renderStage3(container) {
   var h = '';
@@ -2293,9 +2317,8 @@ function renderStage4(container) {
   h += '<div class="s4-player-bar"><button class="s4-player-btn" id="s4PlayBtn" onclick="s4TogglePlay()"><svg viewBox="0 0 24 24" id="s4PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s4PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s4-player-time" id="s4CurTime">0:00</span><div class="s4-player-progress" id="s4ProgressBar" onclick="s4SeekAudio(event)"><div class="s4-player-progress-fill" id="s4ProgressFill"></div><div class="s4-player-progress-thumb" id="s4ProgressThumb"></div></div><span class="s4-player-time" id="s4DurTime">0:39</span><div class="s4-player-mode" id="s4ModeToggle"><button class="s4-active" onclick="s4SwitchMode(\'vocal\')" id="s4ModeVocal">🎤 Vocal</button><button onclick="s4SwitchMode(\'backing\')" id="s4ModeBacking">🎼 Backing</button></div><div class="s4-player-vol"><span class="s4-vol-icon" onclick="s4ToggleMute()">🔊</span><input type="range" id="s4VolSlider" min="0" max="100" value="80" oninput="s4SetVolume(this.value)"></div><div class="s4-player-speed"><button onclick="s4SetSpeed(0.5)">0.5x</button><button onclick="s4SetSpeed(0.75)">0.75x</button><button class="s4-active" onclick="s4SetSpeed(1)">1x</button><button onclick="s4SetSpeed(1.25)">1.25x</button><button onclick="s4SetSpeed(1.5)">1.5x</button></div></div>';
   h += '<div class="card"><div class="record-setup">';
   h += '<div style="padding:14px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.08);">';
-  h += '<div style="margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-weight:700;font-size:14px;color:#e0e0ff;">🎯 Mark Part</span>';
-  h += '<button class="btn btn-sm btn-outline" onclick="toggleMarkSetup()">' + (recordMarkSetup ? '✅ Done' : '✏️ Mark') + '</button></div>';
-  h += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:6px;">Choose one of our five friends for every lyric line</div>';
+  h += '<div style="margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-weight:700;font-size:14px;color:#e0e0ff;">🎯 Mark Part</span></div>';
+  h += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:6px;">Choose a friend for each lyric line. The singer appears before the lyric.</div>';
   h += '</div>';
   h += '<div class="ip-mark-list">';
     h += '<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:11px;color:rgba(255,255,255,0.3);">';
@@ -2305,7 +2328,7 @@ function renderStage4(container) {
       var chosen = ipForRole(mk.role, ri);
       h += '<div class="ip-mark-row"><span class="ip-assignee"><img src="'+ipImages[chosen]+'" alt="'+chosen+'">'+chosen+'</span>';
       h += '<span class="ip-lyric">'+safeText(line.text)+'</span><span class="ip-picker">';
-      if (recordMarkSetup) ipNames.forEach(function(name) {
+      ipNames.forEach(function(name) {
         h += '<button class="'+(chosen===name?'active':'')+'" title="'+name+'" aria-label="Choose '+name+' for line '+(ri+1)+'" onclick="setRecordMark('+ri+',\'role\',\''+name+'\');renderStage();"><img src="'+ipImages[name]+'" alt=""></button>';
       });
       h += '</span></div>';
@@ -2332,7 +2355,6 @@ function renderStage4(container) {
   h += '</div></div>'; container.innerHTML = h;
 }
 
-function toggleMarkSetup() { recordMarkSetup = !recordMarkSetup; if (!recordMarkSetup) { lyrics.forEach(function(l,ri) { if (!recordMarks[ri]) recordMarks[ri] = { role: ipNames[ri % ipNames.length] }; }); } renderStage(); }
 function setRecordMark(ri, key, val) { if (!recordMarks[ri]) recordMarks[ri] = { role: ipNames[ri % ipNames.length] }; recordMarks[ri][key] = val; }
 
 function setRecordVersion(v) { recordVersion = v; renderStage(); }

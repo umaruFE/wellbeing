@@ -12,6 +12,7 @@ import {
 import '../picture-book/PictureBookStudioPage.css';
 import './creativeWorkshop.css';
 import { applyActualLrc, formatMusicTime } from './musicTiming';
+import uploadService from '../../services/uploadService';
 
 const MODULE_ID = 'music-star-quest';
 const MODULE_NAME = '星光录音棚';
@@ -262,11 +263,9 @@ function LyricsEditor({ lyrics, audio = {}, workId }) {
   return (
     <section className="pbv2-card pbv2-tone-blue" ref={clips}>
       <div className="pbv2-card-title">{t('musicStudio.lyricsTimeline')}</div>
-      <p className="yoga-design-hint">{t('musicStudio.lyricsReadonlyHint')}</p>
-      <p className="yoga-design-hint">{t('musicStudio.lyricClipHint')}</p>
       {lyrics.map((row, idx) => (
-        <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className="cw-lyric-row cw-lyric-row-with-clip">
-          <span className="cw-lyric-time" title={row.time || t('musicStudio.alignmentPending')}>{idx + 1}</span>
+        <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className="cw-lyric-row cw-lyric-row-with-clip" title={t('musicStudio.lyricTimeTooltip', { time: row.time || t('musicStudio.alignmentPending') })}>
+          <span className="cw-lyric-time">{idx + 1}</span>
           <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
           <LyricClipPlayer source={segments[idx]} workId={workId} index={idx} onPlay={pauseOtherClips}
             canLoad={Boolean(workId && audio.generationTask?.status === 'completed' && recognized[idx]?.text === row.text && recognized[idx]?.time === row.time)} />
@@ -289,12 +288,27 @@ function AiSectionButton({ loading, hasContent, onClick }) {
 
 function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
+  const [uploadingIndex, setUploadingIndex] = React.useState(null);
+  const [uploadError, setUploadError] = React.useState('');
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   const updateOption = (idx, optionIndex, value) => {
     const options = Array.from({ length: 4 }, (_, i) => items[idx].options?.[i] || '');
     options[optionIndex] = value;
     update(idx, { options });
+  };
+  const uploadImage = async (idx, file) => {
+    if (!file) return;
+    setUploadError('');
+    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+      setUploadError(t('musicStudio.fillImageInvalid'));
+      return;
+    }
+    setUploadingIndex(idx);
+    const result = await uploadService.uploadFile(file, 'music-fill-images');
+    if (result.success) update(idx, { imageUrl: result.url });
+    else setUploadError(result.error || t('musicStudio.fillImageUploadFailed'));
+    setUploadingIndex(null);
   };
   return (
     <section className="pbv2-card pbv2-tone-yellow">
@@ -321,10 +335,15 @@ function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
                 <Field key={optionIndex} label={optionIndex === 0 ? t('musicStudio.correctOption') : t('musicStudio.distractorOption', { n: optionIndex })} value={item.options?.[optionIndex] || ''} onChange={(value) => updateOption(idx, optionIndex, value)} />
               ))}
             </div>
-            <Field label="emoji" value={item.emoji || ''} onChange={(v) => update(idx, { emoji: v })} />
+            <div className="cw-fill-visual"><span>{t('musicStudio.fillVisualLabel')}</span><div className="cw-emoji-options">
+              {['🎵', '😊', '❤️', '🌈', '⭐', '☀️', '🌸', '🐻', '👏', '🎤', '🏃', '🌍'].map((emoji) => <button type="button" key={emoji} aria-label={t('musicStudio.chooseEmoji', { emoji })} aria-pressed={item.emoji === emoji && !item.imageUrl} className={item.emoji === emoji && !item.imageUrl ? 'is-active' : ''} onClick={() => update(idx, { emoji, imageUrl: '' })}>{emoji}</button>)}
+              <input aria-label={t('musicStudio.customEmoji')} value={item.emoji || ''} onChange={(event) => update(idx, { emoji: event.target.value, imageUrl: '' })} maxLength={12} />
+              <label className="cw-fill-image-upload">{uploadingIndex === idx ? t('musicStudio.fillImageUploading') : t('musicStudio.fillImageUpload')}<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" disabled={uploadingIndex !== null} onChange={(event) => { uploadImage(idx, event.target.files?.[0]); event.target.value = ''; }} /></label>
+            </div>{item.imageUrl && <div className="cw-fill-image-preview"><img src={item.imageUrl} alt="" /><button type="button" onClick={() => update(idx, { imageUrl: '' })}>{t('musicStudio.removeImage')}</button></div>}</div>
           </div>
         </div>
       ))}
+      {uploadError && <p role="alert" className="cw-echo-audio-status is-failed">{uploadError}</p>}
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { sentence: ['', ''], blanks: [''], options: [], emoji: '🎵' }])}>
         <Plus size={16} /> {t('musicStudio.addFill')}
       </button>
@@ -394,17 +413,15 @@ function ListenEditor({ items, lyrics, onChange, onGenerate, generating }) {
   );
 }
 
-function EditablePool({ title, hint, items, onChange, placeholder }) {
+function EditablePool({ title, items, onChange, options }) {
   const { t } = useTranslation();
-  const update = (idx, value) => onChange(items.map((item, i) => i === idx ? value : item));
   return (
     <section className="pbv2-card pbv2-tone-green">
       <div className="pbv2-card-title">{title}</div>
-      <p className="yoga-design-hint">{hint}</p>
-      <div className="cw-pool-editor">
-        {items.map((item, idx) => <div key={idx}><input value={item} onChange={(e) => update(idx, e.target.value)} /><button type="button" onClick={() => onChange(items.filter((_, i) => i !== idx))}><Trash2 size={13} /></button></div>)}
+      <div className="cw-pool-choices">
+        {options.map((item) => <button type="button" key={item} aria-pressed={items.includes(item)} className={items.includes(item) ? 'is-active' : ''} onClick={() => onChange(options.filter((option) => option === item ? !items.includes(item) : items.includes(option)))}>{t(`musicStudio.poolItem.${item}`, { defaultValue: item })}<span>{items.includes(item) ? '−' : '+'}</span></button>)}
       </div>
-      <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, ''])}><Plus size={16} /> {t('musicStudio.addItem', { item: placeholder })}</button>
+      <span className="cw-pool-count">{t('musicStudio.selectedCount', { count: items.length })}</span>
     </section>
   );
 }
@@ -421,8 +438,16 @@ function echoPreviewText(text, mode, words) {
   }).join(' ');
 }
 
+function EchoClipButton({ source, label, onPlay }) {
+  const [playing, setPlaying] = React.useState(false);
+  const player = React.useRef(null);
+  return <span className="cw-echo-clip"><button type="button" className="cw-clip-play" aria-label={label} aria-pressed={playing} onClick={() => { if (player.current?.paused) player.current.play().catch(() => setPlaying(false)); else player.current?.pause(); }}>{playing ? '⏸' : '▶'}</button><audio ref={player} preload="none" src={source} onPlay={(event) => { setPlaying(true); onPlay(event); }} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} /></span>;
+}
+
 function EchoMasterPreview({ lyrics, audio, echoData, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
+  const clips = React.useRef(null);
+  const pauseOtherClips = (event) => clips.current?.querySelectorAll('audio').forEach((player) => { if (player !== event.currentTarget) player.pause(); });
   const failures = new Set(Array.isArray(audio?.segmentFailures) ? audio.segmentFailures : []);
   const segments = Array.isArray(audio?.segments) ? audio.segments : [];
   const hasEchoData = Boolean((echoData?.intermediate?.length || 0) + (echoData?.challenge?.length || 0));
@@ -441,18 +466,16 @@ function EchoMasterPreview({ lyrics, audio, echoData, onChange, onGenerate, gene
     });
   };
   const modes = [
-    { value: 'beginner', dataKey: 'beginner', label: '1. ⭐ Beginner', detail: 'Full Lyrics' },
-    { value: 'challenge', dataKey: 'challenge', label: '2. ⭐⭐ Intermediate', detail: 'First Letter Fill' },
-    { value: 'intermediate', dataKey: 'intermediate', label: '3. ⭐⭐⭐ Challenge', detail: 'Whole Word Blanks' },
+    { value: 'beginner', dataKey: 'beginner', label: '1. ⭐ Beginner', detail: t('musicStudio.echoFullLyrics') },
+    { value: 'challenge', dataKey: 'challenge', label: '2. ⭐⭐ Intermediate', detail: t('musicStudio.echoFirstLetter') },
+    { value: 'intermediate', dataKey: 'intermediate', label: '3. ⭐⭐⭐ Challenge', detail: t('musicStudio.echoWholeWord') },
   ];
   return (
-    <section className="pbv2-card pbv2-tone-yellow cw-echo-preview">
+    <section className="pbv2-card pbv2-tone-yellow cw-echo-preview" ref={clips}>
       <div className="cw-section-title">
         <div className="pbv2-card-title">{t('musicStudio.echoPreviewTitle')}</div>
         <AiSectionButton loading={generating} hasContent={hasEchoData} onClick={onGenerate} />
       </div>
-      <p className="yoga-design-hint">{t('musicStudio.echoPreviewHint')}</p>
-      <p className="yoga-design-hint">{t('musicStudio.echoGenerateHint')}</p>
       <div className="cw-echo-levels">
         {modes.map((item) => (
           <section key={item.value} className="cw-echo-level">
@@ -468,7 +491,7 @@ function EchoMasterPreview({ lyrics, audio, echoData, onChange, onGenerate, gene
                 const selected = selectedWords(item.dataKey, idx);
                 return (
                   <div key={`${item.value}-${idx}-${row.time}`} className={`cw-echo-preview-line${failed ? ' is-failed' : ''}`}>
-                    <span className="cw-lyric-time">{row.time || '--:--'}</span>
+                    <span className="cw-lyric-time" title={t('musicStudio.lyricTimeTooltip', { time: row.time || t('musicStudio.alignmentPending') })}>{idx + 1}</span>
                     <div className="cw-echo-line-content">
                       <strong>{echoPreviewText(row.text, item.value, selected)}</strong>
                       {item.value !== 'beginner' && (
@@ -481,7 +504,7 @@ function EchoMasterPreview({ lyrics, audio, echoData, onChange, onGenerate, gene
                       )}
                     </div>
                     {failed ? <span className="cw-echo-audio-status is-failed">{t('musicStudio.segmentAudioFailed')}</span>
-                      : segment ? <audio controls preload="none" src={segment} />
+                      : segment ? <EchoClipButton source={segment} label={t('musicStudio.lyricClipLabel', { n: idx + 1 })} onPlay={pauseOtherClips} />
                         : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
                   </div>
                 );
@@ -542,8 +565,6 @@ function PrepSongPlayer({ song, audio, onGenerateFull, onEditSong, generating })
     <section className="pbv2-card pbv2-tone-coral cw-prep-player">
       <div>
         <div className="pbv2-card-title">🎵 {song.title || t('musicStudio.untitled')}</div>
-        <p>{t('musicStudio.prepPlayerHint')}</p>
-        {onGenerateFull && <p>{t('musicStudio.aiFullSongHint')}</p>}
         {audio.actualDuration > 0 && <p>{t('musicStudio.actualDuration', { time: formatMusicTime(audio.actualDuration) })}</p>}
         {onEditSong && <button type="button" className="pbv2-ghost" style={{ marginTop: 8 }} onClick={onEditSong}><Pencil size={14} />{t('musicStudio.editRegenerateSong')}</button>}
         {onGenerateFull && (
@@ -1139,7 +1160,6 @@ export function MusicStudioPage() {
             <div className="pbv2-step-panel">
               <PrepSongPlayer song={song} audio={audio} onGenerateFull={() => generateAllSegments()} generating={segmentBusy === 'all' || songGenerating} />
               {audio.generationTask?.status === 'submitted' && <p>{t('musicStudio.resumeFullSong')}</p>}
-              {audio.alignmentStatus === 'needs_review' && <p>{t('musicStudio.transcriptionNeedsReview')}</p>}
               {audio.alignmentStatus === 'pending' && (
                 <section className="pbv2-card pbv2-tone-yellow">
                   <p>{t('musicStudio.actualLrcHint')}</p>
@@ -1177,7 +1197,6 @@ export function MusicStudioPage() {
           {step === 2 && (
             <div className="pbv2-step-panel">
               <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
-              <p className="yoga-design-hint">{t('musicStudio.stage1Hint')}</p>
               <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => requestSectionRegen('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
               <ScrambleEditor lyrics={song.lyrics} items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => requestSectionRegen('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
               <ListenEditor lyrics={song.lyrics} items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => requestSectionRegen('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
@@ -1199,9 +1218,8 @@ export function MusicStudioPage() {
           {step === 3 && (
             <div className="pbv2-step-panel">
               <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
-              <p className="yoga-design-hint">{t('musicStudio.stage2Hint')}</p>
-              <EditablePool title="Actions" hint={t('musicStudio.actionsHint')} placeholder="Action" items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
-              <EditablePool title="Instruments" hint={t('musicStudio.instrumentsHint')} placeholder="Instrument" items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
+              <EditablePool title={t('musicStudio.actionsTitle')} options={DEFAULT_ACTIONS} items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
+              <EditablePool title={t('musicStudio.instrumentsTitle')} options={DEFAULT_INSTRUMENTS} items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="2" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[1])}>{t('musicStudio.backStage1')}</button>
@@ -1216,7 +1234,6 @@ export function MusicStudioPage() {
           {step === 4 && (
             <div className="pbv2-step-panel">
               <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
-              <p className="yoga-design-hint">{t('musicStudio.stage3Hint')}</p>
               <EchoMasterPreview lyrics={song.lyrics} audio={audio} echoData={exercises.echoData} onChange={(echoData) => setExercises({ ...exercises, echoData })} onGenerate={() => requestSectionRegen('echoData')} generating={sectionGenerating === 'echoData'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
               <footer className="pbv2-actions">
@@ -1239,7 +1256,6 @@ export function MusicStudioPage() {
                 </button>
                 <span className="pbv2-save-state">{rendering ? t('musicStudio.rendering') : (rendered ? t('musicStudio.renderedReady') : '')}</span>
               </div>
-              <p className="yoga-design-hint">{t('musicStudio.stage4Hint')}</p>
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="4" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[3])}>{t('musicStudio.backStage3')}</button>
