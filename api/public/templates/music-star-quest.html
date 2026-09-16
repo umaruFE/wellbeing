@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Music Star Quest — Where Are You From</title>
+<title>Music Star Quest — __TITLE__</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 
@@ -101,6 +101,11 @@ body::before{
 .st-content.clear .st-summary{font-size:clamp(18px,2vw,24px);font-weight:650;color:rgba(255,255,255,0.72);margin-bottom:42px;animation:stFadeUp 0.5s ease-out 0.3s both;line-height:1.6}
 .st-content.clear .st-btn{animation:stFadeUp 0.5s ease-out 0.5s both}
 .clear-mode .st-content.clear{max-width:700px;margin:0 20px;padding:48px 56px}
+.clear-mode .st-content.clear{width:min(680px,calc(100% - 32px));display:flex;flex-direction:column;align-items:center;gap:18px;border-radius:32px;background:radial-gradient(circle at top,rgba(255,184,0,.16),transparent 55%),linear-gradient(145deg,#202044,#10142e);border:2px solid rgba(255,184,0,.32);box-shadow:0 28px 90px rgba(0,0,0,.48),0 0 50px rgba(255,184,0,.12)}
+.clear-mode .st-content.clear .st-icon{font-size:88px;margin:0;line-height:1}
+.clear-mode .st-content.clear .st-title{font-size:clamp(30px,4vw,44px);line-height:1.2;margin:0;color:#ffda67;text-shadow:0 0 28px rgba(255,184,0,.35)}
+.clear-mode .st-content.clear .st-summary{font-size:19px;line-height:1.55;margin:0 0 10px;max-width:460px}
+.clear-mode .st-content.clear .st-btn{font-size:18px;padding:15px 36px;background:linear-gradient(135deg,#ffb800,#ff8a3d);border:0!important;color:#211329!important;box-shadow:0 10px 28px rgba(255,184,0,.3)}
 
 /* ═══ Stage Intro: Scan Lines ═══ */
 .st-scan-lines{position:absolute;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,rgba(255,255,255,0.012) 0px,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 3px)}
@@ -212,6 +217,8 @@ body::before{
 .sv-back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:20px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);cursor:pointer;font-size:13px;font-weight:700;font-family:"PingFang SC","Microsoft YaHei",sans-serif;transition:all 0.15s}
 .sv-back:hover{background:rgba(255,255,255,0.1);color:#fff}
 .sv-title{font-size:16px;font-weight:800;color:#fff;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.st1-header h2,.s2-header h1,.s3-header h1,.s4-header h1,.s3-title-name,.s4-title-name,.st1-card-title,.st-content .st-level-name,.st-content.clear .st-title{font-family:"Trebuchet MS","Comic Sans MS","YouYuan","幼圆",sans-serif!important;letter-spacing:.025em!important}
+.st1-card-title{display:inline-block;transform:rotate(-1deg)}
 .sv-body{flex:1;min-height:0;padding:20px;position:relative;overflow-y:auto}
 .sv-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:140px;font-weight:900;color:rgba(255,255,255,0.015);pointer-events:none;white-space:nowrap;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
 
@@ -326,6 +333,13 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .st1-piece .st1-piece-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;color:rgba(255,255,255,0.2)}
 .st1-piece.unlocked .st1-piece-label{color:rgba(0,229,255,0.5)}
 .st1-piece .st1-piece-content{font-size:14px;font-weight:700;line-height:1.7}
+.st1-check-status{margin-left:10px;color:#ffb800;font-size:13px;font-weight:700}
+.st1-btn-check:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.st1-lyrics-modal{position:fixed;inset:0;z-index:270;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(5,5,25,.82);backdrop-filter:blur(10px)}
+.st1-lyrics-modal.visible{display:flex}
+.st1-lyrics-dialog{width:min(680px,100%);max-height:85vh;overflow:auto;padding:32px;border-radius:28px;text-align:center;background:linear-gradient(145deg,#172149,#13102e);border:2px solid rgba(0,229,255,.4);box-shadow:0 24px 80px rgba(0,0,0,.55),0 0 45px rgba(0,229,255,.16)}
+.st1-lyrics-dialog .st1-piece-label{font-size:22px;font-weight:900;color:#00e5ff;margin-bottom:20px}
+.st1-lyrics-dialog .st1-piece-content{font-size:20px;line-height:1.9;color:#fff;margin-bottom:24px}
 
 .st1-complete{text-align:center;padding:40px 20px;display:none;margin-top:24px}
 .st1-complete.visible{display:block;animation:cardReveal 0.6s ease-out}
@@ -487,6 +501,18 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 
 /* Stage 4 Audio Player */
 .s4-player-bar{position:relative;z-index:1;max-width:1200px;margin:0 auto 18px;background:rgba(10,10,30,0.9);border-radius:14px;padding:10px 18px;border:1.5px solid rgba(57,255,20,0.15);display:flex;align-items:center;gap:10px;flex-wrap:nowrap;box-shadow:0 0 24px rgba(57,255,20,0.06)}
+.stage-view:has(.s4-player-bar) .sv-body{overflow-y:auto}
+.s4-player-bar{position:sticky;top:0;z-index:30;backdrop-filter:blur(16px);box-shadow:0 12px 30px rgba(0,0,0,.42)}
+.s2-action-tag,.s2-inst-tag,.s2-modal-tag{cursor:pointer;font-family:inherit}
+.s2-action-tag.is-selected,.s2-inst-tag.is-selected,.s2-modal-tag.is-selected{border:2px solid #ffb800!important;background:rgba(255,184,0,.2)!important;color:#ffe28a!important;box-shadow:0 0 16px rgba(255,184,0,.25)}
+.ip-mark-row{display:flex;align-items:center;gap:12px;padding:9px 12px;margin:7px 0;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.09)}
+.ip-mark-row .ip-lyric{flex:1;color:#fff;font-size:15px;font-weight:650}
+.ip-picker{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.ip-picker button{width:48px;height:56px;padding:3px;border:2px solid transparent;border-radius:13px;background:rgba(255,255,255,.05);cursor:pointer;opacity:.55}
+.ip-picker button.active{border-color:#ffb800;background:rgba(255,184,0,.16);opacity:1;transform:scale(1.08)}
+.ip-picker img,.ip-assignee img{width:100%;height:100%;object-fit:contain}
+.ip-assignee{display:flex;align-items:center;gap:5px;color:#ffda76;font-size:12px;font-weight:800;min-width:68px}
+.ip-assignee img{width:42px;height:42px}
 .s4-player-btn{width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(57,255,20,0.35);background:rgba(57,255,20,0.08);color:#39ff14;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;padding:0}
 .s4-player-btn:hover{background:rgba(57,255,20,0.18);box-shadow:0 0 16px rgba(57,255,20,0.2)}
 .s4-player-btn svg{width:15px;height:15px;fill:currentColor}
@@ -537,6 +563,9 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .playback-overlay::after{content:'';position:absolute;bottom:0;left:0;right:0;height:180px;pointer-events:none;background:radial-gradient(ellipse at 50% 100%,rgba(0,229,255,0.12) 0%,rgba(255,45,149,0.06) 40%,transparent 70%);animation:stageGlow 4s ease-in-out infinite}
 .playback-overlay.active{display:flex}
 .playback-topbar{display:flex;align-items:center;justify-content:center;gap:12px;padding:12px 16px;background:rgba(255,255,255,0.06);flex-shrink:0;position:relative;z-index:1}
+.playback-topbar,.playback-progress-wrap,.pb-controls{position:sticky;top:0;z-index:10;backdrop-filter:blur(14px);background:rgba(18,15,48,.86)}
+.pb-line .ip-performer{display:flex;align-items:center;gap:14px;text-align:left}
+.pb-line .ip-performer img{width:68px;height:68px;object-fit:contain;flex-shrink:0}
 .playback-topbar .pb-time{font-size:14px;color:rgba(255,255,255,0.6);font-weight:600;min-width:40px;text-align:center}
 .playback-progress-wrap{width:100%;display:flex;align-items:center;gap:8px;padding:0 16px 6px;position:relative;z-index:1}
 .playback-progress-bar{flex:1;height:4px;background:rgba(255,255,255,0.15);border-radius:2px;cursor:pointer;position:relative}
@@ -630,6 +659,8 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .record-fs-lyric.role-student{background:rgba(57,255,20,0.12);border:1px solid rgba(57,255,20,0.35);color:#39ff14;text-shadow:0 0 12px rgba(57,255,20,0.3)}
 .record-fs-lyric.role-solo{background:rgba(255,45,149,0.15);border:1px solid rgba(255,45,149,0.4);color:#ff2d95;text-shadow:0 0 12px rgba(255,45,149,0.3)}
 .record-fs-lyric.role-all{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12)}
+.record-fs-lyric .ip-performer{display:inline-flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center}
+.record-fs-lyric .ip-performer img{width:84px;height:84px;object-fit:contain}
 .record-fs-actions{display:flex;gap:12px;margin-top:16px;z-index:1}
 .record-fs-progress{width:80%;max-width:500px;height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:20px;z-index:1;overflow:hidden}
 .record-fs-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#ff2d95,#00e5ff);border-radius:2px;transition:width 0.3s linear;box-shadow:0 0 8px rgba(255,45,149,0.5)}
@@ -718,7 +749,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 <header>
 <h1>🎵 Music Star Quest</h1>
 <p class="subtitle">Unlock the lyrics, move to the beat, master the song, and shine like a star on your final stage.</p>
-<p class="song-name">"Where Are You From"</p>
+<p class="song-name">__TITLE__</p>
 </header>
 
 <div class="game-map" id="gameMap">
@@ -916,6 +947,8 @@ var currentStage = 1;
 var unlockedStages = [true, false, false, false];
 var stage1Complete = false, stage2Complete = false, stage3Complete = false;
 var s2LineSlots = [];
+var s2SelectedActions = [];
+var s2SelectedInstruments = [];
 var puzzleUnlocked = [false, false, false];
 var ex1Done = false, ex2Done = false, ex3Done = false;
 var singLevel = 1, singLineIdx = 0;
@@ -924,13 +957,21 @@ var recordingState = 'idle', recordTimer = null, recordVersion = 'original';
 var mediaRecorder = null, microphoneStream = null, recordedChunks = [], recordedAudioUrl = '';
 var starRoles = [
 ];
+var songTitle = __SONG_TITLE_JSON__;
+var ipImages = __IP_IMAGES_JSON__;
+var ipNames = ['poppy','edi','rolly','milo','ace'];
+function ipForRole(role, index) {
+  if (ipImages[role]) return role;
+  return ipNames[index % ipNames.length];
+}
+function safeText(value) { return String(value || '').replace(/[&<>"']/g, function(c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 var echoData = {
   intermediate: [],
   challenge: []
 };
 // 第四关初始分工来自生成器（与歌词行对齐），课堂Mark面板可继续手动改色
 var recordMarks = {};
-starRoles.forEach(function(role, ri) { recordMarks[ri] = { role: role || 'all' }; });
+starRoles.forEach(function(role, ri) { recordMarks[ri] = { role: ipForRole(role, ri) }; });
 var recordMarkSetup = false;
 var playbackTimer = null, playbackActive = false;
 
@@ -1062,19 +1103,14 @@ function startStage(n) {
 function showStageClear(n) {
   var clearInfo = [
     {title:'All Lyrics Collected!',sub:'You\'ve unlocked the complete song. Stage 2 is now open!',color:'s1'},
-    {title:'Actions & Instruments Matched!',sub:'You\'ve mastered the rhythm. Stage 3 is now open!',color:'s2'},
+    {title:'Your Rhythm Team Is Ready!',sub:'You chose the sounds and moves. Stage 3 is now open!',color:'s2'},
     {title:'All Three Modes Cleared!',sub:'You\'ve completed every Echo Master mode. Stage 4 is now open!',color:'s3'},
     {title:'Full Performance Recorded!',sub:'You are a true Stage Star! All challenges complete!',color:'s4'}
   ];
   var info = clearInfo[n-1];
   var overlay = document.getElementById('stageTransition');
   overlay.className = 'stage-transition active clear-mode';
-  overlay.innerHTML = '<div class="st-content clear">';
-  overlay.innerHTML += '<span class="st-icon">🏆</span>';
-  overlay.innerHTML += '<div class="st-title">' + info.title + '</div>';
-  overlay.innerHTML += '<div class="st-summary">' + info.sub + '</div>';
-  overlay.innerHTML += '<button class="st-btn s4" style="color:#39ff14;border-color:rgba(57,255,20,0.3);" onclick="backToMap()">🗺 Back to Map</button>';
-  overlay.innerHTML += '</div>';
+  overlay.innerHTML = '<div class="st-content clear"><span class="st-icon">🏆</span><div class="st-title">' + info.title + '</div><div class="st-summary">' + info.sub + '</div><button class="st-btn s4" onclick="backToMap()">🗺 Back to Map</button></div>';
   if (n === 4) { launchConfetti(); } else { celebrate('🏆'); }
 }
 
@@ -1122,6 +1158,9 @@ var st1ActiveBlank = null;
 var st1FillOpts = null; // cached shuffled options per sentence
 var st1BuildState = {};
 var st1ListenSelected = [null, null];
+var st1Checked = {fill:{},build:{},listen:{}};
+var st1ReadyToReveal = false;
+var st1LyricsRevealed = false;
 
 // ═══ Stage 1: Fill Blanks ═══
 function st1RenderFill() {
@@ -1149,6 +1188,7 @@ function st1RenderFill() {
       h += '<span class="st1-word-opt" onclick="st1FillWord(\'' + w.replace(/'/g,"\\'") + '\')">' + w + '</span>';
     });
     h += '</div>';
+    h += '<div class="st1-btn-row"><button class="st1-btn-check" onclick="st1CheckOne(\'fill\',' + fi + ')">✅ Check ' + (fi+1) + '</button><span id="st1Status-fill-' + fi + '" class="st1-check-status"></span></div>';
   });
   area.innerHTML = h;
   if (st1ActiveBlank !== null) {
@@ -1175,8 +1215,52 @@ function st1SelectBlank(id) {
 function st1FillWord(word) {
   if (st1ActiveBlank === null) return;
   st1FillState[st1ActiveBlank] = word;
+  delete st1Checked.fill[st1FillItemForBlank(st1ActiveBlank)];
   st1ActiveBlank = null;
   st1RenderFill();
+}
+function st1FillItemForBlank(blank) {
+  var count = 0;
+  for (var i = 0; i < ex1FillData.length; i++) {
+    count += ex1FillData[i].blanks.length;
+    if (blank < count) return i;
+  }
+  return -1;
+}
+function st1CheckOne(type, idx) {
+  var correct = false;
+  if (type === 'fill') {
+    var offset = ex1FillData.slice(0, idx).reduce(function(n, item) { return n + item.blanks.length; }, 0);
+    correct = ex1FillData[idx].blanks.every(function(answer, bi) { return st1FillState[offset + bi] === answer; });
+    ex1FillData[idx].blanks.forEach(function(answer, bi) {
+      var el = document.getElementById('st1blank' + (offset + bi));
+      if (el) { el.classList.remove('correct','wrong'); el.classList.add(st1FillState[offset + bi] === answer ? 'correct' : 'wrong'); }
+    });
+  } else if (type === 'build') {
+    var state = st1BuildState[idx];
+    var area = document.getElementById('st1BuildArea' + idx);
+    var norm = function(s) { return String(s || '').replace(/\s+([!?,.;:])/g, '$1').trim(); };
+    correct = !!state && norm(state.built.join(' ')) === norm(ex2Items[idx].answer);
+    if (area) { area.classList.remove('correct','wrong'); area.classList.add(correct ? 'correct' : 'wrong'); }
+  } else {
+    correct = st1ListenSelected[idx] === ex3Data[idx].correct;
+    ex3Data[idx].options.forEach(function(_, oi) {
+      var el = document.getElementById('st1ListenOpt' + idx + '_' + oi);
+      if (el) { el.classList.remove('correct','wrong'); if (oi === st1ListenSelected[idx]) el.classList.add(correct ? 'correct' : 'wrong'); }
+    });
+  }
+  st1Checked[type][idx] = correct;
+  var status = document.getElementById('st1Status-' + type + '-' + idx);
+  if (status) status.textContent = correct ? '✅ Correct!' : 'Try again';
+  st1UpdateRevealButton();
+}
+function st1UpdateRevealButton() {
+  st1ReadyToReveal = ['fill','build','listen'].every(function(type) {
+    var count = type === 'fill' ? ex1FillData.length : type === 'build' ? ex2Items.length : ex3Data.length;
+    return Array.from({length:count}, function(_, i) { return st1Checked[type][i] === true; }).every(Boolean);
+  });
+  var button = document.getElementById('st1RevealButton');
+  if (button) button.disabled = !st1ReadyToReveal;
 }
 
 function st1ResetFill() {
@@ -1184,6 +1268,8 @@ function st1ResetFill() {
   st1FillState = Array(blankCount).fill('');
   st1ActiveBlank = null;
   st1FillOpts = null;
+  st1Checked.fill = {};
+  st1UpdateRevealButton();
   st1RenderFill();
 }
 
@@ -1235,26 +1321,30 @@ function st1RenderBuild() {
       h += '<span class="st1-bank-word" onclick="st1AddBuild(' + idx + ',' + i + ')">' + w + '</span>';
     });
     h += '</div>';
-    h += '<button class="st1-btn-reset" style="padding:6px 14px;font-size:12px;" onclick="st1ResetBuildOne(' + idx + ')">↩ Reset</button></div>';
+    h += '<button class="st1-btn-reset" style="padding:6px 14px;font-size:12px;" onclick="st1ResetBuildOne(' + idx + ')">↩ Reset</button> <button class="st1-btn-check" onclick="st1CheckOne(\'build\',' + idx + ')">✅ Check</button> <span id="st1Status-build-' + idx + '" class="st1-check-status"></span></div>';
   });
   area.innerHTML = h;
 }
 
 function st1AddBuild(idx, wi) {
+  delete st1Checked.build[idx]; st1UpdateRevealButton();
   var s = st1BuildState[idx];
   s.built.push(s.bank.splice(wi, 1)[0]);
   st1RenderBuild();
 }
 function st1RemoveBuild(idx, wi) {
+  delete st1Checked.build[idx]; st1UpdateRevealButton();
   var s = st1BuildState[idx];
   s.bank.push(s.built.splice(wi, 1)[0]);
   st1RenderBuild();
 }
 function st1ResetBuildOne(idx) {
+  delete st1Checked.build[idx]; st1UpdateRevealButton();
   st1BuildState[idx] = { built:[], bank: shuffleArr(ex2Items[idx].words.slice()) };
   st1RenderBuild();
 }
 function st1ResetBuild() {
+  st1Checked.build = {}; st1UpdateRevealButton();
   ex2Items.forEach(function(item, idx) {
     st1BuildState[idx] = { built:[], bank: shuffleArr(item.words.slice()) };
   });
@@ -1299,16 +1389,19 @@ function st1RenderListen() {
       if (st1ListenSelected[idx] === i) cls += ' selected';
       h += '<button class="' + cls + '" onclick="st1SelectListen(' + idx + ',' + i + ')" id="st1ListenOpt' + idx + '_' + i + '">' + String.fromCharCode(65+i) + '. ' + o + '</button>';
     });
+    h += '<button class="st1-btn-check" onclick="st1CheckOne(\'listen\',' + idx + ')">✅ Check</button> <span id="st1Status-listen-' + idx + '" class="st1-check-status"></span>';
     h += '</div>';
   });
   area.innerHTML = h;
 }
 
 function st1SelectListen(idx, i) {
+  delete st1Checked.listen[idx]; st1UpdateRevealButton();
   st1ListenSelected[idx] = i;
   st1RenderListen();
 }
 function st1ResetListen() {
+  st1Checked.listen = {}; st1UpdateRevealButton();
   st1ListenSelected = Array(ex3Data.length).fill(null);
   st1RenderListen();
 }
@@ -1345,14 +1438,10 @@ function st1CheckListen() {
 }
 
 // ═══ Stage 1: Unified Check & Full Lyrics Reveal ═══
-function st1CheckAll() {
-  var fillCorrect = st1CheckFill();
-  var buildCorrect = st1CheckBuild();
-  var listenCorrect = st1CheckListen();
-  if (!fillCorrect || !buildCorrect || !listenCorrect) {
-    showToast('Please correct the highlighted answers and check again.');
-    return;
-  }
+function st1RevealLyrics() {
+  st1UpdateRevealButton();
+  if (!st1ReadyToReveal) return;
+  st1LyricsRevealed = true;
   ex1Done = true;
   ex2Done = true;
   ex3Done = true;
@@ -1361,13 +1450,8 @@ function st1CheckAll() {
     var card = document.getElementById('st1Card' + i);
     if (card) card.classList.add('done');
   }
-  var lyricsPanel = document.getElementById('st1AllLyrics');
-  if (lyricsPanel) {
-    lyricsPanel.querySelector('.st1-piece-label').textContent = 'Complete Lyrics · Unlocked';
-    lyricsPanel.querySelector('.st1-piece-content').innerHTML = lyrics.map(function(line) { return line.text; }).join('<br>');
-    lyricsPanel.classList.add('unlocked');
-    lyricsPanel.scrollIntoView({ behavior:'smooth', block:'center' });
-  }
+  var lyricsPanel = document.getElementById('st1LyricsModal');
+  if (lyricsPanel) { lyricsPanel.classList.add('visible'); lyricsPanel.querySelector('.st1-piece-content').innerHTML = lyrics.map(function(line) { return safeText(line.text); }).join('<br>'); }
   var complete = document.getElementById('st1Complete');
   if (complete) complete.classList.add('visible');
   if (!unlockedStages[1]) unlockStage(2);
@@ -1376,8 +1460,7 @@ function st1CheckAll() {
 
 function st1BackToMap() {
   stage1Complete = true;
-  if (!unlockedStages[1]) unlockStage(2);
-  currentStage = 2;
+  document.getElementById('st1LyricsModal').classList.remove('visible');
   backToMap();
 }
 
@@ -1421,18 +1504,10 @@ function renderStage1(container) {
   h += '<div id="st1ListenArea"></div>';
   h += '<div class="st1-btn-row"><button class="st1-btn-reset" onclick="st1ResetListen()">🔄 Reset</button></div>';
   h += '</div>';
-  h += '<div class="st1-btn-row" style="margin:24px 0 0;"><button class="st1-btn-check" style="min-width:240px;font-size:17px;padding:14px 30px;" onclick="st1CheckAll()">✅ Check All Answers</button></div>';
+  h += '<div class="st1-btn-row" style="margin:24px 0 0;"><button id="st1RevealButton" class="st1-btn-check" style="min-width:240px;font-size:17px;padding:14px 30px;" onclick="st1RevealLyrics()" disabled>📜 Reveal Complete Lyrics</button></div>';
   h += '</div>'; // close st1-challenge
-  // Lyric Collection
-  var allUnlocked = ex1Done && ex2Done && ex3Done;
-  h += '<div class="st1-lyrics"><h3>📦 Complete Lyrics</h3>';
-  h += '<div class="st1-piece' + (allUnlocked ? ' unlocked' : '') + '" id="st1AllLyrics">';
-  h += '<div class="st1-piece-label">Complete Lyrics · ' + (allUnlocked ? 'Unlocked' : 'Locked') + '</div>';
-  h += '<div class="st1-piece-content">' + (allUnlocked ? lyrics.map(function(line) { return line.text; }).join('<br>') : 'Finish all three exercise types, then check all answers to reveal the complete lyrics.') + '</div>';
-  h += '</div>';
-  h += '</div></div>'; // close st1-lyrics, st1-layout
-  // Complete Banner — outside layout, full width at bottom
-  h += '<div class="st1-complete" id="st1Complete"><span class="st1-big-icon">🏆</span><h2>All Lyrics Collected!</h2><p>You\'ve unlocked the complete song. Stage 2 is now open!</p><button class="st1-btn-map" onclick="st1BackToMap()">🗺 Back to Map</button></div>';
+  h += '</div>'; // close st1-layout
+  h += '<div class="st1-lyrics-modal" id="st1LyricsModal"><div class="st1-lyrics-dialog"><div class="st1-piece-label">🎉 Complete Lyrics · Unlocked</div><div class="st1-piece-content"></div><button class="st1-btn-map" onclick="st1BackToMap()">🗺 Back to Map</button></div></div>';
   container.innerHTML = h;
   var blankCount = ex1FillData.reduce(function(total, item) { return total + item.blanks.length; }, 0);
   if (st1FillState.length !== blankCount) st1FillState = Array(blankCount).fill('');
@@ -1440,48 +1515,28 @@ function renderStage1(container) {
   st1RenderFill();
   st1RenderBuild();
   st1RenderListen();
+  st1UpdateRevealButton();
 }
 
 function renderStage2(container) {
-  var initialSlots = 1;
-  if (!s2LineSlots.length) { s2LineSlots = lyrics.map(function() { return Array.from({length:initialSlots}, function(){ return {}; }); }); }
+  if (!s2LineSlots.length) s2LineSlots = lyrics.map(function() { return []; });
   var h = '<div class="s2-floats"><div class="s2-float-item">🎵</div><div class="s2-float-item">🥁</div><div class="s2-float-item">🎶</div><div class="s2-float-item">✨</div><div class="s2-float-item">🎼</div><div class="s2-float-item">🎸</div><div class="s2-float-item">⭐</div><div class="s2-float-item">🎹</div><div class="s2-float-item">💫</div><div class="s2-float-item">🎵</div></div>';
-  h += '<div class="s2-header"><div class="s2-level-badge">LEVEL 2</div><br><span class="s2-title-icon">🥁</span><h1>Melody Mover</h1><br><div class="s2-sub">Match actions and instruments to every line</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(2)">How to teach</button></div>';
+  h += '<div class="s2-header"><div class="s2-level-badge">LEVEL 2</div><br><span class="s2-title-icon">🥁</span><h1>Melody Mover</h1><br><div class="s2-sub">Choose the actions and instruments for your performance</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(2)">How to teach</button></div>';
   h += '<div class="s2-player-bar"><button class="s2-player-btn" id="s2PlayBtn" onclick="s2TogglePlay()"><svg viewBox="0 0 24 24" id="s2PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s2PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s2-player-time" id="s2CurTime">0:00</span><div class="s2-player-progress" id="s2ProgressBar" onclick="s2SeekAudio(event)"><div class="s2-player-progress-fill" id="s2ProgressFill"></div><div class="s2-player-progress-thumb" id="s2ProgressThumb"></div></div><span class="s2-player-time" id="s2DurTime">0:39</span><div class="s2-player-mode" id="s2ModeToggle"><button class="s2-active" onclick="s2SwitchMode(\'vocal\')" id="s2ModeVocal">🎤 Vocal</button><button onclick="s2SwitchMode(\'backing\')" id="s2ModeBacking">🎼 Backing</button></div><div class="s2-player-vol"><span class="s2-vol-icon" onclick="s2ToggleMute()">🔊</span><input type="range" id="s2VolSlider" min="0" max="100" value="80" oninput="s2SetVolume(this.value)"></div><div class="s2-player-speed"><button onclick="s2SetSpeed(0.5)">0.5x</button><button onclick="s2SetSpeed(0.75)">0.75x</button><button class="s2-active" onclick="s2SetSpeed(1)">1x</button><button onclick="s2SetSpeed(1.25)">1.25x</button><button onclick="s2SetSpeed(1.5)">1.5x</button></div></div>';
   h += '<div class="card" style="background:#08081a;border:1px solid rgba(255,255,255,0.05);box-shadow:0 0 30px rgba(0,0,0,0.3);">';
   h += '<div class="s2-container">';
   h += '<div class="s2-left">';
-  h += '<div class="s2-lyrics-panel"><h3>📝 Lyrics</h3><div style="font-size:16px;font-weight:900;color:#ffb800;text-align:center;margin-bottom:14px;text-shadow:0 0 12px rgba(255,184,0,0.3)">🎵 Where Are You From</div>';
+  h += '<div class="s2-lyrics-panel"><h3>📝 Lyrics</h3><div style="font-size:16px;font-weight:900;color:#ffb800;text-align:center;margin-bottom:14px;text-shadow:0 0 12px rgba(255,184,0,0.3)">🎵 '+safeText(songTitle)+'</div>';
   lyrics.forEach(function(line, ri) {
-    var slots = s2LineSlots[ri];
-    h += '<div class="s2-lyric-row"><span class="s2-lyric-text">'+line.text+'</span>';
-    h += '<span class="s2-slot-group">';
-    slots.forEach(function(s, si) {
-      var filled = s.type ? ' filled' : '';
-      h += '<span class="s2-drop-slot'+filled+'" data-line="'+ri+'" data-slot="'+si+'" ondragover="s2SlotDragOver(event)" ondragleave="s2SlotDragLeave(event)" ondrop="s2DropOnSlot(event,'+ri+','+si+')" onclick="s2ClearSlot(this)">';
-      if (s.type === 'action') {
-        var act = s2Actions.find(function(a){return a.id===s.id});
-        if (act) h += act.emoji+'<span class="s2-slot-remove">✕</span>';
-      } else if (s.type === 'inst') {
-        var inst = s2Instruments.find(function(i){return i.id===s.id});
-        if (inst) h += '<img src="'+inst.img+'" alt=""><span class="s2-slot-remove">✕</span>';
-      }
-      h += '</span>';
-    });
-    h += '<button class="s2-slot-add" onclick="s2AddSlot('+ri+')" title="Add slot">+</button>';
-    if (slots.length > 1) {
-      h += '<button class="s2-slot-del" onclick="s2RemoveSlot('+ri+')" title="Remove last slot">−</button>';
-    }
-    h += '</span></div>';
+    h += '<div class="s2-lyric-row"><span class="s2-lyric-text">'+safeText(line.text)+'</span></div>';
   });
-  h += '<button class="btn btn-sm" style="margin-top:12px;background:rgba(255,45,149,0.1);border:1.5px solid rgba(255,45,149,0.3);color:#ff2d95;font-weight:700;" onclick="s2ResetAll()">🔄 Clear All</button>';
   h += '</div></div>';
   h += '<div class="s2-right">';
-  h += '<div class="s2-actions-panel"><h3><span>🤸 Actions <span class="hint">Drag to lyrics</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'actions\')" title="Expand">⛶</button></h3><div class="s2-action-grid">';
-  s2Actions.forEach(function(a) { h += '<span class="s2-action-tag" draggable="true" data-action-id="'+a.id+'" ondragstart="s2ActionDragStart(event)">'+a.emoji+' '+a.name+'</span>'; });
+  h += '<div class="s2-actions-panel"><h3><span>🤸 Actions <span class="hint">Choose any you will use</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'actions\')" title="Expand">⛶</button></h3><div class="s2-action-grid">';
+  s2Actions.forEach(function(a) { h += '<button class="s2-action-tag'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')">'+a.emoji+' '+safeText(a.name)+'</button>'; });
   h += '</div></div>';
-  h += '<div class="s2-inst-panel"><h3><span>🥁 Instruments <span class="hint">Drag to lyrics</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'instruments\')" title="Expand">⛶</button></h3><div class="s2-inst-grid">';
-  s2Instruments.forEach(function(inst) { h += '<span class="s2-inst-tag" draggable="true" data-inst-id="'+inst.id+'" ondragstart="s2InstDragStart(event)"><img src="'+inst.img+'" alt="">'+inst.name+'</span>'; });
+  h += '<div class="s2-inst-panel"><h3><span>🥁 Instruments <span class="hint">Choose any you will use</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'instruments\')" title="Expand">⛶</button></h3><div class="s2-inst-grid">';
+  s2Instruments.forEach(function(inst) { h += '<button class="s2-inst-tag'+(s2SelectedInstruments.indexOf(inst.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'inst\',\''+inst.id+'\')"><img src="'+inst.img+'" alt="">'+safeText(inst.name)+'</button>'; });
   h += '</div></div>';
   h += '</div>';
   h += '</div>';
@@ -1492,6 +1547,13 @@ function renderStage2(container) {
 }
 
 function s2ActionDragStart(e) { e.dataTransfer.setData('application/x-s2-action', e.currentTarget.dataset.actionId); e.dataTransfer.effectAllowed = 'move'; }
+function s2ToggleSelection(type, id) {
+  var selected = type === 'action' ? s2SelectedActions : s2SelectedInstruments;
+  var index = selected.indexOf(id);
+  if (index >= 0) selected.splice(index, 1); else selected.push(id);
+  renderStage2(document.getElementById('stageContent'));
+  if (document.getElementById('s2PoolModal').classList.contains('s2-active')) s2OpenPoolModal(type === 'action' ? 'actions' : 'instruments');
+}
 function s2InstDragStart(e) { e.dataTransfer.setData('application/x-s2-inst', e.currentTarget.dataset.instId); e.dataTransfer.effectAllowed = 'move'; }
 function s2SlotDragOver(e) { e.preventDefault(); var sl = e.target.closest('.s2-drop-slot'); if (sl) sl.classList.add('drag-over'); }
 function s2SlotDragLeave(e) { var sl = e.target.closest('.s2-drop-slot'); if (sl) sl.classList.remove('drag-over'); }
@@ -1675,7 +1737,7 @@ function s2OpenPoolModal(type) {
     title.innerHTML = '🤸 Actions';
     var h = '';
     s2Actions.forEach(function(a) {
-      h += '<span class="s2-modal-tag s2-actions" draggable="true" data-action-id="'+a.id+'" ondragstart="s2ActionDragStart(event)"><span class="s2-tag-emoji">'+a.emoji+'</span>'+a.name+'</span>';
+      h += '<button class="s2-modal-tag s2-actions'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')"><span class="s2-tag-emoji">'+a.emoji+'</span>'+safeText(a.name)+'</button>';
     });
     grid.innerHTML = h;
   } else {
@@ -1684,7 +1746,7 @@ function s2OpenPoolModal(type) {
     title.innerHTML = '🥁 Instruments';
     var h = '';
     s2Instruments.forEach(function(inst) {
-      h += '<span class="s2-modal-tag s2-instruments" draggable="true" data-inst-id="'+inst.id+'" ondragstart="s2InstDragStart(event)"><img src="'+inst.img+'" alt="">'+inst.name+'</span>';
+      h += '<button class="s2-modal-tag s2-instruments'+(s2SelectedInstruments.indexOf(inst.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'inst\',\''+inst.id+'\')"><img src="'+inst.img+'" alt="">'+safeText(inst.name)+'</button>';
     });
     grid.innerHTML = h;
   }
@@ -1947,18 +2009,17 @@ function enterPlayback() {
   overlay.classList.add('active'); playbackActive = true;
   var pbLyrics = document.getElementById('pbLyrics'); var h = '';
   lyrics.forEach(function(line, ri) {
-    var slots = s2LineSlots[ri];
     var items = [];
-    slots.forEach(function(s) {
-      if (s.type === 'action') {
-        var act = s2Actions.find(function(x){return x.id===s.id});
-        if (act) items.push('<span style="font-size:1.4em">'+act.emoji+'</span>');
-      } else if (s.type === 'inst') {
-        var inst = s2Instruments.find(function(x){return x.id===s.id});
-        if (inst) items.push('<img src="'+inst.img+'" style="width:140px;height:140px;object-fit:contain" alt="">');
-      }
+    s2SelectedActions.forEach(function(id) {
+      var act = s2Actions.find(function(x){return x.id===id});
+      if (act) items.push('<span style="font-size:1.4em" title="'+safeText(act.name)+'">'+act.emoji+'</span>');
     });
-    h += '<div class="pb-line" id="pbLine'+ri+'" data-start="'+parseTimeSeconds(line.time).start+'" data-end="'+parseTimeSeconds(line.time).end+'"><span>'+line.text+'</span>';
+    s2SelectedInstruments.forEach(function(id) {
+      var inst = s2Instruments.find(function(x){return x.id===id});
+      if (inst) items.push('<img src="'+inst.img+'" style="width:90px;height:90px;object-fit:contain" alt="'+safeText(inst.name)+'">');
+    });
+    var singer = ipForRole(recordMarks[ri] && recordMarks[ri].role, ri);
+    h += '<div class="pb-line" id="pbLine'+ri+'" data-start="'+parseTimeSeconds(line.time).start+'" data-end="'+parseTimeSeconds(line.time).end+'"><span class="ip-performer"><img src="'+ipImages[singer]+'" alt="'+singer+'"><span>'+safeText(line.text)+'</span></span>';
     if (items.length>0) h += '<div class="pb-actions" style="gap:8px;align-items:center">'+items.join('')+'</div>';
     h += '</div>';
   });
@@ -2086,12 +2147,12 @@ function pbToggleMute() {
 
 function formatTime(s) { var m = Math.floor(s / 60); var sec = Math.floor(s % 60); return m + ':' + (sec < 10 ? '0' : '') + sec; }
 
-function completeStage2() { stage2Complete = true; showStageClear(2); }
+function completeStage2() { if (!s2SelectedActions.length && !s2SelectedInstruments.length) { showToast('Choose at least one action or instrument first.'); return; } stage2Complete = true; showStageClear(2); }
 
 function renderStage3(container) {
   var h = '';
   // Header
-  h += '<div class="s3-header"><div class="s3-level-badge">LEVEL 3</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s3-title-icon">🎤</span><span style="font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Echo Master</span></div><div class="s3-sub">Full lyrics, first-letter fills, then whole-word blanks</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(3)">How to teach</button></div>';
+  h += '<div class="s3-header"><div class="s3-level-badge">LEVEL 3</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s3-title-icon">🎤</span><span class="s3-title-name" style="font-size:28px;font-weight:900;color:#ff2d95;text-shadow:0 0 20px rgba(255,45,149,0.6),0 0 40px rgba(255,45,149,0.4),0 0 80px rgba(255,45,149,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Echo Master</span></div><div class="s3-sub">Full lyrics, first-letter fills, then whole-word blanks</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(3)">How to teach</button></div>';
   // Audio Player
   h += '<div class="s3-player-bar"><button class="s3-player-btn" id="s3PlayBtn" onclick="s3TogglePlay()"><svg viewBox="0 0 24 24" id="s3PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s3PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s3-player-time" id="s3CurTime">0:00</span><div class="s3-player-progress" id="s3ProgressBar" onclick="s3SeekAudio(event)"><div class="s3-player-progress-fill" id="s3ProgressFill"></div><div class="s3-player-progress-thumb" id="s3ProgressThumb"></div></div><span class="s3-player-time" id="s3DurTime">0:39</span><div class="s3-player-mode" id="s3ModeToggle"><button class="s3-active" onclick="s3SwitchMode(\'vocal\')" id="s3ModeVocal">🎤 Vocal</button><button onclick="s3SwitchMode(\'backing\')" id="s3ModeBacking">🎼 Backing</button></div><div class="s3-player-vol"><span class="s3-vol-icon" onclick="s3ToggleMute()">🔊</span><input type="range" id="s3VolSlider" min="0" max="100" value="80" oninput="s3SetVolume(this.value)"></div><div class="s3-player-speed"><button onclick="s3SetSpeed(0.5)">0.5x</button><button onclick="s3SetSpeed(0.75)">0.75x</button><button class="s3-active" onclick="s3SetSpeed(1)">1x</button><button onclick="s3SetSpeed(1.25)">1.25x</button><button onclick="s3SetSpeed(1.5)">1.5x</button></div></div>';
   // Sing content
@@ -2228,36 +2289,28 @@ var recordSyncTimer = null;
 
 function renderStage4(container) {
   var h = '';
-  h += '<div class="s4-header"><div class="s4-level-badge">LEVEL 4</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s4-title-icon">📹</span><span style="font-size:28px;font-weight:900;color:#39ff14;text-shadow:0 0 20px rgba(57,255,20,0.6),0 0 40px rgba(57,255,20,0.4),0 0 80px rgba(57,255,20,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Star Studio</span></div><div class="s4-sub">Mark your parts, hit record, and own the stage</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(4)">How to teach</button></div>';
+  h += '<div class="s4-header"><div class="s4-level-badge">LEVEL 4</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0;"><span class="s4-title-icon">📹</span><span class="s4-title-name" style="font-size:28px;font-weight:900;color:#39ff14;text-shadow:0 0 20px rgba(57,255,20,0.6),0 0 40px rgba(57,255,20,0.4),0 0 80px rgba(57,255,20,0.2);letter-spacing:0.04em;font-family:\'PingFang SC\',\'Microsoft YaHei\',sans-serif;">Star Studio</span></div><div class="s4-sub">Mark your parts, hit record, and own the stage</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(4)">How to teach</button></div>';
   h += '<div class="s4-player-bar"><button class="s4-player-btn" id="s4PlayBtn" onclick="s4TogglePlay()"><svg viewBox="0 0 24 24" id="s4PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s4PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s4-player-time" id="s4CurTime">0:00</span><div class="s4-player-progress" id="s4ProgressBar" onclick="s4SeekAudio(event)"><div class="s4-player-progress-fill" id="s4ProgressFill"></div><div class="s4-player-progress-thumb" id="s4ProgressThumb"></div></div><span class="s4-player-time" id="s4DurTime">0:39</span><div class="s4-player-mode" id="s4ModeToggle"><button class="s4-active" onclick="s4SwitchMode(\'vocal\')" id="s4ModeVocal">🎤 Vocal</button><button onclick="s4SwitchMode(\'backing\')" id="s4ModeBacking">🎼 Backing</button></div><div class="s4-player-vol"><span class="s4-vol-icon" onclick="s4ToggleMute()">🔊</span><input type="range" id="s4VolSlider" min="0" max="100" value="80" oninput="s4SetVolume(this.value)"></div><div class="s4-player-speed"><button onclick="s4SetSpeed(0.5)">0.5x</button><button onclick="s4SetSpeed(0.75)">0.75x</button><button class="s4-active" onclick="s4SetSpeed(1)">1x</button><button onclick="s4SetSpeed(1.25)">1.25x</button><button onclick="s4SetSpeed(1.5)">1.5x</button></div></div>';
   h += '<div class="card"><div class="record-setup">';
   h += '<div style="padding:14px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.08);">';
   h += '<div style="margin-bottom:8px;"><div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-weight:700;font-size:14px;color:#e0e0ff;">🎯 Mark Part</span>';
   h += '<button class="btn btn-sm btn-outline" onclick="toggleMarkSetup()">' + (recordMarkSetup ? '✅ Done' : '✏️ Mark') + '</button></div>';
-  h += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:6px;">Color-code each line to split singing parts among your group</div>';
+  h += '<div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:6px;">Choose one of our five friends for every lyric line</div>';
   h += '</div>';
-  if (recordMarkSetup) {
-    h += '<div style="max-height:300px;overflow-y:auto;">';
+  h += '<div class="ip-mark-list">';
     h += '<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:11px;color:rgba(255,255,255,0.3);">';
-    h += '<span style="flex:1;text-align:left;">Lyrics</span><span style="flex-shrink:0;text-align:center;padding-right:8px;">Mark Part</span></div>';
+    h += '<span style="flex:1;text-align:left;">Lyrics</span><span style="flex-shrink:0;text-align:center;padding-right:8px;">Choose a friend</span></div>';
     lyrics.forEach(function(line, ri) {
-      var mk = recordMarks[ri] || { role: 'all' };
-      var roles = ['all','teacher','student','solo'];
-      var roleColors = {all:'mark-color-all',teacher:'mark-color-teacher',student:'mark-color-student',solo:'mark-color-solo'};
-      var roleLabelMap = {all:'All',teacher:'Teacher',student:'Student',solo:'Solo'};
-      var roleColorMap = {all:'#e0e0ff',teacher:'#00e5ff',student:'#39ff14',solo:'#ff2d95'};
-      var lc = roleColorMap[mk.role] || '#e0e0ff';
-      h += '<div style="display:flex;align-items:center;justify-content:space-between;gap:24px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);">';
-      h += '<span style="font-size:13px;font-weight:600;color:'+lc+';text-align:left;flex:1;transition:color 0.2s;">'+line.text+'</span>';
-      h += '<span style="display:flex;gap:4px;justify-content:center;flex-shrink:0;">';
-      roles.forEach(function(r) {
-        h += '<span class="mark-color-btn '+roleColors[r]+ (mk.role===r?' active':'') + '" onclick="setRecordMark('+ri+',\'role\',\''+r+'\');renderStage();"></span>';
+      var mk = recordMarks[ri] || { role: ipNames[ri % ipNames.length] };
+      var chosen = ipForRole(mk.role, ri);
+      h += '<div class="ip-mark-row"><span class="ip-assignee"><img src="'+ipImages[chosen]+'" alt="'+chosen+'">'+chosen+'</span>';
+      h += '<span class="ip-lyric">'+safeText(line.text)+'</span><span class="ip-picker">';
+      if (recordMarkSetup) ipNames.forEach(function(name) {
+        h += '<button class="'+(chosen===name?'active':'')+'" title="'+name+'" aria-label="Choose '+name+' for line '+(ri+1)+'" onclick="setRecordMark('+ri+',\'role\',\''+name+'\');renderStage();"><img src="'+ipImages[name]+'" alt=""></button>';
       });
       h += '</span></div>';
     });
     h += '</div>';
-  } else {
-    }
   h += '</div></div>';
   h += '<div class="record-area">';
   if (recordingState === 'idle') {
@@ -2279,8 +2332,8 @@ function renderStage4(container) {
   h += '</div></div>'; container.innerHTML = h;
 }
 
-function toggleMarkSetup() { recordMarkSetup = !recordMarkSetup; if (!recordMarkSetup) { lyrics.forEach(function(l,ri) { if (!recordMarks[ri]) recordMarks[ri] = { role: 'all' }; }); } renderStage(); }
-function setRecordMark(ri, key, val) { if (!recordMarks[ri]) recordMarks[ri] = { role: 'all' }; recordMarks[ri][key] = val; }
+function toggleMarkSetup() { recordMarkSetup = !recordMarkSetup; if (!recordMarkSetup) { lyrics.forEach(function(l,ri) { if (!recordMarks[ri]) recordMarks[ri] = { role: ipNames[ri % ipNames.length] }; }); } renderStage(); }
+function setRecordMark(ri, key, val) { if (!recordMarks[ri]) recordMarks[ri] = { role: ipNames[ri % ipNames.length] }; recordMarks[ri][key] = val; }
 
 function setRecordVersion(v) { recordVersion = v; renderStage(); }
 
@@ -2377,9 +2430,9 @@ function startRecordLyricSync() {
       var ts = parseTimeSeconds(lyrics[i].time);
       if (t >= ts.start && t < ts.end) {
         var mk = recordMarks[i];
-        var role = (mk && mk.role) ? mk.role : 'all';
-        el.textContent = lyrics[i].text;
-        el.className = 'record-fs-lyric role-' + role;
+        var role = ipForRole(mk && mk.role, i);
+        el.innerHTML = '<span class="ip-performer"><img src="'+ipImages[role]+'" alt="'+role+'"><span>'+safeText(lyrics[i].text)+'</span></span>';
+        el.className = 'record-fs-lyric role-all';
         found = true; break;
       }
     }

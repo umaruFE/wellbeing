@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-14T04:29:15.656Z",
+  "updatedAt": "2026-09-16T06:49:00.751Z",
   "createdAt": "2026-04-01T06:52:01.019Z",
   "id": "htV9YwPHhjaIGOcn",
   "name": "🦅单人视频-生成配音",
@@ -260,12 +260,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://117.50.171.219:8188/prompt",
+        "url": "=http://117.50.214.226:8188/prompt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": {\n  \"1\": {\n    \"inputs\": {\n      \"top_k\": 30,\n      \"top_p\": 0.8,\n      \"temperature\": 0.8,\n      \"num_beams\": 3,\n      \"max_mel_tokens\": 1500,\n      \"max_text_tokens_per_sentence\": 120,\n      \"custom_cuda_kernel\": false,\n      \"deepspeed\": true,\n      \"unload_model\": false,\n      \"emo_alpha\": 1,\n      \"emo_vector\": \"\",\n      \"use_emo_text\": false,\n      \"emo_text\": \"\",\n      \"use_random\": false,\n      \"emo_alpha_s2\": 1.0000000000000002,\n      \"emo_vector_s2\": \"\",\n      \"use_emo_text_s2\": false,\n      \"emo_text_s2\": \"\",\n      \"use_random_s2\": false,\n      \"audio\": [\n        \"9\",\n        0\n      ],\n      \"text\": [\n        \"6\",\n        0\n      ]\n    },\n    \"class_type\": \"IndexTTS2Run\",\n    \"_meta\": {\n      \"title\": \"IndexTTS2 Run\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"text\": \"{{ $json.text }}\"\n    },\n    \"class_type\": \"Text Multiline\",\n    \"_meta\": {\n      \"title\": \"多行文本\"\n    }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"audio\": \"voice/{{ $json.voice_id }}\",\n      \"audioUI\": \"/api/view?filename=%E6%90%9E%E7%AC%91%E5%A4%A7%E7%88%B7.flac&type=input&subfolder=&rand=0.6831432869771068\"\n    },\n    \"class_type\": \"LoadAudio\",\n    \"_meta\": {\n      \"title\": \"Load Audio\"\n    }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"audio/ComfyUI\",\n      \"audioUI\": \"/api/view?filename=ComfyUI_00003_.flac&type=output&subfolder=audio&rand=0.{{ Math.random().toString().slice(2, 18) }}\",\n      \"audio\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveAudio\",\n    \"_meta\": {\n      \"title\": \"Save Audio (FLAC)\"\n    }\n  }\n}\n\n}",
+        "jsonBody": "={\n  \"prompt\": {\n  \"1\": {\n    \"inputs\": {\n      \"top_k\": 30,\n      \"top_p\": 0.8,\n      \"temperature\": 0.8,\n      \"num_beams\": 3,\n      \"max_mel_tokens\": 1500,\n      \"max_text_tokens_per_sentence\": 120,\n      \"custom_cuda_kernel\": false,\n      \"deepspeed\": true,\n      \"unload_model\": true,\n      \"emo_alpha\": 1,\n      \"emo_vector\": \"\",\n      \"use_emo_text\": false,\n      \"emo_text\": \"\",\n      \"use_random\": false,\n      \"emo_alpha_s2\": 1.0000000000000002,\n      \"emo_vector_s2\": \"\",\n      \"use_emo_text_s2\": false,\n      \"emo_text_s2\": \"\",\n      \"use_random_s2\": false,\n      \"audio\": [\n        \"9\",\n        0\n      ],\n      \"text\": [\n        \"6\",\n        0\n      ]\n    },\n    \"class_type\": \"IndexTTS2Run\",\n    \"_meta\": {\n      \"title\": \"IndexTTS2 Run\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"text\": \"{{ $json.text }}\"\n    },\n    \"class_type\": \"Text Multiline\",\n    \"_meta\": {\n      \"title\": \"多行文本\"\n    }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"audio\": \"voice/{{ $json.voice_id }}\",\n      \"audioUI\": \"/api/view?filename=%E6%90%9E%E7%AC%91%E5%A4%A7%E7%88%B7.flac&type=input&subfolder=&rand=0.6831432869771068\"\n    },\n    \"class_type\": \"LoadAudio\",\n    \"_meta\": {\n      \"title\": \"Load Audio\"\n    }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"audio/ComfyUI\",\n      \"audioUI\": \"/api/view?filename=ComfyUI_00003_.flac&type=output&subfolder=audio&rand=0.{{ Math.random().toString().slice(2, 18) }}\",\n      \"audio\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveAudio\",\n    \"_meta\": {\n      \"title\": \"Save Audio (FLAC)\"\n    }\n  }\n}\n\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
@@ -285,7 +285,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.171.219:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
+        "url": "=http://117.50.214.226:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -307,7 +307,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.171.219:8188/view",
+        "url": "=http://117.50.214.226:8188/view",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -677,9 +677,9 @@
       }
     ]
   },
-  "versionId": "b54d937e-0d25-43ff-abcf-35a4b38cccf1",
-  "activeVersionId": "b54d937e-0d25-43ff-abcf-35a4b38cccf1",
-  "versionCounter": 235,
+  "versionId": "4b1045c9-60ae-4a5c-8158-d32638c15306",
+  "activeVersionId": "4b1045c9-60ae-4a5c-8158-d32638c15306",
+  "versionCounter": 239,
   "triggerCount": 0,
   "shared": [
     {
@@ -702,9 +702,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-09-14T04:29:15.657Z",
-    "createdAt": "2026-09-14T04:29:15.657Z",
-    "versionId": "b54d937e-0d25-43ff-abcf-35a4b38cccf1",
+    "updatedAt": "2026-09-16T06:49:00.753Z",
+    "createdAt": "2026-09-16T06:49:00.753Z",
+    "versionId": "4b1045c9-60ae-4a5c-8158-d32638c15306",
     "workflowId": "htV9YwPHhjaIGOcn",
     "nodes": [
       {
@@ -960,12 +960,12 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "=http://117.50.171.219:8188/prompt",
+          "url": "=http://117.50.214.226:8188/prompt",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"prompt\": {\n  \"1\": {\n    \"inputs\": {\n      \"top_k\": 30,\n      \"top_p\": 0.8,\n      \"temperature\": 0.8,\n      \"num_beams\": 3,\n      \"max_mel_tokens\": 1500,\n      \"max_text_tokens_per_sentence\": 120,\n      \"custom_cuda_kernel\": false,\n      \"deepspeed\": true,\n      \"unload_model\": false,\n      \"emo_alpha\": 1,\n      \"emo_vector\": \"\",\n      \"use_emo_text\": false,\n      \"emo_text\": \"\",\n      \"use_random\": false,\n      \"emo_alpha_s2\": 1.0000000000000002,\n      \"emo_vector_s2\": \"\",\n      \"use_emo_text_s2\": false,\n      \"emo_text_s2\": \"\",\n      \"use_random_s2\": false,\n      \"audio\": [\n        \"9\",\n        0\n      ],\n      \"text\": [\n        \"6\",\n        0\n      ]\n    },\n    \"class_type\": \"IndexTTS2Run\",\n    \"_meta\": {\n      \"title\": \"IndexTTS2 Run\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"text\": \"{{ $json.text }}\"\n    },\n    \"class_type\": \"Text Multiline\",\n    \"_meta\": {\n      \"title\": \"多行文本\"\n    }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"audio\": \"voice/{{ $json.voice_id }}\",\n      \"audioUI\": \"/api/view?filename=%E6%90%9E%E7%AC%91%E5%A4%A7%E7%88%B7.flac&type=input&subfolder=&rand=0.6831432869771068\"\n    },\n    \"class_type\": \"LoadAudio\",\n    \"_meta\": {\n      \"title\": \"Load Audio\"\n    }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"audio/ComfyUI\",\n      \"audioUI\": \"/api/view?filename=ComfyUI_00003_.flac&type=output&subfolder=audio&rand=0.{{ Math.random().toString().slice(2, 18) }}\",\n      \"audio\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveAudio\",\n    \"_meta\": {\n      \"title\": \"Save Audio (FLAC)\"\n    }\n  }\n}\n\n}",
+          "jsonBody": "={\n  \"prompt\": {\n  \"1\": {\n    \"inputs\": {\n      \"top_k\": 30,\n      \"top_p\": 0.8,\n      \"temperature\": 0.8,\n      \"num_beams\": 3,\n      \"max_mel_tokens\": 1500,\n      \"max_text_tokens_per_sentence\": 120,\n      \"custom_cuda_kernel\": false,\n      \"deepspeed\": true,\n      \"unload_model\": true,\n      \"emo_alpha\": 1,\n      \"emo_vector\": \"\",\n      \"use_emo_text\": false,\n      \"emo_text\": \"\",\n      \"use_random\": false,\n      \"emo_alpha_s2\": 1.0000000000000002,\n      \"emo_vector_s2\": \"\",\n      \"use_emo_text_s2\": false,\n      \"emo_text_s2\": \"\",\n      \"use_random_s2\": false,\n      \"audio\": [\n        \"9\",\n        0\n      ],\n      \"text\": [\n        \"6\",\n        0\n      ]\n    },\n    \"class_type\": \"IndexTTS2Run\",\n    \"_meta\": {\n      \"title\": \"IndexTTS2 Run\"\n    }\n  },\n  \"6\": {\n    \"inputs\": {\n      \"text\": \"{{ $json.text }}\"\n    },\n    \"class_type\": \"Text Multiline\",\n    \"_meta\": {\n      \"title\": \"多行文本\"\n    }\n  },\n  \"9\": {\n    \"inputs\": {\n      \"audio\": \"voice/{{ $json.voice_id }}\",\n      \"audioUI\": \"/api/view?filename=%E6%90%9E%E7%AC%91%E5%A4%A7%E7%88%B7.flac&type=input&subfolder=&rand=0.6831432869771068\"\n    },\n    \"class_type\": \"LoadAudio\",\n    \"_meta\": {\n      \"title\": \"Load Audio\"\n    }\n  },\n  \"14\": {\n    \"inputs\": {\n      \"filename_prefix\": \"audio/ComfyUI\",\n      \"audioUI\": \"/api/view?filename=ComfyUI_00003_.flac&type=output&subfolder=audio&rand=0.{{ Math.random().toString().slice(2, 18) }}\",\n      \"audio\": [\n        \"1\",\n        0\n      ]\n    },\n    \"class_type\": \"SaveAudio\",\n    \"_meta\": {\n      \"title\": \"Save Audio (FLAC)\"\n    }\n  }\n}\n\n}",
           "options": {}
         },
         "type": "n8n-nodes-base.httpRequest",
@@ -985,7 +985,7 @@
       },
       {
         "parameters": {
-          "url": "=http://117.50.171.219:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
+          "url": "=http://117.50.214.226:8188/history/{{ $('请求生成配音').item.json.prompt_id }}",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "options": {}
@@ -1007,7 +1007,7 @@
       },
       {
         "parameters": {
-          "url": "=http://117.50.171.219:8188/view",
+          "url": "=http://117.50.214.226:8188/view",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendQuery": true,
@@ -1327,10 +1327,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-09-14T04:29:15.843Z",
-        "id": 832,
+        "createdAt": "2026-09-16T06:49:00.961Z",
+        "id": 867,
         "workflowId": "htV9YwPHhjaIGOcn",
-        "versionId": "b54d937e-0d25-43ff-abcf-35a4b38cccf1",
+        "versionId": "4b1045c9-60ae-4a5c-8158-d32638c15306",
         "event": "activated",
         "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
       }

@@ -112,8 +112,10 @@
 .cw-global-loading-card svg{color:#4482e5}.cw-global-loading-card strong{font-size:18px;color:#373f4d}.cw-global-loading-card span{font-size:13px;color:#818997;line-height:1.5}
 
 /* 歌曲创作：逐句歌词与原曲切片试听 */
-.cw-lyric-row.cw-lyric-row-with-clip{grid-template-columns:minmax(150px,.6fr) minmax(0,1fr) minmax(220px,.8fr);align-items:center;gap:12px}
+.cw-lyric-row.cw-lyric-row-with-clip{grid-template-columns:32px minmax(0,1fr) 44px;align-items:center;gap:12px}
+.cw-lyric-row-with-clip .cw-lyric-time{border:0;background:none;padding:0;color:#a5a0ad;font-size:11px}
 .cw-lyric-clip{display:flex;flex-direction:column;gap:6px;min-width:0}
-.cw-lyric-clip audio{width:100%;height:36px}
+.cw-lyric-clip audio{display:none}
+.cw-clip-play{width:38px;height:38px;border:1px solid #c6b6dd;border-radius:50%;background:#f3ecfa;color:#7046a8;cursor:pointer}
 .cw-lyric-clip .cw-echo-audio-status{text-align:left}
 @media(max-width:760px){.cw-lyric-row.cw-lyric-row-with-clip{grid-template-columns:1fr}.cw-lyric-clip{width:100%}}

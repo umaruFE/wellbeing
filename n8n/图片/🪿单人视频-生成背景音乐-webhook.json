@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-14T04:32:42.301Z",
+  "updatedAt": "2026-09-16T06:49:03.815Z",
   "createdAt": "2026-04-28T13:24:29.050Z",
   "id": "t2Qr0LzBfsAaeDAp",
   "name": "🪿单人视频-生成背景音乐-webhook",
@@ -123,7 +123,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "http://117.50.171.219:8188/prompt",
+        "url": "http://117.50.214.226:8188/prompt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
@@ -148,7 +148,7 @@
     },
     {
       "parameters": {
-        "url": "http://117.50.171.219:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+        "url": "http://117.50.214.226:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -170,7 +170,7 @@
     },
     {
       "parameters": {
-        "url": "http://117.50.171.219:8188/view",
+        "url": "http://117.50.214.226:8188/view",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -496,9 +496,9 @@
       }
     ]
   },
-  "versionId": "a2364f98-5813-480e-8d21-d5b8b67a8e1c",
-  "activeVersionId": "a2364f98-5813-480e-8d21-d5b8b67a8e1c",
-  "versionCounter": 99,
+  "versionId": "1676ba51-f6ec-47c3-89bf-8a5c5d5979ea",
+  "activeVersionId": "1676ba51-f6ec-47c3-89bf-8a5c5d5979ea",
+  "versionCounter": 103,
   "triggerCount": 1,
   "shared": [
     {
@@ -521,9 +521,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-09-14T04:32:42.302Z",
-    "createdAt": "2026-09-14T04:32:42.302Z",
-    "versionId": "a2364f98-5813-480e-8d21-d5b8b67a8e1c",
+    "updatedAt": "2026-09-16T06:49:03.816Z",
+    "createdAt": "2026-09-16T06:49:03.816Z",
+    "versionId": "1676ba51-f6ec-47c3-89bf-8a5c5d5979ea",
     "workflowId": "t2Qr0LzBfsAaeDAp",
     "nodes": [
       {
@@ -642,7 +642,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "http://117.50.171.219:8188/prompt",
+          "url": "http://117.50.214.226:8188/prompt",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendBody": true,
@@ -667,7 +667,7 @@
       },
       {
         "parameters": {
-          "url": "http://117.50.171.219:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+          "url": "http://117.50.214.226:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "options": {}
@@ -689,7 +689,7 @@
       },
       {
         "parameters": {
-          "url": "http://117.50.171.219:8188/view",
+          "url": "http://117.50.214.226:8188/view",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendQuery": true,
@@ -975,10 +975,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-09-14T04:32:45.511Z",
-        "id": 837,
+        "createdAt": "2026-09-16T06:49:03.970Z",
+        "id": 873,
         "workflowId": "t2Qr0LzBfsAaeDAp",
-        "versionId": "a2364f98-5813-480e-8d21-d5b8b67a8e1c",
+        "versionId": "1676ba51-f6ec-47c3-89bf-8a5c5d5979ea",
         "event": "activated",
         "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
       }

@@ -219,6 +219,8 @@ function LyricClipPlayer({ source, workId, index, canLoad, onPlay }) {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(false);
   const requestVersion = React.useRef(0);
+  const player = React.useRef(null);
+  const [playing, setPlaying] = React.useState(false);
   React.useEffect(() => {
     return () => { requestVersion.current += 1; };
   }, [workId, index, source, canLoad]);
@@ -240,7 +242,7 @@ function LyricClipPlayer({ source, workId, index, canLoad, onPlay }) {
   };
   return (
     <div className="cw-lyric-clip">
-      {source || loaded ? <audio controls preload="none" src={source || loaded} aria-label={t('musicStudio.lyricClipLabel', { n: index + 1 })} onPlay={onPlay} onError={() => setError(true)} />
+      {source || loaded ? <><button type="button" className="cw-clip-play" aria-label={t('musicStudio.lyricClipLabel', { n: index + 1 })} onClick={() => { if (player.current?.paused) player.current.play().catch(() => setError(true)); else player.current?.pause(); }}>{playing ? '⏸' : '▶'}</button><audio ref={player} preload="none" src={source || loaded} onPlay={(event) => { setPlaying(true); onPlay(event); }} onPause={() => setPlaying(false)} onEnded={() => setPlaying(false)} onError={() => setError(true)} /></>
         : canLoad ? <button type="button" className="pbv2-ghost" disabled={loading} onClick={loadClip}>
           {loading && <Loader2 className="spin" size={14} />}{t(loading ? 'musicStudio.lyricClipLoading' : 'musicStudio.lyricClipLoad')}
         </button> : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
@@ -264,7 +266,7 @@ function LyricsEditor({ lyrics, audio = {}, workId }) {
       <p className="yoga-design-hint">{t('musicStudio.lyricClipHint')}</p>
       {lyrics.map((row, idx) => (
         <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className="cw-lyric-row cw-lyric-row-with-clip">
-          <span className="cw-lyric-time">{row.time || t('musicStudio.alignmentPending')}</span>
+          <span className="cw-lyric-time" title={row.time || t('musicStudio.alignmentPending')}>{idx + 1}</span>
           <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
           <LyricClipPlayer source={segments[idx]} workId={workId} index={idx} onPlay={pauseOtherClips}
             canLoad={Boolean(workId && audio.generationTask?.status === 'completed' && recognized[idx]?.text === row.text && recognized[idx]?.time === row.time)} />

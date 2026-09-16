@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-09-14T03:35:20.338Z",
+  "updatedAt": "2026-09-16T06:49:02.907Z",
   "createdAt": "2026-04-01T06:51:24.994Z",
   "id": "YaPEJOrK4FpAa1LY",
   "name": "🪿单人视频-生成背景音乐",
@@ -266,7 +266,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://117.50.171.219:8188/prompt",
+        "url": "=http://117.50.214.226:8188/prompt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
@@ -291,7 +291,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.171.219:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+        "url": "=http://117.50.214.226:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -313,7 +313,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.171.219:8188/view",
+        "url": "=http://117.50.214.226:8188/view",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -575,9 +575,9 @@
       }
     ]
   },
-  "versionId": "9fc3f152-d685-4af0-a95a-7ab8993cde8d",
-  "activeVersionId": "9fc3f152-d685-4af0-a95a-7ab8993cde8d",
-  "versionCounter": 125,
+  "versionId": "0101431b-6164-482e-ae0a-c85c6de589e0",
+  "activeVersionId": "0101431b-6164-482e-ae0a-c85c6de589e0",
+  "versionCounter": 129,
   "triggerCount": 0,
   "shared": [
     {
@@ -600,9 +600,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-09-14T03:35:20.339Z",
-    "createdAt": "2026-09-14T03:35:20.339Z",
-    "versionId": "9fc3f152-d685-4af0-a95a-7ab8993cde8d",
+    "updatedAt": "2026-09-16T06:49:02.908Z",
+    "createdAt": "2026-09-16T06:49:02.908Z",
+    "versionId": "0101431b-6164-482e-ae0a-c85c6de589e0",
     "workflowId": "YaPEJOrK4FpAa1LY",
     "nodes": [
       {
@@ -864,7 +864,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "=http://117.50.171.219:8188/prompt",
+          "url": "=http://117.50.214.226:8188/prompt",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendBody": true,
@@ -889,7 +889,7 @@
       },
       {
         "parameters": {
-          "url": "=http://117.50.171.219:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+          "url": "=http://117.50.214.226:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "options": {}
@@ -911,7 +911,7 @@
       },
       {
         "parameters": {
-          "url": "=http://117.50.171.219:8188/view",
+          "url": "=http://117.50.214.226:8188/view",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendQuery": true,
@@ -1141,10 +1141,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-09-14T03:35:20.524Z",
-        "id": 823,
+        "createdAt": "2026-09-16T06:49:03.080Z",
+        "id": 871,
         "workflowId": "YaPEJOrK4FpAa1LY",
-        "versionId": "9fc3f152-d685-4af0-a95a-7ab8993cde8d",
+        "versionId": "0101431b-6164-482e-ae0a-c85c6de589e0",
         "event": "activated",
         "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
       }

@@ -347,14 +347,15 @@ function normalizeMusicLyrics(lyrics: unknown): { time: string; text: string }[]
     .filter((l) => l.text);
 }
 
-const STAR_ROLES = new Set(['all', 'teacher', 'student', 'solo']);
-/** 第四关分工归一化：校验取值、对齐歌词行数（短补 all，长截断） */
+const STAR_ROLE_NAMES = ['poppy', 'edi', 'rolly', 'milo', 'ace'];
+const STAR_ROLES = new Set(STAR_ROLE_NAMES);
+/** 第四关人物分工归一化：旧角色值按行映射为五位人物。 */
 function normalizeStarRoles(roles: unknown, lyricsCount: number): string[] {
   const list = Array.isArray(roles) ? roles : [];
   const out: string[] = [];
   for (let i = 0; i < lyricsCount; i++) {
     const role = String(list[i] || '').toLowerCase().trim();
-    out.push(STAR_ROLES.has(role) ? role : 'all');
+    out.push(STAR_ROLES.has(role) ? role : STAR_ROLE_NAMES[i % STAR_ROLE_NAMES.length]);
   }
   return out;
 }
@@ -386,6 +387,10 @@ function normalizeEchoData(value: MusicExercises['echoData'], lyrics: { text: st
 /** 渲染四关游戏课件（单文件 HTML；音频引用 FTP/CDN URL，可为空串） */
 export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music Star Quest'): string {
   let html = readTemplate('music-star-quest.html');
+  const ipNames = ['poppy', 'edi', 'rolly', 'milo', 'ace'];
+  const ipImages = Object.fromEntries(ipNames.map((name) => [name, `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), 'public', 'ip', `${name}.png`)).toString('base64')}`]));
+  html = html.replace('__IP_IMAGES_JSON__', JSON.stringify(ipImages));
+  html = html.replace('__SONG_TITLE_JSON__', JSON.stringify(result.title || fallbackTitle).replace(/</g, '\\u003c'));
   // Preserve the user's template edits; fix fractional-second parsing only in the rendered output.
   html = html.replace(/function parseTimeSeconds\(timeStr\) \{[\s\S]*?\n\}/, `function parseTimeSeconds(timeStr) {
   var parts = String(timeStr || '').split(/[–—-]/);
