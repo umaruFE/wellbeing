@@ -13,7 +13,7 @@
 1. Webhook 使用 `Header Auth`：Name=`X-N8N-API-KEY`，Value与项目后端 `N8N_API_KEY` 一致。流程中未保存密钥。没有这项凭据不能直接激活。
 2. `提交ComfyUI整曲任务`、`查询ComfyUI结果`、`认证下载完整歌曲` 三个 HTTP Request 节点，都选择同一 ComfyUI `Bearer Auth` 凭据。项目现有音乐流程使用这一认证类型，本流程没有复制凭据ID；可在你的n8n中选择已有凭据。
 3. 该新服务器实际认证机制尚未确认。若不是Bearer，则将三个节点一致改为其要求的Header Auth或Basic Auth。不要将n8n管理API密钥误当ComfyUI密钥。
-4. 地址已经填为 `http://117.50.214.226:8188`。如果模型在子目录（例如原模板的 `acestep1.5/acestep_v1.5_turbo.safetensors`），修改配置节点中的 `unet` 为实际路径。
+4. 地址已经填为 `http://117.50.171.219:8188`。如果模型在子目录（例如原模板的 `acestep1.5/acestep_v1.5_turbo.safetensors`），修改配置节点中的 `unet` 为实际路径。
 5. 本地目录 `/home/node/files/` 必须可写，并与现有 `/files` 流程使用相同挂载。`写入通用资源表` 节点复用了现有 `tworkflow` 表ID `J3YaofTO0eHhgjAp`；导入同一n8n项目并检查表权限，换实例需要重新选择表。
 
 ### Webhook的叹号
