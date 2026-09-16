@@ -1007,8 +1007,8 @@ function OptionGroup({ label, required, options, value, onChange, tone = 'coral'
       <div className="pbv2-label">{label}{required && <b>*</b>}</div>
       <div className="pbv2-option-grid">
         {options.map((option) => (
-          <button type="button" key={option} className={value === option ? 'is-active' : ''} onClick={() => onChange(value === option ? '' : option)}>
-            {option}
+          <button type="button" key={option.value} className={value === option.value ? 'is-active' : ''} onClick={() => onChange(value === option.value ? '' : option.value)}>
+            {option.label}
           </button>
         ))}
       </div>
@@ -1023,8 +1023,8 @@ function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther, t
       <div className="pbv2-card-title">{label}</div>
       <div className="pbv2-chip-grid">
         {options.map((option) => (
-          <button type="button" key={option} className={value.includes(option) ? 'is-active' : ''} onClick={() => onToggle(option)}>
-            {option}
+          <button type="button" key={option.value} className={value.includes(option.value) ? 'is-active' : ''} onClick={() => onToggle(option.value)}>
+            {option.label}
           </button>
         ))}
       </div>
