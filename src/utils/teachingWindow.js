@@ -14,6 +14,17 @@ const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (c) => ({
 /** CSS url() 里的地址需要闭合括号/引号转义 */
 const encodeCssUrl = (url) => String(url || '').replace(/\\/g, '/').replace(/'/g, "\\'");
 
+// Blob documents cannot reliably resolve site-relative asset paths. Resolve them
+// against the app before handing the data to a teaching window.
+const resolveTeachingAssetUrl = (url) => {
+  if (!url) return '';
+  try {
+    return new URL(url, window.location.href).href;
+  } catch {
+    return url;
+  }
+};
+
 /**
  * @param {object} options
  * @param {Array<{imageUrl?: string, img?: string, subtitle?: string}>} options.pages 页面列表
@@ -151,15 +162,21 @@ render();
 export function openSongWindow({ draft, blankValues = {}, arrangement = {}, audio = null, backgroundUrl = '' } = {}) {
   const lines = Array.isArray(draft?.lines) ? draft.lines : [];
   if (!lines.length) return false;
-  const vocalUrl = audio?.vocalUrl || '';
-  const instrumentalUrl = audio?.instrumentalUrl || '';
-  const fallbackUrl = audio?.fallbackUrl || '';
+  const vocalUrl = resolveTeachingAssetUrl(audio?.vocalUrl);
+  const instrumentalUrl = resolveTeachingAssetUrl(audio?.instrumentalUrl);
+  const fallbackUrl = resolveTeachingAssetUrl(audio?.fallbackUrl);
   const payload = {
     title: draft?.title || '歌曲授课',
     melodyName: audio?.name || '未选择曲目',
     lines,
     blankValues,
-    arrangement: Object.fromEntries(Object.entries(arrangement || {}).map(([k, v]) => [k, Array.isArray(v) ? v : []])),
+    arrangement: Object.fromEntries(Object.entries(arrangement || {}).map(([k, v]) => [
+      k,
+      Array.isArray(v) ? v.map((instrument) => ({
+        ...instrument,
+        icon: resolveTeachingAssetUrl(instrument?.icon),
+      })) : [],
+    ])),
     audio: { vocalUrl, instrumentalUrl, fallbackUrl },
   };
 
