@@ -1,4 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import i18next from 'i18next';
+import { LocalizedValue } from '../i18n/LocalizedText.jsx';
+import { useTranslation } from 'react-i18next';
 import { parseJsonSafely, responseErrorMessage } from '../utils/responseUtils';
 import { Tag, Button, Progress, message } from 'antd';
 import {
@@ -371,7 +374,7 @@ const taskStatusToUi = (status) => {
 const formatTaskTime = (value) => {
   if (!value) return '--';
   try {
-    return new Date(value).toLocaleString('zh-CN', {
+    return new Date(value).toLocaleString(i18next.language?.startsWith('zh') ? 'zh-CN' : 'en-US', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -438,13 +441,13 @@ const normalizeTask = (task) => {
   };
 };
 
-const createDetailFromTask = (task) => {
+const createDetailFromTask = (task, t) => {
   const raw = task.raw || task;
   const input = raw.input || {};
   return {
     type: raw.type || task.type || 'image',
     title: raw.title || task.title || 'AI 生成任务',
-    count: `x ${raw.count || task.count || 1} ${raw.type === 'video' ? '个' : raw.type === 'audio' ? '首' : '张'}`,
+    count: t(raw.type === 'video' ? 'taskCenter.countVideo' : raw.type === 'audio' ? 'taskCenter.countAudio' : 'taskCenter.countImage', { count: raw.count || task.count || 1 }),
     course: raw.related || task.related || '未关联课程',
     status: taskStatusToUi(raw.status),
     statusText: statusConfigMap[raw.status]?.label || task.statusText || '等待中',
@@ -468,7 +471,7 @@ const TaskStatusTag = ({ status }) => {
   return (
     <Tag className={`task-status-pill ${config.className}`}>
       {config.icon}
-      <span>{config.label}</span>
+      <span><LocalizedValue value={config.label} catalog="taskCenterValues" /></span>
     </Tag>
   );
 };
@@ -481,6 +484,7 @@ const handleAccessibleCardKey = (event, onOpen) => {
 };
 
 const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask }) => {
+  const { t } = useTranslation();
   const iconColors = getIconBgColor(task.type);
   const IconComponent = getIcon(task.type);
 
@@ -514,10 +518,10 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
           </div>
           <div className="history-task-detail">
             <div className="history-task-title-row">
-              <span className="history-task-title">{task.title}</span>
-              <Tag className="history-task-count">x {task.count}</Tag>
+              <span className="history-task-title"><LocalizedValue value={task.title} catalog="taskCenterValues" /></span>
+              <Tag className="history-task-count">x <LocalizedValue value={task.count} catalog="taskCenterValues" /></Tag>
             </div>
-            <span className="history-task-related">关联: {task.related}</span>
+            <span className="history-task-related">{t('taskCenter.related')}: <LocalizedValue value={task.related} catalog="taskCenterValues" /></span>
           </div>
         </div>
         <TaskStatusTag status={task.status} />
@@ -532,11 +536,11 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
             className="history-insert-btn"
             onClick={(event) => {
               event.stopPropagation();
-              onInsertTaskAsset?.(createCanvasAssetPayload(task.raw ? createDetailFromTask(task) : getDetailForTask(task)));
+              onInsertTaskAsset?.(createCanvasAssetPayload(task.raw ? createDetailFromTask(task, t) : getDetailForTask(task)));
             }}
           >
             <CirclePlus size={14} />
-            <span>插入当前画布</span>
+            <span>{t('taskCenter.insert')}</span>
           </Button>
         )}
         {['failed', 'cancelled'].includes(task.rawStatus) && (
@@ -547,7 +551,7 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
               onRetryTask?.(task);
             }}
           >
-            重新生成
+            {t('common.regenerate')}
           </Button>
         )}
       </div>
@@ -556,6 +560,7 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
 };
 
 const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) => {
+  const { t } = useTranslation();
   const IconComponent = getIcon(task.type);
 
   return (
@@ -576,12 +581,12 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
           </div>
           <div className="task-item-detail">
             <div className="task-item-title-row">
-              <span className="task-item-title">{task.title}</span>
+              <span className="task-item-title"><LocalizedValue value={task.title} catalog="taskCenterValues" /></span>
               <div className="task-item-count">
-                <span className="task-item-count-text">x {task.count}</span>
+                <span className="task-item-count-text">x <LocalizedValue value={task.count} catalog="taskCenterValues" /></span>
               </div>
             </div>
-            <span className="task-item-related">关联: {task.related}</span>
+            <span className="task-item-related">{t('taskCenter.related')}: <LocalizedValue value={task.related} catalog="taskCenterValues" /></span>
           </div>
         </div>
         <TaskStatusTag status={task.status} />
@@ -590,7 +595,7 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
       {task.progress !== undefined && (
         <div className="task-progress">
           <div className="task-progress-row">
-            <span className="task-progress-text">{task.progressText}</span>
+            <span className="task-progress-text"><LocalizedValue value={task.progressText} catalog="taskCenterValues" /></span>
             <span className="task-progress-text">{task.progress}%</span>
           </div>
           <Progress
@@ -605,7 +610,7 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
       <div className="task-footer">
         <div className="task-status-text">
           <Clock size={14} />
-          <span className="task-status-text-content">{task.statusText}</span>
+          <span className="task-status-text-content"><LocalizedValue value={task.statusText} catalog="taskCenterValues" /></span>
         </div>
 
         {task.showInsert && (
@@ -613,11 +618,11 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
             className="task-insert-btn"
             onClick={(event) => {
               event.stopPropagation();
-              onInsertTaskAsset?.(createCanvasAssetPayload(task.raw ? createDetailFromTask(task) : getDetailForTask(task)));
+              onInsertTaskAsset?.(createCanvasAssetPayload(task.raw ? createDetailFromTask(task, t) : getDetailForTask(task)));
             }}
           >
             <CirclePlus size={14} />
-            <span>插入当前画布</span>
+            <span>{t('taskCenter.insert')}</span>
           </Button>
         )}
         {['waiting', 'processing'].includes(task.status) && (
@@ -628,7 +633,7 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
               onCancelTask?.(task);
             }}
           >
-            取消
+            {t('common.cancel')}
           </Button>
         )}
       </div>
@@ -637,6 +642,7 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
 };
 
 export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('queue');
   const [selectedTask, setSelectedTask] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
@@ -653,7 +659,7 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
       const result = await parseJsonSafely(response);
 
       if (!response.ok || !result?.success) {
-        throw new Error(responseErrorMessage(response, result, '后台任务获取失败'));
+        throw new Error(responseErrorMessage(response, result, i18next.t('taskCenterValues.后台任务获取失败')));
       }
 
       const tasks = (result.data?.tasks || []).map(normalizeTask);
@@ -663,7 +669,7 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
         setQueueTasks(tasks);
       }
     } catch (error) {
-      message.error(error?.message || '后台任务获取失败');
+      message.error(error?.message || t('taskCenterValues.后台任务获取失败'));
     } finally {
       setLoading(false);
     }
@@ -689,7 +695,7 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
   );
 
   const openTaskDetail = (task) => {
-    setSelectedTask(task.raw ? createDetailFromTask(task) : getDetailForTask(task));
+    setSelectedTask(task.raw ? createDetailFromTask(task, t) : getDetailForTask(task));
     setDetailOpen(true);
   };
 
@@ -706,12 +712,12 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
-        throw new Error(result.error || '取消失败');
+        throw new Error(result.error || t('taskCenter.cancelFailed'));
       }
-      message.success('任务已取消');
+      message.success(t('taskCenter.cancelled'));
       loadTasks('queue');
     } catch (error) {
-      message.error(error?.message || '取消失败');
+      message.error(error?.message || t('taskCenter.cancelFailed'));
     }
   };
 
@@ -724,13 +730,13 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
       });
       const result = await response.json();
       if (!response.ok || !result.success) {
-        throw new Error(result.error || '重试失败');
+        throw new Error(result.error || t('taskCenter.retryFailed'));
       }
-      message.success('任务已重新提交');
+      message.success(t('taskCenter.retried'));
       setActiveTab('queue');
       loadTasks('queue');
     } catch (error) {
-      message.error(error?.message || '重试失败');
+      message.error(error?.message || t('taskCenter.retryFailed'));
     }
   };
 
@@ -738,7 +744,7 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
     <div className="task-center-container">
       <div className="task-center-header">
         <div className="task-center-title">
-          <span className="title-text">后台任务</span>
+          <span className="title-text">{t('taskCenter.title')}</span>
           <div className="title-decoration" />
           <div className="title-dots">
             <span className="dot-large" />
@@ -754,20 +760,20 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
           className={`task-center-tab ${activeTab === 'queue' ? 'active' : ''}`}
           onClick={() => setActiveTab('queue')}
         >
-          当前队列 ({queueTasks.length})
+          {t('taskCenter.queue', { count: queueTasks.length })}
         </span>
         <span
           className={`task-center-tab ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
-          历史记录 ({historyTasks.length})
+          {t('taskCenter.history', { count: historyTasks.length })}
         </span>
       </div>
       <div className="task-center-content">
         {loading && currentTasks.length === 0 ? (
-          <div className="task-center-empty">正在加载后台任务...</div>
+          <div className="task-center-empty">{t('taskCenter.loading')}</div>
         ) : currentTasks.length === 0 ? (
-          <div className="task-center-empty">暂无后台任务</div>
+          <div className="task-center-empty">{t('taskCenter.empty')}</div>
         ) : (
           currentTasks.map(task => (
             activeTab === 'queue'

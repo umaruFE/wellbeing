@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React, { useState, useRef, useCallback } from 'react';
 import { RotateCw, Play, Pause, Music, Copy, Trash2, Type } from 'lucide-react';
 
@@ -110,7 +111,7 @@ export const CanvasAssetRenderer = ({
                     onCopyAsset?.(asset.id);
                   }}
                   className="p-1.5 bg-info-light0 text-white rounded shadow-sm hover:bg-info transition-colors"
-                  title="复制"
+                  title={i18next.t('common.copy')}
                 >
                   <Copy className="w-3 h-3" />
                 </button>
@@ -120,7 +121,7 @@ export const CanvasAssetRenderer = ({
                     onDeleteAsset?.(asset.id);
                   }}
                   className="p-1.5 bg-error text-white rounded shadow-sm hover:bg-error transition-colors"
-                  title="删除"
+                  title={i18next.t('common.delete')}
                 >
                   <Trash2 className="w-3 h-3" />
                 </button>

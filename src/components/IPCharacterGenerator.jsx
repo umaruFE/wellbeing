@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React, { useState, useCallback } from 'react';
 import { Wand2, Loader2, Check, X, RefreshCw, Image as ImageIcon } from 'lucide-react';
 import poppyImg from '../assets/ip/poppy.png';
@@ -7,19 +9,19 @@ import miloImg from '../assets/ip/milo.png';
 import aceImg from '../assets/ip/ace.png';
 
 const IP_CHARACTERS = [
-  { id: 'poppy', name: 'Poppy', color: '粉色', colorHex: '#FFB6C1', thumbnail: poppyImg },
-  { id: 'edi', name: 'Edi', color: '蓝色', colorHex: '#87CEEB', thumbnail: ediImg },
-  { id: 'rolly', name: 'Rolly', color: '橘色', colorHex: '#FFA500', thumbnail: rollyImg },
-  { id: 'milo', name: 'Milo', color: '黄色', colorHex: '#FFD700', thumbnail: miloImg },
-  { id: 'ace', name: 'Ace', color: '紫色', colorHex: '#9370DB', thumbnail: aceImg },
+  { id: 'poppy', name: 'Poppy', colorKey: 'colorPink', colorHex: '#FFB6C1', thumbnail: poppyImg },
+  { id: 'edi', name: 'Edi', colorKey: 'colorBlue', colorHex: '#87CEEB', thumbnail: ediImg },
+  { id: 'rolly', name: 'Rolly', colorKey: 'colorOrange', colorHex: '#FFA500', thumbnail: rollyImg },
+  { id: 'milo', name: 'Milo', colorKey: 'colorYellow', colorHex: '#FFD700', thumbnail: miloImg },
+  { id: 'ace', name: 'Ace', colorKey: 'colorPurple', colorHex: '#9370DB', thumbnail: aceImg },
 ];
 
 const ASPECT_RATIOS = [
-  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
-  { id: '4:3', label: '4:3', width: 1024, height: 768, description: '标准横屏' },
-  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
-  { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
-  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: '竖屏长图' },
+  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: 'ratioLandscapeWide' },
+  { id: '4:3', label: '4:3', width: 1024, height: 768, description: 'ratioLandscapeStandard' },
+  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: 'ratioSquare' },
+  { id: '3:4', label: '3:4', width: 768, height: 1024, description: 'ratioPortraitStandard' },
+  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: 'ratioPortraitTall' },
 ];
 
 const getAuthHeaders = () => {
@@ -125,12 +127,12 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
         })
       });
 
-      if (!sceneResponse.ok) throw new Error(`生成失败: ${await sceneResponse.text()}`);
+      if (!sceneResponse.ok) throw new Error(i18next.t('ipCharacterUi.generateFailedWith', { error: await sceneResponse.text() }));
       const sceneData = await sceneResponse.json();
-      if (!sceneData.success) throw new Error(sceneData.error || '生成失败');
+      if (!sceneData.success) throw new Error(sceneData.error || i18next.t('ipCharacter.generationFailed'));
 
       const characterTask = sceneData.tasks.find(t => t.type === 'character');
-      if (!characterTask) throw new Error('未获取到生成任务');
+      if (!characterTask) throw new Error(i18next.t('ipCharacterUi.taskNotFound'));
 
       const result = await pollTaskAndUpload(characterTask.promptId, characterTask.apiUrl);
       setGeneratedImageUrl(result.url);
@@ -163,7 +165,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
             <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
               <ImageIcon className="w-4 h-4 text-purple-600" />
             </div>
-            <h2 className="text-base font-bold text-gray-800">IP 人物生成</h2>
+            <h2 className="text-base font-bold text-gray-800"><LocalizedText id="ipCharacter.title" /></h2>
           </div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 transition-colors">
             <X size={20} />
@@ -172,7 +174,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
 
         <div className="p-6 space-y-5">
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">选择 IP 角色</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2"><LocalizedText id="ipCharacter.selectCharacter" /></label>
             <div className="flex gap-2 flex-wrap">
               {IP_CHARACTERS.map(char => (
                 <button
@@ -187,7 +189,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
                   <img src={char.thumbnail} alt={char.name} className="w-12 h-18 rounded-lg object-cover" />
                   <div className="text-left">
                     <div className="text-sm font-bold text-gray-800">{char.name}</div>
-                    <div className="text-[10px] text-gray-500">{char.color}</div>
+                        <div className="text-[10px] text-gray-500">{i18next.t(`ipRoleUi.${char.colorKey}`)}</div>
                   </div>
                 </button>
               ))}
@@ -195,17 +197,17 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">描述动作 / 场景</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2"><LocalizedText id="ipCharacter.describeAction" /></label>
             <textarea
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
-              placeholder="例如：做瑜伽拉伸动作、跑步、举哑铃..."
+              placeholder={i18next.t('ipCharacter.describePlaceholder')}
               className="w-full h-20 px-4 py-3 border-2 border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:border-purple-400 transition-all"
             />
           </div>
 
           <div>
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">图片比例</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2"><LocalizedText id="ipCharacter.imageRatio" /></label>
             <div className="grid grid-cols-5 gap-2">
               {ASPECT_RATIOS.map((ratio) => (
                 <button
@@ -235,7 +237,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
               ))}
             </div>
             <p className="text-[11px] text-gray-400 mt-1">
-              {selectedRatio.description} ({selectedRatio.width}×{selectedRatio.height})
+              {i18next.t(`ipSceneUi.${selectedRatio.description}`)} ({selectedRatio.width}×{selectedRatio.height})
             </p>
           </div>
 
@@ -245,7 +247,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
 
           {generatedImageUrl && (
             <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
-              <img src={generatedImageUrl} alt="生成结果" className="w-full h-64 object-contain bg-gray-50" />
+              <img src={generatedImageUrl} alt={i18next.t('assetPanel.stepGenResult')} className="w-full h-64 object-contain bg-gray-50" />
             </div>
           )}
         </div>
@@ -257,13 +259,13 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
                 onClick={() => { setGeneratedImageUrl(null); }}
                 className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
               >
-                <RefreshCw size={14} /> 重新生成
+                <RefreshCw size={14} /> <LocalizedText id="ipCharacterUi.2e19057052" />
               </button>
               <button
                 onClick={handleConfirm}
                 className="px-6 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1.5"
               >
-                <Check size={14} /> 确认
+                <Check size={14} /> <LocalizedText id="common.confirm" />
               </button>
             </>
           ) : (
@@ -273,9 +275,9 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
               className="px-6 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
             >
               {isGenerating ? (
-                <><Loader2 size={14} className="animate-spin" /> 生成中...</>
+                <><Loader2 size={14} className="animate-spin" /> <LocalizedText id="ipCharacterUi.26eab253a0" /></>
               ) : (
-                <><Wand2 size={14} /> 生成图片</>
+                <><Wand2 size={14} /> <LocalizedText id="ipCharacterUi.55e7017a46" /></>
               )}
             </button>
           )}

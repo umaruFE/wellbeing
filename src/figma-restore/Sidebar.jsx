@@ -12,6 +12,7 @@ import './Sidebar.css';
 const PICTURE_SONG_CREATOR = 'picture_song_creator';
 
 const MenuLink = ({ item, depth = 0, collapsed }) => {
+  const { t } = useTranslation();
   const IconComponent = item.icon;
   const location = useLocation();
 
@@ -21,12 +22,12 @@ const MenuLink = ({ item, depth = 0, collapsed }) => {
         className="sidebar-node sidebar-node-disabled"
         style={{ '--menu-depth': depth }}
         data-depth={depth}
-        title={collapsed ? item.label : `${item.label}（待建设）`}
+        title={collapsed ? item.label : `${item.label}（${t('sidebar.comingSoon')}）`}
         aria-disabled="true"
       >
         <IconComponent className="sidebar-node-icon" size={14} />
         <span className="sidebar-node-text">{item.label}</span>
-        <span className="sidebar-coming-soon">待建设</span>
+        <span className="sidebar-coming-soon">{t('sidebar.comingSoon')}</span>
       </div>
     );
   }

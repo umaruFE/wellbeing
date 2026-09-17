@@ -1,7 +1,8 @@
+import { LocalizedText, LocalizedValue } from '../../../../i18n/LocalizedText.jsx';
 import { Input } from 'antd';
 import { WandSparkles } from 'lucide-react';
 
-export function OptionGrid({ options, value, onChange, columns = 3, className = '' }) {
+export function OptionGrid({ options, value, onChange, columns = 3, className = '', labelCatalog }) {
   return (
     <div className={`ppt-option-grid ${className}`} style={{ '--option-cols': columns }}>
       {options.map((option) => {
@@ -15,8 +16,8 @@ export function OptionGrid({ options, value, onChange, columns = 3, className = 
             onClick={() => onChange(item.value || item.label)}
           >
             {item.preview ? <i className={`ppt-option-preview preview-${item.preview}`} aria-hidden="true" /> : null}
-            <strong>{item.label}</strong>
-            {item.desc ? <span>{item.desc}</span> : null}
+            <strong>{labelCatalog ? <LocalizedValue value={item.label} catalog={labelCatalog} /> : item.label}</strong>
+            {item.desc ? <span>{labelCatalog ? <LocalizedValue value={item.desc} catalog={labelCatalog} /> : item.desc}</span> : null}
           </button>
         );
       })}
@@ -44,7 +45,7 @@ export function PromptField({ label, value, onChange, placeholder, maxLength = 8
       />
       <div className="ppt-prompt-foot">
         <span>{value.length} / {maxLength}</span>
-        <button type="button"><WandSparkles size={13} />帮我写</button>
+        <button type="button"><WandSparkles size={13} /><LocalizedText id="assetControlsUi.b76ad92520" /></button>
       </div>
     </FieldBlock>
   );

@@ -28,17 +28,17 @@ const songTeachingBg = 'https://z.wellbeing.newstaredu.cn/wellbeing/song-bg/2026
 import './SongWritingStudioPage.css';
 
 const melodies = [
-  { id: 'twinkle', name: 'Twinkle, Twinkle, Little Star', hint: '小星星', src: '/audio/twinkle-little-star.mp3' },
-  { id: 'sunshine', name: "You Are My Sunshine", hint: '你是我的阳光', src: '/audio/you-are-my-sunshine.mp3' },
-  { id: 'edelweiss', name: 'Edelweiss', hint: '雪绒花', src: '/audio/edelweiss.mp3' },
+  { id: 'twinkle', name: 'Twinkle, Twinkle, Little Star', hint: 'songWriting.hintTwinkle', src: '/audio/twinkle-little-star.mp3' },
+  { id: 'sunshine', name: "You Are My Sunshine", hint: 'songWriting.hintSunshine', src: '/audio/you-are-my-sunshine.mp3' },
+  { id: 'edelweiss', name: 'Edelweiss', hint: 'songWriting.hintEdelweiss', src: '/audio/edelweiss.mp3' },
   { id: 'if-youre-happy', name: "If You're Happy and You Know It", hint: 'If You’re Happy and You Know It', src: "/audio/If You're Happy and You Know It (Karaoke Version) (Originally Performed By Kids Karaoke) - Zoom Karaoke.mp3" },
 ];
 
-const melodyTypeLabels = {
-  Edelweiss: '舒缓抒情型',
-  'You Are My Sunshine': '温暖舒展型',
-  'Twinkle, Twinkle, Little Star': '轻快跳跃型',
-  "If You're Happy and You Know It": '欢快互动型',
+const melodyTypeKeys = {
+  Edelweiss: 'melodyType0',
+  'You Are My Sunshine': 'melodyType1',
+  'Twinkle, Twinkle, Little Star': 'melodyType2',
+  "If You're Happy and You Know It": 'melodyType3',
 };
 
 const instruments = [
@@ -178,6 +178,7 @@ function generateCoverSvg(title, melodyId, melodyName) {
 
 export function SongWritingStudioPage() {
   const { t } = useTranslation();
+  const melodyTypeLabel = (value) => melodyTypeKeys[value] ? t(`songWriting.${melodyTypeKeys[value]}`) : value;
   const initialSessionRef = React.useRef(readStoredJson(SONG_SESSION_KEY, null));
   const initialSession = initialSessionRef.current;
   const audioRef = React.useRef(null);
@@ -754,8 +755,8 @@ export function SongWritingStudioPage() {
         <div className="pbv2-topbar-left">
           <div className="pbv2-topbar-icon"><Music2 size={28} /></div>
           <div>
-            <h1>歌曲编唱屋</h1>
-            <p>设计适合课堂使用的英文幸福力歌曲互动</p>
+            <h1>{t('songWriting.moduleName')}</h1>
+            <p>{t('songWriting.studioSubtitle')}</p>
           </div>
         </div>
         <div className="pbv2-topbar-actions">
@@ -826,7 +827,7 @@ export function SongWritingStudioPage() {
                 </div>
               ) : (
                 <div className="song-picker-selected">
-                  {librarySong ? <div><strong>{librarySong.name}</strong><span>{melodyTypeLabels[librarySong.melody_type || librarySong.melodyType] || librarySong.melody_type || librarySong.melodyType}</span></div> : <p>{t('songWriting.notSelected')}</p>}
+                  {librarySong ? <div><strong>{librarySong.name}</strong><span>{melodyTypeLabel(librarySong.melody_type || librarySong.melodyType)}</span></div> : <p>{t('songWriting.notSelected')}</p>}
                   <button type="button" className="pbv2-ghost" onClick={() => setShowSongPicker(true)}>{librarySong ? t('songWriting.changeSong') : t('songWriting.chooseSong')}</button>
                 </div>
               )}
@@ -848,7 +849,7 @@ export function SongWritingStudioPage() {
                 <audio ref={previewRef} onEnded={() => setPreviewSongId(null)} />
                 <div className="song-picker-filters">
                   <button type="button" className={songTypeFilter === 'all' ? 'active' : ''} onClick={() => setSongTypeFilter('all')}>{t('songWriting.filterAll')}</button>
-                  {songTypes.map((type) => <button type="button" key={type} className={songTypeFilter === type ? 'active' : ''} onClick={() => setSongTypeFilter(type)}>{melodyTypeLabels[type] || type}</button>)}
+                  {songTypes.map((type) => <button type="button" key={type} className={songTypeFilter === type ? 'active' : ''} onClick={() => setSongTypeFilter(type)}>{melodyTypeLabel(type)}</button>)}
                 </div>
                 <div className="song-library-grid">
                   {filteredSongLibrary.map((song) => {
@@ -857,7 +858,7 @@ export function SongWritingStudioPage() {
                     const instrumentalUrl = song.instrumental_url || song.instrumentalUrl;
                     return <div key={song.id} className={`song-library-card${isSelected ? ' selected' : ''}`} onClick={() => { setFormField('melody', song.id); stopSongPreview(); setShowSongPicker(false); }}>
                       <div className="song-library-card-head"><span className="song-library-name">{song.name}</span>{isSelected && <span className="song-library-check">✓</span>}</div>
-                      <span className="song-library-type">{melodyTypeLabels[song.melody_type || song.melodyType] || song.melody_type || song.melodyType}</span>
+                      <span className="song-library-type">{melodyTypeLabel(song.melody_type || song.melodyType)}</span>
                       {song.description && <p className="song-library-desc">{song.description}</p>}
                       <div className="song-library-preview-actions">
                         <button type="button" disabled={!vocalUrl} className={`song-library-preview${String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? ' playing' : ''}`} onClick={(event) => { event.stopPropagation(); previewLibrarySong(song, 'vocal'); }}>{String(previewSongId) === String(song.id) && previewAudioMode === 'vocal' ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}{t('songWriting.vocalVersion')}</button>
@@ -914,7 +915,7 @@ export function SongWritingStudioPage() {
           )}
           <div className="sky-player-row"><button type="button" className="sky-play" onClick={toggleAudio}>{playing ? <Pause fill="currentColor" size={17} /> : <Play fill="currentColor" size={17} />}</button><small>{formatAudioTime(currentTime)}</small><input aria-label={t('songWriting.progressAria')} type="range" min="0" max={duration || 0} step="0.1" value={Math.min(currentTime, duration || 0)} disabled={!duration} onChange={seekAudio} /><small>{formatAudioTime(duration)}</small></div>
           <div className="speed-row">{[0.5,0.75,1,1.25,1.5].map((item) => <button type="button" className={speed === item ? 'active' : ''} key={item} onClick={() => setSpeed(item)}>{item}×</button>)}</div>
-          <label className="sky-volume"><Volume2 size={14} /><input aria-label={t('songWriting.volumeAria')} type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} /><b>{Math.round(volume * 100)}%</b></label><p>{selectedMelody.name} · {selectedMelody.hint}</p>
+          <label className="sky-volume"><Volume2 size={14} /><input aria-label={t('songWriting.volumeAria')} type="range" min="0" max="1" step="0.05" value={volume} onChange={(e) => setVolume(Number(e.target.value))} /><b>{Math.round(volume * 100)}%</b></label><p>{selectedMelody.name} · {t(selectedMelody.hint, { defaultValue: selectedMelody.hint })}</p>
         </article>
 
         <div className="sky-content">
@@ -929,7 +930,7 @@ export function SongWritingStudioPage() {
                     const target = { lineIndex: index, blankIndex };
                     const value = blankValues[`${index}:${blankIndex}`] ?? (blankIndex === 0 ? blankValues[index] || '' : '');
                     const isActive = activeBlank?.lineIndex === index && activeBlank?.blankIndex === blankIndex;
-                    return <React.Fragment key={`${index}-${blankIndex}`}><span className="lyric-copy">{part}</span>{blankIndex < parts.length - 1 && <button type="button" className={`lyric-blank${isActive ? ' is-selected' : ''}`} aria-label={`第 ${index + 1} 行第 ${blankIndex + 1} 个填空`} aria-pressed={isActive} onClick={() => selectBlank(target)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); try { const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing')); if (payload.type === 'word') fillWordAt(payload.word, target); } catch { /* Ignore invalid drops. */ } }}>{value || '______'}</button>}</React.Fragment>;
+                    return <React.Fragment key={`${index}-${blankIndex}`}><span className="lyric-copy">{part}</span>{blankIndex < parts.length - 1 && <button type="button" className={`lyric-blank${isActive ? ' is-selected' : ''}`} aria-label={t('songWriting.lyricBlankLabel', { line: index + 1, blank: blankIndex + 1 })} aria-pressed={isActive} onClick={() => selectBlank(target)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); try { const payload = JSON.parse(event.dataTransfer.getData('application/x-song-writing')); if (payload.type === 'word') fillWordAt(payload.word, target); } catch { /* Ignore invalid drops. */ } }}>{value || '______'}</button>}</React.Fragment>;
                   });
                 })()}
                 <div className={`line-instruments${activeInstrumentLine === index ? ' is-selected' : ''}`} onClick={() => selectInstrumentTarget(index)} onDragOver={(event) => event.preventDefault()} onDrop={(event) => dropOnLine(event, index, 'instrument')}>{(arrangement[index] || []).map((instrument, itemIndex) => <span key={`${instrument.id}-${itemIndex}`} className="line-instrument-chip" title={`${t('songWriting.inst_' + instrument.id)}${t('songWriting.chipRemoveSuffix')}`} role="button" tabIndex={0} onClick={(event) => { event.stopPropagation(); removeInstrument(index, itemIndex); }} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') removeInstrument(index, itemIndex); }}><img src={instrument.icon} alt={t('songWriting.inst_' + instrument.id)} /></span>)}<button type="button" title={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE ? t('songWriting.maxPerLine') : t('songWriting.pickInstrumentFirst')} disabled={(arrangement[index] || []).length >= MAX_INSTRUMENTS_PER_LINE} onClick={(event) => { event.stopPropagation(); selectInstrumentTarget(index); }}>＋</button></div>

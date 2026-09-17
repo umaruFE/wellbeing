@@ -1,3 +1,5 @@
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
+import i18next from 'i18next';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Move, RotateCw, ZoomIn, ZoomOut, Loader2, FlipHorizontal, FlipVertical } from 'lucide-react';
 import {
@@ -70,7 +72,7 @@ export const CanvasEditor = ({
       ctx.font = '16px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('背景图生成中...', offsetX + sceneW / 2, offsetY + sceneH / 2);
+      ctx.fillText(i18next.t('ipCanvasUi.bgGenerating'), offsetX + sceneW / 2, offsetY + sceneH / 2);
     } else if (backgroundImgRef.current) {
       ctx.drawImage(
         backgroundImgRef.current,
@@ -111,7 +113,7 @@ export const CanvasEditor = ({
         ctx.font = '14px sans-serif';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(`${roleName} 生成中...`, position.x + dw / 2, position.y + dh / 2);
+        ctx.fillText(i18next.t('ipCanvasUi.roleGenerating', { name: roleName }), position.x + dw / 2, position.y + dh / 2);
         return;
       }
 
@@ -357,7 +359,7 @@ export const CanvasEditor = ({
         <>
           <div className="p-3 bg-surface-alt border-b border-stroke">
             <div className="flex items-center justify-center gap-2">
-              <span className="text-sm font-medium text-primary-secondary">选择角色：</span>
+              <span className="text-sm font-medium text-primary-secondary"><LocalizedText id="ipCanvasUi.a785c02258" /></span>
               <div className="flex gap-2">
                 {Object.keys(roles).map((roleName) => (
                   <button
@@ -393,14 +395,14 @@ export const CanvasEditor = ({
             <div className="p-3 bg-surface-alt border-t border-stroke">
               <div className="flex items-center justify-center gap-4 flex-wrap">
                 <span className="text-sm font-medium text-primary-secondary">
-                  已选择: {selectedRole}
+                  <LocalizedText id="ipCanvasUi.425bd9e9dc" /> {selectedRole}
                 </span>
 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleScaleChange(-0.1)}
                     className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
-                    title="缩小"
+                    title={i18next.t('ppt.zoomOut')}
                   >
                     <ZoomOut className="w-4 h-4" />
                   </button>
@@ -412,7 +414,7 @@ export const CanvasEditor = ({
                   <button
                     onClick={() => handleScaleChange(0.1)}
                     className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
-                    title="放大"
+                    title={i18next.t('ppt.zoomIn')}
                   >
                     <ZoomIn className="w-4 h-4" />
                   </button>
@@ -422,7 +424,7 @@ export const CanvasEditor = ({
                   <button
                     onClick={() => handleRotationChange(-15)}
                     className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
-                    title="逆时针旋转"
+                    title={i18next.t('ipCanvasUi.aff6ac17f8')}
                   >
                     <RotateCw className="w-4 h-4 transform -scale-x-100" />
                   </button>
@@ -434,7 +436,7 @@ export const CanvasEditor = ({
                   <button
                     onClick={() => handleRotationChange(15)}
                     className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
-                    title="顺时针旋转"
+                    title={i18next.t('ipCanvasUi.018bfa53d6')}
                   >
                     <RotateCw className="w-4 h-4" />
                   </button>
@@ -448,7 +450,7 @@ export const CanvasEditor = ({
                         ? 'bg-purple-100 border-purple-400 text-purple'
                         : 'bg-white border-stroke-light hover:bg-surface-alt text-primary-secondary'
                     }`}
-                    title="水平翻转"
+                    title={i18next.t('assetPanel.iwFlipH')}
                   >
                     <FlipHorizontal className="w-4 h-4" />
                   </button>
@@ -460,7 +462,7 @@ export const CanvasEditor = ({
                         ? 'bg-purple-100 border-purple-400 text-purple'
                         : 'bg-white border-stroke-light hover:bg-surface-alt text-primary-secondary'
                     }`}
-                    title="垂直翻转"
+                    title={i18next.t('assetPanel.iwFlipV')}
                   >
                     <FlipVertical className="w-4 h-4" />
                   </button>
@@ -475,8 +477,8 @@ export const CanvasEditor = ({
             <div className="w-24 h-24 bg-stroke rounded-full flex items-center justify-center mx-auto mb-4">
               <Move className="w-12 h-12 text-primary-placeholder" />
             </div>
-            <p className="text-primary-muted text-lg font-medium">画布编辑器</p>
-            <p className="text-primary-placeholder text-sm mt-2">生成资源后，可在此编辑角色位置</p>
+            <p className="text-primary-muted text-lg font-medium"><LocalizedText id="ipCanvasUi.c68c1d85f6" /></p>
+            <p className="text-primary-placeholder text-sm mt-2"><LocalizedText id="ipCanvasUi.849625f38d" /></p>
           </div>
         </div>
       )}

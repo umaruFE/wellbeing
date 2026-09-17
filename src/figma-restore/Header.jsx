@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -80,14 +81,14 @@ export const Header = ({ title }) => {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        throw new Error(result.error || '密码修改失败');
+        throw new Error(result.error || t('uiMessages.passwordChangeFailed'));
       }
 
       setSettingsOpen(false);
       settingsForm.resetFields();
-      message.success('密码已修改');
+      message.success(t('uiMessages.passwordChanged'));
     } catch (error) {
-      message.error(error?.message || '密码修改失败');
+      message.error(error?.message || t('uiMessages.passwordChangeFailed'));
     } finally {
       setSavingSettings(false);
     }
@@ -186,39 +187,39 @@ export const Header = ({ title }) => {
       >
         <Form form={settingsForm} layout="vertical" className="profile-settings-form">
           <Form.Item
-            label="当前密码"
+            label={i18next.t('headerUi.33abf70fd5')}
             name="currentPassword"
-            rules={[{ required: true, message: '请输入当前密码' }]}
+            rules={[{ required: true, message: t('headerUi.4b0b00e054') }]}
           >
-            <Input.Password placeholder="请输入当前密码" autoComplete="current-password" />
+            <Input.Password placeholder={i18next.t('headerUi.4b0b00e054')} autoComplete="current-password" />
           </Form.Item>
           <Form.Item
-            label="新密码"
+            label={i18next.t('headerUi.d22c9c0085')}
             name="newPassword"
             rules={[
-              { required: true, message: '请输入新密码' },
-              { min: 6, message: '新密码至少 6 位' },
+              { required: true, message: t('headerUi.23ba228494') },
+              { min: 6, message: t('headerUi.passwordMinLength') },
             ]}
           >
-            <Input.Password placeholder="请输入新密码" autoComplete="new-password" />
+            <Input.Password placeholder={i18next.t('headerUi.23ba228494')} autoComplete="new-password" />
           </Form.Item>
           <Form.Item
-            label="确认新密码"
+            label={i18next.t('headerUi.d4477adb6f')}
             name="confirmPassword"
             dependencies={['newPassword']}
             rules={[
-              { required: true, message: '请再次输入新密码' },
+              { required: true, message: t('headerUi.eb82e7f0a9') },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('newPassword') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('两次输入的新密码不一致'));
+                  return Promise.reject(new Error(t('headerUi.passwordMismatch')));
                 },
               }),
             ]}
           >
-            <Input.Password placeholder="请再次输入新密码" autoComplete="new-password" />
+            <Input.Password placeholder={i18next.t('headerUi.eb82e7f0a9')} autoComplete="new-password" />
           </Form.Item>
         </Form>
       </Modal>

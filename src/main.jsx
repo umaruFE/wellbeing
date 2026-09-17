@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { ConfigProvider } from 'antd'
+import i18next from 'i18next'
 import './index.css'
 import App from './App.jsx'
 import { appAntdTheme } from './theme/buildAntdTheme'
@@ -24,8 +25,8 @@ if (!rootElement) {
     console.error('渲染错误:', error);
     rootElement.innerHTML = `
       <div style="padding: 20px; color: red; font-family: monospace;">
-        <h1>渲染错误</h1>
-        <p><strong>错误信息:</strong> ${error.message}</p>
+        <h1>${i18next.t('common.renderError')}</h1>
+        <p><strong>${i18next.t('common.errorMessageLabel')}:</strong> ${error.message}</p>
         <pre style="background: #f0f0f0; padding: 10px; overflow: auto;">${error.stack}</pre>
       </div>
     `;

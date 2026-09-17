@@ -1,0 +1,12 @@
+{
+  "安静": "Calm", "欢快": "Cheerful", "悬念": "Suspenseful", "动感": "Energetic", "庆祝": "Celebratory", "伤感": "Melancholy", "白噪音": "White Noise",
+  "30秒": "30 seconds", "1分钟": "1 minute", "2分钟": "2 minutes", "3分钟": "3 minutes",
+  "适合课堂过渡 / 安静练习": "For transitions / quiet practice", "适合小组活动 / 冥想放松": "For group work / meditation", "适合完整活动 / 长时陪伴": "For full activities / longer use", "适合长篇故事 / 深度沉浸": "For longer stories / immersion",
+  "互动体能": "Movement Activities", "艺术创作": "Art Creation", "瘦身冥想": "Meditation", "专注练习": "Focus Practice", "成果展示": "Showcase", "课间休息": "Break Time",
+  "慢速 60-80 BPM": "Slow 60–80 BPM", "中速 80-100 BPM": "Medium 80–100 BPM", "快速 100-140 BPM": "Fast 100–140 BPM", "冥想 / 放松 / 睡前": "Meditation / relaxation / bedtime", "日常活动 / 绘画 / 手工": "Daily activities / drawing / crafts", "比赛 / 游戏 / 体能闯关": "Competition / games / movement",
+  "课堂问候": "Classroom Greetings", "水果主题": "Fruit Theme", "颜色主题": "Color Theme", "数字歌": "Counting Song", "女声": "Female Voice", "男声": "Male Voice", "童声": "Child Voice", "温暖亲切": "Warm and Friendly", "清晰有力": "Clear and Strong", "活泼可爱": "Playful and Sweet",
+  "慢速": "Slow", "正常": "Normal", "快速": "Fast", "适合初学": "For Beginners", "日常跟读": "Daily Read-along", "挑战跟读": "Challenging Read-along",
+  "水果认知": "Learning Fruits", "颜色学习": "Learning Colors", "身体部位": "Body Parts", "动物叫声": "Animal Sounds", "家庭成员": "Family Members", "天气歌": "Weather Song", "星期歌": "Days of the Week",
+  "轻快流行": "Light Pop", "童谣摇滚": "Nursery Rock", "说唱节奏": "Rap Rhythm", "温馨民谣": "Warm Folk", "活泼欢快 · 适合律动": "Lively and cheerful · For movement", "节奏感强 · 适合跟唱": "Strong beat · For singing along", "朗朗上口 · 适合跟读": "Catchy · For repeating", "柔和舒缓 · 适合睡前": "Gentle and soothing · For bedtime",
+  "主题": "Theme", "风格": "Style", "歌词": "Lyrics", "生成": "Generate", "内容": "Content", "输入文本": "Enter Text", "发音人": "Speaker", "活动类型": "Activity Type", "节奏": "Rhythm", "情绪": "Emotion", "时长": "Duration", "选择": "Choose", "生成结果": "Generation Result", "自动匹配": "Auto Match", "返回类型": "Back to Type", "上一步": "Previous", "下一步": "Next", "取消": "Cancel", "输入对话脚本": "Enter Dialogue Script", "输入引导词": "Enter Guidance Text", "正在生成分镜": "Generating Storyboard", "正在生成视频": "Generating Video"
+}

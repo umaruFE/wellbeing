@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, FileVideo, MoreVertical, Pause, Play, Search, Trash2, Upload as UploadIcon, Video } from 'lucide-react';
@@ -306,7 +307,7 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
                           onClick: (info) => handleMenuClick(info, asset),
                         }}
                       >
-                        <button className="fr-vid-card-menu-btn" type="button" aria-label="更多操作" onClick={(event) => event.stopPropagation()}>
+                        <button className="fr-vid-card-menu-btn" type="button" aria-label={i18next.t('videoLibraryUi.77836d3a99')} onClick={(event) => event.stopPropagation()}>
                           <MoreVertical size={18} />
                         </button>
                       </Dropdown>

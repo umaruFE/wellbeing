@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React from 'react';
 import { Button, Form, Input, Modal } from 'antd';
 import { Edit3, Image, Type } from 'lucide-react';
@@ -27,8 +29,8 @@ export function ReadingMaterialView({ course, materials, onMaterialsChange }) {
       <aside className="fr-read-left">
         <div className="fr-read-head">
           <div>
-            <div className="fr-read-title">阅读材料</div>
-            <div className="fr-read-count">{data.length} 份材料 · {course?.unit || course?.courseTitle || 'Unit 3: Animals'}</div>
+            <div className="fr-read-title"><LocalizedText id="course.readingMaterial" /></div>
+            <div className="fr-read-count">{data.length} <LocalizedText id="readingMaterialUi.063d73857f" /> {course?.unit || course?.courseTitle || 'Unit 3: Animals'}</div>
           </div>
           <button className="fr-read-add" type="button">+</button>
         </div>
@@ -42,26 +44,26 @@ export function ReadingMaterialView({ course, materials, onMaterialsChange }) {
             >
               <span>A4</span>
               <strong>{item.title}</strong>
-              <small>{index === 2 ? 'A4 横版' : 'A4 竖版'}</small>
+              <small>{index === 2 ? i18next.t('readingMaterialUi.a4Landscape') : i18next.t('readingMaterialUi.a4Portrait')}</small>
               <i>×</i>
             </button>
           ))}
         </div>
         <div className="fr-read-foot">
-          <Button block onClick={() => window.print()}>导出 / 打印阅读材料</Button>
+          <Button block onClick={() => window.print()}><LocalizedText id="readingMaterialUi.f6fb7ff29c" /></Button>
         </div>
       </aside>
 
       <main className="fr-read-canvas">
         <div className="fr-canvas-bar">
           <div className="fr-canvas-info">
-            当前材料：<strong>{active.title}</strong>
+            <LocalizedText id="readingMaterialUi.cc80c0edf2" /><strong>{active.title}</strong>
             <button className="fr-title-edit" type="button" onClick={openTitleEdit}><Edit3 size={13} /></button>
-            <span />页面 <b>1</b>/2
+            <span /><LocalizedText id="readingMaterialUi.06dfb846bd" /> <b>1</b>/2
           </div>
           <div className="fr-canvas-tools">
-            <Button icon={<Type size={15} />}>文本</Button>
-            <Button icon={<Image size={15} />}>图片</Button>
+            <Button icon={<Type size={15} />}><LocalizedText id="ppt.text" /></Button>
+            <Button icon={<Image size={15} />}><LocalizedText id="readingMaterialUi.be8da62ea1" /></Button>
           </div>
         </div>
         <div className="fr-read-scroll">
@@ -80,10 +82,10 @@ export function ReadingMaterialView({ course, materials, onMaterialsChange }) {
       </main>
 
       <aside className="fr-read-right">
-        <div className="fr-panel-head">画布与图层</div>
+        <div className="fr-panel-head"><LocalizedText id="ppt.canvasAndLayers" /></div>
         <div className="fr-panel-body">
           <section>
-            <div className="fr-panel-label">页面背景</div>
+            <div className="fr-panel-label"><LocalizedText id="ppt.pageBackground" /></div>
             <div className="fr-swatch-row">
               {['#253142', '#fff', '#ffe9e2', '#fff4da', '#eaf4ff', '#f0e7ff'].map((color, index) => (
                 <span key={color} className={index === 1 ? 'active' : ''} style={{ background: color }} />
@@ -91,30 +93,30 @@ export function ReadingMaterialView({ course, materials, onMaterialsChange }) {
             </div>
           </section>
           <section>
-            <div className="fr-panel-label">页面方向</div>
+            <div className="fr-panel-label"><LocalizedText id="readingMaterialUi.f2e8112bc3" /></div>
             <div className="fr-orient-grid">
               <button className={orientation === 'v' ? 'active' : ''} onClick={() => setOrientation('v')}>
-                <span className="v" /><b>竖版</b><small>A4 · 210×297</small>
+                <span className="v" /><b><LocalizedText id="assetPanel.ratio916" /></b><small>A4 · 210×297</small>
               </button>
               <button className={orientation === 'h' ? 'active' : ''} onClick={() => setOrientation('h')}>
-                <span className="h" /><b>横版</b><small>A4 · 297×210</small>
+                <span className="h" /><b><LocalizedText id="assetPanel.ratio169" /></b><small>A4 · 297×210</small>
               </button>
             </div>
           </section>
           <section>
-            <div className="fr-panel-label">元素列表</div>
+            <div className="fr-panel-label"><LocalizedText id="ppt.layerList" /></div>
             <div className="fr-layer-list">
-              <div className="fr-layer-row image"><span>▧</span><b>landscape 主题意境图</b></div>
-              <div className="fr-layer-row text"><span>T</span><b>阅读标题文字</b></div>
-              <div className="fr-layer-row text"><span>T</span><b>任务提示文字</b></div>
+              <div className="fr-layer-row image"><span>▧</span><b><LocalizedText id="readingMaterialUi.c8f7527bc4" /></b></div>
+              <div className="fr-layer-row text"><span>T</span><b><LocalizedText id="readingMaterialUi.0396289d61" /></b></div>
+              <div className="fr-layer-row text"><span>T</span><b><LocalizedText id="readingMaterialUi.d9d22be73a" /></b></div>
             </div>
           </section>
         </div>
       </aside>
 
-      <Modal title="编辑阅读材料标题" open={editingTitle} onCancel={() => setEditingTitle(false)} onOk={saveTitle}>
+      <Modal title={i18next.t('readingMaterialUi.70209dccac')} open={editingTitle} onCancel={() => setEditingTitle(false)} onOk={saveTitle}>
         <Form form={form} layout="vertical">
-          <Form.Item label="阅读材料标题" name="title" rules={[{ required: true, message: '请输入阅读材料标题' }]}>
+          <Form.Item label={i18next.t('readingMaterialUi.6e03e3d5ba')} name="title" rules={[{ required: true, message: i18next.t('readingMaterialUi.titleRequired') }]}>
             <Input maxLength={40} />
           </Form.Item>
         </Form>

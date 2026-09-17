@@ -1,0 +1,3 @@
+{
+  "上传失败": "Upload failed", "请填写曲目名称和旋律类型": "Enter a song name and melody type", "保存失败": "Save failed", "删除失败": "Delete failed", "曲目库": "Song Library", "管理演唱版与伴奏版曲目资源": "Manage vocal and instrumental song versions", "添加曲目": "Add Song", "暂无音频": "No audio", "暂无曲目，点击「添加曲目」开始创建": "No songs yet. Click Add Song to get started.", "关闭": "Close", "曲目名称": "Song Name", "请输入曲目名称": "Enter a song name", "旋律类型": "Melody Type", "请选择旋律类型": "Choose a melody type", "演唱版音频文件": "Vocal Audio File", "伴奏版音频文件": "Instrumental Audio File", "原版歌词参考": "Original Lyrics Reference", "可选，填写原版歌词作为参考": "Optional: enter the original lyrics for reference", "可选，简短描述": "Optional: a short description"
+}

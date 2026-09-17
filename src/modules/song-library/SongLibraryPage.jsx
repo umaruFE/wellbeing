@@ -1,4 +1,7 @@
+import i18next from 'i18next';
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Upload, Music, Play, Pause, Trash2, Plus, Edit, X, Disc } from 'lucide-react';
 import apiService from '../../services/api';
 import uploadService from '../../services/uploadService';
@@ -8,29 +11,21 @@ const MELODY_TYPES = [
   {
     id: 'lyrical',
     value: 'Edelweiss',
-    name: '舒缓抒情型',
-    description: '旋律柔和、起伏舒展，情感逐步推进',
     color: '#6d59c5',
   },
   {
     id: 'warm',
     value: 'You Are My Sunshine',
-    name: '温暖舒展型',
-    description: '旋律明朗温暖，长句自然流动',
     color: '#F5A233',
   },
   {
     id: 'light',
     value: 'Twinkle, Twinkle, Little Star',
-    name: '轻快跳跃型',
-    description: '节奏均匀、短句重复，旋律轻巧活泼',
     color: '#4482E5',
   },
   {
     id: 'interactive',
     value: "If You're Happy and You Know It",
-    name: '欢快互动型',
-    description: '长短句交替、节奏鲜明，适合动作互动',
     color: '#CF5846',
   },
 ];
@@ -47,6 +42,7 @@ const EMPTY_FORM = {
 const getMelody = (value) => MELODY_TYPES.find((m) => m.value === value || m.id === value);
 
 export const SongLibraryPage = () => {
+  useTranslation(); // Re-render translated option labels when language changes.
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -106,13 +102,13 @@ export const SongLibraryPage = () => {
       setUploadingField(field);
       const uploadResult = await uploadService.uploadFile(file, 'song-library');
       if (!uploadResult.success) {
-        alert(uploadResult.error || '上传失败');
+        alert(uploadResult.error || i18next.t('songLibraryUi.uploadFailed'));
         return;
       }
       setFormData((prev) => ({ ...prev, [field]: uploadResult.url }));
     } catch (err) {
       console.error('upload file failed:', err);
-      alert('上传失败');
+      alert(i18next.t('songLibraryUi.uploadFailed'));
     } finally {
       setUploadingField(null);
     }
@@ -121,7 +117,7 @@ export const SongLibraryPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.melodyType) {
-      alert('请填写曲目名称和旋律类型');
+      alert(i18next.t('songLibraryUi.required'));
       return;
     }
     try {
@@ -151,20 +147,20 @@ export const SongLibraryPage = () => {
       await fetchSongs();
     } catch (err) {
       console.error('save song failed:', err);
-      alert('保存失败');
+      alert(i18next.t('songLibraryUi.saveFailed'));
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (song) => {
-    if (!window.confirm(`确定要删除「${song.name}」吗？`)) return;
+    if (!window.confirm(i18next.t('songLibraryUi.deleteConfirm', { name: song.name }))) return;
     try {
       await apiService.request(`/api/song-library/${song.id}`, { method: 'DELETE' });
       setSongs((prev) => prev.filter((s) => s.id !== song.id));
     } catch (err) {
       console.error('delete song failed:', err);
-      alert('删除失败');
+      alert(i18next.t('songLibraryUi.deleteFailed'));
     }
   };
 
@@ -172,7 +168,7 @@ export const SongLibraryPage = () => {
     return (
       <div className="song-library-loading">
         <div className="song-library-spinner" />
-        <p>加载中...</p>
+        <p><LocalizedText id="common.loading" /></p>
       </div>
     );
   }
@@ -183,13 +179,13 @@ export const SongLibraryPage = () => {
         <div className="song-library-title">
           <Disc className="song-library-title-icon" />
           <div>
-            <h1>曲目库</h1>
-            <p>管理演唱版与伴奏版曲目资源</p>
+            <h1><LocalizedText id="songLibraryUi.9e98d91694" /></h1>
+            <p><LocalizedText id="songLibraryUi.4e8b1c41f0" /></p>
           </div>
         </div>
         <button className="song-library-add-btn" onClick={handleAdd}>
           <Plus className="w-4 h-4" />
-          添加曲目
+          <LocalizedText id="songLibraryUi.3085cb2ec6" />
         </button>
       </header>
 
@@ -213,14 +209,14 @@ export const SongLibraryPage = () => {
                   <button
                     className="song-card-edit"
                     onClick={() => handleEdit(song)}
-                    title="编辑"
+                    title={i18next.t('common.edit')}
                   >
                     <Edit className="w-4 h-4" />
                   </button>
                   <button
                     className="song-card-delete"
                     onClick={() => handleDelete(song)}
-                    title="删除"
+                    title={i18next.t('common.delete')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -237,31 +233,31 @@ export const SongLibraryPage = () => {
                   }}
                 >
                   <Disc className="w-3 h-3" />
-                  {melody ? melody.name : melodyType}
+                  {melody ? i18next.t(`songLibraryUi.melody.${melody.id}.name`) : melodyType}
                 </span>
               </div>
 
               <div className="song-audio-section">
                 <div className="song-audio-label">
                   <Play className="w-3 h-3" />
-                  演唱版
+                  <LocalizedText id="songWriting.vocalVersion" />
                 </div>
                 {song.vocalUrl || song.vocal_url ? (
                   <audio controls src={song.vocalUrl || song.vocal_url} className="song-audio-player" />
                 ) : (
-                  <span className="song-audio-empty">暂无音频</span>
+                  <span className="song-audio-empty"><LocalizedText id="songLibraryUi.2ef7f6b42c" /></span>
                 )}
               </div>
 
               <div className="song-audio-section">
                 <div className="song-audio-label">
                   <Pause className="w-3 h-3" />
-                  伴奏版
+                  <LocalizedText id="generatedResults.instrumental" />
                 </div>
                 {song.instrumentalUrl || song.instrumental_url ? (
                   <audio controls src={song.instrumentalUrl || song.instrumental_url} className="song-audio-player" />
                 ) : (
-                  <span className="song-audio-empty">暂无音频</span>
+                  <span className="song-audio-empty"><LocalizedText id="songLibraryUi.2ef7f6b42c" /></span>
                 )}
               </div>
             </div>
@@ -272,7 +268,7 @@ export const SongLibraryPage = () => {
       {songs.length === 0 && (
         <div className="song-library-empty">
           <Music className="song-library-empty-icon" />
-          <p>暂无曲目，点击「添加曲目」开始创建</p>
+          <p><LocalizedText id="songLibraryUi.9ffa19a0f3" /></p>
         </div>
       )}
 
@@ -281,7 +277,7 @@ export const SongLibraryPage = () => {
           <div className="song-form" onClick={(e) => e.stopPropagation()}>
             <div className="song-form-head">
               <h2>{editingSong ? '编辑曲目' : '添加曲目'}</h2>
-              <button className="song-form-close" onClick={handleCancel} title="关闭">
+              <button className="song-form-close" onClick={handleCancel} title={i18next.t('songLibraryUi.6c14bd7f6f')}>
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -289,21 +285,21 @@ export const SongLibraryPage = () => {
             <form onSubmit={handleSubmit}>
               <div className="song-form-row">
                 <label className="song-form-label">
-                  曲目名称 <span className="song-form-required">*</span>
+                  <LocalizedText id="songLibraryUi.e5ef4c2721" /> <span className="song-form-required">*</span>
                 </label>
                 <input
                   type="text"
                   className="song-form-input"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="请输入曲目名称"
+                  placeholder={i18next.t('songLibraryUi.f7e2ffccab')}
                   required
                 />
               </div>
 
               <div className="song-form-row">
                 <label className="song-form-label">
-                  旋律类型 <span className="song-form-required">*</span>
+                  <LocalizedText id="songLibraryUi.2e513c92d9" /> <span className="song-form-required">*</span>
                 </label>
                 <select
                   className="song-form-select"
@@ -311,17 +307,17 @@ export const SongLibraryPage = () => {
                   onChange={(e) => setFormData({ ...formData, melodyType: e.target.value })}
                   required
                 >
-                  <option value="">请选择旋律类型</option>
+                  <option value=""><LocalizedText id="songLibraryUi.568045fa2d" /></option>
                   {MELODY_TYPES.map((m) => (
                     <option key={m.id} value={m.value}>
-                      {m.name}｜{m.description}
+                      {i18next.t(`songLibraryUi.melody.${m.id}.name`)}｜{i18next.t(`songLibraryUi.melody.${m.id}.description`)}
                     </option>
                   ))}
                 </select>
               </div>
 
               <div className="song-form-row">
-                <label className="song-form-label">演唱版音频文件</label>
+                <label className="song-form-label"><LocalizedText id="songLibraryUi.abf2a0b72a" /></label>
                 <div className="song-form-upload">
                   <label className="song-form-upload-btn">
                     <Upload className="w-4 h-4" />
@@ -343,7 +339,7 @@ export const SongLibraryPage = () => {
               </div>
 
               <div className="song-form-row">
-                <label className="song-form-label">伴奏版音频文件</label>
+                <label className="song-form-label"><LocalizedText id="songLibraryUi.a53ec034ef" /></label>
                 <div className="song-form-upload">
                   <label className="song-form-upload-btn">
                     <Upload className="w-4 h-4" />
@@ -365,30 +361,30 @@ export const SongLibraryPage = () => {
               </div>
 
               <div className="song-form-row">
-                <label className="song-form-label">原版歌词参考</label>
+                <label className="song-form-label"><LocalizedText id="songLibraryUi.0104086d90" /></label>
                 <textarea
                   className="song-form-textarea"
                   value={formData.lyrics}
                   onChange={(e) => setFormData({ ...formData, lyrics: e.target.value })}
-                  placeholder="可选，填写原版歌词作为参考"
+                  placeholder={i18next.t('songLibraryUi.1cf30bb984')}
                   rows={4}
                 />
               </div>
 
               <div className="song-form-row">
-                <label className="song-form-label">描述</label>
+                <label className="song-form-label"><LocalizedText id="common.description" /></label>
                 <input
                   type="text"
                   className="song-form-input"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="可选，简短描述"
+                  placeholder={i18next.t('songLibraryUi.936c74a8c1')}
                 />
               </div>
 
               <div className="song-form-foot">
                 <button type="button" className="song-form-cancel" onClick={handleCancel}>
-                  取消
+                  <LocalizedText id="common.cancel" />
                 </button>
                 <button type="submit" className="song-form-save" disabled={uploadingField !== null || saving}>
                   {saving ? '保存中...' : '保存'}

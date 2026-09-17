@@ -31,11 +31,11 @@ const languageSkillOptionValues = ['听力理解', '口语表达', '阅读理解
 const pathOptionValues = ['艺术表达', '体感探索', '音乐律动', 'AI 自动匹配'];
 const atmosphereOptionValues = ['神秘探险感', '戏剧表演感', '温馨治愈感', '团队协作感', 'AI 自动匹配'];
 const AUTO_MATCH_VALUES = new Set(['AI 自动匹配', 'AI Auto Match']);
-const fallbackRegenTips = [
-  '希望在Execute创作运用阶段能有一个小组竞赛游戏，让产出更有挑战性。',
-  '情境可以更科幻一些，比如在外星球完成这个任务。',
-  '希望Engage情境启动更有悬念，像收到一封神秘任务信。',
-  '希望成长罗盘更突出团队协作和解决问题的成就感。',
+const fallbackRegenTipKeys = [
+  'workflow.map.regenTip1',
+  'workflow.map.regenTip2',
+  'workflow.map.regenTip3',
+  'workflow.map.regenTip4',
 ];
 
 const journeyItems = [
@@ -345,7 +345,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
   const [regenOpen, setRegenOpen] = React.useState(false);
   const [regenerating, setRegenerating] = React.useState(false);
   const [regenImage, setRegenImage] = React.useState(false);
-  const [regenTips, setRegenTips] = React.useState(fallbackRegenTips);
+  const [regenTips, setRegenTips] = React.useState([]);
+  const fallbackRegenTips = React.useMemo(() => fallbackRegenTipKeys.map((key) => t(key)), [t]);
   const [loadingRegenTips, setLoadingRegenTips] = React.useState(false);
   const [storylineOpen, setStorylineOpen] = React.useState(false);
   const [mapContentModal, setMapContentModal] = React.useState(null);
@@ -770,7 +771,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       const result = await response.json();
 
       if (!response.ok || !result.success || !result.data?.courseOverview) {
-        throw new Error(result.error || '课程概览生成失败');
+        throw new Error(result.error || t('uiMessages.courseOverviewFailed'));
       }
 
       const overview = result.data.courseOverview;
@@ -816,11 +817,11 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         }
       }
 
-      message.success('课程地图已重新生成');
+      message.success(t('uiMessages.courseMapRegenerated'));
       regenForm.resetFields();
     } catch (err) {
       console.error('重新生成课程概览失败:', err);
-      message.error(err?.message || '课程概览生成失败，请稍后重试');
+      message.error(err?.message || t('uiMessages.courseOverviewFailed'));
       onCourseChange?.({
         ...course,
         storyContext: request ? `${map.storyline} 根据调整需求：${request}` : map.storyline,
@@ -956,7 +957,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
         <div className="modal-overlay overview-modal-overlay" onMouseDown={(event) => event.target === event.currentTarget && setStorylineOpen(false)}>
           <div className="modal course-map-storyline-modal">
             <div className="modal-hd">
-              <div className="modal-t">{isChinese ? '核心情境 Storyline' : t('workflow.map.storyline')}</div>
+              <div className="modal-t">{t('workflow.map.storylineTitle')}</div>
               <button type="button" className="modal-x" onClick={() => setStorylineOpen(false)}><X size={22} /></button>
             </div>
             <div className="modal-body">
@@ -1034,19 +1035,19 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
               <div>
                 <div className="modal-t">{t('workflow.map.edit')}</div>
                 <div className="modal-sub">
-                  {isChinese ? '直接修改课程地图内容，保存后不会调用 AI。' : 'Edit course map content directly without calling AI.'}
+                  {t('workflow.map.editDirectNote')}
                 </div>
               </div>
               <button type="button" className="modal-x" onClick={() => setMapEditOpen(false)}><X size={22} /></button>
             </div>
             <div className="modal-body overview-adjust-body">
               <Form form={mapEditForm} layout="vertical" className="overview-ant-form">
-                <ModalSection title={isChinese ? '基础信息' : 'Basic Info'}>
+                <ModalSection title={t('workflow.map.basicInfo')}>
                   <Form.Item label={t('createCourse.courseName')} name="courseTitle" rules={[{ required: true, message: t('createCourse.courseNameRequired') }]}>
                     <Input className="fi" autoComplete="off" />
                   </Form.Item>
                 </ModalSection>
-                <ModalSection title={isChinese ? '地图内容' : 'Map Content'}>
+                <ModalSection title={t('workflow.map.mapContent')}>
                   <Form.Item label={t('workflow.map.storyline')} name="storyline">
                     <TextArea className="fi textarea" rows={4} />
                   </Form.Item>

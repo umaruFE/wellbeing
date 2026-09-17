@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
@@ -30,7 +31,7 @@ export const Layout = () => {
     <div style={layoutStyles}>
       <Sidebar />
       <div style={contentStyles}>
-        <Header title="工作看板" />
+        <Header title={i18next.t('sidebar.dashboard')} />
         <main style={mainStyles}>
           <Outlet />
         </main>

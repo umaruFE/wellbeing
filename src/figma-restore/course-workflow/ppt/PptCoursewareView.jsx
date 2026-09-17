@@ -71,8 +71,7 @@ export function PptCoursewareView({
   saveStatus = 'saved',
   saveText = '',
 }) {
-  const { t, i18n } = useTranslation();
-  const isChinese = !i18n.language?.startsWith('en');
+  const { t } = useTranslation();
   const hasInitialPptContent = React.useMemo(() => hasGeneratedPptContent(initialCourseData), [initialCourseData]);
   const [mode, setMode] = React.useState(() => (hasInitialPptContent ? 'editor' : 'template'));
   const [canCancelTemplatePicker, setCanCancelTemplatePicker] = React.useState(false);
@@ -402,7 +401,7 @@ export function PptCoursewareView({
       const nextLayers = items.map((item, index) => createMediaLayer(type, {
         ...patch,
         items: undefined,
-        title: item.title || `${patch.title || '词汇闪卡'} ${index + 1}`,
+        title: item.title || `${patch.title || t('assetPanel.iwFlashcard')} ${index + 1}`,
         url: item.url,
         taskId: item.taskId,
         statusUrl: item.statusUrl,
@@ -553,7 +552,7 @@ export function PptCoursewareView({
       const copy = fitLayerToSlide({
         ...cloneData(layer),
         id: `layer-${Date.now()}`,
-        title: `${layer.title || '元素'} 副本`,
+        title: `${layer.title || t('ppt.element')}${t('ppt.slideCopySuffix')}`,
         x: (layer.x || 0) + 18,
         y: (layer.y || 0) + 18,
       });
@@ -616,7 +615,7 @@ export function PptCoursewareView({
           const copy = fitLayerToSlide({
             ...cloneData(layer),
             id: `layer-${Date.now()}`,
-            title: `${layer.title || '元素'} 副本`,
+            title: `${layer.title || t('ppt.element')}${t('ppt.slideCopySuffix')}`,
             x: (layer.x || 0) + 18,
             y: (layer.y || 0) + 18,
           });
@@ -698,7 +697,7 @@ export function PptCoursewareView({
                     className="ppt-slide-stepper-btn"
                     onClick={() => setSlideTotal((value) => Math.max(stepCount, value - 1))}
                     disabled={slideTotal <= stepCount}
-                    aria-label={isChinese ? '减少页面数' : 'Decrease slide count'}
+                    aria-label={t('ppt.decreaseSlideCount')}
                   >
                     <Minus size={16} />
                   </button>
@@ -707,7 +706,7 @@ export function PptCoursewareView({
                     type="button"
                     className="ppt-slide-stepper-btn"
                     onClick={() => setSlideTotal((value) => value + 1)}
-                    aria-label={isChinese ? '增加页面数' : 'Increase slide count'}
+                    aria-label={t('ppt.increaseSlideCount')}
                   >
                     <Plus size={16} />
                   </button>

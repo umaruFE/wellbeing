@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -923,20 +924,20 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       const result = await response.json();
 
       if (!response.ok || !result.success || !result.data) {
-        throw new Error(result?.error || '教案重新生成失败');
+        throw new Error(result?.error || t('lessonPlanUi.regenFailedShort'));
       }
 
       const courseDataRaw = result.data.courseData || result.data;
       const resolved = resolvePhasesFromCourse({ courseData: courseDataRaw });
       if (!resolved) {
-        throw new Error('N8N 未返回有效教案数据');
+        throw new Error(t('lessonPlanUi.noValidData'));
       }
 
       await updateData(resolved);
       toastMessage(t('workflow.lesson.regenerateDone'));
     } catch (err) {
       console.error('重新生成完整教案失败:', err);
-      toastMessage(err?.message || '教案重新生成失败，请重试');
+      toastMessage(err?.message || t('lessonPlanUi.regenFailedRetry'));
     } finally {
       setRegenPhase(null);
       setRegenAllLoading(false);
@@ -1083,7 +1084,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     setSavedSteps(updated);
     localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
     setMenuKey(null);
-    toastMessage(isChinese ? `已收藏「${record.title}」` : `Saved "${getDisplayText(record.title)}"`);
+    toastMessage(t('lessonPlanUi.savedToast', { title: isChinese ? record.title : getDisplayText(record.title) }));
   };
 
   const handleUnsaveStep = (phaseKey, stepIndex) => {
@@ -1094,7 +1095,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     setSavedSteps(updated);
     localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
     setMenuKey(null);
-    toastMessage(isChinese ? `已取消收藏「${step.title}」` : `Removed "${getDisplayText(step.title)}" from favorites`);
+    toastMessage(t('lessonPlanUi.unsavedToast', { title: isChinese ? step.title : getDisplayText(step.title) }));
   };
 
   const isStepSaved = (phaseKey, stepIndex) => {
@@ -1112,7 +1113,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     steps.unshift(pinned);
     updateData(data.map((p) => (p.key === phaseKey ? { ...p, steps } : p)));
     setMenuKey(null);
-    toastMessage(isChinese ? '已置顶到该阶段首位' : 'Pinned to the top of this phase');
+    toastMessage(t('lessonPlanUi.pinnedToast'));
   };
 
   const handleSelectSavedStep = (record) => {
@@ -1189,7 +1190,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       >
         <div className="step-summary">
           <div className="step-chevron"><ChevronRight size={12} /></div>
-          <button type="button" className="step-thumb-placeholder" title="点击生成图片" onClick={(event) => event.stopPropagation()}>
+          <button type="button" className="step-thumb-placeholder" title={i18next.t('lessonPlanUi.504a62c8a4')} onClick={(event) => event.stopPropagation()}>
             <img src={phaseMapMeta.phaseIcon} alt="" />
           </button>
           <div className="step-main">
@@ -1344,7 +1345,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
         {overflowMinutes > 0 && (
           <div className="tbl-phase-duration-warning">
             <span className="tbl-phase-duration-warning-icon">!</span>
-            <span>{t("lesson.overflowWarn", { current: phaseMinutes, limit: durationLimit, overflow: overflowMinutes, defaultValue: "Consider adjusting activity duration" })}</span>
+            <span>{t("lesson.overflowWarn", { current: phaseMinutes, limit: durationLimit, overflow: overflowMinutes })}</span>
           </div>
         )}
 
@@ -1478,8 +1479,8 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       </div>
       <div className="tbl-inner-toolbar">
         <div className="tbl-ib-left">
-          <button type="button" className="tbl-ib-btn" disabled title="撤回 (Ctrl+Z)"><RotateCcw size={14} /></button>
-          <button type="button" className="tbl-ib-btn" disabled title="恢复 (Ctrl+Y)"><RotateCw size={14} /></button>
+          <button type="button" className="tbl-ib-btn" disabled title={i18next.t('lessonPlanUi.5bcc2a270c')}><RotateCcw size={14} /></button>
+          <button type="button" className="tbl-ib-btn" disabled title={i18next.t('lessonPlanUi.292f5a657c')}><RotateCw size={14} /></button>
           <span className="tbl-ib-sep" />
           <span className="tbl-ib-label">{t('workflow.lesson.title')}</span>
         </div>
@@ -1585,7 +1586,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                   {regenTarget ? t('lesson.regenerateStep') : insertTarget ? t('lesson.insertStep') : t('lesson.addStep')} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>
                 </div>
                 <div id="asPhaseTag">
-                  {course?.courseTitle || course?.title || 'Unit 3: Animals（神奇的动物）'} · {course?.ageGroup || course?.age || '8-9岁'} / {course?.grade || '三年级 G3'}
+                  {course?.courseTitle || course?.title || t('lessonPlanUi.demoCourseTitle')} · {course?.ageGroup || course?.age || t('lessonPlanUi.ageFallback')} / {course?.grade || t('lessonPlanUi.gradeFallback')}
                 </div>
               </div>
               <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }} aria-label={t('common.close')}><X size={22} /></button>
@@ -1607,7 +1608,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
                 <div className={`as-gen-panel ${genMode === 'ai' ? 'active' : ''}`} id="asPanel-ai">
                   <div className="as-quick-hint">
-                    <div className="as-qh-label">{t('lesson.promptHint', { defaultValue: isChinese ? '💡 提示词（点击直接填入）' : 'Prompt ideas (click to fill)' })}</div>
+                    <div className="as-qh-label">{t('lesson.promptHint')}</div>
                     <div className="as-qh-chips">
                       {quickIdeas.map((item) => (
                         <button className="as-qh-chip" type="button" key={item.label} onClick={() => fillIdea(isChinese ? item.text : item.textEn)}>
@@ -1630,7 +1631,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 </div>
 
                 <div className={`as-gen-panel ${genMode === 'classic' ? 'active' : ''}`} id="asPanel-classic">
-                  <div className="as-panel-label classic-label">{t('lesson.chooseClassicActivity', { defaultValue: isChinese ? '选择一种经典活动' : 'Choose a classic activity' })}</div>
+                  <div className="as-panel-label classic-label">{t('lesson.chooseClassicActivity')}</div>
                   <div className="as-classic-grid" id="asClassicGrid">
                     {classicActivities.map((activity) => (
                       <button
@@ -1659,8 +1660,8 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 <div className={`as-gen-panel ${genMode === 'mine' ? 'active' : ''}`} id="asPanel-mine">
                   {savedSteps.length === 0 ? (
                     <div id="asSavedList" className="as-saved-empty">
-                      {t('lesson.noFavorites', { defaultValue: isChinese ? '暂无收藏环节或保存的活动' : 'No saved steps or favorite activities yet' })}<br />
-                      <span>{t('lesson.favoriteTip', { defaultValue: isChinese ? '在环节卡片右上角菜单中点击「收藏此环节」存入此处' : 'Use the step card menu to save favorites here.' })}</span>
+                      {t('lesson.noFavorites')}<br />
+                      <span>{t('lesson.favoriteTip')}</span>
                     </div>
                   ) : (
                     <div id="asSavedList" className="as-saved-list">
@@ -1690,7 +1691,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
               <div className="as-right-panel">
                 <div className="as-right-hd">
-                  <span className="as-right-title">{t('lesson.activityDraft', { defaultValue: isChinese ? '活动草案' : 'Activity Draft' })}</span>
+                  <span className="as-right-title">{t('lesson.activityDraft')}</span>
                   <span className={`as-right-tag ${generateDraftLoading ? 'ai' : genMode === 'ai' ? 'ai' : genMode === 'mine' ? 'mine' : ''}`}>
                     {generateDraftLoading ? t('lesson.generating') : genMode === 'ai' ? t('workflow.stepState.pending') : genMode === 'classic' ? t('workflow.stepState.pending') : t('lesson.myFavorites')}
                   </span>
@@ -1699,17 +1700,17 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 <Form form={addForm} className="as-draft-form" layout="vertical">
                   <div className="as-draft-row">
 	                    <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title">
-                      <Input className="as-draft-input" placeholder={t('lesson.stepNamePlaceholder', { defaultValue: isChinese ? '起一个吸引人的名字' : 'Give it an engaging name' })} />
+                      <Input className="as-draft-input" placeholder={t('lesson.stepNamePlaceholder')} />
                     </Form.Item>
 	                    <Form.Item className="as-draft-field as-draft-time" label={t('lesson.stepDuration')} name="time">
                       <InputNumber className="as-draft-input" min={1} max={40} controls={false} />
                     </Form.Item>
                   </div>
 	                  <Form.Item className="as-draft-field" label={t('lesson.languageGoal')} name="goal">
-                    <TextArea className="as-draft-textarea" placeholder={t('lesson.languageGoalPlaceholder', { defaultValue: isChinese ? '例如：听力输入：核心情绪词（sad, happy, lonely, bored），核心句型 Let’s help…' : 'Example: Listening input for key emotion words and the sentence pattern “Let’s help...”' })} />
+                    <TextArea className="as-draft-textarea" placeholder={t('lesson.languageGoalPlaceholder')} />
                   </Form.Item>
 	                  <Form.Item className="as-draft-field" label={t('lesson.activitySummary')} name="activity">
-                    <TextArea className="as-draft-textarea" placeholder={t('lesson.activitySummaryPlaceholder', { defaultValue: isChinese ? '简要描述活动内容...' : 'Briefly describe the activity...' })} />
+                    <TextArea className="as-draft-textarea" placeholder={t('lesson.activitySummaryPlaceholder')} />
                   </Form.Item>
                   <div className="as-draft-field">
 	                    <label className="as-draft-lbl">{t('lesson.activityFlow')}</label>
@@ -1720,10 +1721,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                             <div>
 	                              <div className="flow-step-editor-title">{t('lesson.executionFlow')}</div>
                               <div className="flow-step-editor-tip">
-                                {t('lesson.flowEditorTip', { defaultValue: isChinese ? '按真实上课顺序填写：先设计活动内容，再补充教师语言与引导动作。' : 'Write in real classroom order: design the activity first, then add teacher language and cues.' })}
+                                {t('lesson.flowEditorTip')}
                               </div>
                             </div>
-                            <div className="flow-step-editor-badge">{t('lesson.flowStepCount', { count: fields.length, defaultValue: isChinese ? `${fields.length} 个步骤` : `${fields.length} steps` })}</div>
+                            <div className="flow-step-editor-badge">{t('lesson.flowStepCount', { count: fields.length })}</div>
                           </div>
 
                           {fields.map((field, index) => (
@@ -1734,36 +1735,36 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                               </div>
                               <div className="flow-step-fields">
                                 <div className="flow-step-card-head">
-                                  <div className="flow-step-mini-label">{t('lesson.flowStepName', { defaultValue: isChinese ? '步骤名称' : 'Step Name' })}</div>
+                                  <div className="flow-step-mini-label">{t('lesson.flowStepName')}</div>
                                   <Form.Item name={[field.name, 'title']} noStyle>
-                                    <Input className="flow-step-input flow-step-title" placeholder={t('lesson.flowStepNamePlaceholder', { defaultValue: isChinese ? '例如：创设悬念' : 'Example: Create suspense' })} />
+                                    <Input className="flow-step-input flow-step-title" placeholder={t('lesson.flowStepNamePlaceholder')} />
                                   </Form.Item>
                                 </div>
                                 <div className="flow-step-body-grid">
                                   <div className="flow-step-section">
-                                    <div className="flow-step-section-title">{t('lesson.activityContent', { defaultValue: isChinese ? '活动内容' : 'Activity Content' })}</div>
+                                    <div className="flow-step-section-title">{t('lesson.activityContent')}</div>
                                     <Form.Item name={[field.name, 'desc']} noStyle>
                                       <TextArea
                                         className="flow-step-input flow-step-desc"
-                                        placeholder={t('lesson.activityContentPlaceholder', { defaultValue: isChinese ? '这一步学生会看到什么、做什么、完成什么？' : 'What will students see, do, and complete in this step?' })}
+                                        placeholder={t('lesson.activityContentPlaceholder')}
                                       />
                                     </Form.Item>
                                   </div>
                                   <div className="flow-step-section guidance teacher-script">
-                                    <div className="flow-step-section-title">{t('lesson.teacherGuidance', { defaultValue: isChinese ? '教师引导 / 教师语言' : 'Teacher Guidance / Language' })}</div>
+                                    <div className="flow-step-section-title">{t('lesson.teacherGuidance')}</div>
                                     <Form.Item name={[field.name, 'teacher']} noStyle>
                                       <TextArea
                                         className="flow-step-input flow-step-script"
-                                        placeholder="例如：Shhh... Listen, everyone."
+                                        placeholder={i18next.t('lessonPlanUi.61db78b3bf')}
                                       />
                                     </Form.Item>
                                   </div>
                                   <div className="flow-step-section guidance action-cue">
-                                    <div className="flow-step-section-title">{t('lesson.actionCue', { defaultValue: isChinese ? '动作 / 引导提示' : 'Action / Cue' })}</div>
+                                    <div className="flow-step-section-title">{t('lesson.actionCue')}</div>
                                     <Form.Item name={[field.name, 'cue']} noStyle>
                                       <TextArea
                                         className="flow-step-input flow-step-cue"
-                                        placeholder={t('lesson.actionCuePlaceholder', { defaultValue: isChinese ? '例如：神秘地举起信封；停顿等待学生自然回应' : 'Example: Hold up the envelope mysteriously; pause for responses' })}
+                                        placeholder={t('lesson.actionCuePlaceholder')}
                                       />
                                     </Form.Item>
                                   </div>
@@ -1799,10 +1800,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                   </div>
                   <div className="as-draft-row">
 	                    <Form.Item className="as-draft-field" label={t('lesson.teachingResources')} name="resources">
-                      <TextArea className="as-draft-textarea" placeholder={t('lesson.resourcesPlaceholder', { defaultValue: isChinese ? '用顿号、逗号或换行分隔，例如：装饰信封、求救信、动物轮廓表情图' : 'Separate with commas or line breaks, e.g., mission cards, image cards, timer' })} />
+                      <TextArea className="as-draft-textarea" placeholder={t('lesson.resourcesPlaceholder')} />
                     </Form.Item>
 	                    <Form.Item className="as-draft-field" label={t('lesson.sceneSetup')} name="scenario">
-                      <TextArea className="as-draft-textarea" placeholder={t('lesson.scenarioPlaceholder', { defaultValue: isChinese ? '创设的情境背景...' : 'Describe the classroom scenario...' })} />
+                      <TextArea className="as-draft-textarea" placeholder={t('lesson.scenarioPlaceholder')} />
                     </Form.Item>
                   </div>
                 </Form>
@@ -1872,7 +1873,7 @@ function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, i
         <Heart size={12} fill={isSaved ? '#ff705f' : 'none'} />
         {isSaved ? t('common.cancel') : t('lesson.myFavorites')}
       </button>
-      <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />{t('lesson.pinToTop', { defaultValue: 'Pin to Top' })}</button>
+      <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />{t('lesson.pinToTop')}</button>
       <div className="step-menu-sep" />
       <button type="button" className="step-menu-item danger" onClick={onDelete}><Trash2 size={12} />{t('lesson.deleteStep')}</button>
     </div>

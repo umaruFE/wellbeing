@@ -36,13 +36,13 @@ export const CourseSquarePage = () => {
           const age = ageMatch ? `${ageMatch[1]}-${ageMatch[2]}` : ageGroup || t('course.notSet');
 
           let grade = '';
-          if (ageGroup.includes('G1') || ageGroup.includes('一年级')) grade = '一年级/G1';
-          else if (ageGroup.includes('G2') || ageGroup.includes('二年级')) grade = '二年级/G2';
-          else if (ageGroup.includes('G3') || ageGroup.includes('三年级')) grade = '三年级/G3';
-          else if (ageGroup.includes('G4') || ageGroup.includes('四年级')) grade = '四年级/G4';
-          else if (ageGroup.includes('G5') || ageGroup.includes('五年级')) grade = '五年级/G5';
-          else if (ageGroup.includes('G6') || ageGroup.includes('六年级')) grade = '六年级/G6';
-          else if (ageGroup.includes('K') || ageGroup.includes('幼儿园')) grade = '幼儿园/K';
+          if (ageGroup.includes('G1') || ageGroup.includes('一年级')) grade = t('square.grade1');
+          else if (ageGroup.includes('G2') || ageGroup.includes('二年级')) grade = t('square.grade2');
+          else if (ageGroup.includes('G3') || ageGroup.includes('三年级')) grade = t('square.grade3');
+          else if (ageGroup.includes('G4') || ageGroup.includes('四年级')) grade = t('square.grade4');
+          else if (ageGroup.includes('G5') || ageGroup.includes('五年级')) grade = t('square.grade5');
+          else if (ageGroup.includes('G6') || ageGroup.includes('六年级')) grade = t('square.grade6');
+          else if (ageGroup.includes('K') || ageGroup.includes('幼儿园')) grade = t('square.gradeK');
 
           const unit = course.unit || '';
           const unitParts = unit.split(/[：:]/);

@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { X, RefreshCw, Check, Music, Volume2 } from 'lucide-react';
 
 /**
@@ -8,7 +9,7 @@ import { X, RefreshCw, Check, Music, Volume2 } from 'lucide-react';
 export const CardSelectionModal = ({
   isOpen,
   onClose,
-  title = '选择图片',
+  title,
   images = [],
   isLoading = false,
   onSelect,
@@ -19,6 +20,7 @@ export const CardSelectionModal = ({
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [playingIndex, setPlayingIndex] = useState(null);
   const audioRefs = useRef({});
+  const { t } = useTranslation();
 
   if (!isOpen) return null;
 
@@ -76,9 +78,9 @@ export const CardSelectionModal = ({
               {isAudioType ? <Music className="w-5 h-5 text-white" /> : <RefreshCw className="w-5 h-5 text-white" />}
             </div>
             <div>
-              <h3 className="font-bold text-xl text-primary">{isAudioType ? '选择音频' : title}</h3>
+              <h3 className="font-bold text-xl text-primary">{isAudioType ? t('cardSelection.chooseAudio') : title || t('cardSelection.chooseImage')}</h3>
               <p className="text-sm text-primary-muted">
-                共 {itemCount} 个{itemType === 'audio' ? '音频' : '图片'}，选择你喜欢的一个
+                {t('cardSelection.countHint', { count: itemCount, type: t(itemType === 'audio' ? 'cardSelection.audio' : 'cardSelection.image') })}
               </p>
             </div>
           </div>
@@ -105,7 +107,7 @@ export const CardSelectionModal = ({
                 </div>
               </div>
               <p className="text-primary-muted animate-pulse">
-                {isAudioType ? '正在生成音频...' : '正在生成图片...'}
+                {isAudioType ? t('cardSelection.generatingAudio') : t('cardSelection.generatingImage')}
               </p>
             </div>
           ) : images.length === 0 ? (
@@ -113,7 +115,7 @@ export const CardSelectionModal = ({
               <div className="w-20 h-20 bg-surface-alt rounded-full flex items-center justify-center">
                 {isAudioType ? <Music className="w-10 h-10" /> : <RefreshCw className="w-10 h-10" />}
               </div>
-              <p>暂无可选择的{itemType === 'audio' ? '音频' : '图片'}</p>
+              <p>{t('cardSelection.empty', { type: t(itemType === 'audio' ? 'cardSelection.audio' : 'cardSelection.image') })}</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -145,7 +147,7 @@ export const CardSelectionModal = ({
                             {isAudioType ? <Music className="w-5 h-5 text-info animate-pulse" /> : <RefreshCw className="w-5 h-5 text-purple animate-spin" />}
                           </div>
                         </div>
-                        <p className="text-xs text-primary-muted animate-pulse">生成中...</p>
+                        <p className="text-xs text-primary-muted animate-pulse">{t('assetGenerator.generating')}</p>
                       </div>
                     ) : image.isAudio || (image.url && image.url.includes('audio')) ? (
                       // 音频卡片
@@ -154,7 +156,7 @@ export const CardSelectionModal = ({
                           <Music className="w-8 h-8 text-white" />
                         </div>
                         <p className="text-xs text-primary-muted text-center line-clamp-2">
-                          {image.prompt || `音频 ${index + 1}`}
+                          {image.prompt || `${t('cardSelection.audio')} ${index + 1}`}
                         </p>
                         {/* 音频播放按钮 */}
                         {image.url && !image.loading && (
@@ -167,7 +169,7 @@ export const CardSelectionModal = ({
                             }`}
                           >
                             <Volume2 className="w-3 h-3" />
-                            {playingIndex === index ? '暂停' : '播放'}
+                            {playingIndex === index ? t('audioLib.pause') : t('audioLib.play')}
                           </button>
                         )}
                         {/* 隐藏音频元素 */}
@@ -183,7 +185,7 @@ export const CardSelectionModal = ({
                     ) : image.url ? (
                       <img
                         src={image.url}
-                        alt={`图片 ${index + 1}`}
+                        alt={`${t('cardSelection.image')} ${index + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.src = 'https://placehold.co/400x400/f1f5f9/94a3b8?text=Image+Error';
@@ -231,8 +233,8 @@ export const CardSelectionModal = ({
           <div className="flex items-center justify-between">
             <div className="text-sm text-primary-muted">
               {selectedIndex !== null
-                ? `已选择第 ${selectedIndex + 1} 个${itemType === 'audio' ? '音频' : '图片'}`
-                : `请选择一个${itemType === 'audio' ? '音频' : '图片'}`
+                ? t('cardSelection.selectedHint', { index: selectedIndex + 1, type: t(itemType === 'audio' ? 'cardSelection.audio' : 'cardSelection.image') })
+                : t('cardSelection.selectHint', { type: t(itemType === 'audio' ? 'cardSelection.audio' : 'cardSelection.image') })
               }
             </div>
             <div className="flex gap-3">
@@ -244,7 +246,7 @@ export const CardSelectionModal = ({
                 }}
                 className="px-6 py-2.5 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all font-medium"
               >
-                取消
+                {t('common.cancel')}
               </button>
               <button
                 onClick={handleConfirm}
@@ -260,7 +262,7 @@ export const CardSelectionModal = ({
                 `}
               >
                 <Check className="w-4 h-4" />
-                确认选择
+                {t('cardSelection.confirm')}
               </button>
             </div>
           </div>

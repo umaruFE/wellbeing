@@ -1,23 +1,27 @@
+import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React, { useState } from 'react';
 import { X, Type, Edit, Wand2, RectangleHorizontal, Upload, Image as ImageIcon, Clock, Music, Video, Plus, Trash2 } from 'lucide-react';
 import PromptOptimizer from './PromptOptimizer';
 import { VideoStoryboardModal } from './VideoStoryboardModal';
 
+// description 为 promptInputUi 命名空间下的 i18n key
 const ASPECT_RATIOS = [
-  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
-  { id: '4:3', label: '4:3', width: 1024, height: 768, description: '标准横屏' },
-  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
-  { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
-  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: '竖屏长图' },
+  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: 'landscapeWidescreen' },
+  { id: '4:3', label: '4:3', width: 1024, height: 768, description: 'landscapeStandard' },
+  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: 'square' },
+  { id: '3:4', label: '3:4', width: 768, height: 1024, description: 'portraitStandard' },
+  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: 'portraitTall' },
 ];
 
 export const PromptInputModal = ({
   isOpen,
   onClose,
   onConfirm,
-  title = '输入内容',
-  description = '请输入您的内容',
-  placeholder = '请输入内容...',
+  title = i18next.t('promptInputUi.defaultTitle'),
+  description = i18next.t('promptInputUi.defaultDescription'),
+  placeholder = i18next.t('promptInputUi.defaultPlaceholder'),
   initialContent = '',
   type = 'text',
   assetType = null,
@@ -34,27 +38,28 @@ export const PromptInputModal = ({
   const [lyrics, setLyrics] = useState('');
   const [audioDuration, setAudioDuration] = useState(30);
   const [audioStyle, setAudioStyle] = useState('');
+  const { t } = useTranslation();
 
   // HeartMuLa 要求最小 10 秒
   const MIN_AUDIO_DURATION = 10;
 
-  // HeartMuLa 音乐风格选项
+  // HeartMuLa 音乐风格选项（label 复用 assetEditor 命名空间的风格文案）
   const AUDIO_STYLES = [
-    { id: '', label: '自动选择', tags: '' },
-    { id: 'pop', label: '流行 Pop', tags: 'pop, catchy, upbeat' },
+    { id: '', label: t('assetEditor.9741bc8c5f'), tags: '' },
+    { id: 'pop', label: t('assetEditor.61d5ebf290'), tags: 'pop, catchy, upbeat' },
     { id: 'rnb', label: 'R&B', tags: 'R&B, smooth, soulful' },
-    { id: 'rock', label: '摇滚 Rock', tags: 'rock, electric guitar, energetic' },
-    { id: 'electronic', label: '电子 Electronic', tags: 'electronic, synthesizer, modern' },
-    { id: 'jazz', label: '爵士 Jazz', tags: 'jazz, improvisation, sophisticated' },
-    { id: 'classical', label: '古典 Classical', tags: 'classical, orchestral, elegant' },
-    { id: 'folk', label: '民谣 Folk', tags: 'folk, acoustic, storytelling' },
-    { id: 'cafe', label: '咖啡厅 Cafe', tags: 'cafe, warm, reflection, relaxed' },
-    { id: 'piano', label: '钢琴 Piano', tags: 'piano, keyboard, melodic' },
-    { id: 'guitar', label: '吉他 Guitar', tags: 'guitar, strings, acoustic' },
-    { id: 'soft', label: '轻柔 Soft', tags: 'soft, gentle, calming' },
-    { id: 'upbeat', label: '欢快 Upbeat', tags: 'upbeat, happy, energetic' },
-    { id: 'emotional', label: '情感 Emotional', tags: 'emotional, heartfelt, moving' },
-    { id: 'ambient', label: '氛围 Ambient', tags: 'ambient, atmospheric, ethereal' }
+    { id: 'rock', label: t('assetEditor.3a1544429a'), tags: 'rock, electric guitar, energetic' },
+    { id: 'electronic', label: t('assetEditor.9e5a9d1f1d'), tags: 'electronic, synthesizer, modern' },
+    { id: 'jazz', label: t('assetEditor.6728028cc8'), tags: 'jazz, improvisation, sophisticated' },
+    { id: 'classical', label: t('assetEditor.106ec2422d'), tags: 'classical, orchestral, elegant' },
+    { id: 'folk', label: t('assetEditor.4e4951a5c3'), tags: 'folk, acoustic, storytelling' },
+    { id: 'cafe', label: t('assetEditor.eb40341bd8'), tags: 'cafe, warm, reflection, relaxed' },
+    { id: 'piano', label: t('assetEditor.e11cedb864'), tags: 'piano, keyboard, melodic' },
+    { id: 'guitar', label: t('assetEditor.4ae01ed99c'), tags: 'guitar, strings, acoustic' },
+    { id: 'soft', label: t('assetEditor.b7e48ef10f'), tags: 'soft, gentle, calming' },
+    { id: 'upbeat', label: t('assetEditor.0eaffd210a'), tags: 'upbeat, happy, energetic' },
+    { id: 'emotional', label: t('assetEditor.a3ef720b90'), tags: 'emotional, heartfelt, moving' },
+    { id: 'ambient', label: t('assetEditor.1830f0764b'), tags: 'ambient, atmospheric, ethereal' }
   ];
 
   React.useEffect(() => {
@@ -185,7 +190,7 @@ export const PromptInputModal = ({
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block">内容</label>
+            <label className="text-sm font-medium text-slate-700 mb-2 block"><LocalizedText id="musicStudio.contentLabel" /></label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -196,8 +201,8 @@ export const PromptInputModal = ({
             <div className="flex items-center justify-between mt-2">
               <p className="text-xs text-slate-400">
                 {assetType === 'audio'
-                  ? '提示：输入歌词或音频描述，AI将生成背景音乐'
-                  : '提示：直接输入文本内容，将立即添加到画布'}
+                  ? t('promptInputUi.audioHint')
+                  : t('promptInputUi.textHint')}
               </p>
               {(type === 'image' || type === 'script' || type === 'activity' || type === 'ppt' ||
                 assetType === 'image' || assetType === 'script' || assetType === 'activity' || assetType === 'ppt' ||
@@ -208,7 +213,7 @@ export const PromptInputModal = ({
                   className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 disabled:opacity-50"
                 >
                   <Wand2 className="w-3 h-3" />
-                  优化提示词
+                  <LocalizedText id="promptInputUi.779dd81c9d" />
                 </button>
               )}
             </div>
@@ -217,7 +222,7 @@ export const PromptInputModal = ({
           {assetType === 'image' && (
             <div>
               <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
-                图片比例
+                <LocalizedText id="ipCharacter.imageRatio" />
               </label>
               <div className="grid grid-cols-5 gap-2">
                 {ASPECT_RATIOS.map((ratio) => (
@@ -249,7 +254,7 @@ export const PromptInputModal = ({
                 ))}
               </div>
               <p className="text-xs text-slate-400 mt-1">
-                已选择：{selectedRatio.label} ({selectedRatio.width}×{selectedRatio.height}) - {selectedRatio.description}
+                <LocalizedText id="lesson.selected" />{selectedRatio.label} ({selectedRatio.width}×{selectedRatio.height}) - {t(`promptInputUi.${selectedRatio.description}`)}
               </p>
             </div>
           )}
@@ -258,7 +263,7 @@ export const PromptInputModal = ({
             <div>
               <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" />
-                参考图片 (可选)
+                <LocalizedText id="promptInputUi.dc33859347" />
               </label>
               {!referenceImage ? (
                 <div className="border-2 border-dashed border-stroke-light rounded-xl p-4 flex flex-col items-center justify-center bg-surface hover:bg-warning-light hover:border-primary transition-all cursor-pointer relative group/upload">
@@ -272,8 +277,8 @@ export const PromptInputModal = ({
                   <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform">
                     <Upload className="w-5 h-5 text-slate-400" />
                   </div>
-                  <span className="text-xs text-slate-500 font-medium">点击上传参考图片</span>
-                  <span className="text-[10px] text-slate-400 mt-1">用于图生图功能</span>
+                  <span className="text-xs text-slate-500 font-medium"><LocalizedText id="promptInputUi.7f4eac35c3" /></span>
+                  <span className="text-[10px] text-slate-400 mt-1"><LocalizedText id="promptInputUi.43be4c02af" /></span>
                 </div>
               ) : (
                 <div className="relative group/ref">
@@ -283,7 +288,7 @@ export const PromptInputModal = ({
                     onClick={() => setReferenceImage(null)}
                     disabled={isLoading}
                     className="absolute top-2 right-2 bg-white text-slate-600 hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity disabled:opacity-50"
-                    title="移除参考图"
+                    title={i18next.t('promptInputUi.6c72b99216')}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -297,7 +302,7 @@ export const PromptInputModal = ({
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                   <Music className="w-4 h-4" />
-                  音乐风格
+                  <LocalizedText id="audioGenerator.style" />
                 </label>
                 <select
                   value={audioStyle}
@@ -312,14 +317,14 @@ export const PromptInputModal = ({
                   ))}
                 </select>
                 <p className="text-xs text-slate-400 mt-1">
-                  选择音乐风格，将自动添加到生成提示中
+                  <LocalizedText id="promptInputUi.e544333be2" />
                 </p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
-                  音频时长
+                  <LocalizedText id="promptInputUi.afeeda8e62" />
                 </label>
                 <div className="flex items-center gap-4">
                   <input
@@ -333,28 +338,28 @@ export const PromptInputModal = ({
                     disabled={isLoading}
                   />
                   <span className="text-sm font-medium text-slate-700 min-w-[60px]">
-                    {audioDuration} 秒
+                    {audioDuration} <LocalizedText id="videoWizard.eb6aaba1a1" />
                   </span>
                 </div>
                 <p className="text-xs text-slate-400 mt-1">
-                  拖动滑块调整音频时长（10-240秒）
+                  <LocalizedText id="promptInputUi.bbc79101b4" />
                 </p>
               </div>
 
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                   <Wand2 className="w-4 h-4" />
-                  歌词 (可选)
+                  <LocalizedText id="promptInputUi.c530a5f793" />
                 </label>
                 <textarea
                   value={lyrics}
                   onChange={(e) => setLyrics(e.target.value)}
-                  placeholder="输入歌词内容，留空则生成纯音乐..."
+                  placeholder={i18next.t('promptInputUi.a6e06a0792')}
                   className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-24 transition-all"
                   disabled={isLoading}
                 />
                 <p className="text-xs text-slate-400 mt-1">
-                  提示：输入歌词后，AI会根据歌词生成歌曲；留空则生成纯音乐
+                  <LocalizedText id="promptInputUi.3302e78670" />
                 </p>
               </div>
             </>
@@ -365,17 +370,17 @@ export const PromptInputModal = ({
               <div>
                 <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
                   <Video className="w-4 h-4" />
-                  人物参考图片（可选）
+                  <LocalizedText id="promptInputUi.61d75fa446" />
                 </label>
                 <p className="text-xs text-slate-400 mb-2">
-                  上传人物参考图片，AI会保持人物形象一致性生成分镜
+                  <LocalizedText id="promptInputUi.e95820cfce" />
                 </p>
                 <div className="space-y-2">
                   {referenceImages.map((img, index) => (
                     <div key={index} className="relative group">
                       <img 
                         src={img} 
-                        alt={`参考${index + 1}`}
+                        alt={t('promptInputUi.referenceIndex', { index: index + 1 })}
                         className="w-full h-20 object-cover rounded-xl border-2 border-stroke-light"
                       />
                       <button
@@ -398,7 +403,7 @@ export const PromptInputModal = ({
                     />
                     <div className="flex flex-col items-center">
                       <Plus className="w-5 h-5 text-slate-400 mb-1" />
-                      <span className="text-xs text-slate-500">点击上传参考图片</span>
+                      <span className="text-xs text-slate-500"><LocalizedText id="promptInputUi.7f4eac35c3" /></span>
                     </div>
                   </label>
                 </div>
@@ -408,13 +413,13 @@ export const PromptInputModal = ({
                 <div className="flex items-start gap-3">
                   <Video className="w-5 h-5 text-purple-600 mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-medium text-purple-800">视频生成流程</h4>
+                    <h4 className="text-sm font-medium text-purple-800"><LocalizedText id="promptInputUi.cc3b8d4221" /></h4>
                     <ol className="text-xs text-purple-600 mt-1 space-y-1 list-decimal list-inside">
-                      <li>输入视频描述</li>
-                      <li>上传人物参考图片（可选）</li>
-                      <li>AI生成分镜脚本</li>
-                      <li>为每个分镜生成图片</li>
-                      <li>合成最终视频</li>
+                      <li><LocalizedText id="promptInputUi.3c0ba76d32" /></li>
+                      <li><LocalizedText id="promptInputUi.80cd3fe66b" /></li>
+                      <li><LocalizedText id="promptInputUi.bdacf1c776" /></li>
+                      <li><LocalizedText id="promptInputUi.7f863710d1" /></li>
+                      <li><LocalizedText id="promptInputUi.cf5963aba5" /></li>
                     </ol>
                   </div>
                 </div>
@@ -428,7 +433,7 @@ export const PromptInputModal = ({
               disabled={isLoading}
               className="flex-1 px-4 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 transition-all font-medium"
             >
-              取消
+              <LocalizedText id="common.cancel" />
             </button>
             <button
               onClick={handleConfirm}
@@ -438,12 +443,12 @@ export const PromptInputModal = ({
               {isLoading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  处理中...
+                  <LocalizedText id="promptInputUi.dde1db5771" />
                 </>
               ) : (
                 <>
                   <Edit className="w-4 h-4" />
-                  确认添加
+                  <LocalizedText id="promptInputUi.f4f917cf1b" />
                 </>
               )}
             </button>

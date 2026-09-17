@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+import { LocalizedText, LocalizedValue } from '../../../../i18n/LocalizedText.jsx';
 import React from 'react';
 import { Input } from 'antd';
 import { Activity, BookOpen, Check, Clock, Dumbbell, Flame, Music, Palette, Play, Sparkles, Trophy, UserRound, Zap } from 'lucide-react';
@@ -27,7 +29,7 @@ function AudioField({ field, value, onChange }) {
   }
   return (
     <FieldBlock label={field.label}>
-      <OptionGrid options={field.options} value={value || field.options[0]} onChange={onChange} columns={field.options.length > 3 ? 4 : 3} />
+      <OptionGrid options={field.options} value={value || field.options[0]} onChange={onChange} columns={field.options.length > 3 ? 4 : 3} labelCatalog="audioOptionLabels" />
     </FieldBlock>
   );
 }
@@ -151,7 +153,7 @@ function AudioStepper({ steps, step }) {
       {steps.map((item, index) => (
         <React.Fragment key={item}>
           <span className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}>
-            <b>{step > index ? <Check size={11} /> : index + 1}</b>{item.replace('选择', '').replace('生成结果', '生成')}
+            <b>{step > index ? <Check size={11} /> : index + 1}</b><LocalizedValue value={item.replace('选择', '').replace('生成结果', '生成')} catalog="audioOptionLabels" />
           </span>
           {index < steps.length - 1 ? <i>—</i> : null}
         </React.Fragment>
@@ -166,7 +168,7 @@ function C1Stepper({ step, done = false, items = ['情绪', '时长', '生成'] 
       {items.map((item, index) => (
         <React.Fragment key={item}>
           <span className={`${step === index ? 'is-active' : ''} ${step > index || done ? 'is-done' : ''}`}>
-            <b>{step > index || done ? <Check size={11} /> : index + 1}</b>{item}
+            <b>{step > index || done ? <Check size={11} /> : index + 1}</b><LocalizedValue value={item} catalog="audioOptionLabels" />
           </span>
           {index < items.length - 1 ? <i /> : null}
         </React.Fragment>
@@ -189,8 +191,8 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
   const isResult = step === 4;
 
   React.useEffect(() => {
-    onTitleChange?.('教学歌曲');
-  }, [onTitleChange]);
+    onTitleChange?.(asset.title);
+  }, [asset.title, onTitleChange]);
 
   const generateAudio = async () => {
     setStep(3);
@@ -200,7 +202,7 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
       setGeneratedAsset(generated);
       setStep(4);
     } catch (error) {
-      setErrorMessage(error.message || '音频生成任务提交失败');
+      setErrorMessage(error.message || i18next.t('audioWizard.submitFailed'));
       setStep(2);
     }
   };
@@ -216,66 +218,66 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
       <C1Stepper step={isResult ? 3 : step} done={isResult} items={['主题', '风格', '歌词', '生成']} />
       {step === 0 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">输入歌曲主题</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.d71b4a8fd4" /></div>
           <Input
             className="ppt-c5-topic-input"
             value={values.topic}
             onChange={(event) => setValue('topic', event.target.value)}
           />
-          <div className="ppt-audio-section-title is-muted">推荐主题</div>
+          <div className="ppt-audio-section-title is-muted"><LocalizedText id="audioWizard.7b2e0643c5" /></div>
           <div className="ppt-c5-chip-row">
             {c5Themes.map(([name, icon]) => (
               <button type="button" key={name} className={values.topic.includes(name) ? 'is-active' : ''} onClick={() => toggleTheme(name)}>
-                {icon ? <span>{icon}</span> : null}{name}
+                {icon ? <span>{icon}</span> : null}<LocalizedValue value={name} catalog="audioOptionLabels" />
               </button>
             ))}
           </div>
-          <div className="ppt-c1-tip">建议选择贴近教学进度的核心主题，AI将自动生成适合儿童演唱的英文歌词</div>
+          <div className="ppt-c1-tip"><LocalizedText id="audioWizard.72eae19cc7" /></div>
         </div>
       ) : null}
       {step === 1 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">选择音乐风格</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.c16bfc477c" /></div>
           <div className="ppt-c1-emotion-grid ppt-c5-style-grid">
             {c5Styles.map(([name, desc]) => (
               <button type="button" key={name} className={values.style === name ? 'is-active' : ''} onClick={() => setValue('style', name)}>
                 <strong><Music size={30} /></strong>
-                <span>{name}</span>
-                <em>{desc}</em>
+                <span><LocalizedValue value={name} catalog="audioOptionLabels" /></span>
+                <em><LocalizedValue value={desc} catalog="audioOptionLabels" /></em>
               </button>
             ))}
           </div>
-          <div className="ppt-c1-tip ppt-c5-style-tip"><Flame size={14} />系统将生成原声版（带歌词演唱） + 伴奏版（纯乐器），方便不同场景使用</div>
+          <div className="ppt-c1-tip ppt-c5-style-tip"><Flame size={14} /><LocalizedText id="audioWizard.7a992e1a85" /></div>
         </div>
       ) : null}
       {step === 2 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">AI生成歌词</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.02a45a3d8c" /></div>
           <div className="ppt-c3-textbox ppt-c5-lyrics-box">
             <Input.TextArea value={values.lyrics} onChange={(event) => setValue('lyrics', event.target.value)} />
           </div>
-          <div className="ppt-c1-tip">可直接编辑歌词内容，再生成歌曲音频</div>
+          <div className="ppt-c1-tip"><LocalizedText id="audioWizard.696d13f564" /></div>
         </div>
       ) : null}
       {isGenerating ? (
         <div className="ppt-c1-generating">
           <span className="ppt-c1-spinner" />
-          <strong>正在生成教学歌曲...</strong>
-          <em>{values.style} · 原声版 + 伴奏版</em>
+          <strong><LocalizedText id="audioWizard.3416fae884" /></strong>
+          <em><LocalizedValue value={values.style} catalog="audioOptionLabels" /> <LocalizedText id="audioWizard.d6208a76b7" /></em>
           <div className="ppt-c1-progress"><i /></div>
-          <p>正在编曲 · 合成儿童演唱音频...</p>
+          <p><LocalizedText id="audioWizard.a53d69ed67" /></p>
         </div>
       ) : null}
       {isResult ? (
         <div className="ppt-c1-result">
-          <div className="ppt-c1-result-sub">{values.style} · 生成完成</div>
+          <div className="ppt-c1-result-sub"><LocalizedValue value={values.style} catalog="audioOptionLabels" /> <LocalizedText id="audioWizard.ce9474de0a" /></div>
           <article>
             <div>
-              <strong>教学歌曲_01.mp3</strong>
-              <span><Music size={14} />原声版</span>
+              <strong><LocalizedText id="audioWizard.8617bddcc3" /></strong>
+              <span><Music size={14} /><LocalizedText id="audioWizard.a9d9d8a723" /></span>
             </div>
             <section>
-              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <button type="button" aria-label={i18next.t('audioWizard.21925350de')}><Play size={16} fill="currentColor" /></button>
               <i><b /></i>
               <em>1:20</em>
             </section>
@@ -284,24 +286,24 @@ function C5AudioWizard({ asset, onInsert, onTitleChange }) {
       ) : null}
       {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
-        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.ea0ef2ae72" /></button> : null}
         {step === 1 ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)} aria-label="上一步"><span aria-hidden="true">←</span></button>
-            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}>AI生成歌词 ★</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)} aria-label={i18next.t('audioWizard.75ef1241c0')}><span aria-hidden="true">←</span></button>
+            <button type="button" className="ppt-primary-btn" onClick={() => setStep(2)}><LocalizedText id="audioWizard.7c16cdf95c" /></button>
           </>
         ) : null}
         {step === 2 ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成歌曲</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.75ef1241c0" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}><LocalizedText id="audioWizard.c4d651ef53" /></button>
           </>
         ) : null}
-        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>取消</button> : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}><LocalizedText id="audioWizard.4d0b4688c7" /></button> : null}
         {isResult ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(3)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(3)}><LocalizedText id="audioWizard.2e19057052" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}><LocalizedText id="audioWizard.e8641c2c63" /></button>
           </>
         ) : null}
       </div>
@@ -336,10 +338,10 @@ function AudioComingSoon({ asset, onClose, onTitleChange }) {
             <span key={line}>{line}</span>
           ))}
         </p>
-        <em><Clock size={14} />即将上线</em>
+        <em><Clock size={14} /><LocalizedText id="audioWizard.d302bacb72" /></em>
       </div>
       <div className="ppt-audio-soon-footer">
-        <button type="button" onClick={onClose}>关闭</button>
+        <button type="button" onClick={onClose}><LocalizedText id="audioWizard.6c14bd7f6f" /></button>
       </div>
     </>
   );
@@ -373,7 +375,7 @@ function SimpleAudioWizard({ asset, onInsert, onTitleChange }) {
       setGeneratedAsset(generated);
       setStep(2);
     } catch (error) {
-      setErrorMessage(error.message || '音频生成任务提交失败');
+      setErrorMessage(error.message || i18next.t('audioWizard.submitFailed'));
       setStep(0);
     }
   };
@@ -383,48 +385,48 @@ function SimpleAudioWizard({ asset, onInsert, onTitleChange }) {
       <C1Stepper step={isResult ? 1 : step} done={isResult} items={['内容', '生成']} />
       {step === 0 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">{asset.code === 'C4' ? '输入对话脚本' : '输入引导词'}</div>
+          <div className="ppt-audio-section-title"><LocalizedValue value={asset.code === 'C4' ? '输入对话脚本' : '输入引导词'} catalog="audioOptionLabels" /></div>
           <div className="ppt-c3-textbox">
             <Input.TextArea value={values.text} onChange={(event) => setValue('text', event.target.value)} />
           </div>
-          <div className="ppt-audio-section-title">音色与时长</div>
-          <OptionGrid options={['女声', '男声', '童声']} value={values.voice} onChange={(value) => setValue('voice', value)} columns={3} />
-          <OptionGrid options={['30秒', '1分钟', '2分钟']} value={values.duration} onChange={(value) => setValue('duration', value)} columns={3} />
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.3f5ad33fd5" /></div>
+          <OptionGrid options={['女声', '男声', '童声']} value={values.voice} onChange={(value) => setValue('voice', value)} columns={3} labelCatalog="audioOptionLabels" />
+          <OptionGrid options={['30秒', '1分钟', '2分钟']} value={values.duration} onChange={(value) => setValue('duration', value)} columns={3} labelCatalog="audioOptionLabels" />
           {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
         </div>
       ) : null}
       {isGenerating ? (
         <div className="ppt-c1-generating">
           <span className="ppt-c1-spinner" />
-          <strong>正在生成{asset.title}...</strong>
-          <em>{values.voice} · {values.duration}</em>
+          <strong><LocalizedText id="audioWizard.5f57664caa" />{asset.title}...</strong>
+          <em><LocalizedValue value={values.voice} catalog="audioOptionLabels" /> · <LocalizedValue value={values.duration} catalog="audioOptionLabels" /></em>
           <div className="ppt-c1-progress"><i /></div>
-          <p>正在调用语音生成流程...</p>
+          <p><LocalizedText id="audioWizard.fc4a59c854" /></p>
         </div>
       ) : null}
       {isResult ? (
         <div className="ppt-c1-result">
-          <div className="ppt-c1-result-sub">{values.voice} · {values.duration} · 任务已提交</div>
+          <div className="ppt-c1-result-sub"><LocalizedValue value={values.voice} catalog="audioOptionLabels" /> · <LocalizedValue value={values.duration} catalog="audioOptionLabels" /> <LocalizedText id="audioWizard.9cf794f9fc" /></div>
           <article>
             <div>
               <strong>{asset.title}_01.mp3</strong>
-              <span><Music size={14} />生成音频</span>
+              <span><Music size={14} /><LocalizedText id="audioWizard.b74569c1b3" /></span>
             </div>
             <section>
-              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <button type="button" aria-label={i18next.t('audioWizard.21925350de')}><Play size={16} fill="currentColor" /></button>
               <i><b /></i>
-              <em>{values.duration}</em>
+              <em><LocalizedValue value={values.duration} catalog="audioOptionLabels" /></em>
             </section>
           </article>
         </div>
       ) : null}
       <div className="ppt-inline-footer ppt-c1-footer">
-        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成音频</button> : null}
-        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>取消</button> : null}
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={generateAudio}><LocalizedText id="audioWizard.b74569c1b3" /></button> : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}><LocalizedText id="audioWizard.4d0b4688c7" /></button> : null}
         {isResult ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={generateAudio}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
+            <button type="button" className="ppt-ghost-btn" onClick={generateAudio}><LocalizedText id="audioWizard.2e19057052" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}><LocalizedText id="audioWizard.e8641c2c63" /></button>
           </>
         ) : null}
       </div>
@@ -443,8 +445,8 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
   const lineCount = values.text.split(/\r?\n/).map((item) => item.trim()).filter(Boolean).length;
 
   React.useEffect(() => {
-    onTitleChange?.('跟读朗读');
-  }, [onTitleChange]);
+    onTitleChange?.(asset.title);
+  }, [asset.title, onTitleChange]);
 
   const generateAudio = async () => {
     setStep(2);
@@ -454,7 +456,7 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
       setGeneratedAsset(generated);
       setStep(3);
     } catch (error) {
-      setErrorMessage(error.message || '朗读音频生成任务提交失败');
+      setErrorMessage(error.message || i18next.t('audioWizard.readingFailed'));
       setStep(1);
     }
   };
@@ -468,75 +470,75 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
       <C1Stepper step={isResult ? 2 : step} done={isResult} items={['输入文本', '发音人', '生成']} />
       {step === 0 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">快捷模板</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.8e379b6dd4" /></div>
           <div className="ppt-c3-template-row">
             {c3Templates.map(([name, icon, text]) => (
               <button type="button" key={name} className={values.template === name ? 'is-active' : ''} onClick={() => applyTemplate(name, text)}>
-                <span>{icon}</span>{name}
+                <span>{icon}</span><LocalizedValue value={name} catalog="audioOptionLabels" />
               </button>
             ))}
           </div>
-          <div className="ppt-audio-section-title">输入朗读内容</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.855872485e" /></div>
           <div className="ppt-c3-textbox">
             <Input.TextArea
               value={values.text}
-              placeholder={'请输入英文单词、短语或句子，支持批量输入（每行一条）\n\n例：'}
+              placeholder={i18next.t('audioWizard.readAlongPlaceholder')}
               onChange={(event) => setValue('text', event.target.value)}
             />
           </div>
           <div className="ppt-c3-count-row">
-            <span>每行一条，自动拆分为多个音频</span>
-            <strong>{lineCount} 条</strong>
+            <span><LocalizedText id="audioWizard.73232250a4" /></span>
+            <strong>{lineCount} <LocalizedText id="audioWizard.bce2ef6151" /></strong>
           </div>
         </div>
       ) : null}
       {step === 1 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">选择发音人</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.78dc219a04" /></div>
           <div className="ppt-c1-emotion-grid ppt-c3-voice-grid">
             {c3Voices.map(([name, desc, color]) => (
               <button type="button" key={name} className={values.voice === name ? 'is-active' : ''} onClick={() => setValue('voice', name)}>
                 <strong style={{ background: color }}><UserRound size={18} /></strong>
-                <span>{name}</span>
-                <em>{desc}</em>
+                <span><LocalizedValue value={name} catalog="audioOptionLabels" /></span>
+                <em><LocalizedValue value={desc} catalog="audioOptionLabels" /></em>
               </button>
             ))}
           </div>
           <div className="ppt-c3-speed-head">
-            <span>语速</span>
-            <strong>{values.speed}</strong>
+            <span><LocalizedText id="audioWizard.747374775d" /></span>
+            <strong><LocalizedValue value={values.speed} catalog="audioOptionLabels" /></strong>
           </div>
           <div className="ppt-c1-emotion-grid ppt-c3-speed-grid">
             {c3Speeds.map(([name, desc, Icon]) => (
               <button type="button" key={name} className={values.speed === name ? 'is-active' : ''} onClick={() => setValue('speed', name)}>
                 <strong><Icon size={18} /></strong>
-                <span>{name}</span>
-                <em>{desc}</em>
+                <span><LocalizedValue value={name} catalog="audioOptionLabels" /></span>
+                <em><LocalizedValue value={desc} catalog="audioOptionLabels" /></em>
               </button>
             ))}
           </div>
-          <div className="ppt-c1-tip">童声 + 慢速适合K2/G1入门阶段，正常语速适合G2-G4跟读练习</div>
+          <div className="ppt-c1-tip"><LocalizedText id="audioWizard.6a630b40cf" /></div>
         </div>
       ) : null}
       {isGenerating ? (
         <div className="ppt-c1-generating">
           <span className="ppt-c1-spinner" />
-          <strong>正在生成跟读朗读...</strong>
-          <em>{values.voice} · {values.speed}</em>
+          <strong><LocalizedText id="audioWizard.6400d172e7" /></strong>
+          <em><LocalizedValue value={values.voice} catalog="audioOptionLabels" /> · <LocalizedValue value={values.speed} catalog="audioOptionLabels" /></em>
           <div className="ppt-c1-progress"><i /></div>
-          <p>正在拆分文本 · 合成朗读音频...</p>
+          <p><LocalizedText id="audioWizard.3dc50d4f17" /></p>
         </div>
       ) : null}
       {isResult ? (
         <div className="ppt-c1-result">
-          <div className="ppt-c1-result-sub">{values.voice} · {values.speed} · 生成完成</div>
+          <div className="ppt-c1-result-sub"><LocalizedValue value={values.voice} catalog="audioOptionLabels" /> · <LocalizedValue value={values.speed} catalog="audioOptionLabels" /> <LocalizedText id="audioWizard.ce9474de0a" /></div>
           <article>
             <div>
-              <strong>跟读朗读_01.mp3</strong>
-              <span><Music size={14} />朗读音频</span>
+              <strong><LocalizedText id="audioWizard.e7ad48bed2" /></strong>
+              <span><Music size={14} /><LocalizedText id="audioWizard.19038d451c" /></span>
             </div>
             <section>
-              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <button type="button" aria-label={i18next.t('audioWizard.21925350de')}><Play size={16} fill="currentColor" /></button>
               <i><b /></i>
               <em>0:45</em>
             </section>
@@ -545,18 +547,18 @@ function C3AudioWizard({ asset, onInsert, onTitleChange }) {
       ) : null}
       {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
-        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.ea0ef2ae72" /></button> : null}
         {step === 1 ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成朗读</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}><LocalizedText id="audioWizard.75ef1241c0" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}><LocalizedText id="audioWizard.1403abe424" /></button>
           </>
         ) : null}
-        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.4d0b4688c7" /></button> : null}
         {isResult ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}><LocalizedText id="audioWizard.2e19057052" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}><LocalizedText id="audioWizard.e8641c2c63" /></button>
           </>
         ) : null}
       </div>
@@ -575,8 +577,8 @@ function C2AudioWizard({ asset, onInsert, onTitleChange }) {
   const tempoLabel = values.tempo.split(' ')[0];
 
   React.useEffect(() => {
-    onTitleChange?.('活动背景音乐');
-  }, [onTitleChange]);
+    onTitleChange?.(asset.title);
+  }, [asset.title, onTitleChange]);
 
   const generateAudio = async () => {
     setStep(2);
@@ -586,7 +588,7 @@ function C2AudioWizard({ asset, onInsert, onTitleChange }) {
       setGeneratedAsset(generated);
       setStep(3);
     } catch (error) {
-      setErrorMessage(error.message || '活动背景乐生成任务提交失败');
+      setErrorMessage(error.message || i18next.t('audioWizard.activityFailed'));
       setStep(1);
     }
   };
@@ -596,51 +598,51 @@ function C2AudioWizard({ asset, onInsert, onTitleChange }) {
       <C1Stepper step={isResult ? 2 : step} done={isResult} items={['活动类型', '节奏', '生成']} />
       {step === 0 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">选择活动类型</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.86f19c514b" /></div>
           <div className="ppt-c1-emotion-grid ppt-c2-activity-grid">
             {c2Activities.map(([name, Icon]) => (
               <button type="button" key={name} className={values.activity === name ? 'is-active' : ''} onClick={() => setValue('activity', name)}>
-                <strong><Icon size={20} /></strong><span>{name}</span>
+                <strong><Icon size={20} /></strong><span><LocalizedValue value={name} catalog="audioOptionLabels" /></span>
               </button>
             ))}
           </div>
-          <div className="ppt-c1-tip">每种活动类型预设对应乐器与节奏风格，互动体能以鼓点为主，瘦身冥想以长音为主</div>
+          <div className="ppt-c1-tip"><LocalizedText id="audioWizard.48d20254b9" /></div>
         </div>
       ) : null}
       {step === 1 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">选择节奏速度</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.e26ca7a0e1" /></div>
           <div className="ppt-c1-duration-list">
             {c2Tempos.map(([name, desc, Icon]) => (
               <button type="button" key={name} className={values.tempo === name ? 'is-active' : ''} onClick={() => setValue('tempo', name)}>
                 <i><Icon size={16} /></i>
-                <span><strong>{name}</strong><em>{desc}</em></span>
+                <span><strong><LocalizedValue value={name} catalog="audioOptionLabels" /></strong><em><LocalizedValue value={desc} catalog="audioOptionLabels" /></em></span>
                 <b />
               </button>
             ))}
           </div>
-          <div className="ppt-c1-tip">BPM决定背景音乐的律动强度，请根据活动节奏选择合适的配速</div>
+          <div className="ppt-c1-tip"><LocalizedText id="audioWizard.323b64e8f8" /></div>
         </div>
       ) : null}
       {isGenerating ? (
         <div className="ppt-c1-generating">
           <span className="ppt-c1-spinner" />
-          <strong>正在生成活动BGM...</strong>
-          <em>{values.activity} · {tempoLabel}</em>
+          <strong><LocalizedText id="audioWizard.2856c77ad6" /></strong>
+          <em><LocalizedValue value={values.activity} catalog="audioOptionLabels" /> · <LocalizedValue value={tempoLabel} catalog="audioOptionLabels" /></em>
           <div className="ppt-c1-progress"><i /></div>
-          <p>正在组装活动Prompt · 匹配乐器与节奏...</p>
+          <p><LocalizedText id="audioWizard.5b5be13a68" /></p>
         </div>
       ) : null}
       {isResult ? (
         <div className="ppt-c1-result">
-          <div className="ppt-c1-result-sub">{values.activity} · {tempoLabel} · 生成完成</div>
+          <div className="ppt-c1-result-sub"><LocalizedValue value={values.activity} catalog="audioOptionLabels" /> · <LocalizedValue value={tempoLabel} catalog="audioOptionLabels" /> <LocalizedText id="audioWizard.ce9474de0a" /></div>
           <article>
             <div>
-              <strong>活动BGM_01.mp3</strong>
-              <span><Music size={14} />活动配乐</span>
+              <strong><LocalizedText id="audioWizard.734776bd2e" /></strong>
+              <span><Music size={14} /><LocalizedText id="audioWizard.aa530fe0a5" /></span>
             </div>
             <section>
-              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <button type="button" aria-label={i18next.t('audioWizard.21925350de')}><Play size={16} fill="currentColor" /></button>
               <i><b /></i>
               <em>1:30</em>
             </section>
@@ -649,18 +651,18 @@ function C2AudioWizard({ asset, onInsert, onTitleChange }) {
       ) : null}
       {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
-        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.ea0ef2ae72" /></button> : null}
         {step === 1 ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成BGM</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}><LocalizedText id="audioWizard.75ef1241c0" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}><LocalizedText id="audioWizard.1df8a13f7a" /></button>
           </>
         ) : null}
-        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.4d0b4688c7" /></button> : null}
         {isResult ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}><LocalizedText id="audioWizard.2e19057052" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}><LocalizedText id="audioWizard.e8641c2c63" /></button>
           </>
         ) : null}
       </div>
@@ -689,7 +691,7 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
       setGeneratedAsset(generated);
       setStep(3);
     } catch (error) {
-      setErrorMessage(error.message || '情绪BGM生成任务提交失败');
+      setErrorMessage(error.message || i18next.t('audioWizard.moodFailed'));
       setStep(1);
     }
   };
@@ -699,51 +701,51 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
       <C1Stepper step={isResult ? 2 : step} done={isResult} />
       {step === 0 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">选择情绪标签</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.aca4011765" /></div>
           <div className="ppt-c1-emotion-grid">
             {c1Emotions.map(([name, icon]) => (
               <button type="button" key={name} className={values.emotion === name ? 'is-active' : ''} onClick={() => setValue('emotion', name)}>
-                <strong>{icon}</strong><span>{name}</span>
+                <strong>{icon}</strong><span><LocalizedValue value={name} catalog="audioOptionLabels" /></span>
               </button>
             ))}
           </div>
-          <div className="ppt-c1-tip">情绪标签决定BGM的整体基调，系统将自动匹配合适的乐器与节奏</div>
+          <div className="ppt-c1-tip"><LocalizedText id="audioWizard.195175f324" /></div>
         </div>
       ) : null}
       {step === 1 ? (
         <div className="ppt-c1-body">
-          <div className="ppt-audio-section-title">选择音频时长</div>
+          <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.1fe93f57e0" /></div>
           <div className="ppt-c1-duration-list">
             {c1Durations.map(([name, desc]) => (
               <button type="button" key={name} className={values.duration === name ? 'is-active' : ''} onClick={() => setValue('duration', name)}>
                 <i><Clock size={16} /></i>
-                <span><strong>{name}</strong><em>{desc}</em></span>
+                <span><strong><LocalizedValue value={name} catalog="audioOptionLabels" /></strong><em><LocalizedValue value={desc} catalog="audioOptionLabels" /></em></span>
                 <b />
               </button>
             ))}
           </div>
-          <div className="ppt-c1-tip">时长越长生成时间越久，建议先试生成30秒确认效果</div>
+          <div className="ppt-c1-tip"><LocalizedText id="audioWizard.dd47694be8" /></div>
         </div>
       ) : null}
       {isGenerating ? (
         <div className="ppt-c1-generating">
           <span className="ppt-c1-spinner" />
-          <strong>正在生成情绪BGM...</strong>
-          <em>{values.emotion} · {values.duration}</em>
+          <strong><LocalizedText id="audioWizard.597da97c96" /></strong>
+          <em><LocalizedValue value={values.emotion} catalog="audioOptionLabels" /> · <LocalizedValue value={values.duration} catalog="audioOptionLabels" /></em>
           <div className="ppt-c1-progress"><i /></div>
-          <p>正在组装情绪Prompt · 连接HeartMuLa引擎...</p>
+          <p><LocalizedText id="audioWizard.45254be62f" /></p>
         </div>
       ) : null}
       {isResult ? (
         <div className="ppt-c1-result">
-          <div className="ppt-c1-result-sub">{values.emotion} · {values.duration} · 生成完成</div>
+          <div className="ppt-c1-result-sub"><LocalizedValue value={values.emotion} catalog="audioOptionLabels" /> · <LocalizedValue value={values.duration} catalog="audioOptionLabels" /> <LocalizedText id="audioWizard.ce9474de0a" /></div>
           <article>
             <div>
-              <strong>情绪BGM_01.mp3</strong>
-              <span><Music size={14} />纯器乐</span>
+              <strong><LocalizedText id="audioWizard.c918319f59" /></strong>
+              <span><Music size={14} /><LocalizedText id="audioWizard.1f0b50eb38" /></span>
             </div>
             <section>
-              <button type="button" aria-label="播放"><Play size={16} fill="currentColor" /></button>
+              <button type="button" aria-label={i18next.t('audioWizard.21925350de')}><Play size={16} fill="currentColor" /></button>
               <i><b /></i>
               <em>{values.duration === '30秒' ? '0:30' : values.duration === '1分钟' ? '1:30' : values.duration === '2分钟' ? '2:00' : '3:00'}</em>
             </section>
@@ -752,18 +754,18 @@ function C1AudioWizard({ asset, onInsert, onTitleChange }) {
       ) : null}
       {errorMessage ? <div className="ppt-c1-tip">{errorMessage}</div> : null}
       <div className="ppt-inline-footer ppt-c1-footer">
-        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}>下一步</button> : null}
+        {step === 0 ? <button type="button" className="ppt-primary-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.ea0ef2ae72" /></button> : null}
         {step === 1 ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}>上一步</button>
-            <button type="button" className="ppt-primary-btn" onClick={generateAudio}>生成BGM</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(0)}><LocalizedText id="audioWizard.75ef1241c0" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={generateAudio}><LocalizedText id="audioWizard.1df8a13f7a" /></button>
           </>
         ) : null}
-        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}>取消</button> : null}
+        {isGenerating ? <button type="button" className="ppt-ghost-btn" onClick={() => setStep(1)}><LocalizedText id="audioWizard.4d0b4688c7" /></button> : null}
         {isResult ? (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}>重新生成</button>
-            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}>插入画布</button>
+            <button type="button" className="ppt-ghost-btn" onClick={() => setStep(2)}><LocalizedText id="audioWizard.2e19057052" /></button>
+            <button type="button" className="ppt-primary-btn" onClick={() => onInsert('audio', { ...asset, ...generatedAsset, title: generatedAsset?.title || asset.title })}><LocalizedText id="audioWizard.e8641c2c63" /></button>
           </>
         ) : null}
       </div>
@@ -797,13 +799,13 @@ export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChan
   const setValue = (key, value) => setValues((current) => ({ ...current, [key]: value }));
 
   React.useEffect(() => {
-    if (stage === 'generating') onTitleChange?.('正在生成...');
-    else if (stage === 'result') onTitleChange?.('选择音频');
+    if (stage === 'generating') onTitleChange?.(i18next.t('assetPanel.iwGenerating'));
+    else if (stage === 'result') onTitleChange?.(i18next.t('audioWizard.selectAudio'));
     else onTitleChange?.(asset.title);
   }, [asset.title, onTitleChange, stage]);
 
   if (stage === 'generating') {
-    return <GenerationProgress title="AI 正在生成音频" subtitle={`${asset.title} · 自动保存到音频素材库`} progress={72} onHang={onClose} onViewResult={() => setStage('result')} />;
+    return <GenerationProgress title={i18next.t('audioWizard.4e0d6c5dc9')} subtitle={i18next.t('audioWizard.savedToLibrary', { title: asset.title })} progress={72} onHang={onClose} onViewResult={() => setStage('result')} />;
   }
 
   if (stage === 'result') {
@@ -825,24 +827,24 @@ export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChan
       <div className="ppt-asset-form">
         {asset.code === 'C1' && step === 0 ? (
           <>
-            <div className="ppt-audio-section-title">选择情绪标签</div>
+            <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.aca4011765" /></div>
             <div className="ppt-audio-emotion-grid">
               {c1Emotions.map(([name, icon]) => (
                 <button type="button" key={name} className={values.emotion === name ? 'is-active' : ''} onClick={() => setValue('emotion', name)}>
-                  <strong>{icon}</strong><span>{name}</span>
+                  <strong>{icon}</strong><span><LocalizedValue value={name} catalog="audioOptionLabels" /></span>
                 </button>
               ))}
             </div>
-            <Tip>情绪标签决定BGM的整体基调，系统将自动匹配合适的乐器与节奏</Tip>
+            <Tip><LocalizedText id="audioWizard.195175f324" /></Tip>
           </>
         ) : null}
         {asset.code === 'C1' && step === 1 ? (
           <>
-            <div className="ppt-audio-section-title">选择音频时长</div>
+            <div className="ppt-audio-section-title"><LocalizedText id="audioWizard.1fe93f57e0" /></div>
             <div className="ppt-audio-duration-list">
               {c1Durations.map(([name, desc]) => (
                 <button type="button" key={name} className={values.duration === name ? 'is-active' : ''} onClick={() => setValue('duration', name)}>
-                  <i /><span><strong>{name}</strong><em>{desc}</em></span><b />
+                  <i /><span><strong><LocalizedValue value={name} catalog="audioOptionLabels" /></strong><em><LocalizedValue value={desc} catalog="audioOptionLabels" /></em></span><b />
                 </button>
               ))}
             </div>
@@ -867,24 +869,24 @@ export function AudioAssetWizard({ asset, onBack, onClose, onInsert, onTitleChan
         {(asset.code === 'C1' && step === 2) || (asset.code !== 'C1' && step > 0) ? (
           <div className="ppt-audio-confirm">
             <Music size={24} />
-            <strong>确认并生成音频</strong>
+            <strong><LocalizedText id="audioWizard.321978cea1" /></strong>
             <dl>
-              <dt>音频类型</dt><dd>{asset.title}</dd>
-              <dt>情绪/主题</dt><dd>{values.emotion || values.topic || values.activity || '自动匹配'}</dd>
-              <dt>时长</dt><dd>{values.duration || '1分钟'}</dd>
+              <dt><LocalizedText id="audioWizard.50ff6ddc7b" /></dt><dd>{asset.title}</dd>
+              <dt><LocalizedText id="audioWizard.1690d1c10b" /></dt><dd><LocalizedValue value={values.emotion || values.topic || values.activity || '自动匹配'} catalog="audioOptionLabels" /></dd>
+              <dt><LocalizedText id="audioWizard.29d0552d2e" /></dt><dd><LocalizedValue value={values.duration || '1分钟'} catalog="audioOptionLabels" /></dd>
             </dl>
-            <Tip>已自动保存到音频素材库，插入画布后将保留生成版本信息。</Tip>
+            <Tip><LocalizedText id="audioWizard.43daae6c15" /></Tip>
           </div>
         ) : null}
       </div>
       <div className="ppt-inline-footer">
-        <button type="button" className="ppt-ghost-btn" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}>{step === 0 ? '返回类型' : '上一步'}</button>
+        <button type="button" className="ppt-ghost-btn" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}><LocalizedValue value={step === 0 ? '返回类型' : '上一步'} catalog="audioOptionLabels" /></button>
         <button type="button" className="ppt-primary-btn" onClick={() => {
           const maxStep = asset.code === 'C1' ? 2 : 1;
           if (step < maxStep) setStep((current) => current + 1);
           else setStage('generating');
         }}>
-          {step < (asset.code === 'C1' ? 2 : 1) ? '下一步' : <><Sparkles size={14} />生成音频</>}
+          {step < (asset.code === 'C1' ? 2 : 1) ? <LocalizedValue value="下一步" catalog="audioOptionLabels" /> : <><Sparkles size={14} /><LocalizedText id="audioWizard.b74569c1b3" /></>}
         </button>
       </div>
     </>

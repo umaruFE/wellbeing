@@ -16,8 +16,9 @@ export function setTrackingContext({ userId, organizationId }) {
 }
 
 export function trackEvent(action, resourceType, resourceId, details) {
+  const token = localStorage.getItem('token');
+  if (!token) return;
   const payload = JSON.stringify({
-    ...context,
     events: [
       {
         action,
@@ -29,13 +30,9 @@ export function trackEvent(action, resourceType, resourceId, details) {
   });
 
   try {
-    if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
-      const blob = new Blob([payload], { type: 'application/json' });
-      if (navigator.sendBeacon('/api/events', blob)) return;
-    }
     void fetch('/api/events', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: payload,
       keepalive: true,
     });

@@ -1,10 +1,12 @@
+import i18next from 'i18next';
 import React from 'react';
 import { AutoComplete, Input } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown } from 'lucide-react';
 import '../css/PptRotationControl.css';
 
-const ROTATION_PRESETS = [
-  { value: '0', label: '默认 0°' },
+const getRotationPresets = (t) => [
+  { value: '0', label: t('pptRotationUi.defaultZero') },
   { value: '45', label: '45°' },
   { value: '90', label: '90°' },
   { value: '180', label: '180°' },
@@ -14,6 +16,7 @@ const ROTATION_PRESETS = [
 ];
 
 export function PptRotationControl({ value, onChange }) {
+  const { t } = useTranslation();
   const rotation = Number(value) || 0;
   const [draft, setDraft] = React.useState(String(rotation));
 
@@ -34,7 +37,7 @@ export function PptRotationControl({ value, onChange }) {
     <AutoComplete
       className="ppt-rotation-control"
       value={draft}
-      options={ROTATION_PRESETS}
+      options={getRotationPresets(t)}
       popupMatchSelectWidth
       onChange={(next) => {
         setDraft(next);
@@ -48,7 +51,7 @@ export function PptRotationControl({ value, onChange }) {
     >
       <Input
         inputMode="decimal"
-        aria-label="选择预设或输入旋转角度"
+        aria-label={i18next.t('pptRotationUi.c19e12d501')}
         suffix={(
           <span className="ppt-rotation-suffix" aria-hidden="true">
             <span>°</span>

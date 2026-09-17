@@ -22,8 +22,8 @@ export interface UsageEvent {
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const HABITS_DATASET = process.env.RAGFLOW_HABITS_DATASET || 'usage-habits';
 
-async function mirrorPictureBookEvent(event: UsageEvent): Promise<void> {
-  if (!isRagflowEnabled() || !event.action.startsWith('picturebook.')) return;
+async function mirrorEvent(event: UsageEvent): Promise<void> {
+  if (!isRagflowEnabled()) return;
 
   const datasetId = await ensureDataset(HABITS_DATASET, '用户使用记录（实时事件 + ETL 聚合画像）');
   const timestamp = new Date().toISOString();
@@ -73,7 +73,7 @@ async function ensureTable() {
 /**
  * 记录一条使用事件（fire-and-forget，不阻塞业务请求、失败不影响主流程）
  */
-export async function recordEvent(event: UsageEvent): Promise<void> {
+export async function recordEvent(event: UsageEvent): Promise<boolean> {
   try {
       await ensureTable();
       const userId = event.userId && UUID_RE.test(event.userId) ? event.userId : null;
@@ -90,13 +90,21 @@ export async function recordEvent(event: UsageEvent): Promise<void> {
           JSON.stringify(event.details || {}),
         ]
       );
-      await mirrorPictureBookEvent(event);
+      try {
+        await mirrorEvent({ ...event, userId, resourceId });
+      } catch (err) {
+        // PostgreSQL remains the source of truth; the RAGFlow failure must be visible for replay.
+        console.error('[usage-tracking] RAGFlow mirror failed:', err);
+      }
+      return true;
   } catch (err) {
-    console.warn('[usage-tracking] record failed (ignored):', err instanceof Error ? err.message : err);
+    console.error('[usage-tracking] database record failed:', err);
+    return false;
   }
 }
 
 /** 批量记录（/api/events 上报入口使用） */
-export async function recordEvents(events: UsageEvent[]): Promise<void> {
-  await Promise.all(events.map((event) => recordEvent(event)));
+export async function recordEvents(events: UsageEvent[]): Promise<number> {
+  const results = await Promise.all(events.map((event) => recordEvent(event)));
+  return results.filter(Boolean).length;
 }

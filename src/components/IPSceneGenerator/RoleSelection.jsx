@@ -1,3 +1,5 @@
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
+import { useTranslation } from 'react-i18next';
 import React from 'react';
 import { Check } from 'lucide-react';
 import poppyImg from '../../assets/ip/poppy.png';
@@ -11,7 +13,7 @@ const IP_CHARACTERS = [
     id: 'poppy',
     name: 'Poppy',
     color: '粉色',
-    description: '粉色角色',
+    colorKey: 'colorPink',
     thumbnail: poppyImg,
     available: true
   },
@@ -19,7 +21,7 @@ const IP_CHARACTERS = [
     id: 'edi',
     name: 'Edi',
     color: '蓝色',
-    description: '蓝色角色',
+    colorKey: 'colorBlue',
     thumbnail: ediImg,
     available: true
   },
@@ -27,7 +29,7 @@ const IP_CHARACTERS = [
     id: 'rolly',
     name: 'Rolly',
     color: '橘色',
-    description: '橘色角色',
+    colorKey: 'colorOrange',
     thumbnail: rollyImg,
     available: true
   },
@@ -35,7 +37,7 @@ const IP_CHARACTERS = [
     id: 'milo',
     name: 'Milo',
     color: '黄色',
-    description: '黄色角色',
+    colorKey: 'colorYellow',
     thumbnail: miloImg,
     available: true
   },
@@ -43,13 +45,14 @@ const IP_CHARACTERS = [
     id: 'ace',
     name: 'Ace',
     color: '紫色',
-    description: '紫色角色',
+    colorKey: 'colorPurple',
     thumbnail: aceImg,
     available: true
   }
 ];
 
 export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
+  const { t } = useTranslation();
   const handleRoleClick = (roleId) => {
     if (selectedRoles.includes(roleId)) {
       onRoleSelect(selectedRoles.filter(id => id !== roleId));
@@ -61,10 +64,10 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
   return (
     <div>
       <label className="text-sm font-medium text-primary-secondary mb-2 block">
-        选择角色 ({selectedRoles.length}/5)
+        <LocalizedText id="ipRoleUi.d8668108e1" />{selectedRoles.length}/5)
       </label>
       <p className="text-xs text-primary-placeholder mb-3">
-        选择要出现在场景中的IP角色
+        <LocalizedText id="ipRoleUi.c973064c12" />
       </p>
       
       <div className="space-y-2">
@@ -113,12 +116,12 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
                                       '#9370DB',
                       color: '#FFF'
                     }}
-                  >
-                    {character.color}
-                  </span>
+                      >
+                        {t(`ipRoleUi.${character.colorKey}`)}
+                      </span>
                 </div>
                 <p className={`text-xs ${isAvailable ? 'text-primary-muted' : 'text-error'}`}>
-                  {character.description}
+                  {t('ipRoleUi.colorRoleLabel', { color: t(`ipRoleUi.${character.colorKey}`) })}
                 </p>
               </div>
             </button>

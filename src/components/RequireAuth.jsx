@@ -1,3 +1,4 @@
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,7 +9,7 @@ export const RequireAuth = ({ children, requiredRoles = null }) => {
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="text-primary-muted">加载中...</div>
+        <div className="text-primary-muted"><LocalizedText id="common.loading" /></div>
       </div>
     );
   }
@@ -31,7 +32,7 @@ export const RequirePermission = ({ children, permission }) => {
   if (loading) {
     return (
       <div className="h-screen flex items-center justify-center">
-        <div className="text-primary-muted">加载中...</div>
+        <div className="text-primary-muted"><LocalizedText id="common.loading" /></div>
       </div>
     );
   }

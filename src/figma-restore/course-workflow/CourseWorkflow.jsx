@@ -267,7 +267,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
           console.error('保存 PPT 课件失败:', error);
           if (pptSaveSequenceRef.current === saveId) {
             setPptSaveStatus('error');
-            setPptSaveError(error?.message || '保存失败');
+            setPptSaveError(error?.message || t('workflow.toolbar.error'));
           }
           throw error;
         }
@@ -279,7 +279,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     } catch {
       // The queued operation has already updated the visible save error state.
     }
-  }, [course?.id, getDraftSaveKey]);
+  }, [course?.id, getDraftSaveKey, t]);
 
   const saveCourseMap = React.useCallback(async (data = latestCourseRef.current) => {
     if (!data) return;
@@ -325,10 +325,10 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       console.error('保存课程地图失败:', error);
       if (courseSaveSequenceRef.current === saveId) {
         setCourseSaveStatus('error');
-        setCourseSaveError(error?.message || '保存失败');
+          setCourseSaveError(error?.message || t('workflow.toolbar.error'));
       }
     }
-  }, [getCourseDraftSaveKey]);
+  }, [getCourseDraftSaveKey, t]);
 
   const handleCourseChange = React.useCallback((nextCourse, meta = {}) => {
     latestCourseRef.current = nextCourse;
@@ -422,7 +422,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
     if (publishing) return;
     const courseId = latestCourseRef.current?.id;
     if (!courseId || String(courseId).startsWith('created-')) {
-      message.warning('请先保存课程后再发布');
+      message.warning(t('workflow.toolbar.saveBeforePublish'));
       return;
     }
 
@@ -443,7 +443,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
         message.open({
           key: 'course-publish-success',
           type: 'success',
-          content: t('course.publishSuccess') || '发布成功！',
+          content: t('course.publishSuccess'),
           duration: 2.5,
         });
       }, 0);
@@ -458,7 +458,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   const exportPpt = React.useCallback(async () => {
     const pptData = latestPptCanvasRef.current;
     if (!Array.isArray(pptData) || pptData.length === 0) {
-      message.warning('暂无可导出的 PPT 内容');
+      message.warning(t('workflow.toolbar.nothingToExport'));
       return;
     }
 
@@ -503,19 +503,19 @@ export function CourseWorkflow({ initialCourse, onBack }) {
         });
         if (!response.ok) {
           const errorBody = await response.json().catch(() => ({}));
-          throw new Error(errorBody.error || `${type === 'video' ? '视频' : '音频'}资源读取失败：HTTP ${response.status}`);
+          throw new Error(errorBody.error || t('workflow.toolbar.mediaReadFailed', { type: t(`workflow.toolbar.mediaType${type === 'video' ? 'Video' : 'Audio'}`), status: response.status }));
         }
 
         const blob = await response.blob();
         const contentType = String(blob.type || response.headers.get('content-type') || '').toLowerCase();
         if (!blob.size || !contentType.startsWith(`${type}/`)) {
-          throw new Error(`${type === 'video' ? '视频' : '音频'}资源格式无效：${contentType || 'unknown'}`);
+          throw new Error(t('workflow.toolbar.mediaInvalid', { type: t(`workflow.toolbar.mediaType${type === 'video' ? 'Video' : 'Audio'}`), format: contentType || 'unknown' }));
         }
 
         const data = await new Promise((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(new Error(`${type === 'video' ? '视频' : '音频'}资源读取失败`));
+          reader.onerror = () => reject(new Error(t('workflow.toolbar.mediaReadFailed', { type: t(`workflow.toolbar.mediaType${type === 'video' ? 'Video' : 'Audio'}`), status: 'network' })));
           reader.readAsDataURL(blob);
         });
         const mimeExtension = {
@@ -610,14 +610,14 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       const title = (latestCourseRef.current?.courseTitle || latestCourseRef.current?.title || 'Lesson Slides')
         .replace(/[\\/:*?"<>|]/g, '_');
       await pres.writeFile({ fileName: `${title}.pptx` });
-      message.success('PPT 已开始导出');
+      message.success(t('workflow.toolbar.exportStarted'));
     } catch (error) {
       console.error('PPT 导出失败:', error);
-      message.error(error?.message || 'PPT 导出失败，请稍后重试');
+      message.error(error?.message || t('workflow.toolbar.exportFailed'));
     } finally {
       setExporting(false);
     }
-  }, []);
+  }, [t]);
 
   const content = [
     <CourseMapView

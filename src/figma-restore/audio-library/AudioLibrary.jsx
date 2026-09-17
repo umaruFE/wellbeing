@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Upload as UploadIcon } from 'lucide-react';
@@ -345,7 +346,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
                           onClick: (info) => handleMenuClick(info, asset),
                         }}
                       >
-                        <button className="fr-aud-card-menu-btn" type="button" aria-label="更多操作" onClick={(event) => event.stopPropagation()}>
+                        <button className="fr-aud-card-menu-btn" type="button" aria-label={i18next.t('audioLibraryUi.77836d3a99')} onClick={(event) => event.stopPropagation()}>
                           <MoreVertical size={18} />
                         </button>
                       </Dropdown>

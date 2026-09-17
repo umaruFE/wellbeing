@@ -58,7 +58,7 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
                 <div className="trd-intro-title">{t('lesson.activityDraft')}</div>
                 <div className="trd-intro-subtitle">{t('lesson.flowEditorTip')}</div>
               </div>
-              <span className="as-right-tag">{isChinese ? '详情预览' : 'Preview'}</span>
+              <span className="as-right-tag">{t('editStepUi.previewTag')}</span>
             </div>
 
             <div className="as-draft-form trd-draft-form">
@@ -152,7 +152,7 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
         </div>
 
         <div className="trd-ft">
-          <button type="button" className="btn-ghost" onClick={onClose}>{isChinese ? '关闭预览' : 'Close Preview'}</button>
+          <button type="button" className="btn-ghost" onClick={onClose}>{t('editStepUi.closePreview')}</button>
           <div className="trd-ft-spacer" />
           <button type="button" className="btn-primary trd-edit-detail-btn" onClick={onEdit}>
             <Edit3 size={15} />

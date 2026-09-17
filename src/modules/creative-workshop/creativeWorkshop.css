@@ -123,6 +123,16 @@
 @media(max-width:760px){.cw-lyric-row.cw-lyric-row-with-clip{grid-template-columns:1fr}.cw-lyric-clip{width:100%}}
 .cw-lyric-row.cw-lyric-row-with-clip{grid-template-columns:30px minmax(0,1fr) 42px;max-width:760px;margin-inline:auto;padding:5px 12px;border-radius:10px;background:#fff}
 .cw-lyric-row-with-clip:hover{background:#f7f1fd}
+/* 歌词行内修正：铅笔按钮 + 编辑态输入框 */
+.cw-lyric-row.cw-lyric-row-with-clip.cw-lyric-row-editable{grid-template-columns:30px minmax(0,1fr) auto}
+.cw-lyric-row-tools{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
+.cw-lyric-tool-btn{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border:1px solid #dcd2e8;border-radius:9px;background:#fff;color:#7046a8;cursor:pointer}
+.cw-lyric-tool-btn:hover{border-color:#9966d0;background:#f3ecfa}
+.cw-lyric-tool-btn.is-save{color:#2f7d4f;border-color:#bfe0cc}
+.cw-lyric-tool-btn.is-save:hover{background:#eef8f1;border-color:#509f69}
+.cw-lyric-edit{display:flex;align-items:center;min-width:0}
+.cw-lyric-edit input{width:100%;min-width:0;border:1px solid #c6b6dd;border-radius:9px;padding:6px 10px;background:#fff;font:inherit;font-size:13px;color:#333e4e}
+.cw-lyric-edit input:focus{outline:none;border-color:#9966d0;box-shadow:0 0 0 3px rgba(153,102,208,.16)}
 .cw-fixed-options{grid-template-columns:repeat(4,minmax(110px,170px));justify-content:start;gap:8px}
 .cw-fixed-options .pbv2-field input{width:100%;min-width:0}
 .cw-fixed-options .pbv2-field span{font-size:11px}

@@ -1,3 +1,4 @@
+import { LocalizedText } from '../../../../i18n/LocalizedText.jsx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { CirclePlus, Music, Play, Search, X } from 'lucide-react';
@@ -11,17 +12,17 @@ import { VIDEO_ASSETS, createVideoTaskDetail } from '../../../video-library/Vide
 import { TaskDetailModal, createCanvasAssetPayload } from '../../../TaskDetailModal';
 import apiService from '../../../../utils/apiService';
 
-const modalTitleByType = {
-  image: '选择图文素材',
-  video: '选择视频素材',
-  audio: '选择音频素材',
-};
+const getModalTitleByType = (t) => ({
+  image: t('pptPickerUi.titleImage'),
+  video: t('pptPickerUi.titleVideo'),
+  audio: t('pptPickerUi.titleAudio'),
+});
 
-const searchPlaceholderByType = {
-  image: '搜索图文素材',
-  video: '搜索视频素材',
-  audio: '搜索音频素材',
-};
+const getSearchPlaceholderByType = (t) => ({
+  image: t('pptPickerUi.searchImage'),
+  video: t('pptPickerUi.searchVideo'),
+  audio: t('pptPickerUi.searchAudio'),
+});
 
 const assetSource = {
   image: IMAGE_ASSETS,
@@ -145,6 +146,8 @@ function DetailModal({ type, asset, onClose, onViewTask }) {
 
 export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
   const { t } = useTranslation();
+  const modalTitleByType = getModalTitleByType(t);
+  const searchPlaceholderByType = getSearchPlaceholderByType(t);
   const fallbackAssets = assetSource[type] || assetSource.image;
   const [libraryAssets, setLibraryAssets] = React.useState([]);
   const assets = libraryAssets;
@@ -328,7 +331,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
         title={(
           <div className="ppt-library-title-wrap">
             <div className="ppt-library-title">{modalTitleByType[type] || modalTitleByType.image}</div>
-            <div className="ppt-library-subtitle">插入到：PPT 课件 / 当前画布</div>
+            <div className="ppt-library-subtitle"><LocalizedText id="pptPickerUi.5915bf52cb" /></div>
           </div>
         )}
       >
@@ -344,12 +347,12 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
             <Select
               value={source}
               onChange={setSource}
-              options={uniqueOptions(assets, 'source', '全部来源')}
+              options={uniqueOptions(assets, 'source', t('imageLib.sourceAll'))}
             />
             <Select
               value={assetType}
               onChange={setAssetType}
-              options={uniqueOptions(assets, 'type', '全部类型')}
+              options={uniqueOptions(assets, 'type', t('imageLib.typeAll'))}
             />
           </div>
 
@@ -370,7 +373,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
                       setDetailAsset(asset);
                     }}
                   >
-                    详情
+                    <LocalizedText id="common.detail" />
                   </button>
                   <div className="ppt-library-thumb">
                     <AssetArt type={type} asset={asset} />
@@ -389,7 +392,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
           </div>
 
           {filteredAssets.length === 0 ? (
-            <div className="ppt-library-empty">{loading ? '正在加载素材库...' : '没有找到匹配素材'}</div>
+            <div className="ppt-library-empty">{loading ? t('pptPickerUi.loadingLibrary') : t('pptPickerUi.noMatch')}</div>
           ) : null}
 
           <Pagination
@@ -403,7 +406,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
         </div>
 
         <div className="ppt-library-footer">
-          <Button onClick={onClose}>取消</Button>
+          <Button onClick={onClose}><LocalizedText id="common.cancel" /></Button>
           <Button
             type="primary"
             className="ppt-library-insert-btn"
@@ -411,7 +414,7 @@ export function PptLibraryPickerModal({ type, open, onClose, onInsert }) {
             icon={<CirclePlus size={15} />}
             onClick={() => insertAsset(selectedAsset)}
           >
-            插入当前页
+            <LocalizedText id="pptPickerUi.d9bd84c847" />
           </Button>
         </div>
       </Modal>

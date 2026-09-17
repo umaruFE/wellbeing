@@ -1,3 +1,6 @@
+import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React from 'react';
 import {
   X,
@@ -46,6 +49,7 @@ export const AssetEditorPanel = ({
   isRightOpen,
   onToggleRightOpen
 }) => {
+  const { t } = useTranslation();
   if (!selectedAsset) return null;
 
   return (
@@ -53,11 +57,11 @@ export const AssetEditorPanel = ({
       <div className="p-4 border-b-2 border-stroke-light bg-warning-light flex items-center justify-between">
         <div className="flex items-center gap-2">
           {getAssetIcon(selectedAsset.type)}
-          <h3 className="font-bold text-info-active">编辑元素</h3>
+          <h3 className="font-bold text-info-active"><LocalizedText id="assetEditor.185cf42742" /></h3>
         </div>
         <div className="flex items-center gap-2">
           {onToggleRightOpen && (
-            <button onClick={onToggleRightOpen} className="text-primary-placeholder hover:text-primary-secondary" title="收起面板">
+            <button onClick={onToggleRightOpen} className="text-primary-placeholder hover:text-primary-secondary" title={i18next.t('assetEditor.1553bf7b86')}>
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
@@ -71,19 +75,19 @@ export const AssetEditorPanel = ({
       {onLayerChange && (
         <div className="px-4 py-2 border-b-2 border-stroke-light bg-white flex items-center justify-between">
           <span className="text-[10px] font-bold text-primary-placeholder uppercase tracking-wider flex items-center gap-1">
-            <Layers className="w-3 h-3" /> 图层
+            <Layers className="w-3 h-3" /> <LocalizedText id="assetEditor.ec4bca7dcc" />
           </span>
           <div className="flex gap-1">
-            <button onClick={() => onLayerChange(selectedAsset.id, 'front')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="置顶">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'front')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title={i18next.t('lesson.pinToTop')}>
               <ChevronsUp className="w-4 h-4" />
             </button>
-            <button onClick={() => onLayerChange(selectedAsset.id, 'forward')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="上移">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'forward')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title={i18next.t('ppt.moveUp')}>
               <ArrowUp className="w-4 h-4" />
             </button>
-            <button onClick={() => onLayerChange(selectedAsset.id, 'backward')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="下移">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'backward')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title={i18next.t('ppt.moveDown')}>
               <ArrowDown className="w-4 h-4" />
             </button>
-            <button onClick={() => onLayerChange(selectedAsset.id, 'back')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title="置底">
+            <button onClick={() => onLayerChange(selectedAsset.id, 'back')} className="p-1.5 hover:bg-surface-alt rounded text-primary-secondary" title={i18next.t('assetEditor.2298689240')}>
               <ChevronsDown className="w-4 h-4" />
             </button>
           </div>
@@ -97,20 +101,20 @@ export const AssetEditorPanel = ({
               <button
                 onClick={() => onFitToCanvas(selectedAsset.id)}
                 className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-stroke-light bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
-                title="按原始比例缩放并放回画布"
+                title={i18next.t('assetEditor.e9cfcecdf9')}
               >
                 <Maximize2 className="w-3.5 h-3.5" />
-                适应画布
+                <LocalizedText id="assetEditor.3bc70c8d9d" />
               </button>
             )}
             {onCenterAsset && (
               <button
                 onClick={() => onCenterAsset(selectedAsset.id)}
                 className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-stroke-light bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
-                title="保持当前尺寸并移动到画布中央"
+                title={i18next.t('assetEditor.0e71c36277')}
               >
                 <Crosshair className="w-3.5 h-3.5" />
-                居中
+                <LocalizedText id="assetEditor.5009324782" />
               </button>
             )}
           </div>
@@ -119,7 +123,7 @@ export const AssetEditorPanel = ({
         {/* 尺寸和旋转 */}
         <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">宽 Width</label>
+            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.3bdb470c60" /></label>
             <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
@@ -131,7 +135,7 @@ export const AssetEditorPanel = ({
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">高 Height</label>
+            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.6cb4458ede" /></label>
             <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
@@ -143,7 +147,7 @@ export const AssetEditorPanel = ({
             </div>
           </div>
           <div>
-            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">旋转 Rotate</label>
+            <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.4c355215cc" /></label>
             <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
@@ -158,7 +162,7 @@ export const AssetEditorPanel = ({
 
         {/* 标题 */}
         <div>
-          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">标题 / Name</label>
+          <label className="text-xs font-bold text-primary-muted uppercase mb-1 block"><LocalizedText id="assetEditor.cb23ac4594" /></label>
           <input 
             type="text" 
             value={selectedAsset.title || ''} 
@@ -172,7 +176,7 @@ export const AssetEditorPanel = ({
           <div className="space-y-4">
             {/* 文本内容 */}
             <div>
-              <label className="text-xs font-bold text-primary-muted uppercase mb-1 block">文本内容 / Content</label>
+              <label className="text-xs font-bold text-primary-muted uppercase mb-1 block"><LocalizedText id="assetEditor.f20c2fe170" /></label>
               <textarea 
                 value={selectedAsset.content || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'content', e.target.value)} 
@@ -183,12 +187,12 @@ export const AssetEditorPanel = ({
             {/* AI 生成提示词 (文本) */}
             <div>
               <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
-                <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
+                <Wand2 className="w-3 h-3 text-purple-500" /> <LocalizedText id="assetEditor.c5bd13ad2b" />
               </label>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 
-                placeholder="描述你想要生成的文本内容..." 
+                placeholder={i18next.t('assetEditor.1638157083')}
                 className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple outline-none h-24 resize-none mb-2"
               />
               <div className="flex gap-2 mb-2">
@@ -197,14 +201,14 @@ export const AssetEditorPanel = ({
                   className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
                 >
                   <History className="w-4 h-4" />
-                  历史生成
+                  <LocalizedText id="assetEditor.afae334af3" />
                 </button>
                 <button 
                   onClick={() => onRegenerateAsset?.(selectedAsset.id)}
                   className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
                   <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} /> 
-                  立即生成
+                  <LocalizedText id="assetEditor.67fe89f079" />
                 </button>
               </div>
             </div>
@@ -212,12 +216,12 @@ export const AssetEditorPanel = ({
             {/* 文本样式选项 */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-primary-muted uppercase">文本样式</label>
+                <label className="text-xs font-bold text-primary-muted uppercase"><LocalizedText id="assetPanel.textStyle" /></label>
               </div>
               
               {/* 字号 */}
               <div>
-                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">字号 Font Size</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.fd2d495ddf" /></label>
                 <div className="flex items-center gap-2">
                   <input 
                     type="number" 
@@ -233,7 +237,7 @@ export const AssetEditorPanel = ({
 
               {/* 加粗 */}
               <div>
-                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">字重 Font Weight</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.d3eae56126" /></label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'fontWeight', 'normal')}
@@ -243,7 +247,7 @@ export const AssetEditorPanel = ({
                         : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
                   >
-                    正常
+                    <LocalizedText id="audioLib.normal" />
                   </button>
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'fontWeight', 'bold')}
@@ -254,7 +258,7 @@ export const AssetEditorPanel = ({
                     }`}
                   >
                     <Bold className="w-3 h-3" />
-                    加粗
+                    <LocalizedText id="assetEditor.f670b2adc0" />
                   </button>
                 </div>
               </div>
@@ -262,7 +266,7 @@ export const AssetEditorPanel = ({
               {/* 文本颜色 */}
               <div>
                 <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block flex items-center gap-1">
-                  <Palette className="w-3 h-3" /> 文本颜色 Color
+                  <Palette className="w-3 h-3" /> <LocalizedText id="assetEditor.534ce06a8f" />
                 </label>
                 <div className="flex items-center gap-2">
                   <input 
@@ -283,7 +287,7 @@ export const AssetEditorPanel = ({
 
               {/* 文本对齐 */}
               <div>
-                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">对齐方式 Align</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.ebe8423be3" /></label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'textAlign', 'left')}
@@ -292,7 +296,7 @@ export const AssetEditorPanel = ({
                         ? 'bg-info-light border-info-border text-info-active' 
                         : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
-                    title="左对齐"
+                    title={i18next.t('assetEditor.413f8db65f')}
                   >
                     <AlignLeft className="w-4 h-4" />
                   </button>
@@ -303,7 +307,7 @@ export const AssetEditorPanel = ({
                         ? 'bg-info-light border-info-border text-info-active' 
                         : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
-                    title="居中"
+                    title={i18next.t('assetEditor.5009324782')}
                   >
                     <AlignCenter className="w-4 h-4" />
                   </button>
@@ -314,7 +318,7 @@ export const AssetEditorPanel = ({
                         ? 'bg-info-light border-info-border text-info-active' 
                         : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
                     }`}
-                    title="右对齐"
+                    title={i18next.t('assetEditor.70fe40dec2')}
                   >
                     <AlignRight className="w-4 h-4" />
                   </button>
@@ -323,7 +327,7 @@ export const AssetEditorPanel = ({
 
               {/* 描边 */}
               <div>
-                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block">描边 Stroke</label>
+                <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.f78f47a879" /></label>
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <input 
@@ -339,13 +343,13 @@ export const AssetEditorPanel = ({
                       }} 
                       className="w-4 h-4 text-dark border-2 border-stroke-light rounded focus:ring-[#2d2d2d]"
                     />
-                    <span className="text-xs text-primary-secondary">启用描边</span>
+                    <span className="text-xs text-primary-secondary"><LocalizedText id="assetEditor.469a3eadb0" /></span>
                   </div>
                   {selectedAsset.strokeWidth && selectedAsset.strokeWidth > 0 && (
                     <div className="space-y-2 pl-6">
                       <div>
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-[10px] text-primary-muted">描边宽度</span>
+                          <span className="text-[10px] text-primary-muted"><LocalizedText id="assetEditor.de4b5a59bd" /></span>
                           <span className="text-[10px] text-primary-placeholder">{selectedAsset.strokeWidth}px</span>
                         </div>
                         <input 
@@ -363,7 +367,7 @@ export const AssetEditorPanel = ({
                         />
                       </div>
                       <div className="flex items-center gap-2">
-                        <label className="text-[10px] text-primary-muted">描边颜色</label>
+                        <label className="text-[10px] text-primary-muted"><LocalizedText id="assetEditor.eaa98f95ba" /></label>
                         <input 
                           type="color" 
                           value={selectedAsset.strokeColor || '#000000'} 
@@ -390,7 +394,7 @@ export const AssetEditorPanel = ({
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-1">
-                    <Upload className="w-3 h-3" /> 参考图片 (可选)
+                    <Upload className="w-3 h-3" /> <LocalizedText id="assetEditor.dc33859347" />
                   </label>
                   <span className="text-[10px] bg-surface text-dark px-1.5 py-0.5 rounded-lg border border-stroke-light">Optional</span>
                 </div>
@@ -416,8 +420,8 @@ export const AssetEditorPanel = ({
                     <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform">
                       <Upload className="w-5 h-5 text-primary-placeholder" />
                     </div>
-                    <span className="text-xs text-primary-muted font-medium">点击上传参考图片</span>
-                    <span className="text-[10px] text-primary-placeholder mt-1">仅用于风格辅助，非必传</span>
+                    <span className="text-xs text-primary-muted font-medium"><LocalizedText id="assetEditor.7f4eac35c3" /></span>
+                    <span className="text-[10px] text-primary-placeholder mt-1"><LocalizedText id="assetEditor.3e2b389305" /></span>
                   </div>
                 ) : (
                   <div className="space-y-2">
@@ -427,7 +431,7 @@ export const AssetEditorPanel = ({
                       <button 
                         onClick={() => onAssetChange(selectedAsset.id, 'referenceImage', null)} 
                         className="absolute top-2 right-2 bg-white text-primary-secondary hover:text-error p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity"
-                        title="移除参考图"
+                        title={i18next.t('assetEditor.6c72b99216')}
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -440,12 +444,12 @@ export const AssetEditorPanel = ({
             {/* AI 生成提示词 */}
             <div>
               <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
-                <Wand2 className="w-3 h-3 text-purple-500" /> AI 生成提示词 / Prompt
+                <Wand2 className="w-3 h-3 text-purple-500" /> <LocalizedText id="assetEditor.c5bd13ad2b" />
               </label>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 
-                placeholder="描述你想要生成的画面..." 
+                placeholder={i18next.t('assetEditor.d9f1d40ad4')}
                 className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple outline-none h-24 resize-none mb-2"
               />
               <div className="flex gap-2 mb-2">
@@ -454,14 +458,14 @@ export const AssetEditorPanel = ({
                   className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
                 >
                   <History className="w-4 h-4" />
-                  历史生成
+                  <LocalizedText id="assetEditor.afae334af3" />
                 </button>
                 <button
                   onClick={() => onRegenerateAsset?.(selectedAsset.id)}
                   className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
                   <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} />
-                  {selectedAsset.referenceImage ? '图生图' : '立即生成'}
+                  {selectedAsset.referenceImage ? t('assetEditor.imageToImage') : t('assetEditor.67fe89f079')}
                 </button>
               </div>
             </div>
@@ -471,34 +475,34 @@ export const AssetEditorPanel = ({
               <>
                 <div>
                   <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
-                    <Music className="w-3 h-3 text-info-hover" /> 风格 / Style
+                    <Music className="w-3 h-3 text-info-hover" /> <LocalizedText id="assetEditor.08fddaf39e" />
                   </label>
                   <select
                     value={selectedAsset.style || ''}
                     onChange={(e) => onAssetChange(selectedAsset.id, 'style', e.target.value)}
                     className="w-full text-sm border border-info-border bg-info-light rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
-                    <option value="">自动选择</option>
-                    <option value="pop, catchy, upbeat">流行 Pop</option>
+                    <option value=""><LocalizedText id="assetEditor.9741bc8c5f" /></option>
+                    <option value="pop, catchy, upbeat"><LocalizedText id="assetEditor.61d5ebf290" /></option>
                     <option value="R&B, smooth, soulful">R&B</option>
-                    <option value="rock, electric guitar, energetic">摇滚 Rock</option>
-                    <option value="electronic, synthesizer, modern">电子 Electronic</option>
-                    <option value="jazz, improvisation, sophisticated">爵士 Jazz</option>
-                    <option value="classical, orchestral, elegant">古典 Classical</option>
-                    <option value="folk, acoustic, storytelling">民谣 Folk</option>
-                    <option value="cafe, warm, reflection, relaxed">咖啡厅 Cafe</option>
-                    <option value="piano, keyboard, melodic">钢琴 Piano</option>
-                    <option value="guitar, strings, acoustic">吉他 Guitar</option>
-                    <option value="soft, gentle, calming">轻柔 Soft</option>
-                    <option value="upbeat, happy, energetic">欢快 Upbeat</option>
-                    <option value="emotional, heartfelt, moving">情感 Emotional</option>
-                    <option value="ambient, atmospheric, ethereal">氛围 Ambient</option>
+                    <option value="rock, electric guitar, energetic"><LocalizedText id="assetEditor.3a1544429a" /></option>
+                    <option value="electronic, synthesizer, modern"><LocalizedText id="assetEditor.9e5a9d1f1d" /></option>
+                    <option value="jazz, improvisation, sophisticated"><LocalizedText id="assetEditor.6728028cc8" /></option>
+                    <option value="classical, orchestral, elegant"><LocalizedText id="assetEditor.106ec2422d" /></option>
+                    <option value="folk, acoustic, storytelling"><LocalizedText id="assetEditor.4e4951a5c3" /></option>
+                    <option value="cafe, warm, reflection, relaxed"><LocalizedText id="assetEditor.eb40341bd8" /></option>
+                    <option value="piano, keyboard, melodic"><LocalizedText id="assetEditor.e11cedb864" /></option>
+                    <option value="guitar, strings, acoustic"><LocalizedText id="assetEditor.4ae01ed99c" /></option>
+                    <option value="soft, gentle, calming"><LocalizedText id="assetEditor.b7e48ef10f" /></option>
+                    <option value="upbeat, happy, energetic"><LocalizedText id="assetEditor.0eaffd210a" /></option>
+                    <option value="emotional, heartfelt, moving"><LocalizedText id="assetEditor.a3ef720b90" /></option>
+                    <option value="ambient, atmospheric, ethereal"><LocalizedText id="assetEditor.1830f0764b" /></option>
                   </select>
                 </div>
 
                 <div>
                   <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
-                    <Clock className="w-3 h-3 text-info-hover" /> 时长 / Duration
+                    <Clock className="w-3 h-3 text-info-hover" /> <LocalizedText id="assetEditor.48d2d5cfc9" />
                   </label>
                   <div className="flex items-center gap-3">
                     <input
@@ -511,23 +515,23 @@ export const AssetEditorPanel = ({
                       className="flex-1 h-2 bg-stroke rounded-lg appearance-none cursor-pointer accent-blue-500"
                     />
                     <span className="text-sm font-medium text-primary-secondary min-w-[50px]">
-                      {selectedAsset.duration || 30} 秒
+                      {selectedAsset.duration || 30} <LocalizedText id="videoWizard.eb6aaba1a1" />
                     </span>
                   </div>
                 </div>
 
                 <div>
                   <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
-                    <Wand2 className="w-3 h-3 text-info-hover" /> 歌词 / Lyrics
+                    <Wand2 className="w-3 h-3 text-info-hover" /> <LocalizedText id="assetEditor.6f39f08406" />
                   </label>
                   <textarea 
                     value={selectedAsset.lyrics || ''} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'lyrics', e.target.value)} 
-                    placeholder="输入歌词内容，留空则生成纯音乐..." 
+                    placeholder={i18next.t('assetEditor.a6e06a0792')}
                     className="w-full text-sm border border-info-border bg-info-light rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none h-24 resize-none"
                   />
                   <p className="text-[10px] text-primary-placeholder mt-1">
-                    提示：输入歌词后，AI会根据歌词生成歌曲；留空则生成纯音乐
+                    <LocalizedText id="assetEditor.3302e78670" />
                   </p>
                 </div>
               </>
@@ -541,13 +545,13 @@ export const AssetEditorPanel = ({
             onClick={() => onCopyAsset?.(selectedAsset.id)} 
             className="w-full py-2 text-info-hover border border-info-border rounded text-sm font-bold hover:bg-info-light flex items-center justify-center gap-2"
           >
-            <Copy className="w-4 h-4" /> 复制此元素
+            <Copy className="w-4 h-4" /> <LocalizedText id="assetEditor.0a9d2f07dd" />
           </button>
           <button 
             onClick={() => onDeleteAsset?.(selectedAsset.id)} 
             className="w-full py-2 text-error border border-error-border rounded text-sm font-bold hover:bg-error-light flex items-center justify-center gap-2"
           >
-            <Trash2 className="w-4 h-4" /> 删除此元素 (Del)
+            <Trash2 className="w-4 h-4" /> <LocalizedText id="assetEditor.2057deb61b" />
           </button>
         </div>
       </div>

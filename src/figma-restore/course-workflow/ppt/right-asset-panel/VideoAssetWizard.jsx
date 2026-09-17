@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+import { LocalizedText, LocalizedValue } from '../../../../i18n/LocalizedText.jsx';
 import React from 'react';
 import { Input } from 'antd';
 import { Check, Pause, Sparkles, X } from 'lucide-react';
@@ -125,7 +127,7 @@ async function completeAndSaveVideo(asset, generated) {
             error: status?.error || '视频生成失败',
           }).catch(() => {});
         }
-        throw new Error(status?.error || '视频生成失败');
+        throw new Error(status?.error || i18next.t('videoWizard.videoGenerateFailed'));
       }
     }
   }
@@ -177,16 +179,16 @@ async function generateStoryboardAsset(asset, values) {
   const storyboardData = unwrapStoryboardData(storyboardResult);
 
   if (!storyboardData) {
-    throw new Error('分镜生成完成，但未返回 storyboardData');
+    throw new Error(i18next.t('videoWizard.storyboardDataMissing'));
   }
 
   const storyboardImages = storyboardData.storyboard_images_filepath;
   const storyboardPrompts = storyboardData.storyboard_prompts;
   if (!Array.isArray(storyboardImages) || storyboardImages.length === 0) {
-    throw new Error('分镜生成完成，但未返回分镜图片');
+    throw new Error(i18next.t('videoWizard.storyboardImagesMissing'));
   }
   if (!Array.isArray(storyboardPrompts) || storyboardPrompts.length === 0) {
-    throw new Error('分镜生成完成，但未返回视频提示词');
+    throw new Error(i18next.t('videoWizard.storyboardPromptsMissing'));
   }
 
   return {
@@ -221,7 +223,7 @@ async function composeStoryboardVideo(asset, storyboard) {
     ? composed.videoData
     : findVideoUrl(composed?.videoData || composed);
   if (!videoUrl) {
-    throw new Error('视频合成完成，但未返回视频地址');
+    throw new Error(i18next.t('videoWizard.videoUrlMissing'));
   }
 
   return completeAndSaveVideo(asset, {
@@ -244,7 +246,7 @@ function VideoStepper({ step }) {
         <React.Fragment key={label}>
           <div className={`ppt-v1-step ${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}>
             <span>{step > index ? <Check size={12} /> : index + 1}</span>
-            <strong>{label}</strong>
+            <strong><LocalizedValue value={label} catalog="videoOptionLabels" /></strong>
           </div>
           {index < steps.length - 1 ? <i /> : null}
         </React.Fragment>
@@ -260,7 +262,7 @@ function StoryStepper({ step }) {
         <React.Fragment key={label}>
           <div className={`ppt-vm-step ${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}>
             <span>{step > index ? <Check size={12} /> : index + 1}</span>
-            <strong>{label}</strong>
+            <strong><LocalizedValue value={label} catalog="videoOptionLabels" /></strong>
           </div>
           {index < storySteps.length - 1 ? <i /> : null}
         </React.Fragment>
@@ -286,7 +288,7 @@ function CountHint({ count, minimum = 6 }) {
 function SceneRoleStep({ values, setValue }) {
   return (
     <div className="ppt-v1-body">
-      <div className="ppt-v1-section-title">设置场景</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.4130da68db" /></div>
       <div className="ppt-v1-scene-grid">
         {scenes.map((scene) => (
           <button
@@ -296,20 +298,20 @@ function SceneRoleStep({ values, setValue }) {
             onClick={() => setValue('scene', scene)}
           >
             <span className={`ppt-v1-scene-art scene-${scene}`} />
-            <strong>{scene}</strong>
+            <strong><LocalizedValue value={scene} catalog="videoOptionLabels" /></strong>
           </button>
         ))}
       </div>
 
       <div className="ppt-v1-scene-prompt">
-        <Input.TextArea placeholder="例：太空场景，宇宙飞船驾驶舱" maxLength={40} />
+        <Input.TextArea placeholder={i18next.t('videoWizard.6fcf0d9501')} maxLength={40} />
         <div>
           <span>0 / 40</span>
-          <button type="button"><Sparkles size={14} />帮我写</button>
+          <button type="button"><Sparkles size={14} /><LocalizedText id="videoWizard.b76ad92520" /></button>
         </div>
       </div>
 
-      <div className="ppt-v1-section-title">IP 角色</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.1851ef4d16" /></div>
       <div className="ppt-v1-character-grid">
         {characters.map((character) => (
           <button
@@ -324,7 +326,7 @@ function SceneRoleStep({ values, setValue }) {
         ))}
       </div>
 
-      <div className="ppt-v1-section-title">视频方向</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.f43ebf86b1" /></div>
       <div className="ppt-v1-direction-row">
         {[
           ['16:9', '横版'],
@@ -337,7 +339,7 @@ function SceneRoleStep({ values, setValue }) {
             onClick={() => setValue('direction', ratio)}
           >
             <strong>{ratio}</strong>
-            <span>{label}</span>
+            <span><LocalizedValue value={label} catalog="videoOptionLabels" /></span>
           </button>
         ))}
       </div>
@@ -382,16 +384,16 @@ function WordSentenceFields({
 
   return (
     <>
-      <div className="ppt-v1-required-line"><b>* {wordTitle}</b>{wordHint ? <span>（{wordHint}）</span> : null}</div>
+      <div className="ppt-v1-required-line"><b>* <LocalizedValue value={wordTitle} catalog="videoOptionLabels" /></b>{wordHint ? <span>（<LocalizedValue value={wordHint} catalog="videoOptionLabels" />）</span> : null}</div>
       <div className="ppt-v1-word-box">
         <div>
           {values.words.map((word) => (
-            <span key={word}>{word}<button type="button" onClick={() => removeWord(word)} aria-label={`删除 ${word}`}><X size={12} /></button></span>
+            <span key={word}>{word}<button type="button" onClick={() => removeWord(word)} aria-label={i18next.t('videoWizard.deleteItem', { item: word })}><X size={12} /></button></span>
           ))}
         </div>
         <Input.TextArea
           value={wordDraft}
-          placeholder="输入后按 Enter 添加..."
+          placeholder={i18next.t('videoWizard.0510057c10')}
           onChange={(event) => setWordDraft(event.target.value)}
           onKeyDown={(event) => {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -403,10 +405,10 @@ function WordSentenceFields({
       </div>
       <CountHint count={values.words.length} />
 
-      <div className="ppt-v1-required-line"><b>{sentenceTitle.includes('第二关') ? '* ' : ''}{sentenceTitle}</b><span>{sentenceHint ? `（${sentenceHint}）` : ''}</span></div>
+      <div className="ppt-v1-required-line"><b>{sentenceTitle.includes('第二关') ? '* ' : ''}<LocalizedValue value={sentenceTitle} catalog="videoOptionLabels" /></b><span>{sentenceHint ? <>（<LocalizedValue value={sentenceHint} catalog="videoOptionLabels" />）</> : null}</span></div>
       <div className="ppt-v1-sentence-list">
         {values.sentences.map((sentence) => (
-          <div key={sentence}><span>⠿</span><strong>{sentence}</strong><button type="button" onClick={() => removeSentence(sentence)} aria-label={`删除 ${sentence}`}><X size={14} /></button></div>
+          <div key={sentence}><span>⠿</span><strong>{sentence}</strong><button type="button" onClick={() => removeSentence(sentence)} aria-label={i18next.t('videoWizard.deleteItem', { item: sentence })}><X size={14} /></button></div>
         ))}
       </div>
       <CountHint count={values.sentences.length} />
@@ -416,7 +418,7 @@ function WordSentenceFields({
           <Input
             autoFocus
             value={sentenceDraft}
-            placeholder="输入句型，按 Enter 确认..."
+            placeholder={i18next.t('videoWizard.ab4868b5c1')}
             onChange={(event) => setSentenceDraft(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === 'Enter') {
@@ -429,11 +431,11 @@ function WordSentenceFields({
               }
             }}
           />
-          <button type="button" onClick={addSentence}>确认</button>
+          <button type="button" onClick={addSentence}><LocalizedText id="videoWizard.b56d9ac6c5" /></button>
           <button type="button" onClick={() => { setAddingSentence(false); setSentenceDraft(''); }}>×</button>
         </div>
       ) : (
-        <button type="button" className="ppt-v1-add-sentence" onClick={() => setAddingSentence(true)}>+ 添加句型</button>
+        <button type="button" className="ppt-v1-add-sentence" onClick={() => setAddingSentence(true)}><LocalizedText id="videoWizard.e4e9c85084" /></button>
       )}
     </>
   );
@@ -444,28 +446,28 @@ function VocabSentenceStep({ values, setValue }) {
 
   return (
     <div className="ppt-v1-body">
-      <div className="ppt-v1-section-title">填写词汇与句型</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.2321a49fa5" /></div>
 
       <WordSentenceFields values={values} setValue={setValue} />
 
       <div className="ppt-v1-duration-row">
-        <span>预计视频时长</span>
-        <strong>约 2 分 55秒</strong>
+        <span><LocalizedText id="videoWizard.45c619288a" /></span>
+        <strong><LocalizedText id="videoWizard.3118b0401d" /></strong>
       </div>
 
       <div className="ppt-v1-divider" />
-      <div className="ppt-v1-section-title">单词气泡样式</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.de1e09b58e" /></div>
       <div className="ppt-v1-bubble-grid">
         {bubbleTypes.map((type) => (
           <button type="button" key={type} className={values.bubble === type ? 'is-active' : ''} onClick={() => setValue('bubble', type)}>
             <span className={`shape-${type}`} />
-            <strong>{type}</strong>
+            <strong><LocalizedValue value={type} catalog="videoOptionLabels" /></strong>
           </button>
         ))}
       </div>
 
       <div className="ppt-v1-divider" />
-      <div className="ppt-v1-section-title">视频偏好设置</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.a5bd70de60" /></div>
       <div className="ppt-v1-toggle-card">
         {[
           ['bgm', '背景音乐', '动感音乐随关卡节奏变化'],
@@ -473,7 +475,7 @@ function VocabSentenceStep({ values, setValue }) {
           ['sfx', '单词发音音效', '击破单词时播放该词发音'],
         ].map(([key, title, desc]) => (
           <button type="button" key={key} onClick={() => toggle(key)}>
-            <span><strong>{title}</strong><em>{desc}</em></span>
+            <span><strong><LocalizedValue value={title} catalog="videoOptionLabels" /></strong><em><LocalizedValue value={desc} catalog="videoOptionLabels" /></em></span>
             <i className={values[key] ? 'is-on' : ''} />
           </button>
         ))}
@@ -485,14 +487,14 @@ function VocabSentenceStep({ values, setValue }) {
 function SummaryCard({ values }) {
   return (
     <div className="ppt-v1-summary-card">
-      <div><span>视频类型</span><strong>体能闯关</strong></div>
-      <div><span>时长</span><strong>按分镜自动计算</strong></div>
-      <div><span>视频方向</span><strong>{values.direction}</strong></div>
-      <div><span>场景</span><strong>{values.scene}</strong></div>
-      <div><span>IP 角色</span><strong>{values.character}</strong></div>
+      <div><span><LocalizedText id="videoWizard.7849d47875" /></span><strong><LocalizedText id="videoWizard.29b723248a" /></strong></div>
+      <div><span><LocalizedText id="videoWizard.29d0552d2e" /></span><strong><LocalizedText id="videoWizard.5ebd7f9bb6" /></strong></div>
+      <div><span><LocalizedText id="videoWizard.f43ebf86b1" /></span><strong>{values.direction}</strong></div>
+      <div><span><LocalizedText id="videoWizard.625b392c7b" /></span><strong><LocalizedValue value={values.scene} catalog="videoOptionLabels" /></strong></div>
+      <div><span><LocalizedText id="videoWizard.1851ef4d16" /></span><strong>{values.character}</strong></div>
       <section>
-        <article><span>词汇数</span><strong>{values.words.length}</strong></article>
-        <article><span>句型数</span><strong>{values.sentences.length}</strong></article>
+        <article><span><LocalizedText id="videoWizard.305c991321" /></span><strong>{values.words.length}</strong></article>
+        <article><span><LocalizedText id="videoWizard.ede08f1fa0" /></span><strong>{values.sentences.length}</strong></article>
       </section>
     </div>
   );
@@ -500,46 +502,46 @@ function SummaryCard({ values }) {
 
 function storyboardPromptText(prompt, index) {
   if (typeof prompt === 'string') return prompt;
-  return prompt?.description || prompt?.prompt || `分镜 ${index + 1}`;
+  return prompt?.description || prompt?.prompt || `${i18next.t('videoWizard.fcad7fe371')} ${index + 1}`;
 }
 
 function StoryboardImagesStep({ storyboard, generating, onRegenerate }) {
   return (
     <div className="ppt-v1-body">
-      <div className="ppt-v1-section-title">生成分镜图片</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.396339fb3f" /></div>
       {generating ? (
         <div className="ppt-v1-progress-card">
           <div className="ppt-v1-progress-hero">
             <span />
-            <strong>正在生成分镜图片</strong>
-            <em>AI 正在根据角色和提示词编排画面，请稍候...</em>
+            <strong><LocalizedText id="videoWizard.95faa45d9f" /></strong>
+            <em><LocalizedText id="videoWizard.4a43563202" /></em>
           </div>
         </div>
       ) : storyboard ? (
         <>
           <p className="ppt-storyboard-tip">
-            已生成 {storyboard.images.length} 张分镜图片。确认无误后进入下一步生成视频。
+            <LocalizedText id="videoWizard.79c74f41ca" /> {storyboard.images.length} <LocalizedText id="videoWizard.926630340e" />
           </p>
           <div className="ppt-storyboard-grid">
             {storyboard.images.map((image, index) => (
               <article key={`${image}-${index}`}>
                 <div>
-                  {image ? <img src={image} alt={`分镜 ${index + 1}`} /> : <span>暂无图片</span>}
-                  <b>分镜 {index + 1}</b>
+                  {image ? <img src={image} alt={`${i18next.t('videoWizard.fcad7fe371')} ${index + 1}`} /> : <span><LocalizedText id="videoWizard.56872a6c3b" /></span>}
+                  <b><LocalizedText id="videoWizard.fcad7fe371" /> {index + 1}</b>
                 </div>
                 <p>{storyboardPromptText(storyboard.prompts[index], index)}</p>
-                <em>{Number(storyboard.prompts[index]?.duration) || 3} 秒</em>
+                <em>{Number(storyboard.prompts[index]?.duration) || 3} <LocalizedText id="videoWizard.eb6aaba1a1" /></em>
               </article>
             ))}
           </div>
           <button type="button" className="ppt-storyboard-regenerate" onClick={onRegenerate}>
-            ↻ 重新生成分镜图片
+            <LocalizedText id="videoWizard.955c056a4a" />
           </button>
         </>
       ) : (
         <div className="ppt-storyboard-empty">
-          <strong>先生成分镜图片，再生成视频</strong>
-          <p>系统会使用当前选择的单个 IP 角色、画面比例和全部选项生成分镜。</p>
+          <strong><LocalizedText id="videoWizard.5bf4910a45" /></strong>
+          <p><LocalizedText id="videoWizard.10c1f82ee0" /></p>
         </div>
       )}
     </div>
@@ -549,27 +551,27 @@ function StoryboardImagesStep({ storyboard, generating, onRegenerate }) {
 function ConfirmStep({ values, generating, onHang }) {
   return (
     <div className="ppt-v1-body">
-      <div className="ppt-v1-section-title">确认并生成视频</div>
+      <div className="ppt-v1-section-title"><LocalizedText id="videoWizard.b4c82d6033" /></div>
       <SummaryCard values={values} />
       <div className="ppt-v1-divider" />
       {generating ? (
         <div className="ppt-v1-progress-card">
           <div className="ppt-v1-progress-hero">
             <span />
-            <strong>正在生成视频</strong>
-            <em>正在处理第二个平衡桥...</em>
+            <strong><LocalizedText id="videoWizard.1e15b84cd2" /></strong>
+            <em><LocalizedText id="videoWizard.2a35cf292b" /></em>
           </div>
           <div className="ppt-v1-progress-list">
             {progressRows.map((row) => (
               <div key={row.text} className={`is-${row.state}`}>
                 <span>{row.state === 'done' ? '✓' : row.state === 'running' ? '○' : '◷'}</span>
-                <strong>{row.text}</strong>
-                <em>{row.status}</em>
+                <strong><LocalizedValue value={row.text} catalog="videoOptionLabels" /></strong>
+                <em><LocalizedValue value={row.status} catalog="videoOptionLabels" /></em>
               </div>
             ))}
           </div>
           <button type="button" className="ppt-hang-btn ppt-video-hang-btn" onClick={onHang}>
-            <Pause size={13} />挂起后台，继续编辑课件
+            <Pause size={13} /><LocalizedText id="videoWizard.094559b0f2" />
           </button>
         </div>
       ) : null}
@@ -618,7 +620,7 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
       const generatedStoryboard = await generateStoryboardAsset(asset, values);
       setStoryboard(generatedStoryboard);
     } catch (error) {
-      setErrorMessage(error.message || '分镜图片生成失败');
+      setErrorMessage(error.message || i18next.t('videoOptionLabels.分镜图片生成失败'));
     } finally {
       setStoryboardGenerating(false);
     }
@@ -626,7 +628,7 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
 
   const generateVideo = async () => {
     if (!storyboard) {
-      setErrorMessage('请先生成分镜图片');
+      setErrorMessage(i18next.t('videoOptionLabels.请先生成分镜图片'));
       setStep(2);
       return;
     }
@@ -639,7 +641,7 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
         onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
       }
     } catch (error) {
-      setErrorMessage(error.message || '视频生成任务提交失败');
+      setErrorMessage(error.message || i18next.t('videoOptionLabels.视频生成任务提交失败'));
       setGenerating(false);
     }
   };
@@ -669,13 +671,13 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
         {generating || storyboardGenerating ? (
           <>
             <button type="button" className="ppt-v1-primary is-disabled">
-              {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
+              <LocalizedValue value={storyboardGenerating ? '正在生成分镜' : '正在生成视频'} catalog="videoOptionLabels" />
             </button>
           </>
         ) : (
           <>
             <button type="button" className="ppt-v1-secondary" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}>
-              {step === 0 ? '取消' : '上一步'}
+              <LocalizedValue value={step === 0 ? '取消' : '上一步'} catalog="videoOptionLabels" />
             </button>
             <button
               type="button"
@@ -687,7 +689,7 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
                 else generateVideo();
               }}
             >
-              {step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'}
+              <LocalizedValue value={step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'} catalog="videoOptionLabels" />
             </button>
           </>
         )}
@@ -699,7 +701,7 @@ function FitnessVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
 function StoryRoleStep({ values, setValue }) {
   return (
     <div className="ppt-vm-body">
-      <div className="ppt-vm-section-title">选择一个 IP 角色（单选）</div>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.f9c88023e0" /></div>
       <div className="ppt-vm-character-grid">
         {characters.map((character) => (
           <button
@@ -714,7 +716,7 @@ function StoryRoleStep({ values, setValue }) {
           </button>
         ))}
       </div>
-      <div className="ppt-vm-section-title">视频方向</div>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.f43ebf86b1" /></div>
       <div className="ppt-v1-direction-row">
         {[
           ['16:9', '横版'],
@@ -722,7 +724,7 @@ function StoryRoleStep({ values, setValue }) {
         ].map(([ratio, label]) => (
           <button type="button" key={ratio} className={values.direction === ratio ? 'is-active' : ''} onClick={() => setValue('direction', ratio)}>
             <strong>{ratio}</strong>
-            <span>{label}</span>
+            <span><LocalizedValue value={label} catalog="videoOptionLabels" /></span>
           </button>
         ))}
       </div>
@@ -740,17 +742,17 @@ function StoryNarrativeStep({ values, setValue }) {
 
   return (
     <div className="ppt-vm-body">
-      <div className="ppt-vm-section-title">叙事模板</div>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.ca2b33abc8" /></div>
       <div className="ppt-vm-template-list">
         {templates.map(([key, title, desc]) => (
           <button type="button" key={key} className={values.template === key ? 'is-active' : ''} onClick={() => setValue('template', key)}>
             <i>{key === 'shield' ? '♜' : key === 'map' ? '◇' : key === 'cup' ? '♛' : '✤'}</i>
-            <span><strong>{title}</strong><em>{desc}</em></span>
+            <span><strong><LocalizedValue value={title} catalog="videoOptionLabels" /></strong><em><LocalizedValue value={desc} catalog="videoOptionLabels" /></em></span>
           </button>
         ))}
       </div>
       <div className="ppt-v1-divider" />
-      <div className="ppt-vm-section-title">填写词汇与句型</div>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.2321a49fa5" /></div>
       <WordSentenceFields
         values={values}
         setValue={setValue}
@@ -774,23 +776,23 @@ function StoryScriptStep() {
 
   return (
     <div className="ppt-vm-body">
-      <div className="ppt-vm-section-title">叙事脚本</div>
-      <p className="ppt-vm-sub">AI 已编排叙事节拍，可整体重新生成</p>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.a125e1e127" /></div>
+      <p className="ppt-vm-sub"><LocalizedText id="videoWizard.d675779a66" /></p>
       <div className="ppt-vm-script-list">
         {cards.map(([tag, title, desc, quote, people], index) => (
           <article key={`${title}-${index}`}>
             <div>
-              <b className={`tag-${tag}`}>{tag}</b>
-              <strong>{title}</strong>
+              <b className={`tag-${tag}`}><LocalizedValue value={tag} catalog="videoOptionLabels" /></b>
+              <strong><LocalizedValue value={title} catalog="videoOptionLabels" /></strong>
               <span>{people}</span>
             </div>
-            <em>远景→推进</em>
-            <p>{desc}</p>
+            <em><LocalizedText id="videoWizard.667144be2e" /></em>
+            <p><LocalizedValue value={desc} catalog="videoOptionLabels" /></p>
             <blockquote>{quote}<small>{index > 1 ? title.replace('挑战：', '') : ''}</small></blockquote>
           </article>
         ))}
       </div>
-      <button type="button" className="ppt-vm-regenerate">↻ 整体重新生成</button>
+      <button type="button" className="ppt-vm-regenerate"><LocalizedText id="videoWizard.9a9ac408f7" /></button>
     </div>
   );
 }
@@ -854,15 +856,15 @@ function StoryStoryboardStep({ values, setValue }) {
 
   return (
     <div className="ppt-vm-body">
-      <div className="ppt-vm-section-title">分镜画面 + 角色编排</div>
-      <p className="ppt-vm-sub">点击任意帧在全屏窗口中编辑角色位置，不满意可重新生成</p>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.186baf641d" /></div>
+      <p className="ppt-vm-sub"><LocalizedText id="videoWizard.5ee2db8ec3" /></p>
       <div className="ppt-vm-frame-grid">
         {storyFrames.map((frame, index) => (
           <button type="button" key={frame.title} onClick={() => openFrame(index)}>
             <span className="ppt-v1-scene-art" />
-            <b>帧{index + 1}</b>
+            <b><LocalizedText id="videoWizard.63917a8d49" />{index + 1}</b>
             <i>P</i><i>E</i>
-            <strong>{frame.title}</strong>
+            <strong><LocalizedValue value={frame.title} catalog="videoOptionLabels" /></strong>
           </button>
         ))}
       </div>
@@ -876,10 +878,10 @@ function StoryStoryboardStep({ values, setValue }) {
           onResetFrame={resetFrame}
         />
       ) : null}
-      <div className="ppt-vm-section-title">视频偏好设置</div>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.a5bd70de60" /></div>
       <div className="ppt-vm-pref-card">
         <div>
-          <span>旁白语言</span>
+          <span><LocalizedText id="videoWizard.2b02889700" /></span>
           <p>
             {[
               ['english', 'English'],
@@ -891,7 +893,7 @@ function StoryStoryboardStep({ values, setValue }) {
                 className={values.narrationLanguage === value ? 'is-active' : ''}
                 onClick={() => setValue('narrationLanguage', value)}
               >
-                {label}
+                <LocalizedValue value={label} catalog="videoOptionLabels" />
               </button>
             ))}
           </p>
@@ -903,11 +905,11 @@ function StoryStoryboardStep({ values, setValue }) {
             className={`ppt-vm-auto-pill ${values.bgm ? 'is-active' : ''}`}
             onClick={() => setValue('bgm', !values.bgm)}
           >
-            {values.bgm ? '自动匹配' : '已关闭'}
+            <LocalizedValue value={values.bgm ? '自动匹配' : '已关闭'} catalog="videoOptionLabels" />
           </button>
         </div>
         <button type="button" className="ppt-vm-pref-switch-row" onClick={() => setValue('sfx', !values.sfx)}>
-          <span>音效</span>
+          <span><LocalizedText id="videoWizard.505e64c2a0" /></span>
           <i className={values.sfx ? 'is-on' : ''} />
         </button>
       </div>
@@ -951,15 +953,15 @@ function FrameEditModal({ activeFrame, framePositions, onClose, onFrameChange, o
     <div className="ppt-vm-modal-backdrop" role="dialog" aria-modal="true">
       <div className="ppt-vm-modal">
         <div className="ppt-vm-modal-head">
-          <strong>帧 {activeFrame + 1} · {frame.title}</strong>
+          <strong><LocalizedText id="videoWizard.63917a8d49" /> {activeFrame + 1} · <LocalizedValue value={frame.title} catalog="videoOptionLabels" /></strong>
           <div>
-            <button type="button" onClick={() => onResetFrame(activeFrame)}>↻ 重新生成本帧</button>
-            <button type="button" className="ppt-vm-modal-close" onClick={onClose} aria-label="关闭"><X size={16} /></button>
+            <button type="button" onClick={() => onResetFrame(activeFrame)}><LocalizedText id="videoWizard.fc8156bb16" /></button>
+            <button type="button" className="ppt-vm-modal-close" onClick={onClose} aria-label={i18next.t('videoWizard.6c14bd7f6f')}><X size={16} /></button>
           </div>
         </div>
         <div className="ppt-vm-modal-content">
           <div className="ppt-vm-modal-label">
-            画布编排 <span>（拖拽缩放背景 · 拖拽摆放角色 · 角色大小固定）</span>
+            <LocalizedText id="videoWizard.ea93972364" /> <span><LocalizedText id="videoWizard.f4c828595d" /></span>
           </div>
           <div className="ppt-vm-canvas-wrap">
             <div
@@ -986,7 +988,7 @@ function FrameEditModal({ activeFrame, framePositions, onClose, onFrameChange, o
             </div>
           </div>
           <div className="ppt-vm-scale-row">
-            <span>背景缩放</span>
+            <span><LocalizedText id="videoWizard.9e5d7e2f76" /></span>
             <input
               type="range"
               min="50"
@@ -997,12 +999,12 @@ function FrameEditModal({ activeFrame, framePositions, onClose, onFrameChange, o
             <strong>{bgScale}%</strong>
           </div>
           <div className="ppt-vm-modal-info">
-            <p>{frame.desc}</p>
+            <p><LocalizedValue value={frame.desc} catalog="videoOptionLabels" /></p>
             <div>
-              {frame.tags.map((tag) => <span key={tag}>{tag}</span>)}
+              {frame.tags.map((tag) => <span key={tag}><LocalizedValue value={tag} catalog="videoOptionLabels" /></span>)}
             </div>
           </div>
-          <div className="ppt-vm-modal-label">全部帧</div>
+          <div className="ppt-vm-modal-label"><LocalizedText id="videoWizard.9b115e4f91" /></div>
           <div className="ppt-vm-modal-nav">
             {storyFrames.map((item, index) => (
               <button
@@ -1012,16 +1014,16 @@ function FrameEditModal({ activeFrame, framePositions, onClose, onFrameChange, o
                 onClick={() => onFrameChange(index)}
               >
                 <span className="ppt-v1-scene-art" />
-                <b>帧{index + 1}</b>
-                <strong>{item.title}</strong>
+                <b><LocalizedText id="videoWizard.63917a8d49" />{index + 1}</b>
+                <strong><LocalizedValue value={item.title} catalog="videoOptionLabels" /></strong>
               </button>
             ))}
           </div>
         </div>
         <div className="ppt-vm-modal-foot">
-          <button type="button" onClick={() => goFrame(-1)} disabled={activeFrame === 0}>上一帧</button>
+          <button type="button" onClick={() => goFrame(-1)} disabled={activeFrame === 0}><LocalizedText id="videoWizard.2d7f0cab98" /></button>
           <button type="button" onClick={() => (activeFrame === storyFrames.length - 1 ? onClose() : goFrame(1))}>
-            {activeFrame === storyFrames.length - 1 ? '保存返回' : '下一帧 →'}
+            <LocalizedValue value={activeFrame === storyFrames.length - 1 ? '保存返回' : '下一帧 →'} catalog="videoOptionLabels" />
           </button>
         </div>
       </div>
@@ -1038,14 +1040,14 @@ function StorySummary({ values }) {
   };
   return (
     <div className="ppt-v1-summary-card ppt-vm-summary-card">
-      <div><span>叙事模板</span><strong>{templateLabels[values.template] || '拯救型'}</strong></div>
-      <div><span>时长</span><strong>按分镜自动计算</strong></div>
-      <div><span>视频方向</span><strong>{values.direction}</strong></div>
-      <div><span>IP 角色</span><strong>{values.character}</strong></div>
-      <div><span>生成方式</span><strong>AI 自动分镜</strong></div>
+      <div><span><LocalizedText id="videoWizard.ca2b33abc8" /></span><strong><LocalizedValue value={templateLabels[values.template] || '拯救型'} catalog="videoOptionLabels" /></strong></div>
+      <div><span><LocalizedText id="videoWizard.29d0552d2e" /></span><strong><LocalizedText id="videoWizard.5ebd7f9bb6" /></strong></div>
+      <div><span><LocalizedText id="videoWizard.f43ebf86b1" /></span><strong>{values.direction}</strong></div>
+      <div><span><LocalizedText id="videoWizard.1851ef4d16" /></span><strong>{values.character}</strong></div>
+      <div><span><LocalizedText id="videoWizard.9d48527d26" /></span><strong><LocalizedText id="videoWizard.9da25dd09f" /></strong></div>
       <section>
-        <article><span>词汇数</span><strong>{values.words.length}</strong></article>
-        <article><span>句型数</span><strong>{values.sentences.length}</strong></article>
+        <article><span><LocalizedText id="videoWizard.305c991321" /></span><strong>{values.words.length}</strong></article>
+        <article><span><LocalizedText id="videoWizard.ede08f1fa0" /></span><strong>{values.sentences.length}</strong></article>
       </section>
     </div>
   );
@@ -1054,27 +1056,27 @@ function StorySummary({ values }) {
 function StoryGenerateStep({ values, generating, onHang }) {
   return (
     <div className="ppt-vm-body">
-      <div className="ppt-vm-section-title">确认并生成视频</div>
+      <div className="ppt-vm-section-title"><LocalizedText id="videoWizard.b4c82d6033" /></div>
       <StorySummary values={values} />
       <div className="ppt-v1-divider" />
       {generating ? (
         <div className="ppt-v1-progress-card">
           <div className="ppt-v1-progress-hero">
             <span />
-            <strong>正在生成视频</strong>
-            <em>正在处理第二个平衡桥...</em>
+            <strong><LocalizedText id="videoWizard.1e15b84cd2" /></strong>
+            <em><LocalizedText id="videoWizard.2a35cf292b" /></em>
           </div>
           <div className="ppt-v1-progress-list">
             {storyProgressRows.map((row) => (
               <div key={row.text} className={`is-${row.state}`}>
                 <span>{row.state === 'done' ? '✓' : row.state === 'running' ? '○' : '◷'}</span>
-                <strong>{row.text}</strong>
-                <em>{row.status}</em>
+                <strong><LocalizedValue value={row.text} catalog="videoOptionLabels" /></strong>
+                <em><LocalizedValue value={row.status} catalog="videoOptionLabels" /></em>
               </div>
             ))}
           </div>
           <button type="button" className="ppt-hang-btn ppt-video-hang-btn" onClick={onHang}>
-            <Pause size={13} />挂起后台，继续编辑课件
+            <Pause size={13} /><LocalizedText id="videoWizard.094559b0f2" />
           </button>
         </div>
       ) : null}
@@ -1105,7 +1107,7 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
   };
 
   React.useEffect(() => {
-    onTitleChange?.(step === 0 ? '编辑视频素材' : asset.title);
+    onTitleChange?.(step === 0 ? i18next.t('videoWizard.editVideoAsset') : asset.title);
   }, [asset.title, onTitleChange, step]);
 
   const generateStoryboard = async () => {
@@ -1115,7 +1117,7 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
       const generatedStoryboard = await generateStoryboardAsset(asset, values);
       setStoryboard(generatedStoryboard);
     } catch (error) {
-      setErrorMessage(error.message || '分镜图片生成失败');
+      setErrorMessage(error.message || i18next.t('videoOptionLabels.分镜图片生成失败'));
     } finally {
       setStoryboardGenerating(false);
     }
@@ -1123,7 +1125,7 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
 
   const generateVideo = async () => {
     if (!storyboard) {
-      setErrorMessage('请先生成分镜图片');
+      setErrorMessage(i18next.t('videoOptionLabels.请先生成分镜图片'));
       setStep(2);
       return;
     }
@@ -1136,7 +1138,7 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
         onInsert('video', { ...asset, ...generated, title: generated?.title || asset.title });
       }
     } catch (error) {
-      setErrorMessage(error.message || '视频生成任务提交失败');
+      setErrorMessage(error.message || i18next.t('videoOptionLabels.视频生成任务提交失败'));
       setGenerating(false);
     }
   };
@@ -1166,13 +1168,13 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
         {generating || storyboardGenerating ? (
           <>
             <button type="button" className="ppt-v1-primary is-disabled">
-              {storyboardGenerating ? '正在生成分镜' : '正在生成视频'}
+              <LocalizedValue value={storyboardGenerating ? '正在生成分镜' : '正在生成视频'} catalog="videoOptionLabels" />
             </button>
           </>
         ) : (
           <>
             <button type="button" className="ppt-v1-secondary" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}>
-              {step === 0 ? '取消' : '上一步'}
+              <LocalizedValue value={step === 0 ? '取消' : '上一步'} catalog="videoOptionLabels" />
             </button>
             <button
               type="button"
@@ -1184,7 +1186,7 @@ function StoryVideoFlow({ asset, onBack, onClose, onInsert, onTitleChange }) {
                 else generateVideo();
               }}
             >
-              {step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'}
+              <LocalizedValue value={step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'} catalog="videoOptionLabels" />
             </button>
           </>
         )}

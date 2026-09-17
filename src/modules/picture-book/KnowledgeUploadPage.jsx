@@ -1,3 +1,6 @@
+import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React from 'react';
 import { AlertCircle, CheckCircle2, Database, FileText, Trash2, UploadCloud, X, Search, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -12,10 +15,10 @@ const sourceTypeLabel = {
   docx: 'DOCX',
   pdf: 'PDF',
   txt: 'TXT',
-  text: '文本',
 };
 
 export const KnowledgeUploadPage = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [list, setList] = React.useState([]);
   const [categories, setCategories] = React.useState([]);
@@ -63,17 +66,17 @@ export const KnowledgeUploadPage = () => {
   }, [fetchList]);
 
   const handleDelete = async (id, docTitle) => {
-    if (!window.confirm(`确定删除「${docTitle}」吗？此操作会同时删除 Qdrant 中的向量数据。`)) return;
+    if (!window.confirm(t('knowledgeUploadUi.confirmDeleteDoc', { title: docTitle }))) return;
     try {
       const res = await fetch(`/api/rag/knowledge/${id}`, { method: 'DELETE' });
       if (res.ok) {
         fetchList();
       } else {
         const data = await res.json();
-        alert(data.error || '删除失败');
+        alert(data.error || t('knowledgeUploadUi.deleteFailed'));
       }
     } catch (err) {
-      alert('删除失败: ' + err.message);
+      alert(t('knowledgeUploadUi.deleteFailedReason', { msg: err.message }));
     }
   };
 
@@ -110,7 +113,7 @@ export const KnowledgeUploadPage = () => {
 
     setStatus('uploading');
     const fileCount = files.length;
-    setMessage(fileCount > 1 ? `正在上传 ${fileCount} 个文件...` : '正在上传并写入知识库...');
+    setMessage(fileCount > 1 ? t('knowledgeUploadUi.uploadingFiles', { count: fileCount }) : t('knowledgeUploadUi.uploadingToKb'));
 
     try {
       let successCount = 0;
@@ -140,7 +143,7 @@ export const KnowledgeUploadPage = () => {
               successCount++;
               totalChunks += data.chunkCount || 0;
             } else {
-              errors.push(`${f.name}: ${data.error || '失败'}`);
+              errors.push(`${f.name}: ${data.error || t('knowledgeUploadUi.failedShort')}`);
             }
           } catch (err) {
             errors.push(`${f.name}: ${err.message}`);
@@ -166,24 +169,24 @@ export const KnowledgeUploadPage = () => {
           successCount++;
           totalChunks += data.chunkCount || 0;
         } else {
-          errors.push(data.error || '失败');
+          errors.push(data.error || t('knowledgeUploadUi.failedShort'));
         }
       }
 
       if (successCount > 0) {
         setStatus('success');
-        setMessage(`上传成功！${successCount} 个文档，共 ${totalChunks} 个切片。${errors.length > 0 ? `${errors.length} 个失败。` : ''}`);
+        setMessage(t('knowledgeUploadUi.uploadSuccess', { docs: successCount, chunks: totalChunks }) + (errors.length > 0 ? t('knowledgeUploadUi.uploadPartFailed', { count: errors.length }) : ''));
         fetchList();
         setTimeout(() => {
           closeModal();
         }, 1500);
       } else {
         setStatus('error');
-        setMessage(errors.join('; ') || '上传失败');
+        setMessage(errors.join('; ') || t('knowledgeUploadUi.uploadFailed'));
       }
     } catch (error) {
       setStatus('error');
-      setMessage(error.message || '上传失败');
+      setMessage(error.message || t('knowledgeUploadUi.uploadFailed'));
     }
   };
 
@@ -206,10 +209,10 @@ export const KnowledgeUploadPage = () => {
           <div>
             <div className="flex items-center gap-2 text-primary-muted text-sm font-semibold">
               <Database className="w-4 h-4" />
-              绘本 RAG
+              <LocalizedText id="knowledgeUploadUi.01e9cd0f1c" />
             </div>
-            <h1 className="text-2xl font-bold text-primary mt-1">绘本知识库</h1>
-            <p className="text-sm text-primary-muted mt-1">共 {total} 份资料，上传后可用于绘本生成时的参考检索</p>
+            <h1 className="text-2xl font-bold text-primary mt-1"><LocalizedText id="knowledgeUploadUi.edf216cb00" /></h1>
+            <p className="text-sm text-primary-muted mt-1"><LocalizedText id="knowledgeUploadUi.3b6ef811b8" /> {total} <LocalizedText id="knowledgeUploadUi.2df2ccaaaf" /></p>
           </div>
           <button
             type="button"
@@ -217,7 +220,7 @@ export const KnowledgeUploadPage = () => {
             className="h-11 px-5 rounded-lg bg-brand text-white font-bold border-2 border-brand-active hover:bg-brand-hover transition-colors flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            上传资料
+            <LocalizedText id="knowledgeUploadUi.da905dfb4f" />
           </button>
         </div>
 
@@ -229,7 +232,7 @@ export const KnowledgeUploadPage = () => {
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               className="h-10 w-64 rounded-lg border-2 border-stroke-light pl-9 pr-3 text-sm outline-none focus:border-primary bg-white"
-              placeholder="搜索标题、文件名、上传者"
+              placeholder={i18next.t('knowledgeUploadUi.335ac1602e')}
             />
           </div>
           <select
@@ -237,7 +240,7 @@ export const KnowledgeUploadPage = () => {
             onChange={(e) => setFilterCategory(e.target.value)}
             className="h-10 rounded-lg border-2 border-stroke-light px-3 text-sm outline-none focus:border-primary bg-white"
           >
-            <option value="all">全部分类</option>
+            <option value="all"><LocalizedText id="knowledgeUploadUi.a8e369c4b6" /></option>
             {categoryOptions.map((opt) => (
               <option key={opt} value={opt}>{opt}</option>
             ))}
@@ -246,11 +249,11 @@ export const KnowledgeUploadPage = () => {
 
         {/* List */}
         {loading ? (
-          <div className="text-center py-20 text-primary-muted">加载中...</div>
+          <div className="text-center py-20 text-primary-muted"><LocalizedText id="common.loading" /></div>
         ) : list.length === 0 ? (
           <div className="text-center py-20 border-2 border-dashed border-stroke-light rounded-lg bg-white">
             <Database className="w-12 h-12 text-primary-muted mx-auto mb-3 opacity-40" />
-            <p className="text-primary-muted">知识库暂无资料，点击右上角「上传资料」开始添加</p>
+            <p className="text-primary-muted"><LocalizedText id="knowledgeUploadUi.d893505e93" /></p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -263,7 +266,7 @@ export const KnowledgeUploadPage = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {items.map((item) => {
                     const srcType = item.source_type || 'text';
-                    const srcLabel = sourceTypeLabel[srcType] || srcType.toUpperCase();
+                    const srcLabel = srcType === 'text' ? t('knowledgeUploadUi.srcTypeText') : sourceTypeLabel[srcType] || srcType.toUpperCase();
                     const srcColor = srcType === 'pdf' ? 'bg-red-100 text-red-700' :
                       srcType === 'docx' ? 'bg-blue-100 text-blue-700' :
                       srcType === 'txt' ? 'bg-gray-100 text-gray-700' :
@@ -291,12 +294,12 @@ export const KnowledgeUploadPage = () => {
                               )
                             )}
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-xs text-primary-muted">{item.ageRange || '全年龄'}</span>
+                              <span className="text-xs text-primary-muted">{item.ageRange || t('knowledgeUploadUi.allAges')}</span>
                               <span className="text-xs text-primary-placeholder">·</span>
-                              <span className="text-xs text-primary-muted">{item.chunk_count} 切片</span>
+                              <span className="text-xs text-primary-muted">{item.chunk_count} <LocalizedText id="knowledgeUploadUi.1a37ffe775" /></span>
                             </div>
                             {item.uploader_name && (
-                              <div className="text-xs text-primary-muted mt-0.5">上传者: {item.uploader_name}</div>
+                              <div className="text-xs text-primary-muted mt-0.5"><LocalizedText id="knowledgeUploadUi.4938caca56" /> {item.uploader_name}</div>
                             )}
                             <div className="text-xs text-primary-placeholder mt-0.5">
                               {new Date(item.created_at).toLocaleDateString('zh-CN')}
@@ -307,7 +310,7 @@ export const KnowledgeUploadPage = () => {
                           type="button"
                           onClick={() => handleDelete(item.id, item.title)}
                           className="opacity-0 group-hover:opacity-100 text-primary-muted hover:text-red-500 transition-all p-1"
-                          title="删除"
+                          title={i18next.t('common.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -330,7 +333,7 @@ export const KnowledgeUploadPage = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-stroke-light">
-              <h3 className="text-lg font-bold text-primary">上传知识库资料</h3>
+              <h3 className="text-lg font-bold text-primary"><LocalizedText id="knowledgeUploadUi.7316801812" /></h3>
               <button type="button" onClick={closeModal} className="text-primary-muted hover:text-primary">
                 <X className="w-5 h-5" />
               </button>
@@ -339,17 +342,17 @@ export const KnowledgeUploadPage = () => {
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="space-y-2">
-                  <span className="text-sm font-bold text-primary">资料标题</span>
+                  <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.84428a4828" /></span>
                   <input
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
                     className="w-full h-11 rounded-lg border-2 border-stroke-light px-3 text-sm outline-none focus:border-primary"
-                    placeholder="例如：5岁儿童害怕黑夜的应对方法"
+                    placeholder={i18next.t('knowledgeUploadUi.e72899cd3a')}
                   />
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-bold text-primary">分类</span>
+                  <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.435c5259e4" /></span>
                   <select
                     value={category}
                     onChange={(event) => setCategory(event.target.value)}
@@ -362,33 +365,33 @@ export const KnowledgeUploadPage = () => {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-bold text-primary">适用年龄</span>
+                  <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.753e22e76a" /></span>
                   <input
                     value={ageRange}
                     onChange={(event) => setAgeRange(event.target.value)}
                     className="w-full h-11 rounded-lg border-2 border-stroke-light px-3 text-sm outline-none focus:border-primary"
-                    placeholder="不填表示全年龄段适用"
+                    placeholder={i18next.t('knowledgeUploadUi.b7324fb85e')}
                   />
                 </label>
               </div>
 
               <div className="space-y-2">
-                <span className="text-sm font-bold text-primary">上传文件（支持多选）</span>
+                <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.926e52784a" /></span>
                 <label className="min-h-[120px] border-2 border-dashed border-stroke rounded-lg bg-surface flex flex-col items-center justify-center px-4 py-4 cursor-pointer hover:bg-surface-alt transition-colors">
                   <UploadCloud className="w-8 h-8 text-primary-muted mb-2" />
-                  <span className="text-sm font-bold text-primary">{selectedNames || '选择 .docx / .pdf / .txt 文件'}</span>
-                  <span className="text-xs text-primary-muted mt-1">{files.length > 0 ? `已选 ${files.length} 个文件` : '可同时选择多个文件批量上传'}</span>
+                  <span className="text-sm font-bold text-primary">{selectedNames || t('knowledgeUploadUi.pickFiles')}</span>
+                  <span className="text-xs text-primary-muted mt-1">{files.length > 0 ? t('knowledgeUploadUi.filesSelected', { count: files.length }) : t('knowledgeUploadUi.multiFileHint')}</span>
                   <input type="file" accept=".docx,.pdf,.txt" multiple className="hidden" onChange={handleFileChange} />
                 </label>
               </div>
 
               <div className="space-y-2">
-                <span className="text-sm font-bold text-primary">或直接粘贴文本</span>
+                <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.1fbf57e317" /></span>
                 <textarea
                   value={text}
                   onChange={(event) => setText(event.target.value)}
                   className="w-full min-h-[100px] rounded-lg border-2 border-stroke-light p-3 text-sm outline-none focus:border-primary resize-y"
-                  placeholder="可以把参考资料正文粘贴到这里"
+                  placeholder={i18next.t('knowledgeUploadUi.a5f43336b1')}
                 />
               </div>
 
@@ -413,14 +416,14 @@ export const KnowledgeUploadPage = () => {
                   onClick={closeModal}
                   className="h-11 px-4 rounded-lg bg-white border-2 border-stroke-light text-primary-secondary font-bold hover:bg-surface-alt transition-colors"
                 >
-                  取消
+                  <LocalizedText id="common.cancel" />
                 </button>
                 <button
                   type="submit"
                   disabled={!canSubmit}
                   className="h-11 px-5 rounded-lg bg-brand text-white font-bold border-2 border-brand-active disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-hover transition-colors"
                 >
-                  {status === 'uploading' ? '上传中...' : '上传到知识库'}
+                  {status === 'uploading' ? t('common.uploading') : t('knowledgeUploadUi.uploadToKb')}
                 </button>
               </div>
             </form>

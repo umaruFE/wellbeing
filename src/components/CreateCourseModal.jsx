@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { X, Check, Loader2 } from 'lucide-react';
@@ -143,7 +145,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
           } else {
             console.error('保存课程失败，没有返回 id');
             setSubmitting(false);
-            alert('保存课程失败，请重试');
+            alert(i18next.t('createCourseUi.saveFailed'));
           }
         } catch (err) {
           if (createFlowAbortRef.current === abortController) {
@@ -155,7 +157,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
           }
           console.error('保存课程失败:', err);
           setSubmitting(false);
-          alert('保存课程失败，请重试');
+          alert(i18next.t('createCourseUi.saveFailed'));
         }
       } else {
         console.error('[CreateCourseModal] 概览生成失败:', result.error || '未知错误');
@@ -163,7 +165,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
           createFlowAbortRef.current = null;
         }
         setSubmitting(false);
-        alert(result.error || '课程概览生成失败，请重试');
+        alert(result.error || i18next.t('createCourseUi.overviewFailed'));
       }
     } catch (error) {
       if (error?.name === 'AbortError') {
@@ -174,7 +176,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
       createFlowAbortRef.current = null;
       console.error('网络错误，请重试');
       setSubmitting(false);
-      alert('网络错误，请检查网络连接后重试');
+      alert(i18next.t('createCourseUi.networkFailed'));
     }
   };
 
@@ -244,21 +246,21 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
 
         {/* 标题栏 */}
         <div className="px-10 pt-8 flex justify-between items-center">
-          <h2 className="text-xl font-bold text-[#333E4E]">创建课程</h2>
+          <h2 className="text-xl font-bold text-[#333E4E]"><LocalizedText id="course.createCourse" /></h2>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition-colors"><X size={24} /></button>
         </div>
 
         {/* 2. 步骤指示器 (完全还原 image_7b321c.png) */}
         <div className="px-10 mt-6 flex items-center">
-          <StepItem id={1} label="基本信息" currentStep={step} />
+          <StepItem id={1} label={i18next.t('musicStudio.stepBasic')} currentStep={step} />
           <div className="flex-1 h-[1.5px] mx-6 transition-colors duration-300" 
             style={{ backgroundColor: step > 1 ? '#F4785E' : '#F5F2EE' }} />
           
-          <StepItem id={2} label="教学目标" currentStep={step} />
+          <StepItem id={2} label={i18next.t('createCourseUi.5a1062a60e')} currentStep={step} />
           <div className="flex-1 h-[1.5px] mx-6 transition-colors duration-300" 
             style={{ backgroundColor: step > 2 ? '#F4785E' : '#F5F2EE' }} />
           
-          <StepItem id={3} label="情境设置" currentStep={step} />
+          <StepItem id={3} label={i18next.t('createCourseUi.c2c5dabfec')} currentStep={step} />
         </div>
 
         {/* 3. 内容区 */}
@@ -267,7 +269,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <div className="grid grid-cols-2 gap-8">
                 <section>
-                  <label className="block text-sm font-bold mb-3">学生年龄 <span className="text-orange-500">*</span></label>
+                  <label className="block text-sm font-bold mb-3"><LocalizedText id="createCourseUi.e94b9b7e27" /> <span className="text-orange-500">*</span></label>
                   <div className="flex gap-2">
                     {['3-6岁', '7-9岁', '9-12岁'].map(opt => (
                       <button key={opt} onClick={() => updateField('age', opt)}
@@ -276,7 +278,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                   </div>
                 </section>
                 <section>
-                  <label className="block text-sm font-bold mb-3">课程时长 <span className="text-orange-500">*</span></label>
+                  <label className="block text-sm font-bold mb-3"><LocalizedText id="createCourse.duration" /> <span className="text-orange-500">*</span></label>
                   <div className="flex gap-2">
                     {['40分钟', '60分钟', '120分钟'].map(opt => (
                       <button key={opt} onClick={() => updateField('duration', opt)}
@@ -286,7 +288,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                 </section>
               </div>
               <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">班级规模 <span className="text-orange-500">*</span></label>
+                <label className="block text-sm font-bold mb-3 text-[#333E4E]"><LocalizedText id="createCourse.classSize" /> <span className="text-orange-500">*</span></label>
                 <div className="flex gap-2">
                   {['≤ 8人', '9-15人', '≥ 16人'].map(opt => (
                     <button key={opt} onClick={() => updateField('scale', opt)}
@@ -300,22 +302,22 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
           {step === 2 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">核心语言目标</label>
+                <label className="block text-sm font-bold mb-3 text-[#333E4E]"><LocalizedText id="createCourseUi.84fcc112cc" /></label>
                 <div className="grid grid-cols-2 gap-px bg-[#F9F9F9] rounded-2xl border border-gray-100 overflow-hidden">
                   <div className="p-6">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">词汇</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider"><LocalizedText id="courseOverview.vocabulary" /></span>
                     <textarea
                       className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
-                      placeholder="请输入核心词汇，每行一个"
+                      placeholder={i18next.t('createCourseUi.9480552faf')}
                       value={Array.isArray(formData.vocabulary) ? formData.vocabulary.join(', ') : (formData.vocabulary || '')}
                       onChange={e => updateField('vocabulary', e.target.value)}
                     />
                   </div>
                   <div className="p-6 border-l border-gray-200">
-                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">语法/句型</span>
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider"><LocalizedText id="createCourse.grammarLabel" /></span>
                     <textarea
                       className="w-full min-h-[110px] mt-4 bg-white rounded-xl p-3 text-sm resize-none border border-transparent focus:border-orange-200 outline-none transition-all"
-                      placeholder="请输入核心句型，每行一个"
+                      placeholder={i18next.t('createCourseUi.c614cf5025')}
                       value={Array.isArray(formData.grammar) ? formData.grammar.join(', ') : (formData.grammar || '')}
                       onChange={e => updateField('grammar', e.target.value)}
                     />
@@ -323,7 +325,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                 </div>
               </section>
               <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">语言能力培养侧重</label>
+                <label className="block text-sm font-bold mb-3 text-[#333E4E]"><LocalizedText id="createCourseUi.fb83f53eb4" /></label>
                 <div className="flex flex-wrap gap-3">
                   {['听力理解', '口语表达', '阅读理解', '书面表达'].map(s => (
                     <CustomCheckbox key={s} label={s} isSelected={formData.skills.includes(s)} 
@@ -338,7 +340,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <section>
                 <div className="flex justify-between items-center mb-3">
-                  <label className="block text-sm font-bold text-[#333E4E]">情境主题 <span className="text-orange-500">*</span></label>
+                  <label className="block text-sm font-bold text-[#333E4E]"><LocalizedText id="createCourseUi.81d610d4b2" /> <span className="text-orange-500">*</span></label>
                   <button 
                     onClick={() => { 
                       setAutoTheme(!autoTheme); 
@@ -354,7 +356,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                   onChange={e => { if (!autoTheme) { updateField('theme', e.target.value); setErrors(prev => ({ ...prev, theme: '' })); } }}
                   disabled={autoTheme}
                   className={`w-full px-4 py-3.5 rounded-xl border transition-all focus:outline-none ${autoTheme ? 'border-gray-100 bg-gray-50 text-gray-400 cursor-not-allowed' : errors.theme ? 'border-red-400 focus:border-red-500 bg-red-50' : 'border-gray-200 focus:border-[#F4785E]'}`} 
-                  placeholder="请输入情境主题" />
+                  placeholder={i18next.t('createCourseUi.0839d788fa')} />
                 {errors.theme && <p className="text-red-500 text-xs mt-1">{errors.theme}</p>}
                 {!autoTheme && (
                   <div className="flex flex-wrap gap-3 mt-4">
@@ -368,7 +370,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                 )}
               </section>
               <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">主导幸福力体验路径 <span className="font-normal text-gray-400 ml-1">(不选则AI自动匹配)</span></label>
+                <label className="block text-sm font-bold mb-3 text-[#333E4E]"><LocalizedText id="createCourseUi.0997049de1" /> <span className="font-normal text-gray-400 ml-1"><LocalizedText id="createCourseUi.ff33e15337" /></span></label>
                 <div className="flex flex-wrap gap-3">
                   {['艺术表达', '体感探索', '音乐律动'].map(p => (
                     <CustomCheckbox key={p} label={p} isSelected={formData.paths.includes(p)} 
@@ -377,9 +379,9 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
                 </div>
               </section>
               <section>
-                <label className="block text-sm font-bold mb-3 text-[#333E4E]">特定要求</label>
+                <label className="block text-sm font-bold mb-3 text-[#333E4E]"><LocalizedText id="createCourseUi.47c203fae2" /></label>
                 <textarea value={formData.requirements} onChange={e => updateField('requirements', e.target.value)}
-                  className="w-full px-4 py-4 rounded-2xl border border-gray-200 outline-none h-44 resize-none focus:border-[#F4785E] transition-all" placeholder="可填写：场地设备限制、学生个性特点等" />
+                  className="w-full px-4 py-4 rounded-2xl border border-gray-200 outline-none h-44 resize-none focus:border-[#F4785E] transition-all" placeholder={i18next.t('createCourseUi.d7d611f997')} />
               </section>
             </div>
           )}
@@ -396,7 +398,7 @@ const CreateCourseModal = ({ isOpen, onClose, onFinish }) => {
           <div className="flex-1" />
           
           <div className="flex gap-6 items-center">
-            {step > 1 && <button onClick={onClose} className="font-bold text-neutral-400 hover:text-neutral-600 px-4 transition-colors">取消</button>}
+            {step > 1 && <button onClick={onClose} className="font-bold text-neutral-400 hover:text-neutral-600 px-4 transition-colors"><LocalizedText id="common.cancel" /></button>}
             
             <button 
               onClick={() => step < 3 ? handleNextStep() : handleFinish(formData)}

@@ -1,7 +1,9 @@
 import { Check, Download, RefreshCw } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { getAssetIconFallback } from './assetPanelData';
 
 export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, onRegenerate, onInsert, onSaveOnly, onDownloadAll, insertLabel }) {
+  const { t } = useTranslation();
   const Icon = asset?.icon || getAssetIconFallback(kind);
   const resultItems = asset?.results || [];
   const downloadableItems = resultItems.filter((item) => item?.url);
@@ -9,18 +11,18 @@ export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, on
   const cards = resultItems.length
     ? resultItems
     : kind === 'audio'
-      ? ['原声版', '伴奏版'].map((title) => ({ title }))
+      ? [t('generatedResults.original'), t('generatedResults.instrumental')].map((title) => ({ title }))
       : kind === 'video'
-        ? [{ title: '成片预览' }]
+        ? [{ title: t('generatedResults.videoPreview') }]
         : [];
 
   return (
     <div className={`ppt-result-panel kind-${kind}`}>
       <div className="ppt-result-body">
-        <div className="ppt-result-desc">{kind === 'image' ? '选择候选图 · 已提交生成任务' : '选择候选结果 · 已自动保存到素材库'}</div>
+        <div className="ppt-result-desc">{t(kind === 'image' ? 'generatedResults.imageHint' : 'generatedResults.assetHint')}</div>
         <div className="ppt-result-grid">
           {cards.map((item, index) => {
-            const label = typeof item === 'string' ? item : item.title || `候选 ${index + 1}`;
+            const label = typeof item === 'string' ? item : item.title || t('generatedResults.candidate', { count: index + 1 });
             return (
             <button
               type="button"
@@ -36,14 +38,14 @@ export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, on
                 {selectedIndex === index ? <i><Check size={15} /></i> : null}
                 {kind === 'image' ? <small><RefreshCw size={13} /></small> : null}
               </span>
-              <strong>{kind === 'image' ? (item.status === 'completed' ? '生成完成' : '任务已提交') : label}</strong>
+              <strong>{kind === 'image' ? t(item.status === 'completed' ? 'generatedResults.completed' : 'generatedResults.submitted') : label}</strong>
               <span>{kind === 'image' ? (item.taskId || item.filename || asset?.title) : asset?.title}</span>
             </button>
             );
           })}
         </div>
         {kind === 'image' ? (
-          <button type="button" className="ppt-result-regen" onClick={onRegenerate}><RefreshCw size={14} />重新生成</button>
+          <button type="button" className="ppt-result-regen" onClick={onRegenerate}><RefreshCw size={14} />{t('common.regenerate')}</button>
         ) : null}
       </div>
       <div className="ppt-result-actions">
@@ -51,15 +53,15 @@ export function GeneratedAssetResults({ kind, asset, selectedIndex, onSelect, on
           <>
             {/* <button type="button" className="ppt-ghost-btn" onClick={onSaveOnly}><Download size={14} />仅存库</button> */}
             {canDownloadAll ? (
-              <button type="button" className="ppt-ghost-btn" onClick={onDownloadAll}><Download size={14} />批量下载</button>
+              <button type="button" className="ppt-ghost-btn" onClick={onDownloadAll}><Download size={14} />{t('generatedResults.downloadAll')}</button>
             ) : null}
-            <button type="button" className="ppt-primary-btn" onClick={onInsert}>{insertLabel || '插入画布 →'}</button>
+            <button type="button" className="ppt-primary-btn" onClick={onInsert}>{insertLabel || t('generatedResults.insertArrow')}</button>
           </>
         ) : (
           <>
-            <button type="button" className="ppt-ghost-btn" onClick={onRegenerate}><RefreshCw size={14} />重新生成</button>
-            <button type="button" className="ppt-ghost-btn"><Download size={14} />下载</button>
-            <button type="button" className="ppt-primary-btn" onClick={onInsert}>插入画布</button>
+            <button type="button" className="ppt-ghost-btn" onClick={onRegenerate}><RefreshCw size={14} />{t('common.regenerate')}</button>
+            <button type="button" className="ppt-ghost-btn"><Download size={14} />{t('common.download')}</button>
+            <button type="button" className="ppt-primary-btn" onClick={onInsert}>{t('generatedResults.insert')}</button>
           </>
         )}
       </div>

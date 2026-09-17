@@ -1,3 +1,5 @@
+import i18next from 'i18next';
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React, { useState } from 'react';
 import { Wand2, Download, RotateCcw, Loader2, Edit2, X, Check } from 'lucide-react';
 import RoleSelection from './RoleSelection';
@@ -10,11 +12,11 @@ import {
 } from './roleImageLayout';
 
 const ASPECT_RATIOS = [
-  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: '横屏宽屏' },
-  { id: '4:3', label: '4:3', width: 1024, height: 768, description: '标准横屏' },
-  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: '正方形' },
-  { id: '3:4', label: '3:4', width: 768, height: 1024, description: '标准竖屏' },
-  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: '竖屏长图' },
+  { id: '16:9', label: '16:9', width: 1920, height: 1080, description: 'ratioLandscapeWide' },
+  { id: '4:3', label: '4:3', width: 1024, height: 768, description: 'ratioLandscapeStandard' },
+  { id: '1:1', label: '1:1', width: 1024, height: 1024, description: 'ratioSquare' },
+  { id: '3:4', label: '3:4', width: 768, height: 1024, description: 'ratioPortraitStandard' },
+  { id: '9:16', label: '9:16', width: 1080, height: 1920, description: 'ratioPortraitTall' },
 ];
 
 const getAuthHeaders = () => {
@@ -68,12 +70,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
   const handleGenerate = async () => {
     if (!state.prompt.trim()) {
-      alert('请输入场景描述提示词');
+      alert(i18next.t('uiMessages.scenePromptRequired'));
       return;
     }
 
     if (state.selectedRoles.length === 0) {
-      alert('请至少选择一个角色');
+      alert(i18next.t('uiMessages.roleRequired'));
       return;
     }
 
@@ -138,7 +140,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
       });
 
       if (!extractResponse.ok) {
-        throw new Error('提取关键词失败');
+        throw new Error(i18next.t('ipSceneUi.extractKeywordsFailed'));
       }
 
       const extractData = await extractResponse.json();
@@ -146,13 +148,13 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
       // 检查 N8N 是否返回了错误
       if (extractData.error) {
-        throw new Error(`提取关键词失败: ${extractData.error}`);
+        throw new Error(i18next.t('ipSceneUi.extractKeywordsFailedWith', { error: extractData.error }));
       }
 
       const { background: backgroundPrompt, roles: rolePrompts } = extractData.data || {};
 
       if (!backgroundPrompt) {
-        throw new Error('关键词提取结果为空');
+        throw new Error(i18next.t('ipSceneUi.extractResultEmpty'));
       }
 
       // 2. 构建角色数据
@@ -186,14 +188,14 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
       if (!sceneResponse.ok) {
         const errorText = await sceneResponse.text();
-        throw new Error(`生成场景失败: ${errorText}`);
+        throw new Error(i18next.t('ipSceneUi.generateSceneFailedWith', { error: errorText }));
       }
 
       const sceneData = await sceneResponse.json();
       console.log('generate-scene 返回:', sceneData);
 
       if (!sceneData.success) {
-        throw new Error(sceneData.error || '生成场景失败');
+        throw new Error(sceneData.error || i18next.t('ipSceneUi.generateSceneFailed'));
       }
 
       // 解析任务结果
@@ -220,7 +222,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
             if (data.status === 'completed') {
               return data.url;
             } else if (data.status === 'error') {
-              throw new Error('任务执行失败: ' + (data.error || '未知错误'));
+              throw new Error(i18next.t('ipSceneUi.taskFailedWith', { error: data.error || i18next.t('ipSceneUi.unknownError') }));
             }
           } catch (error) {
             console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
@@ -229,7 +231,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
           await new Promise(resolve => setTimeout(resolve, interval));
         }
-        throw new Error('任务超时');
+        throw new Error(i18next.t('ipSceneUi.taskTimeout'));
       };
 
       const removeWhiteBackground = async (roleName, roleUrl, maxRetries = 3) => {
@@ -353,7 +355,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
     } catch (error) {
       console.error('生成失败:', error);
-      alert(`生成失败: ${error.message}`);
+      alert(i18next.t('ipSceneUi.generateFailedWith', { error: error.message }));
       setState(prev => ({ 
         ...prev, 
         isGenerating: false,
@@ -390,7 +392,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => resolve(img);
-      img.onerror = (e) => reject(new Error('图片加载失败'));
+      img.onerror = (e) => reject(new Error(i18next.t('ipSceneUi.imageLoadFailed')));
       img.src = proxyUrl;
     });
   };
@@ -442,7 +444,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
       });
 
       if (!backgroundImg) {
-        throw new Error('背景图加载失败');
+        throw new Error(i18next.t('ipSceneUi.backgroundLoadFailed'));
       }
 
       // 绘制背景
@@ -539,7 +541,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
     } catch (error) {
       console.error('Canvas合成失败:', error);
-      alert(`Canvas合成失败: ${error.message}`);
+      alert(i18next.t('ipSceneUi.canvasCompositeFailedWith', { error: error.message }));
       setState(prev => ({ ...prev, isCompositing: false }));
     }
   };
@@ -594,7 +596,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
       });
 
       if (!response.ok) {
-        throw new Error('合成图片失败');
+        throw new Error(i18next.t('ipSceneUi.compositeFailed'));
       }
 
       const data = await response.json();
@@ -612,7 +614,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
             if (data.status === 'completed') {
               return data.url;
             } else if (data.status === 'error') {
-              throw new Error('任务执行失败');
+              throw new Error(i18next.t('ipSceneUi.taskFailed'));
             }
           } catch (error) {
             console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
@@ -621,7 +623,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
           await new Promise(resolve => setTimeout(resolve, interval));
         }
-        throw new Error('任务超时');
+        throw new Error(i18next.t('ipSceneUi.taskTimeout'));
       };
 
       const compositeUrl = await pollTask(compositeTaskId, compositeApiUrl);
@@ -636,7 +638,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
     } catch (error) {
       console.error('AI合成失败:', error);
-      alert(`AI合成失败: ${error.message}`);
+      alert(i18next.t('ipSceneUi.aiCompositeFailedWith', { error: error.message }));
       setState(prev => ({ ...prev, isCompositing: false }));
     }
   };
@@ -689,7 +691,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
         })
       });
 
-      if (!response.ok) throw new Error('生成背景图失败');
+      if (!response.ok) throw new Error(i18next.t('ipSceneUi.generateBackgroundFailed'));
 
       const data = await response.json();
       const taskId = data.tasks[0].promptId;
@@ -706,7 +708,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
             if (data.status === 'completed') {
               return data.url;
             } else if (data.status === 'error') {
-              throw new Error('任务执行失败');
+              throw new Error(i18next.t('ipSceneUi.taskFailed'));
             }
           } catch (error) {
             console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
@@ -715,7 +717,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
           await new Promise(resolve => setTimeout(resolve, interval));
         }
-        throw new Error('任务超时');
+        throw new Error(i18next.t('ipSceneUi.taskTimeout'));
       };
 
       const url = await pollTask(taskId, apiUrl);
@@ -730,7 +732,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
       }));
     } catch (error) {
       console.error('重新生成背景失败:', error);
-      alert(`重新生成背景失败: ${error.message}`);
+      alert(i18next.t('ipSceneUi.regenBackgroundFailedWith', { error: error.message }));
       setState(prev => ({ ...prev, isLoadingBackground: false }));
     }
   };
@@ -760,7 +762,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
         })
       });
 
-      if (!response.ok) throw new Error(`生成角色 ${roleName} 失败`);
+      if (!response.ok) throw new Error(i18next.t('ipSceneUi.generateRoleFailed', { name: roleName }));
 
       const data = await response.json();
       const taskId = data.tasks[0].promptId;
@@ -777,7 +779,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
             if (data.status === 'completed') {
               return data.url;
             } else if (data.status === 'error') {
-              throw new Error('任务执行失败');
+              throw new Error(i18next.t('ipSceneUi.taskFailed'));
             }
           } catch (error) {
             console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
@@ -786,7 +788,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
           await new Promise(resolve => setTimeout(resolve, interval));
         }
-        throw new Error('任务超时');
+        throw new Error(i18next.t('ipSceneUi.taskTimeout'));
       };
 
       let url = await pollTask(taskId, apiUrl);
@@ -823,7 +825,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
       }));
     } catch (error) {
       console.error(`重新生成角色 ${roleName} 失败:`, error);
-      alert(`重新生成角色 ${roleName} 失败: ${error.message}`);
+      alert(i18next.t('ipSceneUi.regenRoleFailedWith', { name: roleName, error: error.message }));
       setState(prev => ({
         ...prev,
         loadingRoles: { ...prev.loadingRoles, [roleName]: false }
@@ -851,8 +853,8 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
               <Wand2 className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-primary">IP角色场景生成器</h3>
-              <p className="text-xs text-primary-muted">选择角色、设置场景、生成专业IP场景图片</p>
+              <h3 className="font-bold text-lg text-primary"><LocalizedText id="ipSceneUi.ba8644ec76" /></h3>
+              <p className="text-xs text-primary-muted"><LocalizedText id="ipSceneUi.88543d1dd5" /></p>
             </div>
           </div>
           <button
@@ -871,7 +873,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
             />
 
             <div className="mt-6">
-              <label className="text-sm font-medium text-primary-secondary mb-2 block">图片比例</label>
+              <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="ipCharacter.imageRatio" /></label>
               <div className="grid grid-cols-2 gap-2">
                 {ASPECT_RATIOS.map((ratio) => (
                   <button
@@ -901,16 +903,16 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                 ))}
               </div>
               <p className="text-xs text-primary-placeholder mt-1">
-                {state.aspectRatio.description} ({state.aspectRatio.width}×{state.aspectRatio.height})
+                {i18next.t(`ipSceneUi.${state.aspectRatio.description}`)} ({state.aspectRatio.width}×{state.aspectRatio.height})
               </p>
             </div>
 
             <div className="mt-6">
-              <label className="text-sm font-medium text-primary-secondary mb-2 block">场景描述</label>
+              <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="taskDetail.sceneDesc" /></label>
               <textarea
                 value={state.prompt}
                 onChange={(e) => handlePromptChange(e.target.value)}
-                placeholder="描述您想要的场景，例如：美丽的绿色魔法森林，阳光透过树叶..."
+                placeholder={i18next.t('ipSceneUi.76ce99f502')}
                 className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple focus:border-purple-500 outline-none resize-none h-32 transition-all"
                 disabled={state.isGenerating}
               />
@@ -924,12 +926,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
               {state.isGenerating ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  生成中...
+                  <LocalizedText id="ipSceneUi.26eab253a0" />
                 </>
               ) : (
                 <>
                   <Wand2 className="w-4 h-4" />
-                  生成资源
+                  <LocalizedText id="ipSceneUi.8e51ffb43f" />
                 </>
               )}
             </button>
@@ -951,12 +953,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
               
               {state.generatedAssets.background && (
                 <div className="w-80 flex-shrink-0 bg-surface-alt rounded-lg p-4 overflow-y-auto">
-                  <h4 className="text-sm font-medium text-primary-secondary mb-3">提示词管理</h4>
+                  <h4 className="text-sm font-medium text-primary-secondary mb-3"><LocalizedText id="ipSceneUi.47fdaf743a" /></h4>
                   
                   <div className="space-y-3">
                     <div className="bg-white rounded-lg p-3 border border-stroke">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-medium text-primary-secondary">背景图</span>
+                        <span className="text-xs font-medium text-primary-secondary"><LocalizedText id="ipSceneUi.e5c12c3be5" /></span>
                         <div className="flex gap-1">
                           {state.editingPrompts.background ? (
                             <>
@@ -971,7 +973,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                                   }));
                                 }}
                                 className="text-xs p-1 text-success hover:bg-success-light rounded"
-                                title="确认"
+                                title={i18next.t('common.confirm')}
                               >
                                 <Check className="w-3 h-3" />
                               </button>
@@ -986,7 +988,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                                   }));
                                 }}
                                 className="text-xs p-1 text-error hover:bg-error-light rounded"
-                                title="取消"
+                                title={i18next.t('common.cancel')}
                               >
                                 <X className="w-3 h-3" />
                               </button>
@@ -1003,7 +1005,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                                 }));
                               }}
                               className="text-xs p-1 text-primary-secondary hover:bg-surface-alt rounded"
-                              title="编辑"
+                              title={i18next.t('common.edit')}
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
@@ -1016,10 +1018,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                             {state.isLoadingBackground ? (
                               <>
                                 <Loader2 className="w-3 h-3 animate-spin" />
-                                生成中
+                                <LocalizedText id="ipSceneUi.57c08c730a" />
                               </>
                             ) : (
-                              '重新生成'
+                              i18next.t('common.regenerate')
                             )}
                           </button>
                         </div>
@@ -1038,12 +1040,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                           }}
                           className="w-full text-xs text-primary-muted leading-relaxed border border-stroke rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-transparent"
                           rows={4}
-                          placeholder="背景提示词"
+                          placeholder={i18next.t('assetPanel.iwBgPrompt')}
                           autoFocus
                         />
                       ) : (
                         <p className="text-xs text-primary-muted leading-relaxed">
-                          {state.prompts.background || '暂无提示词'}
+                          {state.prompts.background || i18next.t('ipSceneUi.noPrompt')}
                         </p>
                       )}
                     </div>
@@ -1069,7 +1071,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                                     }));
                                   }}
                                   className="text-xs p-1 text-success hover:bg-success-light rounded"
-                                  title="确认"
+                                  title={i18next.t('common.confirm')}
                                 >
                                   <Check className="w-3 h-3" />
                                 </button>
@@ -1087,7 +1089,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                                     }));
                                   }}
                                   className="text-xs p-1 text-error hover:bg-error-light rounded"
-                                  title="取消"
+                                  title={i18next.t('common.cancel')}
                                 >
                                   <X className="w-3 h-3" />
                                 </button>
@@ -1107,7 +1109,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                                   }));
                                 }}
                                 className="text-xs p-1 text-primary-secondary hover:bg-surface-alt rounded"
-                                title="编辑"
+                                title={i18next.t('common.edit')}
                               >
                                 <Edit2 className="w-3 h-3" />
                               </button>
@@ -1120,10 +1122,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                               {state.loadingRoles[roleName] ? (
                                 <>
                                   <Loader2 className="w-3 h-3 animate-spin" />
-                                  生成中
+                                  <LocalizedText id="ipSceneUi.57c08c730a" />
                                 </>
                               ) : (
-                                '重新生成'
+                                i18next.t('common.regenerate')
                               )}
                             </button>
                           </div>
@@ -1145,12 +1147,12 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                             }}
                             className="w-full text-xs text-primary-muted leading-relaxed border border-stroke rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-transparent"
                             rows={4}
-                            placeholder={`${roleName}提示词`}
+                            placeholder={i18next.t('ipSceneUi.rolePromptPlaceholder', { name: roleName })}
                             autoFocus
                           />
                         ) : (
                           <p className="text-xs text-primary-muted leading-relaxed">
-                            {state.prompts.roles[roleName] || '暂无提示词'}
+                            {state.prompts.roles[roleName] || i18next.t('ipSceneUi.noPrompt')}
                           </p>
                         )}
                       </div>
@@ -1199,7 +1201,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                   className="px-4 py-2 border-2 border-stroke-light rounded-lg text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 transition-all flex items-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" />
-                  重置
+                  <LocalizedText id="common.reset" />
                 </button>
 
                 <div className="flex gap-2">
@@ -1211,10 +1213,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                     {state.isCompositing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        合成中...
+                        <LocalizedText id="ipSceneUi.416052f4a5" />
                       </>
                     ) : (
-                      '合成图片'
+                      i18next.t('ipSceneUi.compositeImage')
                     )}
                   </button>
 
@@ -1224,7 +1226,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                       className="px-6 py-2 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2 font-medium"
                     >
                       <Download className="w-4 h-4" />
-                      下载
+                      <LocalizedText id="common.download" />
                     </button>
                   )}
                 </div>

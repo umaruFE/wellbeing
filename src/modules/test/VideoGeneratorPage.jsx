@@ -1,4 +1,7 @@
+import i18next from 'i18next';
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Video, Music, Wand2, Play, Pause, Download, Loader2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -8,6 +11,7 @@ import { AUDIO_STYLES } from '../../constants/aiOptions';
 const DURATION_OPTIONS = [15, 30, 60, 90];
 
 export const VideoGeneratorPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
@@ -148,11 +152,11 @@ export const VideoGeneratorPage = () => {
             <button
               onClick={() => navigate(-1)}
               className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
-              title="返回"
+              title={i18next.t('common.back')}
             >
               <ArrowLeft className="w-5 h-5 text-primary-secondary" />
             </button>
-            <h1 className="text-lg font-bold text-primary">AI视频生成器</h1>
+            <h1 className="text-lg font-bold text-primary"><LocalizedText id="testVideoUi.96e92dfb39" /></h1>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-primary-muted">
@@ -171,10 +175,10 @@ export const VideoGeneratorPage = () => {
                 <Video className="w-8 h-8 text-purple" />
               </div>
               <h1 className="text-3xl font-bold text-dark mb-4">
-                AI视频分镜生成器
+                <LocalizedText id="testVideoUi.ca82b1f18b" />
               </h1>
               <p className="text-primary-secondary mb-8">
-                通过AI智能分析，一键生成分镜脚本和图片，并合成精美视频
+                <LocalizedText id="testVideoUi.35cf55935e" />
               </p>
 
               <button
@@ -182,49 +186,49 @@ export const VideoGeneratorPage = () => {
                 className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-3 mx-auto text-lg font-medium shadow-lg hover:shadow-xl"
               >
                 <Video className="w-6 h-6" />
-                打开视频生成器
+                <LocalizedText id="testVideoUi.7a6fac0dc2" />
               </button>
             </div>
 
             <div className="border-t border-stroke pt-8">
-              <h2 className="text-xl font-semibold text-dark mb-4">功能特点：</h2>
+              <h2 className="text-xl font-semibold text-dark mb-4"><LocalizedText id="testVideoUi.b009db40f4" /></h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-purple-50 rounded-lg p-4 text-center">
                   <div className="text-2xl mb-2">📝</div>
-                  <h3 className="font-medium text-dark mb-1">智能分镜</h3>
-                  <p className="text-sm text-primary-muted">AI自动分析故事内容，生成专业的分镜脚本</p>
+                  <h3 className="font-medium text-dark mb-1"><LocalizedText id="testVideoUi.e081c961d6" /></h3>
+                  <p className="text-sm text-primary-muted"><LocalizedText id="testVideoUi.3a4601d5c0" /></p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4 text-center">
                   <div className="text-2xl mb-2">🎨</div>
-                  <h3 className="font-medium text-dark mb-1">精美图片</h3>
-                  <p className="text-sm text-primary-muted">支持多种风格，生成分镜图片保持视觉一致性</p>
+                  <h3 className="font-medium text-dark mb-1"><LocalizedText id="testVideoUi.b76a04d00f" /></h3>
+                  <p className="text-sm text-primary-muted"><LocalizedText id="testVideoUi.f3bc9f143f" /></p>
                 </div>
                 <div className="bg-purple-50 rounded-lg p-4 text-center">
                   <div className="text-2xl mb-2">🎬</div>
-                  <h3 className="font-medium text-dark mb-1">视频合成</h3>
-                  <p className="text-sm text-primary-muted">基于LTX-Video模型，生成流畅连贯的视频</p>
+                  <h3 className="font-medium text-dark mb-1"><LocalizedText id="testVideoUi.7627c369ab" /></h3>
+                  <p className="text-sm text-primary-muted"><LocalizedText id="testVideoUi.ba3e3bf27b" /></p>
                 </div>
               </div>
             </div>
 
             <div className="border-t border-stroke pt-8 mt-8">
-              <h2 className="text-xl font-semibold text-dark mb-4">使用步骤：</h2>
+              <h2 className="text-xl font-semibold text-dark mb-4"><LocalizedText id="testVideoUi.51d4e3c510" /></h2>
               <ol className="space-y-3 text-primary-secondary">
                 <li className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">1</span>
-                  <span>填写故事核心要素和整体风格描述</span>
+                  <span><LocalizedText id="testVideoUi.c5a2052a40" /></span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">2</span>
-                  <span>AI自动生成分镜脚本和图片</span>
+                  <span><LocalizedText id="testVideoUi.bb34526bc5" /></span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">3</span>
-                  <span>预览并调整分镜图片</span>
+                  <span><LocalizedText id="testVideoUi.e73fc69fd6" /></span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">4</span>
-                  <span>点击生成视频，等待AI合成最终作品</span>
+                  <span><LocalizedText id="testVideoUi.ed31514f90" /></span>
                 </li>
               </ol>
             </div>
@@ -235,7 +239,7 @@ export const VideoGeneratorPage = () => {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-dark flex items-center gap-2">
                 <Music className="w-5 h-5 text-info" />
-                背景音乐生成器
+                <LocalizedText id="testVideoUi.e2782f101a" />
               </h2>
               <button
                 onClick={() => setShowAudioPanel(!showAudioPanel)}
@@ -253,15 +257,12 @@ export const VideoGeneratorPage = () => {
               <div className="space-y-6">
                 <div>
                   <label className="text-sm font-medium text-primary-secondary mb-2 block">
-                    分镜提示词 <span className="text-error">*</span>
+                    <LocalizedText id="testVideoUi.a29ea2de1e" /> <span className="text-error">*</span>
                   </label>
                   <textarea
                     value={storyboardPrompts}
                     onChange={e => setStoryboardPrompts(e.target.value)}
-                    placeholder="输入分镜提示词，视频生成后会自动填充到这里，例如：
-1. 阳光明媚的森林，小兔子在草地上跳跃
-2. 小兔子发现了一朵美丽的花
-3. 小兔子和蝴蝶一起玩耍"
+                    placeholder={i18next.t('testVideoUi.b5152b46f4')}
                     rows={5}
                     className="w-full border-2 border-stroke-light rounded-xl px-4 py-3 text-sm resize-none
                       focus:border-primary focus:ring-2 focus:ring-[#2d2d2d]/10 outline-none transition-all"
@@ -270,7 +271,7 @@ export const VideoGeneratorPage = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-sm font-medium text-primary-secondary mb-2 block">音乐风格</label>
+                    <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="audioGenerator.style" /></label>
                     <div className="flex flex-wrap gap-2">
                       {AUDIO_STYLES.map(style => (
                         <button
@@ -282,14 +283,14 @@ export const VideoGeneratorPage = () => {
                               : 'border-stroke-light text-primary-secondary hover:border-primary'
                           }`}
                         >
-                          {style.name}
+                          {t(`assetGenerator.styleOption.${style.id}`)}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-primary-secondary mb-2 block">音乐时长</label>
+                    <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="testVideoUi.a31fd9daff" /></label>
                     <div className="flex gap-2">
                       {DURATION_OPTIONS.map(d => (
                         <button
@@ -301,7 +302,7 @@ export const VideoGeneratorPage = () => {
                               : 'border-stroke-light text-primary-secondary hover:border-primary'
                           }`}
                         >
-                          {d}秒
+                          {d}<LocalizedText id="videoWizard.eb6aaba1a1" />
                         </button>
                       ))}
                     </div>
@@ -328,7 +329,7 @@ export const VideoGeneratorPage = () => {
                   ) : (
                     <>
                       <Wand2 className="w-4 h-4" />
-                      生成背景音乐
+                      <LocalizedText id="pictureBook.aiGenerateMusic" />
                     </>
                   )}
                 </button>
@@ -336,20 +337,20 @@ export const VideoGeneratorPage = () => {
                 {/* 生成结果 */}
                 {audioResult && (
                   <div className="border-2 border-stroke-light rounded-xl p-4">
-                    <h3 className="text-base font-bold text-primary mb-3">生成结果</h3>
+                    <h3 className="text-base font-bold text-primary mb-3"><LocalizedText id="assetPanel.stepGenResult" /></h3>
 
                     {audioResult.status === 'pending' ? (
                       <div className="flex items-center gap-3 text-primary-muted">
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        <span>正在生成音乐，请稍候...</span>
+                        <span><LocalizedText id="testVideoUi.515b54ee2b" /></span>
                       </div>
                     ) : audioResult.status === 'done' && audioResult.url ? (
                       <div>
                         <div className="mb-3">
                           <p className="text-sm text-primary-secondary line-clamp-3">{storyboardPrompts}</p>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-active">已完成</span>
-                            <span className="text-xs text-primary-placeholder">{selectedStyle.name} · {duration}秒</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-active"><LocalizedText id="testVideoUi.e99b48a29b" /></span>
+                            <span className="text-xs text-primary-placeholder">{t(`assetGenerator.styleOption.${selectedStyle.id}`)} · {duration}<LocalizedText id="videoWizard.eb6aaba1a1" /></span>
                           </div>
                         </div>
                         <div className="flex gap-2">
@@ -367,14 +368,14 @@ export const VideoGeneratorPage = () => {
                           <button
                             onClick={() => handleAudioDownload(audioResult.url)}
                             className="px-4 py-2 rounded-lg border-2 border-stroke-light text-primary-secondary hover:border-primary transition-colors"
-                            title="下载"
+                            title={i18next.t('common.download')}
                           >
                             <Download className="w-4 h-4" />
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-error text-sm">生成失败，请重试</div>
+                      <div className="text-error text-sm"><LocalizedText id="assetPanel.iwHelpWriteFail" /></div>
                     )}
                   </div>
                 )}

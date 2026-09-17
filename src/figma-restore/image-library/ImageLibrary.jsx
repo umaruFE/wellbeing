@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { BookOpen, Eye, FileText, Image, Monitor, MoreVertical, Plus, Search, Trash2, Upload as UploadIcon, X } from 'lucide-react';
@@ -436,7 +437,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
                         <button
                           className="fr-img-card-menu-btn"
                           type="button"
-                          aria-label="更多操作"
+                          aria-label={i18next.t('imageLibraryUi.77836d3a99')}
                           onClick={(event) => event.stopPropagation()}
                         >
                           <MoreVertical size={18} />

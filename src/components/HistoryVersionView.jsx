@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { 
   Clock, 
   ChevronLeft, 
@@ -22,6 +23,7 @@ export const HistoryVersionView = ({
   onClose 
 }) => {
   const [selectedIndex, setSelectedIndex] = useState(currentVersionIndex);
+  const { t, i18n } = useTranslation();
 
   const handlePrevious = () => {
     if (selectedIndex > 0) {
@@ -40,7 +42,7 @@ export const HistoryVersionView = ({
   };
 
   const handleRestore = () => {
-    if (confirm('确定要恢复到该版本吗？当前未保存的更改将丢失。')) {
+    if (confirm(t('historyVersion.restoreConfirm'))) {
       // 恢复版本时，调用onRestore回调来实际应用数据
       if (onRestore) {
         onRestore(selectedIndex);
@@ -64,8 +66,8 @@ export const HistoryVersionView = ({
               <Clock className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="font-bold text-lg text-primary">历史版本</h2>
-              <p className="text-xs text-primary-muted">在新窗口查看历史版本，当前版本保持不变</p>
+              <h2 className="font-bold text-lg text-primary">{t('historyVersion.title')}</h2>
+              <p className="text-xs text-primary-muted">{t('historyVersion.hint')}</p>
             </div>
           </div>
           <button 
@@ -80,14 +82,14 @@ export const HistoryVersionView = ({
         <div className="px-6 py-4 bg-surface border-b-2 border-stroke-light flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="text-sm">
-              <span className="text-primary-muted">版本 </span>
+              <span className="text-primary-muted">{t('historyVersion.version')} </span>
               <span className="font-bold text-info">{selectedIndex + 1}</span>
               <span className="text-primary-placeholder"> / {historyVersions.length}</span>
             </div>
             {currentVersion && (
               <div className="text-xs text-primary-muted flex items-center gap-2">
                 <Clock className="w-3 h-3" />
-                <span>{new Date(currentVersion.timestamp).toLocaleString('zh-CN')}</span>
+                <span>{new Date(currentVersion.timestamp).toLocaleString(i18n.language?.startsWith('en') ? 'en-US' : 'zh-CN')}</span>
               </div>
             )}
           </div>
@@ -98,14 +100,14 @@ export const HistoryVersionView = ({
               className="px-4 py-2 bg-white border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
               <ChevronLeft className="w-4 h-4" />
-              上一个
+              {t('historyVersion.previous')}
             </button>
             <button
               onClick={handleNext}
               disabled={selectedIndex === historyVersions.length - 1}
               className="px-4 py-2 bg-white border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
-              下一个
+              {t('historyVersion.next')}
               <ChevronRight className="w-4 h-4" />
             </button>
             <button
@@ -113,7 +115,7 @@ export const HistoryVersionView = ({
               className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info-active flex items-center gap-2 transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
-              恢复此版本
+              {t('historyVersion.restore')}
             </button>
           </div>
         </div>
@@ -132,7 +134,7 @@ export const HistoryVersionView = ({
               <div className="bg-surface rounded-xl p-4 border-2 border-stroke-light">
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="w-4 h-4 text-primary-muted" />
-                  <span className="text-xs font-bold text-primary-muted uppercase">版本数据预览</span>
+                  <span className="text-xs font-bold text-primary-muted uppercase">{t('historyVersion.preview')}</span>
                 </div>
                 <pre className="text-xs text-dark overflow-auto max-h-96 bg-white p-4 rounded-xl border-2 border-stroke-light">
                   {JSON.stringify(currentVersion.data, null, 2)}
@@ -142,7 +144,7 @@ export const HistoryVersionView = ({
           ) : (
             <div className="text-center py-12 text-primary-placeholder">
               <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>暂无历史版本</p>
+              <p>{t('historyVersion.empty')}</p>
             </div>
           )}
         </div>

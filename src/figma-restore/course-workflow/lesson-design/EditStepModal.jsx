@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React from 'react';
 import { Button, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -57,7 +58,7 @@ export function EditStepModal({ open, step, onClose, onSave }) {
         <div className="trd-hd">
           <div>
             <div className="trd-title">{t('lesson.editLessonDetail')}</div>
-            <div className="trd-subtitle">{isChinese ? 'Unit 3: Animals（神奇的动物） · 已有环节' : 'Unit 3: Animals · Existing Step'}</div>
+            <div className="trd-subtitle">{t('editStepUi.existingStepSubtitle')}</div>
           </div>
           <button className="trd-close" type="button" onClick={onClose} aria-label={t('common.close')}>×</button>
         </div>
@@ -69,25 +70,25 @@ export function EditStepModal({ open, step, onClose, onSave }) {
                 <div className="trd-intro-title">{t('lesson.activityDraft')}</div>
                 <div className="trd-intro-subtitle">{t('lesson.flowEditorTip')}</div>
               </div>
-              <span className="as-right-tag">{isChinese ? '编辑中' : 'Editing'}</span>
+              <span className="as-right-tag">{t('editStepUi.editingTag')}</span>
             </div>
 
             <div className="as-draft-form trd-draft-form">
               <div className="as-draft-row trd-row-name">
                 <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title">
-                  <Input className="as-draft-input" placeholder={isChinese ? '例如：神秘来信与情绪感知' : 'Example: Mystery Letter and Emotion Sensing'} />
+                  <Input className="as-draft-input" placeholder={t('editStepUi.stepNameExample')} />
                 </Form.Item>
                 <Form.Item className="as-draft-field trd-time-field" label={t('lesson.stepDuration')} name="duration">
-                  <Input className="as-draft-input" placeholder={isChinese ? '例如：8分钟' : 'Example: 8 min'} />
+                  <Input className="as-draft-input" placeholder={t('editStepUi.durationExample')} />
                 </Form.Item>
               </div>
 
               <Form.Item className="as-draft-field" label={t('lesson.languageGoal')} name="goal">
-                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={isChinese ? '例如：通过沉浸式情境激发好奇心，建立学习动机。' : 'Example: Spark curiosity through an immersive scenario and build learning motivation.'} />
+                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.goalExample')} />
               </Form.Item>
 
               <Form.Item className="as-draft-field" label={t('lesson.activitySummary')} name="activity">
-                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={isChinese ? '例如：全班扮演飞船控制台员。' : 'Example: The class acts as spaceship control operators.'} />
+                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.activityExample')} />
               </Form.Item>
 
               <div className="as-draft-field">
@@ -128,7 +129,7 @@ export function EditStepModal({ open, step, onClose, onSave }) {
                               <div className="flow-step-section guidance teacher-script">
                                 <div className="flow-step-section-title">{t('lesson.teacherGuidance')}</div>
                                 <Form.Item name={[field.name, 'teacher']} noStyle>
-                                  <TextArea className="flow-step-input flow-step-script" autoSize={{ minRows: 4, maxRows: 8 }} placeholder="例如：Shhh... Listen, everyone." />
+                                  <TextArea className="flow-step-input flow-step-script" autoSize={{ minRows: 4, maxRows: 8 }} placeholder={i18next.t('editStepUi.61db78b3bf')} />
                                 </Form.Item>
                               </div>
                               <div className="flow-step-section guidance cue-script">
@@ -150,10 +151,10 @@ export function EditStepModal({ open, step, onClose, onSave }) {
 
               <div className="as-draft-row trd-resource-row">
                 <Form.Item className="as-draft-field" label={t('lesson.teachingResources')} name="resources">
-                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={isChinese ? '例如：AI图像生成设备、投影仪' : 'Example: AI image generator, projector'} />
+                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.resourcesExample')} />
                 </Form.Item>
                 <Form.Item className="as-draft-field" label={t('lesson.sceneSetup')} name="scenario">
-                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={isChinese ? '例如：星际信号接收站场景' : 'Example: Interstellar signal station'} />
+                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.scenarioExample')} />
                 </Form.Item>
               </div>
             </div>

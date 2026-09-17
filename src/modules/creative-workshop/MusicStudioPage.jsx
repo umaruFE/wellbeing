@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowLeft, ChevronRight, Clock, Loader2, Music, Pencil, Plus,
+  ArrowLeft, Check, ChevronRight, Clock, Loader2, Music, Pencil, Plus,
   RefreshCw, Save, Search, Sparkles, Trash2, Wand2, X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -56,7 +56,7 @@ function parseLyricsFile(text) {
     }
     rows.push({ start: 0, end: 0, text: line });
   });
-  if (!rows.length) throw new Error('未解析到任何歌词行');
+  if (!rows.length) throw new Error('musicStudio.noLyricLines');
   // LRC 只有起点：终点 = 下一行起点；纯文本行：从上一行结束处起每行 3 秒顺延
   let cursor = 0;
   return rows.map((row, idx) => {
@@ -89,30 +89,30 @@ async function generateFullSongAudio({ id, resume, onProgress, isCurrent }) {
       method: 'POST',
       headers: authJsonHeaders(),
     });
-    if (!submit.ok) throw new Error((await submit.json().catch(() => ({}))).error || '音频任务提交失败');
+    if (!submit.ok) throw new Error((await submit.json().catch(() => ({}))).error || 'musicStudio.audioSubmitFail');
   }
   let url = '';
   let completed;
   for (let attempt = 0; attempt < 360 && !url; attempt++) {
-    if (!isCurrent()) throw new Error('已离开当前作品，歌曲继续在后台生成');
+    if (!isCurrent()) throw new Error('musicStudio.leftWorkBgGen');
     await new Promise((r) => setTimeout(r, 5000));
     let status;
     try {
       status = await fetch(`/api/creative-works/${id}/music`, { headers: authJsonHeaders(), signal: AbortSignal.timeout(30000) });
     } catch (error) {
-      if (!isCurrent()) throw new Error('已离开当前作品，歌曲继续在后台生成');
+      if (!isCurrent()) throw new Error('musicStudio.leftWorkBgGen');
       if (error instanceof TypeError || ['TimeoutError', 'AbortError'].includes(error.name)) { onProgress('', 'reconnecting'); continue; }
       throw error;
     }
     if ([503, 504].includes(status.status)) { onProgress('', 'reconnecting'); continue; }
     const json = await status.json().catch(() => ({}));
-    if (!status.ok) throw new Error(json.error || '歌曲任务查询失败');
+    if (!status.ok) throw new Error(json.error || 'musicStudio.songTaskQueryFail');
     const data = json.data || {};
     onProgress(data.executionId, data.phase);
-    if (data.status === 'error') throw new Error(data.error || '音频生成失败，请重试');
+    if (data.status === 'error') throw new Error(data.error || 'musicStudio.audioGenFail');
     if (data.status === 'completed') { url = data.url; completed = data; }
   }
-  if (!url) throw new Error('音频生成超时，请重试');
+  if (!url) throw new Error('musicStudio.audioGenTimeout');
   return completed;
 }
 const hasCompleteExercises = (value) => Boolean(
@@ -252,25 +252,63 @@ function LyricClipPlayer({ source, workId, index, canLoad, onPlay }) {
   );
 }
 
-function LyricsEditor({ lyrics, audio = {}, workId }) {
+function LyricsEditor({ lyrics, audio = {}, workId, onEditLyric }) {
   const { t } = useTranslation();
   const clips = React.useRef(null);
+  const [editingIndex, setEditingIndex] = React.useState(-1);
+  const [editDraft, setEditDraft] = React.useState('');
+  const editInputRef = React.useRef(null);
   const segments = Array.isArray(audio.segments) ? audio.segments : [];
   const recognized = audio.transcription?.lyrics || [];
   const pauseOtherClips = event => {
     clips.current?.querySelectorAll('audio').forEach(player => { if (player !== event.currentTarget) player.pause(); });
   };
+  const startEdit = (idx) => {
+    setEditingIndex(idx);
+    setEditDraft(lyrics[idx]?.text || '');
+  };
+  const cancelEdit = () => { setEditingIndex(-1); setEditDraft(''); };
+  const commitEdit = () => {
+    if (editingIndex < 0) return;
+    const next = editDraft.trim();
+    if (next && next !== lyrics[editingIndex]?.text) onEditLyric?.(editingIndex, next);
+    cancelEdit();
+  };
+  React.useEffect(() => {
+    if (editingIndex >= 0) editInputRef.current?.focus();
+  }, [editingIndex]);
   return (
     <section className="pbv2-card pbv2-tone-blue" ref={clips}>
       <div className="pbv2-card-title">{t('musicStudio.lyricsTimeline')}</div>
-      {lyrics.map((row, idx) => (
-        <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className="cw-lyric-row cw-lyric-row-with-clip" title={t('musicStudio.lyricTimeTooltip', { time: row.time || t('musicStudio.alignmentPending') })}>
-          <span className="cw-lyric-time">{idx + 1}</span>
-          <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
-          <LyricClipPlayer source={segments[idx]} workId={workId} index={idx} onPlay={pauseOtherClips}
-            canLoad={Boolean(workId && audio.generationTask?.status === 'completed' && recognized[idx]?.text === row.text && recognized[idx]?.time === row.time)} />
-        </div>
-      ))}
+      {lyrics.map((row, idx) => {
+        const editing = editingIndex === idx;
+        return (
+          <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className={`cw-lyric-row cw-lyric-row-with-clip${onEditLyric ? ' cw-lyric-row-editable' : ''}`} title={t('musicStudio.lyricTimeTooltip', { time: row.time || t('musicStudio.alignmentPending') })}>
+            <span className="cw-lyric-time">{idx + 1}</span>
+            {editing ? (
+              <div className="cw-lyric-edit">
+                <input ref={editInputRef} value={editDraft} aria-label={t('musicStudio.editLyricAria', { n: idx + 1 })} onChange={(event) => setEditDraft(event.target.value)} onBlur={commitEdit}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.nativeEvent.isComposing) commitEdit();
+                    if (event.key === 'Escape') cancelEdit();
+                  }} />
+              </div>
+            ) : (
+              <span className="cw-lyric-text cw-lyric-text-readonly">{row.text || t('musicStudio.notGenerated')}</span>
+            )}
+            <div className="cw-lyric-row-tools">
+              {editing ? (<>
+                <button type="button" className="cw-lyric-tool-btn is-save" aria-label={t('musicStudio.lyricEditSave')} title={t('musicStudio.lyricEditSave')} onMouseDown={(event) => event.preventDefault()} onClick={commitEdit}><Check size={14} /></button>
+                <button type="button" className="cw-lyric-tool-btn" aria-label={t('musicStudio.lyricEditCancel')} title={t('musicStudio.lyricEditCancel')} onMouseDown={(event) => event.preventDefault()} onClick={cancelEdit}><X size={14} /></button>
+              </>) : onEditLyric && (
+                <button type="button" className="cw-lyric-tool-btn" aria-label={t('musicStudio.editLyricAria', { n: idx + 1 })} title={t('musicStudio.editLyricBtn')} onClick={() => startEdit(idx)}><Pencil size={13} /></button>
+              )}
+              <LyricClipPlayer source={segments[idx]} workId={workId} index={idx} onPlay={pauseOtherClips}
+                canLoad={Boolean(workId && audio.generationTask?.status === 'completed' && recognized[idx]?.text === row.text && recognized[idx]?.time === row.time)} />
+            </div>
+          </div>
+        );
+      })}
     </section>
   );
 }
@@ -419,7 +457,7 @@ function EditablePool({ title, items, onChange, options }) {
     <section className="pbv2-card pbv2-tone-green">
       <div className="pbv2-card-title">{title}</div>
       <div className="cw-pool-choices">
-        {options.map((item) => <button type="button" key={item} aria-pressed={items.includes(item)} className={items.includes(item) ? 'is-active' : ''} onClick={() => onChange(options.filter((option) => option === item ? !items.includes(item) : items.includes(option)))}>{t(`musicStudio.poolItem.${item}`, { defaultValue: item })}<span>{items.includes(item) ? '−' : '+'}</span></button>)}
+        {options.map((item) => <button type="button" key={item} aria-pressed={items.includes(item)} className={items.includes(item) ? 'is-active' : ''} onClick={() => onChange(options.filter((option) => option === item ? !items.includes(item) : items.includes(option)))}>{t('musicStudio.poolItem', { returnObjects: true })?.[item] || item}<span>{items.includes(item) ? '−' : '+'}</span></button>)}
       </div>
       <span className="cw-pool-count">{t('musicStudio.selectedCount', { count: items.length })}</span>
     </section>
@@ -871,7 +909,8 @@ export function MusicStudioPage() {
       setMessage(t('musicStudio.transcriptionNeedsReview'));
       setSaveState(t('musicStudio.aiFullSongReady'));
     } catch (err) {
-      if (editingIdRef.current === id) setMessage(err.message || t('musicStudio.fullSongFail'));
+      // err.message 可能是本模块抛出的 musicStudio.* key，也可能是后端原文；t() + defaultValue 兼容两者
+      if (editingIdRef.current === id) setMessage(err.message ? t(err.message, { defaultValue: err.message }) : t('musicStudio.fullSongFail'));
     } finally {
       setSegmentBusy(null);
     }
@@ -894,6 +933,13 @@ export function MusicStudioPage() {
       setRendered(false);
       setMessage(t('musicStudio.actualLrcImported'));
     } catch (err) { setMessage(err.message); }
+  };
+
+  // 修正单句歌词：只改写歌词条文本，时间轴与切句片段保持不变，并立即保存到服务端
+  const editLyricLine = (index, text) => {
+    const nextSong = { ...song, lyrics: song.lyrics.map((row, i) => (i === index ? { ...row, text } : row)) };
+    setSong(nextSong);
+    persist({ song: nextSong, title: nextSong.title || workTitle });
   };
 
   // 进入第四关 / 音频发生变化后，自动（重新）渲染课件，无需额外的第七步
@@ -1179,7 +1225,7 @@ export function MusicStudioPage() {
                   <div className="pbv2-field"><span>{t('musicStudio.patternsLabel')}</span><div className="cw-readonly-value">{(song.targetPatterns || []).join('、') || '—'}</div></div>
                 </div>
               </section>
-              <LyricsEditor lyrics={song.lyrics} audio={audio} workId={editingIdRef.current} />
+              <LyricsEditor lyrics={song.lyrics} audio={audio} workId={editingIdRef.current} onEditLyric={editLyricLine} />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>{t('musicStudio.backToBasic')}</button>
                 <button type="button" className="pbv2-ghost" disabled={songGenerating || Boolean(segmentBusy)} onClick={requestSongRegen}>

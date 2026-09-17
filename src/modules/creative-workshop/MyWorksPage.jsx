@@ -1,3 +1,6 @@
+import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BookOpen, Clock, FileText, FolderOpen, Plus, Search, Trash2 } from 'lucide-react';
@@ -7,6 +10,7 @@ import './creativeWorkshop.css';
 const formatDate = (value) => new Intl.DateTimeFormat('zh-CN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
 
 export const MyWorksPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [works, setWorks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,26 +30,26 @@ export const MyWorksPage = () => {
   const filtered = works.filter((work) => (category === 'all' || work.moduleName === category) && `${work.title} ${work.moduleName}`.toLowerCase().includes(query.toLowerCase()));
 
   const remove = async (id) => {
-    if (!window.confirm('确认删除这份创作草稿？')) return;
+    if (!window.confirm(t('myWorksUi.confirmDeleteDraft'))) return;
     try {
       await deleteCreativeWork(id);
       setWorks((prev) => prev.filter((work) => work.id !== id));
     } catch (err) {
       console.error('删除草稿失败:', err);
-      window.alert(err.message || '删除失败，请重试');
+      window.alert(err.message || t('myWorksUi.deleteFailedRetry'));
     }
   };
 
   return (
     <div className="works-page">
-      <header className="works-header"><div><span className="cw-eyebrow">内容管理</span><h1><FolderOpen size={28} /> 我的作品</h1><p>集中查看、继续编辑和管理自己创建的课程、活动与素材。</p></div><button className="cw-primary-button" onClick={() => navigate('/workshop/english-plus')}><Plus size={17} /> 开始新创作</button></header>
-      <div className="works-toolbar"><div className="works-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="搜索作品" /></div><div className="works-categories">{categories.map((item) => <button key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item === 'all' ? '全部' : item}</button>)}</div></div>
+      <header className="works-header"><div><span className="cw-eyebrow"><LocalizedText id="myWorksUi.55c57bbfa9" /></span><h1><FolderOpen size={28} /> <LocalizedText id="sidebar.myWorks" /></h1><p><LocalizedText id="myWorksUi.2e3e2e9a2a" /></p></div><button className="cw-primary-button" onClick={() => navigate('/workshop/english-plus')}><Plus size={17} /> <LocalizedText id="myWorksUi.2155290c5a" /></button></header>
+      <div className="works-toolbar"><div className="works-search"><Search size={17} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={i18next.t('myWorksUi.1c450446f3')} /></div><div className="works-categories">{categories.map((item) => <button key={item} className={category === item ? 'active' : ''} onClick={() => setCategory(item)}>{item === 'all' ? t('common.all') : item}</button>)}</div></div>
       {loading ? (
-        <div className="works-empty"><span><BookOpen size={36} /></span><h2>正在加载…</h2></div>
+        <div className="works-empty"><span><BookOpen size={36} /></span><h2><LocalizedText id="myWorksUi.1d08846f05" /></h2></div>
       ) : filtered.length ? (
-        <div className="works-grid">{filtered.map((work) => <article className="work-card" key={work.id}><div className="work-card-top"><span><FileText size={19} /></span><em className={work.status === 'done' ? 'work-status-done' : ''}>{work.status === 'done' ? '已生成' : '草稿'}</em></div><small>{work.moduleName}</small><h2>{work.title}</h2><p>{work.parameters?.goals || work.parameters?.notes || '等待继续完善创作内容'}</p><footer><span><Clock size={13} /> {formatDate(work.createdAt)}</span><span className="work-buttons"><button aria-label="删除" onClick={() => remove(work.id)}><Trash2 size={16} /></button></span></footer></article>)}</div>
+        <div className="works-grid">{filtered.map((work) => <article className="work-card" key={work.id}><div className="work-card-top"><span><FileText size={19} /></span><em className={work.status === 'done' ? 'work-status-done' : ''}>{work.status === 'done' ? t('myWorksUi.statusDone') : t('myWorksUi.statusDraft')}</em></div><small>{work.moduleName}</small><h2>{work.title}</h2><p>{work.parameters?.goals || work.parameters?.notes || t('myWorksUi.pendingContent')}</p><footer><span><Clock size={13} /> {formatDate(work.createdAt)}</span><span className="work-buttons"><button aria-label={i18next.t('common.delete')} onClick={() => remove(work.id)}><Trash2 size={16} /></button></span></footer></article>)}</div>
       ) : (
-        <div className="works-empty"><span><BookOpen size={36} /></span><h2>还没有符合条件的作品</h2><p>从创作工坊选择一种内容，输入参数生成你的第一份草稿。</p><button className="cw-primary-button" onClick={() => navigate('/workshop/english-plus')}>进入创作工坊</button></div>
+        <div className="works-empty"><span><BookOpen size={36} /></span><h2><LocalizedText id="myWorksUi.e645e9a18d" /></h2><p><LocalizedText id="myWorksUi.ba71b49936" /></p><button className="cw-primary-button" onClick={() => navigate('/workshop/english-plus')}><LocalizedText id="myWorksUi.d997bd1f74" /></button></div>
       )}
     </div>
   );

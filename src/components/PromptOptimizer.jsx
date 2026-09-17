@@ -1,3 +1,6 @@
+import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Wand2, History, ArrowRight, Star, Save, X } from 'lucide-react';
 import { promptOptimizationService, promptOptimizationMap } from '../services/promptService';
@@ -6,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [originalPrompt, setOriginalPrompt] = useState('');
   const [optimizedPrompt, setOptimizedPrompt] = useState('');
   const [improvements, setImprovements] = useState([]);
@@ -56,7 +60,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
       setOptimizedPrompt(optimized);
     } catch (error) {
       console.error('优化提示词失败:', error);
-      alert('优化提示词失败，请稍后重试');
+      alert(i18next.t('uiMessages.optimizeFailed'));
     } finally {
       setLoading(false);
     }
@@ -74,7 +78,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
         optimized_prompt: optimizedPrompt,
         improvement_score: 5 // 默认评分
       });
-      alert('优化记录已保存');
+      alert(i18next.t('uiMessages.optimizationSaved'));
     } catch (error) {
       console.error('保存优化记录失败:', error);
     }
@@ -93,7 +97,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
           <div className="flex items-center gap-3">
             <Wand2 className="w-6 h-6 text-purple" />
             <h3 className="font-bold text-lg text-primary">
-              提示词优化器 - {elementType === 'image' ? '图片' : elementType === 'video' ? '视频' : elementType === 'audio' ? '音频' : elementType === 'script' ? '讲稿' : elementType === 'activity' ? '活动' : 'PPT'}
+              <LocalizedText id="promptOptimizerUi.cf00478453" /> {elementType === 'image' ? t('promptOptimizerUi.typeImage') : elementType === 'video' ? t('promptOptimizerUi.typeVideo') : elementType === 'audio' ? t('promptOptimizerUi.typeAudio') : elementType === 'script' ? t('promptOptimizerUi.typeScript') : elementType === 'activity' ? t('promptOptimizerUi.typeActivity') : 'PPT'}
             </h3>
           </div>
           <button onClick={onClose} className="text-primary-placeholder hover:text-primary-secondary">
@@ -104,18 +108,18 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
         <div className="p-6 space-y-6">
           {/* 原始提示词 */}
           <div>
-            <label className="text-sm font-medium text-primary-secondary mb-2 block">原始提示词</label>
+            <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="promptOptimizerUi.a3bc22250c" /></label>
             <textarea
               value={originalPrompt}
               onChange={(e) => setOriginalPrompt(e.target.value)}
-              placeholder="输入原始提示词..."
+              placeholder={i18next.t('promptOptimizerUi.2b722346d7')}
               className="w-full p-3 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-32 transition-all"
             />
           </div>
 
           {/* 优化建议 */}
           <div>
-            <label className="text-sm font-medium text-primary-secondary mb-2 block">优化建议</label>
+            <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="promptOptimizerUi.ca490ba6e4" /></label>
             <div className="space-y-2">
               {improvements.map((improvement, index) => (
                 <div key={index} className="flex items-center gap-2">
@@ -136,11 +140,11 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
 
           {/* 优化后提示词 */}
           <div>
-            <label className="text-sm font-medium text-primary-secondary mb-2 block">优化后提示词</label>
+            <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="promptOptimizerUi.3870ec94a9" /></label>
             <textarea
               value={optimizedPrompt}
               onChange={(e) => setOptimizedPrompt(e.target.value)}
-              placeholder="优化后的提示词将显示在这里..."
+              placeholder={i18next.t('promptOptimizerUi.7defda79e9')}
               className="w-full p-3 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-32 transition-all"
             />
           </div>
@@ -157,7 +161,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
               ) : (
                 <Wand2 className="w-4 h-4" />
               )}
-              优化提示词
+              <LocalizedText id="promptOptimizerUi.779dd81c9d" />
             </button>
             <button
               onClick={handleSave}
@@ -165,14 +169,14 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
               className="px-4 py-2 bg-success text-white rounded-lg hover:bg-success-active disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
-              保存
+              <LocalizedText id="common.save" />
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
               className="px-4 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary transition-all flex items-center justify-center gap-2 font-medium"
             >
               <History className="w-4 h-4" />
-              历史
+              <LocalizedText id="promptOptimizerUi.be78b20585" />
             </button>
           </div>
 
@@ -182,22 +186,22 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
               disabled={!optimizedPrompt}
               className="w-full px-4 py-2 bg-info text-white rounded-lg hover:bg-info-active transition-colors flex items-center justify-center gap-2 mt-4"
             >
-              使用优化后的提示词
+              <LocalizedText id="promptOptimizerUi.341673303e" />
               <ArrowRight className="w-4 h-4" />
             </button>
 
           {/* 历史记录 */}
           {showHistory && (
             <div className="mt-6 pt-6 border-t-2 border-stroke-light">
-              <h4 className="font-medium text-primary-secondary mb-3">历史优化记录</h4>
+              <h4 className="font-medium text-primary-secondary mb-3"><LocalizedText id="promptOptimizerUi.586c05ce92" /></h4>
               <div className="space-y-3">
                 {history.length === 0 ? (
-                  <p className="text-primary-muted text-sm">暂无历史记录</p>
+                  <p className="text-primary-muted text-sm"><LocalizedText id="promptOptimizerUi.77cf867de7" /></p>
                 ) : (
                   history.map((item, index) => (
                     <div key={index} className="p-3 border-2 border-stroke-light rounded-xl hover:bg-warning-light hover:border-primary cursor-pointer transition-all" onClick={() => handleUseHistory(item)}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-primary-secondary">优化记录 {index + 1}</span>
+                        <span className="text-sm font-medium text-primary-secondary"><LocalizedText id="promptOptimizerUi.7f89154012" /> {index + 1}</span>
                         <div className="flex items-center gap-1">
                           {[...Array(5)].map((_, i) => (
                             <Star key={i} className={`w-3 h-3 ${i < item.improvement_score ? 'text-yellow-400 fill-yellow-400' : 'text-primary-placeholder'}`} />

@@ -1,3 +1,6 @@
+import i18next from 'i18next';
+import { useTranslation } from 'react-i18next';
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Plus, Trash2, RefreshCw, Image as ImageIcon, Video, Wand2, ChevronLeft, ChevronRight, Check, AlertCircle, Download } from 'lucide-react';
 import videoStoryboardService from '../services/videoStoryboardService';
@@ -10,27 +13,27 @@ import aceImg from '../assets/ip/ace.png';
 
 // 步骤定义
 const STEPS = [
-  { id: 1, title: '基本信息', description: '输入视频描述' },
-  { id: 2, title: '分镜详情', description: '查看分镜信息' },
-  { id: 3, title: '生成视频', description: '合成最终视频' }
+  { id: 1, title: 'videoStoryboardUi.stepBasicInfo', description: 'videoStoryboardUi.stepBasicInfoDesc' },
+  { id: 2, title: 'videoStoryboardUi.0ae2c80243', description: 'videoStoryboardUi.stepStoryboardDesc' },
+  { id: 3, title: 'videoStoryboardUi.stepGenerateVideo', description: 'videoStoryboardUi.stepGenerateVideoDesc' }
 ];
 
 // 图片比例选项
 const ASPECT_RATIOS = [
-  { id: '16:9', label: '16:9', width: 1280, height: 720, description: '横屏宽屏' },
-  { id: '4:3', label: '4:3', width: 1280, height: 960, description: '标准横屏' },
-  { id: '1:1', label: '1:1', width: 1280, height: 1280, description: '正方形' },
-  { id: '3:4', label: '3:4', width: 960, height: 1280, description: '标准竖屏' },
-  { id: '9:16', label: '9:16', width: 720, height: 1280, description: '竖屏长图' },
+  { id: '16:9', label: '16:9', width: 1280, height: 720, description: 'videoStoryboardUi.ratioLandscapeWide' },
+  { id: '4:3', label: '4:3', width: 1280, height: 960, description: 'videoStoryboardUi.ratioLandscapeStandard' },
+  { id: '1:1', label: '1:1', width: 1280, height: 1280, description: 'videoStoryboardUi.ratioSquare' },
+  { id: '3:4', label: '3:4', width: 960, height: 1280, description: 'videoStoryboardUi.ratioPortraitStandard' },
+  { id: '9:16', label: '9:16', width: 720, height: 1280, description: 'videoStoryboardUi.ratioPortraitTall' },
 ];
 
 // IP角色数据（与RoleSelection.jsx保持一致）
 const IP_CHARACTERS = [
-  { id: 'poppy', name: 'Poppy', color: '粉色', colorHex: '#FFB6C1', description: '粉色角色', thumbnail: poppyImg, available: true },
-  { id: 'edi', name: 'Edi', color: '蓝色', colorHex: '#87CEEB', description: '蓝色角色', thumbnail: ediImg, available: true },
-  { id: 'rolly', name: 'Rolly', color: '橘色', colorHex: '#FFA500', description: '橘色角色', thumbnail: rollyImg, available: true },
-  { id: 'milo', name: 'Milo', color: '黄色', colorHex: '#FFD700', description: '黄色角色', thumbnail: miloImg, available: true },
-  { id: 'ace', name: 'Ace', color: '紫色', colorHex: '#9370DB', description: '紫色角色', thumbnail: aceImg, available: true },
+  { id: 'poppy', name: 'Poppy', color: 'videoStoryboardUi.colorPink', colorHex: '#FFB6C1', description: '粉色角色', thumbnail: poppyImg, available: true },
+  { id: 'edi', name: 'Edi', color: 'videoStoryboardUi.colorBlue', colorHex: '#87CEEB', description: '蓝色角色', thumbnail: ediImg, available: true },
+  { id: 'rolly', name: 'Rolly', color: 'videoStoryboardUi.colorOrange', colorHex: '#FFA500', description: '橘色角色', thumbnail: rollyImg, available: true },
+  { id: 'milo', name: 'Milo', color: 'videoStoryboardUi.colorYellow', colorHex: '#FFD700', description: '黄色角色', thumbnail: miloImg, available: true },
+  { id: 'ace', name: 'Ace', color: 'videoStoryboardUi.colorPurple', colorHex: '#9370DB', description: '紫色角色', thumbnail: aceImg, available: true },
 ];
 
 /**
@@ -45,6 +48,8 @@ export const VideoStoryboardModal = ({
   userId = null,
   organizationId = null
 }) => {
+  const { t } = useTranslation();
+
   // 当前步骤
   const [currentStep, setCurrentStep] = useState(1);
   
@@ -141,12 +146,12 @@ export const VideoStoryboardModal = ({
   // 步骤1下一步
   const handleStep1Next = async () => {
     if (!storyCore.trim()) {
-      setError('请填写故事核心要素');
+      setError(t('videoStoryboardUi.storyCoreRequired'));
       return;
     }
 
     if (selectedIPs.length === 0) {
-      setError('请选择一个IP角色');
+      setError(t('videoStoryboardUi.ipRequired'));
       return;
     }
 
@@ -234,15 +239,15 @@ export const VideoStoryboardModal = ({
           console.log('成功生成分镜，跳转到步骤2');
         } else {
           console.error('未找到图片数据');
-          throw new Error('未找到图片数据');
+          throw new Error(t('videoStoryboardUi.noImageData'));
         }
       } else {
         console.error('返回数据格式错误:', result);
-        throw new Error('未返回有效数据');
+        throw new Error(t('videoStoryboardUi.invalidResponse'));
       }
     } catch (err) {
       console.error('生成分镜失败:', err);
-      setError('生成分镜失败: ' + err.message);
+      setError(t('videoStoryboardUi.generateStoryboardFailed', { message: err.message }));
     } finally {
       setIsGeneratingScript(false);
     }
@@ -293,7 +298,7 @@ export const VideoStoryboardModal = ({
           newImageUrl = result.storyboardData.data;
         } else {
           console.error('storyboardData格式未知:', result.storyboardData);
-          throw new Error('未找到图片URL');
+          throw new Error(t('videoStoryboardUi.imageUrlNotFound'));
         }
       } else if (result.image_url) {
         newImageUrl = result.image_url;
@@ -305,11 +310,11 @@ export const VideoStoryboardModal = ({
           newImageUrl = result.data;
         } else {
           console.error('data格式未知:', result.data);
-          throw new Error('未找到图片URL');
+          throw new Error(t('videoStoryboardUi.imageUrlNotFound'));
         }
       } else {
         console.error('未知的返回格式:', result);
-        throw new Error('未找到图片URL');
+        throw new Error(t('videoStoryboardUi.imageUrlNotFound'));
       }
       
       console.log('新图片URL:', newImageUrl);
@@ -323,7 +328,7 @@ export const VideoStoryboardModal = ({
       return newImageUrl;
     } catch (err) {
       console.error('重新生成图片失败:', err);
-      setError('重新生成图片失败: ' + err.message);
+      setError(t('videoStoryboardUi.regenerateImageFailed', { message: err.message }));
       return null;
     } finally {
       setIsGeneratingSceneImage(prev => ({ ...prev, [sceneId]: false }));
@@ -412,7 +417,7 @@ export const VideoStoryboardModal = ({
     try {
       const validation = uploadService.validateFile(file, ['image/jpeg', 'image/png', 'image/gif', 'image/webp'], 10);
       if (!validation.valid) {
-        setError(validation.error || '文件验证失败');
+        setError(validation.error || t('videoStoryboardUi.fileValidationFailed'));
         return;
       }
 
@@ -425,11 +430,11 @@ export const VideoStoryboardModal = ({
             : scene
         ));
       } else {
-        setError(uploadResult.error || '上传失败');
+        setError(uploadResult.error || t('common.uploadFailed'));
       }
     } catch (err) {
       console.error('上传分镜图片失败:', err);
-      setError('上传失败: ' + err.message);
+      setError(t('videoStoryboardUi.uploadFailedWithReason', { message: err.message }));
     } finally {
       setUploadingSceneImage(prev => {
         const newState = { ...prev };
@@ -453,7 +458,7 @@ export const VideoStoryboardModal = ({
   const handleStep2Next = () => {
     const completedScenes = scenes.filter(s => s.generatedImage);
     if (completedScenes.length === 0) {
-      setError('请先生成至少一张分镜图片');
+      setError(t('videoStoryboardUi.needSceneImage'));
       return;
     }
     setCurrentStep(3);
@@ -516,7 +521,7 @@ export const VideoStoryboardModal = ({
       const missingFields = requiredFields.filter(field => !requestData[field]);
       if (missingFields.length > 0) {
         console.error('缺少必要字段:', missingFields);
-        throw new Error(`缺少必要字段: ${missingFields.join(', ')}`);
+        throw new Error(t('videoStoryboardUi.missingFields', { fields: missingFields.join(', ') }));
       }
       
       console.log('数据验证通过，所有必要字段都存在');
@@ -545,14 +550,14 @@ export const VideoStoryboardModal = ({
           setGeneratedVideoUrl(videoUrl);
         } else {
           console.error('视频数据结构:', result.videoData);
-          throw new Error('未找到视频URL');
+          throw new Error(t('videoStoryboardUi.videoUrlNotFound'));
         }
       } else {
-        throw new Error('未返回视频数据');
+        throw new Error(t('videoStoryboardUi.noVideoData'));
       }
     } catch (err) {
       console.error('合成视频失败:', err);
-      setError('合成视频失败: ' + err.message);
+      setError(t('videoStoryboardUi.composeVideoFailed', { message: err.message }));
     } finally {
       setIsComposingVideo(false);
     }
@@ -582,7 +587,7 @@ export const VideoStoryboardModal = ({
             }`}>
               {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
             </div>
-            <span className="text-xs mt-1 hidden sm:block">{step.title}</span>
+            <span className="text-xs mt-1 hidden sm:block">{t(step.title)}</span>
           </div>
           {index < STEPS.length - 1 && (
             <div className={`w-12 h-0.5 mx-2 ${currentStep > step.id ? 'bg-success' : 'bg-stroke'}`} />
@@ -598,19 +603,19 @@ export const VideoStoryboardModal = ({
       {isGeneratingScript && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-xl">
           <RefreshCw className="w-10 h-10 text-purple-500 animate-spin mb-4" />
-          <p className="text-primary-secondary font-medium">正在生成分镜图片...</p>
-          <p className="text-sm text-primary-placeholder mt-1">请稍候，这可能需要几分钟</p>
+          <p className="text-primary-secondary font-medium"><LocalizedText id="videoStoryboardUi.82f6333f90" /></p>
+          <p className="text-sm text-primary-placeholder mt-1"><LocalizedText id="videoStoryboardUi.6f63115847" /></p>
         </div>
       )}
       
       <div>
         <label className="text-sm font-medium text-primary-secondary mb-2 block">
-          故事核心要素 <span className="text-error">*</span>
+          <LocalizedText id="videoStoryboard.storyCore" /> <span className="text-error">*</span>
         </label>
         <textarea
           value={storyCore}
           onChange={(e) => setStoryCore(e.target.value)}
-          placeholder="例如：poppy在花园里玩耍"
+          placeholder={i18next.t('videoStoryboardUi.a73abaefb3')}
           className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-24 transition-all"
           disabled={isGeneratingScript}
         />
@@ -618,7 +623,7 @@ export const VideoStoryboardModal = ({
 
       <div>
         <label className="text-sm font-medium text-primary-secondary mb-2 block">
-          图片比例
+          <LocalizedText id="ipCharacter.imageRatio" />
         </label>
         <div className="grid grid-cols-5 gap-2">
           {ASPECT_RATIOS.map((ratio) => (
@@ -650,16 +655,16 @@ export const VideoStoryboardModal = ({
           ))}
         </div>
         <p className="text-xs text-primary-placeholder mt-1">
-          已选择：{selectedAspectRatio.label} ({selectedAspectRatio.width}×{selectedAspectRatio.height}) - {selectedAspectRatio.description}
+          <LocalizedText id="lesson.selected" />{selectedAspectRatio.label} ({selectedAspectRatio.width}×{selectedAspectRatio.height}) - {t(selectedAspectRatio.description)}
         </p>
       </div>
 
       <div>
         <label className="text-sm font-medium text-primary-secondary mb-2 block">
-          IP选择（单选）
+          <LocalizedText id="videoStoryboardUi.6628949ee5" />
         </label>
         <p className="text-xs text-primary-placeholder mb-3">
-          选择要出现在视频中的IP角色
+          <LocalizedText id="videoStoryboardUi.abadd10afb" />
         </p>
         <div className="flex gap-3 flex-wrap">
           {IP_CHARACTERS.map((ip) => {
@@ -705,7 +710,7 @@ export const VideoStoryboardModal = ({
                     color: '#FFF'
                   }}
                 >
-                  {ip.color}
+                  {t(ip.color)}
                 </span>
               </button>
             );
@@ -723,7 +728,7 @@ export const VideoStoryboardModal = ({
         <div className="text-center py-8">
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-4">
             <p className="text-yellow-700">
-              未找到分镜数据，请返回步骤1重新生成
+              <LocalizedText id="videoStoryboardUi.5b18748c33" />
             </p>
           </div>
         </div>
@@ -731,18 +736,18 @@ export const VideoStoryboardModal = ({
         <>
           {/* 视频信息概览 */}
           <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
-            <h4 className="font-medium text-purple-800 mb-3">视频信息</h4>
+            <h4 className="font-medium text-purple-800 mb-3"><LocalizedText id="videoStoryboardUi.2be1fa57c9" /></h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <span className="text-primary-muted">标题：</span>
+                <span className="text-primary-muted"><LocalizedText id="videoStoryboardUi.5825a055ab" /></span>
                 <span className="font-medium text-primary-secondary">{storyboardTitle}</span>
               </div>
               <div>
-                <span className="text-primary-muted">分镜数量：</span>
-                <span className="font-medium text-primary-secondary">{scenes.length} 个</span>
+                <span className="text-primary-muted"><LocalizedText id="videoStoryboardUi.f3806ce269" /></span>
+                <span className="font-medium text-primary-secondary">{scenes.length} <LocalizedText id="videoStoryboardUi.f7b2a6ee68" /></span>
               </div>
               <div>
-                <span className="text-primary-muted">视频尺寸：</span>
+                <span className="text-primary-muted"><LocalizedText id="videoStoryboardUi.474c04e3d6" /></span>
                 <span className="font-medium text-primary-secondary">{videoSize.width} × {videoSize.height}</span>
               </div>
             </div>
@@ -751,7 +756,7 @@ export const VideoStoryboardModal = ({
           {/* 角色提示词 */}
           {characterPrompt && (
             <div className="bg-info-light border border-info-border rounded-lg p-4">
-              <h4 className="font-medium text-info-active mb-2">角色描述</h4>
+              <h4 className="font-medium text-info-active mb-2"><LocalizedText id="videoStoryboardUi.a0a62a0031" /></h4>
               <p className="text-sm text-info-active">{characterPrompt}</p>
             </div>
           )}
@@ -759,11 +764,11 @@ export const VideoStoryboardModal = ({
           {/* 配音信息 */}
           {voiceInfo && voiceInfo.voice_scripts && voiceInfo.voice_scripts.length > 0 && (
             <div className="bg-success-light border border-success-border rounded-lg p-4">
-              <h4 className="font-medium text-success-active mb-3">配音信息</h4>
+              <h4 className="font-medium text-success-active mb-3"><LocalizedText id="videoStoryboardUi.71cb1bc94f" /></h4>
               <div className="space-y-2">
                 {voiceInfo.characters_timbre && voiceInfo.characters_timbre.length > 0 && (
                   <div className="text-sm text-success-active mb-2">
-                    <span className="font-medium">音色：</span>
+                    <span className="font-medium"><LocalizedText id="videoStoryboardUi.4a9851f630" /></span>
                     {voiceInfo.characters_timbre.map((timbre, index) => (
                       <span key={index} className="ml-2 px-2 py-0.5 bg-success-light rounded text-xs">
                         {timbre.timbre_name} - {timbre.timbre_des}
@@ -787,13 +792,13 @@ export const VideoStoryboardModal = ({
 
           {/* 分镜图片部分 */}
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-primary-secondary">分镜详情</h4>
+            <h4 className="font-medium text-primary-secondary"><LocalizedText id="videoStoryboardUi.0ae2c80243" /></h4>
             <button
               onClick={handleAddScene}
               className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm"
             >
               <Plus className="w-4 h-4" />
-              添加分镜
+              <LocalizedText id="videoStoryboardUi.1c9d6d4917" />
             </button>
           </div>
 
@@ -809,7 +814,7 @@ export const VideoStoryboardModal = ({
                         <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
                           <div className="text-white text-center">
                             <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-2" />
-                            <span className="text-sm">重新生成中...</span>
+                            <span className="text-sm"><LocalizedText id="videoStoryboardUi.d4f5296857" /></span>
                           </div>
                         </div>
                       )}
@@ -817,13 +822,13 @@ export const VideoStoryboardModal = ({
                       {scene.generatedImage ? (
                         <button
                           type="button"
-                          onClick={() => setPreviewImage({ url: scene.generatedImage, alt: `分镜${scene.sequence}` })}
+                          onClick={() => setPreviewImage({ url: scene.generatedImage, alt: t('videoStoryboardUi.frameAlt', { sequence: scene.sequence }) })}
                           className="w-full h-full cursor-zoom-in flex items-center justify-center"
-                          title="点击放大查看"
+                          title={i18next.t('videoStoryboardUi.7a75b6d6a3')}
                         >
                           <img
                             src={scene.generatedImage}
-                            alt={`分镜${scene.sequence}`}
+                            alt={t('videoStoryboardUi.frameAlt', { sequence: scene.sequence })}
                             className="max-w-full max-h-full object-contain"
                           />
                         </button>
@@ -852,10 +857,10 @@ export const VideoStoryboardModal = ({
                         {uploadingSceneImage[scene.id] ? (
                           <span className="flex items-center justify-center gap-1">
                             <RefreshCw className="w-3 h-3 animate-spin" />
-                            上传中...
+                            <LocalizedText id="common.uploading" />
                           </span>
                         ) : (
-                          '上传图片'
+                          t('videoStoryboardUi.uploadImage')
                         )}
                       </label>
                     </div>
@@ -864,10 +869,10 @@ export const VideoStoryboardModal = ({
                   {/* 信息 */}
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center justify-between">
-                      <h5 className="font-medium text-primary-secondary">分镜 {scene.sequence}</h5>
+                      <h5 className="font-medium text-primary-secondary"><LocalizedText id="videoWizard.fcad7fe371" /> {scene.sequence}</h5>
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
-                          时长: {scene.duration}s
+                          <LocalizedText id="videoStoryboardUi.63c4214750" /> {scene.duration}s
                         </span>
                         {/* 排序按钮 */}
                         {/* <div className="flex gap-1">
@@ -896,24 +901,24 @@ export const VideoStoryboardModal = ({
                           {isGeneratingSceneImage[scene.id] ? (
                             <>
                               <RefreshCw className="w-3 h-3 animate-spin" />
-                              生成中...
+                              <LocalizedText id="videoStoryboardUi.26eab253a0" />
                             </>
                           ) : scene.generatedImage ? (
                             <>
                               <RefreshCw className="w-3 h-3" />
-                              重新生成
+                              <LocalizedText id="videoStoryboardUi.2e19057052" />
                             </>
                           ) : (
                             <>
                               <Wand2 className="w-3 h-3" />
-                              生成图片
+                              <LocalizedText id="videoStoryboardUi.55e7017a46" />
                             </>
                           )}
                         </button>
                         <button
                           onClick={() => handleDeleteScene(scene.id)}
                           className="px-3 py-1 text-xs border border-error-border text-error rounded hover:bg-error-light transition-colors flex items-center gap-1"
-                          title="删除分镜"
+                          title={i18next.t('videoStoryboardUi.3e06ea3ade')}
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -921,24 +926,24 @@ export const VideoStoryboardModal = ({
                     </div>
                     
                     <div>
-                      <label className="text-xs text-primary-muted font-medium">描述：</label>
+                      <label className="text-xs text-primary-muted font-medium"><LocalizedText id="videoStoryboardUi.8390a0c003" /></label>
                       <textarea
                         value={scene.description}
                         onChange={(e) => handleUpdateScene(scene.id, 'description', e.target.value)}
                         className="w-full mt-1 p-2 text-sm border border-stroke rounded focus:ring-2 focus:ring-purple focus:border-transparent"
                         rows={2}
-                        placeholder="输入分镜描述..."
+                        placeholder={i18next.t('videoStoryboardUi.b58d7edfee')}
                       />
                     </div>
                     
                     <div>
-                      <label className="text-xs text-primary-muted font-medium">提示词：</label>
+                      <label className="text-xs text-primary-muted font-medium"><LocalizedText id="videoStoryboardUi.77144487eb" /></label>
                       <textarea
                         value={scene.prompt}
                         onChange={(e) => handleUpdateScene(scene.id, 'prompt', e.target.value)}
                         className="w-full mt-1 p-2 text-sm border border-stroke rounded focus:ring-2 focus:ring-purple focus:border-transparent bg-surface-alt"
                         rows={2}
-                        placeholder="输入提示词..."
+                        placeholder={i18next.t('videoStoryboardUi.0a5ab60d2f')}
                       />
                     </div>
                     
@@ -952,7 +957,7 @@ export const VideoStoryboardModal = ({
                     {scene.thoughtProcess && (
                       <details className="text-xs">
                         <summary className="cursor-pointer text-primary-muted hover:text-primary-secondary">
-                          查看思考过程
+                          <LocalizedText id="videoStoryboardUi.c5b5f658c3" />
                         </summary>
                         <p className="mt-2 text-primary-secondary bg-surface-alt p-2 rounded whitespace-pre-wrap">
                           {scene.thoughtProcess}
@@ -975,12 +980,12 @@ export const VideoStoryboardModal = ({
       {!generatedVideoUrl ? (
         <div className="text-center py-8">
           <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
-            <h4 className="font-medium text-purple-800 mb-2">准备生成视频</h4>
+            <h4 className="font-medium text-purple-800 mb-2"><LocalizedText id="videoStoryboardUi.9746b23367" /></h4>
             <p className="text-sm text-purple">
-              已生成 {scenes.filter(s => s.generatedImage).length} 个分镜图片
+              <LocalizedText id="videoStoryboardUi.79c74f41ca" /> {scenes.filter(s => s.generatedImage).length} <LocalizedText id="videoStoryboardUi.477b920775" />
             </p>
             <p className="text-xs text-primary-muted mt-2">
-              点击下方按钮开始合成最终视频
+              <LocalizedText id="videoStoryboardUi.8a8c219f08" />
             </p>
           </div>
 
@@ -992,12 +997,12 @@ export const VideoStoryboardModal = ({
             {isComposingVideo ? (
               <>
                 <RefreshCw className="w-5 h-5 animate-spin" />
-                视频生成中...
+                <LocalizedText id="videoStoryboardUi.34cfeee200" />
               </>
             ) : (
               <>
                 <Video className="w-5 h-5" />
-                生成视频
+                <LocalizedText id="asset.generateVideo" />
               </>
             )}
           </button>
@@ -1008,7 +1013,7 @@ export const VideoStoryboardModal = ({
             <div className="w-12 h-12 bg-success-light rounded-full flex items-center justify-center mx-auto mb-3">
               <Check className="w-6 h-6 text-success" />
             </div>
-            <h4 className="font-medium text-success-active mb-2">视频生成成功！</h4>
+            <h4 className="font-medium text-success-active mb-2"><LocalizedText id="videoStoryboardUi.b8fab21b2b" /></h4>
             <p className="text-sm text-success">
               {storyboardTitle}
             </p>
@@ -1049,7 +1054,7 @@ export const VideoStoryboardModal = ({
               className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all flex items-center gap-2 font-medium"
             >
               <ChevronLeft className="w-4 h-4" />
-              上一步
+              <LocalizedText id="common.previous" />
             </button>
             <div className="flex gap-3">
               {onConfirm ? (
@@ -1058,7 +1063,7 @@ export const VideoStoryboardModal = ({
                   className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
                 >
                   <Check className="w-5 h-5" />
-                  加载到画布
+                  <LocalizedText id="videoStoryboardUi.ebc8d69148" />
                 </button>
               ) : (
                 <button
@@ -1075,7 +1080,7 @@ export const VideoStoryboardModal = ({
                   className="px-6 py-3 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2"
                 >
                   <Download className="w-5 h-5" />
-                  下载视频
+                  <LocalizedText id="videoStoryboardUi.f772cb271b" />
                 </button>
               )}
             </div>
@@ -1090,7 +1095,7 @@ export const VideoStoryboardModal = ({
             className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all flex items-center gap-2 font-medium"
           >
             <ChevronLeft className="w-4 h-4" />
-            上一步
+            <LocalizedText id="common.previous" />
           </button>
         </div>
       );
@@ -1104,7 +1109,7 @@ export const VideoStoryboardModal = ({
           className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
         >
           <ChevronLeft className="w-4 h-4" />
-          上一步
+          <LocalizedText id="common.previous" />
         </button>
 
         {currentStep === 1 && (
@@ -1116,11 +1121,11 @@ export const VideoStoryboardModal = ({
             {isGeneratingScript ? (
               <>
                 <RefreshCw className="w-4 h-4 animate-spin" />
-                生成分镜中...
+                <LocalizedText id="videoStoryboardUi.1ebd75c617" />
               </>
             ) : (
               <>
-                下一步
+                <LocalizedText id="common.next" />
                 <ChevronRight className="w-4 h-4" />
               </>
             )}
@@ -1133,7 +1138,7 @@ export const VideoStoryboardModal = ({
             disabled={isGeneratingScript}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
           >
-            下一步
+            <LocalizedText id="common.next" />
             <ChevronRight className="w-4 h-4" />
           </button>
         )}
@@ -1153,8 +1158,8 @@ export const VideoStoryboardModal = ({
               <Video className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-primary">AI视频生成</h3>
-              <p className="text-xs text-primary-muted">{STEPS.find(s => s.id === currentStep)?.description}</p>
+              <h3 className="font-bold text-lg text-primary"><LocalizedText id="videoStoryboardUi.be8e6386e1" /></h3>
+              <p className="text-xs text-primary-muted">{t(STEPS.find(s => s.id === currentStep)?.description || '')}</p>
             </div>
           </div>
           <button
@@ -1201,7 +1206,7 @@ export const VideoStoryboardModal = ({
               type="button"
               onClick={closePreviewImage}
               className="absolute -top-3 -right-3 bg-white/90 hover:bg-white text-primary-secondary rounded-full p-2 shadow"
-              aria-label="关闭预览"
+              aria-label={i18next.t('videoStoryboardUi.bf76308794')}
             >
               <X className="w-5 h-5" />
             </button>

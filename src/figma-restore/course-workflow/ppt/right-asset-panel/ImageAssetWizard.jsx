@@ -1,3 +1,4 @@
+import { LocalizedText } from '../../../../i18n/LocalizedText.jsx';
 import React from 'react';
 import { Input, message } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -256,19 +257,19 @@ function resolveDownloadUrl(url) {
   return `/api/ai/proxy-image?mode=stream&url=${encodeURIComponent(absoluteUrl)}`;
 }
 
-async function downloadImagesAsZip(items, filenamePrefix) {
+async function downloadImagesAsZip(items, filenamePrefix, t) {
   const zip = new JSZip();
   const downloadableItems = items.filter((item) => item?.url);
 
   if (!downloadableItems.length) {
-    throw new Error('没有可下载的图片');
+    throw new Error(t('assetPanel.iwNoDownloadableImages'));
   }
 
   for (let index = 0; index < downloadableItems.length; index += 1) {
     const item = downloadableItems[index];
     const response = await fetch(resolveDownloadUrl(item.url));
     if (!response.ok) {
-      throw new Error(`第 ${index + 1} 张图片下载失败`);
+      throw new Error(t('assetPanel.iwImageDownloadFailedN', { index: index + 1 }));
     }
     const blob = await response.blob();
     const extension = getImageExtension(blob.type, item.url);
@@ -1022,7 +1023,7 @@ function FlashcardPreview({ word, includeChinese, includePhonetic }) {
           <div><span>{t('assetPanel.iwAiIllustration')}</span></div>
           <strong>{word || 'apple'}</strong>
           <i />
-          {includeChinese ? <span>苹果</span> : null}
+          {includeChinese ? <span><LocalizedText id="imageWizardUi.b38d961e70" /></span> : null}
           {includePhonetic ? <em>/ˈæpl/</em> : null}
         </div>
       </div>
@@ -1385,8 +1386,7 @@ function StorybookStepper({ step, generating }) {
 }
 
 function StorybookPasteStep({ values, setValue }) {
-  const { t, i18n } = useTranslation();
-  const isEn = i18n.language?.startsWith('en');
+  const { t } = useTranslation();
   const examples = ['My Dream Restaurant'];
   const references = values.referenceDocuments || [];
   const handleReferenceFiles = async (event) => {
@@ -1407,7 +1407,7 @@ function StorybookPasteStep({ values, setValue }) {
       }).filter((item) => item.text);
       setValue('referenceDocuments', limited);
     } catch (error) {
-      message.error(error.message || (isEn ? 'Failed to read reference document' : '参考文档读取失败'));
+      message.error(error.message || t('assetPanel.iwRefReadFail'));
     }
   };
 
@@ -1449,17 +1449,15 @@ function StorybookPasteStep({ values, setValue }) {
       <div className="ppt-asset-divider" />
       <div className="ppt-img-section">
         <div className="ppt-img-label-row">
-          <span>{isEn ? 'Reference material' : '参考资料'}</span>
-          <em>{isEn ? `${references.length} files` : `已添加 ${references.length} 份`}</em>
+          <span>{t('assetPanel.iwRefMaterial')}</span>
+          <em>{t('assetPanel.iwRefFilesAdded', { count: references.length })}</em>
         </div>
         <p className="ppt-storybook-reference-hint">
-          {isEn
-            ? 'Add multiple activity cases, character guides, and visual rules. AI will extract one shared story and character bible before creating pages.'
-            : '可添加多份活动案例、角色规范和画风规则；AI 会先提炼统一的故事与角色，再生成分镜。'}
+          {t('assetPanel.iwRefHint')}
         </p>
         <label className="ppt-storybook-reference-upload">
           <Upload size={16} />
-          <span>{isEn ? 'Add DOCX / TXT / MD' : '添加 DOCX / TXT / MD'}</span>
+          <span>{t('assetPanel.iwAddRefFiles')}</span>
           <input type="file" accept=".docx,.txt,.md" multiple onChange={handleReferenceFiles} />
         </label>
         {references.length ? (
@@ -1469,11 +1467,11 @@ function StorybookPasteStep({ values, setValue }) {
                 <FileText size={15} />
                 <span>
                   <strong>{item.name}</strong>
-                  <em>{Math.max(1, Math.round(item.text.length / 1000))}k {isEn ? 'chars' : '字'}{item.truncated ? ` · ${isEn ? 'trimmed' : '已截取'}` : ''}</em>
+                  <em>{t('assetPanel.iwKChars', { count: Math.max(1, Math.round(item.text.length / 1000)) })}{item.truncated ? ` · ${t('assetPanel.iwRefTrimmed')}` : ''}</em>
                 </span>
                 <button
                   type="button"
-                  aria-label={isEn ? `Remove ${item.name}` : `移除 ${item.name}`}
+                  aria-label={t('assetPanel.iwRemoveRefFile', { name: item.name })}
                   onClick={() => setValue('referenceDocuments', references.filter((reference) => reference.name !== item.name))}
                 >
                   <X size={14} />
@@ -1485,7 +1483,7 @@ function StorybookPasteStep({ values, setValue }) {
         <Input.TextArea
           className="ppt-storybook-reference-notes"
           value={values.referenceNotes || ''}
-          placeholder={isEn ? 'Paste client keywords or extra visual requirements here…' : '也可以在这里粘贴关键词或补充视觉要求…'}
+          placeholder={t('assetPanel.iwRefNotesPlaceholder')}
           onChange={(event) => setValue('referenceNotes', event.target.value.slice(0, 20000))}
         />
       </div>
@@ -1897,10 +1895,10 @@ export function ImageAssetWizard({ asset, onBack, onClose, onInsert, onTitleChan
     );
 
     try {
-      await downloadImagesAsZip(downloadableResults, filenamePrefix);
-      message.success('批量下载已开始');
+      await downloadImagesAsZip(downloadableResults, filenamePrefix, t);
+      message.success(t('uiMessages.imageDownloadStarted'));
     } catch (error) {
-      message.error(error.message || '批量下载失败');
+      message.error(error.message || t('uiMessages.imageDownloadFailed'));
     }
   }, [asset, results, t, values.storybookTitle]);
 

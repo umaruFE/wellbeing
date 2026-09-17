@@ -486,7 +486,7 @@ export const AdminDashboard = () => {
           unit: course.unit || title,
           grade: course.age_group || '--',
           age: course.age_group || courseData?.age || '--',
-          duration: course.duration ? `${course.duration}分钟` : (courseData?.duration || '--'),
+          duration: course.duration ? t('course.durationMinutes', { minutes: course.duration }) : (courseData?.duration || '--'),
           students: '--',
           classSize: courseData?.classSize || course.unit || '',
           time: course.created_at
@@ -505,7 +505,7 @@ export const AdminDashboard = () => {
           themeImageUrl: coverUrl,
           courseData,
           courseOverview: courseData?.courseOverview || null,
-          theme: course.theme || courseData?.taskName || '情境任务',
+          theme: course.theme || courseData?.taskName || t('course.scenarioTask'),
           vocabularies: courseData?.vocabularies || [],
           grammars: courseData?.grammars || [],
           languageSkills: courseData?.languageSkills || [],

@@ -1,3 +1,4 @@
+import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Users, Plus, Trash2, Search } from 'lucide-react';
@@ -52,7 +53,7 @@ export const AccountManagement = () => {
       try {
         await apiService.createUser({ email: username, name, role, organizationId: org?.id || null });
         await loadAccounts();
-        alert('账号创建成功，初始密码：TempPassword123!');
+        alert(t('uiMessages.accountCreated'));
       } catch (error) {
         alert(error instanceof Error ? error.message : '账号创建失败');
       }
@@ -139,7 +140,7 @@ export const AccountManagement = () => {
             ))}
           </tbody>
         </table>
-        {loading && <div className="text-center py-12 text-primary-muted">加载中...</div>}
+        {loading && <div className="text-center py-12 text-primary-muted"><LocalizedText id="common.loading" /></div>}
         {!loading && filteredAccounts.length === 0 && (
           <div className="text-center py-12">
             <Users className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />

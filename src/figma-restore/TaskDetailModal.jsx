@@ -1,3 +1,4 @@
+import { LocalizedText, LocalizedValue } from '../i18n/LocalizedText.jsx';
 import React, { useEffect } from 'react';
 import { Button } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -283,19 +284,20 @@ const getCompactConfigRows = (task, t) => {
 };
 
 const ResultPanel = ({ task }) => {
+  const { t } = useTranslation();
   const url = findGeneratedMediaUrl(task.result, task.type);
   return (
     <div className="tdm-panel">
-      <div className="tdm-panel-title"><span className="tdm-dot" />生成结果</div>
+      <div className="tdm-panel-title"><span className="tdm-dot" /><LocalizedText id="assetPanel.stepGenResult" /></div>
       <div className={`tdm-single-result is-${task.type}`}>
         {!url ? (
-          <div className="tdm-result-empty">生成资源暂不可用</div>
+          <div className="tdm-result-empty"><LocalizedText id="taskDetailUi.7794820f72" /></div>
         ) : task.type === 'video' ? (
           <video src={resolvePptMediaUrl(url)} controls preload="metadata" />
         ) : task.type === 'audio' ? (
           <audio src={resolvePptMediaUrl(url)} controls preload="metadata" />
         ) : (
-          <img src={resolvePptMediaUrl(url)} alt={task.title || '生成图片'} />
+          <img src={resolvePptMediaUrl(url)} alt={task.title || t('taskDetailUi.generatedImageAlt')} />
         )}
       </div>
     </div>
@@ -323,6 +325,7 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
   const IconComponent = getIcon(task.type);
   const progressText = task.status === 'done' ? t('taskDetail.statusDone') : (task.status === 'waiting' ? t('taskDetail.statusWaiting') : t('taskDetail.statusRunning'));
   const compactConfigRows = getCompactConfigRows(task, t);
+  const taskLabels = t('taskCenterValues', { returnObjects: true });
 
   return (
     <>
@@ -334,11 +337,11 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
           </div>
           <div className="tdm-title-wrap">
             <div className="tdm-title-row">
-              <div className="tdm-title">{task.title}</div>
-              <span className="tdm-count">{task.count}</span>
-              <span className={`tdm-status ${task.status}`}>{task.statusText}</span>
+              <div className="tdm-title"><LocalizedValue value={task.title} catalog="taskCenterValues" /></div>
+              <span className="tdm-count"><LocalizedValue value={task.count} catalog="taskCenterValues" /></span>
+              <span className={`tdm-status ${task.status}`}><LocalizedValue value={task.statusText} catalog="taskCenterValues" /></span>
             </div>
-            <div className="tdm-sub">{t('taskDetail.related', { name: task.course })}</div>
+            <div className="tdm-sub">{t('taskDetail.related', { name: taskLabels?.[task.course] || task.course })}</div>
           </div>
           <button className="tdm-close" type="button" onClick={onClose} aria-label={t('common.close', 'Close')}>
             <X size={20} />
@@ -353,7 +356,7 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
               <section className="tdm-info-section">
                 <div className="tdm-section-title">{t('taskDetail.taskInfo')}</div>
                 <div className="tdm-info-list">
-                  <div className="tdm-info-row"><label>{t('taskDetail.genType')}</label><span>{task.engine}</span></div>
+                  <div className="tdm-info-row"><label>{t('taskDetail.genType')}</label><span><LocalizedValue value={task.engine} catalog="taskCenterValues" /></span></div>
                   <div className="tdm-info-row"><label>{t('taskDetail.submitTime')}</label><span>{task.submit}</span></div>
                 </div>
                 <div className="tdm-progress">
@@ -368,7 +371,7 @@ export const TaskDetailModal = ({ task, open, onClose, onInsertTaskAsset }) => {
                   {compactConfigRows.map(([label, value]) => (
                     <div className="tdm-info-row" key={label}>
                       <label>{label}</label>
-                      <span>{value}</span>
+                      <span><LocalizedValue value={value} catalog="taskCenterValues" /></span>
                     </div>
                   ))}
                 </div>

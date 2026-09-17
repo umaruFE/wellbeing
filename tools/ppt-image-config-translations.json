@@ -1,0 +1,3 @@
+{
+  "编辑图片素材": "Edit Image Asset", "关闭": "Close", "图层名称": "Layer Name", "尺寸预设": "Size Preset", "选择尺寸": "Choose Size", "高": "Height", "旋转": "Rotate", "锁定图片纵横比": "Lock Image Aspect Ratio", "适应画布并居中": "Fit and Center on Canvas", "设为页面背景？": "Set as Page Background?", "图片将从普通图层移除，但之后仍可还原为图片图层。": "The image will leave the regular layers, but can be restored later.", "设为背景": "Set as Background", "替换本地图片": "Replace Local Image", "AI 溯源与高阶重绘": "AI Provenance and Advanced Redrawing", "原始提示词（可修改后重新生成）": "Original Prompt (edit before regenerating)", "生成历史": "Generation History", "重新生成": "Regenerate"
+}

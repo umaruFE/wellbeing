@@ -1,9 +1,10 @@
+import i18next from 'i18next';
 import React from 'react';
 import './CourseCoverFallback.css';
 
 export function CourseCoverFallback({ className = '' }) {
   return (
-    <div className={`course-cover-fallback ${className}`} aria-label="课程地图封面">
+    <div className={`course-cover-fallback ${className}`} aria-label={i18next.t('imageLib.insertCover')}>
       <div className="ccf-kitchen-wall">
         <span className="ccf-cabinet left" />
         <span className="ccf-hood" />

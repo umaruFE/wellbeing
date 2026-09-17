@@ -1,0 +1,3 @@
+{
+  "保存课程失败，请重试": "Could not save the course. Please try again.", "网络错误，请检查网络连接后重试": "Network error. Check your connection and try again.", "教学目标": "Teaching Goals", "情境设置": "Context Settings", "学生年龄": "Student Age", "核心语言目标": "Core Language Goals", "请输入核心词汇，每行一个": "Enter core vocabulary, one per line", "请输入核心句型，每行一个": "Enter core sentence patterns, one per line", "语言能力培养侧重": "Language Skill Focus", "情境主题": "Contextual Theme", "请输入情境主题": "Enter a theme", "主导幸福力体验路径": "Main Wellbeing Experience Path", "(不选则AI自动匹配)": "(AI will match one if left blank)", "特定要求": "Specific Requirements", "可填写：场地设备限制、学生个性特点等": "Optional: venue or equipment limits, student characteristics, etc."
+}

@@ -1,3 +1,4 @@
+import i18next from 'i18next';
 import React from 'react';
 import {
   ChevronLeft,
@@ -41,7 +42,7 @@ const CanvasTopBar = ({
             <button
               onClick={onToggleLeft}
               className="text-primary-placeholder hover:text-primary-secondary hover:bg-surface-alt p-1.5 rounded transition-colors"
-              title="展开页面列表"
+              title={i18next.t('canvasTopUi.cd5d81526b')}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -74,7 +75,7 @@ const CanvasTopBar = ({
           onClick={onUndo}
           disabled={canUndo === false}
           className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="撤销 (Ctrl+Z)"
+          title={i18next.t('canvasTopUi.a9ad21c6bb')}
         >
           <RotateCcw className="w-4 h-4" />
         </button>
@@ -82,7 +83,7 @@ const CanvasTopBar = ({
           onClick={onRedo}
           disabled={canRedo === false}
           className="p-2 hover:bg-surface-alt rounded text-primary-placeholder hover:text-primary-secondary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          title="重做 (Ctrl+Shift+Z)"
+          title={i18next.t('canvasTopUi.61123d46a1')}
         >
           <RotateCw className="w-4 h-4" />
         </button>

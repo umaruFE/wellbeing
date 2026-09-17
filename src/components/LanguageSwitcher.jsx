@@ -1,3 +1,4 @@
+import { LocalizedText } from '../i18n/LocalizedText.jsx';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Globe } from 'lucide-react';
@@ -27,7 +28,7 @@ export function LanguageSwitcher({ className = '', dropdownClassName = '' }) {
           onClick={() => changeLanguage('zh')}
           className={`w-full px-3 py-2 text-left text-[13px] hover:bg-gray-50 transition-colors ${current === 'zh' ? 'text-blue-600 font-bold' : 'text-gray-700'}`}
         >
-          中文
+          <LocalizedText id="languageSwitchUi.7be2d2d20c" />
         </button>
         <button
           type="button"
