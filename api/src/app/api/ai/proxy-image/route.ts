@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { comfyuiAuthHeaders } from '@/lib/comfyuiAuth';
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
 
     const response = await fetch(imageUrl, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Mozilla/5.0' },
+      headers: { 'User-Agent': 'Mozilla/5.0', ...comfyuiAuthHeaders(imageUrl) },
     });
     clearTimeout(timeoutId);
 

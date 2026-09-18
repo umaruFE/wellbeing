@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 import { db } from '@/lib/db';
+import { comfyuiAuthHeaders } from '@/lib/comfyuiAuth';
 
 function corsHeaders() {
   return {
@@ -48,7 +49,7 @@ async function transferThemeImage(imageUrl: string): Promise<string | null> {
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
-    const response = await fetch(downloadUrl, { signal: controller.signal });
+    const response = await fetch(downloadUrl, { signal: controller.signal, headers: comfyuiAuthHeaders(downloadUrl) });
     clearTimeout(timeoutId);
 
     if (!response.ok) return null;

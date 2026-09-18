@@ -75,7 +75,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const comfyuiUrls = [\n  'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8189.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8190.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8191.container.x-gpu.com',\n  'https://vcbj5meqyp1y7ifw-8192.container.x-gpu.com'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
+        "jsCode": "const comfyuiUrls = [\n  'http://117.50.171.219:8188'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -103,7 +103,9 @@
               "neverError": true
             }
           }
-        }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -114,11 +116,17 @@
       "id": "gpu-probe-overview",
       "name": "探测 GPU",
       "onError": "continueRegularOutput",
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "const candidates = $('GPU 候选列表').all().map((item) => item.json.url);\nconst results = $input.all();\nconst aliveGpuUrls = [];\nresults.forEach((item, index) => {\n  const res = item.json || {};\n  if (res && res.system && res.devices && candidates[index]) {\n    aliveGpuUrls.push(candidates[index]);\n  }\n});\nif (!aliveGpuUrls.length) {\n  throw new Error('没有可用的 GPU 绘图服务：5 个 ComfyUI 候选实例全部探测失败，请确认至少启动了一个 GPU 实例。');\n}\nreturn [{ json: { aliveGpuUrls, aliveCount: aliveGpuUrls.length } }];"
+        "jsCode": "const candidates = $('GPU 候选列表').all().map((item) => item.json.url);\nconst results = $input.all();\nconst aliveGpuUrls = [];\nresults.forEach((item, index) => {\n  const res = item.json || {};\n  if (res && res.system && res.devices && candidates[index]) {\n    aliveGpuUrls.push(candidates[index]);\n  }\n});\nif (!aliveGpuUrls.length) {\n  throw new Error('没有可用的 GPU 绘图服务：ComfyUI 候选实例全部探测失败，请确认至少启动了一个 GPU 实例。');\n}\nreturn [{ json: { aliveGpuUrls, aliveCount: aliveGpuUrls.length } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -160,7 +168,9 @@
         "jsonBody": "={{JSON.stringify($json.comfyuiPayload)}}",
         "options": {
           "timeout": 30000
-        }
+        },
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -169,7 +179,13 @@
         192
       ],
       "id": "a0f3013c-f830-456f-8fab-f655e04bb184",
-      "name": "提交ComfyUI任务"
+      "name": "提交ComfyUI任务",
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
     },
     {
       "parameters": {

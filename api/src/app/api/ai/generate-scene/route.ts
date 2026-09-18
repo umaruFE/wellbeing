@@ -79,13 +79,14 @@ export async function POST(request: NextRequest) {
     });
 
     // ComfyUI URL 映射（与 N8N workflow 保持一致）
+    const imageComfyUrl = process.env.COMFYUI_PUBLIC_URL || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
     const COMFYUI_URLS: Record<string, string> = {
-      poppy: 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',
-      edi: 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',
-      rolly: 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',
-      milo: 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',
-      ace: 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com',
-      bg: 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com'
+      poppy: imageComfyUrl,
+      edi: imageComfyUrl,
+      rolly: imageComfyUrl,
+      milo: imageComfyUrl,
+      ace: imageComfyUrl,
+      bg: imageComfyUrl
     };
 
     // 4. 准备 N8N 任务（负面提示词统一走注册表）
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
           // 从 N8N 结果中提取 executionId 和 comfyuiUrl（实际是 ComfyUI 的 prompt_id 和地址）
           const resultData = result as { executionId?: string; prompt_id?: string; id?: string; comfyuiUrl?: string };
           const promptId = resultData.executionId || resultData.prompt_id || resultData.id;
-          const comfyUrl = resultData.comfyuiUrl || task.comfyuiUrl || 'https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com';
+          const comfyUrl = resultData.comfyuiUrl || task.comfyuiUrl;
           const historyUrl = `${comfyUrl}/history/${promptId}`;
 
           return {

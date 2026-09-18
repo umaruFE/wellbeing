@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { uploadFile } from '@/lib/fileUpload';
 import { persistComfyImagesInValue } from '@/lib/persistRemoteImage';
+import { comfyuiAuthHeaders } from '@/lib/comfyuiAuth';
 
 /**
  * N8N 任务状态查询路由
@@ -32,7 +33,8 @@ async function downloadAndPersistImage(imageUrl: string, folder: string, maxRetr
       const response = await fetch(imageUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          ...comfyuiAuthHeaders(imageUrl),
         }
       });
       
@@ -71,7 +73,7 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, shouldPers
   const historyUrl = `${baseUrl}/history/${promptId}`;
 
   try {
-    const response = await fetch(historyUrl);
+    const response = await fetch(historyUrl, { headers: comfyuiAuthHeaders(historyUrl) });
     if (!response.ok) {
       return { status: 'pending' };
     }

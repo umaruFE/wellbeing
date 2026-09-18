@@ -266,7 +266,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=http://117.50.214.226:8188/prompt",
+        "url": "=http://117.50.171.219:8188/prompt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
@@ -291,7 +291,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.214.226:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+        "url": "=http://117.50.171.219:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "options": {}
@@ -313,7 +313,7 @@
     },
     {
       "parameters": {
-        "url": "=http://117.50.214.226:8188/view",
+        "url": "=http://117.50.171.219:8188/view",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendQuery": true,
@@ -864,7 +864,7 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "=http://117.50.214.226:8188/prompt",
+          "url": "=http://117.50.171.219:8188/prompt",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendBody": true,
@@ -889,7 +889,7 @@
       },
       {
         "parameters": {
-          "url": "=http://117.50.214.226:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
+          "url": "=http://117.50.171.219:8188/history/{{ $('请求生成背景音乐').item.json.prompt_id }}",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "options": {}
@@ -911,7 +911,7 @@
       },
       {
         "parameters": {
-          "url": "=http://117.50.214.226:8188/view",
+          "url": "=http://117.50.171.219:8188/view",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpBearerAuth",
           "sendQuery": true,

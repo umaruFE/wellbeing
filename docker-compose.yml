@@ -62,6 +62,9 @@ services:
       # ---- ComfyUI 图片/视频生成 ----
       COMFYUI_URL: ${COMFYUI_URL:-http://117.50.218.161:8188}
       COMFYUI_PUBLIC_URL: ${COMFYUI_PUBLIC_URL:-https://vcbj5meqyp1y7ifw-8188.container.x-gpu.com}
+      COMFYUI_AUTH_ORIGIN: ${COMFYUI_AUTH_ORIGIN:-http://117.50.171.219:8188}
+      COMFYUI_BEARER_TOKEN: ${COMFYUI_BEARER_TOKEN:-}
+      COMFYUI_BEARER_TOKEN_FILE: ${COMFYUI_BEARER_TOKEN_FILE:-}
       # ---- 生产文件上传（仅 FTP）----
       UPLOAD_PROVIDER: ftp
       FTP_HOST: ${FTP_HOST}

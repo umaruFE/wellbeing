@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { n8nClient } from '@/lib/n8n/client';
 import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
 import { getPrompt } from '@/prompts/registry';
+import { comfyuiAuthHeaders } from '@/lib/comfyuiAuth';
 const ROUTE_VERSION = 'generate-course-overview-2026-06-24-language-forwarding-v2';
 
 async function transferThemeImage(imageUrl: string): Promise<string | null> {
@@ -18,7 +19,7 @@ async function transferThemeImage(imageUrl: string): Promise<string | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-    const response = await fetch(downloadUrl, { signal: controller.signal });
+    const response = await fetch(downloadUrl, { signal: controller.signal, headers: comfyuiAuthHeaders(downloadUrl) });
     clearTimeout(timeoutId);
 
     if (!response.ok) {

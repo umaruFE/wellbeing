@@ -1,4 +1,5 @@
 import { getUploadProvider, uploadFile } from '@/lib/fileUpload';
+import { comfyuiAuthHeaders } from '@/lib/comfyuiAuth';
 
 const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
 const COMFYUI_PUBLIC_URL = process.env.COMFYUI_PUBLIC_URL
@@ -107,7 +108,7 @@ export async function persistComfyImageUrl(
   try {
     const response = await fetch(sourceUrl, {
       signal: controller.signal,
-      headers: { 'User-Agent': 'Wellbeing-PPT-Image-Persistence/1.0' },
+      headers: { 'User-Agent': 'Wellbeing-PPT-Image-Persistence/1.0', ...comfyuiAuthHeaders(sourceUrl) },
     });
     if (!response.ok) {
       throw new Error(`下载远程图片失败：HTTP ${response.status}`);
