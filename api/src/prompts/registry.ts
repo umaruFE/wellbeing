@@ -57,6 +57,7 @@ export const PROMPT_META: Record<string, PromptMeta> = {
   'course.overview-text.zh': { description: '已有概览注入文本（中文）', caller: 'ai/generate-course', kind: 'fragment', source: 'builtin' },
   'ppt.poster-b2': { description: 'B2 海报生图模板', caller: 'ai/generate-ppt-asset', kind: 'fragment', source: 'builtin' },
   'ppt.flashcard-b3': { description: 'B3 词卡生图模板', caller: 'ai/generate-ppt-asset', kind: 'fragment', source: 'builtin' },
+  'scene.style.background': { description: 'IP 场景微调模型固定画风前缀', caller: 'ai/generate-scene', kind: 'fragment', source: 'builtin' },
   'scene.negative.background': { description: '背景图负面提示词', caller: 'ai/generate-scene', kind: 'fragment', source: 'builtin' },
   'scene.negative.character': { description: 'IP 角色图负面提示词', caller: 'ai/generate-scene', kind: 'fragment', source: 'builtin' },
 

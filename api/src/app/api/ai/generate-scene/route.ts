@@ -90,7 +90,8 @@ export async function POST(request: NextRequest) {
     };
 
     // 4. 准备 N8N 任务（负面提示词统一走注册表）
-    const [bgNegative, characterNegative] = await Promise.all([
+    const [backgroundStyle, bgNegative, characterNegative] = await Promise.all([
+      getPrompt('scene.style.background'),
       getPrompt('scene.negative.background'),
       getPrompt('scene.negative.character'),
     ]);
@@ -104,7 +105,10 @@ export async function POST(request: NextRequest) {
         comfyuiUrl: COMFYUI_URLS.bg,
         payload: {
           name: 'bg',
-          prompt: backgroundPrompt,
+          // Keep the trained scene style deterministic. The keyword-expansion
+          // model supplies scene content, but must not be the only source of
+          // style tokens because its wording can drift between runs/models.
+          prompt: `${backgroundStyle}, ${backgroundPrompt}`,
           negative_prompt: bgNegative,
           width: backgroundWidth,
           height: backgroundHeight

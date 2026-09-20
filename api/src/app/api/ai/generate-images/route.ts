@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 import { n8nClient } from '@/lib/n8n/client';
 import { createGenerationTask } from '@/lib/background-tasks';
+import { getPrompt } from '@/prompts/registry';
 
 /**
  * N8N 图片生成路由
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       count = 1,
       reference_image,
       video_style,
+      negative_prompt,
       name,
       character_name,
       roles,
@@ -89,10 +91,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // IP 场景编辑器的背景重生成走此通用路由。与首次生成保持同一套
+    // 微调画风约束，避免重生成后退化为普通矢量插画。
+    const isIpSceneBackground = workflow_type === 'background';
+    const [backgroundStyle, backgroundNegative] = isIpSceneBackground
+      ? await Promise.all([
+          getPrompt('scene.style.background'),
+          getPrompt('scene.negative.background'),
+        ])
+      : ['', ''];
+    const effectivePrompt = isIpSceneBackground
+      ? `${backgroundStyle}, ${prompt}`
+      : prompt;
+    const effectiveNegativePrompt = negative_prompt || backgroundNegative || undefined;
+
     // 4. 准备 N8N 调用参数
     const n8nPayload = {
       workflow_type,
-      prompt,
+      prompt: effectivePrompt,
+      negative_prompt: effectiveNegativePrompt,
       width,
       height,
       reference_image,
@@ -108,7 +125,7 @@ export async function POST(request: NextRequest) {
     console.log('[generate-images] 调用 N8N Workflow:', {
       workflow: 'ai-image-generation',
       workflow_type,
-      prompt: prompt.substring(0, 50) + '...',
+      prompt: effectivePrompt.substring(0, 50) + '...',
       user_id: user?.id
     });
 
@@ -130,7 +147,7 @@ export async function POST(request: NextRequest) {
         user_id: validUserId,
         organization_id: validOrganizationId,
         prompt_type: 'image_generation',
-        original_prompt: prompt,
+        original_prompt: effectivePrompt,
         generated_result: null,
         model_name: 'qwen-image',
         execution_time: null,
@@ -166,7 +183,8 @@ export async function POST(request: NextRequest) {
         statusUrl,
         input: {
           workflow_type,
-          prompt,
+          prompt: effectivePrompt,
+          negative_prompt: effectiveNegativePrompt,
           width,
           height,
           count,

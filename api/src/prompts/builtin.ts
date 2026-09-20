@@ -95,9 +95,14 @@ export const BUILTIN_PROMPTS: Record<string, BuiltinTemplate> = {
 
   // ── 场景生图（n8n）────────────────────────────────────────
 
+  /** IP 场景微调模型的固定风格前缀；不可只依赖关键词模型自由扩写 */
+  'scene.style.background': {
+    main: 'cj_vector_style, 扁平矢量插画，粗细均匀且清晰的黑色轮廓线，单线风格，2D扁平设计，无渐变，无阴影，低饱和度平涂色彩，和谐柔和且连贯的配色，简化但有层次的风格化环境，干净亲和的儿童绘本美学，沉浸式叙事背景，画面无人物、无角色、无文字、无水印',
+  },
+
   /** 背景图负面提示词（原 generate-scene 内联） */
   'scene.negative.background': {
-    main: 'blurry, low quality, deformed, ugly, bad anatomy, disfigured, poorly drawn face, mutation, extra limb, poorly drawn hands, missing limb, floating limbs, disconnected limbs, malformed hands, blur, out of focus, long neck, long body',
+    main: 'people, person, human, character, animal, text, letters, typography, logo, watermark, photorealistic, realistic, 3d, CGI, painterly, watercolor, complex texture, gradient, glow, dramatic lighting, dark shadow, soft border, borderless shapes, blurry, low quality, deformed, ugly, bad anatomy, disfigured, extra limb, missing limb, out of focus',
   },
 
  /** IP 角色图负面提示词（原 generate-scene 内联） */

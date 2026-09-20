@@ -92,6 +92,7 @@ export async function POST(
         const n8nResult = await n8nClient.call('ai-image-generation', {
           workflow_type: input.workflow_type || 'scene',
           prompt: input.prompt,
+          negative_prompt: input.negative_prompt,
           width: input.width || 1024,
           height: input.height || 1024,
           reference_image: input.reference_image,
