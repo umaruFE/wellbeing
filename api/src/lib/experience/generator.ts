@@ -363,6 +363,14 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
   const ipNames = ['poppy', 'edi', 'rolly', 'milo', 'ace'];
   const ipImages = Object.fromEntries(ipNames.map((name) => [name, `data:image/png;base64,${fs.readFileSync(path.join(process.cwd(), 'public', 'ip', `${name}.png`)).toString('base64')}`]));
   html = html.replace('__IP_IMAGES_JSON__', JSON.stringify(ipImages));
+  const actionImageNames = ['Arms Circle.png', 'Make A Heart.png', 'Jump.png', 'Arms up.png', 'Knee Pat.png', 'Chest Pat.png', 'Stomp.png', 'Head Pat.png', 'Shoulder Pat.png', 'Snap.png', 'Wave.png', 'Touch Toes.png'];
+  const actionImageDirs = [path.join(process.cwd(), 'public', 'ip'), path.resolve(process.cwd(), '..', 'public', 'ip')];
+  const actionImageDir = actionImageDirs.find((dir) => fs.existsSync(path.join(dir, actionImageNames[0])));
+  const actionImages = Object.fromEntries(actionImageNames.map((name) => {
+    const file = actionImageDir && path.join(actionImageDir, name);
+    return [name, file && fs.existsSync(file) ? `data:image/png;base64,${fs.readFileSync(file).toString('base64')}` : ''];
+  }));
+  html = html.replace('__ACTION_IMAGES_JSON__', JSON.stringify(actionImages));
   html = html.replace('__SONG_TITLE_JSON__', JSON.stringify(result.title || fallbackTitle).replace(/</g, '\\u003c'));
   // Preserve the user's template edits; fix fractional-second parsing only in the rendered output.
   html = html.replace(/function parseTimeSeconds\(timeStr\) \{[\s\S]*?\n\}/, `function parseTimeSeconds(timeStr) {
