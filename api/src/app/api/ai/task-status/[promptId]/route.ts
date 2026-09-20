@@ -73,8 +73,44 @@ async function queryComfyUIHistory(promptId: string, apiUrl?: string, shouldPers
   const historyUrl = `${baseUrl}/history/${promptId}`;
 
   try {
-    const response = await fetch(historyUrl, { headers: comfyuiAuthHeaders(historyUrl) });
+    // Prefer a locally configured token when available. If this checkout does
+    // not have the secret, allow the request to receive 401/403 and fall back
+    // to n8n, which already owns the ComfyUI bearer credential.
+    let authHeaders: Record<string, string> = {};
+    try {
+      authHeaders = comfyuiAuthHeaders(historyUrl);
+    } catch {
+      // The authenticated n8n proxy below is the intentional fallback.
+    }
+    const response = await fetch(historyUrl, { headers: authHeaders });
     if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        // Migrated ComfyUI instances are protected by ComfyUI-Login. Keep the
+        // bearer token in n8n and let its authenticated proxy query history and
+        // stream the image, just like the audio workflows do.
+        const proxied = await n8nClient.call('ai-task-status', {
+          executionId: promptId,
+          workflowType: 'image'
+        }) as { status?: string; url?: string; filename?: string; error?: string };
+
+        if (proxied.status === 'completed' && proxied.url) {
+          try {
+            const persistedUrl = await downloadAndPersistImage(proxied.url, 'ai-generated-images');
+            return {
+              status: 'completed',
+              url: persistedUrl,
+              filename: proxied.filename
+            };
+          } catch (uploadError) {
+            return {
+              status: 'error',
+              error: uploadError instanceof Error ? uploadError.message : 'Image persistence failed'
+            };
+          }
+        }
+
+        return proxied;
+      }
       return { status: 'pending' };
     }
 

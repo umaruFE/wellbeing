@@ -242,7 +242,7 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "deepseek-v4-flash",
+          "value": "qwen3.6-plus",
           "mode": "list"
         },
         "responsesApiEnabled": false,
@@ -258,8 +258,8 @@
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "EPHUtiZYNuqoGVK2",
-          "name": "deepseek"
+          "id": "OAGoah9WZYmJctU1",
+          "name": "Qwen_aliyun"
         }
       }
     },
@@ -840,7 +840,7 @@
         "parameters": {
           "model": {
             "__rl": true,
-            "value": "deepseek-v4-flash",
+            "value": "qwen3.6-plus",
             "mode": "list"
           },
           "responsesApiEnabled": false,
@@ -856,8 +856,8 @@
         "name": "OpenAI Chat Model",
         "credentials": {
           "openAiApi": {
-            "id": "EPHUtiZYNuqoGVK2",
-            "name": "deepseek"
+            "id": "OAGoah9WZYmJctU1",
+            "name": "Qwen_aliyun"
           }
         }
       },

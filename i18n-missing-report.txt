@@ -1,0 +1,1778 @@
+src/App.jsx:68:            {/* 首页 - Dashboard */}
+src/App.jsx:178:            {/* 素材管理子菜单 */}
+src/components/AssetEditorPanel.jsx:74:      {/* 图层操作 */}
+src/components/AssetEditorPanel.jsx:123:        {/* 尺寸和旋转 */}
+src/components/AssetEditorPanel.jsx:163:        {/* 标题 */}
+src/components/AssetEditorPanel.jsx:174:        {/* 文本类型 */}
+src/components/AssetEditorPanel.jsx:177:            {/* 文本内容 */}
+src/components/AssetEditorPanel.jsx:187:            {/* AI 生成提示词 (文本) */}
+src/components/AssetEditorPanel.jsx:216:            {/* 文本样式选项 */}
+src/components/AssetEditorPanel.jsx:222:              {/* 字号 */}
+src/components/AssetEditorPanel.jsx:238:              {/* 加粗 */}
+src/components/AssetEditorPanel.jsx:266:              {/* 文本颜色 */}
+src/components/AssetEditorPanel.jsx:288:              {/* 文本对齐 */}
+src/components/AssetEditorPanel.jsx:328:              {/* 描边 */}
+src/components/AssetEditorPanel.jsx:392:            {/* 图片/视频的参考图片 */}
+src/components/AssetEditorPanel.jsx:444:            {/* AI 生成提示词 */}
+src/components/AssetEditorPanel.jsx:473:            {/* 音频设置 */}
+src/components/AssetEditorPanel.jsx:542:        {/* 操作按钮 */}
+src/components/CanvasAssetRenderer.jsx:14:  onClick, // 添加点击回调
+src/components/CanvasAssetRenderer.jsx:19:  onAssetChange, // (assetId, field, value) => void - 用于更新资产属性
+src/components/CanvasAssetRenderer.jsx:20:  editingTextAssetId, // 正在编辑的文本资产ID
+src/components/CanvasAssetRenderer.jsx:22:  editingTextContent, // 正在编辑的文本内容
+src/components/CanvasAssetRenderer.jsx:24:  onCanvasClick // 点击画布时的回调，用于取消选择或保存编辑
+src/components/CanvasAssetRenderer.jsx:105:            {/* 右上角复制和删除按钮 - 仅在可编辑模式下显示 */}
+src/components/CanvasAssetRenderer.jsx:212:                    const editingContent = ['双击编辑文本', 'Double-click to edit text'].includes(content.trim())
+src/components/CanvasTopBar.jsx:55:        {/* <span className="text-sm font-medium text-primary-muted whitespace-nowrap">当前编辑:</span> */}
+src/components/CardSelectionModal.jsx:140:                  {/* 内容区域 */}
+src/components/CardSelectionModal.jsx:161:                        {/* 音频播放按钮 */}
+src/components/CardSelectionModal.jsx:175:                        {/* 隐藏音频元素 */}
+src/components/CardSelectionModal.jsx:201:                  {/* 悬停遮罩 - 显示提示词 */}
+src/components/CardSelectionModal.jsx:214:                  {/* 选中标记 */}
+src/components/CardSelectionModal.jsx:221:                  {/* 序号标记 */}
+src/components/CreateCourseModal.jsx:13:    age: '7-9岁',
+src/components/CreateCourseModal.jsx:14:    duration: '60分钟',
+src/components/CreateCourseModal.jsx:15:    scale: '9-15人',
+src/components/CreateCourseModal.jsx:62:        newErrors.theme = '请输入情境主题或选择自动匹配';
+src/components/CreateCourseModal.jsx:114:        console.log('[CreateCourseModal] 概览API响应:', result.data);
+src/components/CreateCourseModal.jsx:123:          title: overview.courseTitle || data.theme || '未命名课程',
+src/components/CreateCourseModal.jsx:146:            console.error('保存课程失败，没有返回 id');
+src/components/CreateCourseModal.jsx:158:          console.error('保存课程失败:', err);
+src/components/CreateCourseModal.jsx:163:        console.error('[CreateCourseModal] 概览生成失败:', result.error || '未知错误');
+src/components/CreateCourseModal.jsx:177:      console.error('网络错误，请重试');
+src/components/CreateCourseModal.jsx:241:        {/* 1. 顶部红色装饰线 */}
+src/components/CreateCourseModal.jsx:247:        {/* 标题栏 */}
+src/components/CreateCourseModal.jsx:253:        {/* 2. 步骤指示器 (完全还原 image_7b321c.png) */}
+src/components/CreateCourseModal.jsx:266:        {/* 3. 内容区 */}
+src/components/CreateCourseModal.jsx:274:                    {['3-6岁', '7-9岁', '9-12岁'].map(opt => (
+src/components/CreateCourseModal.jsx:283:                    {['40分钟', '60分钟', '120分钟'].map(opt => (
+src/components/CreateCourseModal.jsx:293:                  {['≤ 8人', '9-15人', '≥ 16人'].map(opt => (
+src/components/CreateCourseModal.jsx:330:                  {['听力理解', '口语表达', '阅读理解', '书面表达'].map(s => (
+src/components/CreateCourseModal.jsx:351:                    {autoTheme ? '✓ AI自动匹配' : '自动匹配'}
+src/components/CreateCourseModal.jsx:355:                  value={autoTheme ? 'AI将根据课程信息自动生成情境主题' : formData.theme} 
+src/components/CreateCourseModal.jsx:363:                    {['森林探险', '海底世界', '太空旅行', '童话城堡', '农场生活', '城市探索'].map(t => (
+src/components/CreateCourseModal.jsx:375:                  {['艺术表达', '体感探索', '音乐律动'].map(p => (
+src/components/CreateCourseModal.jsx:390:        {/* 4. 底部按钮栏：强化 6px 实体阴影与点击反馈 */}
+src/components/CreateCourseModal.jsx:395:            {step > 1 ? '上一步' : '取消'}
+src/components/CreateCourseModal.jsx:410:              {step === 3 ? (submitting ? '提交中...' : '完成') : '下一步'}
+src/components/IPCharacterGenerator.jsx:64:        if (!saveImageNode) throw new Error('未找到生成的图片');
+src/components/IPCharacterGenerator.jsx:88:      if (data.status === 'failed') throw new Error(data.error || '生成失败');
+src/components/IPCharacterGenerator.jsx:90:      if (err.message !== '生成失败' && !err.message.includes('未找到')) {
+src/components/IPCharacterGenerator.jsx:98:  throw new Error('生成超时');
+src/components/IPCharacterGenerator.jsx:116:      const characterColors = { poppy: '粉色', edi: '蓝色', rolly: '橘色', milo: '黄色', ace: '紫色' };
+src/components/IPCharacterGenerator.jsx:117:      const rolePrompt = `${characterColors[selectedCharacter.id] || ''}的${selectedCharacter.name}角色，${prompt}`;
+src/components/IPCharacterGenerator.jsx:140:      console.error('IP人物生成失败:', err);
+src/components/IPCharacterGenerator.jsx:152:      title: `${selectedCharacter?.name || 'IP'}人物`
+src/components/IPSceneGenerator/CanvasEditor.jsx:183:      console.error('[CanvasEditor] 图片代理失败:', error);
+src/components/IPSceneGenerator/CanvasEditor.jsx:198:      console.error('[CanvasEditor] 背景图加载失败:', background);
+src/components/IPSceneGenerator/CanvasEditor.jsx:227:        console.error('[CanvasEditor] 角色图加载失败:', roleName, roleUrl);
+src/components/IPSceneGenerator/RoleSelection.jsx:15:    color: '粉色',
+src/components/IPSceneGenerator/RoleSelection.jsx:23:    color: '蓝色',
+src/components/IPSceneGenerator/RoleSelection.jsx:31:    color: '橘色',
+src/components/IPSceneGenerator/RoleSelection.jsx:39:    color: '黄色',
+src/components/IPSceneGenerator/RoleSelection.jsx:47:    color: '紫色',
+src/components/IPSceneGenerator/RoleSelection.jsx:112:                      backgroundColor: character.color === '粉色' ? '#FFB6C1' :
+src/components/IPSceneGenerator/RoleSelection.jsx:113:                                      character.color === '蓝色' ? '#87CEEB' :
+src/components/IPSceneGenerator/RoleSelection.jsx:114:                                      character.color === '橘色' ? '#FFA500' :
+src/components/IPSceneGenerator/RoleSelection.jsx:115:                                      character.color === '黄色' ? '#FFD700' :
+src/components/IPSceneGenerator/index.jsx:130:      console.log('开始提取关键词...');
+src/components/IPSceneGenerator/index.jsx:147:      console.log('提取的关键词:', extractData);
+src/components/IPSceneGenerator/index.jsx:162:        poppy: '粉色',
+src/components/IPSceneGenerator/index.jsx:163:        edi: '蓝色',
+src/components/IPSceneGenerator/index.jsx:164:        rolly: '橘色',
+src/components/IPSceneGenerator/index.jsx:165:        milo: '黄色',
+src/components/IPSceneGenerator/index.jsx:166:        ace: '紫色'
+src/components/IPSceneGenerator/index.jsx:171:        prompt: rolePrompts?.[name] || `${characterColors[name] || ''}的${name}角色，${state.prompt}`
+src/components/IPSceneGenerator/index.jsx:175:      console.log('调用 generate-scene API，并行生成...');
+src/components/IPSceneGenerator/index.jsx:195:      console.log('generate-scene 返回:', sceneData);
+src/components/IPSceneGenerator/index.jsx:228:            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+src/components/IPSceneGenerator/index.jsx:238:        console.log(`对角色 ${roleName} 进行白色背景去除处理...`);
+src/components/IPSceneGenerator/index.jsx:244:              console.warn(`角色 ${roleName} 去背景请求超时，中止请求`);
+src/components/IPSceneGenerator/index.jsx:262:              console.log(`角色 ${roleName} 白色背景去除完成:`, removeBgData.url);
+src/components/IPSceneGenerator/index.jsx:266:              console.warn(`角色 ${roleName} 去背景请求过多(429)，等待 ${attempt + 1} 秒后重试...`);
+src/components/IPSceneGenerator/index.jsx:270:              console.warn(`角色 ${roleName} 去背景失败(${removeBgResponse.status})，使用原图`);
+src/components/IPSceneGenerator/index.jsx:275:              console.warn(`角色 ${roleName} 去背景请求超时，使用原图`);
+src/components/IPSceneGenerator/index.jsx:279:              console.warn(`角色 ${roleName} 去背景出错，等待 ${attempt + 1} 秒后重试...`);
+src/components/IPSceneGenerator/index.jsx:283:            console.warn(`角色 ${roleName} 去背景出错，使用原图:`, error);
+src/components/IPSceneGenerator/index.jsx:287:        console.warn(`角色 ${roleName} 去背景重试次数耗尽，使用原图`);
+src/components/IPSceneGenerator/index.jsx:292:        console.log('背景图生成完成:', url);
+src/components/IPSceneGenerator/index.jsx:309:        console.log(`开始处理角色: ${roleTask.name}, taskId: ${roleTask.taskId}`);
+src/components/IPSceneGenerator/index.jsx:312:            console.log(`角色 ${roleTask.name} 轮询完成，URL:`, url);
+src/components/IPSceneGenerator/index.jsx:316:            console.log(`角色 ${roleTask.name} 生成完成:`, url);
+src/components/IPSceneGenerator/index.jsx:345:            console.error(`角色 ${roleTask.name} 处理失败:`, error);
+src/components/IPSceneGenerator/index.jsx:353:      console.log('所有图片生成完成');
+src/components/IPSceneGenerator/index.jsx:357:      console.error('生成失败:', error);
+src/components/IPSceneGenerator/index.jsx:404:      console.log('开始Canvas合成...');
+src/components/IPSceneGenerator/index.jsx:412:      console.log('并行加载所有图片...');
+src/components/IPSceneGenerator/index.jsx:418:          console.log('背景图加载成功');
+src/components/IPSceneGenerator/index.jsx:429:              console.log(`角色 ${roleName} 加载成功`);
+src/components/IPSceneGenerator/index.jsx:432:              console.warn(`角色 ${roleName} 加载失败:`, err);
+src/components/IPSceneGenerator/index.jsx:452:      console.log('背景图绘制完成');
+src/components/IPSceneGenerator/index.jsx:470:          console.warn(`跳过角色 ${roleName}: 缺少图片或位置信息`);
+src/components/IPSceneGenerator/index.jsx:487:        console.log(`绘制角色 ${roleName}:`, {
+src/components/IPSceneGenerator/index.jsx:517:      console.log('Canvas合成完成');
+src/components/IPSceneGenerator/index.jsx:537:        console.warn('上传合成图到OSS失败，使用base64:', uploadErr);
+src/components/IPSceneGenerator/index.jsx:543:      console.error('Canvas合成失败:', error);
+src/components/IPSceneGenerator/index.jsx:620:            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+src/components/IPSceneGenerator/index.jsx:640:      console.error('AI合成失败:', error);
+src/components/IPSceneGenerator/index.jsx:714:            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+src/components/IPSceneGenerator/index.jsx:734:      console.error('重新生成背景失败:', error);
+src/components/IPSceneGenerator/index.jsx:785:            console.warn(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+src/components/IPSceneGenerator/index.jsx:812:        console.warn('去背景失败，使用原图:', error);
+src/components/IPSceneGenerator/index.jsx:827:      console.error(`重新生成角色 ${roleName} 失败:`, error);
+src/components/IPSceneGenerator/index.jsx:1167:                <label className="text-sm font-medium text-primary-secondary mb-2 block">合成方式</label>
+src/components/IPSceneGenerator/index.jsx:1177:                    Canvas直接合成
+src/components/IPSceneGenerator/index.jsx:1187:                    AI流程合成
+src/components/IPSceneGenerator/index.jsx:1192:                    ? '快速合成，保持原始尺寸和位置' 
+src/components/IPSceneGenerator/index.jsx:1193:                    : 'AI风格融合，需要较长处理时间'}
+src/components/LanguageSwitcher.jsx:23:        <span className="hidden sm:inline">{current === 'zh' ? '中文' : 'English'}</span>
+src/components/PromptInputModal.jsx:37:  const [referenceImages, setReferenceImages] = useState([]); // 视频支持多张参考图
+src/components/PromptOptimizer.jsx:29:        console.error('加载优化历史失败:', error);
+src/components/PromptOptimizer.jsx:62:      console.error('优化提示词失败:', error);
+src/components/PromptOptimizer.jsx:79:        improvement_score: 5 // 默认评分
+src/components/PromptOptimizer.jsx:83:      console.error('保存优化记录失败:', error);
+src/components/PromptOptimizer.jsx:109:          {/* 原始提示词 */}
+src/components/PromptOptimizer.jsx:120:          {/* 优化建议 */}
+src/components/PromptOptimizer.jsx:141:          {/* 优化后提示词 */}
+src/components/PromptOptimizer.jsx:152:          {/* 操作按钮 */}
+src/components/PromptOptimizer.jsx:183:          {/* 使用优化后的提示词 */}
+src/components/PromptOptimizer.jsx:193:          {/* 历史记录 */}
+src/components/SlideRenderer.jsx:8:  step, // 接收 step 对象
+src/components/SlideRenderer.jsx:9:  assets, // 直接接收 assets 数组（向后兼容）
+src/components/SlideRenderer.jsx:12:  onClick, // 添加点击回调
+src/components/SlideRenderer.jsx:16:  onAssetChange, // 用于更新资产属性（文本编辑时需要）
+src/components/SlideRenderer.jsx:17:  editingTextAssetId, // 正在编辑的文本资产ID
+src/components/SlideRenderer.jsx:19:  editingTextContent, // 正在编辑的文本内容
+src/components/SlideRenderer.jsx:21:  onCanvasClick, // 点击画布时的回调，用于取消选择或保存编辑
+src/components/SlideRenderer.jsx:22:  onAssetSelect // (assetId) => void - 选中资产时的回调
+src/components/VideoStoryboardModal.jsx:32:  { id: 'poppy', name: 'Poppy', color: 'videoStoryboardUi.colorPink', colorHex: '#FFB6C1', description: '粉色角色', thumbnail: poppyImg, available: true },
+src/components/VideoStoryboardModal.jsx:33:  { id: 'edi', name: 'Edi', color: 'videoStoryboardUi.colorBlue', colorHex: '#87CEEB', description: '蓝色角色', thumbnail: ediImg, available: true },
+src/components/VideoStoryboardModal.jsx:34:  { id: 'rolly', name: 'Rolly', color: 'videoStoryboardUi.colorOrange', colorHex: '#FFA500', description: '橘色角色', thumbnail: rollyImg, available: true },
+src/components/VideoStoryboardModal.jsx:35:  { id: 'milo', name: 'Milo', color: 'videoStoryboardUi.colorYellow', colorHex: '#FFD700', description: '黄色角色', thumbnail: miloImg, available: true },
+src/components/VideoStoryboardModal.jsx:36:  { id: 'ace', name: 'Ace', color: 'videoStoryboardUi.colorPurple', colorHex: '#9370DB', description: '紫色角色', thumbnail: aceImg, available: true },
+src/components/VideoStoryboardModal.jsx:58:  const [selectedAspectRatio, setSelectedAspectRatio] = useState(ASPECT_RATIOS[0]); // 默认16:9
+src/components/VideoStoryboardModal.jsx:59:  const [selectedIPs, setSelectedIPs] = useState([]); // 选中的IP列表
+src/components/VideoStoryboardModal.jsx:65:  const [editingScene, setEditingScene] = useState(null); // { sceneId, field } 或 null
+src/components/VideoStoryboardModal.jsx:70:  const [storyboardData, setStoryboardData] = useState(null); // 存储完整的storyboardData
+src/components/VideoStoryboardModal.jsx:71:  const [voiceInfo, setVoiceInfo] = useState(null); // 配音信息
+src/components/VideoStoryboardModal.jsx:72:  const [characterPrompt, setCharacterPrompt] = useState(''); // 角色提示词
+src/components/VideoStoryboardModal.jsx:73:  const [videoSize, setVideoSize] = useState({ width: 1920, height: 1080 }); // 视频尺寸，默认16:9
+src/components/VideoStoryboardModal.jsx:137:    let description = `故事核心要素：${storyCore}`;
+src/components/VideoStoryboardModal.jsx:139:      description += `\nIP选择：${selectedIPNames}`;
+src/components/VideoStoryboardModal.jsx:162:      console.log('开始调用webhook生成图片...');
+src/components/VideoStoryboardModal.jsx:163:      console.log('选择的视频比例:', selectedAspectRatio);
+src/components/VideoStoryboardModal.jsx:175:      console.log('生成分镜结果:', result);
+src/components/VideoStoryboardModal.jsx:190:        console.log('N8N返回的视频尺寸:', video_width, 'x', video_height);
+src/components/VideoStoryboardModal.jsx:191:        console.log('第一步选择的视频尺寸:', selectedAspectRatio.width, 'x', selectedAspectRatio.height);
+src/components/VideoStoryboardModal.jsx:209:        console.log('最终使用的视频尺寸:', finalVideoWidth, 'x', finalVideoHeight);
+src/components/VideoStoryboardModal.jsx:212:          console.log('找到图片路径:', storyboard_images_filepath);
+src/components/VideoStoryboardModal.jsx:213:          console.log('找到分镜提示词:', storyboard_prompts);
+src/components/VideoStoryboardModal.jsx:214:          console.log('找到配音信息:', voice);
+src/components/VideoStoryboardModal.jsx:215:          console.log('找到角色提示词:', character_prompt);
+src/components/VideoStoryboardModal.jsx:216:          console.log('找到分镜图片提示词:', storyboard_image_prompts);
+src/components/VideoStoryboardModal.jsx:226:              description: storyboard_prompts && storyboard_prompts[index] ? storyboard_prompts[index].description : `分镜${index + 1}`,
+src/components/VideoStoryboardModal.jsx:239:          console.log('成功生成分镜，跳转到步骤2');
+src/components/VideoStoryboardModal.jsx:241:          console.error('未找到图片数据');
+src/components/VideoStoryboardModal.jsx:245:        console.error('返回数据格式错误:', result);
+src/components/VideoStoryboardModal.jsx:249:      console.error('生成分镜失败:', err);
+src/components/VideoStoryboardModal.jsx:265:      console.log('重新生成图片，场景:', scene);
+src/components/VideoStoryboardModal.jsx:275:      const role = selectedIPs[0] || 'poppy'; // 默认使用 poppy
+src/components/VideoStoryboardModal.jsx:277:      console.log('调用重新生成图片API，参数:', { width, height, role, prompt });
+src/components/VideoStoryboardModal.jsx:287:      console.log('重新生成图片结果:', result);
+src/components/VideoStoryboardModal.jsx:300:          console.error('storyboardData格式未知:', result.storyboardData);
+src/components/VideoStoryboardModal.jsx:312:          console.error('data格式未知:', result.data);
+src/components/VideoStoryboardModal.jsx:316:        console.error('未知的返回格式:', result);
+src/components/VideoStoryboardModal.jsx:320:      console.log('新图片URL:', newImageUrl);
+src/components/VideoStoryboardModal.jsx:330:      console.error('重新生成图片失败:', err);
+src/components/VideoStoryboardModal.jsx:378:    if (index <= 0) return; // 已经是第一个
+src/components/VideoStoryboardModal.jsx:395:    if (index >= scenes.length - 1) return; // 已经是最后一个
+src/components/VideoStoryboardModal.jsx:436:      console.error('上传分镜图片失败:', err);
+src/components/VideoStoryboardModal.jsx:475:      console.log('开始生成视频...');
+src/components/VideoStoryboardModal.jsx:476:      console.log('当前分镜数据:', scenes);
+src/components/VideoStoryboardModal.jsx:509:      console.log('构建的请求数据:', JSON.stringify(requestData, null, 2));
+src/components/VideoStoryboardModal.jsx:523:        console.error('缺少必要字段:', missingFields);
+src/components/VideoStoryboardModal.jsx:527:      console.log('数据验证通过，所有必要字段都存在');
+src/components/VideoStoryboardModal.jsx:528:      console.log('图片数量:', requestData.storyboard_images_filepath.length);
+src/components/VideoStoryboardModal.jsx:529:      console.log('提示词数量:', requestData.storyboard_prompts.length);
+src/components/VideoStoryboardModal.jsx:530:      console.log('视频尺寸:', requestData.video_width, 'x', requestData.video_height);
+src/components/VideoStoryboardModal.jsx:531:      console.log('配音角色数量:', requestData.voice.characters_timbre?.length);
+src/components/VideoStoryboardModal.jsx:532:      console.log('配音脚本数量:', requestData.voice.voice_scripts?.length);
+src/components/VideoStoryboardModal.jsx:536:      console.log('视频生成结果:', result);
+src/components/VideoStoryboardModal.jsx:549:          console.log('视频URL:', videoUrl);
+src/components/VideoStoryboardModal.jsx:552:          console.error('视频数据结构:', result.videoData);
+src/components/VideoStoryboardModal.jsx:559:      console.error('合成视频失败:', err);
+src/components/VideoStoryboardModal.jsx:726:      {/* 分镜脚本部分 */}
+src/components/VideoStoryboardModal.jsx:737:          {/* 视频信息概览 */}
+src/components/VideoStoryboardModal.jsx:756:          {/* 角色提示词 */}
+src/components/VideoStoryboardModal.jsx:764:          {/* 配音信息 */}
+src/components/VideoStoryboardModal.jsx:793:          {/* 分镜图片部分 */}
+src/components/VideoStoryboardModal.jsx:809:                  {/* 图片 */}
+src/components/VideoStoryboardModal.jsx:812:                      {/* Loading 覆盖层 */}
+src/components/VideoStoryboardModal.jsx:842:                    {/* 图片操作按钮 */}
+src/components/VideoStoryboardModal.jsx:869:                  {/* 信息 */}
+src/components/VideoStoryboardModal.jsx:877:                        {/* 排序按钮 */}
+src/components/VideoStoryboardModal.jsx:883:                            title="上移"
+src/components/VideoStoryboardModal.jsx:891:                            title="下移"
+src/components/VideoStoryboardModal.jsx:952:                        <span className="text-xs text-primary-muted font-medium">图片提示词：</span>
+src/components/VideoStoryboardModal.jsx:1196:      {/* 分镜图片放大预览 */}
+src/constants.js:10:    return 'engage'; // 默认
+src/constants.js:59:        title: '音频',
+src/constants.js:75:        title: '视频',
+src/constants.js:88:      time: slide.duration || '0分钟',
+src/constants.js:101:  '3-4岁 (小班/Nursery)': [
+src/constants.js:102:    'Theme: My Family (我的家庭)', 
+src/constants.js:103:    'Theme: Colors & Shapes (颜色与形状)', 
+src/constants.js:104:    'Theme: My Body (我的身体)', 
+src/constants.js:105:    'Theme: Fruits (水果)', 
+src/constants.js:106:    'Theme: Toys (玩具)'
+src/constants.js:108:  '4-5岁 (中班/K1)': [
+src/constants.js:109:    'Theme: Farm Animals (农场动物)', 
+src/constants.js:110:    'Theme: My Feelings (我的情绪)', 
+src/constants.js:111:    'Theme: Weather (天气)', 
+src/constants.js:112:    'Theme: Clothes (衣服)', 
+src/constants.js:113:    'Theme: Food & Drink (饮食)'
+src/constants.js:115:  '5-6岁 (大班/K2)': [
+src/constants.js:116:    'Theme: Transportation (交通工具)', 
+src/constants.js:117:    'Theme: Community Helpers (社区职业)', 
+src/constants.js:118:    'Theme: Solar System (太阳系)', 
+src/constants.js:119:    'Theme: Insects (昆虫)', 
+src/constants.js:120:    'Theme: Seasons (四季)'
+src/constants.js:122:  '6-7岁 (一年级/G1)': [
+src/constants.js:123:    'Unit 1: Hello! (问候)',
+src/constants.js:124:    'Unit 2: School Things (文具)',
+src/constants.js:125:    'Unit 3: Animals (动物)',
+src/constants.js:126:    'Unit 4: Numbers 1-10 (数字)',
+src/constants.js:127:    'Unit 5: My Face (五官)'
+src/constants.js:129:  '7-8岁 (二年级/G2)': [
+src/constants.js:130:    'Unit 1: My Day (我的日常)',
+src/constants.js:131:    'Unit 2: The Zoo (动物园)',
+src/constants.js:132:    'Unit 3: My Room (我的房间)',
+src/constants.js:133:    'Unit 4: Family Activities (家庭活动)',
+src/constants.js:134:    'Unit 5: Time (时间)'
+src/constants.js:136:  '8-9岁 (三年级/G3)': [
+src/constants.js:137:    'Unit 3: Animals (神奇的动物)',
+src/constants.js:138:    'Unit 1: Welcome Back (欢迎回来)',
+src/constants.js:139:    'Unit 2: My Schoolbag (我的书包)',
+src/constants.js:140:    'Unit 4: We Love Animals (我们爱动物)',
+src/constants.js:141:    'Unit 5: Food and Drink (饮食)'
+src/constants.js:143:  '9-10岁 (四年级/G4)': [
+src/constants.js:144:    'Unit 1: My Classroom (我的教室)',
+src/constants.js:145:    'Unit 2: My Friends (我的朋友)',
+src/constants.js:146:    'Unit 3: Weather (天气)',
+src/constants.js:147:    'Unit 4: Shopping (购物)',
+src/constants.js:148:    'Unit 5: Hobbies (爱好)'
+src/constants.js:150:  '10-12岁 (高年级/Upper Primary)': [
+src/constants.js:151:    'Unit 1: Future Plans (未来计划)',
+src/constants.js:152:    'Unit 2: Past Experiences (过去经历)',
+src/constants.js:153:    'Unit 3: Holidays (假期)',
+src/constants.js:154:    'Unit 4: Environment (环境保护)',
+src/constants.js:155:    'Unit 5: Technology (科技)'
+src/constants/aiOptions.js:7:  { id: '活力女声', name: '活力女声', file: '活力女声.flac', description: '充满活力的女性声音' },
+src/constants/aiOptions.js:8:  { id: '不羁男声', name: '不羁男声', file: '不羁男声.flac', description: '自由不羁的男性声音' },
+src/constants/aiOptions.js:9:  { id: '沉稳男声', name: '沉稳男声', file: '沉稳男声.flac', description: '沉稳有力的男性声音' },
+src/constants/aiOptions.js:10:  { id: '成熟女声', name: '成熟女声', file: '成熟女声.flac', description: '成熟优雅的女性声音' },
+src/constants/aiOptions.js:11:  { id: '聪明儿童男声', name: '聪明儿童男声', file: '聪明儿童男声.flac', description: '聪明伶俐的儿童男声' },
+src/constants/aiOptions.js:12:  { id: '淡雅女声', name: '淡雅女声', file: '淡雅女声.flac', description: '淡雅温柔的女性声音' },
+src/constants/aiOptions.js:13:  { id: '搞笑大爷', name: '搞笑大爷', file: '搞笑大爷.flac', description: '幽默风趣的老年男声' },
+src/constants/aiOptions.js:14:  { id: '可爱儿童男声', name: '可爱儿童男声', file: '可爱儿童男声.flac', description: '可爱活泼的儿童男声' },
+src/constants/aiOptions.js:15:  { id: '可爱儿童女声', name: '可爱儿童女声', file: '可爱儿童女声.flac', description: '可爱甜美的儿童女声' },
+src/constants/aiOptions.js:16:  { id: '老年女声', name: '老年女声', file: '老年女声.flac', description: '慈祥温和的老年女声' },
+src/constants/aiOptions.js:17:  { id: '少年男声', name: '少年男声', file: '少年男声.flac', description: '朝气蓬勃的少年男声' },
+src/constants/aiOptions.js:18:  { id: '甜美女声', name: '甜美女声', file: '甜美女声.flac', description: '甜美动听的女性声音' },
+src/constants/aiOptions.js:19:  { id: '温暖少女', name: '温暖少女', file: '温暖少女.flac', description: '温暖治愈的少女声音' },
+src/constants/aiOptions.js:20:  { id: '温润男声', name: '温润男声', file: '温润男声.flac', description: '温润如玉的男性声音' },
+src/constants/aiOptions.js:25:  { id: 0.8, label: '0.8x（慢）' },
+src/constants/aiOptions.js:26:  { id: 1.0, label: '1.0x（标准）' },
+src/constants/aiOptions.js:27:  { id: 1.2, label: '1.2x（较快）' },
+src/constants/aiOptions.js:28:  { id: 1.5, label: '1.5x（快）' },
+src/constants/aiOptions.js:33:  { id: 'neutral', label: '中性', description: '平静自然的语气', emotion_prompt: '' },
+src/constants/aiOptions.js:34:  { id: 'cheerful', label: '愉快', description: '开心快乐的语气', emotion_prompt: '开心快乐的语气' },
+src/constants/aiOptions.js:35:  { id: 'sad', label: '悲伤', description: '低沉悲伤的语气', emotion_prompt: '低沉悲伤的语气' },
+src/constants/aiOptions.js:36:  { id: 'angry', label: '愤怒', description: '生气激动的语气', emotion_prompt: '生气激动的语气' },
+src/constants/aiOptions.js:37:  { id: 'fearful', label: '恐惧', description: '害怕紧张的语气', emotion_prompt: '害怕紧张的语气' },
+src/constants/aiOptions.js:38:  { id: 'excited', label: '兴奋', description: '激动兴奋的语气', emotion_prompt: '激动兴奋的语气' },
+src/constants/aiOptions.js:39:  { id: 'gentle', label: '温柔', description: '柔和温暖的语气', emotion_prompt: '柔和温暖的语气' },
+src/constants/aiOptions.js:40:  { id: 'serious', label: '严肃', description: '认真严肃的语气', emotion_prompt: '认真严肃的语气' },
+src/constants/aiOptions.js:45:  { id: 'happy', name: '开心', tags: 'happy, cheerful, upbeat' },
+src/constants/aiOptions.js:46:  { id: 'sad', name: '悲伤', tags: 'sad, emotional, melancholic' },
+src/constants/aiOptions.js:47:  { id: 'calm', name: '平静', tags: 'calm, peaceful, relaxing' },
+src/constants/aiOptions.js:48:  { id: 'excited', name: '兴奋', tags: 'excited, energetic, dynamic' },
+src/constants/aiOptions.js:49:  { id: 'narration', name: '旁白', tags: 'narration, clear, storytelling' },
+src/contexts/AuthContext.jsx:26:  [ROLES.SUPER_ADMIN]: '超级管理员',
+src/contexts/AuthContext.jsx:27:  [ROLES.ORG_ADMIN]: '机构管理员',
+src/contexts/AuthContext.jsx:28:  [ROLES.RESEARCH_LEADER]: '教研组长',
+src/contexts/AuthContext.jsx:29:  [ROLES.CREATOR]: '课件制作人',
+src/contexts/AuthContext.jsx:30:  [ROLES.PICTURE_SONG_CREATOR]: '绘本歌曲制作人',
+src/contexts/AuthContext.jsx:31:  [ROLES.VIEWER]: '普通老师'
+src/contexts/AuthContext.jsx:45:  [SOP_STATUS.DRAFT]: '草稿',
+src/contexts/AuthContext.jsx:46:  [SOP_STATUS.REVIEW]: '待审核',
+src/contexts/AuthContext.jsx:47:  [SOP_STATUS.APPROVED]: '已审核',
+src/contexts/AuthContext.jsx:48:  [SOP_STATUS.PUBLISHED]: '已发布',
+src/contexts/AuthContext.jsx:49:  [SOP_STATUS.ARCHIVED]: '已归档'
+src/contexts/AuthContext.jsx:98:    const AUTH_ERROR_MESSAGES = ['Token已过期', 'Token无效', '无效的token', '未提供认证token', '认证失败', 'Token验证失败'];
+src/contexts/AuthContext.jsx:131:        console.warn('Token 检查失败:', error);
+src/contexts/AuthContext.jsx:171:        throw new Error(data.error || '登录失败');
+src/figma-restore/AdminDashboard.jsx:462:      console.error('获取统计数据失败:', error);
+src/figma-restore/AdminDashboard.jsx:530:      console.error('获取最近课程失败:', error);
+src/figma-restore/AdminDashboard.jsx:564:      console.error('获取图片失败:', error);
+src/figma-restore/AdminDashboard.jsx:590:      console.error('获取视频失败:', error);
+src/figma-restore/AdminDashboard.jsx:614:      console.error('获取音频失败:', error);
+src/figma-restore/TaskCenter.jsx:41:    title: '口语对话练习视频',
+src/figma-restore/TaskCenter.jsx:42:    count: '1 个',
+src/figma-restore/TaskCenter.jsx:51:    title: '场景插图-教室',
+src/figma-restore/TaskCenter.jsx:52:    count: '4 张',
+src/figma-restore/TaskCenter.jsx:61:    title: '单词跟读录音',
+src/figma-restore/TaskCenter.jsx:62:    count: '10 首',
+src/figma-restore/TaskCenter.jsx:63:    related: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:71:    title: '角色立绘-老师',
+src/figma-restore/TaskCenter.jsx:72:    count: '1 张',
+src/figma-restore/TaskCenter.jsx:81:    title: '情绪氛围BGM',
+src/figma-restore/TaskCenter.jsx:82:    count: '3 首',
+src/figma-restore/TaskCenter.jsx:83:    related: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:94:    title: '主题意境图',
+src/figma-restore/TaskCenter.jsx:95:    count: '8 张',
+src/figma-restore/TaskCenter.jsx:96:    related: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:99:    progressText: 'AI 引擎正在生成中...',
+src/figma-restore/TaskCenter.jsx:100:    statusText: '预计剩余 1 分钟',
+src/figma-restore/TaskCenter.jsx:106:    title: '体能闯关视频',
+src/figma-restore/TaskCenter.jsx:107:    count: '1 个',
+src/figma-restore/TaskCenter.jsx:108:    related: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:110:    statusText: '排队中 #2 · 等待 GPU 分配',
+src/figma-restore/TaskCenter.jsx:116:    title: '主题意境图',
+src/figma-restore/TaskCenter.jsx:117:    count: '8 张',
+src/figma-restore/TaskCenter.jsx:118:    related: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:120:    statusText: '排队中 #3 · 等待 GPU 分配',
+src/figma-restore/TaskCenter.jsx:126:    title: '体能闯关视频',
+src/figma-restore/TaskCenter.jsx:127:    count: '1 个',
+src/figma-restore/TaskCenter.jsx:128:    related: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:130:    statusText: '排队中 #4 · 等待 GPU 分配',
+src/figma-restore/TaskCenter.jsx:136:    title: '情绪氛围BGM',
+src/figma-restore/TaskCenter.jsx:137:    count: '3 首',
+src/figma-restore/TaskCenter.jsx:138:    related: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:140:    statusText: '已完成 · 可插入画布',
+src/figma-restore/TaskCenter.jsx:149:    title: '主题意境图',
+src/figma-restore/TaskCenter.jsx:150:    count: 'x 8 张',
+src/figma-restore/TaskCenter.jsx:151:    course: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:153:    statusText: '进行中',
+src/figma-restore/TaskCenter.jsx:155:    engine: '图像生成 · 16:9 landscape',
+src/figma-restore/TaskCenter.jsx:157:    prompt: '神奇动物世界，童趣线条插画，温暖色调，适合小学英语课堂，用于课程主题封面与PPT背景。',
+src/figma-restore/TaskCenter.jsx:158:    spec: '8 张候选图 · 16:9 · 1920x1080 · 卡通插画风',
+src/figma-restore/TaskCenter.jsx:161:      ['生成用途', 'PPT 背景 / 课程封面'],
+src/figma-restore/TaskCenter.jsx:162:      ['画面比例', '16:9 landscape'],
+src/figma-restore/TaskCenter.jsx:163:      ['图片风格', '卡通插画'],
+src/figma-restore/TaskCenter.jsx:164:      ['文字区域', '底部留白'],
+src/figma-restore/TaskCenter.jsx:169:    title: '主题意境图',
+src/figma-restore/TaskCenter.jsx:170:    count: 'x 8 张',
+src/figma-restore/TaskCenter.jsx:171:    course: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:173:    statusText: '等待中',
+src/figma-restore/TaskCenter.jsx:175:    engine: '图像生成 · 16:9 landscape',
+src/figma-restore/TaskCenter.jsx:177:    prompt: '动物园救援主题插图，包含友好的动物角色、任务感场景、明亮课堂色彩。',
+src/figma-restore/TaskCenter.jsx:178:    spec: '8 张候选图 · 等待 GPU 分配 · 预计 2 分钟后开始',
+src/figma-restore/TaskCenter.jsx:181:      ['生成用途', 'PPT 背景 / 课程封面'],
+src/figma-restore/TaskCenter.jsx:182:      ['画面比例', '16:9 landscape'],
+src/figma-restore/TaskCenter.jsx:183:      ['图片风格', '卡通插画'],
+src/figma-restore/TaskCenter.jsx:184:      ['队列位置', '#3'],
+src/figma-restore/TaskCenter.jsx:189:    title: '场景插图-教室',
+src/figma-restore/TaskCenter.jsx:190:    count: 'x 4 张',
+src/figma-restore/TaskCenter.jsx:193:    statusText: '已完成',
+src/figma-restore/TaskCenter.jsx:195:    engine: '场景插图 · 课堂环境',
+src/figma-restore/TaskCenter.jsx:197:    prompt: '明亮友好的英语教室，适合问候语练习，包含黑板、书包、晨间阳光与可互动空间。',
+src/figma-restore/TaskCenter.jsx:198:    spec: '4 张候选图 · 4:3 · 已同步图片库',
+src/figma-restore/TaskCenter.jsx:201:      ['场景名称', '教室 Classroom'],
+src/figma-restore/TaskCenter.jsx:202:      ['画面比例', '4:3'],
+src/figma-restore/TaskCenter.jsx:203:      ['图片风格', '写实摄影'],
+src/figma-restore/TaskCenter.jsx:204:      ['输出状态', '已入库'],
+src/figma-restore/TaskCenter.jsx:209:    title: '角色立绘-老师',
+src/figma-restore/TaskCenter.jsx:210:    count: 'x 1 张',
+src/figma-restore/TaskCenter.jsx:213:    statusText: '已完成',
+src/figma-restore/TaskCenter.jsx:215:    engine: '角色立绘 · 透明背景',
+src/figma-restore/TaskCenter.jsx:217:    prompt: '亲切的英语老师角色，正面站姿，适合课堂问候和引导互动。',
+src/figma-restore/TaskCenter.jsx:218:    spec: '1 张 PNG · 透明背景 · 可编辑素材',
+src/figma-restore/TaskCenter.jsx:221:      ['角色身份', '英语老师'],
+src/figma-restore/TaskCenter.jsx:222:      ['输出格式', 'PNG 透明背景'],
+src/figma-restore/TaskCenter.jsx:223:      ['图片风格', '卡通插画'],
+src/figma-restore/TaskCenter.jsx:224:      ['输出状态', '已入库'],
+src/figma-restore/TaskCenter.jsx:229:    title: '体能闯关视频',
+src/figma-restore/TaskCenter.jsx:230:    count: 'x 1 个',
+src/figma-restore/TaskCenter.jsx:231:    course: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:233:    statusText: '等待中',
+src/figma-restore/TaskCenter.jsx:235:    engine: '视频生成 · 动作示范',
+src/figma-restore/TaskCenter.jsx:237:    prompt: '体能闯关课堂视频，学生跟随动物动作完成跳跃、奔跑与平衡桥挑战。',
+src/figma-restore/TaskCenter.jsx:238:    spec: '预计 2 分 55 秒 · 16:9 · 待生成',
+src/figma-restore/TaskCenter.jsx:242:      ['视频比例', '16:9'],
+src/figma-restore/TaskCenter.jsx:243:      ['单词气泡', '胶囊'],
+src/figma-restore/TaskCenter.jsx:244:      ['英语旁白', 'AI语音朗读导词'],
+src/figma-restore/TaskCenter.jsx:245:      ['队列位置', '#2'],
+src/figma-restore/TaskCenter.jsx:250:    title: '口语对话练习视频',
+src/figma-restore/TaskCenter.jsx:251:    count: 'x 1 个',
+src/figma-restore/TaskCenter.jsx:254:    statusText: '已完成',
+src/figma-restore/TaskCenter.jsx:256:    engine: '视频生成 · 情景对话',
+src/figma-restore/TaskCenter.jsx:258:    prompt: '两个学生在教室门口进行 greeting 对话，节奏清晰，适合跟读和角色扮演。',
+src/figma-restore/TaskCenter.jsx:263:      ['视频比例', '16:9'],
+src/figma-restore/TaskCenter.jsx:264:      ['场景', '教室门口'],
+src/figma-restore/TaskCenter.jsx:265:      ['字幕样式', '底部双语'],
+src/figma-restore/TaskCenter.jsx:266:      ['输出状态', '已入库'],
+src/figma-restore/TaskCenter.jsx:271:    title: '情绪氛围BGM',
+src/figma-restore/TaskCenter.jsx:272:    count: 'x 3 首',
+src/figma-restore/TaskCenter.jsx:273:    course: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:275:    statusText: '已完成',
+src/figma-restore/TaskCenter.jsx:277:    engine: '音频生成 · 情绪氛围 BGM',
+src/figma-restore/TaskCenter.jsx:279:    prompt: '温暖、轻快、适合儿童课堂故事导入的背景音乐，避免强节拍抢占朗读。',
+src/figma-restore/TaskCenter.jsx:280:    spec: '3 首音频 · 每首 30 秒 · MP3',
+src/figma-restore/TaskCenter.jsx:283:      ['音乐风格', '活动背景乐'],
+src/figma-restore/TaskCenter.jsx:284:      ['用途', '游戏 / 冥想'],
+src/figma-restore/TaskCenter.jsx:285:      ['输出格式', 'MP3'],
+src/figma-restore/TaskCenter.jsx:286:      ['输出状态', '已入库'],
+src/figma-restore/TaskCenter.jsx:291:    title: '单词跟读录音',
+src/figma-restore/TaskCenter.jsx:292:    count: 'x 10 首',
+src/figma-restore/TaskCenter.jsx:293:    course: 'Unit 3: Animals (神奇的动物)',
+src/figma-restore/TaskCenter.jsx:295:    statusText: '已完成',
+src/figma-restore/TaskCenter.jsx:297:    engine: '语音生成 · 跟读音频',
+src/figma-restore/TaskCenter.jsx:299:    prompt: '儿童友好的英文单词跟读音频，清晰发音，留有重复间隔。',
+src/figma-restore/TaskCenter.jsx:300:    spec: '10 首音频 · 每条 5-8 秒 · MP3',
+src/figma-restore/TaskCenter.jsx:301:    tracks: ['sad / happy 跟读', 'lonely / bored 跟读', "Let's help them 句型"],
+src/figma-restore/TaskCenter.jsx:303:      ['音频类型', '跟读朗读'],
+src/figma-restore/TaskCenter.jsx:304:      ['配音角色', '儿童友好音色'],
+src/figma-restore/TaskCenter.jsx:305:      ['输出格式', 'MP3'],
+src/figma-restore/TaskCenter.jsx:306:      ['输出状态', '已入库'],
+src/figma-restore/TaskCenter.jsx:324:    label: '等待中',
+src/figma-restore/TaskCenter.jsx:329:    label: '进行中',
+src/figma-restore/TaskCenter.jsx:334:    label: '已完成',
+src/figma-restore/TaskCenter.jsx:339:    label: '失败',
+src/figma-restore/TaskCenter.jsx:344:    label: '已取消',
+src/figma-restore/TaskCenter.jsx:349:    label: '进行中',
+src/figma-restore/TaskCenter.jsx:354:    label: '等待中',
+src/figma-restore/TaskCenter.jsx:359:    label: '已完成',
+src/figma-restore/TaskCenter.jsx:415:  if (task.status === 'queued') return '排队中 · 等待 GPU 分配';
+src/figma-restore/TaskCenter.jsx:416:  if (task.status === 'running') return task.progress >= 80 ? '正在整理生成结果' : 'AI 引擎正在生成中...';
+src/figma-restore/TaskCenter.jsx:417:  if (task.status === 'succeeded') return '已完成 · 可插入画布';
+src/figma-restore/TaskCenter.jsx:418:  if (task.status === 'failed') return task.error_message || '生成失败';
+src/figma-restore/TaskCenter.jsx:419:  if (task.status === 'cancelled') return '已取消';
+src/figma-restore/TaskCenter.jsx:429:    title: task.title || 'AI 生成任务',
+src/figma-restore/TaskCenter.jsx:431:    related: task.related || task.input?.course_title || '未关联课程',
+src/figma-restore/TaskCenter.jsx:449:    title: raw.title || task.title || 'AI 生成任务',
+src/figma-restore/TaskCenter.jsx:451:    course: raw.related || task.related || '未关联课程',
+src/figma-restore/TaskCenter.jsx:453:    statusText: statusConfigMap[raw.status]?.label || task.statusText || '等待中',
+src/figma-restore/TaskCenter.jsx:455:    engine: raw.type === 'video' ? '视频生成 · 后台任务' : raw.type === 'audio' ? '音频生成 · 后台任务' : '图片生成 · 后台任务',
+src/figma-restore/TaskCenter.jsx:457:    prompt: input.prompt || input.storyboard_prompts?.join('\n') || '无提示词',
+src/figma-restore/TaskCenter.jsx:662:        throw new Error(responseErrorMessage(response, result, i18next.t('taskCenterValues.后台任务获取失败')));
+src/figma-restore/TaskCenter.jsx:672:      message.error(error?.message || t('taskCenterValues.后台任务获取失败'));
+src/figma-restore/TaskDetailModal.jsx:85:        duration: task.title.includes('体能') || task.title.includes('Fitness') ? '02:55' : '00:35',
+src/figma-restore/TaskDetailModal.jsx:87:          videoType: task.title.includes('口语对话') || task.title.includes('Dialogue') ? '情境叙事视频' : '体能闯关视频',
+src/figma-restore/TaskDetailModal.jsx:88:          scene: task.title.includes('口语对话') || task.title.includes('Dialogue') ? '校门口 / 英语问候' : '森林 / 动物园任务',
+src/figma-restore/TaskDetailModal.jsx:89:          chars: task.title.includes('口语对话') || task.title.includes('Dialogue') ? '学生角色 x2' : 'Poppy',
+src/figma-restore/TaskDetailModal.jsx:90:          vocab: task.title.includes('口语对话') || task.title.includes('Dialogue') ? 2 : 3,
+src/figma-restore/TaskDetailModal.jsx:91:          sents: task.title.includes('口语对话') || task.title.includes('Dialogue') ? 3 : 2,
+src/figma-restore/TaskDetailModal.jsx:107:        duration: task.title.includes('跟读') || task.title.includes('Read') ? '00:08' : '00:30',
+src/figma-restore/TaskDetailModal.jsx:116:      width: task.title.includes('角色立绘') || task.title.includes('Character') ? 220 : task.title.includes('场景插图') || task.title.includes('Scene') ? 320 : 360,
+src/figma-restore/TaskDetailModal.jsx:117:      height: task.title.includes('角色立绘') || task.title.includes('Character') ? 220 : task.title.includes('场景插图') || task.title.includes('Scene') ? 240 : 203,
+src/figma-restore/TaskDetailModal.jsx:133:          [t('taskDetail.ratio'), task.title.includes('场景') || task.title.includes('Scene') ? '4:3' : '16:9 landscape'],
+src/figma-restore/TaskDetailModal.jsx:151:    const isDialogue = task.title.includes('口语对话') || task.title.includes('Dialogue');
+src/figma-restore/TaskDetailModal.jsx:207:    const isReading = task.title.includes('跟读') || task.title.includes('Read');
+src/figma-restore/TaskDetailModal.jsx:253:  if (task.title.includes('场景插图') || task.title.includes('Scene')) {
+src/figma-restore/TaskDetailModal.jsx:263:  if (task.title.includes('角色立绘') || task.title.includes('Character')) {
+src/figma-restore/audio-library/AudioLibrary.jsx:100:  prompt: (asset.source === t('audioLib.sourceAi') || asset.source === 'AI生成')
+src/figma-restore/audio-library/AudioPreviewModal.jsx:54:  if (asset.type === t('audioLib.typeSong') || asset.type === '歌曲') {
+src/figma-restore/audio-library/AudioPreviewModal.jsx:74:  const isAi = asset.source === t('audioLib.sourceAi') || asset.source === 'AI生成';
+src/figma-restore/course-management/CourseManagement.jsx:19:  return text.replace(/岁/g, '').trim();
+src/figma-restore/course-management/CourseManagement.jsx:49:  return text.replace(/人/g, '').trim();
+src/figma-restore/course-management/CourseManagement.jsx:228:      console.error('获取课程列表失败:', error);
+src/figma-restore/course-management/CourseManagement.jsx:333:      console.error('删除课程失败:', error);
+src/figma-restore/course-management/courseData.js:2:  { value: 'all', label: '全部状态' },
+src/figma-restore/course-management/courseData.js:3:  { value: 'draft', label: '草稿' },
+src/figma-restore/course-management/courseData.js:4:  { value: 'published', label: '已发布' },
+src/figma-restore/course-management/courseData.js:10:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:11:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:13:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:15:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:16:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:17:    theme: '星际救援冒险',
+src/figma-restore/course-management/courseData.js:25:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:26:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:28:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:30:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:31:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:32:    theme: '星际救援冒险',
+src/figma-restore/course-management/courseData.js:39:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:40:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:42:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:44:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:45:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:46:    theme: '音乐星球',
+src/figma-restore/course-management/courseData.js:53:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:54:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:56:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:58:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:59:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:60:    theme: '情绪魔法森林',
+src/figma-restore/course-management/courseData.js:67:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:68:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:70:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:72:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:73:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:74:    theme: '数学探险岛',
+src/figma-restore/course-management/courseData.js:81:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:82:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:84:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:86:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:87:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:88:    theme: '字母魔法师',
+src/figma-restore/course-management/courseData.js:95:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:96:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:98:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:100:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:101:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:102:    theme: '几何乐园',
+src/figma-restore/course-management/courseData.js:109:    title: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:110:    unit: '神奇的动物世界',
+src/figma-restore/course-management/courseData.js:112:    age: '7-9岁',
+src/figma-restore/course-management/courseData.js:114:    duration: '40分钟',
+src/figma-restore/course-management/courseData.js:115:    classSize: '9-15人',
+src/figma-restore/course-management/courseData.js:116:    theme: '合作任务站',
+src/figma-restore/course-workflow/CourseMapView.jsx:30:const languageSkillOptionValues = ['听力理解', '口语表达', '阅读理解', '书面表达', '综合能力'];
+src/figma-restore/course-workflow/CourseMapView.jsx:31:const pathOptionValues = ['艺术表达', '体感探索', '音乐律动', 'AI 自动匹配'];
+src/figma-restore/course-workflow/CourseMapView.jsx:32:const atmosphereOptionValues = ['神秘探险感', '戏剧表演感', '温馨治愈感', '团队协作感', 'AI 自动匹配'];
+src/figma-restore/course-workflow/CourseMapView.jsx:33:const AUTO_MATCH_VALUES = new Set(['AI 自动匹配', 'AI Auto Match']);
+src/figma-restore/course-workflow/CourseMapView.jsx:119:  { value: 'listening', aliases: ['听力', 'listening'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:120:  { value: 'speaking', aliases: ['口语', 'speaking'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:121:  { value: 'reading', aliases: ['阅读', 'reading'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:122:  { value: 'writing', aliases: ['书面', '写作', 'writing'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:123:  { value: 'integrated', aliases: ['综合', 'integrated'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:127:  { value: 'art', aliases: ['艺术', 'art'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:128:  { value: 'body', aliases: ['体感', 'physical', 'embodied', 'body'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:129:  { value: 'music', aliases: ['音乐', 'rhythm', 'music'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:130:  { value: 'AI Auto Match', aliases: ['auto', '自动'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:134:  { value: '神秘探险感', aliases: ['mystery', 'adventure', '神秘', '探险'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:135:  { value: '戏剧表演感', aliases: ['drama', 'dramatic', 'performance', '戏剧', '表演'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:136:  { value: '温馨治愈感', aliases: ['warmth', 'warm', 'healing', '温馨', '治愈'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:137:  { value: '团队协作感', aliases: ['teamwork', 'team', 'collaboration', '团队', '协作'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:138:  { value: 'AI 自动匹配', aliases: ['auto', '自动'] },
+src/figma-restore/course-workflow/CourseMapView.jsx:165:    art: isEn ? 'Artistic Expression' : '艺术表达',
+src/figma-restore/course-workflow/CourseMapView.jsx:166:    body: isEn ? 'Physical Exploration' : '体感探索',
+src/figma-restore/course-workflow/CourseMapView.jsx:167:    music: isEn ? 'Musical Rhythm' : '音乐律动',
+src/figma-restore/course-workflow/CourseMapView.jsx:168:    'AI Auto Match': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+src/figma-restore/course-workflow/CourseMapView.jsx:169:    '艺术表达': isEn ? 'Artistic Expression' : '艺术表达',
+src/figma-restore/course-workflow/CourseMapView.jsx:170:    '体感探索': isEn ? 'Physical Exploration' : '体感探索',
+src/figma-restore/course-workflow/CourseMapView.jsx:171:    '音乐律动': isEn ? 'Musical Rhythm' : '音乐律动',
+src/figma-restore/course-workflow/CourseMapView.jsx:172:    'AI 自动匹配': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+src/figma-restore/course-workflow/CourseMapView.jsx:296:function pickListText(value, fallback = '核心表达', separator = ', ') {
+src/figma-restore/course-workflow/CourseMapView.jsx:304:  const outcome = compactText(course.keyOutcome || map.keyOutcome || (isEn ? `Complete a creative piece around "${taskName}"` : `围绕"${taskName}"完成创意作品`), 32);
+src/figma-restore/course-workflow/CourseMapView.jsx:305:  const growth = compactText(map.growth || course.specialRequirements || (isEn ? 'Expression, collaboration and creative problem-solving' : '表达、协作与创造性解决问题'), 30);
+src/figma-restore/course-workflow/CourseMapView.jsx:309:  const skills = pickListText(course.languageSkills, isEn ? 'Listening and speaking' : '听说表达', isEn ? ', ' : '、');
+src/figma-restore/course-workflow/CourseMapView.jsx:310:  const path = formatExperiencePaths(normalizeExperiencePaths(course, map.path), isEn ? 'Artistic Expression' : '艺术表达');
+src/figma-restore/course-workflow/CourseMapView.jsx:324:    engage: `${atmosphere ? `以${atmosphere}开启，` : ''}学生进入"${taskName}"情境，观察${story || '任务线索'}，提出本节课要破解的真实问题。`,
+src/figma-restore/course-workflow/CourseMapView.jsx:325:    empower: `围绕“${vocab}”和“${grammar}”搭建语言工具箱，通过${skills}示范与短练，让学生马上能为任务开口表达。`,
+src/figma-restore/course-workflow/CourseMapView.jsx:326:    execute: `小组沿着“${path}”路径完成${outcome}，在创作、排练或展示准备中反复使用目标语言并互相调整。`,
+src/figma-restore/course-workflow/CourseMapView.jsx:327:    elevate: `展示${outcome}，用同伴反馈回看${growth}，把本节课的表达方法迁移到新的生活或学习场景。`,
+src/figma-restore/course-workflow/CourseMapView.jsx:402:  const taskName = course.taskName || course.theme || (isEn ? 'Scenario Task' : '情境任务');
+src/figma-restore/course-workflow/CourseMapView.jsx:449:      languageSkills: course.languageSkills || ['听力理解', '口语表达'],
+src/figma-restore/course-workflow/CourseMapView.jsx:592:      console.error('生成课程概览失败:', err);
+src/figma-restore/course-workflow/CourseMapView.jsx:597:    const courseTitle = overview?.courseTitle || values.courseTitle || '未命名课程';
+src/figma-restore/course-workflow/CourseMapView.jsx:612:      languageSkills: values.languageSkills || ['听力理解', '口语表达'],
+src/figma-restore/course-workflow/CourseMapView.jsx:673:      console.error('重新生成图片失败:', err);
+src/figma-restore/course-workflow/CourseMapView.jsx:717:        throw new Error(result.error || '调整建议生成失败');
+src/figma-restore/course-workflow/CourseMapView.jsx:722:      console.warn('生成课程地图调整建议失败，使用默认建议:', err);
+src/figma-restore/course-workflow/CourseMapView.jsx:816:          console.warn('保存重新生成课程概览失败:', err);
+src/figma-restore/course-workflow/CourseMapView.jsx:823:      console.error('重新生成课程概览失败:', err);
+src/figma-restore/course-workflow/CourseMapView.jsx:827:        storyContext: request ? `${map.storyline} 根据调整需求：${request}` : map.storyline,
+src/figma-restore/course-workflow/CourseWorkflow.jsx:100:  const nameMapping = { engage: '引入', empower: '赋能', execute: '实践', elevate: '升华' };
+src/figma-restore/course-workflow/CourseWorkflow.jsx:114:          }, 0)} 分钟`
+src/figma-restore/course-workflow/CourseWorkflow.jsx:115:        : '15 分钟',
+src/figma-restore/course-workflow/CourseWorkflow.jsx:267:          console.error('保存 PPT 课件失败:', error);
+src/figma-restore/course-workflow/CourseWorkflow.jsx:325:      console.error('保存课程地图失败:', error);
+src/figma-restore/course-workflow/CourseWorkflow.jsx:451:      console.error('发布课程失败:', error);
+src/figma-restore/course-workflow/CourseWorkflow.jsx:615:      console.error('PPT 导出失败:', error);
+src/figma-restore/course-workflow/LessonPlanView.jsx:51:  { label: '角色扮演', labelEn: 'Role Play', text: '设计一个让学生通过角色扮演来练习目标句型的活动', textEn: 'Design an activity where students practice the target sentence pattern through role play.' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:52:  { label: '小组合作', labelEn: 'Teamwork', text: '设计一个通过小组合作完成任务的活动', textEn: 'Design an activity where students complete a task through group collaboration.' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:53:  { label: '游戏化', labelEn: 'Gamified', text: '设计一个利用游戏机制激发学生参与的活动', textEn: 'Design a gamified activity that increases student participation.' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:54:  { label: '真实情境', labelEn: 'Real Context', text: '设计一个结合真实情境让学生运用目标语言的活动', textEn: 'Design an authentic-context activity for students to use the target language.' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:55:  { label: '动手操作', labelEn: 'Hands-on', text: '设计一个需要学生动手操作的活动', textEn: 'Design a hands-on activity that lets students manipulate materials while using English.' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:59:  { icon: '🎱', name: 'Bingo 游戏', nameEn: 'Bingo Game', meta: '词汇复习', metaEn: 'Vocabulary Review' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:60:  { icon: '🤔', name: '猜单词', nameEn: 'Guess the Word', meta: '听说练习', metaEn: 'Listening & Speaking' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:61:  { icon: '🎭', name: '情景对话', nameEn: 'Role Dialogue', meta: '口语输出', metaEn: 'Oral Output' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:62:  { icon: '🃏', name: '闪卡翻转', nameEn: 'Flashcard Flip', meta: '词汇记忆', metaEn: 'Vocabulary Memory' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:63:  { icon: '🧩', name: '拼图阅读', nameEn: 'Puzzle Reading', meta: '阅读理解', metaEn: 'Reading Comprehension' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:64:  { icon: '🎨', name: '我画你猜', nameEn: 'Draw and Guess', meta: '词汇运用', metaEn: 'Vocabulary Use' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:68:  { title: '创设悬念', desc: '', teacher: '', cue: '' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:69:  { title: '朗读来信', desc: '', teacher: '', cue: '' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:70:  { title: '情绪感知', desc: '', teacher: '', cue: '' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:71:  { title: '发布任务', desc: '', teacher: '', cue: '' },
+src/figma-restore/course-workflow/LessonPlanView.jsx:100:    summary: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+src/figma-restore/course-workflow/LessonPlanView.jsx:112:    summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
+src/figma-restore/course-workflow/LessonPlanView.jsx:124:    summary: '在真实任务驱动下综合运用方位介词与句型进行表达',
+src/figma-restore/course-workflow/LessonPlanView.jsx:136:    summary: '分享学习成果，反思收获，培养跨文化意识',
+src/figma-restore/course-workflow/LessonPlanView.jsx:156:  ['语言目标：', 'Language Goal: '],
+src/figma-restore/course-workflow/LessonPlanView.jsx:157:  ['语言目标:', 'Language Goal: '],
+src/figma-restore/course-workflow/LessonPlanView.jsx:158:  ['核心词汇：', 'Core Vocabulary: '],
+src/figma-restore/course-workflow/LessonPlanView.jsx:159:  ['核心句型：', 'Core Sentence Pattern: '],
+src/figma-restore/course-workflow/LessonPlanView.jsx:160:  ['社会情感学习：', 'SEL: '],
+src/figma-restore/course-workflow/LessonPlanView.jsx:161:  ['教学资源', 'Teaching Resources'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:162:  ['情境创设', 'Scenario Setup'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:163:  ['活动流程原文', 'Original Activity Flow'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:164:  ['教师语言与引导', 'Teacher Language & Guidance'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:165:  ['活动概述', 'Overview'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:166:  ['活动流程', 'Procedure'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:167:  ['查看详情', 'View Details'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:168:  ['查看活动', 'View Activity'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:169:  ['步骤', 'Step'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:170:  ['个环节', ' steps'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:171:  ['环节', 'steps'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:172:  ['分钟', 'min'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:173:  ['引入', 'Engage'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:174:  ['赋能', 'Empower'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:175:  ['实践', 'Execute'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:176:  ['升华', 'Elevate'],
+src/figma-restore/course-workflow/LessonPlanView.jsx:197:    .replace(/\s*[（(]\s*(引入|赋能|实践|升华)\s*[）)]/g, '')
+src/figma-restore/course-workflow/LessonPlanView.jsx:204:    title: 'Engage · 引入',
+src/figma-restore/course-workflow/LessonPlanView.jsx:205:    goal: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+src/figma-restore/course-workflow/LessonPlanView.jsx:206:    lang: "核心词汇：animal, where, in, on, under; 核心句型：Where is the...? It's...",
+src/figma-restore/course-workflow/LessonPlanView.jsx:207:    sel: '社会情感学习：好奇心、探索欲、团队协作意识',
+src/figma-restore/course-workflow/LessonPlanView.jsx:208:    perma: 'Positive Emotion（积极情绪）：通过情境创设激发兴奋和期待感',
+src/figma-restore/course-workflow/LessonPlanView.jsx:209:    narrative: '学生们化身为宇飞船控制台员，接收到来自动物星球的求救信号，需要前往救援。在旅途中，他们将学习如何用英语描述动物的位置。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:214:    title: 'Empower · 赋能',
+src/figma-restore/course-workflow/LessonPlanView.jsx:215:    goal: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
+src/figma-restore/course-workflow/LessonPlanView.jsx:216:    lang: '强化目标词汇发音和理解，通过TPR全身反应法巩固记忆',
+src/figma-restore/course-workflow/LessonPlanView.jsx:217:    sel: '专注力、听觉辨识能力、动作协调与表达',
+src/figma-restore/course-workflow/LessonPlanView.jsx:218:    perma: 'Engagement（投入）：全身心参与互动，建立学习心流体验',
+src/figma-restore/course-workflow/LessonPlanView.jsx:219:    narrative: '控制台收到动物星球的地图解码任务，学生们需要学会用英语理解指令才能解锁前进路线。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:224:    title: 'Execute · 实践',
+src/figma-restore/course-workflow/LessonPlanView.jsx:225:    goal: '在真实任务驱动下综合运用方位介词与句型进行表达',
+src/figma-restore/course-workflow/LessonPlanView.jsx:226:    lang: '在实际情境中运用目标语言进行交际，完成任务',
+src/figma-restore/course-workflow/LessonPlanView.jsx:227:    sel: '合作学习、问题解决、创造性思维、团队协作',
+src/figma-restore/course-workflow/LessonPlanView.jsx:228:    perma: 'Accomplishment（成就感）：完成任务获得成就感，建立自信',
+src/figma-restore/course-workflow/LessonPlanView.jsx:229:    narrative: '终于到达动物星球！学生们分组建造动物家园，需要用英语描述每个动物的位置，帮助它们安家。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:234:    title: 'Elevate · 升华',
+src/figma-restore/course-workflow/LessonPlanView.jsx:235:    goal: '分享学习成果，反思收获，培养跨文化意识',
+src/figma-restore/course-workflow/LessonPlanView.jsx:236:    lang: '展示学习成果，自信表达，完成学习闭环',
+src/figma-restore/course-workflow/LessonPlanView.jsx:237:    sel: '自我反思、自信表达、感恩之心、分享精神',
+src/figma-restore/course-workflow/LessonPlanView.jsx:238:    perma: 'Relationships（人际关系）：与同伴分享快乐，建立友谊',
+src/figma-restore/course-workflow/LessonPlanView.jsx:239:    narrative: '任务完成！学生们展示自己的动物家园，向星际联盟汇报救援成果，带着满满的收获返回地球。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:256:  { key: 'eng', phase: 'Engage', title: 'Engage', name: '引入', duration: '9 分钟', steps: [] },
+src/figma-restore/course-workflow/LessonPlanView.jsx:257:  { key: 'emp', phase: 'Empower', title: 'Empower', name: '赋能', duration: '24 分钟', steps: [] },
+src/figma-restore/course-workflow/LessonPlanView.jsx:258:  { key: 'exc', phase: 'Execute', title: 'Execute', name: '实践', duration: '18 分钟', steps: [] },
+src/figma-restore/course-workflow/LessonPlanView.jsx:259:  { key: 'elv', phase: 'Elevate', title: 'Elevate', name: '升华', duration: '9 分钟', steps: [] },
+src/figma-restore/course-workflow/LessonPlanView.jsx:308:  const nameMapping = { engage: '引入', empower: '赋能', execute: '实践', elevate: '升华' };
+src/figma-restore/course-workflow/LessonPlanView.jsx:319:        ? steps.reduce((acc, s) => { const m = (s.time || s.duration || '').match(/(\d+)/); return acc + (m ? parseInt(m[1]) : 0); }, 0) + ' 分钟'
+src/figma-restore/course-workflow/LessonPlanView.jsx:320:        : '15 分钟',
+src/figma-restore/course-workflow/LessonPlanView.jsx:383:    duration: (course.duration || '').replace(/--/g, '').replace('分钟', '') || '60',
+src/figma-restore/course-workflow/LessonPlanView.jsx:461:    return isChinese ? `${minutes} 分钟` : `${minutes} min`;
+src/figma-restore/course-workflow/LessonPlanView.jsx:523:        console.error('生成教案失败:', err);
+src/figma-restore/course-workflow/LessonPlanView.jsx:540:        duration: totalMin > 0 ? `${totalMin} 分钟` : phase.duration,
+src/figma-restore/course-workflow/LessonPlanView.jsx:556:        console.warn('自动保存教案失败:', err);
+src/figma-restore/course-workflow/LessonPlanView.jsx:635:    const theme = classicName || source || '小组合作挑战';
+src/figma-restore/course-workflow/LessonPlanView.jsx:637:      title: classicName || '星球任务挑战',
+src/figma-restore/course-workflow/LessonPlanView.jsx:639:      goal: '在真实任务中理解并运用目标词汇与句型，提升听说表达的自信。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:640:      activity: `学生围绕“${theme}”完成分组互动，并在过程中使用目标语言进行沟通。`,
+src/figma-restore/course-workflow/LessonPlanView.jsx:643:          title: '创设悬念',
+src/figma-restore/course-workflow/LessonPlanView.jsx:644:          desc: '教师展示任务线索，快速建立活动情境和角色身份。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:646:          cue: '神秘地展示任务线索；停顿等待学生自然回应',
+src/figma-restore/course-workflow/LessonPlanView.jsx:649:          title: '朗读来信',
+src/figma-restore/course-workflow/LessonPlanView.jsx:650:          desc: '教师示范目标表达，学生跟读并理解关键语言。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:652:          cue: '放慢语速朗读；指向关键词图片或板书',
+src/figma-restore/course-workflow/LessonPlanView.jsx:655:          title: '情绪感知',
+src/figma-restore/course-workflow/LessonPlanView.jsx:656:          desc: '学生分组完成互动任务，教师巡视并提供语言支持。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:658:          cue: '用表情和手势示范；鼓励学生用短句回应',
+src/figma-restore/course-workflow/LessonPlanView.jsx:661:          title: '发布任务',
+src/figma-restore/course-workflow/LessonPlanView.jsx:662:          desc: '小组展示结果，教师总结语言亮点并给出下一步挑战。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:664:          cue: '指向任务卡；确认每组知道要完成的产出',
+src/figma-restore/course-workflow/LessonPlanView.jsx:667:      resources: '任务卡、图片卡、计时器、奖励贴纸',
+src/figma-restore/course-workflow/LessonPlanView.jsx:668:      scenario: '课堂变成任务现场，学生以小队身份完成阶段挑战。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:682:      '用神秘、轻声的语气开场，展示关键道具或画面，引发学生好奇心。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:683:      '朗读或展示核心内容，放慢语速，配合表情和手势帮助理解。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:684:      '引导学生观察、体会角色感受，用面部表情或肢体模仿情绪。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:685:      '明确任务身份和最终挑战，推动学生进入下一环节。',
+src/figma-restore/course-workflow/LessonPlanView.jsx:699:        const cueMatch = scriptLines[i].match(/【动作\/引导】(.*)$/);
+src/figma-restore/course-workflow/LessonPlanView.jsx:702:          teacher = scriptLines[i].replace(/【动作\/引导】.*$/, '').trim();
+src/figma-restore/course-workflow/LessonPlanView.jsx:761:          requirements: isClassic ? `经典活动：${selectedClassic}` : (ideaText || ''),
+src/figma-restore/course-workflow/LessonPlanView.jsx:787:      console.error('生成草案失败:', err);
+src/figma-restore/course-workflow/LessonPlanView.jsx:798:        title: item?.title || defaultFlowSteps[index]?.title || `步骤${index + 1}`,
+src/figma-restore/course-workflow/LessonPlanView.jsx:805:      .map((item) => [item.teacher, item.cue ? `【动作/引导】${item.cue}` : ''].filter(Boolean).join(' '))
+src/figma-restore/course-workflow/LessonPlanView.jsx:809:      title: values.title || '新活动环节',
+src/figma-restore/course-workflow/LessonPlanView.jsx:810:      duration: `${values.time || 8}分钟`,
+src/figma-restore/course-workflow/LessonPlanView.jsx:857:      ? `${adjustText.trim()}（调整方向：${adjustChips.join('、')}）`
+src/figma-restore/course-workflow/LessonPlanView.jsx:903:      console.error('重新生成阶段失败:', err);
+src/figma-restore/course-workflow/LessonPlanView.jsx:939:      console.error('重新生成完整教案失败:', err);
+src/figma-restore/course-workflow/LessonPlanView.jsx:996:      console.error('添加环节失败:', err);
+src/figma-restore/course-workflow/LessonPlanView.jsx:1050:      console.error('重新生成环节失败:', err);
+src/figma-restore/course-workflow/LessonPlanView.jsx:1069:      console.warn('[saveStep] 未找到环节:', { phaseKey, stepIndex });
+src/figma-restore/course-workflow/LessonPlanView.jsx:1206:              title={t('common.actions', { defaultValue: isChinese ? '操作' : 'Actions' })}
+src/figma-restore/course-workflow/LessonPlanView.jsx:1789:                              title: isChinese ? '新步骤' : 'New Step',
+src/figma-restore/course-workflow/lesson-design/EditStepModal.jsx:46:      goal: isChinese ? '通过沉浸式情境激发好奇心，建立学习动机。' : 'Spark curiosity through an immersive scenario and build learning motivation.',
+src/figma-restore/course-workflow/lesson-design/EditStepModal.jsx:47:      activity: isChinese ? '全班在任务情境中观察线索、朗读信息，并用目标语言完成初步回应。' : 'Students observe clues, read mission information, and respond with the target language.',
+src/figma-restore/course-workflow/lesson-design/EditStepModal.jsx:48:      resources: isChinese ? 'AI图像生成设备、投影仪、任务信件、情境图片。' : 'AI image generator, projector, mission letter, scenario images.',
+src/figma-restore/course-workflow/lesson-design/EditStepModal.jsx:49:      scenario: isChinese ? '通过神秘信号、角色任务和视觉线索，营造需要学生共同解决问题的课堂情境。' : 'Use mystery signals, role tasks, and visual clues to create a collaborative classroom challenge.',
+src/figma-restore/course-workflow/lesson-design/EditStepModal.jsx:146:                      <button type="button" className="flow-step-add" onClick={() => add({ title: isChinese ? '新步骤' : 'New Step', desc: '', teacher: '', cue: '' })}>+ {t('common.add')}</button>
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:11:    ['语言目标：', 'Language Goal: '],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:12:    ['核心词汇：', 'Core Vocabulary: '],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:13:    ['核心句型：', 'Core Sentence Pattern: '],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:14:    ['可能回应：', 'Possible response: '],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:15:    ['分钟', 'min'],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:16:    ['引入', 'Engage'],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:17:    ['赋能', 'Empower'],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:18:    ['实践', 'Execute'],
+src/figma-restore/course-workflow/lesson-design/StepDetailModal.jsx:19:    ['升华', 'Elevate'],
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:10:  zh: ['创设悬念', '朗读来信', '情绪感知', '发布任务'],
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:15:  '创设悬念': { zh: '创设悬念', en: 'Build Suspense' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:16:  '朗读来信': { zh: '朗读来信', en: 'Read the Letter' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:17:  '情绪感知': { zh: '情绪感知', en: 'Emotion Awareness' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:18:  '发布任务': { zh: '发布任务', en: 'Announce Task' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:19:  'Build Suspense': { zh: '创设悬念', en: 'Build Suspense' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:20:  'Read the Letter': { zh: '朗读来信', en: 'Read the Letter' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:21:  'Emotion Awareness': { zh: '情绪感知', en: 'Emotion Awareness' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:22:  'Announce Task': { zh: '发布任务', en: 'Announce Task' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:29:  '情境开启',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:30:  '任务说明',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:31:  '合作探索',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:32:  '语言练习',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:33:  '成果分享',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:34:  '课堂收束',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:35:  '打开线索',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:36:  '小组探索',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:37:  '任务收束',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:41:  return isEn ? `Step ${index + 1}` : `步骤 ${index + 1}`;
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:110:    isEn ? 'Teacher guides students through the activity goal.' : '教师根据活动目标引导学生完成课堂任务。',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:111:    isEn ? 'Students respond, collaborate, and complete the task.' : '学生根据任务要求互动协作并完成产出。',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:135:      const responses = Array.from(tail.matchAll(/[（(]([^()（）]*(?:回应|学生|No|Yes)[^()（）]*)[）)]/gi)).map((item) => item[1].trim());
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:154:    /Shhh|special letter|信封|神秘|开场|letter/i,
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:155:    /from|Dear|sad|lonely|help us|朗读|来信|animals are not happy/i,
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:156:    /Look|elephant|panda|happy|excited|animal|情绪|感受|表情/i,
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:157:    /Let'?s help|ready|Rescue Team|team|任务|帮助|Are you ready/i,
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:169:    { text: '"Listen carefully. I have something special to show you."', cue: '用神秘、轻声的语气开场，展示关键道具或画面。', response: '' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:170:    { text: '"Let’s read the message together. What can you find?"', cue: '放慢语速朗读重点信息，配合表情和手势帮助理解。', response: '' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:171:    { text: '"Look closely. How do they feel? Can you say it in English?"', cue: '指向图片细节，引导学生观察、猜测并回应。', response: '' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:172:    { text: '"Now we know our mission. Are you ready to help?"', cue: '明确任务身份和最终挑战，推动学生进入下一环节。', response: '' },
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:178:    stageCue: cues[index] || '用清晰指令连接活动目标和学生行动。',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:184:      cue: line.cue || cues[index] || '用清晰指令连接活动目标和学生行动。',
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:201:    .map((item, index) => `${item?.title || `步骤${index + 1}`}：${item?.desc || ''}`)
+src/figma-restore/course-workflow/lesson-design/lessonDesignUtils.js:207:    .map((item) => [item?.teacher, item?.cue ? `【动作/引导】${item.cue}` : ''].filter(Boolean).join(' '))
+src/figma-restore/course-workflow/ppt/PptCanvas.jsx:13:  '双击编辑文本',
+src/figma-restore/course-workflow/ppt/pptData.js:5:  { key: 'engage', title: 'ENGAGE 引入', tone: 'engage', color: '#9b63dc' },
+src/figma-restore/course-workflow/ppt/pptData.js:6:  { key: 'empower', title: 'EMPOWER 赋能', tone: 'empower', color: '#3f83e8' },
+src/figma-restore/course-workflow/ppt/pptData.js:7:  { key: 'execute', title: 'EXECUTE 实践', tone: 'execute', color: '#4caf72' },
+src/figma-restore/course-workflow/ppt/pptData.js:8:  { key: 'elevate', title: 'ELEVATE 升华', tone: 'elevate', color: '#ff705d' },
+src/figma-restore/course-workflow/ppt/pptData.js:48:    name: '蓝色商务风',
+src/figma-restore/course-workflow/ppt/pptData.js:50:    description: '适合清晰、专业的课程说明。',
+src/figma-restore/course-workflow/ppt/pptData.js:63:    name: '红色商务风',
+src/figma-restore/course-workflow/ppt/pptData.js:65:    description: '适合重点突出、节奏鲜明的课件。',
+src/figma-restore/course-workflow/ppt/pptData.js:78:    name: '自然叠底商务风',
+src/figma-restore/course-workflow/ppt/pptData.js:80:    description: '适合更有空间感的展示。',
+src/figma-restore/course-workflow/ppt/pptData.js:204:  const title = rawStep.title || rawStep.name || `课件页面 ${index + 1}`;
+src/figma-restore/course-workflow/ppt/pptData.js:249:    title: rawPhase.title || '封面',
+src/figma-restore/course-workflow/ppt/pptData.js:255:        title: rawPhase.steps?.[0]?.title || '课程封面',
+src/figma-restore/course-workflow/ppt/pptData.js:259:            title: rawSlide.title || '课程封面',
+src/figma-restore/course-workflow/ppt/pptData.js:369:    : compactText(source.courseTitle || source.title || source.name || fallbackTitle || '课程课件', '课程课件', 38);
+src/figma-restore/course-workflow/ppt/pptData.js:372:    : compactText(source.description || source.subtitle || source.overview || '基于教案自动生成，可继续编辑内容与素材。', '基于教案自动生成，可继续编辑内容与素材。', 62);
+src/figma-restore/course-workflow/ppt/pptData.js:376:    title: isEnglish ? 'Course Cover' : '课程封面',
+src/figma-restore/course-workflow/ppt/pptData.js:383:        title: isEnglish ? 'Cover Title' : '封面标题',
+src/figma-restore/course-workflow/ppt/pptData.js:395:        title: isEnglish ? 'Cover Subtitle' : '封面副标题',
+src/figma-restore/course-workflow/ppt/pptData.js:407:        title: isEnglish ? 'Template Name' : '模板名称',
+src/figma-restore/course-workflow/ppt/pptData.js:423:    title: isEnglish ? 'Cover' : '封面',
+src/figma-restore/course-workflow/ppt/pptData.js:429:        title: isEnglish ? 'Course Cover' : '课程封面',
+src/figma-restore/course-workflow/ppt/pptData.js:439:    : compactText(step.duration, '课堂活动', 20);
+src/figma-restore/course-workflow/ppt/pptData.js:442:    : compactText(step.objective, '明确本环节的学习目标，带着问题进入课堂任务。', 110);
+src/figma-restore/course-workflow/ppt/pptData.js:445:    : compactText(step.activity, '围绕主题完成观察、交流、表达与产出。', 100);
+src/figma-restore/course-workflow/ppt/pptData.js:451:    title: isEnglish ? `${stepTitle} · Intro` : `${step.title} · 导入页`,
+src/figma-restore/course-workflow/ppt/pptData.js:457:        title: isEnglish ? 'Phase Label' : '阶段标签',
+src/figma-restore/course-workflow/ppt/pptData.js:469:        title: isEnglish ? 'Page Title' : '页面标题',
+src/figma-restore/course-workflow/ppt/pptData.js:481:        title: isEnglish ? 'Goal Summary' : '目标摘要',
+src/figma-restore/course-workflow/ppt/pptData.js:482:        content: isEnglish ? `Goal: ${objective}` : `目标：${objective}`,
+src/figma-restore/course-workflow/ppt/pptData.js:493:        title: isEnglish ? 'Activity Summary' : '活动摘要',
+src/figma-restore/course-workflow/ppt/pptData.js:505:        title: isEnglish ? 'Duration Label' : '时间标签',
+src/figma-restore/course-workflow/ppt/pptData.js:506:        content: isEnglish ? `Duration ${duration}` : `时长 ${duration}`,
+src/figma-restore/course-workflow/ppt/pptData.js:517:        title: isEnglish ? 'Classroom Tip' : '课堂提示',
+src/figma-restore/course-workflow/ppt/pptData.js:518:        content: isEnglish ? 'Tip: Start from a question and let students speak, try, and connect first.' : '提示：从问题出发，让学生先说、先试、先连接。',
+src/figma-restore/course-workflow/ppt/pptData.js:539:      : '教师提出任务；学生小组协作完成挑战；展示作品并互相反馈；教师总结关键方法'
+src/figma-restore/course-workflow/ppt/pptData.js:543:    : compactText(step.resources, '材料、图片、视频或课堂工具按需补充。', 90);
+src/figma-restore/course-workflow/ppt/pptData.js:551:      : `${step.title} · 活动页${variant > 0 ? ` ${variant + 1}` : ''}`,
+src/figma-restore/course-workflow/ppt/pptData.js:557:        title: isEnglish ? 'Activity Page Title' : '活动页标题',
+src/figma-restore/course-workflow/ppt/pptData.js:569:        title: isEnglish ? 'Phase Badge' : '阶段角标',
+src/figma-restore/course-workflow/ppt/pptData.js:581:        title: isEnglish ? 'Procedure Title' : '流程标题',
+src/figma-restore/course-workflow/ppt/pptData.js:582:        content: isEnglish ? 'Class Flow' : '课堂流程',
+src/figma-restore/course-workflow/ppt/pptData.js:593:        title: isEnglish ? `Flow ${index + 1}` : `流程 ${index + 1}`,
+src/figma-restore/course-workflow/ppt/pptData.js:605:        title: isEnglish ? 'Material Note' : '材料提示',
+src/figma-restore/course-workflow/ppt/pptData.js:606:        content: isEnglish ? `Materials: ${resource}` : `素材与支持：${resource}`,
+src/figma-restore/course-workflow/ppt/pptData.js:617:        title: isEnglish ? 'Edit Note' : '生成说明',
+src/figma-restore/course-workflow/ppt/pptData.js:618:        content: isEnglish ? 'You can replace images, videos, or audio assets.' : '可继续替换图片、视频或音频素材。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:41:  return String(value).includes('分钟') ? amount * 60 : amount;
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:45:  if (value === '慢速') return 0.85;
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:46:  if (value === '快速') return 1.15;
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:51:  if (asset.code === 'C1') return `生成情绪氛围BGM，情绪：${values.emotion || '安静'}，时长：${values.duration || '1分钟'}，纯器乐，适合儿童英语PPT课堂。`;
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:52:  if (asset.code === 'C2') return `生成活动背景乐，活动类型：${values.activity || '互动体能'}，节奏：${values.tempo || '中速'}，适合儿童英语课堂活动。`;
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:54:  if (asset.code === 'C5') return `生成教学歌曲，主题：${values.topic || '儿童英语课堂'}，风格：${values.style || '轻快流行'}，歌词：${values.lyrics || 'AI自动生成英文歌词'}`;
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:55:  return `生成${asset.title}，${asset.desc || ''}`;
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:66:      audioDuration: values.duration || '1分钟',
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:82:  ['安静', '😌'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:83:  ['欢快', '😄'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:84:  ['悬念', '😮'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:85:  ['动感', '⚡'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:86:  ['庆祝', '🎁'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:87:  ['伤感', '😢'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:88:  ['白噪音', '♧'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:92:  ['30秒', '适合课堂过渡 / 安静练习'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:93:  ['1分钟', '适合小组活动 / 冥想放松'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:94:  ['2分钟', '适合完整活动 / 长时陪伴'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:95:  ['3分钟', '适合长篇故事 / 深度沉浸'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:99:  ['互动体能', Dumbbell],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:100:  ['艺术创作', Palette],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:101:  ['瘦身冥想', UserRound],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:102:  ['专注练习', BookOpen],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:103:  ['成果展示', Trophy],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:104:  ['课间休息', UserRound],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:108:  ['慢速 60-80 BPM', '冥想 / 放松 / 睡前', Clock],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:109:  ['中速 80-100 BPM', '日常活动 / 绘画 / 手工', Activity],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:110:  ['快速 100-140 BPM', '比赛 / 游戏 / 体能闯关', Zap],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:114:  ['课堂问候', '👋', 'Hello! Good morning! How are you today?'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:115:  ['水果主题', '🍎', 'apple\nbanana\norange\npear'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:116:  ['颜色主题', '🎨', 'red\nyellow\nblue\ngreen'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:117:  ['数字歌', '✣', 'one\ntwo\nthree\nfour\nfive'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:121:  ['女声', '温暖亲切', '#cbb7ff'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:122:  ['男声', '清晰有力', '#ffffff'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:123:  ['童声', '活泼可爱', '#9ad7ad'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:127:  ['慢速', '适合初学', Clock],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:128:  ['正常', '日常跟读', Activity],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:129:  ['快速', '挑战跟读', Zap],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:133:  ['水果认知', '🍎'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:134:  ['颜色学习', '🎨'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:135:  ['数字歌', '✚'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:136:  ['身体部位', '♡'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:137:  ['动物叫声', '🦁'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:138:  ['家庭成员', '👨‍👩‍👧'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:139:  ['天气歌', '☁'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:140:  ['星期歌', '◇'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:144:  ['轻快流行', '活泼欢快 · 适合律动'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:145:  ['童谣摇滚', '节奏感强 · 适合跟唱'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:146:  ['说唱节奏', '朗朗上口 · 适合跟读'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:147:  ['温馨民谣', '柔和舒缓 · 适合睡前'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:156:            <b>{step > index ? <Check size={11} /> : index + 1}</b><LocalizedValue value={item.replace('选择', '').replace('生成结果', '生成')} catalog="audioOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:165:function C1Stepper({ step, done = false, items = ['情绪', '时长', '生成'] }) {
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:185:    topic: '水果认知 颜色学习 天气歌 身体部位 星期歌',
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:186:    style: '轻快流行',
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:218:      <C1Stepper step={isResult ? 3 : step} done={isResult} items={['主题', '风格', '歌词', '生成']} />
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:315:    desc: ['支持多角色对话场景生成', 'AI自动分配不同音色'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:319:    desc: ['支持语音旁白 + 背景音乐同步生成', '适合情绪放松、睡前冥想等场景'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:358:    voice: '女声',
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:359:    speed: '正常',
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:360:    duration: '1分钟',
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:385:      <C1Stepper step={isResult ? 1 : step} done={isResult} items={['内容', '生成']} />
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:388:          <div className="ppt-audio-section-title"><LocalizedValue value={asset.code === 'C4' ? '输入对话脚本' : '输入引导词'} catalog="audioOptionLabels" /></div>
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:393:          <OptionGrid options={['女声', '男声', '童声']} value={values.voice} onChange={(value) => setValue('voice', value)} columns={3} labelCatalog="audioOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:394:          <OptionGrid options={['30秒', '1分钟', '2分钟']} value={values.duration} onChange={(value) => setValue('duration', value)} columns={3} labelCatalog="audioOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:441:  const [values, setValues] = React.useState({ text: '', voice: '女声', speed: '正常', template: '课堂问候' });
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:470:      <C1Stepper step={isResult ? 2 : step} done={isResult} items={['输入文本', '发音人', '生成']} />
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:573:  const [values, setValues] = React.useState({ activity: '互动体能', tempo: '中速 80-100 BPM' });
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:598:      <C1Stepper step={isResult ? 2 : step} done={isResult} items={['活动类型', '节奏', '生成']} />
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:677:  const [values, setValues] = React.useState({ emotion: '安静', duration: '1分钟' });
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:750:              <em>{values.duration === '30秒' ? '0:30' : values.duration === '1分钟' ? '1:30' : values.duration === '2分钟' ? '2:00' : '3:00'}</em>
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:798:  const [values, setValues] = React.useState({ emotion: '安静', duration: '30秒' });
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:875:              <dt><LocalizedText id="audioWizard.1690d1c10b" /></dt><dd><LocalizedValue value={values.emotion || values.topic || values.activity || '自动匹配'} catalog="audioOptionLabels" /></dd>
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:876:              <dt><LocalizedText id="audioWizard.29d0552d2e" /></dt><dd><LocalizedValue value={values.duration || '1分钟'} catalog="audioOptionLabels" /></dd>
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:883:        <button type="button" className="ppt-ghost-btn" onClick={step === 0 ? onBack : () => setStep((current) => current - 1)}><LocalizedValue value={step === 0 ? '返回类型' : '上一步'} catalog="audioOptionLabels" /></button>
+src/figma-restore/course-workflow/ppt/right-asset-panel/AudioAssetWizard.jsx:889:          {step < (asset.code === 'C1' ? 2 : 1) ? <LocalizedValue value="下一步" catalog="audioOptionLabels" /> : <><Sparkles size={14} /><LocalizedText id="audioWizard.b74569c1b3" /></>}
+src/figma-restore/course-workflow/ppt/right-asset-panel/GeneratedAssetResults.jsx:54:            {/* <button type="button" className="ppt-ghost-btn" onClick={onSaveOnly}><Download size={14} />仅存库</button> */}
+src/figma-restore/course-workflow/ppt/right-asset-panel/GenerationProgress.jsx:4:const steps = ['组装 Prompt 模板', '调用生成工作流', '轮询任务状态', '获取生成结果'];
+src/figma-restore/course-workflow/ppt/right-asset-panel/GenerationProgress.jsx:25:            <em className={index === 0 ? 'done' : index === 1 ? 'running' : ''}>{index === 0 ? '完成' : index === 1 ? '进行中' : '等待'}</em>
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:168:  B2: (values) => `生成PPT意境海报图，包含图文排版。场景：${values.scene || '课堂主题场景'}。叠加文字：${values.overlayText || '课程主题标题'}。风格：${values.style}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:169:  B3: (values) => `批量生成统一版式的词汇闪卡。词汇：${(values.flashWords || []).join(', ') || values.words || 'apple, banana'}。${values.includeChinese !== false ? '包含中文释义。' : '不包含中文释义。'}${values.includePhonetic ? '包含音标。' : ''}`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:170:  B4: (values) => `生成故事配图，预留${values.whitespace || '底部'}文字区域。故事场景：${values.storyScene || '儿童绘本故事场景'}。角色描述：${values.storyCharacter || '无指定角色'}。风格：${values.style}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:171:  B5: (values) => `生成活动氛围图。活动主题：${values.theme || '体能'}。活动标题：${values.activityTitle || '课堂活动'}。画面适合PPT课堂导入。风格：${values.style}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:172:  B6: (values) => `生成主题词图谱，场景词汇标注。场景：${values.topicScene || '课堂主题场景'}。标注词汇：${values.topicWords || '至少5个主题词汇'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:173:  B7: (values) => `生成文本配图。文字框样式：${values.textLayout || '对话气泡'}。文字内容：${values.textContent || '课堂问题或短对话'}。背景：${values.textBackground || '课堂主题背景'}。风格：${values.style}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:174:  B8: (values) => `生成知识总结图。图表类型：${values.chart || '思维导图'}。中心主题：${values.knowledgeTopic || '课程知识点'}。分支内容：${values.knowledgeItems || '核心知识点列表'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:175:  B9: (values) => `生成多页绘本故事配图，保持角色一致。故事名：${values.storybookTitle || '绘本故事'}。故事内容：${values.storybookContent || '儿童英语绘本故事'}。风格：${values.storybookStyle || '水彩绘本'}。阅读年级：${values.storybookGrade || '小学低年级'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:176:  B10: (values) => `生成四格漫画，固定四格布局。漫画风格：${values.comicStyle || 'Q版萌系'}。${values.comicDialogue !== false ? '包含对话气泡文字。' : '不包含文字。'}目标短语/句型：${values.phrase || '课堂目标句型'}。主角：${values.comicCharacter || '儿童友好角色'}。情节：${values.plot || 'AI自动编排起承转合'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:177:  B11: (values) => `生成动作示意图。IP角色：${values.character || 'Poppy'}。动作类型：${values.actionType || '瑜伽 / 姿势'}。动作：${(values.actions || [values.action]).filter(Boolean).join(', ')}。要求清晰展示动作姿态，适合TPR课堂。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:303:          console.warn('[ImageAssetWizard] 后台任务完成状态同步失败:', error);
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:343:    Poppy: { tag: t('assetPanel.iwLively'), short: 'P', base: '#ff705d', colors: ['#ff705d', '#ff8a7a', '#f97360'], prompt: 'Poppy，活泼友好的IP角色，透明背景，适合儿童英语课堂场景。' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:344:    Edi: { tag: t('assetPanel.iwCalm'), short: 'E', base: '#4f8cff', colors: ['#4f8cff', '#60a5fa', '#2563eb'], prompt: 'Edi，冷静聪明的IP角色，透明背景，正在引导学生观察和思考。' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:345:    Rolly: { tag: t('assetPanel.iwWarm'), short: 'R', base: '#22c55e', colors: ['#22c55e', '#34d399', '#16a34a'], prompt: 'Rolly，温暖可靠的IP角色，透明背景，动作亲切自然。' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:346:    Milo: { tag: t('assetPanel.iwConfident'), short: 'M', base: '#f59e0b', colors: ['#f59e0b', '#fbbf24', '#d97706'], prompt: 'Milo，自信开朗的IP角色，透明背景，站姿积极有表现力。' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:347:    Ace: { tag: t('assetPanel.iwClever'), short: 'A', base: '#8b5cf6', colors: ['#8b5cf6', '#a78bfa', '#7c3aed'], prompt: 'Ace，机智敏捷的IP角色，透明背景，动作轻快，适合趣味课堂。' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:354:    { name: t('assetPanel.iwForestClassroom'), symbol: '葉', css: 'radial-gradient(circle at 18% 28%,#bbf7d0 0 2.6rem,transparent 2.7rem),radial-gradient(circle at 76% 24%,#fde68a 0 2rem,transparent 2.1rem),linear-gradient(135deg,#dcfce7 0%,#ecfccb 48%,#fef3c7 100%)' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:355:    { name: t('assetPanel.iwOceanLab'), symbol: '水', css: 'radial-gradient(circle at 22% 28%,rgba(255,255,255,.72) 0 .65rem,transparent .7rem),radial-gradient(circle at 72% 64%,rgba(255,255,255,.55) 0 .9rem,transparent .95rem),linear-gradient(135deg,#bae6fd 0%,#a7f3d0 50%,#e0f2fe 100%)' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:362:    { label: t('assetPanel.iwForestExplore'), value: '森林教室，寻找动物单词' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:363:    { label: t('assetPanel.iwOceanLabExp'), value: '海底实验室，观察颜色词汇' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:364:    { label: t('assetPanel.iwFarmSports'), value: '农场运动会，学习动物动作' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:523:    setValue('ipBgPrompt', isEn ? `${values.ipScene} background, bright and clear, suitable for PPT slides, no text.` : `${values.ipScene} 背景画面，明亮清晰，适合PPT课件，无文字。`);
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1776:    style: asset.code === 'B4' ? (isEn ? 'Realistic Photography' : '写实摄影') : (isEn ? 'Cartoon Illustration' : '卡通插画'),
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1778:    whitespace: isEn ? 'Bottom' : '底部',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1779:    theme: isEn ? 'Fitness' : '体能',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1781:    chart: isEn ? 'Mind Map' : '思维导图',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1782:    comicStyle: isEn ? 'Q-version cute' : 'Q版萌系',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1784:    action: isEn ? 'Standing Stretch' : '站立伸展',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1786:    actionType: isEn ? 'Yoga / Pose' : '瑜伽 / 姿势',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1792:    textLayout: isEn ? 'Dialogue Bubble' : '对话气泡',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1798:    storybookStyle: isEn ? 'Watercolor Picture Book' : '水彩绘本',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1799:    storybookGrade: isEn ? 'Grade 2 (7-8 years)' : '小二（7-8岁）',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1801:    ipScene: isEn ? 'Space classroom, learning planet words' : '太空教室，认识星球单词',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1802:    ipBgPrompt: isEn ? 'Space classroom background, bright, suitable for PPT cover, no text.' : '太空教室背景，明亮、适合PPT封面，无文字。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1841:            tags: ['AI生成', asset.code, response.imageSubtype].filter(Boolean),
+src/figma-restore/course-workflow/ppt/right-asset-panel/ImageAssetWizard.jsx:1845:          console.error('[ImageAssetWizard] 自动保存生成图片失败:', saveError);
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:166:    const typeTag = tags.find((tag) => tag && tag !== 'AI生成' && !/^B\d+/i.test(tag));
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:167:    const sourceTag = tags.includes('AI生成') ? 'AI生成' : '素材库';
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:170:      name: item.name || '图片素材',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:172:      type: item.category?.name || typeTag || 'PPT素材',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:173:      size: item.size || '图片素材',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:188:    const typeTag = tags.find((tag) => tag && tag !== 'AI生成');
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:191:      name: item.name || '音频素材',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:192:      source: tags.includes('AI生成') ? 'AI生成' : '素材库',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:193:      type: typeTag || '音频',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:204:        audioType: typeTag || '音频素材',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:205:        theme: item.description || item.name || '素材库音频',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:206:        style: tags.join(' / ') || '未标注',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:207:        lyric: '无歌词',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:216:    const typeTag = tags.find((tag) => tag && tag !== 'AI生成' && tag !== '课程同步');
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:219:      name: item.name || '视频素材',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:220:      source: tags.includes('AI生成') ? 'AI生成' : tags.includes('课程同步') ? '课程同步' : '素材库',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:221:      type: typeTag || '视频',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:234:        videoType: typeTag || '视频素材',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:235:        scene: item.description || item.name || '素材库视频',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:236:        language: tags.join(' / ') || '未标注',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:237:        spec: item.description || '素材库视频',
+src/figma-restore/course-workflow/ppt/right-asset-panel/PptLibraryPickerModal.jsx:260:      console.error('[PptLibraryPickerModal] 素材库加载失败:', error);
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:15:const steps = ['场景 · 角色', '词汇与句型', '生成分镜', '生成视频'];
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:16:const storySteps = ['角色与方向', '叙事选项', '生成分镜', '生成视频'];
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:17:const scenes = ['森林', '沙滩', '海洋', '农场', '太空', '雪山'];
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:25:const bubbleTypes = ['胶囊', '圆形', '方形', '爆炸星'];
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:27:  { text: '生成开场动画', status: '已完成', state: 'done' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:28:  { text: '第一关：单词击打', status: '已完成', state: 'done' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:29:  { text: '第二关：平衡桥', status: '进行中', state: 'running' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:30:  { text: '合成最终视频', status: '等待', state: 'waiting' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:33:  { text: '场景建立 · 角色登场', status: '已完成', state: 'done' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:34:  { text: '危机出现', status: '已完成', state: 'done' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:35:  { text: '挑战：Snake pose', status: '进行中', state: 'running' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:36:  { text: '挑战：Jump high', status: '等待', state: 'waiting' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:37:  { text: '通关庆祝', status: '等待', state: 'waiting' },
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:43:      shield: '拯救型：伙伴被困，完成挑战来拯救',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:44:      map: '探险型：追踪线索，完成任务抵达宝藏',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:45:      cup: '竞赛型：友谊挑战赛，比拼通关',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:46:      gear: '解谜型：魔法失控，用正确动作恢复秩序',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:49:      '生成适合儿童英语PPT课件的情境叙事视频。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:50:      `叙事模板：${templateLabels[values.template] || templateLabels.shield}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:51:      `目标动作或词汇：${(values.words || []).join('、') || '无'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:52:      `目标句型：${(values.sentences || []).join('；') || '无'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:53:      `旁白语言：${values.narrationLanguage === 'bilingual' ? '中英双语' : '英文'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:54:      `背景音乐：${values.bgm ? '自动匹配' : '关闭'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:55:      `音效：${values.sfx ? '开启' : '关闭'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:56:      '保持角色形象一致，画面清晰、活泼、连贯。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:60:    '生成适合儿童英语PPT课件的体能闯关视频。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:61:    `场景：${values.scene || '森林'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:62:    `闯关词汇：${(values.words || []).join('、') || '无'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:63:    `引导句型：${(values.sentences || []).join('；') || '无'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:64:    `单词气泡样式：${values.bubble || '胶囊'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:65:    `背景音乐：${values.bgm ? '开启' : '关闭'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:66:    `英文旁白：${values.voice ? '开启' : '关闭'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:67:    `单词发音音效：${values.sfx ? '开启' : '关闭'}。`,
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:68:    '保持角色形象一致，动作清晰，节奏活泼。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:118:            console.warn('[VideoAssetWizard] 后台任务完成状态同步失败:', error);
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:127:            error: status?.error || '视频生成失败',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:142:      tags: ['AI生成', asset.code].filter(Boolean),
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:332:          ['16:9', '横版'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:333:          ['9:16', '竖版'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:353:  wordTitle = '第一关 · 单词击打',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:354:  wordHint = '词汇将在视频中逐一出现供学生击打',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:355:  sentenceTitle = '第二关 · 平衡桥',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:356:  sentenceHint = '每个句型对应一座平衡桥关卡',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:408:      <div className="ppt-v1-required-line"><b>{sentenceTitle.includes('第二关') ? '* ' : ''}<LocalizedValue value={sentenceTitle} catalog="videoOptionLabels" /></b><span>{sentenceHint ? <>（<LocalizedValue value={sentenceHint} catalog="videoOptionLabels" />）</> : null}</span></div>
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:473:          ['bgm', '背景音乐', '动感音乐随关卡节奏变化'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:474:          ['voice', '英文旁白', 'AI语音朗读引导词'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:475:          ['sfx', '单词发音音效', '击破单词时播放该词发音'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:597:    scene: '森林',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:602:    bubble: '胶囊',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:623:      setErrorMessage(error.message || i18next.t('videoOptionLabels.分镜图片生成失败'));
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:631:      setErrorMessage(i18next.t('videoOptionLabels.请先生成分镜图片'));
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:644:      setErrorMessage(error.message || i18next.t('videoOptionLabels.视频生成任务提交失败'));
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:674:              <LocalizedValue value={storyboardGenerating ? '正在生成分镜' : '正在生成视频'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:680:              <LocalizedValue value={step === 0 ? '取消' : '上一步'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:692:              <LocalizedValue value={step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:722:          ['16:9', '横版'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:723:          ['9:16', '竖版'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:737:    ['shield', '拯救型', '伙伴被困，完成挑战来拯救'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:738:    ['map', '探险型', '追踪线索，完成任务抵达宝藏'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:739:    ['cup', '竞赛型', '友谊挑战赛，比拼通关'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:740:    ['gear', '解谜型', '魔法失控，用正确动作恢复秩序'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:759:        wordTitle="目标动作 / 词汇"
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:761:        sentenceTitle="目标句型（可选）"
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:770:    ['开场', '场景建立 · 角色登场', 'Poppy 和 Edi 出现在场景中，镜头缓缓推进，建立故事氛围。', '"Welcome! Are you ready for an adventure?"', 'P E'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:771:    ['危机', '危机出现', '突发事件打破平静！拯救型叙事：需要完成挑战才能解决问题。', '"Oh no! We need your help!"', 'P E'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:772:    ['闯关', '挑战：Snake pose', 'Poppy 面对关卡，提示动作"Snake pose"。口号："Be long and thin like a snake!"', '"Challenge! Can you do "Snake pose"?"', 'P'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:773:    ['闯关', '挑战：Jump high', 'Poppy 和 Edi 出现场景中，镜头缓缓推进，建立故事氛围。', '"Challenge! Can you do "Jump high"?"', 'E'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:774:    ['胜利', '场景建立 · 角色登场', 'Poppy 和 Edi 出现场景中，镜头缓缓推进，建立故事氛围。', '"Amazing! You did it!"', 'P E'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:791:            <blockquote>{quote}<small>{index > 1 ? title.replace('挑战：', '') : ''}</small></blockquote>
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:802:    title: '场景建立 · 角色登场',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:803:    desc: 'Poppy 和 Edi 出现在沙滩场景中，镜头缓缓推进，建立冒险故事氛围。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:804:    tags: ['开场', '远景→推进', 'Poppy', 'Edi'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:807:    title: '危机出现',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:808:    desc: '突发事件打破平静，伙伴需要完成挑战才能继续前进。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:809:    tags: ['危机', '特写→摇镜', 'Poppy', 'Edi'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:812:    title: '挑战：Snake pose',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:813:    desc: 'Poppy 面对关卡，提示动作 Snake pose，并引导学生模仿。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:814:    tags: ['闯关', '中景·跟拍', 'Poppy'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:817:    title: '挑战：Jump high',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:818:    desc: 'Edi 接力挑战 Jump high，画面保留鼓励和互动节奏。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:819:    tags: ['闯关', '中景·跟拍', 'Edi'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:822:    title: '通关庆祝',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:823:    desc: '角色完成任务后一起庆祝，镜头拉远收束故事。',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:824:    tags: ['胜利', '远景→推进', 'Poppy', 'Edi'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:888:              ['bilingual', '双语'],
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:908:            <LocalizedValue value={values.bgm ? '自动匹配' : '已关闭'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1026:            <LocalizedValue value={activeFrame === storyFrames.length - 1 ? '保存返回' : '下一帧 →'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1036:    shield: '拯救型',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1037:    map: '探险型',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1038:    cup: '竞赛型',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1039:    gear: '解谜型',
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1043:      <div><span><LocalizedText id="videoWizard.ca2b33abc8" /></span><strong><LocalizedValue value={templateLabels[values.template] || '拯救型'} catalog="videoOptionLabels" /></strong></div>
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1120:      setErrorMessage(error.message || i18next.t('videoOptionLabels.分镜图片生成失败'));
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1128:      setErrorMessage(i18next.t('videoOptionLabels.请先生成分镜图片'));
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1141:      setErrorMessage(error.message || i18next.t('videoOptionLabels.视频生成任务提交失败'));
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1171:              <LocalizedValue value={storyboardGenerating ? '正在生成分镜' : '正在生成视频'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1177:              <LocalizedValue value={step === 0 ? '取消' : '上一步'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/VideoAssetWizard.jsx:1189:              <LocalizedValue value={step === 2 && !storyboard ? '生成分镜图片' : step === 3 ? '生成视频' : '下一步'} catalog="videoOptionLabels" />
+src/figma-restore/course-workflow/ppt/right-asset-panel/assetPanelData.js:202:  const title = asset?.title || (kind === 'video' ? '视频素材' : kind === 'audio' ? '音频素材' : '图片素材');
+src/figma-restore/course-workflow/ppt/right-panel/PptAudioConfigPanel.jsx:10:  { value: '背景音乐', label: t('pptAudioUi.typeBgm') },
+src/figma-restore/course-workflow/ppt/right-panel/PptAudioConfigPanel.jsx:11:  { value: '课堂口播', label: t('pptAudioUi.typeVoiceover') },
+src/figma-restore/course-workflow/ppt/right-panel/PptAudioConfigPanel.jsx:12:  { value: '音效', label: t('pptAudioUi.typeSound') },
+src/figma-restore/course-workflow/ppt/right-panel/PptAudioConfigPanel.jsx:13:  { value: '词汇朗读', label: t('pptAudioUi.typeVocab') },
+src/figma-restore/course-workflow/ppt/right-panel/PptAudioConfigPanel.jsx:14:  { value: '对话音频', label: t('pptAudioUi.typeDialogue') },
+src/figma-restore/course-workflow/ppt/right-panel/PptTextConfigPanel.jsx:46:  return ['双击编辑文本', 'Double-click to edit text'].includes(content.trim()) ? '' : content;
+src/figma-restore/course-workflow/ppt/right-panel/PptTextConfigPanel.jsx:234:              value={selectedLayer.fontFamily || '思源黑体 (Bold)'}
+src/figma-restore/course-workflow/ppt/right-panel/PptTextConfigPanel.jsx:236:                { value: '思源黑体 (Bold)', label: t('assetPanel.fontSourceHanBold') },
+src/figma-restore/course-workflow/workflowData.js:2:  { key: 'map', title: '课程地图' },
+src/figma-restore/course-workflow/workflowData.js:3:  { key: 'lesson', title: '教案设计' },
+src/figma-restore/course-workflow/workflowData.js:4:  { key: 'ppt', title: 'PPT 课件' },
+src/figma-restore/course-workflow/workflowData.js:12:    name: '情境启动',
+src/figma-restore/course-workflow/workflowData.js:13:    duration: '8分钟',
+src/figma-restore/course-workflow/workflowData.js:17:        title: '任务信件导入',
+src/figma-restore/course-workflow/workflowData.js:18:        duration: '3分钟',
+src/figma-restore/course-workflow/workflowData.js:19:        goal: '激活兴趣，进入角色身份。',
+src/figma-restore/course-workflow/workflowData.js:20:        activity: '教师展示任务信件，引导学生预测今天要解决的问题。',
+src/figma-restore/course-workflow/workflowData.js:22:        resources: '任务信件 / 封面图 / 关键词卡',
+src/figma-restore/course-workflow/workflowData.js:25:        title: '情境词汇热身',
+src/figma-restore/course-workflow/workflowData.js:26:        duration: '5分钟',
+src/figma-restore/course-workflow/workflowData.js:27:        goal: '唤醒已知词汇，建立任务语境。',
+src/figma-restore/course-workflow/workflowData.js:28:        activity: '学生用动作、图片或快速问答说出相关词汇。',
+src/figma-restore/course-workflow/workflowData.js:30:        resources: '词汇卡 / 图片提示',
+src/figma-restore/course-workflow/workflowData.js:37:    name: '语言赋能',
+src/figma-restore/course-workflow/workflowData.js:38:    duration: '12分钟',
+src/figma-restore/course-workflow/workflowData.js:42:        title: '语言工具箱示范',
+src/figma-restore/course-workflow/workflowData.js:43:        duration: '6分钟',
+src/figma-restore/course-workflow/workflowData.js:44:        goal: '理解目标句型的意义和使用场景。',
+src/figma-restore/course-workflow/workflowData.js:45:        activity: '教师通过示范对话展示核心句型，学生跟读并替换关键词。',
+src/figma-restore/course-workflow/workflowData.js:47:        resources: '句型条 / 例句卡',
+src/figma-restore/course-workflow/workflowData.js:50:        title: '同伴微练习',
+src/figma-restore/course-workflow/workflowData.js:51:        duration: '6分钟',
+src/figma-restore/course-workflow/workflowData.js:52:        goal: '在低压力情境中尝试输出。',
+src/figma-restore/course-workflow/workflowData.js:53:        activity: '两人一组抽卡问答，完成 3 轮替换表达。',
+src/figma-restore/course-workflow/workflowData.js:55:        resources: '抽卡任务 / 计时器',
+src/figma-restore/course-workflow/workflowData.js:62:    name: '创作运用',
+src/figma-restore/course-workflow/workflowData.js:63:    duration: '15分钟',
+src/figma-restore/course-workflow/workflowData.js:67:        title: '小组任务创作',
+src/figma-restore/course-workflow/workflowData.js:68:        duration: '10分钟',
+src/figma-restore/course-workflow/workflowData.js:69:        goal: '在真实任务中整合语言工具。',
+src/figma-restore/course-workflow/workflowData.js:70:        activity: '小组完成最终作品草稿，并标出必须使用的目标语言。',
+src/figma-restore/course-workflow/workflowData.js:72:        resources: '任务单 / 彩笔 / 小组海报',
+src/figma-restore/course-workflow/workflowData.js:75:        title: '同伴巡展反馈',
+src/figma-restore/course-workflow/workflowData.js:76:        duration: '5分钟',
+src/figma-restore/course-workflow/workflowData.js:77:        goal: '通过反馈优化表达。',
+src/figma-restore/course-workflow/workflowData.js:78:        activity: '学生走访其他小组，留下一个 praise 和一个 suggestion。',
+src/figma-restore/course-workflow/workflowData.js:80:        resources: '反馈贴纸',
+src/figma-restore/course-workflow/workflowData.js:87:    name: '回顾升华',
+src/figma-restore/course-workflow/workflowData.js:88:    duration: '5分钟',
+src/figma-restore/course-workflow/workflowData.js:92:        title: '成果展示',
+src/figma-restore/course-workflow/workflowData.js:93:        duration: '3分钟',
+src/figma-restore/course-workflow/workflowData.js:94:        goal: '完成公开表达，获得成就感。',
+src/figma-restore/course-workflow/workflowData.js:95:        activity: '每组用目标语言进行简短展示。',
+src/figma-restore/course-workflow/workflowData.js:97:        resources: '展示区 / 作品卡',
+src/figma-restore/course-workflow/workflowData.js:100:        title: '成长复盘',
+src/figma-restore/course-workflow/workflowData.js:101:        duration: '2分钟',
+src/figma-restore/course-workflow/workflowData.js:102:        goal: '把课堂经验迁移到真实生活。',
+src/figma-restore/course-workflow/workflowData.js:103:        activity: '学生选择一句今天最有用的话，并说出下次使用场景。',
+src/figma-restore/course-workflow/workflowData.js:105:        resources: '出口票',
+src/figma-restore/course-workflow/workflowData.js:115:    type: '绘本阅读',
+src/figma-restore/course-workflow/workflowData.js:138:    type: '词汇学习',
+src/figma-restore/course-workflow/workflowData.js:168:    'art': isEn ? 'Artistic Expression' : '艺术表达',
+src/figma-restore/course-workflow/workflowData.js:169:    'body': isEn ? 'Physical Exploration' : '体感探索',
+src/figma-restore/course-workflow/workflowData.js:170:    'music': isEn ? 'Musical Rhythm' : '音乐律动',
+src/figma-restore/course-workflow/workflowData.js:171:    'AI Auto Match': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+src/figma-restore/course-workflow/workflowData.js:172:    '艺术表达': isEn ? 'Artistic Expression' : '艺术表达',
+src/figma-restore/course-workflow/workflowData.js:173:    '体感探索': isEn ? 'Physical Exploration' : '体感探索',
+src/figma-restore/course-workflow/workflowData.js:174:    '音乐律动': isEn ? 'Musical Rhythm' : '音乐律动',
+src/figma-restore/course-workflow/workflowData.js:175:    'AI 自动匹配': isEn ? 'AI Auto Match' : 'AI 自动匹配',
+src/figma-restore/course-workflow/workflowData.js:177:  return pathMap[pathValue] || (isEn ? 'Artistic Expression' : '艺术表达');
+src/figma-restore/course-workflow/workflowData.js:182:    'listening': isEn ? 'Listening' : '听力理解',
+src/figma-restore/course-workflow/workflowData.js:183:    'speaking': isEn ? 'Speaking' : '口语表达',
+src/figma-restore/course-workflow/workflowData.js:184:    'reading': isEn ? 'Reading' : '阅读理解',
+src/figma-restore/course-workflow/workflowData.js:185:    'writing': isEn ? 'Writing' : '书面表达',
+src/figma-restore/course-workflow/workflowData.js:186:    'integrated': isEn ? 'Integrated Skills' : '综合能力',
+src/figma-restore/course-workflow/workflowData.js:187:    '听力理解': isEn ? 'Listening' : '听力理解',
+src/figma-restore/course-workflow/workflowData.js:188:    '口语表达': isEn ? 'Speaking' : '口语表达',
+src/figma-restore/course-workflow/workflowData.js:189:    '阅读理解': isEn ? 'Reading' : '阅读理解',
+src/figma-restore/course-workflow/workflowData.js:190:    '书面表达': isEn ? 'Writing' : '书面表达',
+src/figma-restore/course-workflow/workflowData.js:191:    '综合能力': isEn ? 'Integrated Skills' : '综合能力',
+src/figma-restore/course-workflow/workflowData.js:198:    return isEn ? ['Listening', 'Speaking'] : ['听力理解', '口语表达'];
+src/figma-restore/course-workflow/workflowData.js:206:    '3-6岁': '3-6',
+src/figma-restore/course-workflow/workflowData.js:208:    '7-9岁': '7-9',
+src/figma-restore/course-workflow/workflowData.js:210:    '9-12岁': '9-12',
+src/figma-restore/course-workflow/workflowData.js:218:    '40分钟': '40 min',
+src/figma-restore/course-workflow/workflowData.js:221:    '60分钟': '60 min',
+src/figma-restore/course-workflow/workflowData.js:224:    '120分钟': '120 min',
+src/figma-restore/course-workflow/workflowData.js:234:    '≤ 8人': '<=8',
+src/figma-restore/course-workflow/workflowData.js:236:    '9-15人': '9-15',
+src/figma-restore/course-workflow/workflowData.js:239:    '≥ 16人': '>=16',
+src/figma-restore/course-workflow/workflowData.js:286:      : `孩子们进入"${taskName}"的任务情境，通过观察、交流与合作创作完成挑战。`),
+src/figma-restore/course-workflow/workflowData.js:295:          languageSkills.length ? (isEn ? `Skill Focus: ${languageSkills.join(', ')}` : `能力侧重：${languageSkills.join('、')}`) : '',
+src/figma-restore/course-workflow/workflowData.js:299:      : `每个小组完成一份围绕"${taskName}"的创意作品，并用目标语言展示。`),
+src/figma-restore/course-workflow/workflowData.js:302:      : `在"${taskName}"中发展表达、协作和创造性解决问题能力。`),
+src/figma-restore/courseImages.js:90:  const defaultTitles = new Set(['新课程', 'New Course', 'Untitled Course']);
+src/figma-restore/create-course/CreateCourseModal.jsx:285:            message.info(isChinese ? '已取消课程生成' : 'Course generation canceled');
+src/figma-restore/create-course/CreateCourseModal.jsx:289:        console.warn('概览生成请求失败，停止保存课程:', err);
+src/figma-restore/create-course/CreateCourseModal.jsx:292:          message.error(err?.message || (isChinese ? '课程概览生成失败，请重试' : 'Course overview generation failed, please try again'));
+src/figma-restore/create-course/CreateCourseModal.jsx:343:          throw new Error(isChinese ? '课程保存失败，没有返回课程 ID' : 'Course save failed without a course ID');
+src/figma-restore/create-course/CreateCourseModal.jsx:352:            message.info(isChinese ? '已取消课程生成' : 'Course generation canceled');
+src/figma-restore/create-course/CreateCourseModal.jsx:356:        console.error('保存课程失败:', err);
+src/figma-restore/create-course/CreateCourseModal.jsx:359:          message.error(isChinese ? '课程保存失败，请重试' : 'Course save failed, please try again');
+src/figma-restore/image-library/AssetPreviewModal.jsx:7:  if (asset.source !== t('imageLib.sourceAi') && asset.source !== 'AI生成') return '';
+src/figma-restore/image-library/AssetPreviewModal.jsx:8:  if (asset.type === t('imageLib.typeFlashcard') || asset.type === '闪卡') return t('imageLib.promptFlashcard');
+src/figma-restore/image-library/AssetPreviewModal.jsx:9:  if (asset.type === t('imageLib.typeStory') || asset.type === '故事配图') return t('imageLib.promptStory');
+src/figma-restore/image-library/AssetPreviewModal.jsx:10:  if (asset.type === t('imageLib.typePpt') || asset.type === 'PPT素材') return t('imageLib.promptPpt');
+src/figma-restore/image-library/AssetPreviewModal.jsx:45:  const isAi = asset.source === t('imageLib.sourceAi') || asset.source === 'AI生成';
+src/figma-restore/image-library/ImageLibrary.jsx:67:  prompt: asset.source === t('imageLib.sourceAi') || asset.source === 'AI生成'
+src/figma-restore/image-library/ImageLibrary.jsx:320:    image.onerror = () => resolve('本地图片');
+src/figma-restore/video-library/VideoLibrary.jsx:47:  if (raw.includes('animation') || raw.includes('动画')) return t('videoLib.typeAnimation');
+src/figma-restore/video-library/VideoLibrary.jsx:48:  if (raw.includes('dialogue') || raw.includes('story') || raw.includes('情景')) return t('videoLib.typeDrama');
+src/figma-restore/video-library/VideoLibrary.jsx:49:  if (raw.includes('knowledge') || raw.includes('讲解')) return t('videoLib.typeKnowledge');
+src/figma-restore/video-library/VideoLibrary.jsx:50:  if (raw.includes('fitness') || raw.includes('tpr') || raw.includes('体能')) return t('videoLib.typeFitness');
+src/figma-restore/video-library/VideoLibrary.jsx:104:  prompt: (asset.source === t('videoLib.sourceAi') || asset.source === t('videoLib.sourceCourse') || asset.source === 'AI生成' || asset.source === '课程同步')
+src/figma-restore/video-library/VideoPreviewModal.jsx:44:  if (asset.type === t('videoLib.typeDrama') || asset.type === '情景剧') {
+src/figma-restore/video-library/VideoPreviewModal.jsx:53:  if (asset.type === t('videoLib.typeAnimation') || asset.type === '动画片段') {
+src/figma-restore/video-library/VideoPreviewModal.jsx:62:  if (asset.type === t('videoLib.typeKnowledge') || asset.type === '知识讲解') {
+src/figma-restore/video-library/VideoPreviewModal.jsx:73:    [t('videoLib.roleLabel'), asset.name.includes('体能') ? 'Poppy' : t('videoLib.roleClassroom')],
+src/figma-restore/video-library/VideoPreviewModal.jsx:89:  const isAi = asset.source === t('videoLib.sourceAi') || asset.source === t('videoLib.sourceCourse') || asset.source === 'AI生成' || asset.source === '课程同步';
+src/main.jsx:13:  console.error('找不到 root 元素！');
+src/main.jsx:25:    console.error('渲染错误:', error);
+src/modules/admin/AccountManagement.jsx:25:        organizationName: account.organization?.name || '未分配机构',
+src/modules/admin/AccountManagement.jsx:58:        alert(error instanceof Error ? error.message : '账号创建失败');
+src/modules/admin/AccountManagement.jsx:69:        alert(error instanceof Error ? error.message : '删除失败');
+src/modules/admin/SuperAdminPage.jsx:18:      {/* 主体内容 */}
+src/modules/course-square/CourseSquarePage.jsx:39:          if (ageGroup.includes('G1') || ageGroup.includes('一年级')) grade = t('square.grade1');
+src/modules/course-square/CourseSquarePage.jsx:40:          else if (ageGroup.includes('G2') || ageGroup.includes('二年级')) grade = t('square.grade2');
+src/modules/course-square/CourseSquarePage.jsx:41:          else if (ageGroup.includes('G3') || ageGroup.includes('三年级')) grade = t('square.grade3');
+src/modules/course-square/CourseSquarePage.jsx:42:          else if (ageGroup.includes('G4') || ageGroup.includes('四年级')) grade = t('square.grade4');
+src/modules/course-square/CourseSquarePage.jsx:43:          else if (ageGroup.includes('G5') || ageGroup.includes('五年级')) grade = t('square.grade5');
+src/modules/course-square/CourseSquarePage.jsx:44:          else if (ageGroup.includes('G6') || ageGroup.includes('六年级')) grade = t('square.grade6');
+src/modules/course-square/CourseSquarePage.jsx:45:          else if (ageGroup.includes('K') || ageGroup.includes('幼儿园')) grade = t('square.gradeK');
+src/modules/course-square/CourseSquarePage.jsx:58:            if (theme.includes('动物') || title.includes('animal')) return '🦁';
+src/modules/course-square/CourseSquarePage.jsx:59:            if (theme.includes('颜色') || title.includes('color')) return '🌈';
+src/modules/course-square/CourseSquarePage.jsx:60:            if (theme.includes('食物') || title.includes('food')) return '🍎';
+src/modules/course-square/CourseSquarePage.jsx:61:            if (theme.includes('天气') || title.includes('weather')) return '🌤️';
+src/modules/course-square/CourseSquarePage.jsx:62:            if (theme.includes('数学') || title.includes('math') || title.includes('fraction')) return '🔢';
+src/modules/course-square/CourseSquarePage.jsx:63:            if (theme.includes('字母') || title.includes('phonics') || title.includes('abc')) return '🔤';
+src/modules/course-square/CourseSquarePage.jsx:70:            if (text.includes('phonics') || text.includes('自然拼读') || text.includes('发音')) tags.push(t('square.catPhonics'));
+src/modules/course-square/CourseSquarePage.jsx:71:            if (text.includes('vocabulary') || text.includes('词汇')) tags.push(t('square.catVocabulary'));
+src/modules/course-square/CourseSquarePage.jsx:72:            if (text.includes('reading') || text.includes('阅读') || text.includes('绘本')) tags.push(t('square.catReading'));
+src/modules/course-square/CourseSquarePage.jsx:73:            if (text.includes('grammar') || text.includes('语法')) tags.push(t('square.catGrammar'));
+src/modules/course-square/CourseSquarePage.jsx:74:            if (text.includes('speaking') || text.includes('口语') || text.includes('会话')) tags.push(t('square.catSpeaking'));
+src/modules/course-square/CourseSquarePage.jsx:96:            stage: ageGroup.includes('学前') || ageGroup.includes('K') ? t('square.preschool') :
+src/modules/course-square/CourseSquarePage.jsx:97:                   ageGroup.includes('小学') || ageGroup.match(/G[1-6]/) ? t('square.primary') : t('course.notSet'),
+src/modules/creative-workshop/CreativeWorkshopPage.jsx:14:  const [form, setForm] = useState({ title: '', goals: '', age: '7–10 岁', duration: '20 分钟', notes: '' });
+src/modules/creative-workshop/CreativeWorkshopPage.jsx:28:      console.error('保存草稿失败:', err);
+src/modules/creative-workshop/CreativeWorkshopPage.jsx:54:              <label>{t('workshopPage.age')}<select value={form.age} onChange={(event) => setForm({ ...form, age: event.target.value })}>{['4–6 岁', '7–10 岁', '11–14 岁'].map((age, index) => <option key={age} value={age}>{t(`workshopPage.ageOption${index}`)}</option>)}</select></label>
+src/modules/creative-workshop/CreativeWorkshopPage.jsx:55:              <label>{t('workshopPage.duration')}<select value={form.duration} onChange={(event) => setForm({ ...form, duration: event.target.value })}>{['10 分钟', '20 分钟', '40 分钟', '60 分钟'].map((duration, index) => <option key={duration} value={duration}>{t(`workshopPage.durationOption${index}`)}</option>)}</select></label>
+src/modules/creative-workshop/MusicStudioPage.jsx:18:const MODULE_NAME = '星光录音棚';
+src/modules/creative-workshop/MusicStudioPage.jsx:990:    try { win.document.title = 'Music Star Quest'; } catch { /* about:blank 跨窗口写入失败可忽略 */ }
+src/modules/creative-workshop/MusicStudioPage.jsx:1172:          {/* step 1 · 基本信息 */}
+src/modules/creative-workshop/MusicStudioPage.jsx:1176:                <OptionGroup label={t('musicStudio.ageLabel')} options={[{ value: '4–6 岁', label: t('musicStudio.age4to6') }, { value: '7–10 岁', label: t('musicStudio.age7to10') }, { value: '11–14 岁', label: t('musicStudio.age11to14') }]} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
+src/modules/creative-workshop/MusicStudioPage.jsx:1177:                <OptionGroup label={t('musicStudio.levelLabel')} options={[{ value: '零基础', label: t('musicStudio.levelZero') }, { value: '初级（会字母和简单词）', label: t('musicStudio.levelBeginner') }, { value: '中级（能简单对话）', label: t('musicStudio.levelIntermediate') }, { value: '高级（能阅读和表达）', label: t('musicStudio.levelAdvanced') }]} value={basicInfo.level} onChange={(v) => setBasicInfo({ ...basicInfo, level: v })} tone="blue" />
+src/modules/creative-workshop/MusicStudioPage.jsx:1178:                <OptionGroup label={t('musicStudio.styleLabel')} options={[{ value: '欢快', label: t('musicStudio.styleCheerful') }, { value: '舒缓', label: t('musicStudio.styleSoothing') }, { value: '节奏感强', label: t('musicStudio.styleRhythmic') }]} value={basicInfo.style} onChange={(v) => setBasicInfo({ ...basicInfo, style: v })} tone="yellow" />
+src/modules/creative-workshop/MusicStudioPage.jsx:1179:                <OptionGroup label={t('musicStudio.durationLabel')} options={[{ value: '短 (30-60s)', label: t('musicStudio.durShort') }, { value: '中 (60-90s)', label: t('musicStudio.durMedium') }, { value: '长 (90-120s)', label: t('musicStudio.durLong') }]} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
+src/modules/creative-workshop/MusicStudioPage.jsx:1180:                <OptionGroup label={t('musicStudio.structLabel')} options={[{ value: '简单重复', label: t('musicStudio.structSimple') }, { value: '主歌+副歌', label: t('musicStudio.structVerseChorus') }, { value: '主歌+副歌+桥段', label: t('musicStudio.structFull') }]} value={basicInfo.structure} onChange={(v) => setBasicInfo({ ...basicInfo, structure: v })} tone="coral" />
+src/modules/creative-workshop/MusicStudioPage.jsx:1204:          {/* step 2 · 歌曲创作 */}
+src/modules/creative-workshop/MusicStudioPage.jsx:1242:          {/* step 3 · 第一关 Lyric Hunter（填空 + 连词 + 听音 + 教案） */}
+src/modules/creative-workshop/MusicStudioPage.jsx:1263:          {/* step 4 · 第二关 Melody Mover（教案） */}
+src/modules/creative-workshop/MusicStudioPage.jsx:1279:          {/* step 5 · 第三关 Echo Master（教案） */}
+src/modules/creative-workshop/MusicStudioPage.jsx:1294:          {/* step 6 · 第四关 Star Studio（颜色分工 + 教案） */}
+src/modules/creative-workshop/MyWorksPage.jsx:24:      .catch((err) => { if (!cancelled) console.error('加载创作列表失败:', err); })
+src/modules/creative-workshop/MyWorksPage.jsx:38:      console.error('删除草稿失败:', err);
+src/modules/creative-workshop/YogaStudioPage.jsx:21:const MODULE_NAME = '互动式情境瑜伽';
+src/modules/creative-workshop/YogaStudioPage.jsx:39:const THEME_VALUES = ['自然探索', '动物世界', '日常生活', '太空冒险', '魔法幻想', '季节旅行'];
+src/modules/creative-workshop/YogaStudioPage.jsx:41:  { value: '无道具（纯身体练习）', key: 'propNone' },
+src/modules/creative-workshop/YogaStudioPage.jsx:42:  { value: '基础瑜伽道具（瑜伽垫、瑜伽球、瑜伽砖、泡沫轴）', key: 'propYoga' },
+src/modules/creative-workshop/YogaStudioPage.jsx:43:  { value: '体适能道具（平衡木、跷跷板、过河石、弹力带、跳箱、蹦床、小哑铃、弹力绳）', key: 'propFit' },
+src/modules/creative-workshop/YogaStudioPage.jsx:439:    assetName: `${MODULE_NAME}插图`,
+src/modules/creative-workshop/YogaStudioPage.jsx:455:        storybookGrade: basicInfo.age || '7-9岁',
+src/modules/creative-workshop/YogaStudioPage.jsx:694:          {/* step 1 · 基本信息 */}
+src/modules/creative-workshop/YogaStudioPage.jsx:698:                <OptionGroup label={t('yogaStudio.ageLabel')} options={[{ value: '3-6岁', label: t('yogaStudio.age36') }, { value: '7-9岁', label: t('yogaStudio.age79') }, { value: '10-12岁', label: t('yogaStudio.age1012') }, { value: '13-15岁', label: t('yogaStudio.age1315') }]} value={basicInfo.age} onChange={(v) => setBasicInfo({ ...basicInfo, age: v })} tone="coral" />
+src/modules/creative-workshop/YogaStudioPage.jsx:699:                <OptionGroup label={t('yogaStudio.durationLabel')} options={[{ value: '3-5分钟', label: t('yogaStudio.dur35') }, { value: '5-8分钟', label: t('yogaStudio.dur58') }, { value: '9-15分钟', label: t('yogaStudio.dur915') }]} value={basicInfo.duration} onChange={(v) => setBasicInfo({ ...basicInfo, duration: v })} tone="green" />
+src/modules/creative-workshop/YogaStudioPage.jsx:727:          {/* step 2 · 活动方案 */}
+src/modules/creative-workshop/YogaStudioPage.jsx:762:          {/* step 3 · 页面设计 */}
+src/modules/creative-workshop/YogaStudioPage.jsx:793:          {/* step 4 · 制作插图 */}
+src/modules/creative-workshop/musicTiming.js:23:      if (Number(m[2]) >= 60) throw new Error('LRC秒数无效');
+src/modules/creative-workshop/musicTiming.js:28:  if (rows.length !== lyrics.length || rows.some((r, i) => normalize(r.text) !== normalize(lyrics[i].text))) throw new Error('LRC必须与当前歌曲全部歌词逐行对应（包括重复句），不能缺行或换词');
+src/modules/creative-workshop/musicTiming.js:31:    if (!Number.isFinite(end) || end <= row.start || end > duration + 0.01) throw new Error('LRC时间必须递增且位于实际歌曲时长内');
+src/modules/creative-workshop/workshopData.js:9:    eyebrow: '创作工坊 · 模块 1',
+src/modules/creative-workshop/workshopData.js:10:    title: '“英语+”融合活动',
+src/modules/creative-workshop/workshopData.js:11:    description: '把语言学习与艺术、身体和音乐融合，让学生通过真实体验自然内化英语。',
+src/modules/creative-workshop/workshopData.js:15:      { title: '艺术表达', description: '视觉创作 + 情绪表达', icon: Palette, path: '/picture-books', action: '进入绘本制作' },
+src/modules/creative-workshop/workshopData.js:16:      { title: '体感探索', description: '身体叙事 + 语言嵌入', icon: Dumbbell, path: '/workshop/interactive-yoga', action: '查看互动瑜伽' },
+src/modules/creative-workshop/workshopData.js:17:      { title: '星光录音棚', description: '节奏 + 身体 + 语言', icon: Music, path: '/workshop/music-star-quest', action: '开始创作' },
+src/modules/creative-workshop/workshopData.js:18:      { title: '歌曲编唱屋', description: '围绕教学目标创作英语歌曲', icon: Mic2, path: '/song-writing', action: '开始歌曲创作' },
+src/modules/creative-workshop/workshopData.js:22:    eyebrow: '创作工坊 · 模块 2', title: '能力训练', icon: Brain, accent: '#4482e5',
+src/modules/creative-workshop/workshopData.js:23:    description: '按语言技能创建强调身体参与、情感体验和自然内化的训练活动。',
+src/modules/creative-workshop/workshopData.js:25:      { title: '语法', description: '把规则放进情境任务', icon: Puzzle },
+src/modules/creative-workshop/workshopData.js:26:      { title: '词汇', description: '多感官词汇练习', icon: PenLine },
+src/modules/creative-workshop/workshopData.js:27:      { title: '听力', description: '分层听辨与反馈', icon: Headphones },
+src/modules/creative-workshop/workshopData.js:28:      { title: '口语', description: '真实表达与合作任务', icon: MessageCircle },
+src/modules/creative-workshop/workshopData.js:29:      { title: '阅读', description: '情境阅读与思维支架', icon: BookOpen },
+src/modules/creative-workshop/workshopData.js:30:      { title: '写作', description: '从体验到结构化表达', icon: PenLine },
+src/modules/creative-workshop/workshopData.js:34:    eyebrow: '创作工坊 · 模块 3', title: '趣味练习', icon: Gamepad2, accent: '#9966d0',
+src/modules/creative-workshop/workshopData.js:35:    description: '把练习题转化为可推进、可探索、可获得即时反馈的课堂游戏。',
+src/modules/creative-workshop/workshopData.js:37:      { title: '密室闯关', description: '答题解锁下一空间', icon: Gamepad2 },
+src/modules/creative-workshop/workshopData.js:38:      { title: '侦探解谜', description: '收集线索、推理与答题', icon: Puzzle },
+src/modules/creative-workshop/workshopData.js:39:      { title: '盲盒答题', description: '随机惊喜与挑战', icon: Star },
+src/modules/creative-workshop/workshopData.js:43:    eyebrow: '创作工坊 · 模块 4', title: '完整课程', icon: BookOpen, accent: '#509f69',
+src/modules/creative-workshop/workshopData.js:44:    description: '输入教学目标，生成符合幸福力设计框架的完整课程方案与 PPT 课件。',
+src/modules/creative-workshop/workshopData.js:46:      { title: '创建完整课程', description: '从教学目标开始完整备课', icon: Sparkles, path: '/figma-courses', action: '开始创建' },
+src/modules/creative-workshop/workshopData.js:47:      { title: '管理课程', description: '继续编辑已有课程和课件', icon: BookOpen, path: '/figma-courses', action: '查看课程' },
+src/modules/creative-workshop/workshopData.js:51:    eyebrow: '创作工坊 · 模块 5', title: '主题活动', icon: Theater, accent: '#f5a233',
+src/modules/creative-workshop/workshopData.js:52:    description: '围绕节日、成长主题或机构活动快速生成可直接执行的活动方案。',
+src/modules/creative-workshop/workshopData.js:54:      { title: '节日活动', description: '新年、圣诞节、母亲节等', icon: Star },
+src/modules/creative-workshop/workshopData.js:55:      { title: '成长主题', description: '友情、自信、感恩与合作', icon: Theater },
+src/modules/creative-workshop/workshopData.js:56:      { title: '学科主题', description: '动物、自然、城市与太空', icon: Sparkles },
+src/modules/creative-workshop/workshopData.js:60:    eyebrow: '创作工坊 · 模块 6', title: '教学素材', icon: FileImage, accent: '#cf5846',
+src/modules/creative-workshop/workshopData.js:61:    description: '使用针对幸福力英语教学优化的模板和工作流生成课堂素材。',
+src/modules/creative-workshop/workshopData.js:63:      { title: 'Flash Card', description: '生成统一风格词汇卡', icon: FileImage, path: '/test/ip-scene', action: '开始生成' },
+src/modules/creative-workshop/workshopData.js:64:      { title: '四格漫画', description: '把语言点转化成短故事', icon: Palette, path: '/picture-books', action: '开始创作' },
+src/modules/creative-workshop/workshopData.js:65:      { title: '体式引导图', description: '生成动作清晰的体式素材', icon: Dumbbell, path: '/workshop/interactive-yoga', action: '查看案例' },
+src/modules/creative-workshop/workshopData.js:66:      { title: '音频素材', description: '生成课堂配音与音效', icon: Volume2, path: '/test/audio-generator', action: '生成音频' },
+src/modules/creative-workshop/workshopData.js:73:    type: '互动式情境瑜伽',
+src/modules/creative-workshop/workshopData.js:75:    subtitle: '身体叙事 × 情境探索 × 英语内化',
+src/modules/creative-workshop/workshopData.js:76:    description: '教师以探险向导和瑜伽教练的双重角色，带领学生在连续故事中完成语言学习与身体探索。',
+src/modules/creative-workshop/workshopData.js:79:    features: ['6–12 页连续故事', '4–8 个情境体式', '教师逐页讲稿', '背景音乐与音效配置'],
+src/modules/creative-workshop/workshopData.js:81:      ['theme', '情境主题', '例如：海洋探险', 'text'],
+src/modules/creative-workshop/workshopData.js:82:      ['goals', '目标语言点', '例如：ocean, wave, What can you see?', 'textarea'],
+src/modules/creative-workshop/workshopData.js:83:      ['age', '年龄段', '7–10 岁', 'select'],
+src/modules/creative-workshop/workshopData.js:84:      ['duration', '活动时长', '15 分钟', 'select'],
+src/modules/creative-workshop/workshopData.js:85:      ['requirements', '特殊要求', '角色、道具或体式偏好', 'textarea'],
+src/modules/creative-workshop/workshopData.js:89:    type: '星光录音棚',
+src/modules/creative-workshop/workshopData.js:91:    subtitle: '歌词理解 × 动作编排 × 分级跟唱 × 作品录制',
+src/modules/creative-workshop/workshopData.js:92:    description: '以四关闯关方式完成一首英语歌曲的理解、表演、演唱与录制。',
+src/modules/creative-workshop/workshopData.js:95:    features: ['四关渐进式任务', '歌词与音频同步', '动作和乐器编排', '分组演唱与本地录音'],
+src/modules/creative-workshop/workshopData.js:97:      ['goals', '目标语言点', '例如：China, USA, Where are you from?', 'textarea'],
+src/modules/creative-workshop/workshopData.js:98:      ['theme', '歌曲主题', '例如：国家与问候', 'text'],
+src/modules/creative-workshop/workshopData.js:99:      ['age', '年龄段', '7–10 岁', 'select'],
+src/modules/creative-workshop/workshopData.js:100:      ['level', '英文水平', '初级', 'select'],
+src/modules/creative-workshop/workshopData.js:101:      ['style', '风格偏好', '欢快', 'select'],
+src/modules/creative-workshop/workshopData.js:102:      ['duration', '歌曲时长', '60–90 秒', 'select'],
+src/modules/creative-workshop/workshopData.js:103:      ['requirements', '特殊要求', '例如：加入问答呼应', 'textarea'],
+src/modules/creative-workshop/workshopStorage.js:17:    throw new Error(json.error || `请求失败（${response.status}）`);
+src/modules/creative-workshop/workshopStorage.js:47:    if (controller.signal.aborted) throw new Error('创作列表加载超时，请检查本地 API 和数据库连接后重试');
+src/modules/creative-workshop/workshopStorage.js:61:    if (controller.signal.aborted) throw new Error('作品音频加载超时，请检查网络和数据库连接后重试');
+src/modules/creative-workshop/yogaPoses.js:9:  { en: 'Boat Pose', label: 'Boat Pose', zh: '船式（简易）', body: '坐姿，双腿伸直，身体左右摇摆', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:10:  { en: 'Bow Pose', label: 'Bow Pose', zh: '弓式（简易）', body: '俯卧，手抓脚踝，身体前后摇摆', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:11:  { en: 'Bridge Pose', label: 'Bridge Pose', zh: '桥式', body: '仰卧，屈膝抬臀，手撑地', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:12:  { en: 'Butterfly Pose', label: 'Butterfly Pose', zh: '蝴蝶式', body: '坐姿，脚底相对，膝盖轻轻扇动', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:13:  { en: 'Camel Pose', label: 'Camel Pose', zh: '骆驼式', body: '跪姿，身体后弯，手扶脚跟', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:14:  { en: 'Cat-Cow Pose', label: 'Cat-Cow Pose', zh: '猫牛式', body: '四肢着地，拱背→塌腰', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:15:  { en: 'Cat Pose → Crawl', label: 'Cat Crawl', zh: '猫式 → 爬行', body: '四肢着地，背拱起，爬行', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:16:  { en: 'Chair Pose', label: 'Chair Pose', zh: '椅子式', body: '站直，双脚踩稳，身体微微下沉', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:17:  { en: 'Chair Pose → Hop', label: 'Chair Hop', zh: '椅子式 → 跳', body: '屈膝，摆臂，跳起', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:18:  { en: 'Chair Pose → Upward Salute', label: 'Chair to Salute', zh: '椅子式 → 向上致敬', body: '从蹲姿慢慢站起，手臂从身体两侧向上伸展', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:19:  { en: "Child's Pose", label: "Child's Pose", zh: '婴儿式', body: '蹲下，双手抱膝，身体团成球', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:20:  { en: "Child's Pose (Side-Lying)", label: "Child's Pose", zh: '婴儿式（侧卧）', body: '侧卧，身体蜷缩，双手抱膝', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:21:  { en: 'Cobra Pose', label: 'Cobra Pose', zh: '眼镜蛇式', body: '趴下，手撑地，抬头', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:22:  { en: 'Cobra Pose + Side Wiggles', label: 'Cobra Wiggle', zh: '眼镜蛇式 + 侧摆', body: '俯卧，手撑地，抬头挺胸，身体左右摆动', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:23:  { en: 'Cobra Pose + Sway', label: 'Cobra Sway', zh: '眼镜蛇式 + 摇摆', body: '俯卧，手撑地，抬头，身体左右摆动', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:24:  { en: 'Downward Dog + Hip Wiggles', label: 'Dog Wiggle', zh: '下犬式 + 摆臀', body: '四肢着地，臀部左右摇摆', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:25:  { en: 'Eagle Pose', label: 'Eagle Pose', zh: '鹰式', body: '站姿，手臂交叉缠绕，单腿站立', level: 3 },
+src/modules/creative-workshop/yogaPoses.js:26:  { en: 'Forward Fold → Bear Crawl', label: 'Bear Crawl', zh: '前弯 → 熊爬', body: '从站姿前弯到手撑地，再爬过去', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:27:  { en: 'Forward Fold → Side Lie', label: 'Fold and Rest', zh: '前弯 → 侧躺', body: '从站姿慢慢蹲下，再侧躺，完全放松', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:28:  { en: 'Forward Fold → Squat → Crawl', label: 'Squat Crawl', zh: '前弯 → 蹲 → 爬', body: '弯腰，低头，屈膝，钻过去', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:29:  { en: 'Garland Pose (Malasana)', label: 'Garland Pose', zh: '花环式', body: '蹲姿，膝盖向外打开，手放膝上', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:30:  { en: 'Half Forward Fold (Dynamic)', label: 'Half Forward Fold', zh: '半前弯（动态）', body: '身体前倾，双手撑膝，一步步迈', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:31:  { en: 'Half Moon Pose', label: 'Half Moon Pose', zh: '半月式', body: '站姿，身体向一侧弯成弧形，手臂过头', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:32:  { en: 'Lion Pose', label: 'Lion Pose', zh: '狮式', body: '跪坐，张嘴伸舌，眼睛睁大', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:33:  { en: 'Mountain Pose', label: 'Mountain Pose', zh: '山式', body: '站姿挺拔，双脚并拢，双手合十胸前', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:34:  { en: 'Mountain Pose → Arms Out', label: 'Arms Out', zh: '山式 → 展臂', body: '站姿，手臂从胸前合十慢慢向外展开', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:35:  { en: 'Mountain Pose → Arms Out + Spin', label: 'Arms Out Spin', zh: '山式 → 展臂 + 旋转', body: '站直，深吸气，呼气时手臂向外展开，身体旋转', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:36:  { en: 'Mountain Pose → Forward Lean', label: 'Forward Lean', zh: '山式 → 前倾', body: '站直，双手拢在嘴边，身体前倾', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:37:  { en: 'Mountain Pose → Upward Salute → Mountain Pose', label: 'Mountain Salute', zh: '山式 → 向上致敬 → 山式', body: '站直，手臂上举→合十胸前', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:38:  { en: 'Savasana', label: 'Savasana', zh: '摊尸式', body: '仰卧，四肢完全放松，闭眼', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:39:  { en: 'Seated Forward Fold (Gentle)', label: 'Seated Forward Fold', zh: '坐姿前弯（简易）', body: '坐姿，双手掌心贴地，深呼吸', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:40:  { en: 'Seated Mountain Pose', label: 'Seated Mountain Pose', zh: '坐姿山式', body: '坐姿，双手合十胸前，闭眼', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:41:  { en: 'Seated Spinal Twist', label: 'Seated Spinal Twist', zh: '坐姿扭转式', body: '坐下，身体轻轻左右扭动；或坐姿身体从一侧扭到另一侧，手臂随身体画弧', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:42:  { en: 'Side Bend', label: 'Side Bend', zh: '侧弯式', body: '站姿，身体向一侧弯曲，手臂随身体弧形伸展', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:43:  { en: 'Side Bend (Deep)', label: 'Side Bend', zh: '侧弯式（深度）', body: '站姿，身体向左右交替深度侧弯', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:44:  { en: 'Side Reach (Slow)', label: 'Side Reach', zh: '侧伸展（慢速）', body: '站姿，身体向左右轻柔侧弯', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:45:  { en: 'Side Reach (Fast Alternating)', label: 'Side Reach', zh: '侧伸展（快速交替）', body: '站姿，左右交替快速侧伸展', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:46:  { en: 'Standing Balance', label: 'Standing Balance', zh: '单腿站立平衡', body: '单脚踩上，另一脚跟上，双臂展开找平衡', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:47:  { en: 'Standing Balance (Dynamic)', label: 'Standing Balance', zh: '单腿站立平衡（动态）', body: '单腿站立，身体摇晃，手臂摆动保持平衡', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:48:  { en: 'Standing Forward Fold', label: 'Standing Forward Fold', zh: '站姿前弯式', body: '从站姿慢慢蹲下，手臂从高处缓缓降到地面；或站直手臂从头顶快速向下挥身体前弯', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:49:  { en: 'Standing Forward Fold → Roll Up', label: 'Fold and Roll Up', zh: '站姿前弯 → 卷起', body: '站立，身体像水一样前后波动', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:50:  { en: 'Standing Knee Raise', label: 'Knee Raise', zh: '站姿提膝式', body: '站立，交替抬膝，手臂向上抓或摆动', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:51:  { en: 'Standing Push (Chair Variant)', label: 'Standing Push', zh: '站姿推墙（椅子式变体）', body: '站姿，双手前推，身体前倾', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:52:  { en: 'Standing Side Bend + Arm Waves', label: 'Side Bend Waves', zh: '站姿侧弯 + 手臂波浪', body: '站姿，身体大幅侧弯+转体，手臂波浪式摆动', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:53:  { en: 'Standing Spinal Twist', label: 'Standing Twist', zh: '站姿扭转式', body: '站姿，身体旋转，手臂展开', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:54:  { en: 'Standing Spiral Rise', label: 'Spiral Rise', zh: '站姿螺旋上升', body: '站姿，身体螺旋上升，手臂缠绕式上举', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:55:  { en: 'Standing Twist (Slow)', label: 'Standing Twist', zh: '站姿扭转（慢速）', body: '站姿，身体随手臂方向从左转到右', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:56:  { en: 'Star Pose', label: 'Star Pose', zh: '星式', body: '站姿，手臂从身体两侧开合，配合踮脚', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:57:  { en: 'Tightrope Walk', label: 'Tightrope Walk', zh: '走钢索步', body: '双脚一前一后，小心走直线', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:58:  { en: 'Tiptoe Walk → Mountain Pose', label: 'Tiptoe Walk', zh: '踮脚走 → 山式', body: '踮脚走，小心翼翼保持平衡', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:59:  { en: 'Tree Pose', label: 'Tree Pose', zh: '树式', body: '单腿站立，另一脚贴腿内侧，手臂展开如树枝', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:60:  { en: 'Upward Salute', label: 'Upward Salute', zh: '向上致敬式', body: '抬头，身体向上伸展，手臂笔直上举；或踮脚单臂向上极力伸展', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:61:  { en: 'Upward Salute + Wrist Twist', label: 'Salute Wrist Twist', zh: '向上致敬 + 手腕转', body: '踮脚，手臂向上伸展，手腕转动', level: 1 },
+src/modules/creative-workshop/yogaPoses.js:62:  { en: 'Warrior I', label: 'Warrior I', zh: '战士一式', body: '大步向前跨，前腿屈膝，后腿伸直', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:63:  { en: 'Warrior II', label: 'Warrior II', zh: '战士二式', body: '双脚分开，屈膝，手臂前伸', level: 2 },
+src/modules/creative-workshop/yogaPoses.js:67:  { value: 'scene', label: '场景页' },
+src/modules/creative-workshop/yogaPoses.js:68:  { value: 'transition', label: '过渡页' },
+src/modules/creative-workshop/yogaPoses.js:69:  { value: 'action', label: '动作页' },
+src/modules/creative-workshop/yogaPoses.js:70:  { value: 'return', label: '回归页' },
+src/modules/creative-workshop/yogaPoses.js:71:  { value: 'ending', label: '结束页' },
+src/modules/material-management/IpCharacterManagement.jsx:130:    if (gender === 'female' || gender === '女') return '👩';
+src/modules/material-management/IpCharacterManagement.jsx:131:    if (gender === 'male' || gender === '男') return '👨';
+src/modules/material-management/IpCharacterManagement.jsx:136:    if (gender === 'female' || gender === '女') return t('ipCharacter.female');
+src/modules/material-management/IpCharacterManagement.jsx:137:    if (gender === 'male' || gender === '男') return t('ipCharacter.male');
+src/modules/material-management/IpCharacterManagement.jsx:154:      {/* 头部 */}
+src/modules/material-management/IpCharacterManagement.jsx:171:      {/* 内容区 */}
+src/modules/material-management/IpCharacterManagement.jsx:173:        {/* 人物卡片网格 */}
+src/modules/material-management/IpCharacterManagement.jsx:180:              {/* 头像区域 */}
+src/modules/material-management/IpCharacterManagement.jsx:188:                {/* 悬停操作按钮 */}
+src/modules/material-management/IpCharacterManagement.jsx:205:              {/* 信息区域 */}
+src/modules/material-management/IpCharacterManagement.jsx:215:                {/* 性别标签 */}
+src/modules/material-management/IpCharacterManagement.jsx:234:      {/* 模态框 */}
+src/modules/material-management/IpCharacterManagement.jsx:238:            {/* 头部 */}
+src/modules/material-management/IpCharacterManagement.jsx:250:            {/* 内容 */}
+src/modules/material-management/IpCharacterManagement.jsx:262:                  {/* 头像上传预览 */}
+src/modules/material-management/IpCharacterManagement.jsx:343:            {/* 底部按钮 */}
+src/modules/material-management/KnowledgeBasePage.jsx:18:      {/* 主体内容 */}
+src/modules/material-management/image/PptImageManagement.jsx:132:      {/* 头部 */}
+src/modules/material-management/image/PptImageManagement.jsx:149:      {/* 内容区 */}
+src/modules/material-management/image/PptImageManagement.jsx:151:        {/* 图片网格 */}
+src/modules/material-management/image/PptImageManagement.jsx:158:              {/* 预览区域 */}
+src/modules/material-management/image/PptImageManagement.jsx:166:                {/* 悬停遮罩层 */}
+src/modules/material-management/image/PptImageManagement.jsx:183:              {/* 信息区域 */}
+src/modules/material-management/image/PptImageManagement.jsx:209:      {/* 模态框 */}
+src/modules/material-management/image/PptImageManagement.jsx:213:            {/* 头部 */}
+src/modules/material-management/image/PptImageManagement.jsx:225:            {/* 内容 */}
+src/modules/material-management/image/PptImageManagement.jsx:237:                  {/* 图片上传预览 */}
+src/modules/material-management/image/PptImageManagement.jsx:295:            {/* 底部按钮 */}
+src/modules/material-management/textbook/TextbookManagement.jsx:41:        console.error('获取教材列表失败:', err);
+src/modules/material-management/textbook/TextbookManagement.jsx:92:      console.error('新增教材失败:', err);
+src/modules/material-management/textbook/TextbookManagement.jsx:111:      console.error('新增年级失败:', err);
+src/modules/material-management/textbook/TextbookManagement.jsx:132:      console.error('新增单元失败:', err);
+src/modules/material-management/video/VideoMaterialManagement.jsx:150:      {/* 顶部操作栏 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:198:      {/* 视频列表 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:217:                {/* 视频预览 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:230:                  {/* 播放按钮 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:236:                  {/* 时长 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:244:                {/* 视频信息 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:277:      {/* 添加/编辑模态框 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:294:              {/* 视频预览 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:305:              {/* 视频名称 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:319:              {/* 视频描述 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:333:              {/* 标签 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:347:              {/* 运镜 */}
+src/modules/material-management/video/VideoMaterialManagement.jsx:361:              {/* 画面内容 */}
+src/modules/picture-book/KnowledgeUploadPage.jsx:9:  '情绪表达', '自我认知', '人际关系', '家庭与归属', '成长与变化',
+src/modules/picture-book/KnowledgeUploadPage.jsx:10:  '感恩与善意', '身体与感知', '自然探索', '动物与生命', '勇气与冒险',
+src/modules/picture-book/KnowledgeUploadPage.jsx:11:  '儿童心理', '睡前故事', '社交技能', '安全教育', '科学科普', '艺术创意',
+src/modules/picture-book/PictureBookStudioPage.jsx:101:  return info.themes[0] || info.themeOther || (isEn ? 'Emotional Expression' : '情绪表达');
+src/modules/picture-book/PictureBookStudioPage.jsx:106:  return items.join(isEn ? ', ' : '、') || (isEn ? 'Drawing paper, colored pencils/crayons' : '画纸、彩笔/蜡笔');
+src/modules/picture-book/PictureBookStudioPage.jsx:121:  const isNatureTheme = theme === '自然探索' || theme === 'Nature Exploration';
+src/modules/picture-book/PictureBookStudioPage.jsx:126:    情绪表达: 'My Feeling Friend',
+src/modules/picture-book/PictureBookStudioPage.jsx:127:    自然探索: 'A Tiny Nature Finder',
+src/modules/picture-book/PictureBookStudioPage.jsx:128:    自我认知: 'The Me I Can See',
+src/modules/picture-book/PictureBookStudioPage.jsx:129:    人际关系: 'A Bridge Between Friends',
+src/modules/picture-book/PictureBookStudioPage.jsx:130:    家庭与归属: 'My Warm Little Home',
+src/modules/picture-book/PictureBookStudioPage.jsx:131:    成长与变化: 'I Grow a Little More',
+src/modules/picture-book/PictureBookStudioPage.jsx:132:    感恩与善意: 'A Kindness Spark',
+src/modules/picture-book/PictureBookStudioPage.jsx:133:    身体与感知: 'My Body Says Hello',
+src/modules/picture-book/PictureBookStudioPage.jsx:134:    动物与生命: 'Hello, Little Life',
+src/modules/picture-book/PictureBookStudioPage.jsx:135:    勇气与冒险: 'A Brave Little Step',
+src/modules/picture-book/PictureBookStudioPage.jsx:154:      : `围绕“${theme}”展开的行动型创作旅程。每一页引导孩子观察、选择、动手和分享，以艺术外化内在体验，接纳每一种表达，并在真实表达需求中自然使用英文。`,
+src/modules/picture-book/PictureBookStudioPage.jsx:157:      : `使用核心词汇：${vocab}；使用核心句型/语法：${grammar}；能听懂并回应与作品相关的简单提问。`,
+src/modules/picture-book/PictureBookStudioPage.jsx:160:      : '将内在感受外化为可被看见的形象；在表达和协作中体验被理解、被接纳和共同创造的联结感。',
+src/modules/picture-book/PictureBookStudioPage.jsx:163:      : (isNatureTheme ? '一份个人自然发现作品与感受表达' : '一份个人表达作品和一次简短的英文分享'),
+src/modules/picture-book/PictureBookStudioPage.jsx:175:    情绪表达: 'All feelings belong. Every one of them.',
+src/modules/picture-book/PictureBookStudioPage.jsx:177:    自然探索: 'You are part of nature, and nature is you.',
+src/modules/picture-book/PictureBookStudioPage.jsx:179:    自我认知: 'There is no one else like you.',
+src/modules/picture-book/PictureBookStudioPage.jsx:181:    人际关系: 'Being yourself helps us grow closer.',
+src/modules/picture-book/PictureBookStudioPage.jsx:183:    家庭与归属: 'You belong here, exactly as you are.',
+src/modules/picture-book/PictureBookStudioPage.jsx:185:    成长与变化: 'You can change and still be you.',
+src/modules/picture-book/PictureBookStudioPage.jsx:187:    感恩与善意: 'Your kindness can make the world feel warmer.',
+src/modules/picture-book/PictureBookStudioPage.jsx:189:    身体与感知: 'Your body speaks. You can listen gently.',
+src/modules/picture-book/PictureBookStudioPage.jsx:191:    动物与生命: 'Every living thing belongs in our shared world.',
+src/modules/picture-book/PictureBookStudioPage.jsx:193:    勇气与冒险: 'Brave can be one small step.',
+src/modules/picture-book/PictureBookStudioPage.jsx:202:        : `引导绘本封面，不是叙事场景。展示有吸引力的创作桌、简单工具、色彩丰富的儿童作品，以及欢迎孩子参与的小导游。画面只呈现英文标题“${title}”。`,
+src/modules/picture-book/PictureBookStudioPage.jsx:207:      imageDescription: isEn ? 'Open question page. Show a gentle color cloud and a large clear response area where the child can point or imagine. No story action and no correct answer.' : '开放式提问页。展示柔和的颜色云和一块清晰宽敞的回应区域，让孩子可以指认或想象。不设置故事情节和标准答案。',
+src/modules/picture-book/PictureBookStudioPage.jsx:213:      imageDescription: isEn ? `Choice page. Show six clear illustrated option cards with picture-and-word anchors using these English target words: ${wordAnchors}. Leave generous space for pointing and choosing.` : `选择页。展示六张清晰的图文选项卡，使用这些英文目标词汇作为“图案+单词”锚点：${wordAnchors}。留出充足空间供孩子指认和选择。`,
+src/modules/picture-book/PictureBookStudioPage.jsx:218:      imageDescription: isEn ? 'Body-awareness question page. Show a simple child-friendly body outline with softly highlighted areas and an open response space. Invite noticing without judgment.' : '身体觉察提问页。展示适合儿童理解的简洁身体轮廓、柔和高亮的身体区域和开放回应空间，引导孩子不带评判地觉察。',
+src/modules/picture-book/PictureBookStudioPage.jsx:223:      imageDescription: isEn ? `Preparation instruction page. Clearly show ${plan.materials || 'paper and colored pencils'} as simple tool icons beside a large blank workspace waiting for the child's creation.` : `准备指令页。用简洁工具图标清楚展示${plan.materials || '画纸和彩笔'}，旁边保留一块等待孩子创作的大面积空白区域。`,
+src/modules/picture-book/PictureBookStudioPage.jsx:229:      imageDescription: isEn ? 'Inspiration choice page. Show six non-perfect child-made shape cards: round, spiky, wavy, tiny, wide, and twisty. Each shape has its exact English word label.' : '灵感选择页。展示六张带有儿童手作感、不追求完美的形状卡片：round、spiky、wavy、tiny、wide、twisty。每种形状配对应的英文单词标签。',
+src/modules/picture-book/PictureBookStudioPage.jsx:234:      imageDescription: isEn ? 'Drawing instruction page. Show a pencil beginning one expressive shape and a large mostly blank area for the child. Emphasize that big and small are equally welcome.' : '绘画指令页。展示一支铅笔正在画出富有表现力的形状，并为孩子保留大面积空白创作区。传达画大或画小都可以被接纳。',
+src/modules/picture-book/PictureBookStudioPage.jsx:239:      imageDescription: isEn ? 'Game rule page. Show a large six-sided die and a visual equation: die dots equal the number of parts to add. Use icons and minimal English labels, not a narrative scene.' : '游戏规则页。展示一个醒目的六面骰子和视觉等式：骰子点数等于需要添加的身体部位数量。使用图标和极少量英文标签，不画叙事场景。',
+src/modules/picture-book/PictureBookStudioPage.jsx:244:      imageDescription: isEn ? 'Action page with clear illustrated choices for eyes, ears, hands, feet, mouths, and antennae. Each option has a simple English word anchor.' : '行动指令页。清晰展示眼睛、耳朵、手、脚、嘴巴和触角等图示选项，每个选项配一个简单的英文单词锚点。',
+src/modules/picture-book/PictureBookStudioPage.jsx:249:      imageDescription: isEn ? 'Creative invitation page showing optional wings, spots, stars, pockets, and soft spikes as idea cards, plus open space for the child’s own idea. Avoid polished model answers.' : '创意邀请页。用灵感卡展示可选的翅膀、斑点、星星、口袋和柔软尖角，并为孩子自己的想法保留开放空间。避免提供精致的标准答案。',
+src/modules/picture-book/PictureBookStudioPage.jsx:254:      imageDescription: isEn ? 'Coloring action page. Show two or three selected color swatches, a child’s hand coloring an expressive shape, and a spacious unfinished area. Every color choice is accepted.' : '上色行动页。展示两到三种已选色块、孩子正在为富有表现力的形状上色的手，以及宽敞的未完成区域。接纳每一种颜色选择。',
+src/modules/picture-book/PictureBookStudioPage.jsx:259:      imageDescription: isEn ? 'Naming page. Show the finished creation beside one simple blank name tag and a pencil. The small guide waits quietly without suggesting an answer.' : '命名指令页。展示完成的作品、一个简洁的空白姓名牌和一支铅笔。小导游安静等待，不暗示任何答案。',
+src/modules/picture-book/PictureBookStudioPage.jsx:264:      imageDescription: isEn ? `Sharing prompt page. Show a child holding their creation with two short English sentence anchors: “I feel...” and “My friend feels...”. Include small picture-and-word anchors from: ${wordAnchors}.` : `分享提问页。展示孩子拿着自己的作品，并呈现两个简短英文句式锚点：“I feel...”和“My friend feels...”。加入这些词汇的小型“图案+单词”锚点：${wordAnchors}。`,
+src/modules/picture-book/PictureBookStudioPage.jsx:269:      imageDescription: isEn ? `Back cover. A calm, spacious composition with the small guide waving goodbye. Render only this exact English landing point and no other content: “${landingPoint}”` : `封底。画面平静、留白充足，小导游挥手告别。只呈现这句准确的英文精神落脚点，不添加其他内容：“${landingPoint}”`,
+src/modules/picture-book/PictureBookStudioPage.jsx:364:      })).filter((item) => item.url && (/bgm|music|背景音乐/i.test(item.type) || item.tags?.some?.((tag) => /bgm|music|背景音乐/i.test(tag))));
+src/modules/picture-book/PictureBookStudioPage.jsx:392:          const generatedName = aiMusicForm.prompt.trim().slice(0, 30) || 'AI 背景音乐';
+src/modules/picture-book/PictureBookStudioPage.jsx:393:          const saved = await apiService.request('/api/audio-assets', { method: 'POST', body: JSON.stringify({ name: generatedName, audioUrl: status.results[0].url, duration: `${aiMusicForm.duration}s`, tags: ['背景音乐', 'AI生成'], description: aiMusicForm.prompt.trim() }) });
+src/modules/picture-book/PictureBookStudioPage.jsx:394:          const savedMusic = { id: saved.data?.id || `ai-${data.executionId}`, name: generatedName, description: 'AI 生成背景音乐', url: saved.data?.audio_url || status.results[0].url, source: 'ai' };
+src/modules/picture-book/PictureBookStudioPage.jsx:737:        storybookGrade: basicInfo.age || (isEn ? 'Ages 7–9' : '7-9岁'),
+src/modules/picture-book/PictureBookStudioPage.jsx:840:              storybookGrade: basicInfo.age || (isEn ? 'Ages 7–9' : '7-9岁'),
+src/modules/picture-book/PictureBookStudioPage.jsx:898:            if (!openTeachingWindow({ pages: data.pages || [], title: book.title || t('pictureBook.present', '授课'), backgroundMusic: data.backgroundMusic || null })) {
+src/modules/picture-book/PictureBookStudioPage.jsx:899:              setMessage(t('pictureBook.presentEmpty', '该绘本还没有可播放的页面'));
+src/modules/picture-book/PictureBookStudioPage.jsx:992:                  setMessage(t('pictureBook.presentEmpty', '该绘本还没有可播放的页面'));
+src/modules/picture-book/PictureBookStudioPage.jsx:1081:                    🖥️ {t('pictureBook.present', '授课')}
+src/modules/picture-book/PictureBookStudioPage.jsx:1200:          先生成占位符
+src/modules/song-library/SongLibraryPage.jsx:279:              <h2>{editingSong ? '编辑曲目' : '添加曲目'}</h2>
+src/modules/song-library/SongLibraryPage.jsx:324:                    {uploadingField === 'vocalUrl' ? '上传中...' : '选择文件'}
+src/modules/song-library/SongLibraryPage.jsx:346:                    {uploadingField === 'instrumentalUrl' ? '上传中...' : '选择文件'}
+src/modules/song-library/SongLibraryPage.jsx:390:                  {saving ? '保存中...' : '保存'}
+src/modules/song-writing/SongWritingStudioPage.jsx:45:  { id: 'bell', icon: '/audio/icon/bell.png', label: '铃铛' },
+src/modules/song-writing/SongWritingStudioPage.jsx:46:  { id: 'bongo', icon: '/audio/icon/Bongo.png', label: '邦戈鼓' },
+src/modules/song-writing/SongWritingStudioPage.jsx:47:  { id: 'maracas', icon: '/audio/icon/Maracas.png', label: '砂槌' },
+src/modules/song-writing/SongWritingStudioPage.jsx:48:  { id: 'tambourine', icon: '/audio/icon/Tambourine.png', label: '铃鼓' },
+src/modules/song-writing/SongWritingStudioPage.jsx:49:  { id: 'hand-drum', icon: '/audio/icon/hand drum.png', label: '手鼓' },
+src/modules/song-writing/SongWritingStudioPage.jsx:50:  { id: 'triangle', icon: '/audio/icon/Triangle.webp', label: '三角铁' },
+src/modules/song-writing/SongWritingStudioPage.jsx:51:  { id: 'djembe', icon: '/audio/icon/Djembe.png', label: '非洲鼓' },
+src/modules/song-writing/SongWritingStudioPage.jsx:52:  { id: 'castanets', icon: '/audio/icon/Castanets.png', label: '响板' },
+src/modules/song-writing/SongWritingStudioPage.jsx:53:  { id: 'cabasa', icon: '/audio/icon/Cabasa.png', label: '沙锤' },
+src/modules/song-writing/SongWritingStudioPage.jsx:54:  { id: 'xylophone', icon: '/audio/icon/Xylophone.png', label: '木琴' },
+src/modules/song-writing/SongWritingStudioPage.jsx:55:  { id: 'drum', icon: '/audio/icon/drum.png', label: '鼓' },
+src/modules/song-writing/SongWritingStudioPage.jsx:56:  { id: 'finger-cymbals', icon: '/audio/icon/Finger Cymbals.png', label: '指钹' },
+src/modules/song-writing/SongWritingStudioPage.jsx:57:  { id: 'hand-bell', icon: '/audio/icon/Hand bell.png', label: '手铃' },
+src/modules/song-writing/SongWritingStudioPage.jsx:58:  { id: 'sleigh-bell', icon: '/audio/icon/Sleigh bell.png', label: '雪橇铃' },
+src/modules/song-writing/SongWritingStudioPage.jsx:59:  { id: 'wood-block', icon: '/audio/icon/Wood block.png', label: '木鱼' },
+src/modules/song-writing/SongWritingStudioPage.jsx:62:const themeOptions = ['情绪表达', '自然探索', '自我认知', '人际关系', '家庭与归属', '成长与变化', '感恩与善意', '身体与感知', '动物与生命', '勇气与冒险'];
+src/modules/song-writing/SongWritingStudioPage.jsx:63:const adjustmentSuggestions = ['词汇太难', '词汇太简单', '核心语言点丢失', '句式太重复', '填空太多', '填空太少', 'L1唱起来不顺', 'L2音节数不对'];
+src/modules/song-writing/SongWritingStudioPage.jsx:131:  const theme = themes?.[0] || themeOther || '情绪表达';
+src/modules/song-writing/SongWritingStudioPage.jsx:134:    '情绪表达': ['scared', 'proud', 'lonely', 'surprised', 'confused', 'grateful', 'hopeful', 'peaceful'],
+src/modules/song-writing/SongWritingStudioPage.jsx:135:    '自然探索': ['sunny', 'rainy', 'windy', 'curious', 'amazed', 'free', 'wild', 'bright'],
+src/modules/song-writing/SongWritingStudioPage.jsx:136:    '自我认知': ['strong', 'weak', 'growing', 'learning', 'unique', 'special', 'confident', 'honest'],
+src/modules/song-writing/SongWritingStudioPage.jsx:137:    '人际关系': ['friendly', 'kind', 'helpful', 'sharing', 'caring', 'listening', 'loving', 'trusting'],
+src/modules/song-writing/SongWritingStudioPage.jsx:138:    '勇气与冒险': ['brave', 'bold', 'daring', 'adventurous', 'fearless', 'strong', 'ready', 'determined'],
+src/modules/song-writing/SongWritingStudioPage.jsx:140:  const extras = extraByTheme[theme] || extraByTheme['情绪表达'];
+src/modules/song-writing/SongWritingStudioPage.jsx:142:  const title = theme === '勇气与冒险' ? 'A Brave Little Sky' : theme === '自然探索' ? 'The Sky Inside Me' : 'My Little Bright Song';
+src/modules/song-writing/SongWritingStudioPage.jsx:160:  const html = `<!doctype html><html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${draft.title}</title><style>body{margin:0;font-family:Arial,"Microsoft YaHei";color:#514d56}main{max-width:625px;margin:25px auto;text-align:center}h1{margin:0;font-size:28px}small{color:#aaa}.player{margin-top:20px;padding:16px;border-radius:16px;background:#a9ded7;border-bottom:4px solid #7cc8bd}.grid{display:grid;grid-template-columns:398px 212px;gap:15px;margin-top:14px;text-align:left}.lyrics,.words,.instruments{padding:14px;border-radius:14px}.lyrics{background:#e9def3}.words{background:#f9da50}.instruments{margin-top:12px;background:#f29c79}.lyrics p{padding:7px;border-bottom:1px solid #d6c8e2}.lyrics input{width:60px;border:2px solid #555;border-radius:8px}.words button{width:48%;margin:3px;border:2px solid #555;border-radius:16px;background:#fff;padding:6px;font-weight:bold}.foot{color:#eabf35;padding:20px}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style><main><h1>${draft.title}</h1><small>旋律：${melody.name} · ${form.age} · ${form.level}</small><section class="player">🎵 伴奏播放 ▶ ━━━━━━ 音量</section><div class="grid"><section class="lyrics"><b>🎶 填词模板</b>${lines}</section><div><section class="words"><b>📚 Word Bank</b><p>点击单词填入空格</p>${words}</section><section class="instruments"><b>🎸 乐器</b><p>👏 拍手 🥁 手鼓 🔔 铃鼓 🪇 沙锤</p></section></div></div><div class="foot">⭐ ☀️ 🌈 🎵 💛 ⭐<br><small>幸福力英文歌曲创编 · 轻松唱出心情</small></div></main></html>`;
+src/modules/song-writing/SongWritingStudioPage.jsx:188:  const [draft, setDraft] = React.useState(() => initialSession?.draft || makeDraft({ vocabulary: 'happy, calm, brave', themes: ['情绪表达'], melody: 'twinkle' }));
+src/modules/song-writing/SongWritingStudioPage.jsx:250:    setDraft(makeDraft({ vocabulary: 'happy, calm, brave', themes: ['情绪表达'], melody: 'twinkle' }));
+src/modules/song-writing/SongWritingStudioPage.jsx:787:              <OptionGroup tone="coral" label={t('songWriting.ageLabel')} options={[{ value: '4-6岁', label: t('songWriting.age46') }, { value: '7-9岁', label: t('songWriting.age79') }, { value: '10-12岁', label: t('songWriting.age1012') }, { value: '13-15岁', label: t('songWriting.age1315') }]} value={form.age} onChange={(value) => setFormField('age', value)} />
+src/modules/song-writing/SongWritingStudioPage.jsx:788:              <OptionGroup tone="blue" label={t('songWriting.levelLabel')} options={[{ value: '零基础', label: t('songWriting.levelZero') }, { value: '初级（会字母和简单词）', label: t('songWriting.levelBeginner') }, { value: '中级（能简单对话）', label: t('songWriting.levelIntermediate') }, { value: '高级（能阅读和表达）', label: t('songWriting.levelAdvanced') }]} value={form.level} onChange={(value) => setFormField('level', value)} />
+src/modules/song-writing/SongWritingStudioPage.jsx:789:              <OptionGroup tone="yellow" label={t('songWriting.participantLabel')} options={[{ value: '单人', label: t('songWriting.partSingle') }, { value: '小组（2-4人）', label: t('songWriting.partSmallGroup') }, { value: '大组（5-10人）', label: t('songWriting.partBigGroup') }, { value: '班级（10+）', label: t('songWriting.partClass') }]} value={form.participants} onChange={(value) => setFormField('participants', value)} />
+src/modules/song-writing/SongWritingStudioPage.jsx:902:        {/* <button type="button" className="pbv2-ghost" onClick={() => downloadInteractiveHtml(draft, form, selectedMelody)}>下载 HTML</button> */}
+src/modules/test/AudioGeneratorPage.jsx:27:  const [audioRef, setAudioRef] = useState(null); // 音频播放器引用
+src/modules/test/AudioGeneratorPage.jsx:31:      setError('请输入要生成音频的文字内容');
+src/modules/test/AudioGeneratorPage.jsx:56:        const err = await res.json().catch(() => ({ error: '请求失败' }));
+src/modules/test/AudioGeneratorPage.jsx:57:        throw new Error(err.error || '生成失败');
+src/modules/test/AudioGeneratorPage.jsx:75:          console.log('轮询结果:', statusData);
+src/modules/test/AudioGeneratorPage.jsx:84:            setError('生成失败，请重试');
+src/modules/test/AudioGeneratorPage.jsx:91:      setError('生成超时，请重试');
+src/modules/test/AudioGeneratorPage.jsx:93:      setError('生成失败: ' + err.message);
+src/modules/test/AudioGeneratorPage.jsx:219:                {isGenerating ? '提交中...' : '生成中，请稍候...'}
+src/modules/test/AudioGeneratorPage.jsx:230:        {/* 生成结果 */}
+src/modules/test/AudioGeneratorPage.jsx:259:                    {isPlaying ? '暂停' : '播放'}
+src/modules/test/IPSceneTestPage.jsx:35:          console.log('测试用户登录成功');
+src/modules/test/IPSceneTestPage.jsx:37:          setLoginError(data.error || '登录失败');
+src/modules/test/IPSceneTestPage.jsx:41:        setLoginError('登录请求失败: ' + error.message);
+src/modules/test/IPSceneTestPage.jsx:61:            {/* 登录状态提示 */}
+src/modules/test/VideoGeneratorPage.jsx:35:    console.log('视频生成完成:', data);
+src/modules/test/VideoGeneratorPage.jsx:43:    alert(`视频「${data.title}」生成成功！\n分镜数：${data.scenes?.length || 0}\n时长：${data.duration}秒`);
+src/modules/test/VideoGeneratorPage.jsx:50:      setAudioError('请输入分镜提示词或故事内容');
+src/modules/test/VideoGeneratorPage.jsx:76:        const err = await res.json().catch(() => ({ error: '请求失败' }));
+src/modules/test/VideoGeneratorPage.jsx:77:        throw new Error(err.error || '生成失败');
+src/modules/test/VideoGeneratorPage.jsx:95:          console.log('音频轮询结果:', statusData);
+src/modules/test/VideoGeneratorPage.jsx:103:            setAudioError('生成失败，请重试');
+src/modules/test/VideoGeneratorPage.jsx:110:      setAudioError('生成超时，请重试');
+src/modules/test/VideoGeneratorPage.jsx:112:      setAudioError('生成失败: ' + err.message);
+src/modules/test/VideoGeneratorPage.jsx:148:      {/* 顶部导航栏 */}
+src/modules/test/VideoGeneratorPage.jsx:163:              {user ? user.name || user.email || '用户' : '未登录'}
+src/modules/test/VideoGeneratorPage.jsx:169:      {/* 主体内容 */}
+src/modules/test/VideoGeneratorPage.jsx:237:          {/* 背景音乐生成面板 */}
+src/modules/test/VideoGeneratorPage.jsx:252:                {showAudioPanel ? '收起' : '展开'}
+src/modules/test/VideoGeneratorPage.jsx:327:                      {isGeneratingAudio ? '提交中...' : '生成中，请稍候...'}
+src/modules/test/VideoGeneratorPage.jsx:337:                {/* 生成结果 */}
+src/modules/test/VideoGeneratorPage.jsx:366:                            {isPlayingAudio ? '暂停' : '播放'}
+src/modules/test/VideoGeneratorPage.jsx:388:      {/* 视频生成模态框 */}
+src/modules/test/VoiceGeneratorPage.jsx:26:  const [playingVoice, setPlayingVoice] = useState(null); // 当前正在播放的音色
+src/modules/test/VoiceGeneratorPage.jsx:27:  const [audioRef, setAudioRef] = useState(null); // 音频播放器引用
+src/modules/test/VoiceGeneratorPage.jsx:28:  const audioPreviewRef = useRef(null); // 试听音频播放器引用
+src/modules/test/VoiceGeneratorPage.jsx:57:      console.error('音频加载失败:', voice.file);
+src/modules/test/VoiceGeneratorPage.jsx:68:      setError('请输入要转换为语音的文字内容');
+src/modules/test/VoiceGeneratorPage.jsx:93:        const err = await res.json().catch(() => ({ error: '请求失败' }));
+src/modules/test/VoiceGeneratorPage.jsx:94:        throw new Error(err.error || '生成失败');
+src/modules/test/VoiceGeneratorPage.jsx:112:          console.log('轮询结果:', statusData);
+src/modules/test/VoiceGeneratorPage.jsx:121:            setError('生成失败，请重试');
+src/modules/test/VoiceGeneratorPage.jsx:128:      setError('生成超时，请重试');
+src/modules/test/VoiceGeneratorPage.jsx:130:      setError('生成失败: ' + err.message);
+src/modules/test/VoiceGeneratorPage.jsx:166:      {/* 顶部导航栏 */}
+src/modules/test/VoiceGeneratorPage.jsx:183:        {/* 生成表单 */}
+src/modules/test/VoiceGeneratorPage.jsx:190:          {/* 文字输入 */}
+src/modules/test/VoiceGeneratorPage.jsx:206:          {/* 音色选择 */}
+src/modules/test/VoiceGeneratorPage.jsx:256:          {/* 语速选择 */}
+src/modules/test/VoiceGeneratorPage.jsx:276:          {/* 情感选择 */}
+src/modules/test/VoiceGeneratorPage.jsx:312:                {isGenerating ? '提交中...' : '生成中，请稍候...'}
+src/modules/test/VoiceGeneratorPage.jsx:323:        {/* 生成结果 */}
+src/modules/test/VoiceGeneratorPage.jsx:353:                    {isPlaying ? '暂停' : '播放'}
+src/modules/test/VoiceGeneratorPage.jsx:370:        {/* 使用说明 */}
+src/services/aiAssetService.js:9:const FALLBACK_NEGATIVE_PROMPT_ZH = '模糊，低清，畸形，杂乱背景，过多装饰，恐怖，黑暗，血腥，写实照片，油画，过度写实，文字变形，文字模糊，手绘感太重，噪点，复杂纹理，水印，ui界面，多余人物';
+src/services/aiAssetService.js:159:        throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+src/services/aiAssetService.js:165:      console.error('生成图片失败:', error);
+src/services/aiAssetService.js:179:        throw new Error(`查询任务状态失败: ${response.status} ${response.statusText}`);
+src/services/aiAssetService.js:185:      console.error('查询任务状态失败:', error);
+src/services/aiAssetService.js:204:        throw new Error(`获取素材失败: ${response.status} ${response.statusText}`);
+src/services/aiAssetService.js:209:      console.error('获取素材失败:', error);
+src/services/aiAssetService.js:226:        throw new Error(`上传图片失败: ${response.status} ${response.statusText}`);
+src/services/aiAssetService.js:232:      console.error('上传图片失败:', error);
+src/services/aiAssetService.js:257:        console.error(`轮询任务状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+src/services/aiAssetService.js:265:    throw new Error('任务超时，请稍后重试');
+src/services/aiAssetService.js:289:      console.error('提取图片信息失败:', error);
+src/services/aiAssetService.js:301:        throw new Error('未找到生成的图片');
+src/services/aiAssetService.js:314:        throw new Error('上传到OSS失败');
+src/services/aiAssetService.js:323:      console.error('获取并上传图片失败:', error);
+src/services/aiAssetService.js:352:        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+src/services/aiAssetService.js:358:      console.error('生成多张图片失败:', error);
+src/services/aiAssetService.js:365:    console.log(`开始轮询任务 ${promptId}，最多尝试 ${maxAttempts} 次，间隔 ${interval}ms`);
+src/services/aiAssetService.js:373:        console.log(`轮询任务 ${promptId}，尝试 ${attempt + 1}/${maxAttempts}`);
+src/services/aiAssetService.js:381:          throw new Error(errorData.error || `查询任务状态失败: ${response.status}`);
+src/services/aiAssetService.js:385:        console.log(`轮询任务 ${promptId}，响应数据:`, data);
+src/services/aiAssetService.js:396:            prompt: `${prompt} - 教学场景 ${index + 1}`,
+src/services/aiAssetService.js:400:          throw new Error('任务执行失败');
+src/services/aiAssetService.js:402:          console.log(`任务 ${promptId} 仍在处理中，继续轮询`);
+src/services/aiAssetService.js:404:          console.warn(`任务 ${promptId} 状态未知: ${data.status}`);
+src/services/aiAssetService.js:407:        console.log(`等待 ${interval}ms 后继续轮询`);
+src/services/aiAssetService.js:410:        console.error(`轮询任务 ${index + 1} 状态失败 (尝试 ${attempt + 1}/${maxAttempts}):`, error);
+src/services/aiAssetService.js:417:        console.log(`等待 ${interval}ms 后重试`);
+src/services/aiAssetService.js:422:    throw new Error('任务超时，请稍后重试');
+src/services/aiAssetService.js:428:      onProgress?.(10, '正在提交生成任务...');
+src/services/aiAssetService.js:432:      onProgress?.(30, '任务已提交，正在生成中...');
+src/services/aiAssetService.js:435:        onProgress?.(50, '正在获取生成的图片...');
+src/services/aiAssetService.js:443:        onProgress?.(100, '生成完成并已上传到OSS！');
+src/services/aiAssetService.js:457:        onProgress?.(100, '生成完成！');
+src/services/aiAssetService.js:465:      console.error('生成图片失败:', error);
+src/services/aiAssetService.js:492:        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+src/services/aiAssetService.js:498:      console.error('生成多个音频失败:', error);
+src/services/aiAssetService.js:506:      onProgress?.(10, '正在提交音频生成任务...');
+src/services/aiAssetService.js:510:      onProgress?.(30, '任务已提交，正在生成中...');
+src/services/aiAssetService.js:518:        onProgress?.(30 + Math.floor((i / tasks.length) * 60), `正在生成音频 ${i + 1}/${tasks.length}...`);
+src/services/aiAssetService.js:532:          console.error(`音频任务 ${i + 1} 失败:`, error);
+src/services/aiAssetService.js:536:      onProgress?.(100, '音频生成完成！');
+src/services/aiAssetService.js:543:      console.error('生成音频失败:', error);
+src/services/aiAssetService.js:557:        console.log('相对路径:', processedUrl);
+src/services/aiAssetService.js:561:        console.log('前端地址转换为相对路径:', processedUrl);
+src/services/aiAssetService.js:580:        throw new Error(errorData.error || `API请求失败: ${response.status} ${response.statusText}`);
+src/services/aiAssetService.js:586:      console.error('图生图失败:', error);
+src/services/aiAssetService.js:594:      onProgress?.(10, '正在提交图生图任务...');
+src/services/aiAssetService.js:598:      onProgress?.(30, '任务已提交，正在生成中...');
+src/services/aiAssetService.js:606:        onProgress?.(30 + Math.floor((i / tasks.length) * 60), `正在生成图片 ${i + 1}/${tasks.length}...`);
+src/services/aiAssetService.js:620:          console.error(`图生图任务 ${i + 1} 失败:`, error);
+src/services/aiAssetService.js:624:      onProgress?.(100, '图生图完成！');
+src/services/aiAssetService.js:631:      console.error('图生图失败:', error);
+src/services/api.js:46:        data = { error: response.status >= 500 ? '服务器错误，请稍后重试' : '接口返回了无效响应' };
+src/services/api.js:55:      console.error('API 请求异常:', err.message);
+src/services/dashboardService.js:25:      throw new Error(`获取统计数据失败: ${response.status}`);
+src/services/dashboardService.js:31:    console.error('获取统计数据失败:', error);
+src/services/dashboardService.js:56:      throw new Error(`获取课程列表失败: ${response.status}`);
+src/services/dashboardService.js:62:    console.error('获取课程列表失败:', error);
+src/services/dashboardService.js:87:      throw new Error(`获取任务历史失败: ${response.status}`);
+src/services/dashboardService.js:93:    console.error('获取任务历史失败:', error);
+src/services/dashboardService.js:117:    console.error('获取任务队列失败:', error);
+src/services/dashscope.js:43:      throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+src/services/dashscope.js:53:      throw new Error(result.error || '优化失败');
+src/services/dashscope.js:56:    console.error('优化提示词失败:', error);
+src/services/dashscope.js:74:        console.error('保存提示词历史失败:', historyError);
+src/services/dashscope.js:98:  reportProgress(10, '正在连接服务...');
+src/services/dashscope.js:101:    reportProgress(20, '正在提交生成任务...');
+src/services/dashscope.js:120:      throw new Error(`API请求失败: ${response.status} ${response.statusText}`);
+src/services/dashscope.js:125:    reportProgress(50, '任务已提交，等待生成...');
+src/services/dashscope.js:130:        reportProgress(100, '课件生成任务已提交');
+src/services/dashscope.js:139:        reportProgress(100, '课件生成完成');
+src/services/dashscope.js:144:    throw new Error(result.error || '生成失败');
+src/services/dashscope.js:146:    console.error('生成课件失败:', error);
+src/services/dashscope.js:147:    reportProgress(0, `生成失败: ${error.message}`);
+src/services/promptLibrary.js:34:    console.warn(`[promptLibrary] 拉取 ${key} 失败，使用本地兜底:`, error?.message || error);
+src/services/promptService.js:132:    base: '生成一张适合小学英语教学的图片，主题是 {topic}，风格要生动有趣，适合 {age} 岁学生',
+src/services/promptService.js:134:      '添加更多色彩和细节，使画面更加丰富',
+src/services/promptService.js:135:      '确保图片中的元素符合目标年龄段的认知水平',
+src/services/promptService.js:136:      '增加互动元素，让学生能够参与其中',
+src/services/promptService.js:137:      '使用明亮的色彩和友好的视觉元素',
+src/services/promptService.js:138:      '确保图片内容与教学主题紧密相关'
+src/services/promptService.js:142:    base: '生成一个适合小学英语教学的视频，主题是 {topic}，风格要生动有趣，适合 {age} 岁学生',
+src/services/promptService.js:144:      '确保视频内容清晰，画质良好',
+src/services/promptService.js:145:      '添加更多互动元素，让学生能够参与其中',
+src/services/promptService.js:146:      '使用明亮的色彩和友好的视觉元素',
+src/services/promptService.js:147:      '确保视频内容与教学主题紧密相关',
+src/services/promptService.js:148:      '控制视频时长，符合课堂时间要求'
+src/services/promptService.js:152:    base: '生成适合小学英语教学的音频，主题是 {topic}，风格要生动有趣，适合 {age} 岁学生',
+src/services/promptService.js:154:      '确保音频清晰，音质良好',
+src/services/promptService.js:155:      '使用适合目标年龄段的音乐风格',
+src/services/promptService.js:156:      '添加更多互动元素，让学生能够参与其中',
+src/services/promptService.js:157:      '确保音频内容与教学主题紧密相关',
+src/services/promptService.js:158:      '控制音频时长，符合课堂时间要求'
+src/services/promptService.js:162:    base: '为小学英语课程生成教师讲稿，主题是 {topic}，适合 {age} 岁学生，包含互动环节',
+src/services/promptService.js:164:      '增加更多互动问题，鼓励学生参与',
+src/services/promptService.js:165:      '使用更简单易懂的语言',
+src/services/promptService.js:166:      '添加更多游戏化元素',
+src/services/promptService.js:167:      '确保讲稿长度适中，符合课堂时间要求',
+src/services/promptService.js:168:      '增加更多鼓励性语言，提高学生自信心'
+src/services/promptService.js:172:    base: '为小学英语课程设计一个活动，主题是 {topic}，适合 {age} 岁学生，时长 {duration} 分钟',
+src/services/promptService.js:174:      '增加更多合作学习元素',
+src/services/promptService.js:175:      '设计更明确的活动目标和评估标准',
+src/services/promptService.js:176:      '添加更多差异化教学策略',
+src/services/promptService.js:177:      '确保活动材料易于准备和使用',
+src/services/promptService.js:178:      '增加活动的趣味性和吸引力'
+src/services/promptService.js:182:    base: '为小学英语课程设计PPT内容，主题是 {topic}，适合 {age} 岁学生，包含视觉元素',
+src/services/promptService.js:184:      '增加更多视觉元素和动画效果',
+src/services/promptService.js:185:      '确保文字简洁明了，易于阅读',
+src/services/promptService.js:186:      '添加更多互动环节',
+src/services/promptService.js:187:      '设计更符合目标年龄段审美的视觉风格',
+src/services/promptService.js:188:      '确保PPT内容结构清晰，逻辑连贯'
+src/services/sopService.js:10:  DRAFT: 'draft',         // 草稿（策划中）
+src/services/sopService.js:11:  REVIEW: 'review',       // 待审核
+src/services/sopService.js:12:  APPROVED: 'approved',   // 已审核
+src/services/sopService.js:13:  PUBLISHED: 'published', // 已发布
+src/services/sopService.js:14:  ARCHIVED: 'archived',   // 已归档
+src/services/sopService.js:15:  REJECTED: 'rejected',  // 已驳回
+src/services/uploadService.js:30:          error: data.error || '上传失败'
+src/services/uploadService.js:42:        error: '网络错误，上传失败'
+src/services/uploadService.js:110:          error: data.error || '保存失败'
+src/services/uploadService.js:122:        error: '网络错误，保存失败'
+src/services/uploadService.js:168:          error: data.error || '保存失败'
+src/services/uploadService.js:180:        error: '网络错误，保存失败'
+src/services/uploadService.js:224:          error: data.error || '保存失败'
+src/services/uploadService.js:236:        error: '网络错误，保存失败'
+src/services/uploadService.js:252:        error: `不支持的文件类型。允许的类型: ${allowedTypes.join(', ')}`
+src/services/uploadService.js:260:        error: `文件大小不能超过 ${maxSizeInMB}MB`
+src/services/uploadService.js:289:          error: data.error || '上传失败'
+src/services/uploadService.js:301:        error: '网络错误，上传失败'
+src/services/videoStoryboardService.js:7:const FALLBACK_CHARACTER_REFERENCE_PROMPT = '{{characterDescription}}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格';
+src/services/videoStoryboardService.js:42:      console.error('提取人物特征失败，使用默认描述');
+src/services/videoStoryboardService.js:43:      return '一个通用卡通人物';
+src/services/videoStoryboardService.js:47:    return data.character || '一个通用卡通人物';
+src/services/videoStoryboardService.js:49:    console.error('提取人物特征失败:', error);
+src/services/videoStoryboardService.js:50:    return '一个通用卡通人物';
+src/services/videoStoryboardService.js:72:        throw new Error(`查询任务状态失败: ${response.status}`);
+src/services/videoStoryboardService.js:83:        throw new Error('任务执行失败');
+src/services/videoStoryboardService.js:94:  throw new Error('任务轮询超时');
+src/services/videoStoryboardService.js:112:    console.log('开始提取人物特征...');
+src/services/videoStoryboardService.js:114:    console.log('提取的人物特征:', characterDescription);
+src/services/videoStoryboardService.js:118:  let characterPrompt = `${characterDescription}，单个或多个人物，纯白色背景，人物特写，正面视角，清晰面部特征，全身照，无背景元素，无道具，无场景，高质量，细节丰富，肖像摄影风格`;
+src/services/videoStoryboardService.js:130:        console.log('使用后端提示词:', characterPrompt);
+src/services/videoStoryboardService.js:134:    console.error('获取后端提示词失败，使用默认提示词:', error);
+src/services/videoStoryboardService.js:142:      console.log('使用图生图接口生成人物参考图');
+src/services/videoStoryboardService.js:148:        console.log('相对路径:', imageUrl);
+src/services/videoStoryboardService.js:152:        console.log('前端地址转换为相对路径:', imageUrl);
+src/services/videoStoryboardService.js:170:      console.log('使用文生图接口生成人物参考图');
+src/services/videoStoryboardService.js:189:      throw new Error(errorData.error || '生成人物参考图失败');
+src/services/videoStoryboardService.js:195:      throw new Error('生成人物参考图失败');
+src/services/videoStoryboardService.js:205:        console.error('轮询任务失败:', err);
+src/services/videoStoryboardService.js:214:    console.error('生成人物参考图失败:', error);
+src/services/videoStoryboardService.js:239:      console.log('使用图生图接口生成人物参考图');
+src/services/videoStoryboardService.js:245:        console.log('相对路径:', imageUrl);
+src/services/videoStoryboardService.js:249:        console.log('前端地址转换为相对路径:', imageUrl);
+src/services/videoStoryboardService.js:267:      console.log('使用文生图接口生成人物参考图');
+src/services/videoStoryboardService.js:286:      throw new Error(errorData.error || '生成人物参考图失败');
+src/services/videoStoryboardService.js:292:      throw new Error('生成人物参考图失败');
+src/services/videoStoryboardService.js:302:        console.error('轮询任务失败:', err);
+src/services/videoStoryboardService.js:311:    console.error('生成人物参考图失败:', error);
+src/services/videoStoryboardService.js:341:      console.log(`分镜${scene.sequence || ''} 原始提示词:`, scene.content);
+src/services/videoStoryboardService.js:342:      console.log(`分镜${scene.sequence || ''} 优化后提示词:`, optimizedPrompt);
+src/services/videoStoryboardService.js:345:    console.error('优化分镜提示词失败，使用原始提示词:', error);
+src/services/videoStoryboardService.js:360:      console.log('使用人物参考图作为风格参考');
+src/services/videoStoryboardService.js:368:        console.log('相对路径转换为完整 URL:', referenceImage);
+src/services/videoStoryboardService.js:374:        console.log('前端地址转换为后端地址:', referenceImage);
+src/services/videoStoryboardService.js:379:      console.log('使用图生图保持风格一致性');
+src/services/videoStoryboardService.js:395:      console.log('使用分镜图工作流生成图片');
+src/services/videoStoryboardService.js:414:      throw new Error(errorData.error || '生成分镜图片失败');
+src/services/videoStoryboardService.js:420:      throw new Error('生成分镜图片失败');
+src/services/videoStoryboardService.js:426:    console.error('生成分镜图片失败:', error);
+src/services/videoStoryboardService.js:448:        throw new Error(`查询任务状态失败: ${response.status}`);
+src/services/videoStoryboardService.js:456:        throw new Error('任务执行失败');
+src/services/videoStoryboardService.js:467:  throw new Error('视频生成任务超时');
+src/services/videoStoryboardService.js:508:          console.warn(`查询执行状态失败 (${response.status})，第${attempt + 1}/${maxRetries}次重试...`);
+src/services/videoStoryboardService.js:509:          lastError = new Error(`服务器错误 (${response.status}): ${errorData.error || errorText}`);
+src/services/videoStoryboardService.js:517:        throw new Error(errorData.error || '查询失败');
+src/services/videoStoryboardService.js:527:        console.warn(`网络错误，第${attempt + 1}/${maxRetries}次重试...`, error.message);
+src/services/videoStoryboardService.js:537:        console.error('查询执行状态失败:', error);
+src/services/videoStoryboardService.js:543:  throw lastError || new Error('查询执行状态失败');
+src/services/videoStoryboardService.js:576:          console.warn(`查询重新生成图片状态失败 (${response.status})，第${attempt + 1}/${maxRetries}次重试...`);
+src/services/videoStoryboardService.js:577:          lastError = new Error(`服务器错误 (${response.status}): ${errorData.error || errorText}`);
+src/services/videoStoryboardService.js:585:        throw new Error(errorData.error || '查询失败');
+src/services/videoStoryboardService.js:595:        console.warn(`网络错误，第${attempt + 1}/${maxRetries}次重试...`, error.message);
+src/services/videoStoryboardService.js:605:        console.error('查询重新生成图片状态失败:', error);
+src/services/videoStoryboardService.js:611:  throw lastError || new Error('查询重新生成图片状态失败');
+src/services/videoStoryboardService.js:625:    console.log('调用后端API生成图片:', { role, videoRatio, story, videoWidth, videoHeight });
+src/services/videoStoryboardService.js:644:      throw new Error(errorData.error || '调用失败');
+src/services/videoStoryboardService.js:648:    console.log('后端API返回数据:', data);
+src/services/videoStoryboardService.js:651:      throw new Error('未返回executionId');
+src/services/videoStoryboardService.js:655:    console.log('获取到executionId:', executionId, '开始轮询执行状态...');
+src/services/videoStoryboardService.js:661:      console.log(`第${attempt + 1}/${maxAttempts}次查询执行状态...`);
+src/services/videoStoryboardService.js:664:      console.log('执行状态:', statusData);
+src/services/videoStoryboardService.js:667:        console.log('执行完成，返回完整数据:', statusData.data);
+src/services/videoStoryboardService.js:670:        const errorMsg = statusData.details || statusData.error || '执行失败';
+src/services/videoStoryboardService.js:671:        console.error('执行失败，详细信息:', statusData);
+src/services/videoStoryboardService.js:675:      console.log(`等待${interval/1000}秒后继续查询...`);
+src/services/videoStoryboardService.js:679:    throw new Error('执行超时');
+src/services/videoStoryboardService.js:681:    console.error('生成图片失败:', error);
+src/services/videoStoryboardService.js:693:    console.log('调用后端API生成视频:', storyboardData);
+src/services/videoStoryboardService.js:706:      throw new Error(errorData.error || '调用失败');
+src/services/videoStoryboardService.js:710:    console.log('后端API返回数据:', data);
+src/services/videoStoryboardService.js:714:    console.error('生成视频失败:', error);
+src/services/videoStoryboardService.js:747:          console.warn(`查询视频状态失败 (${response.status})，第${attempt + 1}/${maxRetries}次重试...`);
+src/services/videoStoryboardService.js:748:          lastError = new Error(`服务器错误 (${response.status}): ${errorData.error || errorText}`);
+src/services/videoStoryboardService.js:756:        throw new Error(errorData.error || '查询失败');
+src/services/videoStoryboardService.js:766:        console.warn(`网络错误，第${attempt + 1}/${maxRetries}次重试...`, error.message);
+src/services/videoStoryboardService.js:776:        console.error('查询视频状态失败:', error);
+src/services/videoStoryboardService.js:782:  throw lastError || new Error('查询视频状态失败');
+src/services/videoStoryboardService.js:797:      throw new Error('未返回executionId');
+src/services/videoStoryboardService.js:801:    console.log('获取到视频executionId:', executionId, '开始轮询视频状态...');
+src/services/videoStoryboardService.js:804:      console.log(`第${attempt + 1}/${maxAttempts}次查询视频状态...`);
+src/services/videoStoryboardService.js:807:      console.log('视频状态:', statusData);
+src/services/videoStoryboardService.js:810:        console.log('视频生成完成，返回完整数据:', statusData.data);
+src/services/videoStoryboardService.js:813:        const errorMsg = statusData.data.error || '视频生成失败';
+src/services/videoStoryboardService.js:814:        console.error('视频生成失败，详细信息:', statusData);
+src/services/videoStoryboardService.js:818:      console.log(`等待${interval/1000}秒后继续查询...`);
+src/services/videoStoryboardService.js:822:    throw new Error('视频生成超时');
+src/services/videoStoryboardService.js:824:    console.error('生成视频失败:', error);
+src/services/videoStoryboardService.js:839:    console.log('调用后端API重新生成图片:', { width, height, role, prompt });
+src/services/videoStoryboardService.js:857:      throw new Error(errorData.error || '调用失败');
+src/services/videoStoryboardService.js:861:    console.log('后端API返回数据:', data);
+src/services/videoStoryboardService.js:865:    console.error('重新生成图片失败:', error);
+src/services/videoStoryboardService.js:877:    console.log('获取重新生成的图片:', executionId);
+src/services/videoStoryboardService.js:888:      throw new Error(errorData.error || '调用失败');
+src/services/videoStoryboardService.js:892:    console.log('获取图片数据:', data);
+src/services/videoStoryboardService.js:896:    console.error('获取图片失败:', error);
+src/services/videoStoryboardService.js:917:      throw new Error('未返回executionId');
+src/services/videoStoryboardService.js:921:    console.log('获取到executionId:', executionId, '开始轮询...');
+src/services/videoStoryboardService.js:925:      console.log(`第${attempt + 1}/${maxAttempts}次查询状态...`);
+src/services/videoStoryboardService.js:928:      console.log('执行状态:', statusData);
+src/services/videoStoryboardService.js:936:        console.log('执行完成，返回图片数据...');
+src/services/videoStoryboardService.js:942:        throw new Error('执行失败');
+src/services/videoStoryboardService.js:945:      console.log(`等待${interval/1000}秒后继续查询...`);
+src/services/videoStoryboardService.js:949:    throw new Error('执行超时');
+src/services/videoStoryboardService.js:951:    console.error('重新生成图片失败:', error);
+src/utils/apiClient.js:22:      throw new Error('登录已过期，请重新登录');
+src/utils/apiClient.js:26:      throw new Error('权限不足');
+src/utils/apiService.js:6:const AUTH_ERROR_MESSAGES = ['Token已过期', 'Token无效', '无效的token', '未提供认证token', '认证失败', 'Token验证失败'];
+src/utils/apiService.js:26:  if (response.status === 401) return '认证失败，请重新登录';
+src/utils/apiService.js:27:  if (response.status === 403) return '权限不足';
+src/utils/apiService.js:28:  if (response.status === 404) return '资源不存在';
+src/utils/apiService.js:29:  if (response.status >= 500) return '服务器错误';
+src/utils/apiService.js:30:  return data?.message || '请求失败';
+src/utils/apiService.js:70:      throw new Error('网络连接失败，请检查网络');
+src/utils/exportUtils.js:43:    throw new Error('导出元素不存在');
+src/utils/exportUtils.js:70:    throw new Error('没有可导出的内容');
+src/utils/exportUtils.js:110:    throw new Error('没有可导出的内容');
+src/utils/exportUtils.js:142:    throw new Error('导出元素不存在');
+src/utils/teachingWindow.js:35:export function openTeachingWindow({ pages = [], title = '授课模式', backgroundMusic = null } = {}) {
+src/utils/teachingWindow.js:44:    music: backgroundMusic?.url ? { url: backgroundMusic.url, name: backgroundMusic.name || '背景音乐' } : null,
+src/utils/teachingWindow.js:81:<button class="exit" id="exit" aria-label="exit" title="退出授课"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+src/utils/teachingWindow.js:84:<div class="music" id="music" style="display:none"><button id="musicBtn"></button><span id="musicName"></span><input id="musicVol" aria-label="背景音乐音量" type="range" min="0" max="1" step="0.05" value="0.35"></div>
+src/utils/teachingWindow.js:102:    : '<span class="empty">本页暂无插图</span>';
+src/utils/teachingWindow.js:169:    title: draft?.title || '歌曲授课',
+src/utils/teachingWindow.js:170:    melodyName: audio?.name || '未选择曲目',
+src/utils/teachingWindow.js:232:<button class="exit" id="exit" aria-label="exit" title="退出授课"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+src/utils/teachingWindow.js:239:    <input id="seek" aria-label="播放进度" type="range" min="0" max="0" step="0.1" value="0" style="flex:1;min-width:120px;accent-color:#f4785e" disabled>
+src/utils/teachingWindow.js:243:      <label class="volume"><b id="volText">75%</b><input id="vol" aria-label="音量" type="range" min="0" max="1" step="0.05" value="0.75"></label>
+src/utils/teachingWindow.js:350:  [['instrumental', '伴奏版'], ['vocal', '演唱版']].forEach(function(pair){

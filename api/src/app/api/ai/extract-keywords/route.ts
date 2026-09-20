@@ -77,6 +77,11 @@ export async function POST(request: NextRequest) {
       prompt,
       selectedRoles,
       promptTemplate: await getRawTemplate('n8n.optimize.extract-keywords')
+    }, {
+      // Qwen may need more than the client's 60-second default for long prompts.
+      // Keep this above the observed workflow latency so a successful n8n run is
+      // not reported to the caller as a timeout.
+      timeout: 120000
     });
 
     console.log('[extract-keywords] N8N 响应:', result);

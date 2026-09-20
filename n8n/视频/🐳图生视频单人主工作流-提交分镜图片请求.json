@@ -575,9 +575,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "deepseek-v4-flash",
+          "value": "qwen3.6-plus",
           "mode": "list",
-          "cachedResultName": "deepseek-v4-flash"
+          "cachedResultName": "qwen3.6-plus"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -592,8 +592,8 @@
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
-          "id": "EPHUtiZYNuqoGVK2",
-          "name": "deepseek"
+          "id": "OAGoah9WZYmJctU1",
+          "name": "Qwen_aliyun"
         }
       }
     },
@@ -601,9 +601,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "deepseek-v4-flash",
+          "value": "qwen3.6-plus",
           "mode": "list",
-          "cachedResultName": "deepseek-v4-flash"
+          "cachedResultName": "qwen3.6-plus"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -618,8 +618,8 @@
       "name": "OpenAI Chat Model2",
       "credentials": {
         "openAiApi": {
-          "id": "EPHUtiZYNuqoGVK2",
-          "name": "deepseek"
+          "id": "OAGoah9WZYmJctU1",
+          "name": "Qwen_aliyun"
         }
       }
     },
@@ -627,9 +627,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "deepseek-v4-flash",
+          "value": "qwen3.6-plus",
           "mode": "list",
-          "cachedResultName": "deepseek-v4-flash"
+          "cachedResultName": "qwen3.6-plus"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -644,8 +644,8 @@
       "name": "OpenAI Chat Model3",
       "credentials": {
         "openAiApi": {
-          "id": "EPHUtiZYNuqoGVK2",
-          "name": "deepseek"
+          "id": "OAGoah9WZYmJctU1",
+          "name": "Qwen_aliyun"
         }
       }
     },
@@ -1115,9 +1115,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "deepseek-v4-flash",
+          "value": "qwen3.6-plus",
           "mode": "list",
-          "cachedResultName": "deepseek-v4-flash"
+          "cachedResultName": "qwen3.6-plus"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -1132,8 +1132,8 @@
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "EPHUtiZYNuqoGVK2",
-          "name": "deepseek"
+          "id": "OAGoah9WZYmJctU1",
+          "name": "Qwen_aliyun"
         }
       }
     },
@@ -2264,9 +2264,9 @@
         "parameters": {
           "model": {
             "__rl": true,
-            "value": "deepseek-v4-flash",
+            "value": "qwen3.6-plus",
             "mode": "list",
-            "cachedResultName": "deepseek-v4-flash"
+            "cachedResultName": "qwen3.6-plus"
           },
           "responsesApiEnabled": false,
           "options": {}
@@ -2281,8 +2281,8 @@
         "name": "OpenAI Chat Model1",
         "credentials": {
           "openAiApi": {
-            "id": "EPHUtiZYNuqoGVK2",
-            "name": "deepseek"
+            "id": "OAGoah9WZYmJctU1",
+            "name": "Qwen_aliyun"
           }
         }
       },
@@ -2290,9 +2290,9 @@
         "parameters": {
           "model": {
             "__rl": true,
-            "value": "deepseek-v4-flash",
+            "value": "qwen3.6-plus",
             "mode": "list",
-            "cachedResultName": "deepseek-v4-flash"
+            "cachedResultName": "qwen3.6-plus"
           },
           "responsesApiEnabled": false,
           "options": {}
@@ -2307,8 +2307,8 @@
         "name": "OpenAI Chat Model2",
         "credentials": {
           "openAiApi": {
-            "id": "EPHUtiZYNuqoGVK2",
-            "name": "deepseek"
+            "id": "OAGoah9WZYmJctU1",
+            "name": "Qwen_aliyun"
           }
         }
       },
@@ -2316,9 +2316,9 @@
         "parameters": {
           "model": {
             "__rl": true,
-            "value": "deepseek-v4-flash",
+            "value": "qwen3.6-plus",
             "mode": "list",
-            "cachedResultName": "deepseek-v4-flash"
+            "cachedResultName": "qwen3.6-plus"
           },
           "responsesApiEnabled": false,
           "options": {}
@@ -2333,8 +2333,8 @@
         "name": "OpenAI Chat Model3",
         "credentials": {
           "openAiApi": {
-            "id": "EPHUtiZYNuqoGVK2",
-            "name": "deepseek"
+            "id": "OAGoah9WZYmJctU1",
+            "name": "Qwen_aliyun"
           }
         }
       },
@@ -2804,9 +2804,9 @@
         "parameters": {
           "model": {
             "__rl": true,
-            "value": "deepseek-v4-flash",
+            "value": "qwen3.6-plus",
             "mode": "list",
-            "cachedResultName": "deepseek-v4-flash"
+            "cachedResultName": "qwen3.6-plus"
           },
           "responsesApiEnabled": false,
           "options": {}
@@ -2821,8 +2821,8 @@
         "name": "OpenAI Chat Model",
         "credentials": {
           "openAiApi": {
-            "id": "EPHUtiZYNuqoGVK2",
-            "name": "deepseek"
+            "id": "OAGoah9WZYmJctU1",
+            "name": "Qwen_aliyun"
           }
         }
       },

@@ -1,0 +1,269 @@
+{
+  "updatedAt": "2026-09-20T03:08:34.722Z",
+  "createdAt": "2026-09-20T03:08:34.722Z",
+  "id": "3olPU16KxeNqszal",
+  "name": "ai-comfyui-view",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "name": "Webhook",
+      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.webhook",
+      "webhookId": "bad90090-7415-4584-b93e-1a5e0e55e141",
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "options": {},
+        "path": "ai-comfyui-view",
+        "httpMethod": "GET",
+        "responseMode": "responseNode"
+      },
+      "id": "984a9b83-2323-4a1a-aeb4-953bface82e7"
+    },
+    {
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      },
+      "name": "获取 ComfyUI 图片",
+      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "authentication": "genericCredentialType",
+        "sendQuery": true,
+        "url": "http://117.50.171.219:8188/view",
+        "genericAuthType": "httpBearerAuth",
+        "queryParameters": {
+          "parameters": [
+            {
+              "value": "={{ $json.query.filename }}",
+              "name": "filename"
+            },
+            {
+              "value": "={{ $json.query.subfolder || \"\" }}",
+              "name": "subfolder"
+            },
+            {
+              "value": "={{ $json.query.type || \"output\" }}",
+              "name": "type"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "outputPropertyName": "data",
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "id": "68ac3a30-b7a1-491d-a72f-4e7023facd7c"
+    },
+    {
+      "name": "返回图片",
+      "typeVersion": 1.5,
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "options": {},
+        "responseDataSource": "set",
+        "respondWith": "binary"
+      },
+      "id": "3cab599c-1e68-42f2-9b66-8b4cc25f11cc"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "type": "main",
+            "node": "获取 ComfyUI 图片",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "获取 ComfyUI 图片": {
+      "main": [
+        [
+          {
+            "type": "main",
+            "node": "返回图片",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "e241acca-1e35-453b-a9d5-2f3edd09bb4f",
+  "activeVersionId": "e241acca-1e35-453b-a9d5-2f3edd09bb4f",
+  "versionCounter": 3,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-09-20T03:08:34.724Z",
+      "createdAt": "2026-09-20T03:08:34.724Z",
+      "role": "workflow:owner",
+      "workflowId": "3olPU16KxeNqszal",
+      "projectId": "A1HdxbOAbMRJMiPU",
+      "project": {
+        "updatedAt": "2026-04-01T06:46:13.169Z",
+        "createdAt": "2026-04-01T06:24:56.072Z",
+        "id": "A1HdxbOAbMRJMiPU",
+        "name": "vincent zou <343854933@qq.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-09-20T03:08:34.727Z",
+    "createdAt": "2026-09-20T03:08:34.727Z",
+    "versionId": "e241acca-1e35-453b-a9d5-2f3edd09bb4f",
+    "workflowId": "3olPU16KxeNqszal",
+    "nodes": [
+      {
+        "name": "Webhook",
+        "typeVersion": 2.1,
+        "type": "n8n-nodes-base.webhook",
+        "webhookId": "bad90090-7415-4584-b93e-1a5e0e55e141",
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "options": {},
+          "path": "ai-comfyui-view",
+          "httpMethod": "GET",
+          "responseMode": "responseNode"
+        },
+        "id": "984a9b83-2323-4a1a-aeb4-953bface82e7"
+      },
+      {
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        },
+        "name": "获取 ComfyUI 图片",
+        "typeVersion": 4.4,
+        "type": "n8n-nodes-base.httpRequest",
+        "position": [
+          240,
+          0
+        ],
+        "parameters": {
+          "authentication": "genericCredentialType",
+          "sendQuery": true,
+          "url": "http://117.50.171.219:8188/view",
+          "genericAuthType": "httpBearerAuth",
+          "queryParameters": {
+            "parameters": [
+              {
+                "value": "={{ $json.query.filename }}",
+                "name": "filename"
+              },
+              {
+                "value": "={{ $json.query.subfolder || \"\" }}",
+                "name": "subfolder"
+              },
+              {
+                "value": "={{ $json.query.type || \"output\" }}",
+                "name": "type"
+              }
+            ]
+          },
+          "options": {
+            "response": {
+              "response": {
+                "outputPropertyName": "data",
+                "responseFormat": "file"
+              }
+            }
+          }
+        },
+        "id": "68ac3a30-b7a1-491d-a72f-4e7023facd7c"
+      },
+      {
+        "name": "返回图片",
+        "typeVersion": 1.5,
+        "type": "n8n-nodes-base.respondToWebhook",
+        "position": [
+          480,
+          0
+        ],
+        "parameters": {
+          "options": {},
+          "responseDataSource": "set",
+          "respondWith": "binary"
+        },
+        "id": "3cab599c-1e68-42f2-9b66-8b4cc25f11cc"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "type": "main",
+              "node": "获取 ComfyUI 图片",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "获取 ComfyUI 图片": {
+        "main": [
+          [
+            {
+              "type": "main",
+              "node": "返回图片",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "vincent zou",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-09-20T03:08:34.853Z",
+        "id": 976,
+        "workflowId": "3olPU16KxeNqszal",
+        "versionId": "e241acca-1e35-453b-a9d5-2f3edd09bb4f",
+        "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    ]
+  }
+}

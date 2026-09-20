@@ -41,3 +41,5 @@ api/.env
 /api/.venv-music/
 /api/.music-runtime/
 /scripts
+/.docx-qa-r3
+/.docx-qa

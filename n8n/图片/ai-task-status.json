@@ -1,0 +1,269 @@
+{
+  "updatedAt": "2026-09-20T03:09:50.214Z",
+  "createdAt": "2026-09-20T03:08:59.523Z",
+  "id": "Y6uV4Hb2iPlUJUVh",
+  "name": "ai-task-status [authenticated ComfyUI]",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "name": "Webhook",
+      "id": "b57c07ce-5898-4818-ac6e-77b1e075db0c",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "parameters": {
+        "options": {},
+        "responseMode": "responseNode",
+        "path": "ai-task-status",
+        "httpMethod": "POST"
+      },
+      "webhookId": "c14e298d-a841-4060-bd52-240efef48179",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "查询 ComfyUI 历史",
+      "id": "5bd88dd7-1149-4ebc-be3e-4406df4c5314",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "parameters": {
+        "options": {},
+        "genericAuthType": "httpBearerAuth",
+        "authentication": "genericCredentialType",
+        "url": "=http://117.50.171.219:8188/history/{{ $json.body.executionId }}"
+      },
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "httpBearerAuth": {
+          "id": "i7nqkSZdWgnZJnz5",
+          "name": "Bearer vincentzou"
+        }
+      }
+    },
+    {
+      "name": "解析图片状态",
+      "id": "8671cb6d-d3a7-4758-bd66-da2089642d91",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const body = $input.first().json || {};\nconst task = Object.values(body)[0];\nif (!task) return [{ json: { status: 'pending' } }];\nconst state = task.status?.status_str;\nif (state === 'error' || state === 'failed') return [{ json: { status: 'error', error: task.status?.error || task.status?.exception || 'ComfyUI execution failed' } }];\nif (state !== 'success' && task.status?.completed !== true) return [{ json: { status: 'pending' } }];\nfor (const output of Object.values(task.outputs || {})) {\n  const image = output?.images?.[0];\n  if (!image) continue;\n  const query = 'filename=' + encodeURIComponent(image.filename) + '&subfolder=' + encodeURIComponent(image.subfolder || '') + '&type=' + encodeURIComponent(image.type || 'output');\n  return [{ json: { status: 'completed', filename: image.filename, url: `http://117.50.218.161:5678/webhook/ai-comfyui-view?${query}` } }];\n}\nreturn [{ json: { status: 'completed' } }];"
+      },
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "name": "返回状态",
+      "id": "4a9fa439-5c24-40fa-9396-637216ab5dee",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "parameters": {
+        "options": {},
+        "responseBody": "={{ $json }}",
+        "respondWith": "json"
+      },
+      "position": [
+        720,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "解析图片状态": {
+      "main": [
+        [
+          {
+            "node": "返回状态",
+            "index": 0,
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "查询 ComfyUI 历史": {
+      "main": [
+        [
+          {
+            "node": "解析图片状态",
+            "index": 0,
+            "type": "main"
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "查询 ComfyUI 历史",
+            "index": 0,
+            "type": "main"
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "0974f81d-c59e-4d94-a61a-4ea32dfe351f",
+  "activeVersionId": "0974f81d-c59e-4d94-a61a-4ea32dfe351f",
+  "versionCounter": 11,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-09-20T03:08:59.524Z",
+      "createdAt": "2026-09-20T03:08:59.524Z",
+      "role": "workflow:owner",
+      "workflowId": "Y6uV4Hb2iPlUJUVh",
+      "projectId": "A1HdxbOAbMRJMiPU",
+      "project": {
+        "updatedAt": "2026-04-01T06:46:13.169Z",
+        "createdAt": "2026-04-01T06:24:56.072Z",
+        "id": "A1HdxbOAbMRJMiPU",
+        "name": "vincent zou <343854933@qq.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-09-20T03:09:50.214Z",
+    "createdAt": "2026-09-20T03:09:50.214Z",
+    "versionId": "0974f81d-c59e-4d94-a61a-4ea32dfe351f",
+    "workflowId": "Y6uV4Hb2iPlUJUVh",
+    "nodes": [
+      {
+        "name": "Webhook",
+        "id": "b57c07ce-5898-4818-ac6e-77b1e075db0c",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "parameters": {
+          "options": {},
+          "responseMode": "responseNode",
+          "path": "ai-task-status",
+          "httpMethod": "POST"
+        },
+        "webhookId": "c14e298d-a841-4060-bd52-240efef48179",
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "name": "查询 ComfyUI 历史",
+        "id": "5bd88dd7-1149-4ebc-be3e-4406df4c5314",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "parameters": {
+          "options": {},
+          "genericAuthType": "httpBearerAuth",
+          "authentication": "genericCredentialType",
+          "url": "=http://117.50.171.219:8188/history/{{ $json.body.executionId }}"
+        },
+        "position": [
+          240,
+          0
+        ],
+        "credentials": {
+          "httpBearerAuth": {
+            "id": "i7nqkSZdWgnZJnz5",
+            "name": "Bearer vincentzou"
+          }
+        }
+      },
+      {
+        "name": "解析图片状态",
+        "id": "8671cb6d-d3a7-4758-bd66-da2089642d91",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "parameters": {
+          "jsCode": "const body = $input.first().json || {};\nconst task = Object.values(body)[0];\nif (!task) return [{ json: { status: 'pending' } }];\nconst state = task.status?.status_str;\nif (state === 'error' || state === 'failed') return [{ json: { status: 'error', error: task.status?.error || task.status?.exception || 'ComfyUI execution failed' } }];\nif (state !== 'success' && task.status?.completed !== true) return [{ json: { status: 'pending' } }];\nfor (const output of Object.values(task.outputs || {})) {\n  const image = output?.images?.[0];\n  if (!image) continue;\n  const query = 'filename=' + encodeURIComponent(image.filename) + '&subfolder=' + encodeURIComponent(image.subfolder || '') + '&type=' + encodeURIComponent(image.type || 'output');\n  return [{ json: { status: 'completed', filename: image.filename, url: `http://117.50.218.161:5678/webhook/ai-comfyui-view?${query}` } }];\n}\nreturn [{ json: { status: 'completed' } }];"
+        },
+        "position": [
+          480,
+          0
+        ]
+      },
+      {
+        "name": "返回状态",
+        "id": "4a9fa439-5c24-40fa-9396-637216ab5dee",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "parameters": {
+          "options": {},
+          "responseBody": "={{ $json }}",
+          "respondWith": "json"
+        },
+        "position": [
+          720,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "解析图片状态": {
+        "main": [
+          [
+            {
+              "node": "返回状态",
+              "index": 0,
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "查询 ComfyUI 历史": {
+        "main": [
+          [
+            {
+              "node": "解析图片状态",
+              "index": 0,
+              "type": "main"
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "查询 ComfyUI 历史",
+              "index": 0,
+              "type": "main"
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "vincent zou",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-09-20T03:09:50.349Z",
+        "id": 981,
+        "workflowId": "Y6uV4Hb2iPlUJUVh",
+        "versionId": "0974f81d-c59e-4d94-a61a-4ea32dfe351f",
+        "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    ]
+  }
+}
