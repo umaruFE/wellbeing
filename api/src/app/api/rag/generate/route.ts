@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { generateJsonWithDeepSeek } from '@/lib/n8n/deepseek';
 import { db } from '@/lib/db';
 import { buildActivityPlanPrompts, buildPictureBookDesignPrompts } from '@/prompts';
 import { getPromptPair } from '@/prompts/registry';
@@ -171,34 +172,7 @@ async function resolvePictureBookDesignPrompts(input: {
 }
 
 async function callLLM(systemPrompt: string, userPrompt: string): Promise<any> {
-  const apiKey = process.env.VITE_DASHSCOPE_API_KEY;
-  const apiUrl = process.env.VITE_DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-
-  const response = await fetch(apiUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'qwen-plus',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      temperature: 0.8,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text();
-    throw new Error(`LLM API error: ${response.status} ${errText}`);
-  }
-
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content || '{}';
-  return JSON.parse(content);
+  return generateJsonWithDeepSeek(systemPrompt, userPrompt);
 }
 
 function isEnglishOutput(language?: string, outputLanguage?: string): boolean {

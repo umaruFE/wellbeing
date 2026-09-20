@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPromptPair } from '@/prompts/registry';
+import { generateJsonWithDeepSeek } from '@/lib/n8n/deepseek';
 
 export const runtime = 'nodejs';
 
@@ -11,28 +12,8 @@ export async function POST(request: NextRequest) {
       : [];
     if (!words.length) return NextResponse.json({ success: true, data: {} });
 
-    const apiKey = process.env.VITE_DASHSCOPE_API_KEY;
-    const apiUrl = process.env.VITE_DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-    if (!apiKey) throw new Error('未配置大模型 API Key');
-
     const { system, user } = await getPromptPair('ai.word-emojis', {}, { words: JSON.stringify(words) });
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'qwen-plus',
-        temperature: 0.2,
-        response_format: { type: 'json_object' },
-        messages: [
-          { role: 'system', content: system },
-          { role: 'user', content: user },
-        ],
-      }),
-    });
-    if (!response.ok) throw new Error(`大模型请求失败：${response.status}`);
-    const payload = await response.json();
-    const generated = JSON.parse(payload.choices?.[0]?.message?.content || '{}');
+    const generated = await generateJsonWithDeepSeek<Record<string, unknown>>(system, user);
     const data = Object.fromEntries(words.flatMap((word) => {
       const emoji = typeof generated[word] === 'string' ? generated[word].trim() : '';
       return emoji && emoji.length <= 16 && !/[a-z\d]/i.test(emoji) ? [[word, emoji]] : [];

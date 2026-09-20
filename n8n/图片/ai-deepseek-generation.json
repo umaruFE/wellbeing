@@ -1,0 +1,391 @@
+{
+  "updatedAt": "2026-09-20T17:03:50.229Z",
+  "createdAt": "2026-09-20T17:03:50.229Z",
+  "id": "BiNziQuDhohg0Bxw",
+  "name": "ai-deepseek-generation",
+  "description": null,
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "name": "Webhook 接收",
+      "typeVersion": 2.1,
+      "parameters": {
+        "path": "ai-deepseek-generation",
+        "httpMethod": "POST",
+        "options": {},
+        "responseMode": "responseNode"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "id": "da9c3027-f2d7-4db7-837a-fbc2bfe864fa",
+      "webhookId": "a7241857-520a-43c8-baad-754709114978",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "准备提示词",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const input = $input.first()?.json || {};\nconst body = input.body || input;\nconst systemPrompt = String(body.systemPrompt || '').trim();\nconst userPrompt = String(body.userPrompt || '').trim();\nif (!systemPrompt || !userPrompt) throw new Error('systemPrompt and userPrompt are required');\nreturn [{ json: { systemPrompt, userPrompt } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "id": "22863ec9-d011-4ee7-8df2-b8991e546bcb",
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "name": "DeepSeek Chat Model",
+      "typeVersion": 1.3,
+      "parameters": {
+        "responsesApiEnabled": false,
+        "options": {},
+        "model": {
+          "mode": "list",
+          "cachedResultName": "deepseek-v4-pro",
+          "__rl": true,
+          "value": "deepseek-v4-pro"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "id": "71bcf648-40f4-4786-8d03-6088c4d53b30",
+      "position": [
+        480,
+        220
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
+        }
+      }
+    },
+    {
+      "name": "生成内容",
+      "typeVersion": 1.9,
+      "parameters": {
+        "messages": {
+          "messageValues": [
+            {
+              "message": "={{ $json.systemPrompt }}"
+            }
+          ]
+        },
+        "promptType": "define",
+        "text": "={{ $json.userPrompt }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "id": "d42c3ca8-4f3e-40e5-8788-42613e4f5bf3",
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "name": "整理结果",
+      "typeVersion": 2,
+      "parameters": {
+        "jsCode": "const response = $input.first()?.json || {};\nlet content = response.output ?? response.text ?? '';\nif (typeof content !== 'string') content = JSON.stringify(content);\nreturn [{ json: { content: content.trim() } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "id": "4c0e592d-2b74-49ce-b159-54954607202d",
+      "position": [
+        760,
+        0
+      ]
+    },
+    {
+      "name": "返回结果",
+      "typeVersion": 1.5,
+      "parameters": {
+        "options": {},
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "id": "3efcf536-3eb4-4022-85a2-b6783803bc1d",
+      "position": [
+        1000,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "DeepSeek Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "type": "ai_languageModel",
+            "index": 0,
+            "node": "生成内容"
+          }
+        ]
+      ]
+    },
+    "准备提示词": {
+      "main": [
+        [
+          {
+            "type": "main",
+            "index": 0,
+            "node": "生成内容"
+          }
+        ]
+      ]
+    },
+    "生成内容": {
+      "main": [
+        [
+          {
+            "type": "main",
+            "index": 0,
+            "node": "整理结果"
+          }
+        ]
+      ]
+    },
+    "整理结果": {
+      "main": [
+        [
+          {
+            "type": "main",
+            "index": 0,
+            "node": "返回结果"
+          }
+        ]
+      ]
+    },
+    "Webhook 接收": {
+      "main": [
+        [
+          {
+            "type": "main",
+            "index": 0,
+            "node": "准备提示词"
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": null,
+  "versionId": "4a5f74ff-0a4a-4ef7-81a4-f997dbf09246",
+  "activeVersionId": "4a5f74ff-0a4a-4ef7-81a4-f997dbf09246",
+  "versionCounter": 3,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-09-20T17:03:50.231Z",
+      "createdAt": "2026-09-20T17:03:50.231Z",
+      "role": "workflow:owner",
+      "workflowId": "BiNziQuDhohg0Bxw",
+      "projectId": "A1HdxbOAbMRJMiPU",
+      "project": {
+        "updatedAt": "2026-04-01T06:46:13.169Z",
+        "createdAt": "2026-04-01T06:24:56.072Z",
+        "id": "A1HdxbOAbMRJMiPU",
+        "name": "vincent zou <343854933@qq.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-09-20T17:03:50.235Z",
+    "createdAt": "2026-09-20T17:03:50.235Z",
+    "versionId": "4a5f74ff-0a4a-4ef7-81a4-f997dbf09246",
+    "workflowId": "BiNziQuDhohg0Bxw",
+    "nodes": [
+      {
+        "name": "Webhook 接收",
+        "typeVersion": 2.1,
+        "parameters": {
+          "path": "ai-deepseek-generation",
+          "httpMethod": "POST",
+          "options": {},
+          "responseMode": "responseNode"
+        },
+        "type": "n8n-nodes-base.webhook",
+        "id": "da9c3027-f2d7-4db7-837a-fbc2bfe864fa",
+        "webhookId": "a7241857-520a-43c8-baad-754709114978",
+        "position": [
+          0,
+          0
+        ]
+      },
+      {
+        "name": "准备提示词",
+        "typeVersion": 2,
+        "parameters": {
+          "jsCode": "const input = $input.first()?.json || {};\nconst body = input.body || input;\nconst systemPrompt = String(body.systemPrompt || '').trim();\nconst userPrompt = String(body.userPrompt || '').trim();\nif (!systemPrompt || !userPrompt) throw new Error('systemPrompt and userPrompt are required');\nreturn [{ json: { systemPrompt, userPrompt } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "id": "22863ec9-d011-4ee7-8df2-b8991e546bcb",
+        "position": [
+          240,
+          0
+        ]
+      },
+      {
+        "name": "DeepSeek Chat Model",
+        "typeVersion": 1.3,
+        "parameters": {
+          "responsesApiEnabled": false,
+          "options": {},
+          "model": {
+            "mode": "list",
+            "cachedResultName": "deepseek-v4-pro",
+            "__rl": true,
+            "value": "deepseek-v4-pro"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+        "id": "71bcf648-40f4-4786-8d03-6088c4d53b30",
+        "position": [
+          480,
+          220
+        ],
+        "credentials": {
+          "openAiApi": {
+            "id": "EPHUtiZYNuqoGVK2",
+            "name": "deepseek"
+          }
+        }
+      },
+      {
+        "name": "生成内容",
+        "typeVersion": 1.9,
+        "parameters": {
+          "messages": {
+            "messageValues": [
+              {
+                "message": "={{ $json.systemPrompt }}"
+              }
+            ]
+          },
+          "promptType": "define",
+          "text": "={{ $json.userPrompt }}",
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "id": "d42c3ca8-4f3e-40e5-8788-42613e4f5bf3",
+        "position": [
+          480,
+          0
+        ]
+      },
+      {
+        "name": "整理结果",
+        "typeVersion": 2,
+        "parameters": {
+          "jsCode": "const response = $input.first()?.json || {};\nlet content = response.output ?? response.text ?? '';\nif (typeof content !== 'string') content = JSON.stringify(content);\nreturn [{ json: { content: content.trim() } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "id": "4c0e592d-2b74-49ce-b159-54954607202d",
+        "position": [
+          760,
+          0
+        ]
+      },
+      {
+        "name": "返回结果",
+        "typeVersion": 1.5,
+        "parameters": {
+          "options": {},
+          "respondWith": "json",
+          "responseBody": "={{ $json }}"
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "id": "3efcf536-3eb4-4022-85a2-b6783803bc1d",
+        "position": [
+          1000,
+          0
+        ]
+      }
+    ],
+    "connections": {
+      "DeepSeek Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "type": "ai_languageModel",
+              "index": 0,
+              "node": "生成内容"
+            }
+          ]
+        ]
+      },
+      "准备提示词": {
+        "main": [
+          [
+            {
+              "type": "main",
+              "index": 0,
+              "node": "生成内容"
+            }
+          ]
+        ]
+      },
+      "生成内容": {
+        "main": [
+          [
+            {
+              "type": "main",
+              "index": 0,
+              "node": "整理结果"
+            }
+          ]
+        ]
+      },
+      "整理结果": {
+        "main": [
+          [
+            {
+              "type": "main",
+              "index": 0,
+              "node": "返回结果"
+            }
+          ]
+        ]
+      },
+      "Webhook 接收": {
+        "main": [
+          [
+            {
+              "type": "main",
+              "index": 0,
+              "node": "准备提示词"
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "vincent zou",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-09-20T17:03:50.403Z",
+        "id": 1026,
+        "workflowId": "BiNziQuDhohg0Bxw",
+        "versionId": "4a5f74ff-0a4a-4ef7-81a4-f997dbf09246",
+        "event": "activated",
+        "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
+      }
+    ]
+  }
+}

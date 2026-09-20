@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildStoryboardScriptPrompts } from '@/prompts';
+import { generateJsonWithDeepSeek } from '@/lib/n8n/deepseek';
 
 export const runtime = 'nodejs';
 
@@ -35,51 +36,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const apiKey = process.env.DASHSCOPE_API_KEY || process.env.VITE_DASHSCOPE_API_KEY;
-    const apiUrl = process.env.DASHSCOPE_API_URL
-      || process.env.VITE_DASHSCOPE_API_URL
-      || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-
-    if (!apiKey) throw new Error('未配置大模型 API Key');
-
     const prompts = buildStoryboardScriptPrompts({
       description,
       referenceImageCount,
       duration,
     });
 
-    const endpoint = apiUrl.endsWith('/chat/completions')
-      ? apiUrl
-      : `${apiUrl.replace(/\/$/, '')}/chat/completions`;
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: 'qwen-plus',
-        messages: [
-          { role: 'system', content: prompts.system },
-          { role: 'user', content: prompts.user },
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-        response_format: { type: 'json_object' },
-      }),
-    });
-
-    if (!response.ok) {
-      const detail = await response.text();
-      throw new Error(`大模型请求失败：${response.status} ${detail}`);
-    }
-
-    const payload = await response.json();
-    const content = payload.choices?.[0]?.message?.content || '';
-    const jsonText = content.match(/\{[\s\S]*\}/)?.[0];
-    if (!jsonText) throw new Error('无法解析分镜脚本');
-
-    const storyboard = JSON.parse(jsonText);
+    const storyboard = await generateJsonWithDeepSeek<{ scenes?: Record<string, unknown>[] }>(prompts.system, prompts.user);
     if (!Array.isArray(storyboard.scenes)) throw new Error('分镜脚本格式错误');
 
     storyboard.scenes = storyboard.scenes.map((scene: Record<string, unknown>) => ({

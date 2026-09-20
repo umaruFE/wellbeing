@@ -1,7 +1,7 @@
 /**
  * 创作工坊「体验类」生成器：互动式情境瑜伽 / 星光录音棚
  *
- * 链路：提示词（registry，Wiki 可覆盖）→ qwen-plus 生成 JSON → 校验 → 注入 HTML 模板 → 成品 HTML
+ * 链路：提示词（registry，Wiki 可覆盖）→ n8n DeepSeek 生成 JSON → 校验 → 注入 HTML 模板 → 成品 HTML
  * 模板位于 api/public/templates/（Docker 运行时路径 /app/public/templates/）
  */
 
@@ -10,10 +10,7 @@ import * as path from 'path';
 import { getPromptPair } from '@/prompts/registry';
 import { loadWikiPage } from '@/lib/prompt-library';
 import { YOGA_POSE_LIBRARY_TEXT, findYogaPose } from '@/lib/experience/yogaPoses';
-
-const LLM_MODEL = process.env.EXPERIENCE_LLM_MODEL || 'qwen-plus';
-const DASHSCOPE_API_URL =
-  process.env.VITE_DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+import { generateWithDeepSeek } from '@/lib/n8n/deepseek';
 
 export interface YogaPage {
   id: string;
@@ -87,31 +84,7 @@ export interface MusicResult extends MusicSong, MusicExercises {
 }
 
 async function callLLM(system: string, user: string): Promise<string> {
-  const apiKey = process.env.VITE_DASHSCOPE_API_KEY;
-  if (!apiKey) throw new Error('未配置 VITE_DASHSCOPE_API_KEY，无法生成');
-
-  const response = await fetch(DASHSCOPE_API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: LLM_MODEL,
-      messages: [
-        { role: 'system', content: system },
-        { role: 'user', content: user },
-      ],
-      temperature: 0.8,
-      response_format: { type: 'json_object' },
-    }),
-  });
-
-  if (!response.ok) {
-    const errText = await response.text().catch(() => '');
-    throw new Error(`LLM 请求失败 ${response.status}: ${errText.slice(0, 300)}`);
-  }
-  const data = await response.json();
-  const content = data.choices?.[0]?.message?.content;
-  if (!content) throw new Error('LLM 返回为空');
-  return content;
+  return generateWithDeepSeek(system, user);
 }
 
 /** 剥离可能的 ```json 代码围栏后解析 JSON */

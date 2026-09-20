@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SONG_WRITING_SYSTEM_PROMPTS, buildSongWritingLinePrompt } from '@/prompts';
+import { generateJsonWithDeepSeek } from '@/lib/n8n/deepseek';
 
 export const runtime = 'nodejs';
 
@@ -17,24 +18,10 @@ export async function POST(request: NextRequest) {
     if (themeOther) themeList.push(themeOther);
     const themeText = themeList.join('、') || '情绪表达';
     const melodyReference = melodyReferences[melody] || '';
-    const apiKey = process.env.VITE_DASHSCOPE_API_KEY;
-    const apiUrl = process.env.VITE_DASHSCOPE_API_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-    if (!apiKey) throw new Error('未配置大模型 API Key');
-
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: 'qwen-plus', temperature: 0.65, response_format: { type: 'json_object' },
-        messages: [
-          ...SONG_WRITING_SYSTEM_PROMPTS.map((content) => ({ role: 'system', content })),
-          { role: 'user', content: buildSongWritingLinePrompt({ age, level, melody, themeText, vocabulary, grammar, lines, regenerateIndex, melodyReference, adjustmentRequest }) },
-        ],
-      }),
-    });
-    if (!response.ok) throw new Error(`大模型请求失败：${response.status}`);
-    const payload = await response.json();
-    const data = JSON.parse(payload.choices?.[0]?.message?.content || '{}');
+    const data = await generateJsonWithDeepSeek<{ line?: string }>(
+      SONG_WRITING_SYSTEM_PROMPTS.join('\n\n'),
+      buildSongWritingLinePrompt({ age, level, melody, themeText, vocabulary, grammar, lines, regenerateIndex, melodyReference, adjustmentRequest }),
+    );
     if (typeof data.line !== 'string') throw new Error('大模型返回内容不完整');
     return NextResponse.json({ success: true, data: { line: data.line } });
   } catch (error) {
