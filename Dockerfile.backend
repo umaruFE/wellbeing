@@ -14,6 +14,8 @@ RUN npm ci
 
 # 复制后端源码并构建
 COPY api/ .
+# 动作 IP 图供星光音乐棚渲染时内嵌到单文件课件。
+COPY public/ip/ ./public/ip/
 
 RUN npm run build
 

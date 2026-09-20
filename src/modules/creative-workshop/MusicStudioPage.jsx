@@ -24,7 +24,7 @@ const ACCENT = '#9966d0';
 
 const initialBasicInfo = { goals: '', theme: '', age: '', level: '', style: '', duration: '', structure: '', requirements: '' };
 const initialSong = { title: '', songMeta: {}, lyrics: [], targetPatterns: [] };
-const DEFAULT_ACTIONS = ['👏 Clap', '👋 Wave', '👣 Stomp', '🌀 Spin', '🚶 March', '🤏 Snap', '🫶 Heart', '➜ Point', '🕺 Twist', '🫨 Shake', '👐 Swing'];
+const DEFAULT_ACTIONS = ['Arms Circle', 'Make A Heart', 'Jump', 'Arms up', 'Knee Pat', 'Chest Pat', 'Stomp', 'Head Pat', 'Shoulder Pat', 'Snap', 'Wave', 'Touch Toes'];
 const DEFAULT_INSTRUMENTS = ['Bell', 'Bongo', 'Cabasa', 'Castanets', 'Djembe', 'Drum', 'Handbell', 'Hand Drum', 'Maracas', 'Sleigh Bell', 'Tambourine', 'Xylophone', 'Finger Cym.', 'Triangle', 'Woodblock'];
 const initialExercises = {
   ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {},
