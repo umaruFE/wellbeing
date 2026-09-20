@@ -355,9 +355,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "qwen3.6-plus",
+          "value": "deepseek-v4-flash",
           "mode": "list",
-          "cachedResultName": "qwen3.6-plus"
+          "cachedResultName": "deepseek-v4-flash"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -372,8 +372,8 @@
       "name": "OpenAI Chat Model1",
       "credentials": {
         "openAiApi": {
-          "id": "OAGoah9WZYmJctU1",
-          "name": "Qwen_aliyun"
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
         }
       }
     },
@@ -1706,9 +1706,9 @@
         "parameters": {
           "model": {
             "__rl": true,
-            "value": "qwen3.6-plus",
+            "value": "deepseek-v4-flash",
             "mode": "list",
-            "cachedResultName": "qwen3.6-plus"
+            "cachedResultName": "deepseek-v4-flash"
           },
           "responsesApiEnabled": false,
           "options": {}
@@ -1723,8 +1723,8 @@
         "name": "OpenAI Chat Model1",
         "credentials": {
           "openAiApi": {
-            "id": "OAGoah9WZYmJctU1",
-            "name": "Qwen_aliyun"
+            "id": "EPHUtiZYNuqoGVK2",
+            "name": "deepseek"
           }
         }
       },
@@ -2587,7 +2587,7 @@
         "userId": "85d2e03a-6020-4b13-941c-5d435f901282"
       },
       {
-        "createdAt": "2026-09-14T16:21:11.080Z",
+        "createdAt": "2026-09-14T16:21:11.08Z",
         "id": 862,
         "workflowId": "aXjvMzbOugVM8uFm",
         "versionId": "77d2a1a8-dfd4-49be-8d18-d03c972a48da",

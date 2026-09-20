@@ -35,9 +35,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "qwen-turbo",
+          "value": "deepseek-v4-pro",
           "mode": "list",
-          "cachedResultName": "qwen-turbo"
+          "cachedResultName": "deepseek-v4-pro"
         },
         "responsesApiEnabled": false,
         "options": {}
@@ -52,8 +52,8 @@
       "id": "6bae4f20-9b36-4459-8476-bb61c2f3d2be",
       "credentials": {
         "openAiApi": {
-          "id": "OAGoah9WZYmJctU1",
-          "name": "Qwen_aliyun"
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
         }
       }
     },

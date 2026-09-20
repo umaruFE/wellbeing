@@ -36,7 +36,8 @@
         "model": {
           "__rl": true,
           "mode": "list",
-          "value": "qwen3.6-plus"
+          "value": "deepseek-v4-flash",
+          "cachedResultName": "deepseek-v4-flash"
         },
         "responsesApiEnabled": false,
         "options": {
@@ -53,8 +54,8 @@
       "name": "OpenAI Chat Model",
       "credentials": {
         "openAiApi": {
-          "id": "OAGoah9WZYmJctU1",
-          "name": "Qwen_aliyun"
+          "id": "EPHUtiZYNuqoGVK2",
+          "name": "deepseek"
         }
       }
     },
