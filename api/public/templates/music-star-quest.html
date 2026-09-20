@@ -302,8 +302,10 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .st1-card .st1-instruction{font-size:13px;color:rgba(255,255,255,0.4);margin-bottom:20px;line-height:1.5}
 
 .st1-fill-sentence{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;padding:20px 24px;background:rgba(255,255,255,0.03);border-radius:16px;border:1px solid rgba(255,255,255,0.05);font-size:26px;line-height:1.45}
-.st1-fill-sentence .st1-emoji{display:inline-flex;width:120px;height:96px;align-items:center;justify-content:center;flex:0 0 120px;margin-right:8px;font-size:72px;line-height:1}
-.st1-fill-sentence .st1-emoji img{width:120px;height:96px;object-fit:contain;vertical-align:middle}
+.st1-fill-sentence .st1-emoji{position:relative;display:inline-flex;width:120px;height:96px;align-items:center;justify-content:center;flex:0 0 120px;margin-right:8px;font-size:72px;line-height:1}
+.st1-fill-sentence .st1-emoji img{width:120px;height:96px;object-fit:contain;vertical-align:middle;cursor:zoom-in}
+.st1-image-zoom{position:absolute;right:-8px;bottom:-8px;display:inline-flex;width:34px;height:34px;align-items:center;justify-content:center;border:2px solid #00e5ff;border-radius:10px;background:#10152f;color:#fff;font-size:19px;line-height:1;cursor:zoom-in;box-shadow:0 0 14px rgba(0,229,255,.5);z-index:2}
+.st1-image-zoom:hover{background:#00e5ff;color:#10152f;transform:scale(1.08)}
 .st1-blank{display:inline-flex;align-items:center;justify-content:center;min-width:80px;min-height:36px;padding:6px 14px;border-radius:10px;border:2px dashed rgba(0,229,255,0.7);background:rgba(0,229,255,0.12);color:rgba(0,229,255,0.95);font-size:16px;font-weight:700;cursor:pointer;transition:all 0.2s;text-shadow:0 0 8px rgba(0,229,255,0.4);letter-spacing:2px}
 .st1-blank.selected{border-color:#00e5ff;background:rgba(0,229,255,0.15);box-shadow:0 0 12px rgba(0,229,255,0.2)}
 .st1-blank.filled{border-style:solid;border-color:rgba(0,229,255,0.5);color:#00e5ff;background:rgba(0,229,255,0.1)}
@@ -396,10 +398,12 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .s2-actions-panel h3{font-size:13px;color:#39ff14;margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:space-between}
 .s2-actions-panel h3 .hint{font-size:11px;font-weight:400;color:rgba(57,255,20,0.5)}
 .s2-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.s2-action-tag{background:rgba(255,255,255,0.05);color:#e0e0ff;padding:7px 10px;border-radius:14px;font-size:12px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(57,255,20,0.25);display:flex;align-items:center;gap:5px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.s2-action-tag{position:relative;background:rgba(255,255,255,0.05);color:#e0e0ff;padding:7px 36px 7px 10px;border-radius:14px;font-size:12px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(57,255,20,0.25);display:flex;align-items:center;gap:5px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
 .s2-action-tag:hover{background:rgba(57,255,20,0.1);border-color:#39ff14;transform:translateY(-1px);box-shadow:0 0 12px rgba(57,255,20,0.2)}
 .s2-action-tag:active{cursor:grabbing}
 .s2-action-tag img{width:34px;height:34px;object-fit:contain;flex-shrink:0}
+.s2-action-zoom{position:absolute;top:8px;right:8px;display:inline-flex;width:24px;height:24px;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.22);border-radius:7px;background:rgba(255,255,255,.08);color:#fff;font-size:14px;line-height:1;cursor:zoom-in}
+.s2-action-zoom:hover{background:rgba(57,255,20,.2);border-color:#39ff14}
 
 .s2-inst-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:14px;border:1.5px solid rgba(255,184,0,0.3);box-shadow:0 0 16px rgba(255,184,0,0.08);flex:1;display:flex;flex-direction:column;min-height:0}
 .s2-inst-panel h3{font-size:13px;color:#ffb800;margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:space-between}
@@ -451,7 +455,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .s2-pool-modal.s2-actions-modal h3{color:#39ff14}
 .s2-pool-modal.s2-insts-modal h3{color:#ffb800}
 .s2-pool-modal .s2-modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
-.s2-pool-modal .s2-modal-tag{background:rgba(255,255,255,0.04);padding:20px 22px;border-radius:20px;color:#fff;font-size:20px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:14px;transition:all 0.2s;min-height:72px}
+.s2-pool-modal .s2-modal-tag{position:relative;background:rgba(255,255,255,0.04);padding:20px 54px 20px 22px;border-radius:20px;color:#fff;font-size:20px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(255,255,255,0.1);display:flex;align-items:center;gap:14px;transition:all 0.2s;min-height:72px}
 .s2-pool-modal .s2-modal-tag:active{cursor:grabbing}
 .s2-pool-modal .s2-modal-tag.s2-actions{border-color:rgba(57,255,20,0.3)}
 .s2-pool-modal .s2-modal-tag.s2-actions:hover{background:rgba(57,255,20,0.12);border-color:#39ff14;transform:translateY(-3px);box-shadow:0 0 28px rgba(57,255,20,0.2)}
@@ -460,6 +464,11 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .s2-pool-modal .s2-modal-tag img{width:48px;height:48px;object-fit:contain;flex-shrink:0}
 .s2-pool-modal .s2-modal-tag .s2-tag-emoji{font-size:36px;flex-shrink:0;line-height:1}
 .s2-pool-modal .s2-modal-tag .s2-tag-emoji img{width:64px;height:64px;object-fit:contain;display:block}
+.s2-image-preview{position:fixed;inset:0;z-index:320;display:none;align-items:center;justify-content:center;padding:32px;background:rgba(2,2,12,.9);backdrop-filter:blur(10px)}
+.s2-image-preview.active{display:flex}
+.s2-image-preview-card{position:relative;display:flex;max-width:min(680px,90vw);max-height:88vh;flex-direction:column;align-items:center;padding:60px 30px 30px;border:1.5px solid rgba(57,255,20,.4);border-radius:26px;background:#0a0a1e;box-shadow:0 0 70px rgba(57,255,20,.18)}
+.s2-image-preview-card img{display:block;max-width:100%;max-height:68vh;object-fit:contain}
+.s2-image-preview-close{position:absolute;z-index:3;top:12px;right:12px;display:flex;width:38px;height:38px;box-sizing:border-box;align-items:center;justify-content:center;padding:0;border:1px solid rgba(255,255,255,.35);border-radius:50%;background:#18182c;color:#fff;font-size:20px;line-height:1;cursor:pointer}
 @keyframes s2modalIn{0%{opacity:0;transform:scale(0.92)}100%{opacity:1;transform:scale(1)}}
 @keyframes s2TitleGlow{0%,100%{text-shadow:0 0 20px rgba(255,184,0,0.6),0 0 40px rgba(255,184,0,0.4),0 0 80px rgba(255,184,0,0.2)}50%{text-shadow:0 0 30px rgba(255,184,0,0.8),0 0 60px rgba(255,184,0,0.5),0 0 100px rgba(255,184,0,0.3),0 0 150px rgba(255,184,0,0.15)}}
 
@@ -1196,6 +1205,13 @@ var st1ReadyToReveal = false;
 var st1LyricsRevealed = false;
 
 // ═══ Stage 1: Fill Blanks ═══
+function st1OpenImagePreview(source) {
+  var image = source && source.tagName === 'IMG' ? source : source && source.parentElement && source.parentElement.querySelector('img');
+  if (!image || !image.src) return;
+  document.getElementById('s2ImagePreviewImg').src = image.src;
+  document.getElementById('s2ImagePreview').classList.add('active');
+}
+
 function st1RenderFill() {
   var area = document.getElementById('st1FillArea');
   if (!area) return;
@@ -1204,7 +1220,7 @@ function st1RenderFill() {
   var blankId = 0;
   ex1FillData.forEach(function(item, fi) {
     var imageUrl = typeof item.imageUrl === 'string' && /^https:\/\//.test(item.imageUrl) ? item.imageUrl : '';
-    h += '<div class="st1-fill-sentence"><span class="st1-emoji">' + (imageUrl ? '<img src="' + safeText(imageUrl) + '" alt="">' : safeText(item.emoji || '🎵')) + '</span>';
+    h += '<div class="st1-fill-sentence"><span class="st1-emoji">' + (imageUrl ? '<img src="' + safeText(imageUrl) + '" alt="" title="Click to view larger" onclick="event.stopPropagation();st1OpenImagePreview(this)"><button type="button" class="st1-image-zoom" title="View larger" aria-label="View image larger" onclick="event.stopPropagation();st1OpenImagePreview(this)">⛶</button>' : safeText(item.emoji || '🎵')) + '</span>';
     item.sentence.forEach(function(part, pi) {
       if (part === '') {
         var val = st1FillState[blankId];
@@ -1566,7 +1582,7 @@ function renderStage2(container) {
   h += '</div></div>';
   h += '<div class="s2-right">';
   h += '<div class="s2-actions-panel"><h3><span>🤸 Actions <span class="hint">Choose any you will use</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'actions\')" title="Expand">⛶</button></h3><div class="s2-action-grid">';
-  s2Actions.forEach(function(a) { h += '<button draggable="true" ondragstart="s2ActionDragStart(event)" data-action-id="'+a.id+'" class="s2-action-tag'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')">'+actionVisual(a)+' '+safeText(a.name)+'</button>'; });
+  s2Actions.forEach(function(a) { h += '<button draggable="true" ondragstart="s2ActionDragStart(event)" data-action-id="'+a.id+'" class="s2-action-tag'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')">'+actionVisual(a)+' <span>'+safeText(a.name)+'</span><span class="s2-action-zoom" title="View larger" aria-label="View '+safeText(a.name)+' larger" onclick="event.stopPropagation();s2OpenActionPreview(\''+a.id+'\')">⛶</span></button>'; });
   h += '</div></div>';
   h += '<div class="s2-inst-panel"><h3><span>🥁 Instruments <span class="hint">Choose any you will use</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'instruments\')" title="Expand">⛶</button></h3><div class="s2-inst-grid">';
   s2Instruments.forEach(function(inst) { h += '<button draggable="true" ondragstart="s2InstDragStart(event)" data-inst-id="'+inst.id+'" class="s2-inst-tag'+(s2SelectedInstruments.indexOf(inst.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'inst\',\''+inst.id+'\')"><img src="'+inst.img+'" alt="">'+safeText(inst.name)+'</button>'; });
@@ -1773,6 +1789,18 @@ function s2ClosePoolModal() {
   document.getElementById('s2PoolModal').classList.remove('s2-active');
 }
 
+function s2OpenActionPreview(actionId) {
+  var action = s2Actions.find(function(item) { return item.id === actionId; });
+  var src = action && (action.img || actionImage(action.name));
+  if (!src) return;
+  document.getElementById('s2ImagePreviewImg').src = src;
+  document.getElementById('s2ImagePreview').classList.add('active');
+}
+
+function s2CloseActionPreview() {
+  document.getElementById('s2ImagePreview').classList.remove('active');
+}
+
 function s2OpenPoolModal(type) {
   var modal = document.getElementById('s2PoolModal');
   var content = document.getElementById('s2PoolModalContent');
@@ -1785,7 +1813,7 @@ function s2OpenPoolModal(type) {
     title.innerHTML = '🤸 Actions';
     var h = '';
     s2Actions.forEach(function(a) {
-      h += '<button class="s2-modal-tag s2-actions'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')"><span class="s2-tag-emoji">'+actionVisual(a)+'</span>'+safeText(a.name)+'</button>';
+      h += '<button class="s2-modal-tag s2-actions'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')"><span class="s2-tag-emoji">'+actionVisual(a)+'</span><span>'+safeText(a.name)+'</span><span class="s2-action-zoom" title="View larger" aria-label="View '+safeText(a.name)+' larger" onclick="event.stopPropagation();s2OpenActionPreview(\''+a.id+'\')">⛶</span></button>';
     });
     grid.innerHTML = h;
   } else {
@@ -2867,6 +2895,13 @@ function closeActivityFullscreen() {
     <button class="s2-pool-modal-close" onclick="s2ClosePoolModal()">✕</button>
     <h3 id="s2PoolModalTitle"></h3>
     <div class="s2-modal-grid" id="s2PoolModalGrid"></div>
+  </div>
+</div>
+
+<div class="s2-image-preview" id="s2ImagePreview" onclick="if(event.target===this)s2CloseActionPreview()">
+  <div class="s2-image-preview-card">
+    <button class="s2-image-preview-close" onclick="s2CloseActionPreview()">✕</button>
+    <img id="s2ImagePreviewImg" src="" alt="">
   </div>
 </div>
 
