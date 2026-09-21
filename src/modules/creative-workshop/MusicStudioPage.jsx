@@ -26,6 +26,13 @@ const initialBasicInfo = { goals: '', theme: '', age: '', level: '', style: '', 
 const initialSong = { title: '', songMeta: {}, lyrics: [], targetPatterns: [] };
 const DEFAULT_ACTIONS = ['Arms Circle', 'Make A Heart', 'Jump', 'Arms up', 'Knee Pat', 'Chest Pat', 'Stomp', 'Head Pat', 'Shoulder Pat', 'Snap', 'Wave', 'Touch Toes'];
 const DEFAULT_INSTRUMENTS = ['Bell', 'Bongo', 'Cabasa', 'Castanets', 'Djembe', 'Drum', 'Handbell', 'Hand Drum', 'Maracas', 'Sleigh Bell', 'Tambourine', 'Xylophone', 'Finger Cym.', 'Triangle', 'Woodblock'];
+// public/ip 里的动作图目录（仅动作池使用缩略图）
+const ACTION_IMAGE_BASE = '/ip/';
+/** 旧作品存的是历史动作名（如 👏 Clap），统一迁移为 public/ip 的 12 个规范动作 */
+const normalizeMelodyActions = (value) => {
+  const list = Array.isArray(value) ? value.filter((item) => typeof item === 'string' && item.trim()) : [];
+  return list.length && list.every((item) => DEFAULT_ACTIONS.includes(item)) ? list : DEFAULT_ACTIONS;
+};
 const initialExercises = {
   ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {},
   melodyActions: DEFAULT_ACTIONS,
@@ -451,13 +458,13 @@ function ListenEditor({ items, lyrics, onChange, onGenerate, generating }) {
   );
 }
 
-function EditablePool({ title, items, onChange, options }) {
+function EditablePool({ title, items, onChange, options, thumbBase }) {
   const { t } = useTranslation();
   return (
     <section className="pbv2-card pbv2-tone-green">
       <div className="pbv2-card-title">{title}</div>
       <div className="cw-pool-choices">
-        {options.map((item) => <button type="button" key={item} aria-pressed={items.includes(item)} className={items.includes(item) ? 'is-active' : ''} onClick={() => onChange(options.filter((option) => option === item ? !items.includes(item) : items.includes(option)))}>{t('musicStudio.poolItem', { returnObjects: true })?.[item] || item}<span>{items.includes(item) ? '−' : '+'}</span></button>)}
+        {options.map((item) => <button type="button" key={item} aria-pressed={items.includes(item)} className={items.includes(item) ? 'is-active' : ''} onClick={() => onChange(options.filter((option) => option === item ? !items.includes(item) : items.includes(option)))}>{thumbBase ? <img className="cw-pool-thumb" src={`${thumbBase}${encodeURIComponent(item)}.png`} alt="" loading="lazy" /> : null}{t('musicStudio.poolItem', { returnObjects: true })?.[item] || item}<span>{items.includes(item) ? '−' : '+'}</span></button>)}
       </div>
       <span className="cw-pool-count">{t('musicStudio.selectedCount', { count: items.length })}</span>
     </section>
@@ -690,7 +697,7 @@ export function MusicStudioPage() {
       ex3Data: Array.isArray(r.ex3Data) ? r.ex3Data : [],
       starRoles: Array.isArray(r.starRoles) ? r.starRoles : [],
       teachingPlans: plainTeachingPlans(r.teachingPlans),
-      melodyActions: Array.isArray(r.melodyActions) ? r.melodyActions : DEFAULT_ACTIONS,
+      melodyActions: normalizeMelodyActions(r.melodyActions),
       melodyInstruments: Array.isArray(r.melodyInstruments) ? r.melodyInstruments : DEFAULT_INSTRUMENTS,
       echoData: r.echoData ? {
         intermediate: Array.isArray(r.echoData.intermediate) ? r.echoData.intermediate : [],
@@ -1264,7 +1271,7 @@ export function MusicStudioPage() {
           {step === 3 && (
             <div className="pbv2-step-panel">
               <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
-              <EditablePool title={t('musicStudio.actionsTitle')} options={DEFAULT_ACTIONS} items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
+              <EditablePool title={t('musicStudio.actionsTitle')} options={DEFAULT_ACTIONS} thumbBase={ACTION_IMAGE_BASE} items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
               <EditablePool title={t('musicStudio.instrumentsTitle')} options={DEFAULT_INSTRUMENTS} items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="2" />
               <footer className="pbv2-actions">

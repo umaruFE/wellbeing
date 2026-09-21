@@ -371,6 +371,10 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
     return [name, file && fs.existsSync(file) ? `data:image/png;base64,${fs.readFileSync(file).toString('base64')}` : ''];
   }));
   html = html.replace('__ACTION_IMAGES_JSON__', JSON.stringify(actionImages));
+  // 旧作品存的是历史动作名（如 👏 Clap），统一迁移为 public/ip 里的 12 个规范动作
+  const canonicalActions = actionImageNames.map((name) => name.replace(/\.png$/, ''));
+  const rawActions = (Array.isArray(result.melodyActions) ? result.melodyActions : []).map((item) => String(item));
+  const melodyActions = rawActions.length && rawActions.every((item) => canonicalActions.includes(item)) ? rawActions : canonicalActions;
   html = html.replace('__SONG_TITLE_JSON__', JSON.stringify(result.title || fallbackTitle).replace(/</g, '\\u003c'));
   // Preserve the user's template edits; fix fractional-second parsing only in the rendered output.
   html = html.replace(/function parseTimeSeconds\(timeStr\) \{[\s\S]*?\n\}/, `function parseTimeSeconds(timeStr) {
@@ -386,7 +390,7 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
   html = html.replace(/var ex3Data = \[[\s\S]*?\n\];/, `var ex3Data = ${JSON.stringify(result.ex3Data)};`);
   html = html.replace(/var starRoles = \[[\s\S]*?\n\];/, `var starRoles = ${JSON.stringify(normalizeStarRoles(result.starRoles, result.lyrics?.length || 0))};`);
   html = html.replace(/var echoData = \{[\s\S]*?\n\};/, `var echoData = ${JSON.stringify(normalizeEchoData(result.echoData, result.lyrics || []))};`);
-  html = html.replace(/var teacherActions = \[[\s\S]*?\n\];/, `var teacherActions = ${JSON.stringify(result.melodyActions || [])};`);
+  html = html.replace(/var teacherActions = \[[\s\S]*?\n\];/, `var teacherActions = ${JSON.stringify(melodyActions)};`);
   html = html.replace(/var teacherInstruments = \[[\s\S]*?\n\];/, `var teacherInstruments = ${JSON.stringify(result.melodyInstruments || [])};`);
   html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(normalizeTeachingPlans(result.teachingPlans))};`);
   html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
