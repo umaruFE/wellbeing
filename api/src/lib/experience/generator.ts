@@ -83,8 +83,8 @@ export interface MusicResult extends MusicSong, MusicExercises {
   };
 }
 
-async function callLLM(system: string, user: string): Promise<string> {
-  return generateWithDeepSeek(system, user);
+async function callLLM(system: string, user: string, timeout?: number): Promise<string> {
+  return generateWithDeepSeek(system, user, timeout);
 }
 
 /** 剥离可能的 ```json 代码围栏后解析 JSON */
@@ -402,6 +402,10 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
 }
 
 // ── 工作室流程 step 2：歌曲创作 ────────────────────────────────
+// DeepSeek 生成整曲（16 行歌词）实测约 220s，默认 180s 会超时；与路由 maxDuration 对齐到 300s。
+// 练习 + 四关教案的输出更长，同用这一档。
+const MUSIC_GEN_TIMEOUT_MS = 300000;
+
 export async function generateMusicSong(
   params: Record<string, string>,
   adjustment?: string
@@ -412,7 +416,7 @@ export async function generateMusicSong(
   const user = adjustment
     ? `${base.user}\n\n## 重新生成调整方向（用户提示词，必须优先遵循）\n${adjustment}`
     : base.user;
-  const raw = await callLLM(system, user);
+  const raw = await callLLM(system, user, MUSIC_GEN_TIMEOUT_MS);
   const song = parseJson<MusicSong>(raw);
 
   const lyrics = normalizeMusicLyrics(song.lyrics);
@@ -602,13 +606,14 @@ export async function generateMusicExercises(
     return result;
   };
 
-  let ex = parseJson<MusicExercises>(await callLLM(system, user));
+  let ex = parseJson<MusicExercises>(await callLLM(system, user, MUSIC_GEN_TIMEOUT_MS));
   let normalizedFill: MusicExercises['ex1FillData'] = normalizeFillItems(ex.ex1FillData);
   let errors = fillErrors(normalizedFill);
   if (errors.length) {
     ex = parseJson<MusicExercises>(await callLLM(
       `${system}\n上一次 ex1FillData 不合格：${errors.join('；')}。请重新生成完整 JSON 并逐项修正。`,
-      user
+      user,
+      MUSIC_GEN_TIMEOUT_MS
     ));
     normalizedFill = normalizeFillItems(ex.ex1FillData);
     errors = fillErrors(normalizedFill);
