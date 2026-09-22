@@ -423,7 +423,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .s2-lyric-time{font-size:10px;color:rgba(255,45,149,0.4);margin-left:4px}
 
 .s2-slot-group{display:flex;gap:4px;margin-left:12px;align-items:center}
-.s2-slot-group{margin-left:auto;flex-wrap:nowrap}.s2-drop-slot{flex-shrink:0}.s2-lyric-text{white-space:nowrap;flex:1;min-width:0}
+.s2-slot-group{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;max-width:100%}.s2-drop-slot{flex-shrink:0}.s2-lyric-text{white-space:nowrap;flex:1;min-width:0}
 .s2-placement-hint{font-size:18px;color:rgba(255,255,255,.7);margin:0 0 16px;line-height:1.5}
 .s2-drop-slot{width:28px;height:28px;border-radius:50%;border:2px dashed rgba(0,229,255,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all 0.15s;position:relative}
 .s2-drop-slot:hover,.s2-drop-slot.drag-over{border-color:#00e5ff;background:rgba(0,229,255,0.12);transform:scale(1.1)}
@@ -1635,7 +1635,6 @@ function s2DropOnSlot(e, ri, si) {
 }
 
 function s2AddSlot(ri) {
-  if (s2LineSlots[ri].length >= 4) return;
   s2LineSlots[ri].push({});
   renderStage2(document.getElementById('stageContent'));
 }
