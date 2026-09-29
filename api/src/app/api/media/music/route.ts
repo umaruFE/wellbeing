@@ -18,7 +18,7 @@ async function cdnReadable(url: string) {
   if (cached && cached.until > Date.now()) return cached.okay;
   let okay = false;
   try {
-    const response = await fetch(url, { headers: { Range: 'bytes=0-3' }, signal: AbortSignal.timeout(5000), cache: 'no-store', redirect: 'error' });
+    const response = await fetch(url, { headers: { Range: 'bytes=0-3' }, signal: AbortSignal.timeout(8000), cache: 'no-store', redirect: 'follow' });
     const reader = response.body?.getReader();
     if (reader) {
       const item = await reader.read();
@@ -29,6 +29,29 @@ async function cdnReadable(url: string) {
   if (cdnState.size > 512) cdnState.clear();
   cdnState.set(url, { okay, until: Date.now() + 60000 });
   return okay;
+}
+async function proxyCdn(request: NextRequest, url: string, head: boolean) {
+  const range = request.headers.get('range');
+  const response = await fetch(url, {
+    method: head ? 'HEAD' : 'GET',
+    headers: range ? { Range: range } : undefined,
+    signal: AbortSignal.timeout(45000),
+    cache: 'no-store',
+    redirect: 'follow',
+  });
+  if (!response.ok && response.status !== 206) throw new Error(`CDN音频请求失败（${response.status}）`);
+  const headers: Record<string, string> = {
+    ...cors,
+    'Content-Type': response.headers.get('content-type') || 'audio/flac',
+    'Accept-Ranges': response.headers.get('accept-ranges') || 'bytes',
+    'Cache-Control': 'private, max-age=60',
+    'X-Music-Source': 'cdn-proxy',
+  };
+  for (const name of ['content-length', 'content-range']) {
+    const value = response.headers.get(name);
+    if (value) headers[name.replace(/(^|-)(\w)/g, (_m, dash, char) => `${dash}${char.toUpperCase()}`)] = value;
+  }
+  return new NextResponse(head ? null : response.body, { status: response.status, headers });
 }
 async function backupAudio(file: string): Promise<Buffer> {
   const existing = cache.get(file);
@@ -78,6 +101,7 @@ async function serve(request: NextRequest, head = false) {
   if (!verifyMusicPlayback(cdn, file, token)) return NextResponse.json({ error: '音频地址无效' }, { status: 403, headers: cors });
   try {
     if (await cdnReadable(cdn)) return NextResponse.redirect(cdn, { status: 307, headers: cors });
+    try { return await proxyCdn(request, cdn, head); } catch { /* Fall back to the local/N8N copy below. */ }
     const bytes = await backupAudio(file);
     const rangeHeader = request.headers.get('range');
     const range = musicByteRange(rangeHeader, bytes.length);

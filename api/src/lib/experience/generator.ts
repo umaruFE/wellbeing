@@ -64,6 +64,8 @@ export interface MusicExercises {
   starRoles: string[];
   melodyActions?: string[];
   melodyInstruments?: string[];
+  /** 第二关 Melody Mover 按歌词行预填的缺省槽位：type=action|inst，name 与动作/乐器池名称一致 */
+  melodySlots?: { type: string; name: string }[][];
   teachingPlans: Record<string, { title?: string; sections?: { title: string; content: string }[] }>;
   /** 第三关 Echo Master 回声大师跟唱遮挡：intermediate/challenge 均与歌词行一一对应（原词数组，可为空） */
   echoData?: { intermediate: string[][]; challenge: string[][] };
@@ -357,6 +359,20 @@ function normalizeEchoData(value: MusicExercises['echoData'], lyrics: { text: st
   return { intermediate, challenge };
 }
 
+/** 第二关缺省槽位归一化：与歌词行一一对齐（缺行补空、多余截断），仅保留 action/inst 且名称非空的条目 */
+function normalizeMelodySlots(value: MusicExercises['melodySlots'], lyricsCount: number): NonNullable<MusicExercises['melodySlots']> {
+  const rows = Array.isArray(value) ? value : [];
+  const out: { type: string; name: string }[][] = [];
+  for (let i = 0; i < lyricsCount; i++) {
+    const row = Array.isArray(rows[i]) ? rows[i] : [];
+    out.push(row
+      .filter((slot): slot is { type: string; name: string } => Boolean(slot) && (slot.type === 'action' || slot.type === 'inst') && Boolean(String(slot?.name || '').trim()))
+      .map((slot) => ({ type: slot.type, name: String(slot.name).trim() }))
+      .slice(0, 4));
+  }
+  return out;
+}
+
 /** 渲染四关游戏课件（单文件 HTML；音频引用 FTP/CDN URL，可为空串） */
 export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music Star Quest'): string {
   let html = readTemplate('music-star-quest.html');
@@ -392,6 +408,7 @@ export function renderMusicGameHtml(result: MusicResult, fallbackTitle = 'Music 
   html = html.replace(/var echoData = \{[\s\S]*?\n\};/, `var echoData = ${JSON.stringify(normalizeEchoData(result.echoData, result.lyrics || []))};`);
   html = html.replace(/var teacherActions = \[[\s\S]*?\n\];/, `var teacherActions = ${JSON.stringify(melodyActions)};`);
   html = html.replace(/var teacherInstruments = \[[\s\S]*?\n\];/, `var teacherInstruments = ${JSON.stringify(result.melodyInstruments || [])};`);
+  html = html.replace(/var teacherSlots = \[[\s\S]*?\n\];/, `var teacherSlots = ${JSON.stringify(normalizeMelodySlots(result.melodySlots, result.lyrics?.length || 0))};`);
   html = html.replace(/var teachingPlans = \{[\s\S]*?\n\};/, `var teachingPlans = ${JSON.stringify(normalizeTeachingPlans(result.teachingPlans))};`);
   html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
   const vocal = result.audio?.vocal || '';
@@ -635,12 +652,21 @@ export async function generateMusicExercises(
       answer: String(x.answer || ''),
       words: (Array.isArray(x.words) ? x.words : []).map(String),
     })),
-    ex3Data: (Array.isArray(ex.ex3Data) ? ex.ex3Data : []).map((x) => ({
-      question: String(x.question || 'Choose the sentence you hear:'),
-      options: (Array.isArray(x.options) ? x.options : []).map(String),
-      correct: Number(x.correct) || 0,
-      time: x.time ? String(x.time) : '',
-    })),
+    ex3Data: (Array.isArray(ex.ex3Data) ? ex.ex3Data : []).map((x, index) => {
+      const sourceOptions = (Array.isArray(x.options) ? x.options : []).map(String).filter(Boolean);
+      const sourceCorrect = Math.min(Math.max(Number(x.correct) || 0, 0), Math.max(sourceOptions.length - 1, 0));
+      const answer = sourceOptions[sourceCorrect] || '';
+      // Keep authoring and generated courseware consistent while ensuring the answer is not always A.
+      const targetCorrect = sourceOptions.length ? index % sourceOptions.length : 0;
+      const options = sourceOptions.filter((_, optionIndex) => optionIndex !== sourceCorrect);
+      options.splice(targetCorrect, 0, answer);
+      return {
+        question: String(x.question || 'Choose the sentence you hear:'),
+        options,
+        correct: targetCorrect,
+        time: x.time ? String(x.time) : '',
+      };
+    }),
     starRoles: normalizeStarRoles(ex.starRoles, song.lyrics.length),
     teachingPlans: normalizeTeachingPlans(ex.teachingPlans),
     echoData: normalizeEchoData(ex.echoData, song.lyrics),

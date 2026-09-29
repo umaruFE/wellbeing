@@ -168,7 +168,17 @@ export async function POST(request: NextRequest) {
       filename: file.name,
     });
     if (uploadProvider === 'ftp' || uploadProvider === 'oss') {
-      url = await uploadFile(file, folder, file.name);
+      try {
+        url = await uploadFile(file, folder, file.name);
+      } catch (remoteError) {
+        // Keep authoring usable during a temporary OSS/FTP network outage.
+        // The local URL is stable on this API host and can be stored normally.
+        console.warn(`[upload:${requestId}] remote storage unavailable; falling back to local storage`, {
+          provider: uploadProvider,
+          error: formatUploadError(remoteError),
+        });
+        url = await saveToLocal(file, folder);
+      }
     } else {
       // 本地存储
       url = await saveToLocal(file, folder);

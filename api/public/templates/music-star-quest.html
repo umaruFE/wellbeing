@@ -390,15 +390,15 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 @keyframes s2float3{0%,100%{transform:translate(0,0) scale(1)}25%{transform:translate(20px,10px) scale(1.15)}50%{transform:translate(-5px,25px) scale(0.9)}75%{transform:translate(-15px,5px) scale(1.1)}}
 @keyframes s2float4{0%,100%{transform:translate(0,0) rotate(0deg) scale(1)}25%{transform:translate(-15px,-25px) rotate(-8deg) scale(0.85)}50%{transform:translate(-30px,-10px) rotate(4deg) scale(1.1)}75%{transform:translate(-5px,15px) rotate(-2deg) scale(0.95)}}
 
-.s2-container{display:flex;width:min(100%,1400px);margin-inline:auto;gap:16px;align-items:flex-start;position:relative;z-index:1;justify-content:center}
-.s2-left{flex:1 1 880px;min-width:0;display:flex;flex-direction:column}
-.s2-right{flex:0 0 400px;display:flex;flex-direction:column;gap:10px;position:sticky;top:20px}
+.s2-container{display:flex;width:min(100%,1680px);margin-inline:auto;gap:16px;align-items:flex-start;position:relative;z-index:1;justify-content:center}
+.s2-left{flex:1 1 1100px;min-width:0;display:flex;flex-direction:column}
+.s2-right{flex:0 0 360px;display:flex;flex-direction:column;gap:10px;position:sticky;top:20px}
 
 .s2-actions-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:14px;border:1.5px solid rgba(57,255,20,0.3);box-shadow:0 0 16px rgba(57,255,20,0.08)}
 .s2-actions-panel h3{font-size:17px;color:#39ff14;margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:space-between}
 .s2-actions-panel h3 .hint{font-size:11px;font-weight:400;color:rgba(57,255,20,0.5)}
-.s2-action-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.s2-action-tag{position:relative;background:rgba(255,255,255,0.05);color:#e0e0ff;padding:10px 12px;border-radius:14px;font-size:16px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(57,255,20,0.25);display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.s2-action-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.s2-action-tag{position:relative;background:rgba(255,255,255,0.05);color:#e0e0ff;padding:10px 12px;border-radius:14px;font-size:16px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(57,255,20,0.25);display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif;min-width:0}
 .s2-action-tag:hover{background:rgba(57,255,20,0.1);border-color:#39ff14;transform:translateY(-1px);box-shadow:0 0 12px rgba(57,255,20,0.2)}
 .s2-action-tag:active{cursor:grabbing}
 .s2-action-tag img{width:72px;height:72px;object-fit:contain;flex-shrink:0}
@@ -406,34 +406,36 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .s2-inst-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:14px;border:1.5px solid rgba(255,184,0,0.3);box-shadow:0 0 16px rgba(255,184,0,0.08);flex:1;display:flex;flex-direction:column;min-height:0}
 .s2-inst-panel h3{font-size:17px;color:#ffb800;margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:6px;justify-content:space-between}
 .s2-inst-panel h3 .hint{font-size:11px;font-weight:400;color:rgba(255,184,0,0.5)}
-.s2-inst-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;overflow-y:auto;flex:1;padding-right:2px;scrollbar-width:thin;scrollbar-color:rgba(255,184,0,0.3) transparent}
+.s2-inst-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow-y:auto;flex:1;padding-right:2px;scrollbar-width:thin;scrollbar-color:rgba(255,184,0,0.3) transparent}
 .s2-inst-grid::-webkit-scrollbar{width:3px}
 .s2-inst-grid::-webkit-scrollbar-track{background:transparent}
 .s2-inst-grid::-webkit-scrollbar-thumb{background:rgba(255,184,0,0.3);border-radius:2px}
-.s2-inst-tag{background:rgba(255,255,255,0.05);color:#e0e0ff;padding:9px 10px;border-radius:14px;font-size:16px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(255,184,0,0.25);display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+.s2-inst-tag{background:rgba(255,255,255,0.05);color:#e0e0ff;padding:9px 10px;border-radius:14px;font-size:16px;font-weight:700;cursor:grab;user-select:none;border:1.5px solid rgba(255,184,0,0.25);display:flex;align-items:center;gap:8px;transition:all 0.15s;font-family:"PingFang SC","Microsoft YaHei",sans-serif;min-width:0}
 .s2-inst-tag img{width:50px;height:50px;object-fit:contain;flex-shrink:0}
 .s2-inst-tag:hover{background:rgba(255,184,0,0.1);border-color:#ffb800;transform:translateY(-1px);box-shadow:0 0 12px rgba(255,184,0,0.2)}
 .s2-inst-tag:active{cursor:grabbing}
+/* 侧栏两列较窄：标签文字可换行，防止把网格撑出横向滚动 */
+.s2-action-tag span,.s2-inst-tag span{flex:1;min-width:0;white-space:normal;word-break:break-word;line-height:1.25}
 
 .s2-lyrics-panel{background:rgba(10,10,30,0.85);border-radius:16px;padding:20px;border:1.5px solid rgba(255,45,149,0.3);box-shadow:0 0 16px rgba(255,45,149,0.08)}
 .s2-lyrics-panel h3{font-size:24px;color:#ff2d95;margin-bottom:18px;font-weight:700;display:flex;align-items:center;gap:6px}
 .s2-lyric-row{display:flex;align-items:center;flex-wrap:wrap;padding:16px 0;border-bottom:1px solid rgba(255,45,149,0.1);gap:10px}
 .s2-lyric-row:last-child{border-bottom:none}
-.s2-lyric-text{font-size:26px;line-height:1.35;font-weight:700;color:#e0e0ff;white-space:nowrap;flex-shrink:0}
+.s2-lyric-text{font-size:26px;line-height:1.35;font-weight:700;color:#e0e0ff;white-space:normal;word-break:break-word;flex-shrink:0}
 .s2-lyric-time{font-size:10px;color:rgba(255,45,149,0.4);margin-left:4px}
 
 .s2-slot-group{display:flex;gap:4px;margin-left:12px;align-items:center}
-.s2-slot-group{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;max-width:100%}.s2-drop-slot{flex-shrink:0}.s2-lyric-text{white-space:nowrap;flex:1;min-width:0}
+.s2-slot-group{margin-left:auto;flex-wrap:wrap;justify-content:flex-end;max-width:100%}.s2-drop-slot{flex-shrink:0}.s2-lyric-text{white-space:normal;flex:1;min-width:0}
 .s2-placement-hint{font-size:18px;color:rgba(255,255,255,.7);margin:0 0 16px;line-height:1.5}
-.s2-drop-slot{width:28px;height:28px;border-radius:50%;border:2px dashed rgba(0,229,255,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;transition:all 0.15s;position:relative}
+.s2-drop-slot{width:46px;height:46px;border-radius:50%;border:2.5px dashed rgba(0,229,255,0.3);display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;transition:all 0.15s;position:relative}
 .s2-drop-slot:hover,.s2-drop-slot.drag-over{border-color:#00e5ff;background:rgba(0,229,255,0.12);transform:scale(1.1)}
 .s2-drop-slot.filled{border-style:solid;border-color:#00e5ff;background:rgba(0,229,255,0.08)}
-.s2-drop-slot img{width:22px;height:22px;object-fit:contain}
-.s2-slot-remove{position:absolute;top:-6px;right:-6px;width:14px;height:14px;border-radius:50%;background:#ff2d95;color:#fff;font-size:8px;line-height:14px;text-align:center;display:none;cursor:pointer}
+.s2-drop-slot img{width:36px;height:36px;object-fit:contain}
+.s2-slot-remove{position:absolute;top:-7px;right:-7px;width:20px;height:20px;border-radius:50%;background:#ff2d95;color:#fff;font-size:11px;line-height:20px;text-align:center;display:none;cursor:pointer}
 .s2-drop-slot.filled:hover .s2-slot-remove{display:block}
-.s2-slot-add{width:24px;height:24px;border-radius:50%;border:1px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.06);color:rgba(0,229,255,0.5);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;line-height:1}
+.s2-slot-add{width:38px;height:38px;border-radius:50%;border:1.5px solid rgba(0,229,255,0.2);background:rgba(0,229,255,0.06);color:rgba(0,229,255,0.5);font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;line-height:1}
 .s2-slot-add:hover{background:rgba(0,229,255,0.15);color:#00e5ff;border-color:rgba(0,229,255,0.4)}
-.s2-slot-del{width:16px;height:16px;border-radius:50%;border:1px solid rgba(255,45,149,0.2);background:rgba(255,45,149,0.06);color:rgba(255,45,149,0.4);font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;line-height:1}
+.s2-slot-del{width:26px;height:26px;border-radius:50%;border:1px solid rgba(255,45,149,0.2);background:rgba(255,45,149,0.06);color:rgba(255,45,149,0.4);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;flex-shrink:0;line-height:1}
 .s2-slot-del:hover{background:rgba(255,45,149,0.2);color:#ff2d95;border-color:rgba(255,45,149,0.4)}
 
 /* Stage 2 Expand Button */
@@ -472,6 +474,23 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 
 @media(max-width:1280px){.s2-container{flex-direction:column;align-items:stretch}.s2-left{width:100%;flex:none}.s2-right{width:100%;flex:none;position:static;flex-direction:row;gap:12px}.s2-actions-panel,.s2-inst-panel{flex:1;min-width:0}}
 @media(max-width:768px){.s2-right{flex-direction:column}.s2-lyric-row{align-items:flex-start}.s2-lyric-text{white-space:normal;flex-basis:100%}.s2-slot-group{margin-left:0;flex-wrap:wrap}}
+
+/* Stage 2 授课端：左歌词 / 右动作乐器 各自独立滚动 */
+.sv-body.sv-body--s2{overflow:hidden;display:flex;flex-direction:column}
+.sv-body--s2 .s2-header{flex-shrink:0}
+.sv-body--s2 .s2-player-bar{flex-shrink:0}
+.sv-body--s2>.card{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;margin-bottom:0}
+.sv-body--s2 .s2-container{flex:1;min-height:0;align-items:stretch}
+.sv-body--s2 .s2-left{overflow-y:auto;min-height:0;padding:2px 6px 2px 2px;scrollbar-width:thin;scrollbar-color:rgba(255,45,149,0.35) transparent}
+.sv-body--s2 .s2-right{position:static;flex:0 0 360px;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 4px 2px 2px;scrollbar-width:thin;scrollbar-color:rgba(255,184,0,0.35) transparent}
+.sv-body--s2 .s2-left::-webkit-scrollbar,.sv-body--s2 .s2-right::-webkit-scrollbar{width:5px}
+.sv-body--s2 .s2-left::-webkit-scrollbar-thumb{background:rgba(255,45,149,0.35);border-radius:3px}
+.sv-body--s2 .s2-right::-webkit-scrollbar-thumb{background:rgba(255,184,0,0.35);border-radius:3px}
+.sv-body--s2 .rhythm-controls{flex-shrink:0}
+/* 右栏整体滚动：面板恢复自然高度，避免乐器网格内层再滚动 */
+.sv-body--s2 .s2-right .s2-inst-panel{flex:none}
+.sv-body--s2 .s2-right .s2-inst-grid{overflow:visible;flex:none}
+@media(max-width:1280px){.sv-body.sv-body--s2{overflow-y:auto;display:block}.sv-body--s2 .s2-left,.sv-body--s2 .s2-right{overflow:visible}}
 
 /* Stage 2 Header */
 .s2-header{position:relative;z-index:1;text-align:center;margin-bottom:14px}
@@ -726,6 +745,8 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
 .teaching-drawer-overlay.active{display:block}
 .teaching-drawer{position:fixed;top:0;right:0;width:440px;max-width:90vw;height:100vh;background:#0d0d2b;border-left:1px solid rgba(255,255,255,0.1);z-index:401;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.3s ease;box-shadow:-8px 0 40px rgba(0,0,0,0.5)}
 .teaching-drawer.active{transform:translateX(0)}
+/* 教学方案抽屉（How to teach）：整宽展示，方案里的表格/长流程不再挤在 440px 里；活动说明抽屉保持原宽度 */
+#teachingDrawer{width:100%;max-width:100vw}
 .teaching-drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0}
 .teaching-drawer-header h2{font-size:18px;font-weight:800;color:#ffb800;margin:0}
 .teaching-drawer-header .td-actions{display:flex;gap:8px}
@@ -869,7 +890,7 @@ h1{font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:1.8em;font-w
     <div style="font-size:48px;margin-bottom:12px;">✅</div>
     <h3 style="color:#39ff14;margin-bottom:8px;">Recording Done!</h3>
     <p style="color:rgba(255,255,255,0.5);margin-bottom:12px;font-size:14px;">Review your recording, then choose:</p>
-    <audio id="recordedAudio" controls style="width:min(520px,80vw);margin-bottom:16px;"></audio>
+    <video id="recordedVideo" controls playsinline style="width:min(640px,86vw);max-height:48vh;margin-bottom:16px;border-radius:14px;background:#000;"></video>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
       <a id="recordDownload" class="btn btn-sm btn-outline" style="color:#00e5ff;border-color:rgba(0,229,255,0.4);text-decoration:none;" download="star-studio-recording.webm">⬇ Download Recording</a>
       <button class="btn btn-sm btn-outline" style="color:#fff;border-color:rgba(255,255,255,0.3);" onclick="resetRecording()">🔄 Re-record</button>
@@ -984,10 +1005,29 @@ if (teacherInstruments.length) {
   });
 }
 
+// 制作端注入：按歌词行预填的缺省动作/乐器（name 与池子名称匹配，未匹配的忽略）。
+var teacherSlots = [
+];
+function s2DefaultLineSlots() {
+  if (!teacherSlots.length) return lyrics.map(function() { return [{}, {}]; });
+  return lyrics.map(function(_, ri) {
+    var row = teacherSlots[ri] || [];
+    var out = [];
+    row.forEach(function(slot) {
+      if (!slot || !slot.name) return;
+      var isInst = slot.type === 'inst';
+      var pool = isInst ? s2Instruments : s2Actions;
+      var item = pool.find(function(p) { return String(p.name).trim().toLowerCase() === String(slot.name).trim().toLowerCase(); });
+      if (item) out.push({type: isInst ? 'inst' : 'action', id: item.id});
+    });
+    return out.length ? out : [{}, {}];
+  });
+}
+
 var currentStage = 1;
 var unlockedStages = [true, false, false, false];
 var stage1Complete = false, stage2Complete = false, stage3Complete = false;
-var s2LineSlots = [];
+var s2LineSlots = s2DefaultLineSlots();
 var s2SelectedActions = [];
 var s2SelectedInstruments = [];
 var s2PlacementSelection = null;
@@ -996,7 +1036,7 @@ var ex1Done = false, ex2Done = false, ex3Done = false;
 var singLevel = 1, singLineIdx = 0;
 var singShowFull = false;
 var recordingState = 'idle', recordTimer = null, recordVersion = 'original';
-var mediaRecorder = null, microphoneStream = null, recordedChunks = [], recordedAudioUrl = '';
+var mediaRecorder = null, microphoneStream = null, recordedChunks = [], recordedMediaUrl = '';
 var starRoles = [
 ];
 var songTitle = __SONG_TITLE_JSON__;
@@ -1137,7 +1177,9 @@ function startStage(n) {
   document.getElementById('stageView').classList.add('active');
   document.getElementById('gameMap').style.display = 'none';
   document.getElementById('svTitle').style.display = 'none';
-  document.getElementById('svWatermark').textContent = (n < 10 ? '0' : '') + n;
+  // 关卡重渲染会清空 stageContent，水印可能已被移除，做空值保护
+  var svWm = document.getElementById('svWatermark');
+  if (svWm) svWm.textContent = (n < 10 ? '0' : '') + n;
   updateMapBuildings();
 }
 
@@ -1182,7 +1224,7 @@ function finishAllStages() {
   celebrate('🏆');
 }
 function unlockStage(n) { if (n < 1 || n > 4) return; unlockedStages[n-1] = true; updateMapBuildings(); }
-function renderStage() { var c = document.getElementById('stageContent'); if (currentStage === 1) renderStage1(c); else if (currentStage === 2) renderStage2(c); else if (currentStage === 3) renderStage3(c); else if (currentStage === 4) renderStage4(c); }
+function renderStage() { var c = document.getElementById('stageContent'); if (currentStage !== 2) c.classList.remove('sv-body--s2'); if (currentStage === 1) renderStage1(c); else if (currentStage === 2) renderStage2(c); else if (currentStage === 3) renderStage3(c); else if (currentStage === 4) renderStage4(c); }
 
 function getLyricPiece(idx) { var ranges = [[0,6],[6,11],[11,16]]; return lyrics.slice(ranges[idx][0], ranges[idx][1]); }
 
@@ -1563,7 +1605,8 @@ function renderStage1(container) {
 }
 
 function renderStage2(container) {
-  if (s2LineSlots.length !== lyrics.length) s2LineSlots = lyrics.map(function() { return [{}, {}]; });
+  container.classList.add('sv-body--s2');
+  if (s2LineSlots.length !== lyrics.length) s2LineSlots = s2DefaultLineSlots();
   var h = '<div class="s2-floats"><div class="s2-float-item">🎵</div><div class="s2-float-item">🥁</div><div class="s2-float-item">🎶</div><div class="s2-float-item">✨</div><div class="s2-float-item">🎼</div><div class="s2-float-item">🎸</div><div class="s2-float-item">⭐</div><div class="s2-float-item">🎹</div><div class="s2-float-item">💫</div><div class="s2-float-item">🎵</div></div>';
   h += '<div class="s2-header"><div class="s2-level-badge">LEVEL 2</div><br><span class="s2-title-icon">🥁</span><h1>Melody Mover</h1><br><div class="s2-sub">Choose the actions and instruments for your performance</div><button class="teaching-plan-btn" onclick="openTeachingDrawer(2)">How to teach</button></div>';
   h += '<div class="s2-player-bar"><button class="s2-player-btn" id="s2PlayBtn" onclick="s2TogglePlay()"><svg viewBox="0 0 24 24" id="s2PlayIcon"><polygon points="7,3 21,12 7,21"/></svg><svg viewBox="0 0 24 24" id="s2PauseIcon" style="display:none"><rect x="5" y="3" width="5" height="18"/><rect x="14" y="3" width="5" height="18"/></svg></button><span class="s2-player-time" id="s2CurTime">0:00</span><div class="s2-player-progress" id="s2ProgressBar" onclick="s2SeekAudio(event)"><div class="s2-player-progress-fill" id="s2ProgressFill"></div><div class="s2-player-progress-thumb" id="s2ProgressThumb"></div></div><span class="s2-player-time" id="s2DurTime">0:39</span><div class="s2-player-mode" id="s2ModeToggle"><button class="s2-active" onclick="s2SwitchMode(\'vocal\')" id="s2ModeVocal">🎤 Vocal</button><button onclick="s2SwitchMode(\'backing\')" id="s2ModeBacking">🎼 Backing</button></div><div class="s2-player-vol"><span class="s2-vol-icon" onclick="s2ToggleMute()">🔊</span><input type="range" id="s2VolSlider" min="0" max="100" value="80" oninput="s2SetVolume(this.value)"></div><div class="s2-player-speed"><button onclick="s2SetSpeed(0.5)">0.5x</button><button onclick="s2SetSpeed(0.75)">0.75x</button><button class="s2-active" onclick="s2SetSpeed(1)">1x</button><button onclick="s2SetSpeed(1.25)">1.25x</button><button onclick="s2SetSpeed(1.5)">1.5x</button></div></div>';
@@ -1584,7 +1627,7 @@ function renderStage2(container) {
   s2Actions.forEach(function(a) { h += '<button draggable="true" ondragstart="s2ActionDragStart(event)" data-action-id="'+a.id+'" class="s2-action-tag'+(s2SelectedActions.indexOf(a.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'action\',\''+a.id+'\')">'+actionVisual(a)+' <span>'+safeText(a.name)+'</span></button>'; });
   h += '</div></div>';
   h += '<div class="s2-inst-panel"><h3><span>🥁 Instruments <span class="hint">Choose any you will use</span></span><button class="s2-pool-expand-btn" onclick="s2OpenPoolModal(\'instruments\')" title="Expand">⛶</button></h3><div class="s2-inst-grid">';
-  s2Instruments.forEach(function(inst) { h += '<button draggable="true" ondragstart="s2InstDragStart(event)" data-inst-id="'+inst.id+'" class="s2-inst-tag'+(s2SelectedInstruments.indexOf(inst.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'inst\',\''+inst.id+'\')"><img src="'+inst.img+'" alt="">'+safeText(inst.name)+'</button>'; });
+  s2Instruments.forEach(function(inst) { h += '<button draggable="true" ondragstart="s2InstDragStart(event)" data-inst-id="'+inst.id+'" class="s2-inst-tag'+(s2SelectedInstruments.indexOf(inst.id)>=0?' is-selected':'')+'" onclick="s2ToggleSelection(\'inst\',\''+inst.id+'\')"><img src="'+inst.img+'" alt=""><span>'+safeText(inst.name)+'</span></button>'; });
   h += '</div></div>';
   h += '</div>';
   h += '</div>';
@@ -1654,7 +1697,7 @@ function s2ClearSlot(el) {
 }
 
 function s2ResetAll() {
-  s2LineSlots = lyrics.map(function() { return [{}, {}]; });
+  s2LineSlots = s2DefaultLineSlots();
   s2PlacementSelection = null;
   renderStage2(document.getElementById('stageContent'));
 }
@@ -2423,23 +2466,23 @@ function recordFsSetVersion(v) {
 }
 
 async function recordFsStartCountdown() {
-  if (!navigator.mediaDevices || !window.MediaRecorder) { showToast('⚠️ This browser does not support microphone recording'); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { showToast('⚠️ This browser does not support video recording'); return; }
   try {
-    microphoneStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    microphoneStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:true});
     recordedChunks = [];
     mediaRecorder = new MediaRecorder(microphoneStream);
     mediaRecorder.ondataavailable = function(event) { if (event.data && event.data.size) recordedChunks.push(event.data); };
     mediaRecorder.onstop = function() {
-      if (recordedAudioUrl) URL.revokeObjectURL(recordedAudioUrl);
-      recordedAudioUrl = URL.createObjectURL(new Blob(recordedChunks, {type:mediaRecorder.mimeType || 'audio/webm'}));
-      var player = document.getElementById('recordedAudio');
+      if (recordedMediaUrl) URL.revokeObjectURL(recordedMediaUrl);
+      recordedMediaUrl = URL.createObjectURL(new Blob(recordedChunks, {type:mediaRecorder.mimeType || 'video/webm'}));
+      var player = document.getElementById('recordedVideo');
       var download = document.getElementById('recordDownload');
-      if (player) player.src = recordedAudioUrl;
-      if (download) download.href = recordedAudioUrl;
+      if (player) player.src = recordedMediaUrl;
+      if (download) download.href = recordedMediaUrl;
       if (microphoneStream) microphoneStream.getTracks().forEach(function(track){track.stop();});
       microphoneStream = null;
     };
-  } catch (error) { showToast('⚠️ Microphone permission is required to record'); return; }
+  } catch (error) { showToast('⚠️ Camera and microphone permissions are required to record video'); return; }
   recordingState = 'countdown';
   document.getElementById('recordFsReady').style.display = 'none';
   document.getElementById('recordFsCountdown').style.display = 'block';

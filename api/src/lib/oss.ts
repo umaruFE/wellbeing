@@ -16,6 +16,9 @@ export const getOssClient = () => {
     bucket,
     accessKeyId,
     accessKeySecret,
+    // OSS SDK defaults to HTTP when `secure` is omitted. Some networks block
+    // outbound port 80, which makes otherwise valid uploads time out.
+    secure: process.env.ALIYUN_OSS_SECURE !== 'false',
     // 私有文件需要签名访问
     timeout: 60000,
   });

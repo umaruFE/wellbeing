@@ -92,6 +92,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       if (Array.isArray(body.exercises.starRoles)) existing.starRoles = body.exercises.starRoles;
       if (Array.isArray(body.exercises.melodyActions)) existing.melodyActions = body.exercises.melodyActions;
       if (Array.isArray(body.exercises.melodyInstruments)) existing.melodyInstruments = body.exercises.melodyInstruments;
+      if (Array.isArray(body.exercises.melodySlots)) existing.melodySlots = body.exercises.melodySlots;
       if (body.exercises.teachingPlans !== undefined) existing.teachingPlans = body.exercises.teachingPlans;
     }
     if (body.audio !== undefined) {

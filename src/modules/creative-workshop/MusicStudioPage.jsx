@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  ArrowLeft, Check, ChevronRight, Clock, Loader2, Music, Pencil, Plus,
+  ArrowLeft, Check, ChevronRight, Clock, Loader2, Music, Pause, Pencil, Play, Plus,
   RefreshCw, Save, Search, Sparkles, Trash2, Wand2, X,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ import '../picture-book/PictureBookStudioPage.css';
 import './creativeWorkshop.css';
 import { applyActualLrc, formatMusicTime } from './musicTiming';
 import uploadService from '../../services/uploadService';
+import aiAssetService from '../../services/aiAssetService';
 
 const MODULE_ID = 'music-star-quest';
 const MODULE_NAME = '星光录音棚';
@@ -37,6 +38,7 @@ const initialExercises = {
   ex1FillData: [], ex2Items: [], ex3Data: [], starRoles: [], teachingPlans: {},
   melodyActions: DEFAULT_ACTIONS,
   melodyInstruments: DEFAULT_INSTRUMENTS,
+  melodySlots: [],
   echoData: { intermediate: [], challenge: [] },
 };
 const STAGE_TITLES = { 1: 'Lyric Hunter', 2: 'Melody Mover', 3: 'Echo Master', 4: 'Star Studio' };
@@ -264,6 +266,7 @@ function LyricsEditor({ lyrics, audio = {}, workId, onEditLyric }) {
   const clips = React.useRef(null);
   const [editingIndex, setEditingIndex] = React.useState(-1);
   const [editDraft, setEditDraft] = React.useState('');
+  const [activeLyric, setActiveLyric] = React.useState(-1);
   const editInputRef = React.useRef(null);
   const segments = Array.isArray(audio.segments) ? audio.segments : [];
   const recognized = audio.transcription?.lyrics || [];
@@ -290,7 +293,7 @@ function LyricsEditor({ lyrics, audio = {}, workId, onEditLyric }) {
       {lyrics.map((row, idx) => {
         const editing = editingIndex === idx;
         return (
-          <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className={`cw-lyric-row cw-lyric-row-with-clip${onEditLyric ? ' cw-lyric-row-editable' : ''}`} title={t('musicStudio.lyricTimeTooltip', { time: row.time || t('musicStudio.alignmentPending') })}>
+          <div key={`${workId}-${audio.generationTask?.executionId || ''}-${idx}-${row.text}-${row.time}`} className={`cw-lyric-row cw-lyric-row-with-clip${onEditLyric ? ' cw-lyric-row-editable' : ''}${activeLyric === idx ? ' is-playing' : ''}`} title={t('musicStudio.lyricTimeTooltip', { time: row.time || t('musicStudio.alignmentPending') })}>
             <span className="cw-lyric-time">{idx + 1}</span>
             {editing ? (
               <div className="cw-lyric-edit">
@@ -310,7 +313,7 @@ function LyricsEditor({ lyrics, audio = {}, workId, onEditLyric }) {
               </>) : onEditLyric && (
                 <button type="button" className="cw-lyric-tool-btn" aria-label={t('musicStudio.editLyricAria', { n: idx + 1 })} title={t('musicStudio.editLyricBtn')} onClick={() => startEdit(idx)}><Pencil size={13} /></button>
               )}
-              <LyricClipPlayer source={segments[idx]} workId={workId} index={idx} onPlay={pauseOtherClips}
+              <LyricClipPlayer source={segments[idx]} workId={workId} index={idx} onPlay={(event) => { pauseOtherClips(event); setActiveLyric(idx); }}
                 canLoad={Boolean(workId && audio.generationTask?.status === 'completed' && recognized[idx]?.text === row.text && recognized[idx]?.time === row.time)} />
             </div>
           </div>
@@ -331,11 +334,18 @@ function AiSectionButton({ loading, hasContent, onClick }) {
   );
 }
 
-function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
+function FillEditor({ items, onChange, onPersistVisual, onGenerate, generating }) {
   const { t } = useTranslation();
   const [uploadingIndex, setUploadingIndex] = React.useState(null);
   const [uploadError, setUploadError] = React.useState('');
+  const [imagePrompt, setImagePrompt] = React.useState(null);
+  const [generatingImage, setGeneratingImage] = React.useState(false);
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
+  const updateVisual = async (idx, patch) => {
+    const nextItems = items.map((it, i) => (i === idx ? { ...it, ...patch } : it));
+    onChange(nextItems);
+    if (onPersistVisual) await onPersistVisual(nextItems);
+  };
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
   const updateOption = (idx, optionIndex, value) => {
     const options = Array.from({ length: 4 }, (_, i) => items[idx].options?.[i] || '');
@@ -351,9 +361,28 @@ function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
     }
     setUploadingIndex(idx);
     const result = await uploadService.uploadFile(file, 'music-fill-images');
-    if (result.success) update(idx, { imageUrl: result.url });
+    if (result.success) await updateVisual(idx, { imageUrl: result.url, emoji: '' });
     else setUploadError(result.error || t('musicStudio.fillImageUploadFailed'));
     setUploadingIndex(null);
+  };
+  const generateImage = async () => {
+    const prompt = imagePrompt?.prompt?.trim();
+    if (!prompt || imagePrompt?.idx == null || generatingImage) return;
+    setGeneratingImage(true);
+    setUploadError('');
+    try {
+      const submitted = await aiAssetService.generateMultipleImages(prompt, { count: 1, width: 768, height: 768, workflow_type: 'lora-v3' });
+      const task = submitted?.tasks?.[0];
+      if (!task?.promptId) throw new Error(t('musicStudio.fillImageGenerateFailed', { defaultValue: 'AI 生图任务提交失败' }));
+      const result = await aiAssetService.pollTaskAndUpload(task.promptId, 0, prompt, 120, 3000, undefined, task.apiUrl);
+      if (!result?.url) throw new Error(t('musicStudio.fillImageGenerateFailed', { defaultValue: 'AI 生图失败' }));
+      await updateVisual(imagePrompt.idx, { imageUrl: result.url, emoji: '' });
+      setImagePrompt(null);
+    } catch (error) {
+      setUploadError(error.message || t('musicStudio.fillImageGenerateFailed', { defaultValue: 'AI 生图失败' }));
+    } finally {
+      setGeneratingImage(false);
+    }
   };
   return (
     <section className="pbv2-card pbv2-tone-yellow">
@@ -361,11 +390,7 @@ function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head"><span>{t('musicStudio.questionN', { n: idx + 1 })}</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
-          <div className="cw-exercise-grid">
-            <LyricSelect lyrics={lyrics} label={t('musicStudio.selectLyric')} value={lyricIndexForText(lyrics, item.lyricText || fillToFullText(item))} onChange={(li) => {
-              const text = lyrics[li]?.text || '';
-              update(idx, makeFillItem(text, [], item));
-            }} />
+          <div className="cw-exercise-grid cw-fill-grid">
             <label className="pbv2-field"><span>{t('musicStudio.selectBlankWords')}</span><div className="cw-word-picker">
               {uniqueWords(item.lyricText || fillToFullText(item)).map((word) => {
                 const active = (item.blanks || []).some((blank) => blank.toLowerCase() === word.toLowerCase());
@@ -376,15 +401,32 @@ function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
               })}
             </div></label>
             <div className="cw-fixed-options">
-              {Array.from({ length: 4 }, (_, optionIndex) => (
-                <Field key={optionIndex} label={optionIndex === 0 ? t('musicStudio.correctOption') : t('musicStudio.distractorOption', { n: optionIndex })} value={item.options?.[optionIndex] || ''} onChange={(value) => updateOption(idx, optionIndex, value)} />
-              ))}
+              {Array.from({ length: 4 }, (_, optionIndex) => {
+                const option = item.options?.[optionIndex] || '';
+                const correct = Boolean(option) && (item.blanks || []).some((blank) => blank.trim().toLowerCase() === option.trim().toLowerCase());
+                return <label key={optionIndex} className={`pbv2-field cw-fill-option${correct ? ' is-correct' : ''}`}>
+                  <span>{t('musicStudio.optionLabel', { n: optionIndex + 1 })}</span>
+                  <input value={option} onChange={(event) => updateOption(idx, optionIndex, event.target.value)} />
+                </label>;
+              })}
             </div>
-            <div className="cw-fill-visual"><span>{t('musicStudio.fillVisualLabel')}</span><div className="cw-emoji-options">
-              {['🎵', '😊', '❤️', '🌈', '⭐', '☀️', '🌸', '🐻', '👏', '🎤', '🏃', '🌍'].map((emoji) => <button type="button" key={emoji} aria-label={t('musicStudio.chooseEmoji', { emoji })} aria-pressed={item.emoji === emoji && !item.imageUrl} className={item.emoji === emoji && !item.imageUrl ? 'is-active' : ''} onClick={() => update(idx, { emoji, imageUrl: '' })}>{emoji}</button>)}
-              <input aria-label={t('musicStudio.customEmoji')} value={item.emoji || ''} onChange={(event) => update(idx, { emoji: event.target.value, imageUrl: '' })} maxLength={12} />
-              <label className="cw-fill-image-upload">{uploadingIndex === idx ? t('musicStudio.fillImageUploading') : t('musicStudio.fillImageUpload')}<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" disabled={uploadingIndex !== null} onChange={(event) => { uploadImage(idx, event.target.files?.[0]); event.target.value = ''; }} /></label>
-            </div>{item.imageUrl && <div className="cw-fill-image-preview"><img src={item.imageUrl} alt="" /><button type="button" onClick={() => update(idx, { imageUrl: '' })}>{t('musicStudio.removeImage')}</button></div>}</div>
+            <div className="cw-fill-visual"><span>{t('musicStudio.fillVisualLabel')}</span><div className="cw-fill-visual-body">
+              <div className="cw-fill-image-frame">{item.imageUrl ? <img src={item.imageUrl} alt="" /> : <span>{item.emoji || '🎵'}</span>}</div>
+              <div className="cw-fill-visual-tools">
+                <select aria-label={t('musicStudio.customEmoji')} value={item.imageUrl ? '' : (item.emoji || '')} onChange={(event) => updateVisual(idx, { emoji: event.target.value, imageUrl: '' })}>
+                  <option value="">Emoji</option>
+                  {['🎵', '😊', '❤️', '🌈', '⭐', '☀️', '🌸', '🐻', '👏', '🎤', '🏃', '🌍'].map((emoji) => <option key={emoji} value={emoji}>{emoji}</option>)}
+                </select>
+                <label className="cw-fill-image-upload">{uploadingIndex === idx ? '上传中…' : '上传'}<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" disabled={uploadingIndex !== null} onChange={(event) => { uploadImage(idx, event.target.files?.[0]); event.target.value = ''; }} /></label>
+                <button type="button" className="pbv2-ghost cw-ai-image-button" onClick={() => setImagePrompt({ idx, prompt: item.imagePrompt || '' })}><Sparkles size={14} />AI</button>
+                {item.imageUrl && <button type="button" className="cw-fill-image-remove" onClick={() => updateVisual(idx, { imageUrl: '', emoji: '🎵' })}>{t('musicStudio.removeImage')}</button>}
+              </div>
+            </div></div>
+            <div className="cw-question-preview" aria-label={t('musicStudio.questionN', { n: idx + 1 })}>
+              <small>{t('musicStudio.previewLabel', { defaultValue: '题目效果' })}</small>
+              <strong>{(item.sentence || []).map((part) => part === '' ? ' ______ ' : part).join('')}</strong>
+              <div>{(item.options || []).map((option, optionIndex) => <span key={`${option}-${optionIndex}`}>{String.fromCharCode(65 + optionIndex)}. {option}</span>)}</div>
+            </div>
           </div>
         </div>
       ))}
@@ -392,6 +434,15 @@ function FillEditor({ items, lyrics, onChange, onGenerate, generating }) {
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { sentence: ['', ''], blanks: [''], options: [], emoji: '🎵' }])}>
         <Plus size={16} /> {t('musicStudio.addFill')}
       </button>
+      {imagePrompt && <div className="cw-dialog-backdrop" onClick={() => !generatingImage && setImagePrompt(null)}>
+        <div className="cw-dialog" onClick={(event) => event.stopPropagation()}>
+          <button type="button" className="cw-icon-button cw-dialog-close" disabled={generatingImage} onClick={() => setImagePrompt(null)}><X size={16} /></button>
+          <h2>AI 生成配图</h2>
+          <p className="cw-dialog-intro">请描述图片中的主体、动作、色彩和风格。</p>
+          <label>生图提示词<textarea value={imagePrompt.prompt} onChange={(event) => setImagePrompt({ ...imagePrompt, prompt: event.target.value })} placeholder="例如：一个开心跳舞的小朋友，儿童绘本风格，黄色背景" autoFocus /></label>
+          <div className="cw-dialog-actions"><button type="button" className="cw-secondary-button" disabled={generatingImage} onClick={() => setImagePrompt(null)}>{t('musicStudio.cancel')}</button><button type="button" className="cw-primary-button" disabled={generatingImage || !imagePrompt.prompt.trim()} onClick={generateImage}>{generatingImage ? <Loader2 className="spin" size={15} /> : <Sparkles size={15} />}{generatingImage ? '生成中…' : '开始生成'}</button></div>
+        </div>
+      </div>}
     </section>
   );
 }
@@ -406,10 +457,22 @@ function ScrambleEditor({ items, lyrics, onChange, onGenerate, generating }) {
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head"><span>{t('musicStudio.questionN', { n: idx + 1 })}</span><button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button></div>
-          <LyricSelect lyrics={lyrics} label={t('musicStudio.selectLyric')} value={lyricIndexForText(lyrics, item.answer)} onChange={(li) => {
-            const answer = lyrics[li]?.text || '';
-            update(idx, { answer, words: answer.trim().split(/\s+/).filter(Boolean) });
-          }} />
+          <div className="cw-scramble-layout">
+            <label className="pbv2-field cw-scramble-lyric">
+              <span>{t('musicStudio.lyricLabel', { defaultValue: '歌词' })}</span>
+              <select value={lyricIndexForText(lyrics, item.answer)} onChange={(event) => {
+                const answer = lyrics[Number(event.target.value)]?.text || '';
+                update(idx, { answer, words: answer.trim().split(/\s+/).filter(Boolean) });
+              }}>
+                <option value={-1}>{t('musicStudio.selectLyricPlaceholder')}</option>
+                {lyrics.map((row, lyricIndex) => <option key={`${lyricIndex}-${row.text}`} value={lyricIndex}>{row.text}</option>)}
+              </select>
+            </label>
+            <div className="cw-scramble-question">
+              <span className="cw-scramble-label">{t('musicStudio.questionLabel', { defaultValue: '题目' })}</span>
+              <div className="cw-scramble-words">{(item.words || []).map((word, wordIndex) => <span key={`${word}-${wordIndex}`}>{word}</span>)}</div>
+            </div>
+          </div>
         </div>
       ))}
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { answer: '', words: [] }])}>
@@ -419,36 +482,51 @@ function ScrambleEditor({ items, lyrics, onChange, onGenerate, generating }) {
   );
 }
 
-function ListenEditor({ items, lyrics, onChange, onGenerate, generating }) {
+function ListenEditor({ items, lyrics, audio = {}, onChange, onGenerate, generating }) {
   const { t } = useTranslation();
   const update = (idx, patch) => onChange(items.map((it, i) => (i === idx ? { ...it, ...patch } : it)));
   const remove = (idx) => onChange(items.filter((_, i) => i !== idx));
+  const clips = React.useRef(null);
+  const segments = Array.isArray(audio.segments) ? audio.segments : [];
+  const pauseOtherClips = (event) => clips.current?.querySelectorAll('audio').forEach((player) => { if (player !== event.currentTarget) player.pause(); });
   const updateOption = (idx, oi, value) => update(idx, { options: items[idx].options.map((o, i) => (i === oi ? value : o)) });
   return (
-    <section className="pbv2-card pbv2-tone-coral">
+    <section className="pbv2-card pbv2-tone-coral" ref={clips}>
       <div className="cw-section-title"><div className="pbv2-card-title">{t('musicStudio.ex3Title')}</div><AiSectionButton loading={generating} hasContent={items.length > 0} onClick={onGenerate} /></div>
       {items.map((item, idx) => (
         <div key={idx} className="cw-exercise-item">
           <div className="cw-exercise-head">
-            <span>{t('musicStudio.questionN', { n: idx + 1 })} · {t('musicStudio.correctSentence')}
+            <span className="cw-listen-answer-control">{t('musicStudio.questionN', { n: idx + 1 })} · {t('musicStudio.correctSentence')}
               <select value={item.correct ?? 0} onChange={(e) => update(idx, { correct: Number(e.target.value) })}>
                 {(item.options || []).map((_, i) => <option key={i} value={i}>{t('musicStudio.optionN', { n: i + 1 })}</option>)}
               </select>
             </span>
-            <input style={{ width: 110 }} placeholder="00:13–00:14" value={item.time || ''} onChange={(e) => update(idx, { time: e.target.value })} title={t('musicStudio.timeTitleEx3')} />
+            <input className="cw-listen-time" placeholder="00:13–00:14" value={item.time || ''} onChange={(e) => update(idx, { time: e.target.value })} title={t('musicStudio.timeTitleEx3')} />
             <button type="button" onClick={() => remove(idx)}><Trash2 size={13} /></button>
           </div>
-          <LyricSelect lyrics={lyrics} label={t('musicStudio.selectCorrectLyric')} value={lyricIndexForText(lyrics, item.options?.[item.correct ?? 0])} onChange={(li) => {
-            const row = lyrics[li];
-            if (!row) return;
-            const correct = item.correct ?? 0;
-            const options = [...(item.options || ['', '', ''])];
-            options[correct] = row.text;
-            update(idx, { options, time: row.time });
-          }} />
-          {(item.options || []).map((opt, oi) => (
-            <Field key={oi} label={t('musicStudio.optionLabel', { n: oi + 1 }) + (item.correct === oi ? t('musicStudio.correctTag') : '')} value={opt} onChange={(v) => updateOption(idx, oi, v)} />
-          ))}
+          <label className="pbv2-field cw-listen-lyric-select">
+            <span>{t('musicStudio.selectCorrectLyric')}</span>
+            <div>
+              <select value={lyricIndexForText(lyrics, item.options?.[item.correct ?? 0])} onChange={(event) => {
+                const row = lyrics[Number(event.target.value)];
+                if (!row) return;
+                const correct = item.correct ?? 0;
+                const options = [...(item.options || ['', '', ''])];
+                options[correct] = row.text;
+                update(idx, { options, time: row.time });
+              }}>
+                <option value={-1}>{t('musicStudio.selectLyricPlaceholder')}</option>
+                {lyrics.map((row, lyricIndex) => <option key={`${lyricIndex}-${row.text}`} value={lyricIndex}>{lyricIndex + 1}. {row.text}</option>)}
+              </select>
+            {segments[lyricIndexForText(lyrics, item.options?.[item.correct ?? 0])] ? <EchoClipButton source={segments[lyricIndexForText(lyrics, item.options?.[item.correct ?? 0])]} label={t('musicStudio.lyricClipLabel', { n: idx + 1 })} onPlay={pauseOtherClips} /> : <span className="cw-echo-audio-status">{t('musicStudio.segmentAudioPending')}</span>}
+            </div>
+          </label>
+          <div className="cw-listen-options">
+            {(item.options || []).map((option, optionIndex) => <label key={optionIndex} className={(item.correct ?? 0) === optionIndex ? 'is-correct' : ''}>
+              <span>{t('musicStudio.optionLabel', { n: optionIndex + 1 })}</span>
+              <input value={option || ''} onChange={(event) => updateOption(idx, optionIndex, event.target.value)} />
+            </label>)}
+          </div>
         </div>
       ))}
       <button type="button" className="pbv2-add-page" onClick={() => onChange([...items, { question: 'Choose the sentence you hear:', options: ['', '', ''], correct: 0 }])}>
@@ -467,6 +545,60 @@ function EditablePool({ title, items, onChange, options, thumbBase }) {
         {options.map((item) => <button type="button" key={item} aria-pressed={items.includes(item)} className={items.includes(item) ? 'is-active' : ''} onClick={() => onChange(options.filter((option) => option === item ? !items.includes(item) : items.includes(option)))}>{thumbBase ? <img className="cw-pool-thumb" src={`${thumbBase}${encodeURIComponent(item)}.png`} alt="" loading="lazy" /> : null}{t('musicStudio.poolItem', { returnObjects: true })?.[item] || item}<span>{items.includes(item) ? '−' : '+'}</span></button>)}
       </div>
       <span className="cw-pool-count">{t('musicStudio.selectedCount', { count: items.length })}</span>
+    </section>
+  );
+}
+
+// 第二关缺省槽位：按歌词行预填动作/乐器，授课课件里作为学生的初始摆法（可继续改动）
+const normalizeMelodySlots = (value, lineCount) => {
+  const rows = Array.isArray(value) ? value : [];
+  return Array.from({ length: lineCount }, (_, i) => (Array.isArray(rows[i]) ? rows[i] : [])
+    .filter((slot) => slot && (slot.type === 'action' || slot.type === 'inst') && typeof slot.name === 'string' && slot.name.trim()));
+};
+function MelodyDefaultsEditor({ lyrics, actions, instruments, slots, onChange }) {
+  const { t } = useTranslation();
+  const poolItem = t('musicStudio.poolItem', { returnObjects: true });
+  const label = (name) => poolItem?.[name] || name;
+  const rows = normalizeMelodySlots(slots, lyrics.length);
+  const addSlot = (i, type, name) => onChange(rows.map((row, ri) => (ri === i ? [...row, { type, name }] : row)));
+  const removeSlot = (i, idx) => onChange(rows.map((row, ri) => (ri === i ? row.filter((_, ci) => ci !== idx) : row)));
+  const filledCount = rows.reduce((total, row) => total + row.length, 0);
+  return (
+    <section className="pbv2-card pbv2-tone-blue cw-melody-defaults">
+      <div className="cw-section-title">
+        <div>
+          <div className="pbv2-card-title">{t('musicStudio.defaultsTitle')}</div>
+          <span className="cw-pool-count">{t('musicStudio.defaultsHint')}</span>
+        </div>
+        {filledCount > 0 && <button type="button" className="pbv2-ghost" onClick={() => onChange(lyrics.map(() => []))}>{t('musicStudio.defaultsClear')}</button>}
+      </div>
+      <div className="cw-melody-defaults-rows">
+        {lyrics.map((row, i) => (
+          <div key={`${i}-${row.time || ''}`} className="cw-melody-default-line">
+            <span className="cw-lyric-time">{i + 1}</span>
+            <div className="cw-melody-default-content">
+              <strong>{row.text}</strong>
+              <div className="cw-melody-default-slots">
+                {rows[i].map((slot, idx) => (
+                  <span key={`${slot.type}-${slot.name}-${idx}`} className={`cw-melody-default-chip is-${slot.type}`}>
+                    {slot.type === 'action' && <img src={`${ACTION_IMAGE_BASE}${encodeURIComponent(slot.name)}.png`} alt="" loading="lazy" />}
+                    {slot.type === 'inst' ? '🥁' : ''}{label(slot.name)}
+                    <button type="button" aria-label={t('musicStudio.defaultsRemove')} onClick={() => removeSlot(i, idx)}>×</button>
+                  </span>
+                ))}
+                <select className="cw-melody-default-add" value="" disabled={!actions.length} onChange={(event) => { if (event.target.value) addSlot(i, 'action', event.target.value); }}>
+                  <option value="">{t('musicStudio.defaultsAddAction')}</option>
+                  {actions.map((name) => <option key={name} value={name}>{label(name)}</option>)}
+                </select>
+                <select className="cw-melody-default-add" value="" disabled={!instruments.length} onChange={(event) => { if (event.target.value) addSlot(i, 'inst', event.target.value); }}>
+                  <option value="">{t('musicStudio.defaultsAddInstrument')}</option>
+                  {instruments.map((name) => <option key={name} value={name}>{label(name)}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -604,24 +736,52 @@ function PlansEditor({ plans, onChange, onGenerate, generating, stage }) {
   );
 }
 
-function PrepSongPlayer({ song, audio, onGenerateFull, onEditSong, generating }) {
+function PrepSongPlayer({ audio }) {
   const { t } = useTranslation();
+  const [mode, setMode] = React.useState(audio.vocal ? 'vocal' : 'backing');
+  const [playing, setPlaying] = React.useState(false);
+  const [currentTime, setCurrentTime] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
+  const playerRef = React.useRef(null);
+  const source = mode === 'vocal' ? audio.vocal : audio.backing;
+  React.useEffect(() => {
+    if (mode === 'vocal' && !audio.vocal && audio.backing) setMode('backing');
+    if (mode === 'backing' && !audio.backing && audio.vocal) setMode('vocal');
+  }, [audio.vocal, audio.backing, mode]);
+  React.useEffect(() => {
+    const player = playerRef.current;
+    if (player) {
+      player.pause();
+      player.load();
+    }
+    setPlaying(false);
+    setCurrentTime(0);
+    setDuration(0);
+  }, [source]);
+  const timeLabel = (value) => {
+    const seconds = Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+    return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  };
+  const togglePlay = () => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (player.paused) player.play().catch(() => setPlaying(false));
+    else player.pause();
+  };
   return (
     <section className="pbv2-card pbv2-tone-coral cw-prep-player">
-      <div>
-        <div className="pbv2-card-title">🎵 {song.title || t('musicStudio.untitled')}</div>
-        {audio.actualDuration > 0 && <p>{t('musicStudio.actualDuration', { time: formatMusicTime(audio.actualDuration) })}</p>}
-        {onEditSong && <button type="button" className="pbv2-ghost" style={{ marginTop: 8 }} onClick={onEditSong}><Pencil size={14} />{t('musicStudio.editRegenerateSong')}</button>}
-        {onGenerateFull && (
-          <button type="button" className="pbv2-ghost" style={{ marginTop: 8 }} disabled={generating || !song.lyrics.length} onClick={onGenerateFull}>
-            {generating ? <Loader2 className="spin" size={14} /> : <Sparkles size={14} />}
-            {generating ? t('musicStudio.aiGenerating') : (audio.vocal ? t('musicStudio.regenerateFullSong') : t('musicStudio.generateFullSong'))}
-          </button>
-        )}
-      </div>
       <div className="cw-prep-player-tracks">
-        {audio.vocal && <label><span>{t('musicStudio.vocalLabel')}</span><audio controls preload="metadata" src={audio.vocal} /></label>}
-        {audio.backing && <label><span>{t('musicStudio.backingLabel')}</span><audio controls preload="metadata" src={audio.backing} /></label>}
+        {(audio.vocal || audio.backing) && <div className="cw-track-toggle" role="group" aria-label={t('musicStudio.songVersion', { defaultValue: '歌曲版本' })}>
+          <button type="button" disabled={!audio.vocal} className={mode === 'vocal' ? 'is-active' : ''} onClick={() => setMode('vocal')}>{t('musicStudio.vocalLabel')}</button>
+          <button type="button" disabled={!audio.backing} className={mode === 'backing' ? 'is-active' : ''} onClick={() => setMode('backing')}>{t('musicStudio.backingLabel')}</button>
+        </div>}
+        {source && <div className="cw-compact-audio">
+          <button type="button" className="cw-compact-play" onClick={togglePlay} aria-label={playing ? t('common.pause', { defaultValue: '暂停' }) : t('common.play', { defaultValue: '播放' })}>{playing ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" />}</button>
+          <span>{timeLabel(currentTime)}</span>
+          <input type="range" min="0" max={duration || 0} step="0.1" value={Math.min(currentTime, duration || 0)} disabled={!duration} aria-label={t('musicStudio.songProgress', { defaultValue: '歌曲进度' })} onChange={(event) => { const next = Number(event.target.value); if (playerRef.current) playerRef.current.currentTime = next; setCurrentTime(next); }} />
+          <span>{timeLabel(duration)}</span>
+          <audio ref={playerRef} preload="metadata" src={source} onLoadedMetadata={(event) => setDuration(event.currentTarget.duration || 0)} onDurationChange={(event) => setDuration(Number.isFinite(event.currentTarget.duration) ? event.currentTarget.duration : 0)} onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} onEnded={() => { setPlaying(false); setCurrentTime(0); }} />
+        </div>}
         {!audio.vocal && !audio.backing && <span className="cw-echo-audio-status">{t('musicStudio.songAudioUnavailable')}</span>}
       </div>
     </section>
@@ -699,6 +859,7 @@ export function MusicStudioPage() {
       teachingPlans: plainTeachingPlans(r.teachingPlans),
       melodyActions: normalizeMelodyActions(r.melodyActions),
       melodyInstruments: Array.isArray(r.melodyInstruments) ? r.melodyInstruments : DEFAULT_INSTRUMENTS,
+      melodySlots: normalizeMelodySlots(r.melodySlots, Array.isArray(r.lyrics) ? r.lyrics.length : 0),
       echoData: r.echoData ? {
         intermediate: Array.isArray(r.echoData.intermediate) ? r.echoData.intermediate : [],
         challenge: Array.isArray(r.echoData.challenge) ? r.echoData.challenge : [],
@@ -782,6 +943,13 @@ export function MusicStudioPage() {
     } finally {
       setSongGenerating(false);
     }
+  };
+  const continueFromBasic = async () => {
+    if (song.songMeta?.source !== 'library') return generateSongAndAdvance();
+    const id = editingIdRef.current;
+    if (!id) return;
+    await updateCreativeWork(id, { title: song.title || basicInfo.theme, parameters: basicInfo, song, audio });
+    setStep(1);
   };
 
   // ── step 1：歌曲编辑 ──────────────────────────────────────
@@ -1156,17 +1324,9 @@ export function MusicStudioPage() {
       <div className="pbv2-shell">
         <aside className="pbv2-steps cw-steps-seven">
           <div className="cw-steps-row">
-            {STEPS.slice(0, 4).map((label, index) => (
+            {STEPS.map((label, index) => (
               <button type="button" key={label} className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`} onClick={() => enterStep(index)}>
                 <span>{index + 1}</span>
-                <strong>{t('musicStudio.' + label)}</strong>
-              </button>
-            ))}
-          </div>
-          <div className="cw-steps-row">
-            {STEPS.slice(4).map((label, index) => (
-              <button type="button" key={label} className={`${step === index + 4 ? 'is-active' : ''} ${step > index + 4 ? 'is-done' : ''}`} onClick={() => enterStep(index + 4)}>
-                <span>{index + 5}</span>
                 <strong>{t('musicStudio.' + label)}</strong>
               </button>
             ))}
@@ -1198,11 +1358,18 @@ export function MusicStudioPage() {
                 <div className="pbv2-card-title">{t('musicStudio.reqLabel')}</div>
                 <Field area label={t('musicStudio.reqField')} value={basicInfo.requirements} onChange={(v) => setBasicInfo({ ...basicInfo, requirements: v })} placeholder={t('musicStudio.reqPlaceholder')} />
               </section>
+              <section className="pbv2-card pbv2-tone-yellow">
+                <div className="pbv2-card-title">{t('musicStudio.chooseLibrarySong')}</div>
+                <select className="pbv2-input" disabled={Boolean(segmentBusy) || songGenerating} defaultValue="" onChange={(event) => selectLibrarySong(event.target.value)}>
+                  <option value="">{t('musicStudio.chooseLibrarySongPlaceholder')}</option>
+                  {songLibrary.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+                </select>
+              </section>
               <footer className="pbv2-actions">
                 <ChevronRight size={16} />
-                <button type="button" className="pbv2-primary" disabled={!basicReady || songGenerating} onClick={generateSongAndAdvance}>
+                <button type="button" className="pbv2-primary" disabled={!basicReady || songGenerating} onClick={continueFromBasic}>
                   {songGenerating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}
-                  {songGenerating ? t('musicStudio.aiGenerating') : t('musicStudio.aiGenSong')}
+                  {songGenerating ? t('musicStudio.aiGenerating') : (song.songMeta?.source === 'library' ? t('common.next') : t('musicStudio.aiGenSong'))}
                 </button>
               </footer>
             </div>
@@ -1211,7 +1378,7 @@ export function MusicStudioPage() {
           {/* step 2 · 歌曲创作 */}
           {step === 1 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} onGenerateFull={() => generateAllSegments()} generating={segmentBusy === 'all' || songGenerating} />
+              <PrepSongPlayer audio={audio} />
               {audio.generationTask?.status === 'submitted' && <p>{t('musicStudio.resumeFullSong')}</p>}
               {audio.alignmentStatus === 'pending' && (
                 <section className="pbv2-card pbv2-tone-yellow">
@@ -1219,19 +1386,6 @@ export function MusicStudioPage() {
                   <label className="pbv2-ghost">{t('musicStudio.importActualLrc')}<input type="file" accept=".lrc" disabled={Boolean(segmentBusy)} onChange={event => { importActualLrc(event.target.files?.[0]); event.target.value = ''; }} /></label>
                 </section>
               )}
-              <section className="pbv2-card pbv2-tone-yellow">
-                <div className="pbv2-card-title">{t('musicStudio.chooseLibrarySong')}</div>
-                <select className="pbv2-input" disabled={Boolean(segmentBusy) || songGenerating} defaultValue="" onChange={(event) => selectLibrarySong(event.target.value)}>
-                  <option value="">{t('musicStudio.chooseLibrarySongPlaceholder')}</option>
-                  {songLibrary.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-                </select>
-              </section>
-              <section className="pbv2-plan-block pbv2-tone-coral">
-                <div className="pbv2-form-grid two">
-                  <div className="pbv2-field"><span>{t('musicStudio.songTitleLabel')}</span><div className="cw-readonly-value">{song.title || '—'}</div></div>
-                  <div className="pbv2-field"><span>{t('musicStudio.patternsLabel')}</span><div className="cw-readonly-value">{(song.targetPatterns || []).join('、') || '—'}</div></div>
-                </div>
-              </section>
               <LyricsEditor lyrics={song.lyrics} audio={audio} workId={editingIdRef.current} onEditLyric={editLyricLine} />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(0)}>{t('musicStudio.backToBasic')}</button>
@@ -1249,10 +1403,10 @@ export function MusicStudioPage() {
           {/* step 3 · 第一关 Lyric Hunter（填空 + 连词 + 听音 + 教案） */}
           {step === 2 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
-              <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onGenerate={() => requestSectionRegen('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
+              <PrepSongPlayer audio={audio} />
+              <FillEditor lyrics={song.lyrics} items={exercises.ex1FillData} onChange={(ex1FillData) => setExercises({ ...exercises, ex1FillData })} onPersistVisual={(ex1FillData) => persist({ exercises: { ...exercises, ex1FillData } })} onGenerate={() => requestSectionRegen('ex1FillData')} generating={sectionGenerating === 'ex1FillData'} />
               <ScrambleEditor lyrics={song.lyrics} items={exercises.ex2Items} onChange={(ex2Items) => setExercises({ ...exercises, ex2Items })} onGenerate={() => requestSectionRegen('ex2Items')} generating={sectionGenerating === 'ex2Items'} />
-              <ListenEditor lyrics={song.lyrics} items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => requestSectionRegen('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
+              <ListenEditor lyrics={song.lyrics} audio={audio} items={exercises.ex3Data} onChange={(ex3Data) => setExercises({ ...exercises, ex3Data })} onGenerate={() => requestSectionRegen('ex3Data')} generating={sectionGenerating === 'ex3Data'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="1" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(1)}>{t('musicStudio.backToSong')}</button>
@@ -1267,12 +1421,15 @@ export function MusicStudioPage() {
             </div>
           )}
 
-          {/* step 4 · 第二关 Melody Mover（教案） */}
+          {/* step 4 · 第二关 Melody Mover（缺省槽位 + 教案） */}
           {step === 3 && (
-            <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
-              <EditablePool title={t('musicStudio.actionsTitle')} options={DEFAULT_ACTIONS} thumbBase={ACTION_IMAGE_BASE} items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} />
-              <EditablePool title={t('musicStudio.instrumentsTitle')} options={DEFAULT_INSTRUMENTS} items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} />
+            <div className="pbv2-step-panel cw-melody-prep-layout">
+              <PrepSongPlayer audio={audio} />
+              <div className="cw-melody-scroll cw-melody-scroll-left"><EditablePool title={t('musicStudio.actionsTitle')} options={DEFAULT_ACTIONS} thumbBase={ACTION_IMAGE_BASE} items={exercises.melodyActions || []} onChange={(melodyActions) => setExercises({ ...exercises, melodyActions })} /></div>
+              <div className="cw-melody-scroll cw-melody-scroll-right"><EditablePool title={t('musicStudio.instrumentsTitle')} options={DEFAULT_INSTRUMENTS} items={exercises.melodyInstruments || []} onChange={(melodyInstruments) => setExercises({ ...exercises, melodyInstruments })} /></div>
+              <div className="cw-melody-defaults-wrap">
+                <MelodyDefaultsEditor lyrics={song.lyrics} actions={exercises.melodyActions || []} instruments={exercises.melodyInstruments || []} slots={exercises.melodySlots || []} onChange={(melodySlots) => setExercises({ ...exercises, melodySlots })} />
+              </div>
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="2" />
               <footer className="pbv2-actions">
                 <button type="button" className="pbv2-ghost" onClick={() => setStep(STAGE_STEPS[1])}>{t('musicStudio.backStage1')}</button>
@@ -1286,7 +1443,7 @@ export function MusicStudioPage() {
           {/* step 5 · 第三关 Echo Master（教案） */}
           {step === 4 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
+              <PrepSongPlayer audio={audio} />
               <EchoMasterPreview lyrics={song.lyrics} audio={audio} echoData={exercises.echoData} onChange={(echoData) => setExercises({ ...exercises, echoData })} onGenerate={() => requestSectionRegen('echoData')} generating={sectionGenerating === 'echoData'} />
               <PlansEditor plans={exercises.teachingPlans} onChange={(teachingPlans) => setExercises({ ...exercises, teachingPlans })} onGenerate={() => requestSectionRegen('teachingPlans')} generating={sectionGenerating === 'teachingPlans'} stage="3" />
               <footer className="pbv2-actions">
@@ -1301,7 +1458,7 @@ export function MusicStudioPage() {
           {/* step 6 · 第四关 Star Studio（颜色分工 + 教案） */}
           {step === 5 && (
             <div className="pbv2-step-panel">
-              <PrepSongPlayer song={song} audio={audio} onEditSong={() => setStep(1)} />
+              <PrepSongPlayer audio={audio} />
               <div className="pbv2-making-toolbar">
                 <button type="button" className="pbv2-ghost" disabled={!rendered || rendering} onClick={() => presentCurrent()}>
                   {rendering ? <Loader2 className="spin" size={16} /> : null}
