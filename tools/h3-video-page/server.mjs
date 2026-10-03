@@ -1,7 +1,7 @@
 import http from 'node:http';
 import {readFile,writeFile} from 'node:fs/promises';
 import {randomBytes,timingSafeEqual} from 'node:crypto';
-const base=(process.env.COMFYUI_URL||'http://117.50.214.226:8188').replace(/\/$/,'');
+const base=(process.env.COMFYUI_URL||'http://10.60.156.58:8188').replace(/\/$/,'');
 const token=process.env.COMFYUI_TOKEN;
 const template=JSON.parse(await readFile(new URL('./graph.json',import.meta.url),'utf8'));
 const html=await readFile(new URL('./index.html',import.meta.url));

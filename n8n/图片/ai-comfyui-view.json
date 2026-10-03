@@ -41,7 +41,7 @@
       "parameters": {
         "authentication": "genericCredentialType",
         "sendQuery": true,
-        "url": "http://117.50.171.219:8188/view",
+        "url": "http://10.60.28.70:8188/view",
         "genericAuthType": "httpBearerAuth",
         "queryParameters": {
           "parameters": [
@@ -182,7 +182,7 @@
         "parameters": {
           "authentication": "genericCredentialType",
           "sendQuery": true,
-          "url": "http://117.50.171.219:8188/view",
+          "url": "http://10.60.28.70:8188/view",
           "genericAuthType": "httpBearerAuth",
           "queryParameters": {
             "parameters": [

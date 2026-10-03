@@ -16,11 +16,11 @@ const config = workflow.nodes.find(node => node.name === '配置与构建ComfyUI
 const webhook = workflow.nodes.find(node => node.name === '接收整曲请求');
 const probeName = '探测主ComfyUI服务';
 if (!config || !webhook || !workflow.nodes.some(node => node.name === probeName)) throw new Error('Unexpected workflow structure');
-if (!config.parameters.jsCode.includes("comfyUrl: ($input.first().json?.system ? 'http://117.50.171.219:8188' : 'http://117.50.214.226:8188')")) throw new Error('Unexpected ComfyUI configuration');
+if (!config.parameters.jsCode.includes("comfyUrl: ($input.first().json?.system ? 'http://10.60.28.70:8188' : 'http://117.50.214.226:8188')")) throw new Error('Unexpected ComfyUI configuration');
 if (workflow.connections[webhook.name]?.main?.[0]?.[0]?.node !== probeName) throw new Error('Unexpected webhook connection');
 
 config.parameters.jsCode = config.parameters.jsCode
-  .replace("comfyUrl: ($input.first().json?.system ? 'http://117.50.171.219:8188' : 'http://117.50.214.226:8188')", "comfyUrl: 'http://117.50.214.226:8188'")
+  .replace("comfyUrl: ($input.first().json?.system ? 'http://10.60.28.70:8188' : 'http://117.50.214.226:8188')", "comfyUrl: 'http://117.50.214.226:8188'")
   .replace("const input = $('接收整曲请求').first().json;", 'const input = $input.first().json;');
 workflow.nodes = workflow.nodes.filter(node => node.name !== probeName);
 workflow.connections[webhook.name].main[0] = [{ node: config.name, type: 'main', index: 0 }];

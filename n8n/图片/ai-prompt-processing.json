@@ -79,9 +79,9 @@
       "parameters": {
         "model": {
           "__rl": true,
-          "value": "qwen3.6-plus",
+          "value": "deepseek-v4-flash",
           "mode": "list",
-          "cachedResultName": "qwen3.6-plus"
+          "cachedResultName": "deepseek-v4-flash"
         },
         "builtInTools": {},
         "options": {}

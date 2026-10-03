@@ -90,7 +90,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const comfyuiUrls = [\n  'http://117.50.171.219:8188'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
+        "jsCode": "const comfyuiUrls = [\n  'http://10.60.28.70:8188'\n];\nreturn comfyuiUrls.map((url) => ({ json: { url } }));"
       },
       "id": "gpu-candidate-list",
       "name": "GPU 候选列表",

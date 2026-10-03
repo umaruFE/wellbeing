@@ -33,7 +33,7 @@
         "options": {},
         "genericAuthType": "httpBearerAuth",
         "authentication": "genericCredentialType",
-        "url": "=http://117.50.171.219:8188/history/{{ $json.body.executionId }}"
+        "url": "=http://10.60.28.70:8188/history/{{ $json.body.executionId }}"
       },
       "position": [
         240,
@@ -174,7 +174,7 @@
           "options": {},
           "genericAuthType": "httpBearerAuth",
           "authentication": "genericCredentialType",
-          "url": "=http://117.50.171.219:8188/history/{{ $json.body.executionId }}"
+          "url": "=http://10.60.28.70:8188/history/{{ $json.body.executionId }}"
         },
         "position": [
           240,
