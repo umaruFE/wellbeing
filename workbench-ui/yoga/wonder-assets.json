@@ -1,0 +1,475 @@
+{
+  "schemaVersion": 1,
+  "templateId": "wonder-v2-2",
+  "metadata": {
+    "sourceDirectory": "output/yoga-wonder-visual-v2-2-20261119",
+    "sourceEntry": "style-study.html",
+    "selection": "A 淡晴蓝",
+    "pageCount": 11,
+    "sourceFiles": [
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/style-study.html",
+        "sha256": "f953523d1a838aa8ddcc22522da360e18d4e87bf442f76cfab3c9e33745eb134",
+        "bytes": 1871
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/story-data.js",
+        "sha256": "d7b1d99b75f06786596258ba36ac6e6f86b57b800412aaaf4d76dda9e7447ff3",
+        "bytes": 4185
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/story.js",
+        "sha256": "7ec747625973a683a7eaa8b63708aa120ec22e03e808fb7dce99cb9b82ce3ddf",
+        "bytes": 8345
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/story.css",
+        "sha256": "0730bc76be944783df74106889cc0df066657b67d700b0b923961ff1a691f961",
+        "bytes": 8316
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/characters.js",
+        "sha256": "e3a4e6d812fab40242756ad1a2449985dfd6a9821cd9c4486b39418f1f75a81e",
+        "bytes": 3859
+      }
+    ],
+    "transformations": [
+      "Preserve all 11 source page records and their order; prefix only runtime asset paths with yoga-wonder-case/.",
+      "Attach the corresponding complete character record, including alpha bounds and P10 original_display_crop.",
+      "Add stable page/action IDs, original-text shortText, Chinese scene descriptions and static teacher descriptions.",
+      "Recursively freeze UMD data; do not add storage, audio, navigation or remote dependencies.",
+      "Copy story.css verbatim as wonder-source.css for the host-owned scoped renderer."
+    ],
+    "immutableFields": [
+      "templateId",
+      "pages[].source",
+      "pages[].label",
+      "pages[].heading",
+      "pages[].caption",
+      "pages[].sourceText",
+      "pages[].pose",
+      "pages[].kind",
+      "pages[].longCaption",
+      "pages[].character.original_display_crop"
+    ],
+    "excludedFromPackage": "Standalone viewer code and 11 original slide comparison images are recorded for provenance only; no history, prompts or A/B pages are packaged.",
+    "sourceDriftObserved": [
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/style-study.html",
+        "frozenSha256": "f953523d1a838aa8ddcc22522da360e18d4e87bf442f76cfab3c9e33745eb134",
+        "observedSha256": "84802d461367d07430fa0a5c3c070d2aa377d2061f6c08ae3c018beb59ca9069",
+        "observedBytes": 1959,
+        "difference": "Four stylesheet/script URLs gained ?v=blue-sky-20261119-1 after the package was frozen. Removing that exact suffix reproduces the frozen HTML hash.",
+        "impact": "None for embedded scenes: the standalone HTML is not packaged. All 24 embedded assets and four JS/CSS source files still match their frozen hashes."
+      }
+    ]
+  },
+  "assets": [
+    {
+      "path": "yoga-wonder-case/assets/noto-sans-bold.woff2",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/noto-sans-bold.woff2",
+      "sha256": "649a8114c33e83722ae67a8f12269a6e873a179d34108751511a9dcfda551b08",
+      "bytes": 47752
+    },
+    {
+      "path": "yoga-wonder-case/assets/noto-sans-regular.woff2",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/noto-sans-regular.woff2",
+      "sha256": "9d5f4a27e9f7c821173aedf13f3dc722e4449e18d7f0cdb8089207e043d46802",
+      "bytes": 46192
+    },
+    {
+      "path": "yoga-wonder-case/assets/p01-sky-a-soft-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p01-sky-a-soft-blue.png",
+      "sha256": "009c3b17333924b76d9bada9f971cd2224f05322126532e25ee5d0c377704e44",
+      "bytes": 1682750
+    },
+    {
+      "path": "yoga-wonder-case/assets/p02-grass-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p02-grass-sky-blue.png",
+      "sha256": "8fa74a7216dba81d19abfb1f2bdff71b9113b0c4bb6721bc22ea8fb9bf120fd3",
+      "bytes": 1896331
+    },
+    {
+      "path": "yoga-wonder-case/assets/p03-tall-trees-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p03-tall-trees-sky-blue.png",
+      "sha256": "5675e5c24def4565d0bbfc0513d007e82953e7e6aa56e2ec75fce02682945244",
+      "bytes": 1939153
+    },
+    {
+      "path": "yoga-wonder-case/assets/p04-tree-grove-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p04-tree-grove-sky-blue.png",
+      "sha256": "540708dc8954f9134574a3a464026cddf8dfade2852c4d0de4bee915d8905e0e",
+      "bytes": 1907109
+    },
+    {
+      "path": "yoga-wonder-case/assets/p05-windy-leaves-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p05-windy-leaves-sky-blue.png",
+      "sha256": "31c06dcc45bf072a8e956a31ef1934af229ed7d4ffa06ceea85ede4a46421247",
+      "bytes": 1964657
+    },
+    {
+      "path": "yoga-wonder-case/assets/p06-rock-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p06-rock-sky-blue.png",
+      "sha256": "ffe2ae1361de85b14de0a9e9f94a7a9e4a77b53f73bf0b476470066fb4d67699",
+      "bytes": 1882932
+    },
+    {
+      "path": "yoga-wonder-case/assets/p07-lake-river-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p07-lake-river-sky-blue.png",
+      "sha256": "5fe01b929fab7510f75b4b67027b3cb089f2907b70b8a5e032d5016d845f6ba8",
+      "bytes": 1781048
+    },
+    {
+      "path": "yoga-wonder-case/assets/p08-mountain-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p08-mountain-sky-blue.png",
+      "sha256": "7baf3c531789b15f27c1a1a4419d7a159a02910907fa1afd99044d869ed504a8",
+      "bytes": 1778540
+    },
+    {
+      "path": "yoga-wonder-case/assets/p09-ground.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p09-ground.png",
+      "sha256": "217ab97b75bb6bce892710aaeeaeac51a36e64c802a039a70afe2f0f2e1ca658",
+      "bytes": 1768638
+    },
+    {
+      "path": "yoga-wonder-case/assets/p10-rest-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p10-rest-sky-blue.png",
+      "sha256": "12d8c1e0cb27b01243be2189cc32c04314d12c1130d3fc3442a25a21ff28d259",
+      "bytes": 1700811
+    },
+    {
+      "path": "yoga-wonder-case/assets/p11-farewell-sky-blue.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p11-farewell-sky-blue.png",
+      "sha256": "d4db644720c274c8ed4db59579a6f73a2ace9cdc785855a9f004c8e10c07d139",
+      "bytes": 1795521
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image25.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image25.png",
+      "sha256": "04848638809cf44f7ae14c04c9695a25e05b5d414466d5615d22e36ce7552d78",
+      "bytes": 159507
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image28.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image28.png",
+      "sha256": "b7677211c1674900e89e1bcd66283c07cef845e1356120921088c9c5960ef29e",
+      "bytes": 156082
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image35.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image35.png",
+      "sha256": "76063c10ffb337bc8ce6f330434add6893122ebb65ac16348ff4e52c30fb1e73",
+      "bytes": 108672
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image38.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image38.png",
+      "sha256": "d1701ba688bf0741253a2791d8f45f9515a9cf31e4b3841ee4ef5fa6f041e44f",
+      "bytes": 78319
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image51.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image51.png",
+      "sha256": "c352a9d9ba3caa5e0821e352e80a26781cb5398e3a2e4954f1fe7d46d4055862",
+      "bytes": 119240
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image53.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image53.png",
+      "sha256": "f1c9627406d59d2ed9230fa40e180b87684ff01815e95b62323ba01ff051964c",
+      "bytes": 133430
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image62.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image62.png",
+      "sha256": "254f52d6ce8bc60413cf65bd7bd7161547081b23fe120cfeae301fc437e8326e",
+      "bytes": 156309
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image67.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image67.png",
+      "sha256": "5fa26cf75b10799e9011845d99a7cd5a558c24bd9fd6d6205361ddbc07d63d5f",
+      "bytes": 74451
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image74.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image74.png",
+      "sha256": "2de8f61bf08e90aa3a0159ef75694f67257f4e31a112aad662a7ef13c60d106c",
+      "bytes": 124504
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image82.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image82.png",
+      "sha256": "0203baddc0cdf4535a813b04fc5aa7ae6e1a8dc77f15becc6eef57b85ffd87ef",
+      "bytes": 392392
+    },
+    {
+      "path": "yoga-wonder-case/source-assets/image84.png",
+      "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image84.png",
+      "sha256": "7a23e4343236d346afcf47596000bfe67a71637dd24a85a13e2eba55b8666fb7",
+      "bytes": 473790
+    }
+  ],
+  "totals": {
+    "files": 24,
+    "bytes": 22168130
+  },
+  "standaloneSourceClosure": {
+    "files": 40,
+    "bytes": 22817899,
+    "resources": [
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/noto-sans-bold.woff2",
+        "sha256": "649a8114c33e83722ae67a8f12269a6e873a179d34108751511a9dcfda551b08",
+        "bytes": 47752,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/noto-sans-regular.woff2",
+        "sha256": "9d5f4a27e9f7c821173aedf13f3dc722e4449e18d7f0cdb8089207e043d46802",
+        "bytes": 46192,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p01-sky-a-soft-blue.png",
+        "sha256": "009c3b17333924b76d9bada9f971cd2224f05322126532e25ee5d0c377704e44",
+        "bytes": 1682750,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p02-grass-sky-blue.png",
+        "sha256": "8fa74a7216dba81d19abfb1f2bdff71b9113b0c4bb6721bc22ea8fb9bf120fd3",
+        "bytes": 1896331,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p03-tall-trees-sky-blue.png",
+        "sha256": "5675e5c24def4565d0bbfc0513d007e82953e7e6aa56e2ec75fce02682945244",
+        "bytes": 1939153,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p04-tree-grove-sky-blue.png",
+        "sha256": "540708dc8954f9134574a3a464026cddf8dfade2852c4d0de4bee915d8905e0e",
+        "bytes": 1907109,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p05-windy-leaves-sky-blue.png",
+        "sha256": "31c06dcc45bf072a8e956a31ef1934af229ed7d4ffa06ceea85ede4a46421247",
+        "bytes": 1964657,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p06-rock-sky-blue.png",
+        "sha256": "ffe2ae1361de85b14de0a9e9f94a7a9e4a77b53f73bf0b476470066fb4d67699",
+        "bytes": 1882932,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p07-lake-river-sky-blue.png",
+        "sha256": "5fe01b929fab7510f75b4b67027b3cb089f2907b70b8a5e032d5016d845f6ba8",
+        "bytes": 1781048,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p08-mountain-sky-blue.png",
+        "sha256": "7baf3c531789b15f27c1a1a4419d7a159a02910907fa1afd99044d869ed504a8",
+        "bytes": 1778540,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p09-ground.png",
+        "sha256": "217ab97b75bb6bce892710aaeeaeac51a36e64c802a039a70afe2f0f2e1ca658",
+        "bytes": 1768638,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p10-rest-sky-blue.png",
+        "sha256": "12d8c1e0cb27b01243be2189cc32c04314d12c1130d3fc3442a25a21ff28d259",
+        "bytes": 1700811,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p11-farewell-sky-blue.png",
+        "sha256": "d4db644720c274c8ed4db59579a6f73a2ace9cdc785855a9f004c8e10c07d139",
+        "bytes": 1795521,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/characters.js",
+        "sha256": "e3a4e6d812fab40242756ad1a2449985dfd6a9821cd9c4486b39418f1f75a81e",
+        "bytes": 3859,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-01.png",
+        "sha256": "0c6632efafc2f92e9ed0d1b7ad4e25f980ba761a748b1def425a6427c4ab8ba1",
+        "bytes": 108276,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-02.png",
+        "sha256": "471b051415eaebaa1e710505b1efa522a885fadd4b0da622684d0c95c8ca47d0",
+        "bytes": 42604,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-03.png",
+        "sha256": "c8e9a86703316e38011e8ce865ee98dd4223f81b2a6a20db77fa5e93be9ce38d",
+        "bytes": 47154,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-04.png",
+        "sha256": "52a99c5345c019b6766f971502272d56391b22895d1a359f224218e757b1b66c",
+        "bytes": 44524,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-05.png",
+        "sha256": "131b4176e4b28d5b6d98b84cde550c1db15d2535dca05fadd8852d562b3ede00",
+        "bytes": 55119,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-06.png",
+        "sha256": "9d9f80aa6ba057c044636b03f5a164ab2a797d300e26862adb14b9c59c9fe731",
+        "bytes": 46261,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-07.png",
+        "sha256": "9397c8ca414d9fd1024f633ac876b8304ff51f680286213766e5fe5b2c1e1ee8",
+        "bytes": 55124,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-08.png",
+        "sha256": "cce1b387ec754cfa3e60d395c843d0f72a3b2e107ada98ca1f30c06a9371a1c2",
+        "bytes": 44728,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-09.png",
+        "sha256": "d26176a48c14fa5384f89c0d998d64ebcc19d6c424cce93df93413329e0d404e",
+        "bytes": 33247,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-10.png",
+        "sha256": "f952005bd188f4e2dba1900c4ebeff76b7769244bdd6aa9a40bf384732c91afb",
+        "bytes": 53851,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/original/slide-11.png",
+        "sha256": "8d9b0d573da312e39206c1d7945311b9cec7003d03e1d591182292adbaab95d8",
+        "bytes": 92305,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image25.png",
+        "sha256": "04848638809cf44f7ae14c04c9695a25e05b5d414466d5615d22e36ce7552d78",
+        "bytes": 159507,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image28.png",
+        "sha256": "b7677211c1674900e89e1bcd66283c07cef845e1356120921088c9c5960ef29e",
+        "bytes": 156082,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image35.png",
+        "sha256": "76063c10ffb337bc8ce6f330434add6893122ebb65ac16348ff4e52c30fb1e73",
+        "bytes": 108672,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image38.png",
+        "sha256": "d1701ba688bf0741253a2791d8f45f9515a9cf31e4b3841ee4ef5fa6f041e44f",
+        "bytes": 78319,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image51.png",
+        "sha256": "c352a9d9ba3caa5e0821e352e80a26781cb5398e3a2e4954f1fe7d46d4055862",
+        "bytes": 119240,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image53.png",
+        "sha256": "f1c9627406d59d2ed9230fa40e180b87684ff01815e95b62323ba01ff051964c",
+        "bytes": 133430,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image62.png",
+        "sha256": "254f52d6ce8bc60413cf65bd7bd7161547081b23fe120cfeae301fc437e8326e",
+        "bytes": 156309,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image67.png",
+        "sha256": "5fa26cf75b10799e9011845d99a7cd5a558c24bd9fd6d6205361ddbc07d63d5f",
+        "bytes": 74451,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image74.png",
+        "sha256": "2de8f61bf08e90aa3a0159ef75694f67257f4e31a112aad662a7ef13c60d106c",
+        "bytes": 124504,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image82.png",
+        "sha256": "0203baddc0cdf4535a813b04fc5aa7ae6e1a8dc77f15becc6eef57b85ffd87ef",
+        "bytes": 392392,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image84.png",
+        "sha256": "7a23e4343236d346afcf47596000bfe67a71637dd24a85a13e2eba55b8666fb7",
+        "bytes": 473790,
+        "embedded": true
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/story-data.js",
+        "sha256": "d7b1d99b75f06786596258ba36ac6e6f86b57b800412aaaf4d76dda9e7447ff3",
+        "bytes": 4185,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/story.css",
+        "sha256": "0730bc76be944783df74106889cc0df066657b67d700b0b923961ff1a691f961",
+        "bytes": 8316,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/story.js",
+        "sha256": "7ec747625973a683a7eaa8b63708aa120ec22e03e808fb7dce99cb9b82ce3ddf",
+        "bytes": 8345,
+        "embedded": false
+      },
+      {
+        "source": "output/yoga-wonder-visual-v2-2-20261119/style-study.html",
+        "sha256": "f953523d1a838aa8ddcc22522da360e18d4e87bf442f76cfab3c9e33745eb134",
+        "bytes": 1871,
+        "embedded": false
+      }
+    ]
+  },
+  "localSources": [
+    {
+      "path": "workbench-ui/yoga/wonder-case.js",
+      "sha256": "9258eff66168d86850c7b5aafb0d9583899da5639e5827b7c7dd5148fe93788b",
+      "bytes": 19063
+    },
+    {
+      "path": "workbench-ui/yoga/wonder-source.css",
+      "sha256": "0730bc76be944783df74106889cc0df066657b67d700b0b923961ff1a691f961",
+      "bytes": 8316
+    }
+  ]
+}

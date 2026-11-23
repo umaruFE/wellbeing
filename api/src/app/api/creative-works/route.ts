@@ -29,6 +29,7 @@ export async function GET(request: NextRequest) {
                    THEN jsonb_array_length(result->'lyrics') ELSE 0 END AS lyric_count,
               created_at, updated_at
        FROM creative_works WHERE user_id = $1 ${moduleId ? 'AND module_id = $2' : ''}
+         AND (parameters->>'workbenchMusicCandidate') IS DISTINCT FROM 'true'
        ORDER BY created_at DESC`,
       moduleId ? [userId, moduleId] : [userId]
     );

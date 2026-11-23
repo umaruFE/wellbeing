@@ -3,6 +3,7 @@ import * as ftp from 'basic-ftp';
 import * as path from 'node:path';
 import { Readable } from 'node:stream';
 import { uploadToOss as uploadToOssOriginal, generateFilePath } from './oss';
+import { saveToLocal } from './localUpload';
 
 /**
  * 统一文件上传工具
@@ -119,7 +120,7 @@ async function uploadToFtp(
 }
 
 /**
- * 统一远程上传接口 - 根据 UPLOAD_PROVIDER 选择 OSS 或 FTP
+ * 统一文件上传接口 - 根据 UPLOAD_PROVIDER 选择本地、OSS 或 FTP
  */
 export async function uploadFile(
   file: File | ArrayBuffer | Buffer,
@@ -133,5 +134,5 @@ export async function uploadFile(
   if (provider === 'oss') {
     return uploadToOssOriginal(file, folder, filename);
   }
-  throw new Error('uploadFile does not handle local storage; use saveToLocal instead');
+  return saveToLocal(file, folder, filename);
 }

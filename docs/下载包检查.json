@@ -1,0 +1,164 @@
+{
+  "date": "2026-11-19",
+  "type": "portable package HTTP smoke checks",
+  "checks": [
+    {
+      "name": "local demo entry",
+      "passed": true
+    },
+    {
+      "name": "demo account API",
+      "passed": true
+    },
+    {
+      "name": "art example list",
+      "passed": true
+    },
+    {
+      "name": "isolated memory save",
+      "passed": true
+    },
+    {
+      "name": "isolated demo reset",
+      "passed": true
+    },
+    {
+      "name": "SPA /picture-books",
+      "passed": true
+    },
+    {
+      "name": "SPA /song-writing",
+      "passed": true
+    },
+    {
+      "name": "SPA /workshop/music-star-quest",
+      "passed": true
+    },
+    {
+      "name": "SPA /workshop/interactive-yoga",
+      "passed": true
+    },
+    {
+      "name": "SPA /workshop/spin-speak",
+      "passed": true
+    },
+    {
+      "name": "SPA /workshop/doodle",
+      "passed": true
+    },
+    {
+      "name": "SPA /workshop/move-match",
+      "passed": true
+    },
+    {
+      "name": "local cache cleanup injected",
+      "passed": true
+    },
+    {
+      "name": "main assets found",
+      "passed": true
+    },
+    {
+      "name": "main asset /assets/main-C42yGFKP.js",
+      "passed": true
+    },
+    {
+      "name": "main asset /assets/main-DFixIvAu.css",
+      "passed": true
+    },
+    {
+      "name": "module song.html",
+      "passed": true
+    },
+    {
+      "name": "module music.html",
+      "passed": true
+    },
+    {
+      "name": "module yoga.html",
+      "passed": true
+    },
+    {
+      "name": "yoga animation included",
+      "passed": true
+    },
+    {
+      "name": "module spin-speak-v1/index.html",
+      "passed": true
+    },
+    {
+      "name": "module doodle-guess-v1/index.html",
+      "passed": true
+    },
+    {
+      "name": "module move-match-v1/index.html",
+      "passed": true
+    },
+    {
+      "name": "yoga asset .png",
+      "passed": true
+    },
+    {
+      "name": "yoga asset .woff2",
+      "passed": true
+    },
+    {
+      "name": "audio partial content",
+      "passed": true
+    },
+    {
+      "name": "audio HEAD",
+      "passed": true
+    },
+    {
+      "name": "invalid range",
+      "passed": true
+    },
+    {
+      "name": "missing resource /assets/not-present.js",
+      "passed": true
+    },
+    {
+      "name": "missing resource /workbench-v6/not-present.html",
+      "passed": true
+    },
+    {
+      "name": "missing resource /workbench-v6/not-present",
+      "passed": true
+    },
+    {
+      "name": "path traversal blocked",
+      "passed": true
+    },
+    {
+      "name": "private configuration not served",
+      "passed": true
+    },
+    {
+      "name": "local AI unavailable",
+      "passed": true
+    },
+    {
+      "name": "static writes blocked",
+      "passed": true
+    },
+    {
+      "name": "local SW does not intercept requests",
+      "passed": true
+    },
+    {
+      "name": "build unchanged from current source",
+      "passed": true
+    },
+    {
+      "name": "Mac launcher executable",
+      "passed": true
+    }
+  ],
+  "passed": 38,
+  "built_files_compared": 412,
+  "limitations": [
+    "Not a browser or real-device animation acceptance test",
+    "Windows launcher was not run on Windows"
+  ]
+}

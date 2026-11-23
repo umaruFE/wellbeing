@@ -31,6 +31,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (work.module_id !== 'interactive-yoga') {
       return NextResponse.json({ error: '该模块不支持活动方案生成' }, { status: 400 });
     }
+    const input = await request.json().catch(() => null);
 
     const parameters = (work.parameters && typeof work.parameters === 'object') ? work.parameters : {};
     const scalarParams: Record<string, string> = {};
@@ -40,6 +41,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (work.title && !scalarParams.title) scalarParams.title = work.title;
 
     const { title, plan } = await generateYogaPlan(scalarParams);
+    if (input?.preview === true) return NextResponse.json({ data: { title: title || work.title, plan } });
 
     const existing = (work.result && typeof work.result === 'object') ? work.result as Partial<YogaResult> : {};
     const nextResult: Partial<YogaResult> = { ...existing, title: title || existing.title || work.title, plan: plan as YogaPlan };

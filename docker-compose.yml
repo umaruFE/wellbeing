@@ -26,6 +26,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       # 首次启动自动初始化表结构
       - ./api/db/local-postgres-schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./api/db/workbench-activities.sql:/docker-entrypoint-initdb.d/02-workbench-activities.sql:ro
     ports:
       - "5433:5432"   # 宿主机 5433 避免与本地 PG 冲突
     healthcheck:
@@ -98,7 +99,7 @@ services:
       INTERNAL_API_BASE_URL: http://backend:4000
     volumes:
       # 本地上传文件持久化
-      - backend_uploads:/app/uploads
+      - backend_uploads:/app/public/uploads
       # 媒体缓存持久化
       - backend_media_cache:/app/.media-cache
     ports:
@@ -113,6 +114,8 @@ services:
       dockerfile: Dockerfile.frontend
     container_name: wellbeing-frontend
     restart: unless-stopped
+    volumes:
+      - backend_uploads:/usr/share/nginx/html/uploads:ro
     depends_on:
       - backend
     ports:

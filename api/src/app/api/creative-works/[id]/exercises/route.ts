@@ -19,6 +19,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const body = await request.json().catch(() => ({}));
     const section = typeof body?.section === 'string' ? body.section : '';
     const adjustment = typeof body?.adjustment === 'string' ? body.adjustment.trim().slice(0, 500) : '';
+    const preview = body?.previewOnly === true;
     const allowedSections = new Set(['ex1FillData', 'ex2Items', 'ex3Data', 'starRoles', 'teachingPlans', 'echoData']);
     if (section && !allowedSections.has(section)) {
       return NextResponse.json({ error: '不支持的生成区块' }, { status: 400 });
@@ -40,8 +41,19 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     const existing = (work.result && typeof work.result === 'object') ? work.result as Partial<MusicResult> : {};
-    const lyrics = Array.isArray(existing.lyrics) ? existing.lyrics : [];
-    if (lyrics.length < 4) {
+    let lyrics = Array.isArray(existing.lyrics) ? existing.lyrics : [];
+    if (preview && body.lyrics !== undefined) {
+      if (!Array.isArray(body.lyrics) || !body.lyrics.length || body.lyrics.length > 60 ||
+          body.lyrics.some((line: unknown) => {
+            const value = line as { text?: unknown; time?: unknown } | null;
+            return typeof value?.text !== 'string' || !value.text.trim() || value.text.length > 300 ||
+              typeof value.time !== 'string' || value.time.length > 50;
+          })) {
+        return NextResponse.json({ error: '歌词内容格式无效。' }, { status: 400 });
+      }
+      lyrics = body.lyrics.map((line: { text: string; time: string }) => ({ text: line.text.trim(), time: line.time }));
+    }
+    if (lyrics.length < (preview ? 1 : 4)) {
       return NextResponse.json({ error: '请先在「歌曲创作」步骤生成或填写歌词' }, { status: 400 });
     }
 
@@ -60,6 +72,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const generated = section
       ? { [section]: exercises[section as keyof typeof exercises] }
       : exercises;
+    if (preview) return NextResponse.json({ data: generated });
     const nextResult: Partial<MusicResult> = { ...existing, ...generated };
     await db.query(
       `UPDATE creative_works SET result = $1::jsonb, updated_at = NOW() WHERE id = $2`,

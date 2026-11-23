@@ -42,6 +42,7 @@ export interface PromptMeta {
 export const PROMPT_META: Record<string, PromptMeta> = {
   // ── 已收编（builtin，Wiki 可覆盖）────────────────────────
   'ai.word-emojis': { description: '儿童英文词卡 emoji 匹配', caller: 'ai/generate-word-emojis', kind: 'pair', source: 'builtin' },
+  'ai.speaking-language': { description: '口语翻翻乐的英文操练句与问答生成', caller: 'ai/generate-speaking-language', kind: 'pair', source: 'builtin' },
   'picture-book-activity-plan': { description: '绘本活动计划生成（step 1）', caller: 'rag/generate', kind: 'pair', source: 'builtin' },
   'picture-book-design': { description: '绘本逐页设计生成（step 2）', caller: 'rag/generate', kind: 'pair', source: 'builtin' },
   'experience-yoga-plan': { description: '互动式情境瑜伽活动方案生成（工作室 step 2）', caller: 'creative-works/[id]/plan', kind: 'pair', source: 'builtin' },

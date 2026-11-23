@@ -1,0 +1,55 @@
+{
+  "date": "2026-11-19",
+  "requestedVersion": "User screenshot: manual words and picture cards",
+  "files": [
+    {
+      "path": "app.js",
+      "source": "prototype/doodle-guess-v1-manual-words-dev/app.js",
+      "sourceSha256": "729949699364c50bd24ca5c059cf434cbef044505ae0cd4789c53a2efdb5b73c",
+      "localSha256": "c969048a2d0cf1fa00074e75880170479a073d7799b8e98b3ca29cbb7b7d38a6",
+      "transformation": "Shared host authoring chrome, screenshot helpers and missing-image action; no new=1 auto-create; removed user-specified demo sentence and image caption; removed library result count and card description; compact library and image-card layout after requested copy removal"
+    },
+    {
+      "path": "styles.css",
+      "source": "prototype/doodle-guess-v1-manual-words-dev/styles.css",
+      "sourceSha256": "216536ca2dc6ee2bfb7a78a3601507e5c6053b660dec1aa34ee80f858651f75f",
+      "localSha256": "415f8c37b2d76674225643736c3f669bf842a3ea4278d4cf9aea40b74450754d",
+      "transformation": "Shared authoring components and screenshot layout; removed user-specified demo sentence and image caption; compact library and image-card layout after requested copy removal"
+    },
+    {
+      "path": "index.html",
+      "source": "prototype/doodle-guess-v1-manual-words-dev/index.html",
+      "sourceSha256": "6d893a911af1721d6c53ce31cbaef72d5d3e7802837da10423f4edcdecc04f08",
+      "localSha256": "0cc54397c06f91017ae098298f20be920c88bdddb2d02e029b352cc5f21863ca",
+      "transformation": "Host title and versioned references"
+    },
+    {
+      "path": "model.js",
+      "source": "prototype/doodle-guess-v1-manual-words-dev/model.js",
+      "sourceSha256": "cf0af145a4ca3189554306f9160a638a87c2035e5ccb1a936109ec68f3056a83",
+      "localSha256": "2db0fdc58053842b815646ce3769735dd07260a4b9d75f976e9eb4096ec0bfd0",
+      "transformation": "Canonical existing activity key retained"
+    },
+    {
+      "path": "runtime.js",
+      "source": "prototype/doodle-guess-v1-manual-words-dev/runtime.js",
+      "sourceSha256": "8613cb1e8a33c052e9d8163de7399e9e1637f574bd37c71c08dcb5219425121e",
+      "localSha256": "8613cb1e8a33c052e9d8163de7399e9e1637f574bd37c71c08dcb5219425121e",
+      "transformation": "Unchanged source"
+    },
+    {
+      "path": "classroom-wordbank.js",
+      "source": "prototype/doodle-guess-v1-manual-words-dev/classroom-wordbank.js",
+      "sourceSha256": "29836c0de94bdbbbfff98167e65947a2dca1efa4cd72059d9843f39826c8ab23",
+      "localSha256": "711ccda66146325fdbb6b30de23f08edcfc56f1d53b42e3389652dfe5aba937a",
+      "transformation": "Removed user-specified demo caption from preview and classroom word cards"
+    },
+    {
+      "path": "word-images.js",
+      "source": "prototype/doodle-guess-v1-manual-words-dev/word-images.js",
+      "sourceSha256": "faa48b2124c91731194b5026c630b2eedb51bed2e281d0f2f809cc302e0cb996",
+      "localSha256": "faa48b2124c91731194b5026c630b2eedb51bed2e281d0f2f809cc302e0cb996",
+      "transformation": "Unchanged source"
+    }
+  ]
+}

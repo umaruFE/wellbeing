@@ -14,15 +14,15 @@ echo "========================================"
 echo "🚀 开始部署 Wellbeing 系统..."
 echo "========================================"
 
-echo "📦 [1/6] 正在检查并安装前端依赖..."
 cd "$FRONTEND_DIR"
-npm install
-
-echo "🧹 [2/6] 正在清理旧的构建产物..."
-rm -rf "$FRONTEND_DIR/dist"
-
-echo "🏗️  [3/6] 正在构建前端 (Vite Build)..."
-npm run build
+if [ -f dist/index.html ] && [ -f dist/workbench-v6/song-music-backend.js ] && [ -f dist/workbench-v6/yoga-existing-backend.js ]; then
+  echo "📦 [1–3/6] 使用便携包中的完整前端运行文件"
+else
+  echo "📦 [1/6] 正在安装前端依赖..."
+  npm install
+  echo "🏗️  [3/6] 正在构建前端 (Vite Build)..."
+  npm run build
+fi
 
 echo "📦 [4/6] 正在检查并安装后端依赖..."
 cd "$API_DIR"

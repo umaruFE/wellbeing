@@ -32,6 +32,22 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Original creation workshop storage (yoga and music studios).
+CREATE TABLE IF NOT EXISTS creative_works (
+  id SERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  module_id TEXT NOT NULL,
+  module_name TEXT NOT NULL,
+  title TEXT NOT NULL,
+  parameters JSONB NOT NULL DEFAULT '{}'::jsonb,
+  result JSONB,
+  html TEXT,
+  status TEXT NOT NULL DEFAULT 'draft',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_creative_works_user_module ON creative_works(user_id, module_id);
+
 -- =====================================================
 -- COURSES
 -- =====================================================

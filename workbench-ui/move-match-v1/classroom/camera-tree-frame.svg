@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 244" fill="none" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="camera-window-wood" x1="14" y1="28" x2="286" y2="219" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE59B"/>
+      <stop offset=".5" stop-color="#F4CC69"/>
+      <stop offset="1" stop-color="#D7AA47"/>
+    </linearGradient>
+    <linearGradient id="camera-window-plank" x1="150" y1="29" x2="150" y2="63" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF1BC"/>
+      <stop offset="1" stop-color="#FFE49B"/>
+    </linearGradient>
+    <linearGradient id="camera-window-sill" x1="150" y1="197" x2="150" y2="230" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE7A3"/>
+      <stop offset=".65" stop-color="#F3CD72"/>
+      <stop offset="1" stop-color="#CB9F3F"/>
+    </linearGradient>
+  </defs>
+
+  <!-- The aperture is transparent: x25 y64, 250 x132, with 8-unit corners. -->
+  <path d="M25 28C18 27 14 32 14 39L13 205C13 212 18 216 25 216H275C283 216 287 211 287 204L286 39C286 32 282 28 275 28H25ZM33 64H267C271 64 275 68 275 72V188C275 192 271 196 267 196H33C29 196 25 192 25 188V72C25 68 29 64 33 64Z" fill="url(#camera-window-wood)" fill-rule="evenodd" stroke="#AA8439" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M17 64L16 202M283 65L284 202" stroke="#FFF5CF" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M23 75L23 185M277 75L277 185" stroke="#C6A14B" stroke-width="2" stroke-linecap="round"/>
+  <path d="M33 63H267C272 63 276 67 276 72V188C276 193 272 197 267 197H33C28 197 24 193 24 188V72C24 67 28 63 33 63Z" stroke="#967237" stroke-width="1.7"/>
+
+  <!-- A quiet header plank leaves the live title and controls readable. -->
+  <path d="M23 29H277Q284 29 284 37V61H16V37Q16 29 23 29Z" fill="url(#camera-window-plank)" stroke="#B69249" stroke-width="1.5"/>
+  <path d="M23 32H277M24 59H276" stroke="#FFF8D9" stroke-width="1.7" stroke-linecap="round"/>
+  <path d="M31 35Q42 33 58 35M111 34Q125 33 136 35M163 57Q179 55 190 57M216 33Q229 31 241 33" stroke="#D9BB6B" stroke-width="1.1" stroke-linecap="round" opacity=".48"/>
+
+  <!-- Small side grain is restricted to the timber, outside the video. -->
+  <path d="M19 82Q17 97 19 111M19 140Q22 158 19 177M281 88Q279 106 281 122M281 151Q283 168 281 184" stroke="#B99544" stroke-width="1.1" stroke-linecap="round" opacity=".55"/>
+  <path d="M18 120Q16 125 19 130Q22 126 20 121Z" fill="#D7B65B" opacity=".7"/>
+  <path d="M280 135Q278 139 281 143Q284 139 282 135Z" fill="#D7B65B" opacity=".65"/>
+
+  <!-- Window sill and brackets sit flush against the garden cottage wall. -->
+  <path d="M19 198H281V218H19Z" fill="url(#camera-window-sill)" stroke="#B89548" stroke-width="1.4"/>
+  <path d="M25 200H275" stroke="#FFF7D0" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M12 217L287 216Q292 217 292 221L288 228Q285 230 279 230H20Q14 230 11 227L8 221Q7 218 12 217Z" fill="url(#camera-window-sill)" stroke="#AA8439" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M15 219L285 218M24 226Q52 224 69 226M224 225Q250 223 272 225" stroke="#FFF0B2" stroke-width="1.6" stroke-linecap="round"/>
+  <path d="M49 230L57 240L66 230M234 230L243 240L251 230" fill="#D5AF51" stroke="#AA8439" stroke-width="1.4" stroke-linejoin="round"/>
+  <path d="M54 231L59 236M240 231L244 236" stroke="#FFE29B" stroke-width="1.4" stroke-linecap="round"/>
+
+  <!-- Four flush wooden pegs, not button-like metal fittings. -->
+  <g fill="#BB994D" stroke="#987A39" stroke-width=".8">
+    <circle cx="20" cy="43" r="2.1"/>
+    <circle cx="280" cy="43" r="2.1"/>
+    <circle cx="20" cy="208" r="2"/>
+    <circle cx="280" cy="208" r="2"/>
+  </g>
+  <path d="M19 42L21 44M279 42L281 44M19 207L21 209M279 207L281 209" stroke="#FFF0B1" stroke-width=".8" stroke-linecap="round"/>
+
+</svg>

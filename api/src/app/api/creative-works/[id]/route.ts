@@ -61,6 +61,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (!body || typeof body !== 'object') {
       return NextResponse.json({ error: '请求体无效' }, { status: 400 });
     }
+    const expectedUpdatedAt = body.expectedUpdatedAt;
+    if (expectedUpdatedAt !== undefined && (typeof expectedUpdatedAt !== 'string' || !Number.isFinite(Date.parse(expectedUpdatedAt)))) {
+      return NextResponse.json({ error: '保存版本无效' }, { status: 400 });
+    }
 
     const { rows } = await db.query(
       `SELECT id, module_id, title, parameters, result FROM creative_works WHERE id = $1 AND user_id = $2`,
@@ -113,10 +117,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const { rows: updated } = await db.query(
       `UPDATE creative_works
        SET parameters = $1::jsonb, result = $2::jsonb, title = $3, html = COALESCE($4, html), updated_at = NOW()
-       WHERE id = $5 AND user_id = $6
+       WHERE id = $5 AND user_id = $6 ${expectedUpdatedAt === undefined ? '' : "AND date_trunc('milliseconds', updated_at) = $7::timestamptz"}
        RETURNING id, module_id, module_name, title, parameters, status, result, created_at, updated_at`,
-      [JSON.stringify(parameters), JSON.stringify(existing), title, html, numericId, userId]
+      [JSON.stringify(parameters), JSON.stringify(existing), title, html, numericId, userId, ...(expectedUpdatedAt === undefined ? [] : [expectedUpdatedAt])]
     );
+    if (!updated.length && expectedUpdatedAt !== undefined) return NextResponse.json({ error: '后台课程已更新，当前修改已保留。' }, { status: 409 });
 
     return NextResponse.json({ data: updated[0] });
   } catch (error) {

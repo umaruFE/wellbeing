@@ -31,6 +31,11 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     if (work.module_id !== 'interactive-yoga') {
       return NextResponse.json({ error: '该模块不支持逐页设计生成' }, { status: 400 });
     }
+    const input = await request.json().catch(() => null);
+    const preview = input?.preview === true;
+    if (preview && input.requirements !== undefined && (typeof input.requirements !== 'string' || input.requirements.length > 16000)) {
+      return NextResponse.json({ error: '调整要求无效或过长' }, { status: 400 });
+    }
 
     const parameters = (work.parameters && typeof work.parameters === 'object') ? work.parameters : {};
     const scalarParams: Record<string, string> = {};
@@ -38,9 +43,15 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       if (v !== null && v !== undefined) scalarParams[k] = String(v);
     }
     if (work.title && !scalarParams.title) scalarParams.title = work.title;
+    if (preview && input.requirements) scalarParams.requirements = [scalarParams.requirements, input.requirements].filter(Boolean).join('\n');
 
     const existing = (work.result && typeof work.result === 'object') ? work.result as Partial<YogaResult> : {};
-    const { title, pages } = await generateYogaDesign(scalarParams, (existing.plan as YogaPlan) || null);
+    const previewPlan = preview && input.plan && typeof input.plan === 'object' && !Array.isArray(input.plan)
+      ? Object.fromEntries(['storyTitleEn', 'storyTitleZh', 'storyContent', 'englishGoal', 'wellbeingGoal', 'outputGoal', 'materials']
+          .map(key => [key, typeof input.plan[key] === 'string' ? input.plan[key].slice(0, 3000) : ''])) as YogaPlan
+      : null;
+    const { title, pages } = await generateYogaDesign(scalarParams, previewPlan || existing.plan || null);
+    if (preview) return NextResponse.json({ data: { title, pages } });
 
     const nextResult: Partial<YogaResult> = { ...existing, title: title || existing.title || work.title, pages };
     const html = renderYogaHtml({ title: nextResult.title, pages }, work.title);
