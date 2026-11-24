@@ -357,7 +357,7 @@ export const CanvasEditor = ({
     <div className="h-full flex flex-col overflow-y-auto">
       {background || isLoadingBackground || Object.keys(loadingRoles).some(key => loadingRoles[key]) ? (
         <>
-          <div className="p-3 bg-surface-alt border-b border-stroke">
+          <div className="p-3 bg-surface-alt border-b border-[var(--wb-border)]">
             <div className="flex items-center justify-center gap-2">
               <span className="text-sm font-medium text-primary-secondary"><LocalizedText id="ipCanvasUi.a785c02258" /></span>
               <div className="flex gap-2">
@@ -365,10 +365,10 @@ export const CanvasEditor = ({
                   <button
                     key={roleName}
                     onClick={() => setSelectedRole(roleName)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`px-3 py-1.5 rounded-[var(--wb-control-radius)] text-sm font-medium transition-colors ${
                       selectedRole === roleName
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-white border border-stroke-light text-primary-secondary hover:bg-surface-alt'
+                        ? 'bg-[var(--wb-primary)] text-white'
+                        : 'bg-white border border-[var(--wb-border)] text-primary-secondary hover:bg-surface-alt'
                     }`}
                   >
                     {roleName}
@@ -383,7 +383,7 @@ export const CanvasEditor = ({
               ref={canvasRef}
               width={700}
               height={500}
-              className="border-2 border-stroke-light rounded-lg cursor-move bg-white shadow-lg flex-shrink-0"
+              className="border border-[var(--wb-border)] rounded-lg cursor-move bg-white shadow-lg flex-shrink-0"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
@@ -392,7 +392,7 @@ export const CanvasEditor = ({
           </div>
 
           {selectedRole && (
-            <div className="p-3 bg-surface-alt border-t border-stroke">
+            <div className="p-3 bg-surface-alt border-t border-[var(--wb-border)]">
               <div className="flex items-center justify-center gap-4 flex-wrap">
                 <span className="text-sm font-medium text-primary-secondary">
                   <LocalizedText id="ipCanvasUi.425bd9e9dc" /> {selectedRole}
@@ -401,7 +401,7 @@ export const CanvasEditor = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleScaleChange(-0.1)}
-                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
+                    className="p-2 rounded-[var(--wb-control-radius)] bg-white border border-[var(--wb-border)] hover:bg-surface-alt transition-colors"
                     title={i18next.t('ppt.zoomOut')}
                   >
                     <ZoomOut className="w-4 h-4" />
@@ -413,7 +413,7 @@ export const CanvasEditor = ({
 
                   <button
                     onClick={() => handleScaleChange(0.1)}
-                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
+                    className="p-2 rounded-[var(--wb-control-radius)] bg-white border border-[var(--wb-border)] hover:bg-surface-alt transition-colors"
                     title={i18next.t('ppt.zoomIn')}
                   >
                     <ZoomIn className="w-4 h-4" />
@@ -423,7 +423,7 @@ export const CanvasEditor = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleRotationChange(-15)}
-                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
+                    className="p-2 rounded-[var(--wb-control-radius)] bg-white border border-[var(--wb-border)] hover:bg-surface-alt transition-colors"
                     title={i18next.t('ipCanvasUi.aff6ac17f8')}
                   >
                     <RotateCw className="w-4 h-4 transform -scale-x-100" />
@@ -435,7 +435,7 @@ export const CanvasEditor = ({
 
                   <button
                     onClick={() => handleRotationChange(15)}
-                    className="p-2 rounded-lg bg-white border border-stroke-light hover:bg-surface-alt transition-colors"
+                    className="p-2 rounded-[var(--wb-control-radius)] bg-white border border-[var(--wb-border)] hover:bg-surface-alt transition-colors"
                     title={i18next.t('ipCanvasUi.018bfa53d6')}
                   >
                     <RotateCw className="w-4 h-4" />
@@ -445,10 +445,10 @@ export const CanvasEditor = ({
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleFlipChange('x')}
-                    className={`p-2 rounded-lg border transition-colors ${
+                    className={`p-2 rounded-[var(--wb-control-radius)] border transition-colors ${
                       rolePositions[selectedRole]?.flipX
-                        ? 'bg-purple-100 border-purple-400 text-purple'
-                        : 'bg-white border-stroke-light hover:bg-surface-alt text-primary-secondary'
+                        ? 'bg-[var(--wb-selected)] border-[var(--wb-selected-border)] text-[var(--wb-primary)]'
+                        : 'bg-white border-[var(--wb-border)] hover:bg-surface-alt text-primary-secondary'
                     }`}
                     title={i18next.t('assetPanel.iwFlipH')}
                   >
@@ -457,10 +457,10 @@ export const CanvasEditor = ({
 
                   <button
                     onClick={() => handleFlipChange('y')}
-                    className={`p-2 rounded-lg border transition-colors ${
+                    className={`p-2 rounded-[var(--wb-control-radius)] border transition-colors ${
                       rolePositions[selectedRole]?.flipY
-                        ? 'bg-purple-100 border-purple-400 text-purple'
-                        : 'bg-white border-stroke-light hover:bg-surface-alt text-primary-secondary'
+                        ? 'bg-[var(--wb-selected)] border-[var(--wb-selected-border)] text-[var(--wb-primary)]'
+                        : 'bg-white border-[var(--wb-border)] hover:bg-surface-alt text-primary-secondary'
                     }`}
                     title={i18next.t('assetPanel.iwFlipV')}
                   >

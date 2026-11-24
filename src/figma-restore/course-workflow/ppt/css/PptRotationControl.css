@@ -4,14 +4,14 @@
 
 #ed-ppt .ppt-rotation-control .ant-input-affix-wrapper {
   min-height: 40px;
-  border: 2px solid #364153;
-  border-radius: 9px;
+  border: 1px solid #364153;
+  border-radius: var(--wb-control-radius);
   box-shadow: none;
 }
 
 #ed-ppt .ppt-rotation-control .ant-input-affix-wrapper:hover,
 #ed-ppt .ppt-rotation-control .ant-input-affix-wrapper-focused {
-  border-color: #ff705d;
+  border-color: var(--wb-primary);
 }
 
 #ed-ppt .ppt-rotation-control input {

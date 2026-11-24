@@ -1,10 +1,13 @@
 (function () {
   'use strict';
 
-  function previewMode() {
-    try { return window.top.WB_WORKBENCH_LIVE; } catch { return window.WB_WORKBENCH_LIVE; }
+  function previewFlag(name) {
+    try { return window.top[name]; } catch { return window[name]; }
   }
-  const live = previewMode();
+  const live = previewFlag('WB_WORKBENCH_LIVE');
+  const readOnlyPreview = previewFlag('WB_WORKBENCH_READ_ONLY') === true;
+  const previewWriteModules = previewFlag('WB_WORKBENCH_ACTIVITY_WRITES') === true
+    ? new Set(['spin-speak', 'doodle', 'move-match']) : new Set();
   const offline = live === false || (live === undefined && localStorage.getItem('token') === 'local-style-preview-only');
 
   function newId() {
@@ -89,13 +92,16 @@
 
   function activityStore(moduleId, key, onStateChange = () => {}) {
     if (offline) return null;
+    const scopedPreviewWrite = readOnlyPreview && previewWriteModules.has(moduleId);
+    const readOnly = readOnlyPreview && !scopedPreviewWrite;
     const token = localStorage.getItem('token');
     const path = `/api/workbench-activities/${moduleId}`;
     const tabKey = 'wellbeing-workbench-tab';
     const tab = sessionStorage.getItem(tabKey) || newId();
     sessionStorage.setItem(tabKey, tab);
-    const pendingKey = `${key}:sync:${tab}`;
-    let pending = JSON.parse(localStorage.getItem(pendingKey) || 'null');
+    // Queued writes from other environments must never be replayed into this preview's database.
+    const pendingKey = `${key}:sync:${tab}${scopedPreviewWrite ? ':production-preview' : ''}`;
+    let pending = readOnly ? null : JSON.parse(localStorage.getItem(pendingKey) || 'null');
     let raw = pending?.queued?.raw ?? pending?.sending?.raw ?? null;
     let version = pending?.version ?? 0;
     let running, timer, panel, legacy, status = 'loading';
@@ -115,14 +121,14 @@
     }
 
     function display(message = '', conflict = false) {
-      setStatus(message ? (conflict ? 'conflict' : 'unsynced') : 'synced');
+      setStatus(readOnly ? 'readonly' : message ? (conflict ? 'conflict' : 'unsynced') : 'synced');
       panel?.remove();
       if (!message) return;
       panel = document.createElement('aside');
       panel.setAttribute('role', 'status');
       panel.style.cssText = 'position:fixed;inset:auto 12px 12px auto;max-width:min(460px,calc(100vw - 24px));z-index:9000;padding:9px 12px;background:#fff6dd;color:#513a22;border:1px solid #dfba78;border-radius:8px;font:14px/1.4 system-ui;box-shadow:0 2px 10px #0002';
       panel.append(document.createTextNode(message));
-      if (conflict || pending && !running) {
+      if (!readOnly && (conflict || pending && !running)) {
         const button = document.createElement('button');
         button.type = 'button';
         button.style.marginInlineStart = '8px';
@@ -154,6 +160,7 @@
 
     function change(value) {
       if (reloading || value === raw) return;
+      if (readOnly) throw new Error('当前无法保存活动。');
       record({ version, sending: pending?.sending, queued: { raw: value, id: newId() } });
       raw = value;
       if (failsWithConflict) return;
@@ -163,6 +170,7 @@
     }
 
     function flush() {
+      if (readOnly) return Promise.resolve(true);
       if (running) return running;
       if (!pending || failsWithConflict) return Promise.resolve(!pending);
       clearTimeout(timer);
@@ -191,34 +199,36 @@
     }
 
     async function load() {
-      if (pending) {
+      if (pending && !readOnly) {
         setStatus('pending');
         void flush();
         return;
       }
       const { data } = await request(path, { token, timeout: 12000 });
-      if (!Number.isInteger(data?.version) || data.version < 0 || (data.version > 0 && !data.snapshot)) throw new Error('后台返回的活动数据无效，请重试。');
+      if (!Number.isInteger(data?.version) || data.version < 0 || (data.version > 0 && !data.snapshot)) {
+        throw new Error('后台返回的活动数据无效，请重试。');
+      }
       version = data.version;
       raw = data.snapshot ? JSON.stringify(data.snapshot) : null;
-      if (version === 0) {
+      if (version === 0 && !readOnlyPreview) {
         legacy = localStorage.getItem(key);
         raw = legacy;
       }
       display();
     }
 
-    window.addEventListener('online', flush);
+    if (!readOnly) window.addEventListener('online', flush);
     return {
-      load, flush,
+      load, flush, readOnly,
       importLocal() {
-        if (!legacy) return;
+        if (readOnly || !legacy) return;
         const original = legacy;
         legacy = null;
         raw = null;
         change(original);
       },
       get status() { return status; },
-      get dirty() { return Boolean(pending); },
+      get dirty() { return !readOnly && Boolean(pending); },
       storage: {
         getItem: () => raw,
         setItem: (_key, value) => change(value),
@@ -226,5 +236,5 @@
     };
   }
 
-  window.WBWorkbenchApi = { offline, request, upload, generateImage, activityStore };
+  window.WBWorkbenchApi = { offline, readOnly: readOnlyPreview, request, upload, generateImage, activityStore };
 })();

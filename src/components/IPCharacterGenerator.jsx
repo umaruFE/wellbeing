@@ -159,11 +159,11 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[760px] mx-4 overflow-hidden">
+      <div className="relative bg-white rounded-[18px] shadow-[0_20px_64px_rgba(48,43,59,0.16)] w-full max-w-[760px] mx-4 overflow-hidden">
         <div className="px-6 pt-5 pb-4 flex items-center justify-between border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center">
-              <ImageIcon className="w-4 h-4 text-purple-600" />
+            <div className="w-9 h-9 rounded-lg bg-[var(--wb-selected)] flex items-center justify-center">
+              <ImageIcon className="w-4 h-4 text-[var(--wb-primary)]" />
             </div>
             <h2 className="text-base font-bold text-gray-800"><LocalizedText id="ipCharacter.title" /></h2>
           </div>
@@ -180,9 +180,9 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
                 <button
                   key={char.id}
                   onClick={() => { setSelectedCharacter(char); setGeneratedImageUrl(null); setError(null); }}
-                  className={`flex items-center gap-3 px-5 py-4 rounded-xl border-2 transition-all ${
+                  className={`min-h-10 flex items-center gap-3 px-5 py-4 rounded-[var(--wb-control-radius)] border transition-all ${
                     selectedCharacter?.id === char.id
-                      ? 'border-purple-400 bg-purple-50'
+                      ? 'border-[var(--wb-selected-border)] bg-[var(--wb-selected)]'
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
@@ -202,7 +202,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
               value={prompt}
               onChange={e => setPrompt(e.target.value)}
               placeholder={i18next.t('ipCharacter.describePlaceholder')}
-              className="w-full h-20 px-4 py-3 border-2 border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:border-purple-400 transition-all"
+              className="w-full h-20 px-4 py-3 border border-gray-200 rounded-[var(--wb-control-radius)] text-sm resize-none focus:outline-none focus:border-[var(--wb-selected-border)] transition-all"
             />
           </div>
 
@@ -213,9 +213,9 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
                 <button
                   key={ratio.id}
                   onClick={() => setSelectedRatio(ratio)}
-                  className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                  className={`flex flex-col items-center justify-center p-2 rounded-[var(--wb-control-radius)] border transition-all ${
                     selectedRatio.id === ratio.id
-                      ? 'border-purple-400 bg-purple-50 text-purple-700'
+                      ? 'border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary)]'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:bg-gray-50'
                   }`}
                 >
@@ -246,7 +246,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
           )}
 
           {generatedImageUrl && (
-            <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
+            <div className="border border-gray-200 rounded-xl overflow-hidden">
               <img src={generatedImageUrl} alt={i18next.t('assetPanel.stepGenResult')} className="w-full h-64 object-contain bg-gray-50" />
             </div>
           )}
@@ -257,13 +257,13 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
             <>
               <button
                 onClick={() => { setGeneratedImageUrl(null); }}
-                className="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-1.5"
+                className="min-h-10 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-[var(--wb-control-radius)] hover:bg-gray-100 transition-colors flex items-center gap-1.5"
               >
                 <RefreshCw size={14} /> <LocalizedText id="ipCharacterUi.2e19057052" />
               </button>
               <button
                 onClick={handleConfirm}
-                className="px-6 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-1.5"
+                className="min-h-10 px-6 py-2 text-sm font-medium text-white bg-[var(--wb-primary)] rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center gap-1.5"
               >
                 <Check size={14} /> <LocalizedText id="common.confirm" />
               </button>
@@ -272,7 +272,7 @@ const IPCharacterGenerator = ({ isOpen, onClose, onConfirm, userId, organization
             <button
               onClick={handleGenerate}
               disabled={isGenerating || !selectedCharacter || !prompt.trim()}
-              className="px-6 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+              className="min-h-10 px-6 py-2 text-sm font-medium text-white bg-[var(--wb-primary)] rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
             >
               {isGenerating ? (
                 <><Loader2 size={14} className="animate-spin" /> <LocalizedText id="ipCharacterUi.26eab253a0" /></>

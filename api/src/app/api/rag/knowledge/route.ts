@@ -36,7 +36,6 @@ async function ensureTable() {
 
 export async function GET(request: NextRequest) {
   try {
-    await ensureTable();
 
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');

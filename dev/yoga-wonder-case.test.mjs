@@ -7,6 +7,7 @@ import { createHash } from 'node:crypto';
 const sourceRoot = new URL('../workbench-ui/yoga/', import.meta.url);
 const publicSource = new URL('../public/workbench-v6/yoga.html', import.meta.url);
 const publicDocument = fs.existsSync(publicSource) ? publicSource : new URL('../dist/workbench-v6/yoga.html', import.meta.url);
+const cdnAssets = JSON.parse(fs.readFileSync(new URL('./workbench-cdn-assets.json', import.meta.url), 'utf8')).files;
 const stamp = '2026-11-19T08:00:00.000Z';
 const plain = value => JSON.parse(JSON.stringify(value));
 const sha256 = value => createHash('sha256').update(value).digest('hex');
@@ -342,7 +343,11 @@ for (const target of requested ? [requested] : ['source', 'packaged']) {
       if (target === 'packaged') {
         for (const path of [spec.background, spec.character.path]) {
           assert.match(path, /^yoga-wonder-case\//);
-          assert.ok(fs.statSync(new URL(path, publicDocument)).isFile(), `Missing scene resource: ${path}`);
+          const localAsset = new URL(path, publicDocument);
+          const available = fs.existsSync(localAsset)
+            ? fs.statSync(localAsset).isFile()
+            : publicDocument === publicSource && Object.hasOwn(cdnAssets, `workbench-v6/${path}`);
+          assert.ok(available, `Missing scene resource: ${path}`);
         }
       }
     });

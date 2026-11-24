@@ -1,6 +1,7 @@
 import i18next from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../components/PageLoading';
 import { BookOpen, Eye, FileText, Image, Monitor, MoreVertical, Plus, Search, Trash2, Upload as UploadIcon, X } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import apiService from '../../services/api';
@@ -260,6 +261,7 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
 export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
   const { t } = useTranslation();
   const [assets, setAssets] = React.useState(IMAGE_ASSETS);
+  const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [type, setType] = React.useState('');
@@ -295,6 +297,9 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
           setAssets([]);
           message.error(t('imageLib.fetchFailed'));
         }
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
       });
     return () => {
       alive = false;
@@ -408,7 +413,9 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
             </div>
           </div>
 
-          {filteredAssets.length > 0 ? (
+          {loading ? (
+            <PageLoading />
+          ) : filteredAssets.length > 0 ? (
             <div className="fr-img-grid">
               {filteredAssets.map(asset => (
                 <article className="fr-img-card" key={asset.id} onClick={() => setPreviewAsset(asset)}>

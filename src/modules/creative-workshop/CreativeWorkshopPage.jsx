@@ -1,13 +1,20 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../components/PageLoading';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Check, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Check, Gamepad2, MessageCircle, Palette, Sparkles, X } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { WORKSHOP_MODULES } from './workshopData';
-import { createCreativeWork } from './workshopStorage';
+import { createCreativeWork, getCreativeWorks } from './workshopStorage';
 import './creativeWorkshop.css';
 
-const GenerateDialog = ({ module, moduleId, onClose }) => {
+const addedModulePaths = [
+  { titleKey: 'sidebar.spinSpeak', descriptionKey: 'workshopPage.spinSpeakDescription', icon: MessageCircle, path: '/workshop/spin-speak' },
+  { titleKey: 'sidebar.doodleGame', descriptionKey: 'workshopPage.doodleDescription', icon: Palette, path: '/workshop/doodle' },
+  { titleKey: 'sidebar.moveMatch', descriptionKey: 'workshopPage.moveMatchDescription', icon: Gamepad2, path: '/workshop/move-match' },
+];
+
+const GenerateDialog = ({ module, moduleId, onClose, onCreated }) => {
   const { t } = useTranslation();
   const moduleTitle = t(`workshopPage.modules.${moduleId}.title`);
   const navigate = useNavigate();
@@ -23,6 +30,7 @@ const GenerateDialog = ({ module, moduleId, onClose }) => {
     setError('');
     try {
       await createCreativeWork({ moduleId, moduleName: module.title, title: form.title, parameters: form });
+      onCreated();
       setSaved(true);
     } catch (err) {
       console.error('保存草稿失败:', err);
@@ -74,54 +82,96 @@ export const CreativeWorkshopPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [showGenerator, setShowGenerator] = useState(false);
+  const [works, setWorks] = useState(null);
+  const [attempt, setAttempt] = useState(0);
+  const canOpen = user?.role !== 'picture_song_creator' || moduleId === 'english-plus';
   const module = useMemo(() => WORKSHOP_MODULES[moduleKey], [moduleKey]);
+  const modulePaths = useMemo(() => {
+    const paths = module.paths.map((path, index) => ({ ...path, translationKey: `workshopPage.modules.${moduleKey}.paths.${index}` }));
+    if (moduleKey !== 'english-plus') return paths;
+    const existingModuleOrder = ['/song-writing', '/workshop/music-star-quest', '/workshop/interactive-yoga'];
+    // Keep the picture-book entry, then the six integrated modules in navigation order.
+    paths.sort((left, right) => existingModuleOrder.indexOf(left.path) - existingModuleOrder.indexOf(right.path));
+    return [...paths, ...addedModulePaths];
+  }, [module, moduleKey]);
   const Icon = module.icon;
+  const reloadWorks = () => setAttempt((value) => value + 1);
+  const currentWorks = works?.moduleKey === moduleKey && works.attempt === attempt ? works : null;
 
-  if (user?.role === 'picture_song_creator' && moduleId !== 'english-plus') {
+  useEffect(() => {
+    if (!canOpen) return undefined;
+    let cancelled = false;
+    getCreativeWorks(moduleKey).then(
+      (data) => { if (!cancelled) setWorks({ moduleKey, attempt, data }); },
+      (error) => { if (!cancelled) setWorks({ moduleKey, attempt, error }); },
+    );
+    return () => { cancelled = true; };
+  }, [moduleKey, attempt, canOpen]);
+
+  if (!canOpen) {
     return <Navigate to="/unauthorized" replace />;
   }
 
+  if (works?.moduleKey !== moduleKey) {
+    return <PageLoading layout="fill" />;
+  }
+
   return (
-    <div className="cw-page" style={{ '--cw-accent': module.accent }}>
+    <div className="cw-page" style={{ '--cw-accent': 'var(--wb-primary)' }}>
       <section className="cw-hero">
         <div className="cw-hero-copy">
-          <span className="cw-eyebrow">{t(`workshopPage.modules.${moduleKey}.eyebrow`)}</span>
-          <h1><span className="cw-title-icon"><Icon size={28} /></span>{t(`workshopPage.modules.${moduleKey}.title`)}</h1>
+          <h1><span className="cw-title-icon"><Icon size={20} /></span>{t(`workshopPage.modules.${moduleKey}.title`)}</h1>
           <p>{t(`workshopPage.modules.${moduleKey}.description`)}</p>
-          <div className="cw-hero-actions">
-            <button type="button" className="cw-primary-button" onClick={() => setShowGenerator(true)}><Sparkles size={17} /> {t('workshopPage.sameStyle')}</button>
-          </div>
         </div>
-        <div className="cw-model-card">
-          <span className="cw-model-number">01</span>
-          <strong>{t('workshopPage.stepOne')}</strong>
-          <span className="cw-model-line" />
-          <span className="cw-model-number">02</span>
-          <strong>{t('workshopPage.stepTwo')}</strong>
+        <div className="cw-hero-actions">
+          <button type="button" className="cw-primary-button" onClick={() => setShowGenerator(true)}><Sparkles size={17} /> {t('workshopPage.sameStyle')}</button>
         </div>
       </section>
 
       <section className="cw-section">
         <div className="cw-section-heading"><div><span>{t('workshopPage.paths')}</span><h2>{t('workshopPage.choose')}</h2></div><p>{t('workshopPage.pathsHint')}</p></div>
         <div className="cw-path-grid">
-          {module.paths.map((path, index) => {
-            const PathIcon = path.icon;
-            return (
-              <article key={path.title} className="cw-path-card">
-                <span className="cw-path-icon"><PathIcon size={22} /></span>
-                <h3>{t(`workshopPage.modules.${moduleKey}.paths.${index}.title`)}</h3><p>{t(`workshopPage.modules.${moduleKey}.paths.${index}.description`)}</p>
-                {path.path ? (
-                  <button type="button" onClick={() => navigate(path.path)}>{path.action ? t(`workshopPage.modules.${moduleKey}.paths.${index}.action`) : t('workshopPage.enter')} <ArrowRight size={15} /></button>
-                ) : (
-                  <button type="button" onClick={() => setShowGenerator(true)}>{t('workshopPage.sameStyle')} <ArrowRight size={15} /></button>
-                )}
-              </article>
-            );
-          })}
+          {modulePaths
+            .filter((path) => path.path !== '/song-writing' || user?.role !== 'viewer')
+            .map((path) => {
+              const PathIcon = path.icon;
+              return (
+                <article key={path.titleKey || path.title} className="cw-path-card">
+                  <span className="cw-path-icon"><PathIcon size={22} /></span>
+                  <h3>{t(path.titleKey || `${path.translationKey}.title`)}</h3><p>{t(path.descriptionKey || `${path.translationKey}.description`)}</p>
+                  {path.path ? (
+                    <button type="button" onClick={() => navigate(path.path)}>{path.action ? t(`${path.translationKey}.action`) : t('workshopPage.enter')} <ArrowRight size={15} /></button>
+                  ) : (
+                    <button type="button" onClick={() => setShowGenerator(true)}>{t('workshopPage.sameStyle')} <ArrowRight size={15} /></button>
+                  )}
+                </article>
+              );
+            })}
         </div>
       </section>
 
-      {showGenerator && <GenerateDialog module={module} moduleId={moduleKey} onClose={() => setShowGenerator(false)} />}
+      <section className="cw-section">
+        <div className="cw-section-heading"><h2>{t('sidebar.myWorks')}</h2></div>
+        {!currentWorks ? (
+          <PageLoading />
+        ) : currentWorks.error ? (
+          <div role="alert">
+            <p>{currentWorks.error.message || t('workshopPage.loadWorksFailed')}</p>
+            <button type="button" className="cw-secondary-button" onClick={reloadWorks}>{t('common.retry')}</button>
+          </div>
+        ) : currentWorks.data.length ? (
+          <div className="cw-path-grid">
+            {currentWorks.data.map((work) => (
+              <article className="cw-path-card" key={work.id}>
+                <h3>{work.title}</h3>
+                <p>{t(work.status === 'done' ? 'myWorksUi.statusDone' : 'myWorksUi.statusDraft')}</p>
+              </article>
+            ))}
+          </div>
+        ) : <p>{t('myWorksUi.e645e9a18d')}</p>}
+      </section>
+
+      {showGenerator && <GenerateDialog key={moduleKey} module={module} moduleId={moduleKey} onClose={() => setShowGenerator(false)} onCreated={reloadWorks} />}
     </div>
   );
 };

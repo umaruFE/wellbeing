@@ -35,7 +35,7 @@ const CanvasTopBar = ({
   const iconEl = moduleIcon === 'book' ? <BookOpen className="w-4 h-4" /> : <Layout className="w-4 h-4" />;
 
   return (
-    <div className="h-14 bg-white border-b-2 border-stroke-light flex items-center justify-between px-6 shadow-sm z-10">
+    <div className="h-14 bg-white border-b border-[var(--wb-border)] flex items-center justify-between px-6 shadow-sm z-10">
       <div className="flex items-center gap-4 min-w-0">
         {!isLeftOpen && (
           <>

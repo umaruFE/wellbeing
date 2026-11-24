@@ -1,16 +1,16 @@
 .ppt-courseware {
-  --ppt-ink: #253142;
-  --ppt-muted: #7c8798;
-  --ppt-line: #dedbd4;
-  --ppt-paper: #ffffff;
-  --ppt-purple: #9b63dc;
+  --ppt-ink: var(--wb-text);
+  --ppt-muted: var(--wb-muted);
+  --ppt-line: var(--wb-border);
+  --ppt-paper: var(--wb-surface);
+  --ppt-purple: var(--wb-primary);
   --ppt-blue: #3f83e8;
   --ppt-green: #4caf72;
-  --ppt-coral: #ff705d;
+  --ppt-coral: var(--wb-primary);
   height: calc(100vh - 61px);
   display: flex;
   overflow: hidden;
-  background: #f4f2ec;
+  background: var(--wb-page);
   color: var(--ppt-ink);
 }
 
@@ -34,7 +34,7 @@
 .ppt-wiz-field > span {
   color: var(--ppt-ink);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .ppt-wiz-field textarea,
@@ -42,10 +42,10 @@
   width: 100%;
   box-sizing: border-box;
   min-height: 102px;
-  border: 2px solid #253142;
-  border-radius: 9px;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
   padding: 10px 12px;
-  background: #fff;
+  background: var(--wb-surface);
   color: var(--ppt-ink);
   font: inherit;
   font-size: 13px;
@@ -65,20 +65,20 @@
 }
 
 .ppt-choice-row button {
-  min-height: 34px;
-  border: 2px solid #d8d2c8;
-  border-radius: 8px;
-  background: #fff;
-  color: #626b7c;
+  min-height: 40px;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-surface);
+  color: var(--wb-muted);
   cursor: pointer;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .ppt-choice-row button.on,
 .ppt-choice-row button:hover {
   border-color: var(--ppt-coral);
-  background: #fff1ed;
+  background: var(--wb-selected);
   color: var(--ppt-coral);
 }
 
@@ -89,9 +89,9 @@
 }
 
 .ppt-scene-grid button {
-  border: 2px solid #d8d2c8;
-  border-radius: 9px;
-  background: #fff;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-surface);
   overflow: hidden;
   cursor: pointer;
   padding: 0;
@@ -104,9 +104,9 @@
 .ppt-scene-grid span {
   display: block;
   padding: 6px 4px 7px;
-  color: #626b7c;
+  color: var(--wb-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .ppt-wiz-summary {
@@ -117,8 +117,8 @@
 
 .ppt-wiz-summary div {
   min-height: 58px;
-  border: 2px solid #d8d2c8;
-  border-radius: 9px;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-card-radius);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -127,9 +127,9 @@
 }
 
 .ppt-wiz-summary span {
-  color: #7c8798;
+  color: var(--wb-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .ppt-wiz-summary b {
@@ -165,10 +165,10 @@
 #ed-ppt .fi {
   width: 100%;
   box-sizing: border-box;
-  border: 2px solid #253142;
-  border-radius: 8px;
-  background: #fff;
-  color: #253142;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-surface);
+  color: var(--wb-text);
   padding: 9px 11px;
   font: inherit;
   font-size: 13px;
@@ -183,36 +183,36 @@
 
 #ed-ppt .btn {
   min-height: 38px;
-  border-radius: 9px;
-  border: 2px solid #253142;
+  border-radius: var(--wb-control-radius);
+  border: 1px solid var(--wb-border);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 600;
   flex: 1;
 }
 
 #ed-ppt .btn-pri {
-  border-color: #ff705d;
-  background: #ff705d;
+  border-color: var(--wb-primary);
+  background: var(--wb-primary);
   color: #fff;
 }
 
 #ed-ppt .btn-ghost {
-  background: #fff;
-  color: #253142;
+  background: var(--wb-surface);
+  color: var(--wb-text);
 }
 
 #ed-ppt .image-replace-drop {
   width: 100%;
   min-height: 74px;
-  border: 2px dashed #d8d2c8;
-  border-radius: 10px;
-  background: #fffdf8;
-  color: #667085;
+  border: 1px dashed var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-page);
+  color: var(--wb-muted);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -221,13 +221,13 @@
   gap: 6px;
   margin-bottom: 14px;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 #ed-ppt .image-replace-drop:hover {
-  border-color: #ff705d;
-  background: #fff7f3;
-  color: #ff705d;
+  border-color: var(--wb-primary);
+  background: var(--wb-selected);
+  color: var(--wb-primary-hover);
 }
 
 /* Final layout guards: keep the three-column editor inside the viewport. */
@@ -263,7 +263,7 @@
   padding: 34px;
   border: 1px solid #d9dde4;
   border-radius: 20px;
-  background: #ffffff;
+  background: var(--wb-surface);
   box-shadow: 0 18px 50px rgba(37, 49, 66, 0.1);
 }
 
@@ -277,15 +277,15 @@
 .ppt-template-kicker {
   display: inline-flex;
   margin-bottom: 8px;
-  color: #ff705d;
+  color: var(--wb-primary);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 0.08em;
 }
 
 .ppt-template-head h2 {
   margin: 0;
-  color: #253142;
+  color: var(--wb-text);
   font-size: clamp(26px, 3vw, 36px);
   line-height: 1.2;
 }
@@ -293,7 +293,7 @@
 .ppt-template-head p {
   max-width: 640px;
   margin: 10px 0 0;
-  color: #626b7c;
+  color: var(--wb-muted);
   font-size: 14px;
   font-weight: 700;
   line-height: 1.6;
@@ -303,8 +303,8 @@
   width: min(100%, 440px);
   min-width: 310px;
   min-height: 96px;
-  border: 1px solid #e1e4ea;
-  border-radius: 16px;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
   background: #f7f8fa;
   display: flex;
   align-items: center;
@@ -322,7 +322,7 @@
 }
 
 .ppt-template-stat > span {
-  color: #253142;
+  color: var(--wb-text);
   font-size: 28px;
   font-weight: 1000;
   line-height: 1.1;
@@ -332,7 +332,7 @@
   margin-top: 7px;
   color: #77808f;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -357,9 +357,9 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  border: 1.5px solid #253142;
-  background: #fff;
-  color: #253142;
+  border: 1px solid var(--wb-border);
+  background: var(--wb-surface);
+  color: var(--wb-text);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -369,7 +369,7 @@
 }
 
 .ppt-slide-stepper-btn:hover:not(:disabled) {
-  background: #253142;
+  background: var(--wb-text);
   color: #fff;
 }
 
@@ -387,10 +387,10 @@
 .ppt-template-card {
   position: relative;
   min-width: 0;
-  border: 2px solid #e1e4ea;
-  border-radius: 14px;
-  background: #fff;
-  color: #253142;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-card-radius);
+  background: var(--wb-surface);
+  color: var(--wb-text);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -404,7 +404,7 @@
 
 .ppt-template-card:hover {
   transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--template-accent) 55%, #e1e4ea);
+  border-color: color-mix(in srgb, var(--template-accent) 55%, var(--wb-border));
   box-shadow: 0 10px 24px rgba(37, 49, 66, 0.1);
 }
 
@@ -496,19 +496,19 @@
 
 .ppt-template-badge {
   width: fit-content;
-  border: 2px solid var(--template-accent);
+  border: 1px solid var(--template-accent);
   border-radius: 999px;
-  background: #fff;
+  background: var(--wb-surface);
   color: var(--template-accent);
   padding: 3px 10px;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .ppt-template-desc {
   display: block;
   margin-top: 4px;
-  color: #626b7c;
+  color: var(--wb-muted);
   font-size: 12px;
   font-weight: 700;
   line-height: 1.45;
@@ -528,14 +528,14 @@
   margin-right: auto;
   color: #c63f32;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .ppt-template-cancel-btn,
 .ppt-generate-btn {
   min-height: 46px;
-  border: 2px solid #253142;
-  border-radius: 10px;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -547,19 +547,19 @@
 }
 
 .ppt-template-cancel-btn {
-  background: #ffffff;
-  color: #253142;
+  background: var(--wb-surface);
+  color: var(--wb-text);
 }
 
 .ppt-generate-btn {
-  background: #ff705d;
+  background: var(--wb-primary);
   color: #fff;
-  box-shadow: 0 5px 0 #253142;
+  box-shadow: 0 5px 0 var(--wb-text);
 }
 
 .ppt-generate-btn:active {
   transform: translateY(2px);
-  box-shadow: 0 3px 0 #253142;
+  box-shadow: 0 3px 0 var(--wb-text);
 }
 
 .ppt-template-cancel-btn:disabled,

@@ -3,9 +3,9 @@
 }
 
 #ed-ppt .ppt-audio-config-panel .audio-info-card {
-  border: 1.5px solid #c8c2b9;
-  border-radius: 6px;
-  background: #fffdf9;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-card-radius);
+  background: var(--wb-surface);
   padding: 12px;
   margin-bottom: 24px;
 }
@@ -20,17 +20,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #8a94a4;
+  color: var(--wb-muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-audio-config-panel .audio-meta-row strong {
   min-width: 0;
   overflow: hidden;
-  color: #253142;
+  color: var(--wb-text);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;

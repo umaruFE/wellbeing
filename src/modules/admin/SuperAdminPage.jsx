@@ -6,12 +6,12 @@ import { OrganizationManagement } from './OrganizationManagement';
 export const SuperAdminPage = () => {
   const { t } = useTranslation();
   return (
-    <div className="h-screen flex flex-col bg-surface">
+    <div className="h-screen flex flex-col bg-[var(--wb-page)]">
       {/* Header */}
-      <div className="bg-white border-b-2 border-stroke-light px-6 py-4 shrink-0">
+      <div className="bg-white border-b border-[var(--wb-border)] px-4 sm:px-6 py-4 shrink-0">
         <div className="flex items-center gap-2">
-          <Settings className="w-6 h-6 text-info" />
-          <h1 className="text-2xl font-bold text-primary">{t('admin.title')}</h1>
+          <Settings className="w-6 h-6 text-[var(--wb-primary)]" />
+          <h1 className="text-[28px] font-bold text-[var(--wb-text)]">{t('admin.title')}</h1>
         </div>
       </div>
 

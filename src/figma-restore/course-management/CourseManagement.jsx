@@ -1,12 +1,12 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../components/PageLoading';
 import { AlertTriangle, BookOpen, Plus, X } from 'lucide-react';
 import { CreateCourseModal } from '../create-course';
 import { CourseWorkflow } from '../course-workflow';
 import { CourseCard } from './CourseCard';
 import { CourseToolbar } from './CourseToolbar';
-import { demoCourses } from './courseData';
 import apiService from '../../services/api';
 import { getCourseCoverUrl, getCourseData, getCourseOverview, getDisplayCourseTitle } from '../courseImages';
 import './CourseManagement.css';
@@ -63,9 +63,11 @@ export function CourseManagement({
   const { t } = useTranslation();
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+  const courseListRequest = useRef(0);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
@@ -112,7 +114,7 @@ export function CourseManagement({
         duration: values.duration,
         theme: values.taskName || values.experiencePath || t('course.scenarioTask'),
         updatedAt: new Date().toLocaleDateString('zh-CN'),
-        accent: '#ff705d',
+        accent: 'var(--wb-primary)',
         coverTone: 'coral',
         classSize: values.classSize,
         storyContext: values.storyContext,
@@ -150,7 +152,9 @@ export function CourseManagement({
   }, [handleWorkflowBack]);
 
   const fetchCourses = useCallback(async (pageNum = 1, append = false) => {
+    const requestId = ++courseListRequest.current;
     try {
+      setLoadError(null);
       if (pageNum === 1) {
         setCoursesLoading(true);
       } else {
@@ -158,6 +162,7 @@ export function CourseManagement({
       }
 
       const result = await apiService.getCourses({ page: String(pageNum), limit: '12' });
+      if (requestId !== courseListRequest.current) return;
       const list = result?.data || [];
       const pagination = result?.pagination || {};
       const mapped = list.map((course, i) => {
@@ -190,7 +195,7 @@ export function CourseManagement({
                 year: 'numeric', month: '2-digit', day: '2-digit',
               }).replace(/\//g, '/')
             : '--',
-          accent: ['#ff705d', '#4482e5', '#9966d0', '#509f69', '#edb100', '#f4785e'][i % 6],
+          accent: ['var(--wb-primary)', 'var(--wb-primary)', 'var(--wb-primary)', '#39724f', '#edb100', 'var(--wb-primary)'][i % 6],
           coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
           active: i === 0,
           courseData,
@@ -225,16 +230,18 @@ export function CourseManagement({
       setHasMore(pageNum < (pagination.totalPages || 1));
       setPage(pageNum);
     } catch (error) {
+      if (requestId !== courseListRequest.current) return;
       console.error('获取课程列表失败:', error);
-      if (!append) setCourses(demoCourses.map(course => ({
-        ...course,
-        age: formatAge(course.age),
-        duration: formatDuration(course.duration),
-        classSize: formatClassSize(course.classSize),
-      })));
+      setLoadError(append ? 'more' : 'list');
+      if (!append) {
+        setCourses([]);
+        setHasMore(false);
+      }
     } finally {
-      setCoursesLoading(false);
-      setLoadingMore(false);
+      if (requestId === courseListRequest.current) {
+        setCoursesLoading(false);
+        setLoadingMore(false);
+      }
     }
   }, [t]);
 
@@ -289,7 +296,7 @@ export function CourseManagement({
       duration: values.duration,
       theme: values.taskName || values.experiencePath || t('course.scenarioTask'),
       updatedAt: new Date().toLocaleDateString('zh-CN'),
-      accent: '#ff705d',
+      accent: 'var(--wb-primary)',
       coverTone: 'coral',
       classSize: values.classSize,
       storyContext: values.storyContext,
@@ -383,8 +390,14 @@ export function CourseManagement({
           />
 
           {coursesLoading ? (
-            <div className="fr-cm-loading">
-              <span className="loading-text">{t('common.loading')}</span>
+            <PageLoading />
+          ) : loadError === 'list' ? (
+            <div className="fr-cm-empty">
+              <AlertTriangle size={24} aria-hidden="true" />
+              <strong role="alert">{t('course.fetchFailed')}</strong>
+              <button type="button" className="fr-cm-load-more-btn" onClick={() => fetchCourses()}>
+                {t('common.retry')}
+              </button>
             </div>
           ) : filteredCourses.length > 0 ? (
             <>
@@ -406,13 +419,14 @@ export function CourseManagement({
               </div>
               {hasMore && (
                 <div className="fr-cm-load-more">
+                  {loadError === 'more' && <span role="alert">{t('course.fetchFailed')}</span>}
                   <button
                     type="button"
                     className="fr-cm-load-more-btn"
                     onClick={loadMoreCourses}
                     disabled={loadingMore}
                   >
-                    {loadingMore ? t('common.loading') : t('course.loadMore')}
+                    {loadingMore ? t('common.loading') : t(loadError === 'more' ? 'common.retry' : 'course.loadMore')}
                   </button>
                 </div>
               )}

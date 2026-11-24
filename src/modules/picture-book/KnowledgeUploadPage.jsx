@@ -1,5 +1,6 @@
 import i18next from 'i18next';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../components/PageLoading';
 import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React from 'react';
 import { AlertCircle, CheckCircle2, Database, FileText, Trash2, UploadCloud, X, Search, Plus } from 'lucide-react';
@@ -202,22 +203,22 @@ export const KnowledgeUploadPage = () => {
   }, [list, filterCategory]);
 
   return (
-    <div className="min-h-full bg-[#f3f2ed] p-6">
+    <div className="min-h-full bg-[var(--wb-page)] p-4 sm:p-6">
       <div className="max-w-6xl mx-auto space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="flex items-center gap-2 text-primary-muted text-sm font-semibold">
+            <div className="flex items-center gap-2 text-[var(--wb-muted)] text-sm font-semibold">
               <Database className="w-4 h-4" />
               <LocalizedText id="knowledgeUploadUi.01e9cd0f1c" />
             </div>
-            <h1 className="text-2xl font-bold text-primary mt-1"><LocalizedText id="knowledgeUploadUi.edf216cb00" /></h1>
-            <p className="text-sm text-primary-muted mt-1"><LocalizedText id="knowledgeUploadUi.3b6ef811b8" /> {total} <LocalizedText id="knowledgeUploadUi.2df2ccaaaf" /></p>
+            <h1 className="text-[28px] font-bold text-[var(--wb-text)] mt-1"><LocalizedText id="knowledgeUploadUi.edf216cb00" /></h1>
+            <p className="text-sm text-[var(--wb-muted)] mt-1"><LocalizedText id="knowledgeUploadUi.3b6ef811b8" /> {total} <LocalizedText id="knowledgeUploadUi.2df2ccaaaf" /></p>
           </div>
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="h-11 px-5 rounded-lg bg-brand text-white font-bold border-2 border-brand-active hover:bg-brand-hover transition-colors flex items-center gap-2"
+            className="h-11 px-5 rounded-[10px] bg-[var(--wb-primary)] text-white font-bold border border-[var(--wb-primary)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center gap-2 min-h-10 active:bg-[var(--wb-primary-active)]"
           >
             <Plus className="w-4 h-4" />
             <LocalizedText id="knowledgeUploadUi.da905dfb4f" />
@@ -226,19 +227,19 @@ export const KnowledgeUploadPage = () => {
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-primary-muted" />
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--wb-muted)]" />
             <input
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              className="h-10 w-64 rounded-lg border-2 border-stroke-light pl-9 pr-3 text-sm outline-none focus:border-primary bg-white"
+              className="h-11 w-full sm:w-64 rounded-[10px] border border-[var(--wb-border)] pl-9 pr-3 text-sm outline-none focus:border-[var(--wb-selected-border)] bg-white min-h-11"
               placeholder={i18next.t('knowledgeUploadUi.335ac1602e')}
             />
           </div>
           <select
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
-            className="h-10 rounded-lg border-2 border-stroke-light px-3 text-sm outline-none focus:border-primary bg-white"
+            className="h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] bg-white min-h-11"
           >
             <option value="all"><LocalizedText id="knowledgeUploadUi.a8e369c4b6" /></option>
             {categoryOptions.map((opt) => (
@@ -249,19 +250,19 @@ export const KnowledgeUploadPage = () => {
 
         {/* List */}
         {loading ? (
-          <div className="text-center py-20 text-primary-muted"><LocalizedText id="common.loading" /></div>
+          <PageLoading />
         ) : list.length === 0 ? (
-          <div className="text-center py-20 border-2 border-dashed border-stroke-light rounded-lg bg-white">
-            <Database className="w-12 h-12 text-primary-muted mx-auto mb-3 opacity-40" />
-            <p className="text-primary-muted"><LocalizedText id="knowledgeUploadUi.d893505e93" /></p>
+          <div className="text-center py-20 border border-dashed border-[var(--wb-border)] rounded-[10px] bg-white">
+            <Database className="w-12 h-12 text-[var(--wb-muted)] mx-auto mb-3 opacity-40" />
+            <p className="text-[var(--wb-muted)]"><LocalizedText id="knowledgeUploadUi.d893505e93" /></p>
           </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(grouped).map(([cat, items]) => (
               <div key={cat}>
                 <div className="flex items-center gap-2 mb-3">
-                  <h2 className="text-lg font-bold text-primary">{cat}</h2>
-                  <span className="text-sm text-primary-muted">({items.length})</span>
+                  <h2 className="text-lg font-bold text-[var(--wb-text)]">{cat}</h2>
+                  <span className="text-sm text-[var(--wb-muted)]">({items.length})</span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {items.map((item) => {
@@ -272,36 +273,36 @@ export const KnowledgeUploadPage = () => {
                       srcType === 'txt' ? 'bg-gray-100 text-gray-700' :
                       'bg-green-100 text-green-700';
                     return (
-                    <div key={item.id} className="bg-white border-2 border-stroke-light rounded-lg p-4 hover:shadow-md transition-shadow group">
+                    <div key={item.id} className="bg-white border border-[var(--wb-border)] rounded-[14px] p-4 hover:shadow-md transition-shadow group">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-start gap-2 min-w-0 flex-1">
                           <div className="relative shrink-0 mt-0.5">
-                            <FileText className="w-5 h-5 text-primary-muted" />
+                            <FileText className="w-5 h-5 text-[var(--wb-muted)]" />
                             <span className={`absolute -top-1.5 -right-2 text-[8px] font-bold px-1 py-0.5 rounded ${srcColor}`}>
                               {srcLabel}
                             </span>
                           </div>
                           <div className="min-w-0">
-                            <div className="font-bold text-sm text-primary truncate">{item.title}</div>
+                            <div className="font-bold text-sm text-[var(--wb-text)] truncate">{item.title}</div>
                             {item.filename && (
                               item.oss_url ? (
                                 <a href={item.oss_url} target="_blank" rel="noopener noreferrer"
-                                   className="text-xs text-brand hover:underline truncate block mt-0.5" title={item.filename}>
+                                   className="text-xs text-[var(--wb-primary)] hover:underline truncate block mt-0.5" title={item.filename}>
                                   {item.filename}
                                 </a>
                               ) : (
-                                <div className="text-xs text-primary-muted truncate mt-0.5" title={item.filename}>{item.filename}</div>
+                                <div className="text-xs text-[var(--wb-muted)] truncate mt-0.5" title={item.filename}>{item.filename}</div>
                               )
                             )}
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-xs text-primary-muted">{item.ageRange || t('knowledgeUploadUi.allAges')}</span>
-                              <span className="text-xs text-primary-placeholder">·</span>
-                              <span className="text-xs text-primary-muted">{item.chunk_count} <LocalizedText id="knowledgeUploadUi.1a37ffe775" /></span>
+                              <span className="text-xs text-[var(--wb-muted)]">{item.ageRange || t('knowledgeUploadUi.allAges')}</span>
+                              <span className="text-xs text-[var(--wb-muted)]">·</span>
+                              <span className="text-xs text-[var(--wb-muted)]">{item.chunk_count} <LocalizedText id="knowledgeUploadUi.1a37ffe775" /></span>
                             </div>
                             {item.uploader_name && (
-                              <div className="text-xs text-primary-muted mt-0.5"><LocalizedText id="knowledgeUploadUi.4938caca56" /> {item.uploader_name}</div>
+                              <div className="text-xs text-[var(--wb-muted)] mt-0.5"><LocalizedText id="knowledgeUploadUi.4938caca56" /> {item.uploader_name}</div>
                             )}
-                            <div className="text-xs text-primary-placeholder mt-0.5">
+                            <div className="text-xs text-[var(--wb-muted)] mt-0.5">
                               {new Date(item.created_at).toLocaleDateString('zh-CN')}
                             </div>
                           </div>
@@ -309,7 +310,7 @@ export const KnowledgeUploadPage = () => {
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, item.title)}
-                          className="opacity-0 group-hover:opacity-100 text-primary-muted hover:text-red-500 transition-all p-1"
+                          className="opacity-0 group-hover:opacity-100 text-[var(--wb-muted)] hover:text-red-500 transition-all p-1 min-h-10"
                           title={i18next.t('common.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -327,14 +328,14 @@ export const KnowledgeUploadPage = () => {
 
       {/* Upload Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={closeModal}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeModal}>
           <div
-            className="bg-white rounded-lg border-2 border-stroke-light shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-[18px] border border-[var(--wb-border)] shadow-[0_8px_32px_rgba(48,43,59,0.10)] w-full max-w-xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 py-4 border-b border-stroke-light">
-              <h3 className="text-lg font-bold text-primary"><LocalizedText id="knowledgeUploadUi.7316801812" /></h3>
-              <button type="button" onClick={closeModal} className="text-primary-muted hover:text-primary">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-[var(--wb-border)]">
+              <h3 className="text-lg font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.7316801812" /></h3>
+              <button type="button" onClick={closeModal} className="text-[var(--wb-muted)] hover:text-[var(--wb-text)] min-h-10">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -342,21 +343,21 @@ export const KnowledgeUploadPage = () => {
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="space-y-2">
-                  <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.84428a4828" /></span>
+                  <span className="text-sm font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.84428a4828" /></span>
                   <input
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
-                    className="w-full h-11 rounded-lg border-2 border-stroke-light px-3 text-sm outline-none focus:border-primary"
+                    className="w-full h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] min-h-11"
                     placeholder={i18next.t('knowledgeUploadUi.e72899cd3a')}
                   />
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.435c5259e4" /></span>
+                  <span className="text-sm font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.435c5259e4" /></span>
                   <select
                     value={category}
                     onChange={(event) => setCategory(event.target.value)}
-                    className="w-full h-11 rounded-lg border-2 border-stroke-light px-3 text-sm outline-none focus:border-primary bg-white"
+                    className="w-full h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] bg-white min-h-11"
                   >
                     {categoryOptions.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -365,44 +366,44 @@ export const KnowledgeUploadPage = () => {
                 </label>
 
                 <label className="space-y-2">
-                  <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.753e22e76a" /></span>
+                  <span className="text-sm font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.753e22e76a" /></span>
                   <input
                     value={ageRange}
                     onChange={(event) => setAgeRange(event.target.value)}
-                    className="w-full h-11 rounded-lg border-2 border-stroke-light px-3 text-sm outline-none focus:border-primary"
+                    className="w-full h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] min-h-11"
                     placeholder={i18next.t('knowledgeUploadUi.b7324fb85e')}
                   />
                 </label>
               </div>
 
               <div className="space-y-2">
-                <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.926e52784a" /></span>
-                <label className="min-h-[120px] border-2 border-dashed border-stroke rounded-lg bg-surface flex flex-col items-center justify-center px-4 py-4 cursor-pointer hover:bg-surface-alt transition-colors">
-                  <UploadCloud className="w-8 h-8 text-primary-muted mb-2" />
-                  <span className="text-sm font-bold text-primary">{selectedNames || t('knowledgeUploadUi.pickFiles')}</span>
-                  <span className="text-xs text-primary-muted mt-1">{files.length > 0 ? t('knowledgeUploadUi.filesSelected', { count: files.length }) : t('knowledgeUploadUi.multiFileHint')}</span>
+                <span className="text-sm font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.926e52784a" /></span>
+                <label className="min-h-[120px] border border-dashed border-[var(--wb-border)] rounded-[10px] bg-[var(--wb-surface)] flex flex-col items-center justify-center px-4 py-4 cursor-pointer hover:bg-[var(--wb-page)] transition-colors">
+                  <UploadCloud className="w-8 h-8 text-[var(--wb-muted)] mb-2" />
+                  <span className="text-sm font-bold text-[var(--wb-text)]">{selectedNames || t('knowledgeUploadUi.pickFiles')}</span>
+                  <span className="text-xs text-[var(--wb-muted)] mt-1">{files.length > 0 ? t('knowledgeUploadUi.filesSelected', { count: files.length }) : t('knowledgeUploadUi.multiFileHint')}</span>
                   <input type="file" accept=".docx,.pdf,.txt" multiple className="hidden" onChange={handleFileChange} />
                 </label>
               </div>
 
               <div className="space-y-2">
-                <span className="text-sm font-bold text-primary"><LocalizedText id="knowledgeUploadUi.1fbf57e317" /></span>
+                <span className="text-sm font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.1fbf57e317" /></span>
                 <textarea
                   value={text}
                   onChange={(event) => setText(event.target.value)}
-                  className="w-full min-h-[100px] rounded-lg border-2 border-stroke-light p-3 text-sm outline-none focus:border-primary resize-y"
+                  className="w-full min-h-[100px] rounded-[10px] border border-[var(--wb-border)] p-3 text-sm outline-none focus:border-[var(--wb-selected-border)] resize-y"
                   placeholder={i18next.t('knowledgeUploadUi.a5f43336b1')}
                 />
               </div>
 
               {message && (
                 <div
-                  className={`flex items-start gap-2 rounded-lg border-2 px-3 py-2 text-sm ${
+                  className={`flex items-start gap-2 rounded-[10px] border px-3 py-2 text-sm ${
                     status === 'success'
                       ? 'bg-success-light border-success-border text-green-deep'
                       : status === 'error'
                         ? 'bg-red-50 border-red-200 text-red-700'
-                        : 'bg-surface border-stroke-light text-primary-secondary'
+                        : "bg-[var(--wb-surface)] border-[var(--wb-border)] text-[var(--wb-muted)]"
                   }`}
                 >
                   {status === 'success' ? <CheckCircle2 className="w-4 h-4 mt-0.5" /> : <AlertCircle className="w-4 h-4 mt-0.5" />}
@@ -414,14 +415,14 @@ export const KnowledgeUploadPage = () => {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="h-11 px-4 rounded-lg bg-white border-2 border-stroke-light text-primary-secondary font-bold hover:bg-surface-alt transition-colors"
+                  className="h-11 px-4 rounded-[10px] bg-white border border-[var(--wb-border)] text-[var(--wb-muted)] font-bold hover:bg-[var(--wb-page)] transition-colors min-h-10"
                 >
                   <LocalizedText id="common.cancel" />
                 </button>
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="h-11 px-5 rounded-lg bg-brand text-white font-bold border-2 border-brand-active disabled:opacity-50 disabled:cursor-not-allowed hover:bg-brand-hover transition-colors"
+                  className="h-11 px-5 rounded-[10px] bg-[var(--wb-primary)] text-white font-bold border border-[var(--wb-primary)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--wb-primary-hover)] transition-colors min-h-10 active:bg-[var(--wb-primary-active)]"
                 >
                   {status === 'uploading' ? t('common.uploading') : t('knowledgeUploadUi.uploadToKb')}
                 </button>

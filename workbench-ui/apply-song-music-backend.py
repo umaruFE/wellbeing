@@ -218,13 +218,44 @@ if(hintPickerSession!==session||!dialog.open||d!==draft||!d.questions.includes(q
     return text
 
 
+def live_catalog(module, text):
+    marker = '/* workbench-server-catalog */'
+    if marker in text:
+        return text
+    if module == 'song':
+        text = replace(text, 'async function startSongBackend(){', "async function startSongBackend(){\n ui.tab='mine';")
+        text = replace(text, "if(loaded.error)throw Error(loaded.error);\n  const next=await songBackend.load(items),write=M.saveLibrary(storage,KEY,next);", """const readOnly=window.WBWorkbenchApi.readOnly;
+  if(loaded.error&&!readOnly)throw Error(loaded.error);
+  const next=await songBackend.load(items);
+  if(readOnly){items=next;render();return;}
+  const write=M.saveLibrary(storage,KEY,next);""")
+        text = replace(text, "}catch(e){storageError=e.message;}\n render();\n}", "}catch(e){storageError=e.message;if(window.WBWorkbenchApi.readOnly)items=[];}\n render();\n}")
+        text = replace(text, "${B(`案例库 <span>${M.templates.length}", "${songBackend?'':B(`案例库 <span>${M.templates.length}")
+        text = replace(text, 'function saveDraft(ready=false,goHome=false,automatic=false){', """function saveDraft(ready=false,goHome=false,automatic=false){
+ if(songBackend&&window.WBWorkbenchApi.readOnly){if(!automatic)toast('当前连接只读后台，无法保存活动。');return false;}""")
+        text = replace(text, "return !!songServices?.songAudioSource(id,mode)||(mode===", "return songBackend?!!songServices.songAudioSource(id,mode):(mode===")
+        text = replace(text, "return M.melodies.filter(m=>!m.legacy&&", "return M.melodies.filter(m=>!m.legacy&&(!songBackend||songServices.songAudioSource(m.id,'vocal')||songServices.songAudioSource(m.id,'accompaniment'))&&")
+    else:
+        text = replace(text, 'async function startMusicBackend(){', "async function startMusicBackend(){\n homeTab='mine';")
+        text = replace(text, 'if(libraryError)throw Error(libraryError);\n  const next=await musicBackend.load(works.items);', """const readOnly=window.WBWorkbenchApi.readOnly;
+  if(libraryError&&!readOnly)throw Error(libraryError);
+  const next=await musicBackend.load(works.items);""")
+        text = replace(text, "  localStorage.setItem(WORKS,JSON.stringify(works));\n  await syncMusicBackend();", "  if(!readOnly){localStorage.setItem(WORKS,JSON.stringify(works));await syncMusicBackend();}")
+        text = replace(text, "}catch(e){libraryError=e.message;}\n render();\n}", "}catch(e){libraryError=e.message;if(window.WBWorkbenchApi.readOnly)works=L.normalize({...works,items:[],lastId:null});}\n render();\n}")
+        text = replace(text, "${B(`案例库 <span>${L.presets.length}", "${musicBackend?'':B(`案例库 <span>${L.presets.length}")
+        text = replace(text, "B('浏览案例库','home-tab','small','data-tab=\"library\"')+B('新建音乐活动'", "(musicBackend?'':B('浏览案例库','home-tab','small','data-tab=\"library\"'))+B('新建音乐活动'")
+        text = replace(text, ".concat(songChoices):songChoices", ":songChoices")
+        text = replace(text, 'function save(next,completion=null,automatic=false){', """function save(next,completion=null,automatic=false){
+  if(musicBackend&&window.WBWorkbenchApi.readOnly){if(!automatic)toast('当前连接只读后台，无法保存活动。');return false;}""")
+    return marker + text
+
+
 def patch(module, document):
     marker = '/* workbench-song-music-backend */'
-    if marker in document:
-        return document
     if module == 'song':
-        document = script(document, 'song/model.js', lambda body: replace(body, "(image.kind === 'upload' &&", "(image.kind === 'remote' && !!window.WBSongMusicBackend?.resourceUrl(image.value)) ||\n       (image.kind === 'upload' &&"))
-        return script(document, 'song/app.js', lambda body: marker + song(body))
+        if marker not in document:
+            document = script(document, 'song/model.js', lambda body: replace(body, "(image.kind === 'upload' &&", "(image.kind === 'remote' && !!window.WBSongMusicBackend?.resourceUrl(image.value)) ||\n       (image.kind === 'upload' &&"))
+        return script(document, 'song/app.js', lambda body: live_catalog(module, body if marker in body else marker + song(body)))
     if module == 'music':
-        return script(document, 'app.js', lambda body: marker + music(body))
+        return script(document, 'app.js', lambda body: live_catalog(module, body if marker in body else marker + music(body)))
     raise ValueError(f"Unsupported song/music module: {module}")

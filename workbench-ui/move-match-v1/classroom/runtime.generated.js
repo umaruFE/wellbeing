@@ -1111,6 +1111,41 @@ function MMCompletionCelebration({lesson,records,collected,wordMode,onReplay,onR
    el('button',{type:'button',className:'mm30-primary',onClick:onReview},'看看我的收获',el(Lt,{'aria-hidden':true}))));
 }
 
+function MMPauseGardenArt(){
+ const el=MM35_EL;
+ return el('svg',{className:'mm-break-art',viewBox:'0 0 250 164',fill:'none','aria-hidden':true,focusable:'false'},
+  el('ellipse',{cx:125,cy:85,rx:94,ry:72,fill:'#E5EED6'}),
+  el('circle',{cx:191,cy:34,r:17,fill:'#FFE8A4'}),
+  el('ellipse',{cx:125,cy:148,rx:89,ry:9,fill:'#B9CDA9',opacity:.3}),
+  el('path',{d:'M50 139C52 118 42 99 32 88M55 138C63 123 69 114 79 108M201 141C196 120 203 102 213 91',stroke:'#719B6A',strokeWidth:3,strokeLinecap:'round'}),
+  el('path',{d:'M43 114C25 114 21 99 25 89C42 89 49 100 43 114ZM52 129C36 131 28 122 29 112C43 108 53 117 52 129ZM59 128C58 111 67 102 80 104C82 117 72 126 59 128ZM201 115C199 99 210 91 223 94C222 108 213 116 201 115ZM199 133C209 120 220 120 227 127C219 141 207 141 199 133Z',fill:'#98BC80'}),
+  el('g',{transform:'rotate(8 141 88)'},el('rect',{x:99,y:35,width:88,height:112,rx:15,fill:'#B7DCE0',stroke:'#6EAFB8',strokeWidth:2}),el('rect',{x:107,y:43,width:72,height:96,rx:10,fill:'#E7F5EF'})),
+  el('g',{transform:'rotate(-8 114 84)'},
+   el('rect',{x:68,y:23,width:91,height:119,rx:17,fill:'#F8D47C',stroke:'#C29B50',strokeWidth:2}),
+   el('rect',{x:76,y:31,width:75,height:95,rx:12,fill:'#FFF9E8'}),
+   el('path',{d:'M91 70Q98 77 105 70M122 70Q129 77 136 70',stroke:'#476E68',strokeWidth:3,strokeLinecap:'round'}),
+   el('ellipse',{cx:88,cy:82,rx:7,ry:4,fill:'#F4BEA3',opacity:.6}),el('ellipse',{cx:138,cy:82,rx:7,ry:4,fill:'#F4BEA3',opacity:.6}),
+   el('path',{d:'M107 85Q114 94 121 85',stroke:'#476E68',strokeWidth:2.5,strokeLinecap:'round'}),
+   el('path',{d:'M103 133H123',stroke:'#DEB65D',strokeWidth:3,strokeLinecap:'round'})),
+  el('circle',{cx:177,cy:119,r:29,fill:'#FFF9E7',stroke:'#D7C89C',strokeWidth:2}),
+  el('circle',{cx:177,cy:119,r:22,fill:'#D7EAE3'}),
+  el('rect',{x:166,y:108,width:7,height:22,rx:3,fill:'#4A8279'}),el('rect',{x:181,y:108,width:7,height:22,rx:3,fill:'#4A8279'}),
+  el('path',{d:'M51 41v10M46 46h10',stroke:'#D7B76B',strokeWidth:2.5,strokeLinecap:'round'}),
+  el('circle',{cx:218,cy:66,r:3.5,fill:'#91BEBC'}));
+}
+function MMPauseMoment({collected,total,phase,onResume}){
+ const el=MM35_EL;
+ return el('div',{className:'mm-break'},
+  el('span',{className:'mm-break-tag'},el(Or,{'aria-hidden':true}),'游戏已暂停'),
+  el(MMPauseGardenArt,{}),
+  el('header',{className:'mm-break-heading'},el('h2',{},'Take a little break'),el('p',{},phase==='ready'?'准备好后，开始我们的分类挑战。':'休息一下，倒计时会在你回来后继续。')),
+  el('div',{className:'mm-break-progress'},
+   el('div',{className:'mm-break-progress-label'},el('span',{},'本轮已收集'),el('strong',{},collected,el('small',{},' / ',total,' 张卡片'))),
+   el('div',{className:'mm-break-progress-track',role:'progressbar','aria-label':'本轮已收集卡片','aria-valuemin':0,'aria-valuemax':total,'aria-valuenow':collected},el('i',{style:{width:`${total?collected/total*100:0}%`}}))),
+  el('button',{type:'button',className:'mm30-primary mm-break-resume',onClick:onResume},el(St,{'aria-hidden':true}),'继续游戏'),
+  el('p',{className:'mm-break-shortcut'},'也可以按 ',el('kbd',{},'P'),' 继续'));
+}
+
 function MM35Game({lesson,onLesson,demo=false}){
  const el=MM35_EL,adapter=window.MMClassroom,wordMode=lesson.mode==='word-sort';
  const [game,setGame]=(0,F.useState)(()=>{
@@ -1326,7 +1361,7 @@ function MM35Game({lesson,onLesson,demo=false}){
   done&&el('footer',{className:'reference-controls'},el('button',{className:'reference-primary',onClick:()=>review(null)},el('span',{},wordMode?'Review words':'Review sentences'),el(Ct,{}))),
   !done&&el(MM39SimulationStatus,{motion,seated,paused,phase:game.phase,outcome:game.outcome,onOpen:()=>setDialog('camera')}),
   flight&&game.phase==='flying'&&(0,Ys.createPortal)(el('div',{className:'mm35-flying','aria-hidden':true,style:{left:flight.x,top:flight.y,width:flight.w,height:flight.h,'--flight-x':flight.dx+'px','--flight-y':flight.dy+'px',animationPlayState:blocking?'paused':'running',zIndex:flight.placement.zIndex+1}},el(Vs,{word:archiveItem,placement:flight.placement,latest:true,presentationOnly:true})),flight.host),
-  paused&&!dialog&&el(ti,{kind:'mm35-pause',title:'Game paused',onClose:resume},el('div',{className:'mm35-pause-content'},el(Or,{}),el('h2',{},'A little pause.'),el('p',{},wordMode?'Your word is right where you left it.':'Your sentence is right where you left it.'),el('button',{className:'mm30-primary',onClick:resume},'Resume game',el(St,{})))),
+  paused&&!dialog&&el(ti,{kind:'mm35-break',title:'游戏已暂停',onClose:resume},el(MMPauseMoment,{collected:game.collected.length,total:lesson.items.length,phase:game.phase,onResume:resume})),
   dialog==='camera'&&el(MM39CameraDialog,{motion,seated,starting:game.phase==='ready',onClose:close,onDone:game.phase==='ready'?start:close}),
   dialog==='rules'&&el(ti,{kind:'rules',title:'Moves',onClose:close},el(MM28RulesContent,{categories:lesson.categories,seated,onSeated:setSeated,starting:game.phase==='ready',onDone:game.phase==='ready'?start:close,acquireStream:constraints=>{const stream=camera.video.current?.srcObject;return stream?.getVideoTracks().some(track=>track.readyState==='live')?stream.clone():navigator.mediaDevices.getUserMedia(constraints);}})),
   dialog==='review'&&el(ti,{kind:'mm35-review',title:wordMode?'Word collection':'Sentence collection',onClose:close},el(MM35Review,{lesson,records:game.records,initialCategory:reviewCategory,onClose:close})),

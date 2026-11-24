@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><script data-web-scope="classroom">(function(){'use strict';var valid=function(v){return typeof v==='string'&&/^[a-z0-9_-]{1,128}$/.test(v);};var scope;try{if(parent!==window&&parent.location.origin===location.origin)scope=parent.WB_WEB_SCOPE;}catch(_){}if(!valid(scope)&&valid(window.WB_WEB_SCOPE))scope=window.WB_WEB_SCOPE;if(!valid(scope)){try{scope=new URLSearchParams(location.search).get('scope');}catch(_){}}window.WB_WEB_SCOPE=valid(scope)?scope:'local';})();</script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>情绪应答 · 温室情绪电池 V3</title><link rel="icon" href="data:,"><link rel="stylesheet" href="../energy-v3.css?v=16"><script src="../game-lifecycle.js?v=1"></script><script src="../session.js?v=9"></script><script src="../energy-round.js?v=1" defer></script><script src="../energy-v3.js?v=14" defer></script></head>
+<body><main id="stage" data-phase="idle" aria-label="Energy Response">
+  <div class="paper-scene" aria-hidden="true"></div>
+  <div class="ground-scene" aria-hidden="true"></div>
+  <svg class="suspension" viewBox="0 0 640 230" aria-hidden="true">
+    <defs>
+      <g id="paper-clip">
+        <path d="M-14 204h28v12q0 8-8 8H-6q-8 0-8-8Z" fill="#cfac7d" opacity=".45"/>
+        <path d="M-12 181q0-6 6-6H6q6 0 6 6l3 29q1 10-8 10H-7q-9 0-8-10Z" fill="#ffd678" stroke="#97613d" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M-11 207q0 7 6 7H6q6 0 6-7l2 6q0 6-7 6H-7q-7 0-7-6Z" fill="#edba5c"/>
+        <path d="M-9 181q0-3 4-3H5q4 0 4 3l1 27q0 4-4 4H-6q-4 0-4-4Z" fill="#ffe5a4"/>
+        <path d="M0 175v19" fill="none" stroke="#765091" stroke-width="3.2"/>
+        <path d="M0 175v18" fill="none" stroke="#cda9ed" stroke-width="1.1"/>
+        <circle cy="195" r="6.3" fill="#ffdc58" stroke="#a16c35" stroke-width="1.5"/>
+        <path d="M-5 197a5.4 5.4 0 0 0 10 0" fill="none" stroke="#eeb43e" stroke-width="1.5"/>
+      </g>
+    </defs>
+    <path d="M207 0V195M433 0V195" fill="none" stroke="#765091" stroke-width="3.2"/>
+    <path d="M207 0V195M433 0V195" fill="none" stroke="#cda9ed" stroke-width="1.1"/>
+    <use href="#paper-clip" x="207"/><use href="#paper-clip" x="433"/>
+    <path d="M173 91Q320 87 467 91Q492 91 492 116V132Q492 157 467 157Q320 161 173 157Q148 157 148 132V116Q148 91 173 91Z" fill="#a779d6" stroke="#77518e" stroke-width="1.8"/>
+    <path d="M173 87Q320 83 467 87Q492 87 492 112V128Q492 153 467 153Q320 157 173 153Q148 153 148 128V112Q148 87 173 87Z" fill="#c39aef" stroke="#77518e" stroke-width="1.8"/>
+    <path d="M173 91Q320 87 467 91Q487 91 488 111" fill="none" stroke="#e4cbfa" stroke-width="2.2" stroke-linecap="round"/>
+    <circle cx="207" cy="97" r="4.2" fill="#ffdc58" stroke="#97673e" stroke-width="1.2"/>
+    <circle cx="433" cy="97" r="4.2" fill="#ffdc58" stroke="#97673e" stroke-width="1.2"/>
+  </svg>
+  <header class="heading"><h1 aria-label="Energy Response · 情绪充电花园"><svg viewBox="0 0 352 48" class="title-lettering" aria-hidden="true"><defs><path id="title-arc" d="M 12 33 Q 176 27 340 33"/></defs><text text-anchor="middle"><textPath href="#title-arc" startOffset="50%">Energy <tspan>Response</tspan></textPath></text></svg></h1></header>
+  <button class="help" id="helpBtn" aria-label="查看玩法">?</button>
+  <section class="question-panel" aria-label="Question"><p class="play-instructions"><span>Ask the <strong>question</strong>. Draw a <strong>mood</strong>.</span> <span>Answer with that <strong>feeling</strong>!</span></p><div class="question-label"><svg viewBox="0 0 28 24" aria-hidden="true"><path d="M4 3h20v14H13l-6 5v-5H4Z"/></svg><span>ASK</span></div><div class="question-scroll"><p id="question" tabindex="0">Do you want to join our family dinner?</p></div><div class="question-cue">Scroll to read more</div><div class="mood-result" aria-live="polite"><span class="status-dot"></span><span id="mood-status">What will your mood be?</span></div></section>
+  <div class="draw-invitation" aria-hidden="true"><span>PRESS TO DRAW</span><svg viewBox="0 0 28 28"><path d="M10 2h8v12h7L14 26 3 14h7Z" fill="#ffda43" stroke="#95643c" stroke-width="1.5" stroke-linejoin="round"/></svg></div>
+  <button id="drawBtn" class="battery-trigger" aria-label="Draw a mood">
+    <svg class="cap-socket" viewBox="0 0 156 80" aria-hidden="true"><path d="M12 60C12 46 144 46 144 60V65C144 80 12 80 12 65Z" fill="#ad84d4" stroke="#77518e" stroke-width="1.8"/><ellipse cx="78" cy="60" rx="66" ry="12" fill="#dac5f1" stroke="#77518e" stroke-width="1.8"/></svg>
+    <span class="cap-head"><svg class="cap-shell" viewBox="0 0 156 80" aria-hidden="true"><path class="cap-front" d="M10 17C10-1 146-1 146 17V49C146 69 10 69 10 49Z" stroke="#77518e" stroke-width="2"/><path d="M10 45C10 63 146 63 146 45V49C146 69 10 69 10 49Z" fill="#8954bd"/><ellipse class="cap-top" cx="78" cy="17" rx="68" ry="13" stroke="#77518e" stroke-width="2"/></svg><span class="cap-copy"><span class="button-icon" aria-hidden="true"></span><span class="button-text">DRAW</span></span></span>
+  </button>
+  <section class="hero-battery" role="img" aria-label="Energy level: not drawn"><div id="battery" class="battery-window"></div></section>
+  <svg class="energy-link" viewBox="0 0 1280 720" aria-hidden="true"><path id="selected-link" hidden/></svg>
+  <section class="mood-machine" aria-label="Six mood levels"><div class="answer-rows" id="answer-rows"></div><button id="arrowBtn" class="mood-pointer" aria-label="抽取情绪"><svg viewBox="0 0 40 38" aria-hidden="true"><path d="M7 5Q3 3 3 8v22q0 5 4 3l27-12q5-2 0-4Z"/></svg></button></section>
+  <div class="answers-cue" id="answers-cue" hidden>Scroll for all 6 moods</div>
+  <div class="controls"><button id="doneBtn" class="action complete" disabled><span class="button-icon" aria-hidden="true"></span><span class="button-text">COMPLETE</span></button></div>
+  <footer class="bottom-note"><span id="tip" role="status">Draw a mood, then say your answer.</span><span class="keys">R = DRAW <i>·</i> SPACE = COMPLETE</span></footer>
+  <dialog id="helpDialog" aria-labelledby="help-title"><h2 id="help-title">情绪应答 · 怎么玩</h2><p>老师先读左侧问句。按下电池顶部的 <b>DRAW</b> 或点击档位旁的箭头，随机抽取一种情绪。</p><p>电量条和指针会停在对应档位。学生用这个情绪读出选中的答句；想换一种情绪，可以再次按下顶部的 <b>AGAIN</b>。</p><p>老师确认<b>情绪表达贴切、句子读得准确</b>后，点击 <b>COMPLETE</b>；完成后可点击 <b>PLAY AGAIN</b> 重玩。</p><p class="help-keys">快捷键：R 抽取 · 空格 完成 · Esc 关闭说明</p><button id="closeHelp" class="help-close">知道了</button></dialog>
+</main></body></html>

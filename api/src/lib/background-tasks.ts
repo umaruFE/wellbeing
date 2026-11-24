@@ -234,8 +234,6 @@ async function pollTaskStatus(task: any) {
 }
 
 export async function listGenerationTasks(userId: string | null, scope: 'active' | 'history') {
-  await ensureGenerationTasksTable();
-
   const statuses = scope === 'active'
     ? ['queued', 'running']
     : ['succeeded', 'failed', 'cancelled'];
@@ -248,30 +246,33 @@ export async function listGenerationTasks(userId: string | null, scope: 'active'
   }
 
   const { rows } = await db.query(`
-    SELECT *
+    SELECT generation_tasks.*, current_setting('transaction_read_only') = 'on' AS read_only_session
     FROM generation_tasks
     WHERE ${where}
     ORDER BY created_at DESC
     LIMIT 100
   `, params);
 
-  if (scope === 'active') {
+  const tasks = rows.map(({ read_only_session, ...task }) => task);
+  if (scope === 'active' && rows[0]?.read_only_session === false) {
     const updated = [];
-    for (const task of rows) {
+    for (const task of tasks) {
       updated.push(await pollTaskStatus(task));
     }
     return updated.filter((task) => statuses.includes(task.status));
   }
 
-  return rows;
+  return tasks;
 }
 
 export async function getGenerationTask(id: string) {
-  await ensureGenerationTasksTable();
-  const { rows } = await db.query('SELECT * FROM generation_tasks WHERE id = $1', [id]);
-  const task = rows[0] || null;
-  if (!task) return null;
-  return pollTaskStatus(task);
+  const { rows } = await db.query(
+    "SELECT generation_tasks.*, current_setting('transaction_read_only') = 'on' AS read_only_session FROM generation_tasks WHERE id = $1",
+    [id],
+  );
+  if (!rows.length) return null;
+  const { read_only_session, ...task } = rows[0];
+  return read_only_session ? task : pollTaskStatus(task);
 }
 
 export async function cancelGenerationTask(id: string, userId?: string | null) {

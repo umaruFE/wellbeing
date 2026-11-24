@@ -846,10 +846,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-8xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
+      <div className="bg-white rounded-[18px] shadow-[0_20px_64px_rgba(48,43,59,0.16)] w-full max-w-8xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="p-6 border-b border-[var(--wb-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-purple-600 p-2 rounded-lg text-white">
+            <div className="bg-[var(--wb-primary)] p-2 rounded-lg text-white">
               <Wand2 className="w-5 h-5" />
             </div>
             <div>
@@ -866,7 +866,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
         </div>
 
         <div className="flex-1 flex overflow-hidden min-h-0">
-          <div className="w-80 border-r-2 border-stroke-light p-6 overflow-y-auto">
+          <div className="w-80 border-r border-[var(--wb-border)] p-6 overflow-y-auto">
             <RoleSelection
               selectedRoles={state.selectedRoles}
               onRoleSelect={handleRoleSelect}
@@ -879,10 +879,10 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                   <button
                     key={ratio.id}
                     onClick={() => handleRatioSelect(ratio)}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                    className={`flex flex-col items-center justify-center p-2 rounded-[var(--wb-control-radius)] border transition-all ${
                       state.aspectRatio.id === ratio.id
-                        ? 'border-purple-500 bg-purple-50 text-purple-700'
-                        : 'border-stroke-light hover:border-primary text-dark hover:bg-warning-light'
+                        ? 'border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary)]'
+                        : 'border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] text-dark hover:bg-[var(--wb-selected)]'
                     }`}
                   >
                     <div 
@@ -913,7 +913,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                 value={state.prompt}
                 onChange={(e) => handlePromptChange(e.target.value)}
                 placeholder={i18next.t('ipSceneUi.76ce99f502')}
-                className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-purple focus:border-purple-500 outline-none resize-none h-32 transition-all"
+                className="w-full border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] p-3 text-sm focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none resize-none h-32 transition-all"
                 disabled={state.isGenerating}
               />
             </div>
@@ -921,7 +921,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
             <button
               onClick={handleGenerate}
               disabled={state.isGenerating || !state.prompt.trim() || state.selectedRoles.length === 0}
-              className="w-full mt-6 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-medium"
+              className="min-h-10 w-full mt-6 px-4 py-3 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-medium"
             >
               {state.isGenerating ? (
                 <>
@@ -956,7 +956,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                   <h4 className="text-sm font-medium text-primary-secondary mb-3"><LocalizedText id="ipSceneUi.47fdaf743a" /></h4>
                   
                   <div className="space-y-3">
-                    <div className="bg-white rounded-lg p-3 border border-stroke">
+                    <div className="bg-white rounded-lg p-3 border border-[var(--wb-border)]">
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-medium text-primary-secondary"><LocalizedText id="ipSceneUi.e5c12c3be5" /></span>
                         <div className="flex gap-1">
@@ -1013,7 +1013,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                           <button
                             onClick={handleRegenerateBackground}
                             disabled={state.isLoadingBackground}
-                            className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                            className="text-xs px-2 py-1 bg-[var(--wb-primary)] text-white rounded hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                           >
                             {state.isLoadingBackground ? (
                               <>
@@ -1038,7 +1038,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                               }
                             }));
                           }}
-                          className="w-full text-xs text-primary-muted leading-relaxed border border-stroke rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-transparent"
+                          className="w-full text-xs text-primary-muted leading-relaxed border border-[var(--wb-border)] rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-transparent"
                           rows={4}
                           placeholder={i18next.t('assetPanel.iwBgPrompt')}
                           autoFocus
@@ -1051,7 +1051,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                     </div>
                     
                     {state.selectedRoles.map(roleName => (
-                      <div key={roleName} className="bg-white rounded-lg p-3 border border-stroke">
+                      <div key={roleName} className="bg-white rounded-lg p-3 border border-[var(--wb-border)]">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs font-medium text-primary-secondary">{roleName}</span>
                           <div className="flex gap-1">
@@ -1117,7 +1117,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                             <button
                               onClick={() => handleRegenerateRole(roleName)}
                               disabled={state.loadingRoles[roleName]}
-                              className="text-xs px-2 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                              className="text-xs px-2 py-1 bg-[var(--wb-primary)] text-white rounded hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
                             >
                               {state.loadingRoles[roleName] ? (
                                 <>
@@ -1145,7 +1145,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                                 }
                               }));
                             }}
-                            className="w-full text-xs text-primary-muted leading-relaxed border border-stroke rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-purple focus:border-transparent"
+                            className="w-full text-xs text-primary-muted leading-relaxed border border-[var(--wb-border)] rounded p-2 resize-none focus:outline-none focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-transparent"
                             rows={4}
                             placeholder={i18next.t('ipSceneUi.rolePromptPlaceholder', { name: roleName })}
                             autoFocus
@@ -1162,7 +1162,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
               )}
             </div>
 
-            <div className="flex-shrink-0 p-4 border-t-2 border-stroke-light bg-white">
+            <div className="flex-shrink-0 p-4 border-t border-[var(--wb-border)] bg-white">
               {/* <div className="mb-3">
                 <label className="text-sm font-medium text-primary-secondary mb-2 block">合成方式</label>
                 <div className="flex gap-2">
@@ -1198,7 +1198,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                 <button
                   onClick={handleReset}
                   disabled={state.isGenerating || state.isCompositing}
-                  className="px-4 py-2 border-2 border-stroke-light rounded-lg text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 transition-all flex items-center gap-2"
+                  className="min-h-10 px-4 py-2 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] disabled:opacity-50 transition-all flex items-center gap-2"
                 >
                   <RotateCcw className="w-4 h-4" />
                   <LocalizedText id="common.reset" />
@@ -1208,7 +1208,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                   <button
                     onClick={handleComposite}
                     disabled={state.isCompositing || !state.generatedAssets.background}
-                    className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
+                    className="min-h-10 px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-medium"
                   >
                     {state.isCompositing ? (
                       <>
@@ -1223,7 +1223,7 @@ export const IPSceneGenerator = ({ isOpen, onClose, onConfirm, userId, organizat
                   {state.compositeResult && (
                     <button
                       onClick={handleDownload}
-                      className="px-6 py-2 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2 font-medium"
+                      className="min-h-10 px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center gap-2 font-medium"
                     >
                       <Download className="w-4 h-4" />
                       <LocalizedText id="common.download" />

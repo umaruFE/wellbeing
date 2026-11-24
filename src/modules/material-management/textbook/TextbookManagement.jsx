@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../../components/PageLoading';
 import {
   BookOpen,
   Search,
@@ -176,14 +177,14 @@ export const TextbookManagement = () => {
       <div key={item.id}>
         <div
           className={`flex items-center gap-2 py-2 px-3 cursor-pointer transition-all duration-200 ${
-            isSelected ? 'bg-warning-light border-l-2 border-primary' : 'hover:bg-warning-light hover:border-l-2 hover:border-stroke-light'
+            isSelected ? "bg-[var(--wb-selected)] border-l border-[var(--wb-selected-border)]" : "hover:bg-[var(--wb-selected)] hover:border-l hover:border-[var(--wb-border)]"
           }`}
           style={{ paddingLeft: `${level * 16 + 12}px` }}
           onClick={() => handleSelectItem(item, level)}
         >
           {hasChildren && (
             <ChevronRight
-              className={`w-4 h-4 text-primary-placeholder transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+              className={`w-4 h-4 text-[var(--wb-muted)] transition-transform ${isExpanded ? 'rotate-90' : ''}`}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleExpand(item.id);
@@ -192,7 +193,7 @@ export const TextbookManagement = () => {
           )}
           {!hasChildren && <span className="w-4 h-4" />}
           <FolderOpen className={`w-4 h-4 ${level === 0 ? 'text-info-hover' : level === 1 ? 'text-success' : 'text-warning'}`} />
-          <span className="text-sm text-primary-secondary">{item.name}</span>
+          <span className="text-sm text-[var(--wb-muted)]">{item.name}</span>
         </div>
         {hasChildren && isExpanded && (
           <div>
@@ -229,30 +230,23 @@ export const TextbookManagement = () => {
   };
 
   if (loading) {
-    return (
-      <div className="h-full flex items-center justify-center bg-surface">
-        <div className="text-center">
-          <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-primary-muted">{t('common.loading')}</p>
-        </div>
-      </div>
-    );
+    return <PageLoading layout="fill" />;
   }
 
   return (
-    <div className="h-full flex overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden bg-[var(--wb-page)]">
       {/* Left - Textbook Tree */}
-      <div className="w-80 bg-surface border-r-2 border-stroke-light flex flex-col shrink-0">
+      <div className="w-full lg:w-80 max-h-[45vh] lg:max-h-none bg-[var(--wb-surface)] border-b lg:border-b-0 lg:border-r border-[var(--wb-border)] flex flex-col shrink-0">
         {/* Search Box */}
-        <div className="p-4 border-b-2 border-stroke-light">
+        <div className="p-4 border-b border-[var(--wb-border)]">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary-placeholder" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--wb-muted)]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t('textbook.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none text-sm transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none text-sm transition-all duration-200 min-h-11"
             />
           </div>
         </div>
@@ -263,10 +257,10 @@ export const TextbookManagement = () => {
         </div>
 
         {/* Bottom Button */}
-        <div className="p-4 border-t-2 border-stroke-light space-y-2">
+        <div className="p-4 border-t border-[var(--wb-border)] space-y-2">
           <button
             onClick={() => openModal('add')}
-            className="w-full px-4 py-2 border-2 border-primary rounded-xl hover:bg-warning-light hover:text-dark flex items-center justify-center gap-2 transition-all duration-200 font-medium shadow-neo"
+            className="w-full px-4 py-2 border border-[var(--wb-selected-border)] rounded-[10px] hover:bg-[var(--wb-selected)] hover:text-[var(--wb-text)] flex items-center justify-center gap-2 transition-all duration-200 font-medium shadow-none min-h-10"
           >
             <Plus className="w-4 h-4" />
             {t('textbook.addTextbook')}
@@ -275,14 +269,14 @@ export const TextbookManagement = () => {
       </div>
 
       {/* Right - Detail Area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="min-w-0 min-h-[360px] lg:min-h-0 flex-1 flex flex-col overflow-visible lg:overflow-hidden">
         {selectedItem ? (
           <>
             {/* Detail Header */}
-            <div className="bg-surface border-b-2 border-stroke-light px-6 py-4 shrink-0">
-              <div className="flex items-center justify-between">
+            <div className="bg-[var(--wb-surface)] border-b border-[var(--wb-border)] px-4 sm:px-6 py-4 shrink-0">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <div className="flex items-center gap-2 text-sm text-primary-muted mb-1">
+                  <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)] mb-1">
                     <span>{selectedItem.type || selectedItem.grade || t('textbook.textbookLabel')}</span>
                     {selectedItem.grade && (
                       <>
@@ -293,16 +287,16 @@ export const TextbookManagement = () => {
                     {selectedItem.unit && (
                       <>
                         <ChevronRight className="w-4 h-4" />
-                        <span className="text-info">{selectedItem.unit}</span>
+                        <span className="text-[var(--wb-primary)]">{selectedItem.unit}</span>
                       </>
                     )}
                   </div>
-                  <h2 className="text-xl font-bold text-primary">{selectedItem.name}</h2>
+                  <h2 className="text-xl font-bold text-[var(--wb-text)]">{selectedItem.name}</h2>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <button
                     onClick={() => openModal('edit', { ...selectedItem, level: selectedLevel })}
-                    className="px-3 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary flex items-center gap-2 text-sm transition-all duration-200 font-medium"
+                    className="px-3 py-2 border border-[var(--wb-border)] text-[var(--wb-text)] rounded-[10px] hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] flex items-center gap-2 text-sm transition-all duration-200 font-medium min-h-10"
                   >
                     <Edit className="w-4 h-4" />
                     {t('common.edit')}
@@ -310,7 +304,7 @@ export const TextbookManagement = () => {
                   {selectedLevel === 0 && (
                     <button
                       onClick={() => openModal('addGrade')}
-                      className="px-3 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary flex items-center gap-2 text-sm transition-all duration-200 font-medium"
+                      className="px-3 py-2 border border-[var(--wb-border)] text-[var(--wb-text)] rounded-[10px] hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] flex items-center gap-2 text-sm transition-all duration-200 font-medium min-h-10"
                     >
                       <Plus className="w-4 h-4" />
                       {t('textbook.addGrade')}
@@ -319,7 +313,7 @@ export const TextbookManagement = () => {
                   {selectedLevel === 1 && (
                     <button
                       onClick={() => openModal('addUnit')}
-                      className="px-3 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary flex items-center gap-2 text-sm transition-all duration-200 font-medium"
+                      className="px-3 py-2 border border-[var(--wb-border)] text-[var(--wb-text)] rounded-[10px] hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] flex items-center gap-2 text-sm transition-all duration-200 font-medium min-h-10"
                     >
                       <Plus className="w-4 h-4" />
                       {t('textbook.addUnit')}
@@ -327,7 +321,7 @@ export const TextbookManagement = () => {
                   )}
                   <button
                     onClick={() => openModal('delete', { ...selectedItem, level: selectedLevel })}
-                    className="px-3 py-2 border-2 border-error-border text-error rounded-xl hover:bg-error-light hover:border-error flex items-center gap-2 text-sm transition-all duration-200 font-medium"
+                    className="px-3 py-2 border border-error-border text-error rounded-[10px] hover:bg-error-light hover:border-error flex items-center gap-2 text-sm transition-all duration-200 font-medium min-h-10"
                   >
                     <Trash2 className="w-4 h-4" />
                     {t('common.delete')}
@@ -337,43 +331,43 @@ export const TextbookManagement = () => {
             </div>
 
             {/* Detail Content */}
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-w-0">
               <div className="grid grid-cols-1 gap-6">
                 {/* Basic Info */}
-                <div className="bg-surface rounded-[24px] border-2 border-stroke-light p-5 transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1">
-                  <h3 className="font-semibold text-primary mb-4 flex items-center gap-2">
-                    <Book className="w-5 h-5 text-info" />
+                <div className="bg-[var(--wb-surface)] rounded-[14px] border border-[var(--wb-border)] p-5 transition-all duration-200 hover:border-[var(--wb-selected-border)] hover:shadow-[0_4px_18px_rgba(48,43,59,0.06)] ">
+                  <h3 className="font-semibold text-[var(--wb-text)] mb-4 flex items-center gap-2">
+                    <Book className="w-5 h-5 text-[var(--wb-primary)]" />
                     {t('textbook.basicInfo')}
                   </h3>
                   <div className="space-y-3">
-                    <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                      <span className="text-primary-muted">{t('textbook.name')}</span>
-                      <span className="text-primary font-medium">{selectedItem.name}</span>
+                    <div className="flex justify-between py-2 border-b border-[var(--wb-border)]">
+                      <span className="text-[var(--wb-muted)]">{t('textbook.name')}</span>
+                      <span className="text-[var(--wb-text)] font-medium">{selectedItem.name}</span>
                     </div>
                     {selectedItem.type && (
-                      <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                        <span className="text-primary-muted">{t('textbook.type')}</span>
-                        <span className="text-primary font-medium">{selectedItem.type}</span>
+                      <div className="flex justify-between py-2 border-b border-[var(--wb-border)]">
+                        <span className="text-[var(--wb-muted)]">{t('textbook.type')}</span>
+                        <span className="text-[var(--wb-text)] font-medium">{selectedItem.type}</span>
                       </div>
                     )}
                     {selectedItem.grade && (
-                      <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                        <span className="text-primary-muted">{t('textbook.grade')}</span>
-                        <span className="text-primary font-medium">{selectedItem.grade}</span>
+                      <div className="flex justify-between py-2 border-b border-[var(--wb-border)]">
+                        <span className="text-[var(--wb-muted)]">{t('textbook.grade')}</span>
+                        <span className="text-[var(--wb-text)] font-medium">{selectedItem.grade}</span>
                       </div>
                     )}
                     {selectedItem.unit_code && (
-                      <div className="flex justify-between py-2 border-b-2 border-stroke-light">
-                        <span className="text-primary-muted">{t('textbook.unitCode')}</span>
-                        <span className="text-primary font-medium">{selectedItem.unit_code}</span>
+                      <div className="flex justify-between py-2 border-b border-[var(--wb-border)]">
+                        <span className="text-[var(--wb-muted)]">{t('textbook.unitCode')}</span>
+                        <span className="text-[var(--wb-text)] font-medium">{selectedItem.unit_code}</span>
                       </div>
                     )}
                     {selectedItem.keywords && (
                       <div className="flex justify-between py-2">
-                        <span className="text-primary-muted">{t('common.tags')}</span>
+                        <span className="text-[var(--wb-muted)]">{t('common.tags')}</span>
                         <div className="flex flex-wrap gap-1 justify-end">
                           {(Array.isArray(selectedItem.keywords) ? selectedItem.keywords : []).map((kw, idx) => (
-                            <span key={idx} className="px-2 py-0.5 bg-info-light text-info rounded text-xs">
+                            <span key={idx} className="px-2 py-0.5 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded text-xs">
                               {kw}
                             </span>
                           ))}
@@ -388,9 +382,9 @@ export const TextbookManagement = () => {
         ) : (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <Layers className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
-              <p className="text-primary-muted">{t('textbook.selectFromLeft')}</p>
-              <p className="text-sm text-primary-placeholder mt-1">{t('textbook.threeLevelHint')}</p>
+              <Layers className="w-16 h-16 text-[var(--wb-muted)] mx-auto mb-4" />
+              <p className="text-[var(--wb-muted)]">{t('textbook.selectFromLeft')}</p>
+              <p className="text-sm text-[var(--wb-muted)] mt-1">{t('textbook.threeLevelHint')}</p>
             </div>
           </div>
         )}
@@ -399,52 +393,52 @@ export const TextbookManagement = () => {
       {/* Modals */}
       {modalType && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-surface rounded-[24px] border-2 border-stroke-light shadow-[4px_4px_0px_0px_var(--color-dark)] w-full max-w-md mx-4">
+          <div className="bg-[var(--wb-surface)] rounded-[18px] border border-[var(--wb-border)] shadow-[0_4px_18px_rgba(48,43,59,0.06)] w-full max-w-md mx-4">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b-2 border-stroke-light">
-              <h3 className="text-lg font-semibold text-primary">
+            <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-6 py-4 border-b border-[var(--wb-border)]">
+              <h3 className="text-lg font-semibold text-[var(--wb-text)]">
                 {modalType === 'add' && t('textbook.addTextbook')}
                 {modalType === 'addGrade' && t('textbook.addGrade')}
                 {modalType === 'addUnit' && t('textbook.addUnit')}
                 {modalType === 'edit' && t('common.edit')}
                 {modalType === 'delete' && t('common.confirmDelete')}
               </h3>
-              <button onClick={closeModal} className="p-1 hover:bg-surface-alt rounded-lg">
-                <X className="w-5 h-5 text-primary-placeholder" />
+              <button onClick={closeModal} className="p-1 hover:bg-[var(--wb-page)] rounded-[10px] min-h-10">
+                <X className="w-5 h-5 text-[var(--wb-muted)]" />
               </button>
             </div>
 
             {/* Content */}
-            <div className="p-6">
+            <div className="p-4 sm:p-6 min-w-0">
               {modalType === 'delete' ? (
                 <div className="text-center">
                   <div className="w-12 h-12 bg-error-light rounded-full flex items-center justify-center mx-auto mb-4">
                     <Trash2 className="w-6 h-6 text-error" />
                   </div>
-                  <p className="text-primary-secondary mb-2">{t('textbook.confirmDeleteMsg')}</p>
-                  <p className="font-medium text-primary">{modalData.name}</p>
+                  <p className="text-[var(--wb-muted)] mb-2">{t('textbook.confirmDeleteMsg')}</p>
+                  <p className="font-medium text-[var(--wb-text)]">{modalData.name}</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.name')}</label>
+                    <label className="block text-sm font-medium text-[var(--wb-muted)] mb-1">{t('textbook.name')}</label>
                     <input
                       type="text"
                       value={modalData.name || ''}
                       onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
-                      className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
+                      className="w-full px-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all duration-200 min-h-11"
                       placeholder={t('textbook.namePlaceholder')}
                     />
                   </div>
 
                   {(modalType === 'add' || modalType === 'edit') && modalData.level === 0 && (
                     <div>
-                      <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.type')}</label>
+                      <label className="block text-sm font-medium text-[var(--wb-muted)] mb-1">{t('textbook.type')}</label>
                       <input
                         type="text"
                         value={modalData.type || modalData.name || ''}
                         onChange={(e) => setModalData({ ...modalData, type: e.target.value, name: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
+                        className="w-full px-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all duration-200 min-h-11"
                         placeholder={t('textbook.typePlaceholder')}
                       />
                     </div>
@@ -452,12 +446,12 @@ export const TextbookManagement = () => {
 
                   {(modalType === 'addGrade' || modalType === 'edit') && modalData.level === 1 && (
                     <div>
-                      <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.grade')}</label>
+                      <label className="block text-sm font-medium text-[var(--wb-muted)] mb-1">{t('textbook.grade')}</label>
                       <input
                         type="text"
                         value={modalData.grade || modalData.name || ''}
                         onChange={(e) => setModalData({ ...modalData, grade: e.target.value, name: e.target.value })}
-                        className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
+                        className="w-full px-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all duration-200 min-h-11"
                         placeholder={t('textbook.gradePlaceholder')}
                       />
                     </div>
@@ -466,32 +460,32 @@ export const TextbookManagement = () => {
                   {modalType === 'addUnit' && (
                     <>
                       <div>
-                        <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.unitName')}</label>
+                        <label className="block text-sm font-medium text-[var(--wb-muted)] mb-1">{t('textbook.unitName')}</label>
                         <input
                           type="text"
                           value={modalData.name || ''}
                           onChange={(e) => setModalData({ ...modalData, name: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
+                          className="w-full px-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all duration-200 min-h-11"
                           placeholder={t('textbook.unitNamePlaceholder')}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.unitCode')}</label>
+                        <label className="block text-sm font-medium text-[var(--wb-muted)] mb-1">{t('textbook.unitCode')}</label>
                         <input
                           type="text"
                           value={modalData.unit || ''}
                           onChange={(e) => setModalData({ ...modalData, unit: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
+                          className="w-full px-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all duration-200 min-h-11"
                           placeholder={t('textbook.unitCodePlaceholder')}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-primary-secondary mb-1">{t('textbook.keywordsLabel')}</label>
+                        <label className="block text-sm font-medium text-[var(--wb-muted)] mb-1">{t('textbook.keywordsLabel')}</label>
                         <input
                           type="text"
                           value={modalData.keywords || ''}
                           onChange={(e) => setModalData({ ...modalData, keywords: e.target.value })}
-                          className="w-full px-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
+                          className="w-full px-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all duration-200 min-h-11"
                           placeholder={t('textbook.keywordsPlaceholder')}
                         />
                       </div>
@@ -502,10 +496,10 @@ export const TextbookManagement = () => {
             </div>
 
             {/* Bottom Buttons */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t-2 border-stroke-light">
+            <div className="flex items-center justify-end gap-3 px-4 sm:px-6 py-4 border-t border-[var(--wb-border)]">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-dark border-2 border-stroke-light rounded-xl hover:bg-warning-light hover:border-primary transition-all duration-200 font-medium"
+                className="px-4 py-2 text-[var(--wb-text)] border border-[var(--wb-border)] rounded-[10px] hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] transition-all duration-200 font-medium min-h-10"
               >
                 {t('common.cancel')}
               </button>
@@ -517,10 +511,10 @@ export const TextbookManagement = () => {
                   if (modalType === 'edit') handleEdit();
                   if (modalType === 'delete') handleDelete();
                 }}
-                className={`px-4 py-2 rounded-xl transition-all duration-200 flex items-center gap-2 font-bold shadow-neo ${
+                className={`px-4 py-2 rounded-[10px] transition-all duration-200 flex items-center gap-2 font-bold shadow-none min-h-10 ${
                   modalType === 'delete'
-                    ? 'bg-dark text-white border-2 border-primary hover:bg-error hover:border-error'
-                    : 'bg-dark text-white border-2 border-primary hover:bg-warning-light hover:text-dark'
+                    ? "bg-[var(--wb-primary)] text-white border border-[var(--wb-selected-border)] hover:bg-error hover:border-error"
+                    : "bg-[var(--wb-primary)] text-white border border-[var(--wb-selected-border)] hover:bg-[var(--wb-primary-hover)] hover:text-white"
                 }`}
               >
                 <Check className="w-4 h-4" />

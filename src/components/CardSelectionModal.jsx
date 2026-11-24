@@ -70,11 +70,11 @@ export const CardSelectionModal = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-[18px] shadow-[0_20px_64px_rgba(48,43,59,0.16)] w-full max-w-5xl max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between shrink-0">
+        <div className="p-6 border-b border-[var(--wb-border)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl ${isAudioType ? 'bg-gradient-to-br from-blue-500 to-cyan-500' : 'bg-gradient-to-br from-purple-500 to-pink-500'}`}>
+            <div className="p-2 rounded-[var(--wb-control-radius)] bg-[var(--wb-primary)]">
               {isAudioType ? <Music className="w-5 h-5 text-white" /> : <RefreshCw className="w-5 h-5 text-white" />}
             </div>
             <div>
@@ -90,7 +90,7 @@ export const CardSelectionModal = ({
               setPlayingIndex(null);
               onClose();
             }}
-            className="p-2 hover:bg-surface-alt rounded-xl transition-colors"
+            className="p-2 hover:bg-surface-alt rounded-[var(--wb-control-radius)] transition-colors"
           >
             <X className="w-5 h-5 text-primary-placeholder" />
           </button>
@@ -101,9 +101,9 @@ export const CardSelectionModal = ({
           {isLoading ? (
             <div className="flex flex-col items-center justify-center h-64 space-y-4">
               <div className="relative">
-                <div className={`w-16 h-16 border-4 rounded-full animate-spin ${isAudioType ? 'border-info-border border-t-blue-600' : 'border-purple-200 border-t-purple-600'}`}></div>
+                <div className={`w-16 h-16 border-4 rounded-full animate-spin ${isAudioType ? 'border-info-border border-t-blue-600' : 'border-[var(--wb-selected-border)] border-t-purple-600'}`}></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  {isAudioType ? <Music className="w-6 h-6 text-info animate-pulse" /> : <RefreshCw className="w-6 h-6 text-purple animate-spin" />}
+                  {isAudioType ? <Music className="w-6 h-6 text-info animate-pulse" /> : <RefreshCw className="w-6 h-6 text-[var(--wb-primary)] animate-spin" />}
                 </div>
               </div>
               <p className="text-primary-muted animate-pulse">
@@ -142,9 +142,9 @@ export const CardSelectionModal = ({
                     {image.loading ? (
                       <div className="w-full h-full flex flex-col items-center justify-center">
                         <div className="relative mb-3">
-                          <div className={`w-12 h-12 border-4 rounded-full animate-spin ${isAudioType ? 'border-info-border border-t-blue-600' : 'border-purple-200 border-t-purple-600'}`}></div>
+                          <div className={`w-12 h-12 border-4 rounded-full animate-spin ${isAudioType ? 'border-info-border border-t-blue-600' : 'border-[var(--wb-selected-border)] border-t-purple-600'}`}></div>
                           <div className="absolute inset-0 flex items-center justify-center">
-                            {isAudioType ? <Music className="w-5 h-5 text-info animate-pulse" /> : <RefreshCw className="w-5 h-5 text-purple animate-spin" />}
+                            {isAudioType ? <Music className="w-5 h-5 text-info animate-pulse" /> : <RefreshCw className="w-5 h-5 text-[var(--wb-primary)] animate-spin" />}
                           </div>
                         </div>
                         <p className="text-xs text-primary-muted animate-pulse">{t('assetGenerator.generating')}</p>
@@ -164,7 +164,7 @@ export const CardSelectionModal = ({
                             onClick={(e) => handlePlayAudio(index, e)}
                             className={`mt-3 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 transition-colors ${
                               playingIndex === index
-                                ? 'bg-info-light0 text-white'
+                                ? 'bg-[var(--wb-primary)] text-white'
                                 : 'bg-info-light text-info hover:bg-info-light'
                             }`}
                           >
@@ -213,7 +213,7 @@ export const CardSelectionModal = ({
 
                   {/* 选中标记 */}
                   {selectedIndex === index && (
-                    <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center ${isAudioType ? 'bg-info-light0' : 'bg-purple-500'}`}>
+                    <div className={`absolute top-1.5 right-1.5 w-5 h-5 rounded-full flex items-center justify-center bg-[var(--wb-primary)]`}>
                       <Check className="w-3 h-3 text-white" />
                     </div>
                   )}
@@ -229,7 +229,7 @@ export const CardSelectionModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-stroke-light bg-surface shrink-0">
+        <div className="p-6 border-t border-[var(--wb-border)] bg-surface shrink-0">
           <div className="flex items-center justify-between">
             <div className="text-sm text-primary-muted">
               {selectedIndex !== null
@@ -244,19 +244,17 @@ export const CardSelectionModal = ({
                   setPlayingIndex(null);
                   onClose();
                 }}
-                className="px-6 py-2.5 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all font-medium"
+                className="min-h-10 px-6 py-2.5 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] transition-all font-medium"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={handleConfirm}
                 disabled={selectedIndex === null}
-                className={`
-                  px-8 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-2
+                className={`min-h-10
+                  px-8 py-2.5 rounded-[var(--wb-control-radius)] font-medium transition-all duration-200 flex items-center gap-2
                   ${selectedIndex !== null
-                    ? isAudioType
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-black hover:from-blue-600 hover:to-cyan-600 shadow-lg shadow-blue-500/25'
-                      : 'bg-gradient-to-r from-purple-500 to-pink-500 text-black hover:from-purple-600 hover:to-pink-600 shadow-lg shadow-purple-500/25'
+                    ? 'bg-[var(--wb-primary)] text-white hover:bg-[var(--wb-primary-hover)] active:bg-[var(--wb-primary-active)]'
                     : 'bg-stroke text-primary-placeholder cursor-not-allowed'
                   }
                 `}

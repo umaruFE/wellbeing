@@ -60,7 +60,7 @@ export const HistoryVersionView = ({
   return (
     <div className="h-full flex flex-col bg-white">
         {/* Header */}
-        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
+        <div className="p-6 border-b border-[var(--wb-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-info p-2 rounded-lg text-white">
               <Clock className="w-5 h-5" />
@@ -72,14 +72,14 @@ export const HistoryVersionView = ({
           </div>
           <button 
             onClick={onClose}
-            className="p-2 hover:bg-surface-alt rounded-lg text-primary-placeholder hover:text-primary-secondary transition-colors"
+            className="p-2 hover:bg-surface-alt rounded-[var(--wb-control-radius)] text-primary-placeholder hover:text-primary-secondary transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Version Info Bar */}
-        <div className="px-6 py-4 bg-surface border-b-2 border-stroke-light flex items-center justify-between">
+        <div className="px-6 py-4 bg-surface border-b border-[var(--wb-border)] flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="text-sm">
               <span className="text-primary-muted">{t('historyVersion.version')} </span>
@@ -97,7 +97,7 @@ export const HistoryVersionView = ({
             <button
               onClick={handlePrevious}
               disabled={selectedIndex === 0}
-              className="px-4 py-2 bg-white border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
+              className="min-h-10 px-4 py-2 bg-white border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
               <ChevronLeft className="w-4 h-4" />
               {t('historyVersion.previous')}
@@ -105,14 +105,14 @@ export const HistoryVersionView = ({
             <button
               onClick={handleNext}
               disabled={selectedIndex === historyVersions.length - 1}
-              className="px-4 py-2 bg-white border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
+              className="min-h-10 px-4 py-2 bg-white border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-all font-medium"
             >
               {t('historyVersion.next')}
               <ChevronRight className="w-4 h-4" />
             </button>
             <button
               onClick={handleRestore}
-              className="px-4 py-2 bg-info text-white rounded-lg hover:bg-info-active flex items-center gap-2 transition-colors"
+              className="min-h-10 px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] flex items-center gap-2 transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               {t('historyVersion.restore')}
@@ -131,12 +131,12 @@ export const HistoryVersionView = ({
               )}
               
               {/* Version Data Preview */}
-              <div className="bg-surface rounded-xl p-4 border-2 border-stroke-light">
+              <div className="bg-surface rounded-xl p-4 border border-[var(--wb-border)]">
                 <div className="flex items-center gap-2 mb-3">
                   <FileText className="w-4 h-4 text-primary-muted" />
                   <span className="text-xs font-bold text-primary-muted uppercase">{t('historyVersion.preview')}</span>
                 </div>
-                <pre className="text-xs text-dark overflow-auto max-h-96 bg-white p-4 rounded-xl border-2 border-stroke-light">
+                <pre className="text-xs text-dark overflow-auto max-h-96 bg-white p-4 rounded-xl border border-[var(--wb-border)]">
                   {JSON.stringify(currentVersion.data, null, 2)}
                 </pre>
               </div>

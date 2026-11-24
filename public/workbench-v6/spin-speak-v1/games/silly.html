@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-web-scope="classroom">(function(){'use strict';var valid=function(v){return typeof v==='string'&&/^[a-z0-9_-]{1,128}$/.test(v);};var scope;try{if(parent!==window&&parent.location.origin===location.origin)scope=parent.WB_WEB_SCOPE;}catch(_){}if(!valid(scope)&&valid(window.WB_WEB_SCOPE))scope=window.WB_WEB_SCOPE;if(!valid(scope)){try{scope=new URLSearchParams(location.search).get('scope');}catch(_){}}window.WB_WEB_SCOPE=valid(scope)?scope:'local';})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Speak · Silly Machine</title>
+<style>@layer legacy {
+:root{
+  --grass:#3CB371;--grass-d:#2E9E5B;--yellow:#FFC93C;--yellow-dark:#E8960C;
+  --coral:#FF6B5B;--purple:#8B5CF6;--purple-d:#5B3DB8;--teal:#22C3D6;
+  --cream:#FFF3D6;--ink:#1E1240;--night:#160C33;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  background:#0C0720;display:grid;place-items:center;color:#fff;user-select:none;
+}
+#stage{
+  width:1280px;height:720px;flex:0 0 auto;position:relative;transform-origin:center center;overflow:hidden;
+  background:radial-gradient(1000px 480px at 50% -140px,#3B2578 0%,#2A1A5C 55%,#1C113E 100%);
+  border:6px solid #fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;padding:16px 34px 14px;
+}
+
+/* ---------- top ---------- */
+.top{flex:0 0 auto;position:relative;padding-right:44px}
+.badge{display:inline-flex;align-items:center;gap:10px;background:#E8A33A;color:#3A2370;border-radius:11px;
+  padding:6px 20px;font-size:21px;font-weight:900;letter-spacing:1.4px;box-shadow:0 4px 0 #b97f22}
+.badge .ic{font-size:23px;line-height:1}
+.instr{margin-top:6px;font-size:14px;line-height:1.4;color:#D8CCFF;font-weight:700}
+.instr b{color:#FFD23F}
+.iconbtn{position:absolute;right:0;top:2px;width:34px;height:34px;border:3px solid rgba(255,255,255,.75);
+  border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:15px;font-weight:900;
+  cursor:pointer;line-height:1}
+.iconbtn:active{transform:translateY(2px)}
+
+/* ---------- question ---------- */
+.qwrap{flex:0 0 auto;margin-top:10px;display:flex;justify-content:center}
+.q{background:rgba(255,255,255,.08);border:2px dashed rgba(255,255,255,.28);border-radius:16px;
+  padding:10px 30px;font-size:28px;font-weight:900;color:#fff;letter-spacing:.2px}
+
+/* ---------- machines ---------- */
+.mstage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.row{display:flex;justify-content:center;align-items:flex-end}
+.row .unit:first-child{margin-right:80px}
+.row .unit:last-child{margin-left:80px}
+.unit{display:flex;flex-direction:column;align-items:center}
+.tag{font-size:16px;font-weight:900;letter-spacing:2px;color:#FFE08A;background:rgba(0,0,0,.22);
+  border:2px solid rgba(255,224,138,.55);border-radius:999px;padding:3px 18px;margin-bottom:6px}
+.machine{position:relative;width:268px;height:264px;cursor:pointer;user-select:none}
+.barrel{position:absolute;left:0;top:0;width:268px;height:232px;border-radius:34px;z-index:2;
+  background:linear-gradient(160deg,#F7BE56 0%,#E89B2F 55%,#D1841F 100%);
+  border:5px solid #8A5410;box-shadow:inset 0 4px 0 rgba(255,255,255,.45),inset 0 -8px 14px rgba(120,70,0,.35),
+    0 8px 0 #8A5410,0 14px 22px rgba(0,0,0,.4)}
+.rim{position:absolute;left:14px;right:14px;top:12px;bottom:12px;border-radius:24px;z-index:3;
+  border:5px solid #8A5410;background:#FBE9C6;
+  box-shadow:inset 0 3px 0 rgba(255,255,255,.7),inset 0 -4px 8px rgba(140,90,20,.25);overflow:hidden}
+.screen{position:absolute;left:26px;right:26px;top:26px;height:118px;border-radius:14px;z-index:4;overflow:hidden;
+  background:linear-gradient(180deg,#241A4D,#35266B);border:4px solid #6E470C;
+  box-shadow:inset 0 0 18px rgba(0,0,0,.65)}
+.screen::before,.screen::after{content:'';position:absolute;left:0;right:0;height:20px;z-index:6;pointer-events:none}
+.screen::before{top:0;background:linear-gradient(180deg,rgba(20,12,46,.92),transparent)}
+.screen::after{bottom:0;background:linear-gradient(0deg,rgba(20,12,46,.92),transparent)}
+.strip{position:absolute;left:0;right:0;top:0;display:flex;flex-direction:column;align-items:center}
+.item{height:118px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;flex:0 0 auto}
+.item .e{font-size:46px;line-height:1;filter:drop-shadow(0 2px 0 rgba(0,0,0,.3))}
+.item .t{font-size:14px;font-weight:900;color:#FFE08A;white-space:nowrap}
+.idleitem{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;z-index:5}
+.idleitem .q{font-size:42px;font-weight:900;color:#FFD23F;line-height:1;text-shadow:0 3px 0 rgba(0,0,0,.4);background:none;border:0;padding:0}
+.idleitem .go{font-size:12px;font-weight:900;color:#CFE8FF;letter-spacing:.5px}
+.result{position:absolute;left:26px;right:26px;top:26px;height:118px;border-radius:10px;z-index:5;
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  background:linear-gradient(180deg,#2B2057,#211844);border-top:3px solid rgba(255,210,63,.85)}
+.result .e{font-size:48px;line-height:1}
+.result .t{font-size:18px;font-weight:900;color:#FFE08A;white-space:nowrap;text-shadow:0 2px 0 rgba(0,0,0,.4)}
+.knobplate{position:absolute;right:18px;bottom:26px;width:52px;height:40px;border-radius:10px;z-index:4;
+  background:#C77F22;border:4px solid #8A5410}
+.stand{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:118px;height:30px;z-index:1;
+  background:linear-gradient(180deg,#C9842B,#9C6218);border:5px solid #8A5410;border-top:none;border-radius:0 0 16px 16px}
+.crank{position:absolute;right:-46px;top:78px;width:86px;height:86px;z-index:1;transform-origin:10px 10px}
+.crank .rod{position:absolute;left:6px;top:6px;width:86px;height:12px;border-radius:6px;
+  background:linear-gradient(180deg,#C9842B,#8A5410);border:3px solid #6E470C;transform:rotate(-32deg);transform-origin:6px 6px}
+.crank .ball{position:absolute;right:6px;top:-26px;width:38px;height:38px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#F6C77C,#D59033 70%);border:4px solid #8A5410}
+.bulbs{position:absolute;left:0;top:0;width:268px;height:232px;z-index:6;pointer-events:none}
+.bulb{position:absolute;width:15px;height:15px;border-radius:50%;margin:-7.5px 0 0 -7.5px;
+  background:radial-gradient(circle at 35% 30%,#FFFDF2,#FFE9A0 55%,#E8B73C);
+  border:2px solid #8A5410;box-shadow:0 0 7px rgba(255,224,138,.9);animation:bulb 1.1s infinite}
+.machine.spin .crank{animation:crank .18s linear infinite}
+.machine.spin .barrel{filter:brightness(1.06)}
+.machine.spin{cursor:wait}
+@keyframes crank{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+@keyframes bulb{0%,100%{opacity:1;box-shadow:0 0 9px rgba(255,224,138,1)}
+  50%{opacity:.45;box-shadow:0 0 3px rgba(255,224,138,.4)}}
+
+/* ---------- answer ---------- */
+.ansrow{flex:0 0 auto;display:flex;justify-content:center;margin-top:2px}
+.ans{background:rgba(255,255,255,.08);border:2px dashed rgba(255,255,255,.28);border-radius:16px;
+  padding:10px 24px;display:flex;align-items:center;gap:9px;font-size:26px;font-weight:900;color:#fff}
+.ans .w{color:#fff}
+.slot{min-width:170px;min-height:42px;padding:2px 14px;border-radius:11px;background:#FFE08A;color:#3A2370;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;font-size:21px;font-weight:900;
+  box-shadow:0 3px 0 rgba(0,0,0,.25);white-space:nowrap}
+.slot .e{font-size:24px;line-height:1}
+.slot.empty{background:rgba(255,255,255,.12);color:rgba(255,255,255,.55);border:2px dashed rgba(255,255,255,.45);
+  box-shadow:none;min-width:130px;font-size:16px;font-weight:800}
+
+/* ---------- foot ---------- */
+.foot{flex:0 0 auto;display:flex;align-items:center;gap:16px;margin-top:10px}
+.ftip{margin-right:auto;font-size:12.5px;font-weight:800;color:#B9ABE8;line-height:1.5;max-width:720px}
+.ftip b{color:#FFD23F}
+.big{border:none;border-radius:14px;font-weight:900;font-size:18px;height:50px;padding:0 32px;cursor:pointer;
+  white-space:nowrap;transition:.15s;font-family:inherit;color:#fff}
+.big.ghost{background:rgba(255,255,255,.13);color:rgba(255,255,255,.42);cursor:not-allowed;box-shadow:none}
+.big.go{background:var(--grass);box-shadow:0 4px 0 #2c8a5f}
+.big.go:hover{transform:translateY(-2px)}
+.big.go.ready{animation:pulseG 1.1s infinite}
+@keyframes pulseG{0%,100%{box-shadow:0 4px 0 #2c8a5f,0 0 0 0 rgba(46,158,91,.55)}
+  50%{box-shadow:0 4px 0 #2c8a5f,0 0 0 12px rgba(46,158,91,0)}}
+
+/* ---------- notes ---------- */
+.notes{position:absolute;inset:0;background:rgba(12,7,32,.68);display:none;place-items:center;z-index:9;padding:36px;border-radius:24px}
+.notes.on{display:grid}
+.notes .cardn{background:var(--cream);border-radius:20px;padding:24px 30px;
+  width:720px;max-height:600px;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.55);font-size:13.5px;line-height:1.75;color:#3A2D6B}
+.notes h3{font-size:19px;margin-bottom:10px;font-weight:900;color:var(--ink)}
+.notes h4{font-size:13.5px;margin:12px 0 6px;color:var(--coral);letter-spacing:.4px;font-weight:900}
+.notes ol{list-style:none;display:flex;flex-direction:column;gap:6px}
+.notes li{display:flex;gap:9px;align-items:flex-start}
+.notes .n{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--yellow);border:2px solid #E8960C;
+  font-size:10.5px;font-weight:900;display:grid;place-items:center;margin-top:3px;color:#5c4300}
+.notes b{color:var(--ink)}
+.notes .close{margin-top:16px;border:none;background:var(--purple);color:#fff;border-radius:12px;height:44px;
+  padding:0 20px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #6d44cc}
+}</style><link rel="stylesheet" href="../game.css?v=71"><link rel="stylesheet" href="../play-details.css?v=70"><link rel="stylesheet" href="../scenes.css?v=71"><script src="../game-lifecycle.js?v=1"></script><script src="../icons.js?v=1"></script><script src="../session.js?v=9"></script>
+</head>
+<body data-game="silly">
+<div id="stage">
+
+  <div class="top">
+    <span class="badge"><span class="ic">🎰</span>SILLY MACHINE</span>
+    <div class="instr">Click each machine to get an <b>action</b> and a <b>silly who</b>. Then answer the question!</div>
+    <button class="iconbtn" id="helpBtn" title="How to play">?</button>
+  </div>
+
+  <div class="qwrap">
+    <div class="q">What do you like doing together?</div>
+  </div>
+
+  <div class="mstage">
+    <div class="row">
+      <div class="unit">
+        <div class="tag">ACTION</div>
+        <div class="machine" role="button" tabindex="0" aria-label="抽取动作" id="m_a" data-kind="a">
+          <div class="stand"></div>
+          <div class="crank"><span class="rod"></span><span class="ball"></span></div>
+          <div class="barrel"></div>
+          <div class="rim"></div>
+          <div class="screen">
+            <div class="strip" id="strip_a"></div>
+            <div class="idleitem" id="idle_a"><span class="q">?</span><span class="go">▶ click me!</span></div>
+            <div class="result" id="res_a"></div>
+          </div>
+          <div class="knobplate"></div>
+          <div class="bulbs"><span class="bulb" style="left:13px;top:13px;animation-delay:0.00s"></span><span class="bulb" style="left:43px;top:13px;animation-delay:0.13s"></span><span class="bulb" style="left:73px;top:13px;animation-delay:0.26s"></span><span class="bulb" style="left:103px;top:13px;animation-delay:0.39s"></span><span class="bulb" style="left:134px;top:13px;animation-delay:0.52s"></span><span class="bulb" style="left:164px;top:13px;animation-delay:0.65s"></span><span class="bulb" style="left:194px;top:13px;animation-delay:0.78s"></span><span class="bulb" style="left:224px;top:13px;animation-delay:0.91s"></span><span class="bulb" style="left:255px;top:13px;animation-delay:0.04s"></span><span class="bulb" style="left:255px;top:54px;animation-delay:0.17s"></span><span class="bulb" style="left:255px;top:95px;animation-delay:0.30s"></span><span class="bulb" style="left:255px;top:136px;animation-delay:0.43s"></span><span class="bulb" style="left:255px;top:177px;animation-delay:0.56s"></span><span class="bulb" style="left:13px;top:219px;animation-delay:0.69s"></span><span class="bulb" style="left:43px;top:219px;animation-delay:0.82s"></span><span class="bulb" style="left:73px;top:219px;animation-delay:0.95s"></span><span class="bulb" style="left:103px;top:219px;animation-delay:0.08s"></span><span class="bulb" style="left:134px;top:219px;animation-delay:0.21s"></span><span class="bulb" style="left:164px;top:219px;animation-delay:0.34s"></span><span class="bulb" style="left:194px;top:219px;animation-delay:0.47s"></span><span class="bulb" style="left:224px;top:219px;animation-delay:0.60s"></span><span class="bulb" style="left:255px;top:219px;animation-delay:0.73s"></span><span class="bulb" style="left:13px;top:54px;animation-delay:0.86s"></span><span class="bulb" style="left:13px;top:95px;animation-delay:0.99s"></span><span class="bulb" style="left:13px;top:136px;animation-delay:0.12s"></span><span class="bulb" style="left:13px;top:177px;animation-delay:0.25s"></span></div>
+        </div>
+      </div>
+      <div class="unit">
+        <div class="tag">WHO?</div>
+        <div class="machine" role="button" tabindex="0" aria-label="抽取角色" id="m_b" data-kind="b">
+          <div class="stand"></div>
+          <div class="crank"><span class="rod"></span><span class="ball"></span></div>
+          <div class="barrel"></div>
+          <div class="rim"></div>
+          <div class="screen">
+            <div class="strip" id="strip_b"></div>
+            <div class="idleitem" id="idle_b"><span class="q">?</span><span class="go">▶ click me!</span></div>
+            <div class="result" id="res_b"></div>
+          </div>
+          <div class="knobplate"></div>
+          <div class="bulbs"><span class="bulb" style="left:13px;top:13px;animation-delay:0.00s"></span><span class="bulb" style="left:43px;top:13px;animation-delay:0.13s"></span><span class="bulb" style="left:73px;top:13px;animation-delay:0.26s"></span><span class="bulb" style="left:103px;top:13px;animation-delay:0.39s"></span><span class="bulb" style="left:134px;top:13px;animation-delay:0.52s"></span><span class="bulb" style="left:164px;top:13px;animation-delay:0.65s"></span><span class="bulb" style="left:194px;top:13px;animation-delay:0.78s"></span><span class="bulb" style="left:224px;top:13px;animation-delay:0.91s"></span><span class="bulb" style="left:255px;top:13px;animation-delay:0.04s"></span><span class="bulb" style="left:255px;top:54px;animation-delay:0.17s"></span><span class="bulb" style="left:255px;top:95px;animation-delay:0.30s"></span><span class="bulb" style="left:255px;top:136px;animation-delay:0.43s"></span><span class="bulb" style="left:255px;top:177px;animation-delay:0.56s"></span><span class="bulb" style="left:13px;top:219px;animation-delay:0.69s"></span><span class="bulb" style="left:43px;top:219px;animation-delay:0.82s"></span><span class="bulb" style="left:73px;top:219px;animation-delay:0.95s"></span><span class="bulb" style="left:103px;top:219px;animation-delay:0.08s"></span><span class="bulb" style="left:134px;top:219px;animation-delay:0.21s"></span><span class="bulb" style="left:164px;top:219px;animation-delay:0.34s"></span><span class="bulb" style="left:194px;top:219px;animation-delay:0.47s"></span><span class="bulb" style="left:224px;top:219px;animation-delay:0.60s"></span><span class="bulb" style="left:255px;top:219px;animation-delay:0.73s"></span><span class="bulb" style="left:13px;top:54px;animation-delay:0.86s"></span><span class="bulb" style="left:13px;top:95px;animation-delay:0.99s"></span><span class="bulb" style="left:13px;top:136px;animation-delay:0.12s"></span><span class="bulb" style="left:13px;top:177px;animation-delay:0.25s"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ansrow">
+    <div class="ans">
+      <span class="w">We like</span>
+      <span class="slot empty" id="slotA">ACTION ?</span>
+      <span class="w">with</span>
+      <span class="slot empty" id="slotB">WHO ?</span>
+      <span class="w">.</span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="ftip" id="ftip">Click both machines, then say the whole answer.<br>SPACE = COMPLETE　·　R = RE-SPIN</div>
+    <button class="big ghost" id="doneBtn" disabled>✓ COMPLETE</button>
+  </div>
+
+  <div class="notes" id="notes">
+    <div class="cardn">
+      <h3>离谱问答机（Silly Machine）· 怎么玩</h3>
+      <p>两台老虎机：左边抽<b>动作</b>，右边抽一个<b>意想不到的角色</b>（龙、海盗、企鹅……）。两台都抽完，下面的答句会自动拼好——越离谱越好笑。</p>
+
+      <h4>玩法</h4>
+      <ol>
+        <li><span class="n">1</span><div>学生点左边的机器抽一个动作（cooking / watching films …），再点右边抽一个角色（a dragon / a pirate / a penguin …），像拉老虎机一样随机停住。</div></li>
+        <li><span class="n">2</span><div>用拼好的答句完整回答，比如：<b>“We like having a picnic with a penguin.”</b> 组合越离谱越好笑，读的时候也可以加上表情和动作。想说别的组合就再点机器重抽（老师也可以按 <b>R</b> 两台一起重抽）。</div></li>
+        <li><span class="n">3</span><div>老师判两件事：<b>句型对不对</b>（We like <b>+ doing</b> with + a/an + 角色）；<b>词说得对不对</b>（动作和角色的词、冠词 a/an 有没有说准）。可以就点 <b>✓ COMPLETE</b> 过关；不行就重抽一组再说一遍。</div></li>
+      </ol>
+
+      <button class="close" id="closeNotes">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= 素材 ================= */
+var ACTIONS=[["cooking","🍳"],["watching films","🍿"],["playing chess","♟️"],
+  ["going hiking","🥾"],["having a picnic","🧺"],["reading books","📚"]];
+var WHO=[["a dragon","🐉"],["a pirate","🏴‍☠️"],["a robot","🤖"],
+  ["a penguin","🐧"],["a dinosaur","🦖"],["an alien","👽"]];
+
+/* ================= 状态 / DOM ================= */
+if(SS_DATA){ACTIONS=SS_DATA.poolA.map(a=>[a.text,a.em]);WHO=SS_DATA.poolB.map(a=>[a.text,a.em]);document.querySelector('.qwrap .q').textContent=SS_DATA.question;}
+var st=null;
+var finished=false;
+const $=s=>document.querySelector(s);
+const el={done:$("#doneBtn"),ftip:$("#ftip"),notes:$("#notes")};
+function setTip(html){ el.ftip.innerHTML=html; }
+
+/* ================= 初始化 ================= */
+function reset(){
+  st={a:null,b:null,busyA:false,busyB:false};
+  finished=false;
+  ["a","b"].forEach(function(k){
+    var strip=document.getElementById("strip_"+k),
+        idle=document.getElementById("idle_"+k),
+        res=document.getElementById("res_"+k),
+        mac=document.getElementById("m_"+k);
+    strip.style.transition="none"; strip.style.transform="translateY(0)"; strip.innerHTML="";
+    idle.style.display="flex"; res.style.display="none"; mac.classList.remove("spin");
+  });
+  setSlot("slotA","ACTION ?"); setSlot("slotB","WHO ?");
+  el.done.className="big ghost"; el.done.disabled=true; el.done.textContent="✓ COMPLETE";
+  setTip("Click both machines, then say the whole answer.<br>SPACE = COMPLETE　·　R = RE-SPIN");
+}
+function setSlot(id,txt){
+  var s=document.getElementById(id);
+  s.className="slot empty"; s.textContent=txt;
+}
+
+/* ================= 抽奖动画 ================= */
+function itemHTML(it){ return '<div class="item"><span class="e">'+SpeakIcon(it[1])+'</span><span class="t">'+SS_ESCAPE(it[0])+'</span></div>'; }
+function pickDifferent(pool,prevKey){
+  var prev=pool.findIndex(function(x){ return x[0]===prevKey; });
+  var i; do{ i=Math.floor(Math.random()*pool.length); } while(pool.length>1 && i===prev);
+  return i;
+}
+function spin(kind){
+  if(!st) reset();
+  if(finished) return;
+  if(kind==="a"?st.busyA:st.busyB) return;
+  if(kind==="a") st.busyA=true; else st.busyB=true;
+  el.done.disabled=true;
+  var pool=(kind==="a"?ACTIONS:WHO);
+  var prevKey=kind==="a"?(st.a?st.a[0]:null):(st.b?st.b[0]:null);
+  var idx=pickDifferent(pool,prevKey);
+  var mac=document.getElementById("m_"+kind),
+      strip=document.getElementById("strip_"+kind),
+      idle=document.getElementById("idle_"+kind),
+      res=document.getElementById("res_"+kind);
+  mac.classList.add("spin");
+  idle.style.display="none"; res.style.display="none";
+  var H=118, TURNS=6, seq=[];
+  for(var t=0;t<TURNS;t++){ for(var i=0;i<pool.length;i++) seq.push(pool[(idx+t+i+1)%pool.length]); }
+  seq.push(pool[idx]);
+  strip.style.transition="none"; strip.style.transform="translateY(0)";
+  strip.innerHTML=seq.map(itemHTML).join("");
+  void strip.offsetWidth;
+  var endY=-(seq.length-1)*H;
+  strip.style.transition="transform 1.7s cubic-bezier(.12,.62,.16,1)";
+  SS_LIFECYCLE.requestAnimationFrame(function(){ strip.style.transform="translateY("+endY+"px)"; });
+  var chosen=pool[idx];
+  SS_LIFECYCLE.setTimeout(function(){
+    mac.classList.remove("spin");
+    strip.style.transition="none"; strip.style.transform="translateY(0)"; strip.innerHTML="";
+    res.innerHTML='<span class="e">'+SpeakIcon(chosen[1])+'</span><span class="t">'+SS_ESCAPE(chosen[0])+'</span>';
+    res.style.display="flex";
+    if(kind==="a"){ st.a=chosen; st.busyA=false; } else { st.b=chosen; st.busyB=false; }
+    paintSlot(kind);
+    update();
+  },1750);
+}
+function paintSlot(kind){
+  var it=(kind==="a"?st.a:st.b), s=document.getElementById(kind==="a"?"slotA":"slotB");
+  if(!it) return;
+  s.className="slot";
+  s.innerHTML='<span class="e">'+SpeakIcon(it[1])+'</span>'+it[0];
+}
+
+/* ================= 完成状态 ================= */
+function update(){
+  var ready=st.a&&st.b&&!st.busyA&&!st.busyB;
+  el.done.className=ready?"big go":"big ghost";
+  el.done.disabled=!ready;
+  if(ready){
+    setTip('Say it together. Teacher listens, then taps ✓ COMPLETE.');
+  } else {
+    setTip("Click both machines, then say the whole answer.<br>SPACE = COMPLETE　·　R = RE-SPIN");
+  }
+}
+
+/* ================= 交互 ================= */
+document.getElementById("m_a").onclick=function(){ spin("a"); };
+document.getElementById("m_b").onclick=function(){ spin("b"); };
+$("#helpBtn").onclick=function(){ el.notes.classList.add("on"); };
+$("#closeNotes").onclick=function(){ el.notes.classList.remove("on"); };
+el.notes.onclick=function(e){ if(e.target===el.notes) el.notes.classList.remove("on"); };
+el.done.onclick=function(){
+  if(finished){ location.reload(); return; }
+  if(el.done.disabled) return;
+  finished=true;
+  el.done.className="big go ready"; el.done.textContent="↺ PLAY AGAIN";
+  setTip('🏆 Done — <b>We like '+st.a[0]+' with '+st.b[0]+'.</b><br>Press PLAY AGAIN for a new round.');
+};
+document.addEventListener("keydown",function(e){
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.key===" "||e.code==="Space"){
+    e.preventDefault();
+    if(e.repeat) return;
+    if(!el.done.disabled) el.done.click();
+    return;
+  }
+  if(e.key.toLowerCase()==="r"&&!e.repeat){
+    if(finished) return;
+    reset(); spin("a"); spin("b");
+  }
+});
+
+/* ================= 缩放 ================= */
+function fit(){
+  const s=Math.min(window.innerWidth/1320,window.innerHeight/760);
+  document.getElementById("stage").style.transform="scale("+s+")";
+}
+window.addEventListener("resize",fit);
+fit(); reset();
+</script>
+<script src="../game-access.js?v=40"></script><script src="../play-details.js?v=30"></script></body>
+</html>

@@ -83,7 +83,7 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
         onChange={e => setPrompt(e.target.value)}
         placeholder={t('assetGenerator.imagePlaceholder')}
         rows={4}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-blue-400"
+        className="w-full border border-gray-200 rounded-[var(--wb-control-radius)] px-3 py-2 text-sm resize-none focus:outline-none focus:border-blue-400"
       />
       <div className="flex items-center gap-3">
         <div className="flex-1">
@@ -95,7 +95,7 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
             min={256}
             max={4096}
             step={64}
-            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"
+            className="min-h-11 w-full border border-gray-200 rounded-[var(--wb-control-radius)] px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"
           />
         </div>
         <div className="flex-1">
@@ -107,7 +107,7 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
             min={256}
             max={4096}
             step={64}
-            className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"
+            className="min-h-11 w-full border border-gray-200 rounded-[var(--wb-control-radius)] px-3 py-1.5 text-sm focus:outline-none focus:border-blue-400"
           />
         </div>
       </div>
@@ -120,8 +120,8 @@ const AIImagePanel = ({ onGenerated, userId, organizationId }) => {
       <button
         onClick={handleGenerate}
         disabled={isGenerating || !prompt.trim()}
-        className="w-full py-2.5 rounded-lg text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        style={{ backgroundColor: '#4482E5' }}
+        className="min-h-10 w-full py-2.5 rounded-[var(--wb-control-radius)] text-sm font-bold text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        style={{ backgroundColor: 'var(--wb-primary)' }}
       >
         {isGenerating ? (
           <><Loader2 size={16} className="animate-spin" /> {t('assetGenerator.generating')}</>
@@ -143,7 +143,7 @@ const ImageTypeSelector = ({ onSelect }) => {
     <div className="grid grid-cols-3 gap-3">
       <button
         onClick={() => onSelect('ai')}
-        className="p-5 border-2 border-gray-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all text-left"
+        className="p-5 border border-gray-200 rounded-[var(--wb-control-radius)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)] transition-all text-left"
       >
         <div className="flex items-center gap-2 mb-2">
           <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -155,11 +155,11 @@ const ImageTypeSelector = ({ onSelect }) => {
       </button>
       <button
         onClick={() => onSelect('ip')}
-        className="p-5 border-2 border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all text-left"
+        className="p-5 border border-gray-200 rounded-[var(--wb-control-radius)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)] transition-all text-left"
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-            <Image className="w-4 h-4 text-purple-600" />
+          <div className="w-8 h-8 rounded-lg bg-[var(--wb-selected)] flex items-center justify-center">
+            <Image className="w-4 h-4 text-[var(--wb-primary)]" />
           </div>
           <span className="font-bold text-sm text-gray-800">{t('assetGenerator.ipScene')}</span>
         </div>
@@ -167,7 +167,7 @@ const ImageTypeSelector = ({ onSelect }) => {
       </button>
       <button
         onClick={() => onSelect('ip-character')}
-        className="p-5 border-2 border-gray-200 rounded-xl hover:border-orange-400 hover:bg-orange-50 transition-all text-left"
+        className="p-5 border border-gray-200 rounded-[var(--wb-control-radius)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)] transition-all text-left"
       >
         <div className="flex items-center gap-2 mb-2">
           <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center">
@@ -239,7 +239,7 @@ const VoiceGeneratorPanel = ({ onGenerated, userId, organizationId }) => {
         <Mic className="w-5 h-5 text-blue-500" /> {t('assetGenerator.voiceGeneration')}
       </h3>
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder={t('assetGenerator.voicePlaceholder')} rows={4}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-blue-400" />
+        className="w-full border border-gray-200 rounded-[var(--wb-control-radius)] px-3 py-2 text-sm resize-none focus:outline-none focus:border-blue-400" />
       <div>
         <label className="text-xs font-medium text-gray-500 block mb-2">{t('assetGenerator.voice')}</label>
         <div className="grid grid-cols-4 gap-1.5 max-h-48 overflow-y-auto">
@@ -277,7 +277,7 @@ const VoiceGeneratorPanel = ({ onGenerated, userId, organizationId }) => {
       </div>
       {error && <p className="text-red-500 text-xs">{error}</p>}
       <button onClick={handleGenerate} disabled={isGenerating || !text.trim()}
-        className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        className="min-h-10 w-full py-2.5 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] text-sm font-medium hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
         {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('assetGenerator.generating')}</> : <><Mic className="w-4 h-4" /> {t('assetGenerator.generateVoice')}</>}
       </button>
     </div>
@@ -341,7 +341,7 @@ const AudioGeneratorPanel = ({ onGenerated, userId, organizationId }) => {
         <Music className="w-5 h-5 text-green-500" /> {t('assetGenerator.musicGeneration')}
       </h3>
       <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder={t('assetGenerator.musicPlaceholder')} rows={3}
-        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm resize-none focus:outline-none focus:border-green-400" />
+        className="w-full border border-gray-200 rounded-[var(--wb-control-radius)] px-3 py-2 text-sm resize-none focus:outline-none focus:border-green-400" />
       <div>
         <label className="text-xs font-medium text-gray-500 block mb-2">{t('assetGenerator.style')}</label>
         <div className="flex gap-1.5">
@@ -366,7 +366,7 @@ const AudioGeneratorPanel = ({ onGenerated, userId, organizationId }) => {
       </div>
       {error && <p className="text-red-500 text-xs">{error}</p>}
       <button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()}
-        className="w-full py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+        className="min-h-10 w-full py-2.5 bg-green-600 text-white rounded-[var(--wb-control-radius)] text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
         {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> {t('assetGenerator.generating')}</> : <><Music className="w-4 h-4" /> {t('assetGenerator.generateMusic')}</>}
       </button>
     </div>
@@ -471,12 +471,12 @@ export const AssetGeneratorModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div className="absolute inset-0 bg-black/50" onClick={handleClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+      <div className="relative bg-white rounded-[18px] shadow-[0_20px_64px_rgba(48,43,59,0.16)] w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-lg font-bold text-gray-800">
             {assetType === 'image' ? t('assetGenerator.imageGeneration') : assetType === 'audio' ? t('assetGenerator.musicGeneration') : t('assetGenerator.voiceGenerationTitle')}
           </h2>
-          <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+          <button onClick={handleClose} className="p-1.5 hover:bg-gray-100 rounded-[var(--wb-control-radius)] transition-colors">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>

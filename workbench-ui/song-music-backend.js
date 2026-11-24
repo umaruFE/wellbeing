@@ -30,7 +30,7 @@
     let pending = new Set();
     let sync;
     let failure = '';
-    try {
+    if (!api.readOnly) try {
       const saved = JSON.parse(localStorage.getItem(marker) || '{}');
       ids = new Map(list(saved.ids));
       pending = new Set(list(saved.pending));
@@ -55,7 +55,7 @@
     async function load(local) {
       const server = await getRows();
       const active = new Set();
-      const localById = new Map(local.map(item => [idFor(item), item]));
+      const localById = new Map(api.readOnly ? [] : local.map(item => [idFor(item), item]));
       const remote = [];
       for (const row of server) {
         const id = rowId(row);
@@ -73,6 +73,7 @@
           if (value) remote.push(value);
         }
       }
+      if (api.readOnly) return remote;
       const merged = remote.concat(local.filter(item => !active.has(idFor(item)) && (!ids.has(idFor(item)) || pending.has(idFor(item)))));
       remember();
       return merged;
@@ -121,6 +122,7 @@
     }
 
     function queue(draft) {
+      if (api.readOnly) throw Error('当前连接只读后台，无法保存活动。');
       pending.add(idFor(draft));
       remember();
       failure = '';
@@ -128,6 +130,7 @@
     }
 
     function flush(readDraft) {
+      if (api.readOnly) return Promise.resolve(true);
       if (sync) return sync;
       sync = Promise.resolve().then(async () => {
         while (pending.size) {

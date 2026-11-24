@@ -1,0 +1,65 @@
+/* V1.24 — semantic text recipes shared by all three modules.
+   This layer wins over legacy page styles, while components.css owns controls.
+   Scene geometry, emoji artwork and gameplay hit areas remain in their modules. */
+@layer wb-components {
+:where(:root,body.unified) {
+  -webkit-font-smoothing:var(--font-smoothing-ui);
+  -moz-osx-font-smoothing:var(--font-smoothing-osx);
+}
+:where(body.unified,body.unified #app,body.unified #dialog) {
+  font:var(--type-body);letter-spacing:var(--letter-spacing-ui);font-synthesis:var(--font-synthesis-ui);
+}
+:where(body.unified button,body.unified input,body.unified select,body.unified textarea) {
+  font-family:var(--font-family-ui);letter-spacing:var(--letter-spacing-ui);font-synthesis:var(--font-synthesis-ui);
+}
+:where(body.unified h1,body.unified h2,body.unified h3) {letter-spacing:var(--letter-spacing-ui)}
+:where(body.unified #app strong,body.unified #dialog strong) {font-weight:var(--font-weight-strong)}
+
+/* Teacher pages, including creation, all editing steps, review and dialogs. */
+:where(body.unified .library-home h1,body.unified .unified-prep-header h1) {font:var(--type-page);letter-spacing:var(--letter-spacing-ui)}
+:where(body.unified .unified-experience-header h1) {font:var(--type-experience-title);letter-spacing:var(--letter-spacing-ui)}
+:where(body.unified .unified-prep-main h2,body.unified #dialog h2,body.unified .lh-empty h2,
+  body.unified .workspace-lyrics-head h2,body.unified .activity-bank h2,body.unified .experience-recorder h2) {font:var(--type-section)}
+:where(body.unified .unified-prep-main h3,body.unified #dialog h3,
+  body.unified .lh-card-heading,body.unified .lh-card-title,body.unified .recorder h3) {font:var(--type-card)}
+:where(body.unified .unified-prep-main :is(.lyric-heading,.prep-materials-heading,.prep-material-panel) :is(h2,h3),
+  body.unified .unified-prep-main .unified-ai-label) {font:var(--type-body-strong)}
+:where(body.unified .library-home>header p,body.unified .unified-prep-main :is(.panel-head,.panelhead,.sectionhead,.review-card) p,
+  body.unified #dialog p,body.unified #dialog li,body.unified .unified-candidate-compare p) {font:var(--type-body)}
+:where(body.unified .unified-prep-main label,body.unified #dialog label) {font:var(--type-label)}
+:where(body.unified :is(.notice,.hint,.unified-ai-help,.preview-song-help,.workspace-note,
+  .prep-preview-help-content,.unified-experience-meta,.prep-scope-note,.content-step-guide)) {font:var(--type-help)}
+:where(body.unified small,body.unified .lh-card-description,body.unified .lh-card-subtitle,
+  body.unified .lh-metadata span,body.unified .lh-results-head,body.unified .lh-results-head p,
+  body.unified .lh-version-note,body.unified .lh-card-extra,body.unified .home-footnote,
+  body.unified .prep-header-status,body.unified .prep-header-meta,body.unified .unified-session-note,
+  body.unified .unified-nav-version,body.unified .overview-line-meta,body.unified .overview-footnote,
+  body.unified .preview-editing-label,body.unified .prep-material-description,
+  body.unified .unified-prep-footer #footer-save,body.unified .unified-preview-position) {font:var(--type-caption)}
+:where(body.unified .badge,body.unified .lh-status,body.unified .tag,body.unified .preview-mode-label) {font:var(--type-badge)}
+:where(body.unified .topbar strong,body.unified .unified-navigation button strong) {font:var(--type-body-strong)}
+:where(body.unified .unified-prep-steps .step i) {font:var(--type-badge);font-style:normal}
+:where(body.unified .unified-return kbd) {font:var(--type-caption)}
+
+/* Text inside resource cards must not inherit decorative theme typography. */
+:where(body.unified [data-ui=choice] strong) {font:var(--type-card)}
+:where(body.unified [data-ui=choice] :is(small,p)) {font:var(--type-help)}
+
+/* Lyrics remain a distinct, larger reading surface. No generic button recipe. */
+:where(body.unified .overview-lyric,body.unified .singer-line-text,
+  body.unified .song-preparation .lyricrow .text) {font:var(--type-lyric-overview)}
+:where(body.unified .prep-editor .lyric-tokens) {font:var(--type-lyric-editor)}
+:where(body.unified .song-experience .workspace-line-text) {font:var(--type-lyric-class)}
+:where(body.unified .experience-lyrics .performance-lyric) {font:var(--type-lyric-stage)}
+:where(body.unified .workspace-line-text .lyric-token,body.unified .workspace-line-text .workspace-slot,
+  body.unified .lyric-tokens .lyric-token,body.unified .lyric-tokens .lyric-slot) {font:inherit}
+:where(body.unified .activity-drag-ghost) {font:var(--type-control)}
+/* Scene subtitle sizes use the scene container, preserving projection scaling. */
+:where(body.unified .ys-subtitle p) {font:var(--type-scene-subtitle);letter-spacing:var(--letter-spacing-ui)}
+:where(body.unified .ys-long-copy .ys-subtitle p) {font-size:var(--type-scene-long-size)}
+:where(body.unified .ys-bookend .ys-subtitle p) {font-size:var(--type-scene-bookend-size)}
+@container (max-width:340px) {
+  :where(body.unified .yoga-scene:not(.ys-bookend) .ys-subtitle p) {font-size:var(--font-size-sm)}
+  :where(body.unified .ys-long-copy .ys-subtitle p) {font-size:var(--font-size-xs)}
+}
+}

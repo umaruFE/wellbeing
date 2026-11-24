@@ -92,10 +92,10 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] overflow-y-auto">
-        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
+      <div className="bg-white rounded-[18px] shadow-[0_20px_64px_rgba(48,43,59,0.16)] w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+        <div className="p-6 border-b border-[var(--wb-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Wand2 className="w-6 h-6 text-purple" />
+            <Wand2 className="w-6 h-6 text-[var(--wb-primary)]" />
             <h3 className="font-bold text-lg text-primary">
               <LocalizedText id="promptOptimizerUi.cf00478453" /> {elementType === 'image' ? t('promptOptimizerUi.typeImage') : elementType === 'video' ? t('promptOptimizerUi.typeVideo') : elementType === 'audio' ? t('promptOptimizerUi.typeAudio') : elementType === 'script' ? t('promptOptimizerUi.typeScript') : elementType === 'activity' ? t('promptOptimizerUi.typeActivity') : 'PPT'}
             </h3>
@@ -113,7 +113,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
               value={originalPrompt}
               onChange={(e) => setOriginalPrompt(e.target.value)}
               placeholder={i18next.t('promptOptimizerUi.2b722346d7')}
-              className="w-full p-3 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-32 transition-all"
+              className="w-full p-3 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none resize-none h-32 transition-all"
             />
           </div>
 
@@ -128,7 +128,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
                     id={`improvement-${index}`}
                     checked={selectedImprovements.includes(improvement)}
                     onChange={() => handleImprovementToggle(improvement)}
-                    className="w-4 h-4 text-purple border-gray-disabled rounded-lg focus:ring-purple"
+                    className="w-4 h-4 text-[var(--wb-primary)] border-gray-disabled rounded-[var(--wb-control-radius)] focus:ring-[var(--wb-selected-border)]"
                   />
                   <label htmlFor={`improvement-${index}`} className="text-sm text-primary-secondary">
                     {improvement}
@@ -145,7 +145,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
               value={optimizedPrompt}
               onChange={(e) => setOptimizedPrompt(e.target.value)}
               placeholder={i18next.t('promptOptimizerUi.7defda79e9')}
-              className="w-full p-3 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-32 transition-all"
+              className="w-full p-3 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none resize-none h-32 transition-all"
             />
           </div>
 
@@ -154,7 +154,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
             <button
               onClick={handleOptimize}
               disabled={loading || !originalPrompt}
-              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="min-h-10 flex-1 px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (
                 <Sparkles className="w-4 h-4 animate-spin" />
@@ -166,14 +166,14 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
             <button
               onClick={handleSave}
               disabled={!optimizedPrompt}
-              className="px-4 py-2 bg-success text-white rounded-lg hover:bg-success-active disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              className="min-h-10 px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               <Save className="w-4 h-4" />
               <LocalizedText id="common.save" />
             </button>
             <button
               onClick={() => setShowHistory(!showHistory)}
-              className="px-4 py-2 border-2 border-stroke-light text-dark rounded-xl hover:bg-warning-light hover:border-primary transition-all flex items-center justify-center gap-2 font-medium"
+              className="min-h-10 px-4 py-2 border border-[var(--wb-border)] text-dark rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] transition-all flex items-center justify-center gap-2 font-medium"
             >
               <History className="w-4 h-4" />
               <LocalizedText id="promptOptimizerUi.be78b20585" />
@@ -184,7 +184,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
             <button
               onClick={() => onOptimize(optimizedPrompt)}
               disabled={!optimizedPrompt}
-              className="w-full px-4 py-2 bg-info text-white rounded-lg hover:bg-info-active transition-colors flex items-center justify-center gap-2 mt-4"
+              className="min-h-10 w-full px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center justify-center gap-2 mt-4"
             >
               <LocalizedText id="promptOptimizerUi.341673303e" />
               <ArrowRight className="w-4 h-4" />
@@ -192,14 +192,14 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
 
           {/* 历史记录 */}
           {showHistory && (
-            <div className="mt-6 pt-6 border-t-2 border-stroke-light">
+            <div className="mt-6 pt-6 border-t border-[var(--wb-border)]">
               <h4 className="font-medium text-primary-secondary mb-3"><LocalizedText id="promptOptimizerUi.586c05ce92" /></h4>
               <div className="space-y-3">
                 {history.length === 0 ? (
                   <p className="text-primary-muted text-sm"><LocalizedText id="promptOptimizerUi.77cf867de7" /></p>
                 ) : (
                   history.map((item, index) => (
-                    <div key={index} className="p-3 border-2 border-stroke-light rounded-xl hover:bg-warning-light hover:border-primary cursor-pointer transition-all" onClick={() => handleUseHistory(item)}>
+                    <div key={index} className="p-3 border border-[var(--wb-border)] rounded-xl hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] cursor-pointer transition-all" onClick={() => handleUseHistory(item)}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-primary-secondary"><LocalizedText id="promptOptimizerUi.7f89154012" /> {index + 1}</span>
                         <div className="flex items-center gap-1">
@@ -209,7 +209,7 @@ const PromptOptimizer = ({ elementType, onOptimize, onClose }) => {
                         </div>
                       </div>
                       <p className="text-xs text-primary-muted truncate">{item.original_prompt.substring(0, 50)}...</p>
-                      <p className="text-xs text-purple mt-1 truncate">{item.optimized_prompt.substring(0, 50)}...</p>
+                      <p className="text-xs text-[var(--wb-primary)] mt-1 truncate">{item.optimized_prompt.substring(0, 50)}...</p>
                     </div>
                   ))
                 )}

@@ -5,7 +5,6 @@ import { readFile, realpath, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawn } from 'node:child_process';
-import { createPreviewHandler, visualPreviewPlugin } from './dev/visual-preview.mjs';
 
 const [major, minor] = process.versions.node.split('.').map(Number);
 if (major < 20 || (major === 20 && minor < 19)) {
@@ -27,8 +26,11 @@ for (let index = 0; index < args.length; index++) {
     if (option === '--port') port = Number(value);
     else backendPort = Number(value);
   } else {
-    console.error('用法：node portable-preview.mjs [--port 5200] [--backend-port 4000] [--open]'); process.exit(1);
+    console.error('用法：node portable-preview.mjs --backend-port 4000 [--port 5200] [--open]'); process.exit(1);
   }
+}
+if (backendPort === null) {
+  console.error('旧离线演示已移至桌面。使用此脚本联调时，请指定 --backend-port。'); process.exit(1);
 }
 if (backendPort === port) {
   console.error('预览端口和后台端口必须不同。'); process.exit(1);
@@ -43,11 +45,7 @@ try {
   console.error('找不到完整 dist 目录。请先完整解压系统压缩包，再启动。'); process.exit(1);
 }
 
-const preview = backendPort ? null : createPreviewHandler();
-const remoteMedia = backendPort ? ' https:' : '';
-const contentSecurityPolicy = `connect-src 'self' ws:; img-src 'self' data: blob:${remoteMedia}; media-src 'self' data: blob:${remoteMedia}; frame-src 'self' data: blob:`;
-const tags = backendPort ? [] : visualPreviewPlugin().transformIndexHtml.handler();
-const tagHtml = tag => `<${tag.tag}${Object.entries(tag.attrs || {}).map(([key, value]) => ` ${key}="${value}"`).join('')}>${tag.children || ''}</${tag.tag}>`;
+const contentSecurityPolicy = "connect-src 'self' ws:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; frame-src 'self' data: blob:";
 // The production bundle registers /sw.js itself. Serve a non-caching worker
 // below, and clean any previous Workbox registration/cache for this origin.
 // Neither the production bundle nor any dist file is changed on disk.
@@ -63,9 +61,7 @@ const cleanupScript = `<script>
 </script>`;
 const indexHtml = indexSource
   .replace(/<link\b[^>]*\brel=["']manifest["'][^>]*>/gi, '')
-  .replace(/<head(?:\s[^>]*)?>/i, match => match + `<script>window.WB_WORKBENCH_LIVE=${Boolean(backendPort)};</script>` + cleanupScript)
-  .replace(/<\/head>/i, tags.filter(tag => tag.injectTo === 'head').map(tagHtml).join('') + '</head>')
-  .replace(/<body(?:\s[^>]*)?>/i, match => match + tags.filter(tag => tag.injectTo === 'body-prepend').map(tagHtml).join(''));
+  .replace(/<head(?:\s[^>]*)?>/i, match => match + '<script>window.WB_WORKBENCH_LIVE=true;</script>' + cleanupScript);
 const localWorker = `// Local preview: intentionally no fetch handler or precache.
 self.addEventListener('install', function (event) { event.waitUntil(self.skipWaiting()); });
 self.addEventListener('activate', function (event) {
@@ -149,24 +145,16 @@ async function handle(req, res) {
   if (!pathname.startsWith('/') || /[\\\u0000-\u001f]/.test(pathname) || pathname.split('/').includes('..')) {
     return sendText(req, res, 400, 'Invalid request path');
   }
-  if (backendPort) {
-    if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(req.headers.host)) {
-      return sendText(req, res, 403, '本地联调仅接受回环地址。');
-    }
-    if (/^\/(?:api|uploads)(?:\/|$)/.test(pathname)) return proxyBackend(req, res);
-    if (pathname === '/__preview/start' && ['GET', 'HEAD'].includes(req.method)) {
-      res.setHeader('Location', '/login');
-      return sendText(req, res, 302, '正在进入登录页。');
-    }
+  if (![`127.0.0.1:${port}`, `localhost:${port}`].includes(req.headers.host)) {
+    return sendText(req, res, 403, '本地联调仅接受回环地址。');
   }
-  if (/^\/(?:api|ai(?:-video)?|__preview)(?:\/|$)/.test(pathname)) {
-    if (!preview) return sendText(req, res, 404, 'Unknown local preview endpoint');
-    // Reuse the exact preview state/API; HEAD is its read-only GET equivalent.
-    const head = req.method === 'HEAD', originalMethod = req.method;
-    if (head) req.method = 'GET';
-    try { await preview(req, res, () => sendText(req, res, 404, 'Unknown local preview endpoint')); }
-    finally { req.method = originalMethod; }
-    return;
+  if (/^\/(?:api|uploads)(?:\/|$)/.test(pathname)) return proxyBackend(req, res);
+  if (pathname === '/__preview/start' && ['GET', 'HEAD'].includes(req.method)) {
+    res.setHeader('Location', '/login');
+    return sendText(req, res, 302, '正在进入登录页。');
+  }
+  if (/^\/(?:ai(?:-video)?|__preview)(?:\/|$)/.test(pathname)) {
+    return sendText(req, res, 404, 'Unknown local preview endpoint');
   }
   if (!['GET', 'HEAD'].includes(req.method)) {
     res.setHeader('Allow', 'GET, HEAD'); return sendText(req, res, 405, 'Method not allowed');
@@ -217,15 +205,13 @@ const server = http.createServer((req, res) => {
 });
 server.on('error', error => {
   console.error(error.code === 'EADDRINUSE'
-    ? `端口 ${port} 已被使用。请关闭原窗口，或运行 node portable-preview.mjs --port ${port < 65535 ? port + 1 : 5201} --open`
+    ? `端口 ${port} 已被使用。请关闭原窗口，或运行 node portable-preview.mjs --port ${port < 65535 ? port + 1 : 5201} --backend-port ${backendPort} --open`
     : `无法启动本地预览：${error.code || error.message}`);
   process.exitCode = 1;
 });
 server.listen(port, '127.0.0.1', () => {
   const url = `http://127.0.0.1:${port}/__preview/start`;
-  const status = backendPort
-    ? `后台联调模式 · 请求转发至 127.0.0.1:${backendPort}，请使用后台账号登录。`
-    : '原系统示例保存仅本次运行有效，六模块活动保存在当前浏览器。\n未连接真实账号、后端或 AI 服务。';
+  const status = `后台联调模式 · 请求转发至 127.0.0.1:${backendPort}，请使用后台账号登录。`;
   console.log(`\n小星星 · 完整系统本地预览\n${url}\n\n按 Ctrl+C 停止；请保持此窗口打开。\n${status}\n`);
   if (openBrowser) {
     const command = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'cmd.exe' : 'xdg-open';

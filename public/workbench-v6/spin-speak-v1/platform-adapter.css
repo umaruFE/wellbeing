@@ -1,0 +1,9 @@
+/* Only the platform frame is adapted; preparation and game layouts stay local. */
+[hidden]{display:none!important}
+.library-navigation-toggle{display:none}
+@media(max-width:900px){
+ body[data-unified-module=speak] .shell{display:block}
+ body[data-unified-module=speak] .footer{left:0}
+ body[data-unified-module=speak] .topbar{padding:0 16px}
+ body[data-unified-module=speak] .library-navigation-toggle{display:inline-flex}
+}

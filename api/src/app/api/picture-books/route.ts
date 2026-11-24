@@ -22,7 +22,6 @@ async function ensureTable() {
 // GET /api/picture-books
 export async function GET(request: NextRequest) {
   try {
-    await ensureTable();
     const authResult = await authenticate(request);
     if (!authResult.success) {
       return NextResponse.json({ error: authResult.error || '认证失败' }, { status: 401 });
@@ -71,11 +70,11 @@ export async function GET(request: NextRequest) {
 // POST /api/picture-books
 export async function POST(request: NextRequest) {
   try {
-    await ensureTable();
     const authResult = await authenticate(request);
     if (!authResult.success) {
       return NextResponse.json({ error: authResult.error || '认证失败' }, { status: 401 });
     }
+    await ensureTable();
 
     const body = await request.json();
     const { userId, organizationId, title, status, coverUrl, bookData } = body;

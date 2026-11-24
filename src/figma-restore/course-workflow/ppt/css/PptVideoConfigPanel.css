@@ -20,17 +20,17 @@
 }
 
 #ed-ppt .ppt-video-config-panel .video-playback-button {
-  height: 38px;
+  height: 40px;
   margin: 0 0 12px;
-  border-color: #ff705d;
+  border-color: var(--wb-primary);
   color: #d94f3e;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-video-config-panel .video-playback-button:hover,
 #ed-ppt .ppt-video-config-panel .video-playback-button.is-playing {
-  border-color: #ff705d;
-  background: #ff705d;
+  border-color: var(--wb-primary);
+  background: var(--wb-primary-hover);
   color: #ffffff;
 }
 
@@ -41,9 +41,9 @@
 }
 
 #ed-ppt .ppt-video-config-panel .video-info-card {
-  border: 1.5px solid #c8c2b9;
-  border-radius: 6px;
-  background: #fffdf9;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-card-radius);
+  background: var(--wb-surface);
   padding: 10px 12px 12px;
   margin: 1px 0 24px;
 }
@@ -54,17 +54,17 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #8a94a4;
+  color: var(--wb-muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-video-config-panel .video-meta-row strong {
   min-width: 0;
   overflow: hidden;
-  color: #253142;
+  color: var(--wb-text);
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
   text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -79,9 +79,9 @@
 
 #ed-ppt .ppt-video-config-panel .video-stat-grid div {
   height: 59px;
-  border: 1.5px solid #c8c2b9;
-  border-radius: 6px;
-  background: #ffffff;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-surface);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -90,15 +90,15 @@
 }
 
 #ed-ppt .ppt-video-config-panel .video-stat-grid span {
-  color: #8a94a4;
+  color: var(--wb-muted);
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-video-config-panel .video-stat-grid strong {
-  color: #253142;
+  color: var(--wb-text);
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-video-config-panel .video-switch-list {
@@ -113,15 +113,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  color: #253142;
+  color: var(--wb-text);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-video-config-panel .ant-switch.ant-switch-checked {
-  background: #ff705d;
+  background: var(--wb-primary);
 }
 
 #ed-ppt .ppt-video-config-panel .ant-switch.ant-switch-checked:hover {
-  background: #ff705d;
+  background: var(--wb-primary-hover);
 }

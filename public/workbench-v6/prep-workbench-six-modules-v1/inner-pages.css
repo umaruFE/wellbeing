@@ -1,0 +1,174 @@
+@layer wb-layout {
+/* V1.12: shared teacher chrome. Teaching artwork, stickers and scene layouts
+   retain their module styles; no gameplay or persistence rules live here. */
+body.unified #app :is(.shell,.app-shell):has(.unified-prep-main) .unified-topbar {height:56px;min-height:56px;padding:8px 28px;background:var(--color-surface);border-bottom:1px solid var(--color-border-subtle);box-shadow:none;gap:16px}
+body.unified #app .unified-topbar :is(.row,.right,.top-actions,.breadcrumb) {display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+body.unified #app .unified-topbar strong {font-size:var(--font-size-md);line-height:1.5;color:var(--color-text-secondary);font-weight:600}
+
+body.unified #app .unified-topbar :is(.avatar,.portal-avatar) {display:flex;align-items:center;justify-content:center;flex:none;width:34px;height:34px;padding:0;border:0;border-radius:var(--radius-round);background:var(--color-selected);color:var(--color-text-secondary);font-size:var(--font-size-xs);box-shadow:none}
+
+/* Preserve task steps and content; recover vertical space from repeated chrome. */
+body.unified #app .unified-prep-main {padding-top:var(--space-3);padding-left:var(--space-6);padding-right:var(--space-6);--panel-padding:var(--space-5);--panel-gap:var(--space-4);--panel-header-gap:var(--space-3)}
+/* The return link and title share one desktop row; DOM order stays linear. */
+body.unified #app .unified-prep-heading {display:grid;grid-template-columns:auto minmax(0,1fr);align-items:start;gap:var(--space-4);margin:0 0 var(--space-2)}
+body.unified #app .unified-prep-heading>.unified-back-link {display:flex;align-items:center;min-height:var(--control-height-md);margin:0}
+body.unified #app .unified-prep-main .unified-back-link button {white-space:nowrap}
+body.unified #app .unified-prep-heading .unified-prep-header {min-width:0}
+body.unified #app .unified-prep-main .unified-prep-header {margin:0 0 8px;gap:16px;align-items:flex-start;min-height:0}
+body.unified #app .unified-prep-main .unified-prep-header h1 {margin:0 0 3px}
+body.unified #app .unified-prep-main .unified-prep-header p {font-size:var(--font-size-xs);line-height:1.5;margin:0}
+body.unified #app .unified-prep-main .unified-preview-entry {gap:3px}
+body.unified #app .unified-prep-main>.unified-version-strip {min-height:32px;padding:5px 12px;margin:0 0 8px;gap:6px 12px;border-radius:var(--radius-md);font-size:var(--font-size-xs);line-height:20px}
+body.unified #app .unified-prep-main>.unified-version-strip button {min-height:26px;padding:3px 8px;font-size:var(--font-size-xs);line-height:20px}
+body.unified #app .unified-prep-main .content-step-heading {margin:0 0 var(--space-2);gap:var(--space-3)}
+body.unified #app .unified-prep-main .content-step-guide {font-size:var(--font-size-xs);line-height:1.6;margin:0}
+body.unified #app .unified-prep-main .prep-audio {margin:0 0 8px;padding:0 12px}
+body.unified #app .unified-prep-main .prep-context-bar {padding:0;margin:0 0 4px;gap:6px 12px}
+body.unified #app .unified-prep-main .prep-shared-words>summary {padding:5px 0}
+
+/* Common controls in preparation, including the older music theme. */
+body.unified.music-studio.stroke-system #app .unified-prep-main :is(.panel,.student-effect-panel,.question-edit-panel,.preview-surface,.review-card) {background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);box-shadow:none}
+body.unified.music-studio.stroke-system #app .unified-prep-main :is(.student-effect-toolbar,.question-editor-head,.student-effect-footer) {background:var(--color-surface-subtle);color:var(--color-text-secondary);border-color:var(--color-border-subtle)}
+body.unified #app .unified-prep-main :is(.sectionhead,.panelhead,.panel-head,.content-step-heading) button:not(.primary) {border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-text-secondary);box-shadow:none;transform:none}
+body.unified #app .unified-prep-main :is(.sectionhead,.panelhead,.panel-head,.content-step-heading) button:is(.quiet,.flat) {border-color:transparent;background:transparent}
+body.unified.music-studio.stroke-system #app .unified-prep-main .question-edit-panel {padding:16px}
+body.unified.music-studio.stroke-system #app .unified-prep-main .question-editor-head {padding:var(--space-3) var(--space-4);margin:-16px -16px var(--space-3);gap:var(--space-2)}
+body.unified.music-studio.stroke-system #app .unified-prep-main .question-editor-head h2 {margin:0}
+body.unified.music-studio.stroke-system #app .unified-prep-main .question-editor-head .notice{margin-top:var(--space-1)}
+
+body.unified.music-studio.stroke-system #app .unified-prep-main .question-editor-head button {min-height:32px;font-size:var(--font-size-xs);padding:6px 9px}
+body.unified.music-studio.stroke-system #app .unified-prep-main .student-effect-toolbar {padding:var(--space-3) var(--space-4);min-height:0}
+body.unified.music-studio.stroke-system #app .unified-prep-main .student-effect-toolbar h2 {margin:0}
+body.unified.music-studio.stroke-system #app .unified-prep-main .question-edit-panel .form-stack {gap:var(--space-4)}
+
+/* The page scrolls through editing fields. Only long navigation/resource lists
+   get their own bounded scroll region, with a reserved scrollbar and focus ring. */
+body.unified #app .unified-prep-main :is(.page-nav,.hunter-workbench>.question-list,.resource-scroll) {max-height:clamp(240px,calc(100dvh - var(--prep-footer-height,72px) - 300px),520px);overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;scroll-padding-block:8px}
+body.unified #app .unified-prep-main :is(.page-nav,.hunter-workbench>.question-list) {position:sticky;top:16px;min-height:0;padding-right:6px}
+body.unified #app .unified-prep-main :is(.resource-panel,.singer-palette,.preview-column) {top:16px}
+body.unified #app .unified-prep-main :is(.content-column,.preview-column,.question-edit-panel,.student-effect-panel,.singer-score) {min-width:0}
+
+/* Both song players use the same mode ordering, play symbol and selected state.
+   Speed/volume and available audio sources remain module-specific. */
+body.unified[data-unified-module] #app .unified-player {display:flex;align-items:center;gap:12px;padding:12px 16px;background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);box-shadow:none}
+body.unified[data-unified-module] #app .unified-player small {color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.5}
+body.unified[data-unified-module] #app .unified-player :is(button.round,button.play) {display:inline-flex;align-items:center;justify-content:center;flex:none;width:42px;height:42px;min-height:42px;padding:0;border:1px solid var(--color-action);border-radius:var(--radius-round);background:var(--color-action);color:var(--color-surface);box-shadow:none;transform:none;font-size:var(--font-size-title)}
+body.unified[data-unified-module] #app .unified-player :is(button.round,button.play):hover:not(:disabled) {background:var(--color-action-hover);border-color:var(--color-action-hover)}
+body.unified[data-unified-module] #app .unified-player .unified-audio-modes {display:inline-flex;flex:none;width:auto;align-items:center;gap:2px;padding:3px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-md);background:var(--color-selected);box-shadow:none}
+body.unified[data-unified-module] #app .unified-player .unified-audio-modes button {white-space:nowrap}
+body.unified[data-unified-module] #app .unified-player .progress {}
+body.unified[data-unified-module] #app .unified-player .progress span {}
+body.unified[data-unified-module] #app .unified-player input[type=range] {accent-color:var(--color-action)}
+/* Song playback uses two rows: transport and track, then progress and adjustments. */
+body.unified[data-unified-module] #app .song-player{flex-direction:column;align-items:stretch;gap:var(--space-3)}
+body.unified[data-unified-module] #app .song-player .player-main{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-3);width:100%;min-width:0}
+body.unified[data-unified-module] #app .song-player .player-main>.play{order:0}
+body.unified[data-unified-module] #app .song-player .track{flex:1 1 100px;min-width:0;order:0;overflow-wrap:anywhere}
+body.unified[data-unified-module] #app .song-player .track strong{font:var(--type-body-strong)}
+body.unified[data-unified-module] #app .song-player .song-audio-modes{margin-left:auto;order:0}
+body.unified[data-unified-module] #app .song-player .player-controls{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-3) var(--space-6);width:100%;min-width:0}
+body.unified[data-unified-module] #app .song-player .timeline{display:flex;align-items:center;gap:var(--space-3);flex:1 1 260px;min-width:0;order:0}
+body.unified[data-unified-module] #app .song-player .timeline input{flex:1;min-width:60px;width:100%;height:24px;margin:0;padding:0;cursor:pointer}
+body.unified[data-unified-module] #app .song-player input:disabled{cursor:default}
+body.unified[data-unified-module] #app .song-player .time{font-variant-numeric:tabular-nums;white-space:nowrap}
+body.unified[data-unified-module] #app .song-player .player-settings{display:flex;align-items:center;flex-wrap:wrap;gap:var(--space-3) var(--space-5);max-width:100%}
+body.unified[data-unified-module] #app .song-player :is(.player-rate,.player-rate-options,.player-volume){display:flex;align-items:center;gap:var(--space-2);min-width:0;margin:0}
+body.unified[data-unified-module] #app .song-player .player-rate-options{gap:var(--space-1)}
+body.unified[data-unified-module] #app .song-player .player-setting-label{font:var(--type-caption);color:var(--color-text-secondary);white-space:nowrap}
+body.unified[data-unified-module] #app .song-player .player-volume .volume{flex:0 1 88px;width:88px;max-width:88px;min-width:60px;height:24px;margin:0;padding:0}
+body.unified[data-unified-module] #app .song-player .song-audio-notice{width:100%;flex:none}
+body.unified[data-unified-module] #app .unified-player select {border:1px solid var(--color-border);border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-text)}
+body.unified[data-unified-module] #app .fullscreen-preview-footer .unified-player {padding:10px 0;border:0;border-radius:0;background:transparent}
+body.unified[data-unified-module] #app .prep-audio .unified-player {padding:10px 0;border:0;background:transparent}
+
+@media(max-width:1000px) {
+ body.unified #app .unified-prep-main {padding-left:20px;padding-right:20px}
+ body.unified #app .unified-prep-main .unified-prep-header {flex-wrap:wrap;gap:10px}
+ body.unified #app .unified-prep-main :is(.page-nav,.hunter-workbench>.question-list) {position:static;max-height:260px}
+ body.unified #app .unified-player {gap:9px;flex-wrap:wrap}
+}
+@media(max-width:640px) {
+ body.unified #app :is(.shell,.app-shell):has(.unified-prep-main) .unified-topbar {height:auto;min-height:56px;padding:8px 16px;flex-wrap:wrap;gap:6px}
+ body.unified #app .unified-prep-main {padding:12px 16px calc(var(--prep-footer-height,72px) + 24px)}
+
+ body.unified #app .unified-prep-main .unified-version-strip {align-items:flex-start}
+}
+
+/* V1.19: shared preparation header, status and preview explanation. */
+body.unified #app .unified-prep-main .unified-prep-header.prep-header-compact{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:var(--space-1) var(--space-5);margin-bottom:0}
+body.unified #app .prep-header-compact .prep-header-title{min-width:0}
+body.unified #app .unified-prep-main .prep-header-compact h1{margin:0;overflow-wrap:anywhere}
+body.unified #app .prep-header-compact .prep-head-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin:0;width:auto}
+body.unified #app .prep-header-status{grid-column:1/-1;min-width:0}
+body.unified #app .prep-header-status .unified-version-strip{justify-content:flex-start;align-items:center;gap:6px 14px;background:transparent;border:0;border-radius:0;padding:0;margin:0;color:var(--color-text-secondary);font-size:var(--font-size-xs);min-height:24px}
+body.unified #app .prep-preview-control{position:relative;display:flex;align-items:center;gap:6px}
+body.unified #app .prep-preview-help summary{display:grid;place-items:center;list-style:none;width:auto;min-height:32px;padding:4px 6px;border:0;background:transparent;color:var(--color-text-secondary);font-size:var(--font-size-xs);font-weight:500;cursor:pointer}
+body.unified #app .prep-preview-help summary::-webkit-details-marker{display:none}
+body.unified #app .prep-preview-help summary:hover,body.unified #app .prep-preview-help[open] summary{color:var(--primary);background:var(--color-selected);border-radius:var(--radius-sm)}
+body.unified #app .prep-preview-help summary:focus-visible{outline:3px solid var(--color-selected-border);outline-offset:1px;border-radius:var(--radius-sm)}
+body.unified #app .prep-preview-help-content{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:280px;max-width:calc(100vw - 40px);padding:14px 16px;background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-md);box-shadow:0 6px 24px var(--palette-shadow);color:var(--color-text);font-size:var(--font-size-xs);line-height:1.7;text-align:left}
+body.unified #app .prep-preview-help-content p{margin:6px 0 0;color:var(--color-text-secondary)}
+@media(max-width:760px){
+ body.unified #app .unified-prep-heading{grid-template-columns:minmax(0,1fr);gap:var(--space-1)}
+ body.unified #app .unified-prep-main .unified-prep-header.prep-header-compact{grid-template-columns:minmax(0,1fr);gap:8px}
+ body.unified #app .prep-header-compact .prep-header-status{grid-row:2}
+ body.unified #app .prep-header-compact .prep-head-actions{justify-content:flex-start}
+ body.unified #app .prep-preview-help-content{left:0;right:auto}
+}
+
+body.unified #app .unified-prep-main .prep-header-status{display:flex;align-items:center;flex-wrap:wrap;gap:4px 14px;font-size:var(--font-size-xs);line-height:1.6;color:var(--color-text-secondary)}
+body.unified #app .unified-prep-main .prep-header-status .prep-header-meta{font-size:var(--font-size-xs);line-height:1.6;color:var(--color-text-secondary);margin:0}
+
+body.unified #app .unified-prep-main .prep-header-status button{min-height:28px;padding:3px 8px;font-size:var(--font-size-xs);line-height:20px;box-shadow:none}
+body.unified #app .unified-prep-main .prep-header-compact .prep-head-actions>button,body.unified #app .unified-prep-main .prep-preview-control>button{min-height:40px;padding:8px 14px;font-size:var(--font-size-md);line-height:1.5;white-space:nowrap}
+body.unified #app .unified-prep-main .prep-header-compact .prep-head-actions:empty{display:none}
+body.unified #app .unified-prep-main .prep-preview-unavailable{font-size:var(--font-size-xs);line-height:1.6;color:var(--color-text-secondary)}
+
+/* V1.20: keep list actions readable without changing question grouping or sorting. */
+body.unified #app .unified-prep-main .question-type-head {flex-wrap:wrap;gap:4px 8px}
+body.unified #app .unified-prep-main .question-type-head>strong {display:flex;align-items:center;gap:5px;white-space:nowrap}
+body.unified #app .unified-prep-main .question-type-head>strong span {margin-left:0}
+body.unified #app .unified-prep-main .question-group-actions {flex:none;gap:4px;margin-left:auto}
+body.unified #app .unified-prep-main .question-group-actions button {white-space:nowrap;flex:none}
+@media(min-width:1180px) and (max-width:1499px){
+ body.unified #app .nav-collapsed .hunter-workbench {grid-template-columns:210px minmax(340px,1.15fr) minmax(310px,1fr)}
+}
+body.unified .review-top-actions {margin-top:14px}
+.interaction-announcement {position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* V1.21: shared AI request labels and candidate-before-apply explanation. */
+body.unified :is(#app,dialog) .unified-ai-label {display:block;font-size:var(--font-size-md);line-height:1.5;font-weight:600;margin:16px 0 8px}
+body.unified :is(#app,dialog) .unified-ai-help {font-size:var(--font-size-sm);line-height:1.65;color:var(--muted)}
+body.unified #app .ai-generate-row>.row {justify-content:flex-end;flex:1 1 100%;gap:8px}
+body.unified #app .ai-generate-row>small {max-width:none}
+body.unified #app .ai-generate-row button {white-space:normal}
+
+
+body.unified #app .ai-adjustment{display:flex;flex-direction:column;min-height:0;max-height:calc(100dvh - var(--prep-footer-height,72px) - 32px);scroll-margin-bottom:calc(var(--prep-footer-height,72px) + 16px)}
+body.unified #app .ai-adjustment>.row,body.unified #app .ai-adjustment .ai-generate-row{flex:none}
+body.unified #app .ai-adjustment-body{min-height:0;overflow:auto;overscroll-behavior:contain;padding:4px;margin:0 -4px}
+body.unified #app .ai-generate-row{padding-top:var(--space-3);border-top:var(--border-width) solid var(--color-border)}
+}
+
+@layer wb-layout {
+/* V1.30: one stable preview action; secondary destinations share one menu. */
+.prep-more-menu{position:relative;flex:none}
+.prep-more-menu>summary{list-style:none;cursor:pointer;white-space:nowrap}
+.prep-more-menu>summary::-webkit-details-marker{display:none}
+.prep-more-menu>summary::after{content:'⌄';margin-left:8px;color:var(--color-text-secondary)}
+.prep-more-menu-items{position:absolute;right:0;top:calc(100% + 8px);z-index:55;display:flex;flex-direction:column;gap:4px;min-width:220px;max-width:calc(100vw - 40px);padding:8px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);box-shadow:var(--shadow-popover)}
+.prep-more-menu:not([open])>.prep-more-menu-items{display:none}
+.prep-more-menu-items>button{width:100%;justify-content:flex-start;text-align:left;white-space:normal}
+@media(max-width:780px){.prep-more-menu-items{right:auto;left:0}}
+}
+@layer wb-layout {
+@media(max-width:440px){
+ .unified-prep-header .prep-head-actions{position:relative}
+ .unified-prep-header .prep-more-menu{position:static}
+ .unified-prep-header .prep-more-menu-items{left:0;right:auto;min-width:min(220px,100%);max-width:100%}
+}
+}
+
+@layer wb-components {
+body[data-unified-module="song"] #app .player-rate-options button{min-width:36px;min-height:36px;height:36px;padding:var(--space-1);font:var(--type-caption);font-variant-numeric:tabular-nums;white-space:nowrap}
+}

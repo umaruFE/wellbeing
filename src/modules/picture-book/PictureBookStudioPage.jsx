@@ -1,16 +1,17 @@
 import React from 'react';
+import { PageLoading } from '../../components/PageLoading';
 import {
   ArrowLeft,
   BookOpenText,
+  Check,
   ChevronLeft,
   ChevronRight,
-  Clock,
   Image,
   LayoutTemplate,
   Loader2,
   Music2,
+  Monitor,
   Pause,
-  Pencil,
   Play,
   Plus,
   RefreshCw,
@@ -31,6 +32,7 @@ import { getPromptTemplate } from '../../services/promptLibrary';
 import { resolveGeneratedAsset } from '../../utils/assetGeneration';
 import { openTeachingWindow } from '../../utils/teachingWindow';
 import { trackEvent } from '../../utils/usageTracker';
+import { createPictureBookCaseDraft } from './pictureBookCases';
 import './PictureBookStudioPage.css';
 
 const initialBasicInfo = {
@@ -97,203 +99,16 @@ function toggleList(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
-function getSelectedTheme(info, isEn = false) {
-  return info.themes[0] || info.themeOther || (isEn ? 'Emotional Expression' : '情绪表达');
-}
-
-function getMaterialsText(info, isEn = false) {
-  const items = [...info.materials, String(info.materialOther || '').trim()].filter(Boolean);
-  return items.join(isEn ? ', ' : '、') || (isEn ? 'Drawing paper, colored pencils/crayons' : '画纸、彩笔/蜡笔');
-}
-
-function recommendFallbackPageCount(info) {
-  const vocabularyCount = String(info.vocabulary || '').split(/[,，、\s]+/).filter(Boolean).length;
-  const materialCount = info.materials.length + (info.materialOther ? 1 : 0);
-  let count = 6;
-  if (vocabularyCount > 4) count += 1;
-  if (vocabularyCount > 8) count += 1;
-  if (materialCount > 2) count += 1;
-  return Math.min(12, Math.max(6, count));
-}
-
-function buildActivityPlan(info, isEn = false) {
-  const theme = getSelectedTheme(info, isEn);
-  const isNatureTheme = theme === '自然探索' || theme === 'Nature Exploration';
-  const vocab = info.vocabulary || (isNatureTheme ? 'leaf, stone, tree, bug, river' : 'happy, sad, calm, brave, friend');
-  const grammar = info.grammar || (isNatureTheme ? 'I can see... / It is...' : 'My friend is/feels... / My friend has...');
-  const materialText = getMaterialsText(info, isEn);
-  const titleMap = {
-    情绪表达: 'My Feeling Friend',
-    自然探索: 'A Tiny Nature Finder',
-    自我认知: 'The Me I Can See',
-    人际关系: 'A Bridge Between Friends',
-    家庭与归属: 'My Warm Little Home',
-    成长与变化: 'I Grow a Little More',
-    感恩与善意: 'A Kindness Spark',
-    身体与感知: 'My Body Says Hello',
-    动物与生命: 'Hello, Little Life',
-    勇气与冒险: 'A Brave Little Step',
-    'Emotional Expression': 'My Feeling Friend',
-    'Nature Exploration': 'A Tiny Nature Finder',
-    'Self-awareness': 'The Me I Can See',
-    Relationships: 'A Bridge Between Friends',
-    'Family and Belonging': 'My Warm Little Home',
-    'Growth and Change': 'I Grow a Little More',
-    'Gratitude and Kindness': 'A Kindness Spark',
-    'Body and Senses': 'My Body Says Hello',
-    'Animals and Life': 'Hello, Little Life',
-    'Courage and Adventure': 'A Brave Little Step',
-  };
-  const storyTitleEn = titleMap[theme] || 'My Creative Journey';
-
-  return {
-    storyTitleEn,
-    storyTitleZh: '',
-    storyContent: isEn
-      ? `An action-led creative journey about ${theme}. Each page invites children to notice, choose, make, and share. Art externalizes inner experience, every choice is accepted, and English appears naturally when children need it to express themselves.`
-      : `围绕“${theme}”展开的行动型创作旅程。每一页引导孩子观察、选择、动手和分享，以艺术外化内在体验，接纳每一种表达，并在真实表达需求中自然使用英文。`,
-    englishGoal: isEn
-      ? `Use the core vocabulary: ${vocab}; use the sentence patterns/grammar: ${grammar}; understand and answer simple questions about the work.`
-      : `使用核心词汇：${vocab}；使用核心句型/语法：${grammar}；能听懂并回应与作品相关的简单提问。`,
-    wellbeingGoal: isEn
-      ? 'Turn inner feelings into visible images and experience understanding, acceptance, and connection through expression and collaboration.'
-      : '将内在感受外化为可被看见的形象；在表达和协作中体验被理解、被接纳和共同创造的联结感。',
-    outputGoal: isEn
-      ? (isNatureTheme ? 'A personal nature discovery artwork and reflection' : 'A personal expressive artwork and a short English sharing moment')
-      : (isNatureTheme ? '一份个人自然发现作品与感受表达' : '一份个人表达作品和一次简短的英文分享'),
-    materials: isEn && !info.materials.length && !info.materialOther ? 'Drawing paper, colored pencils/crayons' : materialText,
-    recommendedPageCount: recommendFallbackPageCount(info),
-  };
-}
-
-function buildPictureBookPages(plan, info, requestedPageCount, isEn = false) {
-  const title = plan.storyTitleEn || 'My Picture Book';
-  const vocab = info.vocabulary || 'happy, sad, calm, brave, friend';
-  const wordAnchors = vocab.split(/[,，、\s]+/).filter(Boolean).slice(0, 6).join(', ');
-  const theme = getSelectedTheme(info, true);
-  const landingPoints = {
-    情绪表达: 'All feelings belong. Every one of them.',
-    'Emotional Expression': 'All feelings belong. Every one of them.',
-    自然探索: 'You are part of nature, and nature is you.',
-    'Nature Exploration': 'You are part of nature, and nature is you.',
-    自我认知: 'There is no one else like you.',
-    'Self-awareness': 'There is no one else like you.',
-    人际关系: 'Being yourself helps us grow closer.',
-    Relationships: 'Being yourself helps us grow closer.',
-    家庭与归属: 'You belong here, exactly as you are.',
-    'Family and Belonging': 'You belong here, exactly as you are.',
-    成长与变化: 'You can change and still be you.',
-    'Growth and Change': 'You can change and still be you.',
-    感恩与善意: 'Your kindness can make the world feel warmer.',
-    'Gratitude and Kindness': 'Your kindness can make the world feel warmer.',
-    身体与感知: 'Your body speaks. You can listen gently.',
-    'Body and Senses': 'Your body speaks. You can listen gently.',
-    动物与生命: 'Every living thing belongs in our shared world.',
-    'Animals and Life': 'Every living thing belongs in our shared world.',
-    勇气与冒险: 'Brave can be one small step.',
-    'Courage and Adventure': 'Brave can be one small step.',
-  };
-  const landingPoint = landingPoints[theme] || 'Every part of you belongs.';
-  const pages = [
-    {
-      pageType: 'cover',
-      imageDescription: isEn
-        ? `Guided picture-book cover, not a narrative scene. Show an inviting art table, simple tools, colorful child-made creations, and a small friendly guide welcoming the child to participate. Render only the English title “${title}”.`
-        : `引导绘本封面，不是叙事场景。展示有吸引力的创作桌、简单工具、色彩丰富的儿童作品，以及欢迎孩子参与的小导游。画面只呈现英文标题“${title}”。`,
-      text: title,
-    },
-    {
-      pageType: 'question',
-      imageDescription: isEn ? 'Open question page. Show a gentle color cloud and a large clear response area where the child can point or imagine. No story action and no correct answer.' : '开放式提问页。展示柔和的颜色云和一块清晰宽敞的回应区域，让孩子可以指认或想象。不设置故事情节和标准答案。',
-      text: 'What color feels like you today?',
-    },
-    {
-      pageType: 'choice',
-      visualWords: vocab.split(/[,，、\s]+/).filter(Boolean).slice(0, 6),
-      imageDescription: isEn ? `Choice page. Show six clear illustrated option cards with picture-and-word anchors using these English target words: ${wordAnchors}. Leave generous space for pointing and choosing.` : `选择页。展示六张清晰的图文选项卡，使用这些英文目标词汇作为“图案+单词”锚点：${wordAnchors}。留出充足空间供孩子指认和选择。`,
-      text: 'Point to the word that fits.',
-    },
-    {
-      pageType: 'question',
-      imageDescription: isEn ? 'Body-awareness question page. Show a simple child-friendly body outline with softly highlighted areas and an open response space. Invite noticing without judgment.' : '身体觉察提问页。展示适合儿童理解的简洁身体轮廓、柔和高亮的身体区域和开放回应空间，引导孩子不带评判地觉察。',
-      text: 'Where do you feel it?',
-    },
-    {
-      pageType: 'instruction',
-      imageDescription: isEn ? `Preparation instruction page. Clearly show ${plan.materials || 'paper and colored pencils'} as simple tool icons beside a large blank workspace waiting for the child's creation.` : `准备指令页。用简洁工具图标清楚展示${plan.materials || '画纸和彩笔'}，旁边保留一块等待孩子创作的大面积空白区域。`,
-      text: 'Take your paper and colors.',
-    },
-    {
-      pageType: 'choice',
-      visualWords: ['round', 'spiky', 'wavy', 'tiny', 'wide', 'twisty'],
-      imageDescription: isEn ? 'Inspiration choice page. Show six non-perfect child-made shape cards: round, spiky, wavy, tiny, wide, and twisty. Each shape has its exact English word label.' : '灵感选择页。展示六张带有儿童手作感、不追求完美的形状卡片：round、spiky、wavy、tiny、wide、twisty。每种形状配对应的英文单词标签。',
-      text: 'Choose a shape that feels right.',
-    },
-    {
-      pageType: 'instruction',
-      imageDescription: isEn ? 'Drawing instruction page. Show a pencil beginning one expressive shape and a large mostly blank area for the child. Emphasize that big and small are equally welcome.' : '绘画指令页。展示一支铅笔正在画出富有表现力的形状，并为孩子保留大面积空白创作区。传达画大或画小都可以被接纳。',
-      text: 'Draw it big or small.',
-    },
-    {
-      pageType: 'rule',
-      imageDescription: isEn ? 'Game rule page. Show a large six-sided die and a visual equation: die dots equal the number of parts to add. Use icons and minimal English labels, not a narrative scene.' : '游戏规则页。展示一个醒目的六面骰子和视觉等式：骰子点数等于需要添加的身体部位数量。使用图标和极少量英文标签，不画叙事场景。',
-      text: 'Roll. Count. Add that many parts.',
-    },
-    {
-      pageType: 'instruction',
-      imageDescription: isEn ? 'Action page with clear illustrated choices for eyes, ears, hands, feet, mouths, and antennae. Each option has a simple English word anchor.' : '行动指令页。清晰展示眼睛、耳朵、手、脚、嘴巴和触角等图示选项，每个选项配一个简单的英文单词锚点。',
-      text: 'Add eyes, ears, hands, or feet.',
-    },
-    {
-      pageType: 'instruction',
-      imageDescription: isEn ? 'Creative invitation page showing optional wings, spots, stars, pockets, and soft spikes as idea cards, plus open space for the child’s own idea. Avoid polished model answers.' : '创意邀请页。用灵感卡展示可选的翅膀、斑点、星星、口袋和柔软尖角，并为孩子自己的想法保留开放空间。避免提供精致的标准答案。',
-      text: 'Add one special power.',
-    },
-    {
-      pageType: 'instruction',
-      imageDescription: isEn ? 'Coloring action page. Show two or three selected color swatches, a child’s hand coloring an expressive shape, and a spacious unfinished area. Every color choice is accepted.' : '上色行动页。展示两到三种已选色块、孩子正在为富有表现力的形状上色的手，以及宽敞的未完成区域。接纳每一种颜色选择。',
-      text: 'Pick two colors. Fill your shape.',
-    },
-    {
-      pageType: 'instruction',
-      imageDescription: isEn ? 'Naming page. Show the finished creation beside one simple blank name tag and a pencil. The small guide waits quietly without suggesting an answer.' : '命名指令页。展示完成的作品、一个简洁的空白姓名牌和一支铅笔。小导游安静等待，不暗示任何答案。',
-      text: 'Give your creation a name.',
-    },
-    {
-      pageType: 'question',
-      imageDescription: isEn ? `Sharing prompt page. Show a child holding their creation with two short English sentence anchors: “I feel...” and “My friend feels...”. Include small picture-and-word anchors from: ${wordAnchors}.` : `分享提问页。展示孩子拿着自己的作品，并呈现两个简短英文句式锚点：“I feel...”和“My friend feels...”。加入这些词汇的小型“图案+单词”锚点：${wordAnchors}。`,
-      text: 'Share: “I feel...”',
-    },
-    {
-      pageType: 'back-cover',
-      imageDescription: isEn ? `Back cover. A calm, spacious composition with the small guide waving goodbye. Render only this exact English landing point and no other content: “${landingPoint}”` : `封底。画面平静、留白充足，小导游挥手告别。只呈现这句准确的英文精神落脚点，不添加其他内容：“${landingPoint}”`,
-      text: landingPoint,
-    },
-  ];
-  const pageCount = Math.min(14, Math.max(6, Number(requestedPageCount) || recommendFallbackPageCount(info)));
-  const selectionPriority = [0, 1, 4, 10, 12, 13, 2, 5, 11, 3, 6, 9, 8, 7];
-  const selectedPages = selectionPriority.slice(0, pageCount).sort((a, b) => a - b).map((index) => pages[index]);
-  return selectedPages.map((page, index) => ({
-    id: `page-${Date.now()}-${index + 1}`,
-    page: index + 1,
-    pageType: page.pageType,
-    visualWords: Array.isArray(page.visualWords) ? page.visualWords : [],
-    imageDescription: page.imageDescription,
-    imagePrompt: `Create a child-friendly guided picture-book ${page.pageType} page. Make the child action visually obvious with clear objects, choices, tools, and generous response space. Do not render labels, captions, annotations, speech bubbles, pseudo-text, symbols that resemble writing, or any typography beyond the separately supplied exact page text.`,
-    text: page.text,
-    imageUrl: '',
-    status: 'placeholder',
-    error: '',
-  }));
-}
-
 export function PictureBookStudioPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isEn = i18n.language?.startsWith('en');
   const [view, setView] = React.useState('list');
   const [bookList, setBookList] = React.useState([]);
-  const [listLoading, setListLoading] = React.useState(false);
+  const [listLoading, setListLoading] = React.useState(true);
+  const [listError, setListError] = React.useState(false);
+  const [listNotice, setListNotice] = React.useState('');
+  const [libraryTab, setLibraryTab] = React.useState('mine');
   const [searchTerm, setSearchTerm] = React.useState('');
   const [editingBookId, setEditingBookId] = React.useState(null);
   const [step, setStep] = React.useState(0);
@@ -333,9 +148,48 @@ export function PictureBookStudioPage() {
   const [aiMusicResult, setAiMusicResult] = React.useState(null);
   const [aiMusicError, setAiMusicError] = React.useState('');
   const musicPreviewRef = React.useRef(null);
+  const musicDialogRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (!showMusicPicker) return;
+    const dialog = musicDialogRef.current;
+    const previousFocus = document.activeElement;
+    const audio = musicPreviewRef.current;
+    dialog?.showModal();
+    return () => {
+      audio?.pause();
+      dialog?.close();
+      if (previousFocus?.isConnected) previousFocus.focus();
+    };
+  }, [showMusicPicker]);
+
+  const closeMusicPicker = () => {
+    musicPreviewRef.current?.pause();
+    setPreviewMusicId(null);
+    setShowMusicPicker(false);
+  };
+
+  const handleMusicBackdropClick = (event) => {
+    if (event.target !== event.currentTarget) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeMusicPicker();
+  };
+
+  const handleMusicTabKeyDown = (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tabs = [...event.currentTarget.querySelectorAll('[role="tab"]')];
+    const current = tabs.indexOf(document.activeElement);
+    if (current < 0) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+      : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    setMusicSourceTab(tabs[next].dataset.source);
+    tabs[next].focus();
+  };
 
   const fetchBookList = React.useCallback(async () => {
     setListLoading(true);
+    setListError(false);
     try {
       const params = { limit: 100 };
       if (user?.id) params.userId = user.id;
@@ -343,7 +197,7 @@ export function PictureBookStudioPage() {
       setBookList(result.data || []);
     } catch (err) {
       console.error('fetch picture books failed:', err);
-      setBookList([]);
+      setListError(true);
     } finally {
       setListLoading(false);
     }
@@ -420,6 +274,8 @@ export function PictureBookStudioPage() {
   };
 
   const openBook = (book) => {
+    setLibraryTab('mine');
+    setListNotice('');
     editingBookIdRef.current = book.id;
     setEditingBookId(book.id);
     const data = book.book_data || {};
@@ -432,6 +288,9 @@ export function PictureBookStudioPage() {
   };
 
   const createNewBook = () => {
+    setLibraryTab('mine');
+    setSearchTerm('');
+    setListNotice('');
     editingBookIdRef.current = null;
     setEditingBookId(null);
     setBasicInfo(initialBasicInfo);
@@ -441,6 +300,35 @@ export function PictureBookStudioPage() {
     setStep(0);
     setMessage('');
     setView('studio');
+  };
+
+  const useBookCase = (book) => {
+    const data = createPictureBookCaseDraft(book);
+    setListNotice('');
+    editingBookIdRef.current = null;
+    setEditingBookId(null);
+    setBasicInfo({ ...initialBasicInfo, ...data.basicInfo });
+    setActivityPlan({ ...initialActivityPlan, ...data.activityPlan });
+    setPages(data.pages || []);
+    setBackgroundMusic(data.backgroundMusic || null);
+    setStep(0);
+    setLibraryTab('mine');
+    setSearchTerm('');
+    setMessage('');
+    setSaveState('');
+    setView('studio');
+  };
+
+  const presentBook = (book) => {
+    setListNotice('');
+    const data = book.book_data || {};
+    if (!(data.pages || []).some((page) => page.imageUrl || page.img || page.subtitle || page.text)) {
+      setListNotice(t('pictureBook.presentEmpty'));
+      return;
+    }
+    if (!openTeachingWindow({ pages: data.pages, title: book.title || t('pictureBook.untitled'), backgroundMusic: data.backgroundMusic || null })) {
+      setListNotice(t('pictureBook.previewBlocked'));
+    }
   };
 
   const saveBook = async (extraData = {}) => {
@@ -506,13 +394,11 @@ export function PictureBookStudioPage() {
   };
 
   const backToList = async () => {
-    await saveBook();
-    setView('list');
+    if (await saveBook()) setView('list');
   };
 
   const goToStep = async (nextStep) => {
-    await saveBook({ step: nextStep });
-    setStep(nextStep);
+    if (await saveBook({ step: nextStep })) setStep(nextStep);
   };
 
   const steps = [
@@ -544,9 +430,8 @@ export function PictureBookStudioPage() {
     setGenerating(true);
     setMessage(t('pictureBook.generatingPlan'));
     try {
-      const res = await fetch('/api/rag/generate', {
+      const data = await apiService.request('/api/rag/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'activity-plan',
           basicInfo,
@@ -554,44 +439,26 @@ export function PictureBookStudioPage() {
           outputLanguage: isEn ? 'English' : 'Chinese',
         }),
       });
-      const data = await res.json();
-      if (data.success && data.activityPlan) {
-        const nextPlan = { ...initialActivityPlan, ...data.activityPlan };
-        setActivityPlan(nextPlan);
-        setPages([]);
-        setMessage('');
-        setStep(1);
-        await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
-        trackEvent('picturebook.activity-plan.generate.success', 'picture_book', editingBookIdRef.current || editingBookId, {
-          themes: basicInfo.themes,
-          age: basicInfo.age,
-          level: basicInfo.level,
-          source: 'ai',
-        });
-      } else {
-        // Fallback to local template
-        const nextPlan = buildActivityPlan(basicInfo, isEn);
-        setActivityPlan(nextPlan);
-        setPages([]);
-        setMessage(data.error || t('pictureBook.planFallback'));
-        setStep(1);
-        await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
-        trackEvent('picturebook.activity-plan.generate.fallback', 'picture_book', editingBookIdRef.current || editingBookId, {
-          error: data.error || 'API generation failed',
-          source: 'local-template',
-        });
+      if (!data.success || !data.activityPlan) {
+        throw new Error(data.error || t('pictureBook.planFailed'));
       }
-    } catch (err) {
-      // Fallback to local template
-      const nextPlan = buildActivityPlan(basicInfo, isEn);
+
+      const nextPlan = { ...initialActivityPlan, ...data.activityPlan };
       setActivityPlan(nextPlan);
       setPages([]);
-      setMessage(`${t('pictureBook.planFallback')}: ${err.message}`);
+      setMessage('');
       setStep(1);
       await saveBook({ activityPlan: nextPlan, pages: [], step: 1 });
+      trackEvent('picturebook.activity-plan.generate.success', 'picture_book', editingBookIdRef.current || editingBookId, {
+        themes: basicInfo.themes,
+        age: basicInfo.age,
+        level: basicInfo.level,
+        source: 'ai',
+      });
+    } catch (error) {
+      setMessage(error.message || t('pictureBook.planFailed'));
       trackEvent('picturebook.activity-plan.generate.error', 'picture_book', editingBookIdRef.current || editingBookId, {
-        error: err.message,
-        source: 'local-template',
+        error: error.message,
       });
     } finally {
       setGenerating(false);
@@ -601,13 +468,10 @@ export function PictureBookStudioPage() {
   const buildDesign = async () => {
     setGenerating(true);
     setMessage(t('pictureBook.generatingDesign'));
-    const pageCount = pages.length > 0
-      ? pages.length
-      : Number(activityPlan.recommendedPageCount) || undefined;
+    const pageCount = pages.length || Number(activityPlan.recommendedPageCount) || undefined;
     try {
-      const res = await fetch('/api/rag/generate', {
+      const data = await apiService.request('/api/rag/generate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'picture-book-design',
           basicInfo,
@@ -617,52 +481,34 @@ export function PictureBookStudioPage() {
           outputLanguage: isEn ? 'English' : 'Chinese',
         }),
       });
-      const data = await res.json();
-      if (data.success && data.pages && data.pages.length > 0) {
-        const nextPages = data.pages.map((p, i) => ({
-          id: `page-${Date.now()}-${i}`,
-          page: p.page || i + 1,
-          pageType: p.pageType || 'instruction',
-          imageDescription: p.imageDescription || '',
-          imagePrompt: p.imagePrompt || '',
-          visualWords: Array.isArray(p.visualWords) ? p.visualWords : [],
-          text: p.text || '',
-          imageUrl: '',
-          status: 'placeholder',
-          error: '',
-        }));
-        setPages(nextPages);
-        setMessage('');
-        setStep(2);
-        await saveBook({ pages: nextPages, step: 2 });
-        trackEvent('picturebook.design.generate.success', 'picture_book', editingBookIdRef.current || editingBookId, {
-          pageCount: nextPages.length,
-          source: 'ai',
-        });
-      } else {
-        // Fallback to local template
-        const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount, isEn);
-        setPages(fallbackPages);
-        setMessage(data.error || t('pictureBook.designFallback'));
-        setStep(2);
-        await saveBook({ pages: fallbackPages, step: 2 });
-        trackEvent('picturebook.design.generate.fallback', 'picture_book', editingBookIdRef.current || editingBookId, {
-          pageCount: fallbackPages.length,
-          error: data.error || 'API generation failed',
-          source: 'local-template',
-        });
+      if (!data.success || !Array.isArray(data.pages) || !data.pages.length) {
+        throw new Error(data.error || t('pictureBook.designFailed'));
       }
-    } catch (err) {
-      // Fallback to local template
-      const fallbackPages = buildPictureBookPages(activityPlan, basicInfo, pageCount, isEn);
-      setPages(fallbackPages);
-      setMessage(`${t('pictureBook.designFallback')}: ${err.message}`);
+
+      const nextPages = data.pages.map((p, i) => ({
+        id: `page-${Date.now()}-${i}`,
+        page: p.page || i + 1,
+        pageType: p.pageType || 'instruction',
+        imageDescription: p.imageDescription || '',
+        imagePrompt: p.imagePrompt || '',
+        visualWords: Array.isArray(p.visualWords) ? p.visualWords : [],
+        text: p.text || '',
+        imageUrl: '',
+        status: 'placeholder',
+        error: '',
+      }));
+      setPages(nextPages);
+      setMessage('');
       setStep(2);
-      await saveBook({ pages: fallbackPages, step: 2 });
+      await saveBook({ pages: nextPages, step: 2 });
+      trackEvent('picturebook.design.generate.success', 'picture_book', editingBookIdRef.current || editingBookId, {
+        pageCount: nextPages.length,
+        source: 'ai',
+      });
+    } catch (error) {
+      setMessage(error.message || t('pictureBook.designFailed'));
       trackEvent('picturebook.design.generate.error', 'picture_book', editingBookIdRef.current || editingBookId, {
-        pageCount: fallbackPages.length,
-        error: err.message,
-        source: 'local-template',
+        error: error.message,
       });
     } finally {
       setGenerating(false);
@@ -877,79 +723,74 @@ export function PictureBookStudioPage() {
   };
 
   const enterMaking = async (mode) => {
+    if (!(await saveBook({ step: 3 }))) return;
     setStep(3);
-    await saveBook({ step: 3 });
     if (mode === 'all') await generateAllImages();
   };
 
   return (
-    <main className="picture-book-studio-v2">
+    <main className={`picture-book-studio-v2${view === 'list' ? ' pbv2-library' : ' wb-authoring'}`}>
       {view === 'list' ? (
         <PictureBookListView
-          books={bookList.filter((b) => (b.title || '').toLowerCase().includes(searchTerm.toLowerCase()))}
+          books={bookList}
+          cases={bookList.filter((book) => book.status === 'published')}
+          activeTab={libraryTab}
+          onTabChange={(tab) => { setLibraryTab(tab); setSearchTerm(''); setListNotice(''); }}
           loading={listLoading}
+          error={listError}
+          notice={listNotice}
+          onRetry={fetchBookList}
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           onCreate={createNewBook}
           onOpen={openBook}
+          onUseCase={useBookCase}
           onDelete={deleteBook}
-          onPresent={(book) => {
-            const data = book.book_data || {};
-            if (!openTeachingWindow({ pages: data.pages || [], title: book.title || t('pictureBook.present', '授课'), backgroundMusic: data.backgroundMusic || null })) {
-              setMessage(t('pictureBook.presentEmpty', '该绘本还没有可播放的页面'));
-            }
-          }}
+          onPresent={presentBook}
         />
       ) : (
         <>
-          <header className="pbv2-topbar">
-            <div className="pbv2-topbar-left">
-              <div className="pbv2-topbar-icon">
-                <BookOpenText size={28} />
+          <div className="wb-authoring-heading">
+            <button type="button" className="wb-button quiet" onClick={backToList} disabled={saving}>
+              <ArrowLeft size={16} aria-hidden="true" />{t('pictureBook.backToList')}
+            </button>
+            <header className="wb-authoring-header">
+              <h1 className="wb-authoring-title">{activityPlan.storyTitleEn || t('pictureBook.newBook')}</h1>
+              <div className="wb-authoring-actions">
+                <button type="button" className="wb-button" onClick={() => saveBook()} disabled={saving}>
+                  {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
+                  {saving ? t('pictureBook.saving') : t('pictureBook.saveProgress')}
+                </button>
               </div>
-              <div>
-                <h1>{t('pictureBook.studioTitle')}</h1>
-                <p>{t('pictureBook.studioSubtitle')}</p>
+              <div className="wb-authoring-status" role="status" aria-live="polite">
+                <span className={`wb-status${saveState === t('pictureBook.saveFailed') ? ' is-error' : ''}`}>{saving ? t('pictureBook.saving') : saveState || t('pictureBook.draft')}</span>
               </div>
-            </div>
-            <div className="pbv2-topbar-actions">
-              <span className={`pbv2-save-state ${saveState === t('pictureBook.saveFailed') ? 'is-error' : ''}`}>{saveState}</span>
-              <button type="button" className="pbv2-save-btn" onClick={() => saveBook()} disabled={saving}>
-                {saving ? <Loader2 className="spin" size={16} /> : <Save size={16} />}
-                {saving ? t('pictureBook.saving') : t('pictureBook.saveProgress')}
-              </button>
-              <button type="button" className="pbv2-back-btn" onClick={backToList}>
-                <ArrowLeft size={16} />
-                {t('pictureBook.backToList')}
-              </button>
-            </div>
-          </header>
+            </header>
+          </div>
 
-      <div className="pbv2-shell">
-        <aside className="pbv2-steps">
+        <nav className="wb-authoring-steps" aria-label={t('pictureBook.studioTitle')}>
           {steps.map((label, index) => (
             <button
               type="button"
               key={label}
-              className={`${step === index ? 'is-active' : ''} ${step > index ? 'is-done' : ''}`}
+              className={`wb-authoring-step${step === index ? ' active' : ''}${step > index ? ' complete' : ''}`}
+              aria-current={step === index ? 'step' : undefined}
+              disabled={saving || generating || generatingAll}
               onClick={() => goToStep(index)}
             >
-              <span>{index + 1}</span>
-              <strong>{label}</strong>
+              <span className="wb-step-number" aria-hidden="true">{index + 1}</span>
+              <span className="wb-step-label">{label}</span>
             </button>
           ))}
-        </aside>
+        </nav>
 
-        <section className={`pbv2-workspace pbv2-workspace-step-${step}`}>
-          {message && <div className="pbv2-message">{message}</div>}
+        <section className="wb-authoring-body" aria-label={steps[step]} aria-busy={generating || generatingAll}>
+          {message && <div className={`wb-notice${generating || generatingAll ? '' : ' warning'}`} role="status" aria-live="polite">{generating || generatingAll ? <Loader2 className="spin" size={16} aria-hidden="true" /> : null}{message}</div>}
 
           {step === 0 && (
             <BasicInfoStep
               basicInfo={basicInfo}
               setBasicField={setBasicField}
-              buildPlan={buildPlan}
-              canBuildPlan={canBuildPlan}
-              generating={generating}
             />
           )}
 
@@ -957,9 +798,6 @@ export function PictureBookStudioPage() {
             <ActivityPlanStep
               activityPlan={activityPlan}
               setPlanField={setPlanField}
-              onBack={() => setStep(0)}
-              onBuildDesign={buildDesign}
-              generating={generating}
             />
           )}
 
@@ -969,9 +807,6 @@ export function PictureBookStudioPage() {
               updatePage={updatePage}
               addPage={addPage}
               removePage={removePage}
-              onBack={() => setStep(1)}
-              onMake={enterMaking}
-              generatingAll={generatingAll}
             />
           )}
 
@@ -979,122 +814,144 @@ export function PictureBookStudioPage() {
             <PictureBookMakingStep
               pages={pages}
               updatePage={updatePage}
-              onBack={() => setStep(2)}
-              onGenerateAll={generateAllImages}
               onGenerateOne={generateOneImage}
               onUpload={uploadPageImage}
-              generatingAll={generatingAll}
               backgroundMusic={backgroundMusic}
               onChooseMusic={() => setShowMusicPicker(true)}
               onRemoveMusic={async () => { setBackgroundMusic(null); await saveBackgroundMusic(null); }}
-              onPresent={() => {
-                if (!openTeachingWindow({ pages, title: activityPlan.storyTitleEn || t('pictureBook.untitled'), backgroundMusic })) {
-                  setMessage(t('pictureBook.presentEmpty', '该绘本还没有可播放的页面'));
-                }
-              }}
             />
           )}
         </section>
-      </div>
+        <footer className="wb-authoring-footer">
+          <div className="wb-footer-meta">{steps[step]}</div>
+          <div className="wb-footer-actions">
+            {step > 0 && <button type="button" className="wb-button quiet" disabled={saving || generating || generatingAll} onClick={() => goToStep(step - 1)}><ArrowLeft size={16} aria-hidden="true" />{t(['pictureBook.backToBasic', 'pictureBook.backToPlan', 'pictureBook.backToDesign'][step - 1])}</button>}
+            {step === 0 && <button type="button" className="wb-button primary" disabled={!canBuildPlan || generating || saving} onClick={buildPlan}>{generating ? <Loader2 className="spin" size={16} /> : <Wand2 size={16} />}{generating ? t('pictureBook.generating') : t('pictureBook.generatePlan')}</button>}
+            {step === 1 && <button type="button" className="wb-button primary" disabled={generating || saving} onClick={buildDesign}>{generating ? <Loader2 className="spin" size={16} /> : <BookOpenText size={16} />}{generating ? t('pictureBook.generating') : t('pictureBook.generateDesign')}</button>}
+            {step === 2 && <button type="button" className="wb-button primary" disabled={generatingAll || saving} onClick={() => enterMaking('all')}>{generatingAll ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}{generatingAll ? t('pictureBook.generating') : t('pictureBook.generateBook')}</button>}
+            {step === 3 && <><button type="button" className="wb-button" disabled={generatingAll || saving} onClick={generateAllImages}>{generatingAll ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}{generatingAll ? t('pictureBook.generating') : t('pictureBook.regenerateAll')}</button><button type="button" className="wb-button primary" disabled={pages.length === 0} onClick={() => { if (!openTeachingWindow({ pages, title: activityPlan.storyTitleEn || t('pictureBook.untitled'), backgroundMusic })) setMessage(t('pictureBook.presentEmpty')); }}><Monitor size={16} />{t('common.teachMode')}</button></>}
+          </div>
+        </footer>
         </>
       )}
 
       {showMusicPicker && (
-        <div className="pbv2-music-overlay" onClick={() => setShowMusicPicker(false)}>
-          <div className="pbv2-music-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="pbv2-music-head"><div><h2>{t('pictureBook.musicPickerTitle')}</h2><p>{t('pictureBook.musicPickerHint')}</p></div><button type="button" onClick={() => setShowMusicPicker(false)}><X size={18} /></button></div>
+        <dialog ref={musicDialogRef} className="wb-dialog pbv2-music-modal" aria-labelledby="pbv2-music-title" onCancel={(event) => { event.preventDefault(); closeMusicPicker(); }} onClick={handleMusicBackdropClick}>
+          <div className="pbv2-music-content">
+            <div className="wb-dialog-heading pbv2-music-head"><div><h2 id="pbv2-music-title">{t('pictureBook.musicPickerTitle')}</h2><p>{t('pictureBook.musicPickerHint')}</p></div><button type="button" className="wb-button quiet" aria-label={t('common.close')} onClick={closeMusicPicker}><X size={18} /></button></div>
             <audio ref={musicPreviewRef} onEnded={() => setPreviewMusicId(null)} />
-            <div className="pbv2-music-tabs"><button type="button" className={musicSourceTab === 'audio' ? 'active' : ''} onClick={() => setMusicSourceTab('audio')}>{t('pictureBook.tabAudioLibrary')}</button><button type="button" className={musicSourceTab === 'song' ? 'active' : ''} onClick={() => setMusicSourceTab('song')}>{t('pictureBook.tabSongLibrary')}</button><button type="button" className={musicSourceTab === 'ai' ? 'active' : ''} onClick={() => setMusicSourceTab('ai')}><Wand2 size={14} />{t('pictureBook.tabAiGenerate')}</button></div>
-            {musicSourceTab === 'audio' && <div className="pbv2-music-list">{audioLibrary.map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{audioLibrary.length === 0 && <div className="pbv2-music-empty">{t('pictureBook.audioEmptyMusic')}</div>}</div>}
-            {musicSourceTab === 'song' && <div className="pbv2-music-list">{songLibrary.flatMap((song) => [{ ...song, id: `song-${song.id}-instrumental`, name: `${song.name}${t('pictureBook.nameInstrumental')}`, url: song.instrumentalUrl, source: 'song' }, { ...song, id: `song-${song.id}-vocal`, name: `${song.name}${t('pictureBook.nameVocal')}`, url: song.vocalUrl, source: 'song' }]).filter((music) => music.url).map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); setShowMusicPicker(false); await saveBackgroundMusic(music); }} />)}{songLibrary.every((song) => !song.instrumentalUrl && !song.vocalUrl) && <div className="pbv2-music-empty">{t('pictureBook.songEmptyMusic')}</div>}</div>}
-            {musicSourceTab === 'ai' && <div className="pbv2-ai-music"><label><span>{t('pictureBook.aiDescLabel')}</span><textarea value={aiMusicForm.prompt} onChange={(event) => setAiMusicForm((current) => ({ ...current, prompt: event.target.value }))} placeholder={t('pictureBook.aiDescPlaceholder')} /></label><div className="pbv2-ai-music-row"><label><span>{t('pictureBook.aiStyleLabel')}</span><select value={aiMusicForm.style} onChange={(event) => setAiMusicForm((current) => ({ ...current, style: event.target.value }))}><option value="calm, peaceful, warm, instrumental">{t('pictureBook.styleCalm')}</option><option value="happy, cheerful, playful, instrumental">{t('pictureBook.stylePlayful')}</option><option value="dreamy, magical, gentle, instrumental">{t('pictureBook.styleDreamy')}</option><option value="nature, peaceful, acoustic, instrumental">{t('pictureBook.styleNature')}</option></select></label><label><span>{t('pictureBook.aiDurationLabel')}</span><select value={aiMusicForm.duration} onChange={(event) => setAiMusicForm((current) => ({ ...current, duration: Number(event.target.value) }))}>{[15, 30, 60, 90].map((duration) => <option key={duration} value={duration}>{t('pictureBook.durationSeconds', { n: duration })}</option>)}</select></label></div><button type="button" className="pbv2-ai-generate" disabled={!aiMusicForm.prompt.trim() || aiMusicGenerating} onClick={generateAiMusic}>{aiMusicGenerating ? <Loader2 className="spin" size={15} /> : <Wand2 size={15} />}{aiMusicGenerating ? t('pictureBook.aiGeneratingLong') : t('pictureBook.aiGenerateMusic')}</button>{aiMusicError && <p className="pbv2-ai-music-error">{aiMusicError}</p>}{aiMusicResult && <MusicPickerItem music={aiMusicResult} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} selectLabel={t('pictureBook.useThisMusic')} onSelect={async () => { setBackgroundMusic(aiMusicResult); setShowMusicPicker(false); await saveBackgroundMusic(aiMusicResult); }} />}</div>}
+            <div className="pbv2-music-tabs" role="tablist" aria-label={t('pictureBook.musicPickerTitle')} onKeyDown={handleMusicTabKeyDown}>
+              {[['audio', 'pictureBook.tabAudioLibrary'], ['song', 'pictureBook.tabSongLibrary'], ['ai', 'pictureBook.tabAiGenerate']].map(([source, label]) => <button key={source} type="button" role="tab" id={`pbv2-music-tab-${source}`} aria-controls={`pbv2-music-panel-${source}`} aria-selected={musicSourceTab === source} tabIndex={musicSourceTab === source ? 0 : -1} data-source={source} className={musicSourceTab === source ? 'active' : ''} onClick={() => setMusicSourceTab(source)}>{source === 'ai' && <Wand2 size={14} />}{t(label)}</button>)}
+            </div>
+            {musicSourceTab === 'audio' && <div className="pbv2-music-list" role="tabpanel" id="pbv2-music-panel-audio" aria-labelledby="pbv2-music-tab-audio" tabIndex={0}>{audioLibrary.map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); closeMusicPicker(); await saveBackgroundMusic(music); }} />)}{audioLibrary.length === 0 && <div className="pbv2-music-empty">{t('pictureBook.audioEmptyMusic')}</div>}</div>}
+            {musicSourceTab === 'song' && <div className="pbv2-music-list" role="tabpanel" id="pbv2-music-panel-song" aria-labelledby="pbv2-music-tab-song" tabIndex={0}>{songLibrary.flatMap((song) => [{ ...song, id: `song-${song.id}-instrumental`, name: `${song.name}${t('pictureBook.nameInstrumental')}`, url: song.instrumentalUrl, source: 'song' }, { ...song, id: `song-${song.id}-vocal`, name: `${song.name}${t('pictureBook.nameVocal')}`, url: song.vocalUrl, source: 'song' }]).filter((music) => music.url).map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); closeMusicPicker(); await saveBackgroundMusic(music); }} />)}{songLibrary.every((song) => !song.instrumentalUrl && !song.vocalUrl) && <div className="pbv2-music-empty">{t('pictureBook.songEmptyMusic')}</div>}</div>}
+            {musicSourceTab === 'ai' && <div className="pbv2-ai-music" role="tabpanel" id="pbv2-music-panel-ai" aria-labelledby="pbv2-music-tab-ai" aria-busy={aiMusicGenerating} tabIndex={0}><label><span>{t('pictureBook.aiDescLabel')}</span><textarea value={aiMusicForm.prompt} onChange={(event) => setAiMusicForm((current) => ({ ...current, prompt: event.target.value }))} placeholder={t('pictureBook.aiDescPlaceholder')} /></label><div className="pbv2-ai-music-row"><label><span>{t('pictureBook.aiStyleLabel')}</span><select value={aiMusicForm.style} onChange={(event) => setAiMusicForm((current) => ({ ...current, style: event.target.value }))}><option value="calm, peaceful, warm, instrumental">{t('pictureBook.styleCalm')}</option><option value="happy, cheerful, playful, instrumental">{t('pictureBook.stylePlayful')}</option><option value="dreamy, magical, gentle, instrumental">{t('pictureBook.styleDreamy')}</option><option value="nature, peaceful, acoustic, instrumental">{t('pictureBook.styleNature')}</option></select></label><label><span>{t('pictureBook.aiDurationLabel')}</span><select value={aiMusicForm.duration} onChange={(event) => setAiMusicForm((current) => ({ ...current, duration: Number(event.target.value) }))}>{[15, 30, 60, 90].map((duration) => <option key={duration} value={duration}>{t('pictureBook.durationSeconds', { n: duration })}</option>)}</select></label></div><button type="button" className="wb-button primary" disabled={!aiMusicForm.prompt.trim() || aiMusicGenerating} onClick={generateAiMusic}>{aiMusicGenerating ? <Loader2 className="spin" size={15} /> : <Wand2 size={15} />}{aiMusicGenerating ? t('pictureBook.aiGeneratingLong') : t('pictureBook.aiGenerateMusic')}</button>{aiMusicError && <p className="wb-notice error" role="alert">{aiMusicError}</p>}{aiMusicResult && <MusicPickerItem music={aiMusicResult} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} selectLabel={t('pictureBook.useThisMusic')} onSelect={async () => { setBackgroundMusic(aiMusicResult); closeMusicPicker(); await saveBackgroundMusic(aiMusicResult); }} />}</div>}
           </div>
-        </div>
+        </dialog>
       )}
     </main>
   );
 }
 
-function PictureBookListView({ books, loading, searchTerm, setSearchTerm, onCreate, onOpen, onDelete, onPresent }) {
+function PictureBookListView({ books, cases, activeTab, onTabChange, loading, error, notice, onRetry, searchTerm, setSearchTerm, onCreate, onOpen, onUseCase, onDelete, onPresent }) {
   const { t } = useTranslation();
+  const isCases = activeTab === 'cases';
+  const query = searchTerm.trim().toLowerCase();
+  const visibleBooks = (isCases ? cases : books).filter((book) =>
+    [book.title, book.book_data?.activityPlan?.storyTitleZh].some((value) => String(value || '').toLowerCase().includes(query)));
+  const handleTabKeyDown = (event) => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tabs = [...event.currentTarget.querySelectorAll('[role="tab"]')];
+    const current = tabs.indexOf(document.activeElement);
+    if (current < 0) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+      : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    onTabChange(tabs[next].dataset.source);
+    tabs[next].focus();
+  };
+
   return (
     <div className="pbv2-list-page">
-      <header className="pbv2-topbar">
-        <div className="pbv2-topbar-left">
-          <div className="pbv2-topbar-icon">
-            <BookOpenText size={28} />
-          </div>
-          <div>
-            <h1>{t('pictureBook.listTitle')}</h1>
-            <p>{t('pictureBook.listSubtitle')}</p>
-          </div>
+      <header className="pbv2-library-header">
+        <h1>{t('sidebar.artExpression')}</h1>
+        <div className="pbv2-library-actions">
+          <button type="button" className="pbv2-create-btn" onClick={onCreate}>
+            <Plus size={18} aria-hidden="true" />{t('pictureBook.newBook')}
+          </button>
         </div>
-        <button type="button" className="pbv2-create-btn" onClick={onCreate}>
-          <Plus size={18} />
-          {t('pictureBook.newBook')}
-        </button>
       </header>
 
-      <div className="pbv2-list-toolbar">
-        <div className="pbv2-search-box">
-          <Search size={16} />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t('pictureBook.searchPlaceholder')}
-          />
-        </div>
-      </div>
-
-      {loading ? (
-        <div className="pbv2-list-loading">
-          <Loader2 className="spin" size={28} />
-        </div>
-      ) : books.length === 0 ? (
-        <div className="pbv2-list-empty">
-          <BookOpenText size={48} />
-          <p>{t('pictureBook.empty')}</p>
-        </div>
-      ) : (
-        <div className="pbv2-card-grid">
-          {books.map((book) => (
-            <article key={book.id} className="pbv2-book-card" onClick={() => onOpen(book)}>
-              <div className="pbv2-book-cover">
-                <img src={book.cover_url || '/assets/empty/ccde8c7986169924dc032228775c34fd.jpg'} alt={book.title} onError={(e) => { e.target.src = '/assets/empty/ccde8c7986169924dc032228775c34fd.jpg'; }} />
-                <span className={`pbv2-book-status ${book.status || 'draft'}`}>
-                  {book.status === 'published' ? t('pictureBook.published') : t('pictureBook.draft')}
-                </span>
-              </div>
-              <div className="pbv2-book-info">
-                <h3>{book.title || t('pictureBook.untitled')}</h3>
-                <div className="pbv2-book-meta">
-                  <Clock size={13} />
-                  <span>{book.updated_at ? new Date(book.updated_at).toLocaleDateString() : ''}</span>
-                </div>
-                <div className="pbv2-book-actions">
-                  <button type="button" onClick={(e) => { e.stopPropagation(); onOpen(book); }}>
-                    <Pencil size={14} />
-                    {t('common.edit')}
-                  </button>
-                  <button type="button" onClick={(e) => { e.stopPropagation(); onPresent(book); }}>
-                    🖥️ {t('pictureBook.present', '授课')}
-                  </button>
-                  <button type="button" onClick={(e) => { e.stopPropagation(); onDelete(book.id); }}>
-                    <Trash2 size={14} />
-                    {t('common.delete')}
-                  </button>
-                </div>
-              </div>
-            </article>
+      <div className="pbv2-library-head">
+        <div className="pbv2-library-tabs" role="tablist" aria-label={t('pictureBook.librarySource')} onKeyDown={handleTabKeyDown}>
+          {[['cases', 'published', cases.length], ['mine', 'myActivities', books.length]].map(([id, label, count]) => (
+            <button key={id} type="button" role="tab" id={`pbv2-library-tab-${id}`} aria-selected={activeTab === id} aria-controls="pbv2-library-panel" tabIndex={activeTab === id ? 0 : -1} data-source={id} onClick={() => onTabChange(id)}>
+              {t(`pictureBook.${label}`)} <span>{loading || error ? '—' : count}</span>
+            </button>
           ))}
         </div>
-      )}
+        <label className="pbv2-search-box">
+          <Search size={16} aria-hidden="true" />
+          <input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder={t('pictureBook.searchPlaceholder')} aria-label={t('pictureBook.searchPlaceholder')} />
+        </label>
+      </div>
+
+      <section id="pbv2-library-panel" role="tabpanel" aria-labelledby={`pbv2-library-tab-${activeTab}`} tabIndex={0} aria-busy={loading}>
+        {notice && <p className="pbv2-library-notice" role="alert">{notice}</p>}
+        {loading ? (
+          <PageLoading />
+        ) : error ? (
+          <div className="pbv2-list-empty" role="alert"><p>{t('pictureBook.listLoadFailed')}</p><button type="button" className="pbv2-create-btn" onClick={onRetry}>{t('pictureBook.retryList')}</button></div>
+        ) : visibleBooks.length === 0 ? (
+          <div className="pbv2-list-empty">
+            <BookOpenText size={40} aria-hidden="true" />
+            <h2>{t(query ? 'pictureBook.noSearchResults' : isCases ? 'pictureBook.noCases' : 'pictureBook.noMyActivities')}</h2>
+            <button type="button" className="pbv2-create-btn" onClick={query ? () => setSearchTerm('') : onCreate}>{t(query ? 'pictureBook.clearSearch' : 'pictureBook.newBook')}</button>
+          </div>
+        ) : (
+          <div className="pbv2-card-grid">
+            {visibleBooks.map((book) => {
+              const data = book.book_data || {};
+              const title = book.title || t('pictureBook.untitled');
+              const openCard = () => isCases ? onPresent(book) : onOpen(book);
+              return (
+                <article key={book.id} className="pbv2-book-card">
+                  <button type="button" className="pbv2-book-cover" onClick={openCard} aria-label={`${t(isCases ? 'pictureBook.previewCase' : 'common.edit')} ${title}`}>
+                    {book.cover_url ? <img src={book.cover_url} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} /> : null}
+                    <span className="pbv2-book-cover-placeholder" aria-hidden="true"><BookOpenText size={40} /></span>
+                  </button>
+                  <div className="pbv2-book-info">
+                    {!isCases && <div className="pbv2-book-state">
+                      <span className={`pbv2-book-status ${book.status === 'published' ? 'published' : 'draft'}`}>{t(book.status === 'published' ? 'pictureBook.published' : 'pictureBook.draft')}</span>
+                      {book.updated_at && <time dateTime={book.updated_at}>{new Date(book.updated_at).toLocaleDateString()}</time>}
+                    </div>}
+                    <h3><button type="button" onClick={openCard}>{title}</button></h3>
+                    <div className="pbv2-book-meta">
+                      {data.basicInfo?.age && <span>{data.basicInfo.age}</span>}
+                      <span>{t('pictureBook.pageTotal', { count: data.pages?.length || 0 })}</span>
+                    </div>
+                    <div className="pbv2-book-actions">
+                      {isCases ? <>
+                        <button type="button" className="primary" onClick={() => onPresent(book)}><Play size={16} aria-hidden="true" />{t('pictureBook.previewCase')}</button>
+                        <button type="button" onClick={() => onUseCase(book)}>{t('pictureBook.useCase')}</button>
+                      </> : <>
+                        <button type="button" className="primary" onClick={() => onPresent(book)}><Monitor size={16} aria-hidden="true" />{t('pictureBook.startTeaching')}</button>
+                        <button type="button" onClick={() => onOpen(book)}>{t('pictureBook.continueEditing')}</button>
+                        <button type="button" className="delete" onClick={() => onDelete(book.id)} aria-label={`${t('common.delete')} ${title}`} title={t('common.delete')}><Trash2 size={16} aria-hidden="true" /></button>
+                      </>}
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
 
-function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, generating }) {
+function BasicInfoStep({ basicInfo, setBasicField }) {
   const { t } = useTranslation();
   const localizedAgeOptions = t('pictureBook.ageOptions', { returnObjects: true });
   const localizedLevelOptions = t('pictureBook.levelOptions', { returnObjects: true });
@@ -1103,14 +960,13 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
   const localizedMaterialOptions = t('pictureBook.materialOptions', { returnObjects: true });
   return (
     <div className="pbv2-step-panel">
-      <div className="pbv2-form-grid two">
-        <OptionGroup tone="coral" label={t('pictureBook.studentAge')} options={localizedAgeOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
-        <OptionGroup tone="blue" label={t('pictureBook.englishLevel')} options={localizedLevelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
-        <OptionGroup tone="yellow" label={t('pictureBook.participants')} options={localizedParticipantOptions} value={basicInfo.participants} onChange={(value) => setBasicField('participants', value)} />
-      </div>
+      <section className="wb-authoring-panel wb-form-stack">
+        <OptionGroup label={t('pictureBook.studentAge')} options={localizedAgeOptions} value={basicInfo.age} onChange={(value) => setBasicField('age', value)} />
+        <OptionGroup label={t('pictureBook.englishLevel')} options={localizedLevelOptions} value={basicInfo.level} onChange={(value) => setBasicField('level', value)} />
+        <OptionGroup label={t('pictureBook.participants')} options={localizedParticipantOptions} value={basicInfo.participants} onChange={(value) => setBasicField('participants', value)} />
+      </section>
 
       <CheckboxGroup
-        tone="yellow"
         label={t('pictureBook.themePreference')}
         options={localizedThemeOptions}
         value={basicInfo.themes}
@@ -1120,7 +976,6 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
       />
 
       <CheckboxGroup
-        tone="green"
         label={t('pictureBook.availableMaterials')}
         options={localizedMaterialOptions}
         value={basicInfo.materials}
@@ -1129,111 +984,79 @@ function BasicInfoStep({ basicInfo, setBasicField, buildPlan, canBuildPlan, gene
         onOther={(value) => setBasicField('materialOther', value)}
       />
 
-      <section className="pbv2-card pbv2-tone-blue">
-        <div className="pbv2-card-title">{t('pictureBook.languageGoalsOptional')} <span className="pbv2-required">*</span></div>
-        <div className="pbv2-form-grid two">
+      <section className="wb-authoring-panel">
+        <div className="wb-panel-heading"><h2>{t('pictureBook.languageGoalsOptional')}</h2></div>
+        <div className="wb-form-grid">
           <Field label={t('pictureBook.coreVocabulary')} value={basicInfo.vocabulary} onChange={(value) => setBasicField('vocabulary', value)} placeholder={t('pictureBook.vocabularyPlaceholder')} />
           <Field label={t('pictureBook.coreGrammar')} value={basicInfo.grammar} onChange={(value) => setBasicField('grammar', value)} placeholder={t('pictureBook.grammarPlaceholder')} />
         </div>
       </section>
 
-      <FooterActions>
-        <button type="button" className="pbv2-primary" disabled={!canBuildPlan || generating} onClick={buildPlan}>
-          <Wand2 size={16} />
-          {generating ? t('pictureBook.generating') : t('pictureBook.generatePlan')}
-        </button>
-      </FooterActions>
     </div>
   );
 }
 
-function ActivityPlanStep({ activityPlan, setPlanField, onBack, onBuildDesign, generating }) {
+function ActivityPlanStep({ activityPlan, setPlanField }) {
   const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
-      <section className="pbv2-plan-block pbv2-tone-coral">
-        <div className="pbv2-form-grid two">
+      <section className="wb-authoring-panel wb-form-stack">
+        <div className="wb-form-grid">
           <Field label={t('pictureBook.englishStoryTitle')} value={activityPlan.storyTitleEn} onChange={(value) => setPlanField('storyTitleEn', value)} />
           <Field label={t('pictureBook.recommendedPageCount')} value={activityPlan.recommendedPageCount} onChange={(value) => setPlanField('recommendedPageCount', value)} placeholder={t('pictureBook.pageCountPlaceholder')} />
         </div>
         <Field area label={t('pictureBook.storyContent')} value={activityPlan.storyContent} onChange={(value) => setPlanField('storyContent', value)} />
       </section>
-      <section className="pbv2-card pbv2-tone-yellow">
-        <div className="pbv2-card-title">{t('pictureBook.activityGoals')}</div>
-        <div className="pbv2-form-grid three">
+      <section className="wb-authoring-panel">
+        <div className="wb-panel-heading"><h2>{t('pictureBook.activityGoals')}</h2></div>
+        <div className="wb-form-grid pbv2-goals-grid">
           <Field area label={t('pictureBook.englishGoal')} value={activityPlan.englishGoal} onChange={(value) => setPlanField('englishGoal', value)} />
           <Field area label={t('pictureBook.wellbeingGoal')} value={activityPlan.wellbeingGoal} onChange={(value) => setPlanField('wellbeingGoal', value)} />
           <Field area label={t('pictureBook.outputGoal')} value={activityPlan.outputGoal} onChange={(value) => setPlanField('outputGoal', value)} />
         </div>
       </section>
-      <section className="pbv2-plan-block pbv2-tone-green">
+      <section className="wb-authoring-panel">
         <Field area label={t('pictureBook.materials')} value={activityPlan.materials} onChange={(value) => setPlanField('materials', value)} />
       </section>
-      <FooterActions>
-        <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToBasic')}</button>
-        <button type="button" className="pbv2-primary" disabled={generating} onClick={onBuildDesign}>
-          <BookOpenText size={16} />
-          {generating ? t('pictureBook.generating') : t('pictureBook.generateDesign')}
-        </button>
-      </FooterActions>
     </div>
   );
 }
 
-function PictureBookDesignStep({ pages, updatePage, addPage, removePage, onBack, onMake, generatingAll }) {
+function PictureBookDesignStep({ pages, updatePage, addPage, removePage }) {
   const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
       <div className="pbv2-page-list">
-        {pages.map((page, index) => (
-          <PageDesignCard key={page.id} page={page} toneIndex={index} updatePage={updatePage} removePage={removePage} />
+        {pages.map((page) => (
+          <PageDesignCard key={page.id} page={page} updatePage={updatePage} removePage={removePage} />
         ))}
       </div>
-      <button type="button" className="pbv2-add-page" onClick={addPage}>
+      <button type="button" className="wb-button pbv2-add-page" onClick={addPage}>
         <Plus size={16} />
         {t('pictureBook.addPage')}
       </button>
-      <FooterActions>
-        <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToPlan')}</button>
-        {/* <button type="button" className="pbv2-secondary" onClick={() => onMake('placeholder')}>
-          <Image size={16} />
-          先生成占位符
-        </button> */}
-        <button type="button" className="pbv2-primary" disabled={generatingAll} onClick={() => onMake('all')}>
-          {generatingAll ? <Loader2 className="spin" size={16} /> : <Sparkles size={16} />}
-          {t('pictureBook.generateBook')}
-        </button>
-      </FooterActions>
     </div>
   );
 }
 
-function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGenerateOne, onUpload, generatingAll, onPresent, backgroundMusic, onChooseMusic, onRemoveMusic }) {
+function PictureBookMakingStep({ pages, updatePage, onGenerateOne, onUpload, backgroundMusic, onChooseMusic, onRemoveMusic }) {
   const { t } = useTranslation();
   return (
     <div className="pbv2-step-panel">
-      <div className="pbv2-making-toolbar">
-        <button type="button" className="pbv2-primary" disabled={generatingAll} onClick={onGenerateAll}>
-          {generatingAll ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}
-          {t('pictureBook.regenerateAll')}
-        </button>
-        <button type="button" className="pbv2-ghost" onClick={onPresent} disabled={pages.length === 0}>
-          🖥️ {t('common.teachMode')}
-        </button>
-        <button type="button" className="pbv2-ghost" onClick={onBack}>{t('pictureBook.backToDesign')}</button>
+      <section className="wb-authoring-panel pbv2-making-toolbar">
+        <div className="wb-panel-heading"><h2>{t('pictureBook.musicPickerTitle')}</h2><p>{t('pictureBook.musicPickerHint')}</p></div>
         <div className={`pbv2-background-music${backgroundMusic ? ' selected' : ''}`}>
           <Music2 size={17} />
           <span title={backgroundMusic?.name}>{backgroundMusic?.name || t('pictureBook.noMusicSelected')}</span>
-          <button type="button" onClick={onChooseMusic}>{backgroundMusic ? t('pictureBook.changeMusic') : t('pictureBook.chooseMusic')}</button>
-          {backgroundMusic && <button type="button" className="pbv2-music-remove" onClick={onRemoveMusic} title={t('pictureBook.removeMusic')}><X size={14} /></button>}
+          <button type="button" className="wb-button" onClick={onChooseMusic}>{backgroundMusic ? t('pictureBook.changeMusic') : t('pictureBook.chooseMusic')}</button>
+          {backgroundMusic && <button type="button" className="wb-button quiet" onClick={onRemoveMusic} aria-label={t('pictureBook.removeMusic')}><X size={16} /></button>}
         </div>
-      </div>
+      </section>
       <div className="pbv2-production-grid">
-        {pages.map((page, index) => (
+        {pages.map((page) => (
           <ProductionCard
             key={page.id}
             page={page}
-            toneIndex={index}
             updatePage={updatePage}
             onGenerateOne={onGenerateOne}
             onUpload={onUpload}
@@ -1244,29 +1067,29 @@ function PictureBookMakingStep({ pages, updatePage, onBack, onGenerateAll, onGen
   );
 }
 
-function PageDesignCard({ page, toneIndex, updatePage, removePage }) {
+function PageDesignCard({ page, updatePage, removePage }) {
   const { t } = useTranslation();
-  const tones = ['yellow', 'blue', 'green', 'coral'];
   return (
-    <article className={`pbv2-page-card pbv2-tone-${tones[toneIndex % tones.length]}`}>
+    <article className="wb-authoring-panel pbv2-page-card">
       <div className="pbv2-page-card-head">
-        <strong>{t('pictureBook.pageNumber', { page: page.page })}</strong>
-        <button type="button" onClick={() => removePage(page.id)}><Trash2 size={15} /></button>
+        <h2>{t('pictureBook.pageNumber', { page: page.page })}</h2>
+        <button type="button" className="wb-button danger" onClick={() => removePage(page.id)} aria-label={`${t('common.delete')} ${t('pictureBook.pageNumber', { page: page.page })}`}><Trash2 size={16} /></button>
       </div>
+      <div className="wb-form-grid">
       <Field area label={t('pictureBook.imageDescription')} value={page.imageDescription} onChange={(value) => updatePage(page.id, { imageDescription: value })} />
       <Field area label={t('pictureBook.pageText')} value={page.text} onChange={(value) => updatePage(page.id, { text: value })} />
+      </div>
     </article>
   );
 }
 
-function ProductionCard({ page, toneIndex, updatePage, onGenerateOne, onUpload }) {
+function ProductionCard({ page, updatePage, onGenerateOne, onUpload }) {
   const { t } = useTranslation();
-  const tones = ['yellow', 'blue', 'green', 'coral'];
   return (
-    <article className={`pbv2-production-card pbv2-tone-${tones[toneIndex % tones.length]}`}>
+    <article className="wb-authoring-panel pbv2-production-card" aria-busy={page.status === 'generating'}>
       <div className="pbv2-preview">
         {page.status === 'generating' ? (
-          <div className="pbv2-generating"><Loader2 className="spin" size={24} />{t('pictureBook.generating')}</div>
+          <div className="pbv2-generating" role="status"><Loader2 className="spin" size={24} />{t('pictureBook.generating')}</div>
         ) : page.imageUrl ? (
           <img src={page.imageUrl} alt={t('pictureBook.pageNumber', { page: page.page })} />
         ) : (
@@ -1274,19 +1097,19 @@ function ProductionCard({ page, toneIndex, updatePage, onGenerateOne, onUpload }
         )}
       </div>
       <div className="pbv2-production-body">
-        <strong>{t('pictureBook.pageNumber', { page: page.page })}</strong>
-        <textarea value={page.imageDescription} onChange={(event) => updatePage(page.id, { imageDescription: event.target.value })} />
-        <input value={page.text} onChange={(event) => updatePage(page.id, { text: event.target.value })} />
-        {page.error && <em>{page.error}</em>}
+        <h2>{t('pictureBook.pageNumber', { page: page.page })}</h2>
+        <Field area label={t('pictureBook.imageDescription')} value={page.imageDescription} onChange={(value) => updatePage(page.id, { imageDescription: value })} />
+        <Field label={t('pictureBook.pageText')} value={page.text} onChange={(value) => updatePage(page.id, { text: value })} />
+        {page.error && <p className="wb-notice error" role="alert">{page.error}</p>}
         <div className="pbv2-card-actions">
-          <button type="button" onClick={() => onGenerateOne(page)} disabled={page.status === 'generating'}>
+          <button type="button" className="wb-button" onClick={() => onGenerateOne(page)} disabled={page.status === 'generating'}>
             {page.status === 'generating' ? <Loader2 className="spin" size={14} /> : <RefreshCw size={14} />}
             {t('pictureBook.generateOrAdjust')}
           </button>
-          <label>
+          <label className="wb-button">
             <Upload size={14} />
             {t('pictureBook.manualUpload')}
-            <input type="file" accept="image/*" onChange={(event) => onUpload(page, event.target.files?.[0])} />
+            <input type="file" accept="image/*" aria-label={`${t('pictureBook.manualUpload')} ${t('pictureBook.pageNumber', { page: page.page })}`} disabled={page.status === 'generating'} onChange={(event) => onUpload(page, event.target.files?.[0])} />
           </label>
         </div>
       </div>
@@ -1294,51 +1117,41 @@ function ProductionCard({ page, toneIndex, updatePage, onGenerateOne, onUpload }
   );
 }
 
-function PanelHeader({ eyebrow, title, desc }) {
+function OptionGroup({ label, options, value, onChange }) {
   return (
-    <header className="pbv2-panel-head">
-      <span>{eyebrow}</span>
-      <h2>{title}</h2>
-      <p>{desc}</p>
-    </header>
-  );
-}
-
-function OptionGroup({ label, required, options, value, onChange, tone = 'coral' }) {
-  return (
-    <section className={`pbv2-fieldset pbv2-tone-${tone}`}>
-      <div className="pbv2-label">{label}{required && <b>*</b>}</div>
+    <fieldset className="pbv2-option-field">
+      <legend>{label}</legend>
       <div className="pbv2-option-grid">
         {options.map((option) => (
-          <button type="button" key={option} className={value === option ? 'is-active' : ''} onClick={() => onChange(value === option ? '' : option)}>
+          <button type="button" key={option} aria-pressed={value === option} className={`wb-button${value === option ? ' is-active' : ''}`} onClick={() => onChange(value === option ? '' : option)}>
             {option}
           </button>
         ))}
       </div>
-    </section>
+    </fieldset>
   );
 }
 
-function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther, tone = 'yellow' }) {
+function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther }) {
   const { t } = useTranslation();
   return (
-    <section className={`pbv2-card pbv2-tone-${tone}`}>
-      <div className="pbv2-card-title">{label}</div>
+    <section className="wb-authoring-panel">
+      <div className="wb-panel-heading"><h2>{label}</h2></div>
       <div className="pbv2-chip-grid">
         {options.map((option) => (
-          <button type="button" key={option} className={value.includes(option) ? 'is-active' : ''} onClick={() => onToggle(option)}>
-            {option}
+          <button type="button" key={option} aria-pressed={value.includes(option)} className={`wb-button${value.includes(option) ? ' is-active' : ''}`} onClick={() => onToggle(option)}>
+            {value.includes(option) && <Check size={14} aria-hidden="true" />}{option}
           </button>
         ))}
       </div>
-      <input className="pbv2-input" value={otherValue} onChange={(event) => onOther(event.target.value)} placeholder={t('pictureBook.otherPlaceholder')} />
+      <label className="wb-field pbv2-other-field"><span>{t('pictureBook.otherPlaceholder')}</span><input value={otherValue} onChange={(event) => onOther(event.target.value)} /></label>
     </section>
   );
 }
 
 function Field({ label, value, onChange, placeholder, area }) {
   return (
-    <label className="pbv2-field">
+    <label className="wb-field">
       <span>{label}</span>
       {area ? (
         <textarea value={value || ''} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
@@ -1349,17 +1162,8 @@ function Field({ label, value, onChange, placeholder, area }) {
   );
 }
 
-function FooterActions({ children }) {
-  return (
-    <footer className="pbv2-actions">
-      <ChevronRight size={16} />
-      {children}
-    </footer>
-  );
-}
-
 function MusicPickerItem({ music, backgroundMusic, previewMusicId, previewRef, setPreviewMusicId, onSelect, selectLabel = '' }) {
   const { t } = useTranslation();
   const isPreviewing = previewMusicId === music.id;
-  return <div className={`pbv2-music-item${backgroundMusic?.id === music.id ? ' selected' : ''}`}><div><strong>{music.name}</strong><span>{music.description || t('pictureBook.bgmFallback')}</span></div><button type="button" onClick={() => { const audio = previewRef.current; if (!audio) return; if (isPreviewing && !audio.paused) { audio.pause(); setPreviewMusicId(null); } else { audio.src = music.url; audio.play().then(() => setPreviewMusicId(music.id)).catch(() => setPreviewMusicId(null)); } }}>{isPreviewing ? <Pause size={15} /> : <Play size={15} />}{t('pictureBook.preview')}</button><button type="button" className="pbv2-music-select" onClick={() => { previewRef.current?.pause(); setPreviewMusicId(null); onSelect(); }}>{selectLabel || t('pictureBook.select')}</button></div>;
+  return <div className={`pbv2-music-item${backgroundMusic?.id === music.id ? ' selected' : ''}`}><div><strong>{music.name}</strong><span>{music.description || t('pictureBook.bgmFallback')}</span></div><button type="button" className="wb-button" aria-pressed={isPreviewing} aria-label={`${t('pictureBook.preview')} ${music.name}`} onClick={() => { const audio = previewRef.current; if (!audio) return; if (isPreviewing && !audio.paused) { audio.pause(); setPreviewMusicId(null); } else { audio.src = music.url; audio.play().then(() => setPreviewMusicId(music.id)).catch(() => setPreviewMusicId(null)); } }}>{isPreviewing ? <Pause size={15} /> : <Play size={15} />}{t('pictureBook.preview')}</button><button type="button" className="wb-button primary" onClick={() => { previewRef.current?.pause(); setPreviewMusicId(null); onSelect(); }}>{selectLabel || t('pictureBook.select')}</button></div>;
 }

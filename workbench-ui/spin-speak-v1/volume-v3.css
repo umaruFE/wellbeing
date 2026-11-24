@@ -13,15 +13,14 @@ button{font-family:inherit}button:focus-visible{outline:3px solid #dd7818;outlin
   position:absolute;left:50%;top:50%;width:1280px;height:var(--scene-height);translate:-50% -50%;overflow:hidden;
   background:url('assets/volume-v3/school-radio.png') center/100% 100% no-repeat;transform-origin:center;
 }
-/* Stretch the wall and display together, then compress the illustrated console below them. */
-.studio-wall,.studio-desk{position:absolute;left:0;width:100%;background-size:1280px var(--scene-height);background-repeat:no-repeat;transform-origin:top;pointer-events:none}
-.studio-wall{top:var(--wall-top);height:var(--wall-art-height);background-image:url('assets/volume-v3/school-radio.png');background-position:0 calc(-1 * var(--wall-top));transform:scaleY(var(--wall-stretch))}
-/* The stand spans the wall and desk, so paint its rig over both backgrounds. */
+.console-backdrop,.studio-desk,.studio-wall{position:absolute;left:0;width:100%;pointer-events:none}
+.console-backdrop{top:0;height:100%}
+.studio-wall{top:var(--wall-top)}
+/* The entire rig uses the same isotropic image coordinates as the headphones and speakers. */
 .scene-microphone{
   position:absolute;left:calc(1280px * 1310 / 1736);
-  top:calc(var(--wall-top) + (1280px * 160 / 1736 - var(--wall-top)) * var(--wall-stretch));
+  top:calc(1280px * 160 / 1736);
   width:calc(1280px * 255 / 1736);height:calc(1280px * 285 / 1736);
-  transform:scaleY(var(--wall-stretch));transform-origin:top;
   overflow:visible;visibility:hidden;pointer-events:none;z-index:1;
 }
 .mic-recording-led,.mic-sound-waves{display:none}
@@ -40,7 +39,7 @@ button{font-family:inherit}button:focus-visible{outline:3px solid #dd7818;outlin
     to{transform:scale(1.23);opacity:0}
   }
 }
-.studio-desk{top:var(--desk-top);height:calc(var(--scene-height) - var(--desk-art-top));background-image:url('assets/volume-v3/controls-clean-plate.png');background-position:0 calc(-1 * var(--desk-art-top));transform:scaleY(var(--desk-compression))}
+.studio-desk{top:calc(var(--desk-top) - var(--desk-art-top) * var(--desk-compression));height:var(--scene-height);transform:scaleY(var(--desk-compression));transform-origin:top}
 #stage::before{content:'';position:absolute;left:185px;top:10px;width:214px;height:80px;pointer-events:none;background:url('assets/volume-v3/status-clean-plate.png') -185px -10px/1280px 668.018px no-repeat;mask-image:linear-gradient(to right,transparent,#000 4px,#000 calc(100% - 4px),transparent),linear-gradient(to bottom,transparent,#000 4px,#000 calc(100% - 4px),transparent);mask-composite:intersect}
 .hud,.title,.actions{position:static;display:block;margin:0;padding:0}
 .title::before{content:'';position:absolute;left:312px;top:89px;width:656px;height:38px;pointer-events:none;background:url('assets/volume-v3/controls-clean-plate.png') -312px -89px/1280px var(--scene-height) no-repeat;mask-image:linear-gradient(to right,transparent,#000 3px,#000 calc(100% - 3px),transparent),linear-gradient(to bottom,transparent,#000 3px,#000 calc(100% - 3px),transparent);mask-composite:intersect}
@@ -52,7 +51,7 @@ button{font-family:inherit}button:focus-visible{outline:3px solid #dd7818;outlin
 .title p{position:absolute;left:var(--content-axis);top:98px;width:max-content;padding:0 20px;margin:0;translate:-50% 0;isolation:isolate;color:#48216b;font-size:15px;font-weight:800;letter-spacing:0;line-height:19px;text-align:center;white-space:nowrap}
 .title p::before{content:'';position:absolute;z-index:-1;inset:-5px 0;border:1.5px solid #659acc;border-radius:16px;background:#fffdfa}
 .iconbtn{position:absolute;right:18px;top:17px;width:38px;height:38px;border:2px solid #72508c;background:#fff8e8;box-shadow:0 3px 0 #bb91e2;color:#48216b;font-size:25px;border-radius:50%;cursor:pointer}
-.monitor-skin{position:absolute;left:calc(var(--content-axis) - 341px);top:0;width:682px;height:231px;pointer-events:none}
+.monitor-skin{position:absolute;left:calc(var(--content-axis) - 341px);top:0;width:682px;height:calc(261px * var(--wall-stretch));pointer-events:none}
 .monitor-skin svg{display:block;width:100%;height:100%}
 .monitor-content{
   --screen-padding:12px;

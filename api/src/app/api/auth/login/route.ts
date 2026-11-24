@@ -15,9 +15,17 @@ export async function POST(request: Request) {
     }
 
     // 从 PostgreSQL 查询用户（支持 email 或 name）
-    const { data: byEmail } = await db.from('users').select('*').eq('email', username);
-    const { data: byName } = await db.from('users').select('*').eq('name', username);
-    const userData = (byEmail && byEmail[0]) || (byName && byName[0]);
+    const byEmail = await db.from('users').select('*').eq('email', username);
+    const lookup = byEmail.error || byEmail.data?.length
+      ? byEmail
+      : await db.from('users').select('*').eq('name', username);
+
+    if (lookup.error) {
+      console.error('[auth/login] Database lookup failed:', lookup.error);
+      return NextResponse.json({ error: '登录服务暂时不可用，请稍后重试' }, { status: 503 });
+    }
+
+    const userData = lookup.data?.[0];
 
     if (!userData) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });

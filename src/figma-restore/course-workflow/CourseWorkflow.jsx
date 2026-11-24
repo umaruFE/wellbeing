@@ -651,7 +651,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   return (
     <section className={`fr-workflow view-${workflowSteps[current].key}-active`}>
       <header className="fr-editor-tb">
-        <Button icon={<ArrowLeft size={16} />} onClick={onBack}>{t('createCourse.backToList')}</Button>
+        <Button icon={<ArrowLeft size={16} />} aria-label="返回课程列表" onClick={onBack}>{t('createCourse.backToList')}</Button>
         <span className="fr-tb-course">{displayCourseTitle}</span>
         <span className="fr-tb-divider">|</span>
         <div className="fr-wf-bridge">

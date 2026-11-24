@@ -123,39 +123,39 @@ export const VoiceManagementPage = () => {
     const emotionData = emotions.find(e => e.id === emotion);
     if (emotionData && emotionData.icon) {
       const Icon = emotionData.icon;
-      return <Icon className={`w-5 h-5 ${emotionData.color || 'text-primary-muted'}`} />;
+      return <Icon className={`w-5 h-5 ${emotionData.color || "text-[var(--wb-muted)]"}`} />;
     }
-    return <Music className="w-5 h-5 text-primary-muted" />;
+    return <Music className="w-5 h-5 text-[var(--wb-muted)]" />;
   };
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-surface">
+      <div className="h-full flex items-center justify-center bg-[var(--wb-surface)]">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-primary-muted">{t('common.loading')}</p>
+          <div className="w-8 h-8 border-4 border-[var(--wb-selected-border)] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-[var(--wb-muted)]">{t('common.loading')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-surface">
+    <div className="h-screen flex flex-col bg-[var(--wb-page)]">
       {/* Header */}
-      <div className="bg-surface border-b-2 border-stroke-light px-6 py-4">
-        <div className="flex items-center justify-between">
+      <div className="bg-[var(--wb-surface)] border-b border-[var(--wb-border)] px-4 sm:px-6 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
-              <Music className="w-6 h-6 text-dark" />
+            <h1 className="text-[28px] font-bold text-[var(--wb-text)] flex items-center gap-2">
+              <Music className="w-6 h-6 text-[var(--wb-text)]" />
               {t('voice.title')}
             </h1>
-            <p className="text-sm text-primary-muted mt-1">{t('voice.subtitle')}</p>
+            <p className="text-sm text-[var(--wb-muted)] mt-1">{t('voice.subtitle')}</p>
           </div>
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className={`px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-200 font-medium shadow-neo ${
-              uploading ? 'bg-gray-disabled text-gray-disabled-text cursor-not-allowed border-2 border-gray-disabled' : 'border-2 border-primary hover:bg-warning-light hover:text-dark'
+            className={`px-4 py-2 rounded-[10px] flex items-center gap-2 transition-all duration-200 font-medium shadow-none min-h-10 ${
+              uploading ? "bg-gray-disabled text-gray-disabled-text cursor-not-allowed border border-gray-disabled" : "border border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)] hover:text-[var(--wb-text)]"
             }`}
           >
             <Upload className="w-4 h-4" />
@@ -165,31 +165,31 @@ export const VoiceManagementPage = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-surface border-b-2 border-stroke-light px-6 py-4">
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-primary-placeholder" />
+      <div className="bg-[var(--wb-surface)] border-b border-[var(--wb-border)] px-4 sm:px-6 py-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="w-full min-w-0 sm:flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--wb-muted)]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t('voice.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all duration-200"
+              className="w-full pl-10 pr-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all duration-200 min-h-11"
             />
           </div>
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-primary-placeholder" />
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <Filter className="w-4 h-4 text-[var(--wb-muted)]" />
+            <div className="flex flex-wrap items-center gap-2">
               {emotions.map(emotion => {
                 const Icon = emotion.icon;
                 return (
                   <button
                     key={emotion.id}
                     onClick={() => setFilterEmotion(emotion.id)}
-                    className={`px-3 py-2 rounded-xl flex items-center gap-2 transition-all duration-200 font-medium ${
+                    className={`px-3 py-2 rounded-[10px] flex items-center gap-2 transition-all duration-200 font-medium  min-h-10 ${
                       filterEmotion === emotion.id
-                        ? 'bg-warning-light text-dark border-2 border-primary'
-                        : 'bg-surface text-primary-secondary border-2 border-stroke-light hover:border-primary hover:bg-warning-light'
+                        ? "bg-[var(--wb-selected)] text-[var(--wb-text)] border border-[var(--wb-selected-border)]"
+                        : "bg-[var(--wb-surface)] text-[var(--wb-muted)] border border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)]"
                     }`}
                   >
                     <Icon className={`w-4 h-4 ${emotion.color || ''}`} />
@@ -203,44 +203,44 @@ export const VoiceManagementPage = () => {
       </div>
 
       {/* Voice List */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 min-w-0">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredVoices.map(voice => (
             <div
               key={voice.id}
-              className="bg-surface rounded-[24px] border-2 border-stroke-light p-5 transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
+              className="bg-[var(--wb-surface)] rounded-[14px] border border-[var(--wb-border)] p-5 transition-all duration-200 hover:border-[var(--wb-selected-border)] hover:shadow-[0_4px_18px_rgba(48,43,59,0.06)] "
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-warning-light rounded-xl flex items-center justify-center border-2 border-stroke-light">
+                  <div className="w-12 h-12 bg-[var(--wb-selected)] rounded-[10px] flex items-center justify-center border border-[var(--wb-border)]">
                     {getEmotionIcon(voice.emotion)}
                   </div>
                   <div>
-                    <h3 className="font-semibold text-primary">{voice.name}</h3>
-                    <p className="text-xs text-primary-muted mt-1">{t('voice.uploadedAt', { date: voice.uploadedAt })}</p>
+                    <h3 className="font-semibold text-[var(--wb-text)]">{voice.name}</h3>
+                    <p className="text-xs text-[var(--wb-muted)] mt-1">{t('voice.uploadedAt', { date: voice.uploadedAt })}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-4 text-sm text-primary-secondary">
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-4 text-sm text-[var(--wb-muted)]">
                   <span className="flex items-center gap-1">
                     <Music className="w-4 h-4" />
                     {voice.duration}
                   </span>
-                  <span className="px-2 py-1 bg-warning-light border border-stroke-light rounded text-xs">
+                  <span className="px-2 py-1 bg-[var(--wb-selected)] border border-[var(--wb-border)] rounded text-xs">
                     {emotions.find(e => e.id === voice.emotion)?.nameKey ? t(emotions.find(e => e.id === voice.emotion).nameKey) : voice.emotion}
                   </span>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => handlePlay(voice.id)}
-                  className={`flex-1 px-3 py-2 rounded-xl flex items-center justify-center gap-2 transition-all duration-200 font-medium ${
+                  className={`flex-1 px-3 py-2 rounded-[10px] flex items-center justify-center gap-2 transition-all duration-200 font-medium  min-h-10 ${
                     playingId === voice.id
-                      ? 'bg-error-light text-error border-2 border-error-border hover:border-error hover:bg-error-light'
-                      : 'bg-warning-light text-dark border-2 border-stroke-light hover:border-primary hover:bg-warning-light'
+                      ? "bg-error-light text-error border border-error-border hover:border-error hover:bg-error-light"
+                      : "bg-[var(--wb-selected)] text-[var(--wb-text)] border border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)]"
                   }`}
                 >
                   {playingId === voice.id ? (
@@ -257,7 +257,7 @@ export const VoiceManagementPage = () => {
                 </button>
                 <button
                   onClick={() => handleDelete(voice.id)}
-                  className="px-3 py-2 bg-error-light text-error border-2 border-error-border rounded-xl hover:border-error hover:bg-error-light transition-all duration-200"
+                  className="px-3 py-2 bg-error-light text-error border border-error-border rounded-[10px] hover:border-error hover:bg-error-light transition-all duration-200 min-h-10"
                   title={t('common.delete')}
                 >
                   <Trash2 className="w-4 h-4" />
@@ -268,8 +268,8 @@ export const VoiceManagementPage = () => {
         </div>
         {filteredVoices.length === 0 && (
           <div className="text-center py-12">
-            <Music className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
-            <p className="text-primary-muted">{t('voice.noVoices')}</p>
+            <Music className="w-16 h-16 text-[var(--wb-muted)] mx-auto mb-4" />
+            <p className="text-[var(--wb-muted)]">{t('voice.noVoices')}</p>
           </div>
         )}
       </div>

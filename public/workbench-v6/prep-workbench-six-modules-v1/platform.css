@@ -1,0 +1,436 @@
+@layer wb-layout {
+/* Shared teacher-facing controls; classroom media retain task-specific composition. */
+/* Full-width shared fields fit within explicit layout tracks. */
+.unified .library-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 175px}
+@media(max-width:640px){.unified .library-toolbar{grid-template-columns:minmax(0,1fr)}}
+body.unified{background:var(--color-page);color:var(--color-text);font-family:var(--font-family-ui)}
+.unified [hidden]{display:none!important}
+.unified button:disabled{cursor:not-allowed}
+.unified .unified-navigation{display:block;position:sticky;top:0;height:100dvh;min-height:0;overflow-y:auto;background:var(--color-surface);border-right:1px solid var(--color-border-subtle);box-shadow:none;color:var(--color-text);width:228px;padding:24px 16px;font-family:var(--font-family-ui);line-height:var(--line-height-body)}
+/* Collapsed editors use one layout track; their navigation must leave flow. */
+@media(min-width:901px){
+ body.unified #app :is(.shell.workspace-mode.nav-collapsed,.shell.collapsed,.app-shell.portal-editor.portal-nav-collapsed)>.unified-navigation{display:none}
+ body.unified[data-unified-module="music"] #app .workspace-mode.nav-expanded{grid-template-columns:228px minmax(0,1fr)}
+}
+.unified .unified-navigation :is(.brand,.portal-brand){font:750 19px/32px var(--font-family-ui);letter-spacing:var(--letter-spacing-ui);gap:9px;color:var(--color-text);margin:0 0 30px;padding:0 6px}
+.unified .unified-navigation :is(.brand,.portal-brand) b{background:var(--color-selected);color:var(--color-action);border-radius:var(--radius-md);box-shadow:none}
+.unified .unified-navigation nav{display:flex;flex-direction:column;gap:7px;margin:0;padding:0}
+.unified .unified-nav-label{font:var(--type-caption);line-height:20px;color:var(--color-text-secondary);margin:0;padding:0 12px 8px}
+body.unified :is(#app,#dialog) .review-section{margin:0 0 20px;padding:20px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);background:var(--color-surface)}
+body.unified :is(#app,#dialog) .review-section>h2,body.unified :is(#app,#dialog) .review-section>h3{margin:0 0 14px}
+body.unified :is(#app,#dialog) .review-item{display:flex;align-items:flex-start;gap:16px;padding:14px 0;border-top:1px solid var(--color-border-subtle);scroll-margin:20px;min-width:0}
+body.unified :is(#app,#dialog) .review-section details>summary{cursor:pointer;padding:12px 0;min-height:44px;font:var(--type-body-strong);color:var(--color-text)}
+body.unified :is(#app,#dialog) .review-item:first-child{border-top:0}
+body.unified :is(#app,#dialog) .review-item>div:first-child{flex:1;min-width:0;overflow-wrap:anywhere}
+body.unified :is(#app,#dialog) .review-item-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap;flex-shrink:0}
+body.unified :is(#app,#dialog) .review-status{display:inline-flex;align-items:center;gap:6px;font:var(--type-caption);color:var(--color-text-secondary)}
+body.unified :is(#app,#dialog) .review-status.warning{color:var(--color-warning)}
+body.unified :is(#app,#dialog) .review-status.changed{color:var(--color-selected-text)}
+body.unified #app .classroom-toolbar{flex:none;display:flex;align-items:center;flex-wrap:wrap;gap:8px 24px;padding:8px 24px;background:var(--color-surface);border-bottom:1px solid var(--color-border-subtle)}
+body.unified #app .classroom-toolbar>.preview-activities{padding:0;border:0;min-width:0}
+body.unified #app .classroom-session-bar{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;margin-left:auto;padding:0;font:var(--type-help);color:var(--color-text-secondary)}
+body.unified #app .classroom-status{display:flex;flex-direction:column;gap:2px}
+body.unified #app .classroom-session-bar .row{gap:8px}
+@media(max-width:700px){body.unified #app .classroom-toolbar{gap:8px;padding:8px 16px}body.unified #app .classroom-toolbar>.preview-activities{max-width:100%}body.unified #app .classroom-session-bar{width:100%}}
+@media(max-width:700px){body.unified :is(#app,#dialog) .review-section{padding:16px}body.unified :is(#app,#dialog) .review-item{flex-wrap:wrap;gap:12px}body.unified :is(#app,#dialog) .review-item>div:first-child{flex-basis:100%}body.unified :is(#app,#dialog) .review-item-actions{justify-content:flex-start;flex-shrink:1}}
+.unified-nav-drawer-head,.unified-nav-backdrop{display:none}
+@media(max-width:900px){
+ body.unified[data-unified-module] #app :is(.shell,.app-shell){display:block;grid-template-columns:minmax(0,1fr)}
+ body.unified[data-unified-module] #app :is(.shell,.app-shell)>aside.unified-navigation{display:none;position:fixed;inset:0 auto 0 0;z-index:90;width:min(300px,calc(100vw - 56px));height:100dvh;min-height:0;overflow-y:auto;padding:18px 16px;box-shadow:8px 0 32px var(--palette-dialog-shadow);border-right:1px solid var(--color-border-subtle)}
+ body.unified[data-unified-module][data-navigation-open] #app :is(.shell,.app-shell)>aside.unified-navigation{display:flex;flex-direction:column;gap:24px}
+ body.unified[data-unified-module] #app aside.unified-navigation nav{display:flex;flex-direction:column;gap:7px}
+ body.unified[data-unified-module] #app aside.unified-navigation :is(.brand,.portal-brand){margin:0;padding:0 6px}
+ body.unified[data-unified-module] #app aside.unified-navigation .unified-nav-drawer-head{display:flex;align-items:center;justify-content:space-between;gap:16px}
+ body.unified[data-unified-module] #app aside.unified-navigation .unified-nav-drawer-head button{display:inline-flex;width:auto;align-items:center;white-space:nowrap}
+ body.unified[data-unified-module] #app aside.unified-navigation .unified-nav-label{display:none}
+ body.unified[data-unified-module] #app aside.unified-navigation button small{display:block}
+ body.unified[data-unified-module] #app .unified-nav-backdrop{display:none;position:fixed;inset:0;z-index:85;width:100%;height:100dvh;border:0;border-radius:0;padding:0;background:var(--palette-backdrop);box-shadow:none}
+ body.unified[data-unified-module][data-navigation-open] #app .unified-nav-backdrop{display:block}
+ body.unified[data-navigation-open]{overflow:hidden}
+ body.unified[data-unified-module] #app .topbar :is(.portal-navigation-toggle,.library-navigation-toggle){display:inline-flex}
+ body.unified[data-unified-module] #app :is(.unified-prep-footer,.bottom-bar,.footer,.preparation-actions){left:0}
+}
+.unified .unified-navigation>.unified-nav-version{display:block;position:static;color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.8;margin:36px 12px 0}
+.unified :is(.topbar){background:var(--color-surface);border-bottom:1px solid var(--color-border-subtle);box-shadow:none;height:66px;min-height:66px}
+.unified .topbar>.row:first-child{min-width:0;flex-wrap:nowrap}
+.unified .topbar>.row:first-child>:is(strong,span){min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.unified .topbar>.row:first-child>button{flex-shrink:0}
+.unified :is(.panel,.card,.home-card,.yoga-library-card){border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);box-shadow:0 3px 12px var(--palette-shadow)}
+.unified :is(.main,.portal-workspace,.workspace-column,.workspace){background:var(--color-page)}
+.unified :is(.footer,.preparation-actions,.editor-footer){background:var(--color-surface);border-top:1px solid var(--color-border-subtle);box-shadow:0 -4px 16px var(--palette-shadow)}
+.unified :is(.step.active,.steps .active){color:var(--color-selected-text);background:var(--color-selected);border-color:var(--color-selected-border);box-shadow:none}
+.unified .steps .active i{background:var(--color-action);color:var(--color-surface)}
+.unified :is(.home-tabs,.library-tabs) button.active{color:var(--color-selected-text);border-color:var(--color-action);background:var(--color-selected);box-shadow:none}
+.unified-version-strip{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--color-selected);border:1px solid var(--color-selected-border);border-radius:var(--radius-lg);padding:12px 16px;margin:0 0 20px;font-size:var(--font-size-sm);color:var(--color-selected-text)}
+.unified-save-group{min-width:0}.unified [data-save-message],.unified #song-save-message{display:block;color:var(--color-error);font-size:var(--font-size-xs);max-width:520px}
+.unified [data-save-message]:empty,.unified #song-save-message:empty{display:none}
+.unified :is(.class-head,.classhead,.fullscreen-header,.fullscreen-preview-header){background:var(--color-surface);color:var(--color-text);border-bottom:1px solid var(--color-border-subtle);padding:18px 24px}
+.unified .home-card-actions>button{min-height:40px}
+@media(max-width:900px){.unified-version-strip{align-items:flex-start;flex-direction:column}.unified :is(.footer,.preparation-actions){gap:10px;flex-wrap:wrap}.unified :is(.sidebar,.portal-sidebar){width:228px}}
+/* Override the historic music theme's high-specificity control rules. */
+body.unified.music-studio.stroke-system :is(#app,#dialog) button.primary{background:var(--color-action);color:var(--color-surface);border:1px solid var(--color-action);box-shadow:none;transform:none}
+body.unified.music-studio.stroke-system :is(#app,#dialog) button.primary:hover:not(:disabled){background:var(--color-action-hover);color:var(--color-surface);border-color:var(--color-action-hover)}
+body.unified.music-studio.stroke-system #app :is(.step.active,.step.active:hover){background:var(--color-selected);color:var(--color-selected-text);border-color:var(--color-selected-border)}
+body.unified.music-studio.stroke-system #app .step.active i{background:var(--color-action);color:var(--color-surface);border-color:var(--color-action)}
+body.unified.music-studio.stroke-system #app :is(.home-tabs button.active,.home-status-filter button.active){background:var(--color-selected);color:var(--color-selected-text);border-color:var(--color-action);box-shadow:none}
+body.unified.music-studio.stroke-system #app .preparation-actions{border-top:1px solid var(--color-border-subtle);background:var(--color-surface)}
+body.unified.music-studio.stroke-system #app .workspace-mode :is(.panel,.question-editor){border:1px solid var(--color-border-subtle);background:var(--color-surface);box-shadow:none}
+body.unified.music-studio.stroke-system #app .workspace-mode :is(.pagehead,.question-list){border-color:var(--color-border-subtle)}
+body.unified.music-studio.stroke-system #app .home-card{border:1px solid var(--color-border-subtle);box-shadow:0 3px 12px var(--palette-shadow)}
+body.unified.music-studio.stroke-system #app .music-home .pagehead{background:var(--color-selected);border:1px solid var(--color-selected-border);box-shadow:none}
+
+body.unified.music-studio.stroke-system #app :is(.home-types button.active,.hunter-mode button.selected){background:var(--color-selected);color:var(--color-selected-text);border-color:var(--color-selected-border);box-shadow:none}
+@media(min-width:901px){
+  body.unified[data-unified-module="song"] .shell.expanded{grid-template-columns:228px minmax(0,1fr)}
+  body.unified[data-unified-module="song"] .expanded .footer{left:228px}
+  body.unified[data-unified-module="yoga"] .app-shell.portal-home,body.unified[data-unified-module="yoga"] .app-shell.portal-nav-expanded{grid-template-columns:228px minmax(0,1fr)}
+  body.unified[data-unified-module="yoga"] .portal-nav-expanded .bottom-bar{left:228px}
+}
+body.unified .unified-navigation :is(.brand,.portal-brand){display:flex;align-items:center;gap:9px}
+body.unified .unified-navigation :is(.brand,.portal-brand) b{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:none;margin:0;transform:none;border:0;box-shadow:none;background:var(--color-selected);color:var(--color-action);font-size:25px}
+
+/* V1.5: shared scope labels, overview, candidate comparison and entry affordances. */
+.unified .unified-preview-entry{display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0}
+.unified .unified-preview-entry small{font-size:var(--font-size-xs);line-height:1.4;color:var(--color-text-secondary);white-space:normal;text-align:center;max-width:210px}
+.unified .prep-head-actions{align-items:flex-start;flex-wrap:wrap}
+.unified .unified-card-cover{display:block;width:100%;padding:0;border:0;border-radius:0;background:transparent;text-align:inherit;overflow:hidden}
+.unified .unified-card-cover .cover{margin:0}
+.unified .unified-card-cover:focus-visible{outline:3px solid var(--color-action);outline-offset:-4px}
+.unified .unified-candidate-compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:22px 0}
+.unified .unified-candidate-compare section{padding:18px;border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface-subtle);min-width:0}
+.unified .candidate-options{padding-left:22px;line-height:2;overflow-wrap:anywhere}
+.unified .overview-option{padding:15px 18px;border:0;background:var(--color-surface);line-height:1.6}
+.unified .student-effect-panel .overview-answerline{display:flex;align-items:center;align-content:center;justify-content:flex-start;min-height:112px;padding:var(--space-4);margin-bottom:var(--space-5);border:var(--border-width) dashed var(--color-border-hover);border-radius:var(--radius-md);background:var(--color-selected);color:var(--color-selected-text);font:var(--type-body);text-align:center}
+.unified .student-effect-panel #student-preview:has([data-hunter-order-context="overview"]){overscroll-behavior:auto}
+.unified .prep-footer{flex-wrap:wrap}
+.unified .prep-footer #song-save-message:not(:empty){flex-basis:100%;color:var(--color-error)}
+@media(max-width:760px){.unified .unified-candidate-compare{grid-template-columns:1fr}.unified .unified-preview-entry small{max-width:150px}.unified .pagehead,.unified .page-head{flex-wrap:wrap;gap:16px}}
+body.unified.music-studio.stroke-system #dialog :is(.dialoghead,.dialogfoot){background:var(--color-surface);border-color:var(--color-border-subtle)}
+body.unified.music-studio.stroke-system #dialog button:not(.primary):not(.flat):not(.ui-dialog-close){border:1px solid var(--color-border);box-shadow:none;background:var(--color-surface)}
+body.unified.music-studio.stroke-system #app .workspace-mode :is(.student-effect-panel,.question-edit-panel){border:1px solid var(--color-border-subtle);background:var(--color-surface);box-shadow:0 3px 12px var(--palette-shadow)}
+body.unified.music-studio.stroke-system #app .workspace-mode :is(.student-effect-toolbar,.question-editor-head,.student-effect-footer){background:var(--color-surface-subtle);border-color:var(--color-border-subtle);color:var(--color-text-secondary)}
+body.unified.music-studio.stroke-system #app .student-effect-panel .student-options{display:grid;gap:10px}
+
+/* V1.6: stable action hierarchy and explicit preview lifetime. */
+.unified .unified-session-note{display:block;color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.65;font-weight:400;margin:5px 0 10px}
+.unified .prep-eyebrow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.unified .prep-eyebrow button{padding:4px 0;font-size:var(--font-size-xs)}
+.unified .prep-head-actions{justify-content:flex-end;gap:12px}
+.unified .prep-heading>div:first-child{min-width:220px;flex:1}
+.unified .prep-heading .unified-version-strip{flex-wrap:wrap;line-height:1.7}
+.unified :is(.page-head,.pagehead)>.row,.unified .pagehead>.actions{align-items:flex-start;flex-wrap:wrap;gap:12px}
+.unified :is(.page-head,.pagehead) h1{overflow-wrap:anywhere}
+.unified .bottom-bar{background:var(--color-surface);border-top:1px solid var(--color-border-subtle)}
+.unified .fullscreen-preview-header .preview-heading{min-width:0}
+.unified .fullscreen-preview-header .unified-session-note{margin:0;flex-basis:100%}
+body.unified.music-studio.stroke-system #app .workspace-mode .question-list-item.selected{border-color:var(--color-action);background:var(--color-selected);box-shadow:none}
+@media(max-width:760px){
+ .unified .prep-head-actions{margin:0;justify-content:flex-start;width:100%}
+ .unified .unified-preview-entry{align-items:flex-start;min-width:0}
+ .unified .unified-preview-entry small{text-align:left;max-width:180px}
+ .unified .prep-heading{gap:14px}
+ .unified .unified-version-strip{padding:10px 12px;margin-bottom:14px;gap:8px}
+ body.unified.music-studio.stroke-system #app .workspace-mode .pagehead{gap:12px;margin-bottom:14px}
+ body.unified.music-studio.stroke-system #app .workspace-mode .steps{gap:6px;margin:12px 0 18px}
+ body.unified.music-studio.stroke-system #app .workspace-mode .steps .step{padding:8px 10px;min-height:36px}
+}
+.unified .unified-back-link{margin:0 0 12px}
+.unified .unified-back-link button{padding:4px 0;font-size:var(--font-size-xs);border:0;background:none;box-shadow:none;color:var(--color-text-secondary)}
+body.unified.music-studio.stroke-system #app .unified-back-link button{padding:4px 0;border:0;box-shadow:none;background:none}
+
+/* V1.7: common preparation chrome; activity content keeps its own composition. */
+body.unified #app .unified-prep-footer{position:fixed;bottom:0;left:0;right:0;z-index:40;display:flex;align-items:center;justify-content:space-between;gap:var(--space-4);min-height:60px;margin:0;padding:var(--space-2) var(--space-6) max(var(--space-2),env(safe-area-inset-bottom));background:var(--color-surface);border:0;border-top:1px solid var(--color-border-subtle);box-shadow:0 -4px 16px var(--palette-shadow);box-sizing:border-box;backdrop-filter:none}
+body.unified #app .unified-prep-footer>div{position:static;min-width:0}
+body.unified #app .unified-prep-footer .row{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:0}
+body.unified #app .unified-prep-footer>.row:last-of-type{justify-content:flex-end}
+body.unified #app .unified-prep-footer :is(small,#footer-save){font-size:var(--font-size-xs);line-height:1.6;color:var(--color-text-secondary);max-width:none}
+body.unified #app .unified-prep-footer .prep-publication-note{max-width:24em;color:var(--color-text-secondary)}
+body.unified #app .unified-prep-footer button{width:auto;margin:0;white-space:normal}
+body.unified #app .unified-prep-footer button.primary{flex-basis:auto}
+body.unified #app :is(.prep-main,.editor-main,.workspace-column>.main,.portal-workspace>.workspace){padding-bottom:calc(var(--prep-footer-height,72px) + 28px)}
+body.unified[data-unified-module="yoga"] #app main.workspace{padding-bottom:calc(var(--prep-footer-height,72px) + 28px)}
+body.unified:has(.unified-prep-footer) #toast{bottom:calc(var(--prep-footer-height,72px) + 16px)}
+body.unified #app .unified-prep-header{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin:0 0 18px;padding:0;background:transparent;border:0;box-shadow:none}
+body.unified #app .unified-prep-header>div:first-child{flex:1;min-width:0}
+body.unified #app .unified-prep-header h1{display:block;margin:0 0 8px;color:var(--color-text);overflow-wrap:anywhere}
+body.unified #app .unified-prep-header :is(p,.prep-eyebrow){font-size:var(--font-size-sm);line-height:1.6;color:var(--color-text-secondary);margin:0}
+body.unified #app .unified-prep-header .prep-eyebrow{margin-bottom:12px}
+body.unified.music-studio.stroke-system #app .unified-prep-header .titlegroup{display:block}
+body.unified.music-studio.stroke-system #app .unified-prep-header .titlegroup>div:last-child{display:block}
+body.unified #app .unified-prep-header .modulemark{display:none}
+body.unified #app .unified-version-strip{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:12px 16px;margin:0 0 20px;background:var(--color-selected);border:1px solid var(--color-selected-border);border-radius:var(--radius-lg);color:var(--color-selected-text);font-size:var(--font-size-sm);line-height:1.6}
+
+/* Header identity and return controls are identical across preview sources. */
+body.unified #app .unified-experience-header{display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;flex:none;height:auto;min-height:76px;padding:12px 28px;background:var(--color-surface);color:var(--color-text);border:0;border-bottom:1px solid var(--color-border-subtle);box-shadow:none;box-sizing:border-box}
+body.unified #app .unified-experience-header .unified-experience-heading{display:flex;flex-direction:column;align-items:flex-start;gap:4px;flex:1;min-width:0}
+body.unified #app .fullscreen>.unified-experience-header{position:sticky;top:0;z-index:20}
+body.unified #app .unified-experience-header h1{margin:0;color:var(--color-text);white-space:normal;overflow-wrap:anywhere}
+body.unified #app .unified-experience-meta{font-size:var(--font-size-sm);line-height:1.5;color:var(--color-text-secondary);margin:0;overflow-wrap:anywhere}
+body.unified #app .unified-experience-header .unified-session-note{font-size:var(--font-size-xs);line-height:1.5;font-weight:400;color:var(--color-text-secondary);margin:0;flex-basis:auto}
+body.unified #app .unified-experience-actions{display:flex;align-items:center;justify-content:flex-end;gap:14px;flex-shrink:0;flex-wrap:wrap}
+/* Secondary explanations stay available beside the return control. */
+body.unified #app .experience-help{position:relative;max-width:100%;color:var(--color-text-secondary)}
+body.unified #app .experience-help>summary{display:flex;align-items:center;min-height:40px;padding:8px 10px;cursor:pointer;list-style:none;border-radius:var(--radius-md);font:var(--type-control)}
+body.unified #app .experience-help>summary::-webkit-details-marker{display:none}
+body.unified #app .experience-help>summary:hover,body.unified #app .experience-help[open]>summary{background:var(--color-selected);color:var(--color-selected-text)}
+body.unified #app .experience-help>summary:focus-visible{outline:3px solid var(--color-focus);outline-offset:2px}
+body.unified #app .experience-help>p{position:absolute;z-index:60;right:0;top:100%;width:300px;max-width:calc(100vw - 32px);margin:6px 0 0;padding:var(--space-4);background:var(--color-surface);color:var(--color-text-secondary);border:1px solid var(--color-border);border-radius:var(--radius-md);box-shadow:0 6px 24px var(--palette-shadow);font-size:var(--font-size-sm);line-height:1.65;text-align:left}
+body.unified #app .unified-preview-position{font-size:var(--font-size-sm);color:var(--color-text-secondary);white-space:nowrap}
+body.unified #app .unified-experience-tabs{display:flex;justify-content:center;gap:4px;margin:0;padding:10px 24px;flex:none;border-radius:0;border-bottom:1px solid var(--color-border-subtle);background:var(--color-surface)}
+body.unified #app .song-experience{height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:var(--color-page)}
+body.unified #app .song-experience>.experience-body{flex:1;min-height:0;width:100%;max-width:1440px;overflow:auto;margin:0 auto;padding:18px 28px 28px}
+body.unified #app .song-experience>.class-main{flex:1;min-height:0;overflow:auto;margin:0 auto;padding-top:20px}
+body.unified #app .song-experience>.class-footer{flex:none;width:100%;max-width:none;background:var(--color-surface);border-top:1px solid var(--color-border-subtle);padding:12px 28px;margin:0}
+body.unified #app .song-experience .class-footer .player{margin-top:6px}
+body.unified #app .song-experience .class-whole{flex:none}
+body.unified #app .song-experience .workspace-grid{margin-bottom:0}
+body.unified #app :is(.fullscreen-question-nav,.preview-activities) button.selected{background:var(--color-selected);color:var(--color-selected-text);border-color:var(--color-selected-border)}
+body.unified.music-studio.stroke-system #app .workspace-mode .question-list-item{border:1px solid var(--color-border-subtle);box-shadow:none;transform:none}
+body.unified.music-studio.stroke-system #app .workspace-mode .question-list-item.selected{border-color:var(--color-selected-border);background:var(--color-selected)}
+body.unified.music-studio.stroke-system #app .workspace-mode .question-edit-panel button:not(.primary):not(.selected){border-width:1px;border-color:var(--color-border);box-shadow:none;transform:none}
+body.unified :is(#app,#dialog) .unified-candidate-compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:16px 0;border:0;background:transparent}
+body.unified :is(#app,#dialog) .unified-candidate-compare> :is(div,section){margin:0;padding:16px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-md);background:var(--color-surface-subtle);min-width:0;overflow-wrap:anywhere}
+body.unified :is(#app,#dialog) .unified-candidate-compare> :is(div,section):last-child{background:var(--color-surface-subtle);border-color:var(--color-selected-border)}
+body.unified :is(#app,#dialog) .unified-candidate-compare :is(h3,small,label){display:block;color:var(--color-text-secondary);margin:0 0 8px}
+body.unified :is(#app,#dialog) .unified-candidate-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--color-border-subtle);background:var(--color-surface)}
+body.unified :is(#app,#dialog) :is([data-action="candidate-cancel"],[data-action="discard-candidate"],[data-action="candidate-revise"],[data-action="refine-candidate"]){background:var(--color-surface);border:1px solid var(--color-border);color:var(--color-selected-text);box-shadow:none}
+body.unified #app .unified-prep-header h1{background:none}
+body.unified.music-studio.stroke-system #app .unified-experience-header{background:var(--color-surface);border-color:var(--color-border-subtle)}
+body.unified.music-studio.stroke-system #app .fullscreen-preview-footer{background:var(--color-surface);border-color:var(--color-border-subtle)}
+body.unified.music-studio.stroke-system #app .fullscreen-preview-footer .player{color:var(--color-text);background:transparent}
+body.unified.music-studio.stroke-system #app .fullscreen-preview-footer :is(.player small,.class-audio-caption){color:var(--color-text-secondary)}
+body.unified.music-studio.stroke-system #app .fullscreen-line-controls button{color:var(--color-selected-text);background:transparent}
+body.unified.music-studio.stroke-system #app .preview-seek input{accent-color:var(--color-action)}
+body.unified.music-studio.stroke-system #app .fullscreen-question-nav nav button{border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-selected-text);box-shadow:none}
+body.unified.music-studio.stroke-system #app .fullscreen-question-nav nav button.selected{border-color:var(--color-selected-border);background:var(--color-selected);color:var(--color-selected-text)}
+body.unified.music-studio.stroke-system #app .preview-activities{background:var(--color-surface);border-color:var(--color-border-subtle)}
+body.unified.music-studio.stroke-system #app .hunter-content-switch{background:var(--color-selected);border:1px solid var(--color-border-subtle);box-shadow:none}
+
+
+
+body.unified #app .fullscreen{display:grid;grid-template-rows:auto minmax(0,1fr) auto auto auto;padding:0;gap:var(--space-3);overflow:auto}
+body.unified #app .fullscreen>.scene-host{container-type:size;display:grid;place-items:center;min-height:0;min-width:0;height:100%;width:calc(100% - 48px);max-width:none;margin:0 auto;box-shadow:none}
+body.unified #app .fullscreen>.scene-host>.yoga-scene{width:min(100%,calc(100cqh * 16 / 8.5));max-width:960px;max-height:100%;aspect-ratio:16/8.5}
+body.unified #app .fullscreen>.scene-host>.background-placeholder{max-height:100%;overflow:auto}
+body.unified #app .fullscreen>.fullscreen-footer{padding:0 28px;flex:none;margin:0}
+body.unified #app .fullscreen>.row.between{padding:0 28px 12px;flex:none}
+body.unified #app .fullscreen .page-dots{flex:none}
+body.unified #app .fullscreen .page-dots button{border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-selected-text);box-shadow:none}
+body.unified #app .fullscreen .page-dots button.active{background:var(--color-selected);border-color:var(--color-selected-border);color:var(--color-selected-text)}
+@media(max-height:520px){body.unified #app .fullscreen{grid-template-rows:auto minmax(180px,1fr) auto auto auto}}
+@media(min-width:901px){
+ body.unified #app :is(.shell.expanded,.nav-expanded,.portal-nav-expanded) .unified-prep-footer{left:228px}
+}
+@media(max-width:900px){
+ body.unified #app .unified-prep-footer{left:0;padding:12px 20px;flex-wrap:wrap;gap:10px}
+ body.unified #app .unified-prep-footer>.row{display:flex;flex:initial;padding:0}
+ body.unified #app .unified-prep-footer>.row .primary{margin:0;flex-basis:auto}
+ body.unified #app .unified-prep-header{flex-wrap:wrap;gap:16px}
+ body.unified #app .unified-experience-header{padding:14px 20px;gap:16px;flex-wrap:wrap}
+ body.unified #app .unified-experience-actions{gap:10px}
+}
+@media(max-width:600px){
+ body.unified #app .unified-prep-footer{padding:10px 16px}
+ body.unified #app .unified-prep-footer>div{flex-basis:100%;width:100%}
+ body.unified #app .unified-prep-footer .row{gap:8px}
+
+ body.unified #app .unified-experience-header{padding:12px 16px;gap:10px}
+ body.unified #app .unified-experience-heading{flex-basis:100%}
+
+ body.unified #app .unified-experience-actions{width:100%;justify-content:space-between}
+ body.unified #app .song-experience>.experience-body{padding:14px 16px}
+ body.unified #app .song-experience>.class-footer{padding:10px 16px}
+ body.unified #app .fullscreen>.scene-host{width:min(calc(100% - 32px),calc((100dvh - 340px)*.93))}
+ body.unified :is(#app,#dialog) .unified-candidate-compare{grid-template-columns:1fr}
+}
+
+/* V1.8 / audit 01–04: more working space, visible materials and local AI review. */
+body.unified #app :is(.prep-main,.editor-main,.workspace-column>.main,.portal-editor .workspace){padding-top:var(--space-3)}
+body.unified #app .unified-prep-header{gap:16px;margin-bottom:10px}
+body.unified #app .unified-prep-header h1{margin-bottom:4px}
+body.unified #app .unified-prep-header .prep-eyebrow{margin-bottom:5px}
+body.unified #app .unified-back-link{margin-bottom:6px}
+body.unified #app .unified-version-strip{gap:8px 16px;padding:7px 12px;margin-bottom:12px;border-radius:var(--radius-md);font-size:var(--font-size-xs)}
+body.unified #app .unified-version-strip button{min-height:28px;padding:3px 9px}
+body.unified #app :is(.prep-main,.editor-main,.workspace-mode,.portal-editor) .steps{margin:0 0 12px;gap:6px}
+body.unified #app :is(.workspace-mode,.portal-editor) .steps .step{min-height:38px;padding:7px 12px;font-size:var(--font-size-sm)}
+body.unified #app .portal-editor .step-state{display:inline;margin:0 0 0 8px;font-size:var(--font-size-xs);font-weight:400}
+body.unified #app .prep-audio{padding:10px 14px;gap:12px}
+body.unified #app .prep-context-bar{gap:6px 14px;margin:8px 0 12px}
+body.unified #app .prep-context-bar .goal-summary{gap:6px;font-size:var(--font-size-xs)}
+body.unified #app .prep-context-bar button{min-height:30px;padding:5px 9px}
+body.unified #app .content-step-heading{margin-bottom:12px;justify-content:flex-end}
+
+/* Two material banks share one visible area; lyrics and cards scroll independently. */
+body.unified #app .song-experience.activity-classroom>.experience-body{display:flex;flex-direction:column;gap:8px;overflow:hidden;padding:12px 24px 16px}
+body.unified #app .song-experience.activity-classroom .workspace-mode-note{flex:none;margin:0;font-size:var(--font-size-xs)}
+body.unified #app .song-experience.activity-classroom .workspace-audio{flex:none;margin:0}
+body.unified #app .song-experience.activity-classroom .workspace-audio .song-player{padding:10px 14px;margin:0}
+body.unified #app .song-experience .activity-status{flex:none;min-height:30px;margin:0;padding:4px 0;font-size:var(--font-size-sm)}
+body.unified #app .song-experience .activity-grid{flex:1;min-height:0;align-items:stretch;gap:20px;margin:0;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
+body.unified #app .song-experience .workspace-lyrics{display:flex;flex-direction:column;min-height:0;padding:14px 16px 8px}
+body.unified #app .song-experience .workspace-lyrics-head{flex:none;padding-bottom:8px;margin:0}
+
+body.unified #app .song-experience .workspace-lines{display:block;flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+body.unified #app .song-experience .workspace-line{min-height:82px;padding:12px 4px;gap:8px}
+body.unified #app .song-experience .workspace-line-text{font-size:22px;line-height:1.65}
+body.unified #app .song-experience .workspace-trial-tools{flex:none;margin:0;padding-top:6px}
+body.unified #app .song-experience .activity-banks{display:flex;flex-direction:column;min-height:0;gap:0;border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);overflow:hidden;background:var(--color-surface)}
+body.unified #app .activity-bank-tabs{display:flex;flex:none;gap:6px;padding:8px 12px;border-bottom:1px solid var(--color-border-subtle);background:var(--color-surface-subtle)}
+body.unified #app .activity-bank-tabs button{flex:1}
+body.unified #app .song-experience .activity-bank{display:flex;flex-direction:column;flex:1;min-height:0;padding:12px 14px;border:0;border-radius:0;background:var(--color-surface)}
+body.unified #app .song-experience .activity-bank .workspace-context-head{flex:none;margin:0;gap:8px}
+
+body.unified #app .song-experience .activity-bank .workspace-note{flex:none;margin:5px 0 8px;font-size:var(--font-size-xs)}
+body.unified #app .song-experience .activity-bank :is(.workspace-word-grid,.workspace-instrument-grid){flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;align-content:start;margin:0;padding:2px 4px 4px;gap:8px}
+body.unified #app .song-experience .activity-bank .activity-material{min-height:60px;padding:9px 8px;font-size:var(--font-size-md)}
+body.unified #app .song-experience .activity-bank .workspace-context-actions{flex:none;margin:6px 0 0;padding-top:6px}
+
+/* A local review owns its controls; page navigation and saving stay in the global bar. */
+body.unified #app .content-workbench.has-adjustment .content-reference-column{align-content:start}
+body.unified #app .adjustment-panel{display:flex;flex-direction:column;max-height:calc(100dvh - var(--prep-footer-height,72px) - 32px);scroll-margin-top:16px;scroll-margin-bottom:calc(var(--prep-footer-height,72px) + 16px)}
+body.unified #app .adjustment-panel .adjustment-head{flex:none;padding:12px 14px}
+body.unified #app .adjustment-panel .adjustment-body{flex:1;min-height:0;max-height:none;overflow:auto;overscroll-behavior:contain;gap:12px;padding:14px;scrollbar-gutter:stable}
+body.unified #app .adjustment-panel .unified-candidate-compare{grid-template-columns:minmax(0,1fr);gap:8px;margin:0;padding:10px}
+body.unified #app .adjustment-panel .unified-candidate-compare>div{padding:12px;overflow-wrap:break-word}
+body.unified #app .adjustment-panel .unified-candidate-compare small{margin-bottom:5px}
+body.unified #app .adjustment-panel .unified-candidate-compare p{font-size:var(--font-size-md);line-height:1.75}
+body.unified #app .adjustment-panel .unified-candidate-actions{flex:none;gap:8px;padding:10px 14px}
+body.unified #app .adjustment-panel .unified-candidate-actions>.row{gap:8px}
+body.unified #app .adjustment-panel .unified-candidate-actions>.primary{width:100%}
+@media(min-width:901px){
+ body.unified #app .content-workbench.has-adjustment .content-reference-column{position:sticky;top:16px}
+}
+@media(max-width:900px){
+ body.unified #app .unified-prep-header{gap:12px}
+ body.unified #app .unified-version-strip{flex-direction:row;align-items:center}
+ body.unified #app .portal-editor .step-state{display:block;margin:2px 0 0}
+ body.unified #app .song-experience .activity-grid{gap:12px}
+ body.unified #app .song-experience .workspace-line-text{font-size:var(--font-size-title)}
+ body.unified #app .song-experience .activity-bank :is(.workspace-word-grid,.workspace-instrument-grid){grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px),(max-height:550px){
+ body.unified #app .song-experience.activity-classroom>.experience-body{overflow:auto}
+ body.unified #app .song-experience .activity-grid{flex:none;grid-template-columns:1fr}
+ body.unified #app .song-experience .workspace-lines{flex:none;max-height:45dvh}
+ body.unified #app .song-experience .activity-bank :is(.workspace-word-grid,.workspace-instrument-grid){flex:none;max-height:40dvh}
+ body.unified #app .song-experience .activity-banks{min-height:260px}
+}
+/* Candidate paragraphs keep their natural height inside the review scroller. */
+body.unified #app .adjustment-panel.is-candidate .adjustment-body{display:block}
+body.unified #app .adjustment-panel.is-candidate .adjustment-body>*+*{margin-top:12px}
+
+/* Keep platform navigation compact only while preparing an activity. */
+body.unified #app :is(.workspace-mode,.shell:not(.expanded),.portal-editor)>.workspace-column>.topbar,
+body.unified #app .portal-editor .topbar,
+body.unified #app .shell:has(.unified-prep-footer) .topbar{height:56px;min-height:56px}
+
+body.unified #app .prep-goal-details{min-width:0;flex:1;font-size:var(--font-size-sm)}
+body.unified #app .prep-goal-details summary{cursor:pointer;min-height:32px;padding:6px 0;color:var(--color-selected-text);font-weight:600}
+body.unified #app .prep-goal-details summary small{margin-left:6px;color:var(--color-text-secondary);font-weight:400;font-size:var(--font-size-xs)}
+body.unified #app .prep-goal-details[open]{flex-basis:100%}
+body.unified #app .prep-goal-details .goal-summary{padding:6px 0 10px}
+body.unified #app .song-experience .activity-banks{position:static}
+@media(min-width:901px) and (max-width:1100px){
+ body.unified #app .prep-audio{flex-wrap:nowrap}
+ body.unified #app .prep-audio .song-player{flex:1 1 auto;gap:9px}
+ body.unified #app .prep-audio .song-player .track{flex:0 1 145px}
+ body.unified #app .prep-audio .song-player .timeline{min-width:100px;flex:1}
+}
+
+/* V1.9 / audit 05–10: explicit scopes, one preview hierarchy, teacher controls. */
+body.unified #app .prep-scope-label{font-size:var(--font-size-xs);color:var(--color-text-secondary);font-weight:500;margin-right:4px;white-space:nowrap}
+body.unified #app .prep-scope-note{font-size:var(--font-size-xs);color:var(--color-text-secondary);margin:-2px 0 16px}
+body.unified #app .prep-shared-words{flex-basis:100%;min-width:0;border-top:1px solid var(--color-border-subtle)}
+body.unified #app .prep-shared-words>summary{cursor:pointer;padding:7px 0;color:var(--color-selected-text);font-size:var(--font-size-sm);font-weight:600}
+body.unified #app .prep-shared-words>summary small{font-size:var(--font-size-xs);color:var(--color-text-secondary);font-weight:400;margin-left:6px}
+body.unified #app .prep-shared-words .candidate-section{margin:0;padding:14px 16px;background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg)}
+body.unified #app .prep-shared-words .candidate-words{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+body.unified #app .prep-shared-words .candidate-word{width:auto;min-width:0;background:var(--color-surface-subtle);border:1px solid var(--color-border-subtle);gap:8px;padding:6px}
+body.unified #app .prep-shared-words .candidate-word>span{overflow-wrap:anywhere}
+body.unified #app .prep-shared-words .candidate-actions{margin-top:10px}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-prep-tools{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:0 0 18px;padding:12px 14px;background:var(--color-surface-subtle);border:1px solid var(--color-border-subtle);border-radius:var(--radius-md)}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-prep-tools small{display:block;margin-top:4px;font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-settings-tools{padding-left:20px;border-left:1px solid var(--color-border-subtle)}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-settings-tools button[data-action="clear-masks"]{color:var(--color-error)}
+body.unified.music-studio.stroke-system #app .workspace-mode .resource-tabs{display:flex;gap:4px;padding:4px;background:var(--color-selected);border:0;border-radius:var(--radius-md)}
+body.unified.music-studio.stroke-system #app .workspace-mode :is(.character-strip>button,.resource-grid .image-card,.singer-inline-options>button){border:1px solid var(--color-border-subtle);border-radius:var(--radius-md);background:var(--color-surface);color:var(--color-text);box-shadow:none;transform:none}
+body.unified.music-studio.stroke-system #app .workspace-mode :is(.character-strip>button,.resource-grid .image-card,.singer-inline-options>button).selected{border-color:var(--color-selected-border);background:var(--color-selected);color:var(--color-selected-text);box-shadow:inset 0 0 0 1px var(--color-selected-border)}
+body.unified.music-studio.stroke-system #app .workspace-mode :is(.character-strip>button,.resource-grid .image-card,.singer-inline-options>button):hover:not(:disabled){border-color:var(--color-selected-border);background:var(--color-surface-subtle)}
+body.unified.music-studio.stroke-system #app .workspace-mode .resource-grid .choice-check{background:var(--color-action);color:var(--color-surface);border:0;border-radius:var(--radius-sm);padding:2px 6px;font-size:var(--font-size-xs)}
+body.unified.music-studio.stroke-system #app .workspace-mode .assignrow.active{border-color:var(--color-selected-border);background:var(--color-surface-subtle);box-shadow:none}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-prep-tools button{min-height:36px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-md);background:var(--color-surface);box-shadow:none;color:var(--color-selected-text)}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-prep-tools button[aria-pressed="true"]{background:var(--color-selected);border-color:var(--color-selected-border)}
+@media(max-width:900px){
+ body.unified #app .prep-more-actions{justify-content:flex-start}
+ body.unified.music-studio.stroke-system #app .workspace-mode .echo-prep-tools{flex-wrap:wrap}
+ body.unified.music-studio.stroke-system #app .workspace-mode .echo-settings-tools{border-left:0;padding-left:0}
+}
+body.unified #app .prep-context-bar .prep-goal-details{flex:0 1 auto}
+body.unified #app .prep-context-bar .prep-more-actions{margin-left:auto}
+body.unified #app .prep-context-bar .prep-shared-words{flex:0 1 auto;border:0}
+body.unified #app .prep-context-bar :is(.prep-goal-details,.prep-shared-words)[open]{flex-basis:100%}
+body.unified #app .prep-shared-words>summary{min-height:32px;padding:6px 0}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-editor>.sectionhead{align-items:center;flex-wrap:wrap;gap:16px}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-editor h2 .badge{margin-left:8px;vertical-align:middle;white-space:nowrap}
+
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-prep-tools{padding:0;margin:0;border:0;border-radius:0;background:transparent}
+body.unified.music-studio.stroke-system #app .workspace-mode .echo-prep-tools small{font-size:var(--font-size-xs)}
+/* V1.11: stable preparation navigation and shared preview/classroom layout. */
+
+
+body.unified #app .experience-display-tools{display:flex;justify-content:center;gap:8px;margin:0 0 12px}
+body.unified #app .experience-content{max-width:1440px;margin:auto;min-width:0}
+body.unified #app .experience-recording{display:grid;grid-template-columns:minmax(0,1fr) minmax(290px,.48fr);gap:24px;align-items:start}
+body.unified #app .experience-lyrics{min-width:0}
+body.unified #app .experience-lyrics .performance-stage{min-height:340px;height:auto;padding:24px}
+body.unified #app .experience-lyrics .performance-cast{gap:16px;margin:18px 0}
+body.unified #app .experience-lyrics .performance-choir{gap:16px}
+body.unified #app .experience-lyrics .performer>.ip-portrait{width:76px;height:76px}
+body.unified #app .experience-lyrics .performance-lyric{font-size:clamp(26px,2.7vw,42px)}
+/* Dance prompts and their current lyric share the first view. */
+body.unified #app .activity-preview-mover .fullscreen-preview-main{padding:16px 28px}
+body.unified #app .activity-preview-mover .performance-stage{display:grid;grid-template-columns:minmax(260px,.85fr) minmax(0,1.6fr);grid-template-areas:"caption caption" "resources lyric" "next next";gap:16px 24px;min-height:0;padding:24px;align-items:center}
+body.unified #app .activity-preview-mover .performance-caption{grid-area:caption}
+body.unified #app .activity-preview-mover .performance-resources{grid-area:resources;gap:16px;margin:0}
+body.unified #app .activity-preview-mover .performance-resource{min-width:0;max-width:160px}
+body.unified #app .activity-preview-mover .performance-resource>.ip-portrait,body.unified #app .activity-preview-mover .performance-resource>img{width:120px;height:120px;object-fit:contain}
+body.unified #app .activity-preview-mover .performance-lyric{grid-area:lyric;margin:0;font-size:clamp(32px,3.5vw,50px);line-height:1.5}
+body.unified #app .activity-preview-mover .performance-next{grid-area:next;margin:0;padding-top:12px}
+@media(max-width:700px){
+ body.unified #app .activity-preview-mover .fullscreen-preview-main{padding:12px 16px}
+ body.unified #app .activity-preview-mover .performance-stage{grid-template-columns:minmax(0,1fr);grid-template-areas:"caption" "lyric" "resources" "next";gap:16px;padding:20px 16px}
+ body.unified #app .activity-preview-mover .performance-lyric{font-size:30px}
+ body.unified #app .activity-preview-mover .performance-resource>.ip-portrait,body.unified #app .activity-preview-mover .performance-resource>img{width:88px;height:88px}
+ body.unified #app .experience-help>p{right:auto;left:0}
+}
+body.unified #app .experience-recorder{padding:20px;border:1px solid var(--color-border);border-radius:var(--radius-lg);background:var(--color-surface);color:var(--color-text)}
+body.unified #app .experience-recorder h2{margin:0 0 16px}
+body.unified #app .experience-recorder .recorder{border:0;background:transparent;box-shadow:none;padding:0;width:100%;min-width:0;min-height:280px;gap:12px}
+body.unified #app .experience-recorder .record-icon{width:52px;height:52px;font-size:27px}
+body.unified #app .experience-score{margin:0;color:var(--color-text);background:var(--color-surface);min-width:0}
+body.unified #app .experience-score .lyricrow{gap:12px;flex-wrap:wrap;min-height:82px}
+body.unified #app .experience-score .lyricrow>.text{min-width:180px;font-size:var(--font-size-title)}
+body.unified #app .experience-score .singer-lines{height:auto;max-height:none;overflow:visible}
+body.unified #app .experience-stage-label{display:inline-flex;align-items:center;white-space:nowrap;min-height:36px;padding:6px 14px;font-size:var(--font-size-sm);border-radius:var(--radius-md);color:var(--color-text-secondary)}
+body.unified #app .experience-stage-label.selected{color:var(--color-selected-text);background:var(--color-selected);font-weight:600}
+body.unified #app .activity-preview .complete{padding:40px 20px;text-align:center;color:var(--color-text)}
+body.unified #app .activity-preview .complete .row{justify-content:center;margin-top:24px}
+body.unified #app .fullscreen-line-controls>.primary{white-space:nowrap;flex-shrink:0}
+@media(max-width:1000px){body.unified #app .experience-recording{grid-template-columns:minmax(0,1fr)}body.unified #app .experience-recorder{width:100%;max-width:650px;justify-self:center}}
+@media(min-width:1001px) and (max-height:800px){
+ body.unified #app .activity-preview-studio .fullscreen-preview-main{padding:16px 24px}
+ body.unified #app .activity-preview-studio .experience-display-tools{margin-bottom:10px}
+ body.unified #app .experience-recording .performance-stage{min-height:0;padding:16px}
+ body.unified #app .experience-recording .performance-cast{margin:12px 0}
+ body.unified #app .experience-recording .performer>.ip-portrait{width:52px;height:52px}
+ body.unified #app .experience-recording .performer{gap:6px}
+ body.unified #app .experience-recording .performance-lyric{font-size:30px;margin:8px 0 12px}
+ body.unified #app .experience-recording .performance-next{font-size:var(--font-size-lg);gap:8px;padding-top:12px}
+ body.unified #app .experience-recorder .recorder{min-height:0;gap:8px}
+ body.unified #app .experience-recorder .record-icon{width:40px;height:40px;font-size:23px}
+ body.unified #app .experience-recorder h2{margin-bottom:12px}
+}
+@media(max-width:700px){body.unified #app .fullscreen-line-controls{flex-wrap:wrap}body.unified #app .fullscreen-line-controls>.primary{margin-left:auto}}
+
+}

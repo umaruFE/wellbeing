@@ -1,0 +1,84 @@
+/* Illustrated activity worlds. Interactive props and all teaching text remain native HTML. */
+[data-game=volume]{--scene:url('assets/scenes-v7/volume.png')}
+[data-game=energy]{--scene:url('assets/scenes-v7/energy.png')}
+[data-game=words]{--scene:url('assets/scenes-v7/words.png')}
+[data-game=role]{--scene:url('assets/scenes-v7/role.png')}
+[data-game=silly]{--scene:url('assets/scenes-v7/silly.png')}
+[data-game=flip]{--scene:url('assets/scenes-v7/flip.png')}
+#stage{padding:28px 40px 22px;background:#f6f2e9}
+/* V7 keeps the outlined cartoon style and original color; only internal scene detail is reduced. */
+#stage:after{content:'';display:block;position:absolute;inset:0;width:auto;height:auto;border:0;border-radius:0;background-image:var(--scene);background-size:100% 100%;background-position:center;background-repeat:no-repeat;opacity:1;pointer-events:none;z-index:-2}
+.title h1,.badge,.mv-title{font-size:31px;letter-spacing:-.8px}
+.head,.top,.hud{min-height:92px;z-index:4}
+.title p,.instr,.sub,.mv-sub{display:table;background:#fffaf0ed;padding:4px 10px;border-radius:6px;font-size:14px;margin-top:10px;color:#5d526b;line-height:1.45}
+.game-cn{font-size:14px}
+.play-progress{top:34px;background:#fffaf0ee;padding:3px 5px;border-radius:10px}
+[data-game=volume] .play-progress{top:35px}
+.foot,.actions{border:0;margin-top:16px;padding-top:0;min-height:56px;gap:16px}
+.ftip,.actions .tip,.tip#tip{background:#fffaf0ed;border-radius:9px;padding:9px 13px;font-size:13px;color:#5f516b;line-height:1.5}
+/* The arcade machines sit on the illustrated counter, leaving the prize shelves visible. */
+[data-game=silly] .qwrap{margin-top:44px}
+[data-game=silly] .q{padding:10px 24px;font-size:26px;border-color:#b59767}
+[data-game=silly] .mstage{justify-content:flex-end;padding-bottom:10px}
+[data-game=silly] .row .unit:first-child{margin-right:98px}
+[data-game=silly] .row .unit:last-child{margin-left:98px}
+[data-game=silly] .machine:after{content:'';position:absolute;bottom:-7px;left:-12px;right:-18px;height:22px;border-radius:50%;background:#73516928;z-index:0}
+[data-game=silly] .mix-action{top:54%}
+[data-game=silly] .ansrow{margin-top:13px}
+[data-game=silly] .ans{font-size:27px;padding:9px 22px}
+[data-game=silly] .foot{margin-top:18px}
+/* Quiet heading plaque; it prevents illustrated corner details crossing the title. */
+#stage:before{display:block;inset:16px 28px auto;height:102px;background:#fffaf0eb;border:1px solid #ffffffa6;border-radius:16px;z-index:-1;box-shadow:0 2px 5px #75694d08}
+/* Broadcast station: the three channels sit together in the broadcast desk. */
+[data-game=volume] .linewrap{width:990px;margin:50px auto 20px}
+[data-game=volume] .line{font-size:30px;padding:20px 26px}
+[data-game=volume] .drawrow{width:990px;margin:0 auto}
+[data-game=volume] .picks{gap:15px}
+[data-game=volume] .pick{min-height:184px;padding:22px 18px 19px}
+[data-game=volume] .pick .nm{font-size:27px}
+[data-game=volume] .pick .hint{font-size:15px;min-height:42px}
+[data-game=volume] .drawhead .t{background:#fffaf0;padding:5px 9px;border-radius:5px}
+[data-game=volume] .mwrap,[data-game=volume] .results{width:990px;margin-left:auto;margin-right:auto}
+/* Garden: an energy panel and its question clipboard share a green workbench. */
+[data-game=energy] .talk{width:990px;margin:50px auto 18px;gap:24px;max-height:432px}
+[data-game=energy] .side.a{flex-basis:306px}
+[data-game=energy] .bub.a{padding:27px 22px}
+[data-game=energy] .bub.a .q{font-size:25px;line-height:1.5}
+[data-game=energy] .bub.b{padding:14px 10px}
+[data-game=energy] .cell .se{font-size:19px;line-height:1.3}
+[data-game=energy] .cell .chip{padding:5px 9px}
+[data-game=energy] .energy-connector{left:305px}
+[data-game=energy] .energy-readout{font-size:13px;padding:10px}
+[data-game=energy] .foot{margin-top:auto}
+/* Adventure clearing: word tiles above, movement tokens below, campsite visible around them. */
+[data-game=words] .sentwrap{margin-top:62px}
+[data-game=words] .sent{background:linear-gradient(145deg,#fffdf4,#f9eedc)}
+[data-game=words] .banks{padding:16px 16px 12px;width:900px;margin-left:auto;margin-right:auto;background:none;border:0;box-shadow:none}
+[data-game=words] .chips{gap:23px}
+[data-game=words] .opt .circ{width:93px;height:93px}
+/* Voice playhouse: cards form the cast wall, framed by the open curtains. */
+[data-game=role] .guide{width:960px;margin:80px auto 0;padding:0;font-size:14px}
+[data-game=role] .voice-instruction{position:absolute;top:55px;left:0;background:#fffaf0ed;padding:4px 10px;border-radius:6px;color:#5d526b;font-weight:500}
+[data-game=role] .guide .target{font-size:27px;margin-top:5px;padding:10px 18px}
+[data-game=role] .board{width:960px;margin:20px auto 20px;gap:16px;max-height:342px}
+[data-game=role] .foot{margin-top:auto}
+/* Museum: four cards become exhibits on the long display ledge. */
+[data-game=flip] #stage>.card{position:static}
+[data-game=flip] .qbar{width:990px;margin:45px auto 0;padding:14px}
+[data-game=flip] .qt,[data-game=flip] .qt.mute{font-size:20px}
+[data-game=flip] .board{width:990px;margin:24px auto 18px;gap:20px;max-height:350px}
+[data-game=flip] .mpf .mh{font-size:25px}
+[data-game=flip] .keybox{position:absolute;left:190px;right:190px;bottom:96px;z-index:20;border:2px solid #8dbba9;border-radius:12px;padding:14px 20px;box-shadow:0 5px 0 #8dbba9}
+[data-game=flip] .rv{background-image:var(--scene);background-size:100% 100%;padding-left:175px;padding-right:175px}
+[data-game=flip] .rv-cap{background:#fffaf0f2;border:2px solid #a1cabb;border-radius:18px;padding:16px 25px;font-size:27px}
+[data-game=flip] .rv-sub{background:#fffaf0ed;border-radius:6px;padding:5px 12px}
+/* Classroom fit keeps the teaching canvas; compensate helper type on smaller displays. */
+@media(max-width:1100px){
+  .title p,.instr,.sub,.mv-sub,[data-game=role] .voice-instruction{font-size:16px}
+  .game-cn{font-size:16px}
+  .play-progress,[data-game=volume] .play-progress{font-size:16px;gap:4px}
+  .play-progress i{width:24px;height:24px;font-size:16px}
+  .play-progress span{padding:4px 6px}
+  .ftip,.actions .tip,.tip#tip{font-size:16px;line-height:1.4}
+  .mix-button small{font-size:16px;letter-spacing:0;font-weight:700}
+}

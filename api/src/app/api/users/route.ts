@@ -1,17 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { authenticate } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
+
+const accountFields = 'id,email,name,role,organization_id,created_at';
+
+function requireAccountAdmin(request: NextRequest) {
+  const auth = authenticate(request);
+  if (!auth.success) return NextResponse.json({ error: auth.error }, { status: 401 });
+  if (auth.user?.role !== 'super_admin') {
+    return NextResponse.json({ error: '无权管理账号' }, { status: 403 });
+  }
+  return null;
+}
 
 // GET /api/users - Get users
 export async function GET(request: NextRequest) {
   try {
+    const denied = requireAccountAdmin(request);
+    if (denied) return denied;
     const { searchParams } = new URL(request.url);
     const organizationId = searchParams.get('organizationId');
     const search = searchParams.get('search');
 
     let query = db
       .from('users')
-      .select(`*, organization:organizations(*)`)
+      .select(`${accountFields}, organization:organizations(*)`)
       .order('users.created_at', { ascending: false });
 
     if (organizationId) {
@@ -41,6 +55,8 @@ export async function GET(request: NextRequest) {
 // POST /api/users - Create user
 export async function POST(request: NextRequest) {
   try {
+    const denied = requireAccountAdmin(request);
+    if (denied) return denied;
     const body = await request.json();
     const { email, name, role, organizationId } = body;
 
@@ -59,7 +75,7 @@ export async function POST(request: NextRequest) {
         organization_id: organizationId || null,
         password_hash: passwordHash,
       })
-      .select()
+      .select(accountFields)
       .single();
 
     if (error) {

@@ -1,0 +1,1256 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "path": "prototype/prep-workbench-six-modules-v1/小星星_六模块工作台_音乐棚预览V6_20261118.html",
+    "sha256": "41f2e7312bc29f3583ddee70b4e6aa7baca9078bc230cadfdf438ad76d80ca38",
+    "bytes": 11886144,
+    "manifest": "doc/2026-11-18_音乐棚预览整合V6/构建清单.json",
+    "manifestSha256": "974b486b94a1668244f6f07013d1e16d279e7e1a7bc7c816a03182dbda956b19",
+    "release": "六模块整合开发版 V6",
+    "createdAt": "2026-11-18T17:19:07+08:00"
+  },
+  "generator": {
+    "path": "scripts/package-workbench.py",
+    "sha256": "7cc6b35cc2e9e9b92bae9434f79e68ddffab9e3433b2b61c0456c3f55b089d91"
+  },
+  "modules": {
+    "song": {
+      "file": "song.html",
+      "sha256": "a3418c2f1725417722aa8f8bc69af93062cfd3fa7d1da1347d801fa60942dd33",
+      "bytes": 751661,
+      "extractedDocument": {
+        "sha256": "d9543f84df69aac2eb004491df7a628b69513646404902477d3461d66ffee326",
+        "bytes": 747219
+      },
+      "source": "embedded-song",
+      "removed": [],
+      "inlineScripts": [
+        {
+          "source": "song/../language-goals.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/../version-core.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/../platform.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/../components.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/../lesson-plan.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/word-illustrations.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/model.js",
+          "nodeCheck": "passed",
+          "storageReplacements": [
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-song-v1",
+              "suffix": "unified-song-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-song-writing-v1",
+              "suffix": "song-writing-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-song-v1",
+              "suffix": "unified-song-v1"
+            }
+          ]
+        },
+        {
+          "source": "song/audio.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/../instrument-art.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/lyric-timeline.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/lyric-follow.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/activity-language.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/activity-themes.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/handout.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "song/app.js",
+          "nodeCheck": "passed",
+          "storageReplacements": [
+            {
+              "original": "wellbeing-prep-six-modules-v1-song-classrooms-v1",
+              "suffix": "song-classrooms-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-song-v1",
+              "suffix": "unified-song-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-song-writing-v2",
+              "suffix": "song-writing-v2"
+            }
+          ]
+        }
+      ],
+      "existingBackend": [
+        {
+          "file": "song-music-backend.js",
+          "source": "workbench-ui/song-music-backend.js",
+          "sha256": "2f78dff1d494124c66f49cb56a670ad7569d4138c7be9725ed510913f024ee06",
+          "bytes": 27360
+        },
+        {
+          "file": "workbench-api.js",
+          "source": "workbench-ui/workbench-api.js",
+          "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
+          "bytes": 10257
+        }
+      ]
+    },
+    "music": {
+      "file": "music.html",
+      "sha256": "c74651e8ed88ccca947c00bd84f3cd2936c029a5cf792011ba9f415ec1ae4e7b",
+      "bytes": 4566685,
+      "extractedDocument": {
+        "sha256": "b543c5db7788721fc06cb22d121f30e2c05b4ff6cafeed1969130f23774ee758",
+        "bytes": 4559518
+      },
+      "source": "小星星_六模块工作台_音乐棚预览V6_20261118.html",
+      "removed": [
+        "embedded-song",
+        "embedded-yoga",
+        "module-bridge.js",
+        "review-manifest",
+        "review-controller",
+        "review-only stylesheet",
+        "#review-toolbar",
+        "#three-module-review"
+      ],
+      "inlineScripts": [
+        {
+          "source": "language-goals.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "version-core.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "platform.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "components.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "lesson-plan.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "happy-beat.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "model.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "library.js",
+          "nodeCheck": "passed",
+          "storageReplacements": [
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-music-v1",
+              "suffix": "unified-music-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-p2-demo-v1-activities-v2",
+              "suffix": "p2-demo-v1-activities-v2"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-music-v1",
+              "suffix": "unified-music-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-music-v1",
+              "suffix": "unified-music-v1"
+            }
+          ]
+        },
+        {
+          "source": "instrument-art.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "catalog.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "lyric-audio.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "mover-classroom.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "mover-prep-drag.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "hunter-order-drag.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "activity-demo.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "app.js",
+          "nodeCheck": "passed",
+          "storageReplacements": [
+            {
+              "original": "wellbeing-prep-six-modules-v1-p2-demo-v1",
+              "suffix": "p2-demo-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-music-v1",
+              "suffix": "unified-music-v1"
+            }
+          ]
+        },
+        {
+          "source": "music-visual-decor.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        }
+      ],
+      "existingBackend": [
+        {
+          "file": "song-music-backend.js",
+          "source": "workbench-ui/song-music-backend.js",
+          "sha256": "2f78dff1d494124c66f49cb56a670ad7569d4138c7be9725ed510913f024ee06",
+          "bytes": 27360
+        },
+        {
+          "file": "workbench-api.js",
+          "source": "workbench-ui/workbench-api.js",
+          "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
+          "bytes": 10257
+        }
+      ]
+    },
+    "yoga": {
+      "file": "yoga.html",
+      "sha256": "c38a2982207f2672727df2c0e1a7e39b3f8d5394ecce05c1b9a115f31f85f8db",
+      "bytes": 6484913,
+      "extractedDocument": {
+        "sha256": "580890f00d665a5ee678c4642cc0a438f5530023d0cb7aa0fe19afb46dcf931d",
+        "bytes": 6406089
+      },
+      "source": "embedded-yoga",
+      "removed": [],
+      "inlineScripts": [
+        {
+          "source": "yoga/../language-goals.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/../version-core.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/../platform.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/../components.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/../lesson-plan.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/wonder-case.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/model.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/library.js",
+          "nodeCheck": "passed",
+          "storageReplacements": [
+            {
+              "original": "wellbeing-prep-six-modules-v1-unified-yoga-v1",
+              "suffix": "unified-yoga-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-yoga-library-v3",
+              "suffix": "yoga-library-v3"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-yoga-library-v2",
+              "suffix": "yoga-library-v2"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-yoga-prototype-v1",
+              "suffix": "yoga-prototype-v1"
+            },
+            {
+              "original": "wellbeing-prep-six-modules-v1-yoga-library-v1",
+              "suffix": "yoga-library-v1"
+            }
+          ]
+        },
+        {
+          "source": "yoga/scene.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/wonder-motion.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/wonder-motion-renderer.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/wonder-scene.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/playback.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/music-files.js",
+          "nodeCheck": "passed",
+          "storageReplacements": [
+            {
+              "original": "wellbeing-six-modules-v1-yoga-music-files-v1",
+              "suffix": "yoga-music-files-v1"
+            }
+          ]
+        },
+        {
+          "source": "yoga/music.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        },
+        {
+          "source": "yoga/app.js",
+          "nodeCheck": "passed",
+          "storageReplacements": []
+        }
+      ],
+      "localCaseOverride": {
+        "templateId": "wonder-v2-2",
+        "caseId": "wonder",
+        "replacesLibraryCase": "forest",
+        "legacyRecords": "Previous forest/ocean snapshots remain supported and are never rewritten by case replacement",
+        "localFiles": [
+          {
+            "path": "workbench-ui/yoga/model.js",
+            "sha256": "3f1a14d4b1355b21238c106bc1abbb65556249da1d7520ae1afac4219d7e16fa",
+            "bytes": 2888216
+          },
+          {
+            "path": "workbench-ui/yoga/library.js",
+            "sha256": "8674221156771f7030063b53fad3b3a5040e8e008457f9edbb3a47052bab09a9",
+            "bytes": 19360
+          },
+          {
+            "path": "workbench-ui/yoga/app.js",
+            "sha256": "d88a7870974337d681ada1ad05d3cc5516641a8d78dd723f4388a156b918c786",
+            "bytes": 1678029
+          },
+          {
+            "path": "workbench-ui/yoga/wonder-case.js",
+            "sha256": "9258eff66168d86850c7b5aafb0d9583899da5639e5827b7c7dd5148fe93788b",
+            "bytes": 19063
+          },
+          {
+            "path": "workbench-ui/yoga/wonder-motion.js",
+            "sha256": "c9965ab1446774a228e1dcd4c8fe20d5b4e2ea4f2408ef49c80feb953b3f89de",
+            "bytes": 11041
+          },
+          {
+            "path": "workbench-ui/yoga/wonder-motion-renderer.js",
+            "sha256": "05bf18efdbb468397ffa5bfbf59ca384b76ca4656e3ab154cdc5228f26be0491",
+            "bytes": 9628
+          },
+          {
+            "path": "workbench-ui/yoga/wonder-scene.js",
+            "sha256": "f0072a356e9f0baf840b91ce9282f79eee54b55b7945c8fe43ba9ae58daf3f4f",
+            "bytes": 5026
+          },
+          {
+            "path": "workbench-ui/yoga/wonder-scene.css",
+            "sha256": "f845a7d8ba3a0802a9a85ea2f506282f5c0a1fb7d35c7d4ec710824b196fc667",
+            "bytes": 7089
+          }
+        ],
+        "assetManifest": {
+          "path": "workbench-ui/yoga/wonder-assets.json",
+          "sha256": "c74cfa8c257faef85ee41b0eba97f2e4bb43d4906d2079f0fe332cd83e0b37b5",
+          "bytes": 19575
+        },
+        "assets": [
+          {
+            "path": "yoga-wonder-case/assets/noto-sans-bold.woff2",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/noto-sans-bold.woff2",
+            "sha256": "649a8114c33e83722ae67a8f12269a6e873a179d34108751511a9dcfda551b08",
+            "bytes": 47752
+          },
+          {
+            "path": "yoga-wonder-case/assets/noto-sans-regular.woff2",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/noto-sans-regular.woff2",
+            "sha256": "9d5f4a27e9f7c821173aedf13f3dc722e4449e18d7f0cdb8089207e043d46802",
+            "bytes": 46192
+          },
+          {
+            "path": "yoga-wonder-case/assets/p01-sky-a-soft-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p01-sky-a-soft-blue.png",
+            "sha256": "009c3b17333924b76d9bada9f971cd2224f05322126532e25ee5d0c377704e44",
+            "bytes": 1682750
+          },
+          {
+            "path": "yoga-wonder-case/assets/p02-grass-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p02-grass-sky-blue.png",
+            "sha256": "8fa74a7216dba81d19abfb1f2bdff71b9113b0c4bb6721bc22ea8fb9bf120fd3",
+            "bytes": 1896331
+          },
+          {
+            "path": "yoga-wonder-case/assets/p03-tall-trees-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p03-tall-trees-sky-blue.png",
+            "sha256": "5675e5c24def4565d0bbfc0513d007e82953e7e6aa56e2ec75fce02682945244",
+            "bytes": 1939153
+          },
+          {
+            "path": "yoga-wonder-case/assets/p04-tree-grove-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p04-tree-grove-sky-blue.png",
+            "sha256": "540708dc8954f9134574a3a464026cddf8dfade2852c4d0de4bee915d8905e0e",
+            "bytes": 1907109
+          },
+          {
+            "path": "yoga-wonder-case/assets/p05-windy-leaves-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p05-windy-leaves-sky-blue.png",
+            "sha256": "31c06dcc45bf072a8e956a31ef1934af229ed7d4ffa06ceea85ede4a46421247",
+            "bytes": 1964657
+          },
+          {
+            "path": "yoga-wonder-case/assets/p06-rock-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p06-rock-sky-blue.png",
+            "sha256": "ffe2ae1361de85b14de0a9e9f94a7a9e4a77b53f73bf0b476470066fb4d67699",
+            "bytes": 1882932
+          },
+          {
+            "path": "yoga-wonder-case/assets/p07-lake-river-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p07-lake-river-sky-blue.png",
+            "sha256": "5fe01b929fab7510f75b4b67027b3cb089f2907b70b8a5e032d5016d845f6ba8",
+            "bytes": 1781048
+          },
+          {
+            "path": "yoga-wonder-case/assets/p08-mountain-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p08-mountain-sky-blue.png",
+            "sha256": "7baf3c531789b15f27c1a1a4419d7a159a02910907fa1afd99044d869ed504a8",
+            "bytes": 1778540
+          },
+          {
+            "path": "yoga-wonder-case/assets/p09-ground.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p09-ground.png",
+            "sha256": "217ab97b75bb6bce892710aaeeaeac51a36e64c802a039a70afe2f0f2e1ca658",
+            "bytes": 1768638
+          },
+          {
+            "path": "yoga-wonder-case/assets/p10-rest-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p10-rest-sky-blue.png",
+            "sha256": "12d8c1e0cb27b01243be2189cc32c04314d12c1130d3fc3442a25a21ff28d259",
+            "bytes": 1700811
+          },
+          {
+            "path": "yoga-wonder-case/assets/p11-farewell-sky-blue.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/assets/p11-farewell-sky-blue.png",
+            "sha256": "d4db644720c274c8ed4db59579a6f73a2ace9cdc785855a9f004c8e10c07d139",
+            "bytes": 1795521
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image25.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image25.png",
+            "sha256": "04848638809cf44f7ae14c04c9695a25e05b5d414466d5615d22e36ce7552d78",
+            "bytes": 159507
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image28.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image28.png",
+            "sha256": "b7677211c1674900e89e1bcd66283c07cef845e1356120921088c9c5960ef29e",
+            "bytes": 156082
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image35.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image35.png",
+            "sha256": "76063c10ffb337bc8ce6f330434add6893122ebb65ac16348ff4e52c30fb1e73",
+            "bytes": 108672
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image38.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image38.png",
+            "sha256": "d1701ba688bf0741253a2791d8f45f9515a9cf31e4b3841ee4ef5fa6f041e44f",
+            "bytes": 78319
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image51.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image51.png",
+            "sha256": "c352a9d9ba3caa5e0821e352e80a26781cb5398e3a2e4954f1fe7d46d4055862",
+            "bytes": 119240
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image53.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image53.png",
+            "sha256": "f1c9627406d59d2ed9230fa40e180b87684ff01815e95b62323ba01ff051964c",
+            "bytes": 133430
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image62.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image62.png",
+            "sha256": "254f52d6ce8bc60413cf65bd7bd7161547081b23fe120cfeae301fc437e8326e",
+            "bytes": 156309
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image67.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image67.png",
+            "sha256": "5fa26cf75b10799e9011845d99a7cd5a558c24bd9fd6d6205361ddbc07d63d5f",
+            "bytes": 74451
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image74.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image74.png",
+            "sha256": "2de8f61bf08e90aa3a0159ef75694f67257f4e31a112aad662a7ef13c60d106c",
+            "bytes": 124504
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image82.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image82.png",
+            "sha256": "0203baddc0cdf4535a813b04fc5aa7ae6e1a8dc77f15becc6eef57b85ffd87ef",
+            "bytes": 392392
+          },
+          {
+            "path": "yoga-wonder-case/source-assets/image84.png",
+            "source": "output/yoga-wonder-visual-v2-2-20261119/source-assets/image84.png",
+            "sha256": "7a23e4343236d346afcf47596000bfe67a71637dd24a85a13e2eba55b8666fb7",
+            "bytes": 473790
+          }
+        ]
+      },
+      "existingBackend": [
+        {
+          "file": "workbench-api.js",
+          "source": "workbench-ui/workbench-api.js",
+          "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
+          "bytes": 10257
+        },
+        {
+          "file": "yoga-existing-backend.js",
+          "source": "workbench-ui/yoga/existing-backend.js",
+          "sha256": "1a30a805d16d70f0433a5b21edede0b4fcbb818247aeb7d1e30ad9e9c9026a63",
+          "bytes": 14905
+        }
+      ]
+    }
+  },
+  "assets": [
+    {
+      "path": "assets/activity-videos-v1/echo.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/echo.jpg",
+      "sha256": "b4b95211322613cdeed0f19f6f07254af92c55946a8e48d26d9db1265620cf83",
+      "bytes": 41046
+    },
+    {
+      "path": "assets/activity-videos-v1/echo.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/echo.webm",
+      "sha256": "e17b8d72123440a6f406f576a1f25ffa2f5f6d7eb8126fac69972b3ec7701722",
+      "bytes": 394543
+    },
+    {
+      "path": "assets/activity-videos-v1/hunter.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/hunter.jpg",
+      "sha256": "cf804fc0789775d9fc5c10e1cdbecec2dc413193a77b67781c1382d612ae064b",
+      "bytes": 39521
+    },
+    {
+      "path": "assets/activity-videos-v1/hunter.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/hunter.webm",
+      "sha256": "6ebd6b8e5ed7548669d6a2f1ff93f06304ed875ca7032f610a8324db58d8e303",
+      "bytes": 312150
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-ace.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-ace.jpg",
+      "sha256": "c2b45aff7d9cc8312aa46152a44e35f4c3d7348bdddadc7e11331238e6b5fb2c",
+      "bytes": 77366
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-ace.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-ace.webm",
+      "sha256": "7fe2909c4916e815e478f05b003aef2512d68fbe8fa2ea8a4cb845cac5d311cb",
+      "bytes": 842596
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-edi.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-edi.jpg",
+      "sha256": "c268b8156a20f810de865df434a91af12dd651e39cd41a99484079f465daf8ab",
+      "bytes": 80586
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-edi.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-edi.webm",
+      "sha256": "29a5b34fb7e100f804d6a97b0c292fc0aa60449eed77aa0f2d3e4dabd192f723",
+      "bytes": 891731
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-milo.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-milo.jpg",
+      "sha256": "001c1722724f3c8d63aabf187fa9cb8b46fefe0d32c1136fcd65cdd17b15f1e0",
+      "bytes": 76475
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-milo.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-milo.webm",
+      "sha256": "261ce88f3909d630ce72e3b495ca4471fe4f86a8ea7f4e86056da0eb1e81aa7f",
+      "bytes": 846211
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-poppy.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-poppy.jpg",
+      "sha256": "e278dca494e84d7cabc9c0e8fbcb24b661ed9e5c91af2dbfb81685859b2433a8",
+      "bytes": 75634
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-poppy.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-poppy.webm",
+      "sha256": "f66c887298462c9d3a7bc8f15ceb52c4d2606024077bac5605a4b0ca723fb978",
+      "bytes": 815421
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-rolly.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-rolly.jpg",
+      "sha256": "1fdee5adf85945a8c216c51d1cac665c5d9119d753fee5c0d443f76dcedbf421",
+      "bytes": 76481
+    },
+    {
+      "path": "assets/activity-videos-v1/mover-rolly.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/mover-rolly.webm",
+      "sha256": "66b1cc1fbbd2ce8bb598e7b182463e7d80e2f4939dcbdac0c3ec2da077a5830b",
+      "bytes": 808082
+    },
+    {
+      "path": "assets/activity-videos-v1/studio.jpg",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/studio.jpg",
+      "sha256": "3c75d2e4e05ea43d7151ea9966065527035a7855ecafcae8c14204c537870be4",
+      "bytes": 56756
+    },
+    {
+      "path": "assets/activity-videos-v1/studio.webm",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/activity-videos-v1/studio.webm",
+      "sha256": "a58530fd981f805cdc04c8abbe4fa8a0fe45df2aef49b31136e0f6e34f310761",
+      "bytes": 612372
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-arms-circle.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-arms-circle.png",
+      "sha256": "55a9ea7abd54e061d848f4a36405d26463b7fbc26f874218e11afdac1d50f9d4",
+      "bytes": 741024
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-arms-up.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-arms-up.png",
+      "sha256": "59e95f68ff627e1290de6cf9b637a50357a19b4d88a4dfbb008ecca5e88f6232",
+      "bytes": 709180
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-chest-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-chest-pat.png",
+      "sha256": "0f0b9abc209f0540add9143469f04d0fe5c30de92387e842bade5648d1d3c2c6",
+      "bytes": 743372
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-head-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-head-pat.png",
+      "sha256": "990d38174c4c3b7e92f0ecbf71d9b5af0613f079438866d102e0b6839c28809f",
+      "bytes": 1464657
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-jump.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-jump.png",
+      "sha256": "e5a2e4b63fa30858c42b509ce98ad9c45f06324772eb6f77515f78970f6631fe",
+      "bytes": 684003
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-knee-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-knee-pat.png",
+      "sha256": "f472a3daf3725185cc2343c5b909c2fb707b79435978e0724e313753a46979d4",
+      "bytes": 793263
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-make-a-heart.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-make-a-heart.png",
+      "sha256": "e93b1dc6985b9818b05a1aa2fed1f55c716dfc61ede9a841d04b100a4eedfd09",
+      "bytes": 1715499
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-shoulder-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-shoulder-pat.png",
+      "sha256": "394e2ec6e46d2c475421faaa4c4e612e09f87ecb7678066e4417fa724dd5ac91",
+      "bytes": 839098
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-snap.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-snap.png",
+      "sha256": "5e522b62a45c90b462aa487a487005b1b41819026fb5e5e2480072c9bb34fc05",
+      "bytes": 1198656
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-stomp.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-stomp.png",
+      "sha256": "eadeec53e6cd603440ab138629aab5f7a2c10af2d46c84b0b3ee119a0808a8ec",
+      "bytes": 1703369
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-touch-toes.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-touch-toes.png",
+      "sha256": "52eeb351b28f2b976bc26c3361363b7ef6a9ff516111474e364c26c52ee96b64",
+      "bytes": 694778
+    },
+    {
+      "path": "assets/mover-actions-v1/ace-wave.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/ace-wave.png",
+      "sha256": "ec56bccb187b473eac2b6382f0ba48f6b103e1f5596223f5af59593676f5716c",
+      "bytes": 715511
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-arms-circle.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-arms-circle.png",
+      "sha256": "923476b7c4f95270f29ae7e6e4bb946edccef43a5bf2bf572e5d339afd3cc289",
+      "bytes": 596707
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-arms-up.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-arms-up.png",
+      "sha256": "63046417bd9b996992465d4c0eada5bc1622e62dc6a82a748044d324736ef149",
+      "bytes": 1146508
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-chest-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-chest-pat.png",
+      "sha256": "a663b0f70347a94a639bca8b6bd0163213c797f9b08438e031419e665c7d4883",
+      "bytes": 595997
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-head-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-head-pat.png",
+      "sha256": "e64f3884b25450d307fdf9c6345657ab1860f382aefdacf20bdc2d62cc9a14f1",
+      "bytes": 634010
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-jump.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-jump.png",
+      "sha256": "df2d3cb45cda5cfaa3044050174ea4909fbba65563db1116339b67397d738184",
+      "bytes": 737595
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-knee-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-knee-pat.png",
+      "sha256": "1d71717a528388132b715246f46f497f60b587c35dc73abd7a66e8d3dfa0b2ee",
+      "bytes": 594111
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-make-a-heart.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-make-a-heart.png",
+      "sha256": "6dfd90b76c6a8c685077b8941af29f5486923d35ef3d7d0cb92e917c5600976d",
+      "bytes": 672269
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-shoulder-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-shoulder-pat.png",
+      "sha256": "eafba3962d282cf3b330047689e75072eb795f91e6dc9d1db51c804b3e7eb132",
+      "bytes": 653877
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-snap.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-snap.png",
+      "sha256": "74f8a32c89964be90e38487cbebd28ac27b6c7205e1fa93e3c45316b9d8b99b7",
+      "bytes": 614446
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-stomp.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-stomp.png",
+      "sha256": "a793fe0e1e381607368877ff0594b8676937fc41fc3b163ade7a9406cf74bd91",
+      "bytes": 579439
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-touch-toes.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-touch-toes.png",
+      "sha256": "f9faaac4eaedbedeea81d9291120b1f8b7e498515b0bad7d56e8d299b973d8ac",
+      "bytes": 1671583
+    },
+    {
+      "path": "assets/mover-actions-v1/edi-wave.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/edi-wave.png",
+      "sha256": "1728c94e666a026c7a5946241b4e24df3b9b52c3af72c44aed3cdeca9a143989",
+      "bytes": 634938
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-arms-circle.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-arms-circle.png",
+      "sha256": "55b665c09327651d932b7ebd0e4548b8eb2dedc9a0bc31f658bfc1f66a51ca47",
+      "bytes": 533881
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-arms-up.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-arms-up.png",
+      "sha256": "b1a2573f1252a78a67b5deb4b59a6ec88af73772c665d1d2a7c0a3568e96a358",
+      "bytes": 565851
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-chest-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-chest-pat.png",
+      "sha256": "8fd7584185312762619a80a57f92a2cdbc7d4b68b5bf2b0e0e6ddfadbd1e255e",
+      "bytes": 512120
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-head-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-head-pat.png",
+      "sha256": "b13c6320964db886c1c66b5cb1bc87136cadab9850580196225ab92809fadb45",
+      "bytes": 543208
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-jump.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-jump.png",
+      "sha256": "3e4377da411b7d4f8f0831f76a9ce4ce9d41f9a59bb9c30c9eaac5b69288ab29",
+      "bytes": 574434
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-knee-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-knee-pat.png",
+      "sha256": "06acc56025e9e2bc58fc23c94b46930bc18fdbd2c4a1f86b92e98cb26dae45cd",
+      "bytes": 1165730
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-make-a-heart.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-make-a-heart.png",
+      "sha256": "4ae2bafe107c903247f49278db4d02711985f7afc46f6b24e9795aeb01e1b21e",
+      "bytes": 554020
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-shoulder-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-shoulder-pat.png",
+      "sha256": "6e991f409c93c94ca3ed80f04e0c9c0145ebff861d806d8af789177c267f84da",
+      "bytes": 1299930
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-snap.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-snap.png",
+      "sha256": "bbfa4fd54bb9b9c24b940386cdfd4fbe9c23688858a867127e98f3396ebe96a1",
+      "bytes": 541493
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-stomp.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-stomp.png",
+      "sha256": "452e32cdd4379e3512fcb60853f98550edf958a2c87cd7b07b57d8c8fd938574",
+      "bytes": 571270
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-touch-toes.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-touch-toes.png",
+      "sha256": "09b45c6af17c634180f1a595ee02a2842a7bea560242d4a0f447c1297de8b41c",
+      "bytes": 558965
+    },
+    {
+      "path": "assets/mover-actions-v1/milo-wave.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/milo-wave.png",
+      "sha256": "3e8836aa720bd6e7e599f5892a1b37fd9ecd9bf78e8230233621ce71cb1bd97c",
+      "bytes": 625676
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-arms-circle.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-arms-circle.png",
+      "sha256": "2addb19ab9f8a7f8fd1118a0eada91172619b06062b3865d9472d7b1e6f60b0d",
+      "bytes": 1354729
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-arms-up.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-arms-up.png",
+      "sha256": "0f65852ac72e41ea92de2367f889577c4fced93a9c27db4d0e73da85aa9615f7",
+      "bytes": 603237
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-chest-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-chest-pat.png",
+      "sha256": "e625030354df3c1b6a6a114eac3cfd732952be697db9627fc75e99cd419873e3",
+      "bytes": 645156
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-head-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-head-pat.png",
+      "sha256": "6635266bfffeb4c3b88aa1d54f639f4a2528d900aafb45e29ffb761b1fd6fdd0",
+      "bytes": 599735
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-jump.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-jump.png",
+      "sha256": "7d6ea48233c6ccf8bf9deb703bbb75ddf55aa65a9fdc3981cd0384a4547e9509",
+      "bytes": 614295
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-knee-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-knee-pat.png",
+      "sha256": "5dc9a759cb6c3a6a460ec0aa4726a1c3197e81c8ed853ea3080e5af21feaa44b",
+      "bytes": 647531
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-make-a-heart.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-make-a-heart.png",
+      "sha256": "d8b4420766ce1c3f947e03b889616d37ffb2b5008513f0f743940dec49769c67",
+      "bytes": 625760
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-shoulder-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-shoulder-pat.png",
+      "sha256": "306ffe363d42a66ece158559ad118c25ba8418960fe52783a577a2364e27c1c1",
+      "bytes": 636552
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-snap.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-snap.png",
+      "sha256": "117a2d48d156b6580030d38fa0d665a11d6cac36bfeccebe92afc9ed6d162b68",
+      "bytes": 600886
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-stomp.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-stomp.png",
+      "sha256": "87aad90b86db9656285c48c11bffb7094d7308d7f4549d404b2dd0142938cc73",
+      "bytes": 647896
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-touch-toes.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-touch-toes.png",
+      "sha256": "557db84eb3de7e2c09381223c9626f516b233dd1888cce23e6b5a664352f9df9",
+      "bytes": 531419
+    },
+    {
+      "path": "assets/mover-actions-v1/poppy-wave.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/poppy-wave.png",
+      "sha256": "e97c01b7e04cc0d09270b82042dc95a23f9e212f463aca194feb0f65c7c0bc11",
+      "bytes": 1439362
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-arms-circle.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-arms-circle.png",
+      "sha256": "a330b8ae923eda9fb447768ea5cd1a003845cc6f96e57354228ebd6438335af8",
+      "bytes": 519230
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-arms-up.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-arms-up.png",
+      "sha256": "9287ad24295ea27a22e634738a18a9e7f60613dd5261c9ce132bf76245c1e5cf",
+      "bytes": 564648
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-chest-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-chest-pat.png",
+      "sha256": "6c8fb88618e31149a0e4e3d6f1720449cd2fff5413414bab4390b8d5bdd53c83",
+      "bytes": 1061295
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-head-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-head-pat.png",
+      "sha256": "7e2709b0fdbd316d6c5230b820a6db797fc253ac2855768822f5f729e252ce02",
+      "bytes": 491119
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-jump.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-jump.png",
+      "sha256": "423dbff6e08a281084af3ddbc0419be874639ac2a9e5f2f1af0c3734ce4f07b2",
+      "bytes": 1626551
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-knee-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-knee-pat.png",
+      "sha256": "83f523b17c784443532c532de2ad19496ace5a792708af9fa361baf1a1e31951",
+      "bytes": 466673
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-make-a-heart.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-make-a-heart.png",
+      "sha256": "7a610a3aa6de82a2a0877f3933403eadcd2026d4a1632de8093c24191164765f",
+      "bytes": 646731
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-shoulder-pat.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-shoulder-pat.png",
+      "sha256": "3794951fed0f179ad7e1f7cfd7431e1ddde815691bc080d839ce0fd4207f06ed",
+      "bytes": 512000
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-snap.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-snap.png",
+      "sha256": "4d35b7bbf59c9015aaac95b66867149b4c703f363071048b6da9122c78f34c3b",
+      "bytes": 510191
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-stomp.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-stomp.png",
+      "sha256": "fcaf5bb58824ead6932ae654919899fe7ef6c9472ca2905f15533950de51a0f0",
+      "bytes": 512120
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-touch-toes.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-touch-toes.png",
+      "sha256": "173185cc43b4d2ab6293ee677217ff237018d1c45b4c025de25eb4c8604adccf",
+      "bytes": 496430
+    },
+    {
+      "path": "assets/mover-actions-v1/rolly-wave.png",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/mover-actions-v1/rolly-wave.png",
+      "sha256": "0b5b169d5db752111af577291fff31aa4a30be5af3614874b857ee65061c6df8",
+      "bytes": 522147
+    },
+    {
+      "path": "assets/music-audio-v1/happy-beat-original.flac",
+      "source": "prototype/prep-workbench-six-modules-v1/assets/music-audio-v1/happy-beat-original.flac",
+      "sha256": "1d02cba9082c7869424073727646bc84efa9c9cd083f98a9cc27f0a1038278f7",
+      "bytes": 6928002
+    },
+    {
+      "path": "preview-journey.css",
+      "source": "prototype/prep-workbench-six-modules-v1/preview-journey.css",
+      "sha256": "54068404091508ee361b49ef87e323a1438e5d2593e28d39ed466afc9eedfde5",
+      "bytes": 1485
+    },
+    {
+      "path": "preview-journey.js",
+      "source": "prototype/prep-workbench-six-modules-v1/preview-journey.js",
+      "sha256": "223e9ab2a38174e01ba1b879f7d168247c0aa113166afcea38c1a105cdd12d45",
+      "bytes": 2229
+    },
+    {
+      "path": "preview-map-layout.js",
+      "source": "prototype/prep-workbench-six-modules-v1/preview-map-layout.js",
+      "sha256": "54fee15dd1f37d4ddad51e0a11fc9dbae15ddb12878a757242f1cff989a3d2c5",
+      "bytes": 3055
+    },
+    {
+      "path": "song/assets/themes/LUCIDE-LICENSE.txt",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/LUCIDE-LICENSE.txt",
+      "sha256": "6b453071cd65b92da40c7fcfd5afa09d993fbc938c7e4498a614da44925a4777",
+      "bytes": 1419
+    },
+    {
+      "path": "song/assets/themes/README.md",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/README.md",
+      "sha256": "1e6207a964ea552d2ca9c7c3eeaf96357579681884bb9a3b8b4a49a164656daa",
+      "bytes": 9628
+    },
+    {
+      "path": "song/assets/themes/beach.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/beach.webp",
+      "sha256": "1384aef293304017b42dede61dd807c8b56388082cd6ec93d307273120b2183c",
+      "bytes": 121506
+    },
+    {
+      "path": "song/assets/themes/beat-v2.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/beat-v2.webp",
+      "sha256": "b1e07d92f1b1e2e13b07891b4ab4e83c572fd72e083f45d4a8b5d7ee21772194",
+      "bytes": 149702
+    },
+    {
+      "path": "song/assets/themes/beat.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/beat.webp",
+      "sha256": "737e5b1f1797e6ec0ed3b1a2c272a0037c5b88af52a5d88e35064a2f14fe7578",
+      "bytes": 59866
+    },
+    {
+      "path": "song/assets/themes/font-notices.txt",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/font-notices.txt",
+      "sha256": "2e570c9e2c1f4906d442225edc7af2de5ddb296e552d103b2be44ea0dd767ab8",
+      "bytes": 13303
+    },
+    {
+      "path": "song/assets/themes/garden-v2.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/garden-v2.webp",
+      "sha256": "0b8ff84270b8b7f72c091d7e5fa017342b090b82380f20cb623dc61e9593b529",
+      "bytes": 235232
+    },
+    {
+      "path": "song/assets/themes/garden.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/garden.webp",
+      "sha256": "898a90edfe0d9864e009ec57806c5fc30d071f3191c2ec10d37ff4f127839cc9",
+      "bytes": 64612
+    },
+    {
+      "path": "song/assets/themes/generated-scenes-v2.json",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/generated-scenes-v2.json",
+      "sha256": "475fa95a1ee1bbe1d49171e9dc305df9e8ec79f4109bf0686f0b17f71d4494be",
+      "bytes": 1403
+    },
+    {
+      "path": "song/assets/themes/moon-v2.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/moon-v2.webp",
+      "sha256": "1782cd9d79e34dd3a80ed0353b72bc49e76433c1d4783cceac44997c029dee26",
+      "bytes": 68848
+    },
+    {
+      "path": "song/assets/themes/moon.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/moon.webp",
+      "sha256": "820d52e49ec708607a3facc21d35fb84d317842d1c5a8e05da8e7ba3c2842add",
+      "bytes": 46050
+    },
+    {
+      "path": "song/assets/themes/noto-sans-bold.woff2",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/noto-sans-bold.woff2",
+      "sha256": "649a8114c33e83722ae67a8f12269a6e873a179d34108751511a9dcfda551b08",
+      "bytes": 47752
+    },
+    {
+      "path": "song/assets/themes/noto-sans-regular.woff2",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/noto-sans-regular.woff2",
+      "sha256": "9d5f4a27e9f7c821173aedf13f3dc722e4449e18d7f0cdb8089207e043d46802",
+      "bytes": 46192
+    },
+    {
+      "path": "song/assets/themes/noto-sans-sc.woff2",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/noto-sans-sc.woff2",
+      "sha256": "862244bddb6b485aabcba2968b0d5adeed757fa0b4af515df1c909c0d1fbd1a6",
+      "bytes": 133232
+    },
+    {
+      "path": "song/assets/themes/source-manifest.json",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/source-manifest.json",
+      "sha256": "dc32918dfd42364fcfcc57e6790341fe5a333222f30e1e8fb8591032ceb4c65e",
+      "bytes": 3506
+    },
+    {
+      "path": "song/assets/themes/space.webp",
+      "source": "prototype/prep-workbench-six-modules-v1/song/assets/themes/space.webp",
+      "sha256": "552e13e6a1818f77708648886991f2d42fed7808f987990f91f2b73509f8ecdf",
+      "bytes": 181974
+    },
+    {
+      "path": "starlight-preview.html",
+      "source": "prototype/prep-workbench-six-modules-v1/starlight-preview.html",
+      "sha256": "346338cda788f0f921bcbd822b3f5abe96e7a9ba53ab8227d546e261d383be47",
+      "bytes": 3042025
+    }
+  ],
+  "storage": {
+    "prefix": "wellbeing-web-three-v1-",
+    "scope": "window.WB_WEB_SCOPE, initialized synchronously by embed-adapter.js",
+    "originalPrefixes": [
+      "wellbeing-prep-six-modules-v1-",
+      "wellbeing-six-modules-v1-"
+    ],
+    "migration": "none; legacy and IndexedDB names are scoped as well"
+  },
+  "adapters": {
+    "required": [
+      "embed-adapter.js",
+      "embed-adapter.css"
+    ],
+    "generatedHere": false
+  },
+  "excludedModules": [
+    "speak",
+    "doodle",
+    "move-match"
+  ],
+  "totals": {
+    "generatedFilesExcludingManifest": 127,
+    "bytesExcludingManifest": 97288064,
+    "inlineSyntaxChecks": 48,
+    "storageLiteralReplacements": 18
+  },
+  "backendAssets": [
+    {
+      "file": "song-music-backend.js",
+      "source": "workbench-ui/song-music-backend.js",
+      "sha256": "2f78dff1d494124c66f49cb56a670ad7569d4138c7be9725ed510913f024ee06",
+      "bytes": 27360
+    },
+    {
+      "file": "workbench-api.js",
+      "source": "workbench-ui/workbench-api.js",
+      "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
+      "bytes": 10257
+    },
+    {
+      "file": "yoga-existing-backend.js",
+      "source": "workbench-ui/yoga/existing-backend.js",
+      "sha256": "1a30a805d16d70f0433a5b21edede0b4fcbb818247aeb7d1e30ad9e9c9026a63",
+      "bytes": 14905
+    }
+  ]
+}

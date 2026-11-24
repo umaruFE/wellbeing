@@ -2,8 +2,9 @@
   "common": {
     "teach": "Teach",
     "teachMode": "Teaching Mode",
-    "appName": "CourseGen AI",
+    "appName": "小星星",
     "loading": "Loading...",
+    "pageLoading": "Loading page",
     "save": "Save",
     "saving": "Saving...",
     "saved": "Saved",
@@ -83,10 +84,13 @@
     "englishPlus": "English+ Activities",
     "artExpression": "Art Expression",
     "somaticExploration": "Somatic Exploration",
-    "interactiveYoga": "Interactive Yoga",
+    "interactiveYoga": "Scenario Yoga",
     "musicAndMovement": "Music & Movement",
-    "musicStarQuest": "Music Star Quest",
+    "musicStarQuest": "Starlight Music Studio",
     "songWorkshop": "Song Workshop",
+    "spinSpeak": "Spin & Speak",
+    "doodleGame": "Doodle Guess",
+    "moveMatch": "Move & Match",
     "skillsTraining": "Skills Training",
     "funPractice": "Fun Practice",
     "completeCourse": "Complete Course",
@@ -796,7 +800,7 @@
     "unitNamePlaceholder": "e.g. Unit 1: Hello",
     "keywordsLabel": "Keywords (comma separated)",
     "keywordsPlaceholder": "e.g. Hello, Hi, I",
-    "selectFromLeft": "Please select a textbook unit from the left",
+    "selectFromLeft": "Please select a textbook unit",
     "threeLevelHint": "Supports three-level classification: Textbook > Grade > Unit",
     "loadFailed": "Failed to load textbooks",
     "addFailed": "Add failed",
@@ -811,8 +815,11 @@
     "permissions": "Permissions"
   },
   "account": {
+    "loadFailed": "Could not load accounts.",
+    "loadOrganizationsFailed": "Could not load organizations.",
     "searchPlaceholder": "Search accounts...",
     "listTitle": "Account List",
+    "scrollHint": "Scroll horizontally to view all details",
     "createAccount": "Create Account",
     "username": "Username",
     "name": "Name",
@@ -826,6 +833,8 @@
     "confirmDelete": "Are you sure you want to delete this account?"
   },
   "org": {
+    "noOrganizations": "No organizations to display.",
+    "loadFailed": "Could not load organizations.",
     "searchPlaceholder": "Search organizations...",
     "listTitle": "Organization List",
     "createOrg": "Create Organization",
@@ -859,6 +868,7 @@
     "imageDownloadFailed": "Bulk download failed"
   },
   "workshopPage": {
+    "loadWorksFailed": "Could not load works.",
     "saveFailed": "Could not save. Please try again",
     "createModule": "Create {{title}}",
     "saved": "Creative task saved",
@@ -882,6 +892,9 @@
     "choose": "Choose what you want to create",
     "pathsHint": "Each path uses a dedicated teaching template and generation workflow.",
     "enter": "Start Creating",
+    "spinSpeakDescription": "Practice speaking through card reveals and interactive activities.",
+    "doodleDescription": "Draw and guess words while practicing vocabulary.",
+    "moveMatchDescription": "Practice vocabulary and concepts through movement and sorting.",
     "ageOption0": "Ages 4–6",
     "ageOption1": "Ages 7–10",
     "ageOption2": "Ages 11–14",
@@ -901,12 +914,12 @@
             "action": "Create a Picture Book"
           },
           {
-            "title": "Movement Exploration",
+            "title": "Scenario Yoga",
             "description": "Body storytelling + language",
-            "action": "Explore Interactive Yoga"
+            "action": "Open Scenario Yoga"
           },
           {
-            "title": "Music Star Quest",
+            "title": "Starlight Music Studio",
             "description": "Rhythm + movement + language",
             "action": "Start Creating"
           },
@@ -1729,8 +1742,8 @@
     "selectRequired": "Please select the students' age and English level first.",
     "generatingPlan": "Generating an activity plan from the knowledge base...",
     "generatingDesign": "Generating a picture book design from the knowledge base...",
-    "planFallback": "Generation failed. A default activity plan has been used",
-    "designFallback": "Generation failed. A default picture book design has been used",
+    "planFailed": "Could not generate the activity plan. Try again.",
+    "designFailed": "Could not generate the picture book design. Try again.",
     "newPageDescription": "Describe the illustration for this new page.",
     "batchImages": "Picture Book Page Images",
     "minimumPages": "At least two designed pages are required to generate images in a batch.",
@@ -1824,7 +1837,24 @@
       "Recycled materials (boxes / bottle caps)",
       "Yarn / fabric",
       "Stamps / ink pads"
-    ]
+    ],
+    "librarySource": "Activity source",
+    "caseLibrary": "Case library",
+    "myActivities": "My activities",
+    "previewCase": "Preview case",
+    "useCase": "Use this case",
+    "builtInCase": "Built-in example",
+    "pageTotal_one": "{{count}} page",
+    "pageTotal_other": "{{count}} pages",
+    "startTeaching": "Start teaching",
+    "continueEditing": "Continue editing",
+    "noMyActivities": "No activities yet",
+    "noCases": "No cases yet",
+    "noSearchResults": "No matching activities",
+    "clearSearch": "Clear search",
+    "listLoadFailed": "Could not load your activities. Please try again.",
+    "retryList": "Reload",
+    "previewBlocked": "The preview window could not open. Allow pop-ups for this site and try again."
   },
   "square": {
     "title": "Course Square",

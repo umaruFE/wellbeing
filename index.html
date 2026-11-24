@@ -10,11 +10,28 @@
     <meta name="apple-mobile-web-app-title" content="小星星" />
     <link rel="apple-touch-icon" href="/star.svg" />
     <link rel="stylesheet" href="/workbench-v6/authoring.css" />
+    <link rel="stylesheet" href="/src/components/PageLoading.css" />
     <script defer src="/workbench-v6/authoring.js"></script>
     <title>小星星 · 创作工作台</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div class="page-loading page-loading--viewport" role="status">
+        <div class="page-loading__card">
+          <div class="page-loading__orbit" aria-hidden="true">
+            <span class="page-loading__paper page-loading__paper--front"></span>
+            <span class="page-loading__paper page-loading__paper--back"></span>
+            <span class="page-loading__pencil"></span>
+            <span class="page-loading__spark page-loading__spark--top"></span>
+            <span class="page-loading__spark page-loading__spark--bottom"></span>
+          </div>
+          <div class="page-loading__copy">
+            <strong>页面加载中</strong>
+            <span class="page-loading__dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          </div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

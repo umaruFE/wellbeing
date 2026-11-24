@@ -30,11 +30,11 @@
 }
 
 #ed-ppt .ppt-image-config-panel .image-aspect-lock svg {
-  color: #ff705d;
+  color: var(--wb-primary);
 }
 
 #ed-ppt .ppt-image-config-panel .image-aspect-lock.is-unlocked svg {
-  color: #8a94a4;
+  color: var(--wb-muted);
 }
 
 #ed-ppt .ppt-image-config-panel .image-canvas-actions {
@@ -50,14 +50,14 @@
 
 #ed-ppt .ppt-image-config-panel .image-set-background {
   margin: 0;
-  border-color: #253142;
-  background: #ff705d;
+  border-color: var(--wb-border);
+  background: var(--wb-primary);
   color: #fff;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-image-config-panel .image-set-background:hover:not(:disabled) {
-  border-color: #253142;
+  border-color: var(--wb-border);
   background: #f45f4d;
   color: #fff;
 }
@@ -65,10 +65,10 @@
 #ed-ppt .ppt-image-config-panel .image-replace-drop {
   width: 100%;
   min-height: 102px;
-  border: 1.5px dashed #253142;
-  border-radius: 6px;
-  background: #fffdf9;
-  color: #253142;
+  border: 1px dashed var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-surface);
+  color: var(--wb-text);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -77,21 +77,21 @@
   gap: 8px;
   margin: 0 0 24px;
   font-size: 13px;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 #ed-ppt .ppt-image-config-panel .image-replace-drop svg {
-  color: #8a94a4;
+  color: var(--wb-muted);
 }
 
 #ed-ppt .ppt-image-config-panel .image-replace-drop:hover {
-  border-color: #ff705d;
-  background: #fff7f3;
-  color: #ff705d;
+  border-color: var(--wb-primary);
+  background: var(--wb-selected);
+  color: var(--wb-primary-hover);
 }
 
 #ed-ppt .ppt-image-config-panel .image-replace-drop:hover svg {
-  color: #ff705d;
+  color: var(--wb-primary-hover);
 }
 
 #ed-ppt .ppt-image-config-panel .image-ai-section {
@@ -103,9 +103,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #ff705d;
+  color: var(--wb-primary);
   font-size: 14px;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 #ed-ppt .ppt-image-config-panel .image-ai-title svg {

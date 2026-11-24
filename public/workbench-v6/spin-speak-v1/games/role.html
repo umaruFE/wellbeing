@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-web-scope="classroom">(function(){'use strict';var valid=function(v){return typeof v==='string'&&/^[a-z0-9_-]{1,128}$/.test(v);};var scope;try{if(parent!==window&&parent.location.origin===location.origin)scope=parent.WB_WEB_SCOPE;}catch(_){}if(!valid(scope)&&valid(window.WB_WEB_SCOPE))scope=window.WB_WEB_SCOPE;if(!valid(scope)){try{scope=new URLSearchParams(location.search).get('scope');}catch(_){}}window.WB_WEB_SCOPE=valid(scope)?scope:'local';})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Speak · Role Play</title>
+<style>@layer legacy {
+:root{
+  --grass:#3CB371;--grass-d:#2E9E5B;--yellow:#FFC93C;--yellow-dark:#E8960C;
+  --coral:#FF6B5B;--purple:#8B5CF6;--purple-d:#5B3DB8;--teal:#22C3D6;
+  --cream:#FFF3D6;--ink:#1E1240;--night:#160C33;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  background:#0C0720;display:grid;place-items:center;color:#fff;user-select:none;
+}
+#stage{
+  width:1280px;height:720px;flex:0 0 auto;position:relative;transform-origin:center center;overflow:hidden;
+  background:radial-gradient(1000px 480px at 50% -140px,#3B2578 0%,#2A1A5C 55%,#1C113E 100%);
+  border:6px solid #fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ---------- cream card ---------- */
+.card{width:1172px;height:648px;background:var(--cream);border-radius:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;padding:16px 26px 14px;position:relative;}
+
+/* ---------- head ---------- */
+.head{flex:0 0 auto;position:relative;padding-right:50px}
+.badge{display:inline-flex;align-items:center;gap:8px;background:var(--coral);color:#fff;border-radius:11px;
+  padding:7px 16px;font-size:19px;font-weight:900;letter-spacing:1.5px;box-shadow:0 4px 0 rgba(0,0,0,.14)}
+.guide{margin-top:8px;font-size:18px;font-weight:800;color:var(--ink);line-height:1.6;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.guide .target{display:inline-block;background:#FFF4C2;border:2.5px solid var(--yellow-dark);border-radius:10px;
+  padding:3px 14px;color:#7A3E00;font-weight:900;box-shadow:0 3px 0 rgba(217,145,10,.3)}
+.guide .target .num{color:var(--grass-d);border-bottom:3px solid var(--grass-d);padding:0 3px}
+.iconbtn{position:absolute;right:0;top:4px;width:34px;height:34px;border:3px solid rgba(30,18,64,.35);
+  border-radius:50%;background:rgba(30,18,64,.08);color:var(--ink);font-family:inherit;font-size:15px;font-weight:900;
+  cursor:pointer;line-height:1}
+.iconbtn:active{transform:translateY(2px)}
+
+/* ---------- flip board ---------- */
+.board{flex:1;min-height:0;margin-top:12px;background:rgba(139,92,246,.08);
+  border:3px dashed rgba(139,92,246,.45);border-radius:18px;padding:13px 15px;
+  display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:14px}
+.flip{min-width:0;min-height:0;perspective:900px;cursor:pointer}
+.flip-inner{position:relative;width:100%;height:100%;transition:transform .6s cubic-bezier(.4,.7,.3,1);
+  transform-style:preserve-3d}
+.flip.up .flip-inner{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border-radius:18px;overflow:hidden;box-shadow:0 7px 0 rgba(0,0,0,.18)}
+/* back */
+.card-back{background:linear-gradient(150deg,#2BB7AB,#15938B);border:5px solid var(--yellow);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:#fff}
+.card-back .corner{position:absolute;font-size:17px;opacity:.85}
+.card-back .c-tl{top:8px;left:10px} .card-back .c-tr{top:8px;right:10px}
+.card-back .c-bl{bottom:8px;left:10px} .card-back .c-br{bottom:8px;right:10px}
+.card-back .bk-disc{width:30%;min-width:64px;aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.16);
+  border:3px dashed rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center;position:relative}
+.card-back .bk-mic{font-size:38px;line-height:1}
+.card-back .bk-note{position:absolute;font-size:19px}
+.card-back .bk-note.n1{top:-5px;right:0} .card-back .bk-note.n2{bottom:1px;left:-3px;font-size:16px}
+.card-back .bk-label{font-weight:900;letter-spacing:2px;font-size:14px;opacity:.95}
+.card-back .bk-tap{font-size:11.5px;font-weight:800;opacity:.82}
+/* front */
+.card-front{background:#fff;border:5px solid var(--teal);transform:rotateY(180deg);
+  display:flex;flex-direction:row;align-items:center;justify-content:center;gap:12px;padding:8px 14px;text-align:left}
+.card-front .af-emoji{font-size:46px;line-height:1}
+.card-front .af-mid{display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+.card-front .af-name{font-size:20px;font-weight:900;color:var(--ink);white-space:nowrap}
+.card-front .af-voice{margin-top:6px;background:#EAFBF9;color:#0e7d74;border:2px solid var(--teal);
+  border-radius:999px;padding:3px 11px;font-size:11.5px;font-weight:900;line-height:1.25;white-space:nowrap}
+
+/* ---------- foot ---------- */
+.foot{flex:0 0 auto;display:flex;align-items:center;gap:16px;margin-top:12px}
+.shuffle{background:var(--purple);color:#fff;border:none;border-radius:12px;padding:11px 20px;
+  font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #6d44cc}
+.shuffle:hover{filter:brightness(1.08)}
+.ftip{margin-left:4px;font-size:12.5px;font-weight:800;color:#8A7A5C;line-height:1.5}
+.ftip b{color:var(--grass-d)}
+.big{margin-left:auto;border:none;border-radius:14px;font-weight:900;font-size:18px;height:50px;padding:0 32px;
+  cursor:pointer;white-space:nowrap;transition:.15s;font-family:inherit;color:#fff}
+.big.ghost{background:rgba(30,18,64,.14);color:rgba(30,18,64,.45);cursor:not-allowed;box-shadow:none}
+.big.go{background:var(--grass);box-shadow:0 4px 0 #2c8a5f}
+.big.go:hover{transform:translateY(-2px)}
+.big.go.ready{animation:pulseG 1.1s infinite}
+@keyframes pulseG{0%,100%{box-shadow:0 4px 0 #2c8a5f,0 0 0 0 rgba(46,158,91,.55)}
+  50%{box-shadow:0 4px 0 #2c8a5f,0 0 0 12px rgba(46,158,91,0)}}
+
+/* ---------- notes ---------- */
+.notes{position:absolute;inset:0;background:rgba(12,7,32,.66);display:none;place-items:center;z-index:9;padding:36px;border-radius:24px}
+.notes.on{display:grid}
+.notes .cardn{background:var(--cream);border-radius:20px;padding:24px 30px;
+  width:720px;max-height:600px;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.55);font-size:13.5px;line-height:1.75;color:#3A2D6B}
+.notes h3{font-size:19px;margin-bottom:10px;font-weight:900;color:var(--ink)}
+.notes h4{font-size:13.5px;margin:12px 0 6px;color:var(--coral);letter-spacing:.4px;font-weight:900}
+.notes ol{list-style:none;display:flex;flex-direction:column;gap:6px}
+.notes li{display:flex;gap:9px;align-items:flex-start}
+.notes .n{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--yellow);border:2px solid #E8960C;
+  font-size:10.5px;font-weight:900;display:grid;place-items:center;margin-top:3px;color:#5c4300}
+.notes b{color:var(--ink)}
+.notes .close{margin-top:16px;border:none;background:var(--purple);color:#fff;border-radius:12px;height:44px;
+  padding:0 20px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #6d44cc}
+}</style><link rel="stylesheet" href="../game.css?v=71"><link rel="stylesheet" href="../play-details.css?v=70"><link rel="stylesheet" href="../scenes.css?v=71"><script src="../game-lifecycle.js?v=1"></script><script src="../session.js?v=9"></script>
+<link rel="stylesheet" href="../role-cards.css?v=1">
+<script src="../role-sound.js?v=1"></script>
+</head>
+<body data-game="role">
+<div id="stage">
+  <div class="card">
+
+    <div class="head">
+      <span class="badge">🎭 ROLE PLAY</span>
+      <div class="guide">
+        Pick a role and say in its voice:
+        <span class="target">“There are <span class="num">four</span> people in my family.”</span>
+      </div>
+      <button class="iconbtn" id="helpBtn" title="How to play">?</button>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="foot">
+      <button class="shuffle" id="shuffleBtn">🔁&nbsp;Shuffle &amp; re-deal</button>
+      <div class="ftip" id="ftip" aria-live="polite"></div>
+      <button class="big ghost" id="doneBtn" disabled>✓ COMPLETE</button>
+    </div>
+
+    <div class="notes" id="notes">
+      <div class="cardn">
+        <h3>角色扮演（Role Play）· 怎么玩</h3>
+        <p>卡组里有八个角色。翻开一张，看角色画像、听它的出场声，再模仿它的声音读出目标句。点卡片上的<b>重听</b>可以再听一次。</p>
+
+        <h4>玩法</h4>
+        <ol>
+          <li><span class="n">1</span><div>学生翻一张角色卡，用<b>这个角色的声音和语气</b>把框里的句子说出来：<b>“There are four people in my family.”</b> 四个人可以换成自己家的真实人数（three / five …）。</div></li>
+          <li><span class="n">2</span><div>角色随机发牌，一局一张；抽到不合适的就按 <b>🔁 Shuffle &amp; re-deal</b> 或按 <b>R</b> 重新发牌，再翻一张。</div></li>
+          <li><span class="n">3</span><div>老师判两件事：<b>声音像不像这个角色</b>（音色、音量、表情有没有演出来）；<b>句子读得对不对</b>（词有没有漏、数字有没有换对）。可以就点 <b>✓ COMPLETE</b> 过关；不行就重翻一张再演。</div></li>
+        </ol>
+
+        <button class="close" id="closeNotes">知道了</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= 角色素材 ================= */
+const ROLES=[
+  {n:"Alien",   voice:"beepy & spacey",     portrait:"../assets/roles/alien.webp"},
+  {n:"Monster", voice:"growly & scary",     portrait:"../assets/roles/monster.webp"},
+  {n:"Robot",   voice:"flat & mechanical",  portrait:"../assets/roles/robot.webp"},
+  {n:"Witch",   voice:"cackly & mysterious",portrait:"../assets/roles/witch.webp"},
+  {n:"Pirate",  voice:"rough & hearty",     portrait:"../assets/roles/pirate.webp"},
+  {n:"Lion",    voice:"big & roaring",      portrait:"../assets/roles/lion.webp"},
+  {n:"Baby",    voice:"whiny & cute",       portrait:"../assets/roles/baby.webp"},
+  {n:"Grandma", voice:"slow & gentle",      portrait:"../assets/roles/grandma.webp"}
+];
+
+/* ================= 状态 / DOM ================= */
+if(SS_DATA){document.querySelector('.target').textContent='“'+SS_DATA.line+'”';}
+let deck=[], revealed=[], finished=false, lastSound=null;
+const $=s=>document.querySelector(s);
+const el={board:$("#board"),done:$("#doneBtn"),ftip:$("#ftip"),notes:$("#notes")};
+function setTip(html){ el.ftip.innerHTML=html; }
+
+/* ================= 渲染 ================= */
+function shuffled(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[x[i],x[j]]=[x[j],x[i]];} return x; }
+
+function frontHTML(r){
+  return '<div class="card-face card-front">'
+    +'<img class="role-portrait" src="'+r.portrait+'" alt="" draggable="false">'
+    +'<div class="af-mid"><div class="af-name">'+SS_ESCAPE(r.n)+'</div>'
+    +'<div class="af-voice">'+SS_ESCAPE(r.voice)+'</div></div></div>';
+}
+function backHTML(){
+  return '<div class="card-face card-back"><span class="card-question">?</span></div>';
+}
+function render(){
+  el.board.innerHTML=deck.map(function(r,i){
+    return '<div class="flip" data-i="'+i+'">'
+      +'<button type="button" class="role-turn" aria-label="翻开角色卡 '+(i+1)+'" aria-pressed="false"></button>'
+      +'<div class="flip-inner" aria-hidden="true">'+backHTML()+frontHTML(r)+'</div>'
+      +'<button type="button" class="role-replay" aria-label="重听 '+SS_ESCAPE(r.n)+' 的音效" hidden>'
+      +'<svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'
+      +'<path d="M9.5 4.2 5.7 7.3H2.8v5.4h2.9l3.8 3.1zM12.6 7a4.3 4.3 0 0 1 0 6m2.6-8.5a7.6 7.6 0 0 1 0 11"/></svg>重听</button></div>';
+  }).join("");
+}
+function updatePrompt(){
+  const r=deck[revealed[revealed.length-1]];
+  el.done.disabled=!r;
+  el.done.className=r?"big go":"big ghost";
+  setTip(r
+    ? "<b>"+SS_ESCAPE(r.n)+"</b> — read the sentence in a "+SS_ESCAPE(r.voice)+" voice."
+    : "Flip a card, listen, then read in that voice.<br>SPACE = COMPLETE　·　R = SHUFFLE");
+}
+function playSound(r){
+  lastSound=r;
+  window.RoleSound.play(r.n);
+}
+function stopSound(){
+  lastSound=null;
+  window.RoleSound.stop();
+}
+function reset(){
+  stopSound();
+  deck=shuffled(ROLES); revealed=[];
+  finished=false;
+  el.done.textContent="✓ COMPLETE";
+  updatePrompt();
+  render();
+}
+
+/* ================= 交互 ================= */
+el.board.onclick=function(e){
+  if(finished) return;
+  const f=e.target.closest(".flip"); if(!f) return;
+  const i=+f.getAttribute("data-i");
+  const r=deck[i];
+  if(e.target.closest(".role-replay")){
+    if(f.classList.contains("up")) playSound(r);
+    return;
+  }
+  const up=f.classList.toggle("up");
+  const turn=f.querySelector(".role-turn");
+  turn.setAttribute("aria-pressed",String(up));
+  turn.setAttribute("aria-label",up ? r.n+", "+r.voice+"，盖回角色卡" : "翻开角色卡 "+(i+1));
+  f.querySelector(".role-replay").hidden=!up;
+  if(up){
+    revealed.push(i);
+    playSound(r);
+  }else{
+    revealed.splice(revealed.indexOf(i),1);
+    if(lastSound===r) stopSound();
+  }
+  updatePrompt();
+};
+$("#shuffleBtn").onclick=function(){ if(!finished) reset(); };
+el.done.onclick=function(){
+  if(finished){ location.reload(); return; }
+  if(el.done.disabled) return;
+  finished=true;
+  stopSound();
+  el.board.querySelectorAll("button").forEach(button=>button.disabled=true);
+  el.done.className="big go ready"; el.done.textContent="↺ PLAY AGAIN";
+  setTip("🏆 Done — role played!<br>Press PLAY AGAIN for a new round.");
+};
+$("#helpBtn").onclick=()=>{stopSound(); el.notes.classList.add("on");};
+$("#closeNotes").onclick=()=>el.notes.classList.remove("on");
+el.notes.onclick=e=>{ if(e.target===el.notes) el.notes.classList.remove("on"); };
+document.addEventListener("keydown",function(e){
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(el.notes.classList.contains("on")) return;
+  if(e.key===" "||e.code==="Space"){
+    if(e.target.closest?.(".role-replay")) return;
+    e.preventDefault();
+    if(e.repeat) return;
+    if(!el.done.disabled) el.done.click();
+    return;
+  }
+  if(e.key.toLowerCase()==="r"&&!e.repeat){ if(!finished) reset(); }
+});
+
+/* ================= 缩放 ================= */
+function fit(){
+  const s=Math.min(window.innerWidth/1320,window.innerHeight/760);
+  document.getElementById('stage').style.transform='scale('+s+')';
+}
+window.addEventListener("resize",fit);
+fit(); reset();
+</script>
+<script src="../game-access.js?v=41"></script><script src="../play-details.js?v=30"></script></body>
+</html>

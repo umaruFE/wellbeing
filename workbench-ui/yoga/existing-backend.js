@@ -47,7 +47,7 @@
     const tabKey='wellbeing-workbench-tab', tab=sessionStorage.getItem(tabKey)||crypto.randomUUID();
     sessionStorage.setItem(tabKey,tab);
     const key=`${L.KEY}:creative-sync:${tab}`;
-    const pending=new Map(JSON.parse(localStorage.getItem(key)||'[]').map(entry=>[entry.record.id,entry]));
+    const pending=new Map(api.readOnly?[]:JSON.parse(localStorage.getItem(key)||'[]').map(entry=>[entry.record.id,entry]));
     const known=new Map(), baseline=new Map();
     let value=null, job=null, timer, lastError=null, status='loading', unavailable=0;
 
@@ -67,6 +67,7 @@
     function defer(){clearTimeout(timer);timer=setTimeout(()=>void flush(),550);}
 
     function set(raw){
+      if(api.readOnly)throw Error('当前连接只读后台，无法保存课程。');
       const next=L.validate(raw);
       const previous=new Map(pending);
       try{
@@ -93,10 +94,10 @@
         }catch(_){unavailable++;}
       }
       let legacy=null;
-      try{legacy=L.load(localStorage);}catch(_) { /* Preserve unreadable local files for offline recovery. */ }
+      if(!api.readOnly)try{legacy=L.load(localStorage);}catch(_) { /* Preserve unreadable local files for offline recovery. */ }
       for(const record of legacy?.items||[])if(!records.has(record.id)&&!pending.has(record.id))pending.set(record.id,{record,expected:null});
       for(const [id,entry] of pending){if(records.get(id)?.saveToken===entry.record.saveToken)pending.delete(id);else records.set(id,entry.record);}
-      savePending();
+      if(!api.readOnly)savePending();
       const items=[...records.values()];
       value=JSON.stringify(L.validate({schema:1,activeId:items.some(r=>r.id===legacy?.activeId)?legacy.activeId:null,items}));
       if(pending.size){change('pending');defer();}else change('synced');

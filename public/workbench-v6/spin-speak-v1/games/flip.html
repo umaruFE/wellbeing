@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-web-scope="classroom">(function(){'use strict';var valid=function(v){return typeof v==='string'&&/^[a-z0-9_-]{1,128}$/.test(v);};var scope;try{if(parent!==window&&parent.location.origin===location.origin)scope=parent.WB_WEB_SCOPE;}catch(_){}if(!valid(scope)&&valid(window.WB_WEB_SCOPE))scope=window.WB_WEB_SCOPE;if(!valid(scope)){try{scope=new URLSearchParams(location.search).get('scope');}catch(_){}}window.WB_WEB_SCOPE=valid(scope)?scope:'local';})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Speak · Flip &amp; Answer</title>
+<style>@layer legacy {
+:root{
+  --grass:#3CB371;--grass-d:#2E9E5B;--yellow:#FFC93C;--yellow-dark:#E8960C;
+  --coral:#FF6B5B;--purple:#8B5CF6;--purple-d:#5B3DB8;--teal:#22C3D6;
+  --cream:#FFF3D6;--ink:#1E1240;--night:#160C33;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  background:#0C0720;display:grid;place-items:center;color:#fff;user-select:none;
+}
+#stage{
+  width:1280px;height:720px;flex:0 0 auto;position:relative;transform-origin:center center;overflow:hidden;
+  background:radial-gradient(1000px 480px at 50% -140px,#3B2578 0%,#2A1A5C 55%,#1C113E 100%);
+  border:6px solid #fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ---------- cream card ---------- */
+.card{position:relative;width:1172px;height:648px;background:var(--cream);border-radius:24px;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);display:flex;flex-direction:column;padding:16px 26px 14px;overflow:hidden}
+
+/* ---------- head ---------- */
+.head{flex:0 0 auto;position:relative;padding-right:50px}
+.badge{display:inline-flex;align-items:center;gap:9px;background:var(--teal);color:#08343C;border-radius:11px;
+  padding:7px 18px;font-size:20px;font-weight:900;letter-spacing:1.6px;box-shadow:0 4px 0 #12919f}
+.sub{margin-top:7px;font-size:15px;font-weight:800;color:var(--ink);line-height:1.5}
+.sub b{color:#0e7d74}
+.iconbtn{position:absolute;right:0;top:4px;width:34px;height:34px;border:3px solid rgba(30,18,64,.35);
+  border-radius:50%;background:rgba(30,18,64,.08);color:var(--ink);font-family:inherit;font-size:15px;font-weight:900;
+  cursor:pointer;line-height:1}
+.iconbtn:active{transform:translateY(2px)}
+
+/* ---------- question bar ---------- */
+.qbar{flex:0 0 auto;margin-top:12px;display:flex;align-items:center;gap:12px;
+  background:#fff;border:3px solid var(--ink);border-radius:14px;padding:10px 14px;box-shadow:0 4px 0 var(--ink)}
+.qno{flex:none;font-size:13px;font-weight:900;background:var(--ink);color:var(--yellow);
+  border-radius:6px;padding:4px 9px;letter-spacing:.6px}
+.qt{flex:1;font-size:24px;font-weight:900;line-height:1.35;color:var(--ink)}
+.qt.mute{font-size:16px;color:#A79E8D;letter-spacing:.2px}
+.qb{flex:none;width:44px;height:38px;border:3px solid var(--ink);background:var(--yellow);border-radius:9px;
+  font-size:18px;line-height:1;cursor:pointer;font-family:inherit;box-shadow:0 3px 0 var(--ink)}
+.qb:active{transform:translateY(2px);box-shadow:none}
+.qb.on{background:var(--teal)}
+
+/* ---------- card board ---------- */
+.board{flex:1 1 auto;min-height:0;margin-top:12px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px;
+  padding:4px 2px}
+.mpcard{position:relative;min-width:0;min-height:0;perspective:1000px;cursor:pointer;
+  transition:transform .24s,opacity .24s}
+.mpin{position:relative;width:100%;height:100%;transition:transform .44s cubic-bezier(.4,.7,.3,1);
+  transform-style:preserve-3d}
+.mpcard.up .mpin{transform:rotateY(180deg)}
+.mpf,.mpb{position:absolute;inset:0;border-radius:18px;border:4px solid var(--ink);backface-visibility:hidden;
+  -webkit-backface-visibility:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;box-shadow:0 6px 0 rgba(0,0,0,.22);overflow:hidden}
+.mpb{background:repeating-linear-gradient(45deg,#332C5E 0 12px,#413A73 12px 24px);color:rgba(255,255,255,.5)}
+.mpb .mq{font-size:54px;font-weight:900;line-height:1;color:rgba(255,255,255,.62)}
+.mpb .mlab{font-size:12px;font-weight:900;letter-spacing:2px;color:rgba(255,255,255,.42)}
+.mpb .mdec{position:absolute;font-size:18px;opacity:.4}
+.mpb .d1{top:10px;left:12px}.mpb .d2{top:10px;right:12px}
+.mpb .d3{bottom:10px;left:12px}.mpb .d4{bottom:10px;right:12px}
+.mpf{background:#FFF6E4;transform:rotateY(180deg)}
+.mpf .me{font-size:84px;line-height:1;filter:drop-shadow(0 3px 0 rgba(0,0,0,.14))}
+.mpf .mh{font-size:16px;font-weight:900;color:#8A4B12;letter-spacing:.3px;text-align:center;line-height:1.25;padding:0 8px}
+.mpcard.hit .mpf{background:#D8F5EF;border-color:#1E7A4A;box-shadow:0 6px 0 #1E7A4A,0 0 0 6px rgba(30,122,74,.22)}
+.mpcard.lock{pointer-events:none}
+.mpcard.lock::after{content:"✓";position:absolute;top:-12px;right:-10px;width:40px;height:40px;border-radius:50%;
+  background:var(--grass);color:#fff;font-size:21px;font-weight:900;display:grid;place-items:center;
+  border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.28);z-index:5}
+.mpcard.shake{animation:cksh .32s}
+@keyframes cksh{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}50%{transform:translateX(9px)}75%{transform:translateX(-5px)}}
+.mpcard.shake .mpf{border-color:var(--coral)}
+
+/* ---------- foot ---------- */
+.foot{flex:0 0 auto;display:flex;align-items:center;gap:14px;margin-top:12px}
+.ftip{margin-right:auto;font-size:13px;font-weight:800;color:#8A7A5C;line-height:1.5;max-width:620px}
+.ftip b{color:var(--grass-d)}
+.keybtn{border:3px solid var(--ink);background:#fff;border-radius:11px;height:44px;padding:0 16px;
+  font-family:inherit;font-size:12.5px;font-weight:900;color:var(--ink);cursor:pointer;box-shadow:0 3px 0 var(--ink)}
+.keybtn:active{transform:translateY(2px);box-shadow:none}
+.big{border:none;border-radius:14px;font-weight:900;font-size:18px;height:52px;padding:0 34px;cursor:pointer;
+  white-space:nowrap;transition:.15s;font-family:inherit;color:#fff}
+.big.ghost{background:rgba(30,18,64,.14);color:rgba(30,18,64,.42);cursor:not-allowed;box-shadow:none}
+.big.go{background:var(--grass);box-shadow:0 4px 0 #2c8a5f}
+.big.go:hover{transform:translateY(-2px)}
+.big.go.ready{animation:pulseG 1.1s infinite}
+@keyframes pulseG{0%,100%{box-shadow:0 4px 0 #2c8a5f,0 0 0 0 rgba(46,158,91,.55)}
+  50%{box-shadow:0 4px 0 #2c8a5f,0 0 0 12px rgba(46,158,91,0)}}
+
+/* ---------- answer key ---------- */
+.keybox{flex:0 0 auto;display:none;margin-top:10px;background:#fff;border:3px dashed #C9B486;border-radius:12px;
+  padding:9px 14px;font-size:15px;font-weight:800;color:#6B5A3A;line-height:1.5}
+.keybox.on{display:block}
+.keybox b{color:#C1493C;letter-spacing:1px;font-size:12px}
+
+/* ---------- reveal ---------- */
+.rv{position:absolute;inset:0;background:var(--cream);border-radius:24px;display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:26px 40px;z-index:7}
+.rv.on{display:flex;animation:rvIn .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes rvIn{0%{opacity:0;transform:scale(.94)}100%{opacity:1;transform:scale(1)}}
+.rv-frame{position:relative;background:#fff;border:1px solid #E4D8B8;border-radius:10px;padding:14px 14px 44px;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);transform:rotate(-1.6deg)}
+.rv-photo{width:330px;height:210px;border-radius:6px;background:linear-gradient(160deg,#4A6FE3,#7A4CD6 55%,#C1493C);
+  display:grid;place-items:center;font-size:96px;line-height:1;box-shadow:inset 0 0 40px rgba(0,0,0,.3)}
+.rv-tag{position:absolute;left:0;right:0;bottom:12px;text-align:center;font-size:13px;font-weight:900;
+  letter-spacing:2px;color:#8A7A5C}
+.rv-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--grass);color:#fff;
+  font-size:12px;font-weight:900;letter-spacing:1.4px;border-radius:999px;padding:5px 14px;
+  border:3px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.25);white-space:nowrap}
+.rv-cap{max-width:900px;text-align:center;font-size:25px;font-weight:900;line-height:1.5;color:var(--ink)}
+.rv-cap .rep{background:var(--yellow);border-bottom:3px dashed #D99A18;border-radius:5px;padding:0 5px}
+.rv-sub{font-size:13.5px;font-weight:800;color:#8A7A5C;margin-top:-4px}
+.rv .big{margin-top:4px}
+.rv-flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;border-radius:24px}
+.rv-flash.go{animation:fl .42s ease-out}
+@keyframes fl{0%{opacity:.92}100%{opacity:0}}
+
+/* ---------- notes ---------- */
+.notes{position:absolute;inset:0;background:rgba(12,7,32,.68);display:none;place-items:center;z-index:9;padding:36px;border-radius:24px}
+.notes.on{display:grid}
+.notes .cardn{background:var(--cream);border-radius:20px;padding:24px 30px;
+  width:720px;max-height:600px;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.55);font-size:13.5px;line-height:1.75;color:#3A2D6B}
+.notes h3{font-size:19px;margin-bottom:10px;font-weight:900;color:var(--ink)}
+.notes h4{font-size:13.5px;margin:12px 0 6px;color:#0e7d74;letter-spacing:.4px;font-weight:900}
+.notes ol{list-style:none;display:flex;flex-direction:column;gap:6px}
+.notes li{display:flex;gap:9px;align-items:flex-start}
+.notes .n{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--yellow);border:2px solid #E8960C;
+  font-size:10.5px;font-weight:900;display:grid;place-items:center;margin-top:3px;color:#5c4300}
+.notes b{color:var(--ink)}
+.notes .close{margin-top:16px;border:none;background:var(--purple);color:#fff;border-radius:12px;height:44px;
+  padding:0 20px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #6d44cc}
+}</style><link rel="stylesheet" href="../game.css?v=71"><link rel="stylesheet" href="../play-details.css?v=70"><link rel="stylesheet" href="../scenes.css?v=71"><script src="../game-lifecycle.js?v=1"></script><script src="../session.js?v=9"></script>
+</head>
+<body data-game="flip">
+<div id="stage">
+  <div class="card">
+
+    <div class="head">
+      <span class="badge">🎴 FLIP &amp; ANSWER</span>
+      <div class="sub">Listen to the question, <b>flip the matching card</b>, then <b>say the answer</b>.</div>
+      <button class="iconbtn" id="helpBtn" title="How to play">?</button>
+    </div>
+
+    <div class="qbar">
+      <span class="qno" id="qno">Q1 / 3</span>
+      <span class="qt mute" id="qt">👂 LISTEN — tap 👀 to read the question</span>
+      <button class="qb" id="tts" title="play the question">🔊</button>
+      <button class="qb" id="eye" title="show / hide question text">👀</button>
+    </div>
+
+    <div class="board" id="board"></div>
+
+    <div class="keybox" id="keybox"></div>
+
+    <div class="foot">
+      <div class="ftip" id="ftip">Flip a card — if it answers the question, say the answer out loud.</div>
+      <button class="keybtn" id="keyBtn">👀 ANSWER KEY (TEACHER)</button>
+      <button class="big ghost" id="okBtn" disabled>✓ CORRECT</button>
+    </div>
+
+    <div class="rv" id="rv">
+      <div class="rv-frame">
+        <span class="rv-badge">PHOTO FOUND · 3/3</span>
+        <div class="rv-photo">👨‍👩‍👧‍👦</div>
+        <div class="rv-tag">MY FAMILY · EVERY WEEKEND</div>
+      </div>
+      <div class="rv-cap" id="rvCap"></div>
+      <div class="rv-sub">Three cards make one photo — now read the whole introduction.</div>
+      <button class="big go ready" id="againBtn">↺ PLAY AGAIN</button>
+      <div class="rv-flash" id="rvFlash"></div>
+    </div>
+
+    <div class="notes" id="notes">
+      <div class="cardn">
+        <h3>翻牌问答（Flip &amp; Answer）· 怎么玩</h3>
+        <p>桌面上有 4 张背面朝上的卡片，其中 <b>3 张</b>分别是三道问句的答案，另外 <b>1 张</b>是干扰卡。翻对哪一张，就说出那张卡上的答案。</p>
+
+        <h4>玩法</h4>
+        <ol>
+          <li><span class="n">1</span><div>每道题弹出时会<b>自动朗读一遍问句</b>，点 <b>🔊</b> 可以再听；问句文字默认藏起来，学生先听，需要看字就点 <b>👀</b>。</div></li>
+          <li><span class="n">2</span><div>学生翻一张卡：<b>翻对</b>了卡会留在正面变绿，这时把答案完整说出来；<b>翻错</b>了卡会抖一下、约 1 秒自动翻回去，记住位置再翻别的。</div></li>
+          <li><span class="n">3</span><div>老师说对了就点 <b>✓ CORRECT</b>——这张卡被锁定打勾，自动进入下一题。三题全部答对，照片揭晓，把三句答案连起来读一遍，就是第一环那段完整的自我介绍。</div></li>
+        </ol>
+
+        <button class="close" id="closeNotes">知道了</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ================= 素材：3 问 3 卡 + 1 张干扰卡 ================= */
+const Q=SS_DATA?.qa || [
+  {q:"How many people are there in your family?",
+   a:"There are [four] people in my family.",
+   em:"👨‍👩‍👧", hint:"four"},
+  {q:"What is your father like?",
+   a:"My father is [strict], but he is also very funny.",
+   em:"👨", hint:"strict · funny"},
+  {q:"What do you like doing together?",
+   a:"We [cook] together every weekend.",
+   em:"🍳", hint:"cook · weekend"}
+];
+const OTHER=SS_DATA?[SS_DATA.decoy]:[{em:"🐕",hint:"a dog"}];
+const VR=SS_DATA?.reveal || "There are [four] people in my family: my dad, my mum, my sister and me.";
+const BACK=1100;   /* 翻错后多久自动翻回 */
+
+/* ================= 状态 / DOM ================= */
+let cards=[], cur=0, phase="ask", done=false, timer=null, qTextOn=false, ac=null;
+const ticked=[false,false,false];
+const $=s=>document.querySelector(s);
+const el={board:$("#board"),qno:$("#qno"),qt:$("#qt"),tts:$("#tts"),eye:$("#eye"),keybox:$("#keybox"),
+  ok:$("#okBtn"),ftip:$("#ftip"),rv:$("#rv"),rvCap:$("#rvCap"),rvFlash:$("#rvFlash"),
+  again:$("#againBtn"),notes:$("#notes")};
+/* ================= 朗读（Web Speech API，与生成器同款参数） ================= */
+let VOICE=null;
+function pickVoice(){
+  if(!("speechSynthesis" in window)) return;
+  const vs=speechSynthesis.getVoices().filter(v=>/^en/i.test(v.lang));
+  VOICE=vs.find(v=>/Samantha|Google US|Aria|Zira|Karen/i.test(v.name))||vs[0]||null;
+}
+function plain(s){ return String(s).replace(/\[|\]/g,"").replace(/<[^>]+>/g,""); }
+function say(t,o){
+  o=o||{};
+  if(SS_LIFECYCLE.paused) return;
+  if(!("speechSynthesis" in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(plain(t));
+    u.lang="en-US"; u.rate=o.rate==null?.92:o.rate; u.pitch=o.pitch==null?1:o.pitch; u.volume=o.volume==null?1:o.volume;
+    if(VOICE) u.voice=VOICE;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+function speakQ(){
+  say(Q[cur].q,{rate:.92});
+  el.tts.classList.add("on");
+  SS_LIFECYCLE.setTimeout(()=>el.tts.classList.remove("on"),700);
+}
+if("speechSynthesis" in window){ pickVoice(); speechSynthesis.onvoiceschanged=pickVoice; }
+
+const mark=s=>SS_ESCAPE(s).replace(/\[([^\]]+)\]/g,'<span class="rep">$1</span>');
+function setTip(html){ el.ftip.innerHTML=html; }
+function shuf(a){ const x=a.slice(); for(let i=x.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [x[i],x[j]]=[x[j],x[i]]; } return x; }
+
+/* ================= 快门 / 闪光 ================= */
+function shutter(){
+  if(SS_LIFECYCLE.paused) return;
+  try{
+    if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+    if(ac.state==="suspended") ac.resume();
+    const t=ac.currentTime+.01;
+    const o=ac.createOscillator(), g=ac.createGain(), hp=ac.createBiquadFilter();
+    o.type="square"; o.frequency.setValueAtTime(1500,t);
+    o.frequency.exponentialRampToValueAtTime(340,t+.07);
+    hp.type="highpass"; hp.frequency.value=600;
+    g.gain.setValueAtTime(.1,t);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.11);
+    o.connect(hp); hp.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+.13);
+  }catch(e){}
+}
+function flash(){ el.rvFlash.classList.remove("go"); void el.rvFlash.offsetWidth; el.rvFlash.classList.add("go"); }
+
+/* ================= 渲染 ================= */
+function setQT(){
+  if(qTextOn){ el.qt.classList.remove("mute"); el.qt.textContent=Q[cur].q; el.eye.classList.add("on"); }
+  else{ el.qt.classList.add("mute"); el.qt.textContent="👂 LISTEN — tap 👀 to read the question"; el.eye.classList.remove("on"); }
+}
+function paintQ(){
+  qTextOn=false;
+  el.qno.textContent="Q"+(cur+1)+" / "+Q.length;
+  setQT();
+  el.keybox.classList.remove("on");
+  el.keybox.innerHTML="<b>ANSWER</b>: "+mark(Q[cur].a);
+  judge(false);
+  speakQ();
+}
+function judge(on){ el.ok.className=on?"big go ready":"big ghost"; el.ok.disabled=!on; }
+
+function build(){
+  if(timer){ SS_LIFECYCLE.clearTimeout(timer); timer=null; }
+  cards=[]; cur=0; phase="ask"; done=false;
+  ticked.fill(false);
+  el.rv.classList.remove("on");
+  el.board.innerHTML="";
+  const deck=shuf([].concat(
+    Q.map((x,i)=>({ans:i,em:x.em,hint:x.hint})),
+    OTHER.map(x=>({ans:null,em:x.em,hint:x.hint}))
+  ));
+  deck.forEach(function(d){
+    const c=document.createElement("div");
+    c.className="mpcard";c.tabIndex=0;c.setAttribute("role","button");c.setAttribute("aria-label","翻开答案卡 "+(cards.length+1));
+    c.innerHTML='<div class="mpin">'
+      +'<div class="mpb"><span class="mdec d1">🎴</span><span class="mdec d2">✦</span>'
+      +'<span class="mq">?</span><span class="mlab">FLIP ME</span>'
+      +'<span class="mdec d3">✦</span><span class="mdec d4">🎴</span></div>'
+      +'<div class="mpf"><span class="me">'+d.em+'</span><span class="mh">'+SS_ESCAPE(d.hint)+'</span></div>'
+      +'</div>';
+    const s={ans:d.ans,em:d.em,hint:d.hint,el:c,up:false,locked:false};
+    c.onclick=()=>onFlip(s);
+    el.board.appendChild(c);
+    cards.push(s);
+  });
+  paintQ();
+  setTip("Flip a card — if it answers the question, say the answer out loud.");
+  el.ok.textContent="✓ CORRECT";
+}
+
+/* ================= 翻牌：对了就停住等判，错了自己翻回去 ================= */
+function onFlip(s){
+  if(done||phase!=="ask"||s.locked||s.up) return;
+  s.up=true; s.el.classList.add("up");
+  if(s.ans===cur){
+    phase="hit"; s.el.classList.add("hit"); judge(true);
+    setTip("Found it! Say the answer out loud — teacher taps <b>✓ CORRECT</b>.");
+  }else{
+    phase="flip";
+    s.el.classList.add("shake");
+    SS_LIFECYCLE.setTimeout(()=>s.el.classList.remove("shake"),340);
+    timer=SS_LIFECYCLE.setTimeout(function(){
+      s.up=false; s.el.classList.remove("up");
+      phase="ask";
+      setTip("Not this one — remember where it is, then try again.");
+    },BACK);
+  }
+}
+
+/* ================= 老师判定 ================= */
+function onOK(){
+  if(done||phase!=="hit") return;
+  const s=cards.find(x=>x.up&&x.ans===cur);
+  ticked[cur]=true;
+  if(s){ s.locked=true; s.el.classList.add("lock","hit"); }
+  phase="ask"; judge(false);
+  const n=ticked.findIndex(v=>!v);
+  if(n<0){ reveal(); return; }
+  cur=n; paintQ();
+  setTip("Next one — listen to the question, then flip a card.");
+}
+
+/* ================= 揭晓 ================= */
+function reveal(){
+  done=true; phase="done";
+  if(timer){ SS_LIFECYCLE.clearTimeout(timer); timer=null; }
+  cards.forEach(function(c){ c.up=true; c.el.classList.add("up"); });
+  el.rvCap.innerHTML=mark(VR);
+  el.rv.classList.add("on");
+  flash(); shutter();
+  const audioEpoch=SS_LIFECYCLE.epoch;
+  SS_LIFECYCLE.setTimeout(flash,230); SS_LIFECYCLE.setTimeout(()=>{if(SS_LIFECYCLE.canAutoplay(audioEpoch))shutter();},250);
+  setTip("🏆 3 / 3 — photo found! Read the whole introduction.");
+}
+
+/* ================= 事件 ================= */
+el.tts.onclick=speakQ;
+el.eye.onclick=function(){ qTextOn=!qTextOn; setQT(); };
+$("#keyBtn").onclick=function(){
+  el.keybox.classList.toggle("on");
+  el.keybox.innerHTML="<b>ANSWER</b>: "+mark(Q[cur].a);
+};
+el.ok.onclick=onOK;
+el.again.onclick=build;
+$("#helpBtn").onclick=()=>el.notes.classList.add("on");
+$("#closeNotes").onclick=()=>el.notes.classList.remove("on");
+el.notes.onclick=e=>{ if(e.target===el.notes) el.notes.classList.remove("on"); };
+document.addEventListener("keydown",function(e){
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.key===" "||e.code==="Space"){
+    e.preventDefault();
+    if(e.repeat) return;
+    if(!el.ok.disabled) onOK();
+    return;
+  }
+  const k=e.key.toLowerCase();
+  if(k==="e"&&!e.repeat){ qTextOn=!qTextOn; setQT(); }
+  if(k==="r"&&!e.repeat){ build(); }
+});
+
+/* ================= 缩放 ================= */
+function fit(){
+  const s=Math.min(window.innerWidth/1320,window.innerHeight/760);
+  document.getElementById("stage").style.transform="scale("+s+")";
+}
+window.addEventListener("resize",fit);
+fit(); build();
+</script>
+<script src="../game-access.js?v=40"></script><script src="../play-details.js?v=30"></script></body>
+</html>

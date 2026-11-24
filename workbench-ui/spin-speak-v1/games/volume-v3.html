@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Volume Challenge · 声音广播站</title>
-  <link rel="stylesheet" href="../volume-v3.css?v=21">
+  <link rel="stylesheet" href="../volume-v3.css?v=23">
   <script src="../game-lifecycle.js?v=1"></script>
   <script src="../session.js?v=9"></script>
-  <script defer src="../volume-v3.js?v=21"></script>
+  <script defer src="../volume-v3.js?v=23"></script>
 </head>
 <body data-game="volume">
   <main id="stage" data-broadcast="ready">
@@ -20,8 +20,32 @@
         <circle cx="34" cy="43" r="3" fill="#ffdb6b" stroke-width="1.5"/>
       </symbol>
     </svg>
+    <!-- Keep the room photograph at its native aspect ratio; only the console and screen reflow. -->
+    <svg class="console-backdrop" viewBox="0 0 1736 906" aria-hidden="true" focusable="false">
+      <defs>
+        <image id="room-art" href="../assets/volume-v3/school-radio.png" width="1736" height="906"/>
+        <clipPath id="console-footprint">
+          <path d="M338 521H1397Q1420 521 1442 551L1605 776Q1610 785 1610 809V835Q1609 853 1599 859L1622 873V906H110V872L144 859Q127 852 126 833V805Q126 789 135 775L298 548Q312 526 338 521Z"/>
+        </clipPath>
+        <clipPath id="console-cutout">
+          <path d="M333 518H1403Q1428 519 1449 550L1611 775Q1618 785 1618 810V850L1630 873V906H105V871L120 849V797Q120 784 129 772L293 544Q310 520 333 518Z"/>
+        </clipPath>
+        <!-- The loudspeakers' inner feet touch the back corners of the original console. -->
+        <path id="speaker-corner" d="M215 548H274V574Q273 587 260 593L259 601Q259 609 250 610H232L229 607H215Z"/>
+        <clipPath id="speaker-corners"><use href="#speaker-corner"/><use href="#speaker-corner" transform="translate(1736) scale(-1 1)"/></clipPath>
+      </defs>
+      <g clip-path="url(#console-cutout)">
+        <rect y="517" width="1736" height="61" fill="#dfeffd"/>
+        <rect y="574" width="1736" height="2" fill="#a5c2e9"/>
+        <rect y="576" width="1736" height="20" fill="#d0e4fc"/>
+        <svg x="0" y="594" width="1736" height="312" viewBox="103 594 8 312" preserveAspectRatio="none"><use href="#room-art"/></svg>
+      </g>
+      <use href="#room-art" clip-path="url(#speaker-corners)"/>
+    </svg>
+    <svg class="studio-desk" viewBox="0 0 1736 906" aria-hidden="true" focusable="false">
+      <image href="../assets/volume-v3/controls-clean-plate.png" width="1736" height="906" clip-path="url(#console-footprint)"/>
+    </svg>
     <div class="studio-wall" aria-hidden="true"></div>
-    <div class="studio-desk" aria-hidden="true"></div>
       <svg class="scene-microphone" viewBox="0 0 510 570" aria-hidden="true" focusable="false">
         <defs>
           <!-- Rigid skins in the original scene's doubled crop coordinates. -->
@@ -40,12 +64,6 @@
           <clipPath id="mic-elbow-cut"><ellipse cx="702" cy="389" rx="49" ry="49"/></clipPath>
           <clipPath id="mic-stand-cut">
             <path d="M664 425Q703 447 723 423L664 841Q658 850 627 849Q605 848 605 842Z"/>
-          </clipPath>
-          <clipPath id="mic-stand-wall">
-            <rect x="565" y="310" width="230" height="423.3"/>
-          </clipPath>
-          <clipPath id="mic-stand-desk">
-            <rect x="565" y="731.6" width="230" height="134"/>
           </clipPath>
           <clipPath id="mic-stand-panel">
             <path d="M591 306H800V781L628 731Q601 719 592 697Z"/>
@@ -72,19 +90,16 @@
           <g id="mic-stand-skin">
             <use href="#mic-scene-source" clip-path="url(#mic-stand-cut)"/>
           </g>
-          <linearGradient id="mic-coral-metal"><stop stop-color="#cd646b"/><stop offset=".15" stop-color="#ffa296"/><stop offset=".42" stop-color="#ffb29b"/><stop offset=".7" stop-color="#f18479"/><stop offset="1" stop-color="#b75266"/></linearGradient>
-          <linearGradient id="mic-ivory-metal"><stop stop-color="#d1a381"/><stop offset=".18" stop-color="#fff4db"/><stop offset=".55" stop-color="#fff1d7"/><stop offset="1" stop-color="#daa785"/></linearGradient>
-          <linearGradient id="mic-bezel-metal" x2=".7" y2="1"><stop stop-color="#fff0ba"/><stop offset=".27" stop-color="#ffb096"/><stop offset=".65" stop-color="#e77570"/><stop offset="1" stop-color="#a44961"/></linearGradient>
-          <radialGradient id="mic-grille-light" cx=".32" cy=".25" r=".85"><stop stop-color="#fff9e9"/><stop offset=".42" stop-color="#f8e9c9"/><stop offset=".78" stop-color="#ead4af"/><stop offset="1" stop-color="#d8bf9b"/></radialGradient>
-          <radialGradient id="mic-grille-shade" cx=".43" cy=".38" r=".72"><stop offset=".5" stop-color="#b68460" stop-opacity="0"/><stop offset="1" stop-color="#b68460" stop-opacity=".18"/></radialGradient>
-          <path id="mic-dome-weave" fill="none"/>
+          <linearGradient id="mic-coral-metal"><stop stop-color="#e67f75"/><stop offset=".12" stop-color="#ffa394"/><stop offset=".52" stop-color="#ff9e8e"/><stop offset=".78" stop-color="#f48d7d"/><stop offset="1" stop-color="#e67a70"/></linearGradient>
+          <linearGradient id="mic-ivory-metal"><stop stop-color="#e9cfab"/><stop offset=".13" stop-color="#fff2df"/><stop offset=".65" stop-color="#fff2df"/><stop offset=".83" stop-color="#ffedd6"/><stop offset="1" stop-color="#e7caa5"/></linearGradient>
+          <radialGradient id="mic-shell-shade" cx="37%" cy="42%" r="69%"><stop offset=".72" stop-color="#b95555" stop-opacity="0"/><stop offset="1" stop-color="#b95555" stop-opacity=".34"/></radialGradient>
+          <clipPath id="mic-shell-clip"><use href="#mic-shell-surface"/></clipPath>
           <radialGradient id="mic-lamp-glow">
             <stop stop-color="#ff664f" stop-opacity=".85"/>
             <stop offset=".48" stop-color="#ff8963" stop-opacity=".45"/>
             <stop offset="1" stop-color="#ffad78" stop-opacity="0"/>
           </radialGradient>
-          <path id="mic-wave-contour" d="M-111 -83 C-96 -107 -64 -116 0 -116 S96 -107 111 -83 M-111 83 C-96 107 -64 116 0 116 S96 107 111 83"/>
-          <clipPath id="mic-dome-clip"><use href="#mic-dome-surface"/></clipPath>
+          <path id="mic-wave-contour" d="M-97 -73C-127 -47 -131 28 -104 65M97 -73C127 -47 131 28 104 65"/>
         </defs>
         <!-- Reconstruct the window edge and the wall hidden behind the raised arm. -->
         <g mask="url(#mic-resting-footprint)">
@@ -95,11 +110,9 @@
           <svg x="355" y="21" width="236" height="410" viewBox="355 413 236 111" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
           <svg x="590" y="21" width="148" height="410" viewBox="590 42 148 98" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
         </g>
-        <use href="#mic-stand-clean-plate" clip-path="url(#mic-stand-wall)"/>
-        <g class="mic-desk-span"><use href="#mic-stand-clean-plate" clip-path="url(#mic-stand-desk)"/></g>
+        <use href="#mic-stand-clean-plate"/>
         <g class="mic-stand">
-          <use href="#mic-stand-skin" clip-path="url(#mic-stand-wall)"/>
-          <g class="mic-desk-span"><use href="#mic-stand-skin" clip-path="url(#mic-stand-desk)"/></g>
+          <use href="#mic-stand-skin"/>
         </g>
         <!-- Each fixed translation is a joint offset. Each skin is bound in that joint's local space. -->
         <g class="mic-elbow-rig">
@@ -115,27 +128,23 @@
                     <g transform="translate(-26 61) rotate(24)">
                       <g class="mic-capsule">
                         <g class="mic-projection">
+                          <g class="mic-sound-waves" fill="none" stroke-linecap="round">
+                            <g class="mic-wave-spread">
+                              <use class="mic-wave" href="#mic-wave-contour" stroke="#e66b52" stroke-width="8"/>
+                              <use class="mic-wave mic-wave-echo" href="#mic-wave-contour" stroke="#f69640" stroke-width="6"/>
+                            </g>
+                          </g>
                           <g class="mic-surfaces" stroke-linejoin="round">
-                            <path class="mic-collar" fill="url(#mic-ivory-metal)" stroke="#50314d" stroke-width="4"/>
-                            <path class="mic-barrel" fill="url(#mic-coral-metal)" stroke="#50314d" stroke-width="4"/>
-                            <path class="mic-vents" fill="#dc796e" stroke="#9e5357" stroke-width="2.7"/>
-                            <path class="mic-bezel" fill="url(#mic-bezel-metal)" stroke="#50314d" stroke-width="3.2"/>
+                            <path class="mic-collar" fill="url(#mic-ivory-metal)" stroke="#51334d" stroke-width="4.5"/>
+                            <g fill="url(#mic-coral-metal)" stroke="#51304a" stroke-width="4.5"><path class="mic-barrel" id="mic-shell-surface"/></g>
+                            <use href="#mic-shell-surface" fill="url(#mic-shell-shade)"/>
+                            <g clip-path="url(#mic-shell-clip)">
+                              <path class="mic-vents" fill="#ee8879" stroke="#ac5c56" stroke-width="4" stroke-linejoin="round"/>
+                            </g>
                           </g>
                           <g class="mic-shell">
                             <g class="mic-grille" transform="translate(0 267)">
-                              <g class="mic-sound-waves" fill="none" stroke-linecap="round">
-                                <g class="mic-wave-spread">
-                                  <use class="mic-wave" href="#mic-wave-contour" stroke="#e66b52" stroke-width="8"/>
-                                  <use class="mic-wave mic-wave-echo" href="#mic-wave-contour" stroke="#f69640" stroke-width="6"/>
-                                </g>
-                              </g>
-                              <g fill="url(#mic-grille-light)"><path class="mic-dome" id="mic-dome-surface"/></g>
-                              <g clip-path="url(#mic-dome-clip)">
-                                <use href="#mic-dome-weave" stroke="#b59a76" stroke-width="2.45"/>
-                                <use href="#mic-dome-weave" transform="translate(-.65 -.8)" stroke="#fff9eb" stroke-width="1.45"/>
-                              </g>
-                              <use href="#mic-dome-surface" fill="url(#mic-grille-shade)" stroke="#99765f" stroke-width="3.6" stroke-linejoin="round"/>
-                              <g class="mic-recording-led" transform="translate(0 84)">
+                              <g class="mic-recording-led">
                                 <circle r="27" fill="url(#mic-lamp-glow)"/>
                                 <circle r="12" fill="#925549" stroke="#fff0cb" stroke-width="2.5"/>
                                 <circle r="8.5" fill="#ff5549"/>

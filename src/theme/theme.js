@@ -1,3 +1,5 @@
+import { workbenchTokens as w } from './workbenchTokens.js';
+
 // ============================================================
 // Design Tokens — 自动从 Figma Design Tokens 导出整合
 // 文件来源:
@@ -10,78 +12,18 @@
 // Colors (Light theme)
 // -------------------------
 export const colors = {
-  // ---- Neutral ----
+  // Shared neutral and primary tokens from the current integrated workbench.
   neutral: {
-    white: '#FFFFFF',
-    black: '#000000',
-    transparent: 'rgba(0, 0, 0, 0)',
-
-    text: {
-      1: '#333E4E',
-      2: '#575F6E',
-      3: '#818997',
-      disabled: '#A4ABB8',
-      white: '#FFFFFF',
-      heading: '#333E4E',
-      label: '#575F6E',
-      description: '#818997',
-      placeholder: '#A4ABB8',
-    },
-
-    icon: {
-      1: '#333E4E',
-      2: '#575F6E',
-      3: '#818997',
-      4: '#A4ABB8',
-    },
-
-    bg: {
-      base: '#FFFFFF',
-      container: '#FFFFFF',
-      elevated: '#FFFFFF',
-      layout: '#F7F5F1',
-      mask: 'rgba(0, 0, 0, 0.45)',
-      spotlight: 'rgba(0, 0, 0, 0.85)',
-      containerDisabled: '#DFDFDF',
-      textActive: '#DFDFDF',
-      textHover: '#EFECE6',
-      borderBg: '#FFFFFF',
-      solid: '#000000',
-      solidActive: 'rgba(0, 0, 0, 0.95)',
-      solidHover: 'rgba(0, 0, 0, 0.75)',
-    },
-
-    fill: {
-      gray1: '#FCFBF9',
-      gray2: '#F7F5F1',
-      gray3: '#EFECE6',
-      gray4: '#DFDFDF',
-      content: '#EFECE6',
-      contentHover: '#DFDFDF',
-      alter: '#FCFBF9',
-      alterSolid: '#FCFAF7',
-      handleBg: '#EFECE6',
-    },
-
-    border: {
-      DEFAULT: '#E6E3DE',
-      split: '#F5F2EE',
-      secondary: '#EFECE8',
-    },
+    white: w.surface, black: '#000000', transparent: 'rgba(0, 0, 0, 0)',
+    text: { 1: w.text, 2: w.muted, 3: w.muted, disabled: w.placeholder, white: w.surface, heading: w.text, label: w.muted, description: w.muted, placeholder: w.placeholder },
+    icon: { 1: w.text, 2: w.muted, 3: w.muted, 4: w.placeholder },
+    bg: { base: w.surface, container: w.surface, elevated: w.surface, layout: w.page, mask: 'rgba(48,43,59,.4)', spotlight: w.text, containerDisabled: w.page, textActive: w.selected, textHover: w.page, borderBg: w.surface, solid: w.text, solidActive: w['primary-active'], solidHover: w['primary-hover'] },
+    fill: { gray1: w.surface, gray2: w.page, gray3: w.selected, gray4: w.border, content: w.page, contentHover: w.selected, alter: w.page, alterSolid: w.page, handleBg: w.selected },
+    border: { DEFAULT: w.border, split: w['border-soft'], secondary: w['border-soft'] },
   },
-
-  // ---- Brand Primary (Orange) ----
   brand: {
-    DEFAULT: '#F4785E',
-    bg: '#FDECE8',
-    bgHover: '#FFE1DA',
-    border: '#FFC7BA',
-    borderHover: '#FF9A85',
-    hover: '#FF846A',
-    active: '#CF5846',
-    text: '#F4785E',
-    textHover: '#FF846A',
-    textActive: '#CF5846',
+    DEFAULT: w.primary, bg: w.selected, bgHover: '#e9e0fc', border: w['selected-border'], borderHover: w.primary,
+    hover: w['primary-hover'], active: w['primary-active'], text: w.primary, textHover: w['primary-hover'], textActive: w['primary-active'],
   },
 
   // ---- Brand Info (Blue) ----
@@ -221,15 +163,9 @@ export const colors = {
     6: '#FADB14', 7: '#D4B106', 8: '#AD8E00', 9: '#876800', 10: '#614700',
   },
 
-  // ---- Control ----
   control: {
-    itemBgActive: '#FDECE8',
-    itemBgActiveDisabled: '#DFDFDF',
-    itemBgActiveHover: '#FFE1DA',
-    itemBgHover: '#F7F5F1',
-    outline: 'rgba(5, 145, 255, 0.10)',
-    tmpOutline: 'rgba(0, 0, 0, 0.02)',
-    itemSelected: '#F4785E',
+    itemBgActive: w.selected, itemBgActiveDisabled: w.page, itemBgActiveHover: '#e9e0fc', itemBgHover: w.page,
+    outline: w['selected-border'], tmpOutline: w.selected, itemSelected: w.primary,
   },
 };
 
@@ -238,7 +174,7 @@ export const colors = {
 // -------------------------
 export const typography = {
   fontFamily: {
-    default: '"HarmonyOS Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif',
+    default: w.font,
     code: '"Courier Prime", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace',
   },
 
@@ -248,10 +184,10 @@ export const typography = {
     DEFAULT: 14,
     lg: 16,
     xl: 20,
-    heading1: 48,
-    heading2: 36,
-    heading3: 30,
-    heading4: 24,
+    heading1: 28,
+    heading2: 24,
+    heading3: 20,
+    heading4: 18,
     heading5: 20,
     heading6: 16,
   },
@@ -260,10 +196,10 @@ export const typography = {
     sm: 20,
     DEFAULT: 22,
     lg: 24,
-    heading1: 56,
-    heading2: 46,
-    heading3: 38,
-    heading4: 32,
+    heading1: 36,
+    heading2: 32,
+    heading3: 28,
+    heading4: 26,
     heading5: 28,
     heading6: 24,
   },
@@ -299,9 +235,9 @@ export const size = {
 
   height: {
     xs: 16,
-    sm: 24,
-    DEFAULT: 32,
-    lg: 40,
+    sm: 36,
+    DEFAULT: 40,
+    lg: 44,
   },
 
   lineWidth: {
@@ -360,20 +296,20 @@ export const space = {
 // Border Radius
 // -------------------------
 export const borderRadius = {
-  xs: 2,
-  sm: 4,
-  DEFAULT: 6,
-  lg: 8,
-  xxl: 10,
+  xs: 6,
+  sm: 10,
+  DEFAULT: 10,
+  lg: 14,
+  xxl: 18,
 };
 
 // -------------------------
 // Shadows (derived from theme)
 // -------------------------
 export const shadows = {
-  neo: '2px 2px 0px 0px #333E4E',
-  neoHover: '3px 3px 0px 0px #333E4E',
-  neoActive: '1px 1px 0px 0px #333E4E',
+  neo: 'none',
+  neoHover: w['shadow-hover'],
+  neoActive: 'none',
   subtle: `0 0 0 1px ${colors.neutral.border.secondary}`,
 };
 

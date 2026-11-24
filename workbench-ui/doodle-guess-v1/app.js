@@ -33,11 +33,11 @@
     if (dirty) return '正在保存草稿…';
     if (cloud?.status === 'pending') return '正在同步后台…';
     if (cloud?.dirty) return '待同步后台';
-    return cloud ? '草稿已同步后台' : '草稿已保存';
+    return cloud?.readOnly ? '' : cloud ? '草稿已同步后台' : '草稿已保存';
   }
   function updateSaveUI() {
     const status = document.getElementById('save-status');
-    if (status) {status.textContent = statusText(); status.dataset.state = storageError ? 'error' : 'saved'; status.classList.toggle('is-error',!!storageError);}
+    if (status) {status.textContent = statusText(); status.hidden = !status.textContent; status.dataset.state = storageError ? 'error' : 'saved'; status.classList.toggle('is-error',!!storageError);}
     const title = document.getElementById('doodle-draft-title'); if (title && draft) title.textContent = draft.title || '新建涂鸦活动';
     const alert = document.getElementById('storage-alert'); if (alert) alert.innerHTML = storageAlert();
     decorate();
@@ -83,7 +83,8 @@
     return `<div class="lh-grid">${visible.length ? visible.map(item=>card(item,cases)).join('') : `<div class="lh-empty"><h2>${query || ui.filter !== 'all' ? '没有找到相关活动' : '准备你的第一堂涂鸦课'}</h2><p>${query || ui.filter !== 'all' ? '换个关键词，或清除筛选再看看。' : '从案例制作同款，或新建一份自己的目标词库。'}</p>${B(query || ui.filter !== 'all' ? '清除筛选' : '新增涂鸦活动',query || ui.filter !== 'all' ? 'clear-filter' : 'new','primary')}</div>`}</div>`;
   }
   function home() {
-    return `<main class="library-home doodle-library"><header class="lh-header"><h1>涂鸦游戏</h1><div class="lh-header-actions">${B(icon('plus')+'新增涂鸦活动','new','primary')}</div></header><div class="lh-library-head"><div class="lh-tabs" role="group" aria-label="活动来源">${[['cases','案例库',M.CASES.length],['mine','我制作的',items.length]].map(([id,label,count])=>B(`${label} <span>${count}</span>`,'tab','quiet',`data-ui="tab" class="${ui.tab===id?'active':''}" data-tab="${id}" aria-pressed="${ui.tab===id}"`)).join('')}</div><label class="lh-search">${icon('search')}<input type="search" id="search" aria-label="搜索涂鸦活动" placeholder="搜索活动或单词" value="${E(ui.query)}"></label></div>${ui.tab==='mine'?`<div class="lh-filterbar"><div class="lh-filters" role="group" aria-label="备课状态">${[['all','全部'],['draft','修改草稿'],['ready','可授课']].map(([id,label])=>B(label,'filter','quiet',`data-filter="${id}" aria-pressed="${ui.filter===id}" class="${ui.filter===id?'active':''}"`)).join('')}</div></div>`:''}<section id="results" aria-label="${ui.tab==='cases'?'涂鸦游戏案例':'我制作的活动'}">${results()}</section></main>`;
+    if(cloud)ui.tab='mine';
+    return `<main class="library-home doodle-library"><header class="lh-header"><h1>涂鸦游戏</h1><div class="lh-header-actions">${B(icon('plus')+'新增涂鸦活动','new','primary')}</div></header><div class="lh-library-head"><div class="lh-tabs" role="group" aria-label="活动来源">${(cloud?[['mine','我制作的',items.length]]:[['cases','案例库',M.CASES.length],['mine','我制作的',items.length]]).map(([id,label,count])=>B(`${label} <span>${count}</span>`,'tab','quiet',`data-ui="tab" class="${ui.tab===id?'active':''}" data-tab="${id}" aria-pressed="${ui.tab===id}"`)).join('')}</div><label class="lh-search">${icon('search')}<input type="search" id="search" aria-label="搜索涂鸦活动" placeholder="搜索活动或单词" value="${E(ui.query)}"></label></div>${ui.tab==='mine'?`<div class="lh-filterbar"><div class="lh-filters" role="group" aria-label="备课状态">${[['all','全部'],['draft','修改草稿'],['ready','可授课']].map(([id,label])=>B(label,'filter','quiet',`data-filter="${id}" aria-pressed="${ui.filter===id}" class="${ui.filter===id?'active':''}"`)).join('')}</div></div>`:''}<section id="results" aria-label="${ui.tab==='cases'?'涂鸦游戏案例':'我制作的活动'}">${results()}</section></main>`;
   }
   function fieldError(name) { return `<span class="field-error" id="error-${name}" role="alert">${E(ui.errors[name] || '')}</span>`; }
   function options(values, current) { return values.map(([value,label])=>`<option value="${value}" ${String(value)===String(current)?'selected':''}>${label}</option>`).join(''); }
@@ -253,7 +254,7 @@
       </div>
     </main>
     <footer class="wb-authoring-footer" aria-label="备课操作">
-      <div class="wb-footer-meta"><span id="save-status" class="doodle-save-status wb-status" role="status" data-state="${storageError?'error':'saved'}">${statusText()}</span></div>
+      <div class="wb-footer-meta"><span id="save-status" class="doodle-save-status wb-status" role="status" data-state="${storageError?'error':'saved'}" ${statusText() ? '' : 'hidden'}>${statusText()}</span></div>
       <div class="wb-footer-actions">${B('保存草稿','save')}${B(pub?'核对并更新授课版':'核对并确认授课版','review','primary')}</div>
     </footer>`;
   }
@@ -466,7 +467,7 @@
   }
   function backendLoadError(error){
     loadError=error.message||'暂时无法读取涂鸦活动，请重试。';
-    app.innerHTML=shell(`<main class="library-home"><p role="alert">${E(loadError)}</p>${B('重试','retry-load','primary')}</main>`,true);
+    app.innerHTML=shell(`<main class="library-home" data-workbench-load-error><h1>暂时无法读取涂鸦活动</h1><p role="alert">${E(loadError)}</p>${B('重试','retry-load','primary')}</main>`,true);
   }
   try{
     cloud=api?.activityStore?.('doodle',M.STORAGE_KEY,updateSaveUI);

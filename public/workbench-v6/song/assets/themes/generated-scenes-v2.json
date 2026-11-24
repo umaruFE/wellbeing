@@ -1,0 +1,43 @@
+{
+  "generated": "2026-10-19",
+  "prompts": "doc/2026-10-19_场景差异化/image-prompts.json",
+  "scenes": [
+    {
+      "key": "garden",
+      "file": "garden-v2.webp",
+      "source": "doc/2026-10-19_场景差异化/generated/garden-v2-refined.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 235232,
+      "sha256": "0b8ff84270b8b7f72c091d7e5fa017342b090b82380f20cb623dc61e9593b529",
+      "creation": "built-in image_gen; original scene generation; WebP format conversion only",
+      "refinementPrompt": "doc/2026-10-19_场景差异化/garden-refinement-prompt.txt"
+    },
+    {
+      "key": "moon",
+      "file": "moon-v2.webp",
+      "source": "doc/2026-10-19_场景差异化/generated/moon-v2.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 68848,
+      "sha256": "1782cd9d79e34dd3a80ed0353b72bc49e76433c1d4783cceac44997c029dee26",
+      "creation": "built-in image_gen; original scene generation; WebP format conversion only"
+    },
+    {
+      "key": "beat",
+      "file": "beat-v2.webp",
+      "source": "doc/2026-10-19_场景差异化/generated/beat-v2.png",
+      "dimensions": [
+        1672,
+        941
+      ],
+      "bytes": 149702,
+      "sha256": "b1e07d92f1b1e2e13b07891b4ab4e83c572fd72e083f45d4a8b5d7ee21772194",
+      "creation": "built-in image_gen; original scene generation; WebP format conversion only"
+    }
+  ]
+}

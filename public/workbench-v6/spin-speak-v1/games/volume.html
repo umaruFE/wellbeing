@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-web-scope="classroom">(function(){'use strict';var valid=function(v){return typeof v==='string'&&/^[a-z0-9_-]{1,128}$/.test(v);};var scope;try{if(parent!==window&&parent.location.origin===location.origin)scope=parent.WB_WEB_SCOPE;}catch(_){}if(!valid(scope)&&valid(window.WB_WEB_SCOPE))scope=window.WB_WEB_SCOPE;if(!valid(scope)){try{scope=new URLSearchParams(location.search).get('scope');}catch(_){}}window.WB_WEB_SCOPE=valid(scope)?scope:'local';})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Speak · Volume Challenge</title>
+<style>@layer legacy {
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#241E4E;--paper:#FFF8E6;--sun:#FFD84D;--teal:#2BB5A0;--coral:#F4645C;
+  --grape:#8B5CF6;--leaf:#3BB273;--sky:#35C0C5;--mute:#7A7392;
+}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:#F3D97A;display:grid;place-items:center;color:var(--ink);
+}
+#stage{
+  width:1280px;height:720px;flex:0 0 auto;position:relative;transform-origin:center center;
+  background:
+    radial-gradient(circle at 8% 4%,#FFEB9C 0%,transparent 42%),
+    radial-gradient(circle at 94% 96%,#FFD84D 0%,transparent 46%),
+    var(--paper);
+  border:4px solid var(--ink);border-radius:26px;overflow:hidden;
+  padding:24px 40px 22px;display:flex;flex-direction:column;gap:10px;
+  box-shadow:0 10px 0 rgba(36,30,78,.22);
+}
+
+/* ---------- HUD ---------- */
+.hud{display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.title h1{font-size:25px;font-weight:900;letter-spacing:-.3px;line-height:1.1}
+.title p{font-size:12.5px;font-weight:800;color:var(--mute);margin-top:2px;letter-spacing:.1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.spacer{flex:1}
+.seg{display:flex;border:2.5px solid var(--ink);border-radius:9px;overflow:hidden;box-shadow:0 2px 0 var(--ink)}
+.seg button{border:0;background:#fff;font-family:inherit;font-size:10.5px;font-weight:900;padding:6px 11px;cursor:pointer;color:var(--mute);letter-spacing:.8px}
+.seg button+button{border-left:2.5px solid var(--ink)}
+.seg button.on{background:var(--ink);color:var(--sun)}
+.iconbtn{width:34px;height:34px;border:2.5px solid var(--ink);border-radius:50%;background:#fff;
+  font-family:inherit;font-size:15px;font-weight:900;cursor:pointer;box-shadow:0 2px 0 var(--ink);line-height:1}
+.iconbtn:active{transform:translateY(2px);box-shadow:none}
+
+/* ---------- target text ---------- */
+.linewrap{position:relative;flex:1 1 auto;display:flex;min-height:0}
+.line{background:#fff;border:3px solid var(--ink);border-radius:16px;padding:14px 26px;
+  font-size:30px;font-weight:800;line-height:1.42;letter-spacing:-.2px;box-shadow:0 4px 0 var(--ink);
+  display:block;margin:auto 0;width:100%}
+.line.multi{font-size:27px;line-height:1.5;padding:13px 22px}
+.line .rep{background:var(--sun);border-bottom:3px dashed #D99A18;border-radius:5px;padding:0 5px}
+.line .sent{padding:0}
+
+/* ---------- draw row ---------- */
+.drawrow{flex:0 0 auto}
+.drawhead{display:flex;align-items:center;gap:10px;margin-bottom:7px}
+.drawhead .t{font-size:10.5px;font-weight:900;letter-spacing:1.7px;color:var(--mute)}
+.drawbtn{border:2.5px solid var(--ink);background:var(--sun);border-radius:10px;padding:4px 14px;
+  font-family:inherit;font-size:12px;font-weight:900;letter-spacing:1px;cursor:pointer;
+  box-shadow:0 3px 0 var(--ink);transition:.12s;color:var(--ink)}
+.drawbtn:active{transform:translateY(2px);box-shadow:0 1px 0 var(--ink)}
+.drawbtn:disabled{background:#EDE7D6;color:#A9A28F;box-shadow:0 3px 0 #C9C2B4;cursor:default;transform:none}
+.drawbtn.hint{animation:nudge 1.4s infinite}
+@keyframes nudge{0%,100%{transform:translateX(0)}50%{transform:translateX(-3px)}}
+
+.picks{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}
+.pick{position:relative;border:3px solid var(--ink);border-radius:15px;background:#fff;
+  padding:10px 14px 11px;cursor:default;text-align:left;font-family:inherit;color:var(--ink);
+  box-shadow:0 4px 0 var(--ink);opacity:.42;filter:grayscale(.55);transition:.16s}
+.pick::before{content:"";position:absolute;inset:0;border-radius:12px;background:var(--vc);opacity:.1}
+.pick>*{position:relative}
+.pick .row{display:flex;align-items:center;gap:9px}
+.pick .em{font-size:23px;line-height:1}
+.pick .nm{font-size:22px;font-weight:900;letter-spacing:.6px}
+.pick .hint{font-size:11px;font-weight:800;color:var(--mute);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick .goalmeter{position:relative;height:6px;border-radius:4px;background:#EDE8D8;margin-top:8px;overflow:hidden}
+.pick .goalmeter i{position:absolute;top:0;bottom:0;background:var(--vc);border-radius:4px;opacity:.85}
+.pick .tag{position:absolute;top:-10px;left:13px;display:none;background:var(--vc);color:#fff;
+  font-size:9px;font-weight:900;letter-spacing:1.2px;padding:2px 8px;border-radius:5px;z-index:2}
+.pick.sel{opacity:1;filter:none;transform:translateY(-4px);border-color:var(--vc);box-shadow:0 7px 0 var(--vc)}
+.pick.sel::before{opacity:.2}
+.pick.sel .tag{display:block}
+.pick.roll{opacity:1;filter:none;transform:translateY(-3px);border-color:var(--vc);box-shadow:0 6px 0 var(--vc)}
+
+/* ---------- meter ---------- */
+.mwrap{flex:0 0 auto}
+.mhead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:4px;height:15px}
+.mhead .t{font-size:10.5px;font-weight:900;letter-spacing:1.5px;color:var(--mute)}
+.mhead .v{font-size:11.5px;font-weight:900;letter-spacing:.4px;color:var(--mute)}
+.mhead .v b{font-size:17px;color:var(--ink)}
+.meter{position:relative;height:70px;border:3px solid var(--ink);border-radius:14px;background:#fff;
+  overflow:hidden;box-shadow:0 4px 0 var(--ink)}
+.meter .zone{position:absolute;top:0;bottom:0;opacity:.13}
+.meter .zone.soft{left:7.69%;width:32.31%;background:var(--grape)}
+.meter .zone.mid{left:38.46%;width:23.08%;background:var(--sky)}
+.meter .zone.loud{left:61.54%;width:36.15%;background:var(--coral)}
+.meter .ticks{position:absolute;inset:0;display:flex;pointer-events:none}
+.meter .ticks i{flex:1;border-right:1px solid rgba(36,30,78,.08)}
+.meter .ticks i:last-child{border-right:0}
+.fill{position:absolute;left:0;top:0;bottom:0;width:0;overflow:hidden;
+  background:linear-gradient(90deg,#7FD6B4 0%,#A9D96F 30%,#F6C445 58%,#F48145 80%,#F4645C 100%);
+  background-size:1200px 100%;transition:width .07s linear}
+.fill::after{content:"";position:absolute;right:0;top:0;bottom:0;width:4px;background:#fff;opacity:.9}
+.peak{position:absolute;top:0;bottom:0;width:3px;background:var(--ink);opacity:0;transition:left .1s,opacity .2s}
+.target{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .18s}
+.target.on{opacity:1}
+.target i{position:absolute;top:0;bottom:0;border-left:3px solid var(--tc);border-right:3px solid var(--tc);
+  background:color-mix(in srgb,var(--tc) 16%,transparent);transition:left .1s linear,width .1s linear}
+.target .cap{position:absolute;top:3px;transform:translateX(-50%);background:var(--tc);
+  color:#fff;font-size:9px;font-weight:900;letter-spacing:.8px;padding:1px 7px;border-radius:5px;white-space:nowrap;
+  transition:left .1s linear}
+.meter.shake{animation:shk .34s}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}75%{transform:translateX(7px)}}
+.meter.ok{box-shadow:0 4px 0 var(--leaf),0 0 0 4px rgba(59,178,115,.22)}
+.mscale{display:flex;justify-content:space-between;padding:3px 2px 0;font-size:8.5px;font-weight:900;color:#A9A28F;letter-spacing:.4px}
+.mzones{display:flex;justify-content:space-between;padding:0 2px;font-size:9.5px;font-weight:900;letter-spacing:1px}
+.mzones .z1{color:#6D4FC0;width:38%}
+.mzones .z2{color:#1E8A88;width:26%;text-align:center}
+.mzones .z3{color:#C1392F;width:36%;text-align:right}
+
+/* ---------- results ---------- */
+.results{display:grid;grid-template-columns:1fr 1fr;gap:12px;flex:0 0 auto}
+.res{position:relative;display:flex;align-items:center;gap:12px;border:3px solid #CFC8DC;border-radius:14px;
+  background:#F4F0E6;padding:8px 15px;box-shadow:0 3px 0 rgba(36,30,78,.12);transition:border-color .18s,background .18s;min-height:76px}
+.res .sbadge{flex:0 0 auto;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
+  background:#DBD4E6;color:#8C86A6;font-size:18px;font-weight:900;transition:.18s}
+.res .rb{flex:1;min-width:0}
+.res .rt{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.res .rl{font-size:9.5px;font-weight:900;letter-spacing:1.7px;color:var(--mute)}
+.res .rv{font-size:27px;font-weight:900;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.res .rv small{font-size:10px;font-weight:900;letter-spacing:.3px;margin-left:3px;color:#9A9384}
+.res .rmsg{font-size:11.5px;font-weight:800;color:#8C86A6;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res .mini{position:relative;height:6px;border-radius:4px;background:#E3DCCA;margin-top:5px;overflow:hidden}
+.res .mini i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--teal);transition:width .1s linear}
+.res .mini u{position:absolute;top:-2px;bottom:-2px;left:80%;border-left:2px dashed #9A9384}
+.res.ok{border-color:var(--leaf);background:#E4F8EA;box-shadow:0 3px 0 rgba(59,178,115,.4)}
+.res.ok .sbadge{background:var(--leaf);color:#fff}
+.res.ok .rl{color:#2A7D51}
+.res.ok .rv{color:#1E6B44}
+.res.ok .rmsg{color:#1E6B44}
+.res.ok .mini i{background:var(--leaf)}
+.res.bad{border-color:var(--coral);background:#FFE9E6;box-shadow:0 3px 0 rgba(244,100,92,.4)}
+.res.bad .sbadge{background:var(--coral);color:#fff}
+.res.bad .rl{color:#BE443B}
+.res.bad .rv{color:#A62F26}
+.res.bad .rmsg{color:#A62F26}
+.res.bad .mini i{background:var(--coral)}
+.res.live{border-color:var(--grape);background:#F3EDFF}
+.res.live .sbadge{background:var(--grape);color:#fff;animation:blink 1.2s infinite}
+.res.live .rl{color:#6D4FC0}
+.res.live .rv{color:#5B3AB0}
+.res.live .rmsg{color:#6D4FC0}
+.res.pop{animation:pop .36s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{0%{transform:scale(.94)}60%{transform:scale(1.03)}100%{transform:scale(1)}}
+
+/* ---------- actions ---------- */
+.actions{display:flex;align-items:center;gap:12px;flex:0 0 auto;margin-top:auto}
+.big{border:3px solid var(--ink);background:var(--grape);color:#fff;border-radius:16px;
+  padding:0 30px;height:56px;font-family:inherit;font-size:17px;font-weight:900;letter-spacing:1px;
+  cursor:pointer;box-shadow:0 5px 0 var(--ink);display:flex;align-items:center;gap:10px;transition:background .15s}
+.big:active{transform:translateY(3px);box-shadow:0 2px 0 var(--ink)}
+.big:disabled{background:#CFC8E4;color:#8C86A6;box-shadow:0 5px 0 #A9A2C4;cursor:not-allowed;transform:none}
+.big.rec{background:var(--coral);animation:pulse 1.1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 5px 0 var(--ink),0 0 0 0 rgba(244,100,92,.45)}50%{box-shadow:0 5px 0 var(--ink),0 0 0 12px rgba(244,100,92,0)}}
+.big.gopass{background:var(--leaf)}
+.big.gopass:disabled{background:#CFC8E4;color:#8C86A6;box-shadow:0 5px 0 #A9A2C4}
+.big.gopass.ready{animation:pulseG 1.1s infinite}
+@keyframes pulseG{0%,100%{box-shadow:0 5px 0 var(--ink),0 0 0 0 rgba(59,178,115,.55)}50%{box-shadow:0 5px 0 var(--ink),0 0 0 13px rgba(59,178,115,0)}}
+.actions .tip{margin-left:auto;font-size:11px;font-weight:800;color:var(--mute);text-align:right;line-height:1.5;max-width:340px}
+
+/* ---------- mode visibility ---------- */
+#stage[data-mode="teacher"] .mwrap{display:none}
+#stage[data-mode="teacher"] .results{display:none}
+#stage[data-mode="teacher"] #recBtn{display:none}
+#stage[data-mode="teacher"] .linewrap{flex:1 1 auto;display:flex}
+#stage[data-mode="teacher"] .line{margin:auto 0;width:100%}
+
+/* ---------- notes ---------- */
+.notes{position:absolute;inset:0;background:rgba(36,30,78,.55);display:none;place-items:center;z-index:9;padding:36px}
+.notes.on{display:grid}
+.notes .card{background:var(--paper);border:3.5px solid var(--ink);border-radius:20px;padding:24px 30px;
+  width:760px;max-height:620px;overflow:auto;box-shadow:0 8px 0 var(--ink);font-size:13px;line-height:1.75;color:#3A3358}
+.notes h3{font-size:18px;margin-bottom:10px;font-weight:900;color:var(--ink)}
+.notes h4{font-size:13px;margin:12px 0 6px;color:#7A45C9;letter-spacing:.4px;font-weight:900}
+.notes ol{list-style:none;display:flex;flex-direction:column;gap:6px}
+.notes li{display:flex;gap:9px;align-items:flex-start}
+.notes .n{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--sun);border:2px solid var(--ink);
+  font-size:10.5px;font-weight:900;display:grid;place-items:center;margin-top:3px;color:var(--ink)}
+.notes b{color:var(--ink)}
+.notes .lvl{display:flex;gap:8px;margin:10px 0 2px}
+.notes .lvl span{background:#fff;border:2px solid var(--ink);border-radius:8px;padding:2px 9px;font-size:11.5px;font-weight:900}
+.notes .close{margin-top:16px;border:3px solid var(--ink);background:#fff;color:var(--ink);border-radius:14px;height:44px;
+  padding:0 18px;font-family:inherit;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 var(--ink)}
+.notes .foot{margin-top:10px;font-size:11.5px;color:var(--mute);line-height:1.7}
+}</style><link rel="stylesheet" href="../game.css?v=71"><link rel="stylesheet" href="../play-details.css?v=70"><link rel="stylesheet" href="../scenes.css?v=71"><script src="../game-lifecycle.js?v=1"></script><script src="../session.js?v=9"></script>
+</head>
+<body data-game="volume">
+<div id="stage" data-mode="mic">
+
+  <div class="hud">
+    <div class="title">
+      <h1>Volume Challenge</h1>
+      <p>Pick a level, say the words right, keep your voice inside the zone.</p>
+    </div>
+    <div class="spacer"></div>
+    <div class="seg" id="modeSeg">
+      <button data-mode="mic" class="on">🎤 MIC</button>
+      <button data-mode="teacher">👩‍🏫 TEACHER</button>
+    </div>
+    <button class="iconbtn" id="helpBtn" title="How to play">?</button>
+  </div>
+
+  <div class="linewrap">
+    <div class="line" id="line"></div>
+  </div>
+
+  <div class="drawrow">
+    <div class="drawhead">
+      <span class="t">TODAY'S LEVEL</span>
+      <span class="spacer"></span>
+      <button class="drawbtn" id="drawBtn">🎲 DRAW A LEVEL</button>
+    </div>
+    <div class="picks" id="picks"></div>
+  </div>
+
+  <div class="mwrap">
+    <div class="mhead">
+      <span class="t" id="mLabel">MIC LEVEL</span>
+      <span class="v"><b id="mVal">0</b> / 130<span id="mTime"></span></span>
+    </div>
+    <div class="meter" id="meter">
+      <div class="ticks" id="ticks"></div>
+      <div class="zone soft"></div>
+      <div class="zone mid"></div>
+      <div class="zone loud"></div>
+      <div class="fill" id="fill"></div>
+      <div class="peak" id="peak"></div>
+      <div class="target" id="target"></div>
+    </div>
+    <div class="mscale"><span>0</span><span>26</span><span>52</span><span>78</span><span>104</span><span>130</span></div>
+    <div class="mzones" id="mzones">
+      <span class="z1">◀ SOFT</span><span class="z2">MEDIUM</span><span class="z3">LOUD ▶</span>
+    </div>
+  </div>
+
+  <div class="results">
+    <div class="res vol" id="resVol">
+      <span class="sbadge" id="volBadge">–</span>
+      <div class="rb">
+        <div class="rt">
+          <span class="rl">VOLUME</span>
+          <span class="rv"><span id="volNum">–</span><small>% in range</small></span>
+        </div>
+        <div class="rmsg" id="volMsg">Not measured yet.</div>
+        <div class="mini"><i id="volBar"></i><u></u></div>
+      </div>
+    </div>
+    <div class="res wd" id="resWd">
+      <span class="sbadge" id="wdBadge">–</span>
+      <div class="rb">
+        <div class="rt">
+          <span class="rl">WORDS</span>
+          <span class="rv"><span id="wdNum">–</span><small>/100</small></span>
+        </div>
+        <div class="rmsg" id="wdMsg">Not checked yet.</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="actions">
+    <button class="big" id="recBtn" disabled>🎤 SAY IT</button>
+    <button class="big gopass" id="doneBtn" disabled>✓ COMPLETE</button>
+    <div class="tip" id="tip">Draw a level, then read the whole text.<br>SPACE = SAY IT / STOP　·　R = DRAW</div>
+  </div>
+
+  <div class="notes" id="notes">
+    <div class="card">
+      <h3>音量挑战 · 怎么玩</h3>
+      <p>先抽档：点 <b>DRAW</b> 随机抽一个音量档，不满意可 <b>REDRAW</b> 重抽（录音中不能换）。抽到哪档就用哪档。</p>
+      <div class="lvl"><span>🕳 SOFT 轻声</span><span>🗣 MEDIUM 正常音量</span><span>🎺 LOUD 最大声</span></div>
+
+      <h4>模式一 · 系统判定（默认）</h4>
+      <ol>
+        <li><span class="n">1</span><div>点 <b>SAY IT</b> 开始录音，读完整段文字，再点 <b>STOP</b> 结束。</div></li>
+        <li><span class="n">2</span><div>系统同时判两件事，显示在下方两张卡上：<b>VOLUME</b> = 说话时间里有百分之几落在该档区间；<b>WORDS</b> = 读得对不对（0–100 分，并指出漏掉的词）。</div></li>
+        <li><span class="n">3</span><div>两张卡都变绿（音量 ≥80%，WORDS ≥70 分）后，点 <b>✓ COMPLETE</b> 进入下一句。只要有一张卡红了，就点 <b>SAY IT</b> 把整句重录——重录会同时重新判音量和读得对不对，两张卡一起刷新。</div></li>
+      </ol>
+
+      <h4>模式二 · 老师判定</h4>
+      <p>不录音、不测音量、也不自动判词。抽档后学生直接读，由老师判同样两件事：<b>音量</b>有没有全程维持在这个档位区间里、<b>读得对不对</b>（词有没有漏、有没有读错）；觉得可以就点 <b>✓ COMPLETE</b> 进入下一句，不行就让学生重读。</p>
+
+      <button class="close" id="closeNotes">知道了</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= 素材 / 环节 ================= */
+const PACK = {
+  vr:"There are [four] people in my family: my dad, my mum, my sister and me.",
+  s1:"There are [four] people in my family.",
+  s2:"My [father] is [strict].",
+  s3:"We [cook] together every weekend."
+};
+const TASK = {
+  1:{en:"HEAR", lines:[PACK.vr]},
+  2:{en:"SWAP", lines:[PACK.vr]},
+  4:{en:"OWN",  lines:[PACK.s1,PACK.s2,PACK.s3]},
+  5:{en:"SHOW", lines:[PACK.s1]}
+};
+const SP = new URLSearchParams(location.search);
+const STAGE = TASK[+SP.get("stage")] ? +SP.get("stage") : 4;
+const LINES = SS_DATA ? [SS_DATA.line] : [PACK.s1];
+
+const VOICES=[
+  {em:"🕳",name:"SOFT",vc:"#8B5CF6",band:"low", hint:"whisper all of it"},
+  {em:"🗣",name:"MEDIUM",vc:"#2BB5A0",band:"mid",hint:"normal talking voice"},
+  {em:"🎺",name:"LOUD",vc:"#F4645C",band:"high",hint:"your loudest voice throughout"}
+];
+const METER_MAX=130, VOICE_ON=12, NEED=80, WORD_PASS=70;
+
+/* ================= 状态 ================= */
+let mode="mic";
+let cur={band:null,done:false}, results=[];
+let rec=null, ac=null, stream=null, timer=null, peakHold=0, rolling=false, finished=false, stopping=false, busy=false;
+
+/* ================= 语音识别 ================= */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let sr=null, srText="", srFail=null;
+let micEpoch=0, recordingPaused=false, pausedAt=0, pendingRecording=null;
+
+/* ================= DOM ================= */
+const $=s=>document.querySelector(s);
+const el={stage:$("#stage"),line:$("#line"),picks:$("#picks"),meter:$("#meter"),fill:$("#fill"),
+  peak:$("#peak"),target:$("#target"),val:$("#mVal"),time:$("#mTime"),
+  rec:$("#recBtn"),draw:$("#drawBtn"),mLabel:$("#mLabel"),
+notes:$("#notes"),
+  resVol:$("#resVol"),volBadge:$("#volBadge"),volNum:$("#volNum"),volMsg:$("#volMsg"),volBar:$("#volBar"),
+  resWd:$("#resWd"),wdBadge:$("#wdBadge"),wdNum:$("#wdNum"),wdMsg:$("#wdMsg"),
+  done:$("#doneBtn"),tip:$("#tip")};
+const plain=s=>String(s).replace(/\[([^\]]+)\]/g,"$1");
+const mark=s=>SS_ESCAPE(s).replace(/\[([^\]]+)\]/g,'<span class="rep">$1</span>');
+const clamp=(x,a,b)=>Math.min(b,Math.max(a,x));
+const f=x=>clamp(x/METER_MAX,0,1)*100;
+
+/* ================= 档位区间（固定，不随时间变化） ================= */
+function bandAt(band){
+  if(band==="low")  return [10,52];
+  if(band==="mid")  return [50,80];
+  if(band==="high") return [80,127];
+  return [0,METER_MAX];
+}
+
+/* ================= 渲染 ================= */
+function paintLine(){
+  el.line.className="line"+(LINES.length>1?" multi":"");
+  el.line.innerHTML=LINES.map(s=>`<span class="sent">${mark(s)}</span>`).join(" ");
+}
+function paintPicks(){
+  el.picks.innerHTML=VOICES.map((v,i)=>{
+    const g=bandAt(v.band,0);
+    return `<button class="pick ${cur.band===v.band?"sel":""}" data-i="${i}" style="--vc:${v.vc}">
+      <span class="tag">YOUR LEVEL</span>
+      <div class="row"><span class="em">${v.em}</span><span class="nm">${v.name}</span></div>
+      <div class="hint">${v.hint}</div>
+      <div class="goalmeter"><i style="left:${f(g[0])}%;width:${f(g[1])-f(g[0])}%"></i></div>
+    </button>`;
+  }).join("");
+}
+function ensureTarget(band){
+  if(el.target.dataset.band===band) return;
+  el.target.dataset.band=band;
+  const v=VOICES.find(x=>x.band===band);
+  el.target.style.setProperty("--tc",v.vc);
+  el.target.innerHTML=`<i id="t1"></i><span class="cap" id="tcap"></span>`;
+  el.target.className="target on";
+}
+function paintTarget(band,t){
+  if(!band){ el.target.className="target"; el.target.dataset.band=""; return; }
+  ensureTarget(band);
+  const [lo,hi]=bandAt(band), i1=$("#t1"), cap=$("#tcap");
+  if(!i1) return;
+  i1.style.left=f(lo)+"%"; i1.style.width=(f(hi)-f(lo))+"%";
+  cap.style.left=((f(lo)+f(hi))/2)+"%";
+  cap.textContent = band==="low"?"SOFT ZONE":band==="high"?"LOUD ZONE":"MEDIUM ZONE";
+}
+function setTip(html){ el.tip.innerHTML=html; }
+function paintPeak(v){ if(v>peakHold){ peakHold=v; el.peak.style.left=f(v)+"%"; el.peak.style.opacity=.85; } }
+
+/* ---------- 两张结果卡 ---------- */
+function paintVol(state,num,msg,bar,pulse){
+  el.resVol.className="res vol "+state;
+  el.volBadge.textContent = state==="ok"?"✓":state==="bad"?"✗":state==="live"?"🎙":"–";
+  el.volNum.textContent = num==null?"–":num;
+  el.volMsg.textContent = msg;
+  el.volBar.style.width = (bar==null?0:bar)+"%";
+  if(pulse){ el.resVol.classList.add("pop"); SS_LIFECYCLE.setTimeout(()=>el.resVol.classList.remove("pop"),380); }
+}
+function paintWords(state,num,msg,pulse){
+  el.resWd.className="res wd "+state;
+  el.wdBadge.textContent = state==="ok"?"✓":state==="bad"?"✗":"–";
+  el.wdNum.textContent = num==null?"–":num;
+  el.wdMsg.textContent = msg;
+  if(pulse){ el.resWd.classList.add("pop"); SS_LIFECYCLE.setTimeout(()=>el.resWd.classList.remove("pop"),380); }
+}
+function idleResults(){
+  paintVol("","–","Not measured yet.",0);
+  paintWords("","–","Not checked yet.");
+}
+
+/* ================= 抽档（可重抽） ================= */
+function drawLevel(){
+  if(rolling||rec||stopping||finished) return;
+  rolling=true; el.draw.disabled=true; el.draw.classList.remove("hint");
+  const cards=[...el.picks.querySelectorAll(".pick")];
+  let k=0;
+  const iv=SS_LIFECYCLE.setInterval(()=>{ cards.forEach((c,i)=>c.classList.toggle("roll",i===k%3)); k++; },75);
+  SS_LIFECYCLE.setTimeout(()=>{
+    SS_LIFECYCLE.clearInterval(iv);
+    cards.forEach(c=>c.classList.remove("roll"));
+    const i=Math.floor(Math.random()*3), v=VOICES[i];
+    cur.band=v.band;
+    peakHold=0; el.peak.style.opacity=0; el.fill.style.width="0%"; el.val.textContent="0";
+    el.meter.classList.remove("ok","shake");
+    paintPicks(); paintTarget(v.band,0); idleResults();
+    rolling=false; el.draw.disabled=finished;
+    el.draw.textContent="🎲 REDRAW";
+    el.done.disabled=false; el.done.classList.remove("ready");
+    if(mode==="teacher"){
+      setTip(`<b>${v.name}</b> — ${v.hint}.<br>Student reads it, then tap ✓ COMPLETE.`);
+    }else{
+      el.rec.disabled=false;
+      setTip(`<b>${v.name}</b> — ${v.hint}.<br>SPACE = SAY IT / STOP　·　R = REDRAW`);
+    }
+  },740);
+}
+
+/* ================= 麦克风 ================= */
+function stopStream(){
+  if(stream){ stream.getTracks().forEach(t=>t.stop()); stream=null; }
+  if(ac){ try{ac.close()?.catch(()=>{});}catch(e){} ac=null; }
+}
+// Keep the unfinished take and selected band; releasing hardware must never judge it.
+function suspendRecording(){
+  const interrupted=Boolean(rec||pendingRecording||busy||stopping);
+  micEpoch++;
+  if(timer) SS_LIFECYCLE.clearInterval(timer); timer=null;
+  if(pendingRecording&&!rec) rec=pendingRecording;
+  pendingRecording=null;
+  if(sr){try{sr.abort();}catch(e){}sr=null;}
+  stopStream(); stopping=false;busy=false;
+  if(!interrupted) return;
+  if(rec){recordingPaused=true;pausedAt=performance.now();}
+  el.rec.classList.remove("rec");el.rec.textContent=rec?"🎤 CONTINUE":"🎤 SAY IT";
+  el.rec.disabled=finished||!cur.band;el.mLabel.textContent=rec?"PAUSED":"MIC LEVEL";
+  el.draw.disabled=finished||Boolean(rec);el.done.disabled=finished||!cur.band||Boolean(rec);
+  setTip(rec?"Microphone paused. Tap CONTINUE to carry on reading.":"Microphone paused. Tap SAY IT to start when ready.");
+}
+async function ensureMic(generation){
+  if(window.__fakeRMS) return true;
+  if(stream) return true;
+  const acquired=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+  if(generation!==micEpoch||SS_LIFECYCLE.paused){acquired.getTracks().forEach(t=>t.stop());return false;}
+  stream=acquired;
+  ac=new (window.AudioContext||window.webkitAudioContext)();
+  const src=ac.createMediaStreamSource(stream), an=ac.createAnalyser();
+  an.fftSize=512; src.connect(an); ac._an=an; ac._buf=new Uint8Array(an.fftSize);
+  return true;
+}
+function readRMS(){
+  if(window.__fakeRMS) return clamp(+window.__fakeRMS()||0,0,METER_MAX);
+  if(!ac||!ac._an) return 0;
+  ac._an.getByteTimeDomainData(ac._buf);
+  let s=0; for(let i=0;i<ac._buf.length;i++){ const d=ac._buf[i]-128; s+=d*d; }
+  return Math.sqrt(s/ac._buf.length);
+}
+function chime(ok){
+  if(SS_LIFECYCLE.paused) return;
+  try{
+    if(!ac) ac=new (window.AudioContext||window.webkitAudioContext)();
+    const t=ac.currentTime+.01,o=ac.createOscillator(),g=ac.createGain();
+    o.type="sine";
+    if(ok){ o.frequency.setValueAtTime(660,t); o.frequency.setValueAtTime(990,t+.09); }
+    else  { o.frequency.setValueAtTime(240,t); o.frequency.exponentialRampToValueAtTime(150,t+.22); }
+    g.gain.setValueAtTime(.13,t); g.gain.exponentialRampToValueAtTime(.0001,t+.3);
+    o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+.34);
+  }catch(e){}
+}
+
+/* ================= 词句比对 ================= */
+function normWords(s){
+  return String(s).toLowerCase().replace(/[’]/g,"'").replace(/[^a-z0-9' ]/g," ")
+    .split(/\s+/).filter(Boolean)
+    .map(w=>({4:"four",3:"three",5:"five",6:"six",2:"two"}[w]||w));
+}
+function compareWords(target,said){
+  const T=normWords(target), S=normWords(said);
+  let j=0, hit=0; const miss=[];
+  for(const w of T){
+    let k=-1;
+    for(let x=j;x<S.length;x++){
+      if(S[x]===w||S[x].replace(/'/g,"")===w.replace(/'/g,"")){ k=x; break; }
+    }
+    if(k>=0){ hit++; j=k+1; } else miss.push(w);
+  }
+  return {hit,total:T.length,miss,pct:Math.round(hit/T.length*100)};
+}
+function srStart(append=false){
+  if(!SR||mode!=="mic") return;
+  if(!append) srText=""; srFail=null;
+  const generation=micEpoch;
+  try{
+    sr=new SR();
+    sr.lang="en-US"; sr.continuous=true; sr.interimResults=false; sr.maxAlternatives=1;
+    sr.onresult=e=>{
+      if(generation!==micEpoch||SS_LIFECYCLE.paused) return;
+      for(let i=e.resultIndex;i<e.results.length;i++){
+        const r=e.results[i];
+        if(r.isFinal) srText+=" "+r[0].transcript;
+      }
+    };
+    sr.onerror=e=>{if(generation===micEpoch)srFail=e.error||"error";};
+    sr.onend=()=>{if(generation===micEpoch)sr=null;};
+    sr.start();
+  }catch(e){ srFail="start"; sr=null; }
+}
+function srStop(){
+  return new Promise(res=>{
+    if(!sr){ res(); return; }
+    const recognition=sr;
+    const done=()=>{ if(sr===recognition)sr=null; res(); };
+    try{ sr.onend=done; sr.stop(); }catch(e){ done(); return; }
+    SS_LIFECYCLE.setTimeout(done,1100);
+  });
+}
+function wordsCheck(band){
+  if(!SR) return {unknown:true,err:"no support"};
+  if(band==="low") return {skip:true};
+  if(!srText.trim()) return {unknown:true,err:srFail};
+  return Object.assign({said:srText.trim()},compareWords(LINES.join(" "),srText));
+}
+function wordsMsg(w){
+  if(w.pct>=100) return "Every word in.";
+  const list=w.miss.slice(0,2).map(x=>`“${x}”`).join(", ");
+  return w.pct>=WORD_PASS ? `Dropped ${list}.` : `Missed ${list}.`;
+}
+
+/* ================= 录音 ================= */
+async function toggleRec(){
+  if(SS_LIFECYCLE.paused) return;
+  if(rec&&!recordingPaused){ stopRec(); return; }
+  if(busy||!cur.band||finished||mode!=="mic") return;
+  const generation=micEpoch;
+  busy=true;
+  el.rec.disabled=true;
+  try{if(!await ensureMic(generation)||generation!==micEpoch||SS_LIFECYCLE.paused)return;}
+  catch(e){
+    if(generation!==micEpoch||SS_LIFECYCLE.paused)return;
+    busy=false; el.rec.disabled=false;
+    paintVol("bad","–","No mic — switch to TEACHER mode.",0,true);
+    setTip("No microphone — switch to 👩‍🏫 TEACHER.");
+    return;
+  }
+  busy=false;
+  peakHold=0; el.peak.style.opacity=0;
+  const continuing=recordingPaused&&Boolean(rec);
+  if(continuing){
+    const gap=performance.now()-pausedAt;rec.t0+=gap;if(rec.voiceT0)rec.voiceT0+=gap;
+  }else rec={band:cur.band,samples:[],t0:performance.now(),voiceT0:0};
+  recordingPaused=false;
+  el.meter.classList.remove("ok","shake");
+  el.rec.disabled=false; el.rec.classList.add("rec"); el.rec.textContent="⏹ STOP";
+  el.done.classList.remove("ready");
+  el.mLabel.textContent="LISTENING"; el.draw.disabled=true; el.done.disabled=true;
+  paintVol("live",0,"Listening…",0);
+  paintWords("","–","Listening…");
+  srStart(continuing);
+  setTip(`Keep the bar in the <b>${VOICES.find(v=>v.band===cur.band).name}</b> zone.<br>Tap ⏹ STOP (SPACE) when you finish.`);
+
+  timer=SS_LIFECYCLE.setInterval(()=>{
+    const now=performance.now(), v=readRMS();
+    if(!rec.voiceT0&&v>VOICE_ON) rec.voiceT0=now;
+    const t=rec.voiceT0?now-rec.voiceT0:0;
+    rec.samples.push({v,t});
+    el.fill.style.width=f(v)+"%"; el.val.textContent=Math.round(v); paintPeak(v);
+    el.time.textContent=" · "+(Math.min(t,99999)/1000).toFixed(1)+"s";
+    paintTarget(rec.band,t);
+    const voiced=rec.samples.filter(s=>s.v>VOICE_ON);
+    if(voiced.length){
+      const hit=voiced.filter(s=>{const [lo,hi]=bandAt(rec.band,s.t);return s.v>=lo&&s.v<=hi;}).length;
+      const pct=Math.round(hit/voiced.length*100);
+      paintVol("live",pct,"Listening…",pct);
+    }
+    if(t>20000) stopRec();
+  },45);
+}
+
+async function stopRec(){
+  if(!rec||stopping||recordingPaused||SS_LIFECYCLE.paused) return;
+  const generation=micEpoch;
+  stopping=true;
+  SS_LIFECYCLE.clearInterval(timer); timer=null;
+  const r=rec; pendingRecording=r;rec=null;
+  el.rec.classList.remove("rec"); el.rec.textContent="🎤 SAY IT"; el.rec.disabled=true;
+  el.mLabel.textContent="MIC LEVEL"; el.time.textContent="";
+  el.fill.style.width="0%"; el.val.textContent="0";
+  await srStop();
+  if(generation!==micEpoch||SS_LIFECYCLE.paused)return;
+  pendingRecording=null;
+  const w=wordsCheck(r.band);
+  stopping=false;
+  el.rec.disabled=false; el.draw.disabled=false; el.done.disabled=false;
+
+  const voiced=r.samples.filter(s=>s.v>VOICE_ON);
+  if(!voiced.length){
+    chime(false);
+    paintVol("bad","–","Nothing picked up.",0,true);
+    paintWords("","–","No words heard.");
+    setTip("Nothing picked up — get closer and speak up.<br>SPACE = SAY IT");
+    return;
+  }
+  if(voiced.length<18){
+    chime(false);
+    paintVol("bad","–","Too short to judge.",0,true);
+    paintWords("","–","Too short to judge.");
+    setTip(`Only ${(voiced.length*45/1000).toFixed(1)}s of voice — read the whole text.<br>SPACE = SAY IT`);
+    return;
+  }
+  const hit=voiced.filter(s=>{const [lo,hi]=bandAt(r.band,s.t);return s.v>=lo&&s.v<=hi;}).length;
+  const pct=Math.round(hit/voiced.length*100);
+  const checked=w&&!w.skip&&!w.unknown;
+  const wOK=!checked||w.pct>=WORD_PASS;
+  const volOK=pct>=NEED;
+
+  /* 音量卡 */
+  const vName = VOICES.find(v=>v.band===r.band).name;
+  const mean = voiced.reduce((a,s)=>a+s.v,0)/voiced.length;
+  const [lo0] = bandAt(r.band);
+  const volMsg = volOK ? `Stayed in the ${vName} zone.`
+               : r.band==="high" ? "Not loud enough."
+               : mean<lo0      ? `Too quiet for ${vName}.`
+               : `Too loud for ${vName}.`;
+  paintVol(volOK?"ok":"bad",pct,volMsg,pct,true);
+
+  /* 词句卡 */
+  if(checked)        paintWords(wOK?"ok":"bad",w.pct,wordsMsg(w),true);
+  else if(w&&w.skip) paintWords("","–","SOFT — words not checked.");
+  else               paintWords("","–",w&&w.err==="no support"?"Not supported here.":"Not recognized — judge by ear.");
+
+  if(volOK&&wOK){
+    el.meter.classList.add("ok"); chime(true);
+    el.done.classList.add("ready");
+    setTip("Both ✓ — tap <b>✓ COMPLETE</b> to go on.");
+    return;
+  }
+
+  chime(false);
+  if(!volOK){ el.meter.classList.add("shake"); SS_LIFECYCLE.setTimeout(()=>el.meter.classList.remove("shake"),360); }
+  el.done.classList.remove("ready");
+  setTip("Not yet — tap 🎤 SAY IT to try again.");
+}
+
+/* ================= 完成这一句 ================= */
+function completeLine(){
+  if(finished){ location.reload(); return; }
+  if(!cur.band||rec) return;
+  const v=VOICES.find(x=>x.band===cur.band);
+  results.push(v.name);
+  cur.done=true;
+  el.rec.disabled=true; el.done.disabled=true; el.done.classList.remove("ready");
+  finished=true;
+  el.draw.disabled=true;
+  el.done.disabled=false; el.done.textContent="↺ PLAY AGAIN";
+  setTip(`🏆 Done — <b>${v.name}</b><br>Press PLAY AGAIN for a new round.`);
+}
+
+/* ================= 模式 ================= */
+function setMode(m){
+  mode=m;
+  el.stage.dataset.mode=m;
+  [...$("#modeSeg").children].forEach(b=>b.classList.toggle("on",b.dataset.mode===m));
+  el.tip.innerHTML = m==="teacher"
+    ? "Teacher judges by ear — no mic, no meter.<br>R = DRAW"
+    : "Draw a level, then read the whole text.<br>SPACE = SAY IT / STOP　·　R = DRAW";
+  results=[]; finished=false; cur={band:null,done:false};
+  stopStream();
+  paintLine(); paintPicks(); paintTarget(null); idleResults();
+  el.draw.textContent="🎲 DRAW A LEVEL"; el.draw.disabled=false; el.draw.classList.add("hint");
+  el.rec.disabled=true; el.done.disabled=true;
+  el.fill.style.width="0%"; el.val.textContent="0"; el.peak.style.opacity=0;
+  el.meter.classList.remove("ok","shake");
+  el.done.textContent="✓ COMPLETE"; el.done.classList.remove("ready");
+  setTip(m==="teacher" ? "Draw a level, then judge by ear.<br>R = DRAW"
+                       : "Draw a level, then read the whole text.<br>SPACE = SAY IT / R = DRAW");
+}
+
+/* ================= 事件 ================= */
+el.draw.onclick=drawLevel;
+el.rec.onclick=toggleRec;
+el.done.onclick=completeLine;
+$("#modeSeg").onclick=e=>{
+  const b=e.target.closest("button[data-mode]"); if(!b||b.dataset.mode===mode) return;
+  setMode(b.dataset.mode);
+};
+$("#helpBtn").onclick=()=>el.notes.classList.add("on");
+$("#closeNotes").onclick=()=>el.notes.classList.remove("on");
+el.notes.onclick=e=>{ if(e.target===el.notes) el.notes.classList.remove("on"); };
+document.addEventListener("keydown",e=>{
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.key===" "||e.code==="Space"){
+    e.preventDefault();
+    if(e.repeat) return;                       // 按住不放的自动重复不要反复开关麦克风
+    if(mode==="mic"){
+      if(rec) stopRec();                        // 录音中：空格 = 停止
+      else if(!busy&&!stopping&&!el.rec.disabled) toggleRec();
+    }else if(!el.done.disabled) completeLine();
+    return;
+  }
+  if(e.key.toLowerCase()==="r"&&!e.repeat) drawLevel();
+});
+
+/* ================= 初始化 ================= */
+$("#ticks").innerHTML="<i></i>".repeat(5);
+function init(){
+  paintLine(); paintPicks(); paintTarget(null); idleResults();
+  el.draw.classList.add("hint");
+  setTip("Draw a level, then read the whole text.<br>SPACE = SAY IT / R = DRAW");
+  stopStream();
+}
+function fit(){
+  const s=Math.min(window.innerWidth/1320,window.innerHeight/760);
+  el.stage.style.transform=`scale(${s})`;
+}
+window.addEventListener("resize",fit);
+fit(); init();
+</script>
+<script src="../game-access.js?v=40"></script><script src="../play-details.js?v=30"></script></body>
+</html>

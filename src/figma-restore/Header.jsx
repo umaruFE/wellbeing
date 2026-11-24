@@ -15,21 +15,45 @@ export const Header = ({ title }) => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [savingSettings, setSavingSettings] = useState(false);
-  const [taskCount, setTaskCount] = useState(0);
+  const [taskCount, setTaskCount] = useState(null);
   const [settingsForm] = Form.useForm();
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const pathname = location.pathname.replace(/\/+$/, '') || '/';
   const pageTitle = {
     '/': t('header.dashboard'),
     '/figma-courses': t('header.courseManage'),
+    '/picture-books': t('sidebar.artExpression'),
+    '/my-works': t('sidebar.myWorks'),
+    '/course-square': t('square.title'),
+    '/workshop/english-plus': t('workshopPage.modules.english-plus.title'),
+    '/workshop/skills-training': t('sidebar.skillsTraining'),
+    '/workshop/fun-practice': t('sidebar.funPractice'),
+    '/workshop/complete-course': t('sidebar.completeCourse'),
+    '/workshop/themed-activities': t('sidebar.themedActivities'),
+    '/workshop/teaching-materials': t('sidebar.teachingMaterials'),
+    '/song-writing': t('sidebar.songWorkshop'),
+    '/workshop/music-star-quest': t('sidebar.musicStarQuest'),
+    '/workshop/interactive-yoga': t('sidebar.interactiveYoga'),
+    '/workshop/spin-speak': t('sidebar.spinSpeak'),
+    '/workshop/doodle': t('sidebar.doodleGame'),
+    '/workshop/move-match': t('sidebar.moveMatch'),
+    '/song-library': t('songLibraryUi.9e98d91694'),
+    '/picture-book-knowledge': t('knowledgeUploadUi.edf216cb00'),
     '/ppt-images': t('header.imageLibrary'),
     '/voices': t('header.audioLibrary'),
     '/video-materials': t('header.videoLibrary'),
+    '/audio-generator': t('audioGenerator.title'),
     '/knowledge-base': t('header.materialResource'),
+    '/ip-characters': t('ipCharacter.title'),
     '/accounts': t('header.userManage'),
     '/super-admin': t('header.systemSettings'),
-  }[location.pathname] || title || t('header.dashboard');
+    '/test/ip-scene': t('testIpUi.ba8644ec76'),
+    '/test/video-generator': t('testVideoUi.ca82b1f18b'),
+    '/test/voice-generator': t('testVoiceUi.8e8251a806'),
+    '/test/audio-generator': t('audioGenerator.title'),
+  }[pathname] || title || t('header.dashboard');
 
   const displayName = user?.name || user?.username || 'Admin';
 
@@ -42,11 +66,11 @@ export const Header = ({ title }) => {
         },
       });
       const result = await parseJsonSafely(response);
-      if (response.ok && result?.success) {
-        setTaskCount(result.data?.tasks?.length || 0);
-      }
+      setTaskCount(response.ok && result?.success && Array.isArray(result.data?.tasks)
+        ? result.data.tasks.length
+        : null);
     } catch {
-      setTaskCount(0);
+      setTaskCount(null);
     }
   };
 
@@ -121,24 +145,14 @@ export const Header = ({ title }) => {
       <span className="breadcrumb-link">{pageTitle}</span>
       <div className="header-right">
         <Input
+          className="header-search"
           placeholder={t('common.search')}
           prefix={<Search size={14} />}
-          style={{
-            border: '2px solid #333e4e',
-            borderRadius: '100px',
-            backgroundColor: '#ffffff',
-            padding: '3px 10px',
-            width: '262px',
-            height: '32px',
-            fontSize: '14px',
-            fontWeight: 500,
-            color: '#a4abb8',
-          }}
         />
         <div className="header-actions">
           <button className="task-button" onClick={handleTaskButtonClick}>
             <div className="task-dot" />
-            <span className="task-text">{t('header.taskCenter')} {taskCount}</span>
+            <span className="task-text">{t('header.taskCenter')}{taskCount === null ? '' : ` ${taskCount}`}</span>
           </button>
           <div className="bell-wrapper">
             <BellOff className="bell-icon" size={18} />
@@ -163,7 +177,7 @@ export const Header = ({ title }) => {
           loadTaskCount();
         }}
         open={drawerVisible}
-        width={420}
+        width="min(420px, 100vw)"
         bodyStyle={{ padding: 0 }}
         headerStyle={{ display: 'none' }}
       >

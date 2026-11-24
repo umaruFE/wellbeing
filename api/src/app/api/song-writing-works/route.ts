@@ -23,7 +23,6 @@ async function ensureTable() {
 
 export async function GET(request: NextRequest) {
   try {
-    await ensureTable();
     const authResult = authenticate(request);
     if (!authResult.success || !authResult.user) {
       return NextResponse.json({ error: authResult.error || '认证失败' }, { status: 401 });
@@ -41,11 +40,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    await ensureTable();
     const authResult = authenticate(request);
     if (!authResult.success || !authResult.user) {
       return NextResponse.json({ error: authResult.error || '认证失败' }, { status: 401 });
     }
+    await ensureTable();
     const { title, coverUrl, workData } = await request.json();
     const result = await db.query(
       `INSERT INTO song_writing_works (user_id, organization_id, title, cover_url, work_data)

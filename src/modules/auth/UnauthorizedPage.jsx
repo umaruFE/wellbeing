@@ -11,16 +11,16 @@ export const UnauthorizedPage = () => {
   const { user } = useAuth();
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-surface">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--wb-page)] p-6 text-sm">
       <div className="text-center">
         <div className="bg-error-light p-6 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-6">
           <ShieldX className="w-12 h-12 text-error" />
         </div>
-        <h1 className="text-3xl font-bold text-primary mb-2">{t('unauthorized.title')}</h1>
-        <p className="text-primary-secondary mb-8">{t('unauthorized.description')}</p>
+        <h1 className="text-[28px] font-bold text-[var(--wb-text)] mb-2">{t('unauthorized.title')}</h1>
+        <p className="text-[var(--wb-muted)] mb-8">{t('unauthorized.description')}</p>
         <button
           onClick={() => navigate(getDefaultRouteForRole(user?.role), { replace: true })}
-          className="px-6 py-3 bg-info text-white rounded-lg hover:bg-info-active flex items-center gap-2 mx-auto transition-colors"
+          className="px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] hover:bg-[var(--wb-primary-hover)] flex items-center gap-2 mx-auto transition-colors min-h-10 active:bg-[var(--wb-primary-active)]"
         >
           <Home className="w-4 h-4" />
           {t('unauthorized.home')}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { BookOpen, Search, Star, Users, Clock, Grid, List, Copy, Book, Sparkles, Tag } from 'lucide-react';
+import { PageLoading } from '../../components/PageLoading';
+import { BookOpen, Search, Users, Clock, Grid, List, Copy, Book, Sparkles, Tag } from 'lucide-react';
 import apiService from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCourseCoverUrl, getDisplayCourseTitle } from '../../figma-restore/courseImages';
@@ -97,7 +98,6 @@ export const CourseSquarePage = () => {
                    ageGroup.includes('小学') || ageGroup.match(/G[1-6]/) ? t('square.primary') : t('course.notSet'),
             storyTheme: course.theme || t('course.notSet'),
             keywords: keywords,
-            rating: 4.5,
             students: course.view_count || course.viewCount || 0,
             copies: course.copy_count || course.copyCount || 0,
             thumbnail: getCourseCoverUrl(course),
@@ -190,31 +190,31 @@ export const CourseSquarePage = () => {
   };
 
   return (
-    <div className="h-full min-h-0 flex flex-col bg-surface">
+    <div className="h-full min-h-0 flex flex-col bg-[var(--wb-page)]">
       {/* Header */}
-      <div className="bg-surface border-b-2 border-stroke-light shrink-0">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-6">
+      <div className="bg-[var(--wb-surface)] border-b border-[var(--wb-border)] shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-dark flex items-center gap-2">
-                <BookOpen className="w-8 h-8 text-dark" />
+              <h1 className="text-[28px] font-bold text-[var(--wb-text)] flex items-center gap-2">
+                <BookOpen className="w-8 h-8 text-[var(--wb-text)]" />
                 {t('square.title')}
               </h1>
-              <p className="text-primary-muted mt-1">{t('square.subtitle')}</p>
+              <p className="text-[var(--wb-muted)] mt-1">{t('square.subtitle')}</p>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all duration-200 ${
-                  viewMode === 'grid' ? 'bg-warning-light border-2 border-primary text-dark' : 'text-primary-placeholder hover:bg-surface-alt'
+                className={`p-2 rounded-[10px] transition-all duration-200 min-h-10 ${
+                  viewMode === 'grid' ? "bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] text-[var(--wb-text)]" : "text-[var(--wb-muted)] hover:bg-[var(--wb-page)]"
                 }`}
               >
                 <Grid className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-all duration-200 ${
-                  viewMode === 'list' ? 'bg-warning-light border-2 border-primary text-dark' : 'text-primary-placeholder hover:bg-surface-alt'
+                className={`p-2 rounded-[10px] transition-all duration-200 min-h-10 ${
+                  viewMode === 'list' ? "bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] text-[var(--wb-text)]" : "text-[var(--wb-muted)] hover:bg-[var(--wb-page)]"
                 }`}
               >
                 <List className="w-5 h-5" />
@@ -224,13 +224,13 @@ export const CourseSquarePage = () => {
 
           {/* Search */}
           <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-primary-placeholder" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--wb-muted)]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t('square.searchPlaceholder')}
-              className="w-full pl-12 pr-4 py-3 border-2 border-stroke-light rounded-xl focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none text-lg transition-all duration-200"
+              className="w-full pl-12 pr-4 py-2.5 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none text-sm transition-all duration-200 min-h-11"
             />
           </div>
 
@@ -240,10 +240,10 @@ export const CourseSquarePage = () => {
               <button
                 key={category.id}
                 onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-xl whitespace-nowrap transition-all duration-200 ${
+                className={`px-4 py-2 rounded-[10px] whitespace-nowrap transition-all duration-200 min-h-10 ${
                   selectedCategory === category.id
-                    ? '!bg-[#344054] !text-white border-2 border-[#344054] font-semibold'
-                    : 'bg-surface-alt text-primary-secondary hover:bg-warning-light hover:border-2 hover:border-primary'
+                    ? "bg-[var(--wb-selected)] text-[var(--wb-primary)] border border-[var(--wb-selected-border)] font-semibold"
+                    : "bg-[var(--wb-page)] text-[var(--wb-muted)] border border-transparent hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)]"
                 }`}
               >
                 {category.name}
@@ -254,28 +254,23 @@ export const CourseSquarePage = () => {
       </div>
 
       {/* Course List */}
-      <div className="flex-1 min-h-0 overflow-y-auto max-w-7xl mx-auto px-6 py-6 w-full">
+      <div className="flex-1 min-h-0 overflow-y-auto max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
         {error && (
-          <div className="bg-error-light border border-error-border text-error-active px-4 py-3 rounded-lg mb-4">
+          <div className="bg-error-light border border-error-border text-error-active px-4 py-3 rounded-[10px] mb-4">
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <div className="w-8 h-8 border-4 border-info border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-primary-muted">{t('common.loading')}</p>
-            </div>
-          </div>
+          <PageLoading />
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map(course => (
               <div
                 key={course.id}
-                className="bg-white rounded-[24px] border-2 border-stroke-light overflow-hidden cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
+                className="bg-white rounded-[14px] border border-[var(--wb-border)] overflow-hidden cursor-pointer group transition-all duration-200 hover:border-[var(--wb-selected-border)] hover:shadow-[0_4px_18px_rgba(48,43,59,0.06)] "
               >
-                <div className="h-40 relative border-b-2 border-stroke-light overflow-hidden">
+                <div className="h-40 relative border-b border-[var(--wb-border)] overflow-hidden">
                   <img
                     src={course.thumbnail || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
                     alt={course.title}
@@ -287,7 +282,7 @@ export const CourseSquarePage = () => {
                       e.stopPropagation();
                       handleCopyCourse(course.id);
                     }}
-                    className="absolute z-10 top-3 right-3 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-neo hover:bg-warning-light"
+                    className="absolute z-10 top-3 right-3 px-3 py-1.5 bg-white border border-[var(--wb-selected-border)] text-[var(--wb-text)] rounded-[10px] text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-none hover:bg-[var(--wb-selected)] min-h-10"
                   >
                     <Copy className="w-4 h-4" />
                     {t('square.copyCourse')}
@@ -295,23 +290,23 @@ export const CourseSquarePage = () => {
                 </div>
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold text-primary flex-1 pr-2">{course.title}</h3>
+                    <h3 className="text-lg font-bold text-[var(--wb-text)] flex-1 pr-2">{course.title}</h3>
                   </div>
                   {course.author && (
-                    <p className="text-xs text-primary-placeholder mb-3">by {course.author}</p>
+                    <p className="text-xs text-[var(--wb-muted)] mb-3">by {course.author}</p>
                   )}
 
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-primary-secondary">
-                      <Book className="w-4 h-4 text-primary-placeholder" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
+                      <Book className="w-4 h-4 text-[var(--wb-muted)]" />
                       <span>{course.unit} - {course.unitCN}</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-primary-secondary">
-                      <Clock className="w-4 h-4 text-primary-placeholder" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
+                      <Clock className="w-4 h-4 text-[var(--wb-muted)]" />
                       <span>{course.duration}{t('course.minutes')} ({course.stage})</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm text-primary-secondary">
-                      <Sparkles className="w-4 h-4 text-primary-placeholder" />
+                    <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
+                      <Sparkles className="w-4 h-4 text-[var(--wb-muted)]" />
                       <span>{course.storyTheme}</span>
                     </div>
                   </div>
@@ -320,19 +315,15 @@ export const CourseSquarePage = () => {
                     {course.tags?.map((tag, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 bg-warning-light text-dark border border-stroke-light rounded-lg text-xs font-medium"
+                        className="px-2 py-0.5 bg-[var(--wb-selected)] text-[var(--wb-text)] border border-[var(--wb-border)] rounded-[10px] text-xs font-medium"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between pt-4 border-t-2 border-stroke-light">
-                    <div className="flex items-center gap-3 text-sm text-primary-muted">
-                      <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                        <span className="font-medium">{course.rating}</span>
-                      </div>
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[var(--wb-border)]">
+                    <div className="flex items-center gap-3 text-sm text-[var(--wb-muted)]">
                       <div className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
                         <span>{formatNumber(course.students)}</span>
@@ -352,10 +343,10 @@ export const CourseSquarePage = () => {
             {filteredCourses.map(course => (
               <div
                 key={course.id}
-                className="bg-white rounded-[24px] border-2 border-stroke-light p-5 cursor-pointer group transition-all duration-200 hover:border-primary hover:shadow-[4px_4px_0px_0px_var(--color-dark)] hover:-translate-y-1"
+                className="bg-white rounded-[14px] border border-[var(--wb-border)] p-5 cursor-pointer group transition-all duration-200 hover:border-[var(--wb-selected-border)] hover:shadow-[0_4px_18px_rgba(48,43,59,0.06)] "
               >
-                <div className="flex gap-5">
-                  <div className="w-36 h-36 rounded-2xl shrink-0 relative border-2 border-stroke-light overflow-hidden">
+                <div className="flex flex-col sm:flex-row gap-5">
+                  <div className="w-full sm:w-36 h-40 sm:h-36 rounded-[14px] shrink-0 relative border border-[var(--wb-border)] overflow-hidden">
                     <img
                       src={course.thumbnail || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
                       alt={course.title}
@@ -367,41 +358,41 @@ export const CourseSquarePage = () => {
                         e.stopPropagation();
                         handleCopyCourse(course.id);
                       }}
-                      className="absolute z-10 bottom-2 right-2 px-3 py-1.5 bg-white border-2 border-primary text-dark rounded-xl text-sm font-bold flex items-center gap-1 shadow-neo opacity-0 group-hover:opacity-100 transition-all hover:bg-warning-light"
+                      className="absolute z-10 bottom-2 right-2 px-3 py-1.5 bg-white border border-[var(--wb-selected-border)] text-[var(--wb-text)] rounded-[10px] text-sm font-bold flex items-center gap-1 shadow-none opacity-0 group-hover:opacity-100 transition-all hover:bg-[var(--wb-selected)] min-h-10"
                     >
                       <Copy className="w-4 h-4" />
                       {t('square.copy')}
                     </button>
                   </div>
 
-                  <div className="flex-1">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <h3 className="text-xl font-bold text-primary">{course.title}</h3>
+                        <h3 className="text-xl font-bold text-[var(--wb-text)]">{course.title}</h3>
                         {course.author && (
-                          <p className="text-sm text-primary-placeholder">by {course.author}</p>
+                          <p className="text-sm text-[var(--wb-muted)]">by {course.author}</p>
                         )}
                       </div>
-                      <span className="px-2 py-1 bg-warning-light border border-primary text-dark rounded-lg text-xs font-bold">
+                      <span className="px-2 py-1 bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] text-[var(--wb-text)] rounded-[10px] text-xs font-bold">
                         {course.grade}
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 my-3">
-                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
-                        <Book className="w-4 h-4 text-primary-placeholder" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
+                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
+                        <Book className="w-4 h-4 text-[var(--wb-muted)]" />
                         <span>{course.unit} - {course.unitCN}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
-                        <Clock className="w-4 h-4 text-primary-placeholder" />
+                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
+                        <Clock className="w-4 h-4 text-[var(--wb-muted)]" />
                         <span>{course.duration}{t('course.minutes')} ({course.stage})</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
-                        <Sparkles className="w-4 h-4 text-primary-placeholder" />
+                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
+                        <Sparkles className="w-4 h-4 text-[var(--wb-muted)]" />
                         <span>{course.storyTheme}</span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-primary-secondary">
-                        <Tag className="w-4 h-4 text-primary-placeholder" />
+                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
+                        <Tag className="w-4 h-4 text-[var(--wb-muted)]" />
                         <span>{course.tags?.join(' / ')}</span>
                       </div>
                     </div>
@@ -410,19 +401,15 @@ export const CourseSquarePage = () => {
                       {course.keywords?.map((keyword, idx) => (
                         <span
                           key={idx}
-                          className="px-2 py-0.5 bg-warning-light text-dark border border-stroke-light rounded-lg text-xs font-medium"
+                          className="px-2 py-0.5 bg-[var(--wb-selected)] text-[var(--wb-text)] border border-[var(--wb-border)] rounded-[10px] text-xs font-medium"
                         >
                           {keyword}
                         </span>
                       ))}
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t-2 border-stroke-light">
-                      <div className="flex items-center gap-4 text-sm text-primary-muted">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-                          <span className="font-medium">{course.rating}</span>
-                        </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[var(--wb-border)]">
+                      <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--wb-muted)]">
                         <div className="flex items-center gap-1">
                           <Users className="w-4 h-4" />
                           <span>{formatNumber(course.students)} {t('square.students')}</span>
@@ -442,8 +429,8 @@ export const CourseSquarePage = () => {
 
         {!loading && filteredCourses.length === 0 && (
           <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-primary-placeholder mx-auto mb-4" />
-            <p className="text-primary-muted">
+            <BookOpen className="w-16 h-16 text-[var(--wb-muted)] mx-auto mb-4" />
+            <p className="text-[var(--wb-muted)]">
               {courses.length === 0 ? t('square.noPublicCourses') : t('square.noResults')}
             </p>
           </div>

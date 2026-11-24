@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from './db';
 import crypto from 'crypto';
+import { signSessionToken } from './session-token.mjs';
 
 export interface AuthUser {
   id: string;
@@ -30,26 +31,8 @@ export function extractToken(request: NextRequest): string | null {
 
 // 生成token（包含用户信息和签名）
 export function generateToken(user: AuthUser): string {
-  const timestamp = Date.now();
-  const data = `${user.id}:${user.role}:${timestamp}`;
-  const signature = crypto
-    .createHmac('sha256', SECRET_KEY)
-    .update(data)
-    .digest('hex')
-    .substring(0, 32);
-  
-  const token = `pg_token_${Buffer.from(JSON.stringify({
-    id: user.id,
-    username: user.username,
-    role: user.role,
-    name: user.name,
-    organizationId: user.organizationId,
-    timestamp,
-    signature
-  })).toString('base64')}`;
-  
   console.log('Token生成, 用户:', user.name);
-  return token;
+  return signSessionToken(user, SECRET_KEY);
 }
 
 // 验证token

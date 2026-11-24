@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import {
   BookOpen, ChevronDown, ChevronRight, Compass, Dumbbell, FolderOpen,
-  Gamepad2, GraduationCap, Image, Library, Music, Palette, Settings,
+  Gamepad2, GraduationCap, Image, LayoutDashboard, Library, MessageCircle, Mic2, Music, Palette, Settings,
   Sparkles, Star, Users,
 } from 'lucide-react';
 import './Sidebar.css';
@@ -101,7 +101,7 @@ const MenuBranch = ({ item, depth = 0, collapsed, openBranches, onToggle }) => {
 export const Sidebar = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [collapsed, setCollapsed] = React.useState(false);
+  const [collapsed, setCollapsed] = React.useState(() => window.matchMedia('(max-width: 900px)').matches);
   const [openBranches, setOpenBranches] = React.useState(() => new Set(['creation-workshop', 'english-plus']));
 
   const creationWorkshop = {
@@ -111,20 +111,13 @@ export const Sidebar = () => {
         id: 'english-plus', label: t('sidebar.englishPlus'), icon: GraduationCap,
         children: [
           { id: 'art-expression', label: t('sidebar.artExpression'), icon: Palette, path: '/picture-books' },
-          {
-            id: 'somatic-exploration', label: t('sidebar.somaticExploration'), icon: Dumbbell,
-            children: [
-              { id: 'interactive-yoga', label: t('sidebar.interactiveYoga'), icon: Dumbbell, path: '/workshop/interactive-yoga' },
-            ],
-          },
-          {
-            id: 'music-and-movement', label: t('sidebar.musicAndMovement'), icon: Music,
-            children: [
-              { id: 'music-star-quest', label: t('sidebar.musicStarQuest'), icon: Star, path: '/workshop/music-star-quest' },
-              { id: 'song-workshop', label: t('sidebar.songWorkshop'), icon: Music, path: '/song-writing' },
-            ],
-          },
-        ],
+          { id: 'song-workshop', label: t('sidebar.songWorkshop'), icon: Mic2, path: '/song-writing' },
+          { id: 'music-studio', label: t('sidebar.musicStarQuest'), icon: Music, path: '/workshop/music-star-quest' },
+          { id: 'scenario-yoga', label: t('sidebar.interactiveYoga'), icon: Dumbbell, path: '/workshop/interactive-yoga' },
+          { id: 'spin-speak', label: t('sidebar.spinSpeak'), icon: MessageCircle, path: '/workshop/spin-speak' },
+          { id: 'doodle', label: t('sidebar.doodleGame'), icon: Palette, path: '/workshop/doodle' },
+          { id: 'move-match', label: t('sidebar.moveMatch'), icon: Gamepad2, path: '/workshop/move-match' },
+        ].filter((item) => item.id !== 'song-workshop' || user?.role !== 'viewer'),
       },
       { id: 'skills-training', label: t('sidebar.skillsTraining'), icon: GraduationCap, path: '/workshop/skills-training' },
       { id: 'fun-practice', label: t('sidebar.funPractice'), icon: Gamepad2, path: '/workshop/fun-practice' },
@@ -135,6 +128,7 @@ export const Sidebar = () => {
   };
 
   const fullMenu = [
+    { type: 'item', id: 'dashboard', label: t('sidebar.dashboard'), icon: LayoutDashboard, path: '/', end: true },
     creationWorkshop,
     { type: 'item', id: 'my-works', label: t('sidebar.myWorks'), icon: FolderOpen, path: '/my-works' },
     { type: 'item', id: 'inspiration-square', label: t('sidebar.inspirationSquare'), icon: Compass, path: '/course-square' },
@@ -169,11 +163,23 @@ export const Sidebar = () => {
   };
 
   return (
-    <aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
+    <aside
+      className={`sidebar ${collapsed ? 'collapsed' : ''}`}
+      onClick={(event) => {
+        if (window.matchMedia('(max-width: 900px)').matches && event.target.closest('a')) {
+          setCollapsed(true);
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && window.matchMedia('(max-width: 900px)').matches) {
+          setCollapsed(true);
+        }
+      }}
+    >
       <div className="sidebar-header">
         <div className="sidebar-logo">
           <div className="logo-icon"><Sparkles size={16} /></div>
-          <span className="logo-text">{t('common.appName')}</span>
+          <span className="logo-text">小星星</span>
         </div>
         <nav className="sidebar-menu" aria-label={t('sidebar.navigation')}>
           {menuItems.map((item) => (

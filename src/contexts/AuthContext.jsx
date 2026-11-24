@@ -3,6 +3,12 @@ import { setTrackingContext } from '../utils/usageTracker';
 
 const AuthContext = createContext(null);
 
+function readSessionToken() {
+  const token = localStorage.getItem('token');
+  if (window.WB_WORKBENCH_LIVE === true && token === 'local-style-preview-only') return null;
+  return token;
+}
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -81,7 +87,7 @@ export const AuthProvider = ({ children }) => {
   // 从 localStorage 恢复登录状态
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    const savedToken = localStorage.getItem('token');
+    const savedToken = readSessionToken();
     if (savedUser && savedToken) {
       try {
         setUser(JSON.parse(savedUser));
@@ -108,7 +114,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const checkToken = async () => {
-      const token = localStorage.getItem('token');
+      const token = readSessionToken();
       if (!token) return;
 
       try {

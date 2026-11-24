@@ -579,11 +579,11 @@ export const VideoStoryboardModal = ({
     <div className="flex items-center justify-center mb-6">
       {STEPS.map((step, index) => (
         <React.Fragment key={step.id}>
-          <div className={`flex flex-col items-center ${currentStep === step.id ? 'text-purple' : currentStep > step.id ? 'text-success' : 'text-primary-placeholder'}`}>
+          <div className={`flex flex-col items-center ${currentStep === step.id ? 'text-[var(--wb-primary)]' : currentStep > step.id ? 'text-success' : 'text-primary-placeholder'}`}>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-              currentStep === step.id ? 'bg-purple-100 border-2 border-purple-600' :
-              currentStep > step.id ? 'bg-success-light border-2 border-success' :
-              'bg-surface border-2 border-gray-disabled'
+              currentStep === step.id ? 'bg-[var(--wb-selected)] border border-[var(--wb-selected-border)]' :
+              currentStep > step.id ? 'bg-success-light border border-success' :
+              'bg-surface border border-gray-disabled'
             }`}>
               {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
             </div>
@@ -602,7 +602,7 @@ export const VideoStoryboardModal = ({
     <div className="relative">
       {isGeneratingScript && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center rounded-xl">
-          <RefreshCw className="w-10 h-10 text-purple-500 animate-spin mb-4" />
+          <RefreshCw className="w-10 h-10 text-[var(--wb-primary)] animate-spin mb-4" />
           <p className="text-primary-secondary font-medium"><LocalizedText id="videoStoryboardUi.82f6333f90" /></p>
           <p className="text-sm text-primary-placeholder mt-1"><LocalizedText id="videoStoryboardUi.6f63115847" /></p>
         </div>
@@ -616,7 +616,7 @@ export const VideoStoryboardModal = ({
           value={storyCore}
           onChange={(e) => setStoryCore(e.target.value)}
           placeholder={i18next.t('videoStoryboardUi.a73abaefb3')}
-          className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-24 transition-all"
+          className="w-full border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] p-3 text-sm focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none resize-none h-24 transition-all"
           disabled={isGeneratingScript}
         />
       </div>
@@ -631,10 +631,10 @@ export const VideoStoryboardModal = ({
               key={ratio.id}
               onClick={() => setSelectedAspectRatio(ratio)}
               disabled={isGeneratingScript}
-              className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+              className={`flex flex-col items-center justify-center p-2 rounded-[var(--wb-control-radius)] border transition-all ${
                 selectedAspectRatio.id === ratio.id
-                  ? 'border-purple-500 bg-purple-50 text-purple-700'
-                  : 'border-2 border-stroke-light hover:border-primary text-dark hover:bg-warning-light'
+                  ? 'border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary)]'
+                  : 'border border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] text-dark hover:bg-[var(--wb-selected)]'
               }`}
             >
               <div 
@@ -682,16 +682,16 @@ export const VideoStoryboardModal = ({
                   }
                 }}
                 disabled={!isAvailable || isGeneratingScript}
-                className={`relative flex flex-col items-center justify-center p-2 rounded-xl border-2 transition-all w-24 shrink-0 ${
+                className={`relative flex flex-col items-center justify-center p-2 rounded-[var(--wb-control-radius)] border transition-all w-24 shrink-0 ${
                   !isAvailable
-                    ? 'border-stroke bg-surface-alt cursor-not-allowed opacity-60'
+                    ? 'border-[var(--wb-border)] bg-surface-alt cursor-not-allowed opacity-60'
                     : isSelected
-                    ? 'border-purple-500 bg-purple-50'
-                    : 'border-stroke-light hover:border-primary hover:bg-warning-light'
+                    ? 'border-[var(--wb-selected-border)] bg-[var(--wb-selected)]'
+                    : 'border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)]'
                 }`}
               >
                 {isSelected && isAvailable && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center z-10">
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--wb-primary)] rounded-full flex items-center justify-center z-10">
                     <Check className="w-3 h-3 text-white" />
                   </div>
                 )}
@@ -735,8 +735,8 @@ export const VideoStoryboardModal = ({
       ) : (
         <>
           {/* 视频信息概览 */}
-          <div className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-4">
-            <h4 className="font-medium text-purple-800 mb-3"><LocalizedText id="videoStoryboardUi.2be1fa57c9" /></h4>
+          <div className="bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] rounded-[var(--wb-card-radius)] p-4">
+            <h4 className="font-medium text-[var(--wb-primary)] mb-3"><LocalizedText id="videoStoryboardUi.2be1fa57c9" /></h4>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
                 <span className="text-primary-muted"><LocalizedText id="videoStoryboardUi.5825a055ab" /></span>
@@ -795,7 +795,7 @@ export const VideoStoryboardModal = ({
             <h4 className="font-medium text-primary-secondary"><LocalizedText id="videoStoryboardUi.0ae2c80243" /></h4>
             <button
               onClick={handleAddScene}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 text-sm"
+              className="min-h-10 px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center gap-2 text-sm"
             >
               <Plus className="w-4 h-4" />
               <LocalizedText id="videoStoryboardUi.1c9d6d4917" />
@@ -804,7 +804,7 @@ export const VideoStoryboardModal = ({
 
           <div className="grid grid-cols-1 gap-4 overflow-y-auto">
             {scenes.map((scene) => (
-              <div key={scene.id} className="border-2 border-stroke-light rounded-xl overflow-hidden transition-all hover:border-primary">
+              <div key={scene.id} className="border border-[var(--wb-border)] rounded-xl overflow-hidden transition-all hover:border-[var(--wb-selected-border)]">
                 <div className="flex gap-4 p-4">
                   {/* 图片 */}
                   <div className="w-64 shrink-0 flex flex-col justify-center">
@@ -871,7 +871,7 @@ export const VideoStoryboardModal = ({
                     <div className="flex items-center justify-between">
                       <h5 className="font-medium text-primary-secondary"><LocalizedText id="videoWizard.fcad7fe371" /> {scene.sequence}</h5>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                        <span className="text-xs px-2 py-1 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded">
                           <LocalizedText id="videoStoryboardUi.63c4214750" /> {scene.duration}s
                         </span>
                         {/* 排序按钮 */}
@@ -896,7 +896,7 @@ export const VideoStoryboardModal = ({
                         <button
                           onClick={() => handleGenerateSceneImage(scene.id)}
                           disabled={isGeneratingSceneImage[scene.id]}
-                          className="px-3 py-1 text-xs border border-purple-200 text-purple rounded hover:bg-purple-50 disabled:opacity-50 transition-colors flex items-center gap-1"
+                          className="px-3 py-1 text-xs border border-[var(--wb-selected-border)] text-[var(--wb-primary)] rounded hover:bg-[var(--wb-selected)] disabled:opacity-50 transition-colors flex items-center gap-1"
                         >
                           {isGeneratingSceneImage[scene.id] ? (
                             <>
@@ -930,7 +930,7 @@ export const VideoStoryboardModal = ({
                       <textarea
                         value={scene.description}
                         onChange={(e) => handleUpdateScene(scene.id, 'description', e.target.value)}
-                        className="w-full mt-1 p-2 text-sm border border-stroke rounded focus:ring-2 focus:ring-purple focus:border-transparent"
+                        className="w-full mt-1 p-2 text-sm border border-[var(--wb-border)] rounded focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-transparent"
                         rows={2}
                         placeholder={i18next.t('videoStoryboardUi.b58d7edfee')}
                       />
@@ -941,7 +941,7 @@ export const VideoStoryboardModal = ({
                       <textarea
                         value={scene.prompt}
                         onChange={(e) => handleUpdateScene(scene.id, 'prompt', e.target.value)}
-                        className="w-full mt-1 p-2 text-sm border border-stroke rounded focus:ring-2 focus:ring-purple focus:border-transparent bg-surface-alt"
+                        className="w-full mt-1 p-2 text-sm border border-[var(--wb-border)] rounded focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-transparent bg-surface-alt"
                         rows={2}
                         placeholder={i18next.t('videoStoryboardUi.0a5ab60d2f')}
                       />
@@ -979,9 +979,9 @@ export const VideoStoryboardModal = ({
     <div className="space-y-6">
       {!generatedVideoUrl ? (
         <div className="text-center py-8">
-          <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 mb-6">
-            <h4 className="font-medium text-purple-800 mb-2"><LocalizedText id="videoStoryboardUi.9746b23367" /></h4>
-            <p className="text-sm text-purple">
+          <div className="bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] rounded-lg p-6 mb-6">
+            <h4 className="font-medium text-[var(--wb-primary)] mb-2"><LocalizedText id="videoStoryboardUi.9746b23367" /></h4>
+            <p className="text-sm text-[var(--wb-primary)]">
               <LocalizedText id="videoStoryboardUi.79c74f41ca" /> {scenes.filter(s => s.generatedImage).length} <LocalizedText id="videoStoryboardUi.477b920775" />
             </p>
             <p className="text-xs text-primary-muted mt-2">
@@ -992,7 +992,7 @@ export const VideoStoryboardModal = ({
           <button
             onClick={handleComposeVideo}
             disabled={isComposingVideo}
-            className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2 mx-auto text-lg"
+            className="min-h-10 px-8 py-4 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 transition-colors flex items-center gap-2 mx-auto text-lg"
           >
             {isComposingVideo ? (
               <>
@@ -1051,7 +1051,7 @@ export const VideoStoryboardModal = ({
           <div className="flex justify-between">
             <button
               onClick={() => setCurrentStep(prev => prev - 1)}
-              className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all flex items-center gap-2 font-medium"
+              className="min-h-10 px-6 py-2 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] transition-all flex items-center gap-2 font-medium"
             >
               <ChevronLeft className="w-4 h-4" />
               <LocalizedText id="common.previous" />
@@ -1060,7 +1060,7 @@ export const VideoStoryboardModal = ({
               {onConfirm ? (
                 <button
                   onClick={handleConfirm}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2"
+                  className="min-h-10 px-6 py-3 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center gap-2"
                 >
                   <Check className="w-5 h-5" />
                   <LocalizedText id="videoStoryboardUi.ebc8d69148" />
@@ -1077,7 +1077,7 @@ export const VideoStoryboardModal = ({
                       document.body.removeChild(link);
                     }
                   }}
-                  className="px-6 py-3 bg-success text-white rounded-lg hover:bg-success-active transition-colors flex items-center gap-2"
+                  className="min-h-10 px-6 py-3 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center gap-2"
                 >
                   <Download className="w-5 h-5" />
                   <LocalizedText id="videoStoryboardUi.f772cb271b" />
@@ -1092,7 +1092,7 @@ export const VideoStoryboardModal = ({
         <div className="flex justify-start">
           <button
             onClick={() => setCurrentStep(prev => prev - 1)}
-            className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary transition-all flex items-center gap-2 font-medium"
+            className="min-h-10 px-6 py-2 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] transition-all flex items-center gap-2 font-medium"
           >
             <ChevronLeft className="w-4 h-4" />
             <LocalizedText id="common.previous" />
@@ -1106,7 +1106,7 @@ export const VideoStoryboardModal = ({
         <button
           onClick={() => setCurrentStep(prev => prev - 1)}
           disabled={currentStep === 1}
-          className="px-6 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
+          className="min-h-10 px-6 py-2 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 font-medium"
         >
           <ChevronLeft className="w-4 h-4" />
           <LocalizedText id="common.previous" />
@@ -1116,7 +1116,7 @@ export const VideoStoryboardModal = ({
           <button
             onClick={handleStep1Next}
             disabled={isGeneratingScript}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+            className="min-h-10 px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
           >
             {isGeneratingScript ? (
               <>
@@ -1136,7 +1136,7 @@ export const VideoStoryboardModal = ({
           <button
             onClick={handleStep2Next}
             disabled={isGeneratingScript}
-            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors flex items-center gap-2"
+            className="min-h-10 px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 transition-colors flex items-center gap-2"
           >
             <LocalizedText id="common.next" />
             <ChevronRight className="w-4 h-4" />
@@ -1150,11 +1150,11 @@ export const VideoStoryboardModal = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl h-[740px] flex flex-col">
+      <div className="bg-white rounded-[18px] shadow-[0_20px_64px_rgba(48,43,59,0.16)] w-full max-w-4xl h-[740px] flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between shrink-0">
+        <div className="p-6 border-b border-[var(--wb-border)] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="bg-purple-600 p-2 rounded-lg text-white">
+            <div className="bg-[var(--wb-primary)] p-2 rounded-lg text-white">
               <Video className="w-5 h-5" />
             </div>
             <div>
@@ -1188,7 +1188,7 @@ export const VideoStoryboardModal = ({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t-2 border-stroke-light">
+        <div className="p-6 border-t border-[var(--wb-border)]">
           {renderFooterButtons()}
         </div>
       </div>

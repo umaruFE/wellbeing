@@ -52,6 +52,22 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  // Reorder the complete lesson, even when the source and target are shown in a
+  // filtered view. Hidden cards and their relative order must remain intact.
+  function reorderItems(items, sourceId, targetId, after = false) {
+    if (!Array.isArray(items) || sourceId === targetId) return items;
+    const from = items.findIndex(item => item.id === sourceId);
+    const target = items.findIndex(item => item.id === targetId);
+    if (from < 0 || target < 0) return items;
+    let to = target + (after ? 1 : 0);
+    if (from < to) to -= 1;
+    if (from === to) return items;
+    const next = items.slice();
+    next.splice(from, 1);
+    next.splice(to, 0, items[from]);
+    return next;
+  }
+
   function settingsOf(settings) {
     if (!object(settings)) throw fault('VALIDATION', '课堂设置格式不正确。');
     return {
@@ -457,5 +473,5 @@
     }
   }
 
-  return Object.freeze({ clone, validate, normalizePreparation, preparationSignature, validatePreparation, isDirty, Repository, DEFAULT_SETTINGS, STORAGE_KEY, RENDERER_VERSION });
+  return Object.freeze({ clone, reorderItems, validate, normalizePreparation, preparationSignature, validatePreparation, isDirty, Repository, DEFAULT_SETTINGS, STORAGE_KEY, RENDERER_VERSION });
 });

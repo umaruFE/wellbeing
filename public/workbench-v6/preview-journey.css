@@ -1,0 +1,18 @@
+/* Only quantity-dependent geometry changes; the four-stage reference keeps its existing layout. */
+.journey-world:is([data-stage-count="2"],[data-stage-count="3"]) .journey-stop{--card-shift:0px}
+body[data-stage-count="1"] #return-map{display:none}
+.award-gallery,.journey-badges,.award-collection-list{grid-template-columns:repeat(var(--selected-stage-count,4),minmax(0,1fr))}
+.journey-empty{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;color:#f5eefa}
+.journey-empty h1{font-size:28px;margin-bottom:16px}
+.journey-empty p{max-width:32em;font-size:16px;line-height:1.6;color:#ded2ed}
+@media(max-width:960px){
+  .journey-world[data-stage-count="2"]{height:calc(var(--cart-top) + var(--cart-width) * 1.47619048 + 150px)}
+  .journey-world[data-stage-count="2"] .journey-cartography{height:calc(var(--cart-width) * 1.47619048)}
+  .journey-world[data-stage-count="3"]{height:calc(var(--cart-top) + var(--cart-width) * 2.14285714 + 150px)}
+  .journey-world[data-stage-count="3"] .journey-cartography{height:calc(var(--cart-width) * 2.14285714)}
+  .journey-world:is([data-stage-count="2"],[data-stage-count="3"]) .journey-stop.is-current{--card-shift:0px}
+}
+@media(max-width:640px){
+  body:not([data-stage-count="1"]) .award-gallery,body:not([data-stage-count="1"]) .journey-badges{grid-template-columns:repeat(2,minmax(0,1fr))}
+  body[data-stage-count="1"] .journey-badges{max-width:320px;margin-inline:auto}
+}

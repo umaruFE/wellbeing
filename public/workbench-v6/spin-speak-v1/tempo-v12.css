@@ -1,0 +1,81 @@
+/* Isolated reference-style study. Illustration canvas: 1280 × 668.018. */
+[data-game=tempo]{--scene:url('assets/scenes-v12/tempo-reference-colors.png');--accent:#8848cf;--shade:#4b2474;--edge:#bb91e2;--tempo-slow:#60bc68;--tempo-medium:#fed140;--tempo-fast:#fc847f;background:#fee9d1;color:#34204d}
+[data-game=tempo] #stage{padding:0;gap:0;height:668.018px;margin-top:-334.009px}
+/* Fixed rim, stars, pointer and base occlude the disc; the audio control sits above this layer. */
+[data-game=tempo] #stage:before{display:block;inset:0;height:auto;border:0;border-radius:0;box-shadow:none;background:var(--scene) center/100% 100% no-repeat;mask:url('assets/scenes-v12/tempo-front-mask.svg?v=148') center/100% 100% no-repeat;z-index:6;pointer-events:none}
+[data-game=tempo] .hud{position:static;min-height:0}
+[data-game=tempo] .title{position:absolute;left:310px;top:29px;width:405px}
+[data-game=tempo] .title h1{display:block;height:84px;margin:0;font-size:44px;font-weight:950;letter-spacing:-1.6px;text-transform:none;color:#fffaf5;-webkit-text-stroke:0;text-shadow:none}
+[data-game=tempo] .title-curve{display:block;width:405px;height:84px;overflow:visible}
+[data-game=tempo] .title-curve text{font-family:inherit;font-size:44px;font-weight:950;letter-spacing:-1.6px;white-space:pre;fill:#fffaf5;stroke:#48216b;stroke-width:2.5px;stroke-linejoin:round;paint-order:stroke fill;filter:drop-shadow(1px 2px 0 #331b57)}
+[data-game=tempo] .title h1:before,[data-game=tempo] .game-cn{display:none}
+[data-game=tempo] .title h1 .challenge{fill:#ffd53b}
+[data-game=tempo] .title p{position:absolute;left:-97px;top:90px;width:557px;height:31px;display:flex;align-items:center;justify-content:center;margin:0;padding:0;background:none;border:0;font-size:14.5px;line-height:1.25;white-space:nowrap;letter-spacing:-.25px;font-weight:800;color:#38224e;text-align:center}
+[data-game=tempo] .iconbtn{position:absolute;right:16px;top:13px;width:50px;height:50px;border:0;border-radius:50%;background:transparent;box-shadow:none;font-size:30px;font-weight:900;color:transparent}
+[data-game=tempo] .play-progress{display:none}
+[data-game=tempo] .midrow,[data-game=tempo] .wheelpanel,[data-game=tempo] .wside{position:static;display:block;min-width:0;min-height:0;flex:none;width:auto;padding:0;margin:0;border:0;border-radius:0;background:none;box-shadow:none}
+[data-game=tempo] .linewrap{position:absolute;left:205px;top:222px;width:569px;height:242px;min-height:0;display:block}
+[data-game=tempo] .linewrap:before{content:'READ WITH THE BEAT';position:absolute;top:0;left:0;font-size:13px;line-height:22px;font-weight:900;letter-spacing:1px;color:#9573aa}
+[data-game=tempo] #stage:not([data-play-phase=ready]) .linewrap:before{visibility:hidden}
+[data-game=tempo] .line{position:absolute;inset:32px 0 0;display:flex;align-items:safe center;overflow:auto;padding:0;border:0;border-radius:0;background:none;box-shadow:none;transform:none}
+[data-game=tempo] .line:before{display:none}
+[data-game=tempo] .linetext,[data-game=tempo] .linetext.multi{color:#34135c;font-size:33px;line-height:1.6;letter-spacing:-.45px;font-weight:850;text-align:left}
+[data-game=tempo] .linetext.multi .sent{display:inline;margin:0}
+[data-game=tempo] .rep{padding:0 5px 1px;border:0;border-bottom:0;border-radius:10px;background:#ffda46;box-shadow:none;color:#34135c;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+[data-game=tempo] .reslab{position:absolute;left:205px;top:222px;width:569px;min-height:24px;height:24px;margin:0;text-align:left;color:#744793;font-size:16.5px;line-height:24px;font-weight:800}
+[data-game=tempo] #spres .speed-result{color:#512576}
+[data-game=tempo] .wheelwrap{position:absolute;left:881.29px;top:180.83px;width:240px;height:240px;transform:scale(1.14);transform-origin:center;z-index:4}
+[data-game=tempo] .wheelwrap:before{display:none}
+[data-game=tempo] .wheel{width:240px;height:240px;border:0;box-shadow:none;transition:none}
+[data-game=tempo] .wheel:before{content:'';position:absolute;inset:0;border-radius:50%;background:none;box-shadow:inset 0 3px 0 #fff2b15c,inset 0 -3px 0 #d49a3b30;pointer-events:none}
+[data-game=tempo] .wheel:after{content:'';position:absolute;inset:5px;border:1px solid #fff5bf99;border-radius:50%;pointer-events:none}
+[data-game=tempo] .wheelwrap:after{display:none}
+[data-game=tempo] .wseg{display:flex;flex-direction:column;gap:5px;align-items:center;justify-content:center;width:86px;font-size:18px;line-height:1.12;letter-spacing:.1px;font-weight:950;color:#fffdf4;text-shadow:0 2px 0 #73384466}
+[data-game=tempo] .wseg>span{-webkit-text-stroke:.35px #80503b;paint-order:stroke fill}
+[data-game=tempo] .wseg svg{display:block;width:42px;height:42px;filter:drop-shadow(0 1px 0 #71473e33)}
+[data-game=tempo] .wseg[data-speed=medium]>span{color:#fffdf4;-webkit-text-stroke:0;text-shadow:0 2px 0 #d29738}
+[data-game=tempo] .pointer{display:none}
+/* Matte purple face: motion invites interaction without decorative highlights. */
+[data-game=tempo] .spin{z-index:5;width:90px;height:90px;border:2px solid #703795;border-radius:50%;background:#a15cf2;box-shadow:inset 0 -4px 0 #8641ce,0 5px 0 #653197,3px 8px 0 #77503f33;color:#fffdf3;font-size:24px;font-weight:950;letter-spacing:.3px;text-shadow:0 2px 0 #6e32a3;transform:translate(-50%,-50%);cursor:pointer;transition:transform .16s,background-color .16s,box-shadow .16s}
+[data-game=tempo] .spin:before,[data-game=tempo] .spin:after{display:none}
+[data-game=tempo] #stage[data-play-phase=ready] .spin:not(:disabled){animation:tempo-spin-invite 2.2s cubic-bezier(.36,0,.24,1) infinite}
+[data-game=tempo] #stage .spin:hover:not(:disabled){filter:none;box-shadow:inset 0 -4px 0 #8641ce,0 7px 0 #653197,3px 10px 0 #77503f33}
+[data-game=tempo] #stage .spin:active:not(:disabled){animation:none;background:#9450df;transform:translate(-50%,-50%) translateY(3px) scale(.97);box-shadow:inset 0 -2px 0 #813bc2,0 2px 0 #653197,2px 4px 0 #77503f33}
+[data-game=tempo] .spin:disabled{animation:none;background:#9259d5;border-color:#703795;color:#fff6e5;transform:translate(-50%,-50%) translateY(2px);box-shadow:inset 0 -2px 0 #7c43b9,0 2px 0 #653197;cursor:not-allowed;text-shadow:0 1px 0 #6e32a3}
+[data-game=tempo] #stage[data-play-phase=drawing] .spin:disabled{background:#9851e5;box-shadow:inset 0 -2px 0 #7f3ac1,0 2px 0 #653197}
+[data-game=tempo] #stage[data-play-phase=ready] .spin:focus-visible{animation:none}
+@keyframes tempo-spin-invite{0%,62%,100%{transform:translate(-50%,-50%)}12%{transform:translate(-50%,-50%) translateY(3px) scale(1.02,.95)}29%{transform:translate(-50%,-50%) translateY(-4px) scale(1.075)}43%{transform:translate(-50%,-50%) translateY(1px) scale(1.02,.98)}54%{transform:translate(-50%,-50%) translateY(-1px) scale(1.025)}}
+/* The control deck is a separate fixed part, with breathing room below the rim. */
+[data-game=tempo] .tempo-control-base{position:absolute;inset:0;z-index:7;background:url('assets/scenes-v12/tempo-control-base.svg?v=148') center/100% 100% no-repeat;pointer-events:none}
+/* Local warm bulb halos travel clockwise while the fixed housing stays still. */
+[data-game=tempo] .tempo-rim-lights{position:absolute;inset:0;z-index:7;pointer-events:none;--rim-cycle:2.2s}
+[data-game=tempo] .tempo-rim-lamp{position:absolute;width:6.7px;height:6.7px;border-radius:50%;transform:translate(-50%,-50%);background:#fffde8;box-shadow:0 0 2px 1px #fff4ad,0 0 7px 3px #ffda62d9;opacity:.05;animation:tempo-rim-marquee var(--rim-cycle) linear infinite;animation-delay:calc(var(--rim-cycle)*var(--lamp-offset))}
+[data-game=tempo] #stage[data-play-phase=drawing] .tempo-rim-lights{--rim-cycle:.9s}
+[data-game=tempo] #stage[data-play-phase=speaking] .tempo-rim-lamp{animation:tempo-rim-result .9s ease-out both}
+[data-game=tempo] #stage[data-play-phase=complete] .tempo-rim-lamp{animation:none;opacity:.14}
+[data-game=tempo] .tempo-rim-lights[data-paused=true] .tempo-rim-lamp{animation-play-state:paused}
+@keyframes tempo-rim-marquee{0%,7.9%{opacity:1}8%,15.9%{opacity:.6}16%,24.9%{opacity:.25}25%,100%{opacity:.02}}
+@keyframes tempo-rim-result{0%{opacity:.15}35%{opacity:1}100%{opacity:.1}}
+@media(prefers-reduced-motion:reduce){[data-game=tempo] #stage[data-play-phase] .tempo-rim-lamp{animation:none;opacity:.12}}
+[data-game=tempo] .beatbtn{position:absolute;left:888px;top:474px;width:226px;height:35px;min-height:0;padding:0;background:#fff5e5;border:1.8px solid #72508c;border-radius:22px;box-shadow:0 3px 0 #80569d;color:#4d2872;font-size:16px;line-height:1;letter-spacing:.05px;font-weight:950;z-index:8;transition:transform .15s,box-shadow .15s}
+[data-game=tempo] .beatbtn:hover:not(:disabled){background:#fff8ee;transform:translateY(-1px);box-shadow:0 4px 0 #80569d}
+[data-game=tempo] .beatbtn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 #80569d}
+[data-game=tempo] .beatbtn:disabled{color:#9c7bab;background:#fff1df;border-color:#9473a5;box-shadow:0 3px 0 #936daa}
+[data-game=tempo] .tempo-switches{display:none}
+[data-game=tempo] .rhythm-lights{display:none}
+[data-game=tempo] .actions{position:static;border:0;padding:0;margin:0;min-height:0;height:0;display:block}
+/* Remove only the baked button from its former tabletop position. */
+[data-game=tempo] .actions:before{content:'';position:absolute;left:152px;top:515px;width:281px;height:97px;background:url('assets/scenes-v12/tempo-tabletop-clean-v149.png') -152px -515px/1280px 668.018px no-repeat;mask-image:linear-gradient(to right,transparent,#000 16px,#000 calc(100% - 16px),transparent),linear-gradient(to bottom,transparent,#000 12px,#000 calc(100% - 12px),transparent);mask-composite:intersect;z-index:0;pointer-events:none}
+/* The reading board and completion control share the same 482.2px centerline. */
+[data-game=tempo] .actions .big{position:absolute;left:361.7px;top:532px;justify-content:center;width:241px;height:57px;min-height:0;margin:0;padding:0 20px;border:0;border-radius:32px;background:transparent;box-shadow:none;color:#fffaf5;font-size:24px;letter-spacing:0;text-shadow:0 2px 0 #7c3fa3;isolation:isolate;z-index:1}
+/* Reuse the original pill artwork, including its outline and lower edge. */
+[data-game=tempo] .actions .big:before{content:'';position:absolute;left:-1px;top:-1px;width:243px;height:64px;border-radius:33px;background:var(--scene) -171px -531px/1280px 668.018px no-repeat;z-index:-1;pointer-events:none}
+[data-game=tempo] .actions .big:disabled{background:transparent;border:0;color:#fffaf5c4;box-shadow:none;text-shadow:none}
+[data-game=tempo] .actions .big:disabled:before{opacity:.78}
+[data-game=tempo] #tip{position:absolute;left:837px;top:539px;width:187px;max-width:none;margin:0;padding:0;border:0;background:none;font-size:13px;font-weight:750;line-height:1.25;color:#73528c;text-align:center}
+[data-game=tempo] #tip b{font-weight:900;color:#442364}
+[data-game=tempo] #tip small{display:block;margin-top:2px;font-size:10.5px;font-weight:800;color:#593975}
+[data-game=tempo] .round-celebration{box-shadow:0 5px 0 #6d4693,4px 10px 0 #d9b68d}
+[data-game=tempo] button:focus-visible{outline:4px solid #dd7818;outline-offset:5px}
+@media(max-width:1100px){[data-game=tempo] .title p{font-size:14.5px}}
+@media(prefers-reduced-motion:reduce){[data-game=tempo] .wheel{transition:none}[data-game=tempo] #stage .spin{transition:none}[data-game=tempo] #stage[data-play-phase] .spin:not(:disabled){animation:none}}

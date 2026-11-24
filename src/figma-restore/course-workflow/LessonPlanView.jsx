@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../components/PageLoading';
 import { buildCourseMap, phaseTemplates } from './workflowData';
 import apiService from '../../services/api';
 import {
@@ -1435,23 +1436,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   if (loading) {
     return (
       <div id="ed-tbl" className="lesson-loading-page">
-        <div className="lesson-loading-card" role="status" aria-live="polite">
-          <div className="lesson-loading-orbit" aria-hidden="true">
-            <span className="lesson-loading-paper paper-a" />
-            <span className="lesson-loading-paper paper-b" />
-            <span className="lesson-loading-pencil" />
-            <span className="lesson-loading-spark spark-a" />
-            <span className="lesson-loading-spark spark-b" />
-          </div>
-          <div className="lesson-loading-copy">
-            <strong>{t('workflow.lesson.generating')}</strong>
-            <span>
-              <i />
-              <i />
-              <i />
-            </span>
-          </div>
-        </div>
+        <PageLoading label={t('workflow.lesson.generating')} />
       </div>
     );
   }
@@ -1513,13 +1498,13 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       )}
       {regenPhaseConfirm && (
         <div className="mo on" onMouseDown={(event) => event.target === event.currentTarget && setRegenPhaseConfirm(null)}>
-          <div className="modal" style={{ width: 'min(420px, 90vw)', background: '#fff', borderRadius: 16, border: '2px solid #253142', boxShadow: '6px 6px 0 rgba(37,49,66,.24)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+          <div className="modal" style={{ width: 'min(420px, 90vw)', background: 'var(--wb-surface)', borderRadius: 18, border: '1px solid var(--wb-border)', boxShadow: '0 20px 64px rgba(48,43,59,.16)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div className="modal-hd">
               <div className="modal-t">{t('lesson.regeneratePhase')}</div>
               <button type="button" className="modal-x" onClick={() => setRegenPhaseConfirm(null)}>×</button>
             </div>
             <div className="modal-body" style={{ padding: '18px 24px' }}>
-              <p style={{ fontSize: 14, color: '#575F6E', lineHeight: 1.6 }}>
+              <p style={{ fontSize: 14, color: 'var(--wb-muted)', lineHeight: 1.6 }}>
                 {t('lesson.confirmRegeneratePhase')}
               </p>
             </div>
@@ -1870,7 +1855,7 @@ function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, i
       <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />{t('lesson.adjustTitle')}</button>
       <button type="button" className="step-menu-item" onClick={onInsertBefore}><Plus size={12} />{t('lesson.insertBefore')}</button>
       <button type="button" className="step-menu-item" onClick={isSaved ? onUnsave : onSave}>
-        <Heart size={12} fill={isSaved ? '#ff705f' : 'none'} />
+        <Heart size={12} fill={isSaved ? 'var(--wb-primary)' : 'none'} />
         {isSaved ? t('common.cancel') : t('lesson.myFavorites')}
       </button>
       <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />{t('lesson.pinToTop')}</button>

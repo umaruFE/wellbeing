@@ -6,6 +6,8 @@
   const HISTORY_WIDTH = 160;
   const HISTORY_HEIGHT = 24;
   const COUNTDOWN_SECONDS = 3;
+  // Pitch is measured from the screen plane toward the student.
+  const RECORDING_PITCH = 42 * Math.PI / 180;
   const VOICES = [
     { name: 'SOFT', hint: 'Whisper', range: [10, 52] },
     { name: 'MEDIUM', hint: 'Talking voice', range: [50, 80] },
@@ -55,7 +57,7 @@
   const monitor = document.createElement('div');
   monitor.className = 'monitor-skin';
   monitor.setAttribute('aria-hidden', 'true');
-  monitor.innerHTML = '<svg viewBox="510 182 715 313" preserveAspectRatio="none"><image href="../assets/volume-v3/school-radio.png" width="1736" height="906"/></svg>';
+  monitor.innerHTML = '<svg viewBox="510 182 715 354" preserveAspectRatio="none"><clipPath id="monitor-outline"><rect x="513" y="183" width="710" height="312" rx="36"/><rect x="811" y="491" width="113" height="43" rx="6"/></clipPath><use href="#room-art" clip-path="url(#monitor-outline)"/></svg>';
   stage.querySelector('.studio-wall').append(monitor);
 
   const drawIcon = '<svg viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="3" width="20" height="20" rx="4" fill="#fff4dc" stroke="currentColor" stroke-width="2"/><g fill="currentColor"><circle cx="8" cy="8" r="1.7"/><circle cx="18" cy="8" r="1.7"/><circle cx="13" cy="13" r="1.7"/><circle cx="8" cy="18" r="1.7"/><circle cx="18" cy="18" r="1.7"/></g></svg>';
@@ -117,17 +119,8 @@
   function createMicrophoneStand(rig) {
     const stand = rig.querySelector('.mic-stand');
     const elbow = rig.querySelector('.mic-elbow-rig');
-    const scene = getComputedStyle(stage);
-    const deskScale = parseFloat(scene.getPropertyValue('--desk-compression'));
-    const wallScale = parseFloat(scene.getPropertyValue('--wall-stretch'));
-    // Both backgrounds originate in the same crop. Match the desk projection below their seam.
-    const seam = 732.45;
-    const ratio = deskScale / wallScale;
-    for (const span of rig.querySelectorAll('.mic-desk-span')) {
-      span.setAttribute('transform', `translate(0 ${seam}) scale(1 ${ratio}) translate(0 ${-seam})`);
-    }
     const footX = 636;
-    const footY = seam + (846 - seam) * ratio;
+    const footY = 846;
     const dx = 702 - footX;
     const dy = 389 - footY;
     return degrees => {
@@ -146,149 +139,80 @@
   const historyY = level => 1 + (1 - level / MAX_LEVEL) * (HISTORY_HEIGHT - 2);
 
   function paintMicrophoneHead(rig) {
-    const projection = rig.querySelector('.mic-projection');
     const collar = rig.querySelector('.mic-collar');
     const barrel = rig.querySelector('.mic-barrel');
     const vents = rig.querySelector('.mic-vents');
     const shell = rig.querySelector('.mic-shell');
-    const bezel = rig.querySelector('.mic-bezel');
-    const dome = rig.querySelector('.mic-dome');
-    const weave = rig.querySelector('#mic-dome-weave');
-    // Rounded-square cross sections fit the broader basket to the original swivel and pickup.
-    const halfWidth = 1.12, halfDepth = .96, crownPower = 2.5;
-    const rimStation = 193, domeHeight = 74, domeRadius = 81;
-    const domeProfile = Array.from({ length: 25 }, (_, i) => {
-      const latitude = i * Math.PI / 48;
-      return [rimStation + domeHeight * Math.sin(latitude) ** (2 / crownPower),
-        domeRadius * Math.cos(latitude) ** (2 / crownPower)];
-    });
-    const collarProfile = [[0,42],[5,55],[12,64],[22,69],[47,69],[57,64],[62,61]];
-    const barrelProfile = [[50,59],[58,67],[70,75],[84,79],[173,79],[186,81],[193,81]];
-    const bezelProfile = [[182,80],[185,84],[188,86],[193,86],[196,83],[196,80]];
-    const normals = Array.from({ length: 72 }, (_, i) => {
-      const angle = i * Math.PI / 36;
+    const lamp = rig.querySelector('.mic-recording-led');
+    // Axial stations and radii follow the illustrated cream ferrule and the single coral capsule.
+    const collarProfile = [[21,43],[26,61],[33,74],[41,85],[49,91],[58,94],[71,94],[81,89],[87,80]];
+    const barrelProfile = [[85,45],[88,61],[93,71],[100,77],[111,79],[213,79],[229,78],[244,74],[257,67],[269,56],[278,42],[285,26],[288,0]];
+    const normals = Array.from({ length: 96 }, (_, i) => {
+      const angle = i * Math.PI / 48;
       return [Math.cos(angle), Math.sin(angle)];
     });
 
-    // The tangent of x^4 + z^4 = 1 gives a broad face with smoothly rounded corners.
-    function sectionTangents(facing) {
-      return normals.map(([nx, ny]) => {
-        const dx = nx * halfWidth, dz = ny * facing * halfDepth;
-        const support = (Math.abs(dx) ** (4 / 3) + Math.abs(dz) ** (4 / 3)) ** .75;
-        const divisor = Math.max(1e-12, support);
-        return { ny, support, x: halfWidth * Math.cbrt(dx / divisor), y: facing * halfDepth * Math.cbrt(dz / divisor) };
-      });
-    }
-
-    function silhouette(profile, tangents, length, magnify, originY = 0) {
+    function silhouette(profile, crossSectionDepth, length, magnify) {
       const rings = profile.map(([station, radius]) => {
         const scale = magnify(station);
-        return { y: station * length * scale - originY, r: radius * scale };
+        return { y: station * length * scale, r: radius * scale };
       });
-      const points = tangents.map(tangent => {
+      const points = normals.map(([nx, ny]) => {
+        const supportRadius = Math.hypot(nx, ny * crossSectionDepth);
         let rim = rings[0], greatest = -Infinity;
         for (const ring of rings) {
-          const support = ring.y * tangent.ny + ring.r * tangent.support;
+          const support = ring.y * ny + ring.r * supportRadius;
           if (support > greatest) { greatest = support; rim = ring; }
         }
-        const x = rim.r * tangent.x;
-        const y = rim.y + rim.r * tangent.y;
+        const x = rim.r * nx / supportRadius;
+        const y = rim.y + rim.r * ny * crossSectionDepth ** 2 / supportRadius;
         return x.toFixed(2) + ',' + y.toFixed(2);
       });
       return 'M' + points.join('L') + 'Z';
     }
 
-    // Each vent follows the curvature of the barrel. Its width and height compress with it.
-    const ventRims = [103,135,167].map(station => {
-      return Array.from({ length: 36 }, (_, i) => {
-        const t = i * 2 * Math.PI / 36;
-        const u = Math.cos(t), v = Math.sin(t);
-        const around = -.14 + .55 * Math.sign(u) * Math.sqrt(Math.abs(u));
-        const horizontal = Math.sin(around);
-        return {
-          x: 79 * halfWidth * horizontal, z: 79 * halfDepth * (1 - horizontal ** 4) ** .25,
-          y: station + 7 * Math.sign(v) * Math.sqrt(Math.abs(v))
-        };
-      });
-    });
-
-    // Bind both sets of wires and their outward normals to the same curved basket.
-    const wires = [];
-    for (let row = -9; row <= 9; row++) {
-      const offset = row / 9.5;
-      const radius = Math.sqrt(1 - offset * offset);
-      for (const crosswise of [false, true]) {
-        wires.push(Array.from({ length: 49 }, (_, i) => {
-          const arc = i * Math.PI / 48;
-          const along = radius * Math.cos(arc);
-          const u = crosswise ? along : offset, v = crosswise ? offset : along;
-          const x = (u - v) * Math.SQRT1_2, z = (u + v) * Math.SQRT1_2;
-          const norm = Math.max(1e-12, (x ** 4 + z ** 4) ** .25);
-          const ring = Math.hypot(x, z) ** (2 / crownPower);
-          const height = (radius * Math.sin(arc)) ** (2 / crownPower);
-          return {
-            x: domeRadius * halfWidth * ring * x / norm,
-            y: rimStation + domeHeight * height,
-            z: domeRadius * halfDepth * ring * z / norm,
-            normalY: height ** (crownPower - 1) / domeHeight,
-            normalZ: ring ** (crownPower - 1) * (z / norm) ** 3 / (domeRadius * halfDepth)
-          };
+    // Rounded slots are cut in three bands around the casing. At rest the two outer
+    // bands wrap out of view at the edges, just as they do on the activity cover.
+    const slots = [];
+    for (const [station, radius] of [[160,79],[205,79],[249,72]]) {
+      for (const [angle, halfAngle] of [[-.29,.55],[1.16,.35],[-1.52,.25]]) {
+        slots.push(Array.from({ length: 32 }, (_, i) => {
+          const t = i * Math.PI / 16;
+          const u = Math.cos(t), v = Math.sin(t);
+          const azimuth = Math.max(-Math.PI / 2, Math.min(Math.PI / 2,
+            angle + halfAngle * Math.sign(u) * Math.abs(u) ** .52));
+          return { x: radius * Math.sin(azimuth), z: radius * Math.cos(azimuth),
+            y: station + 8.3 * Math.sign(v) * Math.abs(v) ** .52 };
         }));
       }
     }
 
-    function projectWeave(facing, length, magnify, tipY) {
-      const commands = [];
-      const axialView = facing * (1 - rimStation * facing / 745);
-      const horizon = facing * facing / 745;
-      function point(x, y, z) {
-        const scale = magnify(y);
-        return (scale * x).toFixed(2) + ',' + (scale * (y * length - z * facing) - tipY).toFixed(2);
-      }
-      for (const wire of wires) {
-        let previous, last;
-        for (const p of wire) {
-          const visibility = p.normalY * axialView + p.normalZ * length - horizon;
-          if (previous && (visibility > 0) !== (last > 0)) {
-            // End the wire exactly on the apparent rim as it turns out of view.
-            const t = last / (last - visibility);
-            commands.push(visibility > 0 ? 'M' : 'L', point(
-              previous.x + t * (p.x - previous.x), previous.y + t * (p.y - previous.y), previous.z + t * (p.z - previous.z)
-            ));
-          }
-          if (visibility > 0) commands.push(previous ? 'L' : 'M', point(p.x, p.y, p.z));
-          previous = p;
-          last = visibility;
-        }
-      }
-      return commands.join('');
-    }
-
-    return function project(pitchRadians, totalRollDegrees, wallStretch) {
+    return function project(pitchRadians, totalRollDegrees) {
       const facing = Math.sin(pitchRadians);
-      const length = Math.max(0, Math.cos(pitchRadians));
+      const length = Math.cos(pitchRadians);
       const magnify = station => 745 / (745 - station * facing);
-      const faceScale = magnify(267);
-      const tipY = 267 * length * faceScale;
-      // The painted wall has been stretched vertically. Undo its distortion progressively
-      // in screen coordinates so a front-on circular grille remains circular at any arm roll.
-      const rectification = 1 - facing * facing * (1 - 1 / wallStretch);
-      projection.setAttribute('transform', `rotate(${-totalRollDegrees}) scale(1 ${rectification}) rotate(${totalRollDegrees})`);
-
-      const tangents = sectionTangents(facing);
-      collar.setAttribute('d', silhouette(collarProfile, tangents, length, magnify));
-      barrel.setAttribute('d', silhouette(barrelProfile, tangents, length, magnify));
-      bezel.setAttribute('d', silhouette(bezelProfile, tangents, length, magnify));
-      vents.setAttribute('d', ventRims.map(rim => 'M' + rim.map(({ x, y, z }) => {
+      // The cover already reveals the near side of each rim in its parked pose.
+      const crossSectionDepth = .48 * length + .64 * facing;
+      collar.setAttribute('d', silhouette(collarProfile, crossSectionDepth, length, magnify));
+      barrel.setAttribute('d', silhouette(barrelProfile, crossSectionDepth, length, magnify));
+      vents.setAttribute('d', slots.map(slot => 'M' + slot.map(({ x, y, z }) => {
         const scale = magnify(y);
-        return (x * scale).toFixed(2) + ',' + ((y * length - z * facing) * scale).toFixed(2);
+        return (x * scale).toFixed(2) + ',' + ((y * length - z * crossSectionDepth) * scale).toFixed(2);
       }).join('L') + 'Z').join(''));
-      // The shell's pickup remains at station 267 while the basket curves back to its rim.
+
+      const tipY = 267 * length * magnify(267);
       shell.setAttribute('transform', `translate(0 ${tipY - 267})`);
-      dome.setAttribute('d', silhouette(domeProfile, tangents, length, magnify, tipY));
-      weave.setAttribute('d', projectWeave(facing, length, magnify, tipY));
+      // The tally lamp sits below the central slots on the near side of the curved nose.
+      const lampScale = magnify(275);
+      const lampY = (275 * length - 41 * crossSectionDepth) * lampScale;
+      lamp.setAttribute('transform', `translate(${-10 * lampScale} ${lampY - tipY}) scale(${lampScale * .88} ${lampScale * .84})`);
+      // The pulse follows the same pickup, behind the casing, throughout the swing.
+      const waveScale = magnify(239);
+      const waveY = 236 * length * waveScale;
+      microphoneWaves.setAttribute('transform', `translate(0 ${waveY}) scale(${waveScale * .9} ${waveScale * .84})`);
+
       const roll = totalRollDegrees * Math.PI / 180;
-      return { x: -Math.sin(roll) * tipY, y: rectification * Math.cos(roll) * tipY };
+      return { x: -Math.sin(roll) * tipY, y: Math.cos(roll) * tipY };
     };
   }
 
@@ -300,7 +224,6 @@
     const head = rig.querySelector('.mic-capsule');
     const projectHead = paintMicrophoneHead(rig);
     const tiltStand = createMicrophoneStand(rig);
-    const wallStretch = Number(getComputedStyle(stage).getPropertyValue('--wall-stretch'));
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
     const rad = Math.PI / 180;
     const upperLength = Math.hypot(268, 304), lowerLength = Math.hypot(104, 113);
@@ -329,11 +252,11 @@
       // wrist, so turning a long barrel towards the viewer never pulls the tip back.
       const travel = ease(time);
       const sweep = Math.sin(Math.PI * travel);
-      const roll = 24 * (1 - travel) + 7 * sweep;
+      const roll = 24 + (48 - 24) * travel + 4 * sweep;
       const wristAngle = -13 * travel + 4 * sweep;
-      const pitch = Math.PI / 2 * travel;
+      const pitch = RECORDING_PITCH * travel;
       const elbow = tiltStand(13 * ease(time / .92));
-      const tip = projectHead(pitch, roll, wallStretch);
+      const tip = projectHead(pitch, roll);
       const wx = Math.cos(wristAngle * rad), wy = Math.sin(wristAngle * rad);
       const x = bezier(parkedX, 127, 65, 64, travel) - tip.x - (-26 * wx - 61 * wy) - (702 + elbow.x);
       const y = bezier(parkedY, 515, 466, 397, travel) - tip.y - (-26 * wy + 61 * wx) - (389 + elbow.y);

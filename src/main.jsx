@@ -5,9 +5,16 @@ import i18next from 'i18next'
 import './index.css'
 import App from './App.jsx'
 import { appAntdTheme } from './theme/buildAntdTheme'
+import { applyWorkbenchTokens } from './theme/workbenchTokens.js'
 import './i18n';
 import { registerSW } from 'virtual:pwa-register'
 
+applyWorkbenchTokens(document.documentElement);
+if (import.meta.env.DEV && import.meta.env.VITE_WELLBEING_READ_ONLY_PREVIEW === 'true') {
+  window.WB_WORKBENCH_LIVE = true;
+  window.WB_WORKBENCH_READ_ONLY = true;
+  window.WB_WORKBENCH_ACTIVITY_WRITES = import.meta.env.VITE_WELLBEING_ACTIVITY_WRITES === 'true';
+}
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   console.error('找不到 root 元素！');

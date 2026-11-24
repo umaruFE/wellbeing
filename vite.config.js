@@ -1,29 +1,33 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+import { workbenchCdnAssets } from './dev/workbench-cdn-assets.mjs'
 export default defineConfig({
   plugins: [
     react(),
+    workbenchCdnAssets(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['vite.svg'],
+      includeAssets: ['star.svg'],
       manifest: {
-        name: 'Wellbeing',
-        short_name: 'Wellbeing',
-        description: 'Wellbeing 课程与绘本创作平台',
-        theme_color: '#253142',
+        name: '小星星',
+        short_name: '小星星',
+        description: '小星星课程与绘本创作工作台',
+        theme_color: '#7053c1',
         background_color: '#ffffff',
         display: 'standalone',
         scope: '/',
         start_url: '/',
         lang: 'zh-CN',
         icons: [
-          { src: '/vite.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
+          { src: '/star.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globIgnores: ['workbench-v6/**'],
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/workbench-v6\//],
         // 增大缓存文件上限到 6 MiB（默认 2 MiB 不够用）
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
       },

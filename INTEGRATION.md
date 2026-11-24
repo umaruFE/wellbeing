@@ -17,7 +17,7 @@
 
 `/api/workbench-activities` 按账号及机构保存活动、草稿和授课版。旧浏览器记录在同一存储范围且后台为空时自动导入。若后台已有记录，原本地数据仍保留。同步失败会提示重试，多标签页更新冲突时可导出当前修改再读取后台版本。
 
-已有 PostgreSQL 数据库需执行 `api/db/workbench-activities.sql`。新建 Docker 数据卷会自动初始化。联调可使用 `node portable-preview.mjs --port 5201 --backend-port 4000`，同源转发到本机 4000 后台。5200 的默认离线预览继续使用示例身份及浏览器存储。当前交付包直接使用 `dist/`，Docker 前端和现有部署脚本检测到完整预构建包后使用该运行包。
+已有 PostgreSQL 数据库需执行 `api/db/workbench-activities.sql`。新建 Docker 数据卷会自动初始化。联调可使用 `node portable-preview.mjs --port 5201 --backend-port 4000`，同源转发到本机 4000 后台。原 5200 离线演示的启动入口已移至桌面归档。当前交付包直接使用 `dist/`，Docker 前端和现有部署脚本检测到完整预构建包后使用该运行包。
 
 ## 2026-11-19 接入记录
 
@@ -80,7 +80,8 @@ npm run dev:visual -- --strictPort
 | --- | --- |
 | `src/modules/integrated-workbench/ModuleHost.jsx` | 持久挂载、离开守卫、返回与暂停生命周期 |
 | `src/modules/integrated-workbench/bridge.mjs` | 六模块入口、角色、身份范围及可信消息 |
-| `public/workbench-v6/` | 六模块运行副本及自带素材 |
+| `public/workbench-v6/` | 六模块页面、脚本、样式和本地开发素材 |
+| `dev/workbench-cdn-assets.json` | FTP 发布的素材地址、字节数和 SHA-256 |
 | `public/workbench-v6/manifest.json` | 前三模块冻结来源、瑜伽本地案例覆盖与输出哈希；`excludedModules` 仅指该生成器范围 |
 | `public/workbench-v6/external-manifest.json` | 新三模块来源、实际依赖、转换及输出哈希 |
 | `scripts/package-workbench.py` | 按固定 V6 哈希提取前三模块，应用瑜伽维护源与登记素材 |
@@ -89,7 +90,7 @@ npm run dev:visual -- --strictPort
 | `public/workbench-v6/authoring.css`、`authoring.js` | 艺术表达及新三模块共用的备课组件与操作栏尺寸适配 |
 | `dev/*.test.mjs` | 预览服务、宿主、适配器及打包边界检查 |
 
-静态包在生产构建时复制到 `dist/workbench-v6/`。整个目录按需加载，不加入 PWA 预缓存，也不被 SPA 导航兜底替换。部署需保留目录结构和媒体 MIME 类型。日常开发、`npm run build` 与运行交付不依赖原总集成目录；重新提取才需要原源。不要手工覆盖生成副本来追随尚未登记的新版本。
+开发服务沿用原资源路径，通过同源代理读取清单中已发布的 CDN 素材。本地同名文件优先，便于预览尚在修改的素材。生产构建校验并补齐已发布素材，将完整运行包输出到 `dist/workbench-v6/`。工作台资源按需加载，排除在 PWA 预缓存与 SPA 导航兜底之外。部署需保留目录结构和媒体 MIME 类型。日常开发、`npm run build` 与运行交付均可使用当前包，重新提取时需要原始文件。
 
 ## 验证与限制
 

@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Row, Col, Button, Segmented, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../components/PageLoading';
 import { 
   BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
-  Sparkles, Plus, Package, RefreshCw, Clock, Award, Users,
+  Sparkles, Plus, Package, Clock, Award, Users,
   Loader2
 } from 'lucide-react';
 import apiService from '../services/api';
@@ -17,8 +18,8 @@ const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
   const [errored, setErrored] = useState(!src);
   if (errored || !src) {
     return (
-      <div className={className} style={{ ...style, background: '#f0eee9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {Icon ? <Icon size={36} style={{ color: '#c4bfb6' }} strokeWidth={1.5} /> : null}
+      <div className={className} style={{ ...style, background: 'var(--wb-page)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {Icon ? <Icon size={36} style={{ color: 'var(--wb-muted)' }} strokeWidth={1.5} /> : null}
       </div>
     );
   }
@@ -35,7 +36,7 @@ const StatusTag = ({ status }) => {
         display: 'flex',
         alignItems: 'center',
         gap: '4px',
-        borderRadius: '100px',
+        borderRadius: '6px',
         padding: '0 7px',
         height: '22px',
         fontSize: '12px',
@@ -129,14 +130,14 @@ const VideoCard = ({ video }) => {
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              borderRadius: '100px',
+              borderRadius: '6px',
               padding: '0 7px',
               height: '22px',
               fontSize: '12px',
               fontWeight: 500,
-              border: '1px solid #333e4e',
-              backgroundColor: '#fcfbf9',
-              color: '#333e4e',
+              border: '1px solid var(--wb-border-soft)',
+              backgroundColor: 'var(--wb-page)',
+              color: 'var(--wb-text)',
             }}
           >
             <FileText size={12} />
@@ -153,7 +154,7 @@ const VideoCard = ({ video }) => {
   );
 };
 
-const audioColors = ['#bdddc2', '#ffd294', '#9ecaff', '#ff9a85', '#c29edf'];
+const audioColors = ['var(--wb-selected)', 'var(--wb-page)'];
 const audioWaveformHeights = [
   18, 28, 14, 34, 22, 38, 16, 30, 24, 40,
   20, 32, 12, 36, 26, 18, 34, 22, 30, 16,
@@ -212,7 +213,7 @@ const CreateSection = ({ onCreateCourse, navigate }) => {
       </div>
     </div>
     <div className="create-section-content">
-      <Button className="create-course-btn" onClick={onCreateCourse}>
+      <Button type="primary" className="create-course-btn" onClick={onCreateCourse}>
         <Plus size={16} />
         <span>{t('dashboard.createCourse')}</span>
       </Button>
@@ -233,11 +234,11 @@ const CreateSection = ({ onCreateCourse, navigate }) => {
   );
 };
 
-const AssetSection = ({ stats, statsLoading }) => {
+const AssetSection = ({ stats }) => {
   const { t } = useTranslation();
-  const courseCount = stats.content?.courses ?? stats.courses?.total ?? 0;
-  const pictureBookCount = stats.content?.pictureBooks ?? 0;
-  const totalContentCount = stats.content?.total ?? (courseCount + pictureBookCount);
+  const courseCount = stats?.content?.courses ?? stats?.courses?.total ?? '—';
+  const pictureBookCount = stats?.content?.pictureBooks ?? '—';
+  const totalContentCount = stats?.content?.total ?? '—';
 
   return (
     <div className="asset-section">
@@ -253,23 +254,13 @@ const AssetSection = ({ stats, statsLoading }) => {
             </div>
           </div>
         </div>
-        <Tag className="sync-tag">
-          <RefreshCw size={12} className="animate-spin" />
-          <span>{t('dashboard.syncing')}</span>
-        </Tag>
       </div>
       <div className="asset-content">
         <div className="asset-stats-row">
           <span className="info-text">{t('dashboard.totalGenerated')}</span>
           <div className="stat-number-wrapper">
-            {statsLoading ? (
-              <Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} />
-            ) : (
-              <>
-                <span className="stat-number">{totalContentCount}</span>
-                <span className="stat-label">{t('dashboard.unit')}</span>
-              </>
-            )}
+            <span className="stat-number">{totalContentCount}</span>
+            <span className="stat-label">{t('dashboard.unit')}</span>
           </div>
         </div>
         <div className="content-counts-row">
@@ -334,27 +325,23 @@ const RecentSection = ({
     { id: 'audio', icon: Music, label: t('sidebar.audioLibrary') },
   ];
 
-  const renderRow = (items, renderFn, rowSize) => {
-    const rows = [];
-    for (let i = 0; i < items.length; i += rowSize) {
-      rows.push(items.slice(i, i + rowSize));
-    }
-    return rows.map((row, ri) => <div key={ri} className="recent-row">{row.map(renderFn)}</div>);
-  };
+  const renderRow = (items, renderFn) => (
+    <div className="recent-row">{items.map(renderFn)}</div>
+  );
 
   const renderContent = () => {
     switch (activeTab) {
       case 'courses':
-        if (coursesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (coursesLoading) return <PageLoading />;
         if (!courses || courses.length === 0) return <EmptyState icon={FileText} text={t('dashboard.noCourses')} />;
         return (
           <>
-            {renderRow(courses, course => <CourseCard key={course.id} course={course} onClick={() => onCourseClick(course)} />, 4)}
+            {renderRow(courses, course => <CourseCard key={course.id} course={course} onClick={() => onCourseClick(course)} />)}
             {(coursesHasMore || coursesLoadingMore) && (
               <div className="recent-load-more-sentinel" ref={coursesSentinelRef}>
                 {coursesLoadingMore && (
                   <>
-                    <Loader2 size={20} className="animate-spin" style={{ color: '#9ca3af' }} />
+                    <Loader2 size={20} className="animate-spin" style={{ color: 'var(--wb-muted)' }} />
                     <span className="loading-text">{t('common.loading')}</span>
                   </>
                 )}
@@ -363,17 +350,17 @@ const RecentSection = ({
           </>
         );
       case 'images':
-        if (imagesLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (imagesLoading) return <PageLoading />;
         if (!images || images.length === 0) return <EmptyState icon={Image} text={t('dashboard.noImages')} />;
-        return renderRow(images, image => <ImageCard key={image.id} image={image} onClick={() => {}} />, 4);
+        return renderRow(images, image => <ImageCard key={image.id} image={image} onClick={() => {}} />);
       case 'videos':
-        if (videosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (videosLoading) return <PageLoading />;
         if (!videos || videos.length === 0) return <EmptyState icon={Video} text={t('dashboard.noVideos')} />;
-        return renderRow(videos, video => <VideoCard key={video.id} video={video} />, 4);
+        return renderRow(videos, video => <VideoCard key={video.id} video={video} />);
       case 'audio':
-        if (audiosLoading) return <div className="loading-container"><Loader2 size={24} className="animate-spin" style={{ color: '#9ca3af' }} /><span className="loading-text">{t('common.loading')}</span></div>;
+        if (audiosLoading) return <PageLoading />;
         if (!audios || audios.length === 0) return <EmptyState icon={Music} text={t('dashboard.noAudios')} />;
-        return renderRow(audios, (audio, idx) => <AudioCard key={audio.id} audio={audio} index={idx} />, 5);
+        return renderRow(audios, (audio, idx) => <AudioCard key={audio.id} audio={audio} index={idx} />);
       default:
         return null;
     }
@@ -406,11 +393,6 @@ const RecentSection = ({
             })}
             value={activeTab}
             onChange={setActiveTab}
-            style={{
-              border: '2px solid #333E4E',
-              borderRadius: '9999px',
-              backgroundColor: '#f3f2ed',
-            }}
           />
         </div>
         <div className="recent-sort-btn">
@@ -442,15 +424,8 @@ export const AdminDashboard = () => {
   const [audios, setAudios] = useState([]);
   const [audiosLoading, setAudiosLoading] = useState(true);
 
-  const [stats, setStats] = useState({
-    courses: { total: 0 },
-    content: { total: 0, courses: 0, pictureBooks: 0 },
-    media: { images: 0, videos: 0, audios: 0 },
-    tasks: { running: 0, completed: 0, queued: 0 },
-    todayCompleted: 0,
-    compute: { used: 0, total: 40000, remaining: 40000 },
-  });
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [stats, setStats] = useState(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   const loadData = useCallback(async () => {
     try {
@@ -460,8 +435,6 @@ export const AdminDashboard = () => {
       }
     } catch (error) {
       console.error('获取统计数据失败:', error);
-    } finally {
-      setStatsLoading(false);
     }
   }, []);
 
@@ -619,11 +592,14 @@ export const AdminDashboard = () => {
   }, [t]);
 
   useEffect(() => {
-    loadData();
-    fetchRecentCourses();
+    let active = true;
+    Promise.allSettled([loadData(), fetchRecentCourses()]).then(() => {
+      if (active) setInitialLoading(false);
+    });
     fetchRecentImages();
     fetchRecentVideos();
     fetchRecentAudios();
+    return () => { active = false; };
   }, [loadData, fetchRecentCourses, fetchRecentImages, fetchRecentVideos, fetchRecentAudios]);
 
   const handleCreateCourse = () => {
@@ -639,14 +615,19 @@ export const AdminDashboard = () => {
     navigate('/figma-courses', { state: { openCourse: course } });
   };
 
+  if (initialLoading) {
+    return <PageLoading layout="fill" />;
+  }
+
   return (
     <div className="admin-dashboard">
+      <div className="dashboard-page-heading"><h1>{t('sidebar.dashboard')}</h1></div>
       <Row className="dashboard-top-modules" gutter={[20, 20]} style={{ marginBottom: 20 }}>
         <Col xs={24} lg={12}>
           <CreateSection onCreateCourse={handleCreateCourse} navigate={navigate} />
         </Col>
         <Col xs={24} lg={12}>
-          <AssetSection stats={stats} statsLoading={statsLoading} />
+          <AssetSection stats={stats} />
         </Col>
       </Row>
       <RecentSection

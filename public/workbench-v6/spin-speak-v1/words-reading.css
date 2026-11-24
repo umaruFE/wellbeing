@@ -1,0 +1,43 @@
+/* The sentence is the reading track. On long sentences it scrolls independently of the stage. */
+[data-game=words] .sentwrap{min-width:0;margin-top:53px}
+[data-game=words] #sent{
+  position:relative;max-width:100%;min-width:0;width:max-content;
+  justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;
+  padding:14px 18px 32px;gap:12px;scrollbar-width:thin;scrollbar-color:#c19a73 #f8edda;
+}
+[data-game=words] #sent .col{
+  appearance:none;flex:0 0 151px;min-width:0;padding:6px 3px 4px;gap:5px;
+  border:0;border-radius:14px;background:transparent;color:#433244;font:inherit;cursor:pointer;
+}
+[data-game=words] #sent .col:not(:last-child)::after{right:-15px;width:18px;top:105px}
+[data-game=words] #sent .col::before{bottom:-23px}
+[data-game=words] #sent .word{
+  width:100%;min-height:48px;height:auto;padding:4px 6px;line-height:1.08;
+  overflow-wrap:anywhere;text-align:center;font-size:24px;
+}
+[data-game=words] #sent .disc{width:100px;height:100px;flex:none}
+[data-game=words] #sent .words-coach{display:block;width:96px;height:96px;pointer-events:none}
+[data-game=words] .move-name{font-size:16px;line-height:1.2;font-weight:750;color:#775136}
+[data-game=words] #sent .free-move{font-weight:900;font-size:37px;color:#926022;background-image:radial-gradient(circle at 32% 20%,#ffffff65,transparent 65%)}
+[data-game=words] #sent .free-move .prop-icon{width:58px;height:58px}
+[data-game=words] .fill-word .word{background:#fff0bd;border-color:#d3ae62}
+[data-game=words] #sent .col:disabled{cursor:default}
+[data-game=words] #sent .col:not(:disabled):hover .word{border-color:#9a602f}
+[data-game=words] #sent .col:focus-visible{outline:3px solid #315a50;outline-offset:0}
+[data-game=words] #sent .col.is-reading .word{
+  background:#ffe293;border-color:#975622;box-shadow:0 3px 0 #b7793d;color:#492814;
+}
+[data-game=words] #sent .col.is-reading:not(.fill-word) .disc{
+  border-color:#8a4927;outline:3px solid #f5b950;outline-offset:2px;
+  background:radial-gradient(circle at 36% 21%,#fff3d5,#ffdaa2);
+}
+[data-game=words] #sent .col.is-reading::before{color:white;background:#995021}
+[data-game=words] #sent .col.is-reading .move-name{color:#82401d}
+[data-game=words] #stage.word-trail .col :is(.word,.disc,.slotcirc){animation:none}
+[data-game=words] #stage.is-paused .col.is-reading *{animation-play-state:paused!important}
+[data-game=words] .opt{font:inherit;background:none;border:0;padding:0}
+[data-game=words] .opt:disabled{cursor:default}
+[data-game=words] .actions .big{margin-left:0}
+[data-game=words] .actions #readBtn{background:#fff6d9;color:#56351e;border-color:#aa7548;box-shadow:0 5px 0 #aa7548}
+[data-game=words] .actions #readBtn:disabled{background:#f5f0e9;color:#897c76;border-color:#cbbfb4;box-shadow:0 4px 0 #cbbfb4}
+[data-game=words] .actions .tip{max-width:620px}

@@ -144,22 +144,22 @@ export const VideoGeneratorPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface-alt">
+    <div className="min-h-screen bg-[var(--wb-page)]">
       {/* 顶部导航栏 */}
-      <header className="bg-white border-b border-stroke sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="bg-white border-b border-[var(--wb-border)] sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 min-h-14 py-2 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
+              className="p-2 hover:bg-[var(--wb-page)] rounded-[10px] transition-colors min-h-10"
               title={i18next.t('common.back')}
             >
-              <ArrowLeft className="w-5 h-5 text-primary-secondary" />
+              <ArrowLeft className="w-5 h-5 text-[var(--wb-muted)]" />
             </button>
-            <h1 className="text-lg font-bold text-primary"><LocalizedText id="testVideoUi.96e92dfb39" /></h1>
+            <h1 className="text-[28px] leading-tight font-bold text-[var(--wb-text)]"><LocalizedText id="testVideoUi.96e92dfb39" /></h1>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-sm text-primary-muted">
+            <span className="text-sm text-[var(--wb-muted)]">
               {user ? user.name || user.email || '用户' : '未登录'}
             </span>
           </div>
@@ -167,67 +167,67 @@ export const VideoGeneratorPage = () => {
       </header>
 
       {/* 主体内容 */}
-      <div className="p-8">
+      <div className="p-4 sm:p-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-xl shadow-lg p-8">
+          <div className="bg-white rounded-[14px] border border-[var(--wb-border)] shadow-[0_6px_24px_rgba(48,43,59,0.06)] p-4 sm:p-8">
             <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video className="w-8 h-8 text-purple" />
+              <div className="w-16 h-16 bg-[var(--wb-selected)] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Video className="w-8 h-8 text-[var(--wb-primary)]" />
               </div>
-              <h1 className="text-3xl font-bold text-dark mb-4">
+              <h1 className="text-[28px] leading-tight font-bold text-[var(--wb-text)] mb-4">
                 <LocalizedText id="testVideoUi.ca82b1f18b" />
               </h1>
-              <p className="text-primary-secondary mb-8">
+              <p className="text-[var(--wb-muted)] mb-8">
                 <LocalizedText id="testVideoUi.35cf55935e" />
               </p>
 
               <button
                 onClick={() => setShowModal(true)}
-                className="px-8 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-3 mx-auto text-lg font-medium shadow-lg hover:shadow-xl"
+                className="px-8 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center justify-center gap-3 mx-auto text-sm font-medium shadow-[0_6px_24px_rgba(48,43,59,0.06)] hover:shadow-[0_8px_32px_rgba(48,43,59,0.10)] min-h-10 active:bg-[var(--wb-primary-active)]"
               >
                 <Video className="w-6 h-6" />
                 <LocalizedText id="testVideoUi.7a6fac0dc2" />
               </button>
             </div>
 
-            <div className="border-t border-stroke pt-8">
-              <h2 className="text-xl font-semibold text-dark mb-4"><LocalizedText id="testVideoUi.b009db40f4" /></h2>
+            <div className="border-t border-[var(--wb-border)] pt-8">
+              <h2 className="text-xl font-semibold text-[var(--wb-text)] mb-4"><LocalizedText id="testVideoUi.b009db40f4" /></h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-purple-50 rounded-lg p-4 text-center">
+                <div className="bg-[var(--wb-selected)] rounded-[10px] p-4 text-center">
                   <div className="text-2xl mb-2">📝</div>
-                  <h3 className="font-medium text-dark mb-1"><LocalizedText id="testVideoUi.e081c961d6" /></h3>
-                  <p className="text-sm text-primary-muted"><LocalizedText id="testVideoUi.3a4601d5c0" /></p>
+                  <h3 className="font-medium text-[var(--wb-text)] mb-1"><LocalizedText id="testVideoUi.e081c961d6" /></h3>
+                  <p className="text-sm text-[var(--wb-muted)]"><LocalizedText id="testVideoUi.3a4601d5c0" /></p>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4 text-center">
+                <div className="bg-[var(--wb-selected)] rounded-[10px] p-4 text-center">
                   <div className="text-2xl mb-2">🎨</div>
-                  <h3 className="font-medium text-dark mb-1"><LocalizedText id="testVideoUi.b76a04d00f" /></h3>
-                  <p className="text-sm text-primary-muted"><LocalizedText id="testVideoUi.f3bc9f143f" /></p>
+                  <h3 className="font-medium text-[var(--wb-text)] mb-1"><LocalizedText id="testVideoUi.b76a04d00f" /></h3>
+                  <p className="text-sm text-[var(--wb-muted)]"><LocalizedText id="testVideoUi.f3bc9f143f" /></p>
                 </div>
-                <div className="bg-purple-50 rounded-lg p-4 text-center">
+                <div className="bg-[var(--wb-selected)] rounded-[10px] p-4 text-center">
                   <div className="text-2xl mb-2">🎬</div>
-                  <h3 className="font-medium text-dark mb-1"><LocalizedText id="testVideoUi.7627c369ab" /></h3>
-                  <p className="text-sm text-primary-muted"><LocalizedText id="testVideoUi.ba3e3bf27b" /></p>
+                  <h3 className="font-medium text-[var(--wb-text)] mb-1"><LocalizedText id="testVideoUi.7627c369ab" /></h3>
+                  <p className="text-sm text-[var(--wb-muted)]"><LocalizedText id="testVideoUi.ba3e3bf27b" /></p>
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-stroke pt-8 mt-8">
-              <h2 className="text-xl font-semibold text-dark mb-4"><LocalizedText id="testVideoUi.51d4e3c510" /></h2>
-              <ol className="space-y-3 text-primary-secondary">
+            <div className="border-t border-[var(--wb-border)] pt-8 mt-8">
+              <h2 className="text-xl font-semibold text-[var(--wb-text)] mb-4"><LocalizedText id="testVideoUi.51d4e3c510" /></h2>
+              <ol className="space-y-3 text-[var(--wb-muted)]">
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">1</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">1</span>
                   <span><LocalizedText id="testVideoUi.c5a2052a40" /></span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">2</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">2</span>
                   <span><LocalizedText id="testVideoUi.bb34526bc5" /></span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">3</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">3</span>
                   <span><LocalizedText id="testVideoUi.e73fc69fd6" /></span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-purple-100 text-purple rounded-full flex items-center justify-center text-sm font-medium">4</span>
+                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">4</span>
                   <span><LocalizedText id="testVideoUi.ed31514f90" /></span>
                 </li>
               </ol>
@@ -235,18 +235,18 @@ export const VideoGeneratorPage = () => {
           </div>
 
           {/* 背景音乐生成面板 */}
-          <div className="bg-white rounded-xl shadow-lg p-8 mt-8">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-dark flex items-center gap-2">
-                <Music className="w-5 h-5 text-info" />
+          <div className="bg-white rounded-[14px] border border-[var(--wb-border)] shadow-[0_6px_24px_rgba(48,43,59,0.06)] p-8 mt-8">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+              <h2 className="text-xl font-semibold text-[var(--wb-text)] flex items-center gap-2">
+                <Music className="w-5 h-5 text-[var(--wb-primary)]" />
                 <LocalizedText id="testVideoUi.e2782f101a" />
               </h2>
               <button
                 onClick={() => setShowAudioPanel(!showAudioPanel)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`px-4 py-2 rounded-[10px] text-sm font-medium transition-colors min-h-10 ${
                   showAudioPanel
-                    ? 'bg-info text-white'
-                    : 'bg-info-light text-info-active hover:bg-info'
+                    ? "bg-[var(--wb-primary)] text-white"
+                    : "bg-[var(--wb-selected)] text-[var(--wb-primary-hover)] hover:bg-[var(--wb-primary)]"
                 }`}
               >
                 {showAudioPanel ? '收起' : '展开'}
@@ -256,7 +256,7 @@ export const VideoGeneratorPage = () => {
             {showAudioPanel && (
               <div className="space-y-6">
                 <div>
-                  <label className="text-sm font-medium text-primary-secondary mb-2 block">
+                  <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block">
                     <LocalizedText id="testVideoUi.a29ea2de1e" /> <span className="text-error">*</span>
                   </label>
                   <textarea
@@ -264,23 +264,22 @@ export const VideoGeneratorPage = () => {
                     onChange={e => setStoryboardPrompts(e.target.value)}
                     placeholder={i18next.t('testVideoUi.b5152b46f4')}
                     rows={5}
-                    className="w-full border-2 border-stroke-light rounded-xl px-4 py-3 text-sm resize-none
-                      focus:border-primary focus:ring-2 focus:ring-[#2d2d2d]/10 outline-none transition-all"
+                    className="w-full border border-[var(--wb-border)] rounded-[10px] px-4 py-3 text-sm resize-none\n                      focus:border-[var(--wb-selected-border)] focus:ring-2 focus:ring-[var(--wb-selected)] outline-none transition-all"
                   />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="audioGenerator.style" /></label>
+                    <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block"><LocalizedText id="audioGenerator.style" /></label>
                     <div className="flex flex-wrap gap-2">
                       {AUDIO_STYLES.map(style => (
                         <button
                           key={style.id}
                           onClick={() => setSelectedStyle(style)}
-                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all ${
+                          className={`px-3 py-1.5 rounded-[10px] text-sm font-medium border transition-all min-h-10 ${
                             selectedStyle.id === style.id
-                              ? 'border-info bg-info-light text-info-active'
-                              : 'border-stroke-light text-primary-secondary hover:border-primary'
+                              ? "border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary-hover)]"
+                              : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)]"
                           }`}
                         >
                           {t(`assetGenerator.styleOption.${style.id}`)}
@@ -290,16 +289,16 @@ export const VideoGeneratorPage = () => {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="testVideoUi.a31fd9daff" /></label>
-                    <div className="flex gap-2">
+                    <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block"><LocalizedText id="testVideoUi.a31fd9daff" /></label>
+                    <div className="flex flex-wrap gap-2">
                       {DURATION_OPTIONS.map(d => (
                         <button
                           key={d}
                           onClick={() => setDuration(d)}
-                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all ${
+                          className={`px-3 py-1.5 rounded-[10px] text-sm font-medium border transition-all min-h-10 ${
                             duration === d
-                              ? 'border-info bg-info-light text-info-active'
-                              : 'border-stroke-light text-primary-secondary hover:border-primary'
+                              ? "border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary-hover)]"
+                              : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)]"
                           }`}
                         >
                           {d}<LocalizedText id="videoWizard.eb6aaba1a1" />
@@ -310,7 +309,7 @@ export const VideoGeneratorPage = () => {
                 </div>
 
                 {audioError && (
-                  <div className="p-3 bg-error-light border border-error-border text-error text-sm rounded-xl">
+                  <div className="p-3 bg-error-light border border-error-border text-error text-sm rounded-[10px]">
                     {audioError}
                   </div>
                 )}
@@ -318,8 +317,7 @@ export const VideoGeneratorPage = () => {
                 <button
                   onClick={handleGenerateAudio}
                   disabled={isGeneratingAudio || isPollingAudio || !storyboardPrompts.trim()}
-                  className="w-full px-6 py-3 bg-info text-white rounded-xl font-medium hover:bg-info-active
-                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                  className="w-full px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] font-medium hover:bg-[var(--wb-primary-hover)]\n                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 min-h-10 active:bg-[var(--wb-primary-active)]"
                 >
                   {(isGeneratingAudio || isPollingAudio) ? (
                     <>
@@ -336,30 +334,30 @@ export const VideoGeneratorPage = () => {
 
                 {/* 生成结果 */}
                 {audioResult && (
-                  <div className="border-2 border-stroke-light rounded-xl p-4">
-                    <h3 className="text-base font-bold text-primary mb-3"><LocalizedText id="assetPanel.stepGenResult" /></h3>
+                  <div className="border border-[var(--wb-border)] rounded-[10px] p-4">
+                    <h3 className="text-base font-bold text-[var(--wb-text)] mb-3"><LocalizedText id="assetPanel.stepGenResult" /></h3>
 
                     {audioResult.status === 'pending' ? (
-                      <div className="flex items-center gap-3 text-primary-muted">
+                      <div className="flex items-center gap-3 text-[var(--wb-muted)]">
                         <Loader2 className="w-5 h-5 animate-spin" />
                         <span><LocalizedText id="testVideoUi.515b54ee2b" /></span>
                       </div>
                     ) : audioResult.status === 'done' && audioResult.url ? (
                       <div>
                         <div className="mb-3">
-                          <p className="text-sm text-primary-secondary line-clamp-3">{storyboardPrompts}</p>
+                          <p className="text-sm text-[var(--wb-muted)] line-clamp-3">{storyboardPrompts}</p>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <span className="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-active"><LocalizedText id="testVideoUi.e99b48a29b" /></span>
-                            <span className="text-xs text-primary-placeholder">{t(`assetGenerator.styleOption.${selectedStyle.id}`)} · {duration}<LocalizedText id="videoWizard.eb6aaba1a1" /></span>
+                            <span className="text-xs text-[var(--wb-muted)]">{t(`assetGenerator.styleOption.${selectedStyle.id}`)} · {duration}<LocalizedText id="videoWizard.eb6aaba1a1" /></span>
                           </div>
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             onClick={toggleAudioPlay}
-                            className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium border-2 transition-colors flex items-center justify-center gap-2 ${
+                            className={`flex-1 px-4 py-2 rounded-[10px] text-sm font-medium border transition-colors flex items-center justify-center gap-2  min-h-10 ${
                               isPlayingAudio
                                 ? 'border-error-border bg-error-light text-error'
-                                : 'border-stroke-light text-primary-secondary hover:border-primary'
+                                : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)]"
                             }`}
                           >
                             {isPlayingAudio ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -367,7 +365,7 @@ export const VideoGeneratorPage = () => {
                           </button>
                           <button
                             onClick={() => handleAudioDownload(audioResult.url)}
-                            className="px-4 py-2 rounded-lg border-2 border-stroke-light text-primary-secondary hover:border-primary transition-colors"
+                            className="px-4 py-2 rounded-[10px] border border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)] transition-colors min-h-10"
                             title={i18next.t('common.download')}
                           >
                             <Download className="w-4 h-4" />

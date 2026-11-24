@@ -162,34 +162,34 @@ export const VoiceGeneratorPage = () => {
   };
 
   return (
-    <div className="min-h-screen h-screen bg-surface overflow-y-auto">
+    <div className="min-h-screen h-screen bg-[var(--wb-page)] overflow-y-auto">
       {/* 顶部导航栏 */}
-      <header className="bg-white border-b-2 border-stroke-light sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 h-14 flex items-center gap-3">
+      <header className="bg-white border-b border-[var(--wb-border)] sticky top-0 z-50">
+        <div className="max-w-4xl mx-auto px-4 min-h-14 py-2 flex items-center gap-3 min-w-0">
           <button
             onClick={() => navigate(-1)}
-            className="p-2 hover:bg-surface-alt rounded-lg transition-colors"
+            className="p-2 hover:bg-[var(--wb-page)] rounded-[10px] transition-colors min-h-10"
           >
-            <ArrowLeft className="w-5 h-5 text-primary-secondary" />
+            <ArrowLeft className="w-5 h-5 text-[var(--wb-muted)]" />
           </button>
-          <h1 className="text-lg font-bold text-primary flex items-center gap-2">
-            <Mic className="w-5 h-5 text-info" />
+          <h1 className="text-[28px] leading-tight font-bold text-[var(--wb-text)] flex flex-wrap items-center gap-2 min-w-0">
+            <Mic className="w-5 h-5 text-[var(--wb-primary)]" />
             <LocalizedText id="testVoiceUi.8e8251a806" />
           </h1>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto p-6 space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 space-y-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
         {/* 生成表单 */}
-        <div className="bg-white rounded-2xl border-2 border-stroke-light shadow-sm p-6">
-          <h2 className="text-base font-bold text-primary mb-4 flex items-center gap-2">
-            <Wand2 className="w-4 h-4 text-info" />
+        <div className="bg-white rounded-[14px] border border-[var(--wb-border)] shadow-sm p-6">
+          <h2 className="text-base font-bold text-[var(--wb-text)] mb-4 flex items-center gap-2">
+            <Wand2 className="w-4 h-4 text-[var(--wb-primary)]" />
             <LocalizedText id="testVoiceUi.2baf02a01e" />
           </h2>
 
           {/* 文字输入 */}
           <div className="mb-5">
-            <label className="text-sm font-medium text-primary-secondary mb-2 block">
+            <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block">
               <LocalizedText id="testVoiceUi.4658611d50" /> <span className="text-error">*</span>
             </label>
             <textarea
@@ -197,74 +197,73 @@ export const VoiceGeneratorPage = () => {
               onChange={e => setText(e.target.value)}
               placeholder={i18next.t('testVoiceUi.d2306af61e')}
               rows={5}
-              className="w-full border-2 border-stroke-light rounded-xl px-4 py-3 text-sm resize-none
-                focus:border-primary focus:ring-2 focus:ring-[#2d2d2d]/10 outline-none transition-all"
+              className="w-full border border-[var(--wb-border)] rounded-[10px] px-4 py-3 text-sm resize-none\n                focus:border-[var(--wb-selected-border)] focus:ring-2 focus:ring-[var(--wb-selected)] outline-none transition-all"
             />
-            <p className="text-xs text-primary-placeholder mt-1">{text.length} <LocalizedText id="assetPanel.iwChars" /></p>
+            <p className="text-xs text-[var(--wb-muted)] mt-1">{text.length} <LocalizedText id="assetPanel.iwChars" /></p>
           </div>
 
           {/* 音色选择 */}
           <div className="mb-5">
-            <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="testVoiceUi.7aae6d22a0" /></label>
-            <p className="text-xs text-primary-placeholder mb-3">
+            <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block"><LocalizedText id="testVoiceUi.7aae6d22a0" /></label>
+            <p className="text-xs text-[var(--wb-muted)] mb-3">
               <LocalizedText id="testVoiceUi.8f23564876" />
             </p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
               {VOICE_OPTIONS.map((voice, index) => {
                 const isSelected = selectedVoice.id === voice.id;
                 const isPlaying = playingVoice === voice.id;
                 return (
                   <div
                     key={voice.id}
-                    className={`relative flex items-center justify-between p-2 rounded-lg border-2 transition-all ${
+                    className={`relative flex flex-wrap items-center justify-between gap-3 p-2 rounded-[10px] border transition-all ${
                       isSelected
-                        ? 'border-info bg-info-light'
-                        : 'border-stroke-light hover:border-primary hover:bg-warning-light'
+                        ? "border-[var(--wb-selected-border)] bg-[var(--wb-selected)]"
+                        : "border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)]"
                     }`}
                   >
                     <button
                       onClick={() => setSelectedVoice(voice)}
                       disabled={isGenerating}
-                      className="flex-1 text-left"
+                      className="flex-1 text-left min-h-10"
                     >
                       <div className="flex items-center gap-2">
-                        <Volume2 className="w-4 h-4 text-primary-placeholder" />
-                        <span className="text-xs font-medium text-primary-secondary">{t(`assetGenerator.voiceOption${index}`)}</span>
+                        <Volume2 className="w-4 h-4 text-[var(--wb-muted)]" />
+                        <span className="text-xs font-medium text-[var(--wb-muted)]">{t(`assetGenerator.voiceOption${index}`)}</span>
                       </div>
                     </button>
                     <button
                       onClick={() => handlePlayVoice(voice)}
                       disabled={isGenerating}
-                      className="p-1 rounded hover:bg-white/50 transition-colors"
+                      className="p-1 rounded hover:bg-white/50 transition-colors min-h-10"
                       title={t(isPlaying ? 'voiceTest.stopPreview' : 'voiceTest.preview')}
                     >
                       {isPlaying ? (
-                        <Pause className="w-4 h-4 text-info" />
+                        <Pause className="w-4 h-4 text-[var(--wb-primary)]" />
                       ) : (
-                        <Play className="w-4 h-4 text-primary-placeholder hover:text-info" />
+                        <Play className="w-4 h-4 text-[var(--wb-muted)] hover:text-[var(--wb-primary)]" />
                       )}
                     </button>
                   </div>
                 );
               })}
             </div>
-            <p className="text-xs text-primary-placeholder mt-1">
+            <p className="text-xs text-[var(--wb-muted)] mt-1">
               <LocalizedText id="lesson.selected" />{t(`assetGenerator.voiceOption${VOICE_OPTIONS.indexOf(selectedVoice)}`)} - {t(`assetGenerator.voiceDescription.${VOICE_OPTIONS.indexOf(selectedVoice)}`)}
             </p>
           </div>
 
           {/* 语速选择 */}
           <div className="mb-5">
-            <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="testVoiceUi.747374775d" /></label>
-            <div className="flex gap-2">
+            <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block"><LocalizedText id="testVoiceUi.747374775d" /></label>
+            <div className="flex flex-wrap gap-2">
               {SPEED_OPTIONS.map((s, index) => (
                 <button
                   key={s.id}
                   onClick={() => setSpeed(s)}
-                  className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-[10px] text-sm font-medium border transition-all duration-200 min-h-10 ${
                     speed.id === s.id
-                      ? 'border-info bg-info-light text-info-active'
-                      : 'border-stroke-light text-primary-secondary hover:border-primary hover:bg-warning-light'
+                      ? "border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary-hover)]"
+                      : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)]"
                   }`}
                 >
                   {t(`assetGenerator.speedOption${index}`)}
@@ -275,16 +274,16 @@ export const VoiceGeneratorPage = () => {
 
           {/* 情感选择 */}
           <div className="mb-5">
-            <label className="text-sm font-medium text-primary-secondary mb-2 block"><LocalizedText id="testVoiceUi.0fac799ac8" /></label>
+            <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block"><LocalizedText id="testVoiceUi.0fac799ac8" /></label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {EMOTION_OPTIONS.map(e => (
                 <button
                   key={e.id}
                   onClick={() => setEmotion(e)}
-                  className={`px-3 py-2 rounded-xl text-sm font-medium border-2 transition-all duration-200 text-left ${
+                  className={`px-3 py-2 rounded-[10px] text-sm font-medium border transition-all duration-200 text-left  min-h-10 ${
                     emotion.id === e.id
-                      ? 'border-info bg-info-light text-info-active'
-                      : 'border-stroke-light text-primary-secondary hover:border-primary hover:bg-warning-light'
+                      ? "border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary-hover)]"
+                      : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)]"
                   }`}
                 >
                   <div className="font-medium">{t(`assetGenerator.emotionOption.${e.id}`)}</div>
@@ -295,7 +294,7 @@ export const VoiceGeneratorPage = () => {
           </div>
 
           {error && (
-            <div className="mb-4 p-3 bg-error-light border border-error-border text-error text-sm rounded-xl flex items-center gap-2">
+            <div className="mb-4 p-3 bg-error-light border border-error-border text-error text-sm rounded-[10px] flex items-center gap-2">
               {error}
             </div>
           )}
@@ -303,8 +302,7 @@ export const VoiceGeneratorPage = () => {
           <button
             onClick={handleGenerate}
             disabled={isGenerating || !text.trim()}
-            className="w-full px-6 py-3 bg-info text-white rounded-xl font-medium hover:bg-info-active
-              disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+            className="w-full px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] font-medium hover:bg-[var(--wb-primary-hover)]\n              disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 min-h-10 active:bg-[var(--wb-primary-active)]"
           >
             {(isGenerating || isPolling) ? (
               <>
@@ -322,31 +320,31 @@ export const VoiceGeneratorPage = () => {
 
         {/* 生成结果 */}
         {result && (
-          <div className="bg-white rounded-2xl border-2 border-stroke-light shadow-sm p-6">
-            <h2 className="text-base font-bold text-primary mb-4"><LocalizedText id="assetPanel.stepGenResult" /></h2>
+          <div className="bg-white rounded-[14px] border border-[var(--wb-border)] shadow-sm p-6">
+            <h2 className="text-base font-bold text-[var(--wb-text)] mb-4"><LocalizedText id="assetPanel.stepGenResult" /></h2>
 
             {result.status === 'pending' ? (
-              <div className="flex items-center gap-3 text-primary-muted">
+              <div className="flex items-center gap-3 text-[var(--wb-muted)]">
                 <Loader2 className="w-5 h-5 animate-spin" />
                 <span><LocalizedText id="testVoiceUi.7c99c36ef9" /></span>
               </div>
             ) : result.status === 'done' && result.url ? (
-              <div className="border border-stroke-light rounded-xl p-4">
+              <div className="border border-[var(--wb-border)] rounded-[10px] p-4">
                 <div className="mb-3">
-                  <p className="text-sm text-primary-secondary line-clamp-3">{text}</p>
+                  <p className="text-sm text-[var(--wb-muted)] line-clamp-3">{text}</p>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span className="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-active"><LocalizedText id="testVoiceUi.e99b48a29b" /></span>
-                    <span className="text-xs text-primary-placeholder">{t(`assetGenerator.voiceOption${VOICE_OPTIONS.indexOf(selectedVoice)}`)} · {t(`assetGenerator.speedOption${SPEED_OPTIONS.indexOf(speed)}`)}</span>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-info-light text-info-active">{t(`assetGenerator.emotionOption.${emotion.id}`)}</span>
+                    <span className="text-xs text-[var(--wb-muted)]">{t(`assetGenerator.voiceOption${VOICE_OPTIONS.indexOf(selectedVoice)}`)} · {t(`assetGenerator.speedOption${SPEED_OPTIONS.indexOf(speed)}`)}</span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-[var(--wb-selected)] text-[var(--wb-primary-hover)]">{t(`assetGenerator.emotionOption.${emotion.id}`)}</span>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={togglePlay}
-                    className={`flex-1 px-4 py-2 rounded-lg text-sm font-medium border-2 transition-colors flex items-center justify-center gap-2 ${
+                    className={`flex-1 px-4 py-2 rounded-[10px] text-sm font-medium border transition-colors flex items-center justify-center gap-2  min-h-10 ${
                       isPlaying
                         ? 'border-error-border bg-error-light text-error'
-                        : 'border-stroke-light text-primary-secondary hover:border-primary'
+                        : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)]"
                     }`}
                   >
                     {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -354,7 +352,7 @@ export const VoiceGeneratorPage = () => {
                   </button>
                   <button
                     onClick={() => handleDownload(result.url)}
-                    className="px-4 py-2 rounded-lg border-2 border-stroke-light text-primary-secondary hover:border-primary transition-colors"
+                    className="px-4 py-2 rounded-[10px] border border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)] transition-colors min-h-10"
                     title={i18next.t('common.download')}
                   >
                     <Download className="w-4 h-4" />
@@ -368,23 +366,23 @@ export const VoiceGeneratorPage = () => {
         )}
 
         {/* 使用说明 */}
-        <div className="bg-white rounded-2xl border-2 border-stroke-light shadow-sm p-6">
-          <h2 className="text-base font-bold text-primary mb-4"><LocalizedText id="testVoiceUi.15683f6cd3" /></h2>
+        <div className="bg-white rounded-[14px] border border-[var(--wb-border)] shadow-sm p-6">
+          <h2 className="text-base font-bold text-[var(--wb-text)] mb-4"><LocalizedText id="testVoiceUi.15683f6cd3" /></h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-            <div className="bg-info-light rounded-xl p-4">
+            <div className="bg-[var(--wb-selected)] rounded-[10px] p-4">
               <div className="text-2xl mb-2">✍️</div>
-              <h3 className="font-medium text-primary text-sm mb-1"><LocalizedText id="testVoiceUi.ae47ab4ccc" /></h3>
-              <p className="text-xs text-primary-muted"><LocalizedText id="testVoiceUi.2b891a79ce" /></p>
+              <h3 className="font-medium text-[var(--wb-text)] text-sm mb-1"><LocalizedText id="testVoiceUi.ae47ab4ccc" /></h3>
+              <p className="text-xs text-[var(--wb-muted)]"><LocalizedText id="testVoiceUi.2b891a79ce" /></p>
             </div>
-            <div className="bg-info-light rounded-xl p-4">
+            <div className="bg-[var(--wb-selected)] rounded-[10px] p-4">
               <div className="text-2xl mb-2">🎭</div>
-              <h3 className="font-medium text-primary text-sm mb-1"><LocalizedText id="assetPanel.stepSelectVoice" /></h3>
-              <p className="text-xs text-primary-muted"><LocalizedText id="testVoiceUi.85190a1dae" /></p>
+              <h3 className="font-medium text-[var(--wb-text)] text-sm mb-1"><LocalizedText id="assetPanel.stepSelectVoice" /></h3>
+              <p className="text-xs text-[var(--wb-muted)]"><LocalizedText id="testVoiceUi.85190a1dae" /></p>
             </div>
-            <div className="bg-info-light rounded-xl p-4">
+            <div className="bg-[var(--wb-selected)] rounded-[10px] p-4">
               <div className="text-2xl mb-2">🔊</div>
-              <h3 className="font-medium text-primary text-sm mb-1"><LocalizedText id="testVoiceUi.24b62bdac7" /></h3>
-              <p className="text-xs text-primary-muted"><LocalizedText id="testVoiceUi.5eb94661bb" /></p>
+              <h3 className="font-medium text-[var(--wb-text)] text-sm mb-1"><LocalizedText id="testVoiceUi.24b62bdac7" /></h3>
+              <p className="text-xs text-[var(--wb-muted)]"><LocalizedText id="testVoiceUi.5eb94661bb" /></p>
             </div>
           </div>
         </div>

@@ -33,11 +33,11 @@
 }
 
 #ed-ppt .ppt-text-config-panel .text-size-control .ant-slider-track {
-  background: #253142;
+  background: var(--wb-text);
 }
 
 #ed-ppt .ppt-text-config-panel .text-size-control .ant-slider-handle::after {
-  box-shadow: 0 0 0 2px #253142;
+  box-shadow: 0 0 0 2px var(--wb-text);
 }
 
 #ed-ppt .ppt-text-config-panel .text-control-grid {
@@ -49,22 +49,22 @@
 }
 
 #ed-ppt .ppt-text-config-panel .text-segment {
-  height: 30px;
-  border: 1.5px solid #253142;
-  border-radius: 6px;
+  height: 44px;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
   overflow: hidden;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  background: #ffffff;
+  background: var(--wb-surface);
 }
 
 #ed-ppt .ppt-text-config-panel .text-segment .ant-radio-button-wrapper {
-  height: 30px;
+  height: 40px;
   min-width: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
-  color: #8a94a4;
+  color: var(--wb-muted);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -75,16 +75,16 @@
 }
 
 #ed-ppt .ppt-text-config-panel .text-segment .ant-radio-button-wrapper-checked {
-  background: #ede9e3;
-  color: #253142;
+  background: var(--wb-selected);
+  color: var(--wb-text);
 }
 
 #ed-ppt .ppt-text-config-panel .text-style-toggles button {
   min-width: 0;
   border: 0;
-  border-right: 1px solid #e4dfd7;
-  background: #fff;
-  color: #8a94a4;
+  border-right: 1px solid var(--wb-border);
+  background: var(--wb-surface);
+  color: var(--wb-muted);
   cursor: pointer;
 }
 
@@ -93,8 +93,8 @@
 }
 
 #ed-ppt .ppt-text-config-panel .text-style-toggles button.is-active {
-  background: #ede9e3;
-  color: #253142;
+  background: var(--wb-selected);
+  color: var(--wb-text);
 }
 
 #ed-ppt .ppt-text-config-panel .text-spacing-grid {
@@ -121,11 +121,11 @@
 }
 
 #ed-ppt .ppt-text-config-panel .text-color-field {
-  height: 30px;
+  height: 44px;
   min-width: 0;
-  border: 1.5px solid #253142;
-  border-radius: 6px;
-  background: #ffffff;
+  border: 1px solid var(--wb-border);
+  border-radius: var(--wb-control-radius);
+  background: var(--wb-surface);
   display: flex;
   align-items: center;
   gap: 9px;
@@ -188,7 +188,7 @@
   min-width: 0;
   flex: 1;
   overflow: hidden;
-  color: #647084;
+  color: var(--wb-muted);
   font-size: 13px;
   font-weight: 700;
   line-height: 18px;
@@ -203,11 +203,11 @@
   background: transparent;
   padding: 0;
   font: inherit;
-  color: #253142;
+  color: var(--wb-text);
 }
 
 #ed-ppt .ppt-text-config-panel .text-color-value-input::placeholder {
-  color: #647084;
+  color: var(--wb-muted);
 }
 
 #ed-ppt .ppt-text-config-panel .text-color-field.is-compact {
@@ -222,5 +222,5 @@
 }
 
 #ed-ppt .ppt-text-config-panel .text-stroke-grid .text-color-field {
-  height: 36px;
+  height: 44px;
 }

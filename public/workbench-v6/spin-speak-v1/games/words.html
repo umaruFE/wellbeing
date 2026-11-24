@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><script data-web-scope="classroom">(function(){'use strict';var valid=function(v){return typeof v==='string'&&/^[a-z0-9_-]{1,128}$/.test(v);};var scope;try{if(parent!==window&&parent.location.origin===location.origin)scope=parent.WB_WEB_SCOPE;}catch(_){}if(!valid(scope)&&valid(window.WB_WEB_SCOPE))scope=window.WB_WEB_SCOPE;if(!valid(scope)){try{scope=new URLSearchParams(location.search).get('scope');}catch(_){}}window.WB_WEB_SCOPE=valid(scope)?scope:'local';})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spin & Speak · Words in Motion</title>
+<style>@layer legacy {
+:root{
+  --grass:#3CB371;--grass-d:#2E9E5B;--yellow:#FFC93C;--yellow-dark:#E8960C;
+  --coral:#FF6B5B;--purple:#8B5CF6;--purple-d:#5B3DB8;--teal:#22C3D6;
+  --cream:#FFF3D6;--ink:#1E1240;--night:#160C33;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Apple Color Emoji","Segoe UI Emoji",sans-serif;
+  background:#0C0720;display:grid;place-items:center;color:#fff;user-select:none;
+}
+#stage{
+  width:1280px;height:720px;flex:0 0 auto;position:relative;transform-origin:center center;overflow:hidden;
+  background:radial-gradient(1000px 480px at 50% -140px,#3B2578 0%,#2A1A5C 55%,#1C113E 100%);
+  border:6px solid #fff;border-radius:24px;box-shadow:0 20px 60px rgba(0,0,0,.55);
+  display:flex;flex-direction:column;padding:20px 34px 18px;gap:6px;
+}
+
+/* ---------- HUD ---------- */
+.hud{flex:0 0 auto;position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding-right:44px}
+.mv-title{font-size:31px;font-weight:900;letter-spacing:1.5px;color:#fff;display:flex;align-items:center;gap:13px}
+.mv-title .dot{width:10px;height:10px;background:#FFD23F;transform:rotate(45deg);border-radius:2px}
+.mv-title .amp{color:#FFD23F}
+.mv-sub{font-size:15px;line-height:1.4;color:#D8CCFF;font-weight:700;max-width:1000px;text-align:center}
+.mv-sub b{color:#FFD23F}
+.iconbtn{position:absolute;right:0;top:2px;width:36px;height:36px;border:3px solid rgba(255,255,255,.85);
+  border-radius:50%;background:rgba(255,255,255,.14);color:#fff;font-family:inherit;font-size:16px;font-weight:900;
+  cursor:pointer;line-height:1;box-shadow:0 2px 0 rgba(0,0,0,.3)}
+.iconbtn:active{transform:translateY(2px);box-shadow:none}
+
+/* ---------- sentence row ---------- */
+.sentwrap{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:12px;margin-top:26px}
+.sent{background:rgba(255,255,255,.07);border:2px dashed rgba(255,255,255,.25);
+  border-radius:18px;padding:14px 16px 12px;display:flex;justify-content:center;gap:7px}
+.col{width:150px;display:flex;flex-direction:column;align-items:center;gap:8px}
+.word{width:142px;height:44px;border-radius:12px;background:#FFF6E4;color:#3A2370;font-size:23px;font-weight:900;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 3px 0 rgba(0,0,0,.25)}
+.disc{width:92px;height:92px;border-radius:50%;background:#EEE8FF;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 0 rgba(0,0,0,.3)}
+.disc img{width:70px;height:70px;object-fit:contain;pointer-events:none}
+/* blank slot */
+.slotcirc{width:64px;height:64px;border-radius:50%;border:3px dashed rgba(255,255,255,.6);
+  display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.75);
+  font-size:30px;font-weight:900;background:rgba(255,255,255,.07)}
+.slotcirc.filled{border:3px solid #fff;box-shadow:0 0 0 4px rgba(255,210,63,.55),0 3px 0 rgba(0,0,0,.3)}
+.slotcirc img{width:50px;height:50px;object-fit:contain;pointer-events:none}
+.slotcirc .em{font-size:36px;line-height:1;pointer-events:none}
+.slotlab{margin-top:4px;min-height:44px;display:flex;align-items:center;justify-content:center}
+.slotlab span{background:#FFD23F;color:#3A2370;font-size:14px;font-weight:900;border-radius:10px;
+  padding:6px 11px;max-width:146px;text-align:center;line-height:1.15;box-shadow:0 3px 0 rgba(0,0,0,.25);
+  white-space:normal;word-break:break-word}
+
+/* ---------- activity picker ---------- */
+.banks{flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;gap:12px;min-height:0}
+.sporttag{text-align:center;font-size:16px;font-weight:900;color:#CFE8FF;letter-spacing:1px}
+.sporttag small{display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:0;margin-top:1px}
+.chips{display:flex;justify-content:center;gap:15px;flex-wrap:nowrap}
+.opt{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:transform .12s}
+.opt:hover{transform:translateY(-2px)}
+.opt .circ{width:98px;height:98px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 0 rgba(0,0,0,.3);transition:.15s}
+.opt img{width:72px;height:72px;object-fit:contain;pointer-events:none}
+.opt .em{font-size:50px;line-height:1;pointer-events:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.18))}
+.opt .lab{font-size:12.5px;font-weight:800;color:#EDE7FF;text-align:center;line-height:1.15;max-width:112px;min-height:28px;
+  display:flex;align-items:flex-start;justify-content:center}
+.opt.sel .circ{outline:5px solid #FFD23F;outline-offset:0;transform:scale(1.04)}
+.opt.sel .lab{color:#FFD23F}
+.banks.shake{animation:mvShake .4s}
+@keyframes mvShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+
+/* ---------- actions ---------- */
+.actions{flex:0 0 auto;display:flex;justify-content:flex-end;align-items:center;gap:16px;padding-top:2px}
+.actions .tip{margin-right:auto;font-size:12.5px;font-weight:800;color:#B9ABE8;text-align:left;line-height:1.5;max-width:560px}
+.actions .tip b{color:#FFD23F}
+.big{border:none;border-radius:14px;font-weight:900;font-size:18px;height:50px;padding:0 32px;cursor:pointer;
+  white-space:nowrap;transition:.15s;font-family:inherit;color:#fff}
+.big.ghost{background:rgba(255,255,255,.14);color:rgba(255,255,255,.5);cursor:not-allowed}
+.big.go{background:var(--grass);box-shadow:0 4px 0 #2c8a5f}
+.big.go:hover{transform:translateY(-2px)}
+.big.go.ready{animation:pulseG 1.1s infinite}
+@keyframes pulseG{0%,100%{box-shadow:0 4px 0 #2c8a5f,0 0 0 0 rgba(46,158,91,.55)}
+  50%{box-shadow:0 4px 0 #2c8a5f,0 0 0 12px rgba(46,158,91,0)}}
+
+/* ---------- notes ---------- */
+.notes{position:absolute;inset:0;background:rgba(12,7,32,.66);display:none;place-items:center;z-index:9;padding:36px}
+.notes.on{display:grid}
+.notes .card{background:var(--cream);border-radius:20px;padding:24px 30px;
+  width:720px;max-height:600px;overflow:auto;box-shadow:0 14px 40px rgba(0,0,0,.55);font-size:13.5px;line-height:1.75;color:#3A2D6B}
+.notes h3{font-size:19px;margin-bottom:10px;font-weight:900;color:var(--ink)}
+.notes h4{font-size:13.5px;margin:12px 0 6px;color:#C1493C;letter-spacing:.4px;font-weight:900}
+.notes ol{list-style:none;display:flex;flex-direction:column;gap:6px}
+.notes li{display:flex;gap:9px;align-items:flex-start}
+.notes .n{flex:0 0 auto;width:20px;height:20px;border-radius:50%;background:var(--yellow);border:2px solid #E8960C;
+  font-size:10.5px;font-weight:900;display:grid;place-items:center;margin-top:3px;color:#5c4300}
+.notes b{color:var(--ink)}
+.notes .close{margin-top:16px;border:none;background:var(--purple);color:#fff;border-radius:12px;height:44px;
+  padding:0 20px;font-family:inherit;font-size:14px;font-weight:900;cursor:pointer;box-shadow:0 4px 0 #6d44cc}
+}</style><link rel="stylesheet" href="../game.css?v=71"><link rel="stylesheet" href="../play-details.css?v=70"><link rel="stylesheet" href="../scenes.css?v=71"><link rel="stylesheet" href="../words-coach.css?v=1"><link rel="stylesheet" href="../words-reading.css?v=2">
+<script src="../game-lifecycle.js?v=1"></script><script src="../icons.js?v=1"></script><script src="../session.js?v=9"></script>
+</head>
+<body data-game="words">
+<div id="stage">
+
+  <div class="hud">
+    <div class="mv-title">WORDS<span class="dot"></span>IN<span class="dot"></span>MOTION</div>
+    <div class="mv-sub">Read each highlighted word. Make up a move for the activity you pick.</div>
+    <button class="iconbtn" id="helpBtn" title="How to play">?</button>
+  </div>
+
+  <div class="sentwrap">
+    <div class="sent" id="sent" role="group" aria-label="Sentence and movement cues"></div>
+  </div>
+
+  <div class="banks" id="banks">
+    <div class="sporttag">PICK AN ACTIVITY<small>fill the blank</small></div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="actions">
+    <div class="tip" id="tip" role="status"></div>
+    <button type="button" class="big" id="readBtn" disabled>▶ READ &amp; MOVE</button>
+    <button class="big ghost" id="doneBtn" disabled>✓ COMPLETE</button>
+  </div>
+
+  <div class="notes" id="notes">
+    <div class="card" role="document"></div>
+  </div>
+</div>
+
+<template id="words-help">
+  <h3>动作挑战 · 怎么玩</h3>
+  <ol>
+    <li><span class="n">1</span><div>选一个活动填空，或选 <b>say your own</b> 说自己的词组。</div></li>
+    <li><span class="n">2</span><div>读到小教练的词卡时，跟着示范做动作。读到填空处的活动图标时，说出所选词组，做自己编的动作。</div></li>
+    <li><span class="n">3</span><div>点任意词卡可以单练。用 <b>PAUSE</b> 暂停、<b>RESUME</b> 继续，或用 <b>READ AGAIN</b> 重读整句。</div></li>
+    <li><span class="n">4</span><div>老师听一听句子，检查动作与单词是否对上，再点 <b>COMPLETE</b> 结束本轮。</div></li>
+  </ol>
+  <button type="button" class="close" id="closeNotes">知道了</button>
+</template>
+<script src="../game-access.js?v=40"></script>
+<script src="../words-coach.js?v=1"></script>
+<script src="../words-reading.js?v=2"></script>
+<script src="../play-details.js?v=30"></script>
+</body>
+</html>

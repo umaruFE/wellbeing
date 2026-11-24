@@ -80,12 +80,12 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
               key={character.id}
               onClick={() => isAvailable && handleRoleClick(character.id)}
               disabled={!isAvailable}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${
+              className={`w-full flex items-center gap-3 p-3 rounded-[var(--wb-control-radius)] border transition-all ${
                 !isAvailable
-                  ? 'border-stroke bg-surface-alt cursor-not-allowed opacity-60'
+                  ? 'border-[var(--wb-border)] bg-surface-alt cursor-not-allowed opacity-60'
                   : isSelected
-                  ? 'border-purple-500 bg-purple-50'
-                  : 'border-stroke-light hover:border-primary hover:bg-warning-light'
+                  ? 'border-[var(--wb-selected-border)] bg-[var(--wb-selected)]'
+                  : 'border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)]'
               }`}
             >
               <div className="relative">
@@ -95,7 +95,7 @@ export const RoleSelection = ({ selectedRoles, onRoleSelect }) => {
                   className="w-12 h-16 rounded-lg object-contain"
                 />
                 {isSelected && isAvailable && (
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 rounded-full flex items-center justify-center">
+                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-[var(--wb-primary)] rounded-full flex items-center justify-center">
                     <Check className="w-3 h-3 text-white" />
                   </div>
                 )}

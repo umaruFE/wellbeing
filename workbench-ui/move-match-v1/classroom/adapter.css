@@ -346,3 +346,38 @@
  .classroom-stage--reference.mm35-game .mm-finish-actions .mm30-primary{padding:0 15px;font-size:14px;gap:9px}
 }
 @media(prefers-reduced-motion:reduce){.mm-finish-trophy,.mm-finish-confetti>i{animation:none}}
+
+/* A quiet garden break with the existing pause/resume behaviour. */
+.classroom-stage--reference.mm35-game .stage-dialog-backdrop--mm35-break{padding:16px;background:#294B4859;backdrop-filter:blur(5px)}
+.classroom-stage--reference.mm35-game .stage-dialog--mm35-break{
+ width:min(480px,calc(100vw - 32px));max-height:calc(100dvh - 32px);padding:27px 32px 25px;
+ border:2px solid #CCCEA8;border-radius:32px;overflow:auto;
+ background:radial-gradient(ellipse at 50% 25%,#F0F5E4 0,transparent 67%),#FFFCF2;
+ box-shadow:inset 0 0 0 5px #FFFFFFAD,0 6px 0 #B6B58D,0 22px 70px #173F4B40;
+ animation:mm-break-enter .28s ease-out both;
+}
+.classroom-stage--reference.mm35-game .stage-dialog--mm35-break>.dialog-close{background:#F5F3E3;color:#7B8B70;border:1px solid #DCDDC7;z-index:2}
+.mm-break{display:flex;flex-direction:column;align-items:center;gap:17px;text-align:center;color:#234F56;min-width:0}
+.mm-break-tag{display:inline-flex;align-items:center;gap:6px;align-self:center;padding:6px 12px;border:1px solid #D7E1C7;border-radius:20px;background:#EAF0DB;color:#6A8061;font-size:11px;font-weight:750;line-height:1.3;letter-spacing:1px}
+.mm-break-tag>svg{width:12px;height:12px}
+.mm-break-art{display:block;width:226px;height:148px;max-width:100%;margin:-6px 0 -5px;flex:none}
+.mm-break-heading h2{margin:0;font-size:31px;font-weight:850;line-height:1.2;letter-spacing:-.8px;color:#234F56}
+.mm-break-heading p{margin:9px 0 0;font-size:13px;line-height:1.6;color:#7B8977}
+.mm-break-progress{align-self:stretch;padding:14px 17px;border:1px solid #E1DEC5;border-radius:16px;background:#FFFEF8;box-shadow:0 3px 0 #E9E5CD50}
+.mm-break-progress-label{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:12px;color:#81907A}
+.mm-break-progress-label strong{font-size:22px;font-weight:800;line-height:1.2;color:#557F70;font-variant-numeric:tabular-nums}
+.mm-break-progress-label small{font-size:12px;font-weight:600;color:#8A947E}
+.mm-break-progress-track{height:7px;border-radius:8px;background:#EBEEDC;overflow:hidden;margin-top:10px}
+.mm-break-progress-track>i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#B3CF91,#65A596)}
+.classroom-stage--reference.mm35-game .mm-break-resume{width:100%;min-width:0;height:49px;display:flex;justify-content:center;align-items:center;gap:11px;padding:0 20px;margin-top:2px;border-radius:25px;font-size:17px;box-shadow:inset 0 1px #FFFFFF40,0 4px 0 #17657A}
+.mm-break-resume>svg{width:20px;height:20px;fill:currentColor;stroke-width:1.5}
+.mm-break-resume:focus-visible{outline:3px solid #27677D;outline-offset:4px}
+.mm-break-shortcut{display:flex;align-items:center;gap:7px;margin:0;font-size:11px;line-height:1.5;color:#929B87}
+.mm-break-shortcut kbd{min-width:23px;padding:2px 5px;border:1px solid #DCDCC6;border-radius:5px;box-shadow:0 2px 0 #E4E4D1;background:#FFFDF4;font:700 11px/1.4 system-ui,sans-serif;color:#77886D}
+@keyframes mm-break-enter{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:none}}
+@media(max-width:520px),(max-height:600px){
+ .classroom-stage--reference.mm35-game .stage-dialog--mm35-break{padding:23px 21px 21px;border-radius:26px}
+ .mm-break{gap:14px}.mm-break-art{width:195px;height:128px}.mm-break-heading h2{font-size:27px}
+ .mm-break-heading p{font-size:12px}.mm-break-progress{padding:12px 15px}
+}
+@media(prefers-reduced-motion:reduce){.classroom-stage--reference.mm35-game .stage-dialog--mm35-break{animation:none}}

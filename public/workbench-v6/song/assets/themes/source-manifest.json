@@ -1,0 +1,136 @@
+{
+  "source": "/Users/baicai/Downloads/music-classroom-wrap-check.html",
+  "sourceSha256": "c503942d44eef144b71a3c282ee937751e742b30a88e8ece077892cf47252b1f",
+  "purpose": "Independent static classroom-theme resources extracted from the user supplied reference. The page uses existing audio transport; no reference demo timer is included.",
+  "atlases": [
+    {
+      "key": "base",
+      "sourceAttribute": "data-scene-master=base",
+      "mime": "image/png",
+      "dimensions": [
+        1024,
+        1536
+      ],
+      "bytes": 1975776,
+      "sha256": "52ec73806025fd59382c7f68f82a9945f9b8cb0e380730c0fa675a5dfb8a4a9a",
+      "scenes": [
+        {
+          "key": "garden",
+          "file": "garden.webp",
+          "crop": [
+            0,
+            0,
+            1024,
+            512
+          ],
+          "dimensions": [
+            1024,
+            512
+          ],
+          "bytes": 64612,
+          "note": "Extracted from the reference vertical atlas; no semantic image editing."
+        },
+        {
+          "key": "moon",
+          "file": "moon.webp",
+          "crop": [
+            0,
+            512,
+            1024,
+            1024
+          ],
+          "dimensions": [
+            1024,
+            512
+          ],
+          "bytes": 46050,
+          "note": "Extracted from the reference vertical atlas; no semantic image editing."
+        },
+        {
+          "key": "beat",
+          "file": "beat.webp",
+          "crop": [
+            0,
+            1024,
+            1024,
+            1536
+          ],
+          "dimensions": [
+            1024,
+            512
+          ],
+          "bytes": 59866,
+          "note": "Extracted from the reference vertical atlas; no semantic image editing."
+        }
+      ]
+    },
+    {
+      "key": "extra",
+      "sourceAttribute": "data-scene-master=extra",
+      "mime": "image/png",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "bytes": 2446366,
+      "sha256": "586309dc0773b945381e94e9c621962ebe9fc5e93f96b8141e3a067511ce520f",
+      "scenes": [
+        {
+          "key": "space",
+          "file": "space.webp",
+          "crop": [
+            0,
+            0,
+            1254,
+            627
+          ],
+          "dimensions": [
+            1254,
+            627
+          ],
+          "bytes": 181974,
+          "note": "Extracted from the reference vertical atlas; no semantic image editing."
+        },
+        {
+          "key": "beach",
+          "file": "beach.webp",
+          "crop": [
+            0,
+            627,
+            1254,
+            1254
+          ],
+          "dimensions": [
+            1254,
+            627
+          ],
+          "bytes": 121506,
+          "note": "Extracted from the reference vertical atlas; no semantic image editing."
+        }
+      ]
+    }
+  ],
+  "fonts": [
+    {
+      "family": "\"Classroom Noto Sans\"",
+      "weight": "400",
+      "file": "noto-sans-regular.woff2",
+      "bytes": 46192,
+      "sha256": "9d5f4a27e9f7c821173aedf13f3dc722e4449e18d7f0cdb8089207e043d46802"
+    },
+    {
+      "family": "\"Classroom Noto Sans\"",
+      "weight": "700",
+      "file": "noto-sans-bold.woff2",
+      "bytes": 47752,
+      "sha256": "649a8114c33e83722ae67a8f12269a6e873a179d34108751511a9dcfda551b08"
+    },
+    {
+      "family": "\"Classroom Noto Sans SC\"",
+      "weight": "400 700",
+      "file": "noto-sans-sc.woff2",
+      "bytes": 133232,
+      "sha256": "862244bddb6b485aabcba2968b0d5adeed757fa0b4af515df1c909c0d1fbd1a6"
+    }
+  ]
+}

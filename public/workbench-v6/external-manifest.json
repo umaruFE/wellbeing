@@ -1,0 +1,4452 @@
+{
+  "schemaVersion": 1,
+  "package": "wellbeing-web-external-modules-v1",
+  "sourceRule": "Current latest V6 named HTML plus the actual current sibling runtime files; classification changes are explicitly recorded against V6.",
+  "provenance": [
+    {
+      "path": "prototype/prep-workbench-six-modules-v1/latest.html",
+      "sha256": "cce22f4c0ea7089297e068fe67055b2a343bc0c837ab52eeb4c26a0785e5208e",
+      "bytes": 650
+    },
+    {
+      "path": "prototype/prep-workbench-six-modules-v1/小星星_六模块工作台_音乐棚预览V6_20261118.html",
+      "sha256": "41f2e7312bc29f3583ddee70b4e6aa7baca9078bc230cadfdf438ad76d80ca38",
+      "bytes": 11886144
+    },
+    {
+      "path": "doc/2026-11-18_音乐棚预览整合V6/构建清单.json",
+      "sha256": "974b486b94a1668244f6f07013d1e16d279e7e1a7bc7c816a03182dbda956b19",
+      "bytes": 117324
+    },
+    {
+      "path": "doc/2026-11-18_分类题量整合V7/构建清单.json",
+      "sha256": "cee0cd5e40fa00e509d71a24da4575658e08e8264678ba18571d1b6a8ed15657",
+      "bytes": 118385
+    }
+  ],
+  "modules": {
+    "speak": {
+      "entry": "spin-speak-v1/index.html?embedded=1",
+      "sourceManifest": "V6",
+      "files": 62,
+      "bytes": 28598356,
+      "runtimeFiles": [
+        "prep-workbench-six-modules-v1/components.css",
+        "prep-workbench-six-modules-v1/design-tokens.css",
+        "prep-workbench-six-modules-v1/library-home.css",
+        "prep-workbench-six-modules-v1/platform.css",
+        "prep-workbench-six-modules-v1/platform.js",
+        "prep-workbench-six-modules-v1/typography.css",
+        "spin-speak-v1/app.js",
+        "spin-speak-v1/art.js",
+        "spin-speak-v1/assets/energy-v3/energy-case-preview-v16.png",
+        "spin-speak-v1/assets/energy-v3/giant-battery.png",
+        "spin-speak-v1/assets/energy-v3/paper-clean-v13.png",
+        "spin-speak-v1/assets/energy-v3/standalone-ground-v16.png",
+        "spin-speak-v1/assets/energy-v3/title-clean-plate.png",
+        "spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+        "spin-speak-v1/assets/fonts/noto-sans-regular.woff2",
+        "spin-speak-v1/assets/scenes-v12/tempo-approved-preview.jpg",
+        "spin-speak-v1/assets/scenes-v12/tempo-approved-wheel.jpg",
+        "spin-speak-v1/assets/scenes-v12/tempo-control-base.svg",
+        "spin-speak-v1/assets/scenes-v12/tempo-front-mask.svg",
+        "spin-speak-v1/assets/scenes-v12/tempo-reference-colors.png",
+        "spin-speak-v1/assets/scenes-v12/tempo-tabletop-clean-v149.png",
+        "spin-speak-v1/assets/scenes-v7/energy.png",
+        "spin-speak-v1/assets/scenes-v7/flip.png",
+        "spin-speak-v1/assets/scenes-v7/role.png",
+        "spin-speak-v1/assets/scenes-v7/silly.png",
+        "spin-speak-v1/assets/scenes-v7/tempo.png",
+        "spin-speak-v1/assets/scenes-v7/volume.png",
+        "spin-speak-v1/assets/scenes-v7/words.png",
+        "spin-speak-v1/assets/volume-v3/controls-clean-plate.png",
+        "spin-speak-v1/assets/volume-v3/school-radio.png",
+        "spin-speak-v1/assets/volume-v3/status-clean-plate.png",
+        "spin-speak-v1/assets/volume-v3/title-clean-plate.png",
+        "spin-speak-v1/assets/volume-v3/volume-case-preview.jpg",
+        "spin-speak-v1/energy-round.js",
+        "spin-speak-v1/energy-v3.css",
+        "spin-speak-v1/energy-v3.js",
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/games/energy-v3.html",
+        "spin-speak-v1/games/energy.html",
+        "spin-speak-v1/games/flip.html",
+        "spin-speak-v1/games/role.html",
+        "spin-speak-v1/games/silly.html",
+        "spin-speak-v1/games/tempo.html",
+        "spin-speak-v1/games/volume-v3.html",
+        "spin-speak-v1/games/volume.html",
+        "spin-speak-v1/games/words.html",
+        "spin-speak-v1/icons.js",
+        "spin-speak-v1/index.html",
+        "spin-speak-v1/model.js",
+        "spin-speak-v1/platform-adapter.css",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js",
+        "spin-speak-v1/styles.css",
+        "spin-speak-v1/tempo-v12.css",
+        "spin-speak-v1/tempo-v12.js",
+        "spin-speak-v1/tempo-workbench.js",
+        "spin-speak-v1/volume-v3.css",
+        "spin-speak-v1/volume-v3.js"
+      ],
+      "excludedUnreachableManifestFiles": [
+        "spin-speak-v1/assets/energy-v1/greenhouse-station.png",
+        "spin-speak-v1/assets/energy-v2/greenhouse-floor-study.png",
+        "spin-speak-v1/assets/energy-v2/greenhouse-floor.png",
+        "spin-speak-v1/assets/energy-v3/paper-light-v12.png",
+        "spin-speak-v1/assets/scenes-v10/tempo-balanced.png",
+        "spin-speak-v1/assets/scenes-v10/tempo-details.png",
+        "spin-speak-v1/assets/scenes-v11/tempo-mint-study.png",
+        "spin-speak-v1/assets/scenes-v11/tempo-rect-colors.png",
+        "spin-speak-v1/assets/scenes-v11/tempo-structure-colors.png",
+        "spin-speak-v1/assets/scenes-v11/tempo-wall-depth.png",
+        "spin-speak-v1/assets/scenes-v11/tempo-window.png",
+        "spin-speak-v1/assets/scenes-v12/tempo-warm-cel-shadows.png",
+        "spin-speak-v1/assets/scenes-v12/tempo-warm-fine-lines.png",
+        "spin-speak-v1/assets/scenes-v12/tempo-warm-small-tip.png",
+        "spin-speak-v1/assets/scenes-v12/tempo-warm.png",
+        "spin-speak-v1/assets/scenes-v4/energy.png",
+        "spin-speak-v1/assets/scenes-v4/flip.png",
+        "spin-speak-v1/assets/scenes-v4/role.png",
+        "spin-speak-v1/assets/scenes-v4/silly.png",
+        "spin-speak-v1/assets/scenes-v4/tempo.png",
+        "spin-speak-v1/assets/scenes-v4/volume.png",
+        "spin-speak-v1/assets/scenes-v4/words.png",
+        "spin-speak-v1/assets/scenes-v6/energy.png",
+        "spin-speak-v1/assets/scenes-v6/flip.png",
+        "spin-speak-v1/assets/scenes-v6/role.png",
+        "spin-speak-v1/assets/scenes-v6/silly.png",
+        "spin-speak-v1/assets/scenes-v6/tempo.png",
+        "spin-speak-v1/assets/scenes-v6/volume.png",
+        "spin-speak-v1/assets/scenes-v6/words.png",
+        "spin-speak-v1/assets/scenes-v8/tempo-color.png",
+        "spin-speak-v1/assets/scenes-v8/tempo.png",
+        "spin-speak-v1/assets/scenes-v9/tempo-depth.png",
+        "spin-speak-v1/assets/volume-v1/broadcast-room.png",
+        "spin-speak-v1/assets/volume-v2/school-radio.png",
+        "spin-speak-v1/energy-style-v1.html",
+        "spin-speak-v1/energy-style-v2.html",
+        "spin-speak-v1/energy-style-v3.html",
+        "spin-speak-v1/energy-v1.css",
+        "spin-speak-v1/energy-v1.js",
+        "spin-speak-v1/energy-v2.css",
+        "spin-speak-v1/energy-v2.js",
+        "spin-speak-v1/games/energy-v1.html",
+        "spin-speak-v1/games/energy-v2.html",
+        "spin-speak-v1/games/tempo-v11.html",
+        "spin-speak-v1/games/tempo-v12.html",
+        "spin-speak-v1/games/volume-v1.html",
+        "spin-speak-v1/games/volume-v2.html",
+        "spin-speak-v1/tempo-scene.css",
+        "spin-speak-v1/tempo-style-v12.html",
+        "spin-speak-v1/volume-style-v1.html",
+        "spin-speak-v1/volume-style-v2.html",
+        "spin-speak-v1/volume-style-v3.html",
+        "spin-speak-v1/volume-v1.css",
+        "spin-speak-v1/volume-v1.js",
+        "spin-speak-v1/volume-v2.css",
+        "spin-speak-v1/volume-v2.js"
+      ],
+      "externalUrls": [],
+      "documentContexts": {
+        "volume-v3.js": [
+          "games/volume-v3.html"
+        ]
+      }
+    },
+    "doodle": {
+      "entry": "doodle-guess-v1/index.html?embedded=1",
+      "sourceManifest": "V6",
+      "files": 21,
+      "bytes": 1930573,
+      "runtimeFiles": [
+        "doodle-guess-v1/app.js",
+        "doodle-guess-v1/assets/case-animals.jpg",
+        "doodle-guess-v1/assets/case-everyday.jpg",
+        "doodle-guess-v1/assets/case-food.jpg",
+        "doodle-guess-v1/candidates.js",
+        "doodle-guess-v1/classroom-v1.7.2.html",
+        "doodle-guess-v1/classroom-wordbank.js",
+        "doodle-guess-v1/index.html",
+        "doodle-guess-v1/model.js",
+        "doodle-guess-v1/runtime.js",
+        "doodle-guess-v1/styles.css",
+        "doodle-guess-v1/word-tools.js",
+        "prep-workbench-six-modules-v1/components.css",
+        "prep-workbench-six-modules-v1/components.js",
+        "prep-workbench-six-modules-v1/design-tokens.css",
+        "prep-workbench-six-modules-v1/inner-pages.css",
+        "prep-workbench-six-modules-v1/language-goals.js",
+        "prep-workbench-six-modules-v1/library-home.css",
+        "prep-workbench-six-modules-v1/platform.css",
+        "prep-workbench-six-modules-v1/platform.js",
+        "prep-workbench-six-modules-v1/typography.css"
+      ],
+      "excludedUnreachableManifestFiles": [],
+      "externalUrls": [],
+      "documentContexts": {}
+    },
+    "move-match": {
+      "entry": "move-match-v1/index.html?embedded=1",
+      "sourceManifest": "V7 current sibling snapshot",
+      "files": 73,
+      "bytes": 2402540,
+      "runtimeFiles": [
+        "move-match-v1/app.js",
+        "move-match-v1/assets/articles-four.jpg",
+        "move-match-v1/assets/articles-two.jpg",
+        "move-match-v1/assets/be-three.jpg",
+        "move-match-v1/assets/v39-art/apple.svg",
+        "move-match-v1/assets/v39-art/ball.svg",
+        "move-match-v1/assets/v39-art/banana.svg",
+        "move-match-v1/assets/v39-art/bear.svg",
+        "move-match-v1/assets/v39-art/bike.svg",
+        "move-match-v1/assets/v39-art/bird.svg",
+        "move-match-v1/assets/v39-art/book.svg",
+        "move-match-v1/assets/v39-art/bread.svg",
+        "move-match-v1/assets/v39-art/burger.svg",
+        "move-match-v1/assets/v39-art/bus.svg",
+        "move-match-v1/assets/v39-art/cake.svg",
+        "move-match-v1/assets/v39-art/car.svg",
+        "move-match-v1/assets/v39-art/carrot.svg",
+        "move-match-v1/assets/v39-art/cat.svg",
+        "move-match-v1/assets/v39-art/cheese.svg",
+        "move-match-v1/assets/v39-art/cookie.svg",
+        "move-match-v1/assets/v39-art/corn.svg",
+        "move-match-v1/assets/v39-art/cow.svg",
+        "move-match-v1/assets/v39-art/dog.svg",
+        "move-match-v1/assets/v39-art/donut.svg",
+        "move-match-v1/assets/v39-art/duck.svg",
+        "move-match-v1/assets/v39-art/egg.svg",
+        "move-match-v1/assets/v39-art/fish.svg",
+        "move-match-v1/assets/v39-art/flower.svg",
+        "move-match-v1/assets/v39-art/grapes.svg",
+        "move-match-v1/assets/v39-art/hat.svg",
+        "move-match-v1/assets/v39-art/icecream.svg",
+        "move-match-v1/assets/v39-art/juice.svg",
+        "move-match-v1/assets/v39-art/lemon.svg",
+        "move-match-v1/assets/v39-art/milk.svg",
+        "move-match-v1/assets/v39-art/orange.svg",
+        "move-match-v1/assets/v39-art/pear.svg",
+        "move-match-v1/assets/v39-art/pencil.svg",
+        "move-match-v1/assets/v39-art/pineapple.svg",
+        "move-match-v1/assets/v39-art/pizza.svg",
+        "move-match-v1/assets/v39-art/plane.svg",
+        "move-match-v1/assets/v39-art/potato.svg",
+        "move-match-v1/assets/v39-art/rabbit.svg",
+        "move-match-v1/assets/v39-art/shirt.svg",
+        "move-match-v1/assets/v39-art/shoes.svg",
+        "move-match-v1/assets/v39-art/strawberry.svg",
+        "move-match-v1/assets/v39-art/tomato.svg",
+        "move-match-v1/assets/v39-art/train.svg",
+        "move-match-v1/assets/v39-art/watermelon.svg",
+        "move-match-v1/catalog.js",
+        "move-match-v1/classroom/adapter.css",
+        "move-match-v1/classroom/bridge.js",
+        "move-match-v1/classroom/classroom.css",
+        "move-match-v1/classroom/index.html",
+        "move-match-v1/classroom/runtime.generated.js",
+        "move-match-v1/generation.js",
+        "move-match-v1/grammar-bank.js",
+        "move-match-v1/index.html",
+        "move-match-v1/linked-content.js",
+        "move-match-v1/model.js",
+        "move-match-v1/platform-adapter.js",
+        "move-match-v1/question-art.js",
+        "move-match-v1/question-context.js",
+        "move-match-v1/styles.css",
+        "move-match-v1/word-bank.js",
+        "prep-workbench-six-modules-v1/components.css",
+        "prep-workbench-six-modules-v1/components.js",
+        "prep-workbench-six-modules-v1/design-tokens.css",
+        "prep-workbench-six-modules-v1/inner-pages.css",
+        "prep-workbench-six-modules-v1/language-goals.js",
+        "prep-workbench-six-modules-v1/library-home.css",
+        "prep-workbench-six-modules-v1/platform.css",
+        "prep-workbench-six-modules-v1/platform.js",
+        "prep-workbench-six-modules-v1/typography.css"
+      ],
+      "excludedUnreachableManifestFiles": [],
+      "externalUrls": [],
+      "documentContexts": {}
+    }
+  },
+  "classificationDriftFromV6": [
+    {
+      "path": "../move-match-v1/app.js",
+      "kind": "changed",
+      "v6": {
+        "path": "../move-match-v1/app.js",
+        "sha256": "16ae1060f1e46b2854e096e74c54840e28380a0a6cb755b45df87c7eafec4a9d",
+        "bytes": 72109
+      },
+      "current": {
+        "path": "../move-match-v1/app.js",
+        "sha256": "9bf51bb7f0679ac336156130e434a9a8bf1cdc0e29118c3f9ef966e3ef43ec14",
+        "bytes": 72435
+      }
+    },
+    {
+      "path": "../move-match-v1/generation.js",
+      "kind": "changed",
+      "v6": {
+        "path": "../move-match-v1/generation.js",
+        "sha256": "b9e4a564b67609b26f98f9eb54fca3e3b8142543134ccc66adbec5ecc29009f2",
+        "bytes": 18256
+      },
+      "current": {
+        "path": "../move-match-v1/generation.js",
+        "sha256": "1765098d36f0b4bc26aac22186719ee6744aa909bee8c4d8e58062e151e56d3d",
+        "bytes": 19305
+      }
+    },
+    {
+      "path": "../move-match-v1/grammar-bank.js",
+      "kind": "added",
+      "v6": null,
+      "current": {
+        "path": "../move-match-v1/grammar-bank.js",
+        "sha256": "4aca88fcdf6a86e1c0c4c5b1e581ff3d31e5a8e810a04663dace73f2458df136",
+        "bytes": 13632
+      }
+    },
+    {
+      "path": "../move-match-v1/index.html",
+      "kind": "changed",
+      "v6": {
+        "path": "../move-match-v1/index.html",
+        "sha256": "665891f68dd48358167f3c79a319697e121cd8eb9d58389b2a26c6fcb8e73bb6",
+        "bytes": 1903
+      },
+      "current": {
+        "path": "../move-match-v1/index.html",
+        "sha256": "2bbb006335b1bf09354879668546da0415aa4a88fb921eb2fedb48332954749c",
+        "bytes": 1996
+      }
+    },
+    {
+      "path": "../move-match-v1/linked-content.js",
+      "kind": "changed",
+      "v6": {
+        "path": "../move-match-v1/linked-content.js",
+        "sha256": "805a25b8200286855f0d8c3c29ef09d53392f74f46015a624b4d03b05b06fb03",
+        "bytes": 15951
+      },
+      "current": {
+        "path": "../move-match-v1/linked-content.js",
+        "sha256": "96a69a76b8cb4a7c35a7333b7bdb817799206175ae5ec8bdfbf68c70d3441369",
+        "bytes": 16010
+      }
+    },
+    {
+      "path": "../move-match-v1/model.js",
+      "kind": "changed",
+      "v6": {
+        "path": "../move-match-v1/model.js",
+        "sha256": "1c4e39cbe97bfcaaa3ef7ecd031b02652ed88d47444435367b2595a22f8bfd2d",
+        "bytes": 28064
+      },
+      "current": {
+        "path": "../move-match-v1/model.js",
+        "sha256": "d6d82d464561ca3b9dae8c6bd19802c0c8c5ace17ff1f89cbfee7c262a215721",
+        "bytes": 28064
+      }
+    },
+    {
+      "path": "../move-match-v1/styles.css",
+      "kind": "changed",
+      "v6": {
+        "path": "../move-match-v1/styles.css",
+        "sha256": "9ee31cf642efedd671db348511bf525cee97be02c1f10e34992701041fb416f5",
+        "bytes": 28260
+      },
+      "current": {
+        "path": "../move-match-v1/styles.css",
+        "sha256": "9c08b3cf8042abef7341d3d57a340deb8a4a445c13b38c4faebc25472b5712e2",
+        "bytes": 28281
+      }
+    },
+    {
+      "path": "../move-match-v1/word-bank.js",
+      "kind": "added",
+      "v6": null,
+      "current": {
+        "path": "../move-match-v1/word-bank.js",
+        "sha256": "aaebbc58de7e205eb70164b04a39a47eb86b2cffe3670b4df1a005c53f6dccda",
+        "bytes": 6829
+      }
+    }
+  ],
+  "classificationV6Recovery": "prototype/move-match-v1/history/config-before-count-options-20261118.zip",
+  "storage": {
+    "prefix": "wellbeing-web-three-v1-${WB_WEB_SCOPE}-external-${moduleId}-",
+    "migration": "none",
+    "nestedScope": "Prefer a validated same-origin parent scope; opaque Doodle srcdoc receives a serialized scope before memory seeding.",
+    "doodleBoundary": "Original opaque sandbox, memory Storage and restrictive CSP retained; scoped classroom keys never switch back to real browser Storage.",
+    "checks": [
+      "nested classroom prefers trusted same-origin parent scope",
+      "opaque scope explicitly passed by launcher is preserved",
+      "invalid scope never enters a storage key",
+      "doodle repository keys differ between two accounts",
+      "move-match repository keys differ between two accounts",
+      "speaking nested sessions read only the matching account key",
+      "classification nested bridge uses an account-scoped launch key",
+      "doodle opaque classroom seeds and reads scoped in-memory keys without browser Storage"
+    ]
+  },
+  "summary": {
+    "sourceFiles": 141,
+    "sourceBytes": 32588317,
+    "outputFiles": 176,
+    "outputBytes": 61684427,
+    "scriptChecks": 54,
+    "storageChecks": 8,
+    "missingLocalDependencies": 0
+  },
+  "scriptChecks": [
+    {
+      "path": "doodle-guess-v1/candidates.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/classroom-v1.7.2.html",
+      "inline": 0,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/classroom-v1.7.2.html",
+      "inline": 1,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/model.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/word-tools.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/catalog.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/generation.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/grammar-bank.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/linked-content.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/platform-adapter.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/question-art.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/question-context.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/word-bank.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/components.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/language-goals.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/platform.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/art.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/energy-round.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/energy-v3.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/game-lifecycle.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/games/energy.html",
+      "inline": 2,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/games/flip.html",
+      "inline": 2,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/games/silly.html",
+      "inline": 3,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/games/tempo.html",
+      "inline": 2,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/games/volume.html",
+      "inline": 2,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/icons.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/play-details.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/session.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/tempo-v12.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/tempo-workbench.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/audio-controller.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/bridge.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/classroom-wordbank.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/runtime.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/word-images.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/pose-classifier.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/pose-tester.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/vision_bundle.mjs",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/camera-controller.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/classroom/runtime.generated.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/volume-v3.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/model.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/words-coach.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/words-reading.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/model.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/game-access.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/games/role.html",
+      "inline": 3,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/role-sound.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/app.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/app.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/app.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "workbench-api.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    }
+  ],
+  "files": [
+    {
+      "path": "doodle-guess-v1/app.js",
+      "source": "prototype/doodle-guess-v1/app.js",
+      "sourceRecord": {
+        "sha256": "c401e0be94da2545db4bdb97e334c6ce8c7b915bcbb7347497118ac62681a63e",
+        "bytes": 38576
+      },
+      "outputRecord": {
+        "sha256": "acd41168aa2bcdc3095ae094482999cf0c06db0141ceeda386e5e733d78de6f4",
+        "bytes": 39686
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/doodle-guess-v1/app.js",
+          "sourceRecord": {
+            "sha256": "acd41168aa2bcdc3095ae094482999cf0c06db0141ceeda386e5e733d78de6f4",
+            "bytes": 39686
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "prep-workbench-six-modules-v1/latest.html"
+      ]
+    },
+    {
+      "path": "doodle-guess-v1/assets/case-animals.jpg",
+      "source": "prototype/doodle-guess-v1/assets/case-animals.jpg",
+      "sourceRecord": {
+        "sha256": "f978185e1c308ffa26490112de6c4172e0c8565ef11046f806a5a6ad0e68cacd",
+        "bytes": 89571
+      },
+      "outputRecord": {
+        "sha256": "f978185e1c308ffa26490112de6c4172e0c8565ef11046f806a5a6ad0e68cacd",
+        "bytes": 89571
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "doodle-guess-v1/assets/case-everyday.jpg",
+      "source": "prototype/doodle-guess-v1/assets/case-everyday.jpg",
+      "sourceRecord": {
+        "sha256": "bbe28607f77e8996fbccd6abc5dd716a28fca4497e62c0fcc4cf328ea26d1874",
+        "bytes": 88961
+      },
+      "outputRecord": {
+        "sha256": "bbe28607f77e8996fbccd6abc5dd716a28fca4497e62c0fcc4cf328ea26d1874",
+        "bytes": 88961
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "doodle-guess-v1/assets/case-food.jpg",
+      "source": "prototype/doodle-guess-v1/assets/case-food.jpg",
+      "sourceRecord": {
+        "sha256": "242446529ba0a87310e3aeae410f7f2581bb1d684985eb9ca1ed9fbb1d7410c4",
+        "bytes": 90755
+      },
+      "outputRecord": {
+        "sha256": "242446529ba0a87310e3aeae410f7f2581bb1d684985eb9ca1ed9fbb1d7410c4",
+        "bytes": 90755
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "doodle-guess-v1/candidates.js",
+      "source": "prototype/doodle-guess-v1/candidates.js",
+      "sourceRecord": {
+        "sha256": "487d16566b8a6f30ee5e500dc0a43f74c1cc679db68393e202acc70a71c653c6",
+        "bytes": 14247
+      },
+      "outputRecord": {
+        "sha256": "487d16566b8a6f30ee5e500dc0a43f74c1cc679db68393e202acc70a71c653c6",
+        "bytes": 14247
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "doodle-guess-v1/classroom-v1.7.2.html",
+      "source": "prototype/doodle-guess-v1/classroom-v1.7.2.html",
+      "sourceRecord": {
+        "sha256": "96a836e34d0b3f536ddc080166880459f6ed3ae99a7675223e5897b3f15a628f",
+        "bytes": 1351048
+      },
+      "outputRecord": {
+        "sha256": "ac30a2d3413c5710f97f188e2509506440e98a01bca8641152ed3c7c5180ea6e",
+        "bytes": 1352408
+      },
+      "transformations": [
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_classroom_preferences_v1",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_classroom_preferences_v1\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_gallery",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_gallery\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_buddy",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_buddy\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_buddy",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_buddy\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_activeLesson",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_activeLesson\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_lessons",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_lessons\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_activeLesson",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_activeLesson\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_lessons",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_lessons\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_activeLesson",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_activeLesson\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_words",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_words\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_lessons",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_lessons\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_stats",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_stats\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_stats",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_stats\")"
+        },
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "doodle-guess-v1/classroom-wordbank.js",
+      "source": "prototype/doodle-guess-v1/classroom-wordbank.js",
+      "sourceRecord": {
+        "sha256": "dd9e6fb9123d78f350f70926c1cb12f88e2a622f8a4b85530a3fb64b0eab096a",
+        "bytes": 16325
+      },
+      "outputRecord": {
+        "sha256": "8009be255e5582c9b8f4df4b8cb15afe459d6e612a0b2c75bb3e0f100817fa17",
+        "bytes": 17734
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/doodle-guess-v1/classroom-wordbank.js",
+          "sourceRecord": {
+            "sha256": "8009be255e5582c9b8f4df4b8cb15afe459d6e612a0b2c75bb3e0f100817fa17",
+            "bytes": 17734
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "doodle-guess-v1/word-images.js"
+      ]
+    },
+    {
+      "path": "doodle-guess-v1/index.html",
+      "source": "prototype/doodle-guess-v1/index.html",
+      "sourceRecord": {
+        "sha256": "deb6b1310c964ebaaf82f4cea8a31848ab9844528367febcc0314d6d0d7fcde1",
+        "bytes": 1622
+      },
+      "outputRecord": {
+        "sha256": "565f857cf850c67766ab3e6616c707287a2bfc55d3afa01877e06391ce799437",
+        "bytes": 1770
+      },
+      "transformations": [
+        {
+          "kind": "host-adapter",
+          "scopeBootstrapSha256": null
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/doodle-guess-v1/index.html",
+          "sourceRecord": {
+            "sha256": "0cc54397c06f91017ae098298f20be920c88bdddb2d02e029b352cc5f21863ca",
+            "bytes": 1542
+          },
+          "scope": "local teacher UI; Doodle manual words and snapshot images from the user-selected source"
+        },
+        {
+          "kind": "content-versioned-ui-assets",
+          "versions": {
+            "app.js": "acd41168aa2bcdc3",
+            "../workbench-api.js": "9a2fcb1919c3eeb3"
+          }
+        }
+      ],
+      "dependencies": [
+        "authoring.js",
+        "doodle-guess-v1/app.js",
+        "doodle-guess-v1/classroom-wordbank.js",
+        "doodle-guess-v1/model.js",
+        "doodle-guess-v1/runtime.js",
+        "doodle-guess-v1/styles.css",
+        "doodle-guess-v1/word-images.js",
+        "doodle-guess-v1/word-tools.js",
+        "embed-adapter.css",
+        "embed-adapter.js",
+        "prep-workbench-six-modules-v1/components.css",
+        "prep-workbench-six-modules-v1/components.js",
+        "prep-workbench-six-modules-v1/design-tokens.css",
+        "prep-workbench-six-modules-v1/inner-pages.css",
+        "prep-workbench-six-modules-v1/library-home.css",
+        "prep-workbench-six-modules-v1/platform.css",
+        "prep-workbench-six-modules-v1/platform.js",
+        "prep-workbench-six-modules-v1/typography.css",
+        "workbench-api.js"
+      ]
+    },
+    {
+      "path": "doodle-guess-v1/model.js",
+      "source": "prototype/doodle-guess-v1/model.js",
+      "sourceRecord": {
+        "sha256": "f6f650e9967b78a7ae4ff787c969047a70ecf7fc58562f515bcfa62f56f8511d",
+        "bytes": 9278
+      },
+      "outputRecord": {
+        "sha256": "d6de18e12ff65d8a9de565ad6dd6542b25df862da31e136ec0d9342bd3322e11",
+        "bytes": 9537
+      },
+      "transformations": [
+        {
+          "kind": "account-storage-key",
+          "original": "wellbeing-doodle-v1-activities",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"wellbeing-doodle-v1-activities\")"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/doodle-guess-v1/model.js",
+          "sourceRecord": {
+            "sha256": "2db0fdc58053842b815646ce3769735dd07260a4b9d75f976e9eb4096ec0bfd0",
+            "bytes": 9469
+          },
+          "scope": "local teacher UI; Doodle manual words and snapshot images from the user-selected source"
+        }
+      ],
+      "dependencies": [
+        "doodle-guess-v1/word-images.js"
+      ]
+    },
+    {
+      "path": "doodle-guess-v1/runtime.js",
+      "source": "prototype/doodle-guess-v1/runtime.js",
+      "sourceRecord": {
+        "sha256": "2dfd57c910291de54aeee7aea92828ae007ae6410c787340c32b9a63d936c258",
+        "bytes": 16165
+      },
+      "outputRecord": {
+        "sha256": "e934f0a6f162c97ca051732bfc047201f50eb7cb6a32b8ec98ea237dca9d6ec6",
+        "bytes": 17489
+      },
+      "transformations": [
+        {
+          "kind": "opaque-classroom-scope",
+          "original": "<script>(",
+          "replacement": "('<script>window.WB_WEB_SCOPE='+JSON.stringify(window.WB_WEB_SCOPE)+';(')"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "dg_english_v13_",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-doodle-'+\"dg_english_v13_\")"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/doodle-guess-v1/runtime.js",
+          "sourceRecord": {
+            "sha256": "61d8bcb07f2f2f5cd37bfec1f33e6bdf05501552072ff26bb72fe41fccd2d58f",
+            "bytes": 17359
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "doodle-guess-v1/classroom-v1.7.2.html",
+        "doodle-guess-v1/classroom-wordbank.js",
+        "doodle-guess-v1/word-images.js",
+        "doodle-guess-v1/word-tools.js"
+      ]
+    },
+    {
+      "path": "doodle-guess-v1/styles.css",
+      "source": "prototype/doodle-guess-v1/styles.css",
+      "sourceRecord": {
+        "sha256": "2ce91b166bf5617f29a624c2ca8c2e027cb049fa7df36cd0407fcc7055cb3a04",
+        "bytes": 14177
+      },
+      "outputRecord": {
+        "sha256": "415f8c37b2d76674225643736c3f669bf842a3ea4278d4cf9aea40b74450754d",
+        "bytes": 12863
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/doodle-guess-v1/styles.css",
+          "sourceRecord": {
+            "sha256": "415f8c37b2d76674225643736c3f669bf842a3ea4278d4cf9aea40b74450754d",
+            "bytes": 12863
+          },
+          "scope": "local teacher UI; Doodle manual words and snapshot images from the user-selected source"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "doodle-guess-v1/word-images.js",
+      "source": null,
+      "sourceRecord": null,
+      "outputRecord": {
+        "sha256": "9d6286cd0fe4f8edf9880c81da62a14aa6cb02d98b4c10db5d6639759f924ce3",
+        "bytes": 5009
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/doodle-guess-v1/word-images.js",
+          "sourceRecord": {
+            "sha256": "9d6286cd0fe4f8edf9880c81da62a14aa6cb02d98b4c10db5d6639759f924ce3",
+            "bytes": 5009
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "doodle-guess-v1/word-tools.js",
+      "source": "prototype/doodle-guess-v1/word-tools.js",
+      "sourceRecord": {
+        "sha256": "61ad0e9544b1b43096a7a5c111c7118d250fee1631b0b724d119c9ff87380083",
+        "bytes": 9674
+      },
+      "outputRecord": {
+        "sha256": "61ad0e9544b1b43096a7a5c111c7118d250fee1631b0b724d119c9ff87380083",
+        "bytes": 9674
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/app.js",
+      "source": "prototype/move-match-v1/app.js",
+      "sourceRecord": {
+        "sha256": "9bf51bb7f0679ac336156130e434a9a8bf1cdc0e29118c3f9ef966e3ef43ec14",
+        "bytes": 72435
+      },
+      "outputRecord": {
+        "sha256": "286ac7b8c43262e782f01ff18c599498a3feb3e289e819eb56e6b36c4083e2b3",
+        "bytes": 109196
+      },
+      "transformations": [
+        {
+          "kind": "account-storage-key",
+          "original": "wellbeing-move-match-v1-data",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"wellbeing-move-match-v1-data\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "wellbeing-move-match-v1-data",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"wellbeing-move-match-v1-data\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "move-match-v1:launch:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"move-match-v1:launch:\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "move-match-v1:launch:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"move-match-v1:launch:\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "move-match-v1:launch:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"move-match-v1:launch:\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "move-match-v1:launch:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"move-match-v1:launch:\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "move-match-v1:launch:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"move-match-v1:launch:\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "move-match-v1:launch:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"move-match-v1:launch:\")"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/app.js",
+          "sourceRecord": {
+            "sha256": "91705f6cb4402b7a574f3c4b8b153279b8709b89a368f2055a35d0007b10179c",
+            "bytes": 108620
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/articles-four.jpg",
+      "source": "prototype/move-match-v1/assets/articles-four.jpg",
+      "sourceRecord": {
+        "sha256": "ab6cbab6bd1ac9e8f076bbb43f944e7f4ca23b67168a65503e9d604fa098f854",
+        "bytes": 148906
+      },
+      "outputRecord": {
+        "sha256": "ab6cbab6bd1ac9e8f076bbb43f944e7f4ca23b67168a65503e9d604fa098f854",
+        "bytes": 148906
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/articles-two.jpg",
+      "source": "prototype/move-match-v1/assets/articles-two.jpg",
+      "sourceRecord": {
+        "sha256": "d2b1e71598ccedf2a1038c179b82117f183b497b3aed57e1c4fe2cda619865b9",
+        "bytes": 138417
+      },
+      "outputRecord": {
+        "sha256": "d2b1e71598ccedf2a1038c179b82117f183b497b3aed57e1c4fe2cda619865b9",
+        "bytes": 138417
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/be-three.jpg",
+      "source": "prototype/move-match-v1/assets/be-three.jpg",
+      "sourceRecord": {
+        "sha256": "5e453afbe246028d31531d5d796a59b09e39797164c6dc321bf63e92a0d48174",
+        "bytes": 142300
+      },
+      "outputRecord": {
+        "sha256": "5e453afbe246028d31531d5d796a59b09e39797164c6dc321bf63e92a0d48174",
+        "bytes": 142300
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/apple.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/apple.svg",
+      "sourceRecord": {
+        "sha256": "57edcc206bc408d3ec3f4ac3c639e15f986c83cb5a66c3d605e1bb64c77db65c",
+        "bytes": 1127
+      },
+      "outputRecord": {
+        "sha256": "57edcc206bc408d3ec3f4ac3c639e15f986c83cb5a66c3d605e1bb64c77db65c",
+        "bytes": 1127
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/ball.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/ball.svg",
+      "sourceRecord": {
+        "sha256": "1331f9bfdeb38fc0390055d345bfaaa3d49576f83fb373cf84438fe46a286e07",
+        "bytes": 966
+      },
+      "outputRecord": {
+        "sha256": "1331f9bfdeb38fc0390055d345bfaaa3d49576f83fb373cf84438fe46a286e07",
+        "bytes": 966
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/banana.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/banana.svg",
+      "sourceRecord": {
+        "sha256": "86d5c3e6297ecb002e20da3e88449f73d51273915bd0158c33c3ff51cbf345cf",
+        "bytes": 760
+      },
+      "outputRecord": {
+        "sha256": "86d5c3e6297ecb002e20da3e88449f73d51273915bd0158c33c3ff51cbf345cf",
+        "bytes": 760
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/bear.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/bear.svg",
+      "sourceRecord": {
+        "sha256": "9a470d8bcd6a8983258c93807b0643159099e3d2538e58a582c2c3d2cc399d25",
+        "bytes": 1671
+      },
+      "outputRecord": {
+        "sha256": "9a470d8bcd6a8983258c93807b0643159099e3d2538e58a582c2c3d2cc399d25",
+        "bytes": 1671
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/bike.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/bike.svg",
+      "sourceRecord": {
+        "sha256": "f2885c85102b883e09f078e461bddc537f3a6dc9d40e0095b060a496edd4c248",
+        "bytes": 1235
+      },
+      "outputRecord": {
+        "sha256": "f2885c85102b883e09f078e461bddc537f3a6dc9d40e0095b060a496edd4c248",
+        "bytes": 1235
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/bird.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/bird.svg",
+      "sourceRecord": {
+        "sha256": "db3f23972e3c051e7246fdb763d8843151c8edce033a4b80fc4d44107592a4bd",
+        "bytes": 1096
+      },
+      "outputRecord": {
+        "sha256": "db3f23972e3c051e7246fdb763d8843151c8edce033a4b80fc4d44107592a4bd",
+        "bytes": 1096
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/book.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/book.svg",
+      "sourceRecord": {
+        "sha256": "2e9a0d82780b1f6625a06f11cc67c1b5465d8d77489d31004495d35da5fa9fa1",
+        "bytes": 924
+      },
+      "outputRecord": {
+        "sha256": "2e9a0d82780b1f6625a06f11cc67c1b5465d8d77489d31004495d35da5fa9fa1",
+        "bytes": 924
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/bread.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/bread.svg",
+      "sourceRecord": {
+        "sha256": "6c1c268742f499ffb7764159350961db84c49593f1a5a010cb6dad93b262e627",
+        "bytes": 918
+      },
+      "outputRecord": {
+        "sha256": "6c1c268742f499ffb7764159350961db84c49593f1a5a010cb6dad93b262e627",
+        "bytes": 918
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/burger.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/burger.svg",
+      "sourceRecord": {
+        "sha256": "dc53283edd2fba958bbcf0f33cc4a98adddee420ba082db069120aabb24258b7",
+        "bytes": 1278
+      },
+      "outputRecord": {
+        "sha256": "dc53283edd2fba958bbcf0f33cc4a98adddee420ba082db069120aabb24258b7",
+        "bytes": 1278
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/bus.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/bus.svg",
+      "sourceRecord": {
+        "sha256": "416cba65184f9e1bc35bb133401ace60cffda5f69902f33e883ac18279d8f647",
+        "bytes": 1442
+      },
+      "outputRecord": {
+        "sha256": "416cba65184f9e1bc35bb133401ace60cffda5f69902f33e883ac18279d8f647",
+        "bytes": 1442
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/cake.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/cake.svg",
+      "sourceRecord": {
+        "sha256": "30969aed5eeaa4a8cf2651be1431c84f7fd885fbe910a2183aef28286326b75f",
+        "bytes": 1014
+      },
+      "outputRecord": {
+        "sha256": "30969aed5eeaa4a8cf2651be1431c84f7fd885fbe910a2183aef28286326b75f",
+        "bytes": 1014
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/car.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/car.svg",
+      "sourceRecord": {
+        "sha256": "2e8fcad2e314138d23cf691bd5f8d66f851fcc8401d07f7ef8e1185b3970a83d",
+        "bytes": 1268
+      },
+      "outputRecord": {
+        "sha256": "2e8fcad2e314138d23cf691bd5f8d66f851fcc8401d07f7ef8e1185b3970a83d",
+        "bytes": 1268
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/carrot.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/carrot.svg",
+      "sourceRecord": {
+        "sha256": "be199b2530fe2f866e848573800dc304d63270147b4264200f025616a36ac07c",
+        "bytes": 829
+      },
+      "outputRecord": {
+        "sha256": "be199b2530fe2f866e848573800dc304d63270147b4264200f025616a36ac07c",
+        "bytes": 829
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/cat.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/cat.svg",
+      "sourceRecord": {
+        "sha256": "c4ca8a8a68a83e03b180c181d9d18731fd270987da6500073b9710c637876ccd",
+        "bytes": 1605
+      },
+      "outputRecord": {
+        "sha256": "c4ca8a8a68a83e03b180c181d9d18731fd270987da6500073b9710c637876ccd",
+        "bytes": 1605
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/cheese.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/cheese.svg",
+      "sourceRecord": {
+        "sha256": "403a99135caebbd7a17f29372fe651e5704e1e6fcd7f218803474a869e78c2f1",
+        "bytes": 1032
+      },
+      "outputRecord": {
+        "sha256": "403a99135caebbd7a17f29372fe651e5704e1e6fcd7f218803474a869e78c2f1",
+        "bytes": 1032
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/cookie.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/cookie.svg",
+      "sourceRecord": {
+        "sha256": "c6320c9e3d7663723ab2d8d1d1a8fa2030e7a637f95c87055a9318cd2a4f4302",
+        "bytes": 979
+      },
+      "outputRecord": {
+        "sha256": "c6320c9e3d7663723ab2d8d1d1a8fa2030e7a637f95c87055a9318cd2a4f4302",
+        "bytes": 979
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/corn.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/corn.svg",
+      "sourceRecord": {
+        "sha256": "3304ed26663ad3b446352e1fce478a6c024844c7879b8b1da2b61350aa174833",
+        "bytes": 847
+      },
+      "outputRecord": {
+        "sha256": "3304ed26663ad3b446352e1fce478a6c024844c7879b8b1da2b61350aa174833",
+        "bytes": 847
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/cow.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/cow.svg",
+      "sourceRecord": {
+        "sha256": "e8f277812ab015a986b341dee6d2fe0b346d98bdcaeabd67a42f85d63b4f9b84",
+        "bytes": 1428
+      },
+      "outputRecord": {
+        "sha256": "e8f277812ab015a986b341dee6d2fe0b346d98bdcaeabd67a42f85d63b4f9b84",
+        "bytes": 1428
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/dog.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/dog.svg",
+      "sourceRecord": {
+        "sha256": "af48cbed9bc49f52bf97371db2ca8b135cadf9c95570cdd1d0bc3e64b7222356",
+        "bytes": 1555
+      },
+      "outputRecord": {
+        "sha256": "af48cbed9bc49f52bf97371db2ca8b135cadf9c95570cdd1d0bc3e64b7222356",
+        "bytes": 1555
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/donut.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/donut.svg",
+      "sourceRecord": {
+        "sha256": "6bffdc5bd96adf36f660770de41df804a4f34dc516a12f498407943800c746be",
+        "bytes": 861
+      },
+      "outputRecord": {
+        "sha256": "6bffdc5bd96adf36f660770de41df804a4f34dc516a12f498407943800c746be",
+        "bytes": 861
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/duck.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/duck.svg",
+      "sourceRecord": {
+        "sha256": "86bb8877694b5bc9dce70eb7836f29738479eb4aa9f79a827bcac731424ae92a",
+        "bytes": 961
+      },
+      "outputRecord": {
+        "sha256": "86bb8877694b5bc9dce70eb7836f29738479eb4aa9f79a827bcac731424ae92a",
+        "bytes": 961
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/egg.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/egg.svg",
+      "sourceRecord": {
+        "sha256": "f513cf4381574a2653f0ff19110d917088732fa8d6a443ef3a4af9fafaa929be",
+        "bytes": 690
+      },
+      "outputRecord": {
+        "sha256": "f513cf4381574a2653f0ff19110d917088732fa8d6a443ef3a4af9fafaa929be",
+        "bytes": 690
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/fish.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/fish.svg",
+      "sourceRecord": {
+        "sha256": "924b1433b7d2b42a084a043bd6b04e7ef8d1ca09a82600d0504225375f80e305",
+        "bytes": 1053
+      },
+      "outputRecord": {
+        "sha256": "924b1433b7d2b42a084a043bd6b04e7ef8d1ca09a82600d0504225375f80e305",
+        "bytes": 1053
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/flower.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/flower.svg",
+      "sourceRecord": {
+        "sha256": "097b5076b4bf54c3dc923dce1b6cd3751549eaae05190722ce35d13aadae2adb",
+        "bytes": 1196
+      },
+      "outputRecord": {
+        "sha256": "097b5076b4bf54c3dc923dce1b6cd3751549eaae05190722ce35d13aadae2adb",
+        "bytes": 1196
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/grapes.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/grapes.svg",
+      "sourceRecord": {
+        "sha256": "f5a9b095e221fbdfb66e56f2f6348f552e10dbe2e5129113b287782b8ce2b737",
+        "bytes": 986
+      },
+      "outputRecord": {
+        "sha256": "f5a9b095e221fbdfb66e56f2f6348f552e10dbe2e5129113b287782b8ce2b737",
+        "bytes": 986
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/hat.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/hat.svg",
+      "sourceRecord": {
+        "sha256": "79081626f5606849450ac8c164cc3b0a055c69f67c158259123af08f584d09c9",
+        "bytes": 730
+      },
+      "outputRecord": {
+        "sha256": "79081626f5606849450ac8c164cc3b0a055c69f67c158259123af08f584d09c9",
+        "bytes": 730
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/icecream.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/icecream.svg",
+      "sourceRecord": {
+        "sha256": "680259cf1b6dd00596022ddada790d09304802aa51d75fb21381bb3b59348449",
+        "bytes": 833
+      },
+      "outputRecord": {
+        "sha256": "680259cf1b6dd00596022ddada790d09304802aa51d75fb21381bb3b59348449",
+        "bytes": 833
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/juice.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/juice.svg",
+      "sourceRecord": {
+        "sha256": "030fda36c9a79ec7ba32ad900ec506ef50ae06b12c715fe052aff36821666f9a",
+        "bytes": 933
+      },
+      "outputRecord": {
+        "sha256": "030fda36c9a79ec7ba32ad900ec506ef50ae06b12c715fe052aff36821666f9a",
+        "bytes": 933
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/lemon.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/lemon.svg",
+      "sourceRecord": {
+        "sha256": "591daaabffe05c825bdc5c02ca9522b6d9c8bada6d6cead85ff7ca42fd5d2424",
+        "bytes": 839
+      },
+      "outputRecord": {
+        "sha256": "591daaabffe05c825bdc5c02ca9522b6d9c8bada6d6cead85ff7ca42fd5d2424",
+        "bytes": 839
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/milk.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/milk.svg",
+      "sourceRecord": {
+        "sha256": "85335d1df53035ac30b3ae17e8c0e1686ff9124cb8d463c897568c6d64b442bc",
+        "bytes": 875
+      },
+      "outputRecord": {
+        "sha256": "85335d1df53035ac30b3ae17e8c0e1686ff9124cb8d463c897568c6d64b442bc",
+        "bytes": 875
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/orange.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/orange.svg",
+      "sourceRecord": {
+        "sha256": "21bfd6ba62141c3c564df67617bbf32eab3941672b5cc9c261d5d8156ea27100",
+        "bytes": 880
+      },
+      "outputRecord": {
+        "sha256": "21bfd6ba62141c3c564df67617bbf32eab3941672b5cc9c261d5d8156ea27100",
+        "bytes": 880
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/pear.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/pear.svg",
+      "sourceRecord": {
+        "sha256": "78c9294c9046990755495858722413183fb9ade740bd42a9de6d6a4b9541df2f",
+        "bytes": 874
+      },
+      "outputRecord": {
+        "sha256": "78c9294c9046990755495858722413183fb9ade740bd42a9de6d6a4b9541df2f",
+        "bytes": 874
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/pencil.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/pencil.svg",
+      "sourceRecord": {
+        "sha256": "51c88bad5efe11659fc5ed8b45853a221ca1143699159f859f7f82979106c274",
+        "bytes": 837
+      },
+      "outputRecord": {
+        "sha256": "51c88bad5efe11659fc5ed8b45853a221ca1143699159f859f7f82979106c274",
+        "bytes": 837
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/pineapple.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/pineapple.svg",
+      "sourceRecord": {
+        "sha256": "8e5292805c7484d2778e66d6016990ffbdb2072c23ec8beb1d13c8902d45bdc3",
+        "bytes": 808
+      },
+      "outputRecord": {
+        "sha256": "8e5292805c7484d2778e66d6016990ffbdb2072c23ec8beb1d13c8902d45bdc3",
+        "bytes": 808
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/pizza.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/pizza.svg",
+      "sourceRecord": {
+        "sha256": "6bf24c180f5267a0592566b88cc1622e615aabaf08e4ceffeeeeea572efbc55f",
+        "bytes": 838
+      },
+      "outputRecord": {
+        "sha256": "6bf24c180f5267a0592566b88cc1622e615aabaf08e4ceffeeeeea572efbc55f",
+        "bytes": 838
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/plane.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/plane.svg",
+      "sourceRecord": {
+        "sha256": "27ae0e95f0e02b6247534009d1debc0c52946f2a31499ebfe2ea94daa41878e3",
+        "bytes": 858
+      },
+      "outputRecord": {
+        "sha256": "27ae0e95f0e02b6247534009d1debc0c52946f2a31499ebfe2ea94daa41878e3",
+        "bytes": 858
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/potato.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/potato.svg",
+      "sourceRecord": {
+        "sha256": "32cb6494be884a88ba1dad486a643ef4d1f70711a6934568cb0138a27f6af961",
+        "bytes": 941
+      },
+      "outputRecord": {
+        "sha256": "32cb6494be884a88ba1dad486a643ef4d1f70711a6934568cb0138a27f6af961",
+        "bytes": 941
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/rabbit.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/rabbit.svg",
+      "sourceRecord": {
+        "sha256": "d6386329f759036a57430c5a12e5378bd9ce76f785fed3fbd2a52df876dd563e",
+        "bytes": 1362
+      },
+      "outputRecord": {
+        "sha256": "d6386329f759036a57430c5a12e5378bd9ce76f785fed3fbd2a52df876dd563e",
+        "bytes": 1362
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/shirt.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/shirt.svg",
+      "sourceRecord": {
+        "sha256": "30d8265a4e7b516bb1b6e4b6c22e7ae1d0b613d8bc1af1942abd5b503d65de00",
+        "bytes": 669
+      },
+      "outputRecord": {
+        "sha256": "30d8265a4e7b516bb1b6e4b6c22e7ae1d0b613d8bc1af1942abd5b503d65de00",
+        "bytes": 669
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/shoes.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/shoes.svg",
+      "sourceRecord": {
+        "sha256": "84140bfd6e0d03c8781239621ed999006404582ec85c21a8eb3e55534296c473",
+        "bytes": 1571
+      },
+      "outputRecord": {
+        "sha256": "84140bfd6e0d03c8781239621ed999006404582ec85c21a8eb3e55534296c473",
+        "bytes": 1571
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/strawberry.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/strawberry.svg",
+      "sourceRecord": {
+        "sha256": "aa7b72a018f27488bdf40d046ad3143300d881fa8130775b4c3b7b477f588868",
+        "bytes": 758
+      },
+      "outputRecord": {
+        "sha256": "aa7b72a018f27488bdf40d046ad3143300d881fa8130775b4c3b7b477f588868",
+        "bytes": 758
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/tomato.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/tomato.svg",
+      "sourceRecord": {
+        "sha256": "5462cad16a090fd2f544b67c5a193e85b77cb92e73525dbb8f6d3055425f0b17",
+        "bytes": 784
+      },
+      "outputRecord": {
+        "sha256": "5462cad16a090fd2f544b67c5a193e85b77cb92e73525dbb8f6d3055425f0b17",
+        "bytes": 784
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/train.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/train.svg",
+      "sourceRecord": {
+        "sha256": "fce4ccde73a45a1871ebcbc30c3c9a2335e6886193952d997696f6edef7f57ef",
+        "bytes": 1215
+      },
+      "outputRecord": {
+        "sha256": "fce4ccde73a45a1871ebcbc30c3c9a2335e6886193952d997696f6edef7f57ef",
+        "bytes": 1215
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/assets/v39-art/watermelon.svg",
+      "source": "prototype/move-match-v1/assets/v39-art/watermelon.svg",
+      "sourceRecord": {
+        "sha256": "79621785ac276fb750c7b82197cf65187bc905512e4defce3a660a9b40f2bbba",
+        "bytes": 826
+      },
+      "outputRecord": {
+        "sha256": "79621785ac276fb750c7b82197cf65187bc905512e4defce3a660a9b40f2bbba",
+        "bytes": 826
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/catalog.js",
+      "source": "prototype/move-match-v1/catalog.js",
+      "sourceRecord": {
+        "sha256": "b768d85783a3a8de654ea15fce86154a349be5cf4d721fb1338a096ca62ef002",
+        "bytes": 18080
+      },
+      "outputRecord": {
+        "sha256": "b768d85783a3a8de654ea15fce86154a349be5cf4d721fb1338a096ca62ef002",
+        "bytes": 18080
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/action-poses-cutout.png",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/action-poses-cutout.png",
+          "sourceRecord": {
+            "sha256": "fac236b956662e3d7716dce6092e31049b952658400bbae0c7a858226103b009",
+            "bytes": 790987
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "fac236b956662e3d7716dce6092e31049b952658400bbae0c7a858226103b009",
+        "bytes": 790987
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/adapter.css",
+      "source": "prototype/move-match-v1/classroom/adapter.css",
+      "sourceRecord": {
+        "sha256": "e5dbc8954954ecd0181ae8b9c3498aff6cd593ad6ea6038fdce4e195db924373",
+        "bytes": 2071
+      },
+      "outputRecord": {
+        "sha256": "a09131e3fff9fc92624352e0ba22c8636d2eacbdebe5d4709f367d873bab6acf",
+        "bytes": 35541
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/adapter.css",
+          "sourceRecord": {
+            "sha256": "a09131e3fff9fc92624352e0ba22c8636d2eacbdebe5d4709f367d873bab6acf",
+            "bytes": 35541
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "move-match-v1/classroom/action-poses-cutout.png"
+      ]
+    },
+    {
+      "path": "move-match-v1/classroom/audio-controller.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/audio-controller.js",
+          "sourceRecord": {
+            "sha256": "0626380d1d425690a891ff0c3addcfdd928204d69008aa3e58abc4790118b2e5",
+            "bytes": 8450
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "0626380d1d425690a891ff0c3addcfdd928204d69008aa3e58abc4790118b2e5",
+        "bytes": 8450
+      },
+      "dependencies": [
+        "move-match-v1/classroom/audio/card-drop.wav",
+        "move-match-v1/classroom/audio/classroom-loop.wav",
+        "move-match-v1/classroom/audio/incorrect.wav"
+      ]
+    },
+    {
+      "path": "move-match-v1/classroom/audio/card-drop.wav",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/audio/card-drop.wav",
+          "sourceRecord": {
+            "sha256": "6273f6441743628a3824eb3b86af94c53af9c4ddd9d6956ae2038141ce683af0",
+            "bytes": 21804
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "6273f6441743628a3824eb3b86af94c53af9c4ddd9d6956ae2038141ce683af0",
+        "bytes": 21804
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/audio/classroom-loop.wav",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/audio/classroom-loop.wav",
+          "sourceRecord": {
+            "sha256": "de0e39c9eacae36446c4e4a6f98477f74967ed1cc1e209f434e8fdea5a4557cd",
+            "bytes": 2560044
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "de0e39c9eacae36446c4e4a6f98477f74967ed1cc1e209f434e8fdea5a4557cd",
+        "bytes": 2560044
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/audio/incorrect.wav",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/audio/incorrect.wav",
+          "sourceRecord": {
+            "sha256": "702931fd87a0c989d150676cd66e3f4ca16dceeb7c93a0c2e7522a1ea71180f6",
+            "bytes": 30764
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "702931fd87a0c989d150676cd66e3f4ca16dceeb7c93a0c2e7522a1ea71180f6",
+        "bytes": 30764
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/bridge.js",
+      "source": "prototype/move-match-v1/classroom/bridge.js",
+      "sourceRecord": {
+        "sha256": "128e06f6cac1db568f7719de6df4153907036a803eef67b5107feda9d933dd6a",
+        "bytes": 5560
+      },
+      "outputRecord": {
+        "sha256": "148a0b8bd66be312f579c4a7998ac20cb67dd5e11f505826eccccda104a4cb3d",
+        "bytes": 7562
+      },
+      "transformations": [
+        {
+          "kind": "account-storage-key",
+          "original": "move-match-v1:launch:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"move-match-v1:launch:\")"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/bridge.js",
+          "sourceRecord": {
+            "sha256": "9f5e7a53454f1b2163fdc500a4bc1e94efaaf9f6c904aa0976c48c528c7f665d",
+            "bytes": 7490
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/camera-controller.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/camera-controller.js",
+          "sourceRecord": {
+            "sha256": "bdbb8b4584a70b39819013414caa9161933b818e8fc28a90a56163c95eb48476",
+            "bytes": 7400
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "bdbb8b4584a70b39819013414caa9161933b818e8fc28a90a56163c95eb48476",
+        "bytes": 7400
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/camera-tree-frame-collapsed.svg",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/camera-tree-frame-collapsed.svg",
+          "sourceRecord": {
+            "sha256": "0f83df56a8bf214cb7efe3bbad168ad482344ebcc16eb6766c3869c02721cc59",
+            "bytes": 1051
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "0f83df56a8bf214cb7efe3bbad168ad482344ebcc16eb6766c3869c02721cc59",
+        "bytes": 1051
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/camera-tree-frame.svg",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/camera-tree-frame.svg",
+          "sourceRecord": {
+            "sha256": "9243098a98ee5263822d597bedbff67ef842b208aafe3a6cad49aea51644710d",
+            "bytes": 3797
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "9243098a98ee5263822d597bedbff67ef842b208aafe3a6cad49aea51644710d",
+        "bytes": 3797
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/classroom.css",
+      "source": "prototype/move-match-v1/classroom/classroom.css",
+      "sourceRecord": {
+        "sha256": "271bc16164c279385be392d9f8fd3d676d84a75f629c7f700faf14997e646646",
+        "bytes": 400848
+      },
+      "outputRecord": {
+        "sha256": "271bc16164c279385be392d9f8fd3d676d84a75f629c7f700faf14997e646646",
+        "bytes": 400848
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/index.html",
+      "source": "prototype/move-match-v1/classroom/index.html",
+      "sourceRecord": {
+        "sha256": "a9501d92bb161e2dd9c19f79da8bbc7e949a1a495228d7b063b7e25a5a211716",
+        "bytes": 451
+      },
+      "outputRecord": {
+        "sha256": "893204db27abff61b6c5d797c6bdcd6e02db4117a94810d434a3af94b8bc8869",
+        "bytes": 1269
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/index.html",
+          "sourceRecord": {
+            "sha256": "795adbf2063135e86e5a62cd73dbfe656f2ef2eabc104b9ec287dc66b0c7171c",
+            "bytes": 622
+          },
+          "scope": "portable local authoring update"
+        },
+        {
+          "kind": "content-versioned-classroom-assets",
+          "versions": {
+            "move-match-v1/classroom/classroom.css": "271bc16164c27938",
+            "move-match-v1/classroom/adapter.css": "a09131e3fff9fc92",
+            "move-match-v1/classroom/bridge.js": "148a0b8bd66be312",
+            "move-match-v1/question-context.js": "1041810d17085187",
+            "move-match-v1/classroom/audio-controller.js": "0626380d1d425690",
+            "move-match-v1/classroom/camera-controller.js": "bdbb8b4584a70b39",
+            "move-match-v1/classroom/pose-classifier.js": "5c182295fad7de68",
+            "move-match-v1/classroom/pose-tester.js": "369f0dbc6ca8f950",
+            "move-match-v1/classroom/runtime.generated.js": "a9a3a585b9fb5607"
+          }
+        }
+      ],
+      "dependencies": [
+        "move-match-v1/classroom/adapter.css",
+        "move-match-v1/classroom/audio-controller.js",
+        "move-match-v1/classroom/bridge.js",
+        "move-match-v1/classroom/camera-controller.js",
+        "move-match-v1/classroom/classroom.css",
+        "move-match-v1/classroom/pose-classifier.js",
+        "move-match-v1/classroom/pose-tester.js",
+        "move-match-v1/classroom/runtime.generated.js",
+        "move-match-v1/question-context.js"
+      ]
+    },
+    {
+      "path": "move-match-v1/classroom/models/pose_landmarker_lite.task",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/models/pose_landmarker_lite.task",
+          "sourceRecord": {
+            "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a",
+            "bytes": 5777746
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a",
+        "bytes": 5777746
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/pose-classifier.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/pose-classifier.js",
+          "sourceRecord": {
+            "sha256": "5c182295fad7de681c30b12eb495f04f9682874aa03b24c5f2e4a0eee53e3f78",
+            "bytes": 6766
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "5c182295fad7de681c30b12eb495f04f9682874aa03b24c5f2e4a0eee53e3f78",
+        "bytes": 6766
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/pose-tester.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/pose-tester.js",
+          "sourceRecord": {
+            "sha256": "369f0dbc6ca8f950ea0d91333c132474eac5cc0b99235cdefb59c297095b38bb",
+            "bytes": 8307
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "369f0dbc6ca8f950ea0d91333c132474eac5cc0b99235cdefb59c297095b38bb",
+        "bytes": 8307
+      },
+      "dependencies": [
+        "move-match-v1/classroom/models/pose_landmarker_lite.task",
+        "move-match-v1/classroom/pose-tester.js",
+        "move-match-v1/classroom/vendor/tasks-vision/vision_bundle.mjs"
+      ]
+    },
+    {
+      "path": "move-match-v1/classroom/runtime.generated.js",
+      "source": "prototype/move-match-v1/classroom/runtime.generated.js",
+      "sourceRecord": {
+        "sha256": "256f1bc14daefac4bdced196ca4a3898eb0471718baaed252f21c6fbc754ff47",
+        "bytes": 1110439
+      },
+      "outputRecord": {
+        "sha256": "a9a3a585b9fb56079d97571ac07778ad6004741abd5f97d4f21c4ff884e2d603",
+        "bytes": 1144227
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/runtime.generated.js",
+          "sourceRecord": {
+            "sha256": "a9a3a585b9fb56079d97571ac07778ad6004741abd5f97d4f21c4ff884e2d603",
+            "bytes": 1144227
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "move-match-v1/classroom/camera-tree-frame.svg",
+        "move-match-v1/index.html"
+      ]
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/LICENSE.txt",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/vendor/tasks-vision/LICENSE.txt",
+          "sourceRecord": {
+            "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8",
+            "bytes": 12331
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8",
+        "bytes": 12331
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/asset-manifest.json",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/vendor/tasks-vision/asset-manifest.json",
+          "sourceRecord": {
+            "sha256": "201346d4c6aa8c2801018976051f32de5d64a199ab6cf7ee0db03cc2d8f0fc64",
+            "bytes": 1292
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "201346d4c6aa8c2801018976051f32de5d64a199ab6cf7ee0db03cc2d8f0fc64",
+        "bytes": 1292
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/vision_bundle.mjs",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/vendor/tasks-vision/vision_bundle.mjs",
+          "sourceRecord": {
+            "sha256": "40f4123dfcd75cfa58add046919cc6f52fde66f009ff582997c09ba54c6ba27c",
+            "bytes": 137735
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "40f4123dfcd75cfa58add046919cc6f52fde66f009ff582997c09ba54c6ba27c",
+        "bytes": 137735
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.js",
+          "sourceRecord": {
+            "sha256": "4a97e2520ba506c680ecd6ba6acfb146888afa0e2746d57f205352bc6ebb82eb",
+            "bytes": 204284
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "4a97e2520ba506c680ecd6ba6acfb146888afa0e2746d57f205352bc6ebb82eb",
+        "bytes": 204284
+      },
+      "dependencies": [
+        "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.wasm"
+      ]
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.wasm",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.wasm",
+          "sourceRecord": {
+            "sha256": "f00ec4731faa23b3e714d00e88d4d10e2df5c0a427d3a2b4ae6e3526fdd14ef7",
+            "bytes": 9574032
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "f00ec4731faa23b3e714d00e88d4d10e2df5c0a427d3a2b4ae6e3526fdd14ef7",
+        "bytes": 9574032
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.js",
+          "sourceRecord": {
+            "sha256": "927def7b465c51b86e4b3060f93646aca4e27121f4b8fc0483786e407ea9cf1f",
+            "bytes": 204137
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "927def7b465c51b86e4b3060f93646aca4e27121f4b8fc0483786e407ea9cf1f",
+        "bytes": 204137
+      },
+      "dependencies": [
+        "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.wasm"
+      ]
+    },
+    {
+      "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.wasm",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.wasm",
+          "sourceRecord": {
+            "sha256": "3821ea9b1f7fb8c549ef2a064ef5c85750bf375c545a49fd6eea0df44a95f1f4",
+            "bytes": 9448638
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "3821ea9b1f7fb8c549ef2a064ef5c85750bf375c545a49fd6eea0df44a95f1f4",
+        "bytes": 9448638
+      },
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/generation.js",
+      "source": "prototype/move-match-v1/generation.js",
+      "sourceRecord": {
+        "sha256": "1765098d36f0b4bc26aac22186719ee6744aa909bee8c4d8e58062e151e56d3d",
+        "bytes": 19305
+      },
+      "outputRecord": {
+        "sha256": "1765098d36f0b4bc26aac22186719ee6744aa909bee8c4d8e58062e151e56d3d",
+        "bytes": 19305
+      },
+      "transformations": [],
+      "dependencies": [
+        "move-match-v1/catalog.js",
+        "move-match-v1/grammar-bank.js",
+        "move-match-v1/model.js",
+        "move-match-v1/word-bank.js"
+      ]
+    },
+    {
+      "path": "move-match-v1/grammar-bank.js",
+      "source": "prototype/move-match-v1/grammar-bank.js",
+      "sourceRecord": {
+        "sha256": "4aca88fcdf6a86e1c0c4c5b1e581ff3d31e5a8e810a04663dace73f2458df136",
+        "bytes": 13632
+      },
+      "outputRecord": {
+        "sha256": "4aca88fcdf6a86e1c0c4c5b1e581ff3d31e5a8e810a04663dace73f2458df136",
+        "bytes": 13632
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/index.html",
+      "source": "prototype/move-match-v1/index.html",
+      "sourceRecord": {
+        "sha256": "2bbb006335b1bf09354879668546da0415aa4a88fb921eb2fedb48332954749c",
+        "bytes": 1996
+      },
+      "outputRecord": {
+        "sha256": "0693e55a5dfac64e8df1c48faf443b35d95ac4f19d28b25ea9e93801b0c9332a",
+        "bytes": 2291
+      },
+      "transformations": [
+        {
+          "kind": "host-adapter",
+          "scopeBootstrapSha256": null
+        },
+        {
+          "kind": "content-versioned-ui-assets",
+          "versions": {
+            "app.js": "286ac7b8c43262e7",
+            "styles.css": "1c28bfe26d9d08af",
+            "model.js": "107e19e9397305e2",
+            "../workbench-api.js": "9a2fcb1919c3eeb3"
+          }
+        }
+      ],
+      "dependencies": [
+        "authoring.js",
+        "embed-adapter.css",
+        "embed-adapter.js",
+        "move-match-v1/app.js",
+        "move-match-v1/catalog.js",
+        "move-match-v1/generation.js",
+        "move-match-v1/grammar-bank.js",
+        "move-match-v1/linked-content.js",
+        "move-match-v1/model.js",
+        "move-match-v1/platform-adapter.js",
+        "move-match-v1/question-art.js",
+        "move-match-v1/question-context.js",
+        "move-match-v1/styles.css",
+        "move-match-v1/word-bank.js",
+        "prep-workbench-six-modules-v1/components.css",
+        "prep-workbench-six-modules-v1/components.js",
+        "prep-workbench-six-modules-v1/design-tokens.css",
+        "prep-workbench-six-modules-v1/inner-pages.css",
+        "prep-workbench-six-modules-v1/language-goals.js",
+        "prep-workbench-six-modules-v1/library-home.css",
+        "prep-workbench-six-modules-v1/platform.css",
+        "prep-workbench-six-modules-v1/platform.js",
+        "prep-workbench-six-modules-v1/typography.css",
+        "workbench-api.js"
+      ]
+    },
+    {
+      "path": "move-match-v1/linked-content.js",
+      "source": "prototype/move-match-v1/linked-content.js",
+      "sourceRecord": {
+        "sha256": "96a69a76b8cb4a7c35a7333b7bdb817799206175ae5ec8bdfbf68c70d3441369",
+        "bytes": 16010
+      },
+      "outputRecord": {
+        "sha256": "96a69a76b8cb4a7c35a7333b7bdb817799206175ae5ec8bdfbf68c70d3441369",
+        "bytes": 16010
+      },
+      "transformations": [],
+      "dependencies": [
+        "move-match-v1/catalog.js",
+        "move-match-v1/generation.js",
+        "move-match-v1/model.js",
+        "move-match-v1/question-art.js"
+      ]
+    },
+    {
+      "path": "move-match-v1/model.js",
+      "source": "prototype/move-match-v1/model.js",
+      "sourceRecord": {
+        "sha256": "d6d82d464561ca3b9dae8c6bd19802c0c8c5ace17ff1f89cbfee7c262a215721",
+        "bytes": 28064
+      },
+      "outputRecord": {
+        "sha256": "107e19e9397305e2380ad878ac07a70cf465a82fe27efa88e238d0c03528cce8",
+        "bytes": 30722
+      },
+      "transformations": [
+        {
+          "kind": "account-storage-key",
+          "original": "wellbeing-move-match-v1-data",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-move-match-'+\"wellbeing-move-match-v1-data\")"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/model.js",
+          "sourceRecord": {
+            "sha256": "4fd3a9ac88d47187fe4d07415c1f185ffda4973d2181b8bad87867217dfa6fa0",
+            "bytes": 30650
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/platform-adapter.js",
+      "source": "prototype/move-match-v1/platform-adapter.js",
+      "sourceRecord": {
+        "sha256": "a7cf6f108a6146a5f0d54216d79977893e71dbde2d121095af1411e0bad0b35e",
+        "bytes": 4634
+      },
+      "outputRecord": {
+        "sha256": "a7cf6f108a6146a5f0d54216d79977893e71dbde2d121095af1411e0bad0b35e",
+        "bytes": 4634
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/question-art.js",
+      "source": "prototype/move-match-v1/question-art.js",
+      "sourceRecord": {
+        "sha256": "be9f5ff79c07f50decebf639ecc42fedc3a7b8da195e1b70e3650a63ef55a3c8",
+        "bytes": 5072
+      },
+      "outputRecord": {
+        "sha256": "be9f5ff79c07f50decebf639ecc42fedc3a7b8da195e1b70e3650a63ef55a3c8",
+        "bytes": 5072
+      },
+      "transformations": [],
+      "dependencies": [
+        "move-match-v1/assets/v39-art/apple.svg",
+        "move-match-v1/assets/v39-art/ball.svg",
+        "move-match-v1/assets/v39-art/banana.svg",
+        "move-match-v1/assets/v39-art/bear.svg",
+        "move-match-v1/assets/v39-art/bike.svg",
+        "move-match-v1/assets/v39-art/bird.svg",
+        "move-match-v1/assets/v39-art/book.svg",
+        "move-match-v1/assets/v39-art/bread.svg",
+        "move-match-v1/assets/v39-art/burger.svg",
+        "move-match-v1/assets/v39-art/bus.svg",
+        "move-match-v1/assets/v39-art/cake.svg",
+        "move-match-v1/assets/v39-art/car.svg",
+        "move-match-v1/assets/v39-art/carrot.svg",
+        "move-match-v1/assets/v39-art/cat.svg",
+        "move-match-v1/assets/v39-art/cheese.svg",
+        "move-match-v1/assets/v39-art/cookie.svg",
+        "move-match-v1/assets/v39-art/corn.svg",
+        "move-match-v1/assets/v39-art/cow.svg",
+        "move-match-v1/assets/v39-art/dog.svg",
+        "move-match-v1/assets/v39-art/donut.svg",
+        "move-match-v1/assets/v39-art/duck.svg",
+        "move-match-v1/assets/v39-art/egg.svg",
+        "move-match-v1/assets/v39-art/fish.svg",
+        "move-match-v1/assets/v39-art/flower.svg",
+        "move-match-v1/assets/v39-art/grapes.svg",
+        "move-match-v1/assets/v39-art/hat.svg",
+        "move-match-v1/assets/v39-art/icecream.svg",
+        "move-match-v1/assets/v39-art/juice.svg",
+        "move-match-v1/assets/v39-art/lemon.svg",
+        "move-match-v1/assets/v39-art/milk.svg",
+        "move-match-v1/assets/v39-art/orange.svg",
+        "move-match-v1/assets/v39-art/pear.svg",
+        "move-match-v1/assets/v39-art/pencil.svg",
+        "move-match-v1/assets/v39-art/pineapple.svg",
+        "move-match-v1/assets/v39-art/pizza.svg",
+        "move-match-v1/assets/v39-art/plane.svg",
+        "move-match-v1/assets/v39-art/potato.svg",
+        "move-match-v1/assets/v39-art/rabbit.svg",
+        "move-match-v1/assets/v39-art/shirt.svg",
+        "move-match-v1/assets/v39-art/shoes.svg",
+        "move-match-v1/assets/v39-art/strawberry.svg",
+        "move-match-v1/assets/v39-art/tomato.svg",
+        "move-match-v1/assets/v39-art/train.svg",
+        "move-match-v1/assets/v39-art/watermelon.svg"
+      ]
+    },
+    {
+      "path": "move-match-v1/question-context.js",
+      "source": "prototype/move-match-v1/question-context.js",
+      "sourceRecord": {
+        "sha256": "1041810d17085187156fc4b864fc57a35be334371873d4b50f676e5e2dcdaff1",
+        "bytes": 3884
+      },
+      "outputRecord": {
+        "sha256": "1041810d17085187156fc4b864fc57a35be334371873d4b50f676e5e2dcdaff1",
+        "bytes": 3884
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/styles.css",
+      "source": "prototype/move-match-v1/styles.css",
+      "sourceRecord": {
+        "sha256": "9c08b3cf8042abef7341d3d57a340deb8a4a445c13b38c4faebc25472b5712e2",
+        "bytes": 28281
+      },
+      "outputRecord": {
+        "sha256": "1c28bfe26d9d08afd93562f9e0c90f49316850fbe51cd0b9b67e240cc5f9dc98",
+        "bytes": 32866
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/move-match-v1/styles.css",
+          "sourceRecord": {
+            "sha256": "1c28bfe26d9d08afd93562f9e0c90f49316850fbe51cd0b9b67e240cc5f9dc98",
+            "bytes": 32866
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "move-match-v1/word-bank.js",
+      "source": "prototype/move-match-v1/word-bank.js",
+      "sourceRecord": {
+        "sha256": "aaebbc58de7e205eb70164b04a39a47eb86b2cffe3670b4df1a005c53f6dccda",
+        "bytes": 6829
+      },
+      "outputRecord": {
+        "sha256": "aaebbc58de7e205eb70164b04a39a47eb86b2cffe3670b4df1a005c53f6dccda",
+        "bytes": 6829
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/components.css",
+      "source": "prototype/prep-workbench-six-modules-v1/components.css",
+      "sourceRecord": {
+        "sha256": "76303235a9fab9a91b6e063a4da84511950738a051c913bc57ef2f09123a0764",
+        "bytes": 66253
+      },
+      "outputRecord": {
+        "sha256": "76303235a9fab9a91b6e063a4da84511950738a051c913bc57ef2f09123a0764",
+        "bytes": 66253
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/components.js",
+      "source": "prototype/prep-workbench-six-modules-v1/components.js",
+      "sourceRecord": {
+        "sha256": "9909aba0f188d7733fb347904d5999cffb5838aa4374f64d710856f3faef06fe",
+        "bytes": 16804
+      },
+      "outputRecord": {
+        "sha256": "9909aba0f188d7733fb347904d5999cffb5838aa4374f64d710856f3faef06fe",
+        "bytes": 16804
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/design-tokens.css",
+      "source": "prototype/prep-workbench-six-modules-v1/design-tokens.css",
+      "sourceRecord": {
+        "sha256": "ed633cb34bfe538bf87dfec20541d47e352fb6989ae8077fbea995f29f307498",
+        "bytes": 10519
+      },
+      "outputRecord": {
+        "sha256": "ed633cb34bfe538bf87dfec20541d47e352fb6989ae8077fbea995f29f307498",
+        "bytes": 10519
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/inner-pages.css",
+      "source": "prototype/prep-workbench-six-modules-v1/inner-pages.css",
+      "sourceRecord": {
+        "sha256": "33d885b3b0509a8258c188a314830bd485e40d548d91afe08f1546e9f744818b",
+        "bytes": 18391
+      },
+      "outputRecord": {
+        "sha256": "33d885b3b0509a8258c188a314830bd485e40d548d91afe08f1546e9f744818b",
+        "bytes": 18391
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/language-goals.js",
+      "source": "prototype/prep-workbench-six-modules-v1/language-goals.js",
+      "sourceRecord": {
+        "sha256": "04ebd9d1adeae3b976dc24cace5124afd3fdb37cf9edd0fdc53e2c02d81706f4",
+        "bytes": 2001
+      },
+      "outputRecord": {
+        "sha256": "04ebd9d1adeae3b976dc24cace5124afd3fdb37cf9edd0fdc53e2c02d81706f4",
+        "bytes": 2001
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/latest.html",
+      "source": null,
+      "outputRecord": {
+        "sha256": "3c85ff2e3ac66c7d95bc3307fa196cd035ebdf00eac28f6b375c04d90c0e5636",
+        "bytes": 624
+      },
+      "transformations": [
+        {
+          "kind": "compatibility-navigation-to-react"
+        }
+      ]
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/library-home.css",
+      "source": "prototype/prep-workbench-six-modules-v1/library-home.css",
+      "sourceRecord": {
+        "sha256": "d5329aa3420e50a908fc14d703d028eb92b9121c330b4323c16d0f5de0f6372e",
+        "bytes": 11914
+      },
+      "outputRecord": {
+        "sha256": "d5329aa3420e50a908fc14d703d028eb92b9121c330b4323c16d0f5de0f6372e",
+        "bytes": 11914
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/platform.css",
+      "source": "prototype/prep-workbench-six-modules-v1/platform.css",
+      "sourceRecord": {
+        "sha256": "50a534bd772ed22758cb0d291b8af827bee604c2db58caa91485d89998ab8f3c",
+        "bytes": 48597
+      },
+      "outputRecord": {
+        "sha256": "50a534bd772ed22758cb0d291b8af827bee604c2db58caa91485d89998ab8f3c",
+        "bytes": 48597
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/platform.js",
+      "source": "prototype/prep-workbench-six-modules-v1/platform.js",
+      "sourceRecord": {
+        "sha256": "b83fd86433d222fc5cb5aec84fbe187c675bfdb176e4452fd7e449992abdf7e8",
+        "bytes": 10562
+      },
+      "outputRecord": {
+        "sha256": "b83fd86433d222fc5cb5aec84fbe187c675bfdb176e4452fd7e449992abdf7e8",
+        "bytes": 10562
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "prep-workbench-six-modules-v1/typography.css",
+      "source": "prototype/prep-workbench-six-modules-v1/typography.css",
+      "sourceRecord": {
+        "sha256": "83388302a3d0652a460a3daa83a8ffca7b4dbf9e0ab32943f49965b1a799c573",
+        "bytes": 5133
+      },
+      "outputRecord": {
+        "sha256": "83388302a3d0652a460a3daa83a8ffca7b4dbf9e0ab32943f49965b1a799c573",
+        "bytes": 5133
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/app.js",
+      "source": "prototype/spin-speak-v1/app.js",
+      "sourceRecord": {
+        "sha256": "aab8ad6ca08d4e8bbc1c837586c84efc32d2f5a8fa23c7fc21d4d2dc7233d002",
+        "bytes": 24566
+      },
+      "outputRecord": {
+        "sha256": "ffe046af16da7d62ac93e8b0e6ff118f9f23b8522ef35606ea45d9a7025a9083",
+        "bytes": 30919
+      },
+      "transformations": [
+        {
+          "kind": "account-storage-key",
+          "original": "wellbeing-six-modules-v1-speak-session:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-speak-'+\"wellbeing-six-modules-v1-speak-session:\")"
+        },
+        {
+          "kind": "account-storage-key",
+          "original": "wellbeing-prep-six-modules-v1-speak",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-speak-'+\"wellbeing-prep-six-modules-v1-speak\")"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/app.js",
+          "sourceRecord": {
+            "sha256": "1479225e386d52e58738d3250e8865f0651d0f8481b1885c0a5e53ccc0f2fc4f",
+            "bytes": 30785
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "prep-workbench-six-modules-v1/latest.html"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/art.js",
+      "source": "prototype/spin-speak-v1/art.js",
+      "sourceRecord": {
+        "sha256": "df5501ba78e14d9fda3b29152da18404ff9932aa8130e99d8a7154f018c487a9",
+        "bytes": 4447
+      },
+      "outputRecord": {
+        "sha256": "df5501ba78e14d9fda3b29152da18404ff9932aa8130e99d8a7154f018c487a9",
+        "bytes": 4447
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/energy-v3/energy-case-preview-v16.png",
+      "source": "prototype/spin-speak-v1/assets/energy-v3/energy-case-preview-v16.png",
+      "sourceRecord": {
+        "sha256": "efc0a0b52fe760ab853ce4d56cde527cec69f6415827e3ba6a35a459ffdefdb7",
+        "bytes": 91233
+      },
+      "outputRecord": {
+        "sha256": "efc0a0b52fe760ab853ce4d56cde527cec69f6415827e3ba6a35a459ffdefdb7",
+        "bytes": 91233
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/energy-v3/giant-battery.png",
+      "source": "prototype/spin-speak-v1/assets/energy-v3/giant-battery.png",
+      "sourceRecord": {
+        "sha256": "7f0f4725028784b89a14c7000866e699a6d270dbb0f37aa5b3d0bb9592398049",
+        "bytes": 1673436
+      },
+      "outputRecord": {
+        "sha256": "7f0f4725028784b89a14c7000866e699a6d270dbb0f37aa5b3d0bb9592398049",
+        "bytes": 1673436
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/energy-v3/paper-clean-v13.png",
+      "source": "prototype/spin-speak-v1/assets/energy-v3/paper-clean-v13.png",
+      "sourceRecord": {
+        "sha256": "9114e2a25d4f6b5f409331d6119f262d454b8b672e07eba3873c543e1b57fb98",
+        "bytes": 1629910
+      },
+      "outputRecord": {
+        "sha256": "9114e2a25d4f6b5f409331d6119f262d454b8b672e07eba3873c543e1b57fb98",
+        "bytes": 1629910
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/energy-v3/standalone-ground-v16.png",
+      "source": "prototype/spin-speak-v1/assets/energy-v3/standalone-ground-v16.png",
+      "sourceRecord": {
+        "sha256": "b5b040bf9410f34c11b39212d7ab5b12eab2fc637390e5cc9354ebfbc1b02e2d",
+        "bytes": 1615739
+      },
+      "outputRecord": {
+        "sha256": "b5b040bf9410f34c11b39212d7ab5b12eab2fc637390e5cc9354ebfbc1b02e2d",
+        "bytes": 1615739
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/energy-v3/title-clean-plate.png",
+      "source": "prototype/spin-speak-v1/assets/energy-v3/title-clean-plate.png",
+      "sourceRecord": {
+        "sha256": "194fc297ead2812c3e48535349b7ef4c3bedb4f514b8ee4048f00bffc7da2389",
+        "bytes": 1679463
+      },
+      "outputRecord": {
+        "sha256": "194fc297ead2812c3e48535349b7ef4c3bedb4f514b8ee4048f00bffc7da2389",
+        "bytes": 1679463
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+      "source": "prototype/spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+      "sourceRecord": {
+        "sha256": "649a8114c33e83722ae67a8f12269a6e873a179d34108751511a9dcfda551b08",
+        "bytes": 47752
+      },
+      "outputRecord": {
+        "sha256": "649a8114c33e83722ae67a8f12269a6e873a179d34108751511a9dcfda551b08",
+        "bytes": 47752
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/fonts/noto-sans-regular.woff2",
+      "source": "prototype/spin-speak-v1/assets/fonts/noto-sans-regular.woff2",
+      "sourceRecord": {
+        "sha256": "9d5f4a27e9f7c821173aedf13f3dc722e4449e18d7f0cdb8089207e043d46802",
+        "bytes": 46192
+      },
+      "outputRecord": {
+        "sha256": "9d5f4a27e9f7c821173aedf13f3dc722e4449e18d7f0cdb8089207e043d46802",
+        "bytes": 46192
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/alien.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/alien.webp",
+          "sourceRecord": {
+            "sha256": "9546d122eae4003c3b24dadd81ddc1f7031263c50237f9e302929d5fb081dbba",
+            "bytes": 16934
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "9546d122eae4003c3b24dadd81ddc1f7031263c50237f9e302929d5fb081dbba",
+        "bytes": 16934
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/baby.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/baby.webp",
+          "sourceRecord": {
+            "sha256": "362e5b908ffe397a0a8d35a620134f7206c7b77c9931eed35c31366e00b6c2a0",
+            "bytes": 15162
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "362e5b908ffe397a0a8d35a620134f7206c7b77c9931eed35c31366e00b6c2a0",
+        "bytes": 15162
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/grandma.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/grandma.webp",
+          "sourceRecord": {
+            "sha256": "cc088aecbb1e1f1d77f3cd8d5a05a31eeabe457e66c371e35a1aee10d9535bb5",
+            "bytes": 23504
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "cc088aecbb1e1f1d77f3cd8d5a05a31eeabe457e66c371e35a1aee10d9535bb5",
+        "bytes": 23504
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/lion.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/lion.webp",
+          "sourceRecord": {
+            "sha256": "3d5a999fda80aebd4960fb5096074c20a0eec8f788da0bd4836bba1e80a2e386",
+            "bytes": 27210
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "3d5a999fda80aebd4960fb5096074c20a0eec8f788da0bd4836bba1e80a2e386",
+        "bytes": 27210
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/monster.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/monster.webp",
+          "sourceRecord": {
+            "sha256": "59a13edce702cc62d447122574303095f9d805fd343c0a7ef7a703152bad4756",
+            "bytes": 25622
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "59a13edce702cc62d447122574303095f9d805fd343c0a7ef7a703152bad4756",
+        "bytes": 25622
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/pirate.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/pirate.webp",
+          "sourceRecord": {
+            "sha256": "6eb90cf0dc0bba3efef753ca404c6bd9facb0bb2bd59b22462135d134d0ae834",
+            "bytes": 24968
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "6eb90cf0dc0bba3efef753ca404c6bd9facb0bb2bd59b22462135d134d0ae834",
+        "bytes": 24968
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/robot.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/robot.webp",
+          "sourceRecord": {
+            "sha256": "42f91992415ddee3249cf7e284b68db58fe3f5ab26b0e667e92b20d3a657dfaa",
+            "bytes": 19850
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "42f91992415ddee3249cf7e284b68db58fe3f5ab26b0e667e92b20d3a657dfaa",
+        "bytes": 19850
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/roles/witch.webp",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/roles/witch.webp",
+          "sourceRecord": {
+            "sha256": "bcf2f1c5811e85c76ab9629e2d579562327037852d5a9790d361b0e64aded739",
+            "bytes": 22528
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "bcf2f1c5811e85c76ab9629e2d579562327037852d5a9790d361b0e64aded739",
+        "bytes": 22528
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v12/tempo-approved-preview.jpg",
+      "source": "prototype/spin-speak-v1/assets/scenes-v12/tempo-approved-preview.jpg",
+      "sourceRecord": {
+        "sha256": "870ea7b5be6056a361e4c53ac56c2ade995484f44217ccd2f3b1b930258256a8",
+        "bytes": 224285
+      },
+      "outputRecord": {
+        "sha256": "870ea7b5be6056a361e4c53ac56c2ade995484f44217ccd2f3b1b930258256a8",
+        "bytes": 224285
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v12/tempo-approved-wheel.jpg",
+      "source": "prototype/spin-speak-v1/assets/scenes-v12/tempo-approved-wheel.jpg",
+      "sourceRecord": {
+        "sha256": "ad99a6bfa8d0207275fbe7d9151faa19b1be45e4bb934f3295c3058d90542e92",
+        "bytes": 54199
+      },
+      "outputRecord": {
+        "sha256": "ad99a6bfa8d0207275fbe7d9151faa19b1be45e4bb934f3295c3058d90542e92",
+        "bytes": 54199
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v12/tempo-control-base.svg",
+      "source": "prototype/spin-speak-v1/assets/scenes-v12/tempo-control-base.svg",
+      "sourceRecord": {
+        "sha256": "75c7826638154f45f89f48669a30ae9319945c161d14e66bc482d7276f484bc9",
+        "bytes": 10561
+      },
+      "outputRecord": {
+        "sha256": "75c7826638154f45f89f48669a30ae9319945c161d14e66bc482d7276f484bc9",
+        "bytes": 10561
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v12/tempo-front-mask.svg",
+      "source": "prototype/spin-speak-v1/assets/scenes-v12/tempo-front-mask.svg",
+      "sourceRecord": {
+        "sha256": "01c8e1df2b544c45dc65a0f3decca32241516c3505a848ce68aa1e16ecb2e0c1",
+        "bytes": 533
+      },
+      "outputRecord": {
+        "sha256": "01c8e1df2b544c45dc65a0f3decca32241516c3505a848ce68aa1e16ecb2e0c1",
+        "bytes": 533
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v12/tempo-reference-colors.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v12/tempo-reference-colors.png",
+      "sourceRecord": {
+        "sha256": "4a88d1824e862f894d22d6c8067f9b8adb15e062d26bbcc328b52344b4cbf368",
+        "bytes": 1592645
+      },
+      "outputRecord": {
+        "sha256": "4a88d1824e862f894d22d6c8067f9b8adb15e062d26bbcc328b52344b4cbf368",
+        "bytes": 1592645
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v12/tempo-tabletop-clean-v149.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v12/tempo-tabletop-clean-v149.png",
+      "sourceRecord": {
+        "sha256": "a19a45011492dba5d0339c609586b7be5e8419deea8cdc5cec89827ab86f4298",
+        "bytes": 1636669
+      },
+      "outputRecord": {
+        "sha256": "a19a45011492dba5d0339c609586b7be5e8419deea8cdc5cec89827ab86f4298",
+        "bytes": 1636669
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v7/energy.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v7/energy.png",
+      "sourceRecord": {
+        "sha256": "47252c63fa248686d54af4cf179dc87ccd9e01bdd9763fbb9327c1afcc5a9297",
+        "bytes": 1374999
+      },
+      "outputRecord": {
+        "sha256": "47252c63fa248686d54af4cf179dc87ccd9e01bdd9763fbb9327c1afcc5a9297",
+        "bytes": 1374999
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v7/flip.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v7/flip.png",
+      "sourceRecord": {
+        "sha256": "3ade5fe8c96d4c52e3754d8c06d7529c016fb34d9e524090789db4d786b1e07b",
+        "bytes": 1388340
+      },
+      "outputRecord": {
+        "sha256": "3ade5fe8c96d4c52e3754d8c06d7529c016fb34d9e524090789db4d786b1e07b",
+        "bytes": 1388340
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v7/role.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v7/role.png",
+      "sourceRecord": {
+        "sha256": "f6463899dda8fd584cb42626970da5055dbc5f19e58292abd55ecad34bf65610",
+        "bytes": 1529296
+      },
+      "outputRecord": {
+        "sha256": "f6463899dda8fd584cb42626970da5055dbc5f19e58292abd55ecad34bf65610",
+        "bytes": 1529296
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v7/silly.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v7/silly.png",
+      "sourceRecord": {
+        "sha256": "0a8e7c0811485bb75773be2b9adc95c81aa4c1f58d3f592da5dcb24c218354b9",
+        "bytes": 1317978
+      },
+      "outputRecord": {
+        "sha256": "0a8e7c0811485bb75773be2b9adc95c81aa4c1f58d3f592da5dcb24c218354b9",
+        "bytes": 1317978
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v7/tempo.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v7/tempo.png",
+      "sourceRecord": {
+        "sha256": "89767e5fe80877e5df18459fc7d11bdf3e324d12ef8ab594b4fcf5e8de21a073",
+        "bytes": 1247284
+      },
+      "outputRecord": {
+        "sha256": "89767e5fe80877e5df18459fc7d11bdf3e324d12ef8ab594b4fcf5e8de21a073",
+        "bytes": 1247284
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v7/volume.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v7/volume.png",
+      "sourceRecord": {
+        "sha256": "70f1d2731927797c3a8b15caa51345f5ab109e143de1e8176294e880e3ec4739",
+        "bytes": 1264899
+      },
+      "outputRecord": {
+        "sha256": "70f1d2731927797c3a8b15caa51345f5ab109e143de1e8176294e880e3ec4739",
+        "bytes": 1264899
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/scenes-v7/words.png",
+      "source": "prototype/spin-speak-v1/assets/scenes-v7/words.png",
+      "sourceRecord": {
+        "sha256": "27a3010d66e77a8b8f8006568852bcd1b32ed19f37090add2ec740e9c9f0c939",
+        "bytes": 1410160
+      },
+      "outputRecord": {
+        "sha256": "27a3010d66e77a8b8f8006568852bcd1b32ed19f37090add2ec740e9c9f0c939",
+        "bytes": 1410160
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/volume-v3/controls-clean-plate.png",
+      "source": "prototype/spin-speak-v1/assets/volume-v3/controls-clean-plate.png",
+      "sourceRecord": {
+        "sha256": "99c41c1e310c2327112a9bbef6509b3785d285c37c841bba5bcbdfbd606f4dbb",
+        "bytes": 1449758
+      },
+      "outputRecord": {
+        "sha256": "99c41c1e310c2327112a9bbef6509b3785d285c37c841bba5bcbdfbd606f4dbb",
+        "bytes": 1449758
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/volume-v3/school-radio.png",
+      "source": "prototype/spin-speak-v1/assets/volume-v3/school-radio.png",
+      "sourceRecord": {
+        "sha256": "32c82d2dfbc5413a1adeea77b1f5123257f622d318510201ba9d20b2c7e3b5fb",
+        "bytes": 1430618
+      },
+      "outputRecord": {
+        "sha256": "32c82d2dfbc5413a1adeea77b1f5123257f622d318510201ba9d20b2c7e3b5fb",
+        "bytes": 1430618
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/volume-v3/status-clean-plate.png",
+      "source": "prototype/spin-speak-v1/assets/volume-v3/status-clean-plate.png",
+      "sourceRecord": {
+        "sha256": "ed3ade89568ed32bd574aa58c1496ddbbcbbb0ec4e0e5e84807699b68a616a4a",
+        "bytes": 1553600
+      },
+      "outputRecord": {
+        "sha256": "ed3ade89568ed32bd574aa58c1496ddbbcbbb0ec4e0e5e84807699b68a616a4a",
+        "bytes": 1553600
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/volume-v3/title-clean-plate.png",
+      "source": "prototype/spin-speak-v1/assets/volume-v3/title-clean-plate.png",
+      "sourceRecord": {
+        "sha256": "7f4c7716dde7b29785e0c261a5e7d6bcac2a87bebf6f19f32b904e9b5ffa30a3",
+        "bytes": 1536215
+      },
+      "outputRecord": {
+        "sha256": "7f4c7716dde7b29785e0c261a5e7d6bcac2a87bebf6f19f32b904e9b5ffa30a3",
+        "bytes": 1536215
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/volume-v3/volume-case-preview.jpg",
+      "source": "prototype/spin-speak-v1/assets/volume-v3/volume-case-preview.jpg",
+      "sourceRecord": {
+        "sha256": "f93d199d584b849cb17cccd945006378a2c78358d4bdd8a071b1b6e41c9d75be",
+        "bytes": 90249
+      },
+      "outputRecord": {
+        "sha256": "f93d199d584b849cb17cccd945006378a2c78358d4bdd8a071b1b6e41c9d75be",
+        "bytes": 90249
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/energy-round.js",
+      "source": "prototype/spin-speak-v1/energy-round.js",
+      "sourceRecord": {
+        "sha256": "a548867d49c50bd18771962b30c3aa6d97698cd5d413558cd157bdc43775c311",
+        "bytes": 1479
+      },
+      "outputRecord": {
+        "sha256": "a548867d49c50bd18771962b30c3aa6d97698cd5d413558cd157bdc43775c311",
+        "bytes": 1479
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/energy-v3.css",
+      "source": "prototype/spin-speak-v1/energy-v3.css",
+      "sourceRecord": {
+        "sha256": "04822e6ce6a9464424dc76f0604277d55471df292ab3f36b611367f413d53f0e",
+        "bytes": 13277
+      },
+      "outputRecord": {
+        "sha256": "04822e6ce6a9464424dc76f0604277d55471df292ab3f36b611367f413d53f0e",
+        "bytes": 13277
+      },
+      "transformations": [],
+      "dependencies": [
+        "spin-speak-v1/assets/energy-v3/giant-battery.png",
+        "spin-speak-v1/assets/energy-v3/paper-clean-v13.png",
+        "spin-speak-v1/assets/energy-v3/standalone-ground-v16.png",
+        "spin-speak-v1/assets/energy-v3/title-clean-plate.png",
+        "spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+        "spin-speak-v1/assets/fonts/noto-sans-regular.woff2"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/energy-v3.js",
+      "source": "prototype/spin-speak-v1/energy-v3.js",
+      "sourceRecord": {
+        "sha256": "8e1044206bfda85ced14df8a27f68d6401d218621269c9a2f0a549e51ef91f00",
+        "bytes": 11402
+      },
+      "outputRecord": {
+        "sha256": "8e1044206bfda85ced14df8a27f68d6401d218621269c9a2f0a549e51ef91f00",
+        "bytes": 11402
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/game-access.js",
+      "source": "prototype/spin-speak-v1/game-access.js",
+      "sourceRecord": {
+        "sha256": "6f34dae43b8daeb3ffe27c680003eb3f9d716e820f5bd85a050b013d806006e7",
+        "bytes": 4972
+      },
+      "outputRecord": {
+        "sha256": "6fbd03ffcf705c59e399319bea60990fb7912b17f11aaf44eff9e58807f43c37",
+        "bytes": 4651
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/game-access.js",
+          "sourceRecord": {
+            "sha256": "6fbd03ffcf705c59e399319bea60990fb7912b17f11aaf44eff9e58807f43c37",
+            "bytes": 4651
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/game-lifecycle.js",
+      "source": "prototype/spin-speak-v1/game-lifecycle.js",
+      "sourceRecord": {
+        "sha256": "3a40b337c22b554117780e9fe00c004c3681ff53a4ab0514a0dba00c308b3d87",
+        "bytes": 5307
+      },
+      "outputRecord": {
+        "sha256": "3a40b337c22b554117780e9fe00c004c3681ff53a4ab0514a0dba00c308b3d87",
+        "bytes": 5307
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/game.css",
+      "source": "prototype/spin-speak-v1/game.css",
+      "sourceRecord": {
+        "sha256": "3aefc660cf9f8856ac8a2174aeb7a286f50756db9f8b924ebbcb890241069f6d",
+        "bytes": 22492
+      },
+      "outputRecord": {
+        "sha256": "3aefc660cf9f8856ac8a2174aeb7a286f50756db9f8b924ebbcb890241069f6d",
+        "bytes": 22492
+      },
+      "transformations": [],
+      "dependencies": [
+        "spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+        "spin-speak-v1/assets/fonts/noto-sans-regular.woff2"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/energy-v3.html",
+      "source": "prototype/spin-speak-v1/games/energy-v3.html",
+      "sourceRecord": {
+        "sha256": "bccf4f032d6262ffe6a544cf6c7f85e9c0fd8d5d531a2b4dd92590427f650286",
+        "bytes": 6289
+      },
+      "outputRecord": {
+        "sha256": "1614bd3a25d296d1a97f2075f7fd5bec9e37fa8201ec55aeb1050a22c01477f8",
+        "bytes": 6765
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/energy-round.js",
+        "spin-speak-v1/energy-v3.css",
+        "spin-speak-v1/energy-v3.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/session.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/energy.html",
+      "source": "prototype/spin-speak-v1/games/energy.html",
+      "sourceRecord": {
+        "sha256": "7ba70bb0ed2d6cb03ba29d4ea3f751a71c53d902ac46456a24396751a702588e",
+        "bytes": 59802
+      },
+      "outputRecord": {
+        "sha256": "5b81a49e831b78fc3189b17f21d1d5b072d1bb1fdc57b769b942c882083017ca",
+        "bytes": 60278
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/flip.html",
+      "source": "prototype/spin-speak-v1/games/flip.html",
+      "sourceRecord": {
+        "sha256": "f2f8425392c4f3b53a5b81990ac46165320598cd44facf20a236644ac0bc29e2",
+        "bytes": 20368
+      },
+      "outputRecord": {
+        "sha256": "dae99f45c362c66c31e0f97e6e4565baebf7dc78d59504b43fd3d13dc665e6e2",
+        "bytes": 20844
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/role.html",
+      "source": "prototype/spin-speak-v1/games/role.html",
+      "sourceRecord": {
+        "sha256": "c1d625b5861469f94cc0582169caae698ca415d1baf91c39800010fefe45394b",
+        "bytes": 13447
+      },
+      "outputRecord": {
+        "sha256": "3e962ba63bef00de71bedb2892e2f2c21f2ee6326e011b1315a2371f50ab7e05",
+        "bytes": 14989
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/games/role.html",
+          "sourceRecord": {
+            "sha256": "6815fded2047fa8fd9a22ffb9ad4f77fc1053d98a6bd5feb348efa168d507f85",
+            "bytes": 14513
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/assets/roles/alien.webp",
+        "spin-speak-v1/assets/roles/baby.webp",
+        "spin-speak-v1/assets/roles/grandma.webp",
+        "spin-speak-v1/assets/roles/lion.webp",
+        "spin-speak-v1/assets/roles/monster.webp",
+        "spin-speak-v1/assets/roles/pirate.webp",
+        "spin-speak-v1/assets/roles/robot.webp",
+        "spin-speak-v1/assets/roles/witch.webp",
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/role-cards.css",
+        "spin-speak-v1/role-sound.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/silly.html",
+      "source": "prototype/spin-speak-v1/games/silly.html",
+      "sourceRecord": {
+        "sha256": "4a127ddb3c52a9eaa65918dfde6bf308aaa275cfc2736189cf385ad8c8efaed3",
+        "bytes": 23216
+      },
+      "outputRecord": {
+        "sha256": "bf3030daa83c77f3a2df430e4e78eb744bd61efe9a4586a5753beccb4a59711e",
+        "bytes": 23692
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/icons.js",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/tempo.html",
+      "source": "prototype/spin-speak-v1/games/tempo.html",
+      "sourceRecord": {
+        "sha256": "f581abac76c37f3b5e16edb29947c9826bb328ac348a11d6b3a9d445130fcd10",
+        "bytes": 2107620
+      },
+      "outputRecord": {
+        "sha256": "1cf962726a54f86ab67bd8e73df93774aa072fbf4b9f72bdcbb599896358c70c",
+        "bytes": 2108096
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js",
+        "spin-speak-v1/tempo-v12.css",
+        "spin-speak-v1/tempo-v12.js",
+        "spin-speak-v1/tempo-workbench.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/volume-v3.html",
+      "source": "prototype/spin-speak-v1/games/volume-v3.html",
+      "sourceRecord": {
+        "sha256": "511a38dc11c4fc3a292008646a44498862a39b627812e527d4ed2251647771db",
+        "bytes": 35850
+      },
+      "outputRecord": {
+        "sha256": "2f17430b25a72e843d9c3e81c40ce977db1a751da131e917c447f43a366666b9",
+        "bytes": 15377
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/games/volume-v3.html",
+          "sourceRecord": {
+            "sha256": "4adbd1e26e85371243549baf5a2481571c2436d125a7f1958563de365d428c25",
+            "bytes": 14901
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/assets/volume-v3/controls-clean-plate.png",
+        "spin-speak-v1/assets/volume-v3/school-radio.png",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/session.js",
+        "spin-speak-v1/volume-v3.css",
+        "spin-speak-v1/volume-v3.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/volume.html",
+      "source": "prototype/spin-speak-v1/games/volume.html",
+      "sourceRecord": {
+        "sha256": "46c611dc205fc64a4ace1bbb8f3391c305697d60bf4209031aea0e504e13bf25",
+        "bytes": 35926
+      },
+      "outputRecord": {
+        "sha256": "9e21e384e294f7dd39344177c11b3e40b66fe28831b5d6ac9f1680df406f6d25",
+        "bytes": 36402
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/games/words.html",
+      "source": "prototype/spin-speak-v1/games/words.html",
+      "sourceRecord": {
+        "sha256": "5c7adfb342f695fb999296843bbb88b0af47f61988ae8161850cff83814d4161",
+        "bytes": 69668
+      },
+      "outputRecord": {
+        "sha256": "bf4185822b024b72cc79192f1a3e664e328bbeaea0915f7f458e281b3f8a9495",
+        "bytes": 9923
+      },
+      "transformations": [
+        {
+          "kind": "inline-classroom-scope",
+          "scopeBootstrapSha256": "7ed71a28bd938f7c3e0570b226e02e5ef17861ffa062d2da203078cc0dcab146"
+        },
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/games/words.html",
+          "sourceRecord": {
+            "sha256": "de777a61323c6fec08e8a8e19a74e3c748e0fbf66835523c68d15e2c9325f456",
+            "bytes": 9447
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/game-access.js",
+        "spin-speak-v1/game-lifecycle.js",
+        "spin-speak-v1/game.css",
+        "spin-speak-v1/icons.js",
+        "spin-speak-v1/play-details.css",
+        "spin-speak-v1/play-details.js",
+        "spin-speak-v1/scenes.css",
+        "spin-speak-v1/session.js",
+        "spin-speak-v1/words-coach.css",
+        "spin-speak-v1/words-coach.js",
+        "spin-speak-v1/words-reading.css",
+        "spin-speak-v1/words-reading.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/icons.js",
+      "source": "prototype/spin-speak-v1/icons.js",
+      "sourceRecord": {
+        "sha256": "b0772baf899caef3acdf9b6cfadd569b5ff47143eedec079add8064cb10344f8",
+        "bytes": 2357
+      },
+      "outputRecord": {
+        "sha256": "b0772baf899caef3acdf9b6cfadd569b5ff47143eedec079add8064cb10344f8",
+        "bytes": 2357
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/index.html",
+      "source": "prototype/spin-speak-v1/index.html",
+      "sourceRecord": {
+        "sha256": "975140566075281fe37d5335b2fd826d3eb7e7f050916ba46b8cde88b54c3c70",
+        "bytes": 1525
+      },
+      "outputRecord": {
+        "sha256": "0cd30f0da8a1e03d0b91e794fae303a1c0329e8a9c60d13a4f8f3c602310e8a8",
+        "bytes": 1774
+      },
+      "transformations": [
+        {
+          "kind": "host-adapter",
+          "scopeBootstrapSha256": null
+        },
+        {
+          "kind": "content-versioned-ui-assets",
+          "versions": {
+            "app.js": "ffe046af16da7d62",
+            "model.js": "629926ec61c7c49d",
+            "../workbench-api.js": "9a2fcb1919c3eeb3"
+          }
+        }
+      ],
+      "dependencies": [
+        "authoring.js",
+        "embed-adapter.css",
+        "embed-adapter.js",
+        "prep-workbench-six-modules-v1/components.css",
+        "prep-workbench-six-modules-v1/design-tokens.css",
+        "prep-workbench-six-modules-v1/latest.html",
+        "prep-workbench-six-modules-v1/library-home.css",
+        "prep-workbench-six-modules-v1/platform.css",
+        "prep-workbench-six-modules-v1/platform.js",
+        "prep-workbench-six-modules-v1/typography.css",
+        "spin-speak-v1/app.js",
+        "spin-speak-v1/art.js",
+        "spin-speak-v1/model.js",
+        "spin-speak-v1/platform-adapter.css",
+        "spin-speak-v1/styles.css",
+        "workbench-api.js"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/model.js",
+      "source": "prototype/spin-speak-v1/model.js",
+      "sourceRecord": {
+        "sha256": "d870ad062bec2df3bb158e5dd7b0ee44aa05f6ff68603ce963b530c3ea46e501",
+        "bytes": 9423
+      },
+      "outputRecord": {
+        "sha256": "629926ec61c7c49d419f37c334e654a9e359e7ce6dc12246141bac2fe27d441c",
+        "bytes": 9510
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/model.js",
+          "sourceRecord": {
+            "sha256": "629926ec61c7c49d419f37c334e654a9e359e7ce6dc12246141bac2fe27d441c",
+            "bytes": 9510
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/platform-adapter.css",
+      "source": "prototype/spin-speak-v1/platform-adapter.css",
+      "sourceRecord": {
+        "sha256": "9afb34f302e967f6f25bb1a13fd4e0497e096570fe7f9edbc3e2a60024735492",
+        "bytes": 426
+      },
+      "outputRecord": {
+        "sha256": "9afb34f302e967f6f25bb1a13fd4e0497e096570fe7f9edbc3e2a60024735492",
+        "bytes": 426
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/play-details.css",
+      "source": "prototype/spin-speak-v1/play-details.css",
+      "sourceRecord": {
+        "sha256": "f79301c4b5ec4e1dcbe67941d11c0a5e08ca35f6b7329397a2748510da68a583",
+        "bytes": 9819
+      },
+      "outputRecord": {
+        "sha256": "f79301c4b5ec4e1dcbe67941d11c0a5e08ca35f6b7329397a2748510da68a583",
+        "bytes": 9819
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/play-details.js",
+      "source": "prototype/spin-speak-v1/play-details.js",
+      "sourceRecord": {
+        "sha256": "d375da3b04aa657c7c67fb0b3bc24ed42b140e4d56a0fd33e0ec5544dccec71f",
+        "bytes": 6573
+      },
+      "outputRecord": {
+        "sha256": "d375da3b04aa657c7c67fb0b3bc24ed42b140e4d56a0fd33e0ec5544dccec71f",
+        "bytes": 6573
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/role-cards.css",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/role-cards.css",
+          "sourceRecord": {
+            "sha256": "1f60fb4e6a68370e212cb8124ec7bb31888f78ce48961cc06365f384a9112075",
+            "bytes": 2117
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "1f60fb4e6a68370e212cb8124ec7bb31888f78ce48961cc06365f384a9112075",
+        "bytes": 2117
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/role-sound.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/role-sound.js",
+          "sourceRecord": {
+            "sha256": "73309d0f1cea12938aa43525e63902568b77d07d9d9ad9b59c14bae4117924d1",
+            "bytes": 8821
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "73309d0f1cea12938aa43525e63902568b77d07d9d9ad9b59c14bae4117924d1",
+        "bytes": 8821
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/scenes.css",
+      "source": "prototype/spin-speak-v1/scenes.css",
+      "sourceRecord": {
+        "sha256": "06b23586b67bdf97f19e29d21811d5e8f2f34572cabd55b225b72fd7153c5ff7",
+        "bytes": 6162
+      },
+      "outputRecord": {
+        "sha256": "06b23586b67bdf97f19e29d21811d5e8f2f34572cabd55b225b72fd7153c5ff7",
+        "bytes": 6162
+      },
+      "transformations": [],
+      "dependencies": [
+        "spin-speak-v1/assets/scenes-v7/energy.png",
+        "spin-speak-v1/assets/scenes-v7/flip.png",
+        "spin-speak-v1/assets/scenes-v7/role.png",
+        "spin-speak-v1/assets/scenes-v7/silly.png",
+        "spin-speak-v1/assets/scenes-v7/volume.png",
+        "spin-speak-v1/assets/scenes-v7/words.png"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/session.js",
+      "source": "prototype/spin-speak-v1/session.js",
+      "sourceRecord": {
+        "sha256": "df8bdca0abff31ce1c367f986d9b5da86aec161e21aa8aa7a8837e06d3864587",
+        "bytes": 778
+      },
+      "outputRecord": {
+        "sha256": "c73ed5b8d582b85c612907833c17ffa03ed8e8f286072d1d9a57b03e11535ecd",
+        "bytes": 845
+      },
+      "transformations": [
+        {
+          "kind": "account-storage-key",
+          "original": "wellbeing-six-modules-v1-speak-session:",
+          "replacement": "('wellbeing-web-three-v1-'+window.WB_WEB_SCOPE+'-external-speak-'+\"wellbeing-six-modules-v1-speak-session:\")"
+        }
+      ],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/styles.css",
+      "source": "prototype/spin-speak-v1/styles.css",
+      "sourceRecord": {
+        "sha256": "c8a629b6ce0e6c400669ae2b3c4119af2eb7478086a4c7918010d42ba8b488df",
+        "bytes": 14796
+      },
+      "outputRecord": {
+        "sha256": "e623e1055ecbb24040f098aaeede70d730b1305847eca2d2917b5ef0c14f76c7",
+        "bytes": 13658
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/styles.css",
+          "sourceRecord": {
+            "sha256": "e623e1055ecbb24040f098aaeede70d730b1305847eca2d2917b5ef0c14f76c7",
+            "bytes": 13658
+          },
+          "scope": "local teacher UI; Doodle manual words and snapshot images from the user-selected source"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/assets/energy-v3/energy-case-preview-v16.png",
+        "spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+        "spin-speak-v1/assets/scenes-v12/tempo-approved-preview.jpg",
+        "spin-speak-v1/assets/scenes-v12/tempo-approved-wheel.jpg",
+        "spin-speak-v1/assets/scenes-v7/energy.png",
+        "spin-speak-v1/assets/scenes-v7/flip.png",
+        "spin-speak-v1/assets/scenes-v7/role.png",
+        "spin-speak-v1/assets/scenes-v7/silly.png",
+        "spin-speak-v1/assets/scenes-v7/tempo.png",
+        "spin-speak-v1/assets/scenes-v7/volume.png",
+        "spin-speak-v1/assets/scenes-v7/words.png",
+        "spin-speak-v1/assets/volume-v3/volume-case-preview.jpg"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/tempo-v12.css",
+      "source": "prototype/spin-speak-v1/tempo-v12.css",
+      "sourceRecord": {
+        "sha256": "9aac9c26acedc9b60a8bb94c88512d480047826fed3557e7e40eb25c9653aedb",
+        "bytes": 11350
+      },
+      "outputRecord": {
+        "sha256": "9aac9c26acedc9b60a8bb94c88512d480047826fed3557e7e40eb25c9653aedb",
+        "bytes": 11350
+      },
+      "transformations": [],
+      "dependencies": [
+        "spin-speak-v1/assets/scenes-v12/tempo-control-base.svg",
+        "spin-speak-v1/assets/scenes-v12/tempo-front-mask.svg",
+        "spin-speak-v1/assets/scenes-v12/tempo-reference-colors.png",
+        "spin-speak-v1/assets/scenes-v12/tempo-tabletop-clean-v149.png"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/tempo-v12.js",
+      "source": "prototype/spin-speak-v1/tempo-v12.js",
+      "sourceRecord": {
+        "sha256": "69a0a9499a16a21a831556ce8131a9d340b3ff45e4e0fd636af6b93931153af6",
+        "bytes": 5359
+      },
+      "outputRecord": {
+        "sha256": "69a0a9499a16a21a831556ce8131a9d340b3ff45e4e0fd636af6b93931153af6",
+        "bytes": 5359
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/tempo-workbench.js",
+      "source": "prototype/spin-speak-v1/tempo-workbench.js",
+      "sourceRecord": {
+        "sha256": "5ee6140dd011e10ab948c8cdccca1d8cc7660e92bfb8349d5ebb7f29f9f19afe",
+        "bytes": 762
+      },
+      "outputRecord": {
+        "sha256": "5ee6140dd011e10ab948c8cdccca1d8cc7660e92bfb8349d5ebb7f29f9f19afe",
+        "bytes": 762
+      },
+      "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/volume-v3.css",
+      "source": "prototype/spin-speak-v1/volume-v3.css",
+      "sourceRecord": {
+        "sha256": "09c1363b6a83843582db5204c59a5d7d61c59963e1aeec71cdae021f48e0c20a",
+        "bytes": 11955
+      },
+      "outputRecord": {
+        "sha256": "64db78790959f4e80583c819e9a363d3e359343c44ee9ead3bd4e8e5c72f248b",
+        "bytes": 16747
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/volume-v3.css",
+          "sourceRecord": {
+            "sha256": "64db78790959f4e80583c819e9a363d3e359343c44ee9ead3bd4e8e5c72f248b",
+            "bytes": 16747
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+        "spin-speak-v1/assets/fonts/noto-sans-regular.woff2",
+        "spin-speak-v1/assets/volume-v3/controls-clean-plate.png",
+        "spin-speak-v1/assets/volume-v3/school-radio.png",
+        "spin-speak-v1/assets/volume-v3/status-clean-plate.png",
+        "spin-speak-v1/assets/volume-v3/title-clean-plate.png"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/volume-v3.js",
+      "source": "prototype/spin-speak-v1/volume-v3.js",
+      "sourceRecord": {
+        "sha256": "a33d4d639cecab4f24f5a03b46e8b4050870e749e311c3522a57acb7ae342c3d",
+        "bytes": 7952
+      },
+      "outputRecord": {
+        "sha256": "bcca6a29fa2de37a2a3a435ca3260a3f2f84d6e0c51afc8f060fc66a5c78f779",
+        "bytes": 26674
+      },
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/volume-v3.js",
+          "sourceRecord": {
+            "sha256": "bcca6a29fa2de37a2a3a435ca3260a3f2f84d6e0c51afc8f060fc66a5c78f779",
+            "bytes": 26674
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "dependencies": [
+        "spin-speak-v1/assets/volume-v3/school-radio.png"
+      ]
+    },
+    {
+      "path": "spin-speak-v1/words-coach.css",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/words-coach.css",
+          "sourceRecord": {
+            "sha256": "d5ff9c2b301eb9e503bfc7c8a02264a22c8ac6189b3b56f99b0fbab1cdc173a4",
+            "bytes": 794
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "d5ff9c2b301eb9e503bfc7c8a02264a22c8ac6189b3b56f99b0fbab1cdc173a4",
+        "bytes": 794
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/words-coach.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/words-coach.js",
+          "sourceRecord": {
+            "sha256": "933ca41050b62f38a249e5c702c552749cc17c5dee1db8dd6d6ca44014dda02a",
+            "bytes": 10277
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "933ca41050b62f38a249e5c702c552749cc17c5dee1db8dd6d6ca44014dda02a",
+        "bytes": 10277
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/words-reading.css",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/words-reading.css",
+          "sourceRecord": {
+            "sha256": "b6cb2caaa72a69c5173520b009c6afa3815ba294dec129e3aa0b29a99102fc66",
+            "bytes": 2810
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "b6cb2caaa72a69c5173520b009c6afa3815ba294dec129e3aa0b29a99102fc66",
+        "bytes": 2810
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/words-reading.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/words-reading.js",
+          "sourceRecord": {
+            "sha256": "9e534da654c0d78ea70b93d054962eeb6a54cce95810c289de9790abb45e7a87",
+            "bytes": 7999
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "9e534da654c0d78ea70b93d054962eeb6a54cce95810c289de9790abb45e7a87",
+        "bytes": 7999
+      },
+      "dependencies": []
+    },
+    {
+      "path": "workbench-api.js",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/workbench-api.js",
+          "sourceRecord": {
+            "sha256": "9a2fcb1919c3eeb3fa6f56216b4183e04ecf1753a9037729746db33c140305c1",
+            "bytes": 10652
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "9a2fcb1919c3eeb3fa6f56216b4183e04ecf1753a9037729746db33c140305c1",
+        "bytes": 10652
+      },
+      "dependencies": []
+    }
+  ],
+  "localAuthoring": {
+    "sourceDirectory": "workbench-ui",
+    "appliedBeforeAccountScopeTransform": true,
+    "files": [
+      {
+        "path": "doodle-guess-v1/app.js",
+        "sha256": "acd41168aa2bcdc3095ae094482999cf0c06db0141ceeda386e5e733d78de6f4",
+        "bytes": 39686
+      },
+      {
+        "path": "doodle-guess-v1/classroom-wordbank.js",
+        "sha256": "8009be255e5582c9b8f4df4b8cb15afe459d6e612a0b2c75bb3e0f100817fa17",
+        "bytes": 17734
+      },
+      {
+        "path": "doodle-guess-v1/index.html",
+        "sha256": "0cc54397c06f91017ae098298f20be920c88bdddb2d02e029b352cc5f21863ca",
+        "bytes": 1542
+      },
+      {
+        "path": "doodle-guess-v1/model.js",
+        "sha256": "2db0fdc58053842b815646ce3769735dd07260a4b9d75f976e9eb4096ec0bfd0",
+        "bytes": 9469
+      },
+      {
+        "path": "doodle-guess-v1/runtime.js",
+        "sha256": "61d8bcb07f2f2f5cd37bfec1f33e6bdf05501552072ff26bb72fe41fccd2d58f",
+        "bytes": 17359
+      },
+      {
+        "path": "doodle-guess-v1/styles.css",
+        "sha256": "415f8c37b2d76674225643736c3f669bf842a3ea4278d4cf9aea40b74450754d",
+        "bytes": 12863
+      },
+      {
+        "path": "doodle-guess-v1/word-images.js",
+        "sha256": "9d6286cd0fe4f8edf9880c81da62a14aa6cb02d98b4c10db5d6639759f924ce3",
+        "bytes": 5009
+      },
+      {
+        "path": "move-match-v1/app.js",
+        "sha256": "91705f6cb4402b7a574f3c4b8b153279b8709b89a368f2055a35d0007b10179c",
+        "bytes": 108620
+      },
+      {
+        "path": "move-match-v1/classroom/action-poses-cutout.png",
+        "sha256": "fac236b956662e3d7716dce6092e31049b952658400bbae0c7a858226103b009",
+        "bytes": 790987
+      },
+      {
+        "path": "move-match-v1/classroom/adapter.css",
+        "sha256": "a09131e3fff9fc92624352e0ba22c8636d2eacbdebe5d4709f367d873bab6acf",
+        "bytes": 35541
+      },
+      {
+        "path": "move-match-v1/classroom/audio-controller.js",
+        "sha256": "0626380d1d425690a891ff0c3addcfdd928204d69008aa3e58abc4790118b2e5",
+        "bytes": 8450
+      },
+      {
+        "path": "move-match-v1/classroom/audio/card-drop.wav",
+        "sha256": "6273f6441743628a3824eb3b86af94c53af9c4ddd9d6956ae2038141ce683af0",
+        "bytes": 21804
+      },
+      {
+        "path": "move-match-v1/classroom/audio/classroom-loop.wav",
+        "sha256": "de0e39c9eacae36446c4e4a6f98477f74967ed1cc1e209f434e8fdea5a4557cd",
+        "bytes": 2560044
+      },
+      {
+        "path": "move-match-v1/classroom/audio/incorrect.wav",
+        "sha256": "702931fd87a0c989d150676cd66e3f4ca16dceeb7c93a0c2e7522a1ea71180f6",
+        "bytes": 30764
+      },
+      {
+        "path": "move-match-v1/classroom/bridge.js",
+        "sha256": "9f5e7a53454f1b2163fdc500a4bc1e94efaaf9f6c904aa0976c48c528c7f665d",
+        "bytes": 7490
+      },
+      {
+        "path": "move-match-v1/classroom/camera-controller.js",
+        "sha256": "bdbb8b4584a70b39819013414caa9161933b818e8fc28a90a56163c95eb48476",
+        "bytes": 7400
+      },
+      {
+        "path": "move-match-v1/classroom/camera-tree-frame-collapsed.svg",
+        "sha256": "0f83df56a8bf214cb7efe3bbad168ad482344ebcc16eb6766c3869c02721cc59",
+        "bytes": 1051
+      },
+      {
+        "path": "move-match-v1/classroom/camera-tree-frame.svg",
+        "sha256": "9243098a98ee5263822d597bedbff67ef842b208aafe3a6cad49aea51644710d",
+        "bytes": 3797
+      },
+      {
+        "path": "move-match-v1/classroom/index.html",
+        "sha256": "795adbf2063135e86e5a62cd73dbfe656f2ef2eabc104b9ec287dc66b0c7171c",
+        "bytes": 622
+      },
+      {
+        "path": "move-match-v1/classroom/models/pose_landmarker_lite.task",
+        "sha256": "59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a",
+        "bytes": 5777746
+      },
+      {
+        "path": "move-match-v1/classroom/pose-classifier.js",
+        "sha256": "5c182295fad7de681c30b12eb495f04f9682874aa03b24c5f2e4a0eee53e3f78",
+        "bytes": 6766
+      },
+      {
+        "path": "move-match-v1/classroom/pose-tester.js",
+        "sha256": "369f0dbc6ca8f950ea0d91333c132474eac5cc0b99235cdefb59c297095b38bb",
+        "bytes": 8307
+      },
+      {
+        "path": "move-match-v1/classroom/runtime.generated.js",
+        "sha256": "a9a3a585b9fb56079d97571ac07778ad6004741abd5f97d4f21c4ff884e2d603",
+        "bytes": 1144227
+      },
+      {
+        "path": "move-match-v1/classroom/vendor/tasks-vision/LICENSE.txt",
+        "sha256": "8707eef0533987efc5b155d64761eeb6e20793f50b9bd1a68dad1cf4719d0ed8",
+        "bytes": 12331
+      },
+      {
+        "path": "move-match-v1/classroom/vendor/tasks-vision/asset-manifest.json",
+        "sha256": "201346d4c6aa8c2801018976051f32de5d64a199ab6cf7ee0db03cc2d8f0fc64",
+        "bytes": 1292
+      },
+      {
+        "path": "move-match-v1/classroom/vendor/tasks-vision/vision_bundle.mjs",
+        "sha256": "40f4123dfcd75cfa58add046919cc6f52fde66f009ff582997c09ba54c6ba27c",
+        "bytes": 137735
+      },
+      {
+        "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.js",
+        "sha256": "4a97e2520ba506c680ecd6ba6acfb146888afa0e2746d57f205352bc6ebb82eb",
+        "bytes": 204284
+      },
+      {
+        "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_internal.wasm",
+        "sha256": "f00ec4731faa23b3e714d00e88d4d10e2df5c0a427d3a2b4ae6e3526fdd14ef7",
+        "bytes": 9574032
+      },
+      {
+        "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.js",
+        "sha256": "927def7b465c51b86e4b3060f93646aca4e27121f4b8fc0483786e407ea9cf1f",
+        "bytes": 204137
+      },
+      {
+        "path": "move-match-v1/classroom/vendor/tasks-vision/wasm/vision_wasm_nosimd_internal.wasm",
+        "sha256": "3821ea9b1f7fb8c549ef2a064ef5c85750bf375c545a49fd6eea0df44a95f1f4",
+        "bytes": 9448638
+      },
+      {
+        "path": "move-match-v1/model.js",
+        "sha256": "4fd3a9ac88d47187fe4d07415c1f185ffda4973d2181b8bad87867217dfa6fa0",
+        "bytes": 30650
+      },
+      {
+        "path": "move-match-v1/styles.css",
+        "sha256": "1c28bfe26d9d08afd93562f9e0c90f49316850fbe51cd0b9b67e240cc5f9dc98",
+        "bytes": 32866
+      },
+      {
+        "path": "spin-speak-v1/app.js",
+        "sha256": "1479225e386d52e58738d3250e8865f0651d0f8481b1885c0a5e53ccc0f2fc4f",
+        "bytes": 30785
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/alien.webp",
+        "sha256": "9546d122eae4003c3b24dadd81ddc1f7031263c50237f9e302929d5fb081dbba",
+        "bytes": 16934
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/baby.webp",
+        "sha256": "362e5b908ffe397a0a8d35a620134f7206c7b77c9931eed35c31366e00b6c2a0",
+        "bytes": 15162
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/grandma.webp",
+        "sha256": "cc088aecbb1e1f1d77f3cd8d5a05a31eeabe457e66c371e35a1aee10d9535bb5",
+        "bytes": 23504
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/lion.webp",
+        "sha256": "3d5a999fda80aebd4960fb5096074c20a0eec8f788da0bd4836bba1e80a2e386",
+        "bytes": 27210
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/monster.webp",
+        "sha256": "59a13edce702cc62d447122574303095f9d805fd343c0a7ef7a703152bad4756",
+        "bytes": 25622
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/pirate.webp",
+        "sha256": "6eb90cf0dc0bba3efef753ca404c6bd9facb0bb2bd59b22462135d134d0ae834",
+        "bytes": 24968
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/robot.webp",
+        "sha256": "42f91992415ddee3249cf7e284b68db58fe3f5ab26b0e667e92b20d3a657dfaa",
+        "bytes": 19850
+      },
+      {
+        "path": "spin-speak-v1/assets/roles/witch.webp",
+        "sha256": "bcf2f1c5811e85c76ab9629e2d579562327037852d5a9790d361b0e64aded739",
+        "bytes": 22528
+      },
+      {
+        "path": "spin-speak-v1/game-access.js",
+        "sha256": "6fbd03ffcf705c59e399319bea60990fb7912b17f11aaf44eff9e58807f43c37",
+        "bytes": 4651
+      },
+      {
+        "path": "spin-speak-v1/games/role.html",
+        "sha256": "6815fded2047fa8fd9a22ffb9ad4f77fc1053d98a6bd5feb348efa168d507f85",
+        "bytes": 14513
+      },
+      {
+        "path": "spin-speak-v1/games/volume-v3.html",
+        "sha256": "4adbd1e26e85371243549baf5a2481571c2436d125a7f1958563de365d428c25",
+        "bytes": 14901
+      },
+      {
+        "path": "spin-speak-v1/games/words.html",
+        "sha256": "de777a61323c6fec08e8a8e19a74e3c748e0fbf66835523c68d15e2c9325f456",
+        "bytes": 9447
+      },
+      {
+        "path": "spin-speak-v1/model.js",
+        "sha256": "629926ec61c7c49d419f37c334e654a9e359e7ce6dc12246141bac2fe27d441c",
+        "bytes": 9510
+      },
+      {
+        "path": "spin-speak-v1/role-cards.css",
+        "sha256": "1f60fb4e6a68370e212cb8124ec7bb31888f78ce48961cc06365f384a9112075",
+        "bytes": 2117
+      },
+      {
+        "path": "spin-speak-v1/role-sound.js",
+        "sha256": "73309d0f1cea12938aa43525e63902568b77d07d9d9ad9b59c14bae4117924d1",
+        "bytes": 8821
+      },
+      {
+        "path": "spin-speak-v1/styles.css",
+        "sha256": "e623e1055ecbb24040f098aaeede70d730b1305847eca2d2917b5ef0c14f76c7",
+        "bytes": 13658
+      },
+      {
+        "path": "spin-speak-v1/volume-v3.css",
+        "sha256": "64db78790959f4e80583c819e9a363d3e359343c44ee9ead3bd4e8e5c72f248b",
+        "bytes": 16747
+      },
+      {
+        "path": "spin-speak-v1/volume-v3.js",
+        "sha256": "bcca6a29fa2de37a2a3a435ca3260a3f2f84d6e0c51afc8f060fc66a5c78f779",
+        "bytes": 26674
+      },
+      {
+        "path": "spin-speak-v1/words-coach.css",
+        "sha256": "d5ff9c2b301eb9e503bfc7c8a02264a22c8ac6189b3b56f99b0fbab1cdc173a4",
+        "bytes": 794
+      },
+      {
+        "path": "spin-speak-v1/words-coach.js",
+        "sha256": "933ca41050b62f38a249e5c702c552749cc17c5dee1db8dd6d6ca44014dda02a",
+        "bytes": 10277
+      },
+      {
+        "path": "spin-speak-v1/words-reading.css",
+        "sha256": "b6cb2caaa72a69c5173520b009c6afa3815ba294dec129e3aa0b29a99102fc66",
+        "bytes": 2810
+      },
+      {
+        "path": "spin-speak-v1/words-reading.js",
+        "sha256": "9e534da654c0d78ea70b93d054962eeb6a54cce95810c289de9790abb45e7a87",
+        "bytes": 7999
+      },
+      {
+        "path": "workbench-api.js",
+        "sha256": "9a2fcb1919c3eeb3fa6f56216b4183e04ecf1753a9037729746db33c140305c1",
+        "bytes": 10652
+      }
+    ],
+    "sharedAssets": [
+      {
+        "path": "embed-adapter.js",
+        "sha256": "3c4254d321dc88dd4f4797df7697fc5f3b1c3d93bffba860b9ffadf61087c0f7",
+        "bytes": 10307
+      },
+      {
+        "path": "embed-adapter.css",
+        "sha256": "715c540610719b9c8469166eaf356c91e9da49ac3787a5f2905cbfbbd0b0cf9e",
+        "bytes": 2876
+      },
+      {
+        "path": "authoring.js",
+        "sha256": "9bd774101b7f8e3c6b2ce8b202692a0df6daf0969b782b5c8250f466460c4591",
+        "bytes": 2264
+      },
+      {
+        "path": "authoring.css",
+        "sha256": "58bcb20fa29c23f343587182e474a6edb28ea6b912a15a55776eb8d4107e1684",
+        "bytes": 14183
+      }
+    ]
+  }
+}

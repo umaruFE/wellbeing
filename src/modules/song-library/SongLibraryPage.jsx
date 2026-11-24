@@ -2,6 +2,7 @@ import i18next from 'i18next';
 import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../components/PageLoading';
 import { Upload, Music, Play, Pause, Trash2, Plus, Edit, X, Disc } from 'lucide-react';
 import apiService from '../../services/api';
 import uploadService from '../../services/uploadService';
@@ -165,12 +166,7 @@ export const SongLibraryPage = () => {
   };
 
   if (loading) {
-    return (
-      <div className="song-library-loading">
-        <div className="song-library-spinner" />
-        <p><LocalizedText id="common.loading" /></p>
-      </div>
-    );
+    return <PageLoading layout="fill" />;
   }
 
   return (

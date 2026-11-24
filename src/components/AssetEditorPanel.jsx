@@ -54,7 +54,7 @@ export const AssetEditorPanel = ({
 
   return (
     <>
-      <div className="p-4 border-b-2 border-stroke-light bg-warning-light flex items-center justify-between">
+      <div className="p-4 border-b border-[var(--wb-border)] bg-warning-light flex items-center justify-between">
         <div className="flex items-center gap-2">
           {getAssetIcon(selectedAsset.type)}
           <h3 className="font-bold text-info-active"><LocalizedText id="assetEditor.185cf42742" /></h3>
@@ -73,7 +73,7 @@ export const AssetEditorPanel = ({
       
       {/* 图层操作 */}
       {onLayerChange && (
-        <div className="px-4 py-2 border-b-2 border-stroke-light bg-white flex items-center justify-between">
+        <div className="px-4 py-2 border-b border-[var(--wb-border)] bg-white flex items-center justify-between">
           <span className="text-[10px] font-bold text-primary-placeholder uppercase tracking-wider flex items-center gap-1">
             <Layers className="w-3 h-3" /> <LocalizedText id="assetEditor.ec4bca7dcc" />
           </span>
@@ -100,7 +100,7 @@ export const AssetEditorPanel = ({
             {onFitToCanvas && (
               <button
                 onClick={() => onFitToCanvas(selectedAsset.id)}
-                className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-stroke-light bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
+                className="min-h-10 flex items-center justify-center gap-1.5 rounded-[var(--wb-control-radius)] border border-[var(--wb-border)] bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
                 title={i18next.t('assetEditor.e9cfcecdf9')}
               >
                 <Maximize2 className="w-3.5 h-3.5" />
@@ -110,7 +110,7 @@ export const AssetEditorPanel = ({
             {onCenterAsset && (
               <button
                 onClick={() => onCenterAsset(selectedAsset.id)}
-                className="flex items-center justify-center gap-1.5 rounded-xl border-2 border-stroke-light bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
+                className="min-h-10 flex items-center justify-center gap-1.5 rounded-[var(--wb-control-radius)] border border-[var(--wb-border)] bg-white px-3 py-2 text-xs font-bold text-primary-secondary hover:border-info hover:text-info-active transition-colors"
                 title={i18next.t('assetEditor.0e71c36277')}
               >
                 <Crosshair className="w-3.5 h-3.5" />
@@ -124,36 +124,36 @@ export const AssetEditorPanel = ({
         <div className="grid grid-cols-3 gap-2">
           <div>
             <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.3bdb470c60" /></label>
-            <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
+            <div className="flex items-center border border-[var(--wb-border)] rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.width || 300)} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'width', parseInt(e.target.value))} 
-                className="w-full text-xs bg-transparent py-1.5 outline-none"
+                className="min-h-11 w-full text-xs bg-transparent py-1.5 outline-none"
               />
               <span className="text-[10px] text-primary-placeholder">px</span>
             </div>
           </div>
           <div>
             <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.6cb4458ede" /></label>
-            <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
+            <div className="flex items-center border border-[var(--wb-border)] rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.height || 200)} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'height', parseInt(e.target.value))} 
-                className="w-full text-xs bg-transparent py-1.5 outline-none"
+                className="min-h-11 w-full text-xs bg-transparent py-1.5 outline-none"
               />
               <span className="text-[10px] text-primary-placeholder">px</span>
             </div>
           </div>
           <div>
             <label className="text-[10px] font-bold text-primary-placeholder uppercase mb-1 block"><LocalizedText id="assetEditor.4c355215cc" /></label>
-            <div className="flex items-center border-2 border-stroke-light rounded-xl px-2 bg-surface">
+            <div className="flex items-center border border-[var(--wb-border)] rounded-xl px-2 bg-surface">
               <input 
                 type="number" 
                 value={Math.round(selectedAsset.rotation || 0)} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'rotation', parseInt(e.target.value))} 
-                className="w-full text-xs bg-transparent py-1.5 outline-none"
+                className="min-h-11 w-full text-xs bg-transparent py-1.5 outline-none"
               />
               <span className="text-[10px] text-primary-placeholder">°</span>
             </div>
@@ -167,7 +167,7 @@ export const AssetEditorPanel = ({
             type="text" 
             value={selectedAsset.title || ''} 
             onChange={(e) => onAssetChange(selectedAsset.id, 'title', e.target.value)} 
-            className="w-full text-sm border-2 border-stroke-light rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all"
+            className="min-h-11 w-full text-sm border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] px-3 py-2 focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none transition-all"
           />
         </div>
 
@@ -180,32 +180,32 @@ export const AssetEditorPanel = ({
               <textarea 
                 value={selectedAsset.content || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'content', e.target.value)} 
-                className="w-full text-sm border-2 border-stroke-light rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none transition-all h-32 resize-none"
+                className="w-full text-sm border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] px-3 py-2 focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none transition-all h-32 resize-none"
               />
             </div>
             
             {/* AI 生成提示词 (文本) */}
             <div>
               <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
-                <Wand2 className="w-3 h-3 text-purple-500" /> <LocalizedText id="assetEditor.c5bd13ad2b" />
+                <Wand2 className="w-3 h-3 text-[var(--wb-primary)]" /> <LocalizedText id="assetEditor.c5bd13ad2b" />
               </label>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 
                 placeholder={i18next.t('assetEditor.1638157083')}
-                className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple outline-none h-24 resize-none mb-2"
+                className="w-full text-sm border border-[var(--wb-selected-border)] bg-[var(--wb-selected)] rounded px-3 py-2 focus:ring-2 focus:ring-[var(--wb-selected-border)] outline-none h-24 resize-none mb-2"
               />
               <div className="flex gap-2 mb-2">
                 <button 
                   onClick={() => onShowHistoryModal?.({ assetId: selectedAsset.id, assetType: selectedAsset.type })}
-                  className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
+                  className="min-h-10 flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
                 >
                   <History className="w-4 h-4" />
                   <LocalizedText id="assetEditor.afae334af3" />
                 </button>
                 <button 
                   onClick={() => onRegenerateAsset?.(selectedAsset.id)}
-                  className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                  className="min-h-10 flex-1 py-2 bg-[var(--wb-primary)] text-white rounded text-sm font-bold shadow hover:bg-[var(--wb-primary-hover)] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
                   <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} /> 
                   <LocalizedText id="assetEditor.67fe89f079" />
@@ -229,7 +229,7 @@ export const AssetEditorPanel = ({
                     max="200" 
                     value={selectedAsset.fontSize || 24} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'fontSize', parseInt(e.target.value) || 24)} 
-                    className="flex-1 text-xs border-2 border-stroke-light rounded-lg px-2 py-1.5 bg-surface outline-none transition-all"
+                    className="min-h-11 flex-1 text-xs border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] px-2 py-1.5 bg-surface outline-none transition-all"
                   />
                   <span className="text-[10px] text-primary-placeholder">px</span>
                 </div>
@@ -241,20 +241,20 @@ export const AssetEditorPanel = ({
                 <div className="flex gap-2">
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'fontWeight', 'normal')}
-                    className={`flex-1 px-3 py-2 rounded border text-xs transition-colors ${
+                    className={`min-h-10 flex-1 px-3 py-2 rounded border text-xs transition-colors ${
                       (selectedAsset.fontWeight || 'normal') === 'normal' 
-                        ? 'bg-info-light border-info-border text-info-active' 
-                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
+                        ? 'bg-[var(--wb-selected)] border-[var(--wb-selected-border)] text-[var(--wb-primary)]'
+                        : 'bg-white border border-[var(--wb-border)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)]'
                     }`}
                   >
                     <LocalizedText id="audioLib.normal" />
                   </button>
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'fontWeight', 'bold')}
-                    className={`flex-1 px-3 py-2 rounded border text-xs transition-colors flex items-center justify-center gap-1 ${
+                    className={`min-h-10 flex-1 px-3 py-2 rounded border text-xs transition-colors flex items-center justify-center gap-1 ${
                       selectedAsset.fontWeight === 'bold' 
-                        ? 'bg-info-light border-info-border text-info-active' 
-                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
+                        ? 'bg-[var(--wb-selected)] border-[var(--wb-selected-border)] text-[var(--wb-primary)]'
+                        : 'bg-white border border-[var(--wb-border)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)]'
                     }`}
                   >
                     <Bold className="w-3 h-3" />
@@ -273,13 +273,13 @@ export const AssetEditorPanel = ({
                     type="color" 
                     value={selectedAsset.color || '#1e293b'} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'color', e.target.value)} 
-                    className="w-12 h-10 rounded-xl border-2 border-stroke-light cursor-pointer transition-all hover:border-primary"
+                    className="w-12 h-10 rounded-[var(--wb-control-radius)] border border-[var(--wb-border)] cursor-pointer transition-all hover:border-[var(--wb-selected-border)]"
                   />
                   <input 
                     type="text" 
                     value={selectedAsset.color || '#1e293b'} 
                     onChange={(e) => onAssetChange(selectedAsset.id, 'color', e.target.value)} 
-                    className="flex-1 text-xs border-2 border-stroke-light rounded-lg px-2 py-1.5 bg-surface outline-none font-mono transition-all"
+                    className="min-h-11 flex-1 text-xs border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] px-2 py-1.5 bg-surface outline-none font-mono transition-all"
                     placeholder="#000000"
                   />
                 </div>
@@ -291,10 +291,10 @@ export const AssetEditorPanel = ({
                 <div className="flex gap-2">
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'textAlign', 'left')}
-                    className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
+                    className={`min-h-10 flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       (selectedAsset.textAlign || 'center') === 'left' 
-                        ? 'bg-info-light border-info-border text-info-active' 
-                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
+                        ? 'bg-[var(--wb-selected)] border-[var(--wb-selected-border)] text-[var(--wb-primary)]'
+                        : 'bg-white border border-[var(--wb-border)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)]'
                     }`}
                     title={i18next.t('assetEditor.413f8db65f')}
                   >
@@ -302,10 +302,10 @@ export const AssetEditorPanel = ({
                   </button>
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'textAlign', 'center')}
-                    className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
+                    className={`min-h-10 flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       (selectedAsset.textAlign || 'center') === 'center' 
-                        ? 'bg-info-light border-info-border text-info-active' 
-                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
+                        ? 'bg-[var(--wb-selected)] border-[var(--wb-selected-border)] text-[var(--wb-primary)]'
+                        : 'bg-white border border-[var(--wb-border)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)]'
                     }`}
                     title={i18next.t('assetEditor.5009324782')}
                   >
@@ -313,10 +313,10 @@ export const AssetEditorPanel = ({
                   </button>
                   <button
                     onClick={() => onAssetChange(selectedAsset.id, 'textAlign', 'right')}
-                    className={`flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
+                    className={`min-h-10 flex-1 px-2 py-2 rounded border text-xs transition-colors flex items-center justify-center ${
                       selectedAsset.textAlign === 'right' 
-                        ? 'bg-info-light border-info-border text-info-active' 
-                        : 'bg-white border-2 border-stroke-light text-dark hover:bg-warning-light hover:border-primary'
+                        ? 'bg-[var(--wb-selected)] border-[var(--wb-selected-border)] text-[var(--wb-primary)]'
+                        : 'bg-white border border-[var(--wb-border)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)]'
                     }`}
                     title={i18next.t('assetEditor.70fe40dec2')}
                   >
@@ -341,7 +341,7 @@ export const AssetEditorPanel = ({
                           onAssetChange(selectedAsset.id, 'strokeColor', null);
                         }
                       }} 
-                      className="w-4 h-4 text-dark border-2 border-stroke-light rounded focus:ring-[#2d2d2d]"
+                      className="w-4 h-4 text-dark border border-[var(--wb-border)] rounded focus:ring-[var(--wb-selected-border)]"
                     />
                     <span className="text-xs text-primary-secondary"><LocalizedText id="assetEditor.469a3eadb0" /></span>
                   </div>
@@ -372,13 +372,13 @@ export const AssetEditorPanel = ({
                           type="color" 
                           value={selectedAsset.strokeColor || '#000000'} 
                           onChange={(e) => onAssetChange(selectedAsset.id, 'strokeColor', e.target.value)} 
-                          className="w-10 h-8 rounded-lg border-2 border-stroke-light cursor-pointer transition-all hover:border-primary"
+                          className="w-10 h-8 rounded-[var(--wb-control-radius)] border border-[var(--wb-border)] cursor-pointer transition-all hover:border-[var(--wb-selected-border)]"
                         />
                         <input 
                           type="text" 
                           value={selectedAsset.strokeColor || '#000000'} 
                           onChange={(e) => onAssetChange(selectedAsset.id, 'strokeColor', e.target.value)} 
-                          className="flex-1 text-xs border-2 border-stroke-light rounded-lg px-2 py-1 bg-surface outline-none font-mono transition-all"
+                          className="min-h-11 flex-1 text-xs border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] px-2 py-1 bg-surface outline-none font-mono transition-all"
                         />
                       </div>
                     </div>
@@ -396,10 +396,10 @@ export const AssetEditorPanel = ({
                   <label className="text-xs font-bold text-primary-muted uppercase flex items-center gap-1">
                     <Upload className="w-3 h-3" /> <LocalizedText id="assetEditor.dc33859347" />
                   </label>
-                  <span className="text-[10px] bg-surface text-dark px-1.5 py-0.5 rounded-lg border border-stroke-light">Optional</span>
+                  <span className="text-[10px] bg-surface text-dark px-1.5 py-0.5 rounded-lg border border-[var(--wb-border)]">Optional</span>
                 </div>
                 {!selectedAsset.referenceImage ? (
-                  <div className="border-2 border-dashed border-stroke-light rounded-xl p-4 flex flex-col items-center justify-center bg-surface hover:bg-warning-light hover:border-primary transition-all cursor-pointer relative group/upload">
+                  <div className="border border-dashed border-[var(--wb-border)] rounded-xl p-4 flex flex-col items-center justify-center bg-surface hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] transition-all cursor-pointer relative group/upload">
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -426,7 +426,7 @@ export const AssetEditorPanel = ({
                 ) : (
                   <div className="space-y-2">
                     <div className="relative group/ref">
-                      <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border-2 border-stroke-light opacity-90" />
+                      <img src={selectedAsset.referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border border-[var(--wb-border)] opacity-90" />
                       <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
                       <button 
                         onClick={() => onAssetChange(selectedAsset.id, 'referenceImage', null)} 
@@ -444,25 +444,25 @@ export const AssetEditorPanel = ({
             {/* AI 生成提示词 */}
             <div>
               <label className="text-xs font-bold text-primary-muted uppercase mb-1 flex items-center gap-2">
-                <Wand2 className="w-3 h-3 text-purple-500" /> <LocalizedText id="assetEditor.c5bd13ad2b" />
+                <Wand2 className="w-3 h-3 text-[var(--wb-primary)]" /> <LocalizedText id="assetEditor.c5bd13ad2b" />
               </label>
               <textarea 
                 value={selectedAsset.prompt || ''} 
                 onChange={(e) => onAssetChange(selectedAsset.id, 'prompt', e.target.value)} 
                 placeholder={i18next.t('assetEditor.d9f1d40ad4')}
-                className="w-full text-sm border border-purple-200 bg-purple-50 rounded px-3 py-2 focus:ring-2 focus:ring-purple outline-none h-24 resize-none mb-2"
+                className="w-full text-sm border border-[var(--wb-selected-border)] bg-[var(--wb-selected)] rounded px-3 py-2 focus:ring-2 focus:ring-[var(--wb-selected-border)] outline-none h-24 resize-none mb-2"
               />
               <div className="flex gap-2 mb-2">
                 <button 
                   onClick={() => onShowHistoryModal?.({ assetId: selectedAsset.id, assetType: selectedAsset.type })}
-                  className="flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
+                  className="min-h-10 flex-1 py-2 bg-surface-alt text-primary-secondary rounded text-sm font-bold hover:bg-stroke flex items-center justify-center gap-2 transition-all"
                 >
                   <History className="w-4 h-4" />
                   <LocalizedText id="assetEditor.afae334af3" />
                 </button>
                 <button
                   onClick={() => onRegenerateAsset?.(selectedAsset.id)}
-                  className="flex-1 py-2 bg-purple-600 text-white rounded text-sm font-bold shadow hover:bg-purple-700 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                  className="min-h-10 flex-1 py-2 bg-[var(--wb-primary)] text-white rounded text-sm font-bold shadow hover:bg-[var(--wb-primary-hover)] flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                 >
                   <RefreshCw className={`w-4 h-4 ${generatingAssetId === selectedAsset.id ? 'animate-spin' : ''}`} />
                   {selectedAsset.referenceImage ? t('assetEditor.imageToImage') : t('assetEditor.67fe89f079')}
@@ -480,7 +480,7 @@ export const AssetEditorPanel = ({
                   <select
                     value={selectedAsset.style || ''}
                     onChange={(e) => onAssetChange(selectedAsset.id, 'style', e.target.value)}
-                    className="w-full text-sm border border-info-border bg-info-light rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="min-h-11 w-full text-sm border border-info-border bg-info-light rounded px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value=""><LocalizedText id="assetEditor.9741bc8c5f" /></option>
                     <option value="pop, catchy, upbeat"><LocalizedText id="assetEditor.61d5ebf290" /></option>
@@ -512,7 +512,7 @@ export const AssetEditorPanel = ({
                       step="5"
                       value={selectedAsset.duration || 30}
                       onChange={(e) => onAssetChange(selectedAsset.id, 'duration', Number(e.target.value))}
-                      className="flex-1 h-2 bg-stroke rounded-lg appearance-none cursor-pointer accent-blue-500"
+                      className="flex-1 h-2 bg-stroke rounded-[var(--wb-control-radius)] appearance-none cursor-pointer accent-blue-500"
                     />
                     <span className="text-sm font-medium text-primary-secondary min-w-[50px]">
                       {selectedAsset.duration || 30} <LocalizedText id="videoWizard.eb6aaba1a1" />
@@ -540,16 +540,16 @@ export const AssetEditorPanel = ({
         )}
 
         {/* 操作按钮 */}
-        <div className="pt-6 mt-6 border-t-2 border-stroke-light space-y-2">
+        <div className="pt-6 mt-6 border-t border-[var(--wb-border)] space-y-2">
           <button 
             onClick={() => onCopyAsset?.(selectedAsset.id)} 
-            className="w-full py-2 text-info-hover border border-info-border rounded text-sm font-bold hover:bg-info-light flex items-center justify-center gap-2"
+            className="min-h-10 w-full py-2 text-info-hover border border-info-border rounded text-sm font-bold hover:bg-info-light flex items-center justify-center gap-2"
           >
             <Copy className="w-4 h-4" /> <LocalizedText id="assetEditor.0a9d2f07dd" />
           </button>
           <button 
             onClick={() => onDeleteAsset?.(selectedAsset.id)} 
-            className="w-full py-2 text-error border border-error-border rounded text-sm font-bold hover:bg-error-light flex items-center justify-center gap-2"
+            className="min-h-10 w-full py-2 text-error border border-error-border rounded text-sm font-bold hover:bg-error-light flex items-center justify-center gap-2"
           >
             <Trash2 className="w-4 h-4" /> <LocalizedText id="assetEditor.2057deb61b" />
           </button>

@@ -1,0 +1,111 @@
+@layer wb-layout {
+/* Shared activity-library layout. Scoped to home pages; editors and classrooms
+   retain their existing layouts, teaching actions and persistence rules. */
+body.unified #app .library-home {width:100%;max-width:1440px;margin:0 auto;padding:28px 28px 40px;color:var(--color-text);font-size:var(--font-size-md);line-height:1.5}
+body.unified #app .main:has(>.library-home) {padding:0;max-width:none}
+body.unified #app .shell.library-mode {grid-template-columns:228px minmax(0,1fr)}
+body.unified[data-unified-module] #app :is(.shell,.app-shell):has(.library-home) .topbar {height:66px;min-height:66px;padding:12px 28px;background:var(--color-surface);border-bottom:1px solid var(--color-border-subtle);box-shadow:none}
+body.unified[data-unified-module] #app :is(.shell,.app-shell):has(.library-home) .topbar strong {font-size:var(--font-size-md);line-height:1.5;font-weight:600;color:var(--color-text-secondary)}
+body.unified #app :is(.shell,.app-shell):has(.library-home) .topbar :is(.avatar,.portal-avatar) {display:flex;align-items:center;justify-content:center;width:34px;height:34px;padding:0;border:0;border-radius:var(--radius-round);background:var(--color-selected);color:var(--color-text-secondary);font-size:var(--font-size-xs);box-shadow:none}
+body.unified #app :is(.shell,.app-shell):has(.library-home) .unified-nav-version {border:0;margin:36px 12px 0;padding:0;font-size:var(--font-size-xs);line-height:1.8}
+body.unified #app .lh-header {display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:66px;margin:0 0 20px;padding:0;border:0;background:none;box-shadow:none}
+body.unified #app .lh-header h1 {display:block;margin:0;background:none}
+body.unified #app .lh-header p {font-size:var(--font-size-md);line-height:1.6;color:var(--lh-muted);margin:8px 0 0}
+body.unified #app .lh-header-actions {display:flex;align-items:center;gap:12px;flex-shrink:0}
+body.unified #app .lh-header-actions button {white-space:nowrap}
+body.unified #app .lh-library-head {display:flex;justify-content:space-between;align-items:center;gap:20px;border-bottom:1px solid var(--lh-line);min-height:56px;margin:0 0 12px}
+body.unified #app .lh-tabs {display:flex;align-self:stretch;gap:24px}
+body.unified #app .lh-tabs button {position:relative;white-space:nowrap}
+body.unified #app .lh-tabs button.active:after {content:'';display:block;position:absolute;left:0;right:0;bottom:-1px}
+body.unified #app .lh-tabs button span {display:inline-block;background:var(--color-selected);color:var(--color-text-secondary);font-size:var(--font-size-xs);line-height:1.4;border-radius:var(--radius-lg);padding:2px 7px;margin-left:5px}
+body.unified #app .lh-search {display:flex;align-items:center;gap:8px;flex:0 1 300px;width:300px;max-width:100%;height:40px;margin:0 0 4px;padding:0 12px;border:1px solid var(--lh-line);border-radius:var(--radius-md);background:var(--color-surface);font-weight:400}
+body.unified #app .lh-search>span {font-size:22px;color:var(--color-text-secondary);line-height:1}
+body.unified #app .lh-search input {width:100%;min-width:0;border:0;background:transparent;padding:8px 0;margin:0;font-size:var(--font-size-sm);font-weight:400;box-shadow:none;color:var(--color-text);outline:none}
+body.unified #app .lh-search:focus-within {outline:3px solid var(--color-selected-border);outline-offset:2px}
+body.unified #app .lh-filterbar {display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:36px;margin:0 0 8px}
+body.unified #app .lh-filterbar>button{flex-shrink:0;white-space:nowrap}
+body.unified #app .lh-filters {display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0}
+body.unified #app .lh-filters button {white-space:nowrap}
+body.unified #app .lh-filters button span {font-size:var(--font-size-xs);margin-left:4px;color:var(--color-text-secondary)}
+body.unified #app .lh-filter-note {margin:0;font-size:var(--font-size-sm);color:var(--lh-muted)}
+body.unified #app .lh-tools {position:relative;margin:0;flex:none;z-index:4}
+body.unified #app .lh-tools summary {cursor:pointer;color:var(--lh-muted);font-size:var(--font-size-sm);min-height:34px;padding:7px 10px;border-radius:var(--radius-md)}
+body.unified #app .lh-tools>div {display:grid;position:absolute;right:0;top:calc(100% + 6px);min-width:144px;padding:6px;background:var(--color-surface);border:1px solid var(--lh-line);border-radius:var(--radius-md);box-shadow:0 8px 25px var(--palette-shadow)}
+body.unified #app .lh-tools button {text-align:left;white-space:nowrap}
+body.unified #app .lh-results-head {display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:28px;margin:0 0 12px;color:var(--lh-muted);font-size:var(--font-size-xs)}
+body.unified #app .lh-results-head p {margin:0;font-size:var(--font-size-xs);color:inherit}
+body.unified #app .lh-results-head>span:last-child {white-space:nowrap;font-size:var(--font-size-xs)}
+body.unified #app .lh-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;max-width:none;margin:0;padding:0;align-items:stretch}
+body.unified #app .lh-grid:after {content:none}
+body.unified #app .library-home .lh-card {display:flex;flex-direction:column;width:auto;max-width:none;min-width:0;margin:0;border:1px solid var(--lh-line);border-radius:var(--radius-lg);background:var(--color-surface);overflow:visible;box-shadow:none}
+body.unified #app .library-home .lh-card:hover {border-color:var(--color-border-hover);box-shadow:0 5px 20px var(--palette-shadow)}
+body.unified #app .library-home .lh-cover {display:block;flex:none;width:100%;min-height:0;aspect-ratio:16/9;padding:0;border:0;border-radius:13px 13px 0 0;background:var(--color-selected);overflow:hidden;position:relative}
+body.unified #app .library-home .lh-cover:focus-visible {outline-offset:-4px}
+body.unified #app .lh-cover>.cover,body.unified #app .lh-cover>.library-cover,body.unified #app .lh-cover>.home-cover {width:100%;height:100%;aspect-ratio:auto;margin:0;border:0;border-radius:0;background-image:none}
+body.unified #app .lh-cover>.cover {gap:10px}
+body.unified #app .lh-cover .tile {flex:none;width:68px;height:80px;padding:8px;font-size:30px}
+body.unified #app .lh-cover .tile small {font-size:var(--font-size-xs)}
+body.unified #app .lh-cover .activity-cover-art {width:100%;height:100%;aspect-ratio:auto}
+body.unified #app .lh-cover .activity-cover-label {position:absolute;bottom:10px;left:12px;padding:4px 8px;border-radius:var(--radius-sm);background:var(--color-overlay-surface);font-size:var(--font-size-xs);line-height:1.4;color:var(--color-text-secondary)}
+body.unified #app .library-home .lh-card-body {display:flex;flex:1;flex-direction:column;gap:8px;min-width:0;min-height:238px;padding:16px;background:var(--color-surface);border-radius:0 0 13px 13px}
+body.unified #app .lh-card-state {display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px;margin:0}
+body.unified #app .lh-card-state>small {font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+body.unified #app .lh-status {display:inline-flex;align-items:center;max-width:100%;font-size:var(--font-size-xs);line-height:1.4;font-weight:500;color:var(--color-text-secondary);background:var(--color-selected);border:0;border-radius:5px;padding:4px 7px;gap:0}
+body.unified #app .lh-status:before {content:none}
+body.unified #app .lh-status.ready {background:var(--color-success-bg);color:var(--color-success)}
+body.unified #app .lh-status.draft {background:var(--color-warning-bg);color:var(--color-warning)}
+body.unified #app .lh-card-heading {margin:0;}
+body.unified #app .lh-card-heading .lh-card-title {display:block;width:100%;min-height:0;margin:0;padding:0;border:0;border-radius:3px;text-align:left;color:var(--color-text);background:transparent;overflow-wrap:anywhere}
+body.unified #app .lh-card-subtitle {margin:0;font-size:var(--font-size-xs);line-height:1.5;color:var(--lh-muted)}
+body.unified #app .lh-metadata {display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:0}
+body.unified #app .lh-metadata span {padding:3px 7px;background:var(--color-surface-subtle);border-radius:5px;font-size:var(--font-size-xs);color:var(--color-text-secondary);line-height:1.5}
+body.unified #app .lh-card-description {min-height:0;margin:0;font-size:var(--font-size-xs);line-height:1.7;color:var(--lh-muted);overflow-wrap:anywhere}
+body.unified #app .lh-word-tags {display:flex;flex-wrap:wrap;gap:6px}
+body.unified #app .lh-word-tags span {padding:2px 7px;border:1px solid var(--color-pressed);border-radius:5px;color:var(--color-text-secondary);background:var(--color-surface-subtle)}
+body.unified #app .lh-version-note,body.unified #app .lh-card-extra {font-size:var(--font-size-xs);color:var(--lh-muted);line-height:1.5}
+body.unified #app .lh-card-extra {display:flex;align-items:center;justify-content:space-between;gap:8px}
+body.unified #app .library-home .lh-detail {padding:0 2px;min-height:24px;font-size:var(--font-size-xs);color:var(--color-text-secondary);border:0;background:transparent;white-space:nowrap}
+body.unified #app .library-home .lh-card-actions {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:auto 0 0;padding:12px 0 0;border-top:1px solid var(--color-selected)}
+body.unified #app .lh-card-actions>button {flex:1 1 auto;min-height:36px;padding:8px 10px;font-size:var(--font-size-sm);white-space:nowrap}
+body.unified #app .lh-card-actions>button.lh-more {flex:0 0 32px;min-width:32px;margin-left:auto;padding:5px;font-size:18px;background:transparent;border-color:transparent}
+body.unified #app .lh-card-actions .course-menu {margin-left:auto}
+body.unified #app .lh-card-actions .course-menu summary {min-height:36px;padding:8px;font-size:var(--font-size-sm)}
+body.unified #app .home-stage-dots {display:flex;flex-wrap:wrap;justify-content:flex-start;gap:5px 10px;margin:0;padding:0}
+body.unified #app .home-stage-dots small {font-size:10px}
+body.unified #app .lh-resume {display:flex;align-items:center;gap:16px;background:var(--color-selected);border:1px solid var(--color-pressed);border-radius:var(--radius-md);padding:9px 12px;margin:12px 0}
+body.unified #app .lh-resume>div {display:flex;align-items:center;flex-wrap:wrap;gap:4px 12px;flex:1;min-width:0}
+body.unified #app .lh-resume span {font-size:var(--font-size-xs);color:var(--color-text-secondary)}
+body.unified #app .lh-resume strong {font-size:var(--font-size-sm);font-weight:600;overflow-wrap:anywhere}
+body.unified #app .lh-resume small {font-size:var(--font-size-xs);color:var(--lh-muted)}
+body.unified #app .lh-resume button {flex:none;white-space:nowrap;font-size:var(--font-size-sm);min-height:32px;padding:5px 8px}
+
+
+
+
+body.unified #app .library-home .home-footnote {font-size:var(--font-size-xs);color:var(--color-text-secondary);margin:20px 0 0}
+@media(max-width:1150px) {
+ body.unified #app .lh-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.unified #app .lh-header {align-items:flex-start;gap:16px}
+ body.unified #app .lh-header-actions {gap:6px}
+ body.unified #app .lh-header-actions button {padding-inline:12px}
+ body.unified #app .lh-search {flex-basis:270px;width:270px}
+}
+@media(max-width:900px) {
+ body.unified #app .library-home {padding:24px 20px 36px}
+ body.unified #app .shell.library-mode {grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:650px) {
+ body.unified #app .library-home {padding:20px 16px 32px}
+ body.unified #app .lh-header {flex-wrap:wrap;gap:16px}
+
+ body.unified #app .lh-header-actions {width:100%;justify-content:flex-end}
+ body.unified #app .lh-library-head {flex-wrap:wrap;gap:8px;padding-bottom:12px}
+ body.unified #app .lh-tabs {width:100%}
+ body.unified #app .lh-search {flex-basis:100%;width:100%;margin:0}
+ body.unified #app .lh-grid {grid-template-columns:minmax(0,1fr)}
+ body.unified #app .lh-filterbar {align-items:flex-start}
+ body.unified #app .lh-results-head {align-items:baseline}
+ body.unified #app .lh-resume>div {display:grid;gap:4px}
+}
+
+}

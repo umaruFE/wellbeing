@@ -1,0 +1,29 @@
+.words-coach {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.words-coach .wc-joint {
+  transform-origin: 0 0;
+  transform-box: view-box;
+  transform: var(--wc-end);
+}
+:is(.is-reading .words-coach, .words-coach.is-reading) .wc-joint {
+  animation: words-coach-demonstrate var(--words-coach-beat, 1.9s) cubic-bezier(.42,0,.28,1) infinite both;
+}
+@keyframes words-coach-demonstrate {
+  0%, 9%, 100% { transform: var(--wc-start); }
+  48%, 67% { transform: var(--wc-end); }
+}
+.is-paused .words-coach .wc-joint,
+.words-coach.is-paused .wc-joint {
+  animation-play-state: paused;
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.is-reading .words-coach, .words-coach.is-reading) .wc-joint {
+    animation: none;
+    transform: var(--wc-end);
+  }
+}

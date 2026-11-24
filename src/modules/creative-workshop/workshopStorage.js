@@ -42,7 +42,8 @@ export const getCreativeWorks = async (moduleId) => {
   try {
     const response = await fetch(`/api/creative-works${query}`, { headers: authHeaders(), signal: controller.signal });
     const json = await parseResponse(response);
-    return (json.data || []).map(normalize);
+    if (!Array.isArray(json.data)) throw new Error('后台返回的作品列表无效');
+    return json.data.map(normalize);
   } catch (error) {
     if (controller.signal.aborted) throw new Error('创作列表加载超时，请检查本地 API 和数据库连接后重试');
     throw error;

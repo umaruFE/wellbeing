@@ -11,6 +11,7 @@
     arrow:'M4 12h16m-6-6 6 6-6 6', play:'m8 4 12 8-12 8z', eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6',
     plus:'M12 5v14M5 12h14', copy:'M8 8h12v13H8zM16 8V3H3v13h5', trash:'M3 6h18M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7',
     up:'m6 14 6-6 6 6', down:'m6 10 6 6 6-6', check:'m4 12 5 5L20 6', close:'m6 6 12 12M6 18 18 6',
+    more:'M5 12h.01M12 12h.01M19 12h.01', grip:'M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01',
     book:'M3 4h7l2 2 2-2h7v15h-7l-2 2-2-2H3zM12 6v15', file:'M6 2h8l5 5v15H6zM14 2v6h5M9 12h7M9 16h7',
     save:'M4 3h14l3 3v15H3V3zM7 3v6h10V3M7 21v-8h10v8', info:'M12 8v.1M12 11v6M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20',
     clock:'M12 6v6l4 3M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20', download:'M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5',
@@ -28,6 +29,7 @@
   let candidate = null, pendingAdoption = false, preparationErrors = [], generationRound = 0, generationJob = null;
   const api = window.WBWorkbenchApi;
   let editingItemId=null, questionFilter='all', deferredAction=null, readingItemId=null;
+  let questionMenu=null, questionDrag=null, suppressCardClickUntil=0;
   let libraryTab='cases', platformVisible=true, switchPreparation=null;
   const QUESTION_COUNT_OPTIONS=[10,20,30,50];
   const caseQuestionCounts=new Map();
@@ -43,8 +45,8 @@
     toast(error.code==='CONFLICT'?'检测到保存冲突，当前输入已保留。':'保存未完成，当前输入仍保留在页面中。');
   }
   function fatal(error){app.innerHTML=`${header()}<main class="fatal" id="main"><h1>暂时无法读取活动</h1><p>${esc(error.message)}</p><p>已有内容未被清空。可以先导出原始保存文件，再处理或恢复。</p><div class="fatal-actions">${btn('导出原始数据','export-raw',{icon:'download'})}${btn('重新读取','reload-page')}</div></main>`;}
-  function saveStatus(){if(saveError)return '未保存，请处理页面提示';if(pending)return '正在保存草稿…';if(cloud?.status==='pending')return '正在同步后台…';if(cloud?.dirty)return '待同步后台';return cloud?'草稿已同步后台':'草稿已保存到本机';}
-  function updateSaveState(){const n=document.querySelector('#save-status');if(n){n.textContent=saveStatus();n.classList.toggle('error',!!saveError);n.classList.toggle('is-error',!!saveError);}const t=document.querySelector('.toolbar-title');if(t&&activity)t.textContent=activity.draft.lesson.title||'未命名活动';}
+  function saveStatus(){if(saveError)return '未保存，请处理页面提示';if(pending)return '正在保存草稿…';if(cloud?.status==='pending')return '正在同步后台…';if(cloud?.dirty)return '待同步后台';if(cloud?.readOnly)return '';return cloud?'草稿已同步后台':'草稿已保存到本机';}
+  function updateSaveState(){const n=document.querySelector('#save-status');if(n){n.textContent=saveStatus();n.hidden=!n.textContent;n.classList.toggle('error',!!saveError);n.classList.toggle('is-error',!!saveError);}const t=document.querySelector('.toolbar-title');if(t&&activity)t.textContent=activity.draft.lesson.title||'未命名活动';}
   function flush(){clearTimeout(saveTimer);if(!activity||!pending)return !saveError;try{activity=repo.saveDraft(activity.id,activity.draft,editorState(),activity.revision);pending=false;saveError=null;const area=document.querySelector('#save-error');if(area)area.hidden=true;updateSaveState();return true;}catch(e){localError(e);return false;}}
   function queueSave(){pending=true;updateSaveState();clearTimeout(saveTimer);saveTimer=setTimeout(flush,350);}
   function editorState(){return {...(activity?.editor||{}),step:activity?.editor?.step||1,selectedItemId:activity?.editor?.selectedItemId||activity?.draft.lesson.items[0]?.id||null,scrollY:window.scrollY};}
@@ -227,15 +229,18 @@
     return `<article class="case-card"><div class="case-cover"><img src="assets/${esc(t.id)}.jpg" alt="${esc(titleOf(t))}课堂画面" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="case-cover-fallback" hidden><div class="sample-sentence">${esc(t.items[0].sentence).replace('___','<em>___</em>')}</div><div class="cover-groups">${t.categories.map(c=>`<span>${esc(c.label)}</span>`).join('')}</div></div></div><div class="case-body"><h3>${esc(titleOf(t))}</h3><p class="case-english">${esc(t.title)}</p><div class="case-meta"><span class="case-categories">${t.categories.map(c=>esc(c.label)).join(' · ')}</span><span>${t.categories.length} 类 / <span data-case-count="${esc(t.id)}">${count}</span> 题</span></div><div class="case-actions">${btn('预览案例','example',{id:t.id,icon:'eye',variant:'primary'})}${btn('制作同款','create',{id:t.id})}</div></div></article>`;
   }
   function renderLibrary(){
+    closeQuestionMenu();finishQuestionDrag(false);
     cancelGeneration();stopReading();editingItemId=null;questionFilter='all';page='library';activity=null;pending=false;saveError=null;candidate=null;pendingAdoption=false;preparationErrors=[];history.replaceState(null,'','#library');
     let activities;try{activities=repo.list();}catch(e){fatal(e);return;}
+    if(cloud)libraryTab='mine';
     const cases=`<div class="case-grid">${templates.map(renderCaseCard).join('')}</div>`;
     const mine=activities.length?`<div class="activity-list">${activities.map(a=>{const release=activeRelease(a),sessions=repo.sessions(a.id),resume=sessions.filter(s=>s.status!=='ended').sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt))[0];return `<article class="activity-row"><div class="activity-copy"><h3>${esc(a.draft.lesson.title||'未命名活动')}</h3><p>${a.draft.lesson.items.length} 题 · ${esc(titleOf(templates.find(t=>t.id===a.templateId)||a.draft.lesson))} · ${formatDate(a.updatedAt)} 更新</p></div><div class="activity-actions"><span class="badge ${release&&!M.isDirty(a)?'ready':''}">${release?(M.isDirty(a)?'草稿有未确认修改':`已确认 v${release.number}`):'草稿'}</span>${btn('编辑草稿','edit',{id:a.id})}${release?btn('进入授课','choose-release',{id:a.id,variant:resume?'':'primary',icon:'play'}):''}${resume?btn(resume.status==='complete'?'查看课堂结果':'继续课堂','resume-session',{id:resume.id,variant:'primary'}):''}</div></article>`;}).join('')}</div>`:`<div class="empty">${icon('book')}<div><p>还没有自己的分类活动</p><p>点击“新建分类活动”，填写基础信息与分类即可开始。</p></div></div>`;
-    app.innerHTML=Platform.homeShell(`${Platform.homeHeading(btn('新建分类活动','new-activity',{icon:'plus',variant:'primary'}))}<div class="lh-library-head"><div class="lh-tabs" role="group" aria-label="活动来源">${[['cases','案例库',templates.length],['mine','我制作的',activities.length]].map(([value,label,count])=>`<button type="button" data-ui="tab" data-action="library-tab" data-value="${value}" class="${libraryTab===value?'active':''}" aria-pressed="${libraryTab===value}">${label} <span>${count}</span></button>`).join('')}</div></div><section id="library-results" aria-label="${libraryTab==='cases'?'分类游戏案例':'我制作的活动'}">${libraryTab==='cases'?cases:mine}</section><div class="library-footer">${icon('info')} 当前为动作模拟；案例预览不会创建课堂记录。</div>`);
+    app.innerHTML=Platform.homeShell(`${Platform.homeHeading(btn('新建分类活动','new-activity',{icon:'plus',variant:'primary'}))}<div class="lh-library-head"><div class="lh-tabs" role="group" aria-label="活动来源">${(cloud?[['mine','我制作的',activities.length]]:[['cases','案例库',templates.length],['mine','我制作的',activities.length]]).map(([value,label,count])=>`<button type="button" data-ui="tab" data-action="library-tab" data-value="${value}" class="${libraryTab===value?'active':''}" aria-pressed="${libraryTab===value}">${label} <span>${count}</span></button>`).join('')}</div></div><section id="library-results" aria-label="${libraryTab==='cases'?'分类游戏案例':'我制作的活动'}">${libraryTab==='cases'?cases:mine}</section><div class="library-footer">${icon('info')} ${cloud?'课堂动作模拟由页面运行。':'当前为动作模拟；案例预览不会创建课堂记录。'}</div>`);
     Platform.decorate();
   }
   function openActivity(id){if(activity&&!flush())return;cancelGeneration();stopReading();editingItemId=null;questionFilter='all';candidate=null;pendingAdoption=false;preparationErrors=[];try{activity=repo.get(id);if(!activity){toast('活动不存在');renderLibrary();return;}pending=false;saveError=null;activity.editor ||= {step:1};activity.editor.selectedItemId ||=activity.draft.lesson.items[0]?.id;page='editor';renderEditor();window.scrollTo(0,activity.editor.scrollY||0);}catch(e){fatal(e);}}
   function renderEditor(){
+    closeQuestionMenu();finishQuestionDrag(false);
     const openPanels=['.optional-settings'].filter(q=>document.querySelector(q)?.open);
     const step=Number(activity.editor?.step)||1, release=activeRelease(activity), hasContent=activity.draft.lesson.items.length>0;
     history.replaceState(null,'',`#edit/${encodeURIComponent(activity.id)}`);
@@ -266,7 +271,7 @@
         ?btn('放弃候选','discard-candidate')+btn('重新生成','generate')+btn('采用这些内容','adopt-candidate',{variant:'primary',icon:'check'})
         :btn('重新生成','generate')+(hasContent?btn('确认授课版','review',{variant:'primary',icon:'check'}):'');
     return `<footer class="wb-authoring-footer" aria-label="备课操作">
-      <div class="wb-footer-meta">${step>1?btn('上一步：基础信息与分类','step',{value:1,icon:'back',variant:'ghost'}):''}<span class="save-state wb-status" id="save-status" role="status">${saveStatus()}</span><span class="wb-status" id="generation-status" role="status" hidden></span></div>
+      <div class="wb-footer-meta">${step>1?btn('上一步：基础信息与分类','step',{value:1,icon:'back',variant:'ghost'}):''}<span class="save-state wb-status" id="save-status" role="status" ${saveStatus() ? '' : 'hidden'}>${saveStatus()}</span><span class="wb-status" id="generation-status" role="status" hidden></span></div>
       <div class="wb-footer-actions">${actions}</div>
     </footer>`;
   }
@@ -392,7 +397,7 @@
   function renderGroups(lesson){
     if(questionFilter!=='all'&&!lesson.categories.some(c=>c.id===questionFilter))questionFilter='all';
     const visible=lesson.items.filter(i=>questionFilter==='all'||i.categoryId===questionFilter||i.id===editingItemId);
-    return `<section id="generated-groups" class="question-workspace" aria-label="题目预览与调整"><div class="question-workspace-heading"><div><h2>题目预览与调整</h2><p>按课堂出题顺序排列，点击“编辑题目”调整内容，保存后更新题卡。</p></div><div class="question-view-actions"><div class="preview-toggle" role="group" aria-label="题卡显示状态"><button type="button" data-action="live-mode" data-value="0" aria-pressed="${!liveAnswer}" class="${liveAnswer?'':'active'}">答题前</button><button type="button" data-action="live-mode" data-value="1" aria-pressed="${liveAnswer}" class="${liveAnswer?'active':''}">答题后</button></div>${btn('新增题目','add-item',{icon:'plus',small:true})}</div></div><div class="question-filters" role="group" aria-label="按分类筛选题目">${btn(`全部 <span>${lesson.items.length}</span>`,'filter-questions',{value:'all',small:true,variant:questionFilter==='all'?'primary':'ghost'})}${lesson.categories.map(c=>btn(`${esc(c.label)} <span>${lesson.items.filter(i=>i.categoryId===c.id).length}</span>`,'filter-questions',{value:c.id,small:true,variant:questionFilter===c.id?'primary':'ghost'})).join('')}</div><div class="question-card-grid">${visible.map(i=>renderQuestionCard(i,lesson)).join('')||'<div class="empty">该分类还没有题目，可点击“新增题目”。</div>'}</div></section>`;
+    return `<section id="generated-groups" class="question-workspace" aria-label="题目预览与调整"><div class="question-workspace-heading"><div><h2>题目预览与调整</h2><p>拖动题号旁的手柄调整出题顺序，点击“编辑题目”修改内容。</p></div><div class="question-view-actions"><div class="preview-toggle" role="group" aria-label="题卡显示状态"><button type="button" data-action="live-mode" data-value="0" aria-pressed="${!liveAnswer}" class="${liveAnswer?'':'active'}">答题前</button><button type="button" data-action="live-mode" data-value="1" aria-pressed="${liveAnswer}" class="${liveAnswer?'active':''}">答题后</button></div>${btn('新增题目','add-item',{icon:'plus',small:true})}</div></div><div class="question-filters" role="group" aria-label="按分类筛选题目">${btn(`全部 <span>${lesson.items.length}</span>`,'filter-questions',{value:'all',small:true,variant:questionFilter==='all'?'primary':'ghost'})}${lesson.categories.map(c=>btn(`${esc(c.label)} <span>${lesson.items.filter(i=>i.categoryId===c.id).length}</span>`,'filter-questions',{value:c.id,small:true,variant:questionFilter===c.id?'primary':'ghost'})).join('')}</div><p id="question-sort-help" class="question-sr-only">拖拽手柄调整顺序；也可聚焦手柄后按方向键移动，按 Escape 取消拖拽。</p><div id="question-sort-status" class="question-sr-only" role="status" aria-live="polite"></div><div class="question-card-grid">${visible.map(i=>renderQuestionCard(i,lesson,visible.length)).join('')||'<div class="empty">该分类还没有题目，可点击“新增题目”。</div>'}</div></section>`;
   }
   const imageJobs=new Map();
   function imageControls(item,lesson){
@@ -470,9 +475,137 @@
     finally{if(imageJobs.get(item.id)===job)imageJobs.delete(item.id);if(activity&&editingLesson()===lesson)refreshCurrent();}
   }
 
-  function renderQuestionCard(item,lesson){
-    const category=lesson.categories.find(c=>c.id===item.categoryId);
-    return `<article class="question-card" data-item-id="${esc(item.id)}"><div class="question-overview"><header class="question-meta"><span class="question-number">${String(lesson.items.indexOf(item)+1).padStart(2,'0')}</span><span class="badge question-category">${esc(category?.label||'未分类')}</span><span class="question-action">${category?esc(actionName(category.action,activity.draft.settings.seated)):''}</span></header><div class="question-card-preview">${renderTaskPreview(item,lesson)}${item.imageError?`<p class="mm-image-error" role="alert">${esc(item.imageError)}</p>`:''}${imageJobs.has(item.id)?'<p role="status">正在生成题目图片…</p>':''}</div><div class="question-card-controls"><span class="small-label">${candidate?'候选内容':'草稿内容'} · ${esc(questionStatus(item,lesson))}</span>${btn('编辑题目','edit-item',{id:item.id,small:true})}</div><div class="mm-card-tools">${btn('复制','copy-item',{id:item.id,small:true,variant:'ghost'})}${btn('前移','move-up',{id:item.id,small:true,variant:'ghost',disabled:lesson.items.indexOf(item)===0})}${btn('后移','move-down',{id:item.id,small:true,variant:'ghost',disabled:lesson.items.indexOf(item)===lesson.items.length-1})}${btn('删除','delete-item',{id:item.id,small:true,variant:'ghost'})}</div></div></article>`;
+  function renderQuestionCard(item,lesson,visibleCount=lesson.items.length){
+    const category=lesson.categories.find(c=>c.id===item.categoryId),number=lesson.items.indexOf(item)+1,menuId=`question-menu-${item.id}`;
+    return `<article class="question-card" data-item-id="${esc(item.id)}"><div class="question-overview"><header class="question-meta"><button type="button" class="question-drag-handle" data-sort-id="${esc(item.id)}" aria-label="拖拽调整第 ${number} 题顺序" aria-describedby="question-sort-help" title="拖拽调整顺序" ${visibleCount<2?'disabled':''}>${icon('grip')}</button><span class="question-number">${String(number).padStart(2,'0')}</span><span class="badge question-category">${esc(category?.label||'未分类')}</span><div class="question-more"><button type="button" class="question-more-trigger" data-action="question-more" data-id="${esc(item.id)}" aria-haspopup="menu" aria-expanded="false" aria-controls="${esc(menuId)}" aria-label="第 ${number} 题更多操作" title="更多操作">${icon('more')}</button><div id="${esc(menuId)}" class="question-more-menu" role="menu" aria-label="第 ${number} 题操作" hidden><button type="button" role="menuitem" data-action="copy-item" data-id="${esc(item.id)}">${icon('copy')}复制</button><button type="button" role="menuitem" data-action="delete-item" data-id="${esc(item.id)}" class="is-danger">${icon('trash')}删除</button></div></div></header><div class="question-card-preview">${renderTaskPreview(item,lesson)}${item.imageError?`<p class="mm-image-error" role="alert">${esc(item.imageError)}</p>`:''}${imageJobs.has(item.id)?'<p role="status">正在生成题目图片…</p>':''}</div><div class="question-card-controls"><span class="small-label">${candidate?'候选内容':'草稿内容'} · ${esc(questionStatus(item,lesson))}</span>${btn('编辑题目','edit-item',{id:item.id,small:true})}</div></div></article>`;
+  }
+  function closeQuestionMenu(restore=false){
+    if(!questionMenu)return;
+    const {trigger,menu}=questionMenu;questionMenu=null;
+    menu.hidden=true;trigger.setAttribute('aria-expanded','false');
+    trigger.closest('.question-card')?.classList.remove('is-menu-open');
+    if(restore&&trigger.isConnected)trigger.focus({preventScroll:true});
+  }
+  function openQuestionMenu(trigger,last=false){
+    if(questionMenu?.trigger===trigger){closeQuestionMenu(true);return;}
+    closeQuestionMenu();
+    const menu=trigger.parentElement.querySelector('.question-more-menu');if(!menu)return;
+    questionMenu={trigger,menu};menu.hidden=false;menu.classList.remove('opens-up');
+    trigger.setAttribute('aria-expanded','true');trigger.closest('.question-card').classList.add('is-menu-open');
+    if(menu.getBoundingClientRect().bottom>window.innerHeight-16)menu.classList.add('opens-up');
+    const items=menu.querySelectorAll('[role="menuitem"]');items[last?items.length-1:0]?.focus({preventScroll:true});
+  }
+  function announceQuestionSort(message){
+    const status=document.querySelector('#question-sort-status');if(status)status.textContent=message;
+  }
+  function moveQuestion(sourceId,targetId,after,keyboard=false){
+    if(!activity||questionEdit||modal.open)return false;
+    const lesson=baseLesson(),next=M.reorderItems(lesson.items,sourceId,targetId,after);
+    if(next===lesson.items)return false;
+    lesson.items=next;markQuestionChange(lesson);refreshCurrent();
+    const handle=document.querySelector(`.question-drag-handle[data-sort-id="${CSS.escape(sourceId)}"]`);
+    handle?.focus({preventScroll:true});if(keyboard)handle?.closest('.question-card').scrollIntoView({block:'nearest'});
+    announceQuestionSort(`已移至第 ${next.findIndex(item=>item.id===sourceId)+1} 题。${candidate?'采用后保存题目顺序。':'题目顺序已更新。'}`);
+    return true;
+  }
+  function clearQuestionDropTarget(drag){
+    drag.target?.classList.remove('is-drop-before','is-drop-after');drag.target=null;
+  }
+  function updateQuestionDropTarget(){
+    const drag=questionDrag;if(!drag?.started)return;
+    clearQuestionDropTarget(drag);
+    if(!drag.grid.isConnected){finishQuestionDrag(false);return;}
+    const bounds=drag.grid.getBoundingClientRect(),x=drag.x,y=drag.y;
+    if(x<bounds.left||x>bounds.right||y<bounds.top||y>bounds.bottom||y<0||y>window.innerHeight)return;
+    const cards=[...drag.grid.querySelectorAll('.question-card')];
+    const hit=document.elementFromPoint(x,y)?.closest('.question-card');
+    if(hit===drag.card)return;
+    let nearest=null,distance=Infinity;
+    for(const card of cards){
+      if(card===drag.card)continue;
+      const r=card.getBoundingClientRect();
+      const dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom),d=dx*dx+dy*dy;
+      if(d<distance){distance=d;nearest=card;}
+    }
+    if(!nearest)return;
+    const r=nearest.getBoundingClientRect(),oneColumn=r.width>bounds.width*.75;
+    drag.after=oneColumn?y>r.top+r.height/2:y>r.bottom?true:y<r.top?false:x>r.left+r.width/2;
+    drag.target=nearest;drag.grid.dataset.sortLayout=oneColumn?'rows':'columns';
+    nearest.classList.add(drag.after?'is-drop-after':'is-drop-before');
+  }
+  function animateQuestionDrag(){
+    const drag=questionDrag;if(!drag?.started)return;
+    drag.ghost.style.transform=`translate3d(${drag.x-drag.offsetX}px,${drag.y-drag.offsetY}px,0) rotate(1deg)`;
+    const edge=72,limit=window.innerHeight-72;
+    const delta=drag.y<edge?-Math.min(17,(edge-drag.y)*.24):drag.y>limit?Math.min(17,(drag.y-limit)*.24):0;
+    if(delta)window.scrollBy(0,delta);
+    updateQuestionDropTarget();
+    if(questionDrag===drag)drag.frame=requestAnimationFrame(animateQuestionDrag);
+  }
+  function startQuestionDrag(event){
+    const handle=event.target.closest('.question-drag-handle');
+    if(questionMenu&&!event.target.closest('.question-more'))closeQuestionMenu();
+    if(!handle||handle.disabled||event.button!==0||event.isPrimary===false||questionDrag||questionEdit||modal.open||!activity)return;
+    if(!flush())return;
+    closeQuestionMenu();
+    const card=handle.closest('.question-card'),rect=card.getBoundingClientRect(),lesson=baseLesson();
+    questionDrag={handle,card,grid:card.closest('.question-card-grid'),id:handle.dataset.sortId,pointerId:event.pointerId,
+      lesson,order:lesson.items.map(i=>i.id).join('\0'),activityId:activity.id,x:event.clientX,y:event.clientY,
+      startX:event.clientX,startY:event.clientY,offsetX:event.clientX-rect.left,offsetY:event.clientY-rect.top,started:false};
+    handle.setPointerCapture(event.pointerId);
+  }
+  function trackQuestionDrag(event){
+    const drag=questionDrag;if(!drag||event.pointerId!==drag.pointerId)return;
+    drag.x=event.clientX;drag.y=event.clientY;
+    if(!drag.started&&Math.hypot(drag.x-drag.startX,drag.y-drag.startY)<6)return;
+    event.preventDefault();
+    if(!drag.started){
+      drag.started=true;stopReading();
+      const rect=drag.card.getBoundingClientRect(),ghost=drag.card.cloneNode(true);
+      ghost.className='question-card question-drag-ghost';ghost.setAttribute('aria-hidden','true');ghost.inert=true;
+      ghost.removeAttribute('id');ghost.querySelectorAll('[id]').forEach(node=>node.removeAttribute('id'));
+      ghost.style.width=`${rect.width}px`;drag.ghost=ghost;document.body.append(ghost);
+      drag.card.classList.add('is-dragging');document.body.classList.add('is-sorting-questions');
+      announceQuestionSort('正在拖动题目，松开调整顺序，按 Escape 取消。');
+      animateQuestionDrag();
+    }
+  }
+  function finishQuestionDrag(commit=false){
+    const drag=questionDrag;if(!drag)return;questionDrag=null;
+    if(drag.frame)cancelAnimationFrame(drag.frame);
+    const targetId=drag.target?.dataset.itemId,valid=activity?.id===drag.activityId&&baseLesson()===drag.lesson&&drag.lesson.items.map(i=>i.id).join('\0')===drag.order;
+    clearQuestionDropTarget(drag);drag.ghost?.remove();drag.card.classList.remove('is-dragging');
+    document.body.classList.remove('is-sorting-questions');
+    if(drag.handle.hasPointerCapture(drag.pointerId))drag.handle.releasePointerCapture(drag.pointerId);
+    if(!drag.started)return;
+    suppressCardClickUntil=Date.now()+250;
+    if(commit&&valid&&targetId&&moveQuestion(drag.id,targetId,drag.after))return;
+    if(drag.handle.isConnected)drag.handle.focus({preventScroll:true});
+    announceQuestionSort('题目顺序未改变。');
+  }
+  function questionControlsKey(event){
+    if(questionDrag&&event.key==='Escape'){event.preventDefault();finishQuestionDrag(false);return true;}
+    if(questionMenu){
+      const {menu,trigger}=questionMenu,items=[...menu.querySelectorAll('[role="menuitem"]')];
+      if(event.key==='Escape'){event.preventDefault();closeQuestionMenu(true);return true;}
+      if(event.key==='Tab'){closeQuestionMenu(true);return false;}
+      if(['ArrowDown','ArrowUp','Home','End'].includes(event.key)){
+        event.preventDefault();const current=items.indexOf(document.activeElement);
+        const next=event.key==='Home'?0:event.key==='End'?items.length-1:(current+(event.key==='ArrowDown'?1:-1)+items.length)%items.length;
+        items[next]?.focus();return true;
+      }
+      if(!trigger.parentElement.contains(event.target))closeQuestionMenu();
+    }
+    const trigger=event.target.closest('.question-more-trigger');
+    if(trigger&&['ArrowDown','ArrowUp'].includes(event.key)){event.preventDefault();openQuestionMenu(trigger,event.key==='ArrowUp');return true;}
+    const handle=event.target.closest('.question-drag-handle');
+    if(!handle||handle.disabled||!['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))return false;
+    event.preventDefault();if(questionDrag||!flush())return true;
+    const visible=[...handle.closest('.question-card-grid').querySelectorAll('.question-card')],index=visible.indexOf(handle.closest('.question-card'));
+    const forward=['ArrowDown','ArrowRight'].includes(event.key),target=visible[index+(forward?1:-1)];
+    if(target)moveQuestion(handle.dataset.sortId,target.dataset.itemId,forward,true);
+    else announceQuestionSort(forward?'已是当前列表最后一题。':'已是当前列表第一题。');
+    return true;
   }
   function taskSentence(item,lesson){
     if(lesson.mode==='word-sort')return esc(item.word||'待填写词卡');
@@ -513,6 +646,7 @@
   function pose(action,seated){const arms={left:'M28 23 14 11 9 2M28 23 41 34',right:'M28 23 41 11 47 2M28 23 14 34',both:'M28 23 14 11 9 2M28 23 41 11 47 2',squat:seated?'M28 23 16 34 17 45M28 23 40 34 39 45':'M28 23 15 31 12 25M28 23 41 31 44 25'};return `<svg class="pose-drawing" viewBox="0 0 56 65" aria-hidden="true"><circle cx="28" cy="12" r="6"/><path d="M28 18v24${action==='squat'?'m0 0-12 7 6 12M28 42l12 7-6 12':'m0 0-11 18M28 42l11 18'}${arms[action]||arms.both}"/></svg>`;}
   function renderSettings(){const settings=activity.draft.settings;return `<div class="settings-layout"><section class="settings-panel"><h2>课堂节奏</h2><div class="setting-section"><div class="range-heading"><label for="f-seconds">每题思考时间</label><output id="seconds-output">${settings.seconds} 秒</output></div><input type="range" data-ui="range" data-field="seconds" id="f-seconds" min="3" max="12" step="1" value="${settings.seconds}"><div class="range-labels"><span>3 秒</span><span>12 秒</span></div><p>倒计时内可纠正动作，答对立即归类并标记成功；到时间仍未答对，会自动归类并标记未成功。</p></div><div class="setting-section"><h3>动作方式</h3><div class="choice-pair">${btn('站姿','seated',{value:'false',variant:settings.seated?'':'primary'})}${btn('坐姿','seated',{value:'true',variant:settings.seated?'primary':''})}</div><p>一轮内保持分类与动作对应一致。</p></div><div class="setting-section"><label class="check-label"><input data-ui="check" type="checkbox" id="f-sound" data-field="sound" ${settings.sound?'checked':''}>进入课堂时开启背景音乐与音效</label><p>点击开始后播放预设游戏音乐，随答题速度变化；卡片落框和答错时播放提示音。朗读或暂停时音乐暂停，课堂中可随时静音。</p></div><div class="setting-section"><h3>沿用现有课堂玩法</h3><div class="classroom-flow"><span>读题</span><span>→</span><span>动作选分类</span><span>→</span><span>结果与归类</span><span>→</span><span>完成后复习</span></div><p>答错后可在剩余时间内纠正；超时仍未答对则自动归入正确分类，标记未成功。支持暂停、重开、全屏与分类复习。</p></div></section><section class="settings-panel"><h2>分类与动作</h2><div class="moves-list">${activity.draft.lesson.categories.map(c=>`<div class="move-row">${pose(c.action,settings.seated)}<div><div class="pose-label"><strong>${esc(c.label)}</strong><span>${esc(actionName(c.action,settings.seated))}</span></div><p class="move-rule">${esc(c.rule)}</p></div></div>`).join('')}</div><div class="simulation-info">${icon('info')}<span>当前为动作模拟，未使用摄像头。预览中的“模拟演示”可检查纠错、离开后返回与超时归类。</span></div><div style="margin-top:18px">${btn('预览课堂与模拟演示','preview',{icon:'play'})}</div></section></div>`;}
   function refreshCurrent(focus=false){
+    closeQuestionMenu();finishQuestionDrag(false);
     if(questionEdit){renderQuestionDialog();return;}
     const group=document.querySelector('#generated-groups');if(group)group.outerHTML=renderGroups(editingLesson());else renderEditor();
     if(focus){const input=document.querySelector(editingLesson().mode==='word-sort'?'#f-word':'#f-sentence');input?.focus({preventScroll:true});document.querySelector('.question-card.is-editing')?.scrollIntoView({block:'nearest'});}
@@ -520,7 +654,7 @@
   function updateLive(){
     if(!activity||page!=='editor')return;const lesson=editingLesson();
     if(questionEdit){const preview=document.querySelector('#question-edit-preview');if(preview)preview.innerHTML=renderTaskPreview(currentItem(),lesson);const label=document.querySelector('#question-edit-category');if(label)label.textContent='正确分类：'+(lesson.categories.find(c=>c.id===currentItem().categoryId)?.label||'未选择');const status=document.querySelector('.mm-editor-status');if(status)status.textContent=imageJobs.has(questionEdit.id)?'图片正在处理，请稍候':'有未保存的修改';const save=document.querySelector('[data-action="save-question"]');if(save)save.disabled=imageJobs.has(questionEdit.id);const generate=document.querySelector('[data-action="generate-image"]');if(generate){generate.disabled=imageJobs.has(questionEdit.id)||!(currentItem().word||currentItem().sentence||'').trim();generate.textContent=imageJobs.has(questionEdit.id)?'图片处理中…':currentItem().imageOrigin?'重新生成图片':'AI 生成图片';}const prompt=document.querySelector('[data-image-prompt]');if(prompt&&!currentItem().imagePrompt)prompt.value=imagePrompt(currentItem());const errors=document.querySelector('#question-edit-errors');if(errors)errors.hidden=true;document.querySelectorAll('.mm-question-form [aria-invalid]').forEach(node=>node.removeAttribute('aria-invalid'));return;}
-    document.querySelectorAll('.question-card').forEach(card=>{const item=lesson.items.find(i=>i.id===card.dataset.itemId);if(!item)return;const area=card.querySelector('.question-card-preview');if(area)area.innerHTML=renderTaskPreview(item,lesson);const category=lesson.categories.find(c=>c.id===item.categoryId);card.querySelector('.question-category').textContent=category?.label||'未分类';card.querySelector('.question-action').textContent=category?actionName(category.action,activity.draft.settings.seated):'';card.querySelector('.question-card-controls>.small-label').textContent=`${candidate?'候选内容':'草稿内容'} · ${questionStatus(item,lesson)}`;const slot=card.querySelector('.linked-status-slot');if(slot){const html=renderLinkedStatus(item,lesson);if(slot.dataset.rendered!==html){slot.innerHTML=html;slot.dataset.rendered=html;}}const finish=card.querySelector('[data-action=finish-item]');if(finish)finish.disabled=linkState(item)==='review';});
+    document.querySelectorAll('.question-card').forEach(card=>{const item=lesson.items.find(i=>i.id===card.dataset.itemId);if(!item)return;const area=card.querySelector('.question-card-preview');if(area)area.innerHTML=renderTaskPreview(item,lesson);const category=lesson.categories.find(c=>c.id===item.categoryId);card.querySelector('.question-category').textContent=category?.label||'未分类';card.querySelector('.question-card-controls>.small-label').textContent=`${candidate?'候选内容':'草稿内容'} · ${questionStatus(item,lesson)}`;const slot=card.querySelector('.linked-status-slot');if(slot){const html=renderLinkedStatus(item,lesson);if(slot.dataset.rendered!==html){slot.innerHTML=html;slot.dataset.rendered=html;}}const finish=card.querySelector('[data-action=finish-item]');if(finish)finish.disabled=linkState(item)==='review';});
     document.querySelectorAll('[data-action="live-mode"]').forEach(button=>{const selected=(button.dataset.value==='1')===liveAnswer;button.classList.toggle('active',selected);button.setAttribute('aria-pressed',String(selected));});
     document.querySelectorAll('[data-action="filter-questions"]').forEach(button=>{const count=button.querySelector('span');if(count)count.textContent=button.dataset.value==='all'?lesson.items.length:lesson.items.filter(i=>i.categoryId===button.dataset.value).length;});
   }
@@ -657,7 +791,7 @@
       case 'copy-item':openQuestionEditor(id,'copy');break;
       case 'delete-item':{const item=editingLesson().items.find(i=>i.id===id)||currentItem();dialog('删除这道题？',`<p>${esc(editingLesson().mode==='word-sort'?item.word:item.sentence)}</p><p>${candidate?'仅从本次候选中删除。':'删除只影响草稿，已确认授课版保持不变。'}</p>`,`${btn('保留题目','close-modal')}${btn('删除题目','delete-item-confirm',{id:item.id,variant:'danger'})}`);break;}
       case 'delete-item-confirm':{const lesson=editingLesson(),n=lesson.items.findIndex(i=>i.id===id);if(n<0)break;lesson.items.splice(n,1);editingItemId=null;if(!candidate)activity.editor.selectedItemId=lesson.items[Math.min(n,lesson.items.length-1)]?.id;closeDialog();markQuestionChange();refreshCurrent();break;}
-      case 'move-up':case 'move-down':{const lesson=editingLesson(),n=lesson.items.findIndex(i=>i.id===id),to=n+(name==='move-up'?-1:1);if(n>=0&&to>=0&&to<lesson.items.length){const [item]=lesson.items.splice(n,1);lesson.items.splice(to,0,item);markQuestionChange();refreshCurrent();document.querySelector(`[data-action="${name}"][data-id="${CSS.escape(id)}"]`)?.focus({preventScroll:true});}break;}
+
       case 'review':showReview();break;
       case 'confirm':confirmRelease();break;
       case 'close-modal':closeDialog();break;
@@ -692,7 +826,19 @@
       case 'discard-candidate':editingItemId=null;candidate=null;if(pendingAdoption){pendingAdoption=false;saveError=null;}renderEditor();toast('已放弃候选，当前草稿保持不变。');break;
     }}catch(e){if(activity)localError(e);else{toast(e.message||'操作未完成');if(e.code==='CORRUPT_STORAGE')fatal(e);}}
   }
-  document.addEventListener('click',event=>{const node=event.target.closest('[data-action]');if(node&&!node.disabled)action(node.dataset.action,node);});
+  document.addEventListener('pointerdown',startQuestionDrag);
+  document.addEventListener('pointermove',trackQuestionDrag,{passive:false});
+  document.addEventListener('pointerup',event=>{if(event.pointerId===questionDrag?.pointerId){if(questionDrag.started){questionDrag.x=event.clientX;questionDrag.y=event.clientY;updateQuestionDropTarget();}finishQuestionDrag(true);}});
+  document.addEventListener('pointercancel',event=>{if(event.pointerId===questionDrag?.pointerId)finishQuestionDrag(false);});
+  document.addEventListener('lostpointercapture',event=>{if(event.pointerId===questionDrag?.pointerId)finishQuestionDrag(false);});
+  window.addEventListener('blur',()=>{closeQuestionMenu();finishQuestionDrag(false);});
+  document.addEventListener('click',event=>{
+    if(Date.now()<suppressCardClickUntil){event.preventDefault();return;}
+    const node=event.target.closest('[data-action]');
+    if(node?.dataset.action==='question-more'){openQuestionMenu(node);return;}
+    closeQuestionMenu(!!node?.closest?.('.question-more-menu'));
+    if(node&&!node.disabled)action(node.dataset.action,node);
+  });
   document.addEventListener('change',event=>{if(event.target.dataset.imageUpload&&activity)uploadQuestionImage(event.target);});
   document.addEventListener('input',event=>{
     if(activity&&event.target.dataset.imagePrompt){const item=editingLesson().items.find(i=>i.id===event.target.dataset.imagePrompt);if(item){item.imagePrompt=event.target.value;markQuestionChange();updateLive();}return;}
@@ -722,8 +868,8 @@
     }
     updateLive();
   });
-  document.addEventListener('keydown',event=>{if(questionEdit&&(event.ctrlKey||event.metaKey)&&event.key==='Enter'&&!event.isComposing){event.preventDefault();saveQuestion();return;}if(event.target.id==='prep-goal-input'&&event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();commitGoal();}});
-  document.addEventListener('focusout',event=>{if(event.target.id==='prep-goal-input')commitGoal();});
+  document.addEventListener('keydown',event=>{if(questionControlsKey(event))return;if(questionEdit&&(event.ctrlKey||event.metaKey)&&event.key==='Enter'&&!event.isComposing){event.preventDefault();saveQuestion();return;}if(event.target.id==='prep-goal-input'&&event.key==='Enter'&&!event.shiftKey&&!event.isComposing){event.preventDefault();commitGoal();}});
+  document.addEventListener('focusout',event=>{if(questionMenu&&event.relatedTarget&&!questionMenu.trigger.parentElement.contains(event.relatedTarget))closeQuestionMenu();if(event.target.id==='prep-goal-input')commitGoal();});
   modal.addEventListener('cancel',event=>{event.preventDefault();closeDialog();});
   window.addEventListener('message',event=>{
     if(window.parent!==window&&event.source===window.parent&&event.origin===location.origin&&event.data?.type==='wellbeing:visibility'){
@@ -754,7 +900,7 @@
     }catch(e){fatal(e);}
   }
   function backendLoadError(e){
-    app.innerHTML=`<main class="fatal" id="main"><h1>暂时无法读取分类活动</h1><p role="alert">${esc(e.message)}</p>${btn('重试','reload-page')}</main>`;
+    app.innerHTML=`<main class="fatal" id="main" data-workbench-load-error><h1>暂时无法读取分类活动</h1><p role="alert">${esc(e.message)}</p>${btn('重试','reload-page')}</main>`;
   }
   try{
     cloud=window.WBWorkbenchApi?.activityStore('move-match',M.STORAGE_KEY,updateSaveState);

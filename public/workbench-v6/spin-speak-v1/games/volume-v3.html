@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head><script data-web-scope="classroom">(function(){'use strict';var valid=function(v){return typeof v==='string'&&/^[a-z0-9_-]{1,128}$/.test(v);};var scope;try{if(parent!==window&&parent.location.origin===location.origin)scope=parent.WB_WEB_SCOPE;}catch(_){}if(!valid(scope)&&valid(window.WB_WEB_SCOPE))scope=window.WB_WEB_SCOPE;if(!valid(scope)){try{scope=new URLSearchParams(location.search).get('scope');}catch(_){}}window.WB_WEB_SCOPE=valid(scope)?scope:'local';})();</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Volume Challenge · 声音广播站</title>
+  <link rel="stylesheet" href="../volume-v3.css?v=23">
+  <script src="../game-lifecycle.js?v=1"></script>
+  <script src="../session.js?v=9"></script>
+  <script defer src="../volume-v3.js?v=23"></script>
+</head>
+<body data-game="volume">
+  <main id="stage" data-broadcast="ready">
+    <svg class="recording-art" width="0" height="0" aria-hidden="true" focusable="false">
+      <symbol id="recording-mic-art" viewBox="0 0 68 84" stroke="#522665" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 39v5a21 21 0 0 0 42 0v-5M34 65v12M22 78h24" fill="none"/>
+        <rect x="19" y="5" width="30" height="53" rx="15" fill="#f58f88"/>
+        <path d="M20 31h28v11a14 14 0 0 1-28 0z" fill="#ec6c70"/>
+        <path d="M26 17h9m-9 7h9m5-7h2m-2 7h2" stroke="#fff3df" stroke-width="2.6"/>
+        <circle cx="34" cy="43" r="3" fill="#ffdb6b" stroke-width="1.5"/>
+      </symbol>
+    </svg>
+    <!-- Keep the room photograph at its native aspect ratio; only the console and screen reflow. -->
+    <svg class="console-backdrop" viewBox="0 0 1736 906" aria-hidden="true" focusable="false">
+      <defs>
+        <image id="room-art" href="../assets/volume-v3/school-radio.png" width="1736" height="906"/>
+        <clipPath id="console-footprint">
+          <path d="M338 521H1397Q1420 521 1442 551L1605 776Q1610 785 1610 809V835Q1609 853 1599 859L1622 873V906H110V872L144 859Q127 852 126 833V805Q126 789 135 775L298 548Q312 526 338 521Z"/>
+        </clipPath>
+        <clipPath id="console-cutout">
+          <path d="M333 518H1403Q1428 519 1449 550L1611 775Q1618 785 1618 810V850L1630 873V906H105V871L120 849V797Q120 784 129 772L293 544Q310 520 333 518Z"/>
+        </clipPath>
+        <!-- The loudspeakers' inner feet touch the back corners of the original console. -->
+        <path id="speaker-corner" d="M215 548H274V574Q273 587 260 593L259 601Q259 609 250 610H232L229 607H215Z"/>
+        <clipPath id="speaker-corners"><use href="#speaker-corner"/><use href="#speaker-corner" transform="translate(1736) scale(-1 1)"/></clipPath>
+      </defs>
+      <g clip-path="url(#console-cutout)">
+        <rect y="517" width="1736" height="61" fill="#dfeffd"/>
+        <rect y="574" width="1736" height="2" fill="#a5c2e9"/>
+        <rect y="576" width="1736" height="20" fill="#d0e4fc"/>
+        <svg x="0" y="594" width="1736" height="312" viewBox="103 594 8 312" preserveAspectRatio="none"><use href="#room-art"/></svg>
+      </g>
+      <use href="#room-art" clip-path="url(#speaker-corners)"/>
+    </svg>
+    <svg class="studio-desk" viewBox="0 0 1736 906" aria-hidden="true" focusable="false">
+      <image href="../assets/volume-v3/controls-clean-plate.png" width="1736" height="906" clip-path="url(#console-footprint)"/>
+    </svg>
+    <div class="studio-wall" aria-hidden="true"></div>
+      <svg class="scene-microphone" viewBox="0 0 510 570" aria-hidden="true" focusable="false">
+        <defs>
+          <!-- Rigid skins in the original scene's doubled crop coordinates. -->
+          <image id="mic-scene-source" href="../assets/volume-v3/school-radio.png" x="-2620" y="-320" width="3472" height="1812"/>
+          <clipPath id="mic-upper-cut"><path d="M438 70L474 68L704 346L712 390L683 410L648 392L433 127Z"/></clipPath>
+          <clipPath id="mic-boom-cut"><path d="M390 78L438 111L359 211Q349 225 330 215L307 202Q300 190 314 173Z"/></clipPath>
+          <clipPath id="mic-wrist-cut"><path d="M309 187Q328 181 349 195Q358 202 348 221Q368 231 358 252L343 280Q319 279 264 248L278 214Q284 199 305 202Z"/></clipPath>
+          <filter id="mic-plate-feather" x="-.2" y="-.2" width="1.4" height="1.4"><feGaussianBlur stdDeviation="4"/></filter>
+          <mask id="mic-resting-footprint" maskUnits="userSpaceOnUse" x="100" y="40" width="365" height="525">
+            <path d="M388 67L446 112L366 222Q375 237 363 259L348 279Q391 326 373 366Q362 391 342 393L290 499C267 548 210 552 169 531C128 511 116 468 129 430L181 310Q170 284 197 254Q221 232 264 236L275 208Q285 196 302 197Q299 184 313 166Z" fill="white" stroke="white" stroke-width="12" filter="url(#mic-plate-feather)"/>
+          </mask>
+          <mask id="mic-upper-footprint" maskUnits="userSpaceOnUse" x="355" y="22" width="382" height="407">
+            <path d="M369 84C369 49 397 25 434 26Q483 26 493 72L716 337L726 393L675 419L635 401L430 145Q368 145 369 84Z" fill="white" filter="url(#mic-plate-feather)"/>
+          </mask>
+          <clipPath id="mic-hinge-cut"><ellipse cx="434" cy="85" rx="47" ry="48"/></clipPath>
+          <clipPath id="mic-elbow-cut"><ellipse cx="702" cy="389" rx="49" ry="49"/></clipPath>
+          <clipPath id="mic-stand-cut">
+            <path d="M664 425Q703 447 723 423L664 841Q658 850 627 849Q605 848 605 842Z"/>
+          </clipPath>
+          <clipPath id="mic-stand-panel">
+            <path d="M591 306H800V781L628 731Q601 719 592 697Z"/>
+          </clipPath>
+          <filter id="mic-stand-feather" x="-.3" y="-.3" width="1.6" height="1.6">
+            <feGaussianBlur stdDeviation="7"/>
+          </filter>
+          <mask id="mic-stand-footprint" maskUnits="userSpaceOnUse" x="565" y="310" width="230" height="555">
+            <g fill="white" filter="url(#mic-stand-feather)">
+              <ellipse cx="702" cy="389" rx="69" ry="67"/>
+              <path d="M646 406L748 406L679 844Q640 858 590 846Z"/>
+            </g>
+          </mask>
+          <g id="mic-stand-clean-plate" mask="url(#mic-stand-footprint)">
+            <svg x="565" y="310" width="230" height="555" viewBox="747 800 90 23" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
+            <path d="M595 678Q590 722 633 735L783 785" fill="none" stroke="#abcbea" stroke-width="16" opacity=".6"/>
+            <g clip-path="url(#mic-stand-panel)">
+              <svg x="565" y="310" width="230" height="470" viewBox="565 159 230 46" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
+              <path d="M592 676Q590 719 628 731L784 776" fill="none" stroke="#7899cb" stroke-width="6"/>
+            </g>
+            <path d="M578 842Q632 819 695 837V866H578Z" fill="#a4bef9"/>
+            <path d="M578 842Q632 819 695 837" fill="none" stroke="#533682" stroke-width="4"/>
+          </g>
+          <g id="mic-stand-skin">
+            <use href="#mic-scene-source" clip-path="url(#mic-stand-cut)"/>
+          </g>
+          <linearGradient id="mic-coral-metal"><stop stop-color="#e67f75"/><stop offset=".12" stop-color="#ffa394"/><stop offset=".52" stop-color="#ff9e8e"/><stop offset=".78" stop-color="#f48d7d"/><stop offset="1" stop-color="#e67a70"/></linearGradient>
+          <linearGradient id="mic-ivory-metal"><stop stop-color="#e9cfab"/><stop offset=".13" stop-color="#fff2df"/><stop offset=".65" stop-color="#fff2df"/><stop offset=".83" stop-color="#ffedd6"/><stop offset="1" stop-color="#e7caa5"/></linearGradient>
+          <radialGradient id="mic-shell-shade" cx="37%" cy="42%" r="69%"><stop offset=".72" stop-color="#b95555" stop-opacity="0"/><stop offset="1" stop-color="#b95555" stop-opacity=".34"/></radialGradient>
+          <clipPath id="mic-shell-clip"><use href="#mic-shell-surface"/></clipPath>
+          <radialGradient id="mic-lamp-glow">
+            <stop stop-color="#ff664f" stop-opacity=".85"/>
+            <stop offset=".48" stop-color="#ff8963" stop-opacity=".45"/>
+            <stop offset="1" stop-color="#ffad78" stop-opacity="0"/>
+          </radialGradient>
+          <path id="mic-wave-contour" d="M-97 -73C-127 -47 -131 28 -104 65M97 -73C127 -47 131 28 104 65"/>
+        </defs>
+        <!-- Reconstruct the window edge and the wall hidden behind the raised arm. -->
+        <g mask="url(#mic-resting-footprint)">
+          <svg x="100" y="40" width="150" height="525" viewBox="100 128 150 36" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
+          <svg x="249" y="40" width="216" height="525" viewBox="402 244 58 276" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
+        </g>
+        <g mask="url(#mic-upper-footprint)">
+          <svg x="355" y="21" width="236" height="410" viewBox="355 413 236 111" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
+          <svg x="590" y="21" width="148" height="410" viewBox="590 42 148 98" preserveAspectRatio="none"><use href="#mic-scene-source"/></svg>
+        </g>
+        <use href="#mic-stand-clean-plate"/>
+        <g class="mic-stand">
+          <use href="#mic-stand-skin"/>
+        </g>
+        <!-- Each fixed translation is a joint offset. Each skin is bound in that joint's local space. -->
+        <g class="mic-elbow-rig">
+          <g transform="translate(702 389)">
+          <g class="mic-upper-arm">
+            <use href="#mic-scene-source" transform="translate(-702 -389)" clip-path="url(#mic-upper-cut)"/>
+            <g transform="translate(-268 -304)">
+              <g class="mic-boom">
+                <use href="#mic-scene-source" transform="translate(-434 -85)" clip-path="url(#mic-boom-cut)"/>
+                <g transform="translate(-104 113)">
+                  <g class="mic-wrist">
+                    <use href="#mic-scene-source" transform="translate(-330 -198)" clip-path="url(#mic-wrist-cut)"/>
+                    <g transform="translate(-26 61) rotate(24)">
+                      <g class="mic-capsule">
+                        <g class="mic-projection">
+                          <g class="mic-sound-waves" fill="none" stroke-linecap="round">
+                            <g class="mic-wave-spread">
+                              <use class="mic-wave" href="#mic-wave-contour" stroke="#e66b52" stroke-width="8"/>
+                              <use class="mic-wave mic-wave-echo" href="#mic-wave-contour" stroke="#f69640" stroke-width="6"/>
+                            </g>
+                          </g>
+                          <g class="mic-surfaces" stroke-linejoin="round">
+                            <path class="mic-collar" fill="url(#mic-ivory-metal)" stroke="#51334d" stroke-width="4.5"/>
+                            <g fill="url(#mic-coral-metal)" stroke="#51304a" stroke-width="4.5"><path class="mic-barrel" id="mic-shell-surface"/></g>
+                            <use href="#mic-shell-surface" fill="url(#mic-shell-shade)"/>
+                            <g clip-path="url(#mic-shell-clip)">
+                              <path class="mic-vents" fill="#ee8879" stroke="#ac5c56" stroke-width="4" stroke-linejoin="round"/>
+                            </g>
+                          </g>
+                          <g class="mic-shell">
+                            <g class="mic-grille" transform="translate(0 267)">
+                              <g class="mic-recording-led">
+                                <circle r="27" fill="url(#mic-lamp-glow)"/>
+                                <circle r="12" fill="#925549" stroke="#fff0cb" stroke-width="2.5"/>
+                                <circle r="8.5" fill="#ff5549"/>
+                                <circle cx="-2.7" cy="-3" r="3.4" fill="#fff1ce"/>
+                              </g>
+                            </g>
+                          </g>
+                        </g>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+              <use href="#mic-scene-source" transform="translate(-434 -85)" clip-path="url(#mic-hinge-cut)"/>
+            </g>
+          </g>
+          </g>
+          <use href="#mic-scene-source" clip-path="url(#mic-elbow-cut)"/>
+        </g>
+      </svg>
+    <header class="hud">
+      <div class="title">
+        <h1>Volume Challenge</h1>
+        <p>Draw a level, then read the whole text in that voice.</p>
+      </div>
+      <button type="button" class="iconbtn" id="helpBtn" aria-label="查看玩法">?</button>
+    </header>
+
+    <div class="monitor-content">
+      <div class="linewrap" id="linewrap">
+        <div class="line" id="line" role="region" aria-label="Reading text"></div>
+        <span class="reading-cue" aria-hidden="true">Scroll to read more</span>
+        <div class="recording-countdown" id="recording-countdown" aria-hidden="true">
+          <strong id="countdown-value"></strong>
+        </div>
+      </div>
+
+      <section class="volume-panel" aria-label="Microphone feedback">
+        <div class="volume-head">
+          <div><strong>MIC LEVEL</strong> <span class="volume-value" id="mVal" aria-hidden="true">—</span></div>
+          <span id="volume-target">Target —</span>
+          <strong id="volume-feedback">Choose a level</strong>
+        </div>
+        <div class="volume-readouts">
+          <div class="volume-meter" id="meter" role="meter" aria-label="Microphone level" aria-valuemin="0" aria-valuemax="130" aria-valuenow="0" aria-valuetext="Waiting to record">
+            <div id="target" hidden aria-hidden="true"></div>
+            <div id="fill" aria-hidden="true"></div>
+          </div>
+          <div class="volume-history" aria-hidden="true">
+            <svg class="volume-history-plot" viewBox="0 0 160 24" preserveAspectRatio="none">
+              <rect id="volume-history-target" width="160" height="0"/>
+              <polyline id="volume-history-line"/>
+            </svg>
+            <span>LAST 3s</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="picks" id="picks" aria-label="Voice levels"></div>
+
+    <div class="actions">
+      <button type="button" class="drawbtn" id="drawBtn">DRAW A LEVEL</button>
+      <button type="button" class="big" id="recBtn" disabled>START RECORDING</button>
+      <button type="button" class="big" id="doneBtn" disabled>COMPLETE</button>
+      <div class="tip" id="tip" role="status">
+        <svg class="live-mic" aria-hidden="true" focusable="false"><use href="#recording-mic-art"/></svg>
+        <span id="tip-copy">Draw your voice level.</span>
+      </div>
+    </div>
+
+    <div class="notes" id="notes" role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
+      <div class="card" lang="zh-CN">
+        <h3 id="help-title">音量挑战 · 怎么玩</h3>
+        <p>先点 <b>DRAW A LEVEL</b>，抽取轻声（SOFT）、正常音量（MEDIUM）或响亮（LOUD）。</p>
+        <p>点 <b>START RECORDING</b> 并允许使用麦克风。右侧麦克风会转向你，出题板开始 3、2、1 倒计时。题目重新出现、红色录音提示亮起时开始朗读。观察当前音量是否进入目标区间，以及最近 3 秒的音量曲线。</p>
+        <p>读完点 <b>STOP RECORDING</b>，再点 <b>COMPLETE</b> 结束本轮。音量条显示麦克风的相对输入强度。</p>
+        <button type="button" class="close" id="closeNotes">知道了</button>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

@@ -8,32 +8,87 @@ const source = readFileSync(new URL('../workbench-ui/workbench-api.js', import.m
 const state = name => JSON.stringify({ draft: { name }, items: [] });
 const response = (status, body) => ({ ok: status < 400, status, json: async () => body });
 
-function fixture(fetch, { existing, live = true } = {}) {
+function fixture(fetch, { existing, live = true, readOnly = false, activityWrites = false } = {}) {
   const values = new Map([['token', 'test-token']]);
-  const session = new Map();
+  const session = new Map([['wellbeing-workbench-tab', 'test-tab']]);
   if (existing) values.set('speak', existing);
   const storage = map => ({
     getItem: key => map.get(key) ?? null,
     setItem: (key, value) => map.set(key, value),
     removeItem: key => map.delete(key),
   });
-  function open() {
+  function open(moduleId = 'spin-speak') {
     const html = { dataset: {} };
-    const window = { top: { WB_WORKBENCH_LIVE: live }, addEventListener() {} };
+    const panels = [];
+    const window = {
+      top: { WB_WORKBENCH_LIVE: live, WB_WORKBENCH_READ_ONLY: readOnly, WB_WORKBENCH_ACTIVITY_WRITES: activityWrites },
+      addEventListener() {},
+    };
     vm.runInNewContext(source, {
       window, localStorage: storage(values), sessionStorage: storage(session), crypto: webcrypto,
       document: {
-        documentElement: html, body: { append() {} }, createTextNode: text => text,
+        documentElement: html, body: { append: node => panels.push(node) }, createTextNode: text => text,
         createElement: () => ({ setAttribute() {}, append() {}, remove() {}, style: {} }),
       },
       fetch, AbortSignal, FormData, URLSearchParams,
       setTimeout: (callback, delay) => { if (delay === 2000) queueMicrotask(callback); return 1; }, clearTimeout() {},
     });
     const api = window.WBWorkbenchApi;
-    return { api, store: api.activityStore('spin-speak', 'speak'), status: html.dataset };
+    return { api, store: api.activityStore(moduleId, 'speak'), status: html.dataset, panels };
   }
   return { open, values };
 }
+
+test('read-only production uses only the backend snapshot and preserves local drafts without importing them', async () => {
+  const methods = [];
+  const { open, values } = fixture(async (_path, options) => {
+    methods.push(options.method);
+    return response(200, { data: { version: 0, snapshot: null } });
+  }, { existing: state('original'), readOnly: true });
+  const { store, status, panels } = open();
+  await store.load();
+  assert.equal(status.workbenchSaveState, 'readonly');
+  assert.equal(store.storage.getItem('speak'), null);
+  store.importLocal();
+  assert.equal(store.readOnly, true);
+  assert.deepEqual(panels, []);
+  assert.throws(() => store.storage.setItem('speak', state('preview edit')), /无法保存活动/);
+  assert.equal(await store.flush(), true);
+  assert.equal(values.get('speak'), state('original'));
+  assert.deepEqual(methods, ['GET']);
+});
+
+test('approved preview modules save only newly made changes without importing earlier browser data', async () => {
+  const writes = [];
+  const { open, values } = fixture(async (path, options) => {
+    assert.equal(path, '/api/workbench-activities/doodle');
+    if (options.method === 'GET') return response(200, { data: { version: 0, snapshot: null } });
+    writes.push(JSON.parse(options.body));
+    return response(200, { data: { version: 1 } });
+  }, { readOnly: true, activityWrites: true, existing: state('legacy') });
+  values.set('speak:sync:test-tab', JSON.stringify({ version: 0, queued: { id: 'legacy', raw: state('old queue') } }));
+  const { api, store } = open('doodle');
+  assert.equal(api.readOnly, true);
+  assert.equal(store.readOnly, false);
+  assert.equal(open('unapproved').store.readOnly, true);
+  await store.load();
+  store.importLocal();
+  assert.equal(store.storage.getItem('speak'), null);
+  assert.equal(writes.length, 0);
+  store.storage.setItem('speak', state('actual edit'));
+  assert.equal(await store.flush(), true);
+  assert.deepEqual(writes.map(write => write.snapshot), [{ draft: { name: 'actual edit' }, items: [] }]);
+  assert.equal(values.get('speak'), state('legacy'));
+});
+
+test('production mode still reports activity service failures and read-only preview does not mask authentication errors', async () => {
+  const unavailable = fixture(async () => response(503, { error: '活动服务暂不可用' }));
+  await assert.rejects(unavailable.open().store.load(), { status: 503 });
+  const readonly = fixture(async () => response(503, { error: '活动服务暂不可用' }), { readOnly: true });
+  await assert.rejects(readonly.open().store.load(), { status: 503 });
+  const signedOut = fixture(async () => response(401, { error: '请重新登录' }), { readOnly: true });
+  await assert.rejects(signedOut.open().store.load(), { status: 401 });
+});
 
 test('imports a legacy draft only after validating an empty backend and keeps the original', async () => {
   const writes = [];

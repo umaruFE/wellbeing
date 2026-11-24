@@ -168,21 +168,21 @@ export const PromptInputModal = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="p-6 border-b-2 border-stroke-light flex items-center justify-between">
+      <div className="bg-white rounded-[18px] shadow-[0_20px_64px_rgba(48,43,59,0.16)] w-full max-w-md">
+        <div className="p-6 border-b border-[var(--wb-border)] flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-lg text-white">
+            <div className="bg-[var(--wb-primary)] p-2 rounded-lg text-white">
               <Type className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-lg text-slate-800">{title}</h3>
-              <p className="text-xs text-slate-500">{description}</p>
+              <h3 className="font-bold text-lg text-[var(--wb-text)]">{title}</h3>
+              <p className="text-xs text-[var(--wb-muted)]">{description}</p>
             </div>
           </div>
           <button
             onClick={handleClose}
             disabled={isLoading}
-            className="text-slate-400 hover:text-slate-600 disabled:opacity-50"
+            className="text-[var(--wb-muted)] hover:text-[var(--wb-muted)] disabled:opacity-50"
           >
             <X className="w-5 h-5" />
           </button>
@@ -190,16 +190,16 @@ export const PromptInputModal = ({
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="text-sm font-medium text-slate-700 mb-2 block"><LocalizedText id="musicStudio.contentLabel" /></label>
+            <label className="text-sm font-medium text-[var(--wb-text)] mb-2 block"><LocalizedText id="musicStudio.contentLabel" /></label>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               placeholder={placeholder}
-              className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-32 transition-all"
+              className="w-full border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] p-3 text-sm focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none resize-none h-32 transition-all"
               autoFocus
             />
             <div className="flex items-center justify-between mt-2">
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[var(--wb-muted)]">
                 {assetType === 'audio'
                   ? t('promptInputUi.audioHint')
                   : t('promptInputUi.textHint')}
@@ -210,7 +210,7 @@ export const PromptInputModal = ({
                 <button
                   onClick={() => setShowOptimizer(true)}
                   disabled={isLoading}
-                  className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 disabled:opacity-50"
+                  className="flex items-center gap-1 text-xs text-[var(--wb-primary)] hover:text-[var(--wb-primary)] disabled:opacity-50"
                 >
                   <Wand2 className="w-3 h-3" />
                   <LocalizedText id="promptInputUi.779dd81c9d" />
@@ -221,7 +221,7 @@ export const PromptInputModal = ({
 
           {assetType === 'image' && (
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+              <label className="text-sm font-medium text-[var(--wb-text)] mb-2 flex items-center gap-2">
                 <LocalizedText id="ipCharacter.imageRatio" />
               </label>
               <div className="grid grid-cols-5 gap-2">
@@ -230,10 +230,10 @@ export const PromptInputModal = ({
                     key={ratio.id}
                     onClick={() => setSelectedRatio(ratio)}
                     disabled={isLoading}
-                    className={`flex flex-col items-center justify-center p-2 rounded-lg border-2 transition-all ${
+                    className={`flex flex-col items-center justify-center p-2 rounded-[var(--wb-control-radius)] border transition-all ${
                       selectedRatio.id === ratio.id
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-2 border-stroke-light hover:border-primary text-dark hover:bg-warning-light'
+                        : 'border border-[var(--wb-border)] hover:border-[var(--wb-selected-border)] text-dark hover:bg-[var(--wb-selected)]'
                     } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
                     <div 
@@ -253,7 +253,7 @@ export const PromptInputModal = ({
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-slate-400 mt-1">
+              <p className="text-xs text-[var(--wb-muted)] mt-1">
                 <LocalizedText id="lesson.selected" />{selectedRatio.label} ({selectedRatio.width}×{selectedRatio.height}) - {t(`promptInputUi.${selectedRatio.description}`)}
               </p>
             </div>
@@ -261,12 +261,12 @@ export const PromptInputModal = ({
 
           {(assetType === 'image' || assetType === 'video') && (
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+              <label className="text-sm font-medium text-[var(--wb-text)] mb-2 flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" />
                 <LocalizedText id="promptInputUi.dc33859347" />
               </label>
               {!referenceImage ? (
-                <div className="border-2 border-dashed border-stroke-light rounded-xl p-4 flex flex-col items-center justify-center bg-surface hover:bg-warning-light hover:border-primary transition-all cursor-pointer relative group/upload">
+                <div className="border border-dashed border-[var(--wb-border)] rounded-xl p-4 flex flex-col items-center justify-center bg-surface hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] transition-all cursor-pointer relative group/upload">
                   <input
                     type="file"
                     accept="image/*"
@@ -275,19 +275,19 @@ export const PromptInputModal = ({
                     disabled={isLoading}
                   />
                   <div className="p-2 bg-white rounded-full shadow-sm mb-2 group-hover/upload:scale-110 transition-transform">
-                    <Upload className="w-5 h-5 text-slate-400" />
+                    <Upload className="w-5 h-5 text-[var(--wb-muted)]" />
                   </div>
-                  <span className="text-xs text-slate-500 font-medium"><LocalizedText id="promptInputUi.7f4eac35c3" /></span>
-                  <span className="text-[10px] text-slate-400 mt-1"><LocalizedText id="promptInputUi.43be4c02af" /></span>
+                  <span className="text-xs text-[var(--wb-muted)] font-medium"><LocalizedText id="promptInputUi.7f4eac35c3" /></span>
+                  <span className="text-[10px] text-[var(--wb-muted)] mt-1"><LocalizedText id="promptInputUi.43be4c02af" /></span>
                 </div>
               ) : (
                 <div className="relative group/ref">
-                  <img src={referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border-2 border-stroke-light opacity-90" />
+                  <img src={referenceImage} alt="Reference" className="w-full h-32 object-cover rounded-xl border border-[var(--wb-border)] opacity-90" />
                   <div className="absolute inset-0 bg-black/0 group-hover/ref:bg-black/10 transition-colors rounded"></div>
                   <button
                     onClick={() => setReferenceImage(null)}
                     disabled={isLoading}
-                    className="absolute top-2 right-2 bg-white text-slate-600 hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity disabled:opacity-50"
+                    className="absolute top-2 right-2 bg-white text-[var(--wb-muted)] hover:text-red-500 p-1.5 rounded-full shadow-sm opacity-0 group-hover/ref:opacity-100 transition-opacity disabled:opacity-50"
                     title={i18next.t('promptInputUi.6c72b99216')}
                   >
                     <X className="w-3.5 h-3.5" />
@@ -300,14 +300,14 @@ export const PromptInputModal = ({
           {assetType === 'audio' && (
             <>
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-[var(--wb-text)] mb-2 flex items-center gap-2">
                   <Music className="w-4 h-4" />
                   <LocalizedText id="audioGenerator.style" />
                 </label>
                 <select
                   value={audioStyle}
                   onChange={(e) => setAudioStyle(e.target.value)}
-                  className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none bg-white transition-all"
+                  className="min-h-11 w-full border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] p-3 text-sm focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none bg-white transition-all"
                   disabled={isLoading}
                 >
                   {AUDIO_STYLES.map((style) => (
@@ -316,13 +316,13 @@ export const PromptInputModal = ({
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-[var(--wb-muted)] mt-1">
                   <LocalizedText id="promptInputUi.e544333be2" />
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-[var(--wb-text)] mb-2 flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   <LocalizedText id="promptInputUi.afeeda8e62" />
                 </label>
@@ -334,20 +334,20 @@ export const PromptInputModal = ({
                     step="10"
                     value={audioDuration}
                     onChange={(e) => setAudioDuration(Number(e.target.value))}
-                    className="flex-1 h-2 bg-[#e5e3db] rounded-lg appearance-none cursor-pointer accent-dark"
+                    className="flex-1 h-2 bg-[#e5e3db] rounded-[var(--wb-control-radius)] appearance-none cursor-pointer accent-dark"
                     disabled={isLoading}
                   />
-                  <span className="text-sm font-medium text-slate-700 min-w-[60px]">
+                  <span className="text-sm font-medium text-[var(--wb-text)] min-w-[60px]">
                     {audioDuration} <LocalizedText id="videoWizard.eb6aaba1a1" />
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-[var(--wb-muted)] mt-1">
                   <LocalizedText id="promptInputUi.bbc79101b4" />
                 </p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-[var(--wb-text)] mb-2 flex items-center gap-2">
                   <Wand2 className="w-4 h-4" />
                   <LocalizedText id="promptInputUi.c530a5f793" />
                 </label>
@@ -355,10 +355,10 @@ export const PromptInputModal = ({
                   value={lyrics}
                   onChange={(e) => setLyrics(e.target.value)}
                   placeholder={i18next.t('promptInputUi.a6e06a0792')}
-                  className="w-full border-2 border-stroke-light rounded-xl p-3 text-sm focus:ring-2 focus:ring-[#2d2d2d] focus:border-primary outline-none resize-none h-24 transition-all"
+                  className="w-full border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] p-3 text-sm focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-primary)] outline-none resize-none h-24 transition-all"
                   disabled={isLoading}
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-[var(--wb-muted)] mt-1">
                   <LocalizedText id="promptInputUi.3302e78670" />
                 </p>
               </div>
@@ -368,11 +368,11 @@ export const PromptInputModal = ({
           {assetType === 'video' && (
             <>
               <div>
-                <label className="text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                <label className="text-sm font-medium text-[var(--wb-text)] mb-2 flex items-center gap-2">
                   <Video className="w-4 h-4" />
                   <LocalizedText id="promptInputUi.61d75fa446" />
                 </label>
-                <p className="text-xs text-slate-400 mb-2">
+                <p className="text-xs text-[var(--wb-muted)] mb-2">
                   <LocalizedText id="promptInputUi.e95820cfce" />
                 </p>
                 <div className="space-y-2">
@@ -381,7 +381,7 @@ export const PromptInputModal = ({
                       <img 
                         src={img} 
                         alt={t('promptInputUi.referenceIndex', { index: index + 1 })}
-                        className="w-full h-20 object-cover rounded-xl border-2 border-stroke-light"
+                        className="w-full h-20 object-cover rounded-xl border border-[var(--wb-border)]"
                       />
                       <button
                         onClick={() => handleRemoveVideoReferenceImage(index)}
@@ -392,7 +392,7 @@ export const PromptInputModal = ({
                       </button>
                     </div>
                   ))}
-                  <label className="flex items-center justify-center w-full h-20 border-2 border-dashed border-stroke-light rounded-xl cursor-pointer hover:border-primary hover:bg-warning-light transition-all">
+                  <label className="flex items-center justify-center w-full h-20 border border-dashed border-[var(--wb-border)] rounded-xl cursor-pointer hover:border-[var(--wb-selected-border)] hover:bg-[var(--wb-selected)] transition-all">
                     <input
                       type="file"
                       accept="image/*"
@@ -402,19 +402,19 @@ export const PromptInputModal = ({
                       disabled={isLoading}
                     />
                     <div className="flex flex-col items-center">
-                      <Plus className="w-5 h-5 text-slate-400 mb-1" />
-                      <span className="text-xs text-slate-500"><LocalizedText id="promptInputUi.7f4eac35c3" /></span>
+                      <Plus className="w-5 h-5 text-[var(--wb-muted)] mb-1" />
+                      <span className="text-xs text-[var(--wb-muted)]"><LocalizedText id="promptInputUi.7f4eac35c3" /></span>
                     </div>
                   </label>
                 </div>
               </div>
 
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+              <div className="bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <Video className="w-5 h-5 text-purple-600 mt-0.5" />
+                  <Video className="w-5 h-5 text-[var(--wb-primary)] mt-0.5" />
                   <div>
-                    <h4 className="text-sm font-medium text-purple-800"><LocalizedText id="promptInputUi.cc3b8d4221" /></h4>
-                    <ol className="text-xs text-purple-600 mt-1 space-y-1 list-decimal list-inside">
+                    <h4 className="text-sm font-medium text-[var(--wb-primary)]"><LocalizedText id="promptInputUi.cc3b8d4221" /></h4>
+                    <ol className="text-xs text-[var(--wb-primary)] mt-1 space-y-1 list-decimal list-inside">
                       <li><LocalizedText id="promptInputUi.3c0ba76d32" /></li>
                       <li><LocalizedText id="promptInputUi.80cd3fe66b" /></li>
                       <li><LocalizedText id="promptInputUi.bdacf1c776" /></li>
@@ -431,14 +431,14 @@ export const PromptInputModal = ({
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className="flex-1 px-4 py-2 border-2 border-stroke-light rounded-xl text-dark hover:bg-warning-light hover:border-primary disabled:opacity-50 transition-all font-medium"
+              className="min-h-10 flex-1 px-4 py-2 border border-[var(--wb-border)] rounded-[var(--wb-control-radius)] text-dark hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)] disabled:opacity-50 transition-all font-medium"
             >
               <LocalizedText id="common.cancel" />
             </button>
             <button
               onClick={handleConfirm}
               disabled={isLoading || (assetType === 'text' && !content.trim())}
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              className="min-h-10 flex-1 px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[var(--wb-control-radius)] hover:bg-[var(--wb-primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>

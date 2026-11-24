@@ -1,6 +1,7 @@
 import i18next from 'i18next';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { PageLoading } from '../../components/PageLoading';
 import { Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Upload as UploadIcon } from 'lucide-react';
 import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
 import apiService from '../../services/api';
@@ -133,6 +134,7 @@ function WaveArt({ asset, playing, onToggle, t }) {
 export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
   const { t } = useTranslation();
   const [assets, setAssets] = React.useState(AUDIO_ASSETS);
+  const [loading, setLoading] = React.useState(true);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [type, setType] = React.useState('');
@@ -170,6 +172,9 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
           setAssets([]);
           message.error(t('audioLib.fetchFailed'));
         }
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
       });
     return () => {
       alive = false;
@@ -320,7 +325,9 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
             </div>
           </div>
 
-          {filteredAssets.length > 0 ? (
+          {loading ? (
+            <PageLoading />
+          ) : filteredAssets.length > 0 ? (
             <div className="fr-aud-grid">
               {filteredAssets.map(asset => (
                 <article className="fr-aud-card" key={asset.id} onClick={() => setPreviewAsset(asset)}>
