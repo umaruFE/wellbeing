@@ -262,7 +262,7 @@
     </main>${renderEditorFooter(step,hasContent)}`);
     Platform.decorate();
     for(const q of openPanels){const node=document.querySelector(q);if(node)node.open=true;}
-    updateSaveState();updateGenerationState();if(saveError)localError(saveError);
+    updateSaveState();updatePreparationFeedback();updateGenerationState();if(saveError)localError(saveError);
   }
   function renderEditorFooter(step,hasContent){
     const actions=step===1
@@ -271,12 +271,21 @@
         ?btn('放弃候选','discard-candidate')+btn('重新生成','generate')+btn('采用这些内容','adopt-candidate',{variant:'primary',icon:'check'})
         :btn('重新生成','generate')+(hasContent?btn('确认授课版','review',{variant:'primary',icon:'check'}):'');
     return `<footer class="wb-authoring-footer" aria-label="备课操作">
-      <div class="wb-footer-meta">${step>1?btn('上一步：基础信息与分类','step',{value:1,icon:'back',variant:'ghost'}):''}<span class="save-state wb-status" id="save-status" role="status" ${saveStatus() ? '' : 'hidden'}>${saveStatus()}</span><span class="wb-status" id="generation-status" role="status" hidden></span></div>
+      <div class="wb-footer-meta">${step>1?btn('上一步：基础信息与分类','step',{value:1,icon:'back',variant:'ghost'}):''}<span class="save-state wb-status" id="save-status" role="status" ${saveStatus() ? '' : 'hidden'}>${saveStatus()}</span><span class="question-sr-only" id="generation-status" role="status"></span></div>
       <div class="wb-footer-actions">${actions}</div>
     </footer>`;
   }
   function preparation(){return activity.draft.lesson.preparation||G.defaults(activity.draft.lesson);}
-  function changePreparation(update){const p=clone(preparation());update(p);activity.draft.lesson.preparation=p;candidate=null;pendingAdoption=false;preparationErrors=[];cancelGeneration();queueSave();}
+  function changePreparation(update){
+    const p=clone(preparation());
+    update(p);
+    activity.draft.lesson.preparation=p;
+    candidate=null;
+    pendingAdoption=false;
+    cancelGeneration();
+    refreshPreparationValidation();
+    queueSave();
+  }
   function questionCountInfo(p=preparation()){
     const value=Object.prototype.hasOwnProperty.call(p,'questionCount')?p.questionCount:10;
     return {value,legacy:!QUESTION_COUNT_OPTIONS.includes(value)};
@@ -288,16 +297,63 @@
   function updateQuestionCountUI(){
     const node=document.querySelector('#prep-question-count');if(!node)return;
     const info=questionCountInfo();node.value=info.legacy?'':String(info.value);
-    node.removeAttribute('aria-invalid');
     document.querySelector('#prep-question-count-help').textContent='自动分配到各类';
   }
   function goalTags(){return preparation().languageGoals.map((g,i)=>`<span class="goal-tag">${esc(g)}<button type="button" data-action="remove-goal" data-value="${i}" aria-label="移除 ${esc(g)}">${icon('close')}</button></span>`).join('');}
-  function commitGoal(){const input=document.querySelector('#prep-goal-input');if(!input?.value.trim())return;const merged=Goals.merge(preparation().languageGoals,input.value);changePreparation(p=>p.languageGoals=merged.items);input.value='';document.querySelector('#goal-tags').innerHTML=goalTags();}
-  function renderPreparation(){const p=preparation();return `<section class="preparation-page"><div class="section-intro wb-panel-heading"><h2>这次想练习什么分类？</h2><p>填写基础信息和分类名称，题目、提示与解释由生成流程准备。</p></div><div class="preparation-grid"><section class="preparation-section wb-authoring-panel"><h2>基础信息</h2><div class="basic-fields"><div class="field wb-field span-all"><label for="prep-theme">活动主题 <small>选填</small></label><input id="prep-theme" data-preparation="theme" data-ui="field" maxlength="120" value="${esc(p.theme)}" placeholder="例如：动物与水果、生活中的冠词"></div><div class="field wb-field"><label for="prep-age">学生年龄</label><select id="prep-age" data-preparation="age" data-ui="field">${['4–6 岁','7–9 岁','10–12 岁'].map(age=>`<option value="${age.replace(/\s/g,'')}" ${p.age.replace(/\s/g,'')===age.replace(/\s/g,'')?'selected':''}>${age}</option>`).join('')}</select></div>${renderQuestionCount(p)}<div class="field wb-field span-all"><label for="show-question-images">默认题卡样式</label><select id="show-question-images" data-ui="field"><option value="no" ${activity.draft.lesson.showImages===false?'selected':''}>纯文字</option><option value="yes" ${activity.draft.lesson.showImages!==false?'selected':''}>图文题卡</option></select><small>用于生成内容和新增题目；每道题可单独添加或移除图片。修改默认样式不影响已有题卡。</small></div><div class="field wb-field span-all"><label for="prep-goal-input">语言目标 <small>核心词汇、句型或语法点</small></label><div class="goals-editor"><div id="goal-tags" class="goal-tags">${goalTags()}</div><div class="goal-input-row"><textarea rows="2" data-ui-embedded="true" id="prep-goal-input" aria-describedby="goal-help" placeholder="例如：cat（每行一项）&#10;或：a / an 的用法"></textarea>${btn('添加','add-goal',{small:true})}</div></div><small id="goal-help">每行一项，按回车添加；句型中的标点会保留。至少添加一个语言目标。</small></div></div></section><section class="preparation-section classification-section wb-authoring-panel"><div class="classification-heading"><h2>分类设置</h2><div class="field wb-field"><label for="prep-count">分类数量</label><select id="prep-count" data-ui="field">${[2,3,4].map(n=>`<option value="${n}" ${p.categoryNames.length===n?'selected':''}>${n} 类</option>`).join('')}</select></div></div><div class="category-fields">${p.categoryNames.map((name,i)=>`<div class="field wb-field"><label for="prep-category-${i}">分类 ${i+1}</label><input id="prep-category-${i}" data-category-index="${i}" data-ui="field" maxlength="24" value="${esc(name)}" placeholder="${['例如：动物 / Animals','例如：水果 / Fruits','输入第三个分类','输入第四个分类'][i]}"></div>`).join('')}</div><p class="field-note">支持 2–4 类，动作由系统按分类顺序安排。</p></section></div><div class="demo-examples"><span>试填示例</span>${btn('动物与水果','fill-example',{value:'words',small:true,variant:'ghost'})}${btn('a / an','fill-example',{value:'articles',small:true,variant:'ghost'})}${btn('am / is / are','fill-example',{value:'be',small:true,variant:'ghost'})}</div>${preparationErrors.length?`<div class="preparation-errors wb-notice error" role="alert">${preparationErrors.map(e=>`<p>${esc(e.message)}</p>`).join('')}</div>`:''}</section>`;}
+  function commitGoal(){
+    const input=document.querySelector('#prep-goal-input');
+    if(!input?.value.trim())return;
+    const merged=Goals.merge(preparation().languageGoals,input.value);
+    input.value='';
+    changePreparation(p=>p.languageGoals=merged.items);
+    document.querySelector('#goal-tags').innerHTML=goalTags();
+  }
+  function preparationProblems(input=preparation()){
+    const errors=M.validatePreparation(input);
+    if(!questionCountInfo(input).legacy)return errors;
+    return [{field:'questionCount',message:'请选择总题数：10、20、30 或 50 题。'},...errors.filter(error=>error.field!=='questionCount')];
+  }
+  function preparationFieldId({field,index}){
+    if(field==='categoryNames')return index===undefined?'prep-count':`prep-category-${index}`;
+    return {languageGoals:'prep-goal-input',questionCount:'prep-question-count',theme:'prep-theme',age:'prep-age'}[field];
+  }
+  function preparationErrorMarkup(){
+    return preparationErrors.map(({message,index})=>`<p>${index===undefined?'':`分类 ${index+1} · `}${esc(message)}</p>`).join('');
+  }
+  function updatePreparationFeedback(){
+    const panel=document.querySelector('.preparation-errors');
+    if(!panel)return;
+    panel.hidden=preparationErrors.length===0;
+    const markup=preparationErrorMarkup();
+    if(panel.innerHTML!==markup)panel.innerHTML=markup;
+    const invalidFields=new Set(preparationErrors.map(preparationFieldId));
+    for(const input of document.querySelectorAll('[data-preparation], [data-category-index], #prep-goal-input, #prep-count')){
+      if(invalidFields.has(input.id))input.setAttribute('aria-invalid','true');
+      else input.removeAttribute('aria-invalid');
+    }
+  }
+  function refreshPreparationValidation(){
+    if(!preparationErrors.length)return;
+    const input=preparation();
+    const typedGoals=document.querySelector('#prep-goal-input')?.value;
+    const withGoals=typedGoals?.trim()?{...input,languageGoals:Goals.merge(input.languageGoals,typedGoals).items}:input;
+    preparationErrors=preparationErrors.some(error=>error.field)?preparationProblems(withGoals):[];
+    updatePreparationFeedback();
+  }
+  function renderPreparation(){const p=preparation();return `<section class="preparation-page"><div class="section-intro wb-panel-heading"><h2>这次想练习什么分类？</h2><p>填写基础信息和分类名称，题目、提示与解释由生成流程准备。</p></div><div class="preparation-grid"><section class="preparation-section wb-authoring-panel"><h2>基础信息</h2><div class="basic-fields"><div class="field wb-field span-all"><label for="prep-theme">活动主题 <small>选填</small></label><input id="prep-theme" data-preparation="theme" data-ui="field" maxlength="120" value="${esc(p.theme)}" placeholder="例如：动物与水果、生活中的冠词"></div><div class="field wb-field"><label for="prep-age">学生年龄</label><select id="prep-age" data-preparation="age" data-ui="field">${['4–6 岁','7–9 岁','10–12 岁'].map(age=>`<option value="${age.replace(/\s/g,'')}" ${p.age.replace(/\s/g,'')===age.replace(/\s/g,'')?'selected':''}>${age}</option>`).join('')}</select></div>${renderQuestionCount(p)}<div class="field wb-field span-all"><label for="show-question-images">默认题卡样式</label><select id="show-question-images" data-ui="field"><option value="no" ${activity.draft.lesson.showImages===false?'selected':''}>纯文字</option><option value="yes" ${activity.draft.lesson.showImages!==false?'selected':''}>图文题卡</option></select><small>用于生成内容和新增题目；每道题可单独添加或移除图片。修改默认样式不影响已有题卡。</small></div><div class="field wb-field span-all"><label for="prep-goal-input">语言目标 <small>核心词汇、句型或语法点</small></label><div class="goals-editor"><div id="goal-tags" class="goal-tags">${goalTags()}</div><div class="goal-input-row"><textarea rows="2" data-ui-embedded="true" id="prep-goal-input" aria-describedby="goal-help" placeholder="例如：cat（每行一项）&#10;或：a / an 的用法"></textarea>${btn('添加','add-goal',{small:true})}</div></div><small id="goal-help">每行一项，按回车添加；句型中的标点会保留。至少添加一个语言目标。</small></div></div></section><section class="preparation-section classification-section wb-authoring-panel"><div class="classification-heading"><h2>分类设置</h2><div class="field wb-field"><label for="prep-count">分类数量</label><select id="prep-count" data-ui="field">${[2,3,4].map(n=>`<option value="${n}" ${p.categoryNames.length===n?'selected':''}>${n} 类</option>`).join('')}</select></div></div><div class="category-fields">${p.categoryNames.map((name,i)=>`<div class="field wb-field"><label for="prep-category-${i}">分类 ${i+1}</label><input id="prep-category-${i}" data-category-index="${i}" data-ui="field" maxlength="24" value="${esc(name)}" placeholder="${['例如：动物 / Animals','例如：水果 / Fruits','输入第三个分类','输入第四个分类'][i]}"></div>`).join('')}</div><p class="field-note">支持 2–4 类，动作由系统按分类顺序安排。</p></section></div><div class="demo-examples"><span>试填示例</span>${btn('动物与水果','fill-example',{value:'words',small:true,variant:'ghost'})}${btn('a / an','fill-example',{value:'articles',small:true,variant:'ghost'})}${btn('am / is / are','fill-example',{value:'be',small:true,variant:'ghost'})}</div><div class="preparation-errors wb-notice error" role="alert" ${preparationErrors.length?'':'hidden'}>${preparationErrorMarkup()}</div></section>`;}
   function updateGenerationState(){
     const busy = generationJob?.activity === activity;
     const button = document.querySelector('[data-action="generate"]');
-    if (button) button.disabled = busy;
+    if (button) {
+      button.disabled = busy;
+      if (busy) {
+        button.setAttribute('aria-busy','true');
+        button.textContent = '正在生成…';
+      } else if (button.getAttribute('aria-busy') === 'true') {
+        button.removeAttribute('aria-busy');
+        button.innerHTML = (Number(activity.editor?.step)||1) === 1 ? icon('arrow')+'生成分类内容' : '重新生成';
+      }
+    }
     const status = document.querySelector('#generation-status');
     if (status) {
       status.hidden = !busy;
@@ -313,26 +369,24 @@
     preparationErrors = errors;
     activity.editor.step = 1;
     renderEditor();
-    document.querySelector('.preparation-errors')?.scrollIntoView({block:'center'});
+    const firstFieldId = preparationFieldId(errors[0]);
+    const firstField = firstFieldId ? document.querySelector('#'+firstFieldId) : null;
+    if (firstField) {
+      firstField.scrollIntoView({block:'center'});
+      firstField.focus({preventScroll:true});
+    } else document.querySelector('.preparation-errors')?.scrollIntoView({block:'center'});
   }
   async function generateContent(){
     if (generationJob?.activity === activity) return;
     commitGoal();
-    const count = questionCountInfo();
-    if (count.legacy) {
-      showPreparationErrors([{field:'questionCount',message:'请选择总题数：10、20、30 或 50 题。'}]);
-      const select = document.querySelector('#prep-question-count');
-      select?.setAttribute('aria-invalid','true');
-      select?.focus();
-      return;
-    }
-    if (!Object.prototype.hasOwnProperty.call(preparation(),'questionCount')) {
-      changePreparation(p => p.questionCount = count.value);
-    }
-    const errors = M.validatePreparation(preparation());
+    const errors = preparationProblems();
     if (errors.length) {
       showPreparationErrors(errors);
       return;
+    }
+    const count = questionCountInfo();
+    if (!Object.prototype.hasOwnProperty.call(preparation(),'questionCount')) {
+      changePreparation(p => p.questionCount = count.value);
     }
     if (!flush()) return;
 
@@ -350,6 +404,7 @@
         job = { activity:owner, controller:new AbortController() };
         generationJob = job;
         preparationErrors = [];
+        updatePreparationFeedback();
         updateGenerationState();
         const { data } = await api.request('/api/ai/generate-classification',{
           method:'POST',body:input,signal:job.controller.signal,
@@ -845,6 +900,7 @@
     if(activity&&event.target.id==='show-question-images'){changeDefaultCardStyle(event.target.value==='yes');return;}
     if(event.target.dataset.caseQuestionCount){const id=event.target.dataset.caseQuestionCount,count=Number(event.target.value);if(!templates.some(t=>t.id===id)||!QUESTION_COUNT_OPTIONS.includes(count)){event.target.value=String(caseQuestionCount(id));return;}caseQuestionCounts.set(id,count);const label=event.target.closest('.case-card')?.querySelector('[data-case-count]');if(label)label.textContent=String(count);return;}
     if(event.target.id==='preview-question-count'){action('preview-question-count',{dataset:{value:event.target.value}});return;}
+    if(activity&&event.target.id==='prep-goal-input'){refreshPreparationValidation();return;}
     if(activity&&event.target.dataset.preparation){const key=event.target.dataset.preparation;if(key==='questionCount'&&!QUESTION_COUNT_OPTIONS.includes(Number(event.target.value))){updateQuestionCountUI();return;}changePreparation(p=>p[key]=key==='questionCount'?Number(event.target.value):event.target.value);updateQuestionCountUI();return;}
     if(activity&&event.target.dataset.categoryIndex!==undefined){changePreparation(p=>p.categoryNames[Number(event.target.dataset.categoryIndex)]=event.target.value);updateQuestionCountUI();return;}
     if(activity&&event.target.id==='prep-count'){commitGoal();changePreparation(p=>p.categoryNames=Array.from({length:Number(event.target.value)},(_,i)=>p.categoryNames[i]||''));renderEditor();document.querySelector('#prep-count')?.focus();return;}

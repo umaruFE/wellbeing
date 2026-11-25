@@ -403,7 +403,7 @@
     "sourceFiles": 141,
     "sourceBytes": 32588317,
     "outputFiles": 176,
-    "outputBytes": 61684427,
+    "outputBytes": 61686735,
     "scriptChecks": 54,
     "storageChecks": 8,
     "missingLocalDependencies": 0
@@ -1065,8 +1065,8 @@
         "bytes": 72435
       },
       "outputRecord": {
-        "sha256": "286ac7b8c43262e782f01ff18c599498a3feb3e289e819eb56e6b36c4083e2b3",
-        "bytes": 109196
+        "sha256": "fb1258f16826c92d7565848ce97b16e745cb4cfa5d9660401aca40d56fd642ea",
+        "bytes": 111504
       },
       "transformations": [
         {
@@ -1113,8 +1113,8 @@
           "kind": "local-authoring-ui",
           "source": "workbench-ui/move-match-v1/app.js",
           "sourceRecord": {
-            "sha256": "91705f6cb4402b7a574f3c4b8b153279b8709b89a368f2055a35d0007b10179c",
-            "bytes": 108620
+            "sha256": "8db6c1b6b070b76eac5e1b804ae10491f7dd59cebd7ac23d5cc30d2962606a50",
+            "bytes": 110928
           },
           "scope": "portable local authoring update"
         }
@@ -2372,7 +2372,7 @@
         "bytes": 1996
       },
       "outputRecord": {
-        "sha256": "0693e55a5dfac64e8df1c48faf443b35d95ac4f19d28b25ea9e93801b0c9332a",
+        "sha256": "4487c6d7dc9063db615b432e1454aad1338b1979d694247e407f753cd8728900",
         "bytes": 2291
       },
       "transformations": [
@@ -2383,7 +2383,7 @@
         {
           "kind": "content-versioned-ui-assets",
           "versions": {
-            "app.js": "286ac7b8c43262e7",
+            "app.js": "fb1258f16826c92d",
             "styles.css": "1c28bfe26d9d08af",
             "model.js": "107e19e9397305e2",
             "../workbench-api.js": "9a2fcb1919c3eeb3"
@@ -4182,8 +4182,8 @@
       },
       {
         "path": "move-match-v1/app.js",
-        "sha256": "91705f6cb4402b7a574f3c4b8b153279b8709b89a368f2055a35d0007b10179c",
-        "bytes": 108620
+        "sha256": "8db6c1b6b070b76eac5e1b804ae10491f7dd59cebd7ac23d5cc30d2962606a50",
+        "bytes": 110928
       },
       {
         "path": "move-match-v1/classroom/action-poses-cutout.png",
