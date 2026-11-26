@@ -4,13 +4,9 @@
 
 .admin-dashboard {
   min-height: 100%;
-  padding: 28px 28px 40px;
   background: var(--wb-page);
   font-family: var(--wb-font);
 
-  max-width: 1440px;
-
-  margin: 0 auto;
 }
 
 .dashboard-top-modules {
@@ -198,41 +194,6 @@
   padding-top: 0;
 }
 
-.create-course-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  column-gap: 8px !important;
-  width: 158px !important;
-  height: 40px !important;
-  border: 1px solid var(--wb-primary) !important;
-  border-radius: var(--wb-control-radius) !important;
-  background: var(--wb-primary) !important;
-  box-shadow: none !important;
-  padding: 0 14px !important;
-}
-
-.create-course-btn svg {
-  color: var(--wb-surface) !important;
-}
-
-.create-course-btn span {
-  color: var(--wb-surface);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-}
-
-.create-course-btn:hover:not(:disabled) {
-  background: var(--wb-primary-hover) !important;
-  border-color: var(--wb-primary-hover) !important;
-}
-
-.create-course-btn:active:not(:disabled) {
-  background: var(--wb-primary-active) !important;
-  border-color: var(--wb-primary-active) !important;
-}
-
 .create-section-buttons {
   display: flex;
   align-items: center;
@@ -240,46 +201,8 @@
   gap: 12px;
 }
 
-.create-btn {
-  display: inline-flex !important;
-  flex: 1 1 0 !important;
-  align-items: center !important;
-  justify-content: center !important;
-  min-width: 0 !important;
-  height: 40px !important;
-  border: 1px solid var(--wb-border) !important;
-  border-radius: var(--wb-control-radius) !important;
-  background: var(--wb-surface) !important;
-  box-shadow: none !important;
-  padding: 0 12px !important;
-  column-gap: 8px !important;
-}
-
-.create-btn span {
-  overflow: hidden;
-  color: var(--wb-text);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 22px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.create-btn svg {
-  flex: 0 0 16px;
-}
-
-.create-btn:nth-child(1) svg {
-  color: var(--wb-primary);
-}
-
-.create-btn:nth-child(2) svg {
-  color: var(--wb-primary);
-}
-
-.create-btn:nth-child(3) svg {
-  color: var(--wb-primary);
-}
+.create-section-buttons .create-btn { flex: 1 1 0; }
+.create-section-buttons .create-btn > span { min-width: 0; overflow-wrap: anywhere; }
 
 .asset-stats-row,
 .task-stats-row {
@@ -487,6 +410,11 @@
   row-gap: 20px;
 }
 
+.recent-container > .ant-tabs {
+  width: 100%;
+  min-width: 0;
+}
+
 .recent-header {
   display: flex;
   align-items: center;
@@ -535,64 +463,6 @@
   display: none;
 }
 
-.recent-container .ant-segmented {
-  width: auto !important;
-  min-width: auto !important;
-  height: 44px !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-
-.recent-container .ant-segmented-item {
-  height: 44px !important;
-  margin: 0 !important;
-  border-radius: 0 !important;
-  padding: 0 12px !important;
-
-  border-bottom: 3px solid transparent;
-}
-
-.recent-container .ant-segmented-item-label {
-  min-height: 41px !important;
-  line-height: 41px !important;
-}
-
-.recent-container .ant-segmented-item.ant-segmented-item-selected {
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-
-  border-bottom-color: var(--wb-primary);
-}
-
-.recent-container .ant-segmented-item svg,
-.recent-container .ant-segmented-item span {
-  color: var(--wb-muted) !important;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.recent-container .ant-segmented-item.ant-segmented-item-selected svg,
-.recent-container .ant-segmented-item.ant-segmented-item-selected span {
-  color: var(--wb-primary-hover) !important;
-}
-
-.recent-sort-btn {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  height: 32px;
-  gap: 8px;
-  color: var(--wb-text);
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 22px;
-}
-
 .recent-content {
   display: flex;
   flex-direction: column;
@@ -602,6 +472,7 @@
 }
 
 .recent-load-more-sentinel {
+  flex-wrap: wrap;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -635,12 +506,14 @@
 
 .course-card {
   height: auto;
-  cursor: pointer;
-
   min-height: 300px;
+  padding: 0;
+  text-align: start;
+  cursor: pointer;
 }
 
 .course-card:hover,
+.course-card:focus-visible,
 .video-card:hover,
 .audio-card:hover {
   transform: none;
@@ -775,7 +648,6 @@
   border-radius: var(--wb-card-radius);
   background: transparent;
   box-shadow: none;
-  cursor: pointer;
   transition: none;
 }
 
@@ -837,18 +709,6 @@
   position: relative;
   width: 100%;
   height: 195px;
-}
-
-.video-play-btn {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  cursor: pointer;
-  transform: translate(-50%, -50%);
-}
-
-.video-play-btn:hover {
-  transform: translate(-50%, -50%);
 }
 
 .video-duration,
@@ -1063,10 +923,6 @@
 }
 
 @media (max-width: 767px) {
-  .admin-dashboard {
-    padding: 16px;
-  }
-
   .dashboard-top-modules .ant-col {
     flex: 0 0 100%;
     max-width: 100%;
@@ -1134,23 +990,8 @@
   }
 }
 
-.dashboard-page-heading { margin: 0 0 24px; }
-.dashboard-page-heading h1 { margin: 0; color: var(--wb-text); font-size: 28px; font-weight: 700; line-height: 1.3; }
-.recent-container .ant-segmented-thumb { display: none; }
-.create-btn:hover { background: var(--wb-selected) !important; border-color: var(--wb-selected-border) !important; }
+.admin-dashboard .course-card:focus-visible { outline: var(--wb-focus-ring); outline-offset: 2px; }
+
 @media (max-width: 650px) {
-  .dashboard-page-heading h1 { font-size: 24px; }
-  .recent-container .ant-segmented {
-    width: 100% !important;
-    height: auto !important;
-    max-width: 100%;
-  }
-  .recent-container .ant-segmented-group {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    width: 100%;
-  }
-  .recent-container .ant-segmented-item-label > span { justify-content: center; }
-  .recent-title-row { width: 100%; gap: 12px; }
-  .course-title { white-space: normal; -webkit-line-clamp: 2; }
+  .admin-dashboard .course-title { white-space: normal; -webkit-line-clamp: 2; }
 }

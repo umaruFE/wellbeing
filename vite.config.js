@@ -24,7 +24,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}', 'assets/{lesson-garden,path-art,path-movement,path-music}-*.jpg'],
         globIgnores: ['workbench-v6/**'],
         navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/workbench-v6\//],

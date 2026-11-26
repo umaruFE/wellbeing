@@ -23,6 +23,7 @@ function fixture(fetch, { existing, live = true, readOnly = false, activityWrite
     const window = {
       top: { WB_WORKBENCH_LIVE: live, WB_WORKBENCH_READ_ONLY: readOnly, WB_WORKBENCH_ACTIVITY_WRITES: activityWrites },
       addEventListener() {},
+      confirm: () => true,
     };
     vm.runInNewContext(source, {
       window, localStorage: storage(values), sessionStorage: storage(session), crypto: webcrypto,
@@ -38,6 +39,33 @@ function fixture(fetch, { existing, live = true, readOnly = false, activityWrite
   }
   return { open, values };
 }
+
+test('the online case library reports backend errors without showing local examples', async () => {
+  const { open } = fixture(async (path) => {
+    assert.equal(path, '/api/workbench-cases/move-match');
+    return response(503, { error: 'Unavailable' });
+  });
+  const library = open().api.caseLibrary('move-match');
+  await library.load();
+  assert.equal(library.items.length, 0);
+  assert.match(library.message, /暂时无法读取平台案例/);
+  await assert.rejects(library.publish('private-work'), /平台管理员/);
+});
+
+test('publishing sends only the work identity and refreshes the matching case', async () => {
+  const { open } = fixture(async (path, options) => {
+    assert.equal(path, '/api/workbench-cases/song');
+    if (options.method === 'GET') return response(200, { data: [{ id: 'shared', title: 'Version 1' }], canPublish: true });
+    assert.deepEqual(JSON.parse(options.body), { sourceId: 'own-work' });
+    return response(201, { data: { id: 'shared', title: 'Version 2' } });
+  });
+  const library = open().api.caseLibrary('song');
+  await library.load();
+  assert.equal(library.canPublish, true);
+  assert.equal(await library.publish('own-work'), true);
+  assert.equal(library.items.length, 1);
+  assert.equal(library.find('shared').title, 'Version 2');
+});
 
 test('read-only production uses only the backend snapshot and preserves local drafts without importing them', async () => {
   const methods = [];

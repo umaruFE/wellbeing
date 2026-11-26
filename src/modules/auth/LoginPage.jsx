@@ -15,6 +15,7 @@ export const LoginPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
     const fields = new FormData(e.currentTarget);
     const username = String(fields.get('username') ?? '').trim();
     const password = String(fields.get('password') ?? '');
@@ -37,21 +38,21 @@ export const LoginPage = () => {
         <LanguageSwitcher />
       </div>
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-[14px] shadow-[0_8px_32px_rgba(48,43,59,0.06)] p-8 border border-[var(--wb-border)]">
+        <div className="wb-surface-panel shadow-[var(--wb-shadow-hover)]">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="bg-[var(--wb-primary)] p-3 rounded-[10px] mb-4 shadow-[0_6px_24px_rgba(48,43,59,0.06)]">
               <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-[28px] font-bold text-[var(--wb-text)] mb-2">{t('common.appName')}</h1>
+            <h1 className="text-[length:var(--wb-title-size)] font-bold text-[var(--wb-text)] mb-2">{t('common.appName')}</h1>
             <p className="text-sm text-[var(--wb-muted)]">{t('login.welcome')}</p>
           </div>
 
           {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-[10px] p-3 flex items-center gap-2 text-red-700 text-sm">
-                <AlertCircle className="w-4 h-4" />
+              <div role="alert" className="bg-error-light border border-error-border rounded-sm p-3 flex items-center gap-2 text-error-active text-sm">
+                <AlertCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
                 <span>{error}</span>
               </div>
             )}
@@ -67,7 +68,7 @@ export const LoginPage = () => {
                 autoComplete="username"
                 autoCapitalize="none"
                 spellCheck={false}
-                className="w-full px-4 py-2.5 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all min-h-11"
+                data-wb-field
                 placeholder={t('login.usernamePlaceholder')}
                 required
               />
@@ -82,7 +83,7 @@ export const LoginPage = () => {
                 name="password"
                 type="password"
                 autoComplete="current-password"
-                className="w-full px-4 py-2.5 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none transition-all min-h-11"
+                data-wb-field
                 placeholder={t('login.passwordPlaceholder')}
                 required
               />
@@ -91,7 +92,8 @@ export const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[var(--wb-primary)] hover:bg-[var(--wb-primary-hover)] text-white font-medium py-2 rounded-[10px] flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm min-h-10 active:bg-[var(--wb-primary-active)]"
+              data-wb-button="primary"
+              className="w-full"
             >
               {loading ? (
                 <>

@@ -355,8 +355,8 @@
     list() { return clone(this._read().activities).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)); }
     get(id) { return clone(this._read().activities.find(item => item.id === id) || null); }
 
-    create(template) {
-      const lesson = clone(template), settings = clone(DEFAULT_SETTINGS);
+    create(template, settingsInput = DEFAULT_SETTINGS) {
+      const lesson = clone(template), settings = settingsOf(settingsInput);
       if (lesson?.id === 'custom') draftOf({ lesson, settings }, 'custom');
       else {
         const errors = validate(lesson, settings);

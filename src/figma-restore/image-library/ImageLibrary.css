@@ -74,35 +74,6 @@
   font-weight: 500;
 }
 
-.fr-img-upload-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: 40px;
-  border: 1px solid var(--wb-primary);
-  border-radius: var(--wb-control-radius);
-  background: var(--wb-primary);
-  box-shadow: none;
-  padding: 0 14px;
-  color: var(--wb-surface);
-  font-family: var(--wb-font);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 24px;
-  cursor: pointer;
-  transition: background-color 150ms ease, border-color 150ms ease;
-}
-
-.fr-img-upload-btn:hover {
-  transform: none;
-  box-shadow: none;
-
-  background: var(--wb-primary-hover);
-
-  border-color: var(--wb-primary-hover);
-}
-
 .fr-img-panel {
   width: 100%;
   min-height: 300px;
@@ -200,6 +171,13 @@
 }
 
 .fr-img-name {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: start;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -217,19 +195,6 @@
   min-width: 0;
 }
 
-.fr-img-type-chip {
-  display: inline-flex;
-  align-items: center;
-  height: 26px;
-  border: 0;
-  border-radius: 6px;
-  background: var(--wb-selected);
-  padding: 0 8px;
-  color: var(--wb-primary-hover);
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-}
 
 .fr-img-size {
   min-width: 0;
@@ -252,45 +217,6 @@
   color: var(--wb-muted);
   font-size: 13px;
   font-weight: 500;
-}
-
-.fr-img-card-menu-btn {
-  width: 36px;
-  height: 36px;
-  border: 1px solid var(--wb-border);
-  border-radius: var(--wb-control-radius);
-  background: var(--wb-surface);
-  box-shadow: none;
-  color: var(--wb-text);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-}
-
-.fr-img-card-menu-btn:hover {
-  background: var(--wb-selected);
-  transform: none;
-  box-shadow: none;
-}
-
-.fr-img-empty {
-  min-height: 300px;
-  border: 1px dashed var(--wb-border-soft);
-  border-radius: var(--wb-card-radius);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  color: var(--wb-muted);
-  text-align: center;
-}
-
-.fr-img-empty strong {
-  color: var(--wb-text);
-  font-size: 16px;
 }
 
 .fr-img-scene {

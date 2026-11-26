@@ -94,8 +94,8 @@
       words: ['house', 'tree', 'sun', 'car', 'rocket', 'umbrella'], mode: 'solo', level: 'sentence' })
   ]);
 
-  function fromCase(caseId) {
-    const source = CASES.find(item => item.id === caseId);
+  function fromCase(caseId, cases = CASES) {
+    const source = cases.find(item => item.id === caseId);
     if (!source) throw new Error('没有找到这个涂鸦案例。');
     const time = now();
     return Object.assign(clone(source), { id: newId(), sourceCaseId: source.id, createdAt: time, updatedAt: time });

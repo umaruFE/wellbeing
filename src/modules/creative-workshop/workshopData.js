@@ -4,6 +4,18 @@ import {
   Star, Theater, Volume2,
 } from 'lucide-react';
 
+const workStatusKeys = {
+  draft: 'myWorksUi.statusDraft',
+  done: 'myWorksUi.statusDone',
+  generating: 'common.generating',
+  failed: 'common.failed',
+};
+
+export const workStatusKey = (status) => Object.hasOwn(workStatusKeys, status) ? workStatusKeys[status] : workStatusKeys.draft;
+
+const workStatusTones = { done: 'ready', failed: 'failed', generating: 'processing', draft: 'draft' };
+export const workStatusTone = (status) => Object.hasOwn(workStatusTones, status) ? workStatusTones[status] : 'draft';
+
 export const WORKSHOP_MODULES = {
   'english-plus': {
     eyebrow: '创作工坊 · 模块 1',

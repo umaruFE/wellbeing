@@ -1,28 +1,23 @@
+import { MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { Users, Clock, Award, CircleDot, CheckCircle2, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { CourseCoverFallback } from '../CourseCoverFallback';
 
 const DEFAULT_COVER = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg';
 
 function CourseManagementCover({ course }) {
-  const [errored, setErrored] = React.useState(false);
   const src = course.themeImageUrl || course.thumbnail;
+  const [failedSrc, setFailedSrc] = React.useState(null);
 
-  React.useEffect(() => {
-    setErrored(false);
-  }, [src]);
-
-  if (!src || errored) {
-    return <img className="fr-cm-cover-image" src={DEFAULT_COVER} alt={course.title || ''} />;
-  }
+  const visibleSrc = !src || failedSrc === src ? DEFAULT_COVER : src;
 
   return (
     <img
       className="fr-cm-cover-image"
-      src={src}
-      alt={course.title || ''}
-      onError={() => setErrored(true)}
+      src={visibleSrc}
+      alt=""
+      loading="lazy"
+      onError={visibleSrc === DEFAULT_COVER ? undefined : () => setFailedSrc(src)}
     />
   );
 }
@@ -36,33 +31,22 @@ export function CourseCard({
   const isPublished = course.status === 'published';
 
   return (
-    <article
-      className={`fr-cm-card ${course.active ? 'is-active' : ''}`}
-      onClick={() => onOpen(course)}
-    >
+    <article className="fr-cm-card">
       <div className={`fr-cm-cover tone-${course.coverTone}`}>
         <CourseManagementCover course={course} />
-        <button
-          type="button"
-          className="fr-cm-delete-btn"
-          aria-label={t('course.deleteCourse')}
-          title={t('course.deleteCourse')}
-          onClick={(event) => {
-            event.stopPropagation();
-            onDelete?.(course);
-          }}
-        >
-          <Trash2 size={15} />
-        </button>
       </div>
 
       <div className="fr-cm-card-body">
         <div className="fr-cm-card-head">
-          <h3>{course.title}</h3>
-          <span className={`fr-cm-tag ${isPublished ? 'published' : 'draft'}`}>
+          <h3>
+            <button type="button" className="fr-cm-open" onClick={() => onOpen(course)}>
+              {course.title}
+            </button>
+          </h3>
+          <MetadataTag tone={isPublished ? 'ready' : 'draft'}>
             {isPublished ? <CheckCircle2 /> : <CircleDot />}
             {isPublished ? t('course.published') : t('course.draft')}
-          </span>
+          </MetadataTag>
         </div>
 
         <div className="fr-cm-meta">
@@ -77,8 +61,22 @@ export function CourseCard({
         </div>
 
         <div className="fr-cm-footer">
-          <Clock size={14} />
+          <Clock size={14} aria-hidden="true" />
           <span className="time-text">{course.updatedAt}</span>
+          {onDelete && (
+            <button
+              type="button"
+              className="fr-cm-delete-btn"
+              data-wb-button="danger"
+              data-wb-size="sm"
+              data-wb-icon
+              aria-label={`${t('course.deleteCourse')} ${course.title}`}
+              title={t('course.deleteCourse')}
+              onClick={() => onDelete(course)}
+            >
+              <Trash2 size={15} aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
     </article>

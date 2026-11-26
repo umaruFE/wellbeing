@@ -1,10 +1,10 @@
-import { LocalizedText } from '../../i18n/LocalizedText.jsx';
+import { CreateButton, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
 import { useSearchParams } from 'react-router-dom';
-import { Users, Plus, Trash2, Search } from 'lucide-react';
-import { Form, Input, Modal, Select } from 'antd';
+import { Trash2 } from 'lucide-react';
+import { Form, Input, Modal, Select, message } from 'antd';
 import { useAuth } from '../../contexts/AuthContext';
 import apiService from '../../services/api';
 
@@ -14,6 +14,8 @@ export const AccountManagement = () => {
   const defaultOrganizationId = searchParams.get('organizationId');
   const { ROLE_NAMES } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
+  const [modal, modalContext] = Modal.useModal();
+  const [notifications, notificationContext] = message.useMessage();
 
   const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,49 +89,41 @@ export const AccountManagement = () => {
     }
   };
 
-  const handleDeleteAccount = async (accountId) => {
-    if (window.confirm(t('account.confirmDelete'))) {
-      try {
-        await apiService.request(`/api/users/${accountId}`, { method: 'DELETE' });
-        setAccounts(accounts.filter(a => a.id !== accountId));
-      } catch (error) {
-        alert(error instanceof Error ? error.message : '删除失败');
-      }
-    }
+  const handleDeleteAccount = (account) => {
+    modal.confirm({
+      title: t('account.confirmDelete'),
+      content: account.username,
+      okText: t('common.delete'),
+      okButtonProps: { danger: true },
+      cancelText: t('common.cancel'),
+      onOk: async () => {
+        try {
+          await apiService.request(`/api/users/${account.id}`, { method: 'DELETE' });
+          setAccounts(current => current.filter(item => item.id !== account.id));
+        } catch (error) {
+          notifications.error(error.message || t('common.failed'));
+          throw error;
+        }
+      },
+    });
   };
 
+  const query = searchTerm.trim().toLowerCase();
   const filteredAccounts = accounts.filter(account =>
-    (account.username || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (account.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    account.organizationName.toLowerCase().includes(searchTerm.toLowerCase())
+    [account.username, account.name, account.organizationName].some(value => value?.toLowerCase().includes(query))
   );
 
   return (
-    <div className="p-4 sm:p-6 min-w-0">
-      <h1 className="mb-6 text-[28px] leading-tight font-bold text-[var(--wb-text)]">{t('header.userManage')}</h1>
-      {/* Search */}
-      <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--wb-muted)]" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t('account.searchPlaceholder')}
-            className="w-full pl-10 pr-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none min-h-11"
-          />
-        </div>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold text-[var(--wb-text)]">{t('account.listTitle')}</h2>
-        <button
-          onClick={openCreateAccount}
-          className="px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] hover:bg-[var(--wb-primary-hover)] flex items-center gap-2 transition-colors min-h-10 active:bg-[var(--wb-primary-active)]"
-        >
-          <Plus className="w-4 h-4" />
-          {t('account.createAccount')}
-        </button>
+    <div className="wb-standard-page">
+      {modalContext}
+      {notificationContext}
+      <header className="wb-library-header">
+        <h1>{t('header.userManage')}</h1>
+        <CreateButton onClick={openCreateAccount}>{t('account.createAccount')}</CreateButton>
+      </header>
+      <div className="wb-library-tools">
+        <h2 className="wb-section-title">{t('account.listTitle')}</h2>
+        <LibrarySearch label={t('account.searchPlaceholder')} value={searchTerm} onChange={setSearchTerm} />
       </div>
 
       <p className="sm:hidden text-xs text-[var(--wb-muted)] mb-2">{t('account.scrollHint', '左右滑动查看完整信息')}</p>
@@ -152,17 +146,19 @@ export const AccountManagement = () => {
                 <td className="px-4 py-3 text-sm text-[var(--wb-muted)]">{account.name}</td>
                 <td className="px-4 py-3 text-sm text-[var(--wb-muted)]">{account.organizationName}</td>
                 <td className="px-4 py-3 text-sm">
-                  <span className="px-2 py-1 bg-[var(--wb-selected)] text-[var(--wb-primary-hover)] rounded text-xs">
-                    {ROLE_NAMES[account.role] || account.role}
-                  </span>
+                  <MetadataTag>{ROLE_NAMES[account.role] || account.role}</MetadataTag>
                 </td>
                 <td className="px-4 py-3 text-sm text-[var(--wb-muted)]">{account.createdAt}</td>
                 <td className="px-4 py-3 text-right">
                   <button
-                    onClick={() => handleDeleteAccount(account.id)}
-                    className="text-error hover:text-error-active min-h-10"
+                    type="button"
+                    data-wb-button="danger"
+                    data-wb-icon
+                    data-wb-size="sm"
+                    aria-label={`${t('common.delete')} ${account.username}`}
+                    onClick={() => handleDeleteAccount(account)}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 size={16} aria-hidden="true" />
                   </button>
                 </td>
               </tr>
@@ -171,15 +167,15 @@ export const AccountManagement = () => {
         </table>
         {loading && <PageLoading />}
         {!loading && loadError && (
-          <div role="alert" className="text-center py-12">
+          <div role="alert" className="wb-library-empty">
             <p>{loadError}</p>
-            <button type="button" className="wb-button" onClick={loadAccounts}>{t('common.retry')}</button>
+            <button type="button" data-wb-button="secondary" onClick={loadAccounts}>{t('common.retry')}</button>
           </div>
         )}
         {!loading && !loadError && filteredAccounts.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="w-16 h-16 text-[var(--wb-muted)] mx-auto mb-4" />
-            <p className="text-[var(--wb-muted)]">{t('account.noAccounts')}</p>
+          <div className="wb-library-empty">
+            <p role="status">{t(query && accounts.length ? 'common.noSearchResults' : 'account.noAccounts')}</p>
+            {query && !!accounts.length && <button type="button" data-wb-button="secondary" onClick={() => setSearchTerm('')}>{t('common.clearSearch')}</button>}
           </div>
         )}
       </div>
@@ -191,6 +187,7 @@ export const AccountManagement = () => {
         okText={t('common.save')}
         cancelText={t('common.cancel')}
         confirmLoading={creating}
+        forceRender
       >
         <Form form={form} layout="vertical" onFinish={handleCreateAccount}>
           <Form.Item name="email" label={t('account.username')} rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>

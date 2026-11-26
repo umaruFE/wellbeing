@@ -1,5 +1,17 @@
 {
   "common": {
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "listView": "List view",
+    "gridView": "Grid view",
+    "localPreviewRemoved": "Removed from the current list",
+    "localPreviewAdded": "Added to the current page preview",
+    "featureUnavailable": "This action is currently unavailable",
+    "loadFailed": "Failed to load",
+    "openModule": "Open module",
+    "clearSearch": "Clear search",
+    "clearFilters": "Clear filters",
+    "noSearchResults": "No matching results.",
     "teach": "Teach",
     "teachMode": "Teaching Mode",
     "appName": "小星星",
@@ -13,7 +25,9 @@
     "delete": "Delete",
     "edit": "Edit",
     "create": "Create",
+    "newActivity": "New activity",
     "search": "Search",
+    "searchActivity": "Search activities",
     "refresh": "Refresh",
     "submit": "Submit",
     "back": "Back",
@@ -165,8 +179,8 @@
   "course": {
     "title": "My Courses",
     "subtitle": "Create and manage your courses",
-    "createCourse": "Create Course",
-    "searchPlaceholder": "Search courses...",
+    "createCourse": "New Course",
+    "searchPlaceholder": "Search courses",
     "allStatus": "All Status",
     "published": "Published",
     "draft": "Draft",
@@ -833,6 +847,7 @@
     "confirmDelete": "Are you sure you want to delete this account?"
   },
   "org": {
+    "name": "Organization name",
     "noOrganizations": "No organizations to display.",
     "loadFailed": "Could not load organizations.",
     "searchPlaceholder": "Search organizations...",
@@ -1734,7 +1749,7 @@
     "saveFailed": "Save failed. Please try again.",
     "saving": "Saving...",
     "saveProgress": "Save Progress",
-    "backToList": "Back to List",
+    "backToList": "Back to Activity Library",
     "stepBasic": "Basic Information",
     "stepPlan": "Activity Plan",
     "stepDesign": "Picture Book Design",
@@ -1848,15 +1863,17 @@
     "pageTotal_other": "{{count}} pages",
     "startTeaching": "Start teaching",
     "continueEditing": "Continue editing",
-    "noMyActivities": "No activities yet",
-    "noCases": "No cases yet",
-    "noSearchResults": "No matching activities",
+    "continuePreparing": "Continue preparing",
+    "noMyActivities": "You have no activities yet.",
+    "noCases": "No published cases yet.",
+    "noSearchResults": "No matching activities.",
     "clearSearch": "Clear search",
-    "listLoadFailed": "Could not load your activities. Please try again.",
+    "listLoadFailed": "Could not load activities. Please try again.",
     "retryList": "Reload",
     "previewBlocked": "The preview window could not open. Allow pop-ups for this site and try again."
   },
   "square": {
+    "views": "{{count}} views",
     "title": "Course Square",
     "subtitle": "Discover quality courses, copy and start teaching",
     "searchPlaceholder": "Search courses, units, themes...",
@@ -3034,6 +3051,7 @@
     "d7d611f997": "Optional: venue or equipment limits, student characteristics, etc."
   },
   "testVideoUi": {
+    "resultSummary": "{{count}} scenes · {{duration}} seconds",
     "96e92dfb39": "AI Video Generator",
     "ca82b1f18b": "AI Video Storyboard Generator",
     "35cf55935e": "Use AI to create storyboard scripts and images, then render the video",
@@ -3455,6 +3473,11 @@
     "77836d3a99": "More Actions"
   },
   "myWorksUi": {
+    "confirmDeleteWork": "Delete “{{title}}”?",
+    "noWorks": "No works yet",
+    "noMatchingWorks": "No matching works",
+    "filterByModule": "Filter by module",
+    "deleteWorkTitle": "Delete work",
     "55c57bbfa9": "Content Management",
     "2e3e2e9a2a": "View, continue editing and manage your courses, activities and assets in one place.",
     "2155290c5a": "Start a New Creation",

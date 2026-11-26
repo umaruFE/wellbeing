@@ -137,7 +137,7 @@
   function validRecord(raw) {
     if (!object(raw) || !identifier(raw.id)) fail('课程记录编号无效。');
     if (!timestamp(raw.createdAt) || !timestamp(raw.updatedAt) || Date.parse(raw.updatedAt) < Date.parse(raw.createdAt)) fail('课程记录的创建或更新时间无效。');
-    if (raw.sourceCaseId !== null && raw.sourceCaseId !== LEGACY_FOREST_CASE.id && !CASES.some(item => item.id === raw.sourceCaseId)) fail('课程案例来源无效。');
+    if (raw.sourceCaseId !== null && raw.sourceCaseId !== LEGACY_FOREST_CASE.id && !CASES.some(item => item.id === raw.sourceCaseId) && !/^work-[a-f0-9]{32}$/.test(raw.sourceCaseId)) fail('课程案例来源无效。');
     const state = validModel(raw.state);
     const workspace = validWorkspace(raw.workspace === undefined ? {} : raw.workspace, state);
     if (own(raw, 'saveRevision') && (!Number.isSafeInteger(raw.saveRevision) || raw.saveRevision < 0)) fail('课程保存版本无效。');
@@ -273,8 +273,8 @@
     }
     return jsonClone(cases.get(caseId));
   }
-  function cloneCase(caseId) {
-    const result = M.forkDraft(getCase(caseId));
+  function cloneCase(caseId, source = getCase(caseId)) {
+    const result = M.forkDraft(source);
     result.published = null; result.versions = []; result.candidate = null; result.job = null; result.lastJob = null;
     result.draft.revision = 1; result.nextJobId = 1;
     return M.validateState(result);

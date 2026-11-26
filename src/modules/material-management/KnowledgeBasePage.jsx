@@ -1,22 +1,17 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Layers } from 'lucide-react';
 import { TextbookManagement } from './textbook/TextbookManagement';
 
 export const KnowledgeBasePage = () => {
   const { t } = useTranslation();
   return (
-    <div className="h-screen flex flex-col bg-[var(--wb-page)]">
-      {/* Header */}
-      <div className="bg-white border-b border-[var(--wb-border)] px-4 sm:px-6 py-4 shrink-0">
-        <div className="flex items-center gap-2">
-          <Layers className="w-6 h-6 text-[var(--wb-text)]" />
-          <h1 className="text-[28px] font-bold text-[var(--wb-text)]">{t('asset.title')}</h1>
-        </div>
-      </div>
+    <div className="h-full min-h-0 flex flex-col bg-[var(--wb-page)]">
+      <header className="wb-library-header border-b border-[var(--wb-border-soft)] px-4 sm:px-7 pt-7 pb-5 shrink-0">
+        <h1>{t('sidebar.textbookLibrary')}</h1>
+      </header>
 
       {/* 主体内容 */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-hidden">
         <TextbookManagement />
       </div>
     </div>

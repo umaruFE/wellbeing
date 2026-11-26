@@ -1,10 +1,13 @@
+import { CreateButton, LibraryFilterSelect, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
 import i18next from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
 import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React from 'react';
-import { AlertCircle, CheckCircle2, Database, FileText, Trash2, UploadCloud, X, Search, Plus } from 'lucide-react';
+import { Modal, message as notification } from 'antd';
+import { AlertCircle, CheckCircle2, FileText, Trash2, UploadCloud } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { MaterialLibraryFeedback } from '../material-management/MaterialLibraryControls';
 
 const categoryOptions = [
   '情绪表达', '自我认知', '人际关系', '家庭与归属', '成长与变化',
@@ -22,9 +25,11 @@ export const KnowledgeUploadPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const [list, setList] = React.useState([]);
-  const [categories, setCategories] = React.useState([]);
   const [total, setTotal] = React.useState(0);
   const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(false);
+  const listRequest = React.useRef(0);
+  const [modal, modalContext] = Modal.useModal();
   const [filterCategory, setFilterCategory] = React.useState('all');
   const [searchText, setSearchText] = React.useState('');
 
@@ -42,7 +47,9 @@ export const KnowledgeUploadPage = () => {
   const canSubmit = status !== 'uploading' && (files.length > 0 || text.trim());
 
   const fetchList = React.useCallback(async () => {
+    const requestId = ++listRequest.current;
     setLoading(true);
+    setLoadError(false);
     try {
       const params = new URLSearchParams();
       if (filterCategory !== 'all') params.set('category', filterCategory);
@@ -50,36 +57,43 @@ export const KnowledgeUploadPage = () => {
       params.set('pageSize', '200');
       const res = await fetch(`/api/rag/knowledge?${params}`);
       const data = await res.json();
-      if (data.success) {
-        setList(data.data || []);
-        setTotal(data.total || 0);
-        setCategories(data.categories || []);
-      }
+      if (!res.ok || !data.success) throw new Error('Knowledge request failed');
+      if (requestId !== listRequest.current) return;
+      setList(data.data || []);
+      setTotal(data.total || 0);
     } catch (err) {
       console.error('fetch knowledge list failed:', err);
+      if (requestId === listRequest.current) setLoadError(true);
     } finally {
-      setLoading(false);
+      if (requestId === listRequest.current) setLoading(false);
     }
   }, [filterCategory, searchText]);
 
   React.useEffect(() => {
     fetchList();
+    return () => { listRequest.current += 1; };
   }, [fetchList]);
 
-  const handleDelete = async (id, docTitle) => {
-    if (!window.confirm(t('knowledgeUploadUi.confirmDeleteDoc', { title: docTitle }))) return;
-    try {
-      const res = await fetch(`/api/rag/knowledge/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        fetchList();
-      } else {
-        const data = await res.json();
-        alert(data.error || t('knowledgeUploadUi.deleteFailed'));
+  const handleDelete = (id, docTitle) => modal.confirm({
+    title: t('common.confirmDelete'),
+    content: t('knowledgeUploadUi.confirmDeleteDoc', { title: docTitle }),
+    okText: t('common.delete'),
+    cancelText: t('common.cancel'),
+    okButtonProps: { danger: true },
+    onOk: async () => {
+      try {
+        const response = await fetch(`/api/rag/knowledge/${id}`, { method: 'DELETE' });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || t('knowledgeUploadUi.deleteFailed'));
+        }
+        await fetchList();
+      } catch (error) {
+        notification.error(t('knowledgeUploadUi.deleteFailedReason', { msg: error.message }));
+        throw error;
       }
-    } catch (err) {
-      alert(t('knowledgeUploadUi.deleteFailedReason', { msg: err.message }));
-    }
-  };
+    },
+  });
 
   const resetForm = () => {
     setFiles([]);
@@ -203,59 +217,43 @@ export const KnowledgeUploadPage = () => {
   }, [list, filterCategory]);
 
   return (
-    <div className="min-h-full bg-[var(--wb-page)] p-4 sm:p-6">
-      <div className="max-w-6xl mx-auto space-y-5">
+    <div className="min-h-full bg-[var(--wb-page)] px-4 sm:px-7 py-7">
+      {modalContext}
+      <div className="max-w-[1440px] mx-auto space-y-5">
         {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <header className="wb-library-header flex min-h-[66px] flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-[var(--wb-muted)] text-sm font-semibold">
-              <Database className="w-4 h-4" />
-              <LocalizedText id="knowledgeUploadUi.01e9cd0f1c" />
-            </div>
-            <h1 className="text-[28px] font-bold text-[var(--wb-text)] mt-1"><LocalizedText id="knowledgeUploadUi.edf216cb00" /></h1>
+            <h1><LocalizedText id="knowledgeUploadUi.edf216cb00" /></h1>
             <p className="text-sm text-[var(--wb-muted)] mt-1"><LocalizedText id="knowledgeUploadUi.3b6ef811b8" /> {total} <LocalizedText id="knowledgeUploadUi.2df2ccaaaf" /></p>
           </div>
-          <button
-            type="button"
-            onClick={() => setShowModal(true)}
-            className="h-11 px-5 rounded-[10px] bg-[var(--wb-primary)] text-white font-bold border border-[var(--wb-primary)] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center gap-2 min-h-10 active:bg-[var(--wb-primary-active)]"
-          >
-            <Plus className="w-4 h-4" />
-            <LocalizedText id="knowledgeUploadUi.da905dfb4f" />
-          </button>
-        </div>
+          <CreateButton onClick={() => setShowModal(true)}><LocalizedText id="knowledgeUploadUi.da905dfb4f" /></CreateButton>
+        </header>
 
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--wb-muted)]" />
-            <input
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              className="h-11 w-full sm:w-64 rounded-[10px] border border-[var(--wb-border)] pl-9 pr-3 text-sm outline-none focus:border-[var(--wb-selected-border)] bg-white min-h-11"
-              placeholder={i18next.t('knowledgeUploadUi.335ac1602e')}
-            />
-          </div>
-          <select
+          <LibrarySearch value={searchText} onChange={setSearchText} label={t('knowledgeUploadUi.335ac1602e')} />
+          <LibraryFilterSelect
+            label={t('knowledgeUploadUi.435c5259e4')}
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] bg-white min-h-11"
-          >
-            <option value="all"><LocalizedText id="knowledgeUploadUi.a8e369c4b6" /></option>
-            {categoryOptions.map((opt) => (
-              <option key={opt} value={opt}>{opt}</option>
-            ))}
-          </select>
+            onChange={setFilterCategory}
+            options={[
+              { value: 'all', label: t('knowledgeUploadUi.a8e369c4b6') },
+              ...categoryOptions.map((value) => ({ value, label: value })),
+            ]}
+          />
         </div>
 
         {/* List */}
         {loading ? (
           <PageLoading />
+        ) : loadError ? (
+          <MaterialLibraryFeedback error={t('common.loadFailed')} onRetry={fetchList} />
         ) : list.length === 0 ? (
-          <div className="text-center py-20 border border-dashed border-[var(--wb-border)] rounded-[10px] bg-white">
-            <Database className="w-12 h-12 text-[var(--wb-muted)] mx-auto mb-3 opacity-40" />
-            <p className="text-[var(--wb-muted)]"><LocalizedText id="knowledgeUploadUi.d893505e93" /></p>
-          </div>
+          <MaterialLibraryFeedback
+            empty={t('common.noData')}
+            filtered={Boolean(searchText.trim() || filterCategory !== 'all')}
+            onReset={() => { setSearchText(''); setFilterCategory('all'); }}
+          />
         ) : (
           <div className="space-y-6">
             {Object.entries(grouped).map(([cat, items]) => (
@@ -268,20 +266,11 @@ export const KnowledgeUploadPage = () => {
                   {items.map((item) => {
                     const srcType = item.source_type || 'text';
                     const srcLabel = srcType === 'text' ? t('knowledgeUploadUi.srcTypeText') : sourceTypeLabel[srcType] || srcType.toUpperCase();
-                    const srcColor = srcType === 'pdf' ? 'bg-red-100 text-red-700' :
-                      srcType === 'docx' ? 'bg-blue-100 text-blue-700' :
-                      srcType === 'txt' ? 'bg-gray-100 text-gray-700' :
-                      'bg-green-100 text-green-700';
                     return (
                     <div key={item.id} className="bg-white border border-[var(--wb-border)] rounded-[14px] p-4 hover:shadow-md transition-shadow group">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-start gap-2 min-w-0 flex-1">
-                          <div className="relative shrink-0 mt-0.5">
-                            <FileText className="w-5 h-5 text-[var(--wb-muted)]" />
-                            <span className={`absolute -top-1.5 -right-2 text-[8px] font-bold px-1 py-0.5 rounded ${srcColor}`}>
-                              {srcLabel}
-                            </span>
-                          </div>
+                          <FileText className="w-5 h-5 text-[var(--wb-muted)]" />
                           <div className="min-w-0">
                             <div className="font-bold text-sm text-[var(--wb-text)] truncate">{item.title}</div>
                             {item.filename && (
@@ -295,6 +284,7 @@ export const KnowledgeUploadPage = () => {
                               )
                             )}
                             <div className="flex items-center gap-2 mt-1 flex-wrap">
+                              <MetadataTag>{srcLabel}</MetadataTag>
                               <span className="text-xs text-[var(--wb-muted)]">{item.ageRange || t('knowledgeUploadUi.allAges')}</span>
                               <span className="text-xs text-[var(--wb-muted)]">·</span>
                               <span className="text-xs text-[var(--wb-muted)]">{item.chunk_count} <LocalizedText id="knowledgeUploadUi.1a37ffe775" /></span>
@@ -310,7 +300,7 @@ export const KnowledgeUploadPage = () => {
                         <button
                           type="button"
                           onClick={() => handleDelete(item.id, item.title)}
-                          className="opacity-0 group-hover:opacity-100 text-[var(--wb-muted)] hover:text-red-500 transition-all p-1 min-h-10"
+                          data-wb-button="danger" data-wb-size="sm" data-wb-icon aria-label={t('common.delete')}
                           title={i18next.t('common.delete')}
                         >
                           <Trash2 className="w-4 h-4" />
@@ -327,27 +317,24 @@ export const KnowledgeUploadPage = () => {
       </div>
 
       {/* Upload Modal */}
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={closeModal}>
-          <div
-            className="bg-white rounded-[18px] border border-[var(--wb-border)] shadow-[0_8px_32px_rgba(48,43,59,0.10)] w-full max-w-xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-[var(--wb-border)]">
-              <h3 className="text-lg font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.7316801812" /></h3>
-              <button type="button" onClick={closeModal} className="text-[var(--wb-muted)] hover:text-[var(--wb-text)] min-h-10">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+      <Modal
+        open={showModal}
+        title={t('knowledgeUploadUi.7316801812')}
+        onCancel={closeModal}
+        footer={null}
+        maskClosable={false}
+        keyboard={status !== 'uploading'}
+        closable={status !== 'uploading'}
+        width={576}
+      >
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="space-y-2">
                   <span className="text-sm font-bold text-[var(--wb-text)]"><LocalizedText id="knowledgeUploadUi.84428a4828" /></span>
                   <input
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
-                    className="w-full h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] min-h-11"
+                    data-wb-field
                     placeholder={i18next.t('knowledgeUploadUi.e72899cd3a')}
                   />
                 </label>
@@ -357,7 +344,7 @@ export const KnowledgeUploadPage = () => {
                   <select
                     value={category}
                     onChange={(event) => setCategory(event.target.value)}
-                    className="w-full h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] bg-white min-h-11"
+                    data-wb-field
                   >
                     {categoryOptions.map((opt) => (
                       <option key={opt} value={opt}>{opt}</option>
@@ -370,7 +357,7 @@ export const KnowledgeUploadPage = () => {
                   <input
                     value={ageRange}
                     onChange={(event) => setAgeRange(event.target.value)}
-                    className="w-full h-11 rounded-[10px] border border-[var(--wb-border)] px-3 text-sm outline-none focus:border-[var(--wb-selected-border)] min-h-11"
+                    data-wb-field
                     placeholder={i18next.t('knowledgeUploadUi.b7324fb85e')}
                   />
                 </label>
@@ -382,7 +369,7 @@ export const KnowledgeUploadPage = () => {
                   <UploadCloud className="w-8 h-8 text-[var(--wb-muted)] mb-2" />
                   <span className="text-sm font-bold text-[var(--wb-text)]">{selectedNames || t('knowledgeUploadUi.pickFiles')}</span>
                   <span className="text-xs text-[var(--wb-muted)] mt-1">{files.length > 0 ? t('knowledgeUploadUi.filesSelected', { count: files.length }) : t('knowledgeUploadUi.multiFileHint')}</span>
-                  <input type="file" accept=".docx,.pdf,.txt" multiple className="hidden" onChange={handleFileChange} />
+                  <input type="file" accept=".docx,.pdf,.txt" multiple className="sr-only" onChange={handleFileChange} />
                 </label>
               </div>
 
@@ -391,7 +378,7 @@ export const KnowledgeUploadPage = () => {
                 <textarea
                   value={text}
                   onChange={(event) => setText(event.target.value)}
-                  className="w-full min-h-[100px] rounded-[10px] border border-[var(--wb-border)] p-3 text-sm outline-none focus:border-[var(--wb-selected-border)] resize-y"
+                  data-wb-field aria-label={t('knowledgeUploadUi.1fbf57e317')}
                   placeholder={i18next.t('knowledgeUploadUi.a5f43336b1')}
                 />
               </div>
@@ -415,22 +402,20 @@ export const KnowledgeUploadPage = () => {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="h-11 px-4 rounded-[10px] bg-white border border-[var(--wb-border)] text-[var(--wb-muted)] font-bold hover:bg-[var(--wb-page)] transition-colors min-h-10"
+                  data-wb-button="secondary" disabled={status === 'uploading'}
                 >
                   <LocalizedText id="common.cancel" />
                 </button>
                 <button
                   type="submit"
                   disabled={!canSubmit}
-                  className="h-11 px-5 rounded-[10px] bg-[var(--wb-primary)] text-white font-bold border border-[var(--wb-primary)] disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[var(--wb-primary-hover)] transition-colors min-h-10 active:bg-[var(--wb-primary-active)]"
+                  data-wb-button="primary"
                 >
                   {status === 'uploading' ? t('common.uploading') : t('knowledgeUploadUi.uploadToKb')}
                 </button>
               </div>
             </form>
-          </div>
-        </div>
-      )}
+      </Modal>
     </div>
   );
 };

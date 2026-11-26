@@ -2,21 +2,32 @@ import i18next from 'i18next';
 import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
+import { CreateButton, DialogCloseButton, FilterChip, MetadataTag } from '../../components/LibraryControls';
 import { PageLoading } from '../../components/PageLoading';
 import { buildCourseMap, phaseTemplates } from './workflowData';
 import apiService from '../../services/api';
 import {
+  ArrowRight,
+  BookOpen,
   ChevronRight,
+  Clock,
   ClipboardList,
   Copy,
+  Drama,
+  GalleryVerticalEnd,
+  Grid3X3,
   Heart,
-  Image as ImageIcon,
+  Info,
   ListChecks,
+  MessageCircleQuestion,
   MoreVertical,
+  Palette,
   Plus,
+  Puzzle,
   RefreshCw,
   RotateCcw,
   RotateCw,
+  Send,
   Sparkles,
   SlidersHorizontal,
   Star,
@@ -30,21 +41,7 @@ import { EditStepModal } from './lesson-design/EditStepModal';
 import { StepCardActions } from './lesson-design/StepCardActions';
 import { StepDetailModal } from './lesson-design/StepDetailModal';
 import { buildStepFlowItems } from './lesson-design/lessonDesignUtils';
-import planeIcon from '../../assets/create-course/plane.png';
-import bgCourseMap from '../../assets/course-map/bg-map.png';
-import bgCourseMapEn from '../../assets/course-map/bg-map-en.png';
-import stepOneImage from '../../assets/course-map/step-1.png';
-import stepTwoImage from '../../assets/course-map/step-2.png';
-import stepThreeImage from '../../assets/course-map/step-3.png';
-import stepFourImage from '../../assets/course-map/step-4.png';
-import engageImage from '../../assets/course-map/engage.png';
-import empowerImage from '../../assets/course-map/empower.png';
-import executeImage from '../../assets/course-map/execute.png';
-import elevateImage from '../../assets/course-map/elevate.png';
-import iconStepOne from '../../assets/course-map/icon-step-1.png';
-import iconStepTwo from '../../assets/course-map/icon-step-2.png';
-import iconStepThree from '../../assets/course-map/icon-step-3.png';
-import iconStepFour from '../../assets/course-map/icon-step-4.png';
+import './LessonMap.css';
 
 const { TextArea } = Input;
 
@@ -57,12 +54,12 @@ const quickIdeas = [
 ];
 
 const classicActivities = [
-  { icon: '🎱', name: 'Bingo 游戏', nameEn: 'Bingo Game', meta: '词汇复习', metaEn: 'Vocabulary Review' },
-  { icon: '🤔', name: '猜单词', nameEn: 'Guess the Word', meta: '听说练习', metaEn: 'Listening & Speaking' },
-  { icon: '🎭', name: '情景对话', nameEn: 'Role Dialogue', meta: '口语输出', metaEn: 'Oral Output' },
-  { icon: '🃏', name: '闪卡翻转', nameEn: 'Flashcard Flip', meta: '词汇记忆', metaEn: 'Vocabulary Memory' },
-  { icon: '🧩', name: '拼图阅读', nameEn: 'Puzzle Reading', meta: '阅读理解', metaEn: 'Reading Comprehension' },
-  { icon: '🎨', name: '我画你猜', nameEn: 'Draw and Guess', meta: '词汇运用', metaEn: 'Vocabulary Use' },
+  { Icon: Grid3X3, name: 'Bingo 游戏', nameEn: 'Bingo Game', meta: '词汇复习', metaEn: 'Vocabulary Review' },
+  { Icon: MessageCircleQuestion, name: '猜单词', nameEn: 'Guess the Word', meta: '听说练习', metaEn: 'Listening & Speaking' },
+  { Icon: Drama, name: '情景对话', nameEn: 'Role Dialogue', meta: '口语输出', metaEn: 'Oral Output' },
+  { Icon: GalleryVerticalEnd, name: '闪卡翻转', nameEn: 'Flashcard Flip', meta: '词汇记忆', metaEn: 'Vocabulary Memory' },
+  { Icon: Puzzle, name: '拼图阅读', nameEn: 'Puzzle Reading', meta: '阅读理解', metaEn: 'Reading Comprehension' },
+  { Icon: Palette, name: '我画你猜', nameEn: 'Draw and Guess', meta: '词汇运用', metaEn: 'Vocabulary Use' },
 ];
 
 const defaultFlowSteps = [
@@ -91,52 +88,40 @@ const PHASE_DURATION_RATIO = {
 
 const lessonMapMeta = {
   eng: {
+    x: 20.59, y: 25.63,
     number: '1',
     className: 'engage',
-    stepImage: stepOneImage,
-    phaseIcon: engageImage,
-    iconImage: iconStepOne,
-    icon: 'sparkle',
-    tone: '#e8d2df',
-    summary: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+    Icon: Sparkles,
+    tone: '#fae5dd',
+    summary: '通过课堂情境唤起好奇心，建立学习动机。',
     summaryEn: 'Spark curiosity through an immersive scenario and build learning motivation.',
-    position: { left: '20.59%', top: '25.63%' },
   },
   emp: {
+    x: 49.07, y: 34.65,
     number: '2',
     className: 'empower',
-    stepImage: stepTwoImage,
-    phaseIcon: empowerImage,
-    iconImage: iconStepTwo,
-    icon: 'book',
-    tone: '#d8ca8d',
+    Icon: BookOpen,
+    tone: '#f6edcc',
     summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
     summaryEn: 'Build target language through frequent listening, visual, and movement input.',
-    position: { left: '49.07%', top: '34.65%' },
   },
   exc: {
+    x: 34.97, y: 63.15,
     number: '3',
     className: 'execute',
-    stepImage: stepThreeImage,
-    phaseIcon: executeImage,
-    iconImage: iconStepThree,
-    icon: 'checklist',
-    tone: '#d7e5f7',
-    summary: '在真实任务驱动下综合运用方位介词与句型进行表达',
+    Icon: ListChecks,
+    tone: '#e2eef2',
+    summary: '在真实任务中运用目标语言，表达自己的想法。',
     summaryEn: 'Use the target language in an authentic task and express ideas clearly.',
-    position: { left: '34.97%', top: '63.15%' },
   },
   elv: {
+    x: 66, y: 68,
     number: '4',
     className: 'elevate',
-    stepImage: stepFourImage,
-    phaseIcon: elevateImage,
-    iconImage: iconStepFour,
-    icon: 'trophy',
-    tone: '#cbb8a8',
+    Icon: Star,
+    tone: '#e5eddf',
     summary: '分享学习成果，反思收获，培养跨文化意识',
     summaryEn: 'Share outcomes, reflect on learning, and extend cultural awareness.',
-    position: { left: '66.00%', top: '68.00%' },
   },
 };
 
@@ -203,7 +188,7 @@ const phaseDetailData = {
   Engage: {
     key: 'eng',
     title: 'Engage · 引入',
-    goal: '通过沉浸式情境激发学生对动物星球的好奇心，建立学习动机',
+    goal: '通过课堂情境唤起好奇心，建立学习动机。',
     lang: "核心词汇：animal, where, in, on, under; 核心句型：Where is the...? It's...",
     sel: '社会情感学习：好奇心、探索欲、团队协作意识',
     perma: 'Positive Emotion（积极情绪）：通过情境创设激发兴奋和期待感',
@@ -223,7 +208,7 @@ const phaseDetailData = {
   Execute: {
     key: 'exc',
     title: 'Execute · 实践',
-    goal: '在真实任务驱动下综合运用方位介词与句型进行表达',
+    goal: '在真实任务中运用目标语言，表达自己的想法。',
     lang: '在实际情境中运用目标语言进行交际，完成任务',
     sel: '合作学习、问题解决、创造性思维、团队协作',
     perma: 'Accomplishment（成就感）：完成任务获得成就感，建立自信',
@@ -424,6 +409,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   const [loading, setLoading] = React.useState(true);
   const [viewMode, setViewMode] = React.useState('map');
   const [activeMapPhase, setActiveMapPhase] = React.useState(null);
+  const mapViewportRef = React.useRef(null);
   const [openCards, setOpenCards] = React.useState(() => new Set());
   const [menuKey, setMenuKey] = React.useState(null);
   const [editing, setEditing] = React.useState(null);
@@ -1168,39 +1154,37 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     teacherScript: step.script || step.teacherScript || '',
   });
 
-  const renderMapIcon = (icon) => {
-    if (icon === 'book') return <ClipboardList size={28} />;
-    if (icon === 'checklist') return <ListChecks size={28} />;
-    if (icon === 'trophy') return <Star size={30} />;
-    return <Sparkles size={28} />;
-  };
-
   const renderOverviewStepCard = (phase, step, index, keyPrefix = '') => {
     const cardKey = `${keyPrefix}${phase.key}-${index}`;
     const isOpen = openCards.has(cardKey);
     const stepTitle = getDisplayText(step.title);
     const stepGoal = getDisplayText(step.goal);
     const stepActivity = getDisplayText(step.activity);
-    const phaseMapMeta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
+    const { Icon } = lessonMapMeta[phase.key] || lessonMapMeta.eng;
 
     return (
       <article
         className={`step-card ${isOpen ? 'open' : ''}`}
         key={cardKey}
-        onClick={() => toggleCard(cardKey)}
       >
         <div className="step-summary">
-          <div className="step-chevron"><ChevronRight size={12} /></div>
-          <button type="button" className="step-thumb-placeholder" title={i18next.t('lessonPlanUi.504a62c8a4')} onClick={(event) => event.stopPropagation()}>
-            <img src={phaseMapMeta.phaseIcon} alt="" />
+          <button
+            type="button"
+            className="lesson-step-toggle"
+            aria-expanded={isOpen}
+            aria-label={`${t(isOpen ? 'common.collapse' : 'common.expand')} ${stepTitle}`}
+            onClick={() => toggleCard(cardKey)}
+          >
+            <span className="step-chevron" aria-hidden="true"><ChevronRight size={14} /></span>
+            <span className="lesson-phase-symbol" aria-hidden="true"><Icon size={18} /></span>
+            <span className="step-main">
+              <span className="step-name">
+                <span className="step-title-text">{stepTitle}</span>
+                <span className="step-dur-badge">{formatDuration(step.duration, 8)}</span>
+              </span>
+              <span className="step-lo-preview">{compactOverviewText(stepGoal, 76)}</span>
+            </span>
           </button>
-          <div className="step-main">
-            <div className="step-name">
-              <span className="step-title-text">{stepTitle}</span>
-              <span className="step-dur-badge">{formatDuration(step.duration, 8)}</span>
-            </div>
-            <div className="step-lo-preview">{compactOverviewText(stepGoal, 76)}</div>
-          </div>
           <div className="step-right-ctrl" onClick={(event) => event.stopPropagation()}>
             <button
               className={`step-menu-btn ${menuKey === cardKey ? 'active' : ''}`}
@@ -1307,9 +1291,9 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     const phaseMapMeta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
 
     return (
-      <section className={`tbl-phase-card ${phase.key}`} data-fixed="true" data-duration="15" key={`${keyPrefix}${phase.key}`}>
+      <section className={`tbl-phase-card ${phase.key}`} data-fixed="true" data-duration="15" style={{ '--phase-tint': phaseMapMeta.tone }} key={`${keyPrefix}${phase.key}`}>
         <div className="tbl-phase-hd">
-          <img className="tbl-phase-number-img" src={phaseMapMeta.stepImage} alt="" />
+          <span className="lesson-phase-number">{phaseMapMeta.number}</span>
           <div className="tbl-phase-hd-left">
             <div className="tbl-phase-title-row">
               <span className="tbl-phase-title">{getPhaseTitle(phase)}</span>
@@ -1332,7 +1316,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 openPhaseDetail(phase);
               }}
             >
-              <MoreVertical size={16} />
+              <Info size={16} aria-hidden="true" />
             </button>
             {menuKey === `${keyPrefix}phase-${phase.key}` && (
               <div className="step-menu-dropdown open phase-menu">
@@ -1369,34 +1353,80 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     const selectedMeta = selected ? lessonMapMeta[selected.key] : null;
 
     return (
-      <div className={`lesson-map-shell ${selected ? 'drawer-open' : ''}`}>
-        <div className="lesson-map-canvas" style={{ backgroundImage: `url(${isChinese ? bgCourseMap : bgCourseMapEn})` }}>
-          <div className="lesson-map-art">
-            {data.map((phase) => {
-              const meta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
-              const phaseMinutes = parseMinutes(phase.duration);
-              const summary = isChinese
-                ? (phase.steps.map((step) => step.goal).filter(Boolean).join('；') || meta.summary)
-                : meta.summaryEn;
-              const phaseTitleText = [getPhaseTitle(phase), getPhaseName(phase)].filter(Boolean).join(' ');
-              const summaryText = getDisplayText(summary);
-              return (
-                <article
-                  key={phase.key}
-                  className={`lesson-map-card ${meta.className}`}
-                  style={{ left: meta.position.left, top: meta.position.top, '--map-card-bg': meta.tone }}
-                >
-                  <img className="lesson-map-step-num" src={meta.stepImage} alt="" />
-                  <div className="lesson-map-card-main">
-                    <div className="lesson-map-card-head">
-                      <h3>{phaseTitleText}</h3>
-                      <span className="lesson-map-card-icon">
-                        {meta.iconImage ? <img src={meta.iconImage} alt="" /> : renderMapIcon(meta.icon)}
-                      </span>
+      <div className="lesson-roadmap-shell">
+        <nav className="lesson-roadmap-jumps" aria-label={isChinese ? '地图站点' : 'Map stations'}>
+          <span>{isChinese ? '定位站点' : 'Go to station'}</span>
+          {data.map((phase) => {
+            const meta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
+            return (
+              <button
+                key={phase.key}
+                type="button"
+                data-wb-button="secondary"
+                data-wb-size="sm"
+                aria-label={`${meta.number} · ${getPhaseTitle(phase)}`}
+                aria-controls={`lesson-station-${phase.key}`}
+                onClick={(event) => {
+                  const station = document.getElementById(event.currentTarget.getAttribute('aria-controls'));
+                  const viewport = mapViewportRef.current;
+                  if (!station || !viewport) return;
+                  viewport.scrollTo({
+                    left: station.offsetLeft - (viewport.clientWidth - station.offsetWidth) / 2,
+                    top: station.offsetTop - (viewport.clientHeight - station.offsetHeight) / 2,
+                  });
+                  station.focus({ preventScroll: true });
+                }}
+              >
+                {meta.number}
+              </button>
+            );
+          })}
+        </nav>
+        <section ref={mapViewportRef} className="lesson-roadmap" aria-labelledby="lesson-roadmap-title" tabIndex={0}>
+          <div className="lesson-roadmap-scene">
+            <header className="lesson-roadmap-copy">
+              <h3 id="lesson-roadmap-title">{isChinese ? '成长路线图' : 'Growth Roadmap'}</h3>
+              <p>{isChinese ? '四步教学路径，点燃兴趣，收获成长。' : 'A four-step path to spark curiosity and fuel growth.'}</p>
+            </header>
+            <svg className="lesson-roadmap-trail" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+              <path d="M169 366 C133 427 146 551 223 557 S385 594 428 529 Q456 485 454 456 C467 551 431 585 366 601 S296 682 313 742 C277 807 280 911 356 927 S553 953 595 879 Q623 834 623 790" />
+            </svg>
+            <aside className="lesson-roadmap-note">
+              <strong>{isChinese ? '设计思路' : 'Design Flow'}</strong>
+              <p>{isChinese
+                ? '从引入兴趣到能力赋能，再到实践应用，最后升华拓展，形成完整学习闭环。'
+                : 'From spark to skill, from practice to growth, each stage builds on the last for a complete learning journey.'}</p>
+            </aside>
+            <ol className="lesson-roadmap-stages">
+              {data.map((phase) => {
+                const meta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
+                const { Icon } = meta;
+                const phaseGoals = phase.steps.map((step) => step.goal).filter(Boolean);
+                const summary = phaseGoals.join(isChinese ? '；' : ' · ') || (isChinese ? meta.summary : meta.summaryEn);
+                const phaseTitleText = [getPhaseTitle(phase), getPhaseName(phase)].filter(Boolean).join(' ');
+                const summaryText = getDisplayText(summary);
+                return (
+                  <li
+                    key={phase.key}
+                    id={`lesson-station-${phase.key}`}
+                    className="lesson-roadmap-stage"
+                    style={{ left: `${meta.x}%`, top: `${meta.y}%`, '--phase-tint': meta.tone }}
+                    tabIndex={-1}
+                    aria-label={phaseTitleText}
+                  >
+                    <button
+                      className="lesson-roadmap-waypoint"
+                      type="button"
+                      aria-label={`${meta.number} · ${phaseTitleText} · ${t('lesson.detail')}`}
+                      onClick={() => setActiveMapPhase(phase)}
+                    >{meta.number}</button>
+                    <div className="lesson-roadmap-heading">
+                      <h4>{phaseTitleText}</h4>
+                      <Icon size={18} aria-hidden="true" />
                     </div>
                     <button
                       type="button"
-                      className="lesson-map-card-summary-btn"
+                      className="lesson-roadmap-summary"
                       title={summaryText}
                       onClick={() => setMapSummaryModal({
                         title: phaseTitleText,
@@ -1407,19 +1437,19 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                     >
                       {summaryText}
                     </button>
-                    <div className="lesson-map-card-meta">
-                      <strong>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</strong>
-                      <span>{formatDuration(phaseMinutes > 0 ? phase.duration : '', 15)}</span>
+                    <div className="lesson-roadmap-meta">
+                      <span>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
+                      <MetadataTag><Clock size={12} aria-hidden="true" />{formatDuration(phase.duration)}</MetadataTag>
                     </div>
-                    <button type="button" className="lesson-map-detail-btn" onClick={() => setActiveMapPhase(phase)}>
-                      {t('lesson.detail')} <span aria-hidden="true">→</span>
+                    <button type="button" data-wb-button="secondary" data-wb-size="sm" onClick={() => setActiveMapPhase(phase)}>
+                      {t('lesson.detail')} <ArrowRight size={14} aria-hidden="true" />
                     </button>
-                  </div>
-                </article>
-              );
-            })}
+                  </li>
+                );
+              })}
+            </ol>
           </div>
-        </div>
+        </section>
 
         {selected && selectedMeta && (
           <aside className={`lesson-map-drawer ${selectedMeta.className}`} style={{ '--map-card-bg': selectedMeta.tone }}>
@@ -1442,19 +1472,19 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   }
 
   return (
-    <div id="ed-tbl" className={`${viewMode === 'map' ? 'lesson-map-mode' : ''} ${isChinese ? 'lesson-lang-zh' : 'lesson-lang-en'}`}>
+    <div id="ed-tbl" className={`${viewMode === 'map' ? 'lesson-roadmap-mode' : ''} ${isChinese ? 'lesson-lang-zh' : 'lesson-lang-en'}`}>
       {toast && <div className="tbl-toast">{toast}</div>}
       <div className="lesson-design-page-header">
         <div className="lesson-design-title-row">
           <h2 className="lesson-design-page-title">{isChinese ? `${t('workflow.lesson.title')}|Lesson Plan` : t('workflow.lesson.title')}</h2>
-          <div className="lesson-design-view-switch" role="group" aria-label={t('workflow.lesson.title')}>
-            <button type="button" className={viewMode === 'map' ? 'active' : ''} onClick={() => setViewMode('map')}>{t('workflow.lesson.mapMode')}</button>
-            <button type="button" className={viewMode === 'overview' ? 'active' : ''} onClick={() => setViewMode('overview')}>{t('workflow.lesson.overviewMode')}</button>
+          <div className="lesson-view-filters" role="group" aria-label={t('workflow.lesson.title')}>
+            <FilterChip selected={viewMode === 'map'} onClick={() => setViewMode('map')}>{t('workflow.lesson.mapMode')}</FilterChip>
+            <FilterChip selected={viewMode === 'overview'} onClick={() => setViewMode('overview')}>{t('workflow.lesson.overviewMode')}</FilterChip>
           </div>
-          <img src={planeIcon} alt="" className="lesson-design-plane" />
+          <Send className="lesson-title-symbol" size={20} aria-hidden="true" />
         </div>
         <div className="lesson-design-actions">
-          <Button className="btn-ghost" icon={<RefreshCw size={16} />} loading={regenAllLoading} onClick={handleRegenerateAll}>
+          <Button data-wb-button="secondary" icon={<RefreshCw size={16} />} loading={regenAllLoading} onClick={handleRegenerateAll}>
             {regenAllLoading ? t('workflow.lesson.generatingShort') : t('workflow.lesson.regenerate')}
           </Button>
           <Button className="btn-next-step" onClick={onNext}>
@@ -1485,13 +1515,13 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
           <div className={`modal lesson-map-summary-modal ${mapSummaryModal.className || ''}`} style={{ '--map-card-bg': mapSummaryModal.tone || '#e8d2df' }}>
             <div className="modal-hd">
               <div className="modal-t">{mapSummaryModal.title}</div>
-              <button type="button" className="modal-x" onClick={() => setMapSummaryModal(null)} aria-label={t('common.close')}><X size={22} /></button>
+              <DialogCloseButton onClick={() => setMapSummaryModal(null)} />
             </div>
             <div className="modal-body">
               <div className="lesson-map-summary-full">{mapSummaryModal.content}</div>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-primary" onClick={() => setMapSummaryModal(null)}>{t('common.close')}</button>
+              <button type="button" data-wb-button="primary" onClick={() => setMapSummaryModal(null)}>{t('common.close')}</button>
             </div>
           </div>
         </div>
@@ -1501,7 +1531,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
           <div className="modal" style={{ width: 'min(420px, 90vw)', background: 'var(--wb-surface)', borderRadius: 18, border: '1px solid var(--wb-border)', boxShadow: '0 20px 64px rgba(48,43,59,.16)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <div className="modal-hd">
               <div className="modal-t">{t('lesson.regeneratePhase')}</div>
-              <button type="button" className="modal-x" onClick={() => setRegenPhaseConfirm(null)}>×</button>
+              <DialogCloseButton onClick={() => setRegenPhaseConfirm(null)} />
             </div>
             <div className="modal-body" style={{ padding: '18px 24px' }}>
               <p style={{ fontSize: 14, color: 'var(--wb-muted)', lineHeight: 1.6 }}>
@@ -1509,8 +1539,8 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
               </p>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setRegenPhaseConfirm(null)}>{t('common.cancel')}</button>
-              <button type="button" className="mo-btn-primary" onClick={() => { const pk = regenPhaseConfirm; setRegenPhaseConfirm(null); handleRegeneratePhase(pk); }}>
+              <button type="button" data-wb-button="secondary" onClick={() => setRegenPhaseConfirm(null)}>{t('common.cancel')}</button>
+              <button type="button" data-wb-button="primary" onClick={() => { const pk = regenPhaseConfirm; setRegenPhaseConfirm(null); handleRegeneratePhase(pk); }}>
                 <RefreshCw size={13} />
                 {t('lesson.confirmRegenerate')}
               </button>
@@ -1527,7 +1557,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 {isChinese ? stripChinesePhaseParentheses(phaseDetail.title) : t(phaseTranslationKeys[phaseDetail.key] || 'lesson.phaseEngage')}
                 <span className="pem-readonly-badge">{t('lesson.readonlyNote')}</span>
               </div>
-              <button type="button" className="modal-x" onClick={() => setPhaseDetail(null)} aria-label={t('common.close')}><X size={20} /></button>
+              <DialogCloseButton onClick={() => setPhaseDetail(null)} />
             </div>
             <div className="modal-body">
               <div className="pem-wrap" style={{ '--pem-accent': phaseDetail.color }}>
@@ -1556,7 +1586,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
               </div>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setPhaseDetail(null)}>{t('common.close')}</button>
+              <button type="button" data-wb-button="secondary" onClick={() => setPhaseDetail(null)}>{t('common.close')}</button>
             </div>
           </div>
         </div>
@@ -1574,19 +1604,19 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                   {course?.courseTitle || course?.title || t('lessonPlanUi.demoCourseTitle')} · {course?.ageGroup || course?.age || t('lessonPlanUi.ageFallback')} / {course?.grade || t('lessonPlanUi.gradeFallback')}
                 </div>
               </div>
-              <button type="button" className="modal-x" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }} aria-label={t('common.close')}><X size={22} /></button>
+              <DialogCloseButton onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }} />
             </div>
 
             <div className="modal-body as-modal-body">
               <div className="as-left-panel">
                 <div className="as-gen-tabs">
-                  <button className={`as-gen-tab ${genMode === 'ai' ? 'active' : ''}`} type="button" onClick={() => setGenMode('ai')}>
+                  <button data-wb-filter="" aria-pressed={genMode === 'ai'} type="button" onClick={() => setGenMode('ai')}>
                     <Sparkles size={13} /> {t('lesson.aiGenerate')}
                   </button>
-                  <button className={`as-gen-tab ${genMode === 'classic' ? 'active' : ''}`} type="button" onClick={() => setGenMode('classic')}>
+                  <button data-wb-filter="" aria-pressed={genMode === 'classic'} type="button" onClick={() => setGenMode('classic')}>
                     <Star size={13} /> {t('lesson.classicActivities')}
                   </button>
-                  <button className={`as-gen-tab ${genMode === 'mine' ? 'active' : ''}`} type="button" onClick={() => setGenMode('mine')}>
+                  <button data-wb-filter="" aria-pressed={genMode === 'mine'} type="button" onClick={() => setGenMode('mine')}>
                     <Heart size={13} /> {t('lesson.myFavorites')}
                   </button>
                 </div>
@@ -1596,7 +1626,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                     <div className="as-qh-label">{t('lesson.promptHint')}</div>
                     <div className="as-qh-chips">
                       {quickIdeas.map((item) => (
-                        <button className="as-qh-chip" type="button" key={item.label} onClick={() => fillIdea(isChinese ? item.text : item.textEn)}>
+                        <button data-wb-button="secondary" data-wb-size="sm" type="button" key={item.label} onClick={() => fillIdea(isChinese ? item.text : item.textEn)}>
                           {isChinese ? item.label : item.labelEn}
                         </button>
                       ))}
@@ -1609,7 +1639,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                     onChange={(event) => setIdeaText(event.target.value)}
                     placeholder={t('lesson.activityIdeaPlaceholder')}
                   />
-                  <button type="button" className="as-gen-btn" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
+                  <button type="button" data-wb-button="primary" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                     <Sparkles size={14} />
                     {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('lesson.generateDraft')}
                   </button>
@@ -1623,19 +1653,18 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                         type="button"
                         className={`as-classic-card ${selectedClassic === activity.name ? 'selected' : ''}`}
                         key={activity.name}
-                        onClick={() => {
-                          setSelectedClassic(activity.name);
-                        }}
+                        aria-pressed={selectedClassic === activity.name}
+                        onClick={() => setSelectedClassic(activity.name)}
                       >
-                        <div className="as-classic-icon">{activity.icon}</div>
-                        <div className="as-classic-name">{isChinese ? activity.name : activity.nameEn}</div>
-                        <div className="as-classic-meta">{isChinese ? activity.meta : activity.metaEn}</div>
+                        <activity.Icon className="lesson-classic-symbol" size={18} aria-hidden="true" />
+                        <span className="as-classic-name">{isChinese ? activity.name : activity.nameEn}</span>
+                        <span className="as-classic-meta">{isChinese ? activity.meta : activity.metaEn}</span>
                       </button>
                     ))}
                   </div>
                   {selectedClassic && <div className="as-selected-hint">{t('lesson.selected')}<strong>{getClassicDisplayName(selectedClassic)}</strong></div>}
                   {selectedClassic && (
-                    <button type="button" className="as-gen-btn classic-gen" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
+                    <button type="button" data-wb-button="primary" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
                       <Sparkles size={14} />
                       {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('lesson.generateDraft')}
                     </button>
@@ -1662,7 +1691,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                           </div>
                           <button
                             type="button"
-                            className="as-saved-item-del"
+                            data-wb-button="danger" data-wb-size="sm" data-wb-icon="" aria-label={t('common.delete')}
                             onClick={(e) => { e.stopPropagation(); handleDeleteSavedStep(record); }}
                           >
                             <Trash2 size={12} />
@@ -1803,12 +1832,11 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
             </div>
 
             <div className="modal-ft">
-	              <button type="button" className="as-ft-cancel" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }}>{t('common.cancel')}</button>
+	              <button type="button" data-wb-button="secondary" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }}>{t('common.cancel')}</button>
               <div className="as-ft-spacer" />
-              <button type="button" className="as-ft-confirm" id="asConfirmBtn" onClick={addDraftStep}>
-                <span className="add-plus" aria-hidden="true">+</span>
+              <CreateButton id="asConfirmBtn" onClick={addDraftStep}>
 	                {regenTarget ? t('lesson.confirmRegenerate') : insertTarget ? t('lesson.insertBefore') : t('lesson.addToOutline')}
-              </button>
+              </CreateButton>
             </div>
           </div>
         </div>

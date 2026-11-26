@@ -45,6 +45,47 @@
     return data;
   }
 
+  function caseLibrary(moduleId) {
+    if (offline) return null;
+    const path = '/api/workbench-cases/' + encodeURIComponent(moduleId);
+    let items = [];
+    let message = '';
+    let canPublish = false;
+    async function load() {
+      try {
+        const { data, canPublish: allowed } = await request(path, { timeout: 12000 });
+        if (!Array.isArray(data)
+          || data.some(item => !item || typeof item.id !== 'string')
+          || new Set(data.map(item => item.id)).size !== data.length) {
+          throw new Error('案例库数据无效。');
+        }
+        items = data;
+        canPublish = allowed === true;
+        message = items.length ? '' : '暂无已发布的案例。';
+      } catch {
+        message = '暂时无法读取平台案例，请稍后重试。';
+      }
+    }
+    return {
+      get items() { return items; },
+      get message() { return message; },
+      get canPublish() { return canPublish; },
+      find(id) { return items.find(item => item.id === id); },
+      load,
+      async publish(sourceId) {
+        if (!canPublish) throw new Error('只有平台管理员可以发布案例。');
+        if (!window.confirm('将此作品已确认的授课版发布到平台案例库？')) return false;
+        const { data } = await request(path, { method: 'POST', body: { sourceId }, timeout: 12000 });
+        if (!data?.id) throw new Error('后台未确认案例发布。');
+        const index = items.findIndex(item => item.id === data.id);
+        if (index < 0) items = [...items, data];
+        else items = items.map(item => item.id === data.id ? data : item);
+        message = '';
+        return true;
+      },
+    };
+  }
+
   function mediaUrl(value) {
     return typeof value === 'string' && /^(?:https?:\/\/|\/[^/\\])/i.test(value) && !/[\\\x00-\x1f]/.test(value);
   }
@@ -236,5 +277,5 @@
     };
   }
 
-  window.WBWorkbenchApi = { offline, readOnly: readOnlyPreview, request, upload, generateImage, activityStore };
+  window.WBWorkbenchApi = { offline, readOnly: readOnlyPreview, request, upload, generateImage, activityStore, caseLibrary };
 })();

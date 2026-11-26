@@ -162,12 +162,12 @@ export function IntegratedModuleHost() {
                 <>
                   <h2>暂时无法打开{INTEGRATED_MODULES[id].title}</h2>
                   <p>请重试，或返回工作看板。已有活动保留在当前浏览器。</p>
-                  <button type="button" onClick={() => retry(id)}>重新载入</button>
+                  <button type="button" data-wb-button="primary" onClick={() => retry(id)}>重新载入</button>
                 </>
               ) : (
                 <PageLoading label={`正在打开${INTEGRATED_MODULES[id].title}`} />
               )}
-              <button type="button" className="secondary" onClick={() => navigate('/')}>返回工作看板</button>
+              <button type="button" data-wb-button="secondary" onClick={() => navigate('/')}>返回工作看板</button>
             </div>
           )}
         </div>
@@ -182,10 +182,10 @@ export function IntegratedModuleHost() {
           ) : (
             <PageLoading label={`正在打开${INTEGRATED_MODULES[active].title}`} />
           )}
-          <button type="button" className="secondary" onClick={() => navigate('/')}>返回工作看板</button>
+          <button type="button" data-wb-button="secondary" onClick={() => navigate('/')}>返回工作看板</button>
         </div>
       )}
-      {notice && active && <div className="integrated-module-notice" role="alert"><span>{notice}</span><button type="button" aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
+      {notice && active && <div className="integrated-module-notice" role="alert"><span>{notice}</span><button type="button" data-wb-button="quiet" data-wb-size="sm" data-wb-icon aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
     </section>
   );
 }

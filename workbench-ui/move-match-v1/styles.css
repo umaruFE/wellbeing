@@ -83,9 +83,7 @@ small,.muted{color:var(--color-text-secondary)}
 .field .error-text{color:var(--color-error);font-size:12px}
 .two-fields{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .mini-actions{display:flex;gap:5px;flex-wrap:wrap}
-.preview-toggle{display:flex;gap:4px}
-.preview-toggle button{border:0;background:transparent;padding:7px 10px;font-size:13px;color:var(--color-text-secondary);cursor:pointer;border-radius:6px}
-.preview-toggle button.active{background:var(--color-selected);color:var(--color-selected-text)}
+.preview-toggle{display:flex;flex-wrap:wrap;gap:var(--wb-space-2)}
 .settings-layout{max-width:1120px;display:grid;grid-template-columns:minmax(300px,1fr) minmax(330px,1fr);gap:32px;margin:28px auto;padding:0 28px 30px}
 .settings-panel{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:12px;padding:28px}
 .settings-panel h2{font-size:18px;margin-bottom:22px}
@@ -263,8 +261,8 @@ dialog[open]{display:flex;flex-direction:column;overflow:hidden}
 .question-workspace-heading h2{font-size:18px}
 .question-workspace-heading p{font-size:12px;color:var(--color-text-secondary);line-height:1.6;margin-top:6px}
 .question-view-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.question-filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
-.question-filters button span{font-size:11px;opacity:.8;margin-left:4px;font-variant-numeric:tabular-nums}
+.question-filters{display:flex;flex-wrap:wrap;gap:var(--wb-space-2);margin-bottom:14px}
+
 .question-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
 .question-card{min-width:0;padding:14px;background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:12px;scroll-margin-top:95px}
 .question-card.is-editing{border-color:var(--color-selected-border)}

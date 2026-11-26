@@ -11,13 +11,13 @@
   },
   "generator": {
     "path": "scripts/package-workbench.py",
-    "sha256": "7cc6b35cc2e9e9b92bae9434f79e68ddffab9e3433b2b61c0456c3f55b089d91"
+    "sha256": "53dee1634d54827feca8fa8c9a7de4a3af551e881fa107421f5eff6e4a60381f"
   },
   "modules": {
     "song": {
       "file": "song.html",
-      "sha256": "a3418c2f1725417722aa8f8bc69af93062cfd3fa7d1da1347d801fa60942dd33",
-      "bytes": 751661,
+      "sha256": "246b74ab51a644f3be45d1a0630870758d87d0bcc3f3226c6fc2b5bef8411831",
+      "bytes": 752827,
       "extractedDocument": {
         "sha256": "d9543f84df69aac2eb004491df7a628b69513646404902477d3461d66ffee326",
         "bytes": 747219
@@ -137,15 +137,15 @@
         {
           "file": "workbench-api.js",
           "source": "workbench-ui/workbench-api.js",
-          "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
-          "bytes": 10257
+          "sha256": "819e8727a82424f4e78ed88ad69ebee9397130f6f5920ae33c483bb30b2fdd01",
+          "bytes": 12344
         }
       ]
     },
     "music": {
       "file": "music.html",
-      "sha256": "c74651e8ed88ccca947c00bd84f3cd2936c029a5cf792011ba9f415ec1ae4e7b",
-      "bytes": 4566685,
+      "sha256": "f0e026306b2a5a9c0bc21f36597705be509b5fa64d8091c8fabcc6021902504d",
+      "bytes": 4567852,
       "extractedDocument": {
         "sha256": "b543c5db7788721fc06cb22d121f30e2c05b4ff6cafeed1969130f23774ee758",
         "bytes": 4559518
@@ -284,15 +284,15 @@
         {
           "file": "workbench-api.js",
           "source": "workbench-ui/workbench-api.js",
-          "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
-          "bytes": 10257
+          "sha256": "819e8727a82424f4e78ed88ad69ebee9397130f6f5920ae33c483bb30b2fdd01",
+          "bytes": 12344
         }
       ]
     },
     "yoga": {
       "file": "yoga.html",
-      "sha256": "c38a2982207f2672727df2c0e1a7e39b3f8d5394ecce05c1b9a115f31f85f8db",
-      "bytes": 6484913,
+      "sha256": "79c98750f32aad78fcf525c04b94a6b2dffb8fbb17c9220fedcae35f3d3c76d6",
+      "bytes": 6485965,
       "extractedDocument": {
         "sha256": "580890f00d665a5ee678c4642cc0a438f5530023d0cb7aa0fe19afb46dcf931d",
         "bytes": 6406089
@@ -420,13 +420,13 @@
           },
           {
             "path": "workbench-ui/yoga/library.js",
-            "sha256": "8674221156771f7030063b53fad3b3a5040e8e008457f9edbb3a47052bab09a9",
-            "bytes": 19360
+            "sha256": "1dd37450cd5320e4f4dd97eabd150f0ce2aa32f51c7c172ea2b0eca818b27d8e",
+            "bytes": 19426
           },
           {
             "path": "workbench-ui/yoga/app.js",
-            "sha256": "d88a7870974337d681ada1ad05d3cc5516641a8d78dd723f4388a156b918c786",
-            "bytes": 1678029
+            "sha256": "3fe5ea1a26ea6c14da19351149f755e40b1a449503935d9b9b5e9c44746ecae3",
+            "bytes": 1679015
           },
           {
             "path": "workbench-ui/yoga/wonder-case.js",
@@ -610,8 +610,8 @@
         {
           "file": "workbench-api.js",
           "source": "workbench-ui/workbench-api.js",
-          "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
-          "bytes": 10257
+          "sha256": "819e8727a82424f4e78ed88ad69ebee9397130f6f5920ae33c483bb30b2fdd01",
+          "bytes": 12344
         },
         {
           "file": "yoga-existing-backend.js",
@@ -1229,7 +1229,7 @@
   ],
   "totals": {
     "generatedFilesExcludingManifest": 127,
-    "bytesExcludingManifest": 97288064,
+    "bytesExcludingManifest": 97293536,
     "inlineSyntaxChecks": 48,
     "storageLiteralReplacements": 18
   },
@@ -1243,8 +1243,8 @@
     {
       "file": "workbench-api.js",
       "source": "workbench-ui/workbench-api.js",
-      "sha256": "cd8dfecca65f0f8730bc141a25783925d654c5c7cf73e9b8da465882202257d0",
-      "bytes": 10257
+      "sha256": "819e8727a82424f4e78ed88ad69ebee9397130f6f5920ae33c483bb30b2fdd01",
+      "bytes": 12344
     },
     {
       "file": "yoga-existing-backend.js",

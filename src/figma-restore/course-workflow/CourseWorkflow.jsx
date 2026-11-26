@@ -651,18 +651,32 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   return (
     <section className={`fr-workflow view-${workflowSteps[current].key}-active`}>
       <header className="fr-editor-tb">
-        <Button icon={<ArrowLeft size={16} />} aria-label="返回课程列表" onClick={onBack}>{t('createCourse.backToList')}</Button>
-        <span className="fr-tb-course">{displayCourseTitle}</span>
-        <span className="fr-tb-divider">|</span>
+        <div className="fr-wf-context">
+          <button
+            type="button"
+            data-wb-button="quiet"
+            data-wb-size="sm"
+            data-wb-icon
+            aria-label={t('createCourse.backToList')}
+            title={t('createCourse.backToList')}
+            onClick={onBack}
+          >
+            <ArrowLeft size={16} aria-hidden="true" />
+          </button>
+          <h1 className="fr-tb-course" title={displayCourseTitle}>{displayCourseTitle}</h1>
+        </div>
         <div className="fr-wf-bridge">
           {workflowSteps.map((step, index) => (
             <React.Fragment key={step.key}>
               <button
                 type="button"
                 className={`fr-wf-step ${index < current ? 'done' : index === current ? 'active' : 'pending'}`}
+                data-wb-button="secondary"
+                aria-current={index === current ? 'step' : undefined}
+                aria-label={t(`workflow.steps.${step.key}`)}
                 onClick={() => setCurrent(index)}
               >
-                <span className="fr-wf-n">{index + 1}</span>
+                <span className="fr-wf-n" aria-hidden="true">{index + 1}</span>
                 <span>
                   <b>{t(`workflow.steps.${step.key}`)}</b>
                   <small>
@@ -674,53 +688,44 @@ export function CourseWorkflow({ initialCourse, onBack }) {
                   </small>
                 </span>
               </button>
-              {index < workflowSteps.length - 1 && <span className="fr-wf-arrow">→</span>}
+              {index < workflowSteps.length - 1 && <span className="fr-wf-arrow" aria-hidden="true" />}
             </React.Fragment>
           ))}
         </div>
-        <div className="fr-tb-spacer" />
-        <div
-          className={`fr-autosave is-${activeSaveStatus}`}
-          title={activeSaveText}
-          aria-label={activeSaveText}
-        >
-          {activeSaveStatus === 'saving' && <Loader2 className="fr-autosave-spinner" size={16} />}
-          {activeSaveStatus === 'error' && <CircleAlert size={16} />}
-          {activeSaveStatus !== 'saving' && activeSaveStatus !== 'error' && <Check size={16} />}
-        </div>
-        <Button
-          className="fr-save-btn"
-          loading={activeSaveStatus === 'saving'}
-          onClick={handleToolbarSave}
-        >
-          {t('workflow.toolbar.save')}
-        </Button>
-        {workflowSteps[current].key === 'ppt' && (
-          <Button
-            className="fr-export-btn"
-            icon={<Download size={15} />}
-            loading={exporting}
-            onClick={exportPpt}
-          >
-            {t('workflow.toolbar.export')}
+        <div className="fr-wf-actions">
+          <div className={`fr-autosave is-${activeSaveStatus}`} title={activeSaveText} role="status" aria-label={activeSaveText}>
+            {activeSaveStatus === 'saving' && <Loader2 className="fr-autosave-spinner" size={16} aria-hidden="true" />}
+            {activeSaveStatus === 'error' && <CircleAlert size={16} aria-hidden="true" />}
+            {activeSaveStatus !== 'saving' && activeSaveStatus !== 'error' && <Check size={16} aria-hidden="true" />}
+          </div>
+          <Button className="fr-save-btn" loading={activeSaveStatus === 'saving'} onClick={handleToolbarSave}>
+            {t('workflow.toolbar.save')}
           </Button>
-        )}
-        <button
-          type="button"
-          className="fr-task-button"
-          onClick={() => {
-            loadTaskCount();
-            setTaskDrawerOpen(true);
-          }}
-        >
-          <span className="task-dot" />
-          <span className="task-text">{t('header.taskCenter')} {taskCount}</span>
-        </button>
-        <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
-        <Button className="fr-publish-btn" loading={publishing} onClick={handlePublish}>{t('workflow.toolbar.publish')}</Button>
+          {workflowSteps[current].key === 'ppt' && (
+            <Button className="fr-export-btn" icon={<Download size={15} aria-hidden="true" />} loading={exporting} onClick={exportPpt}>
+              {t('workflow.toolbar.export')}
+            </Button>
+          )}
+          <button
+            type="button"
+            className="fr-task-button"
+            data-wb-button="secondary"
+            aria-label={t('workflow.toolbar.taskCenter', { count: taskCount })}
+            aria-haspopup="dialog"
+            onClick={() => {
+              loadTaskCount();
+              setTaskDrawerOpen(true);
+            }}
+          >
+            <span className="task-dot" aria-hidden="true" />
+            <span className="task-text">{t('header.taskCenter')} {taskCount}</span>
+          </button>
+          <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
+          <Button type="primary" className="fr-publish-btn" loading={publishing} onClick={handlePublish}>{t('workflow.toolbar.publish')}</Button>
+        </div>
       </header>
 
-      {content[current]}
+      <div className="fr-workflow-stage">{content[current]}</div>
       <Drawer
         placement="right"
         onClose={() => {

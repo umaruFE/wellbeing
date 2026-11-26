@@ -92,7 +92,8 @@ async function dispatch(request, response) {
   const { method, url } = request;
   const activityWrite = method === 'PUT' && activityPaths.has(url);
   const textGeneration = method === 'POST' && generationPaths.has(url);
-  if (activityWrite || textGeneration) {
+  const caseRequest = (method === 'GET' || method === 'POST') && /^\/api\/workbench-cases\/[a-z-]+$/.test(url);
+  if (activityWrite || textGeneration || caseRequest) {
     const user = await signedInUser(request.headers.authorization);
     if (!user) return reply(response, 401, '请重新登录后继续。');
     // The newly signed token is used only inside this loopback worker.

@@ -1,9 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form } from 'antd';
-import pathArt from '../../assets/create-course/path-1.png';
-import pathBody from '../../assets/create-course/path-2.png';
-import pathMusic from '../../assets/create-course/path-3.png';
+import pathArt from '../../assets/complete-course/path-art.jpg';
+import pathBody from '../../assets/complete-course/path-movement.jpg';
+import pathMusic from '../../assets/complete-course/path-music.jpg';
 import { experiencePaths } from './createCourseOptions';
 
 const pathImages = {
@@ -54,10 +54,11 @@ function PathSelector({ value, onChange, t }) {
           key={path.value}
           type="button"
           className={`fr-path-card tone-${path.tone} ${selected.includes(path.value) ? 'active' : ''}`}
+          aria-pressed={selected.includes(path.value)}
           onClick={() => togglePath(path.value)}
         >
           <div className="fr-path-visual">
-            <img className={`fr-path-img path-${path.tone}`} src={pathImages[path.value]} alt={t(path.titleKey)} />
+            <img className="fr-path-img" src={pathImages[path.value]} alt="" />
           </div>
           <div className="fr-path-body">
             <div className="fr-path-title">{t(path.titleKey)}</div>

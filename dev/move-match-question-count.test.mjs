@@ -164,6 +164,8 @@ for (const packaged of [false, true]) {
     assert.equal(activity.releases.length, 0);
     assert.deepEqual(selectValues(f.nodes['#app'].innerHTML, 'prep-question-count'), quantities);
     await f.click('home');
+    assert.match(f.nodes['#app'].innerHTML, /aria-labelledby="wb-mine-tab"/);
+    await f.click('library-tab', { value: 'cases' });
     assert.match(f.nodes['#app'].innerHTML, /data-case-count="articles-two">20</);
   });
 

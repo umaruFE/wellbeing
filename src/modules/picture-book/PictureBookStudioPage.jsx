@@ -1,3 +1,4 @@
+import { CreateButton, FilterChip, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { PageLoading } from '../../components/PageLoading';
 import {
@@ -16,7 +17,6 @@ import {
   Plus,
   RefreshCw,
   Save,
-  Search,
   Sparkles,
   Trash2,
   Upload,
@@ -108,7 +108,7 @@ export function PictureBookStudioPage() {
   const [listLoading, setListLoading] = React.useState(true);
   const [listError, setListError] = React.useState(false);
   const [listNotice, setListNotice] = React.useState('');
-  const [libraryTab, setLibraryTab] = React.useState('mine');
+  const [libraryTab, setLibraryTab] = React.useState('cases');
   const [searchTerm, setSearchTerm] = React.useState('');
   const [editingBookId, setEditingBookId] = React.useState(null);
   const [step, setStep] = React.useState(0);
@@ -735,7 +735,7 @@ export function PictureBookStudioPage() {
           books={bookList}
           cases={bookList.filter((book) => book.status === 'published')}
           activeTab={libraryTab}
-          onTabChange={(tab) => { setLibraryTab(tab); setSearchTerm(''); setListNotice(''); }}
+          onTabChange={(tab) => { setLibraryTab(tab); setListNotice(''); }}
           loading={listLoading}
           error={listError}
           notice={listNotice}
@@ -855,10 +855,21 @@ export function PictureBookStudioPage() {
 
 function PictureBookListView({ books, cases, activeTab, onTabChange, loading, error, notice, onRetry, searchTerm, setSearchTerm, onCreate, onOpen, onUseCase, onDelete, onPresent }) {
   const { t } = useTranslation();
+  const searchInput = React.useRef(null);
+  const searchLabel = t('common.searchActivity');
   const isCases = activeTab === 'cases';
   const query = searchTerm.trim().toLowerCase();
-  const visibleBooks = (isCases ? cases : books).filter((book) =>
-    [book.title, book.book_data?.activityPlan?.storyTitleZh].some((value) => String(value || '').toLowerCase().includes(query)));
+  const source = isCases ? cases : books;
+  const hasActiveSearch = Boolean(query && source.length);
+  const visibleBooks = source.filter((book) => {
+    const plan = book.book_data?.activityPlan;
+    return [book.title || t('pictureBook.untitled'), plan?.storyTitleZh, plan?.storyTitleEn]
+      .some((value) => String(value || '').toLowerCase().includes(query));
+  });
+  const clearSearch = () => {
+    setSearchTerm('');
+    searchInput.current?.focus();
+  };
   const handleTabKeyDown = (event) => {
     if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
     const tabs = [...event.currentTarget.querySelectorAll('[role="tab"]')];
@@ -873,27 +884,22 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
 
   return (
     <div className="pbv2-list-page">
-      <header className="pbv2-library-header">
+      <header className="pbv2-library-header wb-library-header">
         <h1>{t('sidebar.artExpression')}</h1>
         <div className="pbv2-library-actions">
-          <button type="button" className="pbv2-create-btn" onClick={onCreate}>
-            <Plus size={18} aria-hidden="true" />{t('pictureBook.newBook')}
-          </button>
+          <CreateButton onClick={onCreate}>{t('common.newActivity')}</CreateButton>
         </div>
       </header>
 
-      <div className="pbv2-library-head">
-        <div className="pbv2-library-tabs" role="tablist" aria-label={t('pictureBook.librarySource')} onKeyDown={handleTabKeyDown}>
-          {[['cases', 'published', cases.length], ['mine', 'myActivities', books.length]].map(([id, label, count]) => (
+      <div className="wb-library-tools">
+        <div className="wb-library-tabs" role="tablist" aria-label={t('pictureBook.librarySource')} onKeyDown={handleTabKeyDown}>
+          {[['cases', 'caseLibrary', cases.length], ['mine', 'myActivities', books.length]].map(([id, label, count]) => (
             <button key={id} type="button" role="tab" id={`pbv2-library-tab-${id}`} aria-selected={activeTab === id} aria-controls="pbv2-library-panel" tabIndex={activeTab === id ? 0 : -1} data-source={id} onClick={() => onTabChange(id)}>
               {t(`pictureBook.${label}`)} <span>{loading || error ? '—' : count}</span>
             </button>
           ))}
         </div>
-        <label className="pbv2-search-box">
-          <Search size={16} aria-hidden="true" />
-          <input type="search" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} placeholder={t('pictureBook.searchPlaceholder')} aria-label={t('pictureBook.searchPlaceholder')} />
-        </label>
+        <LibrarySearch label={searchLabel} value={searchTerm} onChange={setSearchTerm} inputRef={searchInput} aria-controls="pbv2-library-panel" />
       </div>
 
       <section id="pbv2-library-panel" role="tabpanel" aria-labelledby={`pbv2-library-tab-${activeTab}`} tabIndex={0} aria-busy={loading}>
@@ -901,43 +907,42 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
         {loading ? (
           <PageLoading />
         ) : error ? (
-          <div className="pbv2-list-empty" role="alert"><p>{t('pictureBook.listLoadFailed')}</p><button type="button" className="pbv2-create-btn" onClick={onRetry}>{t('pictureBook.retryList')}</button></div>
+          <div className="wb-library-empty" role="alert"><p>{t('pictureBook.listLoadFailed')}</p><button type="button" data-wb-button="secondary" onClick={onRetry}>{t('common.retry')}</button></div>
         ) : visibleBooks.length === 0 ? (
-          <div className="pbv2-list-empty">
-            <BookOpenText size={40} aria-hidden="true" />
-            <h2>{t(query ? 'pictureBook.noSearchResults' : isCases ? 'pictureBook.noCases' : 'pictureBook.noMyActivities')}</h2>
-            <button type="button" className="pbv2-create-btn" onClick={query ? () => setSearchTerm('') : onCreate}>{t(query ? 'pictureBook.clearSearch' : 'pictureBook.newBook')}</button>
+          <div className="wb-library-empty">
+            <p role="status">{t(hasActiveSearch ? 'pictureBook.noSearchResults' : isCases ? 'pictureBook.noCases' : 'pictureBook.noMyActivities')}</p>
+            {hasActiveSearch && <button type="button" data-wb-button="secondary" onClick={clearSearch}>{t('pictureBook.clearSearch')}</button>}
           </div>
         ) : (
-          <div className="pbv2-card-grid">
+          <div className={isCases ? 'wb-case-grid' : 'pbv2-card-grid'}>
             {visibleBooks.map((book) => {
               const data = book.book_data || {};
               const title = book.title || t('pictureBook.untitled');
               const openCard = () => isCases ? onPresent(book) : onOpen(book);
               return (
-                <article key={book.id} className="pbv2-book-card">
-                  <button type="button" className="pbv2-book-cover" onClick={openCard} aria-label={`${t(isCases ? 'pictureBook.previewCase' : 'common.edit')} ${title}`}>
+                <article key={book.id} className={isCases ? 'pbv2-book-card wb-case-card' : 'pbv2-book-card'}>
+                  <button type="button" className={isCases ? 'pbv2-book-cover wb-case-cover' : 'pbv2-book-cover'} onClick={openCard} aria-label={`${t(isCases ? 'pictureBook.previewCase' : 'common.edit')} ${title}`}>
                     {book.cover_url ? <img src={book.cover_url} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} /> : null}
                     <span className="pbv2-book-cover-placeholder" aria-hidden="true"><BookOpenText size={40} /></span>
                   </button>
-                  <div className="pbv2-book-info">
+                  <div className={isCases ? 'pbv2-book-info wb-case-body' : 'pbv2-book-info'}>
                     {!isCases && <div className="pbv2-book-state">
-                      <span className={`pbv2-book-status ${book.status === 'published' ? 'published' : 'draft'}`}>{t(book.status === 'published' ? 'pictureBook.published' : 'pictureBook.draft')}</span>
+                      <MetadataTag tone={book.status === 'published' ? 'ready' : 'draft'}>{t(book.status === 'published' ? 'pictureBook.published' : 'pictureBook.draft')}</MetadataTag>
                       {book.updated_at && <time dateTime={book.updated_at}>{new Date(book.updated_at).toLocaleDateString()}</time>}
                     </div>}
-                    <h3><button type="button" onClick={openCard}>{title}</button></h3>
+                    <h3 className={isCases ? 'wb-case-title' : undefined}><button type="button" onClick={openCard}>{title}</button></h3>
                     <div className="pbv2-book-meta">
-                      {data.basicInfo?.age && <span>{data.basicInfo.age}</span>}
-                      <span>{t('pictureBook.pageTotal', { count: data.pages?.length || 0 })}</span>
+                      {data.basicInfo?.age && <MetadataTag>{data.basicInfo.age}</MetadataTag>}
+                      <MetadataTag>{t('pictureBook.pageTotal', { count: data.pages?.length || 0 })}</MetadataTag>
                     </div>
-                    <div className="pbv2-book-actions">
+                    <div className={isCases ? 'wb-case-actions' : 'pbv2-book-actions'}>
                       {isCases ? <>
-                        <button type="button" className="primary" onClick={() => onPresent(book)}><Play size={16} aria-hidden="true" />{t('pictureBook.previewCase')}</button>
-                        <button type="button" onClick={() => onUseCase(book)}>{t('pictureBook.useCase')}</button>
+                        <button type="button" data-wb-button="primary" onClick={() => onPresent(book)}>{t('pictureBook.previewCase')}</button>
+                        <button type="button" data-wb-button="secondary" onClick={() => onUseCase(book)}>{t('pictureBook.useCase')}</button>
                       </> : <>
-                        <button type="button" className="primary" onClick={() => onPresent(book)}><Monitor size={16} aria-hidden="true" />{t('pictureBook.startTeaching')}</button>
-                        <button type="button" onClick={() => onOpen(book)}>{t('pictureBook.continueEditing')}</button>
-                        <button type="button" className="delete" onClick={() => onDelete(book.id)} aria-label={`${t('common.delete')} ${title}`} title={t('common.delete')}><Trash2 size={16} aria-hidden="true" /></button>
+                        <button type="button" data-wb-button="primary" onClick={() => onPresent(book)}><Monitor size={16} aria-hidden="true" />{t('pictureBook.startTeaching')}</button>
+                        <button type="button" data-wb-button="secondary" onClick={() => onOpen(book)}>{t('pictureBook.continuePreparing')}</button>
+                        <button type="button" data-wb-button="danger" data-wb-icon="" onClick={() => onDelete(book.id)} aria-label={`${t('common.delete')} ${title}`} title={t('common.delete')}><Trash2 size={16} aria-hidden="true" /></button>
                       </>}
                     </div>
                   </div>
@@ -1123,9 +1128,9 @@ function OptionGroup({ label, options, value, onChange }) {
       <legend>{label}</legend>
       <div className="pbv2-option-grid">
         {options.map((option) => (
-          <button type="button" key={option} aria-pressed={value === option} className={`wb-button${value === option ? ' is-active' : ''}`} onClick={() => onChange(value === option ? '' : option)}>
+          <FilterChip key={option} selected={value === option} onClick={() => onChange(value === option ? '' : option)}>
             {option}
-          </button>
+          </FilterChip>
         ))}
       </div>
     </fieldset>
@@ -1139,9 +1144,9 @@ function CheckboxGroup({ label, options, value, otherValue, onToggle, onOther })
       <div className="wb-panel-heading"><h2>{label}</h2></div>
       <div className="pbv2-chip-grid">
         {options.map((option) => (
-          <button type="button" key={option} aria-pressed={value.includes(option)} className={`wb-button${value.includes(option) ? ' is-active' : ''}`} onClick={() => onToggle(option)}>
+          <FilterChip key={option} selected={value.includes(option)} onClick={() => onToggle(option)}>
             {value.includes(option) && <Check size={14} aria-hidden="true" />}{option}
-          </button>
+          </FilterChip>
         ))}
       </div>
       <label className="wb-field pbv2-other-field"><span>{t('pictureBook.otherPlaceholder')}</span><input value={otherValue} onChange={(event) => onOther(event.target.value)} /></label>

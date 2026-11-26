@@ -1,9 +1,11 @@
 (()=>{'use strict';
 const M=SpeakModel,$=s=>document.querySelector(s),E=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const KEY='wellbeing-prep-six-modules-v1-speak';let lastStored=null,platformVisible=true;const sessionOwners=new Map();let saved=[],draft=M.initial(),view='home',tab='cases',error='',storageError='',generation=null,session=0,toastTimer;
-let cloud, ready=false;
+let cloud, ready=false, query='';
+const caseLibrary=window.WBWorkbenchApi?.caseLibrary?.('spin-speak');
+const cases=()=>caseLibrary?.items??M.games;
 const readOnlyActions = new Set([
-  'module', 'platform-return', 'home', 'tab', 'mine', 'resume', 'edit', 'case-preview',
+  'module', 'platform-return', 'home', 'tab', 'mine', 'resume', 'edit', 'case-preview', 'publish-case', 'clear-search',
   'step', 'back', 'preview-large', 'review-ready', 'teach', 'teach-current', 'export',
 ]);
 const isReadOnly = () => cloud?.readOnly === true;
@@ -33,7 +35,8 @@ function persist(){
 }
 const B=(text,action,style='',attrs='')=>`<button type="button" class="btn wb-button ${style}" data-ui="button" ${style.split(' ').includes('primary')?'data-ui-variant="primary"':''} ${style.split(' ').includes('small')?'data-ui-size="sm"':''} data-action="${action}" ${attrs}>${text}</button>`;
 const uiIcon=name=>`<svg class="speak-ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${({'back':'<path d="m12 5-7 7 7 7M5 12h14"/>','check':'<path d="m5 12 4 4L19 6"/>','play':'<path d="m8 5 11 7-11 7z"/>','plus':'<path d="M12 5v14M5 12h14"/>','menu':'<path d="M4 6h16M4 12h16M4 18h16"/>'})[name]||''}</svg>`;
-function stashDraft(){if(!isReadOnly()&&(draft.input||draft.pack)){const i=saved.findIndex(d=>d.id===draft.id);if(i<0)saved.push(M.clone(draft));else saved[i]=M.clone(draft);}}
+const hasDraftContent=()=>!!(draft.input?.trim()||draft.pack||(draft.title?.trim()&&draft.title!=='未命名口语活动'));
+function stashDraft(){if(!isReadOnly()&&hasDraftContent()){const i=saved.findIndex(d=>d.id===draft.id);if(i<0)saved.push(M.clone(draft));else saved[i]=M.clone(draft);}}
 const game=()=>M.games.find(g=>g.id===draft.game);
 function syncSteps(){document.querySelectorAll('[data-step]').forEach(b=>b.disabled=!canStep(+b.dataset.step));$('#save-status')?.classList.remove('ready');}
 function notify(text){$('#toast').textContent=text;$('#toast').classList.add('on');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('#toast').classList.remove('on'),2600);}
@@ -41,57 +44,68 @@ const posterText={tempo:['SPIN','THE BEAT','节奏唱片铺'],volume:['TURN','IT
 function art(id){return SpeakArt(id);}
 function chrome(content){return `<div class="shell">${WBPlatform.navigation('speak')}<div class="workspace"><header class="topbar"><div class="row"><button class="btn library-navigation-toggle" aria-controls="speak-navigation" aria-expanded="false" aria-label="打开模块导航">${uiIcon('menu')}</button><span>创作工坊 / 口语互动</span></div><div class="row">${B('返回上个模块','platform-return','small')}<span class="avatar">教师</span></div></header><div class="notice wb-notice error" role="alert" id="storage-warning" ${storageError?'':'hidden'}><span class="storage-message">${E(storageError)}</span> ${B('导出当前内容','export','small')} ${B('重试保存','retry-save','small')}</div>${content}</div></div>`;}
 
-function home(){
-  if (cloud) tab = 'mine';
+function personalEntries(){
+  const entries = saved.map((item, index) => ({item, index}));
+  if (hasDraftContent() && !saved.some(item => item.id === draft.id)) {
+    entries.unshift({item:draft, index:-1});
+  }
+  return entries;
+}
+function libraryResults(){
   const readOnly = isReadOnly();
-  const resume = draft.pack || draft.input
-    ? `<button type="button" data-ui="button" data-action="resume">${readOnly ? '查看备课' : '继续备课'}</button>`
-    : '';
-  const caseTab = cloud ? '' : `<button type="button" data-ui="tab" class="${tab === 'cases' ? 'active' : ''}" role="tab" aria-selected="${tab === 'cases'}" data-action="tab" data-tab="cases">案例库 <span>7</span></button>`;
-  let activities;
+  const keyword = query.trim().toLowerCase();
+  const matches = (...values) => values.join(' ').toLowerCase().includes(keyword);
+  const empty = (source, message) => `<div class="wb-library-empty"><p role="status">${source.length?'未找到匹配的活动。':message}</p>${source.length?B('清除搜索','clear-search','secondary'):''}</div>`;
   if (tab === 'cases') {
-    const cards = M.games.map(game => `<article class="game-tile" data-theme="${game.id}">
-      <div class="game-art">
+    if(caseLibrary?.message)return `<div class="wb-library-empty" role="status">${E(caseLibrary.message)}</div>`;
+    const allCases = cases();
+    const cards = allCases.flatMap(example => {
+      const game=M.games.find(item=>item.id===(example.game||example.id));
+      if(!game||!matches(example.title, example.name, game.name, game.en, example.description, game.description, example.input))return [];
+      return `<article class="game-tile wb-case-card" data-theme="${game.id}">
+      <div class="game-art wb-case-cover">
         <div class="poster-copy"><span>${posterText[game.id][2]}</span><strong>${posterText[game.id][0]}<br>${posterText[game.id][1]}</strong></div>
         <div class="poster-prop">${art(game.id)}</div>
       </div>
-      <div class="game-body">
-        <h3>${game.name}</h3><div class="en">${game.en}</div><p>${game.description}</p>
-        <div class="row game-actions">
-          ${B(uiIcon('play') + '<span>预览案例</span>', 'case-preview', 'play-btn', `data-game="${game.id}"`)}
-          ${B('制作同款', 'use-case', '', `data-game="${game.id}"`)}
+      <div class="game-body wb-case-body">
+        <h3 class="wb-case-title">${E(example.game?example.title:example.name)}</h3><div class="en">${E(game.en)}</div><p>${E(example.description||game.description)}</p>
+        <div class="row game-actions wb-case-actions">
+          ${B('预览案例', 'case-preview', 'primary', `data-game="${E(example.id)}" data-wb-button="primary"`)}
+          ${B('制作同款', 'use-case', 'secondary', `data-game="${E(example.id)}" data-wb-button="secondary"`)}
         </div>
       </div>
-    </article>`);
-    activities = `<section class="game-library" aria-label="口语游戏案例">${cards.join('')}</section>`;
-  } else if (saved.length) {
-    const cards = saved.map((item, index) => {
+    </article>`;});
+    return cards.length ? `<div class="game-library wb-case-grid">${cards.join('')}</div>` : empty(allCases,'暂无已发布的案例。');
+  }
+  const entries=personalEntries();
+  const cards=entries.flatMap(({item, index})=>{
+      const activityGame=M.games.find(game=>game.id===item.game);
+      if(!matches(item.title, item.input, activityGame?.name, activityGame?.en))return [];
       const version = item.published
-        ? '授课版 ' + item.history.length + ' · ' + new Date(item.published.createdAt).toLocaleDateString('zh-CN')
+        ? '授课版 V' + (item.history?.length || 1)
         : '草稿';
       const attrs = `data-index="${index}"`;
-      return `<article class="saved-item">
-        <div class="spacer"><h3>${E(item.title)}</h3><div class="muted">${M.games.find(game => game.id === item.game)?.name} · ${version}</div></div>
-        ${B(readOnly ? '查看草稿' : '编辑草稿', 'edit', '', attrs)}
+      return `<article class="lh-card"><div class="lh-card-body wb-work-body">
+        <h3>${E(item.title||'未命名活动')}</h3><div class="lh-metadata"><span>${E(activityGame?.name||'口语翻翻乐')}</span><span>${version}</span></div>
+        <div class="lh-card-actions">
+        ${B(readOnly ? '查看备课' : '继续备课', item.id===draft.id ? 'resume' : 'edit', 'secondary', attrs)}
         ${item.published ? B('开始授课', 'teach', 'primary', attrs) : ''}
-      </article>`;
-    });
-    activities = `<section class="saved-list">${cards.join('')}</section>`;
-  } else {
-    activities = readOnly
-      ? '<div class="empty"><h2>暂无口语活动</h2></div>'
-      : `<div class="empty"><h2>还没有确认的授课活动</h2><p>完成试玩并确认授课版后，活动会出现在这里。</p>${B('新建口语活动', 'new', 'primary')}</div>`;
-  }
+        ${item.published&&index>=0&&caseLibrary?.canPublish ? B('发布为案例','publish-case','',attrs) : ''}
+        </div></div></article>`;
+  });
+  return cards.length ? `<div class="lh-grid wb-work-grid">${cards.join('')}</div>` : empty(entries,'暂无我制作的活动。');
+}
+function home(){
+  const sources=[['cases','案例库',cases().length],['mine','我制作的',personalEntries().length]];
   return `<main class="library-home library-main speak-library">
-    <header class="lh-header">
+    <header class="lh-header wb-library-header">
       <div><h1>口语翻翻乐</h1></div>
-      <div class="lh-header-actions">${resume}<button type="button" data-ui="button" data-ui-variant="primary" data-action="new">${uiIcon('plus')}<span>新建口语活动</span></button></div>
+      <div class="lh-header-actions">${B(uiIcon('plus')+'新建活动','new','primary','data-wb-create')}</div>
     </header>
-    <div class="lh-library-head"><div class="lh-tabs" role="tablist" aria-label="活动来源">
-      ${caseTab}
-      <button type="button" data-ui="tab" class="${tab === 'mine' ? 'active' : ''}" role="tab" aria-selected="${tab === 'mine'}" data-action="tab" data-tab="mine">我制作的 <span>${saved.length}</span></button>
-    </div></div>
-    ${activities}
+    <div class="lh-library-head wb-library-tools"><div class="lh-tabs wb-library-tabs" role="tablist" aria-label="活动来源">
+      ${sources.map(([id,label,count])=>`<button type="button" data-ui="tab" id="wb-${id}-tab" role="tab" aria-selected="${tab===id}" aria-controls="library-results" tabindex="${tab===id?0:-1}" data-action="tab" data-tab="${id}">${label} <span>${count}</span></button>`).join('')}
+    </div><label class="lh-search wb-library-search"><input id="library-search" type="search" aria-label="搜索活动" placeholder="搜索活动" value="${E(query)}"></label></div>
+    <section id="library-results" role="tabpanel" aria-labelledby="wb-${tab}-tab">${libraryResults()}</section>
   </main>`;
 }
 const labels=['输入目标语言','确认操练语言','选择活动类型','预览游戏界面','确认授课版'];
@@ -101,7 +115,7 @@ function updateStatus(){const label=$('#save-status');if(label){label.textConten
 function editor(){
  const n=draft.step;
  const saveLabel=statusText();
- return `<main class="main wb-authoring speak-authoring"><div class="wb-authoring-heading">${B(uiIcon('back')+'<span>返回活动</span>','home','quiet speak-back')}<header class="wb-authoring-header"><input class="title-input wb-authoring-title" aria-label="活动名称" id="activity-title" value="${E(draft.title)}"><div class="wb-authoring-status"><span class="status wb-status ${storageError?'is-error':draft.confirmed?'ready':''}" id="save-status" role="status" ${saveLabel ? '' : 'hidden'}>${saveLabel}</span>${draft.published&&!draft.finalized?`<span>授课版 ${draft.history.length} 已保留</span>`:''}</div></header></div><nav class="wb-authoring-steps" aria-label="备课步骤">${labels.map((l,i)=>`<button type="button" class="wb-authoring-step ${n===i+1?'active':i+1<n?'complete':''}" data-action="step" data-step="${i+1}" ${canStep(i+1)?'':'disabled'} ${n===i+1?'aria-current="step"':''}><span class="wb-step-number" aria-hidden="true">${i+1<n?uiIcon('check'):i+1}</span><span class="wb-step-label">${l}</span></button>`).join('')}</nav><div class="editor wb-authoring-body ${n===3||n===4?'wide':''}">${error?`<div class="notice wb-notice error" role="alert">${E(error)}</div>`:''}${[null,inputStep,languageStep,activityStep,previewStep,doneStep][n]()}</div></main>${footer()}`;
+ return `<main class="main wb-authoring speak-authoring"><div class="wb-authoring-heading">${B(uiIcon('back')+'<span>返回活动库</span>','home','quiet speak-back')}<header class="wb-authoring-header"><input class="title-input wb-authoring-title" aria-label="活动名称" id="activity-title" value="${E(draft.title)}"><div class="wb-authoring-status"><span class="status wb-status ${storageError?'is-error':draft.confirmed?'ready':''}" id="save-status" role="status" ${saveLabel ? '' : 'hidden'}>${saveLabel}</span>${draft.published&&!draft.finalized?`<span>授课版 ${draft.history.length} 已保留</span>`:''}</div></header></div><nav class="wb-authoring-steps" aria-label="备课步骤">${labels.map((l,i)=>`<button type="button" class="wb-authoring-step ${n===i+1?'active':i+1<n?'complete':''}" data-action="step" data-step="${i+1}" ${canStep(i+1)?'':'disabled'} ${n===i+1?'aria-current="step"':''}><span class="wb-step-number" aria-hidden="true">${i+1<n?uiIcon('check'):i+1}</span><span class="wb-step-label">${l}</span></button>`).join('')}</nav><div class="editor wb-authoring-body ${n===3||n===4?'wide':''}">${error?`<div class="notice wb-notice error" role="alert">${E(error)}</div>`:''}${[null,inputStep,languageStep,activityStep,previewStep,doneStep][n]()}</div></main>${footer()}`;
 }
 function inputStep(){return `<section class="work-panel wb-authoring-panel"><div class="intro wb-panel-heading"><h2>这节课，想让学生说什么？</h2><p>贴入英文课文、句子或对话，生成后可以逐条修改。</p></div><label class="wb-field" for="source"><span>目标语言</span><textarea class="source-input" id="source" ${generation?'disabled':''} placeholder="例如：We play football together every weekend.">${E(draft.input)}</textarea></label><div class="preset-row"><span class="muted">试试这些内容</span>${Object.entries(M.samples).map(([k,s])=>B(s.title,'preset','small',`data-preset="${k}" ${generation?'disabled':''}`)).join('')}</div>${generation?'<div class="notice wb-notice" role="status">正在通过后台生成操练语言…</div>':''}</section>`;}
 function languageStep(){const p=draft.pack;return `<section class="work-panel wb-authoring-panel"><div class="intro wb-panel-heading"><h2>确认本课要用的操练语言</h2><p>勾选要练的句子和问答，直接改写文字。确认后选择玩法。</p></div><h3 class="section-label">句子</h3>${['main','full'].map((k,i)=>`<div class="language-row ${p.sel[k]?'':'off'}"><input type="checkbox" data-select="${k}" aria-label="使用${i?'完整表达':'核心句'}" ${p.sel[k]?'checked':''}><label class="wb-field"><span>${i?'完整表达':'核心句'}</span><textarea rows="2" data-field="${k}" aria-label="${i?'完整表达':'核心句'}">${E(p.sentences[k])}</textarea></label></div>`).join('')}<h3 class="section-label">问答</h3>${p.dialog.map((d,i)=>`<div class="language-row ${p.sel.d[i]?'':'off'}"><input type="checkbox" data-select="d${i}" aria-label="使用第 ${i+1} 组问答" ${p.sel.d[i]?'checked':''}><div class="qa-fields wb-form-grid"><label class="wb-field"><span>问题 ${i+1}</span><textarea rows="2" data-field="q" data-index="${i}" aria-label="问题 ${i+1}">${E(d.q)}</textarea></label><label class="wb-field"><span>回答 ${i+1}</span><textarea rows="2" data-field="a" data-index="${i}" aria-label="回答 ${i+1}">${E(d.a)}</textarea></label></div></div>`).join('')}<div class="status wb-status warning language-status" id="language-status" role="status">${draft.confirmed?'已确认；修改后需要重新确认。':'请确认语言准确、难度适合本班。'}</div></section>`;}
@@ -142,8 +156,14 @@ function openPlayer(id,content,title,teaching=false){try{$('#player-title').text
 function closePlayer(){$('#player-frame').src='about:blank';releaseSession('player');$('#player').close();forwardVisibility();}
 $('#player-close').onclick=closePlayer;$('#player').addEventListener('cancel',e=>{e.preventDefault();closePlayer();});
 $('#app').addEventListener('input',e=>{
- if(isReadOnly())return;
  const t=e.target;
+ if(t.id==='library-search'){
+  query=t.value;
+  $('#library-results').innerHTML=libraryResults();
+  if(isReadOnly())applyReadOnlyControls($('#library-results'));
+  return;
+ }
+ if(isReadOnly())return;
  if(t.id==='activity-title'){draft.title=t.value;persist();return;}
  if(t.id==='source'){draft.input=t.value;draft.pack=null;M.invalidate(draft);draft.step=1;syncSteps();persist();return;}
  if(t.dataset.field){const k=t.dataset.field;if(['q','a'].includes(k))draft.pack.dialog[+t.dataset.index][k]=t.value;else draft.pack.sentences[k]=t.value;M.invalidate(draft);$('#language-status').textContent='已修改，待确认。';$('#save-status').textContent='已修改，待确认';syncSteps();persist();}
@@ -160,14 +180,39 @@ $('#app').addEventListener('click',async e=>{
  error='';
  if(a==='module'){navigate(b.dataset.module);return;}
  if(a==='platform-return'){if(window.parent!==window)window.parent.postMessage({type:'wellbeing:return'},location.origin);else navigate('music');return;}
- if(a==='home'){cancelGeneration();view='home';persist();render();return;}
- if(a==='tab'){tab=b.dataset.tab;render();return;}
+ if(a==='home'){cancelGeneration();view='home';tab='mine';query='';persist();render();return;}
+ if(a==='tab'){tab=b.dataset.tab;render();$('#wb-'+tab+'-tab')?.focus({preventScroll:true});return;}
+ if(a==='clear-search'){query='';render();$('#library-search').focus({preventScroll:true});return;}
  if(a==='mine'){tab='mine';view='home';render();return;}
  if(a==='new'){stashDraft();draft=M.initial();view='edit';persist();render();return;}
  if(a==='resume'){view='edit';render();return;}
  if(a==='preset'){draft.input=M.samples[b.dataset.preset].input;draft.pack=null;M.invalidate(draft);draft.step=1;persist();render();return;}
- if(a==='use-case'){stashDraft();draft=M.initial();draft.game=b.dataset.game;draft.input=M.samples.family.input;draft.pack=M.buildLanguage(draft.input);draft.title='My Family · '+M.games.find(g=>g.id===draft.game).name;draft.step=2;view='edit';persist();render();return;}
+ if(a==='publish-case'){
+  const item=saved[+b.dataset.index];
+  try{if(item&&await caseLibrary?.publish(item.id)){tab='cases';query='';render();notify('已发布到平台案例库。');}}catch(e){notify(e.message);}
+  return;
+ }
+ if(a==='use-case'){
+  const example=cases().find(item=>item.id===b.dataset.game);
+  if(!example)return;
+  try{
+   const owner=M.initial(),gameId=example.game||example.id;
+   owner.game=gameId;owner.input=caseLibrary?example.input:M.samples.family.input;
+   owner.pack=(example.pack?M.clone(example.pack):null)||M.buildLanguage(owner.input);
+   owner.title=caseLibrary?example.title:'My Family · '+example.name;
+   owner.step=example.game?4:2;
+   if(example.game){owner.preview=M.clone(example.preview);owner.confirmed=true;}
+   stashDraft();draft=owner;view='edit';persist();render();
+  }catch(e){notify(e.message);}
+  return;
+ }
  if(a==='case-preview'){
+  if(caseLibrary){
+   const example=caseLibrary.find(b.dataset.game);
+   const id=example&&(example.game||example.id);
+   if(id)openPlayer(id==='energy'?'energy-v3':id,example.preview,example.title);
+   return;
+  }
   const id=b.dataset.game,p=M.activePack(M.buildLanguage(M.samples.family.input));
   // The Energy case keeps the reviewed dinner dialogue; preparation generation stays independent.
   const c=id==='energy'?{question:'Do you want to join our family dinner?',answers:[
@@ -228,8 +273,8 @@ $('#app').addEventListener('click',async e=>{
   try{const next=M.snapshot(draft),old=M.clone(draft);draft.published=next;draft.finalized=true;draft.history.push(next);draft.step=5;const idx=saved.findIndex(d=>d.id===draft.id);const previous=M.clone(saved);if(idx<0)saved.push(M.clone(draft));else saved[idx]=M.clone(draft);if(!persist()){draft=old;saved=previous;render();return;}render();window.scrollTo({top:0});}catch(e){notify(e.message);}return;
  }
  if(a==='modify'){draft.finalized=false;draft.step=2;view='edit';persist();render();return;}
- if(a==='edit'){stashDraft();draft=M.clone(saved[+b.dataset.index]);draft.step=draft.pack?2:1;view='edit';persist();render();return;}
- if(a==='teach'||a==='teach-current'){const d=a==='teach'?saved[+b.dataset.index]:draft;openPlayer(d.published.game,d.published.content,d.published.title,true);return;}
+ if(a==='edit'){const entry=saved[+b.dataset.index];if(!entry)return;stashDraft();draft=M.clone(entry);draft.step=canStep(draft.step)?draft.step:draft.pack?2:1;view='edit';persist();render();return;}
+ if(a==='teach'||a==='teach-current'){const d=a==='teach'&&+b.dataset.index>=0?saved[+b.dataset.index]:draft;if(d?.published)openPlayer(d.published.game,d.published.content,d.published.title,true);return;}
  if(a==='export'){const blob=new Blob([JSON.stringify({draft,items:saved},null,2)],{type:'application/json'});const u=URL.createObjectURL(blob),link=document.createElement('a');link.href=u;link.download='口语翻翻乐-备份.json';link.click();URL.revokeObjectURL(u);return;}
  if(a==='retry-save'){storageError='';persist();render();return;}
 });
@@ -242,7 +287,7 @@ function prepareLocalLeave(){
  if(!ready||isReadOnly())return true;
  if(generation){notify('正在生成操练语言，请稍后再切换模块。');return false;}
  if(storageError){notify('保存尚未成功，请先重试保存；也可先导出备份保护内容。');return false;}
- if(!draft.input&&!draft.pack&&!saved.length&&lastStored===null)return true;
+ if(!hasDraftContent()&&!saved.length&&lastStored===null)return true;
  return persist();
 }
 window.WBPrepareModuleSwitch=async()=>prepareLocalLeave()&&(!cloud||await cloud.flush());
@@ -282,6 +327,6 @@ function backendLoadError(e){
 }
 try{
  cloud=window.WBWorkbenchApi?.activityStore('spin-speak',KEY,updateStatus);
- if(cloud)cloud.load().then(initialize,backendLoadError);else initialize();
+ if(cloud||caseLibrary)Promise.all([cloud?.load(),caseLibrary?.load()]).then(initialize,backendLoadError);else initialize();
 }catch(e){backendLoadError(e);}
 })();

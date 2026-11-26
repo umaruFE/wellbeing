@@ -1,9 +1,10 @@
-import i18next from 'i18next';
+import { LibraryFilterSelect, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
-import { Eye, FileAudio, MoreVertical, Music, Pause, Play, Search, Trash2, Upload as UploadIcon } from 'lucide-react';
-import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
+import { MaterialLibraryFeedback } from '../../modules/material-management/MaterialLibraryControls';
+import { Eye, MoreVertical, Music, Pause, Play, Trash2, Upload as UploadIcon } from 'lucide-react';
+import { Button, Dropdown, Modal, Upload, message } from 'antd';
 import apiService from '../../services/api';
 import './AudioLibrary.css';
 import { AudioPreviewModal } from './AudioPreviewModal';
@@ -117,7 +118,7 @@ export const createAudioTaskDetail = (asset, t) => ({
 function WaveArt({ asset, playing, onToggle, t }) {
   return (
     <div className={`fr-aud-wave tone-${asset.tone}`}>
-      <Tag className="fr-aud-source-tag">{asset.source}</Tag>
+      <MetadataTag className="fr-aud-source-tag">{asset.source}</MetadataTag>
       <div className="fr-aud-bars" aria-hidden="true">
         {Array.from({ length: 18 }).map((_, index) => (
           <span key={index} style={{ height: `${30 + ((index * 17) % 54)}px` }} />
@@ -135,6 +136,8 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
   const { t } = useTranslation();
   const [assets, setAssets] = React.useState(AUDIO_ASSETS);
   const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(false);
+  const [loadAttempt, setLoadAttempt] = React.useState(0);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [type, setType] = React.useState('');
@@ -161,6 +164,8 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
 
   React.useEffect(() => {
     let alive = true;
+    setLoading(true);
+    setLoadError(false);
     apiService.getVoiceConfigs()
       .then((result) => {
         if (!alive) return;
@@ -168,10 +173,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
       })
       .catch((error) => {
         console.error('fetch audio library failed:', error);
-        if (alive) {
-          setAssets([]);
-          message.error(t('audioLib.fetchFailed'));
-        }
+        if (alive) setLoadError(true);
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -179,10 +181,10 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
     return () => {
       alive = false;
     };
-  }, [t]);
+  }, [t, loadAttempt]);
 
-  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
-  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
+  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [sourceOptions, assets]);
+  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [typeOptions, assets]);
 
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -193,6 +195,12 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
         && (!type || asset.type === type);
     });
   }, [assets, search, source, type]);
+
+  const resetFilters = () => {
+    setSearch('');
+    setSource('');
+    setType('');
+  };
 
   const handleUpload = async (file) => {
     if (!file?.type?.startsWith('audio/')) {
@@ -215,7 +223,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
       objectUrl: URL.createObjectURL(file),
     };
     setAssets(current => [nextAsset, ...current]);
-    message.success(t('audioLib.uploadSuccess'));
+    message.info(t('common.localPreviewAdded'));
     return false;
   };
 
@@ -279,7 +287,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
     setDeleteAsset(null);
     if (playingId === asset.id) stopAudio();
     if (asset.objectUrl) URL.revokeObjectURL(asset.objectUrl);
-    message.success(t('audioLib.deleteSuccess', { name: asset.name }));
+    message.info(t('common.localPreviewRemoved'));
   };
 
   const handleMenuClick = ({ key, domEvent }, asset) => {
@@ -294,16 +302,16 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
   return (
     <section className={`fr-aud-lib ${variant === 'ppt-picker' ? 'ppt-library-picker' : ''}`}>
       <div className="fr-aud-page">
-        <header className="fr-aud-hero">
+        <header className="fr-aud-hero wb-library-header">
           <div className="fr-aud-hero-left">
             <div className="fr-aud-hero-icon"><Music size={30} /></div>
             <div>
-              <h1>{t('audioLib.title')}</h1>
+              <h1>{t('sidebar.audioLibrary')}</h1>
               <p>{t('audioLib.subtitle')}</p>
             </div>
           </div>
           <Upload accept="audio/*" beforeUpload={handleUpload} showUploadList={false}>
-            <button className="fr-aud-upload-btn" type="button">
+            <button type="button" data-wb-button="primary">
               <UploadIcon size={16} />
               {t('audioLib.uploadAudio')}
             </button>
@@ -312,21 +320,17 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
 
         <section className="fr-aud-panel">
           <div className="fr-aud-toolbar">
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t('audioLib.searchPlaceholder')}
-              prefix={<Search size={16} />}
-              allowClear
-            />
+            <LibrarySearch value={search} onChange={setSearch} label={t('audioLib.searchPlaceholder')} />
             <div className="fr-aud-filter-group">
-              <Select value={source} onChange={setSource} options={sourceFilterOptions} />
-              <Select value={type} onChange={setType} options={typeFilterOptions} />
+              <LibraryFilterSelect label={t('imageLib.sourceAll')} value={source} onChange={setSource} options={sourceFilterOptions} />
+              <LibraryFilterSelect label={t('imageLib.typeAll')} value={type} onChange={setType} options={typeFilterOptions} />
             </div>
           </div>
 
           {loading ? (
             <PageLoading />
+          ) : loadError ? (
+            <MaterialLibraryFeedback error={t('audioLib.fetchFailed')} onRetry={() => setLoadAttempt((n) => n + 1)} />
           ) : filteredAssets.length > 0 ? (
             <div className="fr-aud-grid">
               {filteredAssets.map(asset => (
@@ -336,9 +340,19 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
                     handlePlayAudio(asset);
                   }} />
                   <div className="fr-aud-meta">
-                    <div className="fr-aud-name">{asset.name}</div>
+                    <button
+                      type="button"
+                      className="fr-aud-name"
+                      aria-label={t('common.preview') + ' ' + asset.name}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPreviewAsset(asset);
+                      }}
+                    >
+                      {asset.name}
+                    </button>
                     <div className="fr-aud-chip-row">
-                      <span className="fr-aud-type-chip">{asset.type}</span>
+                      <MetadataTag>{asset.type}</MetadataTag>
                       <span className="fr-aud-size">{asset.format} · {asset.fileSize}</span>
                     </div>
                     <div className="fr-aud-footer">
@@ -353,7 +367,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
                           onClick: (info) => handleMenuClick(info, asset),
                         }}
                       >
-                        <button className="fr-aud-card-menu-btn" type="button" aria-label={i18next.t('audioLibraryUi.77836d3a99')} onClick={(event) => event.stopPropagation()}>
+                        <button data-wb-button="quiet" data-wb-size="sm" data-wb-icon type="button" aria-label={t('common.more')} onClick={(event) => event.stopPropagation()}>
                           <MoreVertical size={18} />
                         </button>
                       </Dropdown>
@@ -363,11 +377,7 @@ export function AudioLibrary({ variant, onInsertTaskAsset } = {}) {
               ))}
             </div>
           ) : (
-            <div className="fr-aud-empty">
-              <FileAudio size={30} />
-              <strong>{t('audioLib.noResults')}</strong>
-              <span>{t('audioLib.noResultsHint')}</span>
-            </div>
+            <MaterialLibraryFeedback empty={t('common.noData')} filtered={Boolean(search.trim() || source || type)} onReset={resetFilters} />
           )}
         </section>
       </div>

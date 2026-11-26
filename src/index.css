@@ -64,17 +64,17 @@
   --font-sans: var(--wb-font);
   --font-family-code: "Courier Prime", monospace;
 
-  --font-size-heading-1: 28px;
+  --font-size-heading-1: var(--wb-title-size);
   --font-size-heading-2: 24px;
-  --font-size-heading-3: 20px;
-  --font-size-heading-4: 18px;
-  --font-size-heading-5: 20px;
+  --font-size-heading-3: var(--wb-section-size);
+  --font-size-heading-4: var(--wb-card-title-size);
+  --font-size-heading-5: var(--wb-section-size);
   --font-size-heading-6: 16px;
 
   --radius-xs: 6px;
-  --radius-sm: 10px;
-  --radius-lg: 14px;
-  --radius-xxl: 18px;
+  --radius-sm: var(--wb-control-radius);
+  --radius-lg: var(--wb-card-radius);
+  --radius-xxl: var(--wb-modal-radius);
 
   --shadow-neo: none;
   --shadow-neo-hover: var(--wb-shadow-hover);
@@ -83,7 +83,7 @@
 
 :root {
   font-family: var(--wb-font);
-  font-size: 14px;
+  font-size: var(--wb-body-size);
   line-height: 1.6;
   font-weight: 400;
   color-scheme: light;
@@ -105,7 +105,7 @@ button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: poi
 :where(input, textarea) { caret-color: var(--wb-primary); }
 :where(input, textarea)::placeholder { color: var(--wb-placeholder); opacity: 1; }
 :where(button, a, input, select, textarea, [tabindex]):focus-visible {
-  outline: 3px solid var(--wb-selected-border);
+  outline: var(--wb-focus-ring);
   outline-offset: 3px;
 }
 :where(button:disabled, [aria-disabled="true"]) { cursor: not-allowed; }
@@ -114,6 +114,61 @@ button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: poi
 :where(.ant-tabs-tab) { font-weight: 600; }
 :where(.ant-tabs-ink-bar) { height: 3px; }
 :where(.ant-btn:disabled) { opacity: .48; }
+
+.wb-choice-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--wb-space-2);
+}
+.wb-choice-chips label:has(:focus-visible) {
+  outline: var(--wb-focus-ring);
+  outline-offset: 3px;
+}
+
+.wb-library-select.ant-select {
+  min-width: min(136px, 100%);
+  max-width: 100%;
+  height: var(--wb-control-md);
+}
+
+.wb-standard-page {
+  width: 100%;
+  max-width: 1440px;
+  min-width: 0;
+  margin-inline: auto;
+  padding: var(--wb-space-7) var(--wb-space-7) 40px;
+}
+.wb-standard-page--narrow { max-width: 960px; }
+.wb-standard-page > .wb-library-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--wb-space-3) var(--wb-space-6);
+  min-height: 66px;
+  margin-bottom: var(--wb-space-5);
+}
+.wb-standard-page h2.wb-section-title {
+  margin: 0;
+  color: var(--wb-text);
+  font: 600 var(--wb-section-size)/1.5 var(--wb-font);
+}
+.wb-surface-panel {
+  min-width: 0;
+  padding: var(--wb-space-5);
+  border: 1px solid var(--wb-border-soft);
+  border-radius: var(--wb-card-radius);
+  background: var(--wb-surface);
+}
+.wb-standard-page .wb-library-tools { flex-wrap: wrap; }
+@media (max-width: 900px) {
+  .wb-standard-page { padding: var(--wb-space-6) var(--wb-space-5) 36px; }
+}
+@media (max-width: 650px) {
+  .wb-standard-page { padding: var(--wb-space-5) var(--wb-space-4) 32px; }
+  .wb-surface-panel { padding: var(--wb-space-4); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }

@@ -1,8 +1,9 @@
+import { CreateButton } from '../../components/LibraryControls';
 import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
-import { AlertTriangle, BookOpen, Plus, X } from 'lucide-react';
+import { Modal, message } from 'antd';
 import { CreateCourseModal } from '../create-course';
 import { CourseWorkflow } from '../course-workflow';
 import { CourseCard } from './CourseCard';
@@ -61,6 +62,7 @@ export function CourseManagement({
   onOpenCourse,
 }) {
   const { t } = useTranslation();
+  const [notice, messageHolder] = message.useMessage();
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -69,6 +71,7 @@ export function CourseManagement({
   const [hasMore, setHasMore] = useState(false);
   const courseListRequest = useRef(0);
   const [search, setSearch] = useState('');
+  const searchRef = useRef(null);
   const [status, setStatus] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
   const [workflowCourse, setWorkflowCourse] = useState(null);
@@ -197,7 +200,6 @@ export function CourseManagement({
             : '--',
           accent: ['var(--wb-primary)', 'var(--wb-primary)', 'var(--wb-primary)', '#39724f', '#edb100', 'var(--wb-primary)'][i % 6],
           coverTone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][i % 6],
-          active: i === 0,
           courseData,
           canvasData: course.canvas_data || course.canvasData || null,
           courseOverview: overview || courseData?.courseOverview || null,
@@ -270,8 +272,10 @@ export function CourseManagement({
     });
   }, [courses, search, status]);
 
-  const handleStatusChange = (nextStatus) => {
-    setStatus(nextStatus);
+  const clearFilters = () => {
+    setSearch('');
+    setStatus('all');
+    searchRef.current?.focus();
   };
 
   const handleCreateClick = () => {
@@ -338,7 +342,7 @@ export function CourseManagement({
       fetchCourses(1);
     } catch (error) {
       console.error('删除课程失败:', error);
-      window.alert(t('course.deleteFailed'));
+      notice.error(t('course.deleteFailed'));
     } finally {
       setDeletingCourse(false);
     }
@@ -355,74 +359,61 @@ export function CourseManagement({
 
   return (
     <section className="fr-courses">
-      <div className="fr-cm-page">
-        <header className="fr-cm-hero">
-          <div className="fr-cm-hero-left">
-            <div className="fr-cm-hero-icon">
-              <BookOpen size={30} />
-            </div>
-            <div>
-              <h1>{t('course.title')}</h1>
-              <p>{t('course.subtitle')}</p>
-            </div>
-          </div>
-
-          <button
-            className="fr-cm-create"
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              handleCreateClick();
-            }}
-          >
-            <Plus size={16} />
-            {t('dashboard.createCourse')}
-          </button>
+      {messageHolder}
+      <div className="wb-standard-page">
+        <header className="wb-library-header">
+          <h1>{t('sidebar.completeCourse')}</h1>
+          <CreateButton onClick={handleCreateClick}>{t('course.createCourse')}</CreateButton>
         </header>
 
-        <div className="fr-cm-panel" onClick={(event) => event.stopPropagation()}>
+        <div className="fr-cm-panel">
           <CourseToolbar
             search={search}
             status={status}
             counts={counts}
+            searchRef={searchRef}
             onSearchChange={setSearch}
-            onStatusChange={handleStatusChange}
+            onStatusChange={setStatus}
           />
 
           {coursesLoading ? (
             <PageLoading />
           ) : loadError === 'list' ? (
-            <div className="fr-cm-empty">
-              <AlertTriangle size={24} aria-hidden="true" />
-              <strong role="alert">{t('course.fetchFailed')}</strong>
-              <button type="button" className="fr-cm-load-more-btn" onClick={() => fetchCourses()}>
+            <div className="wb-library-empty">
+              <p role="alert">{t('course.fetchFailed')}</p>
+              <button type="button" data-wb-button="secondary" onClick={() => fetchCourses()}>
                 {t('common.retry')}
               </button>
             </div>
-          ) : filteredCourses.length > 0 ? (
+          ) : (
             <>
-              <div className="fr-cm-grid">
-                {filteredCourses.map(course => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    onOpen={(item) => {
-                      if (onOpenCourse) {
-                        onOpenCourse(item);
-                        return;
-                      }
-                      setWorkflowCourse(item);
-                    }}
-                    onDelete={handleDeleteCourse}
-                  />
-                ))}
-              </div>
+              {filteredCourses.length > 0 ? (
+                <div className="wb-work-grid">
+                  {filteredCourses.map(course => (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      onOpen={onOpenCourse || setWorkflowCourse}
+                      onDelete={handleDeleteCourse}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="wb-library-empty">
+                  <p role="status">{t(courses.length === 0 ? 'course.noCourses' : 'course.noMatchingCourses')}</p>
+                  {courses.length > 0 && (
+                    <button type="button" data-wb-button="secondary" onClick={clearFilters}>
+                      {t(status === 'all' ? 'common.clearSearch' : 'common.clearFilters')}
+                    </button>
+                  )}
+                </div>
+              )}
               {hasMore && (
                 <div className="fr-cm-load-more">
                   {loadError === 'more' && <span role="alert">{t('course.fetchFailed')}</span>}
                   <button
                     type="button"
-                    className="fr-cm-load-more-btn"
+                    data-wb-button="secondary"
                     onClick={loadMoreCourses}
                     disabled={loadingMore}
                   >
@@ -431,12 +422,6 @@ export function CourseManagement({
                 </div>
               )}
             </>
-          ) : (
-            <div className="fr-cm-empty">
-              <BookOpen size={30} />
-              <strong>{t('course.noMatchingCourses')}</strong>
-              <span>{t('course.adjustFilters')}</span>
-            </div>
           )}
         </div>
       </div>
@@ -447,43 +432,24 @@ export function CourseManagement({
         onSubmit={handleCreateSubmit}
       />
 
-      {deleteTarget && (
-        <div
-          className="fr-cm-confirm-mask"
-          role="presentation"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) closeDeleteConfirm();
-          }}
-        >
-          <div className="fr-cm-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="fr-cm-delete-title">
-            <button
-              type="button"
-              className="fr-cm-confirm-close"
-              onClick={closeDeleteConfirm}
-              aria-label={t('common.close')}
-              disabled={deletingCourse}
-            >
-              <X size={18} />
-            </button>
-            <div className="fr-cm-confirm-icon">
-              <AlertTriangle size={24} />
-            </div>
-            <div className="fr-cm-confirm-copy">
-              <h2 id="fr-cm-delete-title">{t('course.deleteCourse')}</h2>
-              <p>{t('course.confirmDeleteCourse')}</p>
-              <strong>{deleteTarget.title}</strong>
-            </div>
-            <div className="fr-cm-confirm-actions">
-              <button type="button" className="fr-cm-confirm-cancel" onClick={closeDeleteConfirm} disabled={deletingCourse}>
-                {t('common.cancel')}
-              </button>
-              <button type="button" className="fr-cm-confirm-danger" onClick={confirmDeleteCourse} disabled={deletingCourse}>
-                {deletingCourse ? t('common.loading') : t('course.deleteCourse')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        title={t('course.deleteCourse')}
+        open={!!deleteTarget}
+        onCancel={closeDeleteConfirm}
+        onOk={confirmDeleteCourse}
+        okText={t('common.delete')}
+        cancelText={t('common.cancel')}
+        okButtonProps={{ danger: true }}
+        cancelButtonProps={{ disabled: deletingCourse }}
+        confirmLoading={deletingCourse}
+        closable={!deletingCourse}
+        keyboard={!deletingCourse}
+        maskClosable={!deletingCourse}
+        centered
+      >
+        <p className="fr-cm-confirm-message">{t('course.confirmDeleteCourse')}</p>
+        <strong className="fr-cm-confirm-title">{deleteTarget?.title}</strong>
+      </Modal>
     </section>
   );
 }

@@ -19,8 +19,8 @@ export function CreateCourseStepTwo({ canPolish, ideaLoading, polishLoading, onA
       <div className="fr-create-ai-row">
         <div>{t('createCourse.aiHelperDesc')}</div>
         <div className="fr-create-ai-actions">
-          <Button className="fr-create-ai-btn idea" icon={<Zap size={16} />} onClick={onApplyIdea} loading={ideaLoading}>{t('createCourse.getIdea')}</Button>
-          <Button className="fr-create-ai-btn polish" icon={<Sparkles size={16} />} onClick={onPolish} disabled={!canPolish} loading={polishLoading}>{t('createCourse.polishContent')}</Button>
+          <Button data-wb-button="secondary" icon={<Zap size={16} />} onClick={onApplyIdea} loading={ideaLoading}>{t('createCourse.getIdea')}</Button>
+          <Button data-wb-button="secondary" icon={<Sparkles size={16} />} onClick={onPolish} disabled={!canPolish} loading={polishLoading}>{t('createCourse.polishContent')}</Button>
         </div>
       </div>
 

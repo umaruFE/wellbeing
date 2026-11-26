@@ -12,6 +12,8 @@
   };
   const api = window.WBWorkbenchApi;
   const live = !!api && !api.offline;
+  const caseLibrary=api?.caseLibrary?.('doodle');
+  const casesList=()=>caseLibrary?.items??M.CASES;
   let storage, cloud, loadError = '';
   try { storage = window.localStorage; } catch (_) { /* read() reports blocked storage without discarding input. */ }
   let items = [], baseline, storageError = '', conflict = false;
@@ -71,20 +73,27 @@
     const id = E(config.id), published = config._publication, changed = published && M.hasChanges(config);
     const attrs = `data-id="${id}"`;
     let actions;
-    if (isCase) actions = B('预览案例','case-preview','primary',attrs) + B('制作同款','copy-case','secondary',attrs);
+    if (isCase) actions = B('预览案例','case-preview','primary',attrs+' data-wb-button="primary"')
+      + B('制作同款','copy-case','secondary',attrs+' data-wb-button="secondary"');
     else actions = (published && !changed ? B(`开始授课 · V${published.version}`,'teach','primary',attrs) : B(published ? '更新授课版' : '确认授课版','review-saved','primary',attrs))
-      + B('继续修改','edit','secondary',attrs) + B(icon('more'),'more','quiet',`${attrs} class="lh-more" aria-label="${E(config.title || '未命名活动')}的更多操作"`);
-    return `<article class="lh-card" aria-label="${E(config.title || '未命名活动')}"><button type="button" class="lh-cover" data-action="${isCase ? 'case-preview' : 'edit'}" ${attrs} aria-label="${isCase ? '预览案例' : '编辑'}：${E(config.title || '未命名活动')}">${isCase?`<img src="assets/case-${config.id}.jpg" alt="${modeName(config.mode)}画板界面" loading="lazy">`:`<div class="doodle-word-cover">${config.words.slice(0,3).map(word=>`<span>${E(word)}</span>`).join('')||'<span>添加目标词</span>'}</div>`}</button><div class="lh-card-body">${!isCase ? `<div class="lh-card-state"><span class="lh-status ${published ? 'ready' : 'draft'}">${published ? `授课版 V${published.version}` : '修改草稿'}</span><small>${changed ? '有修改未更新' : timeName(config.updatedAt)}</small></div>` : ''}<h2 class="lh-card-heading"><button type="button" class="lh-card-title" data-action="${isCase ? 'case-preview' : 'edit'}" ${attrs}>${E(config.title || '未命名活动')}</button></h2><div class="lh-metadata">${isCase?`<span>${E(config.age)}</span>`:''}<span>${config.words.length} 个目标词</span></div><div class="lh-word-tags">${config.words.slice(0,5).map(word=>`<span>${E(word)}</span>`).join('')}${config.words.length>5?`<span>+${config.words.length-5}</span>`:''}</div><div class="lh-card-actions">${actions}</div></div></article>`;
+      + B('继续备课','edit','secondary',attrs) + (published&&caseLibrary?.canPublish?B('发布为案例','publish-case','secondary',attrs):'') + B(icon('more'),'more','quiet',`${attrs} class="lh-more" aria-label="${E(config.title || '未命名活动')}的更多操作"`);
+    return `<article class="lh-card${isCase?' wb-case-card':''}" aria-label="${E(config.title || '未命名活动')}"><button type="button" class="lh-cover${isCase?' wb-case-cover':''}" data-action="${isCase ? 'case-preview' : 'edit'}" ${attrs} aria-label="${isCase ? '预览案例' : '编辑'}：${E(config.title || '未命名活动')}">${isCase&&M.CASES.some(item=>item.id===config.id)?`<img src="assets/case-${config.id}.jpg" alt="${modeName(config.mode)}画板界面" loading="lazy">`:`<div class="doodle-word-cover">${config.words.slice(0,3).map(word=>`<span>${E(word)}</span>`).join('')||'<span>添加目标词</span>'}</div>`}</button><div class="lh-card-body${isCase?' wb-case-body':''}">${!isCase ? `<div class="lh-card-state"><span class="lh-status ${published ? 'ready' : 'draft'}">${published ? `授课版 V${published.version}` : '修改草稿'}</span><small>${changed ? '有修改未更新' : timeName(config.updatedAt)}</small></div>` : ''}<h2 class="lh-card-heading${isCase?' wb-case-title':''}"><button type="button" class="lh-card-title" data-action="${isCase ? 'case-preview' : 'edit'}" ${attrs}>${E(config.title || '未命名活动')}</button></h2><div class="lh-metadata">${isCase?`<span>${E(config.age)}</span>`:''}<span>${config.words.length} 个目标词</span></div><div class="lh-word-tags">${config.words.slice(0,5).map(word=>`<span>${E(word)}</span>`).join('')}${config.words.length>5?`<span>+${config.words.length-5}</span>`:''}</div><div class="lh-card-actions${isCase?' wb-case-actions':''}">${actions}</div></div></article>`;
   }
   function results() {
     const cases = ui.tab === 'cases', query = ui.query.trim().toLowerCase();
-    const visible = (cases ? M.CASES : items).filter(item => (!query || [item.title,item.theme,item.requirements,item.description,...(item.languageGoals||[]),...item.words].join(' ').toLowerCase().includes(query))
+    if(cases&&caseLibrary?.message)return `<div class="wb-library-empty" role="status">${E(caseLibrary.message)}</div>`;
+    const source = cases ? casesList() : items;
+    const visible = source.filter(item => (!query || [item.title,item.theme,item.requirements,item.description,...(item.languageGoals||[]),...item.words].join(' ').toLowerCase().includes(query))
       && (cases || ui.filter === 'all' || (ui.filter === 'ready' ? !!item._publication : M.hasChanges(item))));
-    return `<div class="lh-grid">${visible.length ? visible.map(item=>card(item,cases)).join('') : `<div class="lh-empty"><h2>${query || ui.filter !== 'all' ? '没有找到相关活动' : '准备你的第一堂涂鸦课'}</h2><p>${query || ui.filter !== 'all' ? '换个关键词，或清除筛选再看看。' : '从案例制作同款，或新建一份自己的目标词库。'}</p>${B(query || ui.filter !== 'all' ? '清除筛选' : '新增涂鸦活动',query || ui.filter !== 'all' ? 'clear-filter' : 'new','primary')}</div>`}</div>`;
+    if(visible.length)return `<div class="lh-grid ${cases?'wb-case-grid':'wb-work-grid'}">${visible.map(item=>card(item,cases)).join('')}</div>`;
+    const filtered=source.length&&(query||ui.filter!=='all');
+    return `<div class="wb-library-empty"><p role="status">${filtered?'未找到匹配的活动。':cases?'暂无已发布的案例。':'暂无我制作的活动。'}</p>${filtered?B(query&&ui.filter==='all'?'清除搜索':'清除筛选','clear-filter','secondary'):''}</div>`;
   }
   function home() {
-    if(cloud)ui.tab='mine';
-    return `<main class="library-home doodle-library"><header class="lh-header"><h1>涂鸦游戏</h1><div class="lh-header-actions">${B(icon('plus')+'新增涂鸦活动','new','primary')}</div></header><div class="lh-library-head"><div class="lh-tabs" role="group" aria-label="活动来源">${(cloud?[['mine','我制作的',items.length]]:[['cases','案例库',M.CASES.length],['mine','我制作的',items.length]]).map(([id,label,count])=>B(`${label} <span>${count}</span>`,'tab','quiet',`data-ui="tab" class="${ui.tab===id?'active':''}" data-tab="${id}" aria-pressed="${ui.tab===id}"`)).join('')}</div><label class="lh-search">${icon('search')}<input type="search" id="search" aria-label="搜索涂鸦活动" placeholder="搜索活动或单词" value="${E(ui.query)}"></label></div>${ui.tab==='mine'?`<div class="lh-filterbar"><div class="lh-filters" role="group" aria-label="备课状态">${[['all','全部'],['draft','修改草稿'],['ready','可授课']].map(([id,label])=>B(label,'filter','quiet',`data-filter="${id}" aria-pressed="${ui.filter===id}" class="${ui.filter===id?'active':''}"`)).join('')}</div></div>`:''}<section id="results" aria-label="${ui.tab==='cases'?'涂鸦游戏案例':'我制作的活动'}">${results()}</section></main>`;
+    const sources=[['cases','案例库',casesList().length],['mine','我制作的',items.length]];
+    return `<main class="library-home doodle-library"><header class="lh-header wb-library-header"><h1>涂鸦游戏</h1><div class="lh-header-actions">${B(icon('plus')+'新建活动','new','primary','data-wb-create')}</div></header>
+      <div class="lh-library-head wb-library-tools"><div class="lh-tabs wb-library-tabs" role="tablist" aria-label="活动来源">${sources.map(([id,label,count])=>`<button type="button" data-ui="tab" id="wb-${id}-tab" role="tab" aria-selected="${ui.tab===id}" aria-controls="results" tabindex="${ui.tab===id?0:-1}" data-action="tab" data-tab="${id}">${label} <span>${count}</span></button>`).join('')}</div>
+      <label class="lh-search wb-library-search"><input type="search" id="search" aria-label="搜索活动" placeholder="搜索活动" value="${E(ui.query)}"></label></div>${ui.tab==='mine'?`<div class="lh-filterbar"><div class="lh-filters" role="group" aria-label="备课状态">${[['all','全部'],['draft','草稿'],['ready','可授课']].map(([id,label])=>B(label,'filter','secondary',`data-wb-filter data-filter="${id}" aria-pressed="${ui.filter===id}" class="${ui.filter===id?'active':''}"`)).join('')}</div></div>`:''}<section id="results" role="tabpanel" aria-labelledby="wb-${ui.tab}-tab">${results()}</section></main>`;
   }
   function fieldError(name) { return `<span class="field-error" id="error-${name}" role="alert">${E(ui.errors[name] || '')}</span>`; }
   function options(values, current) { return values.map(([value,label])=>`<option value="${value}" ${String(value)===String(current)?'selected':''}>${label}</option>`).join(''); }
@@ -266,10 +275,6 @@
     dialog.innerHTML = `<header class="dialoghead wb-dialog-heading"><h2 id="dialog-title">${title}</h2>${B(icon('close'),'close','quiet','aria-label="关闭"')}</header><div class="dialogbody">${body}</div><footer class="dialogfoot wb-dialog-actions">${footer || B('返回','close')}</footer>`;
     decorate(); if (!dialog.open) dialog.showModal();
   }
-  function newDialog() {
-    if (!save()) return;
-    showDialog('新增涂鸦活动', `<div class="new-choices">${B(`${icon('plus')}<span><strong>从空白开始</strong><small>填写单词，生成图片示意，可上传替换</small></span>${icon('chevron-right')}`,'create','secondary','class="new-choice"')}${M.CASES.map(item=>B(`<span><strong>${E(item.title)}</strong><small>${item.words.slice(0,4).join(' / ')}</small></span>${icon('chevron-right')}`,'copy-case','secondary',`class="new-choice" data-id="${item.id}"`)).join('')}</div>`);
-  }
   function edit(item, isNew=false) {
     closeDialog();stopWordSpeech();clearImages(); draft=M.clone(item); dirty=isNew; ui.page='editor'; ui.errors={};ui.wordAdd='';ui.wordFeedback='';ui.wordUndo=null;
     render(); window.scrollTo(0,0); if(isNew)save(); document.getElementById('activity-title')?.focus();
@@ -305,7 +310,7 @@
   }
   function leaveEditor() {
     if(!save()){toast('当前修改尚未保存，请先重试、导出或另存副本。');return;}
-    stopWordSpeech();clearImages();draft=null;ui.page='home';ui.tab='mine';ui.errors={};render();window.scrollTo(0,0);
+    stopWordSpeech();clearImages();draft=null;ui.page='home';ui.tab='mine';ui.query='';ui.filter='all';ui.errors={};render();window.scrollTo(0,0);
   }
   function startSession(config, kind) {
     if(session)return;
@@ -407,18 +412,20 @@
     else if(action==='word-remove'){const index=Number(button.dataset.index),before=draft.words.slice(),word=before[index],result=W.update(before,{type:'remove',index});if(result.ok){const images=M.clone(draft.wordImages);cancelImage(word);imageErrors.delete(word);setWords(result.words,'已删除 '+word+'。',{before,images,after:JSON.stringify(result.words)});document.querySelector('[data-action="word-undo"]')?.focus();}}
     else if(action==='word-undo'){const undo=ui.wordUndo;if(undo&&undo.after===JSON.stringify(draft.words)){draft.wordImages={...undo.images,...draft.wordImages};setWords(undo.before,'已恢复删除的单词。');document.getElementById('word-add-input')?.focus();}}
     else if(action==='word-say')sayWord(draft.words[Number(button.dataset.index)]);
-    else if(action==='new')newDialog();
-    else if(action==='create')edit(M.blank(),true);
-    else if(action==='copy-case')edit(M.fromCase(id),true);
+    else if(action==='new'){if(save())edit(M.blank(),true);}
+    else if(action==='copy-case')edit(M.fromCase(id,casesList()),true);
+    else if(action==='publish-case')void caseLibrary?.publish(id).then(published=>{
+      if(published){ui.tab='cases';ui.query='';ui.filter='all';render();toast('已发布到平台案例库。');}
+    }).catch(error=>toast(error.message));
     else if(action==='edit'){if(save()){const item=items.find(item=>item.id===id);if(item)edit(item);}}
-    else if(action==='tab'){ui.tab=button.dataset.tab;ui.filter='all';ui.query='';render();}
+    else if(action==='tab'){ui.tab=button.dataset.tab;ui.filter='all';render();document.getElementById('wb-'+ui.tab+'-tab')?.focus({preventScroll:true});}
     else if(action==='filter'){ui.filter=button.dataset.filter;render();}
-    else if(action==='clear-filter'){ui.filter='all';ui.query='';render();}
+    else if(action==='clear-filter'){ui.filter='all';ui.query='';render();document.getElementById('search')?.focus({preventScroll:true});}
     else if(action==='home')leaveEditor();
     else if(action==='close')closeDialog();
     else if(action==='save'||action==='retry-save'){if(save()){if(cloud)void cloud.flush().then(ok=>{if(ok)toast('草稿已同步后台');});else toast('草稿已保存');}}
     else if(action==='preview')startSession(draft,'preview');
-    else if(action==='case-preview'){const item=M.CASES.find(item=>item.id===id);if(item)startSession(item,'case');}
+    else if(action==='case-preview'){const item=casesList().find(item=>item.id===id);if(item)startSession(item,'case');}
     else if(action==='review')review();
     else if(action==='review-saved'){const item=items.find(item=>item.id===id);if(item){edit(item);review();}}
     else if(action==='publish')publish();
@@ -426,7 +433,7 @@
     else if(action==='teach'){const item=items.find(item=>item.id===id);if(item?._publication)startSession(item._publication.draft,'classroom');}
     else if(action==='session-exit')exitSession();
     else if(action==='session-retry')mountSession();
-    else if(action==='session-copy'){exitSession();edit(M.fromCase(id),true);}
+    else if(action==='session-copy'){exitSession();edit(M.fromCase(id,casesList()),true);}
     else if(action==='more')more(id);
     else if(action==='duplicate'){
       const source=items.find(item=>item.id===id);if(source){const copy=M.clone(source);copy.id=M.blank().id;copy.title=(copy.title||'未命名活动')+'（副本）';delete copy._publication;edit(copy,true);}
@@ -471,6 +478,8 @@
   }
   try{
     cloud=api?.activityStore?.('doodle',M.STORAGE_KEY,updateSaveUI);
-    if(cloud){storage=cloud.storage;cloud.load().then(initialize).catch(backendLoadError);}else initialize();
+    if(cloud)storage=cloud.storage;
+    if(cloud||caseLibrary)Promise.all([cloud?.load(),caseLibrary?.load()]).then(initialize).catch(backendLoadError);
+    else initialize();
   }catch(error){backendLoadError(error);}
 })();

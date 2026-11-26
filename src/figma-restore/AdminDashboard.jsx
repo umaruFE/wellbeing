@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Row, Col, Button, Segmented, Tag } from 'antd';
+import { CreateButton, MetadataTag } from '../components/LibraryControls';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Row, Col, Tabs } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../components/PageLoading';
 import { 
-  BookOpen, Image, Video, Music, FileText, CheckCircle, ChevronsUpDown,
-  Sparkles, Plus, Package, Clock, Award, Users,
-  Loader2
+  BookOpen, Image, Video, Music, FileText, CheckCircle,
+  Sparkles, Package, Clock, Award, Users
 } from 'lucide-react';
 import apiService from '../services/api';
 import { CreateCourseModal } from './create-course';
-import { CourseCoverFallback } from './CourseCoverFallback';
 import { getCourseCoverUrl, getCourseData, getDisplayCourseTitle } from './courseImages';
 import './AdminDashboard.css';
 
@@ -30,22 +29,10 @@ const StatusTag = ({ status }) => {
   const { t } = useTranslation();
   const isPublished = status === 'published';
   return (
-    <Tag
-      color={isPublished ? 'success' : undefined}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '4px',
-        borderRadius: '6px',
-        padding: '0 7px',
-        height: '22px',
-        fontSize: '12px',
-        fontWeight: 500,
-      }}
-    >
+    <MetadataTag tone={isPublished ? 'ready' : 'draft'}>
       {isPublished ? <CheckCircle size={12} /> : <FileText size={12} />}
       <span>{isPublished ? t('course.published') : t('course.draft')}</span>
-    </Tag>
+    </MetadataTag>
   );
 };
 
@@ -56,28 +43,29 @@ const CourseCoverImage = ({ course }) => {
   const src = course.thumbnail;
 
   if (!src || errored) {
-    return <img src={DEFAULT_COVER} alt={course.title || ''} className="course-image" />;
+    return <img src={DEFAULT_COVER} alt="" className="course-image" loading="lazy" />;
   }
 
   return (
     <img
       src={src}
-      alt={course.title}
+      alt=""
       className="course-image"
+      loading="lazy"
       onError={() => setErrored(true)}
     />
   );
 };
 
 const CourseCard = ({ course, onClick }) => (
-  <div className="course-card" onClick={onClick} style={{ cursor: 'pointer' }}>
+  <button type="button" className="course-card" onClick={onClick}>
     <CourseCoverImage course={course} />
-    <div className="course-footer">
-      <div className="course-footer-row">
+    <span className="course-footer">
+      <span className="course-footer-row">
         <span className="course-title">{course.title}</span>
         <StatusTag status={course.status} />
-      </div>
-      <div className="course-meta">
+      </span>
+      <span className="course-meta">
         <Award size={12} />
         <span className="meta-text">{course.grade}</span>
         <span className="meta-divider">·</span>
@@ -86,17 +74,17 @@ const CourseCard = ({ course, onClick }) => (
         <span className="meta-divider">·</span>
         <Users size={12} />
         <span className="meta-text">{course.students}</span>
-      </div>
-      <div className="course-time">
+      </span>
+      <span className="course-time">
         <Clock size={14} />
         <span className="time-text">{course.time}</span>
-      </div>
-    </div>
-  </div>
+      </span>
+    </span>
+  </button>
 );
 
-const ImageCard = ({ image, onClick }) => (
-  <div className="image-card" onClick={onClick}>
+const ImageCard = ({ image }) => (
+  <div className="image-card">
     <PlaceholderImg src={image.url} alt={image.title || `Image ${image.id}`} className="image-card-img" icon={Image} />
     <div className="image-card-overlay">
       <div className="image-card-title">{image.title}</div>
@@ -106,17 +94,10 @@ const ImageCard = ({ image, onClick }) => (
 );
 
 const VideoCard = ({ video }) => {
-  const { t } = useTranslation();
   return (
   <div className="video-card">
     <div className="video-card-body">
       <PlaceholderImg src={video.thumbnail} alt={video.title} className="video-card-thumbnail" icon={Video} />
-      <div className="video-play-btn">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="24" cy="24" r="24" fill="rgba(0,0,0,0.6)" />
-          <path d="M30 24L18 16V32L30 24Z" fill="white" />
-        </svg>
-      </div>
       <div className="video-duration">
         {video.duration}
       </div>
@@ -125,24 +106,7 @@ const VideoCard = ({ video }) => {
       <div className="video-title-row">
         <span className="video-title">{video.title}</span>
         {video.status !== 'published' && (
-          <Tag
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              borderRadius: '6px',
-              padding: '0 7px',
-              height: '22px',
-              fontSize: '12px',
-              fontWeight: 500,
-              border: '1px solid var(--wb-border-soft)',
-              backgroundColor: 'var(--wb-page)',
-              color: 'var(--wb-text)',
-            }}
-          >
-            <FileText size={12} />
-            <span>{t('course.draft')}</span>
-          </Tag>
+          <StatusTag status="draft" />
         )}
       </div>
       <div className="video-time">
@@ -188,11 +152,8 @@ const AudioCard = ({ audio, index }) => {
   );
 };
 
-const EmptyState = ({ icon: Icon, text }) => (
-  <div className="empty-container">
-    {React.createElement(Icon, { size: 40, className: 'empty-icon' })}
-    <span className="empty-text">{text}</span>
-  </div>
+const EmptyState = ({ text }) => (
+  <div className="wb-library-empty"><p role="status">{text}</p></div>
 );
 
 const CreateSection = ({ onCreateCourse, navigate }) => {
@@ -202,31 +163,21 @@ const CreateSection = ({ onCreateCourse, navigate }) => {
     <div className="section-header">
       <div className="section-title-wrapper">
         <Sparkles size={18} />
-        <div className="section-title title-4">
-          <span className="title-text">{t('dashboard.quickActions')}</span>
-          <div className="title-decoration" />
-          <div className="title-dots">
-            <span className="dot-large" />
-            <span className="dot-small" />
-          </div>
-        </div>
+        <h2 className="wb-section-title">{t('dashboard.quickActions')}</h2>
       </div>
     </div>
     <div className="create-section-content">
-      <Button type="primary" className="create-course-btn" onClick={onCreateCourse}>
-        <Plus size={16} />
-        <span>{t('dashboard.createCourse')}</span>
-      </Button>
+      <CreateButton onClick={onCreateCourse}>{t('course.createCourse')}</CreateButton>
       <div className="create-section-buttons">
         {[
           { icon: Image, label: t('asset.generateImage'), route: '/test/ip-scene' },
           { icon: Video, label: t('asset.generateVideo'), route: '/test/video-generator' },
           { icon: Music, label: t('asset.generateAudio'), route: '/test/audio-generator' },
         ].map(({ icon, label, route }) => (
-          <Button key={label} className="create-btn" onClick={() => navigate(route)}>
+          <button type="button" data-wb-button="secondary" key={label} className="create-btn" onClick={() => navigate(route)}>
             {React.createElement(icon, { size: 16 })}
             <span>{label}</span>
-          </Button>
+          </button>
         ))}
       </div>
     </div>
@@ -245,14 +196,7 @@ const AssetSection = ({ stats }) => {
       <div className="section-header">
         <div className="section-title-wrapper">
           <Package size={18} />
-          <div className="section-title title-5">
-            <span className="title-text">{t('dashboard.totalAssets')}</span>
-            <div className="title-decoration" />
-            <div className="title-dots">
-              <span className="dot-large" />
-              <span className="dot-small" />
-            </div>
-          </div>
+          <h2 className="wb-section-title">{t('dashboard.totalAssets')}</h2>
         </div>
       </div>
       <div className="asset-content">
@@ -288,6 +232,8 @@ const RecentSection = ({
   coursesHasMore,
   onCourseClick,
   onLoadMoreCourses,
+  loadErrors,
+  onRetry,
   images,
   imagesLoading,
   videos,
@@ -297,27 +243,6 @@ const RecentSection = ({
 }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('courses');
-  const coursesSentinelRef = useRef(null);
-
-  useEffect(() => {
-    if (activeTab !== 'courses' || !coursesHasMore || coursesLoading || coursesLoadingMore) return undefined;
-
-    const sentinel = coursesSentinelRef.current;
-    if (!sentinel) return undefined;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          onLoadMoreCourses();
-        }
-      },
-      { root: null, rootMargin: '240px 0px', threshold: 0.01 }
-    );
-
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [activeTab, coursesHasMore, coursesLoading, coursesLoadingMore, onLoadMoreCourses]);
-
   const tabs = [
     { id: 'courses', icon: BookOpen, label: t('sidebar.courseGroup') },
     { id: 'images', icon: Image, label: t('sidebar.imageLibrary') },
@@ -326,40 +251,44 @@ const RecentSection = ({
   ];
 
   const renderRow = (items, renderFn) => (
-    <div className="recent-row">{items.map(renderFn)}</div>
+    <div className="wb-work-grid">{items.map(renderFn)}</div>
   );
 
+  const activeLoading = { courses: coursesLoading, images: imagesLoading, videos: videosLoading, audio: audiosLoading }[activeTab];
   const renderContent = () => {
+    if (activeLoading) return <PageLoading />;
+    if (loadErrors[activeTab] === 'list') {
+      return (
+        <div className="wb-library-empty">
+          <p role="alert">{t('common.operationFailed')}</p>
+          <button type="button" data-wb-button="secondary" onClick={() => onRetry[activeTab]()}>{t('common.retry')}</button>
+        </div>
+      );
+    }
     switch (activeTab) {
       case 'courses':
-        if (coursesLoading) return <PageLoading />;
-        if (!courses || courses.length === 0) return <EmptyState icon={FileText} text={t('dashboard.noCourses')} />;
+        if (!courses || courses.length === 0) return <EmptyState text={t('dashboard.noCourses')} />;
         return (
           <>
             {renderRow(courses, course => <CourseCard key={course.id} course={course} onClick={() => onCourseClick(course)} />)}
-            {(coursesHasMore || coursesLoadingMore) && (
-              <div className="recent-load-more-sentinel" ref={coursesSentinelRef}>
-                {coursesLoadingMore && (
-                  <>
-                    <Loader2 size={20} className="animate-spin" style={{ color: 'var(--wb-muted)' }} />
-                    <span className="loading-text">{t('common.loading')}</span>
-                  </>
-                )}
+            {coursesHasMore && (
+              <div className="recent-load-more-sentinel">
+                {loadErrors.courses === 'more' && <span role="alert">{t('course.fetchFailed')}</span>}
+                <button type="button" data-wb-button="secondary" disabled={coursesLoadingMore} onClick={onLoadMoreCourses}>
+                  {t(coursesLoadingMore ? 'common.loading' : loadErrors.courses === 'more' ? 'common.retry' : 'course.loadMore')}
+                </button>
               </div>
             )}
           </>
         );
       case 'images':
-        if (imagesLoading) return <PageLoading />;
-        if (!images || images.length === 0) return <EmptyState icon={Image} text={t('dashboard.noImages')} />;
-        return renderRow(images, image => <ImageCard key={image.id} image={image} onClick={() => {}} />);
+        if (!images || images.length === 0) return <EmptyState text={t('dashboard.noImages')} />;
+        return renderRow(images, image => <ImageCard key={image.id} image={image} />);
       case 'videos':
-        if (videosLoading) return <PageLoading />;
-        if (!videos || videos.length === 0) return <EmptyState icon={Video} text={t('dashboard.noVideos')} />;
+        if (!videos || videos.length === 0) return <EmptyState text={t('dashboard.noVideos')} />;
         return renderRow(videos, video => <VideoCard key={video.id} video={video} />);
       case 'audio':
-        if (audiosLoading) return <PageLoading />;
-        if (!audios || audios.length === 0) return <EmptyState icon={Music} text={t('dashboard.noAudios')} />;
+        if (!audios || audios.length === 0) return <EmptyState text={t('dashboard.noAudios')} />;
         return renderRow(audios, (audio, idx) => <AudioCard key={audio.id} audio={audio} index={idx} />);
       default:
         return null;
@@ -368,41 +297,16 @@ const RecentSection = ({
 
   return (
     <div className="recent-container">
-      <div className="recent-header">
-        <div className="recent-title-row">
-          <div className="recent-title-wrapper title-4">
-            <span className="title">{t('dashboard.recentCourses')}</span>
-            <div className="title-decoration" />
-            <div className="title-dots">
-              <span className="dot-large" />
-              <span className="dot-small" />
-            </div>
-          </div>
-          <Segmented
-            options={tabs.map(tab => {
-              const IconComponent = tab.icon;
-              return {
-                label: (
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <IconComponent size={14} />
-                    <span>{tab.label}</span>
-                  </span>
-                ),
-                value: tab.id,
-              };
-            })}
-            value={activeTab}
-            onChange={setActiveTab}
-          />
-        </div>
-        <div className="recent-sort-btn">
-          <span>{t('dashboard.sortByUpdated')}</span>
-          <ChevronsUpDown size={14} />
-        </div>
-      </div>
-      <div className="recent-content">
-        {renderContent()}
-      </div>
+      <h2 className="wb-section-title">{t('dashboard.recentCourses')}</h2>
+      <Tabs
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={tabs.map(({ id, icon, label }) => ({
+          key: id,
+          label: <span className="inline-flex items-center gap-2">{React.createElement(icon, { size: 16, 'aria-hidden': true })}{label}</span>,
+          children: activeTab === id ? renderContent() : null,
+        }))}
+      />
     </div>
   );
 };
@@ -425,6 +329,7 @@ export const AdminDashboard = () => {
   const [audiosLoading, setAudiosLoading] = useState(true);
 
   const [stats, setStats] = useState(null);
+  const [loadErrors, setLoadErrors] = useState({});
   const [initialLoading, setInitialLoading] = useState(true);
 
   const loadData = useCallback(async () => {
@@ -439,6 +344,7 @@ export const AdminDashboard = () => {
   }, []);
 
   const fetchRecentCourses = useCallback(async (pageNum = 1, append = false) => {
+    setLoadErrors(current => ({ ...current, courses: null }));
     try {
       if (pageNum === 1) {
         setCoursesLoading(true);
@@ -501,6 +407,7 @@ export const AdminDashboard = () => {
       setCoursesHasMore(totalPages ? pageNum < totalPages : list.length === 8);
     } catch (error) {
       console.error('获取最近课程失败:', error);
+      setLoadErrors(current => ({ ...current, courses: append ? 'more' : 'list' }));
       if (!append) {
         setCourses([]);
       }
@@ -516,6 +423,7 @@ export const AdminDashboard = () => {
   }, [coursesHasMore, coursesLoading, coursesLoadingMore, coursesPage, fetchRecentCourses]);
 
   const fetchRecentImages = useCallback(async () => {
+    setLoadErrors(current => ({ ...current, images: null }));
     try {
       setImagesLoading(true);
       const result = await apiService.getPptImages({ limit: '8' });
@@ -535,6 +443,7 @@ export const AdminDashboard = () => {
       })));
     } catch (error) {
       console.error('获取图片失败:', error);
+      setLoadErrors(current => ({ ...current, images: 'list' }));
       setImages([]);
     } finally {
       setImagesLoading(false);
@@ -542,6 +451,7 @@ export const AdminDashboard = () => {
   }, [t]);
 
   const fetchRecentVideos = useCallback(async () => {
+    setLoadErrors(current => ({ ...current, videos: null }));
     try {
       setVideosLoading(true);
       const result = await apiService.getVideos({ limit: '8' });
@@ -561,6 +471,7 @@ export const AdminDashboard = () => {
       })));
     } catch (error) {
       console.error('获取视频失败:', error);
+      setLoadErrors(current => ({ ...current, videos: 'list' }));
       setVideos([]);
     } finally {
       setVideosLoading(false);
@@ -568,6 +479,7 @@ export const AdminDashboard = () => {
   }, [t]);
 
   const fetchRecentAudios = useCallback(async () => {
+    setLoadErrors(current => ({ ...current, audio: null }));
     try {
       setAudiosLoading(true);
       const result = await apiService.getVoiceConfigs();
@@ -585,6 +497,7 @@ export const AdminDashboard = () => {
       })));
     } catch (error) {
       console.error('获取音频失败:', error);
+      setLoadErrors(current => ({ ...current, audio: 'list' }));
       setAudios([]);
     } finally {
       setAudiosLoading(false);
@@ -620,8 +533,8 @@ export const AdminDashboard = () => {
   }
 
   return (
-    <div className="admin-dashboard">
-      <div className="dashboard-page-heading"><h1>{t('sidebar.dashboard')}</h1></div>
+    <section className="admin-dashboard wb-standard-page">
+      <header className="wb-library-header"><h1>{t('sidebar.dashboard')}</h1></header>
       <Row className="dashboard-top-modules" gutter={[20, 20]} style={{ marginBottom: 20 }}>
         <Col xs={24} lg={12}>
           <CreateSection onCreateCourse={handleCreateCourse} navigate={navigate} />
@@ -637,6 +550,8 @@ export const AdminDashboard = () => {
         coursesHasMore={coursesHasMore}
         onCourseClick={handleCourseClick}
         onLoadMoreCourses={loadMoreCourses}
+        loadErrors={loadErrors}
+        onRetry={{ courses: fetchRecentCourses, images: fetchRecentImages, videos: fetchRecentVideos, audio: fetchRecentAudios }}
         images={images}
         imagesLoading={imagesLoading}
         videos={videos}
@@ -649,6 +564,6 @@ export const AdminDashboard = () => {
         onCancel={() => setCreateOpen(false)}
         onSubmit={handleCreateSubmit}
       />
-    </div>
+    </section>
   );
 };

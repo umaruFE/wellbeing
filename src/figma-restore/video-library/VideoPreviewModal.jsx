@@ -1,7 +1,8 @@
+import { MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Pause, Play, X } from 'lucide-react';
-import { Button, Modal, Tag, message } from 'antd';
+import { Button, Modal, message } from 'antd';
 
 function formatMediaTime(value) {
   if (!Number.isFinite(value) || value <= 0) return '00:00';
@@ -14,7 +15,7 @@ function formatMediaTime(value) {
 function VideoArt({ asset, playing, onToggle, t }) {
   return (
     <div className={`fr-vid-frame tone-${asset.tone}`}>
-      <Tag className="fr-vid-source-tag">{asset.source}</Tag>
+      <MetadataTag className="fr-vid-source-tag">{asset.source}</MetadataTag>
       <span className="fr-vid-moon" />
       <span className="fr-vid-line line-a" />
       <span className="fr-vid-line line-b" />
@@ -112,9 +113,9 @@ export function VideoPreviewModal({ asset, open, onClose, onViewTask }) {
         <div className="fr-vid-detail-head">
           <div className="fr-vid-modal-title">{asset.name}</div>
           <div className="fr-vid-modal-tags">
-            <Tag color="error">{asset.type}</Tag>
-            <Tag>{asset.source}</Tag>
-            <Tag>{asset.format}</Tag>
+            <MetadataTag>{asset.type}</MetadataTag>
+            <MetadataTag>{asset.source}</MetadataTag>
+            <MetadataTag>{asset.format}</MetadataTag>
           </div>
         </div>
       )}

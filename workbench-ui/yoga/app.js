@@ -2,6 +2,9 @@
 'use strict';
 const M=window.YogaModel,S=window.YogaScene,L=window.YogaLibrary;
 const backend=window.YogaExistingBackend;
+const caseLibrary=window.WBWorkbenchApi?.caseLibrary?.('yoga');
+const cases=()=>caseLibrary?.items??L.CASES;
+const caseState=id=>caseLibrary?caseLibrary.find(id)?.state:L.getCase(id);
 const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone=v=>JSON.parse(JSON.stringify(v));
 let library=L.createLibrary(),activeId=null,state=M.createState(),storageError='',recoveryRaw=null,cloud,courseStorage,loadError='';
@@ -153,7 +156,7 @@ function confirmAndContinue(){const next=M.confirmContent(state);ui.step=3;commi
 function historyDialog(){showDialog('版本历史',`<div class="notice">恢复后进入修改草稿；当前授课版本保留，重新确认后才会更新。</div>${[...state.versions].reverse().map(v=>`<section class="teacher-block"><h3>V${v.version}${v.version===state.published?.version?' · 当前授课版':''} · ${E(v.course.title)}</h3><p>${E(window.WBPlatform.formatTime?.(v.createdAt)||(v.createdAt?new Date(v.createdAt).toLocaleString('zh-CN',{hour12:false}):'时间未记录'))} · ${v.course.pages.length} 页</p>${btn('恢复为修改草稿','history-restore','secondary',!!state.job||!!ui.busy||!!state.candidate,`data-version="${v.version}"`)}</section>`).join('')}`,btn('关闭','close-dialog'));}
 function canSwitchCourse(){if(ui.busy||state.job){notify('请先完成或取消当前生成，再切换课程。');return false;}if(!save()){render();notify('请先重试保存或备份当前记录，避免切换时丢失内容。');return false;}closeDialog();stopPlayer();return true;}
 function openCourse(id,classroom=false){if(!canSwitchCourse())return;library=L.load(courseStorage);const record=L.get(library,id);if(record)baseTokens.set(id,L.recordToken(record));if(!record)return notify('课程暂不可用，请刷新后重试。');activeId=record.id;state=clone(record.state);if(state.job)state=M.cancelJob(state);restoreWorkspace(record);ui.homeTab='mine';ui.page='editor';save();render();window.scrollTo(0,0);if(classroom)startClassroom();}
-function newCourse(caseId){if(!canSwitchCourse())return;state=caseId?L.cloneCase(caseId):M.createState();const record=L.createRecord(state,{sourceCaseId:caseId||null});activeId=record.id;baseTokens.set(record.id,null);library=L.upsert(library,record);restoreWorkspace(record);if(!caseId)Object.assign(settings,{title:'',theme:'',context:'',goal:''});ui.homeTab='mine';ui.page='editor';save();render();window.scrollTo(0,0);if(caseId)notify('已添加到“我制作的”，可以继续调整课程。');}
+function newCourse(caseId){if(!canSwitchCourse())return;const source=caseId?caseState(caseId):null;if(caseId&&!source)return;state=source?L.cloneCase(caseId,source):M.createState();const record=L.createRecord(state,{sourceCaseId:caseId||null});activeId=record.id;baseTokens.set(record.id,null);library=L.upsert(library,record);restoreWorkspace(record);if(!caseId)Object.assign(settings,{title:'',theme:'',context:'',goal:''});ui.homeTab='mine';ui.page='editor';save();render();window.scrollTo(0,0);if(caseId)notify('已添加到“我制作的”，可以继续调整课程。');}
 function commit(next,message){state=next;settings=clone(state.settings);const saved=save();ui.error='';render();if(!saved)notify(storageError||'修改仍保留在页面中，请重试保存。');else if(message)notify(message);return saved;}
 function run(fn,message){try{commit(fn(),message);return true;}catch(e){ui.error=e.message;notify(e.message);render();return false;}}
 function badge(text,kind=''){return `<span class="chip ${kind}">${E(text)}</span>`;}
@@ -262,7 +265,7 @@ async function importLibraryFile(input){
 function libraryHasDraft(record){return !record.state.draft||!record.state.draft.locked;}
 function libraryPersonalActions(item){
   const s=item.state,ready=!!s.published,hasDraft=libraryHasDraft(item),changed=ready&&draftHasUpdates(s),identity=`data-id="${E(item.id)}"`;
-  const edit=btn(ready?(hasDraft?'继续修改':'查看课程'):'继续修改','open-course',!ready||changed?'primary':'secondary',false,identity);
+  const edit=btn(ready&&!hasDraft?'查看备课':'继续备课','open-course',!ready||changed?'primary':'secondary',false,identity);
   const teach=ready?btn(changed?`使用授课版 V${s.published.version}授课`:`开始授课 · V${s.published.version}`,'teach-course',changed?'secondary':'primary',false,identity):'';
   return ready&&!changed?teach+edit:edit+teach;
 }
@@ -273,7 +276,7 @@ function draftRecordStatus(record){
 function recordStatus(record){return record.state.published?`授课版 V${record.state.published.version} · 可直接授课`:draftRecordStatus(record);}
 function homeEntries(){
   const query=ui.query.trim().toLowerCase();
-  const entries=ui.homeTab==='cases'?L.CASES.map(meta=>({id:meta.id,meta,state:L.getCase(meta.id)})):library.items.slice().sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
+  const entries=ui.homeTab==='cases'?cases().map(example=>({id:example.id,meta:example.meta||example,state:example.state||caseState(example.id)})):library.items.slice().sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt));
   return entries.filter(item=>{const s=item.state,configs=[s.published?.course.settings,s.draft?.settings,item.workspace?.form,s.settings].filter(Boolean),titles=[courseLibraryTitle(item),s.published?.course.title,s.draft?.title];const matches=!query||[...titles,...configs.flatMap(conf=>[conf.theme,conf.age,characterName(conf.characterId)])].join(' ').toLowerCase().includes(query);const filter=ui.homeTab==='cases'?(ui.filter==='all'||item.id===ui.filter):ui.filter==='archived'?!!item.archived:!item.archived&&(ui.filter==='all'||(ui.filter==='ready'?!!s.published:libraryHasDraft(item)));return matches&&filter;});
 }
 function libraryCard(item){
@@ -283,24 +286,30 @@ function libraryCard(item){
   const description=isCase?item.meta.description:shownCourse?conf.goal:'基本信息已保留，补充课程设定后生成内容。';
   const identity=`data-id="${E(item.id)}"`;
   const draftSummary=ready&&hasDraft?`<div class="library-draft-status"><strong>修改草稿 · ${E(draftRecordStatus(item))}</strong>${draft&&draft.title!==shownCourse.title?`<small class="library-draft-title">草稿课程名：${E(draft.title)}</small>`:''}</div>`:'';
-  return `<article class="yoga-library-card lh-card ${item.archived?'archived':''}" aria-label="${E(title)}">
-    <button class="library-cover-button lh-cover" data-action="${isCase?'case-preview':'open-course'}" ${identity} aria-label="${isCase?'预览案例':'打开课程'}：${E(title)}"><div class="library-cover ${/海|ocean/i.test(theme)?'ocean':'forest'}">${coverReady?renderScene(cover,conf,{compact:true,showLabel:false}):`<div class="library-blank-cover"><span>✧</span><strong>${cover?(pageAssetStatus(cover,'background',coverState)==='stale'?'背景需更新':'背景尚未生成'):'故事即将开始'}</strong><small>${cover?'课程内容已保留，可继续准备素材':'补充设定，生成你的课程'}</small></div>`}<span class="library-cover-tag">${E(theme)}</span></div></button>
-    <div class="library-card-body lh-card-body"><div class="library-card-state lh-card-state"><span class="library-entry-status lh-status ${isCase?'':ready?'ready':'draft'}">${E(kind)}</span><small>${item.archived?'已归档 · ':''}${isCase?'':E(item.updatedAt.slice(0,10))}</small></div>
-    <h3 class="lh-card-heading"><button class="library-card-title lh-card-title" data-action="${isCase?'case-preview':'open-course'}" ${identity}>${E(title)}</button></h3>
+  return `<article class="yoga-library-card lh-card${item.archived?' archived':''}${isCase?' wb-case-card':''}" aria-label="${E(title)}">
+    <button class="library-cover-button lh-cover${isCase?' wb-case-cover':''}" data-action="${isCase?'case-preview':'open-course'}" ${identity} aria-label="${isCase?'预览案例':'打开课程'}：${E(title)}"><div class="library-cover ${/海|ocean/i.test(theme)?'ocean':'forest'}">${coverReady?renderScene(cover,conf,{compact:true,showLabel:false}):`<div class="library-blank-cover"><span>✧</span><strong>${cover?(pageAssetStatus(cover,'background',coverState)==='stale'?'背景需更新':'背景尚未生成'):'故事即将开始'}</strong><small>${cover?'课程内容已保留，可继续准备素材':'补充设定，生成你的课程'}</small></div>`}<span class="library-cover-tag">${E(theme)}</span></div></button>
+    <div class="library-card-body lh-card-body${isCase?' wb-case-body':''}"><div class="library-card-state lh-card-state"><span class="library-entry-status lh-status ${isCase?'':ready?'ready':'draft'}">${E(kind)}</span><small>${item.archived?'已归档 · ':''}${isCase?'':E(item.updatedAt.slice(0,10))}</small></div>
+    <h3 class="lh-card-heading${isCase?' wb-case-title':''}"><button class="library-card-title lh-card-title" data-action="${isCase?'case-preview':'open-course'}" ${identity}>${E(title)}</button></h3>
     ${ready&&item.displayTitle&&item.displayTitle!==shownCourse.title?`<small class="library-published-title">授课课程名：${E(shownCourse.title)}</small>`:''}
     <div class="row course-metadata lh-metadata"><span>${E(conf.age||'年龄待设置')}</span><span>${shownCourse?shownCourse.pages.length+' 页':'内容待生成'}</span><span>${E(characterName(conf.characterId))}</span></div>
-    <p class="library-card-description lh-card-description">${E(description)}</p>${!isCase&&!ready?`<small class="lh-version-note">${E(draftRecordStatus(item))}</small>`:''}${draftSummary}<div class="library-card-actions lh-card-actions">${isCase?btn('预览案例','case-preview','primary',false,identity)+btn('制作同款','copy-case','secondary',false,identity):libraryPersonalActions(item)+courseMenu(item)}</div></div></article>`;
+    <p class="library-card-description lh-card-description">${E(description)}</p>${!isCase&&!ready?`<small class="lh-version-note">${E(draftRecordStatus(item))}</small>`:''}${draftSummary}<div class="library-card-actions lh-card-actions${isCase?' wb-case-actions':''}">${isCase?btn('预览案例','case-preview','primary',false,identity+' data-wb-button="primary"')+btn('制作同款','copy-case','secondary',false,identity+' data-wb-button="secondary"'):libraryPersonalActions(item)+(ready&&caseLibrary?.canPublish?btn('发布为案例','publish-case','secondary',false,identity):'')+courseMenu(item)}</div></div></article>`;
 }
-function libraryResults(){const entries=homeEntries();return `<div class="library-results-head lh-results-head"><span role="status" aria-live="polite">共 ${entries.length} 个${ui.homeTab==='cases'?'案例':'课程'}</span></div><div class="yoga-library-cards lh-grid">${entries.length?entries.map(libraryCard).join(''):`<div class="library-empty lh-empty"><span aria-hidden="true">${ui.query||ui.filter!=='all'?'⌕':'▤'}</span><h2>${ui.query||ui.filter!=='all'?'没有找到匹配的课程':'还没有制作过课程'}</h2><p>${ui.query||ui.filter!=='all'?'换个关键词，或清除筛选后再看看。':(cloud?'可以新建自己的情境瑜伽课程。':'从一个案例开始，或新建自己的情境瑜伽课程。')}</p>${ui.query||ui.filter!=='all'?btn('清除筛选','clear-search','secondary'):(cloud?'':btn('浏览案例','library-tab','secondary',false,'data-tab="cases"'))+btn('＋ 新建瑜伽课程','setup','primary')}</div>`}</div>`;}
+function libraryResults(){
+  const isCase=ui.homeTab==='cases';
+  if(isCase&&caseLibrary?.message)return `<div class="wb-library-empty" role="status">${E(caseLibrary.message)}</div>`;
+  const entries=homeEntries(), source=isCase?cases():library.items;
+  if(entries.length)return `<div class="library-results-head lh-results-head"><span role="status" aria-live="polite">共 ${entries.length} 项</span></div><div class="yoga-library-cards lh-grid ${isCase?'wb-case-grid':'wb-work-grid'}">${entries.map(libraryCard).join('')}</div>`;
+  const filtered=source.length&&(ui.query.trim()||ui.filter!=='all');
+  return `<div class="wb-library-empty"><p role="status">${filtered?'未找到匹配的活动。':isCase?'暂无已发布的案例。':'暂无我制作的活动。'}</p>${filtered?btn(ui.query.trim()&&ui.filter==='all'?'清除搜索':'清除筛选','clear-search','secondary'):''}</div>`;
+}
 function home(){
-  if(cloud)ui.homeTab='mine';
   const mine=ui.homeTab==='mine',activeItems=library.items.filter(x=>!x.archived),ready=activeItems.filter(x=>x.state.published).length,drafts=activeItems.filter(libraryHasDraft).length;
-  const filters=mine?[['all','全部',activeItems.length],['draft','修改草稿',drafts],['ready','可授课',ready],['archived','已归档',library.items.length-activeItems.length]]:[['all','全部情境'],['wonder','奇境漫步'],['ocean','海底探索']];
-  return `<main class="workspace yoga-home library-home"><header class="lh-header"><div><h1>互动式情境瑜伽</h1></div><div class="lh-header-actions">${btn('＋ 新建瑜伽课程','setup','primary')}</div></header>
-  <div class="lh-library-head"><div class="lh-tabs" role="group" aria-label="活动来源">${(cloud?[['mine','我制作的',library.items.length]]:[['cases','案例库',L.CASES.length],['mine','我制作的',library.items.length]]).map(([id,label,count])=>btn(`${label} <span>${count}</span>`,'library-tab',ui.homeTab===id?'active':'',false,`data-tab="${id}" aria-pressed="${ui.homeTab===id}"`)).join('')}</div><label class="lh-search"><span aria-hidden="true">⌕</span><input id="library-search" type="search" placeholder="搜索课程名称、情境或角色" aria-label="搜索课程" value="${E(ui.query)}"></label></div>
-  <div class="lh-filterbar"><div class="lh-filters" role="group" aria-label="${mine?'课程状态':'案例情境'}">${filters.map(([id,label,count])=>btn(`${label}${count===undefined?'':` <span>${count}</span>`}`,'library-filter',ui.filter===id?'active':'',false,`data-filter="${id}" aria-pressed="${ui.filter===id}"`)).join('')}</div><details class="lh-tools"><summary>课程库工具</summary><div>${btn('导入备份','import-library','quiet')}${btn('导出备份','export','quiet')}</div></details><input type="file" id="library-import" accept=".json,application/json" class="hide" aria-label="导入课程库备份"></div>
+  const filters=mine?[['all','全部',activeItems.length],['draft','草稿',drafts],['ready','可授课',ready],['archived','已归档',library.items.length-activeItems.length]]:[['all','全部情境'],['wonder','奇境漫步'],['ocean','海底探索']];
+  return `<main class="workspace yoga-home library-home"><header class="lh-header wb-library-header"><div><h1>情境瑜伽</h1></div><div class="lh-header-actions">${btn((window.WBUI?.icon?.('plus')||'')+'新建活动','setup','primary',false,'data-wb-create')}</div></header>
+  <div class="lh-library-head wb-library-tools"><div class="lh-tabs wb-library-tabs" role="tablist" aria-label="活动来源">${[['cases','案例库',cases().length],['mine','我制作的',library.items.length]].map(([id,label,count])=>`<button type="button" data-ui="tab" id="wb-${id}-tab" role="tab" aria-selected="${ui.homeTab===id}" aria-controls="library-results" tabindex="${ui.homeTab===id?0:-1}" data-action="library-tab" data-tab="${id}">${label} <span>${count}</span></button>`).join('')}</div><label class="lh-search wb-library-search"><input id="library-search" type="search" placeholder="搜索活动" aria-label="搜索活动" value="${E(ui.query)}"></label></div>
+  <div class="lh-filterbar"><div class="lh-filters" role="group" aria-label="${mine?'课程状态':'案例情境'}">${filters.map(([id,label,count])=>btn(`${label}${count===undefined?'':` <span>${count}</span>`}`,'library-filter',ui.filter===id?'active':'',false,`data-wb-filter data-filter="${id}" aria-pressed="${ui.filter===id}"`)).join('')}</div><details class="lh-tools"><summary>课程库工具</summary><div>${btn('导入备份','import-library','quiet')}${btn('导出备份','export','quiet')}</div></details><input type="file" id="library-import" accept=".json,application/json" class="hide" aria-label="导入课程库备份"></div>
   ${mine&&cloud?.unavailable?`<p role="status">有 ${cloud.unavailable} 份课程暂无法在此打开，后台原记录已保留。</p>`:''}
-  <section id="library-results" aria-label="${mine?'我制作的课程':'案例课程'}">${libraryResults()}</section></main>`;
+  <section id="library-results" role="tabpanel" aria-labelledby="wb-${ui.homeTab}-tab">${libraryResults()}</section></main>`;
 }
 function directEditButton(field,label='编辑'){return btn(label,'direct-edit','quiet tiny',adjustmentLocked()||!!state.candidate,`data-field="${field}" data-id="${current()?.id||''}"`);}
 function readonlySettings(){const s=state.draft.settings;return `<div class="settings-layout"><section class="panel"><div class="panel-head"><h2>课程设定</h2><div class="row">${state.draft.locked?btn('建立修改草稿','fork','secondary',!!state.job):directEditButton('settings','编辑设定')+btn('AI 调整整课','settings-edit','secondary',adjustmentLocked()||!!state.candidate)}</div></div>${[['课程名称',state.draft.title],['情境主题',s.theme],['故事描述',s.context],['学生年龄',s.age],['语言目标',M.languageGoals(s).join('；')],['学习目标',s.goal],['课程时长',s.duration+' 分钟'],['带领角色',characterName(s.characterId)]].map(([a,b])=>`<div class="summary-line"><span>${a}</span><strong>${E(b)}</strong></div>`).join('')}</section></div>`;}
@@ -935,7 +944,7 @@ function startClassroom(mode){
   persistClassroom();renderPlayer();$('#exit-preview')?.focus();
 }
 function restartClassroom(){if(!ui.play)return;ui.play.roundId=Date.now().toString(36);changePlayPage(0);}
-function startPreview(published=false,first=false,auto=false,caseId=null,startPageId=null){if(activeId&&!save())return notify('草稿保存失败，请先处理保存问题。');const source=caseId?L.getCase(caseId).published.course:published?state.published?.course:state.draft;if(!source)return notify('请先确认生成授课版本。');stopMusicPreview();stopReferenceMedia();ui.scroll=window.scrollY;ui.returnFocus=document.activeElement;ui.play={course:clone(source),assetStates:Object.fromEntries(source.pages.map(p=>[p.id,{background:pageAssetStatus(p,'background',{draft:source}),ready:['background','voice','motion'].every(k=>['ready','na'].includes(pageAssetStatus(p,k,{draft:source})))}])),index:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),published,caseId,reviewOrigin:!published&&!caseId&&ui.page==='editor'&&ui.step===5,previewSource:state.draft?.locked&&state.published?'授课版 V'+state.published.version:'当前草稿',ownerId:activeId,returnPageId:ui.pageId,returnStep:ui.step,returnEditorPage:ui.page,returnNavScrollTop:$('.page-nav')?.scrollTop||0,returnNavScrollLeft:$('.page-nav')?.scrollLeft||0,previewStartIndex:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),returnAction:document.activeElement?.dataset.action,returnId:document.activeElement?.dataset.id,returnReviewKey:document.activeElement?.dataset.reviewKey,returnReviewDetails:reviewDetails(),version:state.published?.version,ended:false,progress:0,status:'idle',message:'点击播放，英语与动作同时开始'};if(ui.dialogMode==='publication-review')closeDialog();renderPlayer();if(auto)playCurrent();else $('#exit-preview')?.focus();}
+function startPreview(published=false,first=false,auto=false,caseId=null,startPageId=null){if(activeId&&!save())return notify('草稿保存失败，请先处理保存问题。');const source=caseId?caseState(caseId)?.published.course:published?state.published?.course:state.draft;if(!source)return notify('请先确认生成授课版本。');stopMusicPreview();stopReferenceMedia();ui.scroll=window.scrollY;ui.returnFocus=document.activeElement;ui.play={course:clone(source),assetStates:Object.fromEntries(source.pages.map(p=>[p.id,{background:pageAssetStatus(p,'background',{draft:source}),ready:['background','voice','motion'].every(k=>['ready','na'].includes(pageAssetStatus(p,k,{draft:source})))}])),index:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),published,caseId,reviewOrigin:!published&&!caseId&&ui.page==='editor'&&ui.step===5,previewSource:state.draft?.locked&&state.published?'授课版 V'+state.published.version:'当前草稿',ownerId:activeId,returnPageId:ui.pageId,returnStep:ui.step,returnEditorPage:ui.page,returnNavScrollTop:$('.page-nav')?.scrollTop||0,returnNavScrollLeft:$('.page-nav')?.scrollLeft||0,previewStartIndex:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),returnAction:document.activeElement?.dataset.action,returnId:document.activeElement?.dataset.id,returnReviewKey:document.activeElement?.dataset.reviewKey,returnReviewDetails:reviewDetails(),version:state.published?.version,ended:false,progress:0,status:'idle',message:'点击播放，英语与动作同时开始'};if(ui.dialogMode==='publication-review')closeDialog();renderPlayer();if(auto)playCurrent();else $('#exit-preview')?.focus();}
 function playerCurrent(){return ui.play?.course.pages[ui.play.index];}
 function playablePage(){return !!ui.play?.assetStates[playerCurrent()?.id]?.ready;}
 function playerStatus({state:st,message}){if(!ui.play)return;const bg=M.musicOptions(ui.play.course.settings),track=musicTrack(bg.id,ui.play.course.settings);if(st==='playing'&&(track.src||track.fileId)&&window.YogaMusic){classroomMusic=classroomMusic||window.YogaMusic.createAudio({onError:notify});if(classroomMusic.getKey()===musicKey(track))classroomMusic.resume();else classroomMusic.play(musicSource(track),bg.volume,musicKey(track));}else if(st==='paused')classroomMusic?.pause();else if(['idle','ended','error'].includes(st))classroomMusic?.stop();ui.play.status=st;ui.play.message=message;const line=$('#player-message');if(line){line.textContent=st==='error'?message:'';line.className=st==='error'?'inline-error':'play-note';}const control=$('#play-control');if(control){control.textContent=st==='starting'?'准备播放…':st==='playing'?'暂停':st==='paused'?'继续':st==='ended'?'再播一次':'播放本页';control.disabled=st==='starting';control.setAttribute('title',control.textContent+'（空格）');}}
@@ -956,9 +965,9 @@ else if(a==='switch-music')void switchModule('music');
 else if(a==='switch-song')void switchModule('song');
 else if(a==='module')void switchModule(b.dataset.module);
 else if(a==='home'){if(ui.busy||state.job)return notify('请先取消或等待当前生成完成。');save();if(ui.page==='editor')ui.homeTab='mine';ui.page='home';ui.filter='all';ui.query='';render();window.scrollTo(0,0);}
-else if(a==='library-tab'){ui.homeTab=b.dataset.tab;ui.filter='all';ui.query='';render();}
+else if(a==='library-tab'){ui.homeTab=b.dataset.tab;ui.filter='all';render();$('#wb-'+ui.homeTab+'-tab')?.focus({preventScroll:true});}
 else if(a==='library-filter'){ui.filter=b.dataset.filter;render();}
-else if(a==='clear-search'){ui.query='';ui.filter='all';render();}
+else if(a==='clear-search'){ui.query='';ui.filter='all';render();$('#library-search')?.focus({preventScroll:true});}
 else if(a==='import-library'){requireLibraryManagement();$('#library-import')?.click();}
 else if(a==='course-rename')renameCourseDialog(b.dataset.id);
 else if(a==='course-rename-confirm'){
@@ -974,6 +983,9 @@ else if(a==='open-course')openCourse(b.dataset.id);
 else if(a==='teach-course')openCourse(b.dataset.id,true);
 else if(a==='case-preview')startPreview(false,true,false,b.dataset.id);
 else if(a==='copy-case')newCourse(b.dataset.id);
+else if(a==='publish-case')return caseLibrary?.publish(b.dataset.id).then(ok=>{
+  if(ok){ui.homeTab='cases';ui.filter='all';ui.query='';render();notify('已发布到平台案例库。');}
+}).catch(error=>notify(error.message));
 else if(a==='character'){settings.characterId=b.dataset.id;save();render();}
 else if(a==='prep-locate')locatePreparationIssue();
 else if(a==='music-library')musicPicker();
@@ -1107,6 +1119,6 @@ function showLoadError(error){
 }
 try{
   cloud=backend?.createStore(updateCloudStatus);courseStorage=cloud?.storage||localStorage;
-  if(cloud)cloud.load().then(initialize).catch(showLoadError);else initialize();
+  if(cloud||caseLibrary)Promise.all([cloud?.load(),caseLibrary?.load()]).then(initialize).catch(showLoadError);else initialize();
 }catch(error){showLoadError(error);}
 })();

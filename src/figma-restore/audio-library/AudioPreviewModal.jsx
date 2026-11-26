@@ -1,7 +1,8 @@
+import { MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Download, Pause, Play, X } from 'lucide-react';
-import { Button, Modal, Tag, message } from 'antd';
+import { Button, Modal, message } from 'antd';
 
 function formatMediaTime(value) {
   if (!Number.isFinite(value) || value <= 0) return '00:00';
@@ -14,7 +15,7 @@ function formatMediaTime(value) {
 function WaveArt({ asset, playing, onToggle, t }) {
   return (
     <div className={`fr-aud-wave tone-${asset.tone}`}>
-      <Tag className="fr-aud-source-tag">{asset.source}</Tag>
+      <MetadataTag className="fr-aud-source-tag">{asset.source}</MetadataTag>
       <div className="fr-aud-bars" aria-hidden="true">
         {Array.from({ length: 18 }).map((_, index) => (
           <span key={index} style={{ height: `${30 + ((index * 17) % 54)}px` }} />
@@ -91,9 +92,9 @@ export function AudioPreviewModal({ asset, open, onClose, playing, onTogglePlay,
         <div className="fr-aud-detail-head">
           <div className="fr-aud-modal-title">{asset.name}</div>
           <div className="fr-aud-modal-tags">
-            <Tag color="error">{asset.type}</Tag>
-            <Tag>{asset.source}</Tag>
-            <Tag>{asset.format}</Tag>
+            <MetadataTag>{asset.type}</MetadataTag>
+            <MetadataTag>{asset.source}</MetadataTag>
+            <MetadataTag>{asset.format}</MetadataTag>
           </div>
         </div>
       )}

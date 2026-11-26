@@ -1,7 +1,7 @@
 /* Teacher workspace; classroom state stays behind the V39 adapter boundary. */
 (() => {
   'use strict';
-  const M = window.MMModel, Art = window.MMQuestionArt, Linked = window.MMLinkedContent, Context = window.MMQuestionContext, G = window.MMGeneration, Goals = window.WBLanguageGoals, Platform = window.MMPlatform, templates = window.MMCatalog;
+  const M = window.MMModel, Art = window.MMQuestionArt, Linked = window.MMLinkedContent, Context = window.MMQuestionContext, G = window.MMGeneration, Goals = window.WBLanguageGoals, Platform = window.MMPlatform, bundledTemplates = window.MMCatalog;
   const app = document.querySelector('#app'), modal = document.querySelector('#modal'), stage = document.querySelector('#stage');
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const clone = value => M.clone(value);
@@ -18,7 +18,7 @@
     sound:'m3 9 5 0 5-5v16l-5-5H3zM17 8q6 4 0 8', star:'m12 2 3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z'
   };
   const icon = name => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="${paths[name] || paths.file}"/></svg>`;
-  const btn = (label, action, opts = {}) => `<button type="button" class="wb-button ${opts.variant==='ghost'?'quiet':opts.variant||'secondary'}${opts.small?' small':''}" data-ui="button" data-action="${action}" ${opts.id ? `data-id="${esc(opts.id)}"` : ''} ${opts.value !== undefined ? `data-value="${esc(opts.value)}"` : ''} ${opts.variant ? `data-ui-variant="${opts.variant}"` : ''} ${opts.small ? 'data-ui-size="sm"' : ''} ${opts.disabled ? 'disabled' : ''} ${opts.title ? `title="${esc(opts.title)}" aria-label="${esc(opts.title)}"` : ''}>${opts.icon ? icon(opts.icon) : ''}${label}</button>`;
+  const btn = (label, action, opts = {}) => `<button type="button" class="wb-button ${opts.variant==='ghost'?'quiet':opts.variant||'secondary'}${opts.small?' small':''}" data-ui="button" data-action="${action}" ${opts.create ? 'data-wb-create' : ''} ${opts.pressed !== undefined ? `data-wb-filter aria-pressed="${opts.pressed}"` : ''} ${opts.id ? `data-id="${esc(opts.id)}"` : ''} ${opts.value !== undefined ? `data-value="${esc(opts.value)}"` : ''} ${opts.variant ? `data-ui-variant="${opts.variant}"` : ''} ${opts.small ? 'data-ui-size="sm"' : ''} ${opts.caseAction ? `data-wb-button="${opts.variant || 'secondary'}"` : ''} ${opts.disabled ? 'disabled' : ''} ${opts.title ? `title="${esc(opts.title)}" aria-label="${esc(opts.title)}"` : ''}>${opts.icon ? icon(opts.icon) : ''}${label}</button>`;
   const field = (label, key, value, options = {}) => `<div class="field wb-field ${options.className || ''}"><label for="f-${key}">${label}</label>${options.textarea ? `<textarea id="f-${key}" data-field="${key}" data-ui="field" rows="${options.rows || 2}">${esc(value)}</textarea>` : `<input id="f-${key}" data-field="${key}" data-ui="field" value="${esc(value)}" ${options.maxlength ? `maxlength="${options.maxlength}"` : ''}>`}${options.hint ? `<small>${options.hint}</small>` : ''}</div>`;
   const formatDate = value => new Date(value).toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
   const uid = () => crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -28,12 +28,14 @@
   const progressWaiters = new Map();
   let candidate = null, pendingAdoption = false, preparationErrors = [], generationRound = 0, generationJob = null;
   const api = window.WBWorkbenchApi;
+  const caseLibrary=api?.caseLibrary?.('move-match');
+  let templates=caseLibrary?.items??bundledTemplates;
   let editingItemId=null, questionFilter='all', deferredAction=null, readingItemId=null;
   let questionMenu=null, questionDrag=null, suppressCardClickUntil=0;
-  let libraryTab='cases', platformVisible=true, switchPreparation=null;
+  let libraryTab='cases', libraryQuery='', platformVisible=true, switchPreparation=null;
   const QUESTION_COUNT_OPTIONS=[10,20,30,50];
   const caseQuestionCounts=new Map();
-  if (!M || !Art || !Linked || !G || !Goals || !Platform || !Array.isArray(templates)) { app.innerHTML = '<main class="fatal"><h1>工作台未能加载</h1><p>请检查模块文件是否完整，然后刷新页面。</p></main>'; return; }
+  if (!M || !Art || !Linked || !G || !Goals || !Platform || !Array.isArray(bundledTemplates)) { app.innerHTML = '<main class="fatal"><h1>工作台未能加载</h1><p>请检查模块文件是否完整，然后刷新页面。</p></main>'; return; }
   function toast(message) { clearTimeout(noticeTimer); const node=document.querySelector('#notice'); node.textContent=message;node.classList.add('show');noticeTimer=setTimeout(()=>node.classList.remove('show'),3600); }
   function header(){return `<header class="app-header"><div class="brand"><span class="brand-mark">${icon('star')}</span><strong>小星星</strong><span class="brand-divider"></span><span>分类游戏</span></div><div class="header-note"><span class="badge simulation">动作模拟</span><span class="muted">未使用摄像头</span></div></header>`;}
   function titleOf(template){return template.nameZh || {'articles-four':'冠词分类','articles-two':'a 还是 an','be-three':'be 动词'}[template.id] || template.title;}
@@ -222,20 +224,54 @@
   const caseQuestionCount=id=>caseQuestionCounts.get(id)||QUESTION_COUNT_OPTIONS[0];
   function caseLesson(template,count=caseQuestionCount(template.id)){
     if(!QUESTION_COUNT_OPTIONS.includes(count))throw new Error('请选择总题数：10、20、30 或 50 题。');
+    if(template.lesson)return clone(template.lesson);
+    if(caseLibrary){
+      const lesson=template.lessons?.[count];
+      if(!lesson)throw Error('案例的题目未准备完整。');
+      return clone(lesson);
+    }
     return G.generate({...G.defaults(template),questionCount:count},{lessonId:template.id}).lesson;
   }
   function renderCaseCard(t){
-    const count=caseQuestionCount(t.id);
-    return `<article class="case-card"><div class="case-cover"><img src="assets/${esc(t.id)}.jpg" alt="${esc(titleOf(t))}课堂画面" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="case-cover-fallback" hidden><div class="sample-sentence">${esc(t.items[0].sentence).replace('___','<em>___</em>')}</div><div class="cover-groups">${t.categories.map(c=>`<span>${esc(c.label)}</span>`).join('')}</div></div></div><div class="case-body"><h3>${esc(titleOf(t))}</h3><p class="case-english">${esc(t.title)}</p><div class="case-meta"><span class="case-categories">${t.categories.map(c=>esc(c.label)).join(' · ')}</span><span>${t.categories.length} 类 / <span data-case-count="${esc(t.id)}">${count}</span> 题</span></div><div class="case-actions">${btn('预览案例','example',{id:t.id,icon:'eye',variant:'primary'})}${btn('制作同款','create',{id:t.id})}</div></div></article>`;
+    const count=t.lesson?t.items.length:caseQuestionCount(t.id);
+    return `<article class="case-card wb-case-card"><div class="case-cover wb-case-cover">${t.lesson?'':`<img src="assets/${esc(t.id)}.jpg" alt="${esc(titleOf(t))}课堂画面" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`}<div class="case-cover-fallback" ${t.lesson?'':'hidden'}><div class="sample-sentence">${esc(t.items[0].sentence||t.items[0].word).replace('___','<em>___</em>')}</div><div class="cover-groups">${t.categories.map(c=>`<span>${esc(c.label)}</span>`).join('')}</div></div></div><div class="case-body wb-case-body"><h3 class="wb-case-title">${esc(titleOf(t))}</h3><p class="case-english">${esc(t.title)}</p><div class="case-meta"><span data-wb-tag class="case-categories">${t.categories.map(c=>esc(c.label)).join(' · ')}</span><span>${t.categories.length} 类 / <span data-case-count="${esc(t.id)}">${count}</span> 题</span></div><div class="case-actions wb-case-actions">${btn('预览案例','example',{id:t.id,variant:'primary',caseAction:true})}${btn('制作同款','create',{id:t.id,caseAction:true})}</div></div></article>`;
+  }
+  function libraryResults(activities){
+    const cases=libraryTab==='cases', source=cases?templates:activities;
+    const query=libraryQuery.trim().toLowerCase();
+    const matches=(...fields)=>fields.join(' ').toLowerCase().includes(query);
+    if(cases&&caseLibrary?.message)return `<div class="wb-library-empty" role="status">${esc(caseLibrary.message)}</div>`;
+    const filtered=source.filter(item=>{
+      const lesson=cases?(item.lesson||item):item.draft.lesson;
+      return matches(titleOf(lesson),lesson.title,lesson.subtitle,...(lesson.categories||[]).map(category=>category.label));
+    });
+    if(!filtered.length)return `<div class="wb-library-empty"><p role="status">${source.length?'未找到匹配的活动。':cases?'暂无已发布的案例。':'暂无我制作的活动。'}</p>${source.length?btn('清除搜索','clear-search'):''}</div>`;
+    if(cases)return `<div class="case-grid wb-case-grid">${filtered.map(renderCaseCard).join('')}</div>`;
+    return `<div class="lh-grid wb-work-grid">${filtered.map(a=>{
+      const release=activeRelease(a), lesson=a.draft.lesson;
+      const resume=repo.sessions(a.id).filter(s=>s.status!=='ended').sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt))[0];
+      return `<article class="lh-card"><div class="lh-card-body wb-work-body">
+        <h3>${esc(lesson.title||'未命名活动')}</h3>
+        <div class="lh-metadata"><span>${lesson.items.length} 题</span><span class="${release&&!M.isDirty(a)?'lh-status ready':''}">${release?(M.isDirty(a)?'草稿有未确认修改':`授课版 V${release.number}`):'草稿'}</span></div>
+        <div class="lh-card-actions">${btn('继续备课','edit',{id:a.id})}${release&&caseLibrary?.canPublish?btn('发布为案例','publish-case',{id:a.id}):''}${release?btn('开始授课','choose-release',{id:a.id,variant:resume?'':'primary',icon:'play'}):''}${resume?btn(resume.status==='complete'?'查看课堂结果':'继续课堂','resume-session',{id:resume.id,variant:'primary'}):''}</div>
+      </div></article>`;
+    }).join('')}</div>`;
+  }
+  function updateLibraryResults(){
+    try{
+      document.getElementById('library-results').innerHTML=libraryResults(repo.list());
+      Platform.decorate();
+    }catch(error){fatal(error);}
   }
   function renderLibrary(){
     closeQuestionMenu();finishQuestionDrag(false);
     cancelGeneration();stopReading();editingItemId=null;questionFilter='all';page='library';activity=null;pending=false;saveError=null;candidate=null;pendingAdoption=false;preparationErrors=[];history.replaceState(null,'','#library');
     let activities;try{activities=repo.list();}catch(e){fatal(e);return;}
-    if(cloud)libraryTab='mine';
-    const cases=`<div class="case-grid">${templates.map(renderCaseCard).join('')}</div>`;
-    const mine=activities.length?`<div class="activity-list">${activities.map(a=>{const release=activeRelease(a),sessions=repo.sessions(a.id),resume=sessions.filter(s=>s.status!=='ended').sort((a,b)=>new Date(b.updatedAt)-new Date(a.updatedAt))[0];return `<article class="activity-row"><div class="activity-copy"><h3>${esc(a.draft.lesson.title||'未命名活动')}</h3><p>${a.draft.lesson.items.length} 题 · ${esc(titleOf(templates.find(t=>t.id===a.templateId)||a.draft.lesson))} · ${formatDate(a.updatedAt)} 更新</p></div><div class="activity-actions"><span class="badge ${release&&!M.isDirty(a)?'ready':''}">${release?(M.isDirty(a)?'草稿有未确认修改':`已确认 v${release.number}`):'草稿'}</span>${btn('编辑草稿','edit',{id:a.id})}${release?btn('进入授课','choose-release',{id:a.id,variant:resume?'':'primary',icon:'play'}):''}${resume?btn(resume.status==='complete'?'查看课堂结果':'继续课堂','resume-session',{id:resume.id,variant:'primary'}):''}</div></article>`;}).join('')}</div>`:`<div class="empty">${icon('book')}<div><p>还没有自己的分类活动</p><p>点击“新建分类活动”，填写基础信息与分类即可开始。</p></div></div>`;
-    app.innerHTML=Platform.homeShell(`${Platform.homeHeading(btn('新建分类活动','new-activity',{icon:'plus',variant:'primary'}))}<div class="lh-library-head"><div class="lh-tabs" role="group" aria-label="活动来源">${(cloud?[['mine','我制作的',activities.length]]:[['cases','案例库',templates.length],['mine','我制作的',activities.length]]).map(([value,label,count])=>`<button type="button" data-ui="tab" data-action="library-tab" data-value="${value}" class="${libraryTab===value?'active':''}" aria-pressed="${libraryTab===value}">${label} <span>${count}</span></button>`).join('')}</div></div><section id="library-results" aria-label="${libraryTab==='cases'?'分类游戏案例':'我制作的活动'}">${libraryTab==='cases'?cases:mine}</section><div class="library-footer">${icon('info')} ${cloud?'课堂动作模拟由页面运行。':'当前为动作模拟；案例预览不会创建课堂记录。'}</div>`);
+    const tabs=[['cases','案例库',templates.length],['mine','我制作的',activities.length]];
+    app.innerHTML=Platform.homeShell(`${Platform.homeHeading(btn('新建活动','new-activity',{create:true,icon:'plus',variant:'primary'}))}
+      <div class="lh-library-head wb-library-tools"><div class="lh-tabs wb-library-tabs" role="tablist" aria-label="活动来源">${tabs.map(([value,label,count])=>`<button type="button" data-ui="tab" id="wb-${value}-tab" role="tab" aria-selected="${libraryTab===value}" aria-controls="library-results" tabindex="${libraryTab===value?0:-1}" data-action="library-tab" data-value="${value}">${label} <span>${count}</span></button>`).join('')}</div>
+      <label class="lh-search wb-library-search"><input id="library-search" type="search" aria-label="搜索活动" placeholder="搜索活动" value="${esc(libraryQuery)}"></label></div>
+      <section id="library-results" role="tabpanel" aria-labelledby="wb-${libraryTab}-tab">${libraryResults(activities)}</section><div class="library-footer">${icon('info')} ${cloud?'课堂动作模拟由页面运行。':'当前为动作模拟；案例预览不会创建课堂记录。'}</div>`);
     Platform.decorate();
   }
   function openActivity(id){if(activity&&!flush())return;cancelGeneration();stopReading();editingItemId=null;questionFilter='all';candidate=null;pendingAdoption=false;preparationErrors=[];try{activity=repo.get(id);if(!activity){toast('活动不存在');renderLibrary();return;}pending=false;saveError=null;activity.editor ||= {step:1};activity.editor.selectedItemId ||=activity.draft.lesson.items[0]?.id;page='editor';renderEditor();window.scrollTo(0,activity.editor.scrollY||0);}catch(e){fatal(e);}}
@@ -452,7 +488,7 @@
   function renderGroups(lesson){
     if(questionFilter!=='all'&&!lesson.categories.some(c=>c.id===questionFilter))questionFilter='all';
     const visible=lesson.items.filter(i=>questionFilter==='all'||i.categoryId===questionFilter||i.id===editingItemId);
-    return `<section id="generated-groups" class="question-workspace" aria-label="题目预览与调整"><div class="question-workspace-heading"><div><h2>题目预览与调整</h2><p>拖动题号旁的手柄调整出题顺序，点击“编辑题目”修改内容。</p></div><div class="question-view-actions"><div class="preview-toggle" role="group" aria-label="题卡显示状态"><button type="button" data-action="live-mode" data-value="0" aria-pressed="${!liveAnswer}" class="${liveAnswer?'':'active'}">答题前</button><button type="button" data-action="live-mode" data-value="1" aria-pressed="${liveAnswer}" class="${liveAnswer?'active':''}">答题后</button></div>${btn('新增题目','add-item',{icon:'plus',small:true})}</div></div><div class="question-filters" role="group" aria-label="按分类筛选题目">${btn(`全部 <span>${lesson.items.length}</span>`,'filter-questions',{value:'all',small:true,variant:questionFilter==='all'?'primary':'ghost'})}${lesson.categories.map(c=>btn(`${esc(c.label)} <span>${lesson.items.filter(i=>i.categoryId===c.id).length}</span>`,'filter-questions',{value:c.id,small:true,variant:questionFilter===c.id?'primary':'ghost'})).join('')}</div><p id="question-sort-help" class="question-sr-only">拖拽手柄调整顺序；也可聚焦手柄后按方向键移动，按 Escape 取消拖拽。</p><div id="question-sort-status" class="question-sr-only" role="status" aria-live="polite"></div><div class="question-card-grid">${visible.map(i=>renderQuestionCard(i,lesson,visible.length)).join('')||'<div class="empty">该分类还没有题目，可点击“新增题目”。</div>'}</div></section>`;
+    return `<section id="generated-groups" class="question-workspace" aria-label="题目预览与调整"><div class="question-workspace-heading"><div><h2>题目预览与调整</h2><p>拖动题号旁的手柄调整出题顺序，点击“编辑题目”修改内容。</p></div><div class="question-view-actions"><div class="preview-toggle" role="group" aria-label="题卡显示状态"><button type="button" data-wb-filter data-action="live-mode" data-value="0" aria-pressed="${!liveAnswer}" class="${liveAnswer?'':'active'}">答题前</button><button type="button" data-wb-filter data-action="live-mode" data-value="1" aria-pressed="${liveAnswer}" class="${liveAnswer?'active':''}">答题后</button></div>${btn('新增题目','add-item',{icon:'plus',small:true})}</div></div><div class="question-filters" role="group" aria-label="按分类筛选题目">${btn(`全部 <span>${lesson.items.length}</span>`,'filter-questions',{value:'all',pressed:questionFilter==='all'})}${lesson.categories.map(c=>btn(`${esc(c.label)} <span>${lesson.items.filter(i=>i.categoryId===c.id).length}</span>`,'filter-questions',{value:c.id,pressed:questionFilter===c.id})).join('')}</div><p id="question-sort-help" class="question-sr-only">拖拽手柄调整顺序；也可聚焦手柄后按方向键移动，按 Escape 取消拖拽。</p><div id="question-sort-status" class="question-sr-only" role="status" aria-live="polite"></div><div class="question-card-grid">${visible.map(i=>renderQuestionCard(i,lesson,visible.length)).join('')||'<div class="empty">该分类还没有题目，可点击“新增题目”。</div>'}</div></section>`;
   }
   const imageJobs=new Map();
   function imageControls(item,lesson){
@@ -731,7 +767,7 @@
   function renderStage(){
     const r=currentLaunch;r.ready=false;app.inert=true;document.body.style.overflow='hidden';stage.hidden=false;
     const modeName=r.mode==='classroom'?'授课':r.mode==='preview'?'备课预览':'案例预览';
-    stage.innerHTML=`<header class="stage-header"><div class="stage-heading"><span class="badge">${modeName}</span><strong>${esc(r.lesson.title)}</strong><span class="stage-card-count">共 ${r.lesson.items.length} 张卡片</span><span class="badge simulation">动作判定：模拟</span></div><div class="stage-header-actions">${r.mode==='example'?`<label class="stage-question-count" for="preview-question-count"><span>总题数</span><select id="preview-question-count" data-ui="field" title="切换题数后重新开始案例预览">${questionCountOptions(r.lesson.items.length)}</select></label>`:''}${r.mode==='example'&&!suspendedLaunch?btn('制作同款','create-from-preview',{id:r.templateId,variant:'primary'}):''}${r.mode==='classroom'?btn('结束本次课堂','end-class',{variant:'ghost'}):''}${btn(suspendedLaunch?'返回原课堂':r.mode==='classroom'?'退出并保存进度':page==='editor'?'返回编辑':'返回案例库','exit-stage',{icon:'back'})}</div></header><div class="error-banner" id="stage-save-error" hidden role="alert"></div><div class="stage-frame-wrap"><div class="stage-loading" id="stage-loading">正在载入课堂…</div><iframe class="stage-frame" id="classroom-frame" title="${modeName}：${esc(r.lesson.title)}" src="classroom/index.html?launch=${encodeURIComponent(r.token)}" allow="camera; fullscreen" allowfullscreen></iframe></div>`;
+    stage.innerHTML=`<header class="stage-header"><div class="stage-heading"><span class="badge">${modeName}</span><strong>${esc(r.lesson.title)}</strong><span class="stage-card-count">共 ${r.lesson.items.length} 张卡片</span><span class="badge simulation">动作判定：模拟</span></div><div class="stage-header-actions">${r.mode==='example'&&!templates.find(t=>t.id===r.templateId)?.lesson?`<label class="stage-question-count" for="preview-question-count"><span>总题数</span><select id="preview-question-count" data-ui="field" title="切换题数后重新开始案例预览">${questionCountOptions(r.lesson.items.length)}</select></label>`:''}${r.mode==='example'&&!suspendedLaunch?btn('制作同款','create-from-preview',{id:r.templateId,variant:'primary'}):''}${r.mode==='classroom'?btn('结束本次课堂','end-class',{variant:'ghost'}):''}${btn(suspendedLaunch?'返回原课堂':r.mode==='classroom'?'退出并保存进度':page==='editor'?'返回编辑':'返回案例库','exit-stage',{icon:'back'})}</div></header><div class="error-banner" id="stage-save-error" hidden role="alert"></div><div class="stage-frame-wrap"><div class="stage-loading" id="stage-loading">正在载入课堂…</div><iframe class="stage-frame" id="classroom-frame" title="${modeName}：${esc(r.lesson.title)}" src="classroom/index.html?launch=${encodeURIComponent(r.token)}" allow="camera; fullscreen" allowfullscreen></iframe></div>`;
     clearTimeout(launchTimer);launchTimer=setTimeout(()=>{const n=document.querySelector('#stage-loading');if(n)n.innerHTML=`<div><p>课堂尚未准备好，请重试加载。</p>${btn('重新加载课堂','reload-stage')}${btn('返回','exit-stage')}</div>`;},15000);
     if(r.saveError)showStageSaveError(r.saveError);
   }
@@ -819,12 +855,17 @@
       case 'module':await Platform.requestModule(node.dataset.module);break;
       case 'platform-return':await Platform.returnToPlatform();break;
       case 'nav':Platform.toggleNav();break;
+      case 'publish-case':{
+        if(await caseLibrary?.publish(id)){templates=caseLibrary.items;libraryTab='cases';libraryQuery='';renderLibrary();toast('已发布到平台案例库。');}
+        break;
+      }
       case 'library-tab':if(['cases','mine'].includes(value)){libraryTab=value;renderLibrary();document.querySelector(`[data-action="library-tab"][data-value="${value}"]`)?.focus({preventScroll:true});}break;
-      case 'home':commitGoal();if(!flush()||!saveEditor())break;renderLibrary();window.scrollTo(0,0);break;
-      case 'create':{const template=templates.find(t=>t.id===id);if(template){const a=repo.create(caseLesson(template));openActivity(a.id);toast('已创建独立草稿，原案例保持不变。');}break;}
+      case 'clear-search':{libraryQuery='';const input=document.getElementById('library-search');input.value='';updateLibraryResults();input.focus({preventScroll:true});break;}
+      case 'home':commitGoal();if(!flush()||!saveEditor())break;libraryTab='mine';libraryQuery='';renderLibrary();window.scrollTo(0,0);break;
+      case 'create':{const template=templates.find(t=>t.id===id);if(template){const a=repo.create(caseLesson(template),template.settings);openActivity(a.id);toast('已创建独立草稿，原案例保持不变。');}break;}
       case 'edit':openActivity(id);break;
-      case 'example':{const t=templates.find(t=>t.id===id);if(t)launch('example',caseLesson(t),M.DEFAULT_SETTINGS,null,id);break;}
-      case 'preview-question-count':{const run=currentLaunch,count=Number(value),template=templates.find(t=>t.id===run?.templateId);if(run?.mode!=='example'||!template||!QUESTION_COUNT_OPTIONS.includes(count))break;if(launch('example',caseLesson(template,count),run.settings,null,template.id)){caseQuestionCounts.set(template.id,count);try{sessionStorage.removeItem('move-match-v1:launch:'+run.token);}catch{}document.querySelector('#preview-question-count')?.focus();}break;}
+      case 'example':{const t=templates.find(t=>t.id===id);if(t)launch('example',caseLesson(t),t.settings||M.DEFAULT_SETTINGS,null,id);break;}
+      case 'preview-question-count':{const run=currentLaunch,count=Number(value),template=templates.find(t=>t.id===run?.templateId);if(run?.mode!=='example'||!template||template.lesson||!QUESTION_COUNT_OPTIONS.includes(count))break;if(launch('example',caseLesson(template,count),run.settings,null,template.id)){caseQuestionCounts.set(template.id,count);try{sessionStorage.removeItem('move-match-v1:launch:'+run.token);}catch{}document.querySelector('#preview-question-count')?.focus();}break;}
       case 'preview':if(flush()&&validateForRun())launch('preview',activity.draft.lesson,activity.draft.settings);break;
       case 'step':commitGoal();if(!flush())break;activity.editor.step=Number(value);activity.editor.scrollY=0;window.scrollTo(0,0);saveEditor();renderEditor();break;
       case 'select-item':case 'edit-item':openQuestionEditor(id);break;
@@ -860,11 +901,11 @@
       case 'end-class':sendStage('move-match:pause');dialog('结束本次课堂？','<p>本次模拟课堂将结束，已保存内容不变。之后仍可选择授课版开始新的一轮。</p>',`${btn('继续当前课堂','cancel-case')}${btn('结束课堂','end-class-confirm',{variant:'primary'})}`);break;
       case 'end-class-confirm':closeDialog();await exitStage(true);break;
       case 'cancel-case':closeDialog();sendStage('move-match:resume');break;
-      case 'switch-case':{const template=templates.find(t=>t.id===id);if(!template)break;const lesson=caseLesson(template);closeDialog();if(!await capturePausedProgress()){toast('当前课堂进度尚未准备好，请重试。');break;}if(currentLaunch.saveError||currentLaunch.tempError){if(currentLaunch.saveError)showStageSaveError(currentLaunch.saveError);else toast('临时进度尚未保存，请重试后再切换案例。');break;}const prior=currentLaunch,root=suspendedLaunch;suspendedLaunch=root||prior;if(launch('example',lesson,M.DEFAULT_SETTINGS,null,id)){if(root)sessionStorage.removeItem('move-match-v1:launch:'+prior.token);}else suspendedLaunch=root;break;}
+      case 'switch-case':{const template=templates.find(t=>t.id===id);if(!template)break;const lesson=caseLesson(template);closeDialog();if(!await capturePausedProgress()){toast('当前课堂进度尚未准备好，请重试。');break;}if(currentLaunch.saveError||currentLaunch.tempError){if(currentLaunch.saveError)showStageSaveError(currentLaunch.saveError);else toast('临时进度尚未保存，请重试后再切换案例。');break;}const prior=currentLaunch,root=suspendedLaunch;suspendedLaunch=root||prior;if(launch('example',lesson,template.settings||M.DEFAULT_SETTINGS,null,id)){if(root)sessionStorage.removeItem('move-match-v1:launch:'+prior.token);}else suspendedLaunch=root;break;}
       case 'retry-progress':if(currentLaunch?.progress)persistProgress(currentLaunch,currentLaunch.progress);break;
       case 'export-progress':if(currentLaunch)exportJSON({lesson:currentLaunch.lesson,settings:currentLaunch.settings,progress:currentLaunch.progress},'分类游戏-未保存课堂进度.json');break;
       case 'reload-session':{const old=currentLaunch,session=repo.getSession(old.sessionId);if(session&&launch('classroom',session.lesson,session.settings,session))sessionStorage.removeItem('move-match-v1:launch:'+old.token);break;}
-      case 'create-from-preview':{if(currentLaunch?.mode!=='example'||currentLaunch.templateId!==id||suspendedLaunch)break;const lesson=clone(currentLaunch.lesson);await exitStage();if(currentLaunch)break;const a=repo.create(lesson);openActivity(a.id);break;}
+      case 'create-from-preview':{if(currentLaunch?.mode!=='example'||currentLaunch.templateId!==id||suspendedLaunch)break;const {lesson,settings}=currentLaunch;await exitStage();if(currentLaunch)break;const a=repo.create(lesson,settings);openActivity(a.id);break;}
       case 'retry-save':saveError=null;if(pending)flush();else {saveEditor();if(!saveError){updateSaveState();const area=document.querySelector('#save-error');if(area)area.hidden=true;}}break;
       case 'reload-activity':{const id=activity.id;pending=false;saveError=null;clearTimeout(saveTimer);activity=null;openActivity(id);break;}
       case 'fork-current':{const a=repo.fork(activity.id,candidate?{lesson:candidate.result.lesson,settings:activity.draft.settings}:activity.draft);pending=false;saveError=null;activity=null;openActivity(a.id);toast('已另存为新活动，旧活动保持不变。');break;}
@@ -896,6 +937,7 @@
   });
   document.addEventListener('change',event=>{if(event.target.dataset.imageUpload&&activity)uploadQuestionImage(event.target);});
   document.addEventListener('input',event=>{
+    if(event.target.id==='library-search'){libraryQuery=event.target.value;updateLibraryResults();return;}
     if(activity&&event.target.dataset.imagePrompt){const item=editingLesson().items.find(i=>i.id===event.target.dataset.imagePrompt);if(item){item.imagePrompt=event.target.value;markQuestionChange();updateLive();}return;}
     if(activity&&event.target.id==='show-question-images'){changeDefaultCardStyle(event.target.value==='yes');return;}
     if(event.target.dataset.caseQuestionCount){const id=event.target.dataset.caseQuestionCount,count=Number(event.target.value);if(!templates.some(t=>t.id===id)||!QUESTION_COUNT_OPTIONS.includes(count)){event.target.value=String(caseQuestionCount(id));return;}caseQuestionCounts.set(id,count);const label=event.target.closest('.case-card')?.querySelector('[data-case-count]');if(label)label.textContent=String(count);return;}
@@ -949,6 +991,7 @@
   window.addEventListener('pagehide',()=>{flush();if(currentLaunch?.mode==='classroom'&&currentLaunch.progress){try{const saved=repo.saveProgress(currentLaunch.sessionId,{...currentLaunch.progress,paused:true},currentLaunch.sessionRevision);currentLaunch.sessionRevision=saved.revision;}catch{}}});
   function initialize(){
     try{
+      if(caseLibrary)templates=caseLibrary.items;
       repo=new M.Repository(cloud?.storage||localStorage);
       cloud?.importLocal();
       const id=location.hash.startsWith('#edit/')?decodeURIComponent(location.hash.slice(6)):null;
@@ -960,6 +1003,6 @@
   }
   try{
     cloud=window.WBWorkbenchApi?.activityStore('move-match',M.STORAGE_KEY,updateSaveState);
-    if(cloud)cloud.load().then(initialize,backendLoadError);else initialize();
+    if(cloud||caseLibrary)Promise.all([cloud?.load(),caseLibrary?.load()]).then(initialize,backendLoadError);else initialize();
   }catch(e){backendLoadError(e);}
 })();

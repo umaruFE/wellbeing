@@ -74,6 +74,6 @@ function generate(id,p){
 function count(p){return Number(p.sel.main)+Number(p.sel.full)+p.sel.d.filter(Boolean).length;}
 function invalidate(d){d.finalized=false;d.previewEdits={};d.previewDirty=false;d.confirmed=false;d.preview=null;d.reviewed=false;d.step=Math.min(d.step,2);return d;}
 function initial(){return {id:'draft-'+Date.now(),title:'未命名口语活动',input:'',pack:null,game:'tempo',confirmed:false,preview:null,reviewed:false,step:1,published:null,history:[],finalized:false};}
-function snapshot(d){if(!d.confirmed||!d.preview||!d.reviewed||d.previewDirty)throw Error('先试玩并确认内容。');return {id:'v-'+Date.now(),title:d.title,game:d.game,content:clone(d.preview),createdAt:new Date().toISOString()};}
+function snapshot(d){if(!d.confirmed||!d.preview||!d.reviewed||d.previewDirty)throw Error('先试玩并确认内容。');return {id:'v-'+Date.now(),title:d.title,game:d.game,input:d.input,pack:clone(d.pack),content:clone(d.preview),createdAt:new Date().toISOString()};}
 return {games,samples,clone,buildLanguage,activePack,wordFrame,need,generate,count,invalidate,initial,snapshot,plain};
 });

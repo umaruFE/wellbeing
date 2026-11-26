@@ -1,7 +1,8 @@
+import { MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { X } from 'lucide-react';
-import { Button, Modal, Tag } from 'antd';
+import { Button, Modal } from 'antd';
 
 function imageAssetPrompt(asset, t) {
   if (asset.source !== t('imageLib.sourceAi') && asset.source !== 'AI生成') return '';
@@ -57,9 +58,9 @@ export function AssetPreviewModal({ asset, open, onClose, onViewTask }) {
         <div className="fr-img-detail-head">
           <div className="fr-img-modal-title">{asset.name}</div>
           <div className="fr-img-modal-tags">
-            <Tag color="error">{asset.type}</Tag>
-            <Tag>{asset.source}</Tag>
-            <Tag>PNG</Tag>
+            <MetadataTag>{asset.type}</MetadataTag>
+            <MetadataTag>{asset.source}</MetadataTag>
+            <MetadataTag>PNG</MetadataTag>
           </div>
         </div>
       )}

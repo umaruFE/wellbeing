@@ -402,8 +402,8 @@
   "summary": {
     "sourceFiles": 141,
     "sourceBytes": 32588317,
-    "outputFiles": 176,
-    "outputBytes": 61686735,
+    "outputFiles": 179,
+    "outputBytes": 62223071,
     "scriptChecks": 54,
     "storageChecks": 8,
     "missingLocalDependencies": 0
@@ -422,11 +422,6 @@
     {
       "path": "doodle-guess-v1/classroom-v1.7.2.html",
       "inline": 1,
-      "nodeCheck": "passed"
-    },
-    {
-      "path": "doodle-guess-v1/model.js",
-      "inline": null,
       "nodeCheck": "passed"
     },
     {
@@ -625,22 +620,12 @@
       "nodeCheck": "passed"
     },
     {
-      "path": "spin-speak-v1/model.js",
-      "inline": null,
-      "nodeCheck": "passed"
-    },
-    {
       "path": "spin-speak-v1/words-coach.js",
       "inline": null,
       "nodeCheck": "passed"
     },
     {
       "path": "spin-speak-v1/words-reading.js",
-      "inline": null,
-      "nodeCheck": "passed"
-    },
-    {
-      "path": "move-match-v1/model.js",
       "inline": null,
       "nodeCheck": "passed"
     },
@@ -660,6 +645,26 @@
       "nodeCheck": "passed"
     },
     {
+      "path": "doodle-guess-v1/model.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "move-match-v1/model.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "spin-speak-v1/model.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "workbench-api.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
       "path": "doodle-guess-v1/app.js",
       "inline": null,
       "nodeCheck": "passed"
@@ -673,11 +678,6 @@
       "path": "spin-speak-v1/app.js",
       "inline": null,
       "nodeCheck": "passed"
-    },
-    {
-      "path": "workbench-api.js",
-      "inline": null,
-      "nodeCheck": "passed"
     }
   ],
   "files": [
@@ -689,16 +689,16 @@
         "bytes": 38576
       },
       "outputRecord": {
-        "sha256": "acd41168aa2bcdc3095ae094482999cf0c06db0141ceeda386e5e733d78de6f4",
-        "bytes": 39686
+        "sha256": "7edb6b5a7dcada6958b77be7f8bc7cbf76d355ecaef06e2c0a6e25d47cce817c",
+        "bytes": 40228
       },
       "transformations": [
         {
           "kind": "local-authoring-ui",
           "source": "workbench-ui/doodle-guess-v1/app.js",
           "sourceRecord": {
-            "sha256": "acd41168aa2bcdc3095ae094482999cf0c06db0141ceeda386e5e733d78de6f4",
-            "bytes": 39686
+            "sha256": "7edb6b5a7dcada6958b77be7f8bc7cbf76d355ecaef06e2c0a6e25d47cce817c",
+            "bytes": 40228
           },
           "scope": "portable local authoring update"
         }
@@ -881,7 +881,7 @@
         "bytes": 1622
       },
       "outputRecord": {
-        "sha256": "565f857cf850c67766ab3e6616c707287a2bfc55d3afa01877e06391ce799437",
+        "sha256": "592eb8b3b66ea6d2606ca173b49b291e129c63cff413b63ee0107432b0e9c060",
         "bytes": 1770
       },
       "transformations": [
@@ -901,8 +901,8 @@
         {
           "kind": "content-versioned-ui-assets",
           "versions": {
-            "app.js": "acd41168aa2bcdc3",
-            "../workbench-api.js": "9a2fcb1919c3eeb3"
+            "app.js": "7edb6b5a7dcada69",
+            "../workbench-api.js": "819e8727a82424f4"
           }
         }
       ],
@@ -936,8 +936,8 @@
         "bytes": 9278
       },
       "outputRecord": {
-        "sha256": "d6de18e12ff65d8a9de565ad6dd6542b25df862da31e136ec0d9342bd3322e11",
-        "bytes": 9537
+        "sha256": "35531b952f12f53285e9da2453b02cff1de59204396a474186cccffa3dc10f55",
+        "bytes": 9552
       },
       "transformations": [
         {
@@ -949,10 +949,10 @@
           "kind": "local-authoring-ui",
           "source": "workbench-ui/doodle-guess-v1/model.js",
           "sourceRecord": {
-            "sha256": "2db0fdc58053842b815646ce3769735dd07260a4b9d75f976e9eb4096ec0bfd0",
-            "bytes": 9469
+            "sha256": "a2ae310b5e67106ada612041017c7c68cf8dabfcdac165d85f9a97ce24fa4000",
+            "bytes": 9484
           },
-          "scope": "local teacher UI; Doodle manual words and snapshot images from the user-selected source"
+          "scope": "portable local authoring update"
         }
       ],
       "dependencies": [
@@ -1065,8 +1065,8 @@
         "bytes": 72435
       },
       "outputRecord": {
-        "sha256": "fb1258f16826c92d7565848ce97b16e745cb4cfa5d9660401aca40d56fd642ea",
-        "bytes": 111504
+        "sha256": "5fd64a601926ba5bb74e8ba88872d143f21a1c01c74db7f6bbf9a9171f7aa779",
+        "bytes": 114144
       },
       "transformations": [
         {
@@ -1113,8 +1113,8 @@
           "kind": "local-authoring-ui",
           "source": "workbench-ui/move-match-v1/app.js",
           "sourceRecord": {
-            "sha256": "8db6c1b6b070b76eac5e1b804ae10491f7dd59cebd7ac23d5cc30d2962606a50",
-            "bytes": 110928
+            "sha256": "491c764fde7865be2c5abbc67fb0e04ebe1d614981613691d2ca3fe6e0d7ac74",
+            "bytes": 113568
           },
           "scope": "portable local authoring update"
         }
@@ -2372,7 +2372,7 @@
         "bytes": 1996
       },
       "outputRecord": {
-        "sha256": "4487c6d7dc9063db615b432e1454aad1338b1979d694247e407f753cd8728900",
+        "sha256": "72f62d13a796802073801c2fbcfb2d5c0b72451f0cbe11df9a76cdddb3a913e1",
         "bytes": 2291
       },
       "transformations": [
@@ -2383,10 +2383,10 @@
         {
           "kind": "content-versioned-ui-assets",
           "versions": {
-            "app.js": "fb1258f16826c92d",
-            "styles.css": "1c28bfe26d9d08af",
-            "model.js": "107e19e9397305e2",
-            "../workbench-api.js": "9a2fcb1919c3eeb3"
+            "app.js": "5fd64a601926ba5b",
+            "styles.css": "24110d3aab3c3ba3",
+            "model.js": "8ce4b6317979134e",
+            "../workbench-api.js": "819e8727a82424f4"
           }
         }
       ],
@@ -2444,8 +2444,8 @@
         "bytes": 28064
       },
       "outputRecord": {
-        "sha256": "107e19e9397305e2380ad878ac07a70cf465a82fe27efa88e238d0c03528cce8",
-        "bytes": 30722
+        "sha256": "8ce4b6317979134e6af4002eb48d255ac17e50c6335e6d8f580224cc25617dcd",
+        "bytes": 30758
       },
       "transformations": [
         {
@@ -2457,8 +2457,8 @@
           "kind": "local-authoring-ui",
           "source": "workbench-ui/move-match-v1/model.js",
           "sourceRecord": {
-            "sha256": "4fd3a9ac88d47187fe4d07415c1f185ffda4973d2181b8bad87867217dfa6fa0",
-            "bytes": 30650
+            "sha256": "a4ed5d06cb77ba133e4f5e9fe2579536f897811e79ce62240a3d0e5e2412a17a",
+            "bytes": 30686
           },
           "scope": "portable local authoring update"
         }
@@ -2560,16 +2560,16 @@
         "bytes": 28281
       },
       "outputRecord": {
-        "sha256": "1c28bfe26d9d08afd93562f9e0c90f49316850fbe51cd0b9b67e240cc5f9dc98",
-        "bytes": 32866
+        "sha256": "24110d3aab3c3ba3b7d7a3c31a5dad5f0a587f5c9a9b6621a665562a3a266983",
+        "bytes": 32551
       },
       "transformations": [
         {
           "kind": "local-authoring-ui",
           "source": "workbench-ui/move-match-v1/styles.css",
           "sourceRecord": {
-            "sha256": "1c28bfe26d9d08afd93562f9e0c90f49316850fbe51cd0b9b67e240cc5f9dc98",
-            "bytes": 32866
+            "sha256": "24110d3aab3c3ba3b7d7a3c31a5dad5f0a587f5c9a9b6621a665562a3a266983",
+            "bytes": 32551
           },
           "scope": "portable local authoring update"
         }
@@ -2737,8 +2737,8 @@
         "bytes": 24566
       },
       "outputRecord": {
-        "sha256": "ffe046af16da7d62ac93e8b0e6ff118f9f23b8522ef35606ea45d9a7025a9083",
-        "bytes": 30919
+        "sha256": "d87d9bbc7ff69cccdff3e34e9425f35ccd4856ace49a1d27b30afb00249d2b38",
+        "bytes": 33743
       },
       "transformations": [
         {
@@ -2755,8 +2755,8 @@
           "kind": "local-authoring-ui",
           "source": "workbench-ui/spin-speak-v1/app.js",
           "sourceRecord": {
-            "sha256": "1479225e386d52e58738d3250e8865f0651d0f8481b1885c0a5e53ccc0f2fc4f",
-            "bytes": 30785
+            "sha256": "d61690adce6981c2cbc769c13e2b3a045e45200808f8ccd0d7b24e0953617b2f",
+            "bytes": 33609
           },
           "scope": "portable local authoring update"
         }
@@ -2875,6 +2875,69 @@
         "bytes": 46192
       },
       "transformations": [],
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/library-covers/energy-v2.jpg",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/library-covers/energy-v2.jpg",
+          "sourceRecord": {
+            "sha256": "c063bfb4bf512cb1c1b8a90ebed338f475f609f0f35f0e1aa5f3e700219cc5d5",
+            "bytes": 180285
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "c063bfb4bf512cb1c1b8a90ebed338f475f609f0f35f0e1aa5f3e700219cc5d5",
+        "bytes": 180285
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/library-covers/tempo-v2.jpg",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/library-covers/tempo-v2.jpg",
+          "sourceRecord": {
+            "sha256": "43a0ddd3f04e0a9e5feead0638a45261e3961540454bdaa09c18990ad5325e53",
+            "bytes": 170436
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "43a0ddd3f04e0a9e5feead0638a45261e3961540454bdaa09c18990ad5325e53",
+        "bytes": 170436
+      },
+      "dependencies": []
+    },
+    {
+      "path": "spin-speak-v1/assets/library-covers/volume-v2.jpg",
+      "source": null,
+      "sourceRecord": null,
+      "transformations": [
+        {
+          "kind": "local-authoring-ui",
+          "source": "workbench-ui/spin-speak-v1/assets/library-covers/volume-v2.jpg",
+          "sourceRecord": {
+            "sha256": "c8770d068bd15d2f0d742024747e8d2672ef73f723b6375d3923abdb17f7cd48",
+            "bytes": 178891
+          },
+          "scope": "portable local authoring update"
+        }
+      ],
+      "outputRecord": {
+        "sha256": "c8770d068bd15d2f0d742024747e8d2672ef73f723b6375d3923abdb17f7cd48",
+        "bytes": 178891
+      },
       "dependencies": []
     },
     {
@@ -3709,8 +3772,8 @@
         "bytes": 1525
       },
       "outputRecord": {
-        "sha256": "0cd30f0da8a1e03d0b91e794fae303a1c0329e8a9c60d13a4f8f3c602310e8a8",
-        "bytes": 1774
+        "sha256": "eada85d45013ba2e1066852648171d9accb90818773584b6e59ebde7d5903a7c",
+        "bytes": 1777
       },
       "transformations": [
         {
@@ -3720,9 +3783,10 @@
         {
           "kind": "content-versioned-ui-assets",
           "versions": {
-            "app.js": "ffe046af16da7d62",
-            "model.js": "629926ec61c7c49d",
-            "../workbench-api.js": "9a2fcb1919c3eeb3"
+            "app.js": "d87d9bbc7ff69ccc",
+            "styles.css": "d97be453d24d1b61",
+            "model.js": "e9c4eea840ebd548",
+            "../workbench-api.js": "819e8727a82424f4"
           }
         }
       ],
@@ -3753,16 +3817,16 @@
         "bytes": 9423
       },
       "outputRecord": {
-        "sha256": "629926ec61c7c49d419f37c334e654a9e359e7ce6dc12246141bac2fe27d441c",
-        "bytes": 9510
+        "sha256": "e9c4eea840ebd54808868f1a498efb8a5317676e2f091295b3b1e7e0a3ca2f1a",
+        "bytes": 9543
       },
       "transformations": [
         {
           "kind": "local-authoring-ui",
           "source": "workbench-ui/spin-speak-v1/model.js",
           "sourceRecord": {
-            "sha256": "629926ec61c7c49d419f37c334e654a9e359e7ce6dc12246141bac2fe27d441c",
-            "bytes": 9510
+            "sha256": "e9c4eea840ebd54808868f1a498efb8a5317676e2f091295b3b1e7e0a3ca2f1a",
+            "bytes": 9543
           },
           "scope": "portable local authoring update"
         }
@@ -3902,23 +3966,25 @@
         "bytes": 14796
       },
       "outputRecord": {
-        "sha256": "e623e1055ecbb24040f098aaeede70d730b1305847eca2d2917b5ef0c14f76c7",
-        "bytes": 13658
+        "sha256": "d97be453d24d1b615399be1169f7fce655aa14608a908d434867748e97e4260a",
+        "bytes": 12912
       },
       "transformations": [
         {
           "kind": "local-authoring-ui",
           "source": "workbench-ui/spin-speak-v1/styles.css",
           "sourceRecord": {
-            "sha256": "e623e1055ecbb24040f098aaeede70d730b1305847eca2d2917b5ef0c14f76c7",
-            "bytes": 13658
+            "sha256": "d97be453d24d1b615399be1169f7fce655aa14608a908d434867748e97e4260a",
+            "bytes": 12912
           },
-          "scope": "local teacher UI; Doodle manual words and snapshot images from the user-selected source"
+          "scope": "portable local authoring update"
         }
       ],
       "dependencies": [
-        "spin-speak-v1/assets/energy-v3/energy-case-preview-v16.png",
         "spin-speak-v1/assets/fonts/noto-sans-bold.woff2",
+        "spin-speak-v1/assets/library-covers/energy-v2.jpg",
+        "spin-speak-v1/assets/library-covers/tempo-v2.jpg",
+        "spin-speak-v1/assets/library-covers/volume-v2.jpg",
         "spin-speak-v1/assets/scenes-v12/tempo-approved-preview.jpg",
         "spin-speak-v1/assets/scenes-v12/tempo-approved-wheel.jpg",
         "spin-speak-v1/assets/scenes-v7/energy.png",
@@ -3927,8 +3993,7 @@
         "spin-speak-v1/assets/scenes-v7/silly.png",
         "spin-speak-v1/assets/scenes-v7/tempo.png",
         "spin-speak-v1/assets/scenes-v7/volume.png",
-        "spin-speak-v1/assets/scenes-v7/words.png",
-        "spin-speak-v1/assets/volume-v3/volume-case-preview.jpg"
+        "spin-speak-v1/assets/scenes-v7/words.png"
       ]
     },
     {
@@ -4128,15 +4193,15 @@
           "kind": "local-authoring-ui",
           "source": "workbench-ui/workbench-api.js",
           "sourceRecord": {
-            "sha256": "9a2fcb1919c3eeb3fa6f56216b4183e04ecf1753a9037729746db33c140305c1",
-            "bytes": 10652
+            "sha256": "819e8727a82424f4e78ed88ad69ebee9397130f6f5920ae33c483bb30b2fdd01",
+            "bytes": 12344
           },
           "scope": "portable local authoring update"
         }
       ],
       "outputRecord": {
-        "sha256": "9a2fcb1919c3eeb3fa6f56216b4183e04ecf1753a9037729746db33c140305c1",
-        "bytes": 10652
+        "sha256": "819e8727a82424f4e78ed88ad69ebee9397130f6f5920ae33c483bb30b2fdd01",
+        "bytes": 12344
       },
       "dependencies": []
     }
@@ -4147,8 +4212,8 @@
     "files": [
       {
         "path": "doodle-guess-v1/app.js",
-        "sha256": "acd41168aa2bcdc3095ae094482999cf0c06db0141ceeda386e5e733d78de6f4",
-        "bytes": 39686
+        "sha256": "7edb6b5a7dcada6958b77be7f8bc7cbf76d355ecaef06e2c0a6e25d47cce817c",
+        "bytes": 40228
       },
       {
         "path": "doodle-guess-v1/classroom-wordbank.js",
@@ -4162,8 +4227,8 @@
       },
       {
         "path": "doodle-guess-v1/model.js",
-        "sha256": "2db0fdc58053842b815646ce3769735dd07260a4b9d75f976e9eb4096ec0bfd0",
-        "bytes": 9469
+        "sha256": "a2ae310b5e67106ada612041017c7c68cf8dabfcdac165d85f9a97ce24fa4000",
+        "bytes": 9484
       },
       {
         "path": "doodle-guess-v1/runtime.js",
@@ -4182,8 +4247,8 @@
       },
       {
         "path": "move-match-v1/app.js",
-        "sha256": "8db6c1b6b070b76eac5e1b804ae10491f7dd59cebd7ac23d5cc30d2962606a50",
-        "bytes": 110928
+        "sha256": "491c764fde7865be2c5abbc67fb0e04ebe1d614981613691d2ca3fe6e0d7ac74",
+        "bytes": 113568
       },
       {
         "path": "move-match-v1/classroom/action-poses-cutout.png",
@@ -4297,18 +4362,33 @@
       },
       {
         "path": "move-match-v1/model.js",
-        "sha256": "4fd3a9ac88d47187fe4d07415c1f185ffda4973d2181b8bad87867217dfa6fa0",
-        "bytes": 30650
+        "sha256": "a4ed5d06cb77ba133e4f5e9fe2579536f897811e79ce62240a3d0e5e2412a17a",
+        "bytes": 30686
       },
       {
         "path": "move-match-v1/styles.css",
-        "sha256": "1c28bfe26d9d08afd93562f9e0c90f49316850fbe51cd0b9b67e240cc5f9dc98",
-        "bytes": 32866
+        "sha256": "24110d3aab3c3ba3b7d7a3c31a5dad5f0a587f5c9a9b6621a665562a3a266983",
+        "bytes": 32551
       },
       {
         "path": "spin-speak-v1/app.js",
-        "sha256": "1479225e386d52e58738d3250e8865f0651d0f8481b1885c0a5e53ccc0f2fc4f",
-        "bytes": 30785
+        "sha256": "d61690adce6981c2cbc769c13e2b3a045e45200808f8ccd0d7b24e0953617b2f",
+        "bytes": 33609
+      },
+      {
+        "path": "spin-speak-v1/assets/library-covers/energy-v2.jpg",
+        "sha256": "c063bfb4bf512cb1c1b8a90ebed338f475f609f0f35f0e1aa5f3e700219cc5d5",
+        "bytes": 180285
+      },
+      {
+        "path": "spin-speak-v1/assets/library-covers/tempo-v2.jpg",
+        "sha256": "43a0ddd3f04e0a9e5feead0638a45261e3961540454bdaa09c18990ad5325e53",
+        "bytes": 170436
+      },
+      {
+        "path": "spin-speak-v1/assets/library-covers/volume-v2.jpg",
+        "sha256": "c8770d068bd15d2f0d742024747e8d2672ef73f723b6375d3923abdb17f7cd48",
+        "bytes": 178891
       },
       {
         "path": "spin-speak-v1/assets/roles/alien.webp",
@@ -4372,8 +4452,8 @@
       },
       {
         "path": "spin-speak-v1/model.js",
-        "sha256": "629926ec61c7c49d419f37c334e654a9e359e7ce6dc12246141bac2fe27d441c",
-        "bytes": 9510
+        "sha256": "e9c4eea840ebd54808868f1a498efb8a5317676e2f091295b3b1e7e0a3ca2f1a",
+        "bytes": 9543
       },
       {
         "path": "spin-speak-v1/role-cards.css",
@@ -4387,8 +4467,8 @@
       },
       {
         "path": "spin-speak-v1/styles.css",
-        "sha256": "e623e1055ecbb24040f098aaeede70d730b1305847eca2d2917b5ef0c14f76c7",
-        "bytes": 13658
+        "sha256": "d97be453d24d1b615399be1169f7fce655aa14608a908d434867748e97e4260a",
+        "bytes": 12912
       },
       {
         "path": "spin-speak-v1/volume-v3.css",
@@ -4422,15 +4502,15 @@
       },
       {
         "path": "workbench-api.js",
-        "sha256": "9a2fcb1919c3eeb3fa6f56216b4183e04ecf1753a9037729746db33c140305c1",
-        "bytes": 10652
+        "sha256": "819e8727a82424f4e78ed88ad69ebee9397130f6f5920ae33c483bb30b2fdd01",
+        "bytes": 12344
       }
     ],
     "sharedAssets": [
       {
         "path": "embed-adapter.js",
-        "sha256": "3c4254d321dc88dd4f4797df7697fc5f3b1c3d93bffba860b9ffadf61087c0f7",
-        "bytes": 10307
+        "sha256": "2d8cb27639f9f44737ed8cfd6dd65de667853b9aa93904f2862693d09a9916f1",
+        "bytes": 11487
       },
       {
         "path": "embed-adapter.css",
@@ -4444,8 +4524,13 @@
       },
       {
         "path": "authoring.css",
-        "sha256": "58bcb20fa29c23f343587182e474a6edb28ea6b912a15a55776eb8d4107e1684",
-        "bytes": 14183
+        "sha256": "758caf42b547a5fc605c36156d2d555c562379757d15c273add00cdab77e6374",
+        "bytes": 11726
+      },
+      {
+        "path": "ui-components.css",
+        "sha256": "0e5e5504387370699018fd6380c15c7bc79b96e61acf26df8578907b603ab3bf",
+        "bytes": 11382
       }
     ]
   }

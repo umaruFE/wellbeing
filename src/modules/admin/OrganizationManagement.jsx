@@ -1,8 +1,10 @@
+import { CreateButton, LibrarySearch } from '../../components/LibraryControls';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
 import { useNavigate } from 'react-router-dom';
-import { Clock, Plus, Search, UserPlus } from 'lucide-react';
+import { Clock, UserPlus } from 'lucide-react';
+import { Form, Input, InputNumber, Modal } from 'antd';
 import apiService from '../../services/api';
 
 export const OrganizationManagement = () => {
@@ -13,6 +15,9 @@ export const OrganizationManagement = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [actionError, setActionError] = useState('');
+  const [dialog, setDialog] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm();
 
   const loadOrganizations = async () => {
     setLoading(true);
@@ -30,80 +35,66 @@ export const OrganizationManagement = () => {
 
   useEffect(() => { void loadOrganizations(); }, []);
 
-  const handleCreateOrganization = async () => {
-    const name = window.prompt(t('org.promptName'))?.trim();
-    if (!name) return;
-    const code = window.prompt(t('org.orgCode'))?.trim();
-    if (!code) return;
+  const openDialog = (organization = null) => {
+    form.resetFields();
+    if (organization?.total_hours != null) form.setFieldValue('totalHours', Number(organization.total_hours));
+    setActionError('');
+    setDialog(organization ? { organization } : {});
+  };
+
+  const handleSaveOrganization = async (values) => {
+    if (!dialog || saving) return;
+    setSaving(true);
     setActionError('');
     try {
-      await apiService.createOrganization({ name, code });
+      if (dialog.organization) {
+        await apiService.updateOrganization(dialog.organization.id, { totalHours: values.totalHours });
+      } else {
+        await apiService.createOrganization({ name: values.name.trim(), code: values.code.trim() });
+      }
+      setDialog(null);
       await loadOrganizations();
     } catch (error) {
-      setActionError(error.message);
+      setActionError(error.message || t('common.failed'));
+    } finally {
+      setSaving(false);
     }
   };
 
-  const handleSetHours = async (org) => {
-    const value = window.prompt(t('org.promptHours'), String(org.total_hours ?? ''));
-    if (!value?.trim()) return;
-    const totalHours = Number(value);
-    if (!Number.isFinite(totalHours) || totalHours < 0) return;
-    setActionError('');
-    try {
-      await apiService.updateOrganization(org.id, { totalHours });
-      await loadOrganizations();
-    } catch (error) {
-      setActionError(error.message);
-    }
-  };
-
+  const query = searchTerm.trim().toLowerCase();
   const filteredOrganizations = organizations.filter(org =>
-    (org.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (org.code || '').toLowerCase().includes(searchTerm.toLowerCase())
+    [org.name, org.code].some(value => String(value ?? '').toLowerCase().includes(query))
   );
 
   return (
-    <div className="p-4 sm:p-6 min-w-0">
-      {/* Search */}
-      <div className="mb-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-[var(--wb-muted)]" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t('org.searchPlaceholder')}
-            className="w-full pl-10 pr-4 py-2 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none min-h-11"
-          />
-        </div>
+    <div className="wb-standard-page">
+      <header className="wb-library-header">
+        <h1>{t('header.systemSettings')}</h1>
+        <CreateButton onClick={() => openDialog()}>{t('org.createOrg')}</CreateButton>
+      </header>
+      <div className="wb-library-tools">
+        <h2 className="wb-section-title">{t('org.listTitle')}</h2>
+        <LibrarySearch label={t('org.searchPlaceholder')} value={searchTerm} onChange={setSearchTerm} />
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h2 className="text-lg font-semibold text-[var(--wb-text)]">{t('org.listTitle')}</h2>
-        <button
-          onClick={handleCreateOrganization}
-          className="px-4 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] hover:bg-[var(--wb-primary-hover)] flex items-center gap-2 transition-colors min-h-10 active:bg-[var(--wb-primary-active)]"
-        >
-          <Plus className="w-4 h-4" />
-          {t('org.createOrg')}
-        </button>
-      </div>
-
-      {actionError && <p role="alert">{actionError}</p>}
       {loading && <PageLoading />}
       {!loading && loadError && (
-        <div role="alert">
+        <div role="alert" className="wb-library-empty">
           <p>{loadError}</p>
-          <button type="button" className="wb-button" onClick={loadOrganizations}>{t('common.retry')}</button>
+          <button type="button" data-wb-button="secondary" onClick={loadOrganizations}>{t('common.retry')}</button>
         </div>
       )}
-      {!loading && !loadError && filteredOrganizations.length === 0 && <p>{t('org.noOrganizations')}</p>}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {!loading && !loadError && filteredOrganizations.length === 0 && (
+        <div className="wb-library-empty">
+          <p role="status">{t(query && organizations.length ? 'common.noSearchResults' : 'org.noOrganizations')}</p>
+          {query && !!organizations.length && <button type="button" data-wb-button="secondary" onClick={() => setSearchTerm('')}>{t('common.clearSearch')}</button>}
+        </div>
+      )}
+      <div className="wb-work-grid">
         {!loading && !loadError && filteredOrganizations.map(org => (
           <div
             key={org.id}
-            className="bg-white rounded-[14px] border border-[var(--wb-border)] p-5 hover:shadow-[0_4px_18px_rgba(48,43,59,0.06)] hover:border-[var(--wb-selected-border)] transition-all"
+            className="wb-surface-panel flex flex-col"
           >
             <div className="flex items-start justify-between mb-3">
               <div>
@@ -129,25 +120,53 @@ export const OrganizationManagement = () => {
                 <span className="font-medium text-success">{org.total_hours != null && org.used_hours != null ? org.total_hours - org.used_hours : '—'} {t('org.hours')}</span>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="mt-auto flex flex-wrap gap-2">
               <button
-                onClick={() => handleSetHours(org)}
-                className="flex-1 px-3 py-2 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-[10px] hover:bg-[var(--wb-selected)] flex items-center justify-center gap-1 transition-colors min-h-10"
+                type="button"
+                data-wb-button="secondary"
+                onClick={() => openDialog(org)}
+                className="flex-1"
               >
-                <Clock className="w-4 h-4" />
+                <Clock size={16} aria-hidden="true" />
                 {t('org.setHours')}
               </button>
               <button
+                type="button"
+                data-wb-button="secondary"
                 onClick={() => navigate(`/accounts?organizationId=${encodeURIComponent(org.id)}`)}
-                className="flex-1 px-3 py-2 bg-success-light text-success rounded-[10px] hover:bg-success-light flex items-center justify-center gap-1 transition-colors min-h-10"
+                className="flex-1"
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus size={16} aria-hidden="true" />
                 {t('org.addAccount')}
               </button>
             </div>
           </div>
         ))}
       </div>
+      <Modal
+        title={t(dialog?.organization ? 'org.setHours' : 'org.createOrg')}
+        open={!!dialog}
+        onCancel={() => { if (!saving) setDialog(null); }}
+        onOk={() => form.submit()}
+        okText={t('common.save')}
+        cancelText={t('common.cancel')}
+        confirmLoading={saving}
+        forceRender
+      >
+        <Form form={form} layout="vertical" onFinish={handleSaveOrganization}>
+          {dialog?.organization ? (
+            <Form.Item name="totalHours" label={t('org.totalHours')} rules={[{ required: true, type: 'number', min: 0 }]}>
+              <InputNumber min={0} className="w-full" />
+            </Form.Item>
+          ) : (
+            <>
+              <Form.Item name="name" label={t('org.name')} rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
+              <Form.Item name="code" label={t('org.orgCode')} rules={[{ required: true, whitespace: true }]}><Input /></Form.Item>
+            </>
+          )}
+        </Form>
+        {actionError && <p role="alert" className="text-error-active">{actionError}</p>}
+      </Modal>
     </div>
   );
 };

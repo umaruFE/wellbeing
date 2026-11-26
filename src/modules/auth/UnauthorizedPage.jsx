@@ -19,8 +19,9 @@ export const UnauthorizedPage = () => {
         <h1 className="text-[28px] font-bold text-[var(--wb-text)] mb-2">{t('unauthorized.title')}</h1>
         <p className="text-[var(--wb-muted)] mb-8">{t('unauthorized.description')}</p>
         <button
+          type="button"
           onClick={() => navigate(getDefaultRouteForRole(user?.role), { replace: true })}
-          className="px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] hover:bg-[var(--wb-primary-hover)] flex items-center gap-2 mx-auto transition-colors min-h-10 active:bg-[var(--wb-primary-active)]"
+          data-wb-button="primary"
         >
           <Home className="w-4 h-4" />
           {t('unauthorized.home')}

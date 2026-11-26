@@ -1,9 +1,10 @@
-import i18next from 'i18next';
+import { LibraryFilterSelect, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
-import { Eye, FileVideo, MoreVertical, Pause, Play, Search, Trash2, Upload as UploadIcon, Video } from 'lucide-react';
-import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
+import { MaterialLibraryFeedback } from '../../modules/material-management/MaterialLibraryControls';
+import { Eye, MoreVertical, Pause, Play, Trash2, Upload as UploadIcon, Video } from 'lucide-react';
+import { Button, Dropdown, Modal, Upload, message } from 'antd';
 import apiService from '../../services/api';
 import './VideoLibrary.css';
 import { VideoPreviewModal } from './VideoPreviewModal';
@@ -130,7 +131,7 @@ function VideoArt({ asset, playing, onToggle, t }) {
         <video className="fr-vid-real" src={asset.objectUrl} autoPlay controls />
       ) : (
         <>
-          <Tag className="fr-vid-source-tag">{asset.source}</Tag>
+          <MetadataTag className="fr-vid-source-tag">{asset.source}</MetadataTag>
           <span className="fr-vid-moon" />
           <span className="fr-vid-line line-a" />
           <span className="fr-vid-line line-b" />
@@ -149,6 +150,8 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
   const { t } = useTranslation();
   const [assets, setAssets] = React.useState(VIDEO_ASSETS);
   const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(false);
+  const [loadAttempt, setLoadAttempt] = React.useState(0);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [type, setType] = React.useState('');
@@ -174,6 +177,8 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
 
   React.useEffect(() => {
     let alive = true;
+    setLoading(true);
+    setLoadError(false);
     apiService.getVideos({ limit: 200 })
       .then((result) => {
         if (!alive) return;
@@ -181,10 +186,7 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
       })
       .catch((error) => {
         console.error('fetch video library failed:', error);
-        if (alive) {
-          setAssets([]);
-          message.error(t('videoLib.fetchFailed'));
-        }
+        if (alive) setLoadError(true);
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -192,10 +194,10 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
     return () => {
       alive = false;
     };
-  }, [t]);
+  }, [t, loadAttempt]);
 
-  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
-  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
+  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [sourceOptions, assets]);
+  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [typeOptions, assets]);
 
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -206,6 +208,12 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
         && (!type || asset.type === type);
     });
   }, [assets, search, source, type]);
+
+  const resetFilters = () => {
+    setSearch('');
+    setSource('');
+    setType('');
+  };
 
   const handleUpload = async (file) => {
     if (!file?.type?.startsWith('video/')) {
@@ -229,7 +237,7 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
       objectUrl: URL.createObjectURL(file),
     };
     setAssets(current => [nextAsset, ...current]);
-    message.success(t('videoLib.uploadSuccess'));
+    message.info(t('common.localPreviewAdded'));
     return false;
   };
 
@@ -238,7 +246,7 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
     setPreviewAsset(current => (current?.id === asset.id ? null : current));
     setDeleteAsset(null);
     if (asset.objectUrl) URL.revokeObjectURL(asset.objectUrl);
-    message.success(t('videoLib.deleteSuccess', { name: asset.name }));
+    message.info(t('common.localPreviewRemoved'));
   };
 
   const handlePlay = (asset) => {
@@ -261,16 +269,16 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
   return (
     <section className={`fr-vid-lib ${variant === 'ppt-picker' ? 'ppt-library-picker' : ''}`}>
       <div className="fr-vid-page">
-        <header className="fr-vid-hero">
+        <header className="fr-vid-hero wb-library-header">
           <div className="fr-vid-hero-left">
             <div className="fr-vid-hero-icon"><Video size={30} /></div>
             <div>
-              <h1>{t('videoLib.title')}</h1>
+              <h1>{t('sidebar.videoLibrary')}</h1>
               <p>{t('videoLib.subtitle')}</p>
             </div>
           </div>
           <Upload accept="video/*" beforeUpload={handleUpload} showUploadList={false}>
-            <button className="fr-vid-upload-btn" type="button">
+            <button type="button" data-wb-button="primary">
               <UploadIcon size={16} />
               {t('videoLib.uploadVideo')}
             </button>
@@ -279,15 +287,17 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
 
         <section className="fr-vid-panel">
           <div className="fr-vid-toolbar">
-            <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder={t('videoLib.searchPlaceholder')} prefix={<Search size={16} />} allowClear />
+            <LibrarySearch value={search} onChange={setSearch} label={t('videoLib.searchPlaceholder')} />
             <div className="fr-vid-filter-group">
-              <Select value={source} onChange={setSource} options={sourceFilterOptions} />
-              <Select value={type} onChange={setType} options={typeFilterOptions} />
+              <LibraryFilterSelect label={t('imageLib.sourceAll')} value={source} onChange={setSource} options={sourceFilterOptions} />
+              <LibraryFilterSelect label={t('imageLib.typeAll')} value={type} onChange={setType} options={typeFilterOptions} />
             </div>
           </div>
 
           {loading ? (
             <PageLoading />
+          ) : loadError ? (
+            <MaterialLibraryFeedback error={t('videoLib.fetchFailed')} onRetry={() => setLoadAttempt((n) => n + 1)} />
           ) : filteredAssets.length > 0 ? (
             <div className="fr-vid-grid">
               {filteredAssets.map(asset => (
@@ -297,9 +307,19 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
                     handlePlay(asset);
                   }} />
                   <div className="fr-vid-meta">
-                    <div className="fr-vid-name">{asset.name}</div>
+                    <button
+                      type="button"
+                      className="fr-vid-name"
+                      aria-label={t('common.preview') + ' ' + asset.name}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPreviewAsset(asset);
+                      }}
+                    >
+                      {asset.name}
+                    </button>
                     <div className="fr-vid-chip-row">
-                      <span className="fr-vid-type-chip">{asset.type}</span>
+                      <MetadataTag>{asset.type}</MetadataTag>
                       <span className="fr-vid-size">{asset.format} · {asset.fileSize}</span>
                     </div>
                     <div className="fr-vid-footer">
@@ -314,7 +334,7 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
                           onClick: (info) => handleMenuClick(info, asset),
                         }}
                       >
-                        <button className="fr-vid-card-menu-btn" type="button" aria-label={i18next.t('videoLibraryUi.77836d3a99')} onClick={(event) => event.stopPropagation()}>
+                        <button data-wb-button="quiet" data-wb-size="sm" data-wb-icon type="button" aria-label={t('common.more')} onClick={(event) => event.stopPropagation()}>
                           <MoreVertical size={18} />
                         </button>
                       </Dropdown>
@@ -324,11 +344,7 @@ export function VideoLibrary({ variant, onInsertTaskAsset } = {}) {
               ))}
             </div>
           ) : (
-            <div className="fr-vid-empty">
-              <FileVideo size={30} />
-              <strong>{t('videoLib.noResults')}</strong>
-              <span>{t('videoLib.noResultsHint')}</span>
-            </div>
+            <MaterialLibraryFeedback empty={t('common.noData')} filtered={Boolean(search.trim() || source || type)} onReset={resetFilters} />
           )}
         </section>
       </div>

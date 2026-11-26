@@ -1,3 +1,4 @@
+import { DialogCloseButton } from '../../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Edit3 } from 'lucide-react';
@@ -48,7 +49,7 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
             <div className="trd-title">{displayText(step.title, isChinese) || t('lesson.lessonDetail')}</div>
             <div className="trd-subtitle">{displayText(phase?.title || t('workflow.lesson.title'), isChinese)}</div>
           </div>
-          <button className="trd-close" type="button" onClick={onClose} aria-label={t('common.close')}>×</button>
+          <DialogCloseButton onClick={onClose} />
         </div>
 
         <div className="trd-body lesson-design-form">
@@ -152,9 +153,9 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
         </div>
 
         <div className="trd-ft">
-          <button type="button" className="btn-ghost" onClick={onClose}>{t('editStepUi.closePreview')}</button>
+          <button type="button" data-wb-button="secondary" onClick={onClose}>{t('editStepUi.closePreview')}</button>
           <div className="trd-ft-spacer" />
-          <button type="button" className="btn-primary trd-edit-detail-btn" onClick={onEdit}>
+          <button type="button" data-wb-button="primary" onClick={onEdit}>
             <Edit3 size={15} />
             {t('lesson.editLessonDetail')}
           </button>

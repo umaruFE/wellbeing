@@ -1,3 +1,4 @@
+import { DialogCloseButton } from '../../../components/LibraryControls';
 import i18next from 'i18next';
 import React from 'react';
 import { Button, Form, Input } from 'antd';
@@ -60,7 +61,7 @@ export function EditStepModal({ open, step, onClose, onSave }) {
             <div className="trd-title">{t('lesson.editLessonDetail')}</div>
             <div className="trd-subtitle">{t('editStepUi.existingStepSubtitle')}</div>
           </div>
-          <button className="trd-close" type="button" onClick={onClose} aria-label={t('common.close')}>×</button>
+          <DialogCloseButton onClick={onClose} />
         </div>
 
         <Form form={form} className="trd-body lesson-design-form" layout="vertical">
@@ -162,10 +163,10 @@ export function EditStepModal({ open, step, onClose, onSave }) {
         </Form>
 
         <div className="trd-ft">
-          <button type="button" className="btn-ghost" onClick={onClose}>{t('common.cancel')}</button>
+          <button type="button" data-wb-button="secondary" onClick={onClose}>{t('common.cancel')}</button>
           <div className="trd-ft-spacer" />
-          <button type="button" className="tbl-btn-regen" onClick={rewrite}>{t('lesson.aiRewrite')}</button>
-          <Button type="primary" className="btn-primary" onClick={save}>{t('lesson.saveChanges')}</Button>
+          <button type="button" data-wb-button="secondary" onClick={rewrite}>{t('lesson.aiRewrite')}</button>
+          <Button type="primary" data-wb-button="primary" onClick={save}>{t('lesson.saveChanges')}</Button>
         </div>
       </div>
     </div>

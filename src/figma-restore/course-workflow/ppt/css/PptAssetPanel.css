@@ -129,26 +129,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: var(--asset-tone, var(--ppt-blue));
-  color: #ffffff;
+  background: color-mix(in srgb, var(--asset-tone, var(--wb-primary)) 12%, var(--wb-surface));
+  color: color-mix(in srgb, var(--asset-tone, var(--wb-primary)) 55%, var(--wb-text));
   flex: 0 0 auto;
   margin: 0 auto 9px;
-}
-
-#ed-ppt .ppt-asset-sprite {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: inherit;
-  background-size: 400% 300%;
-  background-repeat: no-repeat;
-}
-
-#ed-ppt .ppt-asset-card-image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
 }
 
 #ed-ppt .tone-blue { --asset-tone: var(--ppt-blue); }
@@ -304,17 +288,6 @@
   margin-bottom: 10px;
 }
 
-#ed-ppt .ppt-asset-panel-image .ppt-asset-card.has-art-icon .ppt-asset-card-icon {
-  width: 56px;
-  height: 56px;
-  margin-bottom: 7px;
-  background: transparent;
-}
-
-#ed-ppt .ppt-asset-panel-image .ppt-asset-card.has-art-icon .ppt-asset-card-image {
-  object-fit: contain;
-}
-
 #ed-ppt .ppt-asset-panel-image .ppt-asset-card-copy {
   gap: 4px;
 }
@@ -467,12 +440,6 @@
   justify-content: center;
   gap: 2px;
   cursor: pointer;
-}
-
-#ed-ppt .ppt-asset-library-icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
 }
 
 #ed-ppt .ppt-option-grid .ppt-option-preview {
@@ -2927,13 +2894,6 @@
   margin: 0 auto 9px;
 }
 
-#ed-ppt .ppt-asset-panel-audio .ppt-asset-card.has-art-icon .ppt-asset-card-icon {
-  width: 52px;
-  height: 52px;
-  margin-bottom: 7px;
-  background: transparent;
-}
-
 #ed-ppt .ppt-asset-panel-audio .tone-coral { --asset-tone: #f36f5e; }
 #ed-ppt .ppt-asset-panel-audio .tone-purple { --asset-tone: #8f56d6; }
 #ed-ppt .ppt-asset-panel-audio .tone-green { --asset-tone: #4ca66f; }
@@ -3712,12 +3672,6 @@
   width: 36px;
   height: 36px;
   border-radius: var(--wb-card-radius);
-}
-
-#ed-ppt .ppt-asset-panel-video .ppt-asset-card.has-art-icon .ppt-asset-card-icon {
-  width: 52px;
-  height: 52px;
-  background: transparent;
 }
 
 #ed-ppt .ppt-asset-panel-video .ppt-asset-card-copy strong {

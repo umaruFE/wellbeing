@@ -8,7 +8,6 @@ import { CreateCourseStepOne } from './CreateCourseStepOne';
 import { CreateCourseStepThree } from './CreateCourseStepThree';
 import { CreateCourseStepTwo } from './CreateCourseStepTwo';
 import {
-  adventureIdeas,
   atmosphereOptions,
   createCourseSteps,
   defaultCreateCourseValues,
@@ -80,7 +79,6 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
   const outputLanguage = isChinese ? 'Chinese' : 'English';
   const [form] = Form.useForm();
   const [current, setCurrent] = useState(0);
-  const [ideaIndex, setIdeaIndex] = useState(-1);
   const [submitting, setSubmitting] = useState(false);
   const [ideaLoading, setIdeaLoading] = useState(false);
   const [polishLoading, setPolishLoading] = useState(false);
@@ -95,7 +93,6 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
 
   const resetFlow = () => {
     setCurrent(0);
-    setIdeaIndex(-1);
     form.setFieldsValue(defaultCreateCourseValues);
   };
 
@@ -405,27 +402,18 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
     <CreateCourseStepFour key="step-4" />,
   ];
 
-  const modalTitle = (
-    <div className="fr-create-modal-title">
-      <span>{t('createCourse.title')}</span>
-      <i className="fr-create-title-mark" />
-      <i className="fr-create-title-dot large" />
-      <i className="fr-create-title-dot small" />
-    </div>
-  );
-
   const modalFooter = (
     <div className="fr-create-footer-bar">
       <Button
         onClick={() => setCurrent(value => value - 1)}
-        className={`fr-create-btn-cancel fr-create-prev ${current === 0 ? 'hidden' : ''}`}
+        className={`fr-create-prev ${current === 0 ? 'hidden' : ''}`}
         disabled={submitting}
       >
         {t('createCourse.prevStep')}
       </Button>
       <div className="fr-create-footer-actions">
-        <Button onClick={handleCancel} className="fr-create-btn-cancel">{t('common.cancel')}</Button>
-        <Button onClick={handleNext} className="fr-create-btn-next" disabled={submitting}>
+        <Button onClick={handleCancel} disabled={submitting}>{t('common.cancel')}</Button>
+        <Button type="primary" onClick={handleNext} loading={submitting}>
           {submitting
             ? <>{t('common.generating')}</>
             : current === createCourseSteps.length - 1 ? t('createCourse.finish') : t('createCourse.nextStep')
@@ -438,31 +426,33 @@ export function CreateCourseModal({ open, onCancel, onSubmit }) {
   return (
     <Modal
       className="fr-create-modal"
-      title={modalTitle}
+      title={t('course.createCourse')}
       open={open}
       onCancel={handleCancel}
       width={858}
       centered
       destroyOnHidden
       footer={modalFooter}
-      closable
-      maskClosable={!submitting}
+      closable={!submitting}
+      keyboard={!submitting}
+      maskClosable={false}
       afterOpenChange={(visible) => {
         if (visible) resetFlow();
       }}
     >
-      <div className="fr-create-steps">
+      <ol className="fr-create-steps">
         {createCourseSteps.map((step, index) => (
-          <div
+          <li
             key={step.titleKey}
             className={`fr-create-step-item ${index === current ? 'active' : ''} ${index < current ? 'process' : ''}`}
+            aria-current={index === current ? 'step' : undefined}
           >
             <span className="fr-create-step-number">{index < current ? '✓' : index + 1}</span>
             <span className="fr-create-step-label">{t(step.titleKey)}</span>
             {index < createCourseSteps.length - 1 && <div className="fr-create-step-tail" />}
-          </div>
+          </li>
         ))}
-      </div>
+      </ol>
 
       <Form
         form={form}

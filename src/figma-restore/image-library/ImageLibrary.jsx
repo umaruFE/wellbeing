@@ -1,9 +1,10 @@
-import i18next from 'i18next';
+import { LibraryFilterSelect, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
-import { BookOpen, Eye, FileText, Image, Monitor, MoreVertical, Plus, Search, Trash2, Upload as UploadIcon, X } from 'lucide-react';
-import { Button, Dropdown, Input, Modal, Select, Tag, Upload, message } from 'antd';
+import { MaterialLibraryFeedback } from '../../modules/material-management/MaterialLibraryControls';
+import { BookOpen, Eye, Image, Monitor, MoreVertical, Plus, Trash2, Upload as UploadIcon, X } from 'lucide-react';
+import { Button, Dropdown, Modal, Select, Upload, message } from 'antd';
 import apiService from '../../services/api';
 import './ImageLibrary.css';
 import { AssetPreviewModal } from './AssetPreviewModal';
@@ -156,8 +157,8 @@ function InsertModal({ asset, open, onClose, onConfirm }) {
           <div className="fr-img-insert-meta">
             <div className="fr-img-insert-name">{asset.name}</div>
             <div className="fr-img-insert-line">
-              <Tag color="error">{asset.type}</Tag>
-              <Tag>{asset.source}</Tag>
+              <MetadataTag>{asset.type}</MetadataTag>
+              <MetadataTag>{asset.source}</MetadataTag>
             </div>
           </div>
         </aside>
@@ -262,6 +263,8 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
   const { t } = useTranslation();
   const [assets, setAssets] = React.useState(IMAGE_ASSETS);
   const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(false);
+  const [loadAttempt, setLoadAttempt] = React.useState(0);
   const [search, setSearch] = React.useState('');
   const [source, setSource] = React.useState('');
   const [type, setType] = React.useState('');
@@ -286,6 +289,8 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
 
   React.useEffect(() => {
     let alive = true;
+    setLoading(true);
+    setLoadError(false);
     apiService.getPptImages({ limit: 200 })
       .then((result) => {
         if (!alive) return;
@@ -293,10 +298,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
       })
       .catch((error) => {
         console.error('fetch image library failed:', error);
-        if (alive) {
-          setAssets([]);
-          message.error(t('imageLib.fetchFailed'));
-        }
+        if (alive) setLoadError(true);
       })
       .finally(() => {
         if (alive) setLoading(false);
@@ -304,10 +306,10 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
     return () => {
       alive = false;
     };
-  }, [t]);
+  }, [t, loadAttempt]);
 
-  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [assets]);
-  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [assets]);
+  const sourceFilterOptions = React.useMemo(() => mergeOptions(sourceOptions, assets, 'source'), [sourceOptions, assets]);
+  const typeFilterOptions = React.useMemo(() => mergeOptions(typeOptions, assets, 'type'), [typeOptions, assets]);
 
   const filteredAssets = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -325,6 +327,12 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
     image.onerror = () => resolve('本地图片');
     image.src = previewUrl;
   });
+
+  const resetFilters = () => {
+    setSearch('');
+    setSource('');
+    setType('');
+  };
 
   const handleUpload = async (file) => {
     if (!file?.type?.startsWith('image/')) {
@@ -345,7 +353,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
       previewUrl,
     };
     setAssets(current => [nextAsset, ...current]);
-    message.success(t('imageLib.uploadSuccess'));
+    message.info(t('common.localPreviewAdded'));
     return false;
   };
 
@@ -361,7 +369,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
     setInsertAsset(current => (current?.id === asset.id ? null : current));
     setDeleteAsset(null);
     if (asset.previewUrl) URL.revokeObjectURL(asset.previewUrl);
-    message.success(t('imageLib.deleteSuccess', { name: asset.name }));
+    message.info(t('common.localPreviewRemoved'));
   };
 
   const handleAssetMenuClick = ({ key, domEvent }, asset) => {
@@ -378,11 +386,11 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
   return (
     <section className={`fr-img-lib ${variant === 'ppt-picker' ? 'ppt-library-picker' : ''}`}>
       <div className="fr-img-page">
-        <header className="fr-img-hero">
+        <header className="fr-img-hero wb-library-header">
           <div className="fr-img-hero-left">
             <div className="fr-img-hero-icon"><Image size={30} /></div>
             <div>
-              <h1>{t('imageLib.title')}</h1>
+              <h1>{t('sidebar.imageLibrary')}</h1>
               <p>{t('imageLib.subtitle')}</p>
             </div>
           </div>
@@ -391,7 +399,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
             beforeUpload={handleUpload}
             showUploadList={false}
           >
-            <button className="fr-img-upload-btn" type="button">
+            <button type="button" data-wb-button="primary">
               <UploadIcon size={16} />
               {t('imageLib.uploadImage')}
             </button>
@@ -400,33 +408,39 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
 
         <section className="fr-img-panel">
           <div className="fr-img-toolbar">
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t('imageLib.searchPlaceholder')}
-              prefix={<Search size={16} />}
-              allowClear
-            />
+            <LibrarySearch value={search} onChange={setSearch} label={t('imageLib.searchPlaceholder')} />
             <div className="fr-img-filter-group">
-              <Select value={source} onChange={setSource} options={sourceFilterOptions} />
-              <Select value={type} onChange={setType} options={typeFilterOptions} />
+              <LibraryFilterSelect label={t('imageLib.sourceAll')} value={source} onChange={setSource} options={sourceFilterOptions} />
+              <LibraryFilterSelect label={t('imageLib.typeAll')} value={type} onChange={setType} options={typeFilterOptions} />
             </div>
           </div>
 
           {loading ? (
             <PageLoading />
+          ) : loadError ? (
+            <MaterialLibraryFeedback error={t('imageLib.fetchFailed')} onRetry={() => setLoadAttempt((n) => n + 1)} />
           ) : filteredAssets.length > 0 ? (
             <div className="fr-img-grid">
               {filteredAssets.map(asset => (
                 <article className="fr-img-card" key={asset.id} onClick={() => setPreviewAsset(asset)}>
                   <div className="fr-img-thumb">
                     <SceneArt scene={asset.scene} src={asset.previewUrl} alt={asset.name} />
-                    <Tag className="fr-img-source-tag">{asset.source}</Tag>
+                    <MetadataTag className="fr-img-source-tag">{asset.source}</MetadataTag>
                   </div>
                   <div className="fr-img-meta">
-                    <div className="fr-img-name">{asset.name}</div>
+                    <button
+                      type="button"
+                      className="fr-img-name"
+                      aria-label={t('common.preview') + ' ' + asset.name}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setPreviewAsset(asset);
+                      }}
+                    >
+                      {asset.name}
+                    </button>
                     <div className="fr-img-chip-row">
-                      <span className="fr-img-type-chip">{asset.type}</span>
+                      <MetadataTag>{asset.type}</MetadataTag>
                       <span className="fr-img-size">{asset.size}</span>
                     </div>
                     <div className="fr-img-footer">
@@ -442,9 +456,9 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
                         }}
                       >
                         <button
-                          className="fr-img-card-menu-btn"
+                          data-wb-button="quiet" data-wb-size="sm" data-wb-icon
                           type="button"
-                          aria-label={i18next.t('imageLibraryUi.77836d3a99')}
+                          aria-label={t('common.more')}
                           onClick={(event) => event.stopPropagation()}
                         >
                           <MoreVertical size={18} />
@@ -456,11 +470,7 @@ export function ImageLibrary({ variant, onInsertTaskAsset } = {}) {
               ))}
             </div>
           ) : (
-            <div className="fr-img-empty">
-              <FileText size={30} />
-              <strong>{t('imageLib.noResults')}</strong>
-              <span>{t('imageLib.noResultsHint')}</span>
-            </div>
+            <MaterialLibraryFeedback empty={t('common.noData')} filtered={Boolean(search.trim() || source || type)} onReset={resetFilters} />
           )}
         </section>
       </div>

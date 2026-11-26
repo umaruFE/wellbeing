@@ -1,10 +1,11 @@
+import { MetadataTag } from '../components/LibraryControls';
 import React, { useEffect, useState } from 'react';
 import i18next from 'i18next';
 import { LocalizedValue } from '../i18n/LocalizedText.jsx';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../components/PageLoading';
 import { parseJsonSafely, responseErrorMessage } from '../utils/responseUtils';
-import { Tag, Button, Progress, message } from 'antd';
+import { Button, Progress, Tabs, message } from 'antd';
 import {
   CheckCircle,
   CirclePlus,
@@ -47,42 +48,42 @@ const getIconBgColor = (type) => {
 const statusConfigMap = {
   queued: {
     label: '等待中',
-    className: 'waiting',
+    tone: 'draft',
     icon: <Clock size={12} />,
   },
   running: {
     label: '进行中',
-    className: 'processing',
+    tone: 'processing',
     icon: <Loader2 size={12} className="animate-spin" />,
   },
   succeeded: {
     label: '已完成',
-    className: 'done',
+    tone: 'ready',
     icon: <CheckCircle size={12} />,
   },
   failed: {
     label: '失败',
-    className: 'failed',
+    tone: 'failed',
     icon: <Clock size={12} />,
   },
   cancelled: {
     label: '已取消',
-    className: 'cancelled',
+    tone: 'neutral',
     icon: <Clock size={12} />,
   },
   processing: {
     label: '进行中',
-    className: 'processing',
+    tone: 'processing',
     icon: <Loader2 size={12} className="animate-spin" />,
   },
   waiting: {
     label: '等待中',
-    className: 'waiting',
+    tone: 'draft',
     icon: <Clock size={12} />,
   },
   done: {
     label: '已完成',
-    className: 'done',
+    tone: 'ready',
     icon: <CheckCircle size={12} />,
   },
 };
@@ -193,10 +194,10 @@ const createDetailFromTask = (task, t) => {
 const TaskStatusTag = ({ status }) => {
   const config = statusConfigMap[status] || statusConfigMap.waiting;
   return (
-    <Tag className={`task-status-pill ${config.className}`}>
+    <MetadataTag tone={config.tone}>
       {config.icon}
       <span><LocalizedValue value={config.label} catalog="taskCenterValues" /></span>
-    </Tag>
+    </MetadataTag>
   );
 };
 
@@ -243,7 +244,7 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
           <div className="history-task-detail">
             <div className="history-task-title-row">
               <span className="history-task-title"><LocalizedValue value={task.title} catalog="taskCenterValues" /></span>
-              <Tag className="history-task-count">x <LocalizedValue value={task.count} catalog="taskCenterValues" /></Tag>
+              <MetadataTag>x <LocalizedValue value={task.count} catalog="taskCenterValues" /></MetadataTag>
             </div>
             <span className="history-task-related">{t('taskCenter.related')}: <LocalizedValue value={task.related} catalog="taskCenterValues" /></span>
           </div>
@@ -372,6 +373,7 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [queueTasks, setQueueTasks] = useState(null);
   const [historyTasks, setHistoryTasks] = useState(null);
+  const [loadErrors, setLoadErrors] = useState({});
 
   const loadTasks = async (scope = activeTab) => {
     const setTasks = scope === 'history' ? setHistoryTasks : setQueueTasks;
@@ -387,9 +389,9 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
 
       const tasks = (result.data?.tasks || []).map(normalizeTask);
       setTasks(tasks);
+      setLoadErrors(current => current[scope] ? { ...current, [scope]: '' } : current);
     } catch (error) {
-      message.error(error?.message || t('taskCenterValues.后台任务获取失败'));
-      setTasks(current => current ?? []);
+      setLoadErrors(current => ({ ...current, [scope]: error?.message || t('taskCenterValues.后台任务获取失败') }));
     }
   };
 
@@ -458,45 +460,36 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
   return (
     <div className="task-center-container">
       <div className="task-center-header">
-        <div className="task-center-title">
-          <span className="title-text">{t('taskCenter.title')}</span>
-          <div className="title-decoration" />
-          <div className="title-dots">
-            <span className="dot-large" />
-            <span className="dot-small" />
-          </div>
-        </div>
-        <button className="task-center-close" onClick={onClose}>
-          <X size={18} />
+        <h2 className="task-center-title">{t('taskCenter.title')}</h2>
+        <button type="button" data-wb-button="quiet" data-wb-size="sm" data-wb-icon aria-label={t('common.close')} onClick={onClose}>
+          <X size={18} aria-hidden="true" />
         </button>
       </div>
-      <div className="task-center-tabs">
-        <span
-          className={`task-center-tab ${activeTab === 'queue' ? 'active' : ''}`}
-          onClick={() => setActiveTab('queue')}
-        >
-          {t('taskCenter.queue', { count: queueTasks?.length ?? 0 })}
-        </span>
-        <span
-          className={`task-center-tab ${activeTab === 'history' ? 'active' : ''}`}
-          onClick={() => setActiveTab('history')}
-        >
-          {t('taskCenter.history', { count: historyTasks?.length ?? 0 })}
-        </span>
-      </div>
-      <div className="task-center-content">
-        {currentTasks === null ? (
-          <PageLoading />
-        ) : currentTasks.length === 0 ? (
-          <div className="task-center-empty">{t('taskCenter.empty')}</div>
-        ) : (
-          currentTasks.map(task => (
-            activeTab === 'queue'
-              ? <QueueTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onCancelTask={cancelTask} />
-              : <HistoryTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onRetryTask={retryTask} />
-          ))
-        )}
-      </div>
+      <Tabs
+        className="task-center-tabs"
+        activeKey={activeTab}
+        onChange={setActiveTab}
+        items={['queue', 'history'].map(key => ({
+          key,
+          label: t(`taskCenter.${key}`, { count: (key === 'queue' ? queueTasks : historyTasks)?.length ?? 0 }),
+          children: key === activeTab && (
+            <div className="task-center-content">
+              {loadErrors[key] && (
+                <div role="alert" className="wb-library-empty">
+                  <p>{loadErrors[key]}</p>
+                  <button type="button" data-wb-button="secondary" onClick={() => loadTasks(key)}>{t('common.retry')}</button>
+                </div>
+              )}
+              {currentTasks === null && !loadErrors[key] && <PageLoading />}
+              {currentTasks?.length === 0 && !loadErrors[key] && <div className="task-center-empty" role="status">{t('taskCenter.empty')}</div>}
+              {currentTasks?.map(task => key === 'queue'
+                ? <QueueTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onCancelTask={cancelTask} />
+                : <HistoryTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onRetryTask={retryTask} />
+              )}
+            </div>
+          ),
+        }))}
+      />
 
       <TaskDetailModal task={selectedTask} open={detailOpen} onClose={closeTaskDetail} onInsertTaskAsset={onInsertTaskAsset} />
     </div>

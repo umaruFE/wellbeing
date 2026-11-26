@@ -1,6 +1,7 @@
+import { ChoiceChips } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Checkbox, Form, Radio, Select, Tag } from 'antd';
+import { Form, Select, Tag } from 'antd';
 import {
   ageOptions,
   classSizeOptions,
@@ -170,13 +171,10 @@ export function CreateCourseStepOne() {
           rules={[{ required: true }]}
           className="fr-create-form-item"
         >
-          <Radio.Group
-            optionType="button"
-            buttonStyle="solid"
-            className="fr-create-radio-group"
-          >
-            {ageOptions.map(option => <Radio.Button key={option.value} value={option.value}>{t(option.labelKey)}</Radio.Button>)}
-          </Radio.Group>
+          <ChoiceChips
+            label={t('createCourse.ageLabel')}
+            options={ageOptions.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
+          />
         </Form.Item>
 
         <Form.Item
@@ -185,13 +183,10 @@ export function CreateCourseStepOne() {
           rules={[{ required: true }]}
           className="fr-create-form-item"
         >
-          <Radio.Group
-            optionType="button"
-            buttonStyle="solid"
-            className="fr-create-radio-group"
-          >
-            {durationOptions.map(option => <Radio.Button key={option.value} value={option.value}>{t(option.labelKey)}</Radio.Button>)}
-          </Radio.Group>
+          <ChoiceChips
+            label={t('createCourse.durationLabel')}
+            options={durationOptions.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
+          />
         </Form.Item>
 
         <Form.Item
@@ -200,13 +195,10 @@ export function CreateCourseStepOne() {
           rules={[{ required: true }]}
           className="fr-create-form-item"
         >
-          <Radio.Group
-            optionType="button"
-            buttonStyle="solid"
-            className="fr-create-radio-group"
-          >
-            {classSizeOptions.map(option => <Radio.Button key={option.value} value={option.value}>{t(option.labelKey)}</Radio.Button>)}
-          </Radio.Group>
+          <ChoiceChips
+            label={t('createCourse.classSizeLabel')}
+            options={classSizeOptions.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
+          />
         </Form.Item>
       </div>
 
@@ -250,9 +242,10 @@ export function CreateCourseStepOne() {
         name="languageSkills"
         className="fr-create-form-item"
       >
-        <Checkbox.Group
+        <ChoiceChips
+          multiple
+          label={t('createCourse.skillLabel')}
           options={languageSkillOptions.map(opt => ({ label: t(opt.labelKey), value: opt.value }))}
-          className="fr-create-checkbox-group"
         />
       </Form.Item>
     </>

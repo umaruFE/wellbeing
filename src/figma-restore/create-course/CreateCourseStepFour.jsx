@@ -1,29 +1,10 @@
+import { ChoiceChips } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Form, Input } from 'antd';
 import { atmosphereOptions } from './createCourseOptions';
 
 const { TextArea } = Input;
-
-function ClearableButtonGroup({ value, onChange, options, getLabel, className }) {
-  return (
-    <div className={className}>
-      {options.map((option) => {
-        const selected = value === option.value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            className={`ant-radio-button-wrapper ${selected ? 'ant-radio-button-wrapper-checked' : ''}`}
-            onClick={() => onChange?.(selected ? '' : option.value)}
-          >
-            {getLabel(option)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
 
 export function CreateCourseStepFour() {
   const { t } = useTranslation();
@@ -44,10 +25,10 @@ export function CreateCourseStepFour() {
       </Form.Item>
 
       <Form.Item label={t('createCourse.atmosphereLabel')} name="atmosphere" className="fr-magic-atmosphere">
-        <ClearableButtonGroup
-          className="fr-create-radio-group"
-          options={atmosphereOptions}
-          getLabel={(option) => t(option.labelKey)}
+        <ChoiceChips
+          clearable
+          label={t('createCourse.atmosphereLabel')}
+          options={atmosphereOptions.map((option) => ({ value: option.value, label: t(option.labelKey) }))}
         />
       </Form.Item>
     </>

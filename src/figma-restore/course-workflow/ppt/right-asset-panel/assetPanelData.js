@@ -24,37 +24,37 @@ import {
 
 export function getImageAssetTypes(t) {
   return [
-    { code: 'B1', title: t('assetPanel.b1Title'), desc: t('assetPanel.b1Desc'), tone: 'blue', icon: Sparkles, imageSrc: '/ppt/image/asset-icons/theme.png' },
-    { code: 'B2', title: t('assetPanel.b2Title'), desc: t('assetPanel.b2Desc'), tone: 'purple', icon: LayoutTemplate, imageSrc: '/ppt/image/asset-icons/scene-text.png' },
-    { code: 'B3', title: t('assetPanel.b3Title'), desc: t('assetPanel.b3Desc'), tone: 'coral', icon: FileText, imageSrc: '/ppt/image/asset-icons/vocabulary.png' },
-    { code: 'B4', title: t('assetPanel.b4Title'), desc: t('assetPanel.b4Desc'), tone: 'green', icon: BookOpen, imageSrc: '/ppt/image/asset-icons/story.png' },
-    { code: 'B5', title: t('assetPanel.b5Title'), desc: t('assetPanel.b5Desc'), tone: 'blue', icon: Activity, imageSrc: '/ppt/image/asset-icons/activity.png' },
-    { code: 'B6', title: t('assetPanel.b6Title'), desc: t('assetPanel.b6Desc'), tone: 'coral', icon: Network, imageSrc: '/ppt/image/asset-icons/mind-map.png' },
-    { code: 'B7', title: t('assetPanel.b7Title'), desc: t('assetPanel.b7Desc'), tone: 'pink', icon: Speech, imageSrc: '/ppt/image/asset-icons/text.png' },
-    { code: 'B8', title: t('assetPanel.b8Title'), desc: t('assetPanel.b8Desc'), tone: 'orange', icon: MapIcon, imageSrc: '/ppt/image/asset-icons/summary.png' },
-    { code: 'B9', title: t('assetPanel.b9Title'), desc: t('assetPanel.b9Desc'), tone: 'teal', icon: BookOpen, imageSrc: '/ppt/image/asset-icons/storybook.png' },
-    { code: 'B10', title: t('assetPanel.b10Title'), desc: t('assetPanel.b10Desc'), tone: 'lime', icon: Grid2X2, imageSrc: '/ppt/image/asset-icons/comic.png' },
-    { code: 'B11', title: t('assetPanel.b11Title'), desc: t('assetPanel.b11Desc'), tone: 'purple', icon: Dumbbell, imageSrc: '/ppt/image/asset-icons/action.png' },
-    { code: 'B13', title: t('assetPanel.b13Title'), desc: t('assetPanel.b13Desc'), tone: 'orange', icon: UsersRound, imageSrc: '/ppt/image/asset-icons/ip-scene.png' },
+    { code: 'B1', title: t('assetPanel.b1Title'), desc: t('assetPanel.b1Desc'), tone: 'blue', icon: Sparkles },
+    { code: 'B2', title: t('assetPanel.b2Title'), desc: t('assetPanel.b2Desc'), tone: 'purple', icon: LayoutTemplate },
+    { code: 'B3', title: t('assetPanel.b3Title'), desc: t('assetPanel.b3Desc'), tone: 'coral', icon: FileText },
+    { code: 'B4', title: t('assetPanel.b4Title'), desc: t('assetPanel.b4Desc'), tone: 'green', icon: BookOpen },
+    { code: 'B5', title: t('assetPanel.b5Title'), desc: t('assetPanel.b5Desc'), tone: 'blue', icon: Activity },
+    { code: 'B6', title: t('assetPanel.b6Title'), desc: t('assetPanel.b6Desc'), tone: 'coral', icon: Network },
+    { code: 'B7', title: t('assetPanel.b7Title'), desc: t('assetPanel.b7Desc'), tone: 'pink', icon: Speech },
+    { code: 'B8', title: t('assetPanel.b8Title'), desc: t('assetPanel.b8Desc'), tone: 'orange', icon: MapIcon },
+    { code: 'B9', title: t('assetPanel.b9Title'), desc: t('assetPanel.b9Desc'), tone: 'teal', icon: BookOpen },
+    { code: 'B10', title: t('assetPanel.b10Title'), desc: t('assetPanel.b10Desc'), tone: 'lime', icon: Grid2X2 },
+    { code: 'B11', title: t('assetPanel.b11Title'), desc: t('assetPanel.b11Desc'), tone: 'purple', icon: Dumbbell },
+    { code: 'B13', title: t('assetPanel.b13Title'), desc: t('assetPanel.b13Desc'), tone: 'orange', icon: UsersRound },
   ];
 }
 
 export function getAudioAssetTypes(t) {
   return [
-    { code: 'C1', title: t('assetPanel.c1Title'), desc: t('assetPanel.c1Desc'), tone: 'coral', icon: Smile, imageSrc: '/ppt/image/audio-icons/music.png' },
-    { code: 'C2', title: t('assetPanel.c2Title'), desc: t('assetPanel.c2Desc'), tone: 'purple', icon: Volume2, imageSrc: '/ppt/image/audio-icons/megaphone.png' },
-    { code: 'C3', title: t('assetPanel.c3Title'), desc: t('assetPanel.c3Desc'), tone: 'green', icon: Mic, imageSrc: '/ppt/image/audio-icons/voice.png' },
-    { code: 'C4', title: t('assetPanel.c4Title'), desc: t('assetPanel.c4Desc'), tone: 'blue', icon: Speech, imageSrc: '/ppt/image/audio-icons/dialogue.png' },
-    { code: 'C5', title: t('assetPanel.c5Title'), desc: t('assetPanel.c5Desc'), tone: 'purple', icon: Mic, imageSrc: '/ppt/image/audio-icons/microphone.png' },
-    { code: 'C6', title: t('assetPanel.c6Title'), desc: t('assetPanel.c6Desc'), tone: 'coral', icon: Wind, imageSrc: '/ppt/image/audio-icons/feather.png' },
+    { code: 'C1', title: t('assetPanel.c1Title'), desc: t('assetPanel.c1Desc'), tone: 'coral', icon: Smile },
+    { code: 'C2', title: t('assetPanel.c2Title'), desc: t('assetPanel.c2Desc'), tone: 'purple', icon: Volume2 },
+    { code: 'C3', title: t('assetPanel.c3Title'), desc: t('assetPanel.c3Desc'), tone: 'green', icon: Mic },
+    { code: 'C4', title: t('assetPanel.c4Title'), desc: t('assetPanel.c4Desc'), tone: 'blue', icon: Speech },
+    { code: 'C5', title: t('assetPanel.c5Title'), desc: t('assetPanel.c5Desc'), tone: 'purple', icon: Mic },
+    { code: 'C6', title: t('assetPanel.c6Title'), desc: t('assetPanel.c6Desc'), tone: 'coral', icon: Wind },
   ];
 }
 
 export function getVideoAssetTypes(t) {
   return [
-    { code: 'V1', title: t('assetPanel.v1Title'), desc: t('assetPanel.v1Desc'), tone: 'blue', icon: Dumbbell, imageSrc: '/ppt/image/video-icons/fitness-challenge.png' },
-    { code: 'VM', title: t('assetPanel.vmTitle'), desc: t('assetPanel.vmDesc'), tone: 'purple', icon: Clapperboard, imageSrc: '/ppt/image/video-icons/story-narrative.png' },
-    { code: 'V3', title: t('assetPanel.v3Title'), desc: t('assetPanel.v3Desc'), tone: 'coral', icon: Film, imageSrc: '/ppt/image/video-icons/teaching-animation.png', disabled: true },
+    { code: 'V1', title: t('assetPanel.v1Title'), desc: t('assetPanel.v1Desc'), tone: 'blue', icon: Dumbbell },
+    { code: 'VM', title: t('assetPanel.vmTitle'), desc: t('assetPanel.vmDesc'), tone: 'purple', icon: Clapperboard },
+    { code: 'V3', title: t('assetPanel.v3Title'), desc: t('assetPanel.v3Desc'), tone: 'coral', icon: Film, disabled: true },
   ];
 }
 

@@ -1,10 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { FilterChip, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
+import React, { useState, useEffect, useRef } from 'react';
+import { message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
-import { BookOpen, Search, Users, Clock, Grid, List, Copy, Book, Sparkles, Tag } from 'lucide-react';
+import { Eye, Clock, Grid, List, Copy, Book, Sparkles, Loader2 } from 'lucide-react';
 import apiService from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import { getCourseCoverUrl, getDisplayCourseTitle } from '../../figma-restore/courseImages';
+
+const DEFAULT_COVER = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg';
 
 export const CourseSquarePage = () => {
   const { t } = useTranslation();
@@ -14,13 +18,19 @@ export const CourseSquarePage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  const [copyingId, setCopyingId] = useState(null);
+  const copyPending = useRef(false);
+  const searchInput = useRef(null);
+  const [notice, noticeHolder] = message.useMessage();
 
   useEffect(() => {
+    let cancelled = false;
     const fetchCourses = async () => {
       try {
         setLoading(true);
-        setError(null);
+        setError(false);
 
         const params = {
           public: 'true',
@@ -29,12 +39,11 @@ export const CourseSquarePage = () => {
         };
 
         const result = await apiService.getCourses(params);
+        if (cancelled) return;
         const rawCourses = result.data || [];
 
         const normalized = rawCourses.map(course => {
           const ageGroup = course.age_group || course.ageGroup || '';
-          const ageMatch = ageGroup.match(/(\d+)[-~](\d+)/);
-          const age = ageMatch ? `${ageMatch[1]}-${ageMatch[2]}` : ageGroup || t('course.notSet');
 
           let grade = '';
           if (ageGroup.includes('G1') || ageGroup.includes('一年级')) grade = t('square.grade1');
@@ -52,18 +61,6 @@ export const CourseSquarePage = () => {
 
           const keywords = Array.isArray(course.keywords) ? course.keywords :
                           (course.keywords ? course.keywords.split(',').map(k => k.trim()) : []);
-
-          const getThumbnail = () => {
-            const theme = (course.theme || '').toLowerCase();
-            const title = (course.title || '').toLowerCase();
-            if (theme.includes('动物') || title.includes('animal')) return '🦁';
-            if (theme.includes('颜色') || title.includes('color')) return '🌈';
-            if (theme.includes('食物') || title.includes('food')) return '🍎';
-            if (theme.includes('天气') || title.includes('weather')) return '🌤️';
-            if (theme.includes('数学') || title.includes('math') || title.includes('fraction')) return '🔢';
-            if (theme.includes('字母') || title.includes('phonics') || title.includes('abc')) return '🔤';
-            return '📚';
-          };
 
           const getTags = () => {
             const tags = [];
@@ -89,7 +86,6 @@ export const CourseSquarePage = () => {
             id: course.id,
             title: getDisplayCourseTitle(course, t('dashboard.unnamedCourse')),
             author,
-            age: age,
             grade: grade || ageGroup || t('course.notSet'),
             unit: unitEN,
             unitCN: unitCN,
@@ -98,26 +94,27 @@ export const CourseSquarePage = () => {
                    ageGroup.includes('小学') || ageGroup.match(/G[1-6]/) ? t('square.primary') : t('course.notSet'),
             storyTheme: course.theme || t('course.notSet'),
             keywords: keywords,
-            students: course.view_count || course.viewCount || 0,
+            views: course.view_count || course.viewCount || 0,
             copies: course.copy_count || course.copyCount || 0,
             thumbnail: getCourseCoverUrl(course),
-            thumbnailFallback: getThumbnail(),
             tags: getTags()
           };
         });
 
         setCourses(normalized);
       } catch (err) {
+        if (cancelled) return;
         console.error('fetch course square failed:', err);
-        setError(`${t('course.fetchFailed')}: ${err.message || ''}`);
+        setError(true);
         setCourses([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchCourses();
-  }, [t]);
+    return () => { cancelled = true; };
+  }, [retry, t]);
 
   const categories = [
     { id: 'all', name: t('common.all') },
@@ -127,11 +124,10 @@ export const CourseSquarePage = () => {
     { id: 'grammar', name: t('square.catGrammar') },
   ];
 
+  const keyword = searchTerm.trim().toLowerCase();
+  const categoryName = categories.find(category => category.id === selectedCategory)?.name || '';
   const filteredCourses = courses.filter(course => {
-    const matchesSearch = (course.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (course.unit || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (course.storyTheme || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const categoryName = categories.find(category => category.id === selectedCategory)?.name || '';
+    const matchesSearch = [course.title, course.unit, course.unitCN, course.storyTheme].some(value => value?.toLowerCase().includes(keyword));
     const matchesCategory = selectedCategory === 'all' ||
                            course.tags?.some(tag => tag.toLowerCase() === categoryName.toLowerCase());
     return matchesSearch && matchesCategory;
@@ -139,10 +135,13 @@ export const CourseSquarePage = () => {
 
   const handleCopyCourse = async (courseId) => {
     if (!user) {
-      alert(t('square.loginRequired'));
+      notice.warning(t('square.loginRequired'));
       return;
     }
 
+    if (copyPending.current) return;
+    copyPending.current = true;
+    setCopyingId(courseId);
     try {
       const courseDetail = await apiService.getCourse(courseId);
       const originalCourse = courseDetail.data || courseDetail;
@@ -166,20 +165,23 @@ export const CourseSquarePage = () => {
         throw new Error(result.error);
       }
 
-      try {
-        setCourses(courses.map(c =>
-          c.id === courseId
-            ? { ...c, copies: (c.copies || 0) + 1 }
-            : c
-        ));
-      } catch (err) {
-      }
-
-      alert(t('square.copySuccess'));
+      setCourses(current => current.map(course => course.id === courseId
+        ? { ...course, copies: (course.copies || 0) + 1 }
+        : course));
+      notice.success(t('square.copySuccess'));
     } catch (err) {
       console.error('copy course failed:', err);
-      alert(t('square.copyFailed'));
+      notice.error(t('square.copyFailed'));
+    } finally {
+      copyPending.current = false;
+      setCopyingId(null);
     }
+  };
+
+  const clearFilters = () => {
+    setSelectedCategory('all');
+    setSearchTerm('');
+    searchInput.current?.focus();
   };
 
   const formatNumber = (num) => {
@@ -189,253 +191,109 @@ export const CourseSquarePage = () => {
     return num;
   };
 
+  const isList = viewMode === 'list';
+
   return (
-    <div className="h-full min-h-0 flex flex-col bg-[var(--wb-page)]">
-      {/* Header */}
-      <div className="bg-[var(--wb-surface)] border-b border-[var(--wb-border)] shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div>
-              <h1 className="text-[28px] font-bold text-[var(--wb-text)] flex items-center gap-2">
-                <BookOpen className="w-8 h-8 text-[var(--wb-text)]" />
-                {t('square.title')}
-              </h1>
-              <p className="text-[var(--wb-muted)] mt-1">{t('square.subtitle')}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-[10px] transition-all duration-200 min-h-10 ${
-                  viewMode === 'grid' ? "bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] text-[var(--wb-text)]" : "text-[var(--wb-muted)] hover:bg-[var(--wb-page)]"
-                }`}
-              >
-                <Grid className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-[10px] transition-all duration-200 min-h-10 ${
-                  viewMode === 'list' ? "bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] text-[var(--wb-text)]" : "text-[var(--wb-muted)] hover:bg-[var(--wb-page)]"
-                }`}
-              >
-                <List className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative mb-4">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[var(--wb-muted)]" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t('square.searchPlaceholder')}
-              className="w-full pl-12 pr-4 py-2.5 border border-[var(--wb-border)] rounded-[10px] focus:ring-2 focus:ring-[var(--wb-selected-border)] focus:border-[var(--wb-selected-border)] outline-none text-sm transition-all duration-200 min-h-11"
-            />
-          </div>
-
-          {/* Categories */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-2">
-            {categories.map(category => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-4 py-2 rounded-[10px] whitespace-nowrap transition-all duration-200 min-h-10 ${
-                  selectedCategory === category.id
-                    ? "bg-[var(--wb-selected)] text-[var(--wb-primary)] border border-[var(--wb-selected-border)] font-semibold"
-                    : "bg-[var(--wb-page)] text-[var(--wb-muted)] border border-transparent hover:bg-[var(--wb-selected)] hover:border-[var(--wb-selected-border)]"
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
+    <section className="wb-standard-page">
+      {noticeHolder}
+      <header className="wb-library-header">
+        <h1>{t('sidebar.inspirationSquare')}</h1>
+        <div className="flex items-center gap-2">
+          <button type="button" data-wb-button="secondary" data-wb-icon aria-label={t('common.gridView')} aria-pressed={!isList} onClick={() => setViewMode('grid')}>
+            <Grid size={16} aria-hidden="true" />
+          </button>
+          <button type="button" data-wb-button="secondary" data-wb-icon aria-label={t('common.listView')} aria-pressed={isList} onClick={() => setViewMode('list')}>
+            <List size={16} aria-hidden="true" />
+          </button>
         </div>
+      </header>
+
+      <div className="wb-library-tools pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {categories.map(category => (
+            <FilterChip
+              key={category.id}
+              selected={selectedCategory === category.id}
+              onClick={() => setSelectedCategory(category.id)}
+            >
+              {category.name}
+            </FilterChip>
+          ))}
+        </div>
+        <LibrarySearch label={t('course.searchPlaceholder')} value={searchTerm} onChange={setSearchTerm} inputRef={searchInput} />
       </div>
 
-      {/* Course List */}
-      <div className="flex-1 min-h-0 overflow-y-auto max-w-7xl mx-auto px-4 sm:px-6 py-6 w-full">
-        {error && (
-          <div className="bg-error-light border border-error-border text-error-active px-4 py-3 rounded-[10px] mb-4">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <PageLoading />
-        ) : viewMode === 'grid' ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredCourses.map(course => (
-              <div
-                key={course.id}
-                className="bg-white rounded-[14px] border border-[var(--wb-border)] overflow-hidden cursor-pointer group transition-all duration-200 hover:border-[var(--wb-selected-border)] hover:shadow-[0_4px_18px_rgba(48,43,59,0.06)] "
-              >
-                <div className="h-40 relative border-b border-[var(--wb-border)] overflow-hidden">
-                  <img
-                    src={course.thumbnail || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
-                    alt={course.title}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    onError={(e) => { e.target.src = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'; }}
-                  />
+      {loading ? <PageLoading /> : error ? (
+        <div className="wb-library-empty">
+          <p role="alert">{t('course.fetchFailed')}</p>
+          <button type="button" data-wb-button="secondary" onClick={() => setRetry(value => value + 1)}>{t('common.retry')}</button>
+        </div>
+      ) : filteredCourses.length === 0 ? (
+        <div className="wb-library-empty">
+          <p role="status">{t(courses.length === 0 ? 'square.noPublicCourses' : 'course.noMatchingCourses')}</p>
+          {courses.length > 0 && (
+            <button type="button" data-wb-button="secondary" onClick={clearFilters}>
+              {t(selectedCategory === 'all' ? 'common.clearSearch' : 'common.clearFilters')}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className={isList ? 'grid gap-4' : 'wb-case-grid'}>
+          {filteredCourses.map(course => (
+            <article
+              key={course.id}
+              className={isList ? 'wb-surface-panel flex flex-col items-start gap-4 sm:flex-row' : 'wb-case-card overflow-hidden'}
+            >
+              <div className={isList ? 'relative aspect-video w-full shrink-0 overflow-hidden rounded-[var(--wb-control-radius)] sm:w-40' : 'wb-case-cover'}>
+                <img
+                  src={course.thumbnail || DEFAULT_COVER}
+                  alt=""
+                  loading="lazy"
+                  className="block h-full w-full object-cover"
+                  onError={event => {
+                    const image = event.currentTarget;
+                    if (image.getAttribute('src') !== DEFAULT_COVER) image.src = DEFAULT_COVER;
+                  }}
+                />
+              </div>
+              <div className={isList ? 'flex w-full min-w-0 flex-col gap-2' : 'wb-case-body'}>
+                <h3 className="m-0 text-[length:var(--wb-card-title-size)] font-semibold wrap-anywhere">{course.title}</h3>
+                {course.author && <p className="m-0 text-sm text-[var(--wb-muted)]">{course.author}</p>}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[var(--wb-muted)]">
+                  {(course.unit || course.unitCN) && (
+                    <span className="inline-flex items-center gap-2"><Book size={16} aria-hidden="true" />{[course.unit, course.unitCN].filter(Boolean).join(' · ')}</span>
+                  )}
+                  <span className="inline-flex items-center gap-2"><Clock size={16} aria-hidden="true" />{t('course.durationMinutes', { minutes: course.duration })} · {course.stage}</span>
+                  <span className="inline-flex items-center gap-2"><Sparkles size={16} aria-hidden="true" />{course.storyTheme}</span>
+                  {isList && <span>{course.grade}</span>}
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {[...new Set(isList ? [...course.tags, ...course.keywords] : course.tags)].map(tag => (
+                    <MetadataTag key={tag}>{tag}</MetadataTag>
+                  ))}
+                </div>
+                <footer className="mt-auto flex flex-wrap items-center justify-between gap-2 border-t border-[var(--wb-border-soft)] pt-3">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--wb-muted)]">
+                    <span className="inline-flex items-center gap-1"><Eye size={14} aria-hidden="true" />{t('square.views', { count: formatNumber(course.views) })}</span>
+                    <span>{t('square.copiedTimes', { count: course.copies })}</span>
+                  </div>
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCopyCourse(course.id);
-                    }}
-                    className="absolute z-10 top-3 right-3 px-3 py-1.5 bg-white border border-[var(--wb-selected-border)] text-[var(--wb-text)] rounded-[10px] text-sm font-bold flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shadow-none hover:bg-[var(--wb-selected)] min-h-10"
+                    type="button"
+                    data-wb-button="secondary"
+                    data-wb-size="sm"
+                    disabled={copyingId !== null}
+                    aria-busy={copyingId === course.id}
+                    onClick={() => handleCopyCourse(course.id)}
                   >
-                    <Copy className="w-4 h-4" />
+                    {copyingId === course.id ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Copy size={16} aria-hidden="true" />}
                     {t('square.copyCourse')}
                   </button>
-                </div>
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold text-[var(--wb-text)] flex-1 pr-2">{course.title}</h3>
-                  </div>
-                  {course.author && (
-                    <p className="text-xs text-[var(--wb-muted)] mb-3">by {course.author}</p>
-                  )}
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
-                      <Book className="w-4 h-4 text-[var(--wb-muted)]" />
-                      <span>{course.unit} - {course.unitCN}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
-                      <Clock className="w-4 h-4 text-[var(--wb-muted)]" />
-                      <span>{course.duration}{t('course.minutes')} ({course.stage})</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
-                      <Sparkles className="w-4 h-4 text-[var(--wb-muted)]" />
-                      <span>{course.storyTheme}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1 mb-4">
-                    {course.tags?.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="px-2 py-0.5 bg-[var(--wb-selected)] text-[var(--wb-text)] border border-[var(--wb-border)] rounded-[10px] text-xs font-medium"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[var(--wb-border)]">
-                    <div className="flex items-center gap-3 text-sm text-[var(--wb-muted)]">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        <span>{formatNumber(course.students)}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-xs text-success">
-                      <Copy className="w-3 h-3" />
-                      <span>{t('square.copiedTimes', { count: course.copies })}</span>
-                    </div>
-                  </div>
-                </div>
+                </footer>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredCourses.map(course => (
-              <div
-                key={course.id}
-                className="bg-white rounded-[14px] border border-[var(--wb-border)] p-5 cursor-pointer group transition-all duration-200 hover:border-[var(--wb-selected-border)] hover:shadow-[0_4px_18px_rgba(48,43,59,0.06)] "
-              >
-                <div className="flex flex-col sm:flex-row gap-5">
-                  <div className="w-full sm:w-36 h-40 sm:h-36 rounded-[14px] shrink-0 relative border border-[var(--wb-border)] overflow-hidden">
-                    <img
-                      src={course.thumbnail || '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'}
-                      alt={course.title}
-                      className="absolute inset-0 h-full w-full object-cover"
-                      onError={(e) => { e.target.src = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg'; }}
-                    />
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCopyCourse(course.id);
-                      }}
-                      className="absolute z-10 bottom-2 right-2 px-3 py-1.5 bg-white border border-[var(--wb-selected-border)] text-[var(--wb-text)] rounded-[10px] text-sm font-bold flex items-center gap-1 shadow-none opacity-0 group-hover:opacity-100 transition-all hover:bg-[var(--wb-selected)] min-h-10"
-                    >
-                      <Copy className="w-4 h-4" />
-                      {t('square.copy')}
-                    </button>
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="text-xl font-bold text-[var(--wb-text)]">{course.title}</h3>
-                        {course.author && (
-                          <p className="text-sm text-[var(--wb-muted)]">by {course.author}</p>
-                        )}
-                      </div>
-                      <span className="px-2 py-1 bg-[var(--wb-selected)] border border-[var(--wb-selected-border)] text-[var(--wb-text)] rounded-[10px] text-xs font-bold">
-                        {course.grade}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-3">
-                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
-                        <Book className="w-4 h-4 text-[var(--wb-muted)]" />
-                        <span>{course.unit} - {course.unitCN}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
-                        <Clock className="w-4 h-4 text-[var(--wb-muted)]" />
-                        <span>{course.duration}{t('course.minutes')} ({course.stage})</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
-                        <Sparkles className="w-4 h-4 text-[var(--wb-muted)]" />
-                        <span>{course.storyTheme}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-[var(--wb-muted)]">
-                        <Tag className="w-4 h-4 text-[var(--wb-muted)]" />
-                        <span>{course.tags?.join(' / ')}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1 mb-3">
-                      {course.keywords?.map((keyword, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-0.5 bg-[var(--wb-selected)] text-[var(--wb-text)] border border-[var(--wb-border)] rounded-[10px] text-xs font-medium"
-                        >
-                          {keyword}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[var(--wb-border)]">
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-[var(--wb-muted)]">
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          <span>{formatNumber(course.students)} {t('square.students')}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-success">
-                          <Copy className="w-4 h-4" />
-                          <span>{t('square.copiedTimes', { count: course.copies })}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {!loading && filteredCourses.length === 0 && (
-          <div className="text-center py-12">
-            <BookOpen className="w-16 h-16 text-[var(--wb-muted)] mx-auto mb-4" />
-            <p className="text-[var(--wb-muted)]">
-              {courses.length === 0 ? t('square.noPublicCourses') : t('square.noResults')}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 };

@@ -1,26 +1,23 @@
+import { ChoiceChips, DialogCloseButton } from '../../components/LibraryControls';
 import React from 'react';
-import { Button, Checkbox, Form, Input, message, Radio, Select, Upload } from 'antd';
+import { Button, Form, Input, message, Select, Upload } from 'antd';
 import { useTranslation } from 'react-i18next';
 import {
   Clock,
-  Heart,
+  Compass,
+  Lightbulb,
   MessageSquare,
   Paperclip,
   PencilLine,
   RefreshCw,
+  Send,
   ShieldCheck,
   Star,
   Target,
   Users,
-  X,
 } from 'lucide-react';
 import { buildCourseMap } from './workflowData';
 import apiService from '../../services/api';
-import compassIcon from '../../assets/create-course/compass.svg';
-import lightIcon from '../../assets/create-course/light.svg';
-import planeIcon from '../../assets/create-course/plane.png';
-import starIcon from '../../assets/create-course/star.svg';
-import toolkitIcon from '../../assets/create-course/toolkit.svg';
 
 const { TextArea } = Input;
 
@@ -263,28 +260,6 @@ function normalizeTagField(value, form, field) {
     .flatMap((item) => field === 'vocabularies' ? splitPastedTags(item, /[,\uFF0C\r\n]+/) : splitGrammarTags(item))
     .filter((item, index, array) => array.indexOf(item) === index);
   form.setFieldsValue({ [field]: next });
-}
-
-function ClearableButtonGroup({ value, onChange, options, className = '' }) {
-  return (
-    <div className={className}>
-      {options.map((option) => {
-        const optionValue = typeof option === 'string' ? option : option.value;
-        const optionLabel = typeof option === 'string' ? option : option.label;
-        const selected = value === optionValue;
-        return (
-          <button
-            key={optionValue}
-            type="button"
-            className={`ant-radio-button-wrapper ${selected ? 'ant-radio-button-wrapper-checked' : ''}`}
-            onClick={() => onChange?.(selected ? '' : optionValue)}
-          >
-            {optionLabel}
-          </button>
-        );
-      })}
-    </div>
-  );
 }
 
 function compactText(value, max = 34) {
@@ -836,11 +811,11 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
       <div className="overview-panel-header">
         <h2 className="overview-panel-title">
           {isChinese ? `${t('workflow.map.title')}|Course Map` : t('workflow.map.title')}
-          <img src={planeIcon} alt="" className="overview-panel-title-icon" />
+          <Send className="overview-panel-title-icon" size={20} aria-hidden="true" />
         </h2>
         <div className="overview-panel-actions">
           <Button className="btn-ghost primary" icon={<PencilLine size={16} />} onClick={openMapEdit}>{t('workflow.map.edit')}</Button>
-          <Button className="btn-ghost" icon={<RefreshCw size={16} />} onClick={openEdit}>{t('workflow.map.regenerate')}</Button>
+          <Button data-wb-button="secondary" icon={<RefreshCw size={16} />} onClick={openEdit}>{t('workflow.map.regenerate')}</Button>
           <Button className="btn-next-step" onClick={onNext}>
             {t('workflow.nextStep')}
           </Button>
@@ -903,23 +878,23 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
           <section className="course-map-v2-panel">
             <div className="course-map-v2-grid">
-              <CourseGoal icon={MessageSquare} image={toolkitIcon} title={t('workflow.map.languageToolkit')} en="Language Toolkit" showEn={isChinese} tone="toolkit" color="#d8ca8d" onOpen={openMapContent}>
+              <CourseGoal icon={MessageSquare} title={t('workflow.map.languageToolkit')} en="Language Toolkit" showEn={isChinese} tone="toolkit" onOpen={openMapContent}>
                 {map.toolkit}
               </CourseGoal>
-              <CourseGoal icon={Target} image={starIcon} title={t('workflow.map.keyOutcome')} en="Key Outcome" showEn={isChinese} tone="outcome" color="#f6e6cc" onOpen={openMapContent}>
+              <CourseGoal icon={Target} title={t('workflow.map.keyOutcome')} en="Key Outcome" showEn={isChinese} tone="outcome" onOpen={openMapContent}>
                 {map.keyOutcome}
               </CourseGoal>
-              <CourseGoal icon={Heart} image={compassIcon} title={t('workflow.map.growthCompass')} en="Growth Compass" showEn={isChinese} tone="growth" color="#d9dde9" onOpen={openMapContent}>
+              <CourseGoal icon={Compass} title={t('workflow.map.growthCompass')} en="Growth Compass" showEn={isChinese} tone="growth" onOpen={openMapContent}>
                 {map.growth}
               </CourseGoal>
-              <CourseGoal icon={Users} image={lightIcon} title={t('workflow.map.howWeLearn')} en="How We Learn" showEn={isChinese} tone="learn" color="#dfe2bb" onOpen={openMapContent}>
+              <CourseGoal icon={Lightbulb} title={t('workflow.map.howWeLearn')} en="How We Learn" showEn={isChinese} tone="learn" onOpen={openMapContent}>
                 {map.experience}
               </CourseGoal>
 
               <article className="course-map-v2-goal wide">
                 <div className="course-map-v2-goal-title">
-                  <span className="course-map-v2-icon" style={{ '--goal-color': '#ff705f' }}>
-                    <img src={planeIcon} alt="" />
+                  <span className="course-map-v2-icon">
+                    <Send size={20} aria-hidden="true" />
                   </span>
                   {t('workflow.map.classJourney')}
                   {isChinese && <span className="course-map-v2-title-en">Class Journey</span>}
@@ -958,13 +933,13 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           <div className="modal course-map-storyline-modal">
             <div className="modal-hd">
               <div className="modal-t">{t('workflow.map.storylineTitle')}</div>
-              <button type="button" className="modal-x" onClick={() => setStorylineOpen(false)}><X size={22} /></button>
+              <DialogCloseButton onClick={() => setStorylineOpen(false)} />
             </div>
             <div className="modal-body">
               <div className="course-map-storyline-full">{map.storyline}</div>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-primary" onClick={() => setStorylineOpen(false)}>{t('common.close')}</button>
+              <button type="button" data-wb-button="primary" onClick={() => setStorylineOpen(false)}>{t('common.close')}</button>
             </div>
           </div>
         </div>
@@ -975,13 +950,13 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           <div className="modal course-map-storyline-modal">
             <div className="modal-hd">
               <div className="modal-t">{mapContentModal.title}</div>
-              <button type="button" className="modal-x" onClick={() => setMapContentModal(null)}><X size={22} /></button>
+              <DialogCloseButton onClick={() => setMapContentModal(null)} />
             </div>
             <div className="modal-body">
               <div className="course-map-storyline-full">{mapContentModal.content}</div>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-primary" onClick={() => setMapContentModal(null)}>{t('common.close')}</button>
+              <button type="button" data-wb-button="primary" onClick={() => setMapContentModal(null)}>{t('common.close')}</button>
             </div>
           </div>
         </div>
@@ -992,7 +967,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
           <div className="modal overview-regen-modal">
             <div className="modal-hd">
               <div className="modal-t">{t('workflow.map.regenModalTitle')}</div>
-              <button type="button" className="modal-x" onClick={() => setRegenOpen(false)}><X size={22} /></button>
+              <DialogCloseButton onClick={() => setRegenOpen(false)} />
             </div>
             <div className="modal-body">
               <Form form={regenForm} layout="vertical" className="overview-ant-form">
@@ -1018,8 +993,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
               </div>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setRegenOpen(false)}>{t('common.cancel')}</button>
-              <button type="button" className="mo-btn-primary" onClick={submitRegen}>
+              <button type="button" data-wb-button="secondary" onClick={() => setRegenOpen(false)}>{t('common.cancel')}</button>
+              <button type="button" data-wb-button="primary" onClick={submitRegen}>
                 <RefreshCw size={14} />
                 {t('workflow.map.regenerate')}
               </button>
@@ -1038,7 +1013,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   {t('workflow.map.editDirectNote')}
                 </div>
               </div>
-              <button type="button" className="modal-x" onClick={() => setMapEditOpen(false)}><X size={22} /></button>
+              <DialogCloseButton onClick={() => setMapEditOpen(false)} />
             </div>
             <div className="modal-body overview-adjust-body">
               <Form form={mapEditForm} layout="vertical" className="overview-ant-form">
@@ -1067,8 +1042,8 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
               </Form>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setMapEditOpen(false)}>{t('common.cancel')}</button>
-              <button type="button" className="mo-btn-primary" onClick={saveMapEdit}>
+              <button type="button" data-wb-button="secondary" onClick={() => setMapEditOpen(false)}>{t('common.cancel')}</button>
+              <button type="button" data-wb-button="primary" onClick={saveMapEdit}>
                 {t('workflow.toolbar.save')}
               </button>
             </div>
@@ -1086,7 +1061,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   {t('workflow.map.editModalSubtitle')}
                 </div>
               </div>
-              <button type="button" className="modal-x" onClick={() => setEditOpen(false)}><X size={22} /></button>
+              <DialogCloseButton onClick={() => setEditOpen(false)} />
             </div>
             <div className="modal-body overview-adjust-body">
               <Form form={editForm} layout="vertical" className="overview-ant-form">
@@ -1096,13 +1071,13 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   </Form.Item>
                   <div className="overview-adjust-three">
                     <Form.Item label={t('createCourse.ageLabel')} name="age">
-                      <Radio.Group optionType="button" buttonStyle="solid" options={editOptions.age} />
+                      <ChoiceChips label={t('createCourse.ageLabel')} options={editOptions.age} />
                     </Form.Item>
                     <Form.Item label={t('createCourse.durationLabel')} name="duration">
-                      <Radio.Group optionType="button" buttonStyle="solid" options={editOptions.duration} />
+                      <ChoiceChips label={t('createCourse.durationLabel')} options={editOptions.duration} />
                     </Form.Item>
                     <Form.Item label={t('createCourse.classSizeLabel')} name="classSize">
-                      <Radio.Group optionType="button" buttonStyle="solid" options={editOptions.classSize} />
+                      <ChoiceChips label={t('createCourse.classSizeLabel')} options={editOptions.classSize} />
                     </Form.Item>
                   </div>
                   <div className="overview-adjust-two">
@@ -1127,7 +1102,7 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                     </Form.Item>
                   </div>
                   <Form.Item label={`${t('createCourse.skillLabel')} (${t('createCourse.multiSelect')})`} name="languageSkills">
-                    <Checkbox.Group options={editOptions.languageSkills} />
+                    <ChoiceChips multiple label={t('createCourse.skillLabel')} options={editOptions.languageSkills} />
                   </Form.Item>
                 </ModalSection>
 
@@ -1157,7 +1132,9 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
 
                 <ModalSection title={t('createCourse.step3Title')} desc={t('createCourse.step3Subtitle')}>
                   <Form.Item name="experiencePaths">
-                    <Checkbox.Group
+                    <ChoiceChips
+                      multiple
+                      label={t('createCourse.step3Title')}
                       options={editOptions.paths}
                       onChange={(values) => editForm.setFieldsValue({ experiencePaths: updateExperiencePaths(values) })}
                     />
@@ -1174,21 +1151,21 @@ export function CourseMapView({ course, onCourseChange, onNext }) {
                   </Form.Item>
                   <Form.Item name="attachments" valuePropName="fileList" getValueFromEvent={(event) => event?.fileList || []}>
                     <Upload beforeUpload={() => false} multiple>
-                      <button type="button" className="attachment-btn">
+                      <button type="button" data-wb-button="secondary">
                         <Paperclip size={13} />
                         {t('createCourse.attachment')}
                       </button>
                     </Upload>
                   </Form.Item>
                   <Form.Item label={t('createCourse.atmosphereLabel')} name="atmosphere">
-                    <ClearableButtonGroup options={editOptions.atmosphere} className="overview-clearable-radio-group" />
+                    <ChoiceChips clearable label={t('createCourse.atmosphereLabel')} options={editOptions.atmosphere} />
                   </Form.Item>
                 </ModalSection>
               </Form>
             </div>
             <div className="modal-ft">
-              <button type="button" className="mo-btn-cancel" onClick={() => setEditOpen(false)}>{t('common.cancel')}</button>
-              <button type="button" className="mo-btn-primary" onClick={saveEdit} disabled={regenImage}>
+              <button type="button" data-wb-button="secondary" onClick={() => setEditOpen(false)}>{t('common.cancel')}</button>
+              <button type="button" data-wb-button="primary" onClick={saveEdit} disabled={regenImage}>
                 {regenImage ? t('workflow.map.generating') : t('workflow.map.saveAndRefresh')}
               </button>
             </div>
@@ -1211,15 +1188,15 @@ function ModalSection({ title, desc, children }) {
   );
 }
 
-function CourseGoal({ icon: Icon, image, title, en, showEn, color, tone, children, onOpen }) {
+function CourseGoal({ icon: Icon, title, en, showEn, tone, children, onOpen }) {
   const fullTitle = [title, showEn ? en : ''].filter(Boolean).join(' ');
   const content = String(children || '');
   const contentLines = content.split(/\n+/).map((line) => line.trim()).filter(Boolean);
   return (
     <article className={`course-map-v2-goal ${tone ? `is-${tone}` : ''}`}>
       <div className="course-map-v2-goal-title">
-        <span className="course-map-v2-icon" style={{ '--goal-color': color }}>
-          {image ? <img src={image} alt="" /> : React.createElement(Icon, { size: 18 })}
+        <span className="course-map-v2-icon">
+          <Icon size={20} aria-hidden="true" />
         </span>
         {title}
         {showEn && <span className="course-map-v2-title-en">{en}</span>}

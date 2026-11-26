@@ -27,19 +27,12 @@ p{margin:0 0 12px}
 .speak-library .lh-library-head{margin-bottom:20px}
 .game-library{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}.game-tile{--poster:#e7dcff;--scene:url(assets/scenes-v7/tempo.png);--deep:#6236b3;--prop:#ddc9ff;display:flex;flex-direction:column;min-width:0;background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-lg);overflow:hidden;transition:border-color var(--duration-fast)}.game-tile:hover{border-color:var(--color-border-hover)}.game-art{flex:none;aspect-ratio:16/9;position:relative;background-color:var(--poster);background-image:var(--scene);background-size:cover;background-position:center;overflow:hidden}.poster-copy{position:absolute;left:20px;top:20px;z-index:2;color:var(--deep);pointer-events:none;background:#fffaf0ed;border:1px solid #fffef8;border-radius:11px;padding:12px 14px;box-shadow:none}.poster-copy>span{display:block;font:700 12px SpeakPoster,sans-serif;letter-spacing:.3px;margin-bottom:15px}.poster-copy strong{font:900 clamp(24px,2.5vw,34px)/1.1 SpeakPoster,sans-serif;letter-spacing:-.02em;display:block}.poster-prop{position:absolute;width:60%;height:92%;right:-1%;bottom:0;}.poster-prop svg{width:100%;height:100%;overflow:visible}.game-body{display:flex;flex:1;flex-direction:column;min-width:0;padding:20px}.game-body h3{font:var(--type-card);margin:0 0 4px;overflow-wrap:anywhere}.game-body .en{font:var(--type-caption);color:var(--color-text-secondary);overflow-wrap:anywhere}.game-body p{font:var(--type-help);color:var(--color-text-secondary);margin:12px 0 0;overflow-wrap:anywhere}.game-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:auto;padding-top:20px}.game-actions .btn{width:100%;min-width:0;padding-inline:8px;white-space:normal}.game-body .play-btn{background:var(--color-action);border-color:var(--color-action);color:var(--color-text-inverse)}.game-body .play-btn:hover:not(:disabled){background:var(--color-action-hover);border-color:var(--color-action-hover)}
 [data-theme=tempo]{--scene:url(assets/scenes-v12/tempo-approved-preview.jpg)}[data-theme=volume]{--scene:url(assets/scenes-v7/volume.png);--poster:#d8eeff;--deep:#2354aa}[data-theme=energy]{--scene:url(assets/scenes-v7/energy.png);--poster:#dff2cf;--deep:#286039}[data-theme=words]{--scene:url(assets/scenes-v7/words.png);--poster:#ffe4c8;--deep:#a54b20}[data-theme=role]{--scene:url(assets/scenes-v7/role.png);--poster:#ffe0ec;--deep:#9f3d74}[data-theme=silly]{--scene:url(assets/scenes-v7/silly.png);--poster:#fff0ac;--deep:#7754ac}[data-theme=flip]{--scene:url(assets/scenes-v7/flip.png);--poster:#ccefe9;--deep:#256e7c}
-/* Approved V12 artwork: the library and activity picker match the playable scene. */
-.game-tile[data-theme=tempo] .poster-copy,.game-tile[data-theme=tempo] .poster-prop,.choice .thumb[data-theme=tempo] svg{display:none}
-.game-tile[data-theme=tempo] .game-art{background-size:contain;background-repeat:no-repeat;background-color:#fee9d1}
+/* The library overlays the same live text and props on all seven scene plates. */
+.game-tile[data-theme=tempo]{--scene:url(assets/library-covers/tempo-v2.jpg)}
+.game-tile[data-theme=volume]{--scene:url(assets/library-covers/volume-v2.jpg)}
+.game-tile[data-theme=energy]{--scene:url(assets/library-covers/energy-v2.jpg)}
+.choice .thumb[data-theme=tempo] svg{display:none}
 .choice .thumb[data-theme=tempo]{background-image:url(assets/scenes-v12/tempo-approved-wheel.jpg);background-size:contain;background-position:center;background-repeat:no-repeat;background-color:#fee9d1}
-/* Volume V3 is approved for the case library; draft and teaching players stay independent. */
-.game-tile[data-theme=volume]{--scene:url(assets/volume-v3/volume-case-preview.jpg)}
-.game-tile[data-theme=volume] .poster-copy,.game-tile[data-theme=volume] .poster-prop{display:none}
-.game-tile[data-theme=volume] .game-art{background-size:contain;background-repeat:no-repeat;background-color:#e4f1fc}
-
-/* Energy V3 case cover follows the reviewed standalone battery scene. */
-.game-tile[data-theme=energy]{--scene:url(assets/energy-v3/energy-case-preview-v16.png)}
-.game-tile[data-theme=energy] .poster-copy,.game-tile[data-theme=energy] .poster-prop{display:none}
-.game-tile[data-theme=energy] .game-art{background-size:contain;background-repeat:no-repeat;background-color:#e5f8ee}
 
 /* Only module-specific form geometry remains here; shared classes own panels, steps and buttons. */
 .speak-authoring .title-input{width:100%;min-width:0}

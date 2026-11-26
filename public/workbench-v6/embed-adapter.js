@@ -11,6 +11,20 @@
   const requestedScope = new URLSearchParams(root.location.search).get('scope');
   root.WB_WEB_SCOPE = /^[a-z0-9_-]{1,128}$/.test(requestedScope || '') ? requestedScope : 'local';
 
+  function onLibraryKeyDown(event) {
+    const tab = event.target.closest?.('.wb-library-tabs [role="tab"]');
+    if (!tab || event.isComposing || !['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tabs = Array.from(tab.closest('.wb-library-tabs').querySelectorAll('[role="tab"]:not(:disabled)'));
+    const current = tabs.indexOf(tab);
+    if (current < 0) return;
+    event.preventDefault();
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+      : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+    const control = tabs[next];
+    control.click();
+    (doc.getElementById(control.id) || control).focus({ preventScroll: true });
+  }
+
   let hostVisible = true;
   let disposed = false;
   let loaded = false;
@@ -210,6 +224,14 @@
   }
 
   function onModuleClick(event) {
+    const clear = event.target?.closest?.('[data-wb-clear-search]');
+    const input = clear?.closest?.('.library-home')?.querySelector('.wb-library-search input');
+    if (input) {
+      input.value = '';
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.focus({ preventScroll: true });
+      return;
+    }
     const trigger = event.target?.closest?.('[data-action]');
     if (!trigger) return;
     const action = trigger.dataset.action;
@@ -242,6 +264,7 @@
     pauseMedia(root, true);
     root.YogaMusicFiles?.release();
     doc.removeEventListener('click', onModuleClick, true);
+    doc.removeEventListener('keydown', onLibraryKeyDown);
     doc.removeEventListener('visibilitychange', onVisibilityChange);
     root.removeEventListener('message', onHostMessage);
     root.removeEventListener('pagehide', onPageHide);
@@ -249,6 +272,7 @@
 
   root.WBWebModule = { module: moduleId, ready, prepareLeave, setVisible, dispose };
   doc.addEventListener('click', onModuleClick, true);
+  doc.addEventListener('keydown', onLibraryKeyDown);
   doc.addEventListener('visibilitychange', onVisibilityChange);
   root.addEventListener('message', onHostMessage);
   root.addEventListener('pagehide', onPageHide);

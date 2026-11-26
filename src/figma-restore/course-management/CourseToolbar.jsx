@@ -1,12 +1,12 @@
+import { LibraryFilterSelect, LibrarySearch } from '../../components/LibraryControls';
 import React from 'react';
-import { Input, Select } from 'antd';
-import { Search } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 export function CourseToolbar({
   search,
   status,
   counts,
+  searchRef,
   onSearchChange,
   onStatusChange,
 }) {
@@ -19,14 +19,9 @@ export function CourseToolbar({
 
   return (
     <div className="fr-cm-toolbar">
-      <Input
-        value={search}
-        onChange={(event) => onSearchChange(event.target.value)}
-        placeholder={t('course.searchPlaceholder')}
-        prefix={<Search size={14} />}
-      />
-
-      <Select
+      <LibraryFilterSelect
+        className="fr-cm-status-filter"
+        label={t('common.status')}
         value={status}
         onChange={onStatusChange}
         options={statusOptions.map(option => ({
@@ -34,6 +29,7 @@ export function CourseToolbar({
           label: `${option.label} (${counts[option.value] || 0})`,
         }))}
       />
+      <LibrarySearch label={t('course.searchPlaceholder')} value={search} onChange={onSearchChange} inputRef={searchRef} />
     </div>
   );
 }

@@ -88,12 +88,6 @@
   margin: 0 0 20px;
 }
 
-.pbv2-library-header h1 {
-  margin: 0;
-  color: var(--wb-text);
-  font: 700 28px/1.3 var(--wb-font);
-}
-
 .pbv2-library-actions {
   display: flex;
   align-items: center;
@@ -114,10 +108,6 @@
   .pbv2-list-page { padding: 20px 16px 32px; }
   .pbv2-library-header { flex-wrap: wrap; }
   .pbv2-library-actions { width: 100%; }
-}
-
-@media (max-width: 640px) {
-  .pbv2-library-header h1 { font-size: 24px; }
 }
 
 .pbv2-create-btn {
@@ -143,18 +133,10 @@
   background: var(--wb-primary-hover);
 }
 
-.pbv2-library-head { display: flex; align-items: center; justify-content: space-between; gap: 20px; min-height: 56px; margin-bottom: 20px; border-bottom: 1px solid var(--pb-line); }
-.pbv2-library-tabs { display: flex; align-self: stretch; gap: 24px; }
-.pbv2-library-tabs > button { position: relative; display: flex; align-items: center; gap: 8px; min-height: 56px; padding: 12px 0; border: 0; background: transparent; color: var(--pb-ink); font: 600 14px/1.5 var(--wb-font); white-space: nowrap; cursor: pointer; }
-.pbv2-library-tabs > button[aria-selected=true] { color: var(--pb-coral-dark); }
-.pbv2-library-tabs > button[aria-selected=true]::after { position: absolute; right: 0; bottom: -1px; left: 0; height: 3px; background: var(--pb-coral); content: ''; }
-.pbv2-library-tabs > button:hover { color: var(--pb-coral-dark); }
-.pbv2-library-tabs > button > span { padding: 2px 7px; border-radius: 14px; background: var(--pb-coral-soft); color: var(--pb-muted); font-size: 12px; line-height: 1.4; }
 .pbv2-search-box { display: flex; align-items: center; flex: 0 1 300px; gap: 8px; width: 300px; max-width: 100%; min-width: 0; min-height: 40px; margin-bottom: 4px; padding: 0 12px; border: 1px solid var(--pb-line); border-radius: var(--wb-control-radius); background: var(--pb-panel); color: var(--pb-muted); }
 .pbv2-search-box svg { flex: none; }
-.pbv2-search-box input { width: 100%; min-width: 0; min-height: 38px; padding: 8px 0; border: 0; outline: none; background: transparent; color: var(--pb-ink); font: 14px/1.5 var(--wb-font); }
-.pbv2-search-box input::placeholder { color: var(--pb-muted); }
-.pbv2-search-box:focus-within, .pbv2-library :is(button, [role=tabpanel]):focus-visible { outline: 3px solid var(--wb-selected-border); outline-offset: 2px; }
+.pbv2-search-box input { width: 100%; min-height: 38px; padding: var(--wb-space-2) 0; border: 0; background: transparent; }
+.pbv2-library [role=tabpanel]:focus-visible { outline: var(--wb-focus-ring); outline-offset: 3px; }
 .pbv2-list-loading { display: flex; align-items: center; justify-content: center; padding: 64px 20px; color: var(--pb-muted); }
 .pbv2-list-empty { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 48px 20px; color: var(--pb-muted); text-align: center; }
 .pbv2-list-empty h2 { margin: 0; color: var(--pb-ink); font-size: 20px; font-weight: 600; }
@@ -176,19 +158,17 @@
 .pbv2-book-info h3 { margin: 0; color: var(--pb-ink); font-size: 18px; line-height: 1.5; font-weight: 600; }
 .pbv2-book-info h3 button { display: block; width: 100%; padding: 0; border: 0; border-radius: 3px; background: transparent; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .pbv2-book-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-bottom: 4px; color: var(--pb-muted); font-size: 12px; }
-.pbv2-book-meta > span { padding: 3px 7px; border-radius: 5px; background: var(--pb-surface); overflow-wrap: anywhere; }
+.pbv2-book-meta > span:not([data-wb-tag]) { padding: 3px 7px; border-radius: 5px; background: var(--pb-surface); overflow-wrap: anywhere; }
 .pbv2-book-actions { display: flex; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid var(--pb-coral-soft); }
-.pbv2-book-actions button { display: inline-flex; align-items: center; justify-content: center; flex: 1 1 0; gap: 6px; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--pb-line); border-radius: var(--wb-control-radius); background: var(--pb-panel); color: var(--pb-ink); font: 600 14px/1.5 var(--wb-font); overflow-wrap: anywhere; cursor: pointer; transition: background .15s ease, border-color .15s ease; }
-.pbv2-book-actions button svg { flex: none; }
-.pbv2-book-actions button:hover { border-color: var(--pb-coral); background: var(--pb-coral-soft); }
-.pbv2-book-actions button.primary { border-color: var(--pb-coral); background: var(--pb-coral); color: #fff; }
-.pbv2-book-actions button.primary:hover { border-color: var(--pb-coral-dark); background: var(--pb-coral-dark); }
-.pbv2-book-actions button.delete { flex: 0 0 36px; border-color: transparent; background: transparent; color: var(--pb-muted); }
-.pbv2-book-actions button.delete:hover { background: #fff0ee; color: #a63e36; }
+.pbv2-book-actions button:not([data-wb-icon]) { flex: 1 1 0; padding-inline: var(--wb-space-2); overflow-wrap: anywhere; }
+.pbv2-book-actions button:where(:not([data-wb-button])) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-width: 0; min-height: 40px; padding: 8px; border: 1px solid var(--pb-line); border-radius: var(--wb-control-radius); background: var(--pb-panel); color: var(--pb-ink); font: 600 14px/1.5 var(--wb-font); cursor: pointer; }
+.pbv2-book-actions button:where(:not([data-wb-button])):hover { border-color: var(--pb-coral); background: var(--pb-coral-soft); }
+.pbv2-book-actions button.primary:where(:not([data-wb-button])) { border-color: var(--pb-coral); background: var(--pb-coral); color: #fff; }
+.pbv2-book-actions button.primary:where(:not([data-wb-button])):hover { border-color: var(--pb-coral-dark); background: var(--pb-coral-dark); }
+.pbv2-book-actions button.delete:where(:not([data-wb-button])) { flex: 0 0 36px; border-color: transparent; background: transparent; color: var(--pb-muted); }
+.pbv2-book-actions button.delete:where(:not([data-wb-button])):hover { background: #fff0ee; color: #a63e36; }
 @media (max-width: 1150px) { .pbv2-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 650px) {
-  .pbv2-library-head { flex-wrap: wrap; gap: 8px; padding-bottom: 12px; margin-bottom: 16px; }
-  .pbv2-library-tabs { width: 100%; }
   .pbv2-search-box { flex-basis: 100%; width: 100%; margin: 0; }
   .pbv2-card-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
 }

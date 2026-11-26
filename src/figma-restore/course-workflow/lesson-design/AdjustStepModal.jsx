@@ -1,5 +1,6 @@
+import { DialogCloseButton } from '../../../components/LibraryControls';
 import React from 'react';
-import { Check, Loader2, X } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { Input } from 'antd';
 import { useTranslation } from 'react-i18next';
 
@@ -61,9 +62,7 @@ export function AdjustStepModal({
       <div className="modal adjust-step-modal">
         <div className="modal-hd">
           <div className="modal-t">{t('lesson.adjustTitle')}</div>
-          <button type="button" className="modal-x" onClick={onClose} aria-label={t('common.close')}>
-            <X size={22} />
-          </button>
+          <DialogCloseButton onClick={onClose} />
         </div>
 
         <div className="modal-body adjust-step-body">
@@ -83,7 +82,7 @@ export function AdjustStepModal({
                 <div className="adjust-tip-label">{t('adjustStepUi.tipLabel')}</div>
                 <div className="adjust-chip-row">
                   {tipChips.map(([labelKey, textKey]) => (
-                    <button type="button" className="adjust-chip" key={labelKey} onClick={() => fillTip(t(textKey))}>
+                    <button type="button" data-wb-button="secondary" data-wb-size="sm" key={labelKey} onClick={() => fillTip(t(textKey))}>
                       {t(labelKey)}
                     </button>
                   ))}
@@ -102,7 +101,7 @@ export function AdjustStepModal({
                       return (
                         <button
                           type="button"
-                          className={`adjust-chip ${selected.includes(chipValue) ? 'selected' : ''}`}
+                          data-wb-filter="" aria-pressed={selected.includes(chipValue)}
                           key={chipKey}
                           onClick={() => toggleChip(chipValue)}
                         >
@@ -118,8 +117,8 @@ export function AdjustStepModal({
         </div>
 
         <div className="modal-ft">
-          <button type="button" className="mo-btn-cancel" disabled={loading} onClick={onClose}>{t('common.cancel')}</button>
-          <button type="button" className="mo-btn-primary" disabled={!value.trim() || loading} onClick={onConfirm}>
+          <button type="button" data-wb-button="secondary" disabled={loading} onClick={onClose}>{t('common.cancel')}</button>
+          <button type="button" data-wb-button="primary" disabled={!value.trim() || loading} onClick={onConfirm}>
             {loading ? <Loader2 size={15} className="adjust-spin" /> : <Check size={15} />}
             {loading ? t('adjustStepUi.adjusting') : t('adjustStepUi.confirmAdjust')}
           </button>

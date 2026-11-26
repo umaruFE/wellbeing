@@ -1,9 +1,10 @@
-import i18next from 'i18next';
 import { LocalizedText } from '../../i18n/LocalizedText.jsx';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Video, Music, Wand2, Play, Pause, Download, Loader2 } from 'lucide-react';
+import { Alert } from 'antd';
+import { PageLoading } from '../../components/PageLoading';
+import { GenerateButton, GeneratedAudioActions, GeneratorPageLayout } from './GeneratorPageLayout';
+import { Video } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import VideoStoryboardModal from '../../components/VideoStoryboardModal';
 import { AUDIO_STYLES } from '../../constants/aiOptions';
@@ -12,9 +13,9 @@ const DURATION_OPTIONS = [15, 30, 60, 90];
 
 export const VideoGeneratorPage = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
+  const [videoResult, setVideoResult] = useState(null);
 
   // 音乐生成状态
   const [showAudioPanel, setShowAudioPanel] = useState(false);
@@ -29,10 +30,9 @@ export const VideoGeneratorPage = () => {
   const [audioRef, setAudioRef] = useState(null);
 
   const userId = user?.id || null;
-  const organizationId = user?.organizationId || null;
+  const organizationId = user?.organizationId ?? user?.organization_id ?? null;
 
   const handleConfirm = (data) => {
-    console.log('视频生成完成:', data);
     // 如果有分镜提示词，自动填充到音乐生成面板
     if (data.scenes && data.scenes.length > 0) {
       const prompts = data.scenes.map((scene, index) => 
@@ -40,16 +40,18 @@ export const VideoGeneratorPage = () => {
       ).join('\n');
       setStoryboardPrompts(prompts);
     }
-    alert(`视频「${data.title}」生成成功！\n分镜数：${data.scenes?.length || 0}\n时长：${data.duration}秒`);
+    setVideoResult({ title: data.title, count: data.scenes?.length || 0, duration: data.duration });
     setShowModal(false);
   };
 
   // 生成背景音乐（调用 gene-music 流程）
+  const busy = isGeneratingAudio || isPollingAudio;
+
   const handleGenerateAudio = async () => {
-    if (!storyboardPrompts.trim()) {
-      setAudioError('请输入分镜提示词或故事内容');
-      return;
-    }
+    if (busy || !storyboardPrompts.trim() || !userId) return;
+    audioRef?.pause();
+    setAudioRef(null);
+    setIsPlayingAudio(false);
     setAudioError(null);
     setIsGeneratingAudio(true);
     setAudioResult(null);
@@ -73,8 +75,8 @@ export const VideoGeneratorPage = () => {
       });
 
       if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: '请求失败' }));
-        throw new Error(err.error || '生成失败');
+        const err = await res.json().catch(() => ({ error: t('common.operationFailed') }));
+        throw new Error(err.error || t('common.operationFailed'));
       }
 
       const data = await res.json();
@@ -92,7 +94,6 @@ export const VideoGeneratorPage = () => {
         });
         if (statusRes.ok) {
           const statusData = await statusRes.json();
-          console.log('音频轮询结果:', statusData);
           if (statusData.status === 'completed' && statusData.results && statusData.results.length > 0) {
             setAudioResult(prev => ({ ...prev, url: statusData.results[0].url, status: 'done' }));
             setIsPollingAudio(false);
@@ -100,16 +101,16 @@ export const VideoGeneratorPage = () => {
           } else if (statusData.status === 'error') {
             setAudioResult(prev => ({ ...prev, status: 'error' }));
             setIsPollingAudio(false);
-            setAudioError('生成失败，请重试');
+            setAudioError(t('common.operationFailed'));
             return;
           }
         }
       }
 
       setAudioResult(prev => ({ ...prev, status: 'error' }));
-      setAudioError('生成超时，请重试');
+      setAudioError(t('assetGenerator.timeout'));
     } catch (err) {
-      setAudioError('生成失败: ' + err.message);
+      setAudioError(err.message || t('common.operationFailed'));
       setAudioResult(prev => prev ? { ...prev, status: 'error' } : null);
     } finally {
       setIsGeneratingAudio(false);
@@ -144,246 +145,86 @@ export const VideoGeneratorPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--wb-page)]">
-      {/* 顶部导航栏 */}
-      <header className="bg-white border-b border-[var(--wb-border)] sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 min-h-14 py-2 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 hover:bg-[var(--wb-page)] rounded-[10px] transition-colors min-h-10"
-              title={i18next.t('common.back')}
-            >
-              <ArrowLeft className="w-5 h-5 text-[var(--wb-muted)]" />
-            </button>
-            <h1 className="text-[28px] leading-tight font-bold text-[var(--wb-text)]"><LocalizedText id="testVideoUi.96e92dfb39" /></h1>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-[var(--wb-muted)]">
-              {user ? user.name || user.email || '用户' : '未登录'}
-            </span>
-          </div>
-        </div>
-      </header>
+    <GeneratorPageLayout title={t('testVideoUi.96e92dfb39')}>
+      <section className="wb-surface-panel space-y-4">
+        <p className="text-[var(--wb-muted)]">{t('testVideoUi.35cf55935e')}</p>
+        <button type="button" data-wb-button="primary" aria-haspopup="dialog" disabled={!userId} onClick={() => setShowModal(true)}>
+          <Video size={16} aria-hidden="true" />{t('testVideoUi.7a6fac0dc2')}
+        </button>
+        {videoResult && (
+          <Alert
+            type="success"
+            showIcon
+            message={t('videoStoryboard.completed')}
+            description={<>{videoResult.title && <p>{videoResult.title}</p>}{t('testVideoUi.resultSummary', videoResult)}</>}
+          />
+        )}
+        <h2 className="wb-section-title">{t('testAudioUi.15683f6cd3')}</h2>
+        <ol className="list-decimal space-y-2 pl-5 text-[var(--wb-muted)]">
+          {['c5a2052a40', 'bb34526bc5', 'e73fc69fd6', 'ed31514f90'].map((key) => <li key={key}>{t(`testVideoUi.${key}`)}</li>)}
+        </ol>
+      </section>
 
-      {/* 主体内容 */}
-      <div className="p-4 sm:p-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="bg-white rounded-[14px] border border-[var(--wb-border)] shadow-[0_6px_24px_rgba(48,43,59,0.06)] p-4 sm:p-8">
-            <div className="text-center mb-8">
-              <div className="w-16 h-16 bg-[var(--wb-selected)] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Video className="w-8 h-8 text-[var(--wb-primary)]" />
+      <section className="wb-surface-panel space-y-4">
+        <header className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="wb-section-title">{t('testVideoUi.e2782f101a')}</h2>
+          <button type="button" data-wb-button="secondary" aria-expanded={showAudioPanel} aria-controls="video-background-music" onClick={() => setShowAudioPanel((open) => !open)}>
+            {t(showAudioPanel ? 'common.collapse' : 'common.expand')}
+          </button>
+        </header>
+        <div id="video-background-music" className="space-y-4" hidden={!showAudioPanel}>
+          <div>
+            <label htmlFor="background-music-prompt" className="text-sm font-medium mb-2 block">
+              {t('testVideoUi.a29ea2de1e')} <span aria-hidden="true" className="text-error">*</span>
+            </label>
+            <textarea
+              id="background-music-prompt"
+              data-wb-field
+              required
+              disabled={busy}
+              value={storyboardPrompts}
+              onChange={(event) => setStoryboardPrompts(event.target.value)}
+              placeholder={t('testVideoUi.b5152b46f4')}
+              rows={5}
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <fieldset>
+              <legend className="text-sm font-medium mb-2">{t('audioGenerator.style')}</legend>
+              <div className="flex flex-wrap gap-2">
+                {AUDIO_STYLES.map((style) => (
+                  <button type="button" data-wb-button="secondary" key={style.id} aria-pressed={selectedStyle.id === style.id} disabled={busy} onClick={() => setSelectedStyle(style)}>
+                    {t(`assetGenerator.styleOption.${style.id}`)}
+                  </button>
+                ))}
               </div>
-              <h1 className="text-[28px] leading-tight font-bold text-[var(--wb-text)] mb-4">
-                <LocalizedText id="testVideoUi.ca82b1f18b" />
-              </h1>
-              <p className="text-[var(--wb-muted)] mb-8">
-                <LocalizedText id="testVideoUi.35cf55935e" />
+            </fieldset>
+            <fieldset>
+              <legend className="text-sm font-medium mb-2">{t('audioGenerator.duration')}</legend>
+              <div className="flex flex-wrap gap-2">
+                {DURATION_OPTIONS.map((value) => (
+                  <button type="button" data-wb-button="secondary" key={value} aria-pressed={duration === value} disabled={busy} onClick={() => setDuration(value)}>
+                    {value}<LocalizedText id="videoWizard.eb6aaba1a1" />
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+          {audioError && <Alert type="error" showIcon message={audioError} />}
+          <GenerateButton busy={busy} disabled={!storyboardPrompts.trim() || !userId} label={t('pictureBook.aiGenerateMusic')} onClick={handleGenerateAudio} />
+          {audioResult?.status === 'pending' && <PageLoading label={t('testVideoUi.515b54ee2b')} />}
+          {audioResult?.status === 'done' && audioResult.url && (
+            <div className="rounded-[var(--wb-control-radius)] border border-[var(--wb-border-soft)] p-4">
+              <h3 className="text-base font-semibold mb-2">{t('assetPanel.stepGenResult')}</h3>
+              <p className="text-sm text-[var(--wb-muted)] line-clamp-3 mb-2">{storyboardPrompts}</p>
+              <p className="text-xs text-[var(--wb-muted)] mb-3">
+                {t(`assetGenerator.styleOption.${selectedStyle.id}`)} · {duration}<LocalizedText id="videoWizard.eb6aaba1a1" />
               </p>
-
-              <button
-                onClick={() => setShowModal(true)}
-                className="px-8 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] hover:bg-[var(--wb-primary-hover)] transition-colors flex items-center justify-center gap-3 mx-auto text-sm font-medium shadow-[0_6px_24px_rgba(48,43,59,0.06)] hover:shadow-[0_8px_32px_rgba(48,43,59,0.10)] min-h-10 active:bg-[var(--wb-primary-active)]"
-              >
-                <Video className="w-6 h-6" />
-                <LocalizedText id="testVideoUi.7a6fac0dc2" />
-              </button>
+              <GeneratedAudioActions playing={isPlayingAudio} onPlay={toggleAudioPlay} onDownload={() => handleAudioDownload(audioResult.url)} />
             </div>
-
-            <div className="border-t border-[var(--wb-border)] pt-8">
-              <h2 className="text-xl font-semibold text-[var(--wb-text)] mb-4"><LocalizedText id="testVideoUi.b009db40f4" /></h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-[var(--wb-selected)] rounded-[10px] p-4 text-center">
-                  <div className="text-2xl mb-2">📝</div>
-                  <h3 className="font-medium text-[var(--wb-text)] mb-1"><LocalizedText id="testVideoUi.e081c961d6" /></h3>
-                  <p className="text-sm text-[var(--wb-muted)]"><LocalizedText id="testVideoUi.3a4601d5c0" /></p>
-                </div>
-                <div className="bg-[var(--wb-selected)] rounded-[10px] p-4 text-center">
-                  <div className="text-2xl mb-2">🎨</div>
-                  <h3 className="font-medium text-[var(--wb-text)] mb-1"><LocalizedText id="testVideoUi.b76a04d00f" /></h3>
-                  <p className="text-sm text-[var(--wb-muted)]"><LocalizedText id="testVideoUi.f3bc9f143f" /></p>
-                </div>
-                <div className="bg-[var(--wb-selected)] rounded-[10px] p-4 text-center">
-                  <div className="text-2xl mb-2">🎬</div>
-                  <h3 className="font-medium text-[var(--wb-text)] mb-1"><LocalizedText id="testVideoUi.7627c369ab" /></h3>
-                  <p className="text-sm text-[var(--wb-muted)]"><LocalizedText id="testVideoUi.ba3e3bf27b" /></p>
-                </div>
-              </div>
-            </div>
-
-            <div className="border-t border-[var(--wb-border)] pt-8 mt-8">
-              <h2 className="text-xl font-semibold text-[var(--wb-text)] mb-4"><LocalizedText id="testVideoUi.51d4e3c510" /></h2>
-              <ol className="space-y-3 text-[var(--wb-muted)]">
-                <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">1</span>
-                  <span><LocalizedText id="testVideoUi.c5a2052a40" /></span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">2</span>
-                  <span><LocalizedText id="testVideoUi.bb34526bc5" /></span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">3</span>
-                  <span><LocalizedText id="testVideoUi.e73fc69fd6" /></span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 bg-[var(--wb-selected)] text-[var(--wb-primary)] rounded-full flex items-center justify-center text-sm font-medium">4</span>
-                  <span><LocalizedText id="testVideoUi.ed31514f90" /></span>
-                </li>
-              </ol>
-            </div>
-          </div>
-
-          {/* 背景音乐生成面板 */}
-          <div className="bg-white rounded-[14px] border border-[var(--wb-border)] shadow-[0_6px_24px_rgba(48,43,59,0.06)] p-8 mt-8">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-              <h2 className="text-xl font-semibold text-[var(--wb-text)] flex items-center gap-2">
-                <Music className="w-5 h-5 text-[var(--wb-primary)]" />
-                <LocalizedText id="testVideoUi.e2782f101a" />
-              </h2>
-              <button
-                onClick={() => setShowAudioPanel(!showAudioPanel)}
-                className={`px-4 py-2 rounded-[10px] text-sm font-medium transition-colors min-h-10 ${
-                  showAudioPanel
-                    ? "bg-[var(--wb-primary)] text-white"
-                    : "bg-[var(--wb-selected)] text-[var(--wb-primary-hover)] hover:bg-[var(--wb-primary)]"
-                }`}
-              >
-                {showAudioPanel ? '收起' : '展开'}
-              </button>
-            </div>
-
-            {showAudioPanel && (
-              <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block">
-                    <LocalizedText id="testVideoUi.a29ea2de1e" /> <span className="text-error">*</span>
-                  </label>
-                  <textarea
-                    value={storyboardPrompts}
-                    onChange={e => setStoryboardPrompts(e.target.value)}
-                    placeholder={i18next.t('testVideoUi.b5152b46f4')}
-                    rows={5}
-                    className="w-full border border-[var(--wb-border)] rounded-[10px] px-4 py-3 text-sm resize-none\n                      focus:border-[var(--wb-selected-border)] focus:ring-2 focus:ring-[var(--wb-selected)] outline-none transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block"><LocalizedText id="audioGenerator.style" /></label>
-                    <div className="flex flex-wrap gap-2">
-                      {AUDIO_STYLES.map(style => (
-                        <button
-                          key={style.id}
-                          onClick={() => setSelectedStyle(style)}
-                          className={`px-3 py-1.5 rounded-[10px] text-sm font-medium border transition-all min-h-10 ${
-                            selectedStyle.id === style.id
-                              ? "border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary-hover)]"
-                              : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)]"
-                          }`}
-                        >
-                          {t(`assetGenerator.styleOption.${style.id}`)}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-[var(--wb-muted)] mb-2 block"><LocalizedText id="testVideoUi.a31fd9daff" /></label>
-                    <div className="flex flex-wrap gap-2">
-                      {DURATION_OPTIONS.map(d => (
-                        <button
-                          key={d}
-                          onClick={() => setDuration(d)}
-                          className={`px-3 py-1.5 rounded-[10px] text-sm font-medium border transition-all min-h-10 ${
-                            duration === d
-                              ? "border-[var(--wb-selected-border)] bg-[var(--wb-selected)] text-[var(--wb-primary-hover)]"
-                              : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)]"
-                          }`}
-                        >
-                          {d}<LocalizedText id="videoWizard.eb6aaba1a1" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {audioError && (
-                  <div className="p-3 bg-error-light border border-error-border text-error text-sm rounded-[10px]">
-                    {audioError}
-                  </div>
-                )}
-
-                <button
-                  onClick={handleGenerateAudio}
-                  disabled={isGeneratingAudio || isPollingAudio || !storyboardPrompts.trim()}
-                  className="w-full px-6 py-2 bg-[var(--wb-primary)] text-white rounded-[10px] font-medium hover:bg-[var(--wb-primary-hover)]\n                    disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 min-h-10 active:bg-[var(--wb-primary-active)]"
-                >
-                  {(isGeneratingAudio || isPollingAudio) ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      {isGeneratingAudio ? '提交中...' : '生成中，请稍候...'}
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-4 h-4" />
-                      <LocalizedText id="pictureBook.aiGenerateMusic" />
-                    </>
-                  )}
-                </button>
-
-                {/* 生成结果 */}
-                {audioResult && (
-                  <div className="border border-[var(--wb-border)] rounded-[10px] p-4">
-                    <h3 className="text-base font-bold text-[var(--wb-text)] mb-3"><LocalizedText id="assetPanel.stepGenResult" /></h3>
-
-                    {audioResult.status === 'pending' ? (
-                      <div className="flex items-center gap-3 text-[var(--wb-muted)]">
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        <span><LocalizedText id="testVideoUi.515b54ee2b" /></span>
-                      </div>
-                    ) : audioResult.status === 'done' && audioResult.url ? (
-                      <div>
-                        <div className="mb-3">
-                          <p className="text-sm text-[var(--wb-muted)] line-clamp-3">{storyboardPrompts}</p>
-                          <div className="flex items-center gap-2 mt-2 flex-wrap">
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-success-light text-success-active"><LocalizedText id="testVideoUi.e99b48a29b" /></span>
-                            <span className="text-xs text-[var(--wb-muted)]">{t(`assetGenerator.styleOption.${selectedStyle.id}`)} · {duration}<LocalizedText id="videoWizard.eb6aaba1a1" /></span>
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            onClick={toggleAudioPlay}
-                            className={`flex-1 px-4 py-2 rounded-[10px] text-sm font-medium border transition-colors flex items-center justify-center gap-2  min-h-10 ${
-                              isPlayingAudio
-                                ? 'border-error-border bg-error-light text-error'
-                                : "border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)]"
-                            }`}
-                          >
-                            {isPlayingAudio ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                            {isPlayingAudio ? '暂停' : '播放'}
-                          </button>
-                          <button
-                            onClick={() => handleAudioDownload(audioResult.url)}
-                            className="px-4 py-2 rounded-[10px] border border-[var(--wb-border)] text-[var(--wb-muted)] hover:border-[var(--wb-selected-border)] transition-colors min-h-10"
-                            title={i18next.t('common.download')}
-                          >
-                            <Download className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-error text-sm"><LocalizedText id="assetPanel.iwHelpWriteFail" /></div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+          )}
         </div>
-      </div>
-
-      {/* 视频生成模态框 */}
+      </section>
       <VideoStoryboardModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
@@ -391,7 +232,7 @@ export const VideoGeneratorPage = () => {
         userId={userId}
         organizationId={organizationId}
       />
-    </div>
+    </GeneratorPageLayout>
   );
 };
 
