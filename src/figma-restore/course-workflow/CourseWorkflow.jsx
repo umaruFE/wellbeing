@@ -2,133 +2,21 @@ import React from 'react';
 import { parseJsonSafely } from '../../utils/responseUtils';
 import { Button, Drawer, message } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Check, CircleAlert, Download, Loader2 } from 'lucide-react';
+import { ArrowLeft, Check, CircleAlert, Clock3, Download, ListTodo, Loader2, Save } from 'lucide-react';
 import pptxgen from 'pptxgenjs';
 import apiService from '../../services/api';
 import { getDisplayCourseTitle } from '../courseImages';
 import { TaskCenter } from '../TaskCenter';
+import { AuthoringSteps } from '../../components/AuthoringSteps';
 import { LanguageSwitcher } from '../../components/LanguageSwitcher';
 import { CourseMapView } from './CourseMapView';
+import { resolveLessonPhases } from './lesson-design/lessonDesignUtils';
 import { LessonPlanView } from './LessonPlanView';
 import { PptCoursewareView } from './PptCoursewareView';
 import { ReadingMaterialView } from './ReadingMaterialView';
 import { phaseTemplates, readingTemplates, workflowSteps } from './workflowData';
 import '../Header.css';
 import './CourseWorkflow.css';
-
-function phasesToCourseDataObject(nextPhases = []) {
-  const phaseKeyMap = { eng: 'engage', emp: 'empower', exc: 'execute', elv: 'elevate' };
-  return nextPhases.reduce((acc, phase) => {
-    const longKey = phaseKeyMap[phase.key] || phase.key;
-    if (!longKey) return acc;
-    acc[longKey] = {
-      title: phase.title,
-      steps: (phase.steps || []).map((step) => ({
-        id: step.id,
-        title: step.title,
-        time: step.duration,
-        duration: step.duration,
-        objective: step.goal,
-        goal: step.goal,
-        activity: step.activity,
-        activitySteps: step.flow,
-        flow: step.flow,
-        resources: step.resources,
-        scenario: step.scenario,
-        script: step.teacherScript,
-        teacherScript: step.teacherScript,
-      })),
-    };
-    return acc;
-  }, {});
-}
-
-function normalizePhaseCollection(rawPhases) {
-  if (!rawPhases) return null;
-  if (typeof rawPhases === 'string') {
-    try {
-      return normalizePhaseCollection(JSON.parse(rawPhases));
-    } catch {
-      return null;
-    }
-  }
-  if (!Array.isArray(rawPhases)) return rawPhases;
-
-  return rawPhases.reduce((acc, phase) => {
-    const rawKey = phase?.key || phase?.id || phase?.phase || '';
-    const key = String(rawKey).toLowerCase();
-    if (key) acc[key] = phase;
-    return acc;
-  }, {});
-}
-
-function resolvePhasesFromCourse(course) {
-  let courseData = course?.courseData || course?.course_data || course;
-  if (typeof courseData === 'string') {
-    try {
-      courseData = JSON.parse(courseData);
-    } catch {
-      courseData = null;
-    }
-  }
-  if (!courseData) return null;
-
-  let phases = null;
-  if (Array.isArray(courseData)) {
-    phases = normalizePhaseCollection(courseData);
-  } else if (typeof courseData?.text === 'string') {
-    try {
-      const parsed = JSON.parse(courseData.text);
-      phases = normalizePhaseCollection(parsed.courseData || parsed.parsedCourseData || parsed);
-    } catch {
-      phases = null;
-    }
-  } else if (courseData?.text?.courseData) {
-    phases = normalizePhaseCollection(courseData.text.courseData);
-  } else if (courseData?.courseData) {
-    phases = normalizePhaseCollection(courseData.courseData);
-  } else if (courseData?.parsedCourseData) {
-    phases = normalizePhaseCollection(courseData.parsedCourseData);
-  } else if (courseData?.engage || courseData?.empower || courseData?.execute || courseData?.elevate) {
-    phases = courseData;
-  } else if (courseData?.eng || courseData?.emp || courseData?.exc || courseData?.elv) {
-    phases = courseData;
-  }
-  if (!phases) return null;
-
-  const phaseMapping = { engage: 'eng', empower: 'emp', execute: 'exc', elevate: 'elv' };
-  const nameMapping = { engage: '引入', empower: '赋能', execute: '实践', elevate: '升华' };
-
-  const resolved = Object.entries(phaseMapping).map(([longKey, shortKey]) => {
-    const phase = phases[longKey] || phases[shortKey];
-    const steps = Array.isArray(phase?.steps) ? phase.steps : [];
-    return {
-      key: shortKey,
-      phase: longKey.charAt(0).toUpperCase() + longKey.slice(1),
-      title: phase?.title || `E-${longKey.charAt(0).toUpperCase() + longKey.slice(1)}`,
-      name: nameMapping[longKey],
-      duration: steps.length > 0
-        ? `${steps.reduce((acc, step) => {
-            const match = String(step.time || step.duration || '').match(/(\d+)/);
-            return acc + (match ? parseInt(match[1], 10) : 0);
-          }, 0)} 分钟`
-        : '15 分钟',
-      steps: steps.map((step) => ({
-        id: step.id,
-        title: step.title || '',
-        duration: step.time || step.duration || '',
-        goal: step.objective || step.goal || '',
-        activity: step.activity || '',
-        flow: step.activitySteps || step.flow || '',
-        resources: step.resources || '',
-        scenario: step.scenario || '',
-        teacherScript: step.script || step.teacherScript || '',
-      })),
-    };
-  });
-
-  return resolved.some((phase) => phase.steps.length > 0) ? resolved : null;
-}
 
 function hasMeaningfulPptContent(data) {
   let source = data;
@@ -153,7 +41,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   const [current, setCurrent] = React.useState(0);
   const [course, setCourse] = React.useState(initialCourse || {});
   const initialLessonPhases = React.useMemo(
-    () => resolvePhasesFromCourse(initialCourse) || phaseTemplates,
+    () => resolveLessonPhases(initialCourse) || phaseTemplates,
     [initialCourse]
   );
   const [phases, setPhases] = React.useState(initialLessonPhases);
@@ -341,26 +229,6 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       saveCourseMap(nextCourse);
     }
   }, [saveCourseMap]);
-
-  const mergePhasesIntoCourse = React.useCallback((nextPhases) => {
-    const phaseObject = phasesToCourseDataObject(nextPhases);
-    setPhases(nextPhases);
-    setCourse((currentCourse) => {
-      const nextCourse = {
-        ...currentCourse,
-        courseData: {
-          ...(currentCourse.courseData || currentCourse.course_data || {}),
-          courseData: nextPhases,
-          ...phaseObject,
-        },
-      };
-      latestCourseRef.current = nextCourse;
-      return nextCourse;
-    });
-    courseDirtyVersionRef.current += 1;
-    setCourseSaveStatus('dirty');
-    setCourseSaveError('');
-  }, []);
 
   const handlePptCanvasChange = React.useCallback((nextData, meta = {}) => {
     latestPptCanvasRef.current = nextData;
@@ -631,7 +499,7 @@ export function CourseWorkflow({ initialCourse, onBack }) {
       course={course}
       phases={phases}
       onCourseChange={handleCourseChange}
-      onPhasesChange={mergePhasesIntoCourse}
+      onPhasesChange={setPhases}
       onNext={() => setCurrent(2)}
     />,
     <PptCoursewareView
@@ -651,78 +519,76 @@ export function CourseWorkflow({ initialCourse, onBack }) {
   return (
     <section className={`fr-workflow view-${workflowSteps[current].key}-active`}>
       <header className="fr-editor-tb">
-        <div className="fr-wf-context">
-          <button
-            type="button"
-            data-wb-button="quiet"
-            data-wb-size="sm"
-            data-wb-icon
-            aria-label={t('createCourse.backToList')}
-            title={t('createCourse.backToList')}
-            onClick={onBack}
-          >
-            <ArrowLeft size={16} aria-hidden="true" />
-          </button>
-          <h1 className="fr-tb-course" title={displayCourseTitle}>{displayCourseTitle}</h1>
-        </div>
-        <div className="fr-wf-bridge">
-          {workflowSteps.map((step, index) => (
-            <React.Fragment key={step.key}>
-              <button
-                type="button"
-                className={`fr-wf-step ${index < current ? 'done' : index === current ? 'active' : 'pending'}`}
-                data-wb-button="secondary"
-                aria-current={index === current ? 'step' : undefined}
-                aria-label={t(`workflow.steps.${step.key}`)}
-                onClick={() => setCurrent(index)}
-              >
-                <span className="fr-wf-n" aria-hidden="true">{index + 1}</span>
-                <span>
-                  <b>{t(`workflow.steps.${step.key}`)}</b>
-                  <small>
-                    {index < current
-                      ? t('workflow.stepState.done')
-                      : index === current
-                        ? t('workflow.stepState.active')
-                        : t('workflow.stepState.pending')}
-                  </small>
-                </span>
-              </button>
-              {index < workflowSteps.length - 1 && <span className="fr-wf-arrow" aria-hidden="true" />}
-            </React.Fragment>
-          ))}
-        </div>
-        <div className="fr-wf-actions">
-          <div className={`fr-autosave is-${activeSaveStatus}`} title={activeSaveText} role="status" aria-label={activeSaveText}>
-            {activeSaveStatus === 'saving' && <Loader2 className="fr-autosave-spinner" size={16} aria-hidden="true" />}
-            {activeSaveStatus === 'error' && <CircleAlert size={16} aria-hidden="true" />}
-            {activeSaveStatus !== 'saving' && activeSaveStatus !== 'error' && <Check size={16} aria-hidden="true" />}
+        <div className="fr-wf-toolbar">
+          <div className="fr-wf-context">
+            <button
+              type="button"
+              data-wb-button="quiet"
+              data-wb-size="sm"
+              data-wb-icon
+              aria-label={t('createCourse.backToList')}
+              title={t('createCourse.backToList')}
+              onClick={onBack}
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+            </button>
+            <h1 className="fr-tb-course" title={displayCourseTitle}>{displayCourseTitle}</h1>
           </div>
-          <Button className="fr-save-btn" loading={activeSaveStatus === 'saving'} onClick={handleToolbarSave}>
-            {t('workflow.toolbar.save')}
-          </Button>
-          {workflowSteps[current].key === 'ppt' && (
-            <Button className="fr-export-btn" icon={<Download size={15} aria-hidden="true" />} loading={exporting} onClick={exportPpt}>
-              {t('workflow.toolbar.export')}
+          <div className="fr-wf-actions">
+            <div className={`fr-autosave is-${activeSaveStatus}`} title={activeSaveText} role="status" aria-label={activeSaveText}>
+              {activeSaveStatus === 'saving' && <Loader2 className="fr-autosave-spinner" size={16} aria-hidden="true" />}
+              {activeSaveStatus === 'error' && <CircleAlert size={16} aria-hidden="true" />}
+              {activeSaveStatus === 'dirty' && <Clock3 size={16} aria-hidden="true" />}
+              {activeSaveStatus === 'saved' && <Check size={16} aria-hidden="true" />}
+            </div>
+            <Button
+              data-wb-button="secondary" data-wb-size="sm" className="fr-wf-utility"
+              icon={<Save size={16} aria-hidden="true" />}
+              aria-label={t('workflow.toolbar.save')} title={t('workflow.toolbar.save')}
+              loading={activeSaveStatus === 'saving'} onClick={handleToolbarSave}
+            >
+              <span className="fr-wf-action-label">{t('workflow.toolbar.save')}</span>
             </Button>
-          )}
-          <button
-            type="button"
-            className="fr-task-button"
-            data-wb-button="secondary"
-            aria-label={t('workflow.toolbar.taskCenter', { count: taskCount })}
-            aria-haspopup="dialog"
-            onClick={() => {
-              loadTaskCount();
-              setTaskDrawerOpen(true);
-            }}
-          >
-            <span className="task-dot" aria-hidden="true" />
-            <span className="task-text">{t('header.taskCenter')} {taskCount}</span>
-          </button>
-          <LanguageSwitcher className="fr-workflow-language" dropdownClassName="fr-workflow-language-menu" />
-          <Button type="primary" className="fr-publish-btn" loading={publishing} onClick={handlePublish}>{t('workflow.toolbar.publish')}</Button>
+            {workflowSteps[current].key === 'ppt' && (
+              <Button
+                data-wb-button="secondary" data-wb-size="sm" className="fr-wf-utility"
+                icon={<Download size={16} aria-hidden="true" />}
+                aria-label={t('workflow.toolbar.export')} title={t('workflow.toolbar.export')}
+                loading={exporting} onClick={exportPpt}
+              >
+                <span className="fr-wf-action-label">{t('workflow.toolbar.export')}</span>
+              </Button>
+            )}
+            <button
+              type="button"
+              className="fr-wf-utility"
+              data-wb-button="secondary" data-wb-size="sm"
+              aria-label={t('workflow.toolbar.taskCenter', { count: taskCount })} title={t('header.taskCenter')}
+              aria-haspopup="dialog" aria-expanded={taskDrawerOpen}
+              onClick={() => {
+                loadTaskCount();
+                setTaskDrawerOpen(true);
+              }}
+            >
+              <ListTodo size={16} aria-hidden="true" />
+              <span className="fr-wf-action-label">{t('header.taskCenter')} {taskCount}</span>
+            </button>
+            <LanguageSwitcher className="fr-workflow-language" />
+            <Button
+              type="primary" data-wb-button="primary" data-wb-size="sm" autoInsertSpace={false}
+              loading={publishing} onClick={handlePublish}
+            >
+              {t('workflow.toolbar.publish')}
+            </Button>
+          </div>
         </div>
+        <AuthoringSteps
+          className="fr-course-steps"
+          label={t('workflow.stepNavigation')}
+          steps={workflowSteps.map(step => t(`workflow.steps.${step.key}`))}
+          current={current}
+          onChange={setCurrent}
+        />
       </header>
 
       <div className="fr-workflow-stage">{content[current]}</div>

@@ -1,4 +1,5 @@
-import { CreateButton, FilterChip, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
+import { ContentTabPanel, ContentTabs, CreateButton, FilterChip, LibrarySearch, MetadataTag } from '../../components/LibraryControls';
+import { AuthoringSteps } from '../../components/AuthoringSteps';
 import React from 'react';
 import { PageLoading } from '../../components/PageLoading';
 import {
@@ -99,12 +100,17 @@ function toggleList(list, value) {
   return list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
 }
 
+function hasTeachingPages(pages) {
+  return Array.isArray(pages) && pages.some(page => page && (page.imageUrl || page.img || page.subtitle || page.text));
+}
+
 export function PictureBookStudioPage() {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const isEn = i18n.language?.startsWith('en');
   const [view, setView] = React.useState('list');
   const [bookList, setBookList] = React.useState([]);
+  const [bookCases, setBookCases] = React.useState([]);
   const [listLoading, setListLoading] = React.useState(true);
   const [listError, setListError] = React.useState(false);
   const [listNotice, setListNotice] = React.useState('');
@@ -121,6 +127,7 @@ export function PictureBookStudioPage() {
   const [saving, setSaving] = React.useState(false);
   const [saveState, setSaveState] = React.useState('');
   const editingBookIdRef = React.useRef(null);
+  const savedContent = React.useRef(null);
 
   // 提示词统一从后端注册表拉取（Wiki 可覆盖），本地常量仅兜底
   const [storybookPrompts, setStorybookPrompts] = React.useState({
@@ -175,26 +182,18 @@ export function PictureBookStudioPage() {
     if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeMusicPicker();
   };
 
-  const handleMusicTabKeyDown = (event) => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    const tabs = [...event.currentTarget.querySelectorAll('[role="tab"]')];
-    const current = tabs.indexOf(document.activeElement);
-    if (current < 0) return;
-    event.preventDefault();
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
-      : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
-    setMusicSourceTab(tabs[next].dataset.source);
-    tabs[next].focus();
-  };
-
   const fetchBookList = React.useCallback(async () => {
     setListLoading(true);
     setListError(false);
     try {
       const params = { limit: 100 };
       if (user?.id) params.userId = user.id;
-      const result = await apiService.request('/api/picture-books?' + new URLSearchParams(params).toString());
+      const [result, platformCases] = await Promise.all([
+        apiService.request('/api/picture-books?' + new URLSearchParams(params).toString()),
+        apiService.request('/api/picture-books?scope=cases'),
+      ]);
       setBookList(result.data || []);
+      setBookCases(platformCases.data || []);
     } catch (err) {
       console.error('fetch picture books failed:', err);
       setListError(true);
@@ -257,12 +256,6 @@ export function PictureBookStudioPage() {
     finally { setAiMusicGenerating(false); }
   };
 
-  React.useEffect(() => {
-    const handler = () => setView('list');
-    window.addEventListener('wellbeing:nav-same-route', handler);
-    return () => window.removeEventListener('wellbeing:nav-same-route', handler);
-  }, []);
-
   const deleteBook = async (bookId) => {
     if (!window.confirm(t('pictureBook.confirmDelete'))) return;
     try {
@@ -279,11 +272,20 @@ export function PictureBookStudioPage() {
     editingBookIdRef.current = book.id;
     setEditingBookId(book.id);
     const data = book.book_data || {};
-    if (data.basicInfo) setBasicInfo(data.basicInfo);
-    if (data.activityPlan) setActivityPlan(data.activityPlan);
-    if (data.pages) setPages(data.pages);
-    setBackgroundMusic(data.backgroundMusic || null);
-    setStep(Number.isInteger(data.step) ? data.step : 0);
+    const loaded = {
+      basicInfo: { ...initialBasicInfo, ...data.basicInfo },
+      activityPlan: { ...initialActivityPlan, ...data.activityPlan },
+      pages: Array.isArray(data.pages) ? data.pages : [],
+      backgroundMusic: data.backgroundMusic || null,
+    };
+    savedContent.current = loaded;
+    setBasicInfo(loaded.basicInfo);
+    setActivityPlan(loaded.activityPlan);
+    setPages(loaded.pages);
+    setBackgroundMusic(loaded.backgroundMusic);
+    setStep(Number.isInteger(data.step) && data.step >= 0 && data.step <= 3 ? data.step : 0);
+    setSaveState('');
+    setMessage('');
     setView('studio');
   };
 
@@ -295,7 +297,9 @@ export function PictureBookStudioPage() {
     setEditingBookId(null);
     setBasicInfo(initialBasicInfo);
     setActivityPlan(initialActivityPlan);
-    setPages([]);
+    const emptyPages = [];
+    setPages(emptyPages);
+    savedContent.current = { basicInfo: initialBasicInfo, activityPlan: initialActivityPlan, pages: emptyPages, backgroundMusic: null };
     setBackgroundMusic(null);
     setStep(0);
     setMessage('');
@@ -303,6 +307,7 @@ export function PictureBookStudioPage() {
   };
 
   const useBookCase = (book) => {
+    savedContent.current = null;
     const data = createPictureBookCaseDraft(book);
     setListNotice('');
     editingBookIdRef.current = null;
@@ -322,7 +327,7 @@ export function PictureBookStudioPage() {
   const presentBook = (book) => {
     setListNotice('');
     const data = book.book_data || {};
-    if (!(data.pages || []).some((page) => page.imageUrl || page.img || page.subtitle || page.text)) {
+    if (!hasTeachingPages(data.pages)) {
       setListNotice(t('pictureBook.presentEmpty'));
       return;
     }
@@ -366,6 +371,7 @@ export function PictureBookStudioPage() {
           setEditingBookId(result.data.id);
         }
       }
+      savedContent.current = bookData;
       setSaveState(t('pictureBook.saved'));
       return true;
     } catch (err) {
@@ -385,6 +391,7 @@ export function PictureBookStudioPage() {
     }
     try {
       await apiService.request(`/api/picture-books/${currentBookId}`, { method: 'PUT', body: JSON.stringify({ backgroundMusic: music }) });
+      if (savedContent.current) savedContent.current = { ...savedContent.current, backgroundMusic: music };
       return true;
     } catch (error) {
       console.error('save picture book background music failed:', error);
@@ -393,13 +400,25 @@ export function PictureBookStudioPage() {
     }
   };
 
+  const hasContentChanges = () => {
+    const last = savedContent.current;
+    return !last || last.basicInfo !== basicInfo || last.activityPlan !== activityPlan || last.pages !== pages || last.backgroundMusic !== backgroundMusic;
+  };
+
   const backToList = async () => {
-    if (await saveBook()) setView('list');
+    if (!hasContentChanges() || await saveBook()) setView('list');
   };
 
   const goToStep = async (nextStep) => {
-    if (await saveBook({ step: nextStep })) setStep(nextStep);
+    if (!hasContentChanges() || await saveBook({ step: nextStep })) setStep(nextStep);
   };
+
+  React.useEffect(() => {
+    if (view !== 'studio') return;
+    const handler = () => { if (!saving && !generating && !generatingAll) void backToList(); };
+    window.addEventListener('wellbeing:nav-same-route', handler);
+    return () => window.removeEventListener('wellbeing:nav-same-route', handler);
+  });
 
   const steps = [
     t('pictureBook.stepBasic'),
@@ -733,7 +752,7 @@ export function PictureBookStudioPage() {
       {view === 'list' ? (
         <PictureBookListView
           books={bookList}
-          cases={bookList.filter((book) => book.status === 'published')}
+          cases={bookCases}
           activeTab={libraryTab}
           onTabChange={(tab) => { setLibraryTab(tab); setListNotice(''); }}
           loading={listLoading}
@@ -768,21 +787,13 @@ export function PictureBookStudioPage() {
             </header>
           </div>
 
-        <nav className="wb-authoring-steps" aria-label={t('pictureBook.studioTitle')}>
-          {steps.map((label, index) => (
-            <button
-              type="button"
-              key={label}
-              className={`wb-authoring-step${step === index ? ' active' : ''}${step > index ? ' complete' : ''}`}
-              aria-current={step === index ? 'step' : undefined}
-              disabled={saving || generating || generatingAll}
-              onClick={() => goToStep(index)}
-            >
-              <span className="wb-step-number" aria-hidden="true">{index + 1}</span>
-              <span className="wb-step-label">{label}</span>
-            </button>
-          ))}
-        </nav>
+        <AuthoringSteps
+          label={t('pictureBook.studioTitle')}
+          steps={steps}
+          current={step}
+          onChange={goToStep}
+          disabled={saving || generating || generatingAll}
+        />
 
         <section className="wb-authoring-body" aria-label={steps[step]} aria-busy={generating || generatingAll}>
           {message && <div className={`wb-notice${generating || generatingAll ? '' : ' warning'}`} role="status" aria-live="polite">{generating || generatingAll ? <Loader2 className="spin" size={16} aria-hidden="true" /> : null}{message}</div>}
@@ -840,12 +851,17 @@ export function PictureBookStudioPage() {
           <div className="pbv2-music-content">
             <div className="wb-dialog-heading pbv2-music-head"><div><h2 id="pbv2-music-title">{t('pictureBook.musicPickerTitle')}</h2><p>{t('pictureBook.musicPickerHint')}</p></div><button type="button" className="wb-button quiet" aria-label={t('common.close')} onClick={closeMusicPicker}><X size={18} /></button></div>
             <audio ref={musicPreviewRef} onEnded={() => setPreviewMusicId(null)} />
-            <div className="pbv2-music-tabs" role="tablist" aria-label={t('pictureBook.musicPickerTitle')} onKeyDown={handleMusicTabKeyDown}>
-              {[['audio', 'pictureBook.tabAudioLibrary'], ['song', 'pictureBook.tabSongLibrary'], ['ai', 'pictureBook.tabAiGenerate']].map(([source, label]) => <button key={source} type="button" role="tab" id={`pbv2-music-tab-${source}`} aria-controls={`pbv2-music-panel-${source}`} aria-selected={musicSourceTab === source} tabIndex={musicSourceTab === source ? 0 : -1} data-source={source} className={musicSourceTab === source ? 'active' : ''} onClick={() => setMusicSourceTab(source)}>{source === 'ai' && <Wand2 size={14} />}{t(label)}</button>)}
-            </div>
-            {musicSourceTab === 'audio' && <div className="pbv2-music-list" role="tabpanel" id="pbv2-music-panel-audio" aria-labelledby="pbv2-music-tab-audio" tabIndex={0}>{audioLibrary.map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); closeMusicPicker(); await saveBackgroundMusic(music); }} />)}{audioLibrary.length === 0 && <div className="pbv2-music-empty">{t('pictureBook.audioEmptyMusic')}</div>}</div>}
-            {musicSourceTab === 'song' && <div className="pbv2-music-list" role="tabpanel" id="pbv2-music-panel-song" aria-labelledby="pbv2-music-tab-song" tabIndex={0}>{songLibrary.flatMap((song) => [{ ...song, id: `song-${song.id}-instrumental`, name: `${song.name}${t('pictureBook.nameInstrumental')}`, url: song.instrumentalUrl, source: 'song' }, { ...song, id: `song-${song.id}-vocal`, name: `${song.name}${t('pictureBook.nameVocal')}`, url: song.vocalUrl, source: 'song' }]).filter((music) => music.url).map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); closeMusicPicker(); await saveBackgroundMusic(music); }} />)}{songLibrary.every((song) => !song.instrumentalUrl && !song.vocalUrl) && <div className="pbv2-music-empty">{t('pictureBook.songEmptyMusic')}</div>}</div>}
-            {musicSourceTab === 'ai' && <div className="pbv2-ai-music" role="tabpanel" id="pbv2-music-panel-ai" aria-labelledby="pbv2-music-tab-ai" aria-busy={aiMusicGenerating} tabIndex={0}><label><span>{t('pictureBook.aiDescLabel')}</span><textarea value={aiMusicForm.prompt} onChange={(event) => setAiMusicForm((current) => ({ ...current, prompt: event.target.value }))} placeholder={t('pictureBook.aiDescPlaceholder')} /></label><div className="pbv2-ai-music-row"><label><span>{t('pictureBook.aiStyleLabel')}</span><select value={aiMusicForm.style} onChange={(event) => setAiMusicForm((current) => ({ ...current, style: event.target.value }))}><option value="calm, peaceful, warm, instrumental">{t('pictureBook.styleCalm')}</option><option value="happy, cheerful, playful, instrumental">{t('pictureBook.stylePlayful')}</option><option value="dreamy, magical, gentle, instrumental">{t('pictureBook.styleDreamy')}</option><option value="nature, peaceful, acoustic, instrumental">{t('pictureBook.styleNature')}</option></select></label><label><span>{t('pictureBook.aiDurationLabel')}</span><select value={aiMusicForm.duration} onChange={(event) => setAiMusicForm((current) => ({ ...current, duration: Number(event.target.value) }))}>{[15, 30, 60, 90].map((duration) => <option key={duration} value={duration}>{t('pictureBook.durationSeconds', { n: duration })}</option>)}</select></label></div><button type="button" className="wb-button primary" disabled={!aiMusicForm.prompt.trim() || aiMusicGenerating} onClick={generateAiMusic}>{aiMusicGenerating ? <Loader2 className="spin" size={15} /> : <Wand2 size={15} />}{aiMusicGenerating ? t('pictureBook.aiGeneratingLong') : t('pictureBook.aiGenerateMusic')}</button>{aiMusicError && <p className="wb-notice error" role="alert">{aiMusicError}</p>}{aiMusicResult && <MusicPickerItem music={aiMusicResult} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} selectLabel={t('pictureBook.useThisMusic')} onSelect={async () => { setBackgroundMusic(aiMusicResult); closeMusicPicker(); await saveBackgroundMusic(aiMusicResult); }} />}</div>}
+            <ContentTabs
+              group="pbv2-music" className="pbv2-music-tabs" label={t('pictureBook.musicPickerTitle')} value={musicSourceTab} onChange={setMusicSourceTab}
+              items={[
+                { value: 'audio', label: t('pictureBook.tabAudioLibrary') },
+                { value: 'song', label: t('pictureBook.tabSongLibrary') },
+                { value: 'ai', label: t('pictureBook.tabAiGenerate'), icon: Wand2 },
+              ]}
+            />
+            {musicSourceTab === 'audio' && <ContentTabPanel group="pbv2-music" value="audio" className="pbv2-music-list">{audioLibrary.map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); closeMusicPicker(); await saveBackgroundMusic(music); }} />)}{audioLibrary.length === 0 && <div className="pbv2-music-empty">{t('pictureBook.audioEmptyMusic')}</div>}</ContentTabPanel>}
+            {musicSourceTab === 'song' && <ContentTabPanel group="pbv2-music" value="song" className="pbv2-music-list">{songLibrary.flatMap((song) => [{ ...song, id: `song-${song.id}-instrumental`, name: `${song.name}${t('pictureBook.nameInstrumental')}`, url: song.instrumentalUrl, source: 'song' }, { ...song, id: `song-${song.id}-vocal`, name: `${song.name}${t('pictureBook.nameVocal')}`, url: song.vocalUrl, source: 'song' }]).filter((music) => music.url).map((music) => <MusicPickerItem key={music.id} music={music} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} onSelect={async () => { setBackgroundMusic(music); closeMusicPicker(); await saveBackgroundMusic(music); }} />)}{songLibrary.every((song) => !song.instrumentalUrl && !song.vocalUrl) && <div className="pbv2-music-empty">{t('pictureBook.songEmptyMusic')}</div>}</ContentTabPanel>}
+            {musicSourceTab === 'ai' && <ContentTabPanel group="pbv2-music" value="ai" className="pbv2-ai-music" aria-busy={aiMusicGenerating}><label><span>{t('pictureBook.aiDescLabel')}</span><textarea value={aiMusicForm.prompt} onChange={(event) => setAiMusicForm((current) => ({ ...current, prompt: event.target.value }))} placeholder={t('pictureBook.aiDescPlaceholder')} /></label><div className="pbv2-ai-music-row"><label><span>{t('pictureBook.aiStyleLabel')}</span><select value={aiMusicForm.style} onChange={(event) => setAiMusicForm((current) => ({ ...current, style: event.target.value }))}><option value="calm, peaceful, warm, instrumental">{t('pictureBook.styleCalm')}</option><option value="happy, cheerful, playful, instrumental">{t('pictureBook.stylePlayful')}</option><option value="dreamy, magical, gentle, instrumental">{t('pictureBook.styleDreamy')}</option><option value="nature, peaceful, acoustic, instrumental">{t('pictureBook.styleNature')}</option></select></label><label><span>{t('pictureBook.aiDurationLabel')}</span><select value={aiMusicForm.duration} onChange={(event) => setAiMusicForm((current) => ({ ...current, duration: Number(event.target.value) }))}>{[15, 30, 60, 90].map((duration) => <option key={duration} value={duration}>{t('pictureBook.durationSeconds', { n: duration })}</option>)}</select></label></div><button type="button" className="wb-button primary" disabled={!aiMusicForm.prompt.trim() || aiMusicGenerating} onClick={generateAiMusic}>{aiMusicGenerating ? <Loader2 className="spin" size={15} /> : <Wand2 size={15} />}{aiMusicGenerating ? t('pictureBook.aiGeneratingLong') : t('pictureBook.aiGenerateMusic')}</button>{aiMusicError && <p className="wb-notice error" role="alert">{aiMusicError}</p>}{aiMusicResult && <MusicPickerItem music={aiMusicResult} backgroundMusic={backgroundMusic} previewMusicId={previewMusicId} previewRef={musicPreviewRef} setPreviewMusicId={setPreviewMusicId} selectLabel={t('pictureBook.useThisMusic')} onSelect={async () => { setBackgroundMusic(aiMusicResult); closeMusicPicker(); await saveBackgroundMusic(aiMusicResult); }} />}</ContentTabPanel>}
           </div>
         </dialog>
       )}
@@ -870,18 +886,6 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
     setSearchTerm('');
     searchInput.current?.focus();
   };
-  const handleTabKeyDown = (event) => {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-    const tabs = [...event.currentTarget.querySelectorAll('[role="tab"]')];
-    const current = tabs.indexOf(document.activeElement);
-    if (current < 0) return;
-    event.preventDefault();
-    const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
-      : (current + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
-    onTabChange(tabs[next].dataset.source);
-    tabs[next].focus();
-  };
-
   return (
     <div className="pbv2-list-page">
       <header className="pbv2-library-header wb-library-header">
@@ -892,17 +896,17 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
       </header>
 
       <div className="wb-library-tools">
-        <div className="wb-library-tabs" role="tablist" aria-label={t('pictureBook.librarySource')} onKeyDown={handleTabKeyDown}>
-          {[['cases', 'caseLibrary', cases.length], ['mine', 'myActivities', books.length]].map(([id, label, count]) => (
-            <button key={id} type="button" role="tab" id={`pbv2-library-tab-${id}`} aria-selected={activeTab === id} aria-controls="pbv2-library-panel" tabIndex={activeTab === id ? 0 : -1} data-source={id} onClick={() => onTabChange(id)}>
-              {t(`pictureBook.${label}`)} <span>{loading || error ? '—' : count}</span>
-            </button>
-          ))}
-        </div>
+        <ContentTabs
+          group="pbv2-library" label={t('pictureBook.librarySource')} value={activeTab} onChange={onTabChange}
+          items={[
+            { value: 'cases', label: t('pictureBook.caseLibrary'), count: loading || error ? '—' : cases.length },
+            { value: 'mine', label: t('pictureBook.myActivities'), count: loading || error ? '—' : books.length },
+          ]}
+        />
         <LibrarySearch label={searchLabel} value={searchTerm} onChange={setSearchTerm} inputRef={searchInput} aria-controls="pbv2-library-panel" />
       </div>
 
-      <section id="pbv2-library-panel" role="tabpanel" aria-labelledby={`pbv2-library-tab-${activeTab}`} tabIndex={0} aria-busy={loading}>
+      <ContentTabPanel group="pbv2-library" value={activeTab} aria-busy={loading}>
         {notice && <p className="pbv2-library-notice" role="alert">{notice}</p>}
         {loading ? (
           <PageLoading />
@@ -918,10 +922,12 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
             {visibleBooks.map((book) => {
               const data = book.book_data || {};
               const title = book.title || t('pictureBook.untitled');
+              const playable = hasTeachingPages(data.pages);
+              const previewProps = { disabled: !playable, title: playable ? undefined : t('pictureBook.presentEmpty') };
               const openCard = () => isCases ? onPresent(book) : onOpen(book);
               return (
                 <article key={book.id} className={isCases ? 'pbv2-book-card wb-case-card' : 'pbv2-book-card'}>
-                  <button type="button" className={isCases ? 'pbv2-book-cover wb-case-cover' : 'pbv2-book-cover'} onClick={openCard} aria-label={`${t(isCases ? 'pictureBook.previewCase' : 'common.edit')} ${title}`}>
+                  <button type="button" className={isCases ? 'pbv2-book-cover wb-case-cover' : 'pbv2-book-cover'} {...(isCases ? previewProps : {})} onClick={openCard} aria-label={`${t(isCases ? 'pictureBook.previewCase' : 'common.edit')} ${title}`}>
                     {book.cover_url ? <img src={book.cover_url} alt="" loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} /> : null}
                     <span className="pbv2-book-cover-placeholder" aria-hidden="true"><BookOpenText size={40} /></span>
                   </button>
@@ -930,17 +936,17 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
                       <MetadataTag tone={book.status === 'published' ? 'ready' : 'draft'}>{t(book.status === 'published' ? 'pictureBook.published' : 'pictureBook.draft')}</MetadataTag>
                       {book.updated_at && <time dateTime={book.updated_at}>{new Date(book.updated_at).toLocaleDateString()}</time>}
                     </div>}
-                    <h3 className={isCases ? 'wb-case-title' : undefined}><button type="button" onClick={openCard}>{title}</button></h3>
+                    <h3 className={isCases ? 'wb-case-title' : undefined}><button type="button" {...(isCases ? previewProps : {})} onClick={openCard}>{title}</button></h3>
                     <div className="pbv2-book-meta">
                       {data.basicInfo?.age && <MetadataTag>{data.basicInfo.age}</MetadataTag>}
                       <MetadataTag>{t('pictureBook.pageTotal', { count: data.pages?.length || 0 })}</MetadataTag>
                     </div>
                     <div className={isCases ? 'wb-case-actions' : 'pbv2-book-actions'}>
                       {isCases ? <>
-                        <button type="button" data-wb-button="primary" onClick={() => onPresent(book)}>{t('pictureBook.previewCase')}</button>
+                        <button type="button" data-wb-button="primary" {...previewProps} onClick={() => onPresent(book)}>{t('pictureBook.previewCase')}</button>
                         <button type="button" data-wb-button="secondary" onClick={() => onUseCase(book)}>{t('pictureBook.useCase')}</button>
                       </> : <>
-                        <button type="button" data-wb-button="primary" onClick={() => onPresent(book)}><Monitor size={16} aria-hidden="true" />{t('pictureBook.startTeaching')}</button>
+                        <button type="button" data-wb-button="primary" {...previewProps} onClick={() => onPresent(book)}><Monitor size={16} aria-hidden="true" />{t('pictureBook.startTeaching')}</button>
                         <button type="button" data-wb-button="secondary" onClick={() => onOpen(book)}>{t('pictureBook.continuePreparing')}</button>
                         <button type="button" data-wb-button="danger" data-wb-icon="" onClick={() => onDelete(book.id)} aria-label={`${t('common.delete')} ${title}`} title={t('common.delete')}><Trash2 size={16} aria-hidden="true" /></button>
                       </>}
@@ -951,7 +957,7 @@ function PictureBookListView({ books, cases, activeTab, onTabChange, loading, er
             })}
           </div>
         )}
-      </section>
+      </ContentTabPanel>
     </div>
   );
 }

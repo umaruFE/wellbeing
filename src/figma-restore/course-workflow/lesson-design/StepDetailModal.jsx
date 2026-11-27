@@ -2,7 +2,7 @@ import { DialogCloseButton } from '../../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Edit3 } from 'lucide-react';
-import { buildStepExecutionItems } from './lessonDesignUtils';
+import { lessonExecution } from './lessonDesignUtils';
 
 const displayText = (value, isChinese) => {
   if (value == null) return '';
@@ -38,7 +38,7 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
   const isChinese = !i18n.language?.startsWith('en');
   if (!open || !step) return null;
 
-  const executionItems = buildStepExecutionItems(step, !isChinese);
+  const { items: executionItems, script } = lessonExecution(step, !isChinese);
   const emptyText = t('common.none');
 
   return (
@@ -91,6 +91,7 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
                     <div className="flow-step-editor-badge">{t('lesson.flowStepCount', { count: executionItems.length })}</div>
                   </div>
 
+                  {!executionItems.length && <div className="flow-step-readonly-text">{emptyText}</div>}
                   {executionItems.map((item, index) => (
                     <div className="flow-step-row" key={`${item.title}-${index}`}>
                       <div className="flow-step-rail">
@@ -115,22 +116,13 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
                           <div className="flow-step-section guidance teacher-script">
                             <div className="flow-step-section-title">{t('lesson.teacherGuidance')}</div>
                             <div className="flow-step-readonly-text">
-                              {item.lines.length
-                                ? item.lines.map((line, lineIndex) => (
-                                  <p key={`${line.text}-${lineIndex}`}>{displayText(line.text, isChinese)}</p>
-                                ))
-                                : displayText(item.stageCue, isChinese) || emptyText}
+                              {displayText(item.teacher, isChinese) || emptyText}
                             </div>
                           </div>
                           <div className="flow-step-section guidance cue-script">
                             <div className="flow-step-section-title">{t('lesson.actionCue')}</div>
                             <div className="flow-step-readonly-text">
-                              {item.lines.length
-                                ? item.lines.map((line, lineIndex) => {
-                                  const text = line.cue || line.response;
-                                  return text ? <p key={`${text}-${lineIndex}`}>{displayText(text, isChinese)}</p> : null;
-                                })
-                                : emptyText}
+                              {displayText(item.cue, isChinese) || emptyText}
                             </div>
                           </div>
                         </div>
@@ -140,6 +132,9 @@ export function StepDetailModal({ open, step, phase, onClose, onEdit }) {
                 </div>
               </div>
 
+              {script && (
+                <ReadonlyField label={t('lesson.teacherGuidance')}>{displayText(script, isChinese)}</ReadonlyField>
+              )}
               <div className="as-draft-row trd-resource-row">
                 <ReadonlyField label={t('lesson.teachingResources')}>
                   {displayText(step.resources, isChinese) || emptyText}

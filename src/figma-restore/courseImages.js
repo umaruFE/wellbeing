@@ -87,6 +87,7 @@ export function getCourseOverview(course = {}) {
 export function getDisplayCourseTitle(course = {}, fallback = '') {
   const overview = getCourseOverview(course);
   const rawTitle = pickFirstString(course.title, course.courseTitle, course.unit, fallback);
+  if (/\((?:复制|copy)\)$/i.test(rawTitle)) return rawTitle;
   const defaultTitles = new Set(['新课程', 'New Course', 'Untitled Course']);
   return pickFirstString(
     overview.courseTitle,
@@ -148,4 +149,10 @@ export function getCourseMapVariant(course = {}) {
     tone: ['coral', 'blue', 'purple', 'green', 'gold', 'rose'][hash % 6],
     route: ['arc', 'wave', 'loop'][hash % 3],
   };
+}
+
+export function formatCourseDuration(value, t) {
+  const text = String(value ?? '').trim();
+  const minutes = text.match(/^(\d+(?:[.,]\d+)?(?:\s*[-–~]\s*\d+(?:[.,]\d+)?)?)\s*(?:min(?:ute)?s?\.?|分钟|分)?$/i);
+  return minutes ? t('course.durationMinutes', { minutes: minutes[1] }) : text || '--';
 }

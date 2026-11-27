@@ -28,6 +28,8 @@ Object.assign(process.env, {
   PGAPPNAME: 'wellbeing-activity-preview',
   JWT_SECRET: sessionSecret,
   WELLBEING_PREVIEW_ACTIVITY_WRITES: 'true',
+  WELLBEING_PREVIEW_YOGA_WRITES: 'true',
+  WELLBEING_PREVIEW_FAVORITE_WRITES: 'true',
 });
 
 const activityPaths = new Set([
@@ -38,6 +40,14 @@ const activityPaths = new Set([
 const generationPaths = new Set([
   '/api/ai/generate-speaking-language',
   '/api/ai/generate-classification',
+  '/api/ai/generate-step',
+  '/api/ai/generate-course',
+  '/api/ai/regenerate-phase',
+  '/api/ai/generate-images',
+  '/api/ai/generate-storyboard',
+  '/api/ai/generate-video',
+  '/api/ai/generate-voice',
+  '/api/ai/generate-audio',
 ]);
 
 const app = next({ dev: true, dir: appDirectory, hostname: host, port });
@@ -91,9 +101,16 @@ async function dispatch(request, response) {
 
   const { method, url } = request;
   const activityWrite = method === 'PUT' && activityPaths.has(url);
-  const textGeneration = method === 'POST' && generationPaths.has(url);
+  const generationRequest = method === 'POST' && generationPaths.has(url);
   const caseRequest = (method === 'GET' || method === 'POST') && /^\/api\/workbench-cases\/[a-z-]+$/.test(url);
-  if (activityWrite || textGeneration || caseRequest) {
+  const caseList = method === 'GET' && url === '/api/workbench-cases';
+  const favoriteRequest = url === '/api/lesson-step-favorites' && ['GET', 'PUT', 'DELETE'].includes(method);
+  // The creative-works handlers check the actual module and owner before enabling a yoga write.
+  const yogaLibrary = method === 'GET' && url === '/api/creative-works?moduleId=interactive-yoga';
+  const yogaCreate = method === 'POST' && url === '/api/creative-works';
+  const yogaUpdate = method === 'PUT' && /^\/api\/creative-works\/[1-9]\d*$/.test(url);
+  const yogaGeneration = method === 'POST' && /^\/api\/creative-works\/[1-9]\d*\/(plan|design)$/.test(url);
+  if (activityWrite || generationRequest || caseRequest || caseList || favoriteRequest || yogaLibrary || yogaCreate || yogaUpdate || yogaGeneration) {
     const user = await signedInUser(request.headers.authorization);
     if (!user) return reply(response, 401, '请重新登录后继续。');
     // The newly signed token is used only inside this loopback worker.

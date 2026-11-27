@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronDown, ChevronRight, Copy, FileText, Plus, Trash2 } from 'lucide-react';
+import { coursePhasePalette } from '../workflowData';
 import { resolvePptMediaUrl } from './pptMediaUrl';
 import './css/PptOutline.css';
 
@@ -9,13 +10,6 @@ const phaseLabelKeys = {
   empower: 'lesson.phaseEmpower',
   execute: 'lesson.phaseExecute',
   elevate: 'lesson.phaseElevate',
-};
-
-const phaseColors = {
-  engage: { color: '#a866e8', bg: '#f3e8ff', border: '#a866e8', shadow: '#d8b8f4' },
-  empower: { color: '#4f8ff7', bg: '#eff6ff', border: '#4f8ff7', shadow: '#b7d3ff' },
-  execute: { color: '#3f83e8', bg: '#eaf3ff', border: '#3f83e8', shadow: '#bfd9ff' },
-  elevate: { color: '#ff7a61', bg: '#fff0eb', border: '#ff7a61', shadow: '#ffc0b2' },
 };
 
 export function PptOutline({
@@ -67,6 +61,8 @@ export function PptOutline({
                 <button
                   type="button"
                   className={`ppt-slide-thumb ${isSlideActive ? 'active' : ''}`}
+                  aria-label={slide.title}
+                  aria-current={isSlideActive ? 'page' : undefined}
                   onClick={() => onSelectStep(phase.key, step.id, slide.id)}
                 >
                   <PptOutlineThumb slide={slide} slideIndex={slideIndex} />
@@ -141,11 +137,15 @@ export function PptOutline({
         )}
 
         {contentPhases.map((phase) => {
-          const colors = phaseColors[phase.key] || phaseColors.engage;
+          const palette = coursePhasePalette[phase.key];
           return (
-            <section className="ppt-phase" key={phase.key}>
+            <section
+              className="ppt-phase"
+              key={phase.key}
+              style={palette && { '--phase-tint': palette.tint, '--phase-accent': palette.accent }}
+            >
               <div className="ppt-phase-header">
-                <span className="ppt-phase-dot" style={{ backgroundColor: colors.color }} />
+                <span className="ppt-phase-dot" />
                 <span className="ppt-phase-title">{t(phaseLabelKeys[phase.key], phase.title)}</span>
               </div>
 
@@ -155,22 +155,15 @@ export function PptOutline({
                   const isExpanded = expandedStepIds.has(step.id);
                   const slideCount = step.slides?.length || 0;
                   const isFirstEngageStep = stepIndex === 0 && phase.key === 'engage';
-                  const cardStyle = {
-                    '--phase-color': colors.color,
-                    '--phase-bg': colors.bg,
-                    '--phase-border': colors.border,
-                    '--phase-shadow': colors.shadow,
-                  };
-
                   const card = (
                     <button
                       type="button"
                       className={`${isFirstEngageStep ? 'ppt-first-step-card' : 'ppt-step-card'} ${isStepActive ? 'active' : ''}`}
-                      style={cardStyle}
+                      aria-expanded={isExpanded}
                       onClick={() => toggleStep(step.id)}
                     >
                       {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      <span className="ppt-step-icon" style={{ backgroundColor: colors.color }}>
+                      <span className="ppt-step-icon">
                         <FileText size={12} />
                       </span>
                       <span className="ppt-step-name">{step.title}</span>
@@ -188,10 +181,7 @@ export function PptOutline({
                       ) : (
                         <div className="ppt-step-container-inner">
                           <div className="ppt-step-connector">
-                            <span
-                              className="ppt-step-dot"
-                              style={{ backgroundColor: isStepActive ? colors.color : '#77808f' }}
-                            />
+                            <span className={`ppt-step-dot${isStepActive ? ' active' : ''}`} />
                             {stepIndex < phase.steps.length - 1 && <span className="ppt-step-line" />}
                           </div>
                           {card}

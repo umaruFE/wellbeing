@@ -29,6 +29,59 @@ export function FilterChip({ selected, children, ...props }) {
   );
 }
 
+export function StatusFilters({ options, value, onChange, counts, className = '' }) {
+  const { t } = useTranslation();
+  return (
+    <div role="group" aria-label={t('common.status')} className={`wb-choice-chips ${className}`.trim()}>
+      {options.map((option) => (
+        <FilterChip key={option.value} selected={value === option.value} onClick={() => onChange(option.value)}>
+          {option.label}
+          {counts?.[option.value] != null && <span>({counts[option.value]})</span>}
+        </FilterChip>
+      ))}
+    </div>
+  );
+}
+
+function contentTabId(group, value) {
+  return `${group}-tab-${encodeURIComponent(value)}`;
+}
+
+export function ContentTabs({ group, label, items, value, onChange, disabled = false, className = '' }) {
+  function navigate(event) {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+    const tabs = Array.from(event.currentTarget.querySelectorAll('[role="tab"]:enabled'));
+    const current = tabs.indexOf(event.target);
+    if (current < 0) return;
+    event.preventDefault();
+    let next = (current + (event.key === 'ArrowLeft' ? -1 : 1) + tabs.length) % tabs.length;
+    if (event.key === 'Home') next = 0;
+    if (event.key === 'End') next = tabs.length - 1;
+    tabs[next].focus();
+    tabs[next].click();
+  }
+
+  return (
+    <div role="tablist" aria-label={label} className={`wb-library-tabs wb-content-tabs ${className}`.trim()} onKeyDown={navigate}>
+      {items.map(({ value: key, label: title, count, icon: Icon }) => (
+        <button
+          key={key} type="button" role="tab" id={contentTabId(group, key)} aria-controls={`${group}-panel`}
+          aria-selected={value === key} tabIndex={value === key ? 0 : -1} disabled={disabled}
+          onClick={() => onChange(key)}
+        >
+          {Icon && <Icon size={16} aria-hidden="true" />}
+          {title}
+          {count != null && <span>{count}</span>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function ContentTabPanel({ group, value, ...props }) {
+  return <section role="tabpanel" id={`${group}-panel`} aria-labelledby={contentTabId(group, value)} tabIndex={0} {...props} />;
+}
+
 export function MetadataTag({ tone = 'neutral', children, ...props }) {
   return <span data-wb-tag={tone} {...props}>{children}</span>;
 }

@@ -1,6 +1,7 @@
 import i18next from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { LocalizedText } from '../../i18n/LocalizedText.jsx';
+import { ContentTabPanel, ContentTabs } from '../../components/LibraryControls';
 import React, { useState } from 'react';
 import { ConfigProvider } from 'antd';
 import {
@@ -9,7 +10,6 @@ import {
   Select,
   Card,
   Table,
-  Tabs,
   Badge,
   Switch,
   Checkbox,
@@ -313,11 +313,11 @@ const DesignSystemPreview = () => {
   const [activeTab, setActiveTab] = useState('buttons');
 
   const tabs = [
-    { key: 'buttons', label: t('designPreviewUi.tabButtons'), children: <ButtonSection /> },
-    { key: 'inputs', label: t('designPreviewUi.tabInputs'), children: <InputSection /> },
-    { key: 'data', label: t('designPreviewUi.tabData'), children: <DataSection /> },
-    { key: 'feedback', label: t('designPreviewUi.tabFeedback'), children: <FeedbackSection /> },
-    { key: 'navigation', label: t('designPreviewUi.tabNavigation'), children: <NavigationSection /> },
+    { value: 'buttons', label: t('designPreviewUi.tabButtons'), children: <ButtonSection /> },
+    { value: 'inputs', label: t('designPreviewUi.tabInputs'), children: <InputSection /> },
+    { value: 'data', label: t('designPreviewUi.tabData'), children: <DataSection /> },
+    { value: 'feedback', label: t('designPreviewUi.tabFeedback'), children: <FeedbackSection /> },
+    { value: 'navigation', label: t('designPreviewUi.tabNavigation'), children: <NavigationSection /> },
   ];
 
   return (
@@ -326,7 +326,10 @@ const DesignSystemPreview = () => {
         <h1 style={{ fontSize: '28px', fontWeight: '600', marginBottom: '8px' }}><LocalizedText id="designPreviewUi.f65a9064cb" /></h1>
         <p style={{ color: '#818997' }}><LocalizedText id="designPreviewUi.c1fbbb88fd" /></p>
       </div>
-      <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs} />
+      <ContentTabs group="design-sections" label={t('designPreviewUi.f65a9064cb')} items={tabs} value={activeTab} onChange={setActiveTab} />
+      <ContentTabPanel group="design-sections" value={activeTab} className="pt-4">
+        {tabs.map(({ value, children }) => <div key={value} hidden={value !== activeTab}>{children}</div>)}
+      </ContentTabPanel>
     </div>
   );
 };

@@ -1,6 +1,6 @@
-import { CreateButton, MetadataTag } from '../components/LibraryControls';
+import { ContentTabPanel, ContentTabs, CreateButton, MetadataTag } from '../components/LibraryControls';
 import React, { useState, useEffect, useCallback } from 'react';
-import { Row, Col, Tabs } from 'antd';
+import { Row, Col } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../components/PageLoading';
@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import apiService from '../services/api';
 import { CreateCourseModal } from './create-course';
-import { getCourseCoverUrl, getCourseData, getDisplayCourseTitle } from './courseImages';
+import { formatCourseDuration, getCourseCoverUrl, getCourseData, getDisplayCourseTitle } from './courseImages';
 import './AdminDashboard.css';
 
 const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
@@ -244,10 +244,10 @@ const RecentSection = ({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('courses');
   const tabs = [
-    { id: 'courses', icon: BookOpen, label: t('sidebar.courseGroup') },
-    { id: 'images', icon: Image, label: t('sidebar.imageLibrary') },
-    { id: 'videos', icon: Video, label: t('sidebar.videoLibrary') },
-    { id: 'audio', icon: Music, label: t('sidebar.audioLibrary') },
+    { value: 'courses', icon: BookOpen, label: t('sidebar.courseGroup') },
+    { value: 'images', icon: Image, label: t('sidebar.imageLibrary') },
+    { value: 'videos', icon: Video, label: t('sidebar.videoLibrary') },
+    { value: 'audio', icon: Music, label: t('sidebar.audioLibrary') },
   ];
 
   const renderRow = (items, renderFn) => (
@@ -298,15 +298,10 @@ const RecentSection = ({
   return (
     <div className="recent-container">
       <h2 className="wb-section-title">{t('dashboard.recentCourses')}</h2>
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={tabs.map(({ id, icon, label }) => ({
-          key: id,
-          label: <span className="inline-flex items-center gap-2">{React.createElement(icon, { size: 16, 'aria-hidden': true })}{label}</span>,
-          children: activeTab === id ? renderContent() : null,
-        }))}
-      />
+      <ContentTabs group="recent-works" label={t('dashboard.recentCourses')} items={tabs} value={activeTab} onChange={setActiveTab} />
+      <ContentTabPanel group="recent-works" value={activeTab} aria-busy={activeLoading}>
+        {renderContent()}
+      </ContentTabPanel>
     </div>
   );
 };
@@ -365,7 +360,7 @@ export const AdminDashboard = () => {
           unit: course.unit || title,
           grade: course.age_group || '--',
           age: course.age_group || courseData?.age || '--',
-          duration: course.duration ? t('course.durationMinutes', { minutes: course.duration }) : (courseData?.duration || '--'),
+          duration: formatCourseDuration(course.duration || courseData?.duration, t),
           students: '--',
           classSize: courseData?.classSize || course.unit || '',
           time: course.created_at

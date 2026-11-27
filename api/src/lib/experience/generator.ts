@@ -206,8 +206,9 @@ function validateYogaPages(pages: YogaPage[]): void {
 /** 把 {title, pages} 注入授课 HTML 模板（成品为自包含单文件） */
 export function renderYogaHtml(result: { title?: string; pages: YogaPage[] }, fallbackTitle = '情境瑜伽活动'): string {
   let html = readTemplate('interactive-yoga.html');
-  html = html.replace(/const pages = \[[\s\S]*?\n\];/, `const pages = ${JSON.stringify(result.pages)};`);
-  html = html.replace(/__TITLE__/g, escapeHtml(result.title || fallbackTitle));
+  const pages = JSON.stringify(result.pages).replace(/</g, '\\u003c');
+  html = html.replace(/__TITLE__/g, () => escapeHtml(result.title || fallbackTitle));
+  html = html.replace(/const pages = \[[\s\S]*?\n\];/, () => `const pages = ${pages};`);
   return html;
 }
 

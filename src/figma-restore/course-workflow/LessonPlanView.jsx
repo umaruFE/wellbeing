@@ -1,10 +1,9 @@
-import i18next from 'i18next';
 import React from 'react';
 import { Button, Form, Input, InputNumber } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { CreateButton, DialogCloseButton, FilterChip, MetadataTag } from '../../components/LibraryControls';
+import { ContentTabPanel, ContentTabs, CreateButton, DialogCloseButton, MetadataTag } from '../../components/LibraryControls';
 import { PageLoading } from '../../components/PageLoading';
-import { buildCourseMap, phaseTemplates } from './workflowData';
+import { getCourseOverview, getDisplayCourseTitle } from '../courseImages';
 import apiService from '../../services/api';
 import {
   ArrowRight,
@@ -14,20 +13,12 @@ import {
   ClipboardList,
   Route,
   Copy,
-  Drama,
-  GalleryVerticalEnd,
-  Grid3X3,
   Heart,
   Info,
   ListChecks,
-  MessageCircleQuestion,
   MoreVertical,
-  Palette,
   Plus,
-  Puzzle,
   RefreshCw,
-  RotateCcw,
-  RotateCw,
   Send,
   Sparkles,
   SlidersHorizontal,
@@ -41,46 +32,16 @@ import { AdjustStepModal } from './lesson-design/AdjustStepModal';
 import { EditStepModal } from './lesson-design/EditStepModal';
 import { StepCardActions } from './lesson-design/StepCardActions';
 import { StepDetailModal } from './lesson-design/StepDetailModal';
-import { buildStepFlowItems } from './lesson-design/lessonDesignUtils';
+import { matchesFavorite, useLessonCollection } from './lesson-design/useLessonCollection';
+import { coursePhasePalette, phaseTemplates } from './workflowData';
+import { buildStepFlowItems, composeFlowFromSteps, composeScriptFromSteps, createFlowStepsForForm, lessonText, normalizeLessonStep, parseMinutes, phaseDuration, resolveLessonPhases } from './lesson-design/lessonDesignUtils';
 import { gardenHeight, gardenStops, LessonGardenMap } from './LessonGardenMap';
 import './LessonMap.css';
 import './LessonOverview.css';
 
 const { TextArea } = Input;
 
-const quickIdeas = [
-  { label: '角色扮演', labelEn: 'Role Play', text: '设计一个让学生通过角色扮演来练习目标句型的活动', textEn: 'Design an activity where students practice the target sentence pattern through role play.' },
-  { label: '小组合作', labelEn: 'Teamwork', text: '设计一个通过小组合作完成任务的活动', textEn: 'Design an activity where students complete a task through group collaboration.' },
-  { label: '游戏化', labelEn: 'Gamified', text: '设计一个利用游戏机制激发学生参与的活动', textEn: 'Design a gamified activity that increases student participation.' },
-  { label: '真实情境', labelEn: 'Real Context', text: '设计一个结合真实情境让学生运用目标语言的活动', textEn: 'Design an authentic-context activity for students to use the target language.' },
-  { label: '动手操作', labelEn: 'Hands-on', text: '设计一个需要学生动手操作的活动', textEn: 'Design a hands-on activity that lets students manipulate materials while using English.' },
-];
-
-const classicActivities = [
-  { Icon: Grid3X3, name: 'Bingo 游戏', nameEn: 'Bingo Game', meta: '词汇复习', metaEn: 'Vocabulary Review' },
-  { Icon: MessageCircleQuestion, name: '猜单词', nameEn: 'Guess the Word', meta: '听说练习', metaEn: 'Listening & Speaking' },
-  { Icon: Drama, name: '情景对话', nameEn: 'Role Dialogue', meta: '口语输出', metaEn: 'Oral Output' },
-  { Icon: GalleryVerticalEnd, name: '闪卡翻转', nameEn: 'Flashcard Flip', meta: '词汇记忆', metaEn: 'Vocabulary Memory' },
-  { Icon: Puzzle, name: '拼图阅读', nameEn: 'Puzzle Reading', meta: '阅读理解', metaEn: 'Reading Comprehension' },
-  { Icon: Palette, name: '我画你猜', nameEn: 'Draw and Guess', meta: '词汇运用', metaEn: 'Vocabulary Use' },
-];
-
-const defaultFlowSteps = [
-  { title: '创设悬念', desc: '', teacher: '', cue: '' },
-  { title: '朗读来信', desc: '', teacher: '', cue: '' },
-  { title: '情绪感知', desc: '', teacher: '', cue: '' },
-  { title: '发布任务', desc: '', teacher: '', cue: '' },
-];
-
-const defaultDraft = {
-  title: '',
-  time: 8,
-  goal: '',
-  activity: '',
-  flowSteps: defaultFlowSteps,
-  resources: '',
-  scenario: '',
-};
+const emptyDraft = { title: '', time: null, goal: '', activity: '', flowSteps: [], resources: '', scenario: '' };
 
 const PHASE_DURATION_RATIO = {
   eng: 0.15,
@@ -94,37 +55,25 @@ const lessonMapMeta = {
     number: '1',
     className: 'engage',
     Icon: Sparkles,
-    tone: '#fae5dd',
-    accent: '#9e5034',
-    summary: '通过课堂情境唤起好奇心，建立学习动机。',
-    summaryEn: 'Spark curiosity through an immersive scenario and build learning motivation.',
+    ...coursePhasePalette.engage,
   },
   emp: {
     number: '2',
     className: 'empower',
     Icon: BookOpen,
-    tone: '#f6edcc',
-    accent: '#806210',
-    summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
-    summaryEn: 'Build target language through frequent listening, visual, and movement input.',
+    ...coursePhasePalette.empower,
   },
   exc: {
     number: '3',
     className: 'execute',
     Icon: ListChecks,
-    tone: '#e2eef2',
-    accent: '#326c81',
-    summary: '在真实任务中运用目标语言，表达自己的想法。',
-    summaryEn: 'Use the target language in an authentic task and express ideas clearly.',
+    ...coursePhasePalette.execute,
   },
   elv: {
     number: '4',
     className: 'elevate',
     Icon: Star,
-    tone: '#e5eddf',
-    accent: '#506d39',
-    summary: '分享学习成果，反思收获，培养跨文化意识',
-    summaryEn: 'Share outcomes, reflect on learning, and extend cultural awareness.',
+    ...coursePhasePalette.elevate,
   },
 };
 
@@ -140,17 +89,6 @@ function frameGardenStation(viewport, station) {
     left: viewport.scrollLeft + focusLeft - frame.left,
     top: viewport.scrollTop + (Math.min(box.top, symbol.top) + Math.max(box.bottom, symbol.bottom) - viewport.clientHeight) / 2 - frame.top,
   });
-}
-
-const parseMinutes = (value) => {
-  const matches = String(value || '').match(/\d+(?:\.\d+)?/g);
-  if (!matches?.length) return 0;
-  return Math.round(Number(matches[matches.length - 1]) || 0);
-};
-
-function phaseDuration(steps) {
-  const minutes = steps.reduce((sum, step) => sum + parseMinutes(step.time || step.duration), 0);
-  return `${minutes} 分钟`;
 }
 
 const phaseTranslationKeys = {
@@ -206,139 +144,6 @@ const stripChinesePhaseParentheses = (value) => (
     .trim()
 );
 
-const phaseDetailData = {
-  Engage: {
-    key: 'eng',
-    title: 'Engage · 引入',
-    goal: '通过课堂情境唤起好奇心，建立学习动机。',
-    lang: "核心词汇：animal, where, in, on, under; 核心句型：Where is the...? It's...",
-    sel: '社会情感学习：好奇心、探索欲、团队协作意识',
-    perma: 'Positive Emotion（积极情绪）：通过情境创设激发兴奋和期待感',
-    narrative: '学生们化身为宇飞船控制台员，接收到来自动物星球的求救信号，需要前往救援。在旅途中，他们将学习如何用英语描述动物的位置。',
-    color: 'var(--eng)',
-  },
-  Empower: {
-    key: 'emp',
-    title: 'Empower · 赋能',
-    goal: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
-    lang: '强化目标词汇发音和理解，通过TPR全身反应法巩固记忆',
-    sel: '专注力、听觉辨识能力、动作协调与表达',
-    perma: 'Engagement（投入）：全身心参与互动，建立学习心流体验',
-    narrative: '控制台收到动物星球的地图解码任务，学生们需要学会用英语理解指令才能解锁前进路线。',
-    color: 'var(--emp)',
-  },
-  Execute: {
-    key: 'exc',
-    title: 'Execute · 实践',
-    goal: '在真实任务中运用目标语言，表达自己的想法。',
-    lang: '在实际情境中运用目标语言进行交际，完成任务',
-    sel: '合作学习、问题解决、创造性思维、团队协作',
-    perma: 'Accomplishment（成就感）：完成任务获得成就感，建立自信',
-    narrative: '终于到达动物星球！学生们分组建造动物家园，需要用英语描述每个动物的位置，帮助它们安家。',
-    color: 'var(--exc)',
-  },
-  Elevate: {
-    key: 'elv',
-    title: 'Elevate · 升华',
-    goal: '分享学习成果，反思收获，培养跨文化意识',
-    lang: '展示学习成果，自信表达，完成学习闭环',
-    sel: '自我反思、自信表达、感恩之心、分享精神',
-    perma: 'Relationships（人际关系）：与同伴分享快乐，建立友谊',
-    narrative: '任务完成！学生们展示自己的动物家园，向星际联盟汇报救援成果，带着满满的收获返回地球。',
-    color: 'var(--elv)',
-  },
-};
-
-const phaseDetailKeyMap = {
-  eng: 'Engage',
-  engage: 'Engage',
-  emp: 'Empower',
-  empower: 'Empower',
-  exc: 'Execute',
-  execute: 'Execute',
-  elv: 'Elevate',
-  elevate: 'Elevate',
-};
-
-const emptyPhases = [
-  { key: 'eng', phase: 'Engage', title: 'Engage', name: '引入', duration: '0 分钟', steps: [] },
-  { key: 'emp', phase: 'Empower', title: 'Empower', name: '赋能', duration: '0 分钟', steps: [] },
-  { key: 'exc', phase: 'Execute', title: 'Execute', name: '实践', duration: '0 分钟', steps: [] },
-  { key: 'elv', phase: 'Elevate', title: 'Elevate', name: '升华', duration: '0 分钟', steps: [] },
-];
-
-function normalizePhaseCollection(rawPhases) {
-  if (!rawPhases) return null;
-  if (typeof rawPhases === 'string') {
-    try { return normalizePhaseCollection(JSON.parse(rawPhases)); } catch { return null; }
-  }
-  if (!Array.isArray(rawPhases)) return rawPhases;
-
-  return rawPhases.reduce((acc, phase) => {
-    const rawKey = phase?.key || phase?.id || phase?.phase || '';
-    const key = String(rawKey).toLowerCase();
-    if (key) acc[key] = phase;
-    return acc;
-  }, {});
-}
-
-function resolvePhasesFromCourse(course) {
-  let courseData = course?.courseData || course?.course_data || course;
-  if (typeof courseData === 'string') {
-    try { courseData = JSON.parse(courseData); } catch { courseData = null; }
-  }
-  if (!courseData) return null;
-
-  let phases = null;
-  if (Array.isArray(courseData)) {
-    phases = normalizePhaseCollection(courseData);
-  } else if (typeof courseData?.text === 'string') {
-    try {
-      const parsed = JSON.parse(courseData.text);
-      phases = normalizePhaseCollection(parsed.courseData || parsed.parsedCourseData || parsed);
-    } catch {
-      phases = null;
-    }
-  } else if (courseData?.text?.courseData) {
-    try { phases = normalizePhaseCollection(courseData.text.courseData); } catch { phases = null; }
-  } else if (courseData?.courseData) {
-    phases = normalizePhaseCollection(courseData.courseData);
-  } else if (courseData?.parsedCourseData) {
-    phases = normalizePhaseCollection(courseData.parsedCourseData);
-  } else if (courseData?.engage || courseData?.empower || courseData?.execute || courseData?.elevate) {
-    phases = courseData;
-  } else if (courseData?.eng || courseData?.emp || courseData?.exc || courseData?.elv) {
-    phases = courseData;
-  }
-  if (!phases) return null;
-
-  const phaseMapping = { engage: 'eng', empower: 'emp', execute: 'exc', elevate: 'elv' };
-  const nameMapping = { engage: '引入', empower: '赋能', execute: '实践', elevate: '升华' };
-
-  return Object.entries(phaseMapping).map(([longKey, shortKey]) => {
-    const phase = phases[longKey] || phases[shortKey];
-    const steps = Array.isArray(phase?.steps) ? phase.steps : [];
-    return {
-      key: shortKey,
-      phase: longKey.charAt(0).toUpperCase() + longKey.slice(1),
-      title: phase?.title || `E-${longKey.charAt(0).toUpperCase() + longKey.slice(1)}`,
-      name: nameMapping[longKey],
-      duration: phaseDuration(steps),
-      steps: steps.map((step) => ({
-        id: step.id,
-        title: step.title || '',
-        duration: String(step.time || step.duration || ''),
-        goal: step.objective || step.goal || '',
-        activity: step.activity || '',
-        flow: step.activitySteps || step.flow || '',
-        resources: step.resources || '',
-        scenario: step.scenario || '',
-        teacherScript: step.script || step.teacherScript || '',
-      })),
-    };
-  });
-}
-
 function hasLessonSteps(resolvedPhases) {
   return Array.isArray(resolvedPhases) && resolvedPhases.some((phase) => phase.steps?.length > 0);
 }
@@ -352,6 +157,7 @@ function buildLessonCourseData(updated, baseCourseData = {}) {
 
   updated.forEach((phase) => {
     courseData[phaseKeyMap[phase.key]] = {
+      ...baseCourseData[phaseKeyMap[phase.key]],
       title: phase.title,
       steps: phase.steps.map((s) => ({
         id: s.id,
@@ -375,27 +181,21 @@ function buildLessonCourseData(updated, baseCourseData = {}) {
 }
 
 function buildLessonN8nPayload(course = {}) {
-  const map = buildCourseMap(course);
-
-  let parsedOverview = course.courseOverview || null;
-  if (parsedOverview?.text && typeof parsedOverview.text === 'string') {
-    try { parsedOverview = JSON.parse(parsedOverview.text); } catch {}
-  }
-  if (parsedOverview?.courseOverview) parsedOverview = parsedOverview.courseOverview;
+  const parsedOverview = getCourseOverview(course);
 
   return {
-    courseTitle: course.courseTitle || course.title || map.title || '',
-    age: (course.ageGroup || course.age || '').replace(/--/g, '') || '7-9',
-    duration: (course.duration || '').replace(/--/g, '').replace('分钟', '') || '60',
-    scale: (course.classSize || course.unit || '').replace(/--/g, '') || '',
+    courseTitle: course.courseTitle || course.title || parsedOverview.courseTitle || '',
+    age: String(course.rawAge || course.ageGroup || course.age || '').replace(/--/g, ''),
+    duration: String(course.rawDuration || course.duration || '').replace(/--|分钟|\s*min(?:utes?)?$/gi, '').trim(),
+    scale: String(course.rawClassSize || course.classSize || '').replace(/--/g, ''),
     vocabulary: ensureArray(course.vocabularies || course.keywords),
     grammar: ensureArray(course.grammars),
     skills: ensureArray(course.languageSkills),
     paths: ensureArray(course.experiencePaths || course.experiencePath),
-    theme: course.theme || map.path || '',
+    theme: course.theme || parsedOverview.theme || '',
     taskName: course.taskName || '',
-    storyContext: course.storyContext || map.storyline || '',
-    keyOutcome: course.keyOutcome || map.keyOutcome || '',
+    storyContext: course.storyContext || parsedOverview.overallContext || '',
+    keyOutcome: course.keyOutcome || parsedOverview.finalTask || '',
     atmosphere: course.atmosphere || '',
     specialRequirements: course.specialRequirements || '',
     courseOverview: parsedOverview,
@@ -425,8 +225,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   const aiLanguage = isChinese ? 'zh' : 'en';
   const outputLanguage = isChinese ? 'Chinese' : 'English';
   const [addForm] = Form.useForm();
-  const [data, setData] = React.useState(emptyPhases);
-  const [loading, setLoading] = React.useState(true);
+  const [data, setData] = React.useState(() => resolveLessonPhases(course) || resolveLessonPhases(phases || phaseTemplates));
   const [viewMode, setViewMode] = React.useState('map');
   const [activeMapPhase, setActiveMapPhase] = React.useState(null);
   const mapViewportRef = React.useRef(null);
@@ -444,22 +243,25 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   const [insertTarget, setInsertTarget] = React.useState(null);
   const [phaseDetail, setPhaseDetail] = React.useState(null);
   const [genMode, setGenMode] = React.useState('ai');
-  const [selectedClassic, setSelectedClassic] = React.useState(null);
+  const [classicKey, setClassicKey] = React.useState('');
   const [ideaText, setIdeaText] = React.useState('');
   const [regenPhase, setRegenPhase] = React.useState(null);
   const [regenPhaseConfirm, setRegenPhaseConfirm] = React.useState(null);
   const [regenAllLoading, setRegenAllLoading] = React.useState(false);
-  const [regenStep, setRegenStep] = React.useState(null);
-  const [addingStep, setAddingStep] = React.useState(null);
   const [generateDraftLoading, setGenerateDraftLoading] = React.useState(false);
   const [mapSummaryModal, setMapSummaryModal] = React.useState(null);
-  const [savedSteps, setSavedSteps] = React.useState(() => {
-    try { return JSON.parse(localStorage.getItem('saved-wellbeing-steps') || '[]'); }
-    catch { return []; }
-  });
+  const [favoriteBusy, setFavoriteBusy] = React.useState(false);
+  const [draftError, setDraftError] = React.useState('');
+  const draftRequest = React.useRef(0);
   const [toast, setToast] = React.useState('');
 
   const { user } = useAuth();
+  const favorites = useLessonCollection('/api/lesson-step-favorites', user?.id);
+  const classics = useLessonCollection('/api/workbench-cases', addOpen && genMode === 'classic' ? user?.id : null);
+  const selectedClassic = classics.items.find(item => `${item.moduleId}/${item.id}` === classicKey);
+  const courseRef = String(course?.id ?? '');
+  const overview = getCourseOverview(course);
+  const quickIdeas = [...new Set([...ensureArray(course?.vocabularies), ...ensureArray(course?.grammars)])].slice(0, 5);
 
   React.useLayoutEffect(() => {
     const viewport = mapViewportRef.current;
@@ -467,9 +269,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     if (station && viewport.scrollWidth > viewport.clientWidth) {
       frameGardenStation(viewport, station);
     }
-  }, [loading, viewMode]);
-
-  const generateCalledRef = React.useRef(false);
+  }, [viewMode]);
 
   const formatDuration = React.useCallback((value) => {
     if (value == null || !/\d/.test(String(value))) return '—';
@@ -491,60 +291,6 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     formatLessonText(value, isChinese)
   ), [isChinese]);
 
-  const getClassicDisplayName = React.useCallback((name) => {
-    const activity = classicActivities.find((item) => item.name === name);
-    return isChinese ? name : (activity?.nameEn || name);
-  }, [isChinese]);
-
-  React.useEffect(() => {
-    const fromCourse = resolvePhasesFromCourse(course);
-    const fromRuntimePhases = phases === phaseTemplates ? null : resolvePhasesFromCourse(phases);
-    const existing = hasLessonSteps(fromCourse)
-      ? fromCourse
-      : hasLessonSteps(fromRuntimePhases)
-        ? fromRuntimePhases
-        : null;
-
-    if (existing) {
-      setData(existing);
-      setLoading(false);
-      return;
-    }
-
-    if (generateCalledRef.current) return;
-    generateCalledRef.current = true;
-
-    const generateLesson = async () => {
-      try {
-        const response = await fetch('/api/ai/generate-course', {
-          method: 'POST',
-          headers: getAuthHeaders(),
-          body: JSON.stringify({
-            ...buildLessonN8nPayload(course),
-            language: aiLanguage,
-            outputLanguage,
-          }),
-        });
-        const result = await response.json();
-
-        if (result.success && result.data) {
-          const courseDataRaw = result.data.courseData || result.data;
-          const resolved = resolvePhasesFromCourse({ courseData: courseDataRaw });
-          if (resolved) {
-            setData(resolved);
-            onPhasesChange?.(resolved);
-          }
-        }
-      } catch (err) {
-        console.error('生成教案失败:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    generateLesson();
-  }, []);
-
   const updateData = async (next) => {
     const updated = next.map((phase) => ({
       ...phase,
@@ -558,14 +304,6 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       ...course,
       courseData: nextCourseData,
     }, { source: 'lesson' });
-
-    if (course?.id && !String(course.id).startsWith('created-')) {
-      try {
-        await apiService.updateCourse(course.id, { courseData: nextCourseData });
-      } catch (err) {
-        console.warn('自动保存教案失败:', err);
-      }
-    }
   };
 
   const toastMessage = (text) => {
@@ -603,9 +341,12 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   };
 
   const openAddStep = (phase, step, options = {}) => {
+    draftRequest.current++;
+    setGenerateDraftLoading(false);
+    setDraftError('');
     setAddPhase(phase);
     setGenMode('ai');
-    setSelectedClassic(null);
+    setClassicKey('');
     setIdeaText('');
     setInsertTarget(options.insertIndex != null ? { phaseKey: phase.key, insertIndex: options.insertIndex } : null);
     if (step) {
@@ -613,15 +354,16 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       setRegenTarget({ phaseKey: phase.key, step });
       addForm.setFieldsValue({
         title: step.title || '',
-        time: timeMatch ? parseInt(timeMatch[1]) : 8,
+        time: timeMatch ? Number(timeMatch[1]) : null,
         goal: step.goal || '',
         activity: step.activity || '',
         resources: step.resources || '',
         scenario: step.scenario || '',
+        flowSteps: createFlowStepsForForm(step),
       });
     } else {
       setRegenTarget(null);
-      addForm.setFieldsValue(defaultDraft);
+      addForm.setFieldsValue(emptyDraft);
     }
     setAddOpen(true);
   };
@@ -633,197 +375,82 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
   const openPhaseDetail = (phase) => {
     setMenuKey(null);
-    const detailKey = phaseDetailKeyMap[String(phase.phase || phase.key || '').toLowerCase()] || phase.phase;
-    setPhaseDetail(phaseDetailData[detailKey] || null);
+    const key = longPhaseKey(phase.key);
+    const language = phase.steps.map(step => step.goal).filter(Boolean).join('\n');
+    const scenarios = [...new Set(phase.steps.map(step => step.scenario).filter(Boolean))].join('\n');
+    setPhaseDetail({
+      key: phase.key, title: [getPhaseTitle(phase), getPhaseName(phase)].filter(Boolean).join(' · '),
+      color: lessonMapMeta[phase.key].tint,
+      goal: lessonText(phase.goal || phase.summary || overview.journey?.[key] || course?.journey?.[key]),
+      lang: lessonText(phase.languageGoals) || language || lessonText(overview.languageGoals),
+      hasPhaseLanguage: Boolean(phase.languageGoals || language),
+      sel: lessonText(overview.selGoals), perma: lessonText(overview.permaGoals),
+      narrative: lessonText(phase.narrative) || scenarios || lessonText(overview.overallContext || course?.storyContext),
+      hasPhaseNarrative: Boolean(phase.narrative || scenarios),
+    });
   };
 
   const fillIdea = (text) => {
     setIdeaText((current) => (current ? `${current}，${text}` : text));
   };
 
-  const fillDraftFromIdea = (source = ideaText, classicName = '') => {
-    const theme = classicName || source || '小组合作挑战';
+  const requestStep = async (phaseKey, index, currentStep, requirements) => {
+    const phase = data.find(item => item.key === phaseKey);
+    const steps = phase?.steps || [];
+    const siblings = steps.filter((_, i) => !currentStep || i !== index);
+    const otherPhases = Object.fromEntries(data.filter(item => item.key !== phaseKey).map(item =>
+      [longPhaseKey(item.key), { title: item.title, steps: item.steps }]));
+    const result = await apiService.request('/api/ai/generate-step', {
+      method: 'POST',
+      body: JSON.stringify({
+        ...buildLessonN8nPayload(course), title: getDisplayCourseTitle(course),
+        phaseKey: longPhaseKey(phaseKey), language: aiLanguage, outputLanguage,
+        stepId: currentStep ? currentStep.id ?? `${phaseKey}-${index + 1}` : undefined,
+        requirements, currentStep, currentSteps: siblings, siblingSteps: siblings,
+        otherPhases, insertIndex: index, existingStepCount: steps.length,
+        prevStep: steps[index - 1], nextStep: steps[currentStep ? index + 1 : index],
+        userId: user?.id, organizationId: user?.organizationId,
+      }),
+    });
+    if (!result.success || !result.data?.step?.title?.trim()) throw new Error(result.error || t('lessonPlanUi.noValidData'));
+    return normalizeLessonStep(result.data.step);
+  };
+
+  const fillStepForm = step => {
+    const minutes = parseMinutes(step.duration);
     addForm.setFieldsValue({
-      title: classicName || '星球任务挑战',
-      time: 8,
-      goal: '在真实任务中理解并运用目标词汇与句型，提升听说表达的自信。',
-      activity: `学生围绕“${theme}”完成分组互动，并在过程中使用目标语言进行沟通。`,
-      flowSteps: [
-        {
-          title: '创设悬念',
-          desc: '教师展示任务线索，快速建立活动情境和角色身份。',
-          teacher: 'Shhh... Listen, everyone. A new mission is coming.',
-          cue: '神秘地展示任务线索；停顿等待学生自然回应',
-        },
-        {
-          title: '朗读来信',
-          desc: '教师示范目标表达，学生跟读并理解关键语言。',
-          teacher: 'Let me read the message. Please listen for the key words.',
-          cue: '放慢语速朗读；指向关键词图片或板书',
-        },
-        {
-          title: '情绪感知',
-          desc: '学生分组完成互动任务，教师巡视并提供语言支持。',
-          teacher: 'How do they feel? Can you show me with your face?',
-          cue: '用表情和手势示范；鼓励学生用短句回应',
-        },
-        {
-          title: '发布任务',
-          desc: '小组展示结果，教师总结语言亮点并给出下一步挑战。',
-          teacher: "Now let's try it together. Work with your team.",
-          cue: '指向任务卡；确认每组知道要完成的产出',
-        },
-      ],
-      resources: '任务卡、图片卡、计时器、奖励贴纸',
-      scenario: '课堂变成任务现场，学生以小队身份完成阶段挑战。',
+      title: step.title, time: minutes || null, goal: step.goal, activity: step.activity,
+      flowSteps: createFlowStepsForForm(step), resources: step.resources, scenario: step.scenario,
     });
-  };
-
-  const parseFlowStepsForForm = (flow, teacherScript) => {
-    const flowLines = (flow || '').split('\n').filter(Boolean);
-    const scriptLines = (teacherScript || '').split('\n').filter(Boolean);
-
-    const distributeScript = scriptLines.length <= 1 && teacherScript;
-    const scriptChunks = distributeScript
-      ? chunkArray(teacherScript.split(/[。！？]+/).filter((s) => s.trim()), Math.max(1, flowLines.length || defaultFlowSteps.length))
-      : [];
-
-    const defaultCues = [
-      '用神秘、轻声的语气开场，展示关键道具或画面，引发学生好奇心。',
-      '朗读或展示核心内容，放慢语速，配合表情和手势帮助理解。',
-      '引导学生观察、体会角色感受，用面部表情或肢体模仿情绪。',
-      '明确任务身份和最终挑战，推动学生进入下一环节。',
-    ];
-
-    const steps = flowLines.map((line, i) => {
-      const colonIndex = line.indexOf('：');
-      const title = colonIndex > -1 ? line.slice(0, colonIndex) : line;
-      const desc = colonIndex > -1 ? line.slice(colonIndex + 1) : '';
-      let teacher = '';
-      let cue = '';
-
-      if (distributeScript) {
-        teacher = scriptChunks[i].length > 0 ? scriptChunks[i].join('。') + '。' : '';
-        cue = defaultCues[i] || '';
-      } else if (scriptLines[i]) {
-        const cueMatch = scriptLines[i].match(/【动作\/引导】(.*)$/);
-        if (cueMatch) {
-          cue = cueMatch[1].trim();
-          teacher = scriptLines[i].replace(/【动作\/引导】.*$/, '').trim();
-        } else {
-          teacher = scriptLines[i].trim();
-          cue = defaultCues[i] || '';
-        }
-      }
-
-      return { title, desc, teacher, cue };
-    });
-
-    if (steps.length > 0) return steps;
-
-    return defaultFlowSteps.map((s, i) => ({
-      title: s.title,
-      desc: s.desc,
-      teacher: scriptChunks[i] && scriptChunks[i].length > 0 ? scriptChunks[i].join('。') + '。' : '',
-      cue: s.cue,
-    }));
-  };
-
-  const chunkArray = (arr, count) => {
-    const size = Math.max(1, Math.ceil(arr.length / count));
-    return Array.from({ length: count }, (_, i) => arr.slice(i * size, (i + 1) * size));
   };
 
   const handleGenerateDraft = async (isClassic = false) => {
-    const phase = addPhase;
-    if (!phase) return;
-
+    if (!addPhase || generateDraftLoading || (isClassic && !selectedClassic)) return;
+    const request = ++draftRequest.current;
     setGenerateDraftLoading(true);
+    setDraftError('');
     try {
-      const targetPhase = data.find((p) => p.key === phase.key);
-      const currentSteps = targetPhase?.steps || [];
-      const insertIndex = insertTarget?.phaseKey === phase.key ? insertTarget.insertIndex : currentSteps.length;
-
-      const otherPhases = {};
-      data.forEach((p) => {
-        if (p.key !== phase.key) {
-          otherPhases[longPhaseKey(p.key)] = { title: p.title, steps: p.steps };
-        }
-      });
-
-      const response = await fetch('/api/ai/generate-step', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          phaseKey: longPhaseKey(phase.key),
-          language: aiLanguage,
-          outputLanguage,
-          stepId: `${longPhaseKey(phase.key)}-draft`,
-          title: course?.courseTitle || course?.title || '',
-          age: course?.ageGroup || course?.age || '7-9',
-          duration: course?.duration || '60',
-          scale: course?.classSize || '',
-          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
-          grammar: ensureArray(course?.grammars),
-          theme: course?.theme || '',
-          userId: user?.id || null,
-          organizationId: user?.organizationId || null,
-          requirements: isClassic ? `经典活动：${selectedClassic}` : (ideaText || ''),
-          currentStep: null,
-          siblingSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration })),
-          otherPhases,
-          insertIndex,
-          prevStep: insertIndex > 0 ? currentSteps[insertIndex - 1] : null,
-          nextStep: insertIndex < currentSteps.length ? currentSteps[insertIndex] : null,
-        }),
-      });
-      const result = await response.json();
-
-      if (result.success && result.data?.step) {
-        const step = normalizeStep(result.data.step);
-        const timeMatch = String(step.duration || '').match(/(\d+)/);
-
-        addForm.setFieldsValue({
-          title: step.title || '',
-          time: timeMatch ? parseInt(timeMatch[1]) : 8,
-          goal: step.goal || '',
-          activity: step.activity || '',
-          flowSteps: parseFlowStepsForForm(step.flow, step.teacherScript),
-          resources: step.resources || '',
-          scenario: step.scenario || '',
-        });
-      }
-    } catch (err) {
-      console.error('生成草案失败:', err);
+      const index = regenTarget ? addPhase.steps.indexOf(regenTarget.step) : insertTarget?.insertIndex ?? addPhase.steps.length;
+      const requirements = isClassic && selectedClassic ? [selectedClassic.title, selectedClassic.description].filter(Boolean).join('\n') : ideaText;
+      const step = await requestStep(addPhase.key, index, regenTarget?.step, requirements);
+      if (request === draftRequest.current) fillStepForm(step);
+    } catch (error) {
+      if (request === draftRequest.current) setDraftError(error.message);
     } finally {
-      setGenerateDraftLoading(false);
+      if (request === draftRequest.current) setGenerateDraftLoading(false);
     }
   };
 
   const addDraftStep = async () => {
-    const values = await addForm.validateFields();
+    const values = await addForm.validateFields().catch(() => null);
+    if (!values?.title?.trim()) return;
     const target = addPhase || data[0];
-    const flowSteps = (values.flowSteps?.length ? values.flowSteps : defaultFlowSteps)
-      .map((item, index) => ({
-        title: item?.title || defaultFlowSteps[index]?.title || `步骤${index + 1}`,
-        desc: item?.desc || '',
-        teacher: item?.teacher || '',
-        cue: item?.cue || '',
-      }));
-    const flow = flowSteps.map((item) => `${item.title}：${item.desc}`).join('\n');
-    const teacherScript = flowSteps
-      .map((item) => [item.teacher, item.cue ? `【动作/引导】${item.cue}` : ''].filter(Boolean).join(' '))
-      .filter(Boolean)
-      .join('\n');
     const nextStep = {
-      title: values.title || '新活动环节',
-      duration: `${values.time || 8}分钟`,
-      goal: values.goal || '',
-      activity: values.activity || '',
-      flow,
-      resources: values.resources || '',
-      scenario: values.scenario || '',
-      teacherScript: teacherScript || 'Let\u2019s try this mission together. Listen, speak, and help your team.',
+      id: regenTarget?.step.id || crypto.randomUUID(),
+      title: values.title.trim(), duration: values.time ? `${values.time}分钟` : '',
+      goal: values.goal || '', activity: values.activity || '',
+      flow: composeFlowFromSteps(values.flowSteps), teacherScript: composeScriptFromSteps(values.flowSteps),
+      resources: values.resources || '', scenario: values.scenario || '',
     };
 
     if (regenTarget) {
@@ -867,9 +494,9 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       ? `${adjustText.trim()}（调整方向：${adjustChips.join('、')}）`
       : adjustText.trim();
     setAdjustLoading(true);
-    await handleRegenerateStep(adjustTarget.phaseKey, adjustTarget.stepIndex, requirements);
+    const saved = await handleRegenerateStep(adjustTarget.phaseKey, adjustTarget.stepIndex, requirements);
     setAdjustLoading(false);
-    setAdjustTarget(null);
+    if (saved) setAdjustTarget(null);
   };
 
   const longPhaseKey = (shortKey) => {
@@ -877,8 +504,9 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     return map[shortKey] || shortKey;
   };
 
-  const handleRegeneratePhase = async (phaseKey, sourceData = data, options = {}) => {
-    if (!options.silent) setRegenPhase(phaseKey);
+  const handleRegeneratePhase = async (phaseKey) => {
+    if (regenPhase || regenAllLoading) return;
+    setRegenPhase(phaseKey);
     try {
       const response = await fetch('/api/ai/regenerate-phase', {
         method: 'POST',
@@ -887,33 +515,23 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
           phaseKey: longPhaseKey(phaseKey),
           language: aiLanguage,
           outputLanguage,
-          title: course?.courseTitle || course?.title || '',
-          age: course?.ageGroup || course?.age || '7-9',
-          duration: course?.duration || '60',
-          scale: course?.classSize || '',
-          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
-          grammar: ensureArray(course?.grammars),
-          theme: course?.theme || '',
+          ...buildLessonN8nPayload(course),
+          title: getDisplayCourseTitle(course),
           userId: user?.id || null,
           organizationId: user?.organizationId || null,
-          currentCourseData: dataToCoursePhases(sourceData),
+          currentCourseData: dataToCoursePhases(data),
         }),
       });
       const result = await response.json();
-      if (result.success && result.data?.steps) {
-        const newSteps = result.data.steps.map(normalizeStep);
-        const nextData = sourceData.map((phase) =>
-          phase.key === phaseKey ? { ...phase, steps: newSteps } : phase
-        );
-        if (!options.deferUpdate) await updateData(nextData);
-        return nextData;
+      const steps = result.data?.steps;
+      if (!response.ok || !result.success || !Array.isArray(steps) || !steps.length || steps.some(step => !step?.title?.trim())) {
+        throw new Error(result.error || t('lessonPlanUi.noValidData'));
       }
-      return sourceData;
-    } catch (err) {
-      console.error('重新生成阶段失败:', err);
-      return sourceData;
+      await updateData(data.map(phase => phase.key === phaseKey ? { ...phase, steps: steps.map(normalizeLessonStep) } : phase));
+    } catch (error) {
+      toastMessage(error.message || t('lessonPlanUi.regenFailedRetry'));
     } finally {
-      if (!options.silent) setRegenPhase(null);
+      setRegenPhase(null);
     }
   };
 
@@ -927,7 +545,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
           ...buildLessonN8nPayload(course),
           language: aiLanguage,
           outputLanguage,
-          regenerate: true,
+          regenerate: hasLessonSteps(data),
           currentCourseData: dataToCoursePhases(data),
         }),
       });
@@ -938,8 +556,8 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       }
 
       const courseDataRaw = result.data.courseData || result.data;
-      const resolved = resolvePhasesFromCourse({ courseData: courseDataRaw });
-      if (!resolved) {
+      const resolved = resolveLessonPhases({ courseData: courseDataRaw });
+      if (!hasLessonSteps(resolved)) {
         throw new Error(t('lessonPlanUi.noValidData'));
       }
 
@@ -954,112 +572,19 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     }
   };
 
-  const handleAddStep = async (phaseKey, insertIndex) => {
-    setAddingStep(phaseKey);
+  const handleRegenerateStep = async (phaseKey, stepIndex, requirements) => {
+    const phase = data.find(p => p.key === phaseKey);
+    const original = phase?.steps[stepIndex];
+    if (!original) return false;
     try {
-      const phase = data.find((p) => p.key === phaseKey);
-      const currentSteps = phase?.steps || [];
-      const idx = insertIndex != null ? insertIndex : currentSteps.length;
-
-      const otherPhases = {};
-      data.forEach((p) => {
-        if (p.key !== phaseKey) {
-          otherPhases[longPhaseKey(p.key)] = { title: p.title, steps: p.steps };
-        }
-      });
-
-      const response = await fetch('/api/ai/generate-step', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          phaseKey: longPhaseKey(phaseKey),
-          language: aiLanguage,
-          outputLanguage,
-          title: course?.courseTitle || course?.title || '',
-          age: course?.ageGroup || course?.age || '7-9',
-          duration: course?.duration || '60',
-          scale: course?.classSize || '',
-          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
-          grammar: ensureArray(course?.grammars),
-          theme: course?.theme || '',
-          userId: user?.id || null,
-          organizationId: user?.organizationId || null,
-          existingStepCount: currentSteps.length,
-          currentSteps: currentSteps.map((s) => ({ title: s.title, time: s.duration, objective: s.goal })),
-          otherPhases,
-          insertIndex: idx,
-          prevStep: idx > 0 ? currentSteps[idx - 1] : null,
-          nextStep: idx < currentSteps.length ? currentSteps[idx] : null,
-        }),
-      });
-      const result = await response.json();
-      if (result.success && result.data?.step) {
-        const newStep = normalizeStep(result.data.step);
-        const newSteps = [...currentSteps];
-        newSteps.splice(idx, 0, newStep);
-        updateData(data.map((p) =>
-          p.key === phaseKey ? { ...p, steps: newSteps } : p
-        ));
-        setOpenCards((prev) => new Set(prev).add(`${phaseKey}-${idx}`));
-      }
-    } catch (err) {
-      console.error('添加环节失败:', err);
-    } finally {
-      setAddingStep(null);
-    }
-  };
-
-  const handleRegenerateStep = async (phaseKey, stepIndex, requirements = '') => {
-    const phase = data.find((p) => p.key === phaseKey);
-    const currentSteps = phase?.steps || [];
-    const currentStep = currentSteps[stepIndex];
-    const cardKey = `${phaseKey}-${stepIndex}`;
-    setRegenStep(cardKey);
-    try {
-      const siblingSteps = currentSteps.filter((_, i) => i !== stepIndex);
-      const otherPhases = {};
-      data.forEach((p) => {
-        if (p.key !== phaseKey) {
-          otherPhases[longPhaseKey(p.key)] = { title: p.title, steps: p.steps };
-        }
-      });
-
-      const response = await fetch('/api/ai/generate-step', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          phaseKey: longPhaseKey(phaseKey),
-          language: aiLanguage,
-          outputLanguage,
-          stepId: currentStep?.id,
-          title: course?.courseTitle || course?.title || '',
-          age: course?.ageGroup || course?.age || '7-9',
-          duration: course?.duration || '60',
-          scale: course?.classSize || '',
-          vocabulary: ensureArray(course?.vocabularies || course?.keywords),
-          grammar: ensureArray(course?.grammars),
-          theme: course?.theme || '',
-          requirements,
-          userId: user?.id || null,
-          organizationId: user?.organizationId || null,
-          currentStep: currentStep ? { id: currentStep.id, title: currentStep.title, time: currentStep.duration, objective: currentStep.goal } : null,
-          siblingSteps: siblingSteps.map((s) => ({ title: s.title, time: s.duration })),
-          otherPhases,
-        }),
-      });
-      const result = await response.json();
-      if (result.success && result.data?.step) {
-        const newStep = normalizeStep(result.data.step);
-        updateData(data.map((p) =>
-          p.key === phaseKey
-            ? { ...p, steps: p.steps.map((s, i) => (i === stepIndex ? newStep : s)) }
-            : p
-        ));
-      }
-    } catch (err) {
-      console.error('重新生成环节失败:', err);
-    } finally {
-      setRegenStep(null);
+      const revised = await requestStep(phaseKey, stepIndex, original, requirements);
+      await updateData(data.map(p => p.key === phaseKey ? {
+        ...p, steps: p.steps.map((s, i) => i === stepIndex ? { ...revised, id: original.id || revised.id } : s),
+      } : p));
+      return true;
+    } catch (error) {
+      toastMessage(error.message);
+      return false;
     }
   };
 
@@ -1072,47 +597,27 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     setMenuKey(null);
   };
 
-  const handleSaveStep = (phaseKey, stepIndex) => {
-    const phase = data.find((p) => p.key === phaseKey);
-    const step = phase?.steps?.[stepIndex];
-    if (!step) {
-      console.warn('[saveStep] 未找到环节:', { phaseKey, stepIndex });
-      return;
+  const findFavorite = (phaseKey, stepIndex) => {
+    const step = data.find(p => p.key === phaseKey)?.steps[stepIndex];
+    return favorites.items.find(record => matchesFavorite(record, courseRef, phaseKey, step));
+  };
+
+  const changeFavorite = async (step, phaseKey, record) => {
+    if (favoriteBusy) return;
+    setFavoriteBusy(true);
+    setMenuKey(null);
+    try {
+      await apiService.request('/api/lesson-step-favorites', {
+        method: record ? 'DELETE' : 'PUT',
+        body: JSON.stringify(record ? { id: record.id } : { courseRef, phaseKey, step }),
+      });
+      favorites.reload();
+      toastMessage(t(record ? 'lessonPlanUi.unsavedToast' : 'lessonPlanUi.savedToast', { title: step.title }));
+    } catch (error) {
+      toastMessage(error.message);
+    } finally {
+      setFavoriteBusy(false);
     }
-    const record = {
-      savedAt: Date.now(),
-      title: step.title,
-      goal: step.goal,
-      activity: step.activity,
-      flow: step.flow,
-      duration: step.duration,
-      resources: step.resources,
-      scenario: step.scenario,
-      teacherScript: step.teacherScript,
-    };
-    const updated = [record, ...savedSteps.filter((s) => s.title !== record.title)];
-    setSavedSteps(updated);
-    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
-    setMenuKey(null);
-    toastMessage(t('lessonPlanUi.savedToast', { title: isChinese ? record.title : getDisplayText(record.title) }));
-  };
-
-  const handleUnsaveStep = (phaseKey, stepIndex) => {
-    const phase = data.find((p) => p.key === phaseKey);
-    const step = phase?.steps?.[stepIndex];
-    if (!step) return;
-    const updated = savedSteps.filter((s) => s.title !== step.title);
-    setSavedSteps(updated);
-    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
-    setMenuKey(null);
-    toastMessage(t('lessonPlanUi.unsavedToast', { title: isChinese ? step.title : getDisplayText(step.title) }));
-  };
-
-  const isStepSaved = (phaseKey, stepIndex) => {
-    const phase = data.find((p) => p.key === phaseKey);
-    const step = phase?.steps?.[stepIndex];
-    if (!step) return false;
-    return savedSteps.some((s) => s.title === step.title);
   };
 
   const handlePinStep = (phaseKey, stepIndex) => {
@@ -1124,25 +629,6 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     updateData(data.map((p) => (p.key === phaseKey ? { ...p, steps } : p)));
     setMenuKey(null);
     toastMessage(t('lessonPlanUi.pinnedToast'));
-  };
-
-  const handleSelectSavedStep = (record) => {
-    const timeMatch = (record.duration || '').match(/(\d+)/);
-    addForm.setFieldsValue({
-      title: record.title || '',
-      time: timeMatch ? parseInt(timeMatch[1]) : 8,
-      goal: record.goal || '',
-      activity: record.activity || '',
-      flowSteps: parseFlowStepsForForm(record.flow, record.teacherScript),
-      resources: record.resources || '',
-      scenario: record.scenario || '',
-    });
-  };
-
-  const handleDeleteSavedStep = (record) => {
-    const updated = savedSteps.filter((s) => s.savedAt !== record.savedAt);
-    setSavedSteps(updated);
-    localStorage.setItem('saved-wellbeing-steps', JSON.stringify(updated));
   };
 
   const dataToCoursePhases = (sourceData = data) => {
@@ -1165,24 +651,13 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     return result;
   };
 
-  const normalizeStep = (step) => ({
-    id: step.id,
-    title: step.title || '',
-    duration: String(step.time || step.duration || ''),
-    goal: step.objective || step.goal || '',
-    activity: step.activity || '',
-    flow: step.activitySteps || step.flow || '',
-    resources: step.resources || '',
-    scenario: step.scenario || '',
-    teacherScript: step.script || step.teacherScript || '',
-  });
-
   const renderOverviewStepCard = (phase, step, index, keyPrefix = '') => {
     const cardKey = `${keyPrefix}${phase.key}-${index}`;
     const isOpen = openCards.has(cardKey);
     const stepTitle = getDisplayText(step.title);
     const stepGoal = getDisplayText(step.goal);
     const stepActivity = getDisplayText(step.activity);
+    const flowItems = buildStepFlowItems(step, !isChinese);
     const { Icon } = lessonMapMeta[phase.key] || lessonMapMeta.eng;
 
     return (
@@ -1230,9 +705,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 }}
                 onInsertBefore={() => openInsertStepBefore(phase, index)}
                 onAdjust={() => openAdjust(phase.key, index, step)}
-                onSave={() => handleSaveStep(phase.key, index)}
-                onUnsave={() => handleUnsaveStep(phase.key, index)}
-                isSaved={isStepSaved(phase.key, index)}
+                onSave={() => changeFavorite(step, phase.key)}
+                onUnsave={() => changeFavorite(step, phase.key, findFavorite(phase.key, index))}
+                isSaved={Boolean(findFavorite(phase.key, index))}
+                favoriteBusy={favoriteBusy || favorites.loading || favorites.error}
                 onPin={() => handlePinStep(phase.key, index)}
                 onDelete={() => handleDeleteStep(phase.key, index)}
               />
@@ -1245,21 +721,22 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
             <div className="step-brief-item">
               <div className="step-detail-label"><Target size={13} />{t('lesson.languageGoal')}</div>
               <div className="step-detail-body tbl-lo">
-                {compactOverviewText(stepGoal)}
+                {compactOverviewText(stepGoal) || t('common.none')}
               </div>
             </div>
             <div className="step-brief-item">
               <div className="step-detail-label"><ClipboardList size={13} />{t('lesson.activitySummary')}</div>
               <div className="step-detail-body">
-                {compactOverviewText(stepActivity, 132)}
+                {compactOverviewText(stepActivity, 132) || t('common.none')}
               </div>
             </div>
             <div className="step-brief-item">
               <div className="step-detail-label"><ListChecks size={13} />{t('lesson.activityFlow')}</div>
               <div className="step-flow-card">
                 <div className="step-flow-list">
-                  {buildStepFlowItems(step, !isChinese).map((item) => (
-                    <div className="step-flow-item" key={`${cardKey}-${item.title}`}>
+                  {!flowItems.length && <span>{t('common.none')}</span>}
+                  {flowItems.map((item, flowIndex) => (
+                    <div className="step-flow-item" key={`${cardKey}-${flowIndex}`}>
                       <span className="step-flow-dot" />
                       <div>
                         <div className="step-flow-title">{getDisplayText(item.title)}</div>
@@ -1298,9 +775,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 }}
                 onInsertBefore={() => openInsertStepBefore(phase, index)}
                 onAdjust={() => openAdjust(phase.key, index, step)}
-                onSave={() => handleSaveStep(phase.key, index)}
-                onUnsave={() => handleUnsaveStep(phase.key, index)}
-                isSaved={isStepSaved(phase.key, index)}
+                onSave={() => changeFavorite(step, phase.key)}
+                onUnsave={() => changeFavorite(step, phase.key, findFavorite(phase.key, index))}
+                isSaved={Boolean(findFavorite(phase.key, index))}
+                favoriteBusy={favoriteBusy || favorites.loading || favorites.error}
                 onPin={() => handlePinStep(phase.key, index)}
                 onDelete={() => handleDeleteStep(phase.key, index)}
               />
@@ -1313,15 +791,16 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
   const renderOverviewPhaseCard = (phase, keyPrefix = '') => {
     const phaseMinutes = parseMinutes(phase.duration);
-    const courseMinutes = parseMinutes(course?.duration || course?.course_duration || '60');
+    const courseMinutes = parseMinutes(course?.duration || course?.course_duration);
     const durationLimit = Math.max(1, Math.round(courseMinutes * (PHASE_DURATION_RATIO[phase.key] || 0.25)));
-    const overflowMinutes = Math.max(0, phaseMinutes - durationLimit);
+    const overflowMinutes = courseMinutes ? Math.max(0, phaseMinutes - durationLimit) : 0;
     const phaseMapMeta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
 
     return (
       <section
         className={`tbl-phase-card ${phase.key}`}
-        style={{ '--phase-tint': phaseMapMeta.tone, '--phase-accent': phaseMapMeta.accent }}
+        aria-busy={regenPhase === phase.key}
+        style={{ '--phase-tint': phaseMapMeta.tint, '--phase-accent': phaseMapMeta.accent }}
         key={`${keyPrefix}${phase.key}`}
       >
         <div className="tbl-phase-hd">
@@ -1372,12 +851,13 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
         <div className="tbl-steps-list">
           <div className="tbl-add-step-top">
-            <button type="button" className="tbl-add-step-btn" data-wb-button="secondary" data-wb-size="sm" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
-              {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
-              {addingStep === phase.key ? t('workflow.lesson.generatingShort') : t('workflow.lesson.addStep')}
+            <button type="button" className="tbl-add-step-btn" data-wb-button="secondary" data-wb-size="sm" onClick={() => openAddStep(phase)}>
+              <Plus size={12} />
+              {t('workflow.lesson.addStep')}
             </button>
           </div>
 
+          {!phase.steps.length && <span className="tbl-phase-sub">{t('lesson.noSteps')}</span>}
           {phase.steps.map((step, index) => renderOverviewStepCard(phase, step, index, keyPrefix))}
         </div>
       </section>
@@ -1389,7 +869,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     const selectedMeta = selected ? lessonMapMeta[selected.key] : null;
 
     return (
-      <div className="lesson-roadmap-shell">
+      <ContentTabPanel group="lesson-view" value="map" className="lesson-roadmap-shell">
         <nav className="lesson-roadmap-jumps" aria-label={isChinese ? '地图站点' : 'Map stations'}>
           <span>{isChinese ? '定位站点' : 'Go to station'}</span>
           {data.map((phase) => {
@@ -1430,7 +910,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 const { Icon } = meta;
                 const stop = gardenStops[phase.key];
                 const phaseGoals = phase.steps.map((step) => step.goal).filter(Boolean);
-                const summary = phaseGoals.join(isChinese ? '；' : ' · ') || (isChinese ? meta.summary : meta.summaryEn);
+                const summary = phaseGoals.join(isChinese ? '；' : ' · ') || lessonText(overview.journey?.[longPhaseKey(phase.key)]) || t('common.none');
                 const phaseTitleText = [getPhaseTitle(phase), getPhaseName(phase)].filter(Boolean).join(' ');
                 const summaryText = getDisplayText(summary);
                 return (
@@ -1439,7 +919,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                     id={`lesson-station-${phase.key}`}
                     className={`lesson-roadmap-stage station-${meta.className}`}
                     data-phase={phase.key}
-                    style={{ '--stop-x': `${stop.x / 10}%`, '--stop-y': `${stop.y / gardenHeight * 100}%`, '--phase-tint': meta.tone }}
+                    style={{ '--stop-x': `${stop.x / 10}%`, '--stop-y': `${stop.y / gardenHeight * 100}%`, '--phase-tint': meta.tint }}
                     tabIndex={-1}
                     aria-label={phaseTitleText}
                   >
@@ -1460,7 +940,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                       onClick={() => setMapSummaryModal({
                         title: phaseTitleText,
                         content: summaryText,
-                        tone: meta.tone,
+                        tone: meta.tint,
                         className: meta.className,
                       })}
                     >
@@ -1483,18 +963,18 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
         </section>
 
         {selected && selectedMeta && (
-          <aside className={`lesson-map-drawer ${selectedMeta.className}`} style={{ '--map-card-bg': selectedMeta.tone }}>
+          <aside className={`lesson-map-drawer ${selectedMeta.className}`} style={{ '--map-card-bg': selectedMeta.tint }}>
             <button type="button" className="lesson-map-drawer-close floating" onClick={() => setActiveMapPhase(null)} aria-label={t('common.close')}>
               <X size={22} />
             </button>
             {renderOverviewPhaseCard(selected, 'map-')}
           </aside>
         )}
-      </div>
+      </ContentTabPanel>
     );
   };
 
-  if (loading) {
+  if (regenAllLoading && !hasLessonSteps(data)) {
     return (
       <div id="ed-tbl" className="lesson-loading-page">
         <PageLoading label={t('workflow.lesson.generating')} />
@@ -1508,38 +988,28 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       <div className="lesson-design-page-header">
         <div className="lesson-design-title-row">
           <h2 className="lesson-design-page-title">{isChinese ? `${t('workflow.lesson.title')}|Lesson Plan` : t('workflow.lesson.title')}</h2>
-          <div className="lesson-view-filters" role="group" aria-label={t('workflow.lesson.title')}>
-            <FilterChip selected={viewMode === 'map'} onClick={() => setViewMode('map')}>{t('workflow.lesson.mapMode')}</FilterChip>
-            <FilterChip selected={viewMode === 'overview'} onClick={() => setViewMode('overview')}>{t('workflow.lesson.overviewMode')}</FilterChip>
-          </div>
           <Send className="lesson-title-symbol" size={20} aria-hidden="true" />
+          <ContentTabs
+            group="lesson-view" label={t('workflow.lesson.title')} value={viewMode} onChange={setViewMode}
+            items={[
+              { value: 'map', label: t('workflow.lesson.mapMode') },
+              { value: 'overview', label: t('workflow.lesson.overviewMode') },
+            ]}
+          />
         </div>
         <div className="lesson-design-actions">
-          <Button data-wb-button="secondary" icon={<RefreshCw size={16} />} loading={regenAllLoading} onClick={handleRegenerateAll}>
-            {regenAllLoading ? t('workflow.lesson.generatingShort') : t('workflow.lesson.regenerate')}
+          <Button data-wb-button="secondary" icon={<RefreshCw size={16} />} disabled={Boolean(regenPhase)} loading={regenAllLoading} onClick={handleRegenerateAll}>
+            {regenAllLoading ? t('workflow.lesson.generatingShort') : t(hasLessonSteps(data) ? 'workflow.lesson.regenerate' : 'lesson.generatePlan')}
           </Button>
           <Button className="btn-next-step" onClick={onNext}>
             {t('workflow.nextStep')}
           </Button>
         </div>
       </div>
-      <div className="tbl-inner-toolbar">
-        <div className="tbl-ib-left">
-          <button type="button" className="tbl-ib-btn" disabled title={i18next.t('lessonPlanUi.5bcc2a270c')}><RotateCcw size={14} /></button>
-          <button type="button" className="tbl-ib-btn" disabled title={i18next.t('lessonPlanUi.292f5a657c')}><RotateCw size={14} /></button>
-          <span className="tbl-ib-sep" />
-          <span className="tbl-ib-label">{t('workflow.lesson.title')}</span>
-        </div>
-        <div className="tbl-ib-right">
-          <div className="asi-dot-sm" />
-          <span className="asi-label-sm">{t('workflow.lesson.saved')}</span>
-        </div>
-      </div>
-
       {viewMode === 'map' ? renderLessonMap() : (
-        <div className="tbl-kanban">
+        <ContentTabPanel group="lesson-view" value="overview" className="tbl-kanban">
           {data.map((phase) => renderOverviewPhaseCard(phase))}
-        </div>
+        </ContentTabPanel>
       )}
       {mapSummaryModal && (
         <div className="mo on" id="lesson-map-summary-modal" onMouseDown={(event) => event.target === event.currentTarget && setMapSummaryModal(null)}>
@@ -1594,24 +1064,24 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
               <div className="pem-wrap" style={{ '--pem-accent': phaseDetail.color }}>
                 <div className="pem-summary">
                   <div className="pem-summary-label">{t('lesson.phasePosition')}</div>
-                  <div className="pem-summary-text">{getDisplayText(phaseDetail.goal)}</div>
+                  <div className="pem-summary-text">{getDisplayText(phaseDetail.goal) || t('common.none')}</div>
                 </div>
                 <div className="pem-grid">
                   <div className="pem-section">
-                    <div className="pem-label">{t('lesson.languageGoal')}</div>
-                    <div className="pem-content">{getDisplayText(phaseDetail.lang)}</div>
+                    <div className="pem-label">{t(phaseDetail.hasPhaseLanguage ? 'lesson.languageGoal' : 'lesson.courseLanguage')}</div>
+                    <div className="pem-content">{getDisplayText(phaseDetail.lang) || t('common.none')}</div>
                   </div>
                   <div className="pem-section">
-                    <div className="pem-label">{t('lesson.selFocus')}</div>
-                    <div className="pem-content">{getDisplayText(phaseDetail.sel)}</div>
+                    <div className="pem-label">{t('lesson.courseSel')}</div>
+                    <div className="pem-content">{getDisplayText(phaseDetail.sel) || t('common.none')}</div>
                   </div>
                   <div className="pem-section">
-                    <div className="pem-label">{t('lesson.permaFocus')}</div>
-                    <div className="pem-content">{getDisplayText(phaseDetail.perma)}</div>
+                    <div className="pem-label">{t('lesson.coursePerma')}</div>
+                    <div className="pem-content">{getDisplayText(phaseDetail.perma) || t('common.none')}</div>
                   </div>
                   <div className="pem-section pem-section-narrative">
-                    <div className="pem-label">{t('lesson.phaseNarrative')}</div>
-                    <div className="pem-content pem-narrative">{getDisplayText(phaseDetail.narrative)}</div>
+                    <div className="pem-label">{t(phaseDetail.hasPhaseNarrative ? 'lesson.phaseNarrative' : 'lesson.courseNarrative')}</div>
+                    <div className="pem-content pem-narrative">{getDisplayText(phaseDetail.narrative) || t('common.none')}</div>
                   </div>
                 </div>
               </div>
@@ -1632,7 +1102,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                   {regenTarget ? t('lesson.regenerateStep') : insertTarget ? t('lesson.insertStep') : t('lesson.addStep')} <strong className={`as-phase-${addPhase?.key || 'eng'}`}>{addPhase?.phase || 'Engage'}</strong>
                 </div>
                 <div id="asPhaseTag">
-                  {course?.courseTitle || course?.title || t('lessonPlanUi.demoCourseTitle')} · {course?.ageGroup || course?.age || t('lessonPlanUi.ageFallback')} / {course?.grade || t('lessonPlanUi.gradeFallback')}
+                  {[course?.courseTitle || course?.title, course?.ageGroup || course?.age, course?.grade].filter(value => value && value !== '--').join(' · ')}
                 </div>
               </div>
               <DialogCloseButton onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }} />
@@ -1640,98 +1110,95 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
             <div className="modal-body as-modal-body">
               <div className="as-left-panel">
-                <div className="as-gen-tabs">
-                  <button data-wb-filter="" aria-pressed={genMode === 'ai'} type="button" onClick={() => setGenMode('ai')}>
-                    <Sparkles size={13} /> {t('lesson.aiGenerate')}
-                  </button>
-                  <button data-wb-filter="" aria-pressed={genMode === 'classic'} type="button" onClick={() => setGenMode('classic')}>
-                    <Star size={13} /> {t('lesson.classicActivities')}
-                  </button>
-                  <button data-wb-filter="" aria-pressed={genMode === 'mine'} type="button" onClick={() => setGenMode('mine')}>
-                    <Heart size={13} /> {t('lesson.myFavorites')}
-                  </button>
-                </div>
-
-                <div className={`as-gen-panel ${genMode === 'ai' ? 'active' : ''}`} id="asPanel-ai">
-                  <div className="as-quick-hint">
-                    <div className="as-qh-label">{t('lesson.promptHint')}</div>
-                    <div className="as-qh-chips">
-                      {quickIdeas.map((item) => (
-                        <button data-wb-button="secondary" data-wb-size="sm" type="button" key={item.label} onClick={() => fillIdea(isChinese ? item.text : item.textEn)}>
-                          {isChinese ? item.label : item.labelEn}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="as-panel-label">{t('lesson.activityIdea')}</div>
-                  <TextArea
-                    className="as-gen-textarea"
-                    value={ideaText}
-                    onChange={(event) => setIdeaText(event.target.value)}
-                    placeholder={t('lesson.activityIdeaPlaceholder')}
-                  />
-                  <button type="button" data-wb-button="primary" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
-                    <Sparkles size={14} />
-                    {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('lesson.generateDraft')}
-                  </button>
-                </div>
-
-                <div className={`as-gen-panel ${genMode === 'classic' ? 'active' : ''}`} id="asPanel-classic">
-                  <div className="as-panel-label classic-label">{t('lesson.chooseClassicActivity')}</div>
-                  <div className="as-classic-grid" id="asClassicGrid">
-                    {classicActivities.map((activity) => (
-                      <button
-                        type="button"
-                        className={`as-classic-card ${selectedClassic === activity.name ? 'selected' : ''}`}
-                        key={activity.name}
-                        aria-pressed={selectedClassic === activity.name}
-                        onClick={() => setSelectedClassic(activity.name)}
-                      >
-                        <activity.Icon className="lesson-classic-symbol" size={18} aria-hidden="true" />
-                        <span className="as-classic-name">{isChinese ? activity.name : activity.nameEn}</span>
-                        <span className="as-classic-meta">{isChinese ? activity.meta : activity.metaEn}</span>
-                      </button>
-                    ))}
-                  </div>
-                  {selectedClassic && <div className="as-selected-hint">{t('lesson.selected')}<strong>{getClassicDisplayName(selectedClassic)}</strong></div>}
-                  {selectedClassic && (
-                    <button type="button" data-wb-button="primary" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
+                <ContentTabs
+                  group="lesson-step-source" label={t('pictureBook.librarySource')} value={genMode} onChange={setGenMode} disabled={generateDraftLoading}
+                  items={[
+                    { value: 'ai', label: t('lesson.aiGenerate'), icon: Sparkles },
+                    { value: 'classic', label: t('lesson.classicActivities'), icon: Star },
+                    { value: 'mine', label: t('lesson.myFavorites'), icon: Heart },
+                  ]}
+                />
+                <ContentTabPanel group="lesson-step-source" value={genMode}>
+                  <div className={`as-gen-panel ${genMode === 'ai' ? 'active' : ''}`} id="asPanel-ai">
+                    {quickIdeas.length > 0 && <div className="as-quick-hint">
+                      <div className="as-qh-label">{t('lesson.promptHint')}</div>
+                      <div className="as-qh-chips">
+                        {quickIdeas.map((item) => (
+                          <button data-wb-button="secondary" data-wb-size="sm" type="button" key={item} onClick={() => fillIdea(item)}>
+                            {item}
+                          </button>
+                        ))}
+                      </div>
+                    </div>}
+                    <div className="as-panel-label">{t('lesson.activityIdea')}</div>
+                    <TextArea
+                      className="as-gen-textarea"
+                      value={ideaText}
+                      onChange={(event) => setIdeaText(event.target.value)}
+                      placeholder={t('lesson.activityIdeaPlaceholder')}
+                    />
+                    <button type="button" data-wb-button="primary" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
                       <Sparkles size={14} />
                       {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('lesson.generateDraft')}
                     </button>
-                  )}
-                </div>
+                  </div>
 
-                <div className={`as-gen-panel ${genMode === 'mine' ? 'active' : ''}`} id="asPanel-mine">
-                  {savedSteps.length === 0 ? (
-                    <div id="asSavedList" className="as-saved-empty">
-                      {t('lesson.noFavorites')}<br />
-                      <span>{t('lesson.favoriteTip')}</span>
-                    </div>
-                  ) : (
-                    <div id="asSavedList" className="as-saved-list">
-                      {savedSteps.map((record) => (
-                        <div
-                          className="as-saved-item"
-                          key={record.savedAt}
-                          onClick={() => handleSelectSavedStep(record)}
+                  <div className={`as-gen-panel ${genMode === 'classic' ? 'active' : ''}`} id="asPanel-classic">
+                    <div className="as-panel-label classic-label">{t('lesson.chooseClassicActivity')}</div>
+                    <div className="as-classic-grid" id="asClassicGrid">
+                      {classics.loading && <PageLoading />}
+                      {classics.error && <button type="button" data-wb-button="secondary" onClick={classics.reload}>{t('lesson.libraryRetry')}</button>}
+                      {!classics.loading && !classics.error && !classics.items.length && <p>{t('lesson.noClassics')}</p>}
+                      {classics.items.map(activity => (
+                        <button
+                          type="button" className={`as-classic-card ${selectedClassic === activity ? 'selected' : ''}`}
+                          disabled={generateDraftLoading} key={`${activity.moduleId}/${activity.id}`} aria-pressed={selectedClassic === activity}
+                          onClick={() => { setClassicKey(`${activity.moduleId}/${activity.id}`); setDraftError(''); }}
                         >
-                          <div className="as-saved-item-main">
-                            <div className="as-saved-item-title">{record.title}</div>
-                            <div className="as-saved-item-meta">{record.duration} · {record.goal?.slice(0, 50)}{(record.goal?.length || 0) > 50 ? '...' : ''}</div>
-                          </div>
-                          <button
-                            type="button"
-                            data-wb-button="danger" data-wb-size="sm" data-wb-icon="" aria-label={t('common.delete')}
-                            onClick={(e) => { e.stopPropagation(); handleDeleteSavedStep(record); }}
-                          >
-                            <Trash2 size={12} />
-                          </button>
-                        </div>
+                          <BookOpen className="lesson-classic-symbol" size={18} aria-hidden="true" />
+                          <span className="as-classic-name">{activity.title}</span>
+                        </button>
                       ))}
                     </div>
-                  )}
-                </div>
+                    {selectedClassic && <div className="as-selected-hint">{selectedClassic.description || selectedClassic.title}</div>}
+                    {selectedClassic && (
+                      <button type="button" data-wb-button="primary" onClick={() => handleGenerateDraft(true)} disabled={generateDraftLoading}>
+                        <Sparkles size={14} />
+                        {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('lesson.generateDraft')}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className={`as-gen-panel ${genMode === 'mine' ? 'active' : ''}`} id="asPanel-mine">
+                    {favorites.loading ? <PageLoading /> : favorites.error ? (
+                      <button type="button" data-wb-button="secondary" onClick={favorites.reload}>{t('lesson.libraryRetry')}</button>
+                    ) : favorites.items.length === 0 ? (
+                      <div id="asSavedList" className="as-saved-empty">
+                        {t('lesson.noFavorites')}<br />
+                        <span>{t('lesson.favoriteTip')}</span>
+                      </div>
+                    ) : (
+                      <div id="asSavedList" className="as-saved-list">
+                        {favorites.items.map((record) => (
+                          <div className="as-saved-item" key={record.id}>
+                            <button type="button" className="as-saved-item-main" onClick={() => fillStepForm(record.step)}>
+                              <span className="as-saved-item-title">{record.step.title}</span>
+                              <span className="as-saved-item-meta">{[record.step.duration, compactOverviewText(record.step.goal, 50)].filter(Boolean).join(' · ')}</span>
+                            </button>
+                            <button
+                              type="button"
+                              data-wb-button="danger" data-wb-size="sm" data-wb-icon="" aria-label={t('common.delete')}
+                              disabled={favoriteBusy}
+                              onClick={() => changeFavorite(record.step, record.phaseKey, record)}
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </ContentTabPanel>
               </div>
 
               <div className="as-right-panel">
@@ -1742,9 +1209,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                   </span>
                 </div>
 
-                <Form form={addForm} className="as-draft-form" layout="vertical">
+                {draftError && <p role="alert">{draftError}</p>}
+                <Form form={addForm} disabled={generateDraftLoading} className="as-draft-form" layout="vertical">
                   <div className="as-draft-row">
-	                    <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title">
+	                    <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title" rules={[{ required: true, whitespace: true, message: t('lesson.nameRequired') }]}>
                       <Input className="as-draft-input" placeholder={t('lesson.stepNamePlaceholder')} />
                     </Form.Item>
 	                    <Form.Item className="as-draft-field as-draft-time" label={t('lesson.stepDuration')} name="time">
@@ -1800,7 +1268,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                                     <Form.Item name={[field.name, 'teacher']} noStyle>
                                       <TextArea
                                         className="flow-step-input flow-step-script"
-                                        placeholder={i18next.t('lessonPlanUi.61db78b3bf')}
+                                        placeholder={t('lesson.teacherPlaceholder')}
                                       />
                                     </Form.Item>
                                   </div>
@@ -1831,7 +1299,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                             type="button"
                             className="flow-step-add"
                             onClick={() => add({
-                              title: isChinese ? '新步骤' : 'New Step',
+                              title: '',
                               desc: '',
                               teacher: '',
                               cue: '',
@@ -1854,7 +1322,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 </Form>
 
                 <div className="as-right-ft">
-                  <button className="as-regen-btn" type="button" onClick={() => handleGenerateDraft()} disabled={generateDraftLoading}>
+                  <button className="as-regen-btn" type="button" onClick={() => handleGenerateDraft(genMode === 'classic')} disabled={generateDraftLoading || (genMode === 'classic' && !selectedClassic)}>
                     <RefreshCw size={11} />
 	                    {generateDraftLoading ? t('workflow.lesson.generatingShort') : t('workflow.lesson.regenerate')}
                   </button>
@@ -1865,7 +1333,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
             <div className="modal-ft">
 	              <button type="button" data-wb-button="secondary" onClick={() => { setAddOpen(false); setRegenTarget(null); setInsertTarget(null); }}>{t('common.cancel')}</button>
               <div className="as-ft-spacer" />
-              <CreateButton id="asConfirmBtn" onClick={addDraftStep}>
+              <CreateButton disabled={generateDraftLoading} id="asConfirmBtn" onClick={addDraftStep}>
 	                {regenTarget ? t('lesson.confirmRegenerate') : insertTarget ? t('lesson.insertBefore') : t('lesson.addToOutline')}
               </CreateButton>
             </div>
@@ -1887,8 +1355,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
       <EditStepModal
         open={!!editing}
         step={editing?.step}
+        courseTitle={getDisplayCourseTitle(course)}
         onClose={() => setEditing(null)}
         onSave={saveEdit}
+        onRewrite={(draft) => requestStep(editing.phaseKey, editing.stepIndex, draft, t('lesson.rewriteIntent'))}
       />
       <AdjustStepModal
         open={!!adjustTarget}
@@ -1906,16 +1376,16 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   );
 }
 
-function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, isSaved, onPin, onDelete, placement }) {
+function StepMenu({ open, onRegen, onInsertBefore, onAdjust, onSave, onUnsave, isSaved, favoriteBusy, onPin, onDelete, placement }) {
   const { t } = useTranslation();
   return (
     <div className={`step-menu-dropdown ${placement === 'footer' ? 'footer-menu' : ''} ${open ? 'open' : ''}`}>
       <button type="button" className="step-menu-item" onClick={onRegen}><RefreshCw size={12} />{t('workflow.lesson.regenerate')}</button>
       <button type="button" className="step-menu-item" onClick={onAdjust}><SlidersHorizontal size={12} />{t('lesson.adjustTitle')}</button>
       <button type="button" className="step-menu-item" onClick={onInsertBefore}><Plus size={12} />{t('lesson.insertBefore')}</button>
-      <button type="button" className="step-menu-item" onClick={isSaved ? onUnsave : onSave}>
+      <button type="button" className="step-menu-item" disabled={favoriteBusy} onClick={isSaved ? onUnsave : onSave}>
         <Heart size={12} fill={isSaved ? 'var(--wb-primary)' : 'none'} />
-        {isSaved ? t('common.cancel') : t('lesson.myFavorites')}
+        {t(isSaved ? 'lesson.removeFavorite' : 'lesson.addFavorite')}
       </button>
       <button type="button" className="step-menu-item" onClick={onPin}><Copy size={12} />{t('lesson.pinToTop')}</button>
       <div className="step-menu-sep" />

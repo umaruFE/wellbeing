@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
     const n8nPayload = {
       phaseKey,
       title,
-      age: age || '7-9',
-      duration: duration || '60',
-      scale: scale || '<=8',
+      age,
+      duration,
+      scale,
       vocabulary: vocabulary || [],
       grammar: grammar || [],
       skills: skills || [],

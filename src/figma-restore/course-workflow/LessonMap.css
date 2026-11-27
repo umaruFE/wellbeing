@@ -17,12 +17,6 @@
   background: var(--wb-surface);
 }
 
-.lesson-view-filters {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--wb-space-2);
-}
-
 .lesson-title-symbol {
   flex: none;
   color: var(--wb-primary-hover);

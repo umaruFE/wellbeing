@@ -130,12 +130,13 @@ function caseFixture() {
     requests.push({ path, method: options.method, body: JSON.parse(options.body) });
     return { data: { id: 'new-case-copy' } };
   } };
-  const useCase = actual('useBookCase', { createPictureBookCaseDraft, initialBasicInfo, initialActivityPlan,
+  const savedContent = { current: null };
+  const useCase = actual('useBookCase', { savedContent, createPictureBookCaseDraft, initialBasicInfo, initialActivityPlan,
     editingBookIdRef, apiService, ...setters });
   return { state, editingBookIdRef, requests, useCase,
     save() {
       // Build the closure after the setters, as React does on the next render.
-      return actual('saveBook', { ...state, ...setters, editingBookIdRef, apiService,
+      return actual('saveBook', { ...state, ...setters, savedContent, editingBookIdRef, apiService,
         user: { id: 'current-teacher' }, t: key => key, console: { error() {} } })();
     } };
 }

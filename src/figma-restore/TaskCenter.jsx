@@ -1,11 +1,11 @@
-import { MetadataTag } from '../components/LibraryControls';
+import { ContentTabPanel, ContentTabs, MetadataTag } from '../components/LibraryControls';
 import React, { useEffect, useState } from 'react';
 import i18next from 'i18next';
 import { LocalizedValue } from '../i18n/LocalizedText.jsx';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../components/PageLoading';
 import { parseJsonSafely, responseErrorMessage } from '../utils/responseUtils';
-import { Button, Progress, Tabs, message } from 'antd';
+import { Button, Progress, message } from 'antd';
 import {
   CheckCircle,
   CirclePlus,
@@ -20,13 +20,10 @@ import './TaskCenter.css';
 import { TaskDetailModal, createCanvasAssetPayload } from './TaskDetailModal';
 import { resolvePptMediaUrl } from './course-workflow/ppt/pptMediaUrl';
 
-const getIcon = (type) => {
-  switch (type) {
-    case 'image': return ImageIcon;
-    case 'video': return Video;
-    case 'audio': return Music;
-    default: return ImageIcon;
-  }
+const TaskIcon = ({ type, ...props }) => {
+  if (type === 'video') return <Video {...props} />;
+  if (type === 'audio') return <Music {...props} />;
+  return <ImageIcon {...props} />;
 };
 
 function getAuthHeaders() {
@@ -211,7 +208,6 @@ const handleAccessibleCardKey = (event, onOpen) => {
 const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask }) => {
   const { t } = useTranslation();
   const iconColors = getIconBgColor(task.type);
-  const IconComponent = getIcon(task.type);
 
   return (
     <div
@@ -238,7 +234,7 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
             ) : task.mediaUrl && task.type === 'video' ? (
               <video src={resolvePptMediaUrl(task.mediaUrl)} muted preload="metadata" />
             ) : (
-              <IconComponent size={20} style={{ color: '#ffffff' }} />
+              <TaskIcon type={task.type} size={20} style={{ color: '#ffffff' }} />
             )}
           </div>
           <div className="history-task-detail">
@@ -286,7 +282,6 @@ const HistoryTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onRetryTask })
 
 const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) => {
   const { t } = useTranslation();
-  const IconComponent = getIcon(task.type);
 
   return (
     <div
@@ -302,7 +297,7 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
       <div className="task-item-header">
         <div className="task-item-info">
           <div className={`task-item-icon task-item-icon-${task.type}`}>
-            <IconComponent size={20} />
+            <TaskIcon type={task.type} size={20} />
           </div>
           <div className="task-item-detail">
             <div className="task-item-title-row">
@@ -369,13 +364,14 @@ const QueueTaskItem = ({ task, onOpenDetail, onInsertTaskAsset, onCancelTask }) 
 export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('queue');
+  const tabGroup = React.useId();
   const [selectedTask, setSelectedTask] = useState(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [queueTasks, setQueueTasks] = useState(null);
   const [historyTasks, setHistoryTasks] = useState(null);
   const [loadErrors, setLoadErrors] = useState({});
 
-  const loadTasks = async (scope = activeTab) => {
+  const loadTasks = React.useCallback(async (scope) => {
     const setTasks = scope === 'history' ? setHistoryTasks : setQueueTasks;
     try {
       const response = await fetch(`/api/background-tasks?scope=${scope === 'history' ? 'history' : 'active'}`, {
@@ -393,7 +389,7 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
     } catch (error) {
       setLoadErrors(current => ({ ...current, [scope]: error?.message || t('taskCenterValues.后台任务获取失败') }));
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     let disposed = false;
@@ -407,7 +403,7 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
       disposed = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [loadTasks]);
 
   const currentTasks = activeTab === 'queue' ? queueTasks : historyTasks;
 
@@ -465,31 +461,28 @@ export const TaskCenter = ({ onClose, onInsertTaskAsset }) => {
           <X size={18} aria-hidden="true" />
         </button>
       </div>
-      <Tabs
-        className="task-center-tabs"
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        items={['queue', 'history'].map(key => ({
-          key,
-          label: t(`taskCenter.${key}`, { count: (key === 'queue' ? queueTasks : historyTasks)?.length ?? 0 }),
-          children: key === activeTab && (
-            <div className="task-center-content">
-              {loadErrors[key] && (
-                <div role="alert" className="wb-library-empty">
-                  <p>{loadErrors[key]}</p>
-                  <button type="button" data-wb-button="secondary" onClick={() => loadTasks(key)}>{t('common.retry')}</button>
-                </div>
-              )}
-              {currentTasks === null && !loadErrors[key] && <PageLoading />}
-              {currentTasks?.length === 0 && !loadErrors[key] && <div className="task-center-empty" role="status">{t('taskCenter.empty')}</div>}
-              {currentTasks?.map(task => key === 'queue'
-                ? <QueueTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onCancelTask={cancelTask} />
-                : <HistoryTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onRetryTask={retryTask} />
-              )}
-            </div>
-          ),
-        }))}
+      <ContentTabs
+        group={tabGroup} label={t('taskCenter.title')} className="task-center-tabs"
+        value={activeTab} onChange={setActiveTab}
+        items={[
+          { value: 'queue', label: t('taskCenter.queue'), count: queueTasks?.length ?? '—' },
+          { value: 'history', label: t('taskCenter.history'), count: historyTasks?.length ?? '—' },
+        ]}
       />
+      <ContentTabPanel key={activeTab} group={tabGroup} value={activeTab} className="task-center-content" aria-busy={currentTasks === null && !loadErrors[activeTab]}>
+        {loadErrors[activeTab] && (
+          <div role="alert" className="wb-library-empty">
+            <p>{loadErrors[activeTab]}</p>
+            <button type="button" data-wb-button="secondary" onClick={() => loadTasks(activeTab)}>{t('common.retry')}</button>
+          </div>
+        )}
+        {currentTasks === null && !loadErrors[activeTab] && <PageLoading />}
+        {currentTasks?.length === 0 && !loadErrors[activeTab] && <div className="task-center-empty" role="status">{t('taskCenter.empty')}</div>}
+        {currentTasks?.map(task => activeTab === 'queue'
+          ? <QueueTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onCancelTask={cancelTask} />
+          : <HistoryTaskItem key={task.id} task={task} onOpenDetail={openTaskDetail} onInsertTaskAsset={onInsertTaskAsset} onRetryTask={retryTask} />
+        )}
+      </ContentTabPanel>
 
       <TaskDetailModal task={selectedTask} open={detailOpen} onClose={closeTaskDetail} onInsertTaskAsset={onInsertTaskAsset} />
     </div>

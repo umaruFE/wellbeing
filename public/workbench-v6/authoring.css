@@ -2,7 +2,7 @@
 
 /* Shared teacher authoring surfaces. Geometry follows the current song,
    music and yoga preparation components; module controllers own all state. */
-.wb-authoring, .wb-authoring-footer, .wb-dialog {
+.wb-authoring, .wb-authoring-footer, .wb-dialog, .wb-authoring-steps {
   --wa-text: var(--wb-text);
   --wa-muted: var(--wb-muted);
   --wa-primary: var(--wb-primary);

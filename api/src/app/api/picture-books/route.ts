@@ -28,6 +28,15 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
+    if (searchParams.get('scope') === 'cases') {
+      const result = await db.query(
+        `SELECT b.id, b.title, b.status, b.cover_url, b.book_data, b.updated_at
+         FROM picture_books b JOIN users u ON u.id::text = b.user_id::text
+         WHERE b.status = 'published' AND u.role = 'super_admin'
+         ORDER BY b.updated_at DESC, b.id DESC`
+      );
+      return NextResponse.json({ data: result.rows }, { headers: { 'Cache-Control': 'no-store' } });
+    }
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
     const page = parseInt(searchParams.get('page') || '1');

@@ -82,7 +82,7 @@ export const AudioGeneratorPage = () => {
           } else if (statusData.status === 'error') {
             setResult(prev => ({ ...prev, status: 'error' }));
             setIsPolling(false);
-            setError(t('common.operationFailed'));
+            setError(statusData.error || t('common.operationFailed'));
             return;
           }
         }

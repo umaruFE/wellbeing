@@ -5745,7 +5745,7 @@ return {song,yoga,music,render,open};
 });
 
 </script>
-<script data-wb-backend-asset="yoga-existing-backend.js" src="yoga-existing-backend.js?v=1a30a805d16d70f0"></script>
+<script data-wb-backend-asset="yoga-existing-backend.js" src="yoga-existing-backend.js?v=c5486bc707121f91"></script>
 <script data-build-source="yoga/app.js">
 (function(){
 'use strict';
@@ -5757,6 +5757,7 @@ const caseState=id=>caseLibrary?caseLibrary.find(id)?.state:L.getCase(id);
 const E=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const clone=v=>JSON.parse(JSON.stringify(v));
 let library=L.createLibrary(),activeId=null,state=M.createState(),storageError='',recoveryRaw=null,cloud,courseStorage,loadError='';
+let savedEditorSnapshot=null;
 const baseTokens=new Map();
 const ui={storageConflict:false,backgroundEditorPageId:null,backgroundAdjustment:null,pendingNext:null,returnToReview:false,page:'home',homeTab:'cases',query:'',filter:'all',step:1,pageId:null,scope:'page',prompt:'',backgroundPrompt:'',adjustment:null,error:'',busy:null,jobTimer:null,voiceProgress:null,voiceTimer:null,failAI:false,failAssets:false,failSave:false,navigationExpanded:false,play:null,dialogMode:null,returnFocus:null,scroll:0,hasExpanded:false};
 let settings=clone(state.settings),toastTimer,player=null;
@@ -5764,6 +5765,27 @@ let musicSequence=null,musicAudio=null,classroomMusic=null;
 let referenceMotion=null,referenceVoice=null,referenceSpeech=null,referenceRun=0,aiRun=0;
 let reviewVoice=null,reviewSpeech=null,reviewRun=0;
 const $=s=>document.querySelector(s);
+const isReadOnly=()=>cloud?.readOnly===true;
+const viewActions=new Set([
+  'toggle-navigation','switch-music','switch-song','module','home','library-tab','library-filter','clear-search',
+  'open-course','teach-course','case-preview','export','publish-case','about','close-dialog','retry-backend-load',
+  'step','select-page','prep-locate','review-open','review-section','review-assets','review-page','review-return',
+  'review-voice','review-preview','teacher','teacher-all','history','candidate','course-review','changed-page','job-target',
+  'next-pending-page','reference-motion','reference-voice','voice-preview','music-library','music-audition','music-page','music-play',
+  'preview','preview-first','preview-play','classroom','classroom-new','classroom-continue','exit-preview',
+  'play-control','replay','play-next','play-prev','play-page','restart-class',
+]);
+const canUseAction=action=>!isReadOnly()||viewActions.has(action);
+function applyViewControls(container){
+  if(!isReadOnly())return;
+  for(const button of container.querySelectorAll('button[data-action]')){
+    if(!canUseAction(button.dataset.action))button.disabled=true;
+  }
+  for(const field of container.querySelectorAll('input:not(#library-search):not(#music-seek),textarea,select')){
+    if(field.matches('textarea,input:not([type]),input[type="text"],input[type="number"]'))field.readOnly=true;
+    else field.disabled=true;
+  }
+}
 const actionName=id=>(M.ACTIONS.find(a=>a.id===id)||{}).name||'无动作';
 const characterName=id=>(M.CHARACTERS.find(a=>a.id===id)||{}).name||'Poppy';
 const current=()=>state.draft?.pages.find(p=>p.id===ui.pageId)||state.draft?.pages[0];
@@ -5773,6 +5795,11 @@ const fieldLabels={musicId:'背景音乐',musicVolume:'音乐音量',musicUpload
 const statusText={ready:'已准备',missing:'待生成',stale:'需更新',na:'无需配置'};
 function notify(message){const t=$('#toast');t.textContent=message;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),4200);}
 function editorWorkspace(){syncContentPage();syncBackgroundPage();return {step:ui.step===5?(ui.reviewOriginStep||3):ui.step,pageId:ui.pageId,scope:ui.scope,prompt:ui.prompt,backgroundPrompt:ui.backgroundPrompt,...(state.draft&&ui.adjustment?{adjustment:clone(ui.adjustment)}:{}),...(state.draft&&ui.backgroundAdjustment?{backgroundAdjustment:clone(ui.backgroundAdjustment)}:{}),...(!state.draft?{form:clone(settings)}:{})};}
+function editorSnapshot(workspace){return JSON.stringify([activeId,state,workspace,ui.backendPlan]);}
+function restoreSavedWorkspace(record){
+  restoreWorkspace(record);
+  savedEditorSnapshot=record?editorSnapshot(editorWorkspace()):null;
+}
 function restoreWorkspace(record){
   ui.backendPlan=record?.backendPlan||null;
   ui.musicUploadRun=(ui.musicUploadRun||0)+1;ui.musicUploading=false;ui.musicUploadError='';
@@ -5821,16 +5848,27 @@ function withWriteLock(work){
   if(window.navigator?.locks?.request)return window.navigator.locks.request(L.KEY,work).catch(e=>{ui.error=e.message;notify(e.message);});
   return work();
 }
-function listenMutation(type,handler){document.addEventListener(type,e=>withWriteLock(()=>handler(e)));}
+function listenMutation(type,handler){
+  document.addEventListener(type,event=>{
+    if(isReadOnly()){
+      if(type==='click'&&!canUseAction(event.target.closest('[data-action]')?.dataset.action))return;
+      if(type!=='click'&&event.target.id!=='library-search'&&event.target.id!=='music-seek')return;
+    }
+    return withWriteLock(()=>handler(event));
+  });
+}
 function persistRecord(record){
   if(!baseTokens.has(record.id))baseTokens.set(record.id,L.recordToken(L.get(library,record.id)));
   library=L.persist(courseStorage,library,record,{expectedToken:baseTokens.get(record.id)});
   baseTokens.set(record.id,L.recordToken(L.get(library,record.id)));return L.get(library,record.id);
 }
 function save(){
+  if(isReadOnly())return true;
   if(recoveryRaw!==null||cloud?.status==='conflict')return false;if(!activeId)return !storageError;
-  const old=L.get(library,activeId),record={...(old||L.createRecord(state,{id:activeId})),state:clone(state),workspace:editorWorkspace(),updatedAt:new Date().toISOString(),...(ui.backendPlan?{backendPlan:ui.backendPlan}:{})};
-  try{if(ui.failSave)throw Error('演示保存失败');persistRecord(record);storageError='';ui.storageConflict=false;return true;}
+  const workspace=editorWorkspace(),snapshot=editorSnapshot(workspace);
+  if(!storageError&&snapshot===savedEditorSnapshot)return true;
+  const old=L.get(library,activeId),record={...(old||L.createRecord(state,{id:activeId})),state:clone(state),workspace,updatedAt:new Date().toISOString(),...(ui.backendPlan?{backendPlan:ui.backendPlan}:{})};
+  try{if(ui.failSave)throw Error('演示保存失败');persistRecord(record);savedEditorSnapshot=snapshot;storageError='';ui.storageConflict=false;return true;}
   catch(e){library=L.upsert(library,record);ui.storageConflict=e.code==='COURSE_CONFLICT';storageError=ui.storageConflict?'另一窗口已保存了更新。当前修改仍保留在这里，请另存副本或载入最新版本。':'本地保存失败，当前内容仍在页面中。请重试或导出课程库后再关闭。';return false;}
 }
 function moduleMessageOrigin(){
@@ -5839,13 +5877,13 @@ function moduleMessageOrigin(){
   try{const parent=window.parent!==window&&window.parent.location.origin;return parent&&parent!=='null'?parent:null;}catch(_){return null;}
 }
 function prepareModuleSwitch(){
+  if(loadError||isReadOnly())return true;
   return withWriteLock(()=>{
-    if(loadError)return true;
     if(ui.busy||state.job){notify('请先完成或取消当前生成，再切换模块。');return false;}
     if(ui.musicUploading){notify('背景音乐正在保存，请完成后再切换模块。');return false;}
-    if(ui.play){if(!persistClassroom()){notify('课堂进度未能保存，请重试后再切换模块。');return false;}return cloud?.flush()||true;}
-    if(!save()){notify('请先重试保存或备份当前记录，再切换模块。');return false;}
-    return cloud?.flush()||true;
+    if(ui.play?.published&&ui.play.sessionSaved===false&&!persistClassroom()){notify('课堂进度尚未保存，可以留在课堂重试。');return false;}
+    if((ui.page==='editor'||storageError)&&!save()){notify('当前修改尚未保存，可以重试或导出备份。');return false;}
+    return cloud?.dirty?cloud.flush():true;
   });
 }
 function updateCloudStatus(){
@@ -5863,6 +5901,7 @@ async function resolveCloudConflict(keepCopy){
     library=latest;activeId=record.id;state=clone(record.state);restoreWorkspace(record);
     baseTokens.set(record.id,copy?null:L.recordToken(record));storageError='';ui.storageConflict=false;
     if(copy)persistRecord(copy);
+    savedEditorSnapshot=editorSnapshot(editorWorkspace());
     closeDialog();render();
     if(copy)void cloud.flush().then(ok=>{if(ok)notify('副本已同步后台。');});else notify('已载入后台保存的版本。');
   }catch(error){notify(error.message);}
@@ -5895,6 +5934,7 @@ function undoStrip(){
   return `<div class="notice undo-strip version-note change-summary-strip"><details><summary>最近修改 · ${changes.length} 页${state.draft.confirmed?'':'待复核'}</summary><p>${E(state.undo.summary)}</p><div class="row">${changes.map(x=>btn(`第 ${state.draft.pages.indexOf(x.page)+1} 页 · ${E(x.fields.map(k=>fieldLabels[k]||k).join('、'))}`,'changed-page','quiet tiny',!!ui.busy,`data-id="${x.page.id}"`)).join('')}</div></details>${btn('撤销最近修改','undo-change','tiny',!!ui.busy||!!state.candidate)}</div>`;
 }
 function guardNext(action,step){
+  if(isReadOnly())return false;
   if(state.candidate){candidateDialog();return true;}
   const pending=ui.adjustment?.drafts.some(d=>d.prompt.trim());
   if(ui.step===2&&pending&&(!step||step>2)){
@@ -5903,9 +5943,27 @@ function guardNext(action,step){
 }
 function confirmAndContinue(){const next=M.confirmContent(state);ui.step=3;commit(next,'课程内容已确认，可以准备素材。');}
 function historyDialog(){showDialog('版本历史',`<div class="notice">恢复后进入修改草稿；当前授课版本保留，重新确认后才会更新。</div>${[...state.versions].reverse().map(v=>`<section class="teacher-block"><h3>V${v.version}${v.version===state.published?.version?' · 当前授课版':''} · ${E(v.course.title)}</h3><p>${E(window.WBPlatform.formatTime?.(v.createdAt)||(v.createdAt?new Date(v.createdAt).toLocaleString('zh-CN',{hour12:false}):'时间未记录'))} · ${v.course.pages.length} 页</p>${btn('恢复为修改草稿','history-restore','secondary',!!state.job||!!ui.busy||!!state.candidate,`data-version="${v.version}"`)}</section>`).join('')}`,btn('关闭','close-dialog'));}
-function canSwitchCourse(){if(ui.busy||state.job){notify('请先完成或取消当前生成，再切换课程。');return false;}if(!save()){render();notify('请先重试保存或备份当前记录，避免切换时丢失内容。');return false;}closeDialog();stopPlayer();return true;}
-function openCourse(id,classroom=false){if(!canSwitchCourse())return;library=L.load(courseStorage);const record=L.get(library,id);if(record)baseTokens.set(id,L.recordToken(record));if(!record)return notify('课程暂不可用，请刷新后重试。');activeId=record.id;state=clone(record.state);if(state.job)state=M.cancelJob(state);restoreWorkspace(record);ui.homeTab='mine';ui.page='editor';save();render();window.scrollTo(0,0);if(classroom)startClassroom();}
-function newCourse(caseId){if(!canSwitchCourse())return;const source=caseId?caseState(caseId):null;if(caseId&&!source)return;state=source?L.cloneCase(caseId,source):M.createState();const record=L.createRecord(state,{sourceCaseId:caseId||null});activeId=record.id;baseTokens.set(record.id,null);library=L.upsert(library,record);restoreWorkspace(record);if(!caseId)Object.assign(settings,{title:'',theme:'',context:'',goal:''});ui.homeTab='mine';ui.page='editor';save();render();window.scrollTo(0,0);if(caseId)notify('已添加到“我制作的”，可以继续调整课程。');}
+function canSwitchCourse(){if(ui.busy||state.job){notify('请先完成或取消当前生成，再切换课程。');return false;}if((ui.page==='editor'||storageError)&&!save()){render();notify('请先重试保存或备份当前记录，避免切换时丢失内容。');return false;}closeDialog();stopPlayer();return true;}
+function openCourse(id,classroom=false){if(!canSwitchCourse())return;library=L.load(courseStorage);const record=L.get(library,id);if(record)baseTokens.set(id,L.recordToken(record));if(!record)return notify('课程暂不可用，请刷新后重试。');activeId=record.id;state=clone(record.state);if(state.job)state=M.cancelJob(state);restoreSavedWorkspace(record);ui.homeTab='mine';ui.page='editor';render();window.scrollTo(0,0);if(classroom)startClassroom();}
+function newCourse(caseId){
+  if(!canSwitchCourse())return;
+  const source=caseId?caseState(caseId):null;
+  if(caseId&&!source)return notify('案例暂时无法读取，请返回活动库重试。');
+  state=source?L.cloneCase(caseId,source):M.createState();
+  const record=L.createRecord(state,{sourceCaseId:caseId||null});
+  activeId=record.id;baseTokens.set(record.id,null);library=L.upsert(library,record);
+  restoreWorkspace(record);
+  if(!caseId)Object.assign(settings,{title:'',theme:'',context:'',goal:''});
+  ui.homeTab='mine';ui.page='editor';
+  const saved=save();
+  render();window.scrollTo(0,0);
+  if(!saved)return notify(storageError);
+  const message=caseId?'同款已保存到“我制作的”，可以继续调整。':'草稿已保存到“我制作的”。';
+  if(!cloud)return notify(message);
+  void cloud.flush().then(ok=>{
+    if(activeId===record.id&&ui.page==='editor')notify(ok?message:cloud.error?.message||'后台保存失败，请重试。');
+  });
+}
 function commit(next,message){state=next;settings=clone(state.settings);const saved=save();ui.error='';render();if(!saved)notify(storageError||'修改仍保留在页面中，请重试保存。');else if(message)notify(message);return saved;}
 function run(fn,message){try{commit(fn(),message);return true;}catch(e){ui.error=e.message;notify(e.message);render();return false;}}
 function badge(text,kind=''){return `<span class="chip ${kind}">${E(text)}</span>`;}
@@ -5915,7 +5973,7 @@ function btn(text,act,cls='',disabled=false,extra=''){
   const icon={ 'toggle-navigation':'menu','about':'help','undo-change':'undo','reference-voice':'volume','direct-edit':'edit','review-page':'edit','close-adjustment':'close','play-prev':'chevron-left','replay':'refresh' }[act]||(act==='home'&&text.includes('返回活动库')?'arrow-left':act==='close-dialog'&&text==='×'?'close':null);
   const shortcut={'play-prev':'←','play-next':'→','play-control':'空格','replay':'R','exit-preview':'Esc'}[act];
   if(shortcut&&!/\btitle=/.test(extra))extra+=` title="${E(String(text).replace(/<[^>]*>/g,'').trim())}（${shortcut}）"`;
-  const attrs=(disabled?'disabled ':'')+extra+(act==='review-preview'?' data-icon="play"':'')+(icon?` data-icon-only="${icon}"`:'');
+  const attrs=(disabled||!canUseAction(act)?'disabled ':'')+extra+(act==='review-preview'?' data-icon="play"':'')+(icon?` data-icon-only="${icon}"`:'');
   if(typeof window!=='undefined'&&window.WBUI)return window.WBUI.button(text,act,cls,attrs);
   return `<button type="button" data-action="${act}" class="${cls}" ${attrs}>${text}</button>`;
 }
@@ -5986,7 +6044,7 @@ function jobResultStrip(){
   return `<div class="notice ${failed.length?'error':''} job-result-strip" role="status"><span>最近任务：${E(jobResultMessage(job))}</span><div class="row">${ids.map(id=>btn(`${failed.length?'处理':'查看'}第 ${state.draft.pages.findIndex(p=>p.id===id)+1} 页`,'job-target','quiet tiny',false,`data-id="${id}"`)).join('')}</div></div>`;
 }
 function draftHasUpdates(candidate=state){const content=course=>{const value=clone(course);delete value.locked;delete value.revision;return JSON.stringify(value);};return !!candidate.draft&&!!candidate.published&&content(candidate.draft)!==content(candidate.published.course);}
-function savedContentLabel(){return cloud?.status==='pending'?'正在同步后台…':cloud?.dirty?'待同步后台':cloud?'已同步后台':'已保存';}
+function savedContentLabel(){if(isReadOnly())return '';return cloud?.status==='pending'?'正在同步后台…':cloud?.dirty?'待同步后台':cloud?'已同步后台':'已保存';}
 function versionStrip(){if(!state.draft?.locked)return '';return `<div class="unified-version-strip version-note"><span>授课版 V${state.published.version} · 只读</span>${btn('建立修改草稿','fork','tiny')}</div>`;}
 function courseLibraryTitle(record){return record?.displayTitle||(record?.state.draft?record.state.draft.title:record?.workspace?.form?record.workspace.form.title:record?.state.settings.title)||'未命名瑜伽课程';}
 function requireLibraryManagement(){if(recoveryRaw!==null||storageError||ui.storageConflict)throw Error('请先处理当前保存问题，再管理课程库。');if(ui.busy||state.job)throw Error('请先完成或取消当前生成，再管理课程库。');}
@@ -5996,7 +6054,7 @@ function saveManagedRecord(record){
   catch(error){if(error.code==='COURSE_CONFLICT')throw Error('此课程已在另一窗口更新，本次操作未覆盖新内容。请重新打开课程后再操作。');throw error;}
 }
 function renameCourseDialog(id){const record=libraryManagementRecord(id);showDialog('修改课程库名称',`<label>课程库名称<input id="course-display-title" aria-label="课程库名称" maxlength="70" value="${E(courseLibraryTitle(record))}"></label><p class="hint" style="margin-top:12px">用于整理和查找课程；课程封面、教学内容和授课版本保持原样。</p><p id="course-management-error" class="inline-error" role="alert"></p>`,btn('取消','close-dialog')+btn('保存名称','course-rename-confirm','primary',false,`data-id="${E(id)}"`));$('#course-display-title')?.focus();}
-function courseMenu(item){const identity=`data-id="${E(item.id)}"`;return `<details class="course-menu"><summary aria-label="管理课程：${E(courseLibraryTitle(item))}">更多</summary><div class="course-menu-items">${btn('重命名','course-rename','quiet',false,identity)}${btn('复制课程','course-duplicate','quiet',false,identity)}${btn(item.archived?'恢复到课程库':'归档课程',item.archived?'course-unarchive':'course-archive','quiet',false,identity)}</div></details>`;}
+function courseMenu(item){if(isReadOnly())return '';const identity=`data-id="${E(item.id)}"`;return `<details class="course-menu"><summary aria-label="管理课程：${E(courseLibraryTitle(item))}">更多</summary><div class="course-menu-items">${btn('重命名','course-rename','quiet',false,identity)}${btn('复制课程','course-duplicate','quiet',false,identity)}${btn(item.archived?'恢复到课程库':'归档课程',item.archived?'course-unarchive':'course-archive','quiet',false,identity)}</div></details>`;}
 async function importLibraryFile(input){
   const file=input.files?.[0];if(!file)return;input.value='';
   try{
@@ -6014,7 +6072,7 @@ async function importLibraryFile(input){
 function libraryHasDraft(record){return !record.state.draft||!record.state.draft.locked;}
 function libraryPersonalActions(item){
   const s=item.state,ready=!!s.published,hasDraft=libraryHasDraft(item),changed=ready&&draftHasUpdates(s),identity=`data-id="${E(item.id)}"`;
-  const edit=btn(ready&&!hasDraft?'查看备课':'继续备课','open-course',!ready||changed?'primary':'secondary',false,identity);
+  const edit=btn(isReadOnly()||ready&&!hasDraft?'查看备课':'继续备课','open-course',!ready||changed?'primary':'secondary',false,identity);
   const teach=ready?btn(changed?`使用授课版 V${s.published.version}授课`:`开始授课 · V${s.published.version}`,'teach-course',changed?'secondary':'primary',false,identity):'';
   return ready&&!changed?teach+edit:edit+teach;
 }
@@ -6135,7 +6193,6 @@ function backgroundAction(p){
   if(!state.draft.confirmed)return {label:'返回确认内容',action:'step',extra:'data-step="2"'};
   if(state.job||ui.busy)return {label:state.job?.tasks.some(task=>task.pageId===p.id&&task.kinds.includes('background'))||ui.busy?.kind==='background'&&ui.busy.pageId===p.id?'生成中…':'生成画面',action:'background-generate',disabled:true};
   if(state.candidate)return {label:state.candidate.channel==='background'&&state.candidate.kind==='background'?'比较背景候选图':'AI 调整 · 核对候选',action:'candidate'};
-  if(c.backgroundUrl)after.backgroundUrl=c.backgroundUrl;
   const ready=pageAssetStatus(p,'background')==='ready';
   if(ready&&!backgroundEditorOpen(p))return {label:'AI 调整',action:'background-edit',extra:'aria-expanded="false" aria-controls="background-editor"'};
   if(ready)return {label:'生成候选画面',action:'propose',extra:'data-channel="background"',disabled:!backgroundPrompt(p.id).trim()};
@@ -6324,7 +6381,7 @@ function voiceAssetCard(p,lock){
   const failed=state.lastJob?.status==='failed'&&state.lastJob.kinds?.includes('voice')&&state.lastJob.failedPageIds.includes(p.id)&&status!=='ready';
   const percent=task?(ui.voiceProgress?.id===state.job.id?ui.voiceProgress.percent:0):status==='ready'?100:0;
   const label=task?'生成中':failed?'生成失败':statusText[status];
-  return `<div class="asset-item voice-asset" id="asset-status-voice" tabindex="-1"><div class="voice-asset-heading"><div class="asset-symbol">${window.WBUI?.icon('volume')||'♫'}</div><strong>选择配音音色</strong>${badge(label,task?'':failed?'amber':status==='ready'?'dark':'gray')}</div><div class="voice-asset-body"><label for="yoga-voice">配音音色 <span>整课共用</span></label><div class="voice-choice-row"><select id="yoga-voice" aria-describedby="voice-help" ${lock?'disabled':''}><option value="" ${!voice.id?'selected':''} disabled>请选择音色</option>${M.VOICES.map(item=>`<option value="${item.id}" ${voice.id===item.id?'selected':''}>${E(item.name)} · ${E(item.description)}</option>`).join('')}</select>${btn('试听','voice-preview','tiny',!voice.id||!!state.job||!!ui.busy,'aria-label="试听所选音色"')}</div><small id="voice-help">${voice.id?'更换音色后，需重新生成整课配音。':'先选择音色，再生成本页或整课配音。'}</small><div class="voice-progress-heading"><span id="voice-progress-label">${task?'正在生成配音':failed?'配音生成失败':status==='ready'?'配音已生成':status==='stale'?'配音待更新':'配音待生成'}</span><span id="voice-progress-value">${percent}%</span></div><div class="progress-line voice-progress" id="voice-progress" role="progressbar" aria-label="本页英语配音生成进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span id="voice-progress-fill" style="width:${percent}%"></span></div>${failed?`<div class="voice-retry">${btn('重试配音','voice-retry','tiny',lock)}</div>`:''}<p class="voice-preview-status" id="voice-preview-status" role="status"></p>${pendingVoice?`<div class="voice-retry">${btn(state.job?.tasks.some(task=>task.kinds.includes('voice'))?'生成中…':'生成配音','voice-generate','secondary fullwidth',lock)}</div>`:''}<small class="voice-demo-note">本机音色试听 · 生成进度为演示</small></div></div>`;
+  return `<div class="asset-item voice-asset" id="asset-status-voice" tabindex="-1"><div class="voice-asset-heading"><div class="asset-symbol">${window.WBUI?.icon('volume')||'♫'}</div><strong>选择配音音色</strong>${badge(label,task?'':failed?'amber':status==='ready'?'dark':'gray')}</div><div class="voice-asset-body"><label for="yoga-voice">配音音色 <span>整课共用</span></label><div class="voice-choice-row"><select id="yoga-voice" aria-describedby="voice-help" ${lock?'disabled':''}><option value="" ${!voice.id?'selected':''} disabled>请选择音色</option>${M.VOICES.map(item=>`<option value="${item.id}" ${voice.id===item.id?'selected':''}>${E(item.name)} · ${E(item.description)}</option>`).join('')}</select>${btn('试听','voice-preview','tiny',!voice.id||!!state.job||!!ui.busy,'aria-label="试听所选音色"')}</div><small id="voice-help">${voice.id?'更换音色后，需重新生成整课配音。':'先选择音色，再生成本页或整课配音。'}</small><div class="voice-progress-heading"><span id="voice-progress-label">${task?'正在生成配音':failed?'配音生成失败':status==='ready'?'配音已生成':status==='stale'?'配音待更新':'配音待生成'}</span><span id="voice-progress-value">${percent}%</span></div><div class="progress-line voice-progress" id="voice-progress" role="progressbar" aria-label="本页英语配音生成进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${percent}"><span id="voice-progress-fill" style="width:${percent}%"></span></div>${failed?`<div class="voice-retry">${btn('重试配音','voice-retry','tiny',lock)}</div>`:''}<p class="voice-preview-status" id="voice-preview-status" role="status"></p>${pendingVoice?`<div class="voice-retry">${btn(state.job?.tasks.some(task=>task.kinds.includes('voice'))?'生成中…':'生成配音','voice-generate','secondary fullwidth',lock)}</div>`:''}${cloud?'':'<small class="voice-demo-note">本机音色试听 · 生成进度为演示</small>'}</div></div>`;
 }
 function syncVoiceProgress(){
   if(!state.job||ui.voiceProgress?.id!==state.job.id)return;
@@ -6510,6 +6567,7 @@ function publishCourse(){
   settings=clone(state.settings);ui.error='';ui.returnToReview=false;ui.reviewReturnKey=null;ui.reviewReturnPageId=null;ui.reviewReturnDetails=null;if(ui.dialogMode==='publication-review')closeDialog();ui.step=ui.reviewOriginStep||3;render();if(cloud)void cloud.flush().then(ok=>{if(ok)notify('授课版本已同步后台。');});else notify('授课版本已生成。');return true;
 }
 function footerSaveState(){
+  if(isReadOnly())return '';
   if(cloud?.status==='unsynced')return `<span class="footer-save-state error" role="status">${E(cloud.error?.message||'同步未完成')}</span>${btn('重试同步','save','secondary tiny')}`;
   if(cloud?.status==='conflict')return `<span class="footer-save-state error" role="status">后台已有更新</span>${btn('保留我的副本','conflict-copy','secondary tiny')}${btn('载入最新版本','conflict-reload','secondary tiny')}`;
   return storageError?`<span class="footer-save-state error" role="status">${ui.storageConflict?'保存冲突':'保存失败'} · 当前修改仍保留</span>${btn(ui.storageConflict?'处理保存冲突':'重试保存',ui.storageConflict?'save-conflict-focus':'save','secondary tiny')}`:`<span class="footer-save-state" role="status">${savedContentLabel()}</span>`;
@@ -6534,12 +6592,12 @@ function preparationPreviewEntry(){
   const reason=!ready?(whole?'整课素材尚未齐备':'本页素材尚未齐备'):ui.busy||state.job?'请等待当前生成完成':source;
   return btn(label,whole?'preview-first':'preview','',!ready||!!ui.busy||!!state.job,`title="${E(reason)}"`);
 }
-function render(){stopMusicPreview();if(ui.page==='editor'&&ui.step===5&&!ui.play&&state.draft){ui.step=ui.reviewOriginStep||3;render();ui.step=5;openPublicationReview();return;}syncContentPage();const navScroll=$('.page-nav')?.scrollTop;const app=$('#app');if(ui.play){return;}stopReferenceMedia();let body;if(ui.page==='home')body=home();else{body=`<main class="workspace unified-prep-main"><div class="unified-prep-heading"><div class="unified-back-link">${btn('← 返回活动库','home','quiet',!!ui.busy||!!state.job)}</div><div class="page-head unified-prep-header prep-header-compact"><div class="prep-header-title"><h1>${E(L.get(library,activeId)?.displayTitle||state.draft?.title||'新建情境瑜伽课程')}</h1></div><div class="prep-head-actions"><div class="prep-global-actions" role="group" aria-label="活动全局操作">${btn('查看教案','teacher','',!state.draft)}${preparationPreviewEntry()}</div>${state.published||state.versions.length?`<details class="prep-more-menu"><summary data-action="prep-more" aria-label="更多课程操作">更多</summary><div class="prep-more-menu-items">${state.published?btn('使用授课版 V'+state.published.version+'授课','classroom','quiet',!!ui.busy||!!state.job):''}${state.versions.length?btn('版本历史','history','quiet',!!ui.busy):''}</div></details>`:''}</div><div class="prep-header-status">${versionStrip()}${state.draft?`<p class="prep-header-meta">${E(characterName(state.draft.settings.characterId))} · ${E(state.draft.settings.age)}</p>`:''}</div></div></div>${steps()}<div id="yoga-prep-guide">${preparationGuide()}</div>${undoStrip()}${jobStrip()}${ui.busy&&(ui.busy.kind==='course'||ui.step!==2&&ui.busy.kind!=='background')?`<section class="panel loader-panel"><span class="spinner"></span><h2>${ui.busy.kind==='course'?'正在编排课程':'正在整理修改候选'}</h2>${btn('取消','cancel-ai')}</section>`:[settingsView,contentView,assetsView,musicView,reviewView][ui.step-1]()}</main>${footer()}`;}app.innerHTML=shell(body);const nav=$('.page-nav');if(nav&&navScroll!==undefined)nav.scrollTop=navScroll;}
+function render(){stopMusicPreview();if(ui.page==='editor'&&ui.step===5&&!ui.play&&state.draft){ui.step=ui.reviewOriginStep||3;render();ui.step=5;openPublicationReview();return;}syncContentPage();const navScroll=$('.page-nav')?.scrollTop;const app=$('#app');if(ui.play){return;}stopReferenceMedia();let body;if(ui.page==='home')body=home();else{body=`<main class="workspace unified-prep-main"><div class="unified-prep-heading"><div class="unified-back-link">${btn('← 返回活动库','home','quiet',!!ui.busy||!!state.job)}</div><div class="page-head unified-prep-header prep-header-compact"><div class="prep-header-title"><h1>${E(L.get(library,activeId)?.displayTitle||state.draft?.title||'新建情境瑜伽课程')}</h1></div><div class="prep-head-actions"><div class="prep-global-actions" role="group" aria-label="活动全局操作">${btn('查看教案','teacher','',!state.draft)}${preparationPreviewEntry()}</div>${state.published||state.versions.length?`<details class="prep-more-menu"><summary data-action="prep-more" aria-label="更多课程操作">更多</summary><div class="prep-more-menu-items">${state.published?btn('使用授课版 V'+state.published.version+'授课','classroom','quiet',!!ui.busy||!!state.job):''}${state.versions.length?btn('版本历史','history','quiet',!!ui.busy):''}</div></details>`:''}</div><div class="prep-header-status">${versionStrip()}${state.draft?`<p class="prep-header-meta">${E(characterName(state.draft.settings.characterId))} · ${E(state.draft.settings.age)}</p>`:''}</div></div></div>${steps()}<div id="yoga-prep-guide">${preparationGuide()}</div>${undoStrip()}${jobStrip()}${ui.busy&&(ui.busy.kind==='course'||ui.step!==2&&ui.busy.kind!=='background')?`<section class="panel loader-panel"><span class="spinner"></span><h2>${ui.busy.kind==='course'?'正在编排课程':'正在整理修改候选'}</h2>${btn('取消','cancel-ai')}</section>`:[settingsView,contentView,assetsView,musicView,reviewView][ui.step-1]()}</main>${footer()}`;}app.innerHTML=shell(body);applyViewControls(app);const nav=$('.page-nav');if(nav&&navScroll!==undefined)nav.scrollTop=navScroll;}
 function openPublicationReview(){
   showDialog('核对并确认授课版',`<div class="row review-top-actions" role="group" aria-label="核对前查看">${preparationPreviewEntry()}${btn('查看教案','teacher','quiet')}</div>${storageError?`<div class="notice error" role="alert"><span>${E(storageError)}</span>${ui.storageConflict?btn('保留我的副本','conflict-copy','secondary tiny')+btn('载入最新版本','conflict-reload','secondary tiny'):btn('重试保存','save','secondary tiny')}</div>`:''}${preparationGuide()}${reviewView()}`,btn('继续编辑','close-dialog')+reviewPrimary());
   $('#dialog').classList.add('wb-review-dialog');ui.dialogMode='publication-review';
 }
-function showDialog(title,body,foot='',options={}){if(!options.preserveMusic)stopMusicPreview();stopReferenceMedia();const d=$('#dialog');if(d.open)d.close();else ui.returnFocus=document.activeElement;d.classList.remove('wb-review-dialog');d.classList.remove('course-review-dialog');d.classList.remove('course-adjustment-dialog');d.classList.remove('background-review-dialog');d.classList.remove('page-edit-dialog');d.classList.remove('action-picker-dialog');d.classList.remove('music-picker-dialog');ui.dialogMode=null;d.innerHTML=`<div class="dialog-head"><h2 id="dialog-title">${title}</h2>${btn('×','close-dialog','icon ui-dialog-close',false,'aria-label="关闭对话框"')}</div><div class="dialog-body">${body}</div>${foot?`<div class="dialog-foot">${foot}</div>`:''}`;d.showModal();}
+function showDialog(title,body,foot='',options={}){if(!options.preserveMusic)stopMusicPreview();stopReferenceMedia();const d=$('#dialog');if(d.open)d.close();else ui.returnFocus=document.activeElement;d.classList.remove('wb-review-dialog');d.classList.remove('course-review-dialog');d.classList.remove('course-adjustment-dialog');d.classList.remove('background-review-dialog');d.classList.remove('page-edit-dialog');d.classList.remove('action-picker-dialog');d.classList.remove('music-picker-dialog');ui.dialogMode=null;d.innerHTML=`<div class="dialog-head"><h2 id="dialog-title">${title}</h2>${btn('×','close-dialog','icon ui-dialog-close',false,'aria-label="关闭对话框"')}</div><div class="dialog-body">${body}</div>${foot?`<div class="dialog-foot">${foot}</div>`:''}`;applyViewControls(d);d.showModal();}
 function closeDialog(){if(ui.dialogMode==='music-picker'){musicAudio?.stop();ui.musicAudition=null;refreshMusicAudition();}const d=$('#dialog');if(d.open)d.close();d.classList.remove('wb-review-dialog');d.classList.remove('course-review-dialog');d.classList.remove('course-adjustment-dialog');d.classList.remove('background-review-dialog');d.classList.remove('page-edit-dialog');d.classList.remove('action-picker-dialog');d.classList.remove('music-picker-dialog');ui.dialogMode=null;ui.actionPicker=null;ui.returnFocus?.isConnected&&ui.returnFocus.focus();}
 function valueText(field,v){if(field==='musicUpload')return v?.name||'未上传';if(field==='musicId')return v==='local'?'本地上传':musicTrack(v).name;if(field==='musicVolume')return (v??25)+'%';if(field==='actionId')return actionName(v);if(field==='characterId')return characterName(v);if(field==='look')return v==='bright'?'明亮色调':'柔和色调';if(Array.isArray(v))return v.join(' · ');return typeof v==='string'?v:JSON.stringify(v);}
 function candidateDialog(){const c=state.candidate;if(!c)return;if(c.channel==='content'){closeDialog();showContentCandidate();return;}if(c.scope==='course'||c.requiresExpansion)return courseReview();if(c.channel==='background'&&c.kind==='background'&&!c.redirectToContent)return backgroundReview();const changes=[...(c.settingsChanges||[]).map(x=>({...x,pageId:null})),...c.changes.filter(x=>x.field!=='englishMode')];showDialog('AI 调整 · 核对候选',`<p class="diff-summary">${E(c.summary)}</p>${c.requiresExpansion?'<div class="notice amber">这项要求会影响整套课程。确认扩大修改范围后，才会应用。</div>':''}${c.redirectToContent?'<div class="notice amber">修改涉及课程内容，需要返回内容编排重新确认，再更新素材。</div>':''}<div class="impact-list">${(c.impacts||[]).map(x=>`<div class="impact-row"><strong>${E(state.draft.pages.find(p=>p.id===x.pageId)?.title||'整套课程')}</strong><span>${(x.kinds||[]).map(k=>assetLabels[k]||k).join('、')} ${x.kinds?.length?'需更新':''}</span></div>`).join('')}</div>${changes.map(x=>`<div class="diff-block"><h3>${E(x.pageId?state.draft.pages.find(p=>p.id===x.pageId)?.title||'当前页':'整课设定')} · ${fieldLabels[x.field]||E(x.field)}</h3><div class="diff-cols unified-candidate-compare"><div><small>当前内容</small>${E(valueText(x.field,x.before))}</div><div><small>调整候选</small>${E(valueText(x.field,x.after))}</div></div></div>`).join('')}${c.requiresExpansion?'<label class="checkbox"><input id="allow-expansion" type="checkbox">同意将修改范围扩大到整套课程</label>':''}${c.redirectToContent?'<label class="checkbox"><input id="allow-redirect" type="checkbox">返回内容编排，重新确认受影响内容</label>':''}`,btn('保留原内容','discard-candidate','')+btn(c.scope==='course'||c.requiresExpansion?'应用到整课':'应用到当前页','apply-candidate','primary',!!c.requiresExpansion||!!c.redirectToContent));}
@@ -6679,7 +6737,7 @@ function toggleReviewVoice(pageId,side){
 function classroomVersionKey(){return state.published?`V${state.published.version}:${state.published.createdAt||state.published.course.revision}`:null;}
 function savedClassroom(){const saved=L.get(library,activeId)?.classrooms?.[classroomVersionKey()];return saved&&Number.isInteger(saved.index)&&saved.index>=0&&saved.index<state.published.course.pages.length&&typeof saved.ended==='boolean'?saved:null;}
 function persistClassroom(){
-  const u=ui.play;if(!u?.published||u.caseId||u.ownerId!==activeId)return true;
+  const u=ui.play;if(isReadOnly()||!u?.published||u.caseId||u.ownerId!==activeId)return true;
   try{const record=L.get(library,activeId),classrooms={...(record.classrooms||{}),[u.sessionKey]:{index:u.index,ended:!!u.ended,roundId:u.roundId,updatedAt:new Date().toISOString()}};persistRecord({...record,classrooms,updatedAt:new Date().toISOString()});u.sessionSaved=true;return true;}
   catch(error){u.sessionSaved=false;notify('课堂进度未能保存；请重试后再离开。');return false;}
 }
@@ -6693,7 +6751,7 @@ function startClassroom(mode){
   persistClassroom();renderPlayer();$('#exit-preview')?.focus();
 }
 function restartClassroom(){if(!ui.play)return;ui.play.roundId=Date.now().toString(36);changePlayPage(0);}
-function startPreview(published=false,first=false,auto=false,caseId=null,startPageId=null){if(activeId&&!save())return notify('草稿保存失败，请先处理保存问题。');const source=caseId?caseState(caseId)?.published.course:published?state.published?.course:state.draft;if(!source)return notify('请先确认生成授课版本。');stopMusicPreview();stopReferenceMedia();ui.scroll=window.scrollY;ui.returnFocus=document.activeElement;ui.play={course:clone(source),assetStates:Object.fromEntries(source.pages.map(p=>[p.id,{background:pageAssetStatus(p,'background',{draft:source}),ready:['background','voice','motion'].every(k=>['ready','na'].includes(pageAssetStatus(p,k,{draft:source})))}])),index:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),published,caseId,reviewOrigin:!published&&!caseId&&ui.page==='editor'&&ui.step===5,previewSource:state.draft?.locked&&state.published?'授课版 V'+state.published.version:'当前草稿',ownerId:activeId,returnPageId:ui.pageId,returnStep:ui.step,returnEditorPage:ui.page,returnNavScrollTop:$('.page-nav')?.scrollTop||0,returnNavScrollLeft:$('.page-nav')?.scrollLeft||0,previewStartIndex:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),returnAction:document.activeElement?.dataset.action,returnId:document.activeElement?.dataset.id,returnReviewKey:document.activeElement?.dataset.reviewKey,returnReviewDetails:reviewDetails(),version:state.published?.version,ended:false,progress:0,status:'idle',message:'点击播放，英语与动作同时开始'};if(ui.dialogMode==='publication-review')closeDialog();renderPlayer();if(auto)playCurrent();else $('#exit-preview')?.focus();}
+function startPreview(published=false,first=false,auto=false,caseId=null,startPageId=null){if(!caseId&&activeId&&!save())return notify('草稿保存失败，请先处理保存问题。');const source=caseId?caseState(caseId)?.published.course:published?state.published?.course:state.draft;if(!source)return notify('请先确认生成授课版本。');stopMusicPreview();stopReferenceMedia();ui.scroll=window.scrollY;ui.returnFocus=document.activeElement;ui.play={course:clone(source),assetStates:Object.fromEntries(source.pages.map(p=>[p.id,{background:pageAssetStatus(p,'background',{draft:source}),ready:['background','voice','motion'].every(k=>['ready','na'].includes(pageAssetStatus(p,k,{draft:source})))}])),index:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),published,caseId,reviewOrigin:!published&&!caseId&&ui.page==='editor'&&ui.step===5,previewSource:state.draft?.locked&&state.published?'授课版 V'+state.published.version:'当前草稿',ownerId:activeId,returnPageId:ui.pageId,returnStep:ui.step,returnEditorPage:ui.page,returnNavScrollTop:$('.page-nav')?.scrollTop||0,returnNavScrollLeft:$('.page-nav')?.scrollLeft||0,previewStartIndex:first?0:Math.max(0,source.pages.findIndex(p=>p.id===(startPageId||current()?.id))),returnAction:document.activeElement?.dataset.action,returnId:document.activeElement?.dataset.id,returnReviewKey:document.activeElement?.dataset.reviewKey,returnReviewDetails:reviewDetails(),version:state.published?.version,ended:false,progress:0,status:'idle',message:'点击播放，英语与动作同时开始'};if(ui.dialogMode==='publication-review')closeDialog();renderPlayer();if(auto)playCurrent();else $('#exit-preview')?.focus();}
 function playerCurrent(){return ui.play?.course.pages[ui.play.index];}
 function playablePage(){return !!ui.play?.assetStates[playerCurrent()?.id]?.ready;}
 function playerStatus({state:st,message}){if(!ui.play)return;const bg=M.musicOptions(ui.play.course.settings),track=musicTrack(bg.id,ui.play.course.settings);if(st==='playing'&&(track.src||track.fileId)&&window.YogaMusic){classroomMusic=classroomMusic||window.YogaMusic.createAudio({onError:notify});if(classroomMusic.getKey()===musicKey(track))classroomMusic.resume();else classroomMusic.play(musicSource(track),bg.volume,musicKey(track));}else if(st==='paused')classroomMusic?.pause();else if(['idle','ended','error'].includes(st))classroomMusic?.stop();ui.play.status=st;ui.play.message=message;const line=$('#player-message');if(line){line.textContent=st==='error'?message:'';line.className=st==='error'?'inline-error':'play-note';}const control=$('#play-control');if(control){control.textContent=st==='starting'?'准备播放…':st==='playing'?'暂停':st==='paused'?'继续':st==='ended'?'再播一次':'播放本页';control.disabled=st==='starting';control.setAttribute('title',control.textContent+'（空格）');}}
@@ -6706,14 +6764,14 @@ function exitPreview(skipSave=false){if(!ui.play)return;if(!skipSave&&!persistCl
 function exportData(){if(recoveryRaw===null)save();const data=recoveryRaw??JSON.stringify(library,null,2);const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type:'application/json'}));a.download='情境瑜伽_课程库记录_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);notify('已导出课程库记录。');}
 function setStep(n){if(n>1&&!state.draft)return;if(n===5&&ui.step!==5)ui.reviewOriginStep=ui.step;if(ui.dialogMode==='publication-review'&&n!==5)closeDialog();ui.step=n;ui.page='editor';ui.error='';save();render();window.scrollTo(0,0);$(`.unified-prep-steps [data-step="${n}"]`)?.focus({preventScroll:true});}
 listenMutation('input',e=>{if(e.target.id==='music-volume'){setMusicVolume(e.target.value);return;}if(e.target.id==='music-seek'){if(musicReady())ensureMusicSequence().seek(+e.target.value);return;}if(e.target.dataset.languageGoalsInput){const g=yogaGoalsState(e.target.dataset.languageGoalsInput==='manual');g.text=e.target.value;if(e.target.dataset.languageGoalsInput!=='manual'){settings.pendingLanguageGoal=g.text;save();}return;}if(e.target.dataset.manualField){pageEditImpact();return;}if(e.target.id==='library-search'){ui.query=e.target.value;$('#library-results').innerHTML=libraryResults();return;}let edited=false;if(e.target.dataset.setting){settings[e.target.dataset.setting]=e.target.value;edited=true;refreshPreparationGuidance();}if((e.target.id==='content-prompt'&&localAdjustmentOpen()||e.target.id==='course-prompt'&&ui.dialogMode==='course-compose')&&ui.adjustment?.open&&!adjustmentLocked()&&!state.candidate){setAdjustmentPrompt(e.target.value);edited=true;}if(e.target.id==='background-prompt'&&!adjustmentLocked()&&state.draft.confirmed&&!state.candidate){setBackgroundPrompt(e.target.value);edited=true;const card=$('#background-card-action');if(card)card.innerHTML=backgroundButton(current());document.querySelectorAll('[data-action="propose"]').forEach(b=>{if(b.dataset.channel==='background')b.disabled=!backgroundPrompt().trim();});}if(edited){document.querySelectorAll('[data-action="adjustment-propose"]').forEach(b=>b.disabled=adjustmentLocked()||!!state.candidate||!adjustmentPrompt().trim());const hadError=!!storageError;save();const footerSave=$('#footer-save');if(footerSave)footerSave.innerHTML=footerSaveState();if(ui.storageConflict){closeDialog();render();return;}if(!!storageError!==hadError){const status=$('.save-status');if(status)status.textContent=storageError?'保存待重试':'已保存';}}});
-document.addEventListener('change',e=>{if(e.target.id==='library-import')void importLibraryFile(e.target);});
+document.addEventListener('change',e=>{if(!isReadOnly()&&e.target.id==='library-import')void importLibraryFile(e.target);});
 listenMutation('change',e=>{if(e.target.id==='music-upload-file'){const file=e.target.files?.[0];if(file)void uploadMusic(file);return;}if(e.target.id==='yoga-voice'){if(adjustmentLocked())return;stopReferenceMedia();run(()=>M.selectVoice(state,e.target.value));$('#yoga-voice')?.focus();return;}if(e.target.dataset.setting){settings[e.target.dataset.setting]=e.target.value;refreshPreparationGuidance();}if(e.target.id==='allow-expansion'||e.target.id==='allow-redirect'){const c=state.candidate;const b=$('[data-action="apply-candidate"]');if(b)b.disabled=!!(c.requiresExpansion&&!$('#allow-expansion')?.checked)||!!(c.redirectToContent&&!$('#allow-redirect')?.checked);}if(e.target.id==='fail-ai')ui.failAI=e.target.checked;if(e.target.id==='fail-assets')ui.failAssets=e.target.checked;if(e.target.id==='fail-save')ui.failSave=e.target.checked;});
 listenMutation('click',e=>{const b=e.target.closest('[data-action]');if(!b||b.disabled)return;const a=b.dataset.action,more=b.closest?.('.prep-more-menu');if(more&&a!=='prep-more'){more.open=false;more.querySelector('summary')?.focus({preventScroll:true});}try{if(ui.storageConflict&&['apply-background-candidate','apply-candidate','publish','publish-confirm','confirm','continue-step','fork','history-restore-confirm','undo-change'].includes(a))return notify('请先保留副本或载入最新版本，解决保存冲突。');
 if(a==='toggle-navigation'){ui.navigationExpanded=!ui.navigationExpanded;render();}
 else if(a==='switch-music')void switchModule('music');
 else if(a==='switch-song')void switchModule('song');
 else if(a==='module')void switchModule(b.dataset.module);
-else if(a==='home'){if(ui.busy||state.job)return notify('请先取消或等待当前生成完成。');save();if(ui.page==='editor')ui.homeTab='mine';ui.page='home';ui.filter='all';ui.query='';render();window.scrollTo(0,0);}
+else if(a==='home'){if(ui.busy||state.job)return notify('请先取消或等待当前生成完成。');if(ui.page==='editor'){save();ui.homeTab='mine';}ui.page='home';ui.filter='all';ui.query='';render();window.scrollTo(0,0);}
 else if(a==='library-tab'){ui.homeTab=b.dataset.tab;ui.filter='all';render();$('#wb-'+ui.homeTab+'-tab')?.focus({preventScroll:true});}
 else if(a==='library-filter'){ui.filter=b.dataset.filter;render();}
 else if(a==='clear-search'){ui.query='';ui.filter='all';render();$('#library-search')?.focus({preventScroll:true});}
@@ -6787,7 +6845,7 @@ else if(a==='history-restore'){showDialog('恢复历史版本为草稿','<p>当�
 else if(a==='history-restore-confirm'){const next=M.restoreVersion(state,+b.dataset.version,{allowReplaceDraft:true});closeDialog();ui.adjustment=null;ui.backgroundAdjustment=null;ui.prompt='';ui.backgroundPrompt='';ui.step=2;commit(next,'历史内容已恢复为草稿，请重新核对确认。');restoreWorkspace({workspace:{step:2}});save();render();}
 else if(a==='conflict-copy'){invalidatePendingWork();if(cloud)return void resolveCloudConflict(true);closeDialog();const record=L.duplicateRecord({...L.get(library,activeId),state:clone(state),workspace:editorWorkspace()},{displayTitle:('保留副本 · '+(state.draft?.title||settings.title)).slice(0,70)});record.workspace=editorWorkspace();library=L.load(courseStorage);baseTokens.set(record.id,null);persistRecord(record);activeId=record.id;state=clone(record.state);restoreWorkspace(record);storageError='';ui.storageConflict=false;save();render();notify('当前内容已另存为独立草稿，原课程的新版本保留。');}
 else if(a==='conflict-reload'){showDialog('载入另一窗口的最新版本','<p>当前窗口尚未保存的修改将被替换。如需保留，请先另存副本或导出记录。</p>',btn('先保留副本','conflict-copy')+btn('载入最新版本','conflict-reload-confirm','primary'));}
-else if(a==='conflict-reload-confirm'){invalidatePendingWork();if(cloud)return void resolveCloudConflict(false);const latest=L.load(courseStorage),record=L.get(latest,activeId);if(!record)throw Error('未找到最新记录，请先保留副本。');library=latest;baseTokens.set(activeId,L.recordToken(record));state=clone(record.state);restoreWorkspace(record);storageError='';ui.storageConflict=false;closeDialog();render();notify('已载入最新保存的内容。');}
+else if(a==='conflict-reload-confirm'){invalidatePendingWork();if(cloud)return void resolveCloudConflict(false);const latest=L.load(courseStorage),record=L.get(latest,activeId);if(!record)throw Error('未找到最新记录，请先保留副本。');library=latest;baseTokens.set(activeId,L.recordToken(record));state=clone(record.state);restoreSavedWorkspace(record);storageError='';ui.storageConflict=false;closeDialog();render();notify('已载入最新保存的内容。');}
 else if(a==='apply-candidate'){const go=state.candidate.redirectToContent;const next=M.applyCandidate(state,{allowExpansion:!!$('#allow-expansion')?.checked,allowContentRedirect:!!$('#allow-redirect')?.checked});clearCandidatePrompt();if(state.candidate.channel==='content'&&ui.adjustment)ui.adjustment.open=false;closeDialog();if(go)ui.step=2;commit(next,'修改已应用，请核对受影响内容。');$('#content-page-title')?.focus({preventScroll:true});}
 else if(a==='discard-candidate'){const content=state.candidate?.channel==='content';clearCandidatePrompt();closeDialog();if(content&&ui.adjustment)ui.adjustment.open=false;run(()=>M.discardCandidate(state),'未采用修改，原内容保留。');}
 else if(a==='refine-candidate'){if(state.candidate?.channel==='content'){const wide=wideContentCandidate();if(state.candidate.pageId)ui.pageId=state.candidate.pageId;closeDialog();if(wide)ui.dialogMode='course-compose';run(()=>M.discardCandidate(state),'修改要求已保留，可继续调整。');if(wide)courseComposer();else $('#content-prompt')?.focus();}}
@@ -6849,18 +6907,18 @@ document.addEventListener('cancel',e=>{if(e.target.id==='dialog'){e.preventDefau
 document.addEventListener('visibilitychange',()=>{if(document.hidden){stopPlayer();if(ui.page==='editor'&&ui.step===4&&!ui.play)render();}});
 document.addEventListener('toggle',e=>{if(!e.target?.open&&(e.target?.classList?.contains('review-section')||e.target?.classList?.contains('review-evidence')&&reviewSpeech?.pageId===e.target.id.replace('review-evidence-','')))stopReviewMedia();},true);
 document.addEventListener('yoga:motion-error',()=>notify('当前设备未能播放角色动画，已保留原动作图片。'));
-document.addEventListener('keydown',e=>{if(e.target.dataset.languageGoalsInput&&e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){e.preventDefault();commitYogaGoal(true,e.target.dataset.languageGoalsInput==='manual');return;}if(ui.play&&!$('#dialog').open&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.target?.closest?.('input,textarea,select,[contenteditable="true"]')){if(e.key==='ArrowLeft'){e.preventDefault();changePlayPage(ui.play.index-1);}else if(e.key==='ArrowRight'){e.preventDefault();if(ui.play.index<ui.play.course.pages.length-1)changePlayPage(ui.play.index+1);else{stopPlayer();ui.play.ended=true;persistClassroom();renderPlayer();}}else if(e.key===' '&&!e.target?.closest?.('button,a,summary,[role="button"]')){e.preventDefault();playCurrent();}else if(e.key?.toLowerCase()==='r'&&!ui.play.ended){e.preventDefault();if(playablePage())ensurePlayer().replay(playerCurrent().english,voiceOptions(ui.play.course.settings));}}if(e.key==='Escape'&&ui.play&&!$('#dialog').open){e.preventDefault();exitPreview();}if(ui.play&&!$('#dialog').open&&e.key==='Tab'){const focus=[...document.querySelectorAll('.fullscreen button:not(:disabled),.fullscreen summary')];if(!focus.length)return;const first=focus[0],last=focus[focus.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
+document.addEventListener('keydown',e=>{if(!isReadOnly()&&e.target.dataset.languageGoalsInput&&e.key==='Enter'&&!e.isComposing&&e.keyCode!==229){e.preventDefault();commitYogaGoal(true,e.target.dataset.languageGoalsInput==='manual');return;}if(ui.play&&!$('#dialog').open&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.target?.closest?.('input,textarea,select,[contenteditable="true"]')){if(e.key==='ArrowLeft'){e.preventDefault();changePlayPage(ui.play.index-1);}else if(e.key==='ArrowRight'){e.preventDefault();if(ui.play.index<ui.play.course.pages.length-1)changePlayPage(ui.play.index+1);else{stopPlayer();ui.play.ended=true;persistClassroom();renderPlayer();}}else if(e.key===' '&&!e.target?.closest?.('button,a,summary,[role="button"]')){e.preventDefault();playCurrent();}else if(e.key?.toLowerCase()==='r'&&!ui.play.ended){e.preventDefault();if(playablePage())ensurePlayer().replay(playerCurrent().english,voiceOptions(ui.play.course.settings));}}if(e.key==='Escape'&&ui.play&&!$('#dialog').open){e.preventDefault();exitPreview();}if(ui.play&&!$('#dialog').open&&e.key==='Tab'){const focus=[...document.querySelectorAll('.fullscreen button:not(:disabled),.fullscreen summary')];if(!focus.length)return;const first=focus[0],last=focus[focus.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});
 window.WBPrepareModuleSwitch=prepareModuleSwitch;
 window.addEventListener('message',e=>{if(e.source===window.parent&&e.source!==window&&e.origin===moduleMessageOrigin()&&e.data&&typeof e.data==='object'&&!Array.isArray(e.data)&&e.data.type==='wellbeing:visibility'&&e.data.visible===false)stopPlayer();});
 window.addEventListener('pagehide',()=>{invalidatePendingWork();stopPlayer();window.YogaMusicFiles?.release();});
-window.addEventListener('beforeunload',e=>{stopPlayer();if(storageError||ui.busy||cloud?.dirty||ui.musicUploading||ui.play?.sessionSaved===false){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{stopPlayer();if(!isReadOnly()&&(storageError||ui.busy||cloud?.dirty||ui.musicUploading||ui.play?.sessionSaved===false)){e.preventDefault();e.returnValue='';}});
 function initialize(){
   try{
     if(!cloud)recoveryRaw=localStorage.getItem(L.KEY)??localStorage.getItem(L.PREVIOUS_KEY)??localStorage.getItem(L.OLDER_KEY)??localStorage.getItem(L.LEGACY_KEY);
     library=L.load(courseStorage);activeId=library.activeId;state=L.get(library,activeId)?.state||M.createState();
     recoveryRaw=null;for(const record of library.items)baseTokens.set(record.id,L.recordToken(record));
   }catch(error){storageError=cloud?'后台课程记录未能读取，请刷新后重试。':'本地记录未能读取，原记录仍保留。请导出记录后再开始新的演示。';}
-  restoreWorkspace(L.get(library,activeId));render();
+  restoreSavedWorkspace(L.get(library,activeId));render();
 }
 function showLoadError(error){
   loadError=error.message||'暂时无法读取后台课程。';

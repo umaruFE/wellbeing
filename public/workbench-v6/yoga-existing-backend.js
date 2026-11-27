@@ -46,9 +46,10 @@
     const token=localStorage.getItem('token');
     const tabKey='wellbeing-workbench-tab', tab=sessionStorage.getItem(tabKey)||crypto.randomUUID();
     sessionStorage.setItem(tabKey,tab);
-    const key=`${L.KEY}:creative-sync:${tab}`;
-    const pending=new Map(api.readOnly?[]:JSON.parse(localStorage.getItem(key)||'[]').map(entry=>[entry.record.id,entry]));
+    const key=`${L.KEY}:creative-sync:${tab}${api.readOnly?':production-preview':''}`;
+    const pending=new Map();
     const known=new Map(), baseline=new Map();
+    let readOnly=api.readOnly, queueLoaded=false;
     let value=null, job=null, timer, lastError=null, status='loading', unavailable=0;
 
     async function request(path,options={}) {
@@ -57,7 +58,10 @@
     }
     function savePending(){if(pending.size)localStorage.setItem(key,JSON.stringify([...pending.values()]));else localStorage.removeItem(key);}
     function change(next,message=null){status=next;lastError=message;onChange?.();}
-    function remember(row){const record=recordFor(row);known.set(record.id,{id:row.id,updatedAt:row.updated_at});return record;}
+    function remember(row,record=recordFor(row)){
+      known.set(record.id,{id:row.id,updatedAt:row.updated_at,saveToken:record.saveToken});
+      return record;
+    }
     async function findRow(id) {
       const {data}=await request(rowsUrl,{timeout:20000});
       const row=data.find(row=>row.parameters?.workbenchYoga?.id===id||`creative-yoga-${row.id}`===id);
@@ -67,7 +71,7 @@
     function defer(){clearTimeout(timer);timer=setTimeout(()=>void flush(),550);}
 
     function set(raw){
-      if(api.readOnly)throw Error('当前连接只读后台，无法保存课程。');
+      if(readOnly)throw Error('当前连接只读后台，无法保存课程。');
       const next=L.validate(raw);
       const previous=new Map(pending);
       try{
@@ -81,15 +85,20 @@
       if(pending.size&&status!=='conflict'){change('pending');defer();}
     }
     async function load(){
-      const {data}=await request(rowsUrl,{timeout:20000});
+      const {data,canWrite}=await request(rowsUrl,{timeout:20000});
       if(!Array.isArray(data))throw Error('后台返回的课程列表格式有误。');
+      readOnly=api.readOnly&&canWrite!==true;
+      if(!readOnly&&!queueLoaded){
+        for(const entry of JSON.parse(localStorage.getItem(key)||'[]'))pending.set(entry.record.id,entry);
+        queueLoaded=true;
+      }
       const records=new Map();
       unavailable=0;
       for(const row of data){
         try{
           const record=recordFor(row);
           if(records.has(record.id)){unavailable++;continue;}
-          known.set(record.id,{id:row.id,updatedAt:row.updated_at});
+          remember(row,record);
           baseline.set(record.id,record.saveToken);records.set(record.id,record);
         }catch(_){unavailable++;}
       }
@@ -97,27 +106,35 @@
       if(!api.readOnly)try{legacy=L.load(localStorage);}catch(_) { /* Preserve unreadable local files for offline recovery. */ }
       for(const record of legacy?.items||[])if(!records.has(record.id)&&!pending.has(record.id))pending.set(record.id,{record,expected:null});
       for(const [id,entry] of pending){if(records.get(id)?.saveToken===entry.record.saveToken)pending.delete(id);else records.set(id,entry.record);}
-      if(!api.readOnly)savePending();
+      if(!readOnly)savePending();
       const items=[...records.values()];
       value=JSON.stringify(L.validate({schema:1,activeId:items.some(r=>r.id===legacy?.activeId)?legacy.activeId:null,items}));
       if(pending.size){change('pending');defer();}else change('synced');
     }
     async function syncRecord({record,expected}) {
-      let binding=known.get(record.id), snap=record.state.draft, parameters=workParams(record);
+      let binding=known.get(record.id);
+      const snap=record.state.draft, parameters=workParams(record);
       const title=clean(record.displayTitle||snap?.title||record.workspace.form?.title||'未命名情境瑜伽');
+      const pages=snap?.pages.map(oldPage);
+      const payload={title,parameters,...(pages?{pages}:{}),...(record.backendPlan?{plan:record.backendPlan}:{})};
       if(!binding){
-        const {data}=await request(collection,{method:'POST',body:{moduleId,moduleName:'情境瑜伽',title,parameters}}).catch(async error=>{
+        const {data}=await request(collection,{method:'POST',body:{moduleId,moduleName:'情境瑜伽',...payload}}).catch(async error=>{
+          if(error.status&&error.status<500)throw error;
           const row=await findRow(record.id);
           if(!row)throw error;
           return {data:row};
         });
+        if(data?.parameters?.workbenchYoga?.saveToken!==record.saveToken){
+          throw Object.assign(Error('后台课程已更新，当前修改已保留。'),{status:409});
+        }
         remember(data);binding=known.get(record.id);
-        if(!snap&&!record.backendPlan)return;
+        // Older servers create just the draft. Complete their page/plan save before acknowledging it.
+        if((!pages||data.result?.pages?.length===pages.length)&&(!record.backendPlan||data.result?.plan))return;
+      }else if(!expected&&binding.saveToken!==record.saveToken){
+        throw Object.assign(Error('后台课程已更新，当前修改已保留。'),{status:409});
       }
-      const pages=snap?.pages.map(oldPage);
-      const payload={title, parameters, expectedUpdatedAt:expected||binding.updatedAt, ...(pages?{pages}:{}), ...(record.backendPlan?{plan:record.backendPlan}:{})};
       try{
-        const {data}=await request(`${collection}/${binding.id}`,{method:'PUT',body:payload,timeout:20000});
+        const {data}=await request(`${collection}/${binding.id}`,{method:'PUT',body:{...payload,expectedUpdatedAt:expected||binding.updatedAt},timeout:20000});
         if(!data)throw Error('后台没有确认保存。');
         remember(data);
       }catch(error){
@@ -130,6 +147,7 @@
     }
     function flush(){
       if(job)return job;
+      if(readOnly)return Promise.resolve(!pending.size);
       if(!pending.size)return Promise.resolve(true);
       if(status==='conflict')return Promise.resolve(false);
       clearTimeout(timer);change('pending');
@@ -201,7 +219,7 @@
     }
     const storage={getItem:key=>key===L.KEY?value:null,setItem:(key,raw)=>{if(key!==L.KEY)throw Error('后台课程存储键无效。');set(raw);}};
     window.addEventListener('online',flush);
-    return {storage,load,flush,generate,background,voice,reloadLatest,
+    return {storage,load,flush,generate,background,voice,reloadLatest,get readOnly(){return readOnly;},
       get dirty(){return pending.size>0;},get status(){return status;},get error(){return lastError;},get unavailable(){return unavailable;}};
   }
 

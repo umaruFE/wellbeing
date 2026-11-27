@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
 import { renderYogaHtml, YogaPage, YogaPlan, YogaResult, MusicResult } from '@/lib/experience/generator';
+import { previewYogaWrites, withYogaWorkWrite, yogaModuleId } from '@/lib/yoga-work-write';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -74,6 +75,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (!work) {
       return NextResponse.json({ error: '作品不存在' }, { status: 404 });
     }
+    if (previewYogaWrites() && work.module_id !== yogaModuleId) {
+      return NextResponse.json({ error: '当前模块未开放作品写入。' }, { status: 403 });
+    }
 
     const parameters = (work.parameters && typeof work.parameters === 'object') ? { ...work.parameters } : {};
     if (body.parameters && typeof body.parameters === 'object') {
@@ -114,13 +118,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       html = renderYogaHtml({ title, pages: existing.pages }, work.title);
     }
 
-    const { rows: updated } = await db.query(
-      `UPDATE creative_works
-       SET parameters = $1::jsonb, result = $2::jsonb, title = $3, html = COALESCE($4, html), updated_at = NOW()
-       WHERE id = $5 AND user_id = $6 ${expectedUpdatedAt === undefined ? '' : "AND date_trunc('milliseconds', updated_at) = $7::timestamptz"}
-       RETURNING id, module_id, module_name, title, parameters, status, result, created_at, updated_at`,
-      [JSON.stringify(parameters), JSON.stringify(existing), title, html, numericId, userId, ...(expectedUpdatedAt === undefined ? [] : [expectedUpdatedAt])]
-    );
+    const sql = `UPDATE creative_works
+       SET parameters = $1::jsonb, result = $2::jsonb, title = $3, html = COALESCE($4, html),
+           updated_at = GREATEST(clock_timestamp(), updated_at + interval '1 millisecond')
+       WHERE id = $5 AND user_id = $6 AND module_id = $7 ${expectedUpdatedAt === undefined ? '' : "AND date_trunc('milliseconds', updated_at) = $8::timestamptz"}
+       RETURNING id, module_id, module_name, title, parameters, status, result, created_at, updated_at`;
+    const values = [JSON.stringify(parameters), JSON.stringify(existing), title, html, numericId, userId, work.module_id,
+      ...(expectedUpdatedAt === undefined ? [] : [expectedUpdatedAt])];
+    const { rows: updated } = work.module_id === yogaModuleId
+      ? await withYogaWorkWrite(client => client.query(sql, values))
+      : await db.query(sql, values);
     if (!updated.length && expectedUpdatedAt !== undefined) return NextResponse.json({ error: '后台课程已更新，当前修改已保留。' }, { status: 409 });
 
     return NextResponse.json({ data: updated[0] });

@@ -1,5 +1,5 @@
 import { CreateButton } from '../../components/LibraryControls';
-import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageLoading } from '../../components/PageLoading';
@@ -9,7 +9,7 @@ import { CourseWorkflow } from '../course-workflow';
 import { CourseCard } from './CourseCard';
 import { CourseToolbar } from './CourseToolbar';
 import apiService from '../../services/api';
-import { getCourseCoverUrl, getCourseData, getCourseOverview, getDisplayCourseTitle } from '../courseImages';
+import { formatCourseDuration, getCourseCoverUrl, getCourseData, getCourseOverview, getDisplayCourseTitle } from '../courseImages';
 import './CourseManagement.css';
 
 function formatAge(value) {
@@ -18,14 +18,6 @@ function formatAge(value) {
   const range = text.match(/(\d+)\s*[-~]\s*(\d+)/);
   if (range) return `${range[1]}-${range[2]}`;
   return text.replace(/岁/g, '').trim();
-}
-
-function formatDuration(value) {
-  if (!value) return '--';
-  const text = String(value);
-  const minutes = text.match(/\d+/)?.[0];
-  if (!minutes) return text;
-  return `${minutes} min`;
 }
 
 function formatClassSize(value) {
@@ -71,6 +63,12 @@ export function CourseManagement({
   const [hasMore, setHasMore] = useState(false);
   const courseListRequest = useRef(0);
   const [search, setSearch] = useState('');
+  const [keyword, setKeyword] = useState('');
+  const [counts, setCounts] = useState(null);
+  useEffect(() => {
+    const timer = setTimeout(() => setKeyword(search.trim()), 180);
+    return () => clearTimeout(timer);
+  }, [search]);
   const searchRef = useRef(null);
   const [status, setStatus] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
@@ -113,9 +111,9 @@ export function CourseManagement({
         language: values.language || 'zh',
         outputLanguage: values.outputLanguage || 'Chinese',
         age: values.age,
-        grade: 'Draft',
+        grade: values.grade || '',
         duration: values.duration,
-        theme: values.taskName || values.experiencePath || t('course.scenarioTask'),
+        theme: values.theme || values.taskName || values.experiencePath || '',
         updatedAt: new Date().toLocaleDateString('zh-CN'),
         accent: 'var(--wb-primary)',
         coverTone: 'coral',
@@ -164,10 +162,11 @@ export function CourseManagement({
         setLoadingMore(true);
       }
 
-      const result = await apiService.getCourses({ page: String(pageNum), limit: '12' });
+      const result = await apiService.getCourses({ page: String(pageNum), limit: '12', view: 'library', search: keyword, ...(status === 'all' ? {} : { status }) });
       if (requestId !== courseListRequest.current) return;
       const list = result?.data || [];
       const pagination = result?.pagination || {};
+      setCounts(result.counts);
       const mapped = list.map((course, i) => {
         const courseData = getCourseData(course);
         const overview = getCourseOverview(course);
@@ -189,10 +188,10 @@ export function CourseManagement({
           status: course.status === 'published' ? 'published' : 'draft',
           age: formatAge(rawAge),
           rawAge,
-          grade: rawAge ? `G${String(rawAge).split('-')[0]}` : '--',
-          duration: formatDuration(rawDuration),
+          grade: pickFirst(course.grade, courseData?.grade) || '',
+          duration: formatCourseDuration(rawDuration, t),
           rawDuration,
-          theme: course.theme || t('course.scenarioTask'),
+          theme: pickFirst(course.theme, courseData?.theme, overview?.theme) || '',
           updatedAt: course.created_at
             ? new Date(course.created_at).toLocaleDateString('zh-CN', {
                 year: 'numeric', month: '2-digit', day: '2-digit',
@@ -245,7 +244,7 @@ export function CourseManagement({
         setLoadingMore(false);
       }
     }
-  }, [t]);
+  }, [t, status, keyword]);
 
   useEffect(() => {
     fetchCourses();
@@ -255,22 +254,6 @@ export function CourseManagement({
     if (loadingMore || !hasMore) return;
     fetchCourses(page + 1, true);
   };
-
-  const counts = useMemo(() => ({
-    all: courses.length,
-    draft: courses.filter(course => course.status === 'draft').length,
-    published: courses.filter(course => course.status === 'published').length,
-  }), [courses]);
-
-  const filteredCourses = useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-
-    return courses.filter(course => {
-      const matchesStatus = status === 'all' || course.status === status;
-      const haystack = `${course.title} ${course.unit} ${course.theme} ${course.grade}`.toLowerCase();
-      return matchesStatus && (!keyword || haystack.includes(keyword));
-    });
-  }, [courses, search, status]);
 
   const clearFilters = () => {
     setSearch('');
@@ -296,9 +279,9 @@ export function CourseManagement({
       language: values.language || 'zh',
       outputLanguage: values.outputLanguage || 'Chinese',
       age: values.age,
-      grade: 'Draft',
+      grade: values.grade || '',
       duration: values.duration,
-      theme: values.taskName || values.experiencePath || t('course.scenarioTask'),
+      theme: values.theme || values.taskName || values.experiencePath || '',
       updatedAt: new Date().toLocaleDateString('zh-CN'),
       accent: 'var(--wb-primary)',
       coverTone: 'coral',
@@ -370,7 +353,7 @@ export function CourseManagement({
           <CourseToolbar
             search={search}
             status={status}
-            counts={counts}
+            counts={coursesLoading || loadError === 'list' ? undefined : counts}
             searchRef={searchRef}
             onSearchChange={setSearch}
             onStatusChange={setStatus}
@@ -387,9 +370,9 @@ export function CourseManagement({
             </div>
           ) : (
             <>
-              {filteredCourses.length > 0 ? (
+              {courses.length > 0 ? (
                 <div className="wb-work-grid">
-                  {filteredCourses.map(course => (
+                  {courses.map(course => (
                     <CourseCard
                       key={course.id}
                       course={course}
@@ -400,8 +383,8 @@ export function CourseManagement({
                 </div>
               ) : (
                 <div className="wb-library-empty">
-                  <p role="status">{t(courses.length === 0 ? 'course.noCourses' : 'course.noMatchingCourses')}</p>
-                  {courses.length > 0 && (
+                  <p role="status">{t(counts?.all ? 'course.noMatchingCourses' : 'course.noCourses')}</p>
+                  {counts?.all > 0 && (
                     <button type="button" data-wb-button="secondary" onClick={clearFilters}>
                       {t(status === 'all' ? 'common.clearSearch' : 'common.clearFilters')}
                     </button>

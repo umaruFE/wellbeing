@@ -1,12 +1,12 @@
 import i18next from 'i18next';
-import { phaseTemplates } from '../workflowData';
+import { coursePhasePalette, phaseTemplates } from '../workflowData';
 
-export const PHASES = [
-  { key: 'engage', title: 'ENGAGE 引入', tone: 'engage', color: '#9b63dc' },
-  { key: 'empower', title: 'EMPOWER 赋能', tone: 'empower', color: '#3f83e8' },
-  { key: 'execute', title: 'EXECUTE 实践', tone: 'execute', color: '#4caf72' },
-  { key: 'elevate', title: 'ELEVATE 升华', tone: 'elevate', color: '#ff705d' },
-];
+export const PHASES = phaseTemplates.map(({ key, title, name, tone }) => ({
+  key,
+  title: `${title.toUpperCase()} ${name}`,
+  tone,
+  color: coursePhasePalette[key].accent,
+}));
 
 export const PPT_SLIDE_WIDTH = 940;
 export const PPT_SLIDE_HEIGHT = 529;
@@ -463,7 +463,7 @@ function createTitleSlide(phase, step, stepIndex, template, isEnglish = false) {
         fontSize: 19,
         fontWeight: 'bold',
         textAlign: 'left',
-        color: template.accent,
+        color: phase.color,
       }),
       createTextLayer({
         title: isEnglish ? 'Page Title' : '页面标题',
@@ -575,7 +575,7 @@ function createActivitySlide(phase, step, stepIndex, template, isEnglish = false
         fontSize: 16,
         fontWeight: 'bold',
         textAlign: 'center',
-        color: template.accent,
+        color: phase.color,
       }),
       createTextLayer({
         title: isEnglish ? 'Procedure Title' : '流程标题',

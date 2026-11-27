@@ -16,63 +16,44 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const user = authResult.user;
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
-    const isPublic = searchParams.get('public');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const library = searchParams.get('view') === 'library';
+    const page = Math.max(1, Number.parseInt(searchParams.get('page') || '1') || 1);
+    const limit = Math.max(1, Number.parseInt(searchParams.get('limit') || '10') || 10);
+    const conditions: string[] = [];
+    const values: (string | number)[] = [];
+    const where = () => conditions.length ? 'WHERE ' + conditions.join(' AND ') : '';
+    if (userId) conditions.push(`user_id = $${values.push(userId)}`);
+    if (searchParams.get('public') === 'true') conditions.push('is_public IS TRUE');
 
-    const filters: Record<string, any> = {};
-    
-    if (userId) {
-      filters.user_id = !isNaN(Number(userId)) ? Number(userId) : userId;
-    }
-    
-    if (status) filters.status = status;
-    if (isPublic === 'true') filters.is_public = true;
-
-    const offset = (page - 1) * limit;
-
-    let courses;
-    try {
+    // Tab totals describe the entire visible catalogue, including later pages.
+    let counts;
+    if (library) {
       const result = await db.query(
-        `SELECT * FROM courses 
-         ${Object.keys(filters).length > 0 ? 'WHERE ' + Object.keys(filters).map((k, i) => `${k} = $${i + 1}`).join(' AND ') : ''} 
-         ORDER BY created_at DESC 
-         LIMIT $${Object.keys(filters).length + 1} OFFSET $${Object.keys(filters).length + 2}`,
-        [...Object.values(filters), limit, offset]
-      );
-      courses = result.rows;
-    } catch (coursesError) {
-      console.error('Error fetching courses:', coursesError);
-      return NextResponse.json(
-        { error: (coursesError as Error).message },
-        { status: 500 }
-      );
+        `SELECT count(*)::int AS all, count(*) FILTER (WHERE status IS DISTINCT FROM 'published')::int AS draft,
+                count(*) FILTER (WHERE status='published')::int AS published FROM courses ${where()}`, values);
+      counts = result.rows[0];
     }
-
-    let total = 0;
-    try {
-      const countResult = await db.query(
-        `SELECT COUNT(*) as count FROM courses 
-         ${Object.keys(filters).length > 0 ? 'WHERE ' + Object.keys(filters).map((k, i) => `${k} = $${i + 1}`).join(' AND ') : ''}`,
-        Object.values(filters)
-      );
-      total = parseInt(countResult.rows[0]?.count || '0');
-    } catch (countError) {
-      console.error('Error counting courses:', countError);
+    if (library && status === 'draft') conditions.push("status IS DISTINCT FROM 'published'");
+    else if (status) conditions.push(`status = $${values.push(status)}`);
+    const search = library && searchParams.get('search')?.trim();
+    if (search) {
+      conditions.push(`strpos(lower(concat_ws(' ', title, unit, theme, course_data->>'grade', course_data->>'theme',
+        course_data #>> '{courseOverview,courseTitle}', course_data #>> '{courseOverview,courseOverview,courseTitle}',
+        course_data #>> '{overview,courseTitle}', course_data #>> '{courseOverview,text}')), lower($${values.push(search)})) > 0`);
     }
-
+    const total = counts && !search ? counts[status || 'all'] : undefined;
+    const count = typeof total === 'number' ? total : (await db.query(`SELECT count(*)::int AS total FROM courses ${where()}`, values)).rows[0].total;
+    const result = await db.query(
+      `SELECT * FROM courses ${where()} ORDER BY created_at DESC, id DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`,
+      [...values, limit, (page - 1) * limit],
+    );
     return NextResponse.json({
-      data: courses,
-      pagination: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit)
-      }
+      data: result.rows,
+      ...(library ? { counts } : {}),
+      pagination: { page, limit, total: count, totalPages: Math.ceil(count / limit) },
     });
   } catch (error) {
     console.error('Error fetching courses:', error);

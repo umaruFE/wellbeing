@@ -1,4 +1,4 @@
-import { LibraryFilterSelect, LibrarySearch } from '../../components/LibraryControls';
+import { LibrarySearch, StatusFilters } from '../../components/LibraryControls';
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -19,16 +19,7 @@ export function CourseToolbar({
 
   return (
     <div className="fr-cm-toolbar">
-      <LibraryFilterSelect
-        className="fr-cm-status-filter"
-        label={t('common.status')}
-        value={status}
-        onChange={onStatusChange}
-        options={statusOptions.map(option => ({
-          value: option.value,
-          label: `${option.label} (${counts[option.value] || 0})`,
-        }))}
-      />
+      <StatusFilters options={statusOptions} value={status} onChange={onStatusChange} counts={counts} />
       <LibrarySearch label={t('course.searchPlaceholder')} value={search} onChange={onSearchChange} inputRef={searchRef} />
     </div>
   );

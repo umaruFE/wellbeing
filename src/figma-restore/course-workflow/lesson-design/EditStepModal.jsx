@@ -1,5 +1,4 @@
 import { DialogCloseButton } from '../../../components/LibraryControls';
-import i18next from 'i18next';
 import React from 'react';
 import { Button, Form, Input } from 'antd';
 import { useTranslation } from 'react-i18next';
@@ -7,12 +6,18 @@ import { composeFlowFromSteps, composeScriptFromSteps, createFlowStepsForForm } 
 
 const { TextArea } = Input;
 
-export function EditStepModal({ open, step, onClose, onSave }) {
-  const { t, i18n } = useTranslation();
-  const isChinese = !i18n.language?.startsWith('en');
+export function EditStepModal({ open, step, courseTitle, onClose, onSave, onRewrite }) {
+  const { t } = useTranslation();
   const [form] = Form.useForm();
 
+  const request = React.useRef(0);
+  const [rewriting, setRewriting] = React.useState(false);
+  const [error, setError] = React.useState('');
+
   React.useEffect(() => {
+    request.current++;
+    setRewriting(false);
+    setError('');
     if (!open || !step) return;
     form.setFieldsValue({
       title: step.title,
@@ -21,34 +26,39 @@ export function EditStepModal({ open, step, onClose, onSave }) {
       activity: step.activity,
       resources: step.resources,
       scenario: step.scenario,
-      flowSteps: createFlowStepsForForm(step, !isChinese),
+      flowSteps: createFlowStepsForForm(step),
     });
   }, [form, open, step]);
 
-  const save = async () => {
-    const values = await form.validateFields();
+  const readDraft = values => {
+    const original = createFlowStepsForForm(step);
     const flow = composeFlowFromSteps(values.flowSteps);
-    const teacherScript = composeScriptFromSteps(values.flowSteps) || step.teacherScript;
-    onSave({
-      ...step,
-      title: values.title,
-      duration: values.duration,
-      goal: values.goal,
-      activity: values.activity,
-      flow,
-      resources: values.resources,
-      scenario: values.scenario,
-      teacherScript,
-    });
+    const script = composeScriptFromSteps(values.flowSteps);
+    const { flowSteps, ...fields } = values;
+    return {
+      ...step, ...fields,
+      flow: flow === composeFlowFromSteps(original) ? step.flow : flow,
+      teacherScript: script === composeScriptFromSteps(original) ? step.teacherScript : script,
+    };
   };
 
-  const rewrite = () => {
-    form.setFieldsValue({
-      goal: isChinese ? '通过沉浸式情境激发好奇心，建立学习动机。' : 'Spark curiosity through an immersive scenario and build learning motivation.',
-      activity: isChinese ? '全班在任务情境中观察线索、朗读信息，并用目标语言完成初步回应。' : 'Students observe clues, read mission information, and respond with the target language.',
-      resources: isChinese ? 'AI图像生成设备、投影仪、任务信件、情境图片。' : 'AI image generator, projector, mission letter, scenario images.',
-      scenario: isChinese ? '通过神秘信号、角色任务和视觉线索，营造需要学生共同解决问题的课堂情境。' : 'Use mystery signals, role tasks, and visual clues to create a collaborative classroom challenge.',
-    });
+  const save = async () => {
+    const values = await form.validateFields().catch(() => null);
+    if (values) onSave(readDraft(values));
+  };
+
+  const rewrite = async () => {
+    const id = ++request.current;
+    setError('');
+    setRewriting(true);
+    try {
+      const revised = await onRewrite(readDraft(form.getFieldsValue()));
+      if (request.current === id) form.setFieldsValue({ ...revised, flowSteps: createFlowStepsForForm(revised) });
+    } catch (err) {
+      if (request.current === id) setError(err.message);
+    } finally {
+      if (request.current === id) setRewriting(false);
+    }
   };
 
   if (!open || !step) return null;
@@ -59,12 +69,12 @@ export function EditStepModal({ open, step, onClose, onSave }) {
         <div className="trd-hd">
           <div>
             <div className="trd-title">{t('lesson.editLessonDetail')}</div>
-            <div className="trd-subtitle">{t('editStepUi.existingStepSubtitle')}</div>
+            {courseTitle && <div className="trd-subtitle">{courseTitle}</div>}
           </div>
           <DialogCloseButton onClick={onClose} />
         </div>
 
-        <Form form={form} className="trd-body lesson-design-form" layout="vertical">
+        <Form form={form} disabled={rewriting} className="trd-body lesson-design-form" layout="vertical">
           <div className="trd-main-panel">
             <div className="trd-intro">
               <div>
@@ -76,20 +86,20 @@ export function EditStepModal({ open, step, onClose, onSave }) {
 
             <div className="as-draft-form trd-draft-form">
               <div className="as-draft-row trd-row-name">
-                <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title">
-                  <Input className="as-draft-input" placeholder={t('editStepUi.stepNameExample')} />
+                <Form.Item className="as-draft-field as-draft-name" label={t('lesson.stepName')} name="title" rules={[{ required: true, whitespace: true, message: t('lesson.nameRequired') }]}>
+                  <Input className="as-draft-input" placeholder={t('lesson.stepNamePlaceholder')} />
                 </Form.Item>
                 <Form.Item className="as-draft-field trd-time-field" label={t('lesson.stepDuration')} name="duration">
-                  <Input className="as-draft-input" placeholder={t('editStepUi.durationExample')} />
+                  <Input className="as-draft-input" placeholder={t('lesson.durationPlaceholder')} />
                 </Form.Item>
               </div>
 
               <Form.Item className="as-draft-field" label={t('lesson.languageGoal')} name="goal">
-                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.goalExample')} />
+                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('lesson.languageGoalPlaceholder')} />
               </Form.Item>
 
               <Form.Item className="as-draft-field" label={t('lesson.activitySummary')} name="activity">
-                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.activityExample')} />
+                <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('lesson.activitySummaryPlaceholder')} />
               </Form.Item>
 
               <div className="as-draft-field">
@@ -130,7 +140,7 @@ export function EditStepModal({ open, step, onClose, onSave }) {
                               <div className="flow-step-section guidance teacher-script">
                                 <div className="flow-step-section-title">{t('lesson.teacherGuidance')}</div>
                                 <Form.Item name={[field.name, 'teacher']} noStyle>
-                                  <TextArea className="flow-step-input flow-step-script" autoSize={{ minRows: 4, maxRows: 8 }} placeholder={i18next.t('editStepUi.61db78b3bf')} />
+                                  <TextArea className="flow-step-input flow-step-script" autoSize={{ minRows: 4, maxRows: 8 }} placeholder={t('lesson.teacherPlaceholder')} />
                                 </Form.Item>
                               </div>
                               <div className="flow-step-section guidance cue-script">
@@ -144,7 +154,7 @@ export function EditStepModal({ open, step, onClose, onSave }) {
                         </div>
                       ))}
 
-                      <button type="button" className="flow-step-add" onClick={() => add({ title: isChinese ? '新步骤' : 'New Step', desc: '', teacher: '', cue: '' })}>+ {t('common.add')}</button>
+                      <button type="button" className="flow-step-add" onClick={() => add({ title: '', desc: '', teacher: '', cue: '' })}>+ {t('common.add')}</button>
                     </div>
                   )}
                 </Form.List>
@@ -152,10 +162,10 @@ export function EditStepModal({ open, step, onClose, onSave }) {
 
               <div className="as-draft-row trd-resource-row">
                 <Form.Item className="as-draft-field" label={t('lesson.teachingResources')} name="resources">
-                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.resourcesExample')} />
+                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('lesson.resourcesPlaceholder')} />
                 </Form.Item>
                 <Form.Item className="as-draft-field" label={t('lesson.sceneSetup')} name="scenario">
-                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('editStepUi.scenarioExample')} />
+                  <TextArea className="as-draft-textarea" autoSize={{ minRows: 3, maxRows: 5 }} placeholder={t('lesson.scenarioPlaceholder')} />
                 </Form.Item>
               </div>
             </div>
@@ -165,8 +175,9 @@ export function EditStepModal({ open, step, onClose, onSave }) {
         <div className="trd-ft">
           <button type="button" data-wb-button="secondary" onClick={onClose}>{t('common.cancel')}</button>
           <div className="trd-ft-spacer" />
-          <button type="button" data-wb-button="secondary" onClick={rewrite}>{t('lesson.aiRewrite')}</button>
-          <Button type="primary" data-wb-button="primary" onClick={save}>{t('lesson.saveChanges')}</Button>
+          {error && <span role="alert">{error}</span>}
+          <Button data-wb-button="secondary" loading={rewriting} onClick={rewrite}>{t('lesson.aiRewrite')}</Button>
+          <Button type="primary" data-wb-button="primary" disabled={rewriting} onClick={save}>{t('lesson.saveChanges')}</Button>
         </div>
       </div>
     </div>

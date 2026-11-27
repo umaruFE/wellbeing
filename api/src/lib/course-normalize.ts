@@ -73,12 +73,13 @@ export function normalizePhaseDurations(courseData: any, duration: unknown) {
   const root = courseData?.courseData || courseData;
   if (!root || typeof root !== 'object') return courseData;
 
-  const totalMinutes = parseDurationMinutes(duration, 60);
+  const totalMinutes = parseDurationMinutes(duration);
   for (const [phaseKey, ratio] of Object.entries(PHASE_LIMIT_RATIOS)) {
     const steps = root[phaseKey]?.steps;
     if (!Array.isArray(steps) || steps.length === 0) continue;
 
     steps.forEach(normalizeActivitySteps);
+    if (totalMinutes <= 0) continue;
 
     const limit = Math.max(1, Math.round(totalMinutes * ratio));
     const minutes = steps.map((step: any) => parseDurationMinutes(step.time || step.duration, 0));

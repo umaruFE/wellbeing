@@ -13,7 +13,7 @@
 .cw-section,
 .works-header,
 .works-toolbar,
-.works-grid {
+.works-results {
   max-width: 1440px;
   margin-inline: auto;
 }
@@ -135,8 +135,7 @@
   font-weight: 600;
 }
 
-.works-toolbar { padding-block: var(--wb-space-2); }
-.works-categories { display: flex; min-width: 0; flex-wrap: wrap; gap: var(--wb-space-2); }
+.works-status-filters { margin-bottom: var(--wb-space-4); }
 .work-card-top { display: flex; align-items: center; justify-content: space-between; gap: var(--wb-space-2); }
 .work-card small { margin-block-start: var(--wb-space-4); color: var(--wb-muted); font-size: var(--wb-helper-size); }
 .work-card footer {

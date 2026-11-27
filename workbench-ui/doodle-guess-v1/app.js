@@ -161,7 +161,7 @@
       draft.wordImages={...draft.wordImages,[word]:remoteImage(word,'ai',src)};
       scheduleSave();
     } catch(error) {
-      if(currentImageJob(word,job))imageErrors.set(word,error.message||'生成失败，请重试或上传图片。');
+      if(currentImageJob(word,job))imageErrors.set(word,'配图未生成，可以重试或上传图片。');
     } finally {
       if(currentImageJob(word,job)){imageJobs.delete(word);refreshWords();}
     }
@@ -309,7 +309,7 @@
     showDialog('授课版已确认',`<p><strong>${E(draft.title)}</strong> · V${draft._publication.version}</p><p>可以开始授课，也可以稍后从“我制作的”进入。</p>`,B('返回备课','close')+B('开始授课','teach-current','primary'));
   }
   function leaveEditor() {
-    if(!save()){toast('当前修改尚未保存，请先重试、导出或另存副本。');return;}
+    if(!save()){if(storageError)toast(storageError);return;}
     stopWordSpeech();clearImages();draft=null;ui.page='home';ui.tab='mine';ui.query='';ui.filter='all';ui.errors={};render();window.scrollTo(0,0);
   }
   function startSession(config, kind) {

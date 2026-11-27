@@ -410,7 +410,7 @@
   row-gap: 20px;
 }
 
-.recent-container > .ant-tabs {
+.recent-container > [role="tabpanel"] {
   width: 100%;
   min-width: 0;
 }

@@ -174,10 +174,10 @@ export async function GET(request: NextRequest) {
       interval: 0
     });
 
-    console.log('[generate-music] 执行状态:', executionStatus);
+    console.log('[generate-music] 执行状态:', executionStatus.status);
 
     // 根据状态返回结果
-    const statusData = executionStatus as { status?: string };
+    const statusData = executionStatus as { error?: string; status?: string };
     if (statusData.status === 'completed') {
       console.log('[generate-music] 执行完成，获取音乐资源...');
 
@@ -211,7 +211,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: false,
         status: 'error',
-        error: '任务执行失败'
+        error: statusData.error || '任务执行失败'
       }, { headers: corsHeaders() });
     } else {
       return NextResponse.json({

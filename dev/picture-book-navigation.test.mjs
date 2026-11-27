@@ -48,6 +48,7 @@ function saveFixture({ existing = false, failure = false } = {}) {
     user: { id: 'teacher-1' },
     editingBookId: null,
     editingBookIdRef,
+    savedContent: { current: null },
     t: key => key,
     setSaving: value => saving.push(value),
     setSaveState: value => statuses.push(value),
@@ -110,6 +111,7 @@ for (const { name, args, saveArgs, success } of navigationCases) {
       const saveCalls = [];
       let finishSave;
       const handler = actualHandler(name, {
+        hasContentChanges: () => true,
         saveBook(extraData) {
           saveCalls.push(extraData === undefined ? undefined : JSON.parse(JSON.stringify(extraData)));
           return new Promise(resolve => { finishSave = resolve; });
@@ -128,3 +130,16 @@ for (const { name, args, saveArgs, success } of navigationCases) {
     });
   }
 }
+
+test('browsing a saved or untouched new book can change steps and return without writing', async () => {
+  const actions = [];
+  const environment = {
+    hasContentChanges: () => false,
+    saveBook: () => assert.fail('Browsing must not write a draft'),
+    setStep: value => actions.push(value),
+    setView: value => actions.push(value),
+  };
+  await actualHandler('goToStep', environment)(2);
+  await actualHandler('backToList', environment)();
+  assert.deepEqual(actions, [2, 'list']);
+});

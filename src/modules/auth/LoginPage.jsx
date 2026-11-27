@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDefaultRouteForRole } from './authRoutes';
@@ -12,6 +12,7 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { state } = useLocation();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +25,9 @@ export const LoginPage = () => {
 
     try {
       const user = await login(username, password);
-      navigate(getDefaultRouteForRole(user.role), { replace: true });
+      const destination = state?.returnTo;
+      const localPath = typeof destination === 'string' && /^\/(?!\/)/.test(destination) && !destination.includes('\\');
+      navigate(localPath ? destination : getDefaultRouteForRole(user.role), { replace: true });
     } catch (err) {
       setError(err.message || t('login.loginFailed'));
     } finally {

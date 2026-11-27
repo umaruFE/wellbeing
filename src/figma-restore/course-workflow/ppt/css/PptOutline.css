@@ -110,6 +110,9 @@
 }
 
 #ed-ppt .ppt-phase {
+  --phase-tint: var(--wb-page);
+  --phase-accent: var(--wb-muted);
+  --phase-border: color-mix(in srgb, var(--phase-tint) 72%, var(--wb-muted));
   margin: 0 0 24px;
 }
 
@@ -126,6 +129,7 @@
   width: 6px;
   height: 14px;
   border-radius: 999px;
+  background: var(--phase-accent);
   flex: 0 0 6px;
 }
 
@@ -157,6 +161,14 @@
   display: none;
 }
 
+#ed-ppt .ppt-step-dot {
+  background: var(--wb-muted);
+}
+
+#ed-ppt .ppt-step-dot.active {
+  background: var(--phase-accent);
+}
+
 #ed-ppt .ppt-first-step-card,
 #ed-ppt .ppt-step-card {
   width: 232px;
@@ -178,8 +190,8 @@
 
 #ed-ppt .ppt-first-step-card.active,
 #ed-ppt .ppt-step-card.active {
-  border: 1px solid var(--wb-selected-border);
-  background: var(--wb-selected);
+  border-color: var(--phase-border);
+  background: var(--phase-tint);
   box-shadow: none;
 }
 
@@ -193,7 +205,7 @@
 
 #ed-ppt .ppt-first-step-card.active > svg,
 #ed-ppt .ppt-step-card.active > svg {
-  color: var(--phase-color);
+  color: var(--phase-accent);
 }
 
 #ed-ppt .ppt-first-step-card .ppt-step-icon,
@@ -201,7 +213,8 @@
   width: 20px;
   height: 20px;
   border-radius: 5px;
-  color: #ffffff;
+  background: var(--phase-tint);
+  color: var(--phase-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -230,7 +243,7 @@
 
 #ed-ppt .ppt-first-step-card.active .ppt-step-name,
 #ed-ppt .ppt-step-card.active .ppt-step-name {
-  color: var(--phase-color);
+  color: var(--phase-accent);
 }
 
 #ed-ppt .ppt-first-step-card .ppt-step-count,
@@ -241,7 +254,7 @@
   border: 1px solid var(--phase-border);
   border-radius: 999px;
   background: var(--wb-surface);
-  color: var(--phase-color);
+  color: var(--phase-accent);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -263,7 +276,7 @@
   top: 0;
   bottom: 0;
   width: 2px;
-  background: var(--wb-border);
+  background: var(--phase-border);
 }
 
 #ed-ppt .ppt-slide-row {
@@ -314,17 +327,18 @@
   width: 8px;
   height: 8px;
   border-radius: 999px;
-  background: #b6beca;
+  background: var(--phase-border);
 }
 
-#ed-ppt .ppt-slide-dot.active {
-  background: var(--wb-text);
+#ed-ppt .ppt-slide-dot.active,
+#ed-ppt .ppt-slide-dot.active + .ppt-slide-line {
+  background: var(--phase-accent);
 }
 
 #ed-ppt .ppt-slide-line {
   width: 18px;
   height: 1.5px;
-  background: #b6beca;
+  background: var(--phase-border);
 }
 
 #ed-ppt .ppt-slide-thumb {
@@ -387,7 +401,7 @@
 }
 
 #ed-ppt .ppt-slide-thumb.active {
-  border-color: var(--wb-border);
+  border: 2px solid var(--phase-accent);
   background: var(--wb-surface);
   box-shadow: none;
 }

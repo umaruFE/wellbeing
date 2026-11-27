@@ -6,107 +6,18 @@ export const workflowSteps = [
 ];
 
 export const phaseTemplates = [
-  {
-    key: 'engage',
-    title: 'Engage',
-    name: '情境启动',
-    duration: '8分钟',
-    tone: 'engage',
-    steps: [
-      {
-        title: '任务信件导入',
-        duration: '3分钟',
-        goal: '激活兴趣，进入角色身份。',
-        activity: '教师展示任务信件，引导学生预测今天要解决的问题。',
-        teacherScript: 'Today we have a mission. What can you see? What do you think we need to do?',
-        resources: '任务信件 / 封面图 / 关键词卡',
-      },
-      {
-        title: '情境词汇热身',
-        duration: '5分钟',
-        goal: '唤醒已知词汇，建立任务语境。',
-        activity: '学生用动作、图片或快速问答说出相关词汇。',
-        teacherScript: 'Show me the word with your body. Say it with a feeling.',
-        resources: '词汇卡 / 图片提示',
-      },
-    ],
-  },
-  {
-    key: 'empower',
-    title: 'Empower',
-    name: '语言赋能',
-    duration: '12分钟',
-    tone: 'empower',
-    steps: [
-      {
-        title: '语言工具箱示范',
-        duration: '6分钟',
-        goal: '理解目标句型的意义和使用场景。',
-        activity: '教师通过示范对话展示核心句型，学生跟读并替换关键词。',
-        teacherScript: 'I feel... because... Can you help me describe it?',
-        resources: '句型条 / 例句卡',
-      },
-      {
-        title: '同伴微练习',
-        duration: '6分钟',
-        goal: '在低压力情境中尝试输出。',
-        activity: '两人一组抽卡问答，完成 3 轮替换表达。',
-        teacherScript: 'Ask your partner. Listen carefully and respond.',
-        resources: '抽卡任务 / 计时器',
-      },
-    ],
-  },
-  {
-    key: 'execute',
-    title: 'Execute',
-    name: '创作运用',
-    duration: '15分钟',
-    tone: 'execute',
-    steps: [
-      {
-        title: '小组任务创作',
-        duration: '10分钟',
-        goal: '在真实任务中整合语言工具。',
-        activity: '小组完成最终作品草稿，并标出必须使用的目标语言。',
-        teacherScript: 'Use at least two target sentences in your work. Make your idea clear.',
-        resources: '任务单 / 彩笔 / 小组海报',
-      },
-      {
-        title: '同伴巡展反馈',
-        duration: '5分钟',
-        goal: '通过反馈优化表达。',
-        activity: '学生走访其他小组，留下一个 praise 和一个 suggestion。',
-        teacherScript: 'Give one praise and one idea to make it even better.',
-        resources: '反馈贴纸',
-      },
-    ],
-  },
-  {
-    key: 'elevate',
-    title: 'Elevate',
-    name: '回顾升华',
-    duration: '5分钟',
-    tone: 'elevate',
-    steps: [
-      {
-        title: '成果展示',
-        duration: '3分钟',
-        goal: '完成公开表达，获得成就感。',
-        activity: '每组用目标语言进行简短展示。',
-        teacherScript: 'Tell us your final idea. What language did you use?',
-        resources: '展示区 / 作品卡',
-      },
-      {
-        title: '成长复盘',
-        duration: '2分钟',
-        goal: '把课堂经验迁移到真实生活。',
-        activity: '学生选择一句今天最有用的话，并说出下次使用场景。',
-        teacherScript: 'Choose one sentence you want to use again.',
-        resources: '出口票',
-      },
-    ],
-  },
-];
+  { key: 'engage', title: 'Engage', name: '引入' },
+  { key: 'empower', title: 'Empower', name: '赋能' },
+  { key: 'execute', title: 'Execute', name: '实践' },
+  { key: 'elevate', title: 'Elevate', name: '升华' },
+].map(phase => ({ ...phase, tone: phase.key, duration: '0分钟', steps: [] }));
+
+export const coursePhasePalette = {
+  engage: { tint: '#fae5dd', accent: '#9e5034' },
+  empower: { tint: '#f6edcc', accent: '#806210' },
+  execute: { tint: '#e2eef2', accent: '#326c81' },
+  elevate: { tint: '#e5eddf', accent: '#506d39' },
+};
 
 export const readingTemplates = [
   {

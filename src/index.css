@@ -115,6 +115,22 @@ button:not(:disabled), [role="button"]:not([aria-disabled="true"]) { cursor: poi
 :where(.ant-tabs-ink-bar) { height: 3px; }
 :where(.ant-btn:disabled) { opacity: .48; }
 
+.wb-content-tabs {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  border-bottom: 1px solid var(--wb-border-soft);
+}
+.wb-content-tabs > [role="tab"] { flex: none; }
+.wb-content-tabs > [role="tab"][aria-selected="true"]::after { bottom: 0; }
+.wb-content-tabs > [role="tab"]:focus-visible { outline-offset: -2px; }
+.wb-content-tabs > [role="tab"]:disabled { opacity: .55; cursor: default; }
+[role="tabpanel"]:focus-visible { outline: var(--wb-focus-ring); outline-offset: -2px; }
+@media (min-width: 651px) {
+  .wb-library-tools > .wb-content-tabs { border-bottom: 0; }
+}
+
 .wb-choice-chips {
   display: flex;
   flex-wrap: wrap;

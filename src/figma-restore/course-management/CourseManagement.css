@@ -29,8 +29,6 @@
   gap: var(--wb-space-3);
 }
 
-.fr-cm-status-filter { min-width: min(176px, 100%); }
-
 .fr-cm-load-more {
   display: flex;
   align-items: center;

@@ -403,7 +403,7 @@
     "sourceFiles": 141,
     "sourceBytes": 32588317,
     "outputFiles": 179,
-    "outputBytes": 62223071,
+    "outputBytes": 62223022,
     "scriptChecks": 54,
     "storageChecks": 8,
     "missingLocalDependencies": 0
@@ -665,17 +665,17 @@
       "nodeCheck": "passed"
     },
     {
-      "path": "doodle-guess-v1/app.js",
-      "inline": null,
-      "nodeCheck": "passed"
-    },
-    {
       "path": "move-match-v1/app.js",
       "inline": null,
       "nodeCheck": "passed"
     },
     {
       "path": "spin-speak-v1/app.js",
+      "inline": null,
+      "nodeCheck": "passed"
+    },
+    {
+      "path": "doodle-guess-v1/app.js",
       "inline": null,
       "nodeCheck": "passed"
     }
@@ -689,16 +689,16 @@
         "bytes": 38576
       },
       "outputRecord": {
-        "sha256": "7edb6b5a7dcada6958b77be7f8bc7cbf76d355ecaef06e2c0a6e25d47cce817c",
-        "bytes": 40228
+        "sha256": "1305345bbb0820ac22e51cc1480eff160ba40a50cb1058248426698eb0fea2f6",
+        "bytes": 40179
       },
       "transformations": [
         {
           "kind": "local-authoring-ui",
           "source": "workbench-ui/doodle-guess-v1/app.js",
           "sourceRecord": {
-            "sha256": "7edb6b5a7dcada6958b77be7f8bc7cbf76d355ecaef06e2c0a6e25d47cce817c",
-            "bytes": 40228
+            "sha256": "1305345bbb0820ac22e51cc1480eff160ba40a50cb1058248426698eb0fea2f6",
+            "bytes": 40179
           },
           "scope": "portable local authoring update"
         }
@@ -881,7 +881,7 @@
         "bytes": 1622
       },
       "outputRecord": {
-        "sha256": "592eb8b3b66ea6d2606ca173b49b291e129c63cff413b63ee0107432b0e9c060",
+        "sha256": "3217da99006a67faa4b31d88feb0b25d90007666514b3715f46751bd653278bf",
         "bytes": 1770
       },
       "transformations": [
@@ -901,7 +901,7 @@
         {
           "kind": "content-versioned-ui-assets",
           "versions": {
-            "app.js": "7edb6b5a7dcada69",
+            "app.js": "1305345bbb0820ac",
             "../workbench-api.js": "819e8727a82424f4"
           }
         }
@@ -4212,8 +4212,8 @@
     "files": [
       {
         "path": "doodle-guess-v1/app.js",
-        "sha256": "7edb6b5a7dcada6958b77be7f8bc7cbf76d355ecaef06e2c0a6e25d47cce817c",
-        "bytes": 40228
+        "sha256": "1305345bbb0820ac22e51cc1480eff160ba40a50cb1058248426698eb0fea2f6",
+        "bytes": 40179
       },
       {
         "path": "doodle-guess-v1/classroom-wordbank.js",
@@ -4524,13 +4524,13 @@
       },
       {
         "path": "authoring.css",
-        "sha256": "758caf42b547a5fc605c36156d2d555c562379757d15c273add00cdab77e6374",
-        "bytes": 11726
+        "sha256": "c10f2a205413bae7caf465e9067894591d06177c6bcfdf8ff2f44cb95d57796b",
+        "bytes": 11747
       },
       {
         "path": "ui-components.css",
-        "sha256": "0e5e5504387370699018fd6380c15c7bc79b96e61acf26df8578907b603ab3bf",
-        "bytes": 11382
+        "sha256": "a2a3bb5e2a869c34798e9ba288b4a0ece38017e2afc71a82cfb27ef8880297b9",
+        "bytes": 12309
       }
     ]
   }

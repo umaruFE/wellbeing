@@ -1,210 +1,119 @@
-export function splitStepResources(text) {
-  return String(text || '')
-    .split(/[、，,；;/\n]/g)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 8);
-}
-
-const flowTitles = {
-  zh: ['创设悬念', '朗读来信', '情绪感知', '发布任务'],
-  en: ['Build Suspense', 'Read the Letter', 'Emotion Awareness', 'Announce Task'],
+export const parseMinutes = (value) => {
+  const matches = String(value || '').match(/\d+(?:\.\d+)?/g);
+  if (!matches?.length) return 0;
+  return Math.round(Number(matches[matches.length - 1]) || 0);
 };
 
-const flowTitleMap = {
-  '创设悬念': { zh: '创设悬念', en: 'Build Suspense' },
-  '朗读来信': { zh: '朗读来信', en: 'Read the Letter' },
-  '情绪感知': { zh: '情绪感知', en: 'Emotion Awareness' },
-  '发布任务': { zh: '发布任务', en: 'Announce Task' },
-  'Build Suspense': { zh: '创设悬念', en: 'Build Suspense' },
-  'Read the Letter': { zh: '朗读来信', en: 'Read the Letter' },
-  'Emotion Awareness': { zh: '情绪感知', en: 'Emotion Awareness' },
-  'Announce Task': { zh: '发布任务', en: 'Announce Task' },
-};
-
-
-const fixedFlowTitleSet = new Set([
-  ...flowTitles.zh,
-  ...flowTitles.en,
-  '情境开启',
-  '任务说明',
-  '合作探索',
-  '语言练习',
-  '成果分享',
-  '课堂收束',
-  '打开线索',
-  '小组探索',
-  '任务收束',
-]);
-
-function makeFlowTitleFromContent(text, index, isEn = false) {
-  return isEn ? `Step ${index + 1}` : `步骤 ${index + 1}`;
+export function phaseDuration(steps) {
+  const minutes = steps.reduce((sum, step) => sum + parseMinutes(step.time || step.duration), 0);
+  return `${minutes} 分钟`;
 }
 
-function translateFlowTitle(title, isEn) {
-  return flowTitleMap[title]?.[isEn ? 'en' : 'zh'] || title;
+const phaseNames = { engage: ['eng', '引入'], empower: ['emp', '赋能'], execute: ['exc', '实践'], elevate: ['elv', '升华'] };
+
+function storedPhases(value) {
+  if (typeof value === 'string') {
+    try { return storedPhases(JSON.parse(value)); } catch { return null; }
+  }
+  if (!value || typeof value !== 'object') return null;
+  if (Array.isArray(value)) {
+    return Object.fromEntries(value.filter(Boolean).map(phase => [
+      String(phase.key || phase.id || phase.phase || '').toLowerCase(), phase,
+    ]));
+  }
+  const saved = storedPhases(value.courseData) || storedPhases(value.parsedCourseData);
+  if (saved) return saved;
+  if (Object.entries(phaseNames).some(([long, [short]]) => value[long] || value[short])) return value;
+  return storedPhases(value.text);
 }
 
-export function parseLabeledFlowSteps(flow, isEn = false) {
-  const raw = String(flow || '').replace(/\u200b/g, '').replace(/\r/g, '\n').trim();
-  if (!raw) return [];
-  const lines = raw
-    .split(/\n+/)
-    .map((line) => line.replace(/^[①②③④⑤⑥⑦⑧⑨]|\d+[.、)]/g, '').trim())
-    .filter(Boolean);
-  const labeled = lines
-    .map((line) => {
-      const match = line.match(/^([^\n：:]{2,12})[：:]\s*(.+)$/s);
-      if (!match) return null;
-      return {
-        title: match[1].trim(),
-        desc: match[2].replace(/^[\s。；;，,]+|[\s。；;，,]+$/g, '').trim(),
-      };
-    })
-    .filter((item) => item && item.desc);
-  if (labeled.length < 2) return [];
-  return labeled;
+export function lessonText(value) {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  if (value && typeof value === 'object') return Object.values(value).map(lessonText).filter(Boolean).join('\n');
+  return '';
 }
 
-export function splitStepFlowText(flow, isEn = false) {
-  const raw = String(flow || '').trim();
-  if (!raw) return [];
-  const labeled = parseLabeledFlowSteps(raw, isEn);
-  if (labeled.length) return labeled.map((item) => `${item.title}：${item.desc}`);
-  return raw
-    .split(/\n+|[①②③④⑤⑥⑦⑧⑨]|\d+[.、)]/g)
-    .map((item) => item.replace(/^[：:；;，,\s-]+/, '').trim())
-    .filter(Boolean);
+export function normalizeLessonStep(step) {
+  const flow = step.activitySteps || step.flow;
+  // Older workflows also return an array of steps. Keep explicit guidance alongside each row.
+  const rows = Array.isArray(flow) ? flowRows(flow) : null;
+  return {
+    id: step.id, title: lessonText(step.title), duration: lessonText(step.time || step.duration),
+    goal: lessonText(step.objective || step.goal), activity: lessonText(step.activity),
+    flow: rows ? composeFlowFromSteps(rows) : lessonText(flow),
+    resources: lessonText(step.resources), scenario: lessonText(step.scenario),
+    teacherScript: lessonText(step.script || step.teacherScript) || (rows ? composeScriptFromSteps(rows) : ''),
+  };
+}
+
+export function resolveLessonPhases(course) {
+  const phases = storedPhases(course?.courseData || course?.course_data || course);
+  if (!phases) return null;
+  return Object.entries(phaseNames).map(([key, [shortKey, name]]) => {
+    const phase = phases[key] || phases[shortKey];
+    const steps = Array.isArray(phase?.steps) ? phase.steps.filter(Boolean).map(normalizeLessonStep) : [];
+    const phaseName = key.charAt(0).toUpperCase() + key.slice(1);
+    return {
+      ...phase, key: shortKey, phase: phaseName, name, title: phase?.title || phaseName,
+      duration: phaseDuration(steps), steps,
+    };
+  });
+}
+
+function flowRows(flow) {
+  if (Array.isArray(flow)) return flow.flatMap(item => typeof item === 'string'
+    ? flowRows(item)
+    : item && typeof item === 'object' ? [{ title: item.title || '', desc: item.desc || item.description || '', teacher: item.teacher || '', cue: item.cue || '' }] : []);
+  if (typeof flow !== 'string') return [];
+  return flow.split(/\r?\n|[①②③④⑤⑥⑦⑧⑨⑩]|(?:^|\s)\d+[、)]\s*|(?:^|\s)\d+\.\s+/)
+    .map(line => line.trim()).filter(Boolean)
+    .map(line => {
+      const label = line.match(/^([^：:。！？.!?]{1,32})[：:](?!\/\/)(.*)$/u);
+      return label ? { title: label[1].trim(), desc: label[2].trim() } : { title: '', desc: line };
+    });
 }
 
 export function buildStepFlowItems(step, isEn = false) {
-  const data = {
-    flow: step?.flow,
-    script: step?.teacherScript,
-    scenario: step?.scenario,
-    activity: step?.activity,
-  };
-  const labeled = parseLabeledFlowSteps(data.flow, isEn);
-  if (labeled.length) {
-    return labeled.map((item, index) => ({
-      ...item,
-      title: fixedFlowTitleSet.has(item.title)
-        ? makeFlowTitleFromContent(item.desc, index, isEn)
-        : translateFlowTitle(item.title, isEn),
-    }));
-  }
-
-  const parts = splitStepFlowText(data.flow, isEn);
-  if (parts.length >= 2) {
-    return parts.slice(0, 6).map((desc, index) => ({
-      title: makeFlowTitleFromContent(desc, index, isEn),
-      desc,
-    }));
-  }
-
-  const fallbackParts = [data.flow, data.script, data.scenario, data.activity]
-    .map((item) => String(item || '').trim())
-    .filter(Boolean)
-    .slice(0, 6);
-  const sourceParts = fallbackParts.length ? fallbackParts : [
-    isEn ? 'Teacher guides students through the activity goal.' : '教师根据活动目标引导学生完成课堂任务。',
-    isEn ? 'Students respond, collaborate, and complete the task.' : '学生根据任务要求互动协作并完成产出。',
-  ];
-
-  return sourceParts.map((desc, index) => ({
-    title: makeFlowTitleFromContent(desc, index, isEn),
-    desc,
+  return flowRows(step?.flow).map((row, index) => ({
+    ...row, title: row.title || (isEn ? `Step ${index + 1}` : `步骤 ${index + 1}`),
   }));
 }
 
-function extractScriptSegments(script) {
-  const raw = String(script || '')
-    .replace(/\u200b/g, '')
-    .replace(/\r/g, '\n')
-    .replace(/\(T\)|（T）/g, '')
-    .trim();
-  if (!raw) return [];
-  const quoteRegex = /["“]([^"”]+)["”]/g;
-  const matches = Array.from(raw.matchAll(quoteRegex));
-  if (matches.length) {
-    return matches.map((match, index) => {
-      const tailStart = match.index + match[0].length;
-      const tailEnd = matches[index + 1]?.index ?? raw.length;
-      const tail = raw.slice(tailStart, tailEnd);
-      const cues = Array.from(tail.matchAll(/(?:\[|【)([^】\]]+)(?:\]|】)/g)).map((item) => item[1].trim());
-      const responses = Array.from(tail.matchAll(/[（(]([^()（）]*(?:回应|学生|No|Yes)[^()（）]*)[）)]/gi)).map((item) => item[1].trim());
-      return {
-        text: `"${match[1].trim()}"`,
-        cue: cues.join('；'),
-        response: responses.join('；'),
-      };
-    });
-  }
-  return raw
-    .split(/\n+|(?<=[。！？!?])\s*/g)
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .slice(0, 6)
-    .map((text) => ({ text, cue: '', response: '' }));
+function splitScriptLine(line) {
+  const separator = '【动作/引导】';
+  const index = line.indexOf(separator);
+  return index < 0 ? { teacher: line, cue: '' }
+    : { teacher: line.slice(0, index).trim(), cue: line.slice(index + separator.length).trim() };
 }
 
-function pickScriptSegmentsForStep(segments, index) {
-  if (!segments.length) return [];
-  const matchers = [
-    /Shhh|special letter|信封|神秘|开场|letter/i,
-    /from|Dear|sad|lonely|help us|朗读|来信|animals are not happy/i,
-    /Look|elephant|panda|happy|excited|animal|情绪|感受|表情/i,
-    /Let'?s help|ready|Rescue Team|team|任务|帮助|Are you ready/i,
-  ];
-  const matched = segments.filter((segment) => matchers[index]?.test(`${segment.text} ${segment.cue} ${segment.response}`));
-  if (matched.length) return matched.slice(0, 3);
-  const chunkSize = Math.max(1, Math.ceil(segments.length / 4));
-  return segments.slice(index * chunkSize, index * chunkSize + chunkSize).slice(0, 2);
+export function lessonExecution(step, isEn = false) {
+  const items = buildStepFlowItems(step, isEn);
+  const script = typeof step?.teacherScript === 'string' ? step.teacherScript : '';
+  const lines = script.trim() ? script.split(/\r?\n/) : [];
+  if (!lines.length || lines.length !== items.length) return { items, script };
+  return { items: items.map((item, index) => ({ ...item, ...splitScriptLine(lines[index]) })), script: '' };
 }
 
-export function buildStepExecutionItems(step, isEn = false) {
-  const flowItems = buildStepFlowItems(step, isEn);
-  const scriptSegments = extractScriptSegments(step?.teacherScript);
-  const defaultLines = [
-    { text: '"Listen carefully. I have something special to show you."', cue: '用神秘、轻声的语气开场，展示关键道具或画面。', response: '' },
-    { text: '"Let’s read the message together. What can you find?"', cue: '放慢语速朗读重点信息，配合表情和手势帮助理解。', response: '' },
-    { text: '"Look closely. How do they feel? Can you say it in English?"', cue: '指向图片细节，引导学生观察、猜测并回应。', response: '' },
-    { text: '"Now we know our mission. Are you ready to help?"', cue: '明确任务身份和最终挑战，推动学生进入下一环节。', response: '' },
-  ];
-  const cues = defaultLines.map((item) => item.cue);
-  return flowItems.map((item, index) => ({
-    title: item.title,
-    desc: item.desc,
-    stageCue: cues[index] || '用清晰指令连接活动目标和学生行动。',
-    lines: (pickScriptSegmentsForStep(scriptSegments, index).length
-      ? pickScriptSegmentsForStep(scriptSegments, index)
-      : [defaultLines[index] || defaultLines[defaultLines.length - 1]]
-    ).map((line) => ({
-      text: line.text,
-      cue: line.cue || cues[index] || '用清晰指令连接活动目标和学生行动。',
-      response: line.response || '',
-    })),
-  }));
-}
-
-export function createFlowStepsForForm(step, isEn = false) {
-  return buildStepFlowItems(step, isEn).map((item, index) => ({
-    title: item.title,
-    desc: item.desc,
-    teacher: index === 0 ? step?.teacherScript || '' : '',
-    cue: '',
-  }));
+export function createFlowStepsForForm(step) {
+  const rows = flowRows(step?.flow);
+  const script = typeof step?.teacherScript === 'string' ? step.teacherScript : '';
+  if (!script.trim()) return rows;
+  const lines = script.split(/\r?\n/);
+  if (lines.length === rows.length) return rows.map((row, i) => ({ ...row, ...splitScriptLine(lines[i]) }));
+  if (!rows.length) return [{ title: '', desc: '', teacher: script, cue: '' }];
+  return rows.map((row, i) => i === 0 ? { ...row, teacher: script } : row);
 }
 
 export function composeFlowFromSteps(flowSteps = []) {
-  return flowSteps
-    .map((item, index) => `${item?.title || `步骤${index + 1}`}：${item?.desc || ''}`)
-    .join('\n');
+  return flowSteps.map(item => {
+    const title = (item?.title || '').trim();
+    const desc = (item?.desc || '').trim();
+    return title ? `${title}：${desc}` : desc;
+  }).filter(Boolean).join('\n');
 }
 
 export function composeScriptFromSteps(flowSteps = []) {
-  return flowSteps
-    .map((item) => [item?.teacher, item?.cue ? `【动作/引导】${item.cue}` : ''].filter(Boolean).join(' '))
-    .filter(Boolean)
-    .join('\n');
+  const lines = flowSteps.map(item => [item?.teacher, item?.cue && `【动作/引导】${item.cue}`].filter(Boolean).join(' '));
+  return lines.some(line => line.trim()) ? lines.join('\n') : '';
 }

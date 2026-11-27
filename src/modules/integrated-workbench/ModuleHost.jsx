@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { Modal } from 'antd';
 import { useBlocker, useLocation, useNavigate } from 'react-router-dom';
 import { PageLoading } from '../../components/PageLoading';
 import { useAuth } from '../../contexts/AuthContext';
@@ -26,6 +27,7 @@ export function IntegratedModuleHost() {
   const [status, setStatus] = useState({});
   const [attempt, setAttempt] = useState({});
   const [notice, setNotice] = useState('');
+  const [yogaLeaveTarget, setYogaLeaveTarget] = useState(null);
   const frames = useRef({});
   const timers = useRef({});
   const lastModule = useRef(null);
@@ -43,22 +45,29 @@ export function IntegratedModuleHost() {
     !!active && active !== moduleAtPath(nextLocation.pathname)
   ), [active]));
 
+  const proceed = useCallback(() => {
+    setYogaLeaveTarget(null);
+    setNotice('');
+    setModuleVisible(frames.current[active], false, window.location.origin);
+    blocker.proceed();
+  }, [active, blocker]);
+
   useEffect(() => {
     if (blocker.state !== 'blocked') return;
     let cancelled = false;
     prepareModuleLeave(frames.current[active]).then(ok => {
       if (cancelled) return;
       if (ok) {
-        setNotice('');
-        setModuleVisible(frames.current[active], false, window.location.origin);
-        blocker.proceed();
+        proceed();
+      } else if (active === 'yoga') {
+        setYogaLeaveTarget(blocker.location.key);
       } else {
         setNotice('当前内容尚未允许离开，请先处理模块中的提示，再重试。');
         blocker.reset();
       }
     });
     return () => { cancelled = true; };
-  }, [blocker, active]);
+  }, [blocker, active, proceed]);
 
   useEffect(() => {
     for (const [id, frame] of Object.entries(frames.current)) {
@@ -110,7 +119,7 @@ export function IntegratedModuleHost() {
     timers.current[id] = setTimeout(() => setStatus(previous => ({ ...previous, [id]: 'error' })), 20000);
   };
 
-  const loaded = id => {
+  const loaded = useCallback(id => {
     clearTimeout(timers.current[id]);
     const frame = frames.current[id];
     const deadline = Date.now() + 15000;
@@ -134,7 +143,7 @@ export function IntegratedModuleHost() {
       setStatus(previous => ({ ...previous, [id]: 'error' }));
     };
     check();
-  };
+  }, []);
 
   const retry = id => {
     clearTimeout(timers.current[id]);
@@ -186,6 +195,18 @@ export function IntegratedModuleHost() {
         </div>
       )}
       {notice && active && <div className="integrated-module-notice" role="alert"><span>{notice}</span><button type="button" data-wb-button="quiet" data-wb-size="sm" data-wb-icon aria-label="关闭提示" onClick={() => setNotice('')}>×</button></div>}
+      {active === 'yoga' && blocker.state === 'blocked' && yogaLeaveTarget === blocker.location.key && (
+        <Modal
+          open
+          title="离开情境瑜伽？"
+          cancelText="留在此页"
+          okText="继续离开"
+          onCancel={() => { setYogaLeaveTarget(null); blocker.reset(); }}
+          onOk={proceed}
+        >
+          <p>当前有尚未保存的内容或进行中的任务。切换工作台菜单后，可以回来继续处理。刷新或关闭标签页可能丢失未保存的进度。</p>
+        </Modal>
+      )}
     </section>
   );
 }

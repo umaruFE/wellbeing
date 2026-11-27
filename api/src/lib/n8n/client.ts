@@ -148,12 +148,11 @@ class N8NClient {
    * @returns {Promise<object>} 执行结果
    */
   async pollExecution(executionId: string, options: PollOptions = {}): Promise<any> {
-    const maxAttempts = options.maxAttempts || 60;
-    const interval = options.interval || 3000;
+    const maxAttempts = options.maxAttempts ?? 60;
+    const interval = options.interval ?? 3000;
 
     const statusUrl = `${this.baseUrl}/api/v1/executions/${executionId}?includeData=true`;
     console.log(`[pollExecution] GET ${statusUrl}`);
-    console.log(`[pollExecution] API Key: ${this.apiKey || '(未设置)'}`);
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       console.log(`[pollExecution] 第 ${attempt + 1} 次尝试...`);
@@ -172,11 +171,16 @@ class N8NClient {
         console.log(`[pollExecution] 状态: ${status}, finished: ${finished}`);
 
         // N8N 可能的状态: success, error, running, waiting, stopped
-        if (status === 'success' || finished === true) {
-          return { status: 'completed', data: data };
-        } else if (status === 'error' || status === 'stopped') {
-          return { status: 'error', error: '执行失败', data: data };
-        } else if (status === 'running' || status === 'waiting') {
+        if (['error', 'stopped', 'canceled', 'cancelled', 'crashed'].includes(status)) {
+          const reason = String(data.data?.resultData?.error?.message || '');
+          const error = /GPU|ComfyUI/i.test(reason) ? '生成服务未连上 GPU，请稍后重试。'
+            : /timed? ?out|ECONN|connection/i.test(reason) ? '生成服务连接超时，请稍后重试。' : '生成任务失败，请重试。';
+          return { status: 'error', error, data };
+        }
+        if (status === 'success' || (!status && finished === true)) {
+          return { status: 'completed', data };
+        }
+        if (status === 'running' || status === 'waiting') {
           // 继续轮询
           console.log(`[pollExecution] 执行中, 等待 ${interval}ms...`);
         }
@@ -184,7 +188,7 @@ class N8NClient {
         console.log(`[pollExecution] API 响应失败: ${response.status}`);
       }
 
-      await new Promise(resolve => setTimeout(resolve, interval));
+      if (attempt + 1 < maxAttempts) await new Promise(resolve => setTimeout(resolve, interval));
     }
 
     return { status: 'timeout' };

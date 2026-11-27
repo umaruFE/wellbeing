@@ -11,7 +11,7 @@ import { getCourseCoverUrl, getDisplayCourseTitle } from '../../figma-restore/co
 const DEFAULT_COVER = '/assets/empty/3a4db69c7cdec2529d41fe498ca0887f.jpg';
 
 export const CourseSquarePage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
@@ -22,6 +22,7 @@ export const CourseSquarePage = () => {
   const [retry, setRetry] = useState(0);
   const [copyingId, setCopyingId] = useState(null);
   const copyPending = useRef(false);
+  const copyRequests = useRef(new Map());
   const searchInput = useRef(null);
   const [notice, noticeHolder] = message.useMessage();
 
@@ -143,31 +144,14 @@ export const CourseSquarePage = () => {
     copyPending.current = true;
     setCopyingId(courseId);
     try {
-      const courseDetail = await apiService.getCourse(courseId);
-      const originalCourse = courseDetail.data || courseDetail;
-
-      const newCourseData = {
-        title: `${originalCourse.title || t('dashboard.unnamedCourse')} (${t('square.copy')})`,
-        description: originalCourse.description || '',
-        ageGroup: originalCourse.age_group || originalCourse.ageGroup || '',
-        unit: originalCourse.unit || '',
-        duration: originalCourse.duration || '',
-        theme: originalCourse.theme || '',
-        keywords: Array.isArray(originalCourse.keywords)
-          ? originalCourse.keywords
-          : (originalCourse.keywords ? [originalCourse.keywords] : []),
-        isPublic: false,
-      };
-
-      const result = await apiService.createCourse(newCourseData);
-
-      if (result.error) {
-        throw new Error(result.error);
-      }
-
-      setCourses(current => current.map(course => course.id === courseId
-        ? { ...course, copies: (course.copies || 0) + 1 }
-        : course));
+      const requestId = copyRequests.current.get(courseId) || crypto.randomUUID();
+      copyRequests.current.set(courseId, requestId);
+      const { data } = await apiService.request(`/api/courses/${courseId}/copy`, {
+        method: 'POST',
+        body: JSON.stringify({ requestId, language: i18n.language?.startsWith('en') ? 'en' : 'zh' }),
+      });
+      copyRequests.current.delete(courseId);
+      setCourses(current => current.map(course => course.id === courseId ? { ...course, copies: data.copyCount } : course));
       notice.success(t('square.copySuccess'));
     } catch (err) {
       console.error('copy course failed:', err);

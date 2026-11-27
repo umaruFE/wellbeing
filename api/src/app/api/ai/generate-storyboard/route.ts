@@ -146,9 +146,9 @@ export async function GET(request: NextRequest) {
       interval: 0
     });
 
-    console.log('[generate-storyboard] 执行状态:', executionStatus);
+    console.log('[generate-storyboard] 执行状态:', executionStatus.status);
 
-    const statusData = executionStatus as { status?: string };
+    const statusData = executionStatus as { error?: string; status?: string };
     if (statusData.status === 'completed') {
       console.log('[generate-storyboard] 执行完成，获取分镜图片数据...');
 
@@ -185,7 +185,7 @@ export async function GET(request: NextRequest) {
     } else if (statusData.status === 'error') {
       return NextResponse.json({
         success: false,
-        error: '执行失败',
+        error: statusData.error || '执行失败',
         data: {
           executionId: executionId,
           status: 'failed'

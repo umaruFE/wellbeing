@@ -291,8 +291,8 @@
     },
     "yoga": {
       "file": "yoga.html",
-      "sha256": "79c98750f32aad78fcf525c04b94a6b2dffb8fbb17c9220fedcae35f3d3c76d6",
-      "bytes": 6485965,
+      "sha256": "13be2270e253970763445591f6c1fe8b0d2df0c1ca5a2eb23da762dbd0b90827",
+      "bytes": 6488864,
       "extractedDocument": {
         "sha256": "580890f00d665a5ee678c4642cc0a438f5530023d0cb7aa0fe19afb46dcf931d",
         "bytes": 6406089
@@ -425,8 +425,8 @@
           },
           {
             "path": "workbench-ui/yoga/app.js",
-            "sha256": "3fe5ea1a26ea6c14da19351149f755e40b1a449503935d9b9b5e9c44746ecae3",
-            "bytes": 1679015
+            "sha256": "d62843c30fa96052134ae2cc6e12a7c8bc6ec3b7394a26ce27108dfadeb0e394",
+            "bytes": 1681914
           },
           {
             "path": "workbench-ui/yoga/wonder-case.js",
@@ -616,8 +616,8 @@
         {
           "file": "yoga-existing-backend.js",
           "source": "workbench-ui/yoga/existing-backend.js",
-          "sha256": "1a30a805d16d70f0433a5b21edede0b4fcbb818247aeb7d1e30ad9e9c9026a63",
-          "bytes": 14905
+          "sha256": "c5486bc707121f911f3cec657e81e599c00c5ef431b3d4f1cbc975e89373a761",
+          "bytes": 15804
         }
       ]
     }
@@ -1229,7 +1229,7 @@
   ],
   "totals": {
     "generatedFilesExcludingManifest": 127,
-    "bytesExcludingManifest": 97293536,
+    "bytesExcludingManifest": 97297334,
     "inlineSyntaxChecks": 48,
     "storageLiteralReplacements": 18
   },
@@ -1249,8 +1249,8 @@
     {
       "file": "yoga-existing-backend.js",
       "source": "workbench-ui/yoga/existing-backend.js",
-      "sha256": "1a30a805d16d70f0433a5b21edede0b4fcbb818247aeb7d1e30ad9e9c9026a63",
-      "bytes": 14905
+      "sha256": "c5486bc707121f911f3cec657e81e599c00c5ef431b3d4f1cbc975e89373a761",
+      "bytes": 15804
     }
   ]
 }
