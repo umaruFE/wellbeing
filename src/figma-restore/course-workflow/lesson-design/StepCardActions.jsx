@@ -7,20 +7,20 @@ export function StepCardActions({ onDetail, onEdit, onAdjust, onMore, menu }) {
 
   return (
     <div className="step-card-footer">
-      <button type="button" className="step-card-action" onClick={onDetail}>
+      <button type="button" data-wb-button="quiet" data-wb-size="sm" onClick={onDetail}>
         <BookOpen size={14} />
         {t('lesson.detail')}
       </button>
-      <button type="button" className="step-card-action" onClick={onEdit}>
+      <button type="button" data-wb-button="quiet" data-wb-size="sm" onClick={onEdit}>
         <Edit3 size={14} />
         {t('common.edit')}
       </button>
-      <button type="button" className="step-card-action" onClick={onAdjust}>
+      <button type="button" data-wb-button="quiet" data-wb-size="sm" onClick={onAdjust}>
         <SlidersHorizontal size={14} />
         {t('lesson.adjustParams')}
       </button>
       <span className="step-card-more-wrap">
-        <button type="button" className="step-card-action icon" onClick={onMore} aria-label={t('common.more')}>
+        <button type="button" data-wb-button="quiet" data-wb-size="sm" data-wb-icon="" onClick={onMore} aria-label={t('common.more')}>
           <MoreVertical size={14} />
         </button>
         {menu}

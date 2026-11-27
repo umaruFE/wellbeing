@@ -1,0 +1,202 @@
+/* The overview and the map drawer display the same lesson phase. */
+#ed-tbl .tbl-phase-card {
+  --lesson-warning-text: #80551d;
+
+  .tbl-phase-hd {
+    height: auto;
+    min-height: 76px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: var(--wb-space-2);
+    padding: 12px;
+    border-bottom: 1px solid var(--wb-border-soft);
+    background: var(--wb-surface);
+    color: var(--wb-text);
+  }
+
+  .tbl-phase-hd .lesson-phase-number {
+    width: 34px;
+    height: 34px;
+    background: var(--phase-tint, var(--wb-selected));
+    color: var(--wb-text);
+    font-weight: 600;
+  }
+
+  .tbl-phase-cn,
+  .tbl-phase-title { font-size: 16px; }
+
+  .tbl-phase-title { text-transform: none; }
+
+  .tbl-phase-second-row {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: var(--wb-space-2);
+  }
+
+  .tbl-phase-sub { color: var(--wb-muted); font-weight: 400; }
+
+  .tbl-phase-menu-wrap { align-items: center; padding: 0; }
+
+  .tbl-phase-edit-btn,
+  .lesson-step-menu-button {
+    color: var(--wb-muted);
+    width: var(--wb-control-sm);
+    height: var(--wb-control-sm);
+  }
+
+  .lesson-duration-warning,
+  .tbl-phase-duration-warning {
+    color: var(--lesson-warning-text);
+    background: var(--color-warning-light);
+  }
+
+  .tbl-phase-duration-warning {
+    align-items: flex-start;
+    border-color: var(--color-warning-border);
+    margin: 12px 12px 0;
+    padding: 8px;
+  }
+
+  .tbl-phase-duration-warning > svg { flex: none; margin-top: 2px; }
+
+  .tbl-steps-list { padding: 12px; gap: 10px; }
+
+  .tbl-add-step-btn {
+    height: var(--wb-control-sm);
+    min-height: var(--wb-control-sm);
+    border: 1px solid var(--wb-border);
+    border-radius: var(--wb-control-radius);
+    color: var(--wb-text);
+    font-weight: 600;
+  }
+
+  .tbl-add-step-btn:hover { border-color: var(--wb-selected-border); background: var(--wb-selected); }
+
+  .step-card {
+    border-color: var(--wb-border-soft);
+    cursor: default;
+  }
+
+  .step-card:is(:hover, :focus-within, .open) { border-color: var(--wb-selected-border); }
+
+  .step-card.open .step-summary {
+    border-radius: var(--wb-card-radius) var(--wb-card-radius) 0 0;
+    border-bottom: 1px solid var(--wb-border-soft);
+    background: var(--wb-selected);
+  }
+
+  .step-card.open .step-right-ctrl { display: none; }
+
+  .step-summary {
+    height: auto;
+    min-height: 68px;
+    padding: 8px;
+    gap: 0;
+  }
+
+  .lesson-step-toggle {
+    min-height: 48px;
+    gap: 6px;
+    border-radius: var(--wb-control-radius);
+  }
+
+  .lesson-step-toggle:focus-visible {
+    outline: 2px solid var(--wb-primary);
+    outline-offset: 2px;
+  }
+
+  .step-chevron { width: 14px; height: 16px; }
+
+  .step-card.open .step-chevron { color: var(--wb-primary); }
+
+  .step-name {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    white-space: normal;
+    line-height: 1.45;
+  }
+
+  .step-title-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+
+  .step-detail { padding: 0 12px; }
+
+  .step-detail-label {
+    color: var(--wb-text);
+    font-size: var(--wb-helper-size);
+    margin-bottom: 5px;
+  }
+
+  .step-detail-label svg { color: var(--phase-accent); }
+
+  .step-brief-list .step-detail-body {
+    margin: 0;
+    font-size: var(--wb-helper-size);
+    line-height: 1.6;
+    overflow-wrap: anywhere;
+  }
+
+  .step-flow-card {
+    min-height: 0;
+    margin: 0;
+    padding: 10px;
+    border-radius: var(--wb-control-radius);
+    background: var(--wb-page);
+    color: var(--phase-accent);
+  }
+
+  .step-flow-card::after { content: none; }
+  .step-flow-desc { white-space: normal; overflow-wrap: anywhere; }
+
+  .step-card-footer {
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 12px;
+    padding: 8px 0;
+    border-color: var(--wb-border-soft);
+  }
+
+  .step-menu-dropdown.open {
+    padding: 4px;
+    box-shadow: var(--wb-shadow-hover);
+  }
+
+  .step-menu-item { border-radius: 6px; }
+  .step-menu-item:hover { background: var(--wb-selected); }
+}
+
+#ed-tbl .tbl-kanban > .tbl-phase-card {
+  padding-bottom: 0;
+
+  .step-card.open {
+    border-color: color-mix(in srgb, var(--phase-tint) 72%, var(--wb-muted));
+  }
+
+  .step-card.open .step-summary { background: var(--phase-tint); }
+
+  .step-flow-card {
+    background: color-mix(in srgb, var(--phase-tint) 45%, var(--wb-surface));
+  }
+}
+
+#ed-tbl .tbl-kanban :is(.tbl-phase-card, .step-card):has(.step-menu-dropdown.open) {
+  overflow: visible;
+  z-index: 2;
+}
+
+#ed-tbl .tbl-kanban > .tbl-phase-card:has(.step-menu-dropdown.open) { position: relative; }
+#ed-tbl .lesson-map-drawer .tbl-phase-hd { padding-right: 44px; }
+
+@media (max-width: 760px) {
+  #ed-tbl:not(.lesson-roadmap-mode) { padding: 16px; }
+  #ed-tbl:not(.lesson-roadmap-mode) .lesson-design-page-header {
+    height: auto;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+}

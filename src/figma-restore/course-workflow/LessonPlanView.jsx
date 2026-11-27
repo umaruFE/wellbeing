@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Clock,
   ClipboardList,
+  Route,
   Copy,
   Drama,
   GalleryVerticalEnd,
@@ -41,7 +42,9 @@ import { EditStepModal } from './lesson-design/EditStepModal';
 import { StepCardActions } from './lesson-design/StepCardActions';
 import { StepDetailModal } from './lesson-design/StepDetailModal';
 import { buildStepFlowItems } from './lesson-design/lessonDesignUtils';
+import { gardenHeight, gardenStops, LessonGardenMap } from './LessonGardenMap';
 import './LessonMap.css';
+import './LessonOverview.css';
 
 const { TextArea } = Input;
 
@@ -88,48 +91,67 @@ const PHASE_DURATION_RATIO = {
 
 const lessonMapMeta = {
   eng: {
-    x: 20.59, y: 25.63,
     number: '1',
     className: 'engage',
     Icon: Sparkles,
     tone: '#fae5dd',
+    accent: '#9e5034',
     summary: '通过课堂情境唤起好奇心，建立学习动机。',
     summaryEn: 'Spark curiosity through an immersive scenario and build learning motivation.',
   },
   emp: {
-    x: 49.07, y: 34.65,
     number: '2',
     className: 'empower',
     Icon: BookOpen,
     tone: '#f6edcc',
+    accent: '#806210',
     summary: '高频互动输入目标词汇，建立听觉-视觉-动觉三重联结',
     summaryEn: 'Build target language through frequent listening, visual, and movement input.',
   },
   exc: {
-    x: 34.97, y: 63.15,
     number: '3',
     className: 'execute',
     Icon: ListChecks,
     tone: '#e2eef2',
+    accent: '#326c81',
     summary: '在真实任务中运用目标语言，表达自己的想法。',
     summaryEn: 'Use the target language in an authentic task and express ideas clearly.',
   },
   elv: {
-    x: 66, y: 68,
     number: '4',
     className: 'elevate',
     Icon: Star,
     tone: '#e5eddf',
+    accent: '#506d39',
     summary: '分享学习成果，反思收获，培养跨文化意识',
     summaryEn: 'Share outcomes, reflect on learning, and extend cultural awareness.',
   },
 };
+
+function frameGardenStation(viewport, station) {
+  const box = station.getBoundingClientRect();
+  const frame = viewport.getBoundingClientRect();
+  const symbol = viewport.querySelector(`use[href="#lesson-garden-${gardenStops[station.dataset.phase].symbol}"]`).getBoundingClientRect();
+  const left = Math.min(box.left, symbol.left);
+  const right = Math.max(box.right, symbol.right);
+  // Keep the landmark alongside its card whenever both fit; on a phone keep the whole card readable.
+  const focusLeft = Math.min(Math.max((left + right - viewport.clientWidth) / 2, box.right - viewport.clientWidth + 12), box.left - 12);
+  viewport.scrollTo({
+    left: viewport.scrollLeft + focusLeft - frame.left,
+    top: viewport.scrollTop + (Math.min(box.top, symbol.top) + Math.max(box.bottom, symbol.bottom) - viewport.clientHeight) / 2 - frame.top,
+  });
+}
 
 const parseMinutes = (value) => {
   const matches = String(value || '').match(/\d+(?:\.\d+)?/g);
   if (!matches?.length) return 0;
   return Math.round(Number(matches[matches.length - 1]) || 0);
 };
+
+function phaseDuration(steps) {
+  const minutes = steps.reduce((sum, step) => sum + parseMinutes(step.time || step.duration), 0);
+  return `${minutes} 分钟`;
+}
 
 const phaseTranslationKeys = {
   eng: 'lesson.phaseEngage',
@@ -239,10 +261,10 @@ const phaseDetailKeyMap = {
 };
 
 const emptyPhases = [
-  { key: 'eng', phase: 'Engage', title: 'Engage', name: '引入', duration: '9 分钟', steps: [] },
-  { key: 'emp', phase: 'Empower', title: 'Empower', name: '赋能', duration: '24 分钟', steps: [] },
-  { key: 'exc', phase: 'Execute', title: 'Execute', name: '实践', duration: '18 分钟', steps: [] },
-  { key: 'elv', phase: 'Elevate', title: 'Elevate', name: '升华', duration: '9 分钟', steps: [] },
+  { key: 'eng', phase: 'Engage', title: 'Engage', name: '引入', duration: '0 分钟', steps: [] },
+  { key: 'emp', phase: 'Empower', title: 'Empower', name: '赋能', duration: '0 分钟', steps: [] },
+  { key: 'exc', phase: 'Execute', title: 'Execute', name: '实践', duration: '0 分钟', steps: [] },
+  { key: 'elv', phase: 'Elevate', title: 'Elevate', name: '升华', duration: '0 分钟', steps: [] },
 ];
 
 function normalizePhaseCollection(rawPhases) {
@@ -301,13 +323,11 @@ function resolvePhasesFromCourse(course) {
       phase: longKey.charAt(0).toUpperCase() + longKey.slice(1),
       title: phase?.title || `E-${longKey.charAt(0).toUpperCase() + longKey.slice(1)}`,
       name: nameMapping[longKey],
-      duration: steps.length > 0
-        ? steps.reduce((acc, s) => { const m = (s.time || s.duration || '').match(/(\d+)/); return acc + (m ? parseInt(m[1]) : 0); }, 0) + ' 分钟'
-        : '15 分钟',
+      duration: phaseDuration(steps),
       steps: steps.map((step) => ({
         id: step.id,
         title: step.title || '',
-        duration: step.time || step.duration || '',
+        duration: String(step.time || step.duration || ''),
         goal: step.objective || step.goal || '',
         activity: step.activity || '',
         flow: step.activitySteps || step.flow || '',
@@ -441,10 +461,19 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
 
   const { user } = useAuth();
 
+  React.useLayoutEffect(() => {
+    const viewport = mapViewportRef.current;
+    const station = viewport?.querySelector('.lesson-roadmap-stage');
+    if (station && viewport.scrollWidth > viewport.clientWidth) {
+      frameGardenStation(viewport, station);
+    }
+  }, [loading, viewMode]);
+
   const generateCalledRef = React.useRef(false);
 
-  const formatDuration = React.useCallback((value, fallback = 15) => {
-    const minutes = parseMinutes(value) || fallback;
+  const formatDuration = React.useCallback((value) => {
+    if (value == null || !/\d/.test(String(value))) return '—';
+    const minutes = parseMinutes(value);
     return isChinese ? `${minutes} 分钟` : `${minutes} min`;
   }, [isChinese]);
 
@@ -517,16 +546,10 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   }, []);
 
   const updateData = async (next) => {
-    const updated = next.map((phase) => {
-      const totalMin = phase.steps.reduce((acc, s) => {
-        const m = (s.duration || '').match(/(\d+)/);
-        return acc + (m ? parseInt(m[1]) : 0);
-      }, 0);
-      return {
-        ...phase,
-        duration: totalMin > 0 ? `${totalMin} 分钟` : phase.duration,
-      };
-    });
+    const updated = next.map((phase) => ({
+      ...phase,
+      duration: phaseDuration(phase.steps),
+    }));
 
     setData(updated);
     onPhasesChange?.(updated);
@@ -1145,7 +1168,7 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
   const normalizeStep = (step) => ({
     id: step.id,
     title: step.title || '',
-    duration: step.time || step.duration || '',
+    duration: String(step.time || step.duration || ''),
     goal: step.objective || step.goal || '',
     activity: step.activity || '',
     flow: step.activitySteps || step.flow || '',
@@ -1180,14 +1203,19 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
             <span className="step-main">
               <span className="step-name">
                 <span className="step-title-text">{stepTitle}</span>
-                <span className="step-dur-badge">{formatDuration(step.duration, 8)}</span>
+                <MetadataTag><Clock size={12} aria-hidden="true" />{formatDuration(step.duration)}</MetadataTag>
               </span>
               <span className="step-lo-preview">{compactOverviewText(stepGoal, 76)}</span>
             </span>
           </button>
           <div className="step-right-ctrl" onClick={(event) => event.stopPropagation()}>
             <button
-              className={`step-menu-btn ${menuKey === cardKey ? 'active' : ''}`}
+              type="button"
+              className="lesson-step-menu-button"
+              data-wb-button="quiet"
+              data-wb-icon=""
+              data-wb-size="sm"
+              aria-expanded={menuKey === cardKey}
               title={t('common.actions', { defaultValue: isChinese ? '操作' : 'Actions' })}
               onClick={() => setMenuKey(menuKey === cardKey ? null : cardKey)}
             >
@@ -1291,7 +1319,11 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
     const phaseMapMeta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
 
     return (
-      <section className={`tbl-phase-card ${phase.key}`} data-fixed="true" data-duration="15" style={{ '--phase-tint': phaseMapMeta.tone }} key={`${keyPrefix}${phase.key}`}>
+      <section
+        className={`tbl-phase-card ${phase.key}`}
+        style={{ '--phase-tint': phaseMapMeta.tone, '--phase-accent': phaseMapMeta.accent }}
+        key={`${keyPrefix}${phase.key}`}
+      >
         <div className="tbl-phase-hd">
           <span className="lesson-phase-number">{phaseMapMeta.number}</span>
           <div className="tbl-phase-hd-left">
@@ -1301,14 +1333,18 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
             </div>
             <div className="tbl-phase-second-row">
               <span className="tbl-phase-sub">{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
-              <span className={`tbl-phase-meta-dur${phaseMinutes > durationLimit ? ' is-over-limit' : ''}`}>
-                {formatDuration(phase.duration)}
-              </span>
+              <MetadataTag className={overflowMinutes > 0 ? 'lesson-duration-warning' : undefined}>
+                <Clock size={12} aria-hidden="true" />{formatDuration(phase.duration)}
+              </MetadataTag>
             </div>
           </div>
           <div className="tbl-phase-menu-wrap">
             <button
+              type="button"
               className="tbl-phase-edit-btn"
+              data-wb-button="quiet"
+              data-wb-icon=""
+              data-wb-size="sm"
               title={t('lesson.viewPhaseDetail')}
               aria-label={t('lesson.viewPhaseDetail')}
               onClick={(event) => {
@@ -1329,14 +1365,14 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
         </div>
         {overflowMinutes > 0 && (
           <div className="tbl-phase-duration-warning">
-            <span className="tbl-phase-duration-warning-icon">!</span>
+            <Info size={15} aria-hidden="true" />
             <span>{t("lesson.overflowWarn", { current: phaseMinutes, limit: durationLimit, overflow: overflowMinutes })}</span>
           </div>
         )}
 
         <div className="tbl-steps-list">
           <div className="tbl-add-step-top">
-            <button type="button" className="tbl-add-step-btn" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
+            <button type="button" className="tbl-add-step-btn" data-wb-button="secondary" data-wb-size="sm" onClick={() => openAddStep(phase)} disabled={addingStep === phase.key}>
               {addingStep === phase.key ? <RefreshCw size={12} className="animate-spin" /> : <Plus size={12} />}
               {addingStep === phase.key ? t('workflow.lesson.generatingShort') : t('workflow.lesson.addStep')}
             </button>
@@ -1364,16 +1400,14 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                 type="button"
                 data-wb-button="secondary"
                 data-wb-size="sm"
+                className={`station-${meta.className}`}
                 aria-label={`${meta.number} · ${getPhaseTitle(phase)}`}
                 aria-controls={`lesson-station-${phase.key}`}
                 onClick={(event) => {
                   const station = document.getElementById(event.currentTarget.getAttribute('aria-controls'));
                   const viewport = mapViewportRef.current;
                   if (!station || !viewport) return;
-                  viewport.scrollTo({
-                    left: station.offsetLeft - (viewport.clientWidth - station.offsetWidth) / 2,
-                    top: station.offsetTop - (viewport.clientHeight - station.offsetHeight) / 2,
-                  });
+                  frameGardenStation(viewport, station);
                   station.focus({ preventScroll: true });
                 }}
               >
@@ -1385,22 +1419,16 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
         <section ref={mapViewportRef} className="lesson-roadmap" aria-labelledby="lesson-roadmap-title" tabIndex={0}>
           <div className="lesson-roadmap-scene">
             <header className="lesson-roadmap-copy">
+              <span className="lesson-roadmap-emblem" aria-hidden="true"><Route size={27} /></span>
               <h3 id="lesson-roadmap-title">{isChinese ? '成长路线图' : 'Growth Roadmap'}</h3>
-              <p>{isChinese ? '四步教学路径，点燃兴趣，收获成长。' : 'A four-step path to spark curiosity and fuel growth.'}</p>
+              <p>{isChinese ? '点击站点，查看教学活动。' : 'Select a stop to view its activities.'}</p>
             </header>
-            <svg className="lesson-roadmap-trail" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
-              <path d="M169 366 C133 427 146 551 223 557 S385 594 428 529 Q456 485 454 456 C467 551 431 585 366 601 S296 682 313 742 C277 807 280 911 356 927 S553 953 595 879 Q623 834 623 790" />
-            </svg>
-            <aside className="lesson-roadmap-note">
-              <strong>{isChinese ? '设计思路' : 'Design Flow'}</strong>
-              <p>{isChinese
-                ? '从引入兴趣到能力赋能，再到实践应用，最后升华拓展，形成完整学习闭环。'
-                : 'From spark to skill, from practice to growth, each stage builds on the last for a complete learning journey.'}</p>
-            </aside>
+            <LessonGardenMap />
             <ol className="lesson-roadmap-stages">
               {data.map((phase) => {
                 const meta = lessonMapMeta[phase.key] || lessonMapMeta.eng;
                 const { Icon } = meta;
+                const stop = gardenStops[phase.key];
                 const phaseGoals = phase.steps.map((step) => step.goal).filter(Boolean);
                 const summary = phaseGoals.join(isChinese ? '；' : ' · ') || (isChinese ? meta.summary : meta.summaryEn);
                 const phaseTitleText = [getPhaseTitle(phase), getPhaseName(phase)].filter(Boolean).join(' ');
@@ -1409,8 +1437,9 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                   <li
                     key={phase.key}
                     id={`lesson-station-${phase.key}`}
-                    className="lesson-roadmap-stage"
-                    style={{ left: `${meta.x}%`, top: `${meta.y}%`, '--phase-tint': meta.tone }}
+                    className={`lesson-roadmap-stage station-${meta.className}`}
+                    data-phase={phase.key}
+                    style={{ '--stop-x': `${stop.x / 10}%`, '--stop-y': `${stop.y / gardenHeight * 100}%`, '--phase-tint': meta.tone }}
                     tabIndex={-1}
                     aria-label={phaseTitleText}
                   >
@@ -1421,8 +1450,8 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                       onClick={() => setActiveMapPhase(phase)}
                     >{meta.number}</button>
                     <div className="lesson-roadmap-heading">
+                      <span className="lesson-roadmap-stage-icon"><Icon size={18} aria-hidden="true" /></span>
                       <h4>{phaseTitleText}</h4>
-                      <Icon size={18} aria-hidden="true" />
                     </div>
                     <button
                       type="button"
@@ -1438,12 +1467,14 @@ export function LessonPlanView({ course, phases, onCourseChange, onPhasesChange,
                       {summaryText}
                     </button>
                     <div className="lesson-roadmap-meta">
-                      <span>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
-                      <MetadataTag><Clock size={12} aria-hidden="true" />{formatDuration(phase.duration)}</MetadataTag>
+                      <span className="lesson-roadmap-counts">
+                        <span>{t('workflow.lesson.stepCount', { count: phase.steps.length })}</span>
+                        <MetadataTag><Clock size={12} aria-hidden="true" />{formatDuration(phase.duration)}</MetadataTag>
+                      </span>
+                      <button type="button" data-wb-button="quiet" data-wb-size="sm" onClick={() => setActiveMapPhase(phase)}>
+                        {t('lesson.detail')} <ArrowRight size={14} aria-hidden="true" />
+                      </button>
                     </div>
-                    <button type="button" data-wb-button="secondary" data-wb-size="sm" onClick={() => setActiveMapPhase(phase)}>
-                      {t('lesson.detail')} <ArrowRight size={14} aria-hidden="true" />
-                    </button>
                   </li>
                 );
               })}
