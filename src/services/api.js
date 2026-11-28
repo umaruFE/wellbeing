@@ -145,8 +145,10 @@ class ApiService {
 
   // ============ Voice Configs ============
 
-  async getVoiceConfigs(userId) {
-    return this.request(`/api/voices${userId ? `?userId=${userId}` : ''}`);
+  async getVoiceConfigs(userId, params = {}) {
+    const query = new URLSearchParams(params);
+    if (userId) query.set('userId', userId);
+    return this.request(`/api/voices${query.size ? `?${query}` : ''}`);
   }
 
   async createVoiceConfig(data) {

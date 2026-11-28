@@ -291,8 +291,8 @@
     },
     "yoga": {
       "file": "yoga.html",
-      "sha256": "d80f2af2c5a5a082ee682d22f28d8b8330b0959e8e5210330a9900c732ede816",
-      "bytes": 6493371,
+      "sha256": "4e7f9d58cf73d87a7a539aec5889e8b2aab1e7ecc4d9fec3c05687c9ee76ebfa",
+      "bytes": 6498055,
       "extractedDocument": {
         "sha256": "580890f00d665a5ee678c4642cc0a438f5530023d0cb7aa0fe19afb46dcf931d",
         "bytes": 6406089
@@ -415,8 +415,8 @@
         "localFiles": [
           {
             "path": "workbench-ui/yoga/model.js",
-            "sha256": "40d1c6a5a8fdbe350604f4f926db8e6fb7d9c977f429c356061ad3ce1be24d21",
-            "bytes": 2890475
+            "sha256": "763333c711fc8c04d98ed15c83d688da8928612987b0c0aa94bb733956d9c6d1",
+            "bytes": 2894230
           },
           {
             "path": "workbench-ui/yoga/library.js",
@@ -425,8 +425,8 @@
           },
           {
             "path": "workbench-ui/yoga/app.js",
-            "sha256": "7436f569070aa01777aea20eb3e59f59fdf6c01b93eb326a802049994096d0ee",
-            "bytes": 1682382
+            "sha256": "3e532eb18d293d11e1a36c3e57d37e5feedbbcd772a7b78747e9e1eeed13fa37",
+            "bytes": 1682868
           },
           {
             "path": "workbench-ui/yoga/wonder-case.js",
@@ -616,14 +616,14 @@
         {
           "file": "yoga-course-scene.js",
           "source": "workbench-ui/yoga/course-scene.js",
-          "sha256": "5795c47d5c5a64146a2b000f3a68235759558ef987f18a9eaa2daa8427eb3128",
-          "bytes": 11560
+          "sha256": "b850fd5318facd3aa3396bce4969e43fc5dc4ffc0703ad180c6c5bb24b14e4e9",
+          "bytes": 3247
         },
         {
           "file": "yoga-existing-backend.js",
           "source": "workbench-ui/yoga/existing-backend.js",
-          "sha256": "258b28694e3afbf3323ed177a03954b7eb94230884637a4ae743524882576ca0",
-          "bytes": 15512
+          "sha256": "c8dc5b51412e033b2c9d20d48b532bae0abbeb05d0f85226b76699a64483340b",
+          "bytes": 15650
         }
       ]
     }
@@ -1235,7 +1235,7 @@
   ],
   "totals": {
     "generatedFilesExcludingManifest": 128,
-    "bytesExcludingManifest": 97313109,
+    "bytesExcludingManifest": 97309618,
     "inlineSyntaxChecks": 48,
     "storageLiteralReplacements": 18
   },
@@ -1255,14 +1255,14 @@
     {
       "file": "yoga-course-scene.js",
       "source": "workbench-ui/yoga/course-scene.js",
-      "sha256": "5795c47d5c5a64146a2b000f3a68235759558ef987f18a9eaa2daa8427eb3128",
-      "bytes": 11560
+      "sha256": "b850fd5318facd3aa3396bce4969e43fc5dc4ffc0703ad180c6c5bb24b14e4e9",
+      "bytes": 3247
     },
     {
       "file": "yoga-existing-backend.js",
       "source": "workbench-ui/yoga/existing-backend.js",
-      "sha256": "258b28694e3afbf3323ed177a03954b7eb94230884637a4ae743524882576ca0",
-      "bytes": 15512
+      "sha256": "c8dc5b51412e033b2c9d20d48b532bae0abbeb05d0f85226b76699a64483340b",
+      "bytes": 15650
     }
   ]
 }

@@ -36,6 +36,7 @@ export const Header = ({ title }) => {
     '/workshop/teaching-materials': t('sidebar.teachingMaterials'),
     '/song-writing': t('sidebar.songWorkshop'),
     '/workshop/music-star-quest': t('sidebar.musicStarQuest'),
+    '/workshop/interactive-yoga/motions': '角色动作库',
     '/workshop/interactive-yoga': t('sidebar.interactiveYoga'),
     '/workshop/spin-speak': t('sidebar.spinSpeak'),
     '/workshop/doodle': t('sidebar.doodleGame'),

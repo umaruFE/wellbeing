@@ -24,6 +24,7 @@ import { CourseManagement } from './figma-restore/course-management';
 import DesignSystemPreview from './modules/design-system/DesignSystemPreview';
 import { PictureBookStudioPage } from './modules/picture-book/PictureBookStudioPage';
 import { KnowledgeUploadPage } from './modules/picture-book/KnowledgeUploadPage';
+import { YogaMotionLibrary } from './modules/integrated-workbench/YogaMotionLibrary';
 import { IntegratedModuleRoute } from './modules/integrated-workbench/ModuleHost';
 import { SongLibraryPage } from './modules/song-library/SongLibraryPage';
 import { CreativeWorkshopPage } from './modules/creative-workshop/CreativeWorkshopPage';
@@ -107,6 +108,12 @@ const router = createBrowserRouter(
             </RequireAuth>
           }
         />
+
+        <Route path="/workshop/interactive-yoga/motions" element={
+          <RequireAuth requiredRoles={['super_admin', 'org_admin', 'research_leader', 'creator', 'picture_song_creator', 'viewer']}>
+            <YogaMotionLibrary />
+          </RequireAuth>
+        } />
 
         <Route
           path="/workshop/music-star-quest"

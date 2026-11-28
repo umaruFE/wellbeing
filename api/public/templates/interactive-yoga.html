@@ -48,6 +48,11 @@
     z-index: 0;
   }
 
+  .page-motion {
+    position: absolute; inset: auto 0 13%; margin: auto; height: 57%; max-width: 75%;
+    object-fit: contain; pointer-events: none;
+  }
+
   /* 字幕 - 无框大字 */
   .subtitle-overlay {
     position: absolute;
@@ -571,6 +576,13 @@
     border: 1px solid #f0ece6;
   }
 
+  .prep-visual { position: relative; display: inline-block; max-width: 100%; }
+  .prep-visual > img:first-child { display: block; max-width: 100%; }
+  .prep-table .prep-visual .prep-motion {
+    position: absolute; inset: auto 0 10%; margin: auto; height: 65%; width: auto;
+    max-width: 80%; border: 0; object-fit: contain;
+  }
+
   .prep-table .col-img .page-tag {
     display: inline-block;
     font-size: 10px; color: #aaa;
@@ -616,6 +628,7 @@
 <!-- ============ 授课模式 ============ -->
 <div class="teach-mode" id="teachMode">
   <img class="page-image" id="teachImage" src="" alt="">
+  <img class="page-motion" id="teachMotion" hidden alt="">
   <div class="subtitle-overlay" id="subtitleOverlay">
     <span class="subtitle" id="subtitleText"></span>
   </div>
@@ -807,8 +820,16 @@ const pages = [
 
 // 无图兜底：img 为空时用 SVG emoji 占位（浅色背景 + 大 emoji + 体式名）
 const PAGE_BG = '#E8F5E9';
+function motionUrl(p) {
+  const url = p.motionRef?.url;
+  if (typeof url !== 'string' || !/^\/api\/yoga-motions\/[a-z0-9-]+\/[a-z0-9-]+\?v=[a-f0-9]{64}$/.test(url)) return '';
+  // A Blob or downloaded HTML document does not have an HTTP base path of its own.
+  const origin = /^https?:/.test(location.origin) ? location.origin : '__MEDIA_ORIGIN__';
+  return new URL(url, origin).href;
+}
 function pageImg(p) {
   if (p.img && p.img.trim()) return p.img;
+  if (motionUrl(p)) return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="#edf6f0"/></svg>');
   const label = p.pose ? p.pose : '';
   const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500">' +
     '<rect width="100%" height="100%" fill="' + PAGE_BG + '"/>' +
@@ -887,6 +908,11 @@ let isTeachMode = false;
 function renderTeachMode() {
   const page = pages[currentPage];
   document.getElementById('teachImage').src = pageImg(page);
+  const actor = document.getElementById('teachMotion');
+  const url = motionUrl(page);
+  actor.hidden = !url;
+  if (url) { actor.src = url; actor.alt = page.motionRef.name; }
+  else actor.removeAttribute('src');
   document.getElementById('subtitleText').textContent = page.subtitle;
   document.getElementById('subtitleOverlay').style.display = (currentPage === 0) ? 'none' : '';
 
@@ -1036,7 +1062,16 @@ function renderPrepMode() {
     const tag = document.createElement('div');
     tag.className = 'page-tag';
     tag.textContent = p.id + (p.pose ? ' · ' + p.pose : '');
-    tdImg.appendChild(img); tdImg.appendChild(tag);
+    const visual = document.createElement('div');
+    visual.className = 'prep-visual';
+    visual.appendChild(img);
+    const url = motionUrl(p);
+    if (url) {
+      const actor = document.createElement('img');
+      actor.className = 'prep-motion'; actor.src = url; actor.alt = p.motionRef.name;
+      visual.appendChild(actor);
+    }
+    tdImg.append(visual, tag);
 
     const tdSub = document.createElement('td');
     tdSub.className = 'col-subtitle';

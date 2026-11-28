@@ -364,7 +364,7 @@ function libraryResults(){
 function home(){
   const mine=ui.homeTab==='mine',activeItems=library.items.filter(x=>!x.archived),ready=activeItems.filter(x=>x.state.published).length,drafts=activeItems.filter(libraryHasDraft).length;
   const filters=mine?[['all','全部',activeItems.length],['draft','草稿',drafts],['ready','可授课',ready],['archived','已归档',library.items.length-activeItems.length]]:[['all','全部情境'],['wonder','奇境漫步'],['ocean','海底探索']];
-  return `<main class="workspace yoga-home library-home"><header class="lh-header wb-library-header"><div><h1>情境瑜伽</h1></div><div class="lh-header-actions">${btn((window.WBUI?.icon?.('plus')||'')+'新建活动','setup','primary',false,'data-wb-create')}</div></header>
+  return `<main class="workspace yoga-home library-home"><header class="lh-header wb-library-header"><div><h1>情境瑜伽</h1></div><div class="lh-header-actions"><a class="yc-library-link" data-wb-button="secondary" href="/workshop/interactive-yoga/motions" target="_top">角色动作库</a>${btn((window.WBUI?.icon?.('plus')||'')+'新建活动','setup','primary',false,'data-wb-create')}</div></header>
   <div class="lh-library-head wb-library-tools"><div class="lh-tabs wb-library-tabs" role="tablist" aria-label="活动来源">${[['cases','案例库',cases().length],['mine','我制作的',library.items.length]].map(([id,label,count])=>`<button type="button" data-ui="tab" id="wb-${id}-tab" role="tab" aria-selected="${ui.homeTab===id}" aria-controls="library-results" tabindex="${ui.homeTab===id?0:-1}" data-action="library-tab" data-tab="${id}">${label} <span>${count}</span></button>`).join('')}</div><label class="lh-search wb-library-search"><input id="library-search" type="search" placeholder="搜索活动" aria-label="搜索活动" value="${E(ui.query)}"></label></div>
   <div class="lh-filterbar"><div class="lh-filters" role="group" aria-label="${mine?'课程状态':'案例情境'}">${filters.map(([id,label,count])=>btn(`${label}${count===undefined?'':` <span>${count}</span>`}`,'library-filter',ui.filter===id?'active':'',false,`data-wb-filter data-filter="${id}" aria-pressed="${ui.filter===id}"`)).join('')}</div><details class="lh-tools"><summary>课程库工具</summary><div>${btn('导入备份','import-library','quiet')}${btn('导出备份','export','quiet')}</div></details><input type="file" id="library-import" accept=".json,application/json" class="hide" aria-label="导入课程库备份"></div>
   ${mine&&cloud?.unavailable?`<p role="status">有 ${cloud.unavailable} 份课程暂无法在此打开，后台原记录已保留。</p>`:''}
@@ -625,7 +625,7 @@ function renderReference(page,settings) {
 function renderScene(page,settings,options={}) {
   const art=sceneImage(page);
   if(page.wonder)return S.render(page,settings,{...options,backgroundMarkup:art});
-  if(art || page.backendPose!==undefined)return S.renderCourseScene(withResolvedPose(page),settings,{...options,backgroundMarkup:art});
+  if(art || page.backendPose!==undefined || M.motionClip(settings.characterId,'guide'))return S.renderCourseScene(withResolvedPose(page),settings,{...options,backgroundMarkup:art});
   return S.render(page,settings,options);
 }
 function createVoicePlayer(options){return backend?.createPlayer(options)||window.YogaPlayback.createPlayer(options);}
@@ -972,7 +972,7 @@ function stopReferenceMedia(){
 function toggleReferenceMotion(){
   const wasPlaying=!!referenceMotion;stopReferenceMedia();
   if(wasPlaying||ui.step!==2||ui.page!=='editor'||current()?.kind!=='action')return;
-  const owner=referenceOwner(),token=referenceRun,start=Date.now(),duration=current()?.wonder?10000:6000;referenceMotion={owner,token,timer:null};
+  const owner=referenceOwner(),token=referenceRun,start=Date.now(),duration=current()?.wonder?10000:(S.clipFor?.(withResolvedPose(current()),state.draft.settings)?.durationMs||6000);referenceMotion={owner,token,timer:null};
   const button=$('#reference-motion-control');button.textContent='停止动作';button.setAttribute('aria-pressed','true');S.setProgress($('#motion-reference'),0);
   const advance=()=>{if(!referenceMotion||referenceMotion.token!==token||referenceRun!==token||!referenceIsCurrent(owner))return;const progress=Math.min(1,(Date.now()-start)/duration);S.setProgress($('#motion-reference'),progress);if(progress===1){referenceMotion=null;button.textContent='重播动作';button.setAttribute('aria-pressed','false');return;}referenceMotion.timer=setTimeout(advance,40);};
   referenceMotion.timer=setTimeout(advance,40);
@@ -1193,6 +1193,11 @@ function showLoadError(error){
 }
 try{
   cloud=backend?.createStore(updateCloudStatus);courseStorage=cloud?.storage||localStorage;
-  if(cloud||caseLibrary)Promise.all([cloud?.load(),caseLibrary?.load()]).then(initialize).catch(showLoadError);else initialize();
+  if(cloud||caseLibrary) {
+    const catalog = window.WBWorkbenchApi?.request
+      ? window.WBWorkbenchApi.request('/api/yoga-motions', {timeout:20000}).then(({data}) => M.installMotionLibrary(data))
+      : Promise.resolve();
+    Promise.all([catalog.then(() => cloud?.load()), caseLibrary?.load()]).then(initialize).catch(showLoadError);
+  } else initialize();
 }catch(error){showLoadError(error);}
 })();

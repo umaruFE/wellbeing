@@ -16,6 +16,11 @@ export async function GET(request: NextRequest) {
       query = query.eq('user_id', userId);
     }
 
+    const limit = Number(searchParams.get('limit'));
+    if (Number.isSafeInteger(limit) && limit > 0) {
+      query = query.limit(limit);
+    }
+
     const { data, error } = await query;
 
     if (error) {

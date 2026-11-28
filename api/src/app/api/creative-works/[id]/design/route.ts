@@ -1,3 +1,4 @@
+import { generationParams } from '@/lib/yoga-motions';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { authenticate } from '@/lib/auth';
@@ -38,10 +39,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     }
 
     const parameters = (work.parameters && typeof work.parameters === 'object') ? work.parameters : {};
-    const scalarParams: Record<string, string> = {};
-    for (const [k, v] of Object.entries(parameters as Record<string, unknown>)) {
-      if (v !== null && v !== undefined) scalarParams[k] = String(v);
-    }
+    const scalarParams = generationParams(parameters);
     if (work.title && !scalarParams.title) scalarParams.title = work.title;
     if (preview && input.requirements) scalarParams.requirements = [scalarParams.requirements, input.requirements].filter(Boolean).join('\n');
 

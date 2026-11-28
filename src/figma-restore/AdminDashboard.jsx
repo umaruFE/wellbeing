@@ -13,6 +13,8 @@ import { CreateCourseModal } from './create-course';
 import { formatCourseDuration, getCourseCoverUrl, getCourseData, getDisplayCourseTitle } from './courseImages';
 import './AdminDashboard.css';
 
+const RECENT_PAGE_SIZE = 9;
+
 const PlaceholderImg = ({ src, alt, className, style, icon: Icon }) => {
   const [errored, setErrored] = useState(!src);
   if (errored || !src) {
@@ -347,7 +349,7 @@ export const AdminDashboard = () => {
         setCoursesLoadingMore(true);
       }
 
-      const result = await apiService.getCourses({ limit: '8', page: String(pageNum) });
+      const result = await apiService.getCourses({ limit: RECENT_PAGE_SIZE, page: pageNum });
       const list = result?.data || [];
       const pagination = result?.pagination || {};
       const mapped = list.map(course => {
@@ -398,8 +400,8 @@ export const AdminDashboard = () => {
       setCourses(prev => append ? [...prev, ...mapped] : mapped);
       setCoursesPage(pageNum);
 
-      const totalPages = pagination.totalPages || Math.ceil((pagination.total || 0) / 8);
-      setCoursesHasMore(totalPages ? pageNum < totalPages : list.length === 8);
+      const totalPages = pagination.totalPages || Math.ceil((pagination.total || 0) / RECENT_PAGE_SIZE);
+      setCoursesHasMore(totalPages ? pageNum < totalPages : list.length === RECENT_PAGE_SIZE);
     } catch (error) {
       console.error('获取最近课程失败:', error);
       setLoadErrors(current => ({ ...current, courses: append ? 'more' : 'list' }));
@@ -421,7 +423,7 @@ export const AdminDashboard = () => {
     setLoadErrors(current => ({ ...current, images: null }));
     try {
       setImagesLoading(true);
-      const result = await apiService.getPptImages({ limit: '8' });
+      const result = await apiService.getPptImages({ limit: RECENT_PAGE_SIZE });
       const list = result?.data || [];
       setImages(list.map(img => ({
         id: img.id,
@@ -449,7 +451,7 @@ export const AdminDashboard = () => {
     setLoadErrors(current => ({ ...current, videos: null }));
     try {
       setVideosLoading(true);
-      const result = await apiService.getVideos({ limit: '8' });
+      const result = await apiService.getVideos({ limit: RECENT_PAGE_SIZE });
       const list = result?.data || [];
       setVideos(list.map(video => ({
         id: video.id,
@@ -477,8 +479,8 @@ export const AdminDashboard = () => {
     setLoadErrors(current => ({ ...current, audio: null }));
     try {
       setAudiosLoading(true);
-      const result = await apiService.getVoiceConfigs();
-      const list = (result?.data || result || []).slice(0, 10);
+      const result = await apiService.getVoiceConfigs(undefined, { limit: RECENT_PAGE_SIZE });
+      const list = (result?.data || result || []).slice(0, RECENT_PAGE_SIZE);
       setAudios(list.map(audio => ({
         id: audio.id,
         title: audio.name || audio.title || t('dashboard.unnamedAudio'),

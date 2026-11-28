@@ -24,7 +24,7 @@
       theme:settings.theme||'',age:settings.age||'',duration:`${parseFloat(settings.duration)||8}分钟`,
       goals:[settings.goal,...M.languageGoals(settings)].filter(Boolean).join('\n'),
       requirements:[settings.context,settings.sentence,`编排时使用 ${settings.characterId||'Poppy'} 作为引导角色。`].filter(Boolean).join('\n'),
-      ...(!record.state.draft?.templateId ? { supportedMotionPoses: M.supportedMotionPoses } : {}),
+      ...(!record.state.draft?.templateId ? { motionCharacterId:settings.characterId, supportedMotionPoses: M.actionsForCharacter(settings.characterId).map(action => action.pose) } : {}),
       workbenchYoga:record,
     };
   }
@@ -33,7 +33,7 @@
     const pose=action?.pose||action?.english||page.backendPose||null;
     const type=page.backendType==='return'&&(!action||action.id==='savasana')?'return':{cover:'scene',ending:'ending',intro:'transition',action:'action'}[page.kind];
     const image=M.safeMediaUrl(page.backgroundUrl);
-    return {id:page.id,page:index+1,type,pose,subtitle:clean(page.english),teacherLang:clean(page.teacher),
+    return {id:page.id,page:index+1,type,pose,...(page.motionRef?{motionRef:page.motionRef}:{}),subtitle:clean(page.english),teacherLang:clean(page.teacher),
       expression:clean(page.story),action:clean(page.story),imagePrompt:clean(page.scene),node:page.kind==='action'?'🌿':'✦',...(image&&page.assets.background==='ready'?{img:clean(image)}:{})};
   }
   function initialSettings(row) {

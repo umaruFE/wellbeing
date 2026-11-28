@@ -20,13 +20,51 @@
     { id: 'star', name: '星星式', english: 'Star', instruction: 'Open your arms and legs like a star.', short: 'Be a star.', teacher: '示范舒展的星星形状，学生边模仿边说目标句。' },
     { id: 'butterfly', name: '蝴蝶式', english: 'Butterfly', instruction: 'Sit down and make a butterfly pose.', short: 'Be a butterfly.', teacher: '示范坐姿蝴蝶，等待学生准备好后再做语言互动。' }
   ].map(action => Object.freeze({ ...action, demo: true })));
-  const BACKEND_ACTIONS = Object.freeze([
+  const previousActions = Object.freeze([
     ...LEGACY_ACTIONS.map(action => ({ ...action, pose: action.english + ' Pose' })),
     { id:'garland', name:'花环式', english:'Garland Pose', pose:'Garland Pose (Malasana)', instruction:'Bend your knees and lower into a comfortable squat.', short:'Squat down slowly.', teacher:'双脚分开，膝盖顺着脚尖方向弯曲，示范缓缓蹲下。' },
     { id:'savasana', name:'仰卧放松式', english:'Savasana', pose:'Savasana', instruction:'Lie on your back and breathe softly.', short:'Rest and breathe.', teacher:'引导孩子仰卧，手臂自然放在身体两侧，轻轻呼吸。' },
   ].map(Object.freeze));
-  const supportedMotionPoses = Object.freeze(BACKEND_ACTIONS.map(action => action.pose));
-  const ACTIONS = Object.freeze([...BACKEND_ACTIONS, ...(Wonder ? Wonder.actions.map(action => Object.freeze({ ...action, demo: true })) : [])]);
+  const wonderActions = Wonder ? Wonder.actions.map(action => Object.freeze({ ...action, demo: true })) : [];
+  let backendActions = previousActions;
+  let clipsByCharacter = new Map();
+
+  function installMotionLibrary(clips) {
+    if (!Array.isArray(clips) || !clips.length) fail('瑜伽动作库尚未加载。');
+    const next = new Map(), actions = new Map();
+    for (const clip of clips) {
+      const {characterId, poseId, url, frameCount, durationMs} = clip;
+      if (!LEGACY_CHARACTERS.some(c => c.id === characterId) || !/^[a-z][a-z0-9-]*$/.test(poseId)
+        || typeof url !== 'string' || url.split('?')[0] !== '/api/yoga-motions/' + characterId + '/' + poseId
+        || !Number.isInteger(frameCount) || frameCount < 2 || !(durationMs > 0)) fail('瑜伽动作素材索引无效。');
+      if (!next.has(characterId)) next.set(characterId, new Map());
+      next.get(characterId).set(poseId, Object.freeze({...clip}));
+      if (clip.pose && !actions.has(poseId)) actions.set(poseId, Object.freeze({id:poseId, name:clip.name, english:clip.english || clip.pose,
+        pose:clip.pose, instruction:clip.instruction, short:clip.short, teacher:clip.teacher}));
+    }
+    if (!actions.size) fail('后台没有可用于编排的瑜伽体式。');
+    backendActions = [...actions.values()];
+    clipsByCharacter = next;
+  }
+  const motionClip = (characterId, poseId) => clipsByCharacter.get(characterId)?.get(poseId);
+  function validMotionRef(clip) {
+    return clip && typeof clip === 'object' && LEGACY_CHARACTERS.some(role => role.id === clip.characterId)
+      && typeof clip.poseId === 'string' && /^[a-z][a-z0-9-]*$/.test(clip.poseId)
+      && typeof clip.url === 'string' && clip.url.split('?')[0] === '/api/yoga-motions/' + clip.characterId + '/' + clip.poseId
+      && /^v=[a-f0-9]{64}$/.test(clip.url.split('?').slice(1).join('?'))
+      && Number.isInteger(clip.frameCount) && clip.frameCount >= 2 && clip.frameCount <= 2000
+      && Number.isFinite(clip.durationMs) && clip.durationMs > 0 && typeof clip.name === 'string';
+  }
+  function clipForPage(page, settings) {
+    let id = page.kind === 'action' || page.actionId === 'savasana' ? page.actionId : 'guide';
+    if (id === 'mountain' && page.backendPose === undefined && /(?:arms|hands) up|reach up|向上伸展|双臂上举/i.test([page.english,page.teacher].join(' '))) id = 'upward-salute';
+    if (id === 'tree' && /脚尖点地|脚趾点地|toe[s]? (?:on|touch)/i.test([page.english,page.story,page.scene,page.teacher].join(' '))) id = 'tree-toes';
+    const ref = page.motionRef;
+    if (validMotionRef(ref) && ref.characterId === settings.characterId && ref.poseId === id) return ref;
+    return motionClip(settings.characterId, id);
+  }
+  const actionsForCharacter = id => clipsByCharacter.size ? backendActions.filter(a => motionClip(id,a.id)) : backendActions;
+  const allActions = () => [...backendActions, ...previousActions.filter(old => !backendActions.some(a => a.id === old.id)), ...wonderActions];
   const DEFAULT_SETTINGS = Object.freeze({ title: '森林里的身体探险', theme: '森林探险', age: '5–7 岁', duration: 8,
     context: '和伙伴进入森林，寻找树、星星和蝴蝶。', goal: '理解并使用目标词句，在情境中跟随动作并进行英语表达。',
     words: ['tree', 'bird', 'star', 'butterfly'], sentence: 'I can see a ...', characterId: 'poppy' });
@@ -85,7 +123,7 @@
   const clone = value => JSON.parse(JSON.stringify(value));
   const equal = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const fail = message => { throw new Error(message); };
-  const getAction = id => ACTIONS.find(action => action.id === id);
+  const getAction = id => allActions().find(action => action.id === id);
   const getCharacter = id => CHARACTERS.find(character => character.id === id);
 
   function isWonderCourse(value) {
@@ -98,7 +136,8 @@
   }
   function getAvailableActions(value) {
     if (isWonderCourse(value)) return requireWonder().actions;
-    return (value?.draft || value)?.backend ? BACKEND_ACTIONS : LEGACY_ACTIONS;
+    const course = value?.draft || value;
+    return course?.backend ? actionsForCharacter(course.settings.characterId) : LEGACY_ACTIONS;
   }
   function getAvailableCharacters(value) { return isWonderCourse(value) ? [requireWonder().character] : LEGACY_CHARACTERS; }
   function wonderPage(page) {
@@ -204,8 +243,8 @@
   function makePages(settings, key) {
     const theme = THEMES[key];
     return ['cover', 'action', 'action', 'action', 'action', 'ending'].map((kind, index) => {
-      const page = { id: `page-${index + 1}`, kind, title: index === 0 ? '探险开始' : index === 5 ? '回顾与告别' : `第 ${index} 站 · ${ACTIONS[index - 1].name}`,
-        english: '', story: theme.story[index], scene: theme.scene[index], actionId: kind === 'action' ? ACTIONS[index - 1].id : null,
+      const page = { id: `page-${index + 1}`, kind, title: index === 0 ? '探险开始' : index === 5 ? '回顾与告别' : `第 ${index} 站 · ${LEGACY_ACTIONS[index - 1].name}`,
+        english: '', story: theme.story[index], scene: theme.scene[index], actionId: kind === 'action' ? LEGACY_ACTIONS[index - 1].id : null,
         teacher: '', look: 'soft', focus: kind === 'action' ? settings.words[(index - 1) % settings.words.length] : '', englishMode: 'full',
         assets: { background: 'missing', voice: 'missing', motion: kind === 'action' ? 'missing' : 'na' },
         assetSources: { background: null, voice: null, motion: null } };
@@ -282,7 +321,7 @@
   function actionForPose(pose) {
     const name = String(pose ?? '').normalize('NFKC').trim().replace(/\s+/g, ' ').toLowerCase();
     const aliases = { tadasana:'mountain', vrksasana:'tree', vrikshasana:'tree', '星式':'star', malasana:'garland', 'baddha konasana':'butterfly', shavasana:'savasana', 'corpse pose':'savasana', '摊尸式':'savasana' };
-    return BACKEND_ACTIONS.find(action => action.id === aliases[name] ||
+    return backendActions.find(action => action.id === aliases[name] ||
       [action.id,action.name,action.english,action.pose].some(label => label.toLowerCase() === name));
   }
   function pageAction(page) {
@@ -293,8 +332,13 @@
     if (!course.backend) return course;
     for (const page of course.pages) {
       const action = pageAction(page);
+      if (action) page.actionId = action.id;
+      const clip = clipForPage(page, course.settings);
+      if (clip) {
+        const {characterId, poseId, name, url, frameCount, durationMs} = clip;
+        page.motionRef = {characterId, poseId, name, url, frameCount, durationMs};
+      } else if (page.motionRef) delete page.motionRef;
       if (!action) continue;
-      page.actionId = action.id;
       page.assets.motion = 'ready';
       page.assetSources.motion = sourceStamp(course,page,'motion');
     }
@@ -320,6 +364,7 @@
         english,story:String(raw.action||raw.teacherLang||english),scene:String(raw.imagePrompt||raw.expression||normalized.context),
         teacher:String(raw.teacherLang||raw.action||english),focus:kind==='action'?normalized.words[(index-1)%normalized.words.length]:'',
         assets:{background:backgroundUrl?'ready':'missing',voice:'missing',motion:'na'},assetSources:{background:null,voice:null,motion:null}};
+      if (validMotionRef(raw.motionRef)) page.motionRef = clone(raw.motionRef);
       if (backgroundUrl) { page.backgroundUrl=backgroundUrl; page.assetSources.background=sourceStamp(draft,page,'background'); }
       return page;
     });
@@ -739,7 +784,9 @@
       const expectedKind = index === 0 ? 'cover' : index === draft.pages.length-1 ? 'ending' : draft.backend===true&&page.kind==='intro'?'intro':'action';
       if (page.kind !== expectedKind || typeof page.id !== 'string' || !page.id || !['soft', 'bright'].includes(page.look)) fail('保存的页面类型或显示设置无效。');
       for (const field of ['title', 'english', 'story', 'scene', 'teacher']) if (typeof page[field] !== 'string' || !page[field].trim()) fail('页面的英语、情境或教师引导不完整。');
-      const localPose=getAvailableActions(draft).some(action => action.id === page.actionId);
+      const pinned = validMotionRef(page.motionRef) && page.motionRef.characterId === draft.settings.characterId
+        && (page.motionRef.poseId === page.actionId || page.actionId === 'tree' && page.motionRef.poseId === 'tree-toes');
+      const localPose = pinned || getAvailableActions(draft).some(action => action.id === page.actionId);
       if (page.kind === 'action' ? (!localPose&&!(draft.backend===true&&page.actionId===null)) || !page.focus : page.actionId !== null) fail('动作页必须匹配一个演示动作，封面和结尾不设置动作。');
       if (!['full', 'short'].includes(page.englishMode)) fail('保存的英语指令模式无效。');
       for (const kind of KINDS) {
@@ -750,6 +797,7 @@
     });
   }
   function validatePageMedia(page) {
+    if (page.motionRef !== undefined && !validMotionRef(page.motionRef)) fail('保存的角色动作引用无效。');
     for(const field of ['backgroundUrl','voiceUrl'])if(page[field]!==undefined&&!safeMediaUrl(page[field]))fail('保存的课程媒体地址无效。');
   }
   function validateUndo(state) {
@@ -763,7 +811,7 @@
     const courseFields = ['title', 'settings', 'themeKey', 'pages', 'revision', 'confirmed', 'locked', 'demo', ...(isWonderCourse(before) ? ['templateId'] : []), ...(before.backend===true?['backend']:[])];
     const pageFields = ['id', 'kind', ...FIELD_NAMES, 'assets', 'assetSources', ...(isWonderCourse(before) ? ['wonder'] : [])];
     const settingsExact=value=>exact(value,[...Object.keys(DEFAULT_SETTINGS),...['languageGoals','voiceId','musicId','musicVolume','musicUpload','templateId'].filter(key=>Object.prototype.hasOwnProperty.call(value||{},key))]);
-    if (!exact(before, courseFields) || !settingsExact(undo.before.settings) || !settingsExact(before.settings) || !Array.isArray(before.pages) || before.pages.some(page => !exact(page, [...pageFields,...['backendPose','backendType','backgroundUrl','voiceUrl'].filter(field=>Object.prototype.hasOwnProperty.call(page,field))]) || !exact(page.assets, KINDS) || !exact(page.assetSources, KINDS))) fail('保存的撤销快照结构不完整。');
+    if (!exact(before, courseFields) || !settingsExact(undo.before.settings) || !settingsExact(before.settings) || !Array.isArray(before.pages) || before.pages.some(page => !exact(page, [...pageFields,...['backendPose','backendType','backgroundUrl','voiceUrl','motionRef'].filter(field=>Object.prototype.hasOwnProperty.call(page,field))]) || !exact(page.assets, KINDS) || !exact(page.assetSources, KINDS))) fail('保存的撤销快照结构不完整。');
     validateCourse(before);
     if (before.locked || before.revision >= undo.appliedRevision || !equal(undo.before.settings, before.settings) || !equal(before.pages.map(page => [page.id, page.kind]), state.draft.pages.map(page => [page.id, page.kind]))) fail('保存的撤销快照与当前课程不一致。');
     for (const page of before.pages) for (const kind of KINDS) {
@@ -827,5 +875,5 @@
       fail('保存的数据结构不完整或格式无效，请保留原数据后重新开始。');
     }
   }
-  return { MUSIC_TRACKS, musicOptions, selectMusic, VOICES, selectVoice, languageGoals:LanguageGoals.read, mergeLanguageGoals:LanguageGoals.merge, clone, ACTIONS, CHARACTERS, WONDER_TEMPLATE_ID, createState, createWonderState, getAvailableActions, getAvailableCharacters, generateCourse, useBackendCourse, proposeBackendChange, actionForPose, pageAction, supportedMotionPoses, attachBackendMotion, safeMediaUrl, proposeChange, applyCandidate, editContent, applyBackgroundCandidate, canUndo, undoLastChange, discardCandidate, confirmContent, startAssets, finishAssets, cancelJob, publish, forkDraft, restoreVersion, readiness, validateState };
+  return { MUSIC_TRACKS, musicOptions, selectMusic, VOICES, selectVoice, languageGoals:LanguageGoals.read, mergeLanguageGoals:LanguageGoals.merge, clone, get ACTIONS() { return allActions(); }, CHARACTERS, WONDER_TEMPLATE_ID, createState, createWonderState, getAvailableActions, getAvailableCharacters, generateCourse, useBackendCourse, proposeBackendChange, actionForPose, pageAction, installMotionLibrary, motionClip, clipForPage, actionsForCharacter, get supportedMotionPoses() { return backendActions.map(action => action.pose); }, attachBackendMotion, safeMediaUrl, proposeChange, applyCandidate, editContent, applyBackgroundCandidate, canUndo, undoLastChange, discardCandidate, confirmContent, startAssets, finishAssets, cancelJob, publish, forkDraft, restoreVersion, readiness, validateState };
 });

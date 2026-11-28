@@ -2,56 +2,83 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import { createRequire } from 'node:module';
+import crypto from 'node:crypto';
 
-const module = {exports:{}};
-vm.runInNewContext(fs.readFileSync(new URL('../workbench-ui/yoga/course-scene.js',import.meta.url),'utf8'),{module});
-const legacy={renderBackground:()=>'<i>background</i>',renderReference:()=>'imported reference',setProgress(){}};
-const scene=module.exports(legacy);
-const settings={characterId:'poppy'};
-const page={kind:'action',actionId:'tree',backendPose:'Tree Pose',title:'Under the tree',english:'Find the firefly.'};
-
-function measure(action, progress, reduced=false) {
-  const state={};
-  const node=key=>({setAttribute:(_,value)=>{state[key]=value;}});
-  const attrs={'data-yc-rig':'poppy','data-yc-action':action,'data-yc-variation':'toes'};
-  const svg={
-    getAttribute:key=>attrs[key],
-    querySelector:key=>node(key),
-    querySelectorAll:key=>[node(key)]
-  };
-  const adapter=module.exports(legacy,{matchMedia:()=>({matches:reduced})});
-  adapter.setProgress({querySelectorAll:()=>[svg]},progress);
-  return state;
+const require = createRequire(import.meta.url);
+const {loadRig,bakeSvg} = require('../workbench-ui/yoga/bake-motions.cjs');
+const rig = loadRig();
+const roles = ['poppy','edi','rolly','milo','ace'];
+const legacy = {renderBackground:()=>'<i>background</i>',renderReference:()=>'imported reference',setProgress(){}};
+const page = {kind:'action',actionId:'tree',backendPose:'Tree Pose',title:'Tree',english:'Balance on one foot.'};
+const catalog = roles.flatMap(characterId => rig.motions.map(({id:poseId,...motion}) => ({
+  characterId, poseId, ...motion, frameCount:24, durationMs:1200,
+  url:'/api/yoga-motions/'+characterId+'/'+poseId+'?v='+crypto.createHash('sha256').update(characterId+poseId).digest('hex')
+})));
+function setup(reduced = false) {
+  const context = vm.createContext({URL});
+  for (const file of ['public/workbench-v6/prep-workbench-six-modules-v1/language-goals.js','workbench-ui/yoga/model.js']) {
+    vm.runInContext(fs.readFileSync(new URL('../'+file, import.meta.url),'utf8'),context);
+  }
+  const model = context.YogaModel;
+  model.installMotionLibrary(catalog);
+  const module = {exports:{}};
+  vm.runInNewContext(fs.readFileSync(new URL('../workbench-ui/yoga/course-scene.js',import.meta.url),'utf8'),{module});
+  return {scene:module.exports(legacy,{YogaModel:model,matchMedia:()=>({matches:reduced})}),model};
 }
 
-test('generated classroom scenes contain the selected recognizable character and the reference uses the same pose',()=>{
-  const ids=['poppy','edi','rolly','milo','ace'];
-  const bodies=ids.map(characterId=>{
-    const html=scene.renderCourseScene(page,{characterId},{backgroundMarkup:'<img alt="forest"/>'});
-    assert.ok(html.includes('<img alt="forest"/>'));
-    assert.ok(html.includes('data-yc-rig="'+characterId+'" data-yc-action="tree"'));
-    assert.ok(html.indexOf('</svg></div>') < html.indexOf('class="yc-caption"'));
-    assert.ok(scene.renderReference(page,{characterId}).includes('data-yc-rig="'+characterId+'" data-yc-action="tree"'));
-    return html.match(/<g data-yc-torso=""[^>]+><path d="([^"]+)"/)[1];
-  });
-  assert.equal(new Set(bodies).size,ids.length);
-  assert.equal(scene.renderReference({...page,wonder:{source:1}},settings),'imported reference');
-  assert.match(scene.renderCourseScene({...page,kind:'cover',actionId:null},settings),/data-yc-action="guide"/);
-  assert.match(scene.renderCourseScene({...page,kind:'intro',actionId:'savasana'},settings),/data-yc-action="savasana"/);
-  assert.match(scene.renderCourseScene({...page,actionId:'unrecognized'},settings),/data-yc-action="guide"/);
+test('classroom and teacher reference select the same versioned frame asset for every role and pose', () => {
+  const {scene} = setup();
+  for (const clip of catalog) {
+    const isGuide = clip.poseId === 'guide';
+    const p = {...page,kind:isGuide?'cover':'action',actionId:clip.poseId};
+    const settings = {characterId:clip.characterId};
+    const classroom = scene.renderCourseScene(p,settings,{backgroundMarkup:'<img alt="forest"/>'});
+    assert.ok(classroom.includes('<img alt="forest"/>'));
+    assert.ok(classroom.includes(clip.url+'#f12'));
+    assert.ok(scene.renderReference(p,settings).includes(clip.url+'#f12'));
+  }
+  assert.equal(scene.clipFor({...page,teacher:'另一边脚尖点地'},{characterId:'poppy'}).poseId,'tree-toes');
+  assert.equal(scene.renderReference({...page,wonder:{}},{}),'imported reference');
+  assert.match(scene.renderCourseScene({...page,actionId:'unknown'},{characterId:'poppy'}), /此页暂无对应动作/);
 });
 
-test('the clock articulates the limbs of each pose, respects planted feet and restores the start pose',()=>{
-  for (const id of ['mountain','tree','star','butterfly','garland','savasana']) {
-    const initial=measure(id,0), target=measure(id,.55);
-    assert.deepEqual(measure(id,1),initial,id);
-    assert.notDeepEqual(initial,target,id);
-    assert.deepEqual(measure(id,0,true),measure(id,1,true),id);
-    assert.deepEqual(measure(id,0,true),target,id);
-    if(['tree','garland','savasana','butterfly'].includes(id)){
-      assert.equal(initial['[data-yc-tip="leg0"]'],target['[data-yc-tip="leg0"]'],id);
-    }
-    const key=id==='butterfly'?'leg0':'arm1';
-    assert.notEqual(initial['[data-yc-path="'+key+'"]'],target['[data-yc-path="'+key+'"]'],id);
+test('clock seeks stored frames, closes the loop and respects reduced motion', () => {
+  const clip = catalog[0];
+  function sample(t, reduced=false) {
+    const {scene} = setup(reduced);
+    let href = '';
+    const use = {getAttribute:()=>href,setAttribute:(_,v)=>{href=v;}};
+    scene.setProgress({querySelectorAll:()=>[{dataset:{clipUrl:clip.url,frameCount:'24'},querySelector:()=>use}]}, t);
+    return href;
   }
+  assert.equal(sample(0),sample(1));
+  assert.equal(sample(.5),clip.url+'#f12');
+  assert.equal(sample(.9,true),sample(0,true));
+});
+
+test('new drafts pin stored motion revisions, survive saving and rebind changed characters', () => {
+  const {model} = setup();
+  const source = ['','Chair Pose','Warrior II','Side Bend','Upward Salute',''].map((pose,i) =>
+    ({type:i===0?'scene':i===5?'ending':'action',pose,subtitle:'Follow me.'}));
+  const empty = model.createState(), settings = {...empty.settings,characterId:'ace'};
+  let state = model.useBackendCourse(empty,settings,{title:'Practice',pages:source});
+  assert.ok(state.draft.pages.every(p=>p.motionRef.characterId==='ace'));
+  assert.equal(state.draft.pages[1].motionRef.poseId,'chair');
+  assert.doesNotThrow(()=>model.validateState(JSON.parse(JSON.stringify(state))));
+  const oldRef = state.draft.pages[1].motionRef;
+  model.installMotionLibrary(catalog.map(c=>({...c,url:c.url.split('=')[0]+'='+'e'.repeat(64)})));
+  assert.equal(model.clipForPage(state.draft.pages[1],settings).url,oldRef.url);
+  state = model.editContent(state,{target:'settings',values:{characterId:'milo'}});
+  assert.ok(state.draft.pages.every(p=>p.motionRef.characterId==='milo'));
+  assert.doesNotThrow(()=>model.validateState(JSON.parse(JSON.stringify(state))));
+});
+
+test('one baked SVG can be played independently or sampled by frame ID', () => {
+  const document = bakeSvg(rig,'edi',rig.motions.find(m=>m.id==='chair'),1000,25);
+  assert.equal((document.match(/id="f\d+"/g)||[]).length,25);
+  assert.equal((document.match(/repeatCount="indefinite"/g)||[]).length,25);
+  const ids = new Set([...document.matchAll(/ id="([^"]+)"/g)].map(match=>match[1]));
+  for (const link of document.matchAll(/href="#([^"]+)"/g)) assert.ok(ids.has(link[1]));
+  assert.doesNotMatch(document, /(?:NaN|Infinity|<script|<image|foreignObject)/);
 });

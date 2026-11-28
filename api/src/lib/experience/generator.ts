@@ -7,9 +7,11 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { headers } from 'next/headers';
 import { getPromptPair } from '@/prompts/registry';
 import { loadWikiPage } from '@/lib/prompt-library';
-import { YOGA_POSES, YOGA_POSE_LIBRARY_TEXT, findYogaPose } from '@/lib/experience/yogaPoses';
+import { YOGA_POSE_LIBRARY_TEXT, findYogaPose } from '@/lib/experience/yogaPoses';
+import { availableYogaMotions, pageYogaMotion, type YogaMotionRef } from '@/lib/yoga-motions';
 import { generateWithDeepSeek } from '@/lib/n8n/deepseek';
 
 export interface YogaPage {
@@ -18,6 +20,7 @@ export interface YogaPage {
   pose: string | null;
   subtitle: string;
   teacherLang: string;
+  motionRef?: YogaMotionRef;
   expression?: string;
   action?: string;
   /** 中文画面描述（供 AI 插图） */
@@ -206,34 +209,35 @@ function validateYogaPages(pages: YogaPage[]): void {
 /** 把 {title, pages} 注入授课 HTML 模板（成品为自包含单文件） */
 export function renderYogaHtml(result: { title?: string; pages: YogaPage[] }, fallbackTitle = '情境瑜伽活动'): string {
   let html = readTemplate('interactive-yoga.html');
+  // A downloaded HTML file needs the original service origin for its immutable asset URLs.
+  let origin = 'https://wellbeing.newstaredu.cn';
+  try {
+    const requestOrigin = headers().get('origin') || headers().get('referer');
+    const url = requestOrigin && new URL(requestOrigin);
+    if (url && ['http:', 'https:'].includes(url.protocol) &&
+        (url.hostname === 'wellbeing.newstaredu.cn' || ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname))) {
+      origin = url.origin;
+    }
+  } catch { /* Rendering outside a web request uses the platform origin. */ }
+  html = html.replace('__MEDIA_ORIGIN__', origin);
   const pages = JSON.stringify(result.pages).replace(/</g, '\\u003c');
   html = html.replace(/__TITLE__/g, () => escapeHtml(result.title || fallbackTitle));
-  html = html.replace(/const pages = \[[\s\S]*?\n\];/, () => `const pages = ${pages};`);
+  html = html.replace(/^const pages = \[[\s\S]*?\n\];/m, () => `const pages = ${pages};`);
   return html;
 }
 
 // ── 一键生成（旧流程，generate 路由仍在用）─────────────────────
 export async function generateYoga(params: Record<string, string>): Promise<{ result: { title: string; pages: YogaPage[] }; html: string }> {
-  const vars = yogaVars(params);
-  const base = await getPromptPair('experience-yoga-design', { poseLibrary: YOGA_POSE_LIBRARY_TEXT }, vars);
-  const system = await withSpecDocs(base.system, 'content', 'poseLibrary');
-  const { user } = base;
-  const raw = await callLLM(system, user);
-  const parsed = parseJson<{ title?: string; pages?: YogaPage[] }>(raw);
-
-  const pages = Array.isArray(parsed.pages) ? parsed.pages : [];
-  validateYogaPages(pages);
-
-  const title = parsed.title || params.theme || params.title || '情境瑜伽活动';
-  const normalized = normalizeYogaPages(pages);
-  const html = renderYogaHtml({ title, pages: normalized }, title);
-
-  return { result: { title, pages: normalized }, html };
+  const result = await generateYogaDesign(params);
+  return { result, html: renderYogaHtml(result, result.title) };
 }
 
 // ── 工作室流程 step 2：活动方案 ────────────────────────────────
 export async function generateYogaPlan(params: Record<string, string>): Promise<{ title: string; plan: YogaPlan }> {
-  const base = await getPromptPair('experience-yoga-plan', {}, yogaVars(params));
+  const motions = await availableYogaMotions(params);
+  const vars = yogaVars(params);
+  if (motions.length) vars.requirements += '\n可选角色体式：' + motions.flatMap(clip => clip.pose ? [clip.pose] : []).join('、');
+  const base = await getPromptPair('experience-yoga-plan', {}, vars);
   const { system, user } = { system: await withSpecDocs(base.system, 'lessonPlan', 'content'), user: base.user };
   const raw = await callLLM(system, user);
   const parsed = parseJson<YogaPlan>(raw);
@@ -258,13 +262,14 @@ export async function generateYogaDesign(
   plan?: YogaPlan | null
 ): Promise<{ title: string; pages: YogaPage[] }> {
   const vars = yogaVars(params);
-  const requested = new Set((params.supportedMotionPoses || '').split(',').map(name => name.trim()));
-  const poses = YOGA_POSES.filter(pose => requested.has(pose.en));
-  if (requested.size && params.supportedMotionPoses && !poses.length) throw new Error('没有可演示的体式，请重新打开备课页。');
-  const poseNames = poses.map(pose => pose.en);
+  const motions = await availableYogaMotions(params);
+  const requested = new Set((params.supportedMotionPoses || '').split(',').map(name => name.trim()).filter(Boolean));
+  const poses = motions.filter(clip => clip.pose && (!requested.size || requested.has(clip.pose)));
+  if (motions.length && !poses.length) throw new Error('没有可演示的体式，请重新打开备课页。');
+  const poseNames = poses.map(clip => clip.pose!);
   const base = await getPromptPair(
     'experience-yoga-design',
-    { poseLibrary: poses.length ? poses.map(pose => `${pose.en}（${pose.zh}｜${pose.body}）`).join(' / ') : YOGA_POSE_LIBRARY_TEXT },
+    { poseLibrary: poses.length ? poses.map(clip => `${clip.pose}（${clip.name}｜${clip.teacher}）`).join(' / ') : YOGA_POSE_LIBRARY_TEXT },
     { ...vars, plan: planSummary(plan) }
   );
   const { system, user } = { system: await withSpecDocs(base.system, 'content', 'poseLibrary'), user: base.user };
@@ -288,7 +293,13 @@ export async function generateYogaDesign(
   }
 
   const title = parsed.title || plan?.storyTitleEn || params.theme || params.title || '情境瑜伽活动';
-  return { title, pages: normalizeYogaPages(parsed.pages) };
+  const pages = normalizeYogaPages(parsed.pages).map(page => {
+    // The server selects the executable asset; generated text only supplies a canonical pose name.
+    delete page.motionRef;
+    if (motions.length) page.motionRef = pageYogaMotion(page, motions);
+    return page;
+  });
+  return { title, pages };
 }
 
 /** 导出给生图链路：按英文名取体式的身体反应描述（找不到返回空串） */
